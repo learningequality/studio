@@ -3,12 +3,16 @@
   <div
     ref="rootEl"
     class="link-editor-popover"
+    role="dialog"
+    :aria-labelledby="headingId"
+    aria-modal="true"
   >
     <div class="modal-header">
-      <h3>{{ addLink$() }}</h3>
+      <h3 :id="headingId">{{ addLink$() }}</h3>
       <button
         class="close-button"
         :title="close$()"
+        :aria-label="closeModal$()"
         @click="$emit('close')"
       >
         ×
@@ -22,6 +26,7 @@
           id="link-text"
           v-model="formData.text"
           type="text"
+          required
         >
       </div>
       <div class="form-group">
@@ -31,6 +36,7 @@
           v-model="formData.href"
           type="url"
           :placeholder="link$()"
+          required
         >
       </div>
     </div>
@@ -58,9 +64,10 @@
   export default defineComponent({
     name: 'LinkEditor',
     setup(props, { emit }) {
-      const { addLink$, close$, text$, link$, save$ } = getTipTapEditorStrings();
+      const { addLink$, close$, text$, link$, save$, closeModal$ } = getTipTapEditorStrings();
       const rootEl = ref(null);
       const formData = ref({ text: '', href: '' });
+      const headingId = `link-editor-heading-${Math.random().toString(36).substr(2, 9)}`;
 
       watch(
         () => props.initialState,
@@ -85,11 +92,13 @@
         formData,
         onSave,
         validateForm,
+        headingId,
         addLink$,
         close$,
         text$,
         link$,
         save$,
+        closeModal$,
       };
     },
     props: {
@@ -143,6 +152,11 @@
     border: 0;
   }
 
+  .close-button:focus-visible {
+    outline: 2px solid #0097f2;
+    outline-offset: 2px;
+  }
+
   .form-group {
     position: relative;
     display: flex;
@@ -168,6 +182,11 @@
     border-bottom: 1px solid black;
   }
 
+  .form-group input:focus {
+    outline: 2px solid #0097f2;
+    outline-offset: 2px;
+  }
+
   .footer {
     display: flex;
     justify-content: flex-end;
@@ -186,6 +205,11 @@
   .save-button:disabled {
     color: #bdbdbd;
     cursor: not-allowed;
+  }
+
+  .save-button:focus-visible {
+    outline: 2px solid #0097f2;
+    outline-offset: 2px;
   }
 
 </style>

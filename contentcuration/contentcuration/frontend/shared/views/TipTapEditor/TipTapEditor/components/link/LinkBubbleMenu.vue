@@ -1,37 +1,62 @@
 <template>
 
-  <div class="link-bubble-menu">
+  <div
+    class="link-bubble-menu"
+    role="toolbar"
+    :aria-label="linkActions$()"
+  >
     <a
       :href="href"
       target="_blank"
       rel="noopener noreferrer"
-    >{{ goToLink$() }}</a>
-    <div class="divider"></div>
+      class="link-url"
+      :aria-label="`${goToLink$()} ${opensInNewTab$()}`"
+    >
+      {{ goToLink$() }}
+      <span class="sr-only">{{ opensInNewTab$() }}</span>
+    </a>
+
+    <div
+      class="divider"
+      aria-hidden="true"
+    ></div>
+
     <button
+      class="bubble-menu-button"
       :title="copyLink$()"
+      :aria-label="copyLink$()"
       @click="copyToClipboard(href)"
     >
       <img
         src="../../../assets/icon-copy.svg"
-        :alt="copy$()"
+        alt=""
+        aria-hidden="true"
       >
     </button>
+
     <button
+      class="bubble-menu-button"
       :title="editLink$()"
+      :aria-label="editLink$()"
       @click="onEdit"
     >
       <img
         src="../../../assets/icon-edit.svg"
-        :alt="edit$()"
+        alt=""
+        aria-hidden="true"
       >
     </button>
+
     <button
+      class="bubble-menu-button"
       :title="removeLink$()"
+      :aria-label="removeLink$()"
       @click="onRemove"
     >
       <img
         src="../../../assets/icon-linkOff.svg"
-        :alt="remove$()"
+        alt=""
+        aria-hidden="true"
       >
     </button>
   </div>
@@ -47,8 +72,9 @@
   export default defineComponent({
     name: 'LinkBubbleMenu',
     setup(props) {
-      const { goToLink$, copyLink$, copy$, editLink$, edit$, removeLink$, remove$ } =
+      const { goToLink$, copyLink$, editLink$, removeLink$, linkActions$, opensInNewTab$ } =
         getTipTapEditorStrings();
+
       const { openLinkEditor, removeLink } = inject('linkHandler');
       const href = computed(() => props.editor.getAttributes('link').href);
 
@@ -63,11 +89,10 @@
         copyToClipboard,
         goToLink$,
         copyLink$,
-        copy$,
         editLink$,
-        edit$,
         removeLink$,
-        remove$,
+        linkActions$,
+        opensInNewTab$,
       };
     },
     props: {
@@ -102,18 +127,47 @@
     background: #e0e0e0;
   }
 
-  button {
+  .bubble-menu-button {
     display: flex;
     align-items: center;
     padding: 4px;
     cursor: pointer;
     background: none;
     border: 0;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
   }
 
-  button img {
+  .bubble-menu-button:hover {
+    background: #e6e6e6;
+  }
+
+  .bubble-menu-button:active {
+    background: #d9e1fd;
+  }
+
+  .bubble-menu-button:focus-visible {
+    background: #e6e6e6;
+    outline: 2px solid #0097f2;
+    outline-offset: 2px;
+  }
+
+  .bubble-menu-button img {
     width: 16px;
     height: 16px;
+  }
+
+  /* Screen reader only text */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
 </style>

@@ -257,6 +257,14 @@ const MESSAGES = {
     message: 'Remove link',
     context: 'Button title to remove the link from the text.',
   },
+  linkActions: {
+    message: 'Link actions',
+    context: 'Accessibility label for the toolbar containing link-related actions.',
+  },
+  opensInNewTab: {
+    message: '(opens in new tab)',
+    context: 'Accessibility text indicating that a link will open in a new browser tab.',
+  },
   addLink: {
     message: 'Add link',
     context: 'Title for the link editor modal.',

@@ -327,6 +327,7 @@ export function useToolbarActions() {
       name: 'link',
       title: insertLink$(),
       icon: require('../../assets/icon-link.svg'),
+      isActive: isMarkActive('link'),
       handler: handleInsertLink,
     },
     {
