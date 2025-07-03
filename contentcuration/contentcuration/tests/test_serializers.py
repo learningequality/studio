@@ -308,6 +308,34 @@ class RecommendationsInteractionEventSerializerTestCase(BaseAPITestCase):
             str(instance.recommendation_event_id), data["recommendation_event_id"]
         )
 
+    def test_bulk_deserialization_and_validation(self):
+        bulk_data = [
+            {
+                "context": {"test_key": "test_value_1"},
+                "contentnode_id": str(self.interaction_node.id),
+                "content_id": str(self.interaction_node.content_id),
+                "feedback_type": "IGNORED",
+                "feedback_reason": "----",
+                "recommendation_event_id": str(self.recommendation_event.id),
+            },
+            {
+                "context": {"test_key": "test_value_2"},
+                "contentnode_id": str(self.interaction_node.id),
+                "content_id": str(self.interaction_node.content_id),
+                "feedback_type": "PREVIEWED",
+                "feedback_reason": "++++",
+                "recommendation_event_id": str(self.recommendation_event.id),
+            },
+        ]
+        serializer = RecommendationsInteractionEventSerializer(
+            data=bulk_data, many=True
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        instances = serializer.save()
+        self.assertEqual(len(instances), 2)
+        self.assertEqual(instances[0].context, bulk_data[0]["context"])
+        self.assertEqual(instances[1].feedback_type, bulk_data[1]["feedback_type"])
+
     def test_invalid_data(self):
         data = {"context": "invalid"}
         serializer = RecommendationsInteractionEventSerializer(data=data)
@@ -323,6 +351,31 @@ class RecommendationsInteractionEventSerializerTestCase(BaseAPITestCase):
         }
         serializer = RecommendationsInteractionEventSerializer(data=data)
         self.assertFalse(serializer.is_valid())
+
+    def test_invalid_bulk_data(self):
+        # Missing 'feedback_type'
+        bulk_data = [
+            {
+                "context": {"test_key": "test_value_1"},
+                "contentnode_id": str(self.interaction_node.id),
+                "content_id": str(self.interaction_node.content_id),
+                "feedback_type": "IGNORED",
+                "feedback_reason": "----",
+                "recommendation_event_id": str(self.recommendation_event.id),
+            },
+            {
+                "context": {"test_key": "test_value_2"},
+                "contentnode_id": str(self.interaction_node.id),
+                "content_id": str(self.interaction_node.content_id),
+                "feedback_reason": "----",
+                "recommendation_event_id": str(self.recommendation_event.id),
+            },
+        ]
+        serializer = RecommendationsInteractionEventSerializer(
+            data=bulk_data, many=True
+        )
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("feedback_type", str(serializer.errors))
 
 
 class RecommendationsEventSerializerTestCase(BaseAPITestCase):

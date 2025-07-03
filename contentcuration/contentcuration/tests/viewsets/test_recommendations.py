@@ -351,6 +351,61 @@ class RecommendationsInteractionEventViewSetTestCase(StudioAPITestCase):
         )
         self.assertEqual(response.status_code, 201, response.content)
 
+    def test_bulk_create_recommendations_interaction(self):
+        recommendations_interactions = [
+            {
+                "context": {"test_key": "test_value_1"},
+                "contentnode_id": self.interaction_node.id,
+                "content_id": self.interaction_node.content_id,
+                "feedback_type": "IGNORED",
+                "feedback_reason": "----",
+                "recommendation_event_id": str(self.recommendation_event.id),
+            },
+            {
+                "context": {"test_key": "test_value_2"},
+                "contentnode_id": self.interaction_node.id,
+                "content_id": self.interaction_node.content_id,
+                "feedback_type": "PREVIEWED",
+                "feedback_reason": "----",
+                "recommendation_event_id": str(self.recommendation_event.id),
+            },
+        ]
+        response = self.client.post(
+            reverse("recommendations-interaction-list"),
+            recommendations_interactions,
+            format="json",
+        )
+        self.assertEqual(response.status_code, 201, response.content)
+        self.assertEqual(len(response.json()), len(recommendations_interactions))
+
+    def test_bulk_create_recommendations_interaction_failure(self):
+        # One valid, one invalid (missing required field)
+        recommendations_interactions = [
+            {
+                "context": {"test_key": "test_value_1"},
+                "contentnode_id": self.interaction_node.id,
+                "content_id": self.interaction_node.content_id,
+                "feedback_type": "IGNORED",
+                "feedback_reason": "----",
+                "recommendation_event_id": str(self.recommendation_event.id),
+            },
+            {
+                # Missing 'feedback_type'
+                "context": {"test_key": "test_value_2"},
+                "contentnode_id": self.interaction_node.id,
+                "content_id": self.interaction_node.content_id,
+                "feedback_reason": "----",
+                "recommendation_event_id": str(self.recommendation_event.id),
+            },
+        ]
+        response = self.client.post(
+            reverse("recommendations-interaction-list"),
+            recommendations_interactions,
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertIn("feedback_type", str(response.content))
+
     def test_list_fails(self):
         response = self.client.get(
             reverse("recommendations-interaction-list"), format="json"
