@@ -54,6 +54,10 @@
   "homepage": "https://github.com/learningequality/studio#readme",
   "dependencies": {
     "@sentry/vue": "^7.112.2",
+    "@tiptap/core": "^2.14.0",
+    "@tiptap/extension-underline": "^2.14.0",
+    "@tiptap/starter-kit": "^2.13.0",
+    "@tiptap/vue-2": "^2.13.0",
     "@toast-ui/editor": "^2.3.1",
     "ajv": "^8.12.0",
     "axios": "^1.10.0",

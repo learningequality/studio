@@ -68,12 +68,4 @@
 </script>
 
 
-<style lang="scss" scoped>
-
-  ::v-deep p {
-    font-size: 12pt;
-    line-height: normal;
-    color: var(--v-grey-darken3);
-  }
-
-</style>
+<style lang="scss" scoped></style>
