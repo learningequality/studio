@@ -66,13 +66,10 @@ from rest_framework.fields import get_attribute
 from rest_framework.utils.encoders import JSONEncoder
 
 from contentcuration.constants import channel_history
+from contentcuration.constants import community_library_submission
 from contentcuration.constants import completion_criteria
 from contentcuration.constants import feedback
 from contentcuration.constants import user_history
-from contentcuration.constants.community_library_submission import (
-    COMMUNITY_LIBRARY_SUBMISSION_STATUS_CHOICES,
-)
-from contentcuration.constants.community_library_submission import STATUS_PENDING
 from contentcuration.constants.contentnode import kind_activity_map
 from contentcuration.db.models.expressions import Array
 from contentcuration.db.models.functions import ArrayRemove
@@ -2563,8 +2560,8 @@ class CommunityLibrarySubmission(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     status = models.CharField(
         max_length=20,
-        choices=COMMUNITY_LIBRARY_SUBMISSION_STATUS_CHOICES,
-        default=STATUS_PENDING,
+        choices=community_library_submission.status_choices,
+        default=community_library_submission.STATUS_PENDING,
     )
 
     def clean(self):
