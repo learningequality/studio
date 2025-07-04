@@ -41,7 +41,7 @@ class Migration(migrations.Migration):
                 ),
                 ("description", models.TextField(blank=True)),
                 ("channel_version", models.PositiveIntegerField()),
-                ("categories", models.JSONField(blank=True, default=list, null=True)),
+                ("categories", models.JSONField(blank=True, null=True)),
                 ("date_created", models.DateTimeField(auto_now_add=True)),
                 (
                     "status",

@@ -2559,7 +2559,7 @@ class CommunityLibrarySubmission(models.Model):
     countries = models.ManyToManyField(
         Country, related_name="community_library_submissions"
     )
-    categories = models.JSONField(default=list, blank=True, null=True)
+    categories = models.JSONField(blank=True, null=True)
     date_created = models.DateTimeField(auto_now_add=True)
     status = models.CharField(
         max_length=20,
