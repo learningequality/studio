@@ -35,29 +35,64 @@ class BaseFeedback {
    * @classdesc Represents a base feedback object with common properties and methods.
    * @param {BaseFeedbackParams} object
    */
-  constructor({ id, context = {}, contentnode_id, content_id, method }) {
-    this.id = id || uuidv4();
-    this.context = context;
-    this.contentnode_id = contentnode_id;
-    this.content_id = content_id;
+  constructor({ method, endpoint, data }) {
     this.method = method || 'post';
+    this.endpoint = endpoint;
+    this.data = data;
+
+    this.validateData();
   }
 
-  // Creates a data object according to Backends expectation,
-  // excluding functions and the "endpoint" property.
-  getDataObject() {
-    const dataObject = {};
-    for (const key in this) {
-      if (
-        Object.prototype.hasOwnProperty.call(this, key) &&
-        typeof this[key] !== 'function' &&
-        key !== 'endpoint' &&
-        key !== 'method'
-      ) {
-        dataObject[key] = this[key];
-      }
+  validateData() {
+    const required = this.getRequiredDataFields();
+
+    if (this.data === null || this.data === undefined) {
+      throw new Error('The data property cannot be null or undefined');
     }
-    return dataObject;
+
+    if (Array.isArray(this.data)) {
+      if (this.getMethod() !== 'post') {
+        throw new Error("Array 'data' is only allowed for 'post' requests");
+      }
+
+      if (!this.data.length) {
+        throw new Error("The 'data' array cannot be empty");
+      }
+
+      this.data.forEach((item, idx) => {
+        if (typeof item !== 'object' || item === null) {
+          throw new Error(`Item at position ${idx} in 'data' is not a valid object`);
+        }
+        if (!item.id) {
+          item.id = uuidv4();
+        }
+        required.forEach(field => {
+          if (typeof item[field] === 'undefined') {
+            throw new Error(`Missing required property in 'data': ${field} at position: ${idx}`);
+          }
+        });
+      });
+    } else if (typeof this.data === 'object') {
+      if (!this.data.id) {
+        this.data.id = uuidv4();
+      }
+      required.forEach(field => {
+        if (typeof this.data[field] === 'undefined') {
+          throw new Error(`The 'data' object is missing required property: ${field}`);
+        }
+      });
+    } else {
+      throw new Error("The 'data' must be either a non-null object or an array of objects");
+    }
+  }
+
+  // Returns the data based on the backend contract
+  getData() {
+    return this.data;
+  }
+
+  getRequiredDataFields() {
+    return ['id', 'context', 'contentnode_id', 'content_id'];
   }
 
   // Return the url associated with the ObjectType
@@ -68,7 +103,7 @@ class BaseFeedback {
 
     let url;
     if (['patch', 'put'].includes(this.getMethod())) {
-      url = urls[`${this.endpoint}-detail`](this.id);
+      url = urls[`${this.endpoint}-detail`](this.getData().id);
     } else {
       url = urls[`${this.endpoint}-list`]();
     }
@@ -91,10 +126,8 @@ class BaseFeedback {
  */
 // eslint-disable-next-line no-unused-vars
 class BaseFeedbackEvent extends BaseFeedback {
-  constructor({ user_id, target_channel_id, ...baseFeedbackParams }) {
-    super(baseFeedbackParams);
-    this.user_id = user_id;
-    this.target_channel_id = target_channel_id;
+  getRequiredDataFields() {
+    return [...super.getRequiredDataFields(), 'user_id', 'target_channel_id'];
   }
 }
 
@@ -107,10 +140,8 @@ class BaseFeedbackEvent extends BaseFeedback {
  * base feedbackclass.
  */
 class BaseFeedbackInteractionEvent extends BaseFeedback {
-  constructor({ feedback_type, feedback_reason, ...baseFeedbackParams }) {
-    super(baseFeedbackParams);
-    this.feedback_type = feedback_type;
-    this.feedback_reason = feedback_reason;
+  getRequiredDataFields() {
+    return [...super.getRequiredDataFields(), 'feedback_type', 'feedback_reason'];
   }
 }
 
@@ -124,9 +155,8 @@ class BaseFeedbackInteractionEvent extends BaseFeedback {
  * base interaction event class.
  */
 class BaseFlagFeedback extends BaseFeedbackInteractionEvent {
-  constructor({ target_topic_id, ...baseFeedbackParams }) {
-    super({ ...baseFeedbackParams });
-    this.target_topic_id = target_topic_id;
+  getRequiredDataFields() {
+    return [...super.getRequiredDataFields(), 'target_topic_id'];
   }
 }
 
@@ -140,8 +170,8 @@ class BaseFlagFeedback extends BaseFeedbackInteractionEvent {
  * base flag feedback class.
  */
 export class FlagFeedbackEvent extends BaseFlagFeedback {
-  constructor({ target_topic_id, ...baseFeedbackParams }) {
-    super({ target_topic_id, ...baseFeedbackParams });
+  constructor(baseFeedbackParams) {
+    super(baseFeedbackParams);
     this.endpoint = FLAG_FEEDBACK_EVENT_ENDPOINT;
   }
 }
@@ -154,10 +184,13 @@ export class FlagFeedbackEvent extends BaseFlagFeedback {
  * each representing a recommended content item.
  */
 export class RecommendationsEvent extends BaseFeedbackEvent {
-  constructor({ content, ...baseFeedbackEventParams }) {
+  constructor(baseFeedbackEventParams) {
     super(baseFeedbackEventParams);
-    this.content = content;
     this.endpoint = RECOMMENDATION_EVENT_ENDPOINT;
+  }
+
+  getRequiredDataFields() {
+    return [...super.getRequiredDataFields(), 'content'];
   }
 }
 
@@ -171,10 +204,13 @@ export class RecommendationsEvent extends BaseFeedbackEvent {
  * base feedback interaction event class.
  */
 export class RecommendationsInteractionEvent extends BaseFeedbackInteractionEvent {
-  constructor({ recommendation_event_id, ...feedbackInteractionEventParams }) {
+  constructor(feedbackInteractionEventParams) {
     super(feedbackInteractionEventParams);
-    this.recommendation_event_id = recommendation_event_id;
     this.endpoint = RECOMMENDATION_INTERACTION_EVENT_ENDPOINT;
+  }
+
+  getRequiredDataFields() {
+    return [...super.getRequiredDataFields(), 'recommendation_event_id'];
   }
 }
 
@@ -190,7 +226,7 @@ export class RecommendationsInteractionEvent extends BaseFeedbackInteractionEven
 export async function sendRequest(feedbackObject) {
   try {
     const url = feedbackObject.getUrl();
-    const data = feedbackObject.getDataObject();
+    const data = feedbackObject.getData();
     const method = feedbackObject.getMethod();
 
     let response;

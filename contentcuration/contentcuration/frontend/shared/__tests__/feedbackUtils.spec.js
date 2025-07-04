@@ -13,32 +13,42 @@ jest.mock('../client');
 
 function setupRecommendationsEvent(method) {
   return new RecommendationsEvent({
-    context: { model_version: 1, breadcrumbs: '#Title#->Random' },
-    contentnode_id: uuidv4(),
-    content_id: uuidv4(),
-    target_channel_id: uuidv4(),
-    user_id: uuidv4(),
-    content: [
-      {
-        content_id: uuidv4(),
-        node_id: uuidv4(),
-        channel_id: uuidv4(),
-        score: 4,
-      },
-    ],
     method: method,
+    data: {
+      context: { model_version: 1, breadcrumbs: '#Title#->Random' },
+      contentnode_id: uuidv4(),
+      content_id: uuidv4(),
+      target_channel_id: uuidv4(),
+      user_id: uuidv4(),
+      content: [
+        {
+          content_id: uuidv4(),
+          node_id: uuidv4(),
+          channel_id: uuidv4(),
+          score: 4,
+        },
+      ],
+    },
   });
 }
 
-function setupRecommendationsInteractionEvent(method) {
-  return new RecommendationsInteractionEvent({
+function setupRecommendationsInteractionEvent(
+  method,
+  bulk = false,
+  dataOverride = null,
+  override = false,
+) {
+  const data = {
     context: { test_key: 'test_value' },
     contentnode_id: uuidv4(),
     content_id: uuidv4(),
     feedback_type: FeedbackTypeOptions.ignored,
     feedback_reason: '----',
     recommendation_event_id: uuidv4(),
+  };
+  return new RecommendationsInteractionEvent({
     method: method,
+    data: override ? dataOverride : bulk ? [data] : data,
   });
 }
 
@@ -53,12 +63,14 @@ describe('FeedBackUtility Tests', () => {
 
   beforeEach(() => {
     flagFeedbackEvent = new FlagFeedbackEvent({
-      context: { key: 'value' },
-      contentnode_id: uuidv4(),
-      content_id: uuidv4(),
-      target_topic_id: uuidv4(),
-      feedback_type: FeedbackTypeOptions.flagged,
-      feedback_reason: 'Inappropriate Language',
+      data: {
+        context: { key: 'value' },
+        contentnode_id: uuidv4(),
+        content_id: uuidv4(),
+        target_topic_id: uuidv4(),
+        feedback_type: FeedbackTypeOptions.flagged,
+        feedback_reason: 'Inappropriate Language',
+      },
     });
 
     recommendationsEvent = setupRecommendationsEvent('post');
@@ -74,12 +86,12 @@ describe('FeedBackUtility Tests', () => {
 
   describe('FlagFeedbackEvent Tests', () => {
     it('should generate data object without functions', () => {
-      const dataObject = flagFeedbackEvent.getDataObject();
+      const dataObject = flagFeedbackEvent.getData();
       expect(dataObject.id).toEqual('mocked-uuid');
       expect(dataObject.context).toEqual({ key: 'value' });
       expect(dataObject.contentnode_id).toEqual('mocked-uuid');
       expect(dataObject.content_id).toEqual('mocked-uuid');
-      expect(dataObject.getDataObject).toBeUndefined();
+      expect(dataObject.data).toBeUndefined();
       expect(dataObject.target_topic_id).toEqual('mocked-uuid');
       expect(dataObject.feedback_type).toEqual(FeedbackTypeOptions.flagged);
       expect(dataObject.feedback_reason).toEqual('Inappropriate Language');
@@ -108,7 +120,7 @@ describe('FeedBackUtility Tests', () => {
       expect(result).toEqual('Mocked API Response');
       expect(client.post).toHaveBeenCalledWith(
         flagFeedbackEvent.getUrl(),
-        flagFeedbackEvent.getDataObject(),
+        flagFeedbackEvent.getData(),
       );
     });
 
@@ -117,14 +129,14 @@ describe('FeedBackUtility Tests', () => {
       await expect(sendRequest(flagFeedbackEvent)).rejects.toThrowError('Mocked API Error');
       expect(client.post).toHaveBeenCalledWith(
         flagFeedbackEvent.getUrl(),
-        flagFeedbackEvent.getDataObject(),
+        flagFeedbackEvent.getData(),
       );
     });
   });
 
   describe('RecommendationsEvent Tests', () => {
     it('should generate data object without functions', () => {
-      const dataObject = recommendationsEvent.getDataObject();
+      const dataObject = recommendationsEvent.getData();
       expect(dataObject.id).toEqual('mocked-uuid');
       expect(dataObject.context).toEqual({ model_version: 1, breadcrumbs: '#Title#->Random' });
       expect(dataObject.contentnode_id).toEqual('mocked-uuid');
@@ -139,7 +151,7 @@ describe('FeedBackUtility Tests', () => {
           score: 4,
         },
       ]);
-      expect(dataObject.getDataObject).toBeUndefined();
+      expect(dataObject.data).toBeUndefined();
       expect(dataObject.endpoint).toBeUndefined();
     });
 
@@ -165,7 +177,7 @@ describe('FeedBackUtility Tests', () => {
         expect(result).toEqual('Mocked API Response');
         expect(client.post).toHaveBeenCalledWith(
           recommendationsEvent.getUrl(),
-          recommendationsEvent.getDataObject(),
+          recommendationsEvent.getData(),
         );
       });
 
@@ -176,7 +188,7 @@ describe('FeedBackUtility Tests', () => {
         expect(result).toEqual('Mocked API Response');
         expect(client.put).toHaveBeenCalledWith(
           recommendationsEvent.getUrl(),
-          recommendationsEvent.getDataObject(),
+          recommendationsEvent.getData(),
         );
       });
 
@@ -187,7 +199,7 @@ describe('FeedBackUtility Tests', () => {
         expect(result).toEqual('Mocked API Response');
         expect(client.patch).toHaveBeenCalledWith(
           recommendationsEvent.getUrl(),
-          recommendationsEvent.getDataObject(),
+          recommendationsEvent.getData(),
         );
       });
 
@@ -197,7 +209,7 @@ describe('FeedBackUtility Tests', () => {
         await expect(sendRequest(recommendationsEvent)).rejects.toThrowError('Mocked API Error');
         expect(client.post).toHaveBeenCalledWith(
           recommendationsEvent.getUrl(),
-          recommendationsEvent.getDataObject(),
+          recommendationsEvent.getData(),
         );
       });
 
@@ -207,7 +219,7 @@ describe('FeedBackUtility Tests', () => {
         await expect(sendRequest(recommendationsEvent)).rejects.toThrowError('Mocked API Error');
         expect(client.put).toHaveBeenCalledWith(
           recommendationsEvent.getUrl(),
-          recommendationsEvent.getDataObject(),
+          recommendationsEvent.getData(),
         );
       });
 
@@ -217,7 +229,7 @@ describe('FeedBackUtility Tests', () => {
         await expect(sendRequest(recommendationsEvent)).rejects.toThrowError('Mocked API Error');
         expect(client.patch).toHaveBeenCalledWith(
           recommendationsEvent.getUrl(),
-          recommendationsEvent.getDataObject(),
+          recommendationsEvent.getData(),
         );
       });
 
@@ -239,7 +251,7 @@ describe('FeedBackUtility Tests', () => {
 
   describe('RecommendationsInteractionEvent Tests', () => {
     it('should generate data object without functions', () => {
-      const dataObject = recommendationsInteractionEvent.getDataObject();
+      const dataObject = recommendationsInteractionEvent.getData();
       expect(dataObject.id).toEqual('mocked-uuid');
       expect(dataObject.context).toEqual({ test_key: 'test_value' });
       expect(dataObject.contentnode_id).toEqual('mocked-uuid');
@@ -247,8 +259,50 @@ describe('FeedBackUtility Tests', () => {
       expect(dataObject.feedback_type).toEqual(FeedbackTypeOptions.ignored);
       expect(dataObject.feedback_reason).toEqual('----');
       expect(dataObject.recommendation_event_id).toEqual('mocked-uuid');
-      expect(dataObject.getDataObject).toBeUndefined();
+      expect(dataObject.data).toBeUndefined();
       expect(dataObject.endpoint).toBeUndefined();
+    });
+
+    it('should throw an error when data is not defined', () => {
+      expect(() => setupRecommendationsInteractionEvent('post', true, null, true)).toThrowError(
+        'The data property cannot be null or undefined',
+      );
+    });
+
+    it('should throw an error when data is an array but method is not a POST', () => {
+      expect(() => setupRecommendationsInteractionEvent('put', true, [], true)).toThrowError(
+        "Array 'data' is only allowed for 'post' requests",
+      );
+    });
+
+    it('should throw an error when data is an empty array and method is a POST', () => {
+      expect(() => setupRecommendationsInteractionEvent('post', true, [], true)).toThrowError(
+        "The 'data' array cannot be empty",
+      );
+    });
+
+    it('should throw an error when data is any of any type other than array or object', () => {
+      expect(() =>
+        setupRecommendationsInteractionEvent('post', true, 'Invalid data type', true),
+      ).toThrowError("The 'data' must be either a non-null object or an array of objects");
+    });
+
+    it('should throw an error when submitted data has missing fields', () => {
+      expect(() => setupRecommendationsInteractionEvent('patch', false, {}, true)).toThrowError(
+        /The 'data' object is missing required property: \w+/,
+      );
+    });
+
+    it('should throw an error when submitted data array has invalid data', () => {
+      expect(() => setupRecommendationsInteractionEvent('post', false, [null], true)).toThrowError(
+        /Item at position \w+ in 'data' is not a valid object/,
+      );
+    });
+
+    it('should throw an error when submitted data array has valid data but with missing fields', () => {
+      expect(() => setupRecommendationsInteractionEvent('post', false, [{}], true)).toThrowError(
+        /Missing required property in 'data': \w+ at position: \w+/,
+      );
     });
 
     it('should throw an error when endpoint is not defined', () => {
@@ -273,7 +327,18 @@ describe('FeedBackUtility Tests', () => {
         expect(result).toEqual('Mocked API Response');
         expect(client.post).toHaveBeenCalledWith(
           recommendationsInteractionEvent.getUrl(),
-          recommendationsInteractionEvent.getDataObject(),
+          recommendationsInteractionEvent.getData(),
+        );
+      });
+
+      it('should send Bulk POST request successfully', async () => {
+        client.post.mockResolvedValue(Promise.resolve({ data: 'Mocked API Response' }));
+        recommendationsInteractionEvent = setupRecommendationsInteractionEvent('post', true);
+        const result = await sendRequest(recommendationsInteractionEvent);
+        expect(result).toEqual('Mocked API Response');
+        expect(client.post).toHaveBeenCalledWith(
+          recommendationsInteractionEvent.getUrl(),
+          recommendationsInteractionEvent.getData(),
         );
       });
 
@@ -284,7 +349,7 @@ describe('FeedBackUtility Tests', () => {
         expect(result).toEqual('Mocked API Response');
         expect(client.put).toHaveBeenCalledWith(
           recommendationsInteractionEvent.getUrl(),
-          recommendationsInteractionEvent.getDataObject(),
+          recommendationsInteractionEvent.getData(),
         );
       });
 
@@ -295,7 +360,7 @@ describe('FeedBackUtility Tests', () => {
         expect(result).toEqual('Mocked API Response');
         expect(client.patch).toHaveBeenCalledWith(
           recommendationsInteractionEvent.getUrl(),
-          recommendationsInteractionEvent.getDataObject(),
+          recommendationsInteractionEvent.getData(),
         );
       });
 
@@ -307,7 +372,7 @@ describe('FeedBackUtility Tests', () => {
         );
         expect(client.post).toHaveBeenCalledWith(
           recommendationsInteractionEvent.getUrl(),
-          recommendationsInteractionEvent.getDataObject(),
+          recommendationsInteractionEvent.getData(),
         );
       });
 
@@ -319,7 +384,7 @@ describe('FeedBackUtility Tests', () => {
         );
         expect(client.put).toHaveBeenCalledWith(
           recommendationsInteractionEvent.getUrl(),
-          recommendationsInteractionEvent.getDataObject(),
+          recommendationsInteractionEvent.getData(),
         );
       });
 
@@ -331,7 +396,7 @@ describe('FeedBackUtility Tests', () => {
         );
         expect(client.patch).toHaveBeenCalledWith(
           recommendationsInteractionEvent.getUrl(),
-          recommendationsInteractionEvent.getDataObject(),
+          recommendationsInteractionEvent.getData(),
         );
       });
 
