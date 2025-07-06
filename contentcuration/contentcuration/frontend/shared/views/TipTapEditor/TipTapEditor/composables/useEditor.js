@@ -4,7 +4,6 @@ import StarterKitExtension from '@tiptap/starter-kit';
 import UnderlineExtension from '@tiptap/extension-underline';
 import { Superscript } from '@tiptap/extension-superscript';
 import { Subscript } from '@tiptap/extension-subscript';
-import { BubbleMenu } from '@tiptap/extension-bubble-menu';
 import { Small } from '../extensions/SmallTextExtension';
 import { Image } from '../extensions/Image';
 import { CodeBlockSyntaxHighlight } from '../extensions/CodeBlockSyntaxHighlight';
@@ -14,8 +13,7 @@ export function useEditor() {
   const editor = ref(null);
   const isReady = ref(false);
 
-  // Accept the bubble menu element as an argument
-  const initializeEditor = (bubbleMenuElement, isLinkEditorOpen) => {
+  const initializeEditor = () => {
     editor.value = new Editor({
       extensions: [
         StarterKitExtension.configure({
@@ -29,17 +27,6 @@ export function useEditor() {
         Subscript,
         Image,
         CustomLink, // Use our custom Link extension
-        BubbleMenu.configure({
-          // Use the passed-in element directly
-          element: bubbleMenuElement,
-          tippyOptions: {
-            placement: 'bottom-start',
-            inertia: true,
-          },
-          shouldShow: ({ editor }) => {
-            return !isLinkEditorOpen.value && editor.isActive('link');
-          },
-        }),
       ],
       content: '<p></p>',
       editorProps: {

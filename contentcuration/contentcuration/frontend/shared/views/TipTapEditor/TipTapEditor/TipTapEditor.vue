@@ -6,18 +6,19 @@
       @insert-link="linkHandler.openLinkEditor()"
     />
 
-    <!-- This div holds the bubble menu component and is passed to the editor -->
-    <div ref="bubbleMenu">
+    <div
+      v-if="linkHandler.isBubbleMenuOpen.value"
+      :style="linkHandler.popoverStyle.value"
+    >
       <LinkBubbleMenu
         v-if="isReady"
         :editor="editor"
       />
     </div>
 
-    <!-- The Popover for creating/editing links -->
     <div
       v-if="linkHandler.isEditorOpen.value"
-      :style="linkHandler.editorStyle.value"
+      :style="linkHandler.popoverStyle.value"
     >
       <LinkEditor
         :mode="linkHandler.editorMode.value"
@@ -56,7 +57,7 @@
 
 <script>
 
-  import { defineComponent, provide, onMounted, ref } from 'vue';
+  import { defineComponent, provide, onMounted } from 'vue';
   import EditorToolbar from './components/EditorToolbar.vue';
   import EditorContentWrapper from './components/EditorContentWrapper.vue';
   import { useEditor } from './composables/useEditor';
@@ -80,12 +81,12 @@
       const { editor, isReady, initializeEditor } = useEditor();
       provide('editor', editor);
       provide('isReady', isReady);
-      const bubbleMenu = ref(null);
+
+      const linkHandler = useLinkHandling(editor);
+      provide('linkHandler', linkHandler);
 
       onMounted(() => {
-        if (bubbleMenu.value) {
-          initializeEditor(bubbleMenu.value, linkHandler.isEditorOpen);
-        }
+        initializeEditor();
       });
 
       const {
@@ -100,11 +101,8 @@
         handleRemove,
       } = useImageHandling(editor);
 
-      const linkHandler = useLinkHandling(editor);
-      provide('linkHandler', linkHandler);
-
       const handleDrop = event => {
-        const file = event.dataTransfer?.files[0];
+        const file = event.dataTransfer.files[0];
         if (file) {
           openCreateModal(file);
         }
@@ -124,7 +122,6 @@
         isModalCentered,
         linkHandler,
         editor,
-        bubbleMenu,
       };
     },
   });

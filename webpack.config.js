@@ -9,8 +9,6 @@ const baseConfig = require('kolibri-tools/lib/webpack.config.base');
 const { merge } = require('webpack-merge');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
-const tippyPath = path.dirname(require.resolve('tippy.js/package.json', { paths: [require.resolve('@tiptap/core')] }));
-
 const BundleTracker = require('kolibri-tools/lib/webpackBundleTracker');
 const CircularDependencyPlugin = require('circular-dependency-plugin');
 
@@ -150,11 +148,6 @@ module.exports = (env = {}) => {
         // needed to reference Vuetify styles in the shadow DOM
         vuetify: path.resolve('node_modules', 'vuetify'),
         static: staticFilesDir,
-        // Temp fix
-        // Added this alias to resolve the tippy.js conflict.
-        // It redirects the old, invalid import path from kolibri-design-system
-        // to the correct file in the newer tippy.js version required by Tiptap.
-        'tippy.js/umd': path.join(tippyPath, 'dist/tippy.umd.js'),
       },
       extensions: ['.js', '.vue', '.css'],
       symlinks: true,
