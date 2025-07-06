@@ -336,6 +336,7 @@
 
   .close-button {
     font-size: 2rem;
+    line-height: 1;
     color: black;
     cursor: pointer;
     background: none;
@@ -413,7 +414,6 @@
   .select-file-link {
     flex-shrink: 0;
     margin-left: 1rem;
-    font-weight: 400;
     color: #4368f5;
     text-decoration: underline;
     cursor: pointer;
@@ -502,6 +502,13 @@
   /* Drop Zone */
   .drop-zone-text {
     font-size: 12px;
+  }
+
+  button:focus-visible,
+  input:focus {
+    background: #e6e6e6;
+    border-radius: 4px;
+    outline: 2px solid #0097f2;
   }
 
 </style>

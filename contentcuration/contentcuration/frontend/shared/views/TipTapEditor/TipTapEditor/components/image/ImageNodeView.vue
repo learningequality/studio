@@ -259,4 +259,10 @@
     opacity: 1;
   }
 
+  button:focus-visible {
+    background: #e6e6e6;
+    border-radius: 4px;
+    outline: 2px solid #0097f2;
+  }
+
 </style>

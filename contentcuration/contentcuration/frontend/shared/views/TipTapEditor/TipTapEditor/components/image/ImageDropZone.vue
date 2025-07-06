@@ -80,7 +80,9 @@
   }
 
   .drop-zone:focus {
-    outline: 2px solid #3498db;
+    background: #e6e6e6;
+    border-radius: 4px;
+    outline: 2px solid #0097f2;
   }
 
 </style>

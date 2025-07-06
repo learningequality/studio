@@ -20,6 +20,7 @@
       :style="linkHandler.editorStyle.value"
     >
       <LinkEditor
+        :mode="linkHandler.editorMode.value"
         :initial-state="linkHandler.editorInitialState.value"
         @save="linkHandler.saveLink"
         @remove="linkHandler.removeLink"

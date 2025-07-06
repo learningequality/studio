@@ -1,9 +1,10 @@
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted, onUnmounted } from 'vue';
 
 export function useLinkHandling(editor) {
   const isEditorOpen = ref(false);
   const editorStyle = ref({});
   const editorInitialState = ref({ text: '', href: '' });
+  const editorMode = ref('create');
   const savedSelection = ref(null);
 
   const calculatePosition = () => {
@@ -19,18 +20,18 @@ export function useLinkHandling(editor) {
     };
   };
 
-  const openLinkEditor = () => {
+  const openLinkEditor = (mode = 'create') => {
     if (!editor.value) return;
     
     const { state } = editor.value;
     const { from, to, empty } = state.selection;
-    savedSelection.value = { from, to };
+
     editorStyle.value = calculatePosition();
     editorInitialState.value = {
       href: editor.value.getAttributes('link').href || '',
       text: empty ? '' : state.doc.textBetween(from, to, ' '),
     };
-    
+
     editor.value.commands.focus(); // Force a transaction to close the bubble menu
     isEditorOpen.value = true;
   };
@@ -38,27 +39,21 @@ export function useLinkHandling(editor) {
   const closeLinkEditor = () => {
     isEditorOpen.value = false;
     savedSelection.value = null;
+    editorMode.value = 'create'; // Reset to default
   };
 
   const saveLink = ({ text, href }) => {
-    if (!editor.value || !href || !savedSelection.value) {
+    if (!editor.value || !savedSelection.value) {
       return closeLinkEditor();
     }
 
     const { from, to } = savedSelection.value;
 
-    editor.value
-      .chain()
-      .focus()
-      // 1. First, select the range we originally had.
-      .setTextSelection({ from, to })
-      // 2. Insert the new text, which will replace the selection.
-      .insertContent(text)
-      // 3. re-select the text we just inserted.
-      // The new 'to' position is the original 'from' + the new text's length.
-      .setTextSelection({ from, to: from + text.length })
-      .setLink({ href })
-      .run();
+    const tr = editor.value.state.tr;
+    const linkMark = editor.value.state.schema.marks.link.create({ href });
+
+    tr.replaceWith(from, to, editor.value.state.schema.text(text, [linkMark]));
+    editor.value.view.dispatch(tr);
 
     closeLinkEditor();
   };
@@ -84,10 +79,27 @@ export function useLinkHandling(editor) {
     }
   });
 
+  const handleOpenLinkEditorEvent = () => {
+    openLinkEditor();
+  };
+
+  onMounted(() => {
+    if (editor?.value) {
+      editor.value.on('open-link-editor', handleOpenLinkEditorEvent);
+    }
+  });
+
+  onUnmounted(() => {
+    if (editor?.value) {
+      editor.value.off('open-link-editor', handleOpenLinkEditorEvent);
+    }
+  });
+
   return {
     isEditorOpen,
     editorStyle,
     editorInitialState,
+    editorMode,
     openLinkEditor,
     closeLinkEditor,
     saveLink,

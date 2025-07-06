@@ -1,4 +1,4 @@
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 
 export function useImageHandling(editor) {
   const modalMode = ref(null); // 'create' or 'edit'
@@ -83,6 +83,22 @@ export function useImageHandling(editor) {
     }
     closeModal();
   };
+
+  watch(modalMode, mode => {
+    const handler = event => {
+      const popover = document.querySelector('.image-upload-modal');
+      if (popover && !popover.contains(event.target)) {
+        closeModal();
+      }
+    };
+    if (mode) {
+      setTimeout(() => {
+        document.addEventListener('mousedown', handler, true);
+      }, 0);
+    } else {
+      document.removeEventListener('mousedown', handler, true);
+    }
+  });
 
   onMounted(() => {
     if (editor?.value) {

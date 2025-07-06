@@ -8,7 +8,7 @@
     aria-modal="true"
   >
     <div class="modal-header">
-      <h3 :id="headingId">{{ addLink$() }}</h3>
+      <h3 :id="headingId">{{ isEditMode ? editLink$() : addLink$() }}</h3>
       <button
         class="close-button"
         :title="close$()"
@@ -41,7 +41,23 @@
       </div>
     </div>
 
-    <div class="footer">
+    <div
+      class="footer"
+      :class="{ 'edit-mode': isEditMode }"
+    >
+      <button
+        v-if="isEditMode"
+        class="remove-link-button"
+        @click="$emit('remove')"
+      >
+        <img
+          src="../../../assets/icon-linkOff.svg"
+          aria-hidden="true"
+          class="remove-link-icon"
+        >
+        <span> {{ removeLink$() }} </span>
+      </button>
+
       <button
         class="save-button"
         :disabled="!validateForm()"
@@ -57,17 +73,20 @@
 
 <script>
 
-  import { defineComponent, ref, watch } from 'vue';
+  import { defineComponent, ref, watch, computed } from 'vue';
   import { useFocusTrap } from '../../composables/useFocusTrap';
   import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
 
   export default defineComponent({
     name: 'LinkEditor',
     setup(props, { emit }) {
-      const { addLink$, close$, text$, link$, save$, closeModal$ } = getTipTapEditorStrings();
+      const { addLink$, close$, text$, link$, save$, closeModal$, editLink$, removeLink$ } =
+        getTipTapEditorStrings();
       const rootEl = ref(null);
       const formData = ref({ text: '', href: '' });
       const headingId = `link-editor-heading-${Math.random().toString(36).substr(2, 9)}`;
+
+      const isEditMode = computed(() => props.mode === 'edit');
 
       watch(
         () => props.initialState,
@@ -92,6 +111,7 @@
         formData,
         onSave,
         validateForm,
+        isEditMode,
         headingId,
         addLink$,
         close$,
@@ -99,9 +119,12 @@
         link$,
         save$,
         closeModal$,
+        editLink$,
+        removeLink$,
       };
     },
     props: {
+      mode: { type: String, default: 'create' },
       initialState: { type: Object, required: true },
     },
     emits: ['save', 'remove', 'close'],
@@ -152,11 +175,6 @@
     border: 0;
   }
 
-  .close-button:focus-visible {
-    outline: 2px solid #0097f2;
-    outline-offset: 2px;
-  }
-
   .form-group {
     position: relative;
     display: flex;
@@ -183,13 +201,18 @@
   }
 
   .form-group input:focus {
+    border-bottom: 0;
     outline: 2px solid #0097f2;
-    outline-offset: 2px;
+    outline-offset: 1px;
   }
 
   .footer {
     display: flex;
     justify-content: flex-end;
+  }
+
+  .footer.edit-mode {
+    justify-content: space-between;
   }
 
   .save-button {
@@ -207,9 +230,27 @@
     cursor: not-allowed;
   }
 
-  .save-button:focus-visible {
+  .remove-link-button {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    color: #4368f5;
+    text-decoration: underline;
+    cursor: pointer;
+    background: none;
+    border: 0;
+    border-radius: 2px;
+  }
+
+  .remove-link-icon {
+    filter: brightness(0) saturate(100%) invert(32%) sepia(97%) saturate(2640%) hue-rotate(230deg)
+      brightness(103%) contrast(94%);
+  }
+
+  button:focus-visible {
+    background: #e6e6e6;
+    border-radius: 4px;
     outline: 2px solid #0097f2;
-    outline-offset: 2px;
   }
 
 </style>

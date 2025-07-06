@@ -129,7 +129,6 @@
     background: #e6e6e6;
     border-radius: 4px;
     outline: 2px solid #0097f2;
-    outline-offset: 2px;
   }
 
   .toolbar-icon {

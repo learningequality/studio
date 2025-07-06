@@ -84,7 +84,7 @@
 
       return {
         href,
-        onEdit: openLinkEditor,
+        onEdit: () => openLinkEditor('edit'),
         onRemove: removeLink,
         copyToClipboard,
         goToLink$,
@@ -149,7 +149,6 @@
   .bubble-menu-button:focus-visible {
     background: #e6e6e6;
     outline: 2px solid #0097f2;
-    outline-offset: 2px;
   }
 
   .bubble-menu-button img {
