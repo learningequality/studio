@@ -2564,22 +2564,20 @@ class CommunityLibrarySubmission(models.Model):
         default=community_library_submission.STATUS_PENDING,
     )
 
-    def clean(self):
-        """
-        Validate that the submission author is an editor of the channel.
-        This cannot be expressed as a constraint because traversing
-        related fields is not supported in constraints. Note that this
-        method is NOT called automatically on every save.
-        """
-        super().clean()
+    def save(self, *args, **kwargs):
+        # Validate on save that the submission author is an editor of the channel.
+        # This cannot be expressed as a constraint because traversing
+        # related fields is not supported in constraints.
         if not self.channel.editors.filter(pk=self.author.pk).exists():
             raise ValidationError(
                 _(
                     "The submission author must be an editor of the channel the submission "
-                    "belong to"
+                    "belongs to"
                 ),
                 code="author_not_editor",
             )
+
+        super().save(*args, **kwargs)
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):

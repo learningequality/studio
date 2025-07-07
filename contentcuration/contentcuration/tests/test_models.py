@@ -642,7 +642,7 @@ class CommunityLibrarySubmissionTestCase(PermissionQuerysetTestCase):
         )
         self.assertFalse(queryset.exists())
 
-    def test_filter_edit_queryset__author__channel_editor(self):
+    def test_filter_edit_queryset__author(self):
         submission_a = testdata.community_library_submission()
         submission_b = testdata.community_library_submission()
 
@@ -651,18 +651,6 @@ class CommunityLibrarySubmissionTestCase(PermissionQuerysetTestCase):
         )
         self.assertQuerysetContains(queryset, pk=submission_a.id)
         self.assertQuerysetDoesNotContain(queryset, pk=submission_b.id)
-
-    def test_filter_edit_queryset__author__not_channel_editor(self):
-        submission = testdata.community_library_submission()
-
-        user = testdata.user(email="new@user.com")
-        submission.author = user
-        submission.save()
-
-        queryset = CommunityLibrarySubmission.filter_edit_queryset(
-            self.base_queryset, user=user
-        )
-        self.assertFalse(queryset.exists())
 
     def test_filter_edit_queryset__admin(self):
         submission_a = testdata.community_library_submission()
