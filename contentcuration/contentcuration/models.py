@@ -2565,8 +2565,9 @@ class CommunityLibrarySubmission(models.Model):
     )
 
     def save(self, *args, **kwargs):
-        # Validate on save that the submission author is an editor of the channel.
-        # This cannot be expressed as a constraint because traversing
+        # Validate on save that the submission author is an editor of the channel
+        # and that the version is not greater than the current channel version.
+        # These cannot be expressed as constraints because traversing
         # related fields is not supported in constraints.
         if not self.channel.editors.filter(pk=self.author.pk).exists():
             raise ValidationError(
@@ -2575,6 +2576,19 @@ class CommunityLibrarySubmission(models.Model):
                     "belongs to"
                 ),
                 code="author_not_editor",
+            )
+
+        if self.channel_version <= 0:
+            raise ValidationError(
+                _("Channel version must be positive"),
+                code="non_positive_channel_version",
+            )
+        if self.channel_version > self.channel.version:
+            raise ValidationError(
+                _(
+                    "Channel version must be less than or equal to the current channel version"
+                ),
+                code="impossibly_high_channel_version",
             )
 
         super().save(*args, **kwargs)

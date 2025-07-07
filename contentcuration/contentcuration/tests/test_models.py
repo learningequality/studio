@@ -559,6 +559,7 @@ class CommunityLibrarySubmissionTestCase(PermissionQuerysetTestCase):
         channel = testdata.channel()
         author = testdata.user()
         channel.editors.add(author)
+        channel.version = 1
         channel.save()
 
         country = testdata.country()
@@ -575,6 +576,34 @@ class CommunityLibrarySubmissionTestCase(PermissionQuerysetTestCase):
 
         submission.full_clean()
         submission.save()
+
+    def test_save__author_not_editor(self):
+        submission = testdata.community_library_submission()
+        user = testdata.user("some@email.com")
+        submission.author = user
+        with self.assertRaises(ValidationError):
+            submission.save()
+
+    def test_save__nonpositive_channel_version(self):
+        submission = testdata.community_library_submission()
+        submission.channel_version = 0
+        with self.assertRaises(ValidationError):
+            submission.save()
+
+    def test_save__matching_channel_version(self):
+        submission = testdata.community_library_submission()
+        submission.channel.version = 5
+        submission.channel.save()
+        submission.channel_version = 5
+        submission.save()
+
+    def test_save__impossibly_high_channel_version(self):
+        submission = testdata.community_library_submission()
+        submission.channel.version = 5
+        submission.channel.save()
+        submission.channel_version = 6
+        with self.assertRaises(ValidationError):
+            submission.save()
 
     def test_filter_view_queryset__anonymous(self):
         _ = testdata.community_library_submission()

@@ -218,6 +218,7 @@ def community_library_submission():
     channel_obj = channel(name=random_string())
     user_obj = user(email=random_string())
     channel_obj.editors.add(user_obj)
+    channel_obj.version = 1
     channel_obj.save()
 
     return mixer.blend(
@@ -226,6 +227,7 @@ def community_library_submission():
         author=user_obj,
         status=community_library_submission_constants.STATUS_PENDING,
         categories=list(),
+        channel_version=1,
     )
 
 
