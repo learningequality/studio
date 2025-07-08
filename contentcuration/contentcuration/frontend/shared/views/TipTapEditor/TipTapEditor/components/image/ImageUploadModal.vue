@@ -223,9 +223,6 @@
           const { src, file: processedFile } = await processFile(selectedFile);
           previewSrc.value = src;
           file.value = processedFile;
-          if (!altText.value) {
-            altText.value = processedFile.name.split('.').slice(0, -1).join('.');
-          }
           modalState.value = 'preview';
         } catch (error) {
           alert(error.message);

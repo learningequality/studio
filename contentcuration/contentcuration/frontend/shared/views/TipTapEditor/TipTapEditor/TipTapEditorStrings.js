@@ -191,7 +191,7 @@ const MESSAGES = {
     context: 'Label for the alt text input field.',
   },
   altTextPlaceholder: {
-    message: 'Describe the image...',
+    message: 'Describe your image...',
     context: 'Placeholder text for the alt text input field.',
   },
   altTextDescription: {
