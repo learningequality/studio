@@ -18,7 +18,7 @@
       </template>
     </AppBar>
     <StudioOfflineAlert
-      :offset="112"
+      :offset="104"
     />
     <VContent>
       <VContainer
