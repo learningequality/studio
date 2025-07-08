@@ -2571,23 +2571,19 @@ class CommunityLibrarySubmission(models.Model):
         # related fields is not supported in constraints.
         if not self.channel.editors.filter(pk=self.author.pk).exists():
             raise ValidationError(
-                _(
-                    "The submission author must be an editor of the channel the submission "
-                    "belongs to"
-                ),
+                "The submission author must be an editor of the channel the submission "
+                "belongs to",
                 code="author_not_editor",
             )
 
         if self.channel_version <= 0:
             raise ValidationError(
-                _("Channel version must be positive"),
+                "Channel version must be positive",
                 code="non_positive_channel_version",
             )
         if self.channel_version > self.channel.version:
             raise ValidationError(
-                _(
-                    "Channel version must be less than or equal to the current channel version"
-                ),
+                "Channel version must be less than or equal to the current channel version",
                 code="impossibly_high_channel_version",
             )
 
