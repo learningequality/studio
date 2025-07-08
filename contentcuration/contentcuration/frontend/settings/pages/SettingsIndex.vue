@@ -17,8 +17,7 @@
         </VTab>
       </template>
     </AppBar>
-    <OfflineText
-      toolbar
+    <StudioOfflineAlert
       :offset="112"
     />
     <VContent>
@@ -49,12 +48,12 @@
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import AppBar from 'shared/views/AppBar';
   import { routerMixin } from 'shared/mixins';
-  import OfflineText from 'shared/views/OfflineText';
+  import StudioOfflineAlert from 'shared/views/StudioOfflineAlert';
   import PolicyModals from 'shared/views/policies/PolicyModals';
 
   export default {
     name: 'SettingsIndex',
-    components: { GlobalSnackbar, AppBar, OfflineText, PolicyModals },
+    components: { GlobalSnackbar, AppBar, StudioOfflineAlert, PolicyModals },
     mixins: [routerMixin],
     computed: {
       ...mapState({
