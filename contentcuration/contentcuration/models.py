@@ -66,6 +66,7 @@ from rest_framework.fields import get_attribute
 from rest_framework.utils.encoders import JSONEncoder
 
 from contentcuration.constants import channel_history
+from contentcuration.constants import community_library_submission
 from contentcuration.constants import completion_criteria
 from contentcuration.constants import feedback
 from contentcuration.constants import user_history
@@ -2530,6 +2531,91 @@ class Language(models.Model):
 
     def __str__(self):
         return self.ietf_name()
+
+
+class Country(models.Model):
+    code = models.CharField(
+        max_length=2, primary_key=True, help_text="alpha-2 country code"
+    )
+    name = models.CharField(max_length=100, unique=True)
+
+
+class CommunityLibrarySubmission(models.Model):
+    description = models.TextField(blank=True)
+    channel = models.ForeignKey(
+        Channel,
+        related_name="community_library_submissions",
+        on_delete=models.CASCADE,
+    )
+    channel_version = models.PositiveIntegerField()
+    author = models.ForeignKey(
+        User,
+        related_name="community_library_submissions",
+        on_delete=models.CASCADE,
+    )
+    countries = models.ManyToManyField(
+        Country, related_name="community_library_submissions"
+    )
+    categories = models.JSONField(blank=True, null=True)
+    date_created = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(
+        max_length=20,
+        choices=community_library_submission.status_choices,
+        default=community_library_submission.STATUS_PENDING,
+    )
+
+    def save(self, *args, **kwargs):
+        # Validate on save that the submission author is an editor of the channel
+        # and that the version is not greater than the current channel version.
+        # These cannot be expressed as constraints because traversing
+        # related fields is not supported in constraints.
+        if not self.channel.editors.filter(pk=self.author.pk).exists():
+            raise ValidationError(
+                "The submission author must be an editor of the channel the submission "
+                "belongs to",
+                code="author_not_editor",
+            )
+
+        if self.channel_version <= 0:
+            raise ValidationError(
+                "Channel version must be positive",
+                code="non_positive_channel_version",
+            )
+        if self.channel_version > self.channel.version:
+            raise ValidationError(
+                "Channel version must be less than or equal to the current channel version",
+                code="impossibly_high_channel_version",
+            )
+
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def filter_view_queryset(cls, queryset, user):
+        if user.is_anonymous:
+            return queryset.none()
+
+        if user.is_admin:
+            return queryset
+
+        return queryset.filter(channel__editors=user)
+
+    @classmethod
+    def filter_edit_queryset(cls, queryset, user):
+        if user.is_anonymous:
+            return queryset.none()
+
+        if user.is_admin:
+            return queryset
+
+        return queryset.filter(author=user, channel__editors=user)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["channel", "channel_version"],
+                name="unique_channel_with_channel_version",
+            ),
+        ]
 
 
 ASSESSMENT_ID_INDEX_NAME = "assessment_id_idx"

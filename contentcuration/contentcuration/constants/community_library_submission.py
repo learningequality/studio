@@ -1,0 +1,11 @@
+STATUS_PENDING = "PENDING"
+STATUS_APPROVED = "APPROVED"
+STATUS_REJECTED = "REJECTED"
+STATUS_LIVE = "LIVE"
+
+status_choices = (
+    (STATUS_PENDING, "Pending"),
+    (STATUS_APPROVED, "Approved"),
+    (STATUS_REJECTED, "Rejected"),
+    (STATUS_LIVE, "Live"),
+)
