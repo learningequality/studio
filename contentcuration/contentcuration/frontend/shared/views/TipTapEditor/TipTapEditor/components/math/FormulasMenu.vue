@@ -3,12 +3,20 @@
   <div
     ref="rootEl"
     class="formulas-menu"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="dialog-title"
     @click.stop
   >
     <div class="card">
       <div class="card-title">
         <div class="title-layout">
-          <div class="title-text">{{ formulasMenuTitle$() }}</div>
+          <div
+            id="dialog-title"
+            class="title-text"
+          >
+            {{ formulasMenuTitle$() }}
+          </div>
           <button
             class="close-button"
             :aria-label="closeModal$()"
@@ -21,10 +29,16 @@
 
       <div class="card-content">
         <div class="symbol-editor">
-          <math-field ref="mathfieldEl" />
+          <math-field
+            ref="mathfieldEl"
+            aria-label="Math formula editor"
+          />
         </div>
 
-        <div class="info-bar">
+        <div
+          class="info-bar"
+          aria-live="polite"
+        >
           {{ infoText }}
         </div>
 
@@ -38,12 +52,17 @@
               {{ symbolsGroup.title }}
             </div>
 
-            <div class="symbol-grid">
+            <div
+              class="symbol-grid"
+              role="group"
+              :aria-label="symbolsGroup.title + ' symbols'"
+            >
               <button
                 v-for="(symbol, symbolIdx) in symbolsGroup.symbols"
                 :key="symbolIdx"
                 :class="getSymbolClasses(symbolsGroup)"
                 class="symbol-button"
+                :aria-label="symbol.title"
                 @click="onSymbolClick(symbolsGroupIdx, symbolIdx)"
                 @mouseenter="onSymbolMouseEnter(symbolsGroupIdx, symbolIdx)"
                 @mouseleave="onSymbolMouseLeave"
@@ -62,6 +81,7 @@
       <footer>
         <button
           class="insert-button"
+          :disabled="isFormulaEmpty"
           @click="onSave"
         >
           {{ insert$() }}
@@ -75,7 +95,7 @@
 
 <script>
 
-  import { ref, onMounted, defineComponent } from 'vue';
+  import { ref, onMounted, defineComponent, computed } from 'vue';
   import 'mathlive';
   import { useFocusTrap } from '../../composables/useFocusTrap';
   import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
@@ -90,6 +110,19 @@
       const infoText = ref('');
 
       useFocusTrap(rootEl);
+
+      const currentLatex = ref('');
+
+      // Watch for changes in the mathfield
+      const updateLatex = () => {
+        if (mathfieldEl.value) {
+          currentLatex.value = mathfieldEl.value.getValue('latex');
+        }
+      };
+
+      const isFormulaEmpty = computed(() => {
+        return !currentLatex.value || currentLatex.value.trim() === '';
+      });
 
       onMounted(() => {
         if (typeof window !== 'undefined' && window.MathfieldElement) {
@@ -108,6 +141,10 @@
           mathfieldEl.value.mathVirtualKeyboardPolicy = 'manual';
           mathfieldEl.value.value = props.initialLatex;
           mathfieldEl.value.focus();
+
+          // Listen for input changes
+          mathfieldEl.value.addEventListener('input', updateLatex);
+          currentLatex.value = props.initialLatex;
         }
       });
 
@@ -136,8 +173,14 @@
 
       const onSymbolClick = (symbolsGroupIdx, symbolIdx) => {
         const symbol = getSymbol(symbolsGroupIdx, symbolIdx);
+        const symbolsGroup = symbolGroups.value[symbolsGroupIdx];
+
         if (mathfieldEl.value) {
-          mathfieldEl.value.executeCommand(['insert', symbol.preview]);
+          // Use template if available, otherwise use preview
+          const valueToInsert =
+            symbolsGroup.title === 'Formulas' && symbol.template ? symbol.template : symbol.preview;
+
+          mathfieldEl.value.executeCommand(['insert', valueToInsert]);
           mathfieldEl.value.focus();
         }
       };
@@ -167,6 +210,7 @@
         formulasMenuTitle$,
         insert$,
         closeModal$,
+        isFormulaEmpty,
       };
     },
     props: {
@@ -339,6 +383,12 @@
     background: #e6e6e6;
     border: 1px solid #e0e0e0;
     border-radius: 2px;
+  }
+
+  .insert-button:disabled {
+    color: #bdbdbd;
+    cursor: not-allowed;
+    background: #e0e0e0;
   }
 
 </style>
