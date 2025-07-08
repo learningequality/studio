@@ -1,0 +1,340 @@
+<template>
+
+  <div
+    ref="rootEl"
+    class="formulas-menu"
+    @click.stop
+  >
+    <div class="card">
+      <div class="card-title">
+        <div class="title-layout">
+          <div class="title-text">{{ formulasMenuTitle$() }}</div>
+          <button
+            class="close-button"
+            :aria-label="closeModal$()"
+            @click="$emit('close')"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+
+      <div class="card-content">
+        <div class="symbol-editor">
+          <math-field ref="mathfieldEl" />
+        </div>
+
+        <div class="info-bar">
+          {{ infoText }}
+        </div>
+
+        <div class="symbols-list">
+          <div
+            v-for="(symbolsGroup, symbolsGroupIdx) in symbolGroups"
+            :key="symbolsGroupIdx"
+            class="symbol-group"
+          >
+            <div class="group-title">
+              {{ symbolsGroup.title }}
+            </div>
+
+            <div class="symbol-grid">
+              <button
+                v-for="(symbol, symbolIdx) in symbolsGroup.symbols"
+                :key="symbolIdx"
+                :class="getSymbolClasses(symbolsGroup)"
+                class="symbol-button"
+                @click="onSymbolClick(symbolsGroupIdx, symbolIdx)"
+                @mouseenter="onSymbolMouseEnter(symbolsGroupIdx, symbolIdx)"
+                @mouseleave="onSymbolMouseLeave"
+              >
+                <math-field
+                  read-only
+                  tabindex="-1"
+                  :value="symbol.preview"
+                />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <button
+          class="insert-button"
+          @click="onSave"
+        >
+          {{ insert$() }}
+        </button>
+      </footer>
+    </div>
+  </div>
+
+</template>
+
+
+<script>
+
+  import { ref, onMounted, defineComponent } from 'vue';
+  import 'mathlive';
+  import { useFocusTrap } from '../../composables/useFocusTrap';
+  import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
+  import symbolsData from './symbols.json';
+
+  export default defineComponent({
+    setup(props, { emit }) {
+      const rootEl = ref(null);
+      const mathfieldEl = ref(null);
+      const symbolGroups = ref(symbolsData);
+      const infoText = ref('');
+
+      useFocusTrap(rootEl);
+
+      onMounted(() => {
+        if (typeof window !== 'undefined' && window.MathfieldElement) {
+          // Disable sounds globally
+          window.MathfieldElement.soundsDirectory = null;
+
+          // Disable virtual keyboard globally
+          if (window.mathVirtualKeyboard) {
+            window.mathVirtualKeyboard.plonkSound = null;
+            window.mathVirtualKeyboard.keypressSound = null;
+          }
+        }
+
+        if (mathfieldEl.value) {
+          // Configure the specific mathfield instance
+          mathfieldEl.value.mathVirtualKeyboardPolicy = 'manual';
+          mathfieldEl.value.value = props.initialLatex;
+          mathfieldEl.value.focus();
+        }
+      });
+
+      const getSymbol = (symbolsGroupIdx, symbolIdx) => {
+        return symbolGroups.value[symbolsGroupIdx].symbols[symbolIdx];
+      };
+
+      const getSymbolClasses = symbolsGroup => {
+        const classes = ['symbol'];
+
+        if (['Formulas', 'Lines'].includes(symbolsGroup.title)) {
+          classes.push('equation');
+        }
+
+        return classes.join(' ');
+      };
+
+      const onSymbolMouseEnter = (symbolsGroupIdx, symbolIdx) => {
+        const symbol = getSymbol(symbolsGroupIdx, symbolIdx);
+        infoText.value = `${symbol.title} (${symbol.key})`;
+      };
+
+      const onSymbolMouseLeave = () => {
+        infoText.value = '';
+      };
+
+      const onSymbolClick = (symbolsGroupIdx, symbolIdx) => {
+        const symbol = getSymbol(symbolsGroupIdx, symbolIdx);
+        if (mathfieldEl.value) {
+          mathfieldEl.value.executeCommand(['insert', symbol.preview]);
+          mathfieldEl.value.focus();
+        }
+      };
+
+      const onSave = () => {
+        if (mathfieldEl.value) {
+          const newLatex = mathfieldEl.value.getValue('latex');
+          emit('save', newLatex);
+        }
+      };
+
+      const { formulasMenuTitle$, insert$, closeModal$ } = getTipTapEditorStrings();
+
+      return {
+        rootEl,
+        mathfieldEl,
+        symbolGroups,
+        infoText,
+        getSymbolClasses,
+        onSymbolMouseEnter,
+        onSymbolMouseLeave,
+        onSymbolClick,
+        onSave,
+        formulasMenuTitle$,
+        insert$,
+        closeModal$,
+      };
+    },
+    props: {
+      initialLatex: {
+        type: String,
+        default: '',
+      },
+    },
+  });
+
+</script>
+
+
+<style scoped>
+
+  .formulas-menu {
+    position: relative;
+    max-width: 500px;
+  }
+
+  .card {
+    overflow: hidden;
+    background: white;
+    border-radius: 8px;
+    box-shadow:
+      0 10px 20px rgba(0, 0, 0, 0.19),
+      0 6px 6px rgba(0, 0, 0, 0.23);
+  }
+
+  .card-title {
+    position: relative;
+    z-index: 500000;
+    padding: 16px 16px 8px;
+  }
+
+  .title-layout {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .title-text {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .card-content {
+    position: relative;
+  }
+
+  .close-button {
+    font-size: 2rem;
+    line-height: 1;
+    color: black;
+    cursor: pointer;
+    background: none;
+    border: 0;
+  }
+
+  .symbol-editor {
+    min-height: 20px;
+    padding: 12px;
+    overflow-x: auto;
+    text-align: center;
+  }
+
+  .symbol-editor math-field {
+    width: 100%;
+    min-height: 80px;
+    padding: 8px;
+    font-size: 1.7rem;
+    font-display: swap;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+  }
+
+  .info-bar {
+    position: sticky;
+    display: flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 8px;
+    margin-top: 0.75rem;
+    font-size: 0.9rem;
+    background-color: #f5f5f5;
+  }
+
+  .symbols-list {
+    height: 320px;
+    padding: 8px;
+    overflow-y: auto;
+  }
+
+  .symbol-group {
+    margin-top: 12px;
+  }
+
+  .group-title {
+    padding: 8px;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .symbol-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .symbol {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 8px;
+    font-family: inherit;
+    text-align: center;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+  }
+
+  .symbol::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+    cursor: pointer;
+    content: '';
+  }
+
+  .symbol:hover {
+    background-color: #f5f5f5;
+  }
+
+  .symbol.equation {
+    flex-basis: calc(33.333% - 4px);
+    font-size: 1.1em;
+  }
+
+  .symbol:not(.equation) {
+    flex-basis: calc(16.666% - 4px);
+    font-size: 1.4em;
+  }
+
+  .symbol math-field {
+    pointer-events: none;
+    background: transparent;
+    border: 0;
+  }
+
+  footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 1rem;
+    border-top: 1px solid #cccccc;
+  }
+
+  .insert-button {
+    padding: 8px 16px;
+    font-weight: 700;
+    color: black;
+    cursor: pointer;
+    background: #e6e6e6;
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+  }
+
+</style>

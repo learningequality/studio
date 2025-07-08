@@ -109,7 +109,7 @@
         </ImageDropZone>
       </div>
     </div>
-    <div class="modal-footer">
+    <footer class="modal-footer">
       <template v-if="isEditMode">
         <button
           class="remove-button"
@@ -136,7 +136,7 @@
           {{ insert$() }}
         </button>
       </template>
-    </div>
+    </footer>
   </div>
 
 </template>

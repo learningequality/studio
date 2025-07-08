@@ -281,6 +281,12 @@ const MESSAGES = {
     message: 'Link',
     context: 'Label for the link URL input field.',
   },
+
+  // Math
+  formulasMenuTitle: {
+    message: 'Special Characters',
+    context: 'Title for the menu containing special characters and mathematical symbols.',
+  },
 };
 
 let TipTapEditorStrings = null;

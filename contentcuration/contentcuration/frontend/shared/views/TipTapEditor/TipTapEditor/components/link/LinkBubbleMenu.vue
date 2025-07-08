@@ -8,7 +8,6 @@
     <a
       :href="href"
       target="_blank"
-      rel="noopener noreferrer"
       class="link-url"
       :aria-label="`${goToLink$()} ${opensInNewTab$()}`"
     >
@@ -146,7 +145,8 @@
     background: #d9e1fd;
   }
 
-  .bubble-menu-button:focus-visible {
+  .bubble-menu-button:focus-visible,
+  .link-url:focus-visible {
     background: #e6e6e6;
     outline: 2px solid #0097f2;
   }

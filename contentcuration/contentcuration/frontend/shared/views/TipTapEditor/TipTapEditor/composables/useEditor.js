@@ -8,6 +8,7 @@ import { Small } from '../extensions/SmallTextExtension';
 import { Image } from '../extensions/Image';
 import { CodeBlockSyntaxHighlight } from '../extensions/CodeBlockSyntaxHighlight';
 import { CustomLink } from '../extensions/Link';
+import { Math } from '../extensions/Math';
 
 export function useEditor() {
   const editor = ref(null);
@@ -27,6 +28,7 @@ export function useEditor() {
         Subscript,
         Image,
         CustomLink, // Use our custom Link extension
+        Math,
       ],
       content: '<p></p>',
       editorProps: {

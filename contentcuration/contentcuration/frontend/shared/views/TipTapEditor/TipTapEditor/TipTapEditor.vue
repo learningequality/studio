@@ -4,6 +4,7 @@
     <EditorToolbar
       @insert-image="target => openCreateModal(null, target)"
       @insert-link="linkHandler.openLinkEditor()"
+      @insert-math="mathHandler.openCreateMathModal()"
     />
 
     <div
@@ -46,6 +47,25 @@
       />
     </div>
 
+    <div
+      v-if="mathHandler.isMathModalOpen.value"
+      class="math-modal-popover-wrapper"
+      @click.self="mathHandler.closeMathModal()"
+    >
+      <FormulasMenu
+        :style="{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+        }"
+        :mode="mathHandler.mathModalMode.value"
+        :initial-latex="mathHandler.mathModalInitialLatex.value"
+        @save="mathHandler.handleSaveMath"
+        @close="mathHandler.closeMathModal"
+      />
+    </div>
+
     <EditorContentWrapper
       @drop.native.prevent="handleDrop"
       @dragover.native.prevent
@@ -67,6 +87,8 @@
   import { useLinkHandling } from './composables/useLinkHandling';
   import LinkBubbleMenu from './components/link/LinkBubbleMenu.vue';
   import LinkEditor from './components/link/LinkEditor.vue';
+  import { useMathHandling } from './composables/useMathHandling';
+  import FormulasMenu from './components/math/FormulasMenu.vue';
 
   export default defineComponent({
     name: 'RichTextEditor',
@@ -76,6 +98,7 @@
       ImageUploadModal,
       LinkBubbleMenu,
       LinkEditor,
+      FormulasMenu,
     },
     setup() {
       const { editor, isReady, initializeEditor } = useEditor();
@@ -84,6 +107,9 @@
 
       const linkHandler = useLinkHandling(editor);
       provide('linkHandler', linkHandler);
+
+      const mathHandler = useMathHandling(editor);
+      provide('mathHandler', mathHandler);
 
       onMounted(() => {
         initializeEditor();
@@ -122,6 +148,7 @@
         isModalCentered,
         linkHandler,
         editor,
+        mathHandler,
       };
     },
   });
@@ -148,7 +175,8 @@
     border-radius: 8px;
   }
 
-  .image-upload-popover-wrapper {
+  .image-upload-popover-wrapper,
+  .math-modal-popover-wrapper {
     position: fixed;
     top: 0;
     left: 0;
@@ -158,7 +186,8 @@
     pointer-events: none;
   }
 
-  .image-upload-popover-wrapper > * {
+  .image-upload-popover-wrapper > *,
+  .math-modal-popover-wrapper > * {
     pointer-events: auto;
   }
 
