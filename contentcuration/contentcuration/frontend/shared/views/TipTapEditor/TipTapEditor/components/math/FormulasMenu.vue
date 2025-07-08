@@ -79,6 +79,7 @@
   import 'mathlive';
   import { useFocusTrap } from '../../composables/useFocusTrap';
   import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
+  import { useMathLiveLocale } from '../../composables/useMathLiveLocale';
   import symbolsData from './symbols.json';
 
   export default defineComponent({
@@ -149,6 +150,9 @@
       };
 
       const { formulasMenuTitle$, insert$, closeModal$ } = getTipTapEditorStrings();
+
+      const currentLocale = ref(navigator.language || 'en');
+      useMathLiveLocale(currentLocale);
 
       return {
         rootEl,
