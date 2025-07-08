@@ -173,7 +173,7 @@ module.exports = (env = {}) => {
         patterns: [
           {
             from: path.resolve(__dirname, 'node_modules/mathlive/fonts'),
-            to: path.join(bundleOutputDir, 'fonts'), 
+            to: path.join(bundleOutputDir, 'fonts'),
           },
         ],
       }),
