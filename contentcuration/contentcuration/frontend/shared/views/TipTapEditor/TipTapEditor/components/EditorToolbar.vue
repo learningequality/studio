@@ -178,7 +178,7 @@
         } else if (tool.name === 'link') {
           emit('insert-link');
         } else if (tool.name === 'math') {
-          emit('insert-math');
+          emit('insert-math', event.currentTarget);
         } else {
           // For all other buttons, call their original handler
           tool.handler();

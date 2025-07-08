@@ -6,11 +6,41 @@ export function useMathHandling(editor) {
   const mathModalMode = ref('create'); // 'create' or 'edit'
   const mathModalInitialLatex = ref('');
   const editingMathNodePos = ref(null);
+  const popoverStyle = ref({});
+  const isModalCentered = ref(false);
 
-  const openCreateMathModal = () => {
+  const setPopoverPosition = targetElement => {
+    isModalCentered.value = false;
+    const rect = targetElement.getBoundingClientRect();
+    popoverStyle.value = {
+      position: 'fixed',
+      top: `${rect.bottom + 5}px`,
+      left: `${rect.right}px`,
+      transform: 'translateX(-100%)',
+    };
+  };
+
+  const setCenteredPosition = () => {
+    isModalCentered.value = true;
+    popoverStyle.value = {
+      position: 'fixed',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+    };
+  };
+
+  const openCreateMathModal = ({ targetElement = null } = {}) => {
     mathModalMode.value = 'create';
     mathModalInitialLatex.value = '';
     editingMathNodePos.value = null;
+
+    if (targetElement) {
+      setPopoverPosition(targetElement);
+    } else {
+      setCenteredPosition();
+    }
+
     isMathModalOpen.value = true;
   };
 
@@ -18,11 +48,13 @@ export function useMathHandling(editor) {
     mathModalMode.value = 'edit';
     mathModalInitialLatex.value = latex;
     editingMathNodePos.value = pos;
+    setCenteredPosition(); // Edit mode stays centered
     isMathModalOpen.value = true;
   };
 
   const closeMathModal = () => {
     isMathModalOpen.value = false;
+    isModalCentered.value = false;
   };
 
   const handleSaveMath = newLatex => {
@@ -87,6 +119,8 @@ export function useMathHandling(editor) {
     isMathModalOpen,
     mathModalMode,
     mathModalInitialLatex,
+    popoverStyle,
+    isModalCentered,
     openCreateMathModal,
     closeMathModal,
     handleSaveMath,

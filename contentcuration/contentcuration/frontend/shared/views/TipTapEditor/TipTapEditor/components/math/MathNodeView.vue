@@ -83,4 +83,8 @@
     display: none !important;
   }
 
+  math-field::part(menu-toggle) {
+    display: none;
+  }
+
 </style>

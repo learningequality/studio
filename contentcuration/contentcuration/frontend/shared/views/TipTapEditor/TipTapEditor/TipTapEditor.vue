@@ -2,9 +2,9 @@
 
   <div class="editor-container">
     <EditorToolbar
-      @insert-image="target => openCreateModal(null, target)"
+      @insert-image="target => openCreateModal({ targetElement: target })"
       @insert-link="linkHandler.openLinkEditor()"
-      @insert-math="mathHandler.openCreateMathModal()"
+      @insert-math="target => mathHandler.openCreateMathModal({ targetElement: target })"
     />
 
     <div
@@ -50,15 +50,11 @@
     <div
       v-if="mathHandler.isMathModalOpen.value"
       class="math-modal-popover-wrapper"
+      :class="{ 'has-overlay': mathHandler.isModalCentered.value }"
       @click.self="mathHandler.closeMathModal()"
     >
       <FormulasMenu
-        :style="{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-        }"
+        :style="mathHandler.popoverStyle.value"
         :mode="mathHandler.mathModalMode.value"
         :initial-latex="mathHandler.mathModalInitialLatex.value"
         @save="mathHandler.handleSaveMath"
@@ -192,7 +188,8 @@
   }
 
   /* Overlay for edit mode to allow clicking outside to close */
-  .image-upload-popover-wrapper.has-overlay {
+  .image-upload-popover-wrapper.has-overlay,
+  .math-modal-popover-wrapper.has-overlay {
     pointer-events: auto;
     background: rgba(0, 0, 0, 0.5);
   }

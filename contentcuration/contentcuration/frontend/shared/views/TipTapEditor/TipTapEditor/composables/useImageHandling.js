@@ -28,7 +28,7 @@ export function useImageHandling(editor) {
     };
   };
 
-  const openCreateModal = (file = null, targetElement = null) => {
+  const openCreateModal = ({ file = null, targetElement = null } = {}) => {
     if (targetElement) {
       setPopoverPosition(targetElement);
     } else {
