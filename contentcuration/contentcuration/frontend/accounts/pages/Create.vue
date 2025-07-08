@@ -227,6 +227,7 @@
     },
     data() {
       return {
+        submitting: false,
         valid: true,
         registrationFailed: false,
         form: {
@@ -448,6 +449,10 @@
         return id === uses.OTHER && this.form.uses.includes(id);
       },
       submit() {
+        if (this.submitting) {
+          return;
+        }
+        this.submitting = true;
         // We need to check the "acceptedAgreement" here explicitly because it is not a
         // Vuetify form field and does not trigger the form validation.
         if (this.$refs.form.validate() && this.acceptedAgreement) {
@@ -486,10 +491,12 @@
                 this.registrationFailed = true;
                 this.valid = false;
               }
+              this.submitting = false;
             });
         } else if (this.$refs.top.scrollIntoView) {
           this.$refs.top.scrollIntoView({ behavior: 'smooth' });
         }
+        this.submitting = false;
         return Promise.resolve();
       },
       resetErrors(field) {
