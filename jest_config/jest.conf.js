@@ -18,6 +18,7 @@ module.exports = {
     'shared/client': path.resolve(__dirname, './globalMocks/client.js'),
     'shared/urls': path.resolve(__dirname, './globalMocks/urls.js'),
     '^dexie$': require.resolve('dexie'),
+    '^mathlive$': 'identity-obj-proxy',
   },
   testEnvironment: 'jsdom',
   testMatch: ['**/?(*.)+(spec|test).[jt]s?(x)'],
