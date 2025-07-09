@@ -1247,8 +1247,7 @@ export const Channel = new CreateModelResource({
 
   waitForPublishingDraft(publishDraftChange) {
     const observable = liveQuery(() => {
-      return db[CHANGES_TABLE]
-        .where('rev')
+      return db[CHANGES_TABLE].where('rev')
         .equals(publishDraftChange.rev)
         .and(change => change.type === publishDraftChange.type)
         .and(change => change.channel_id === publishDraftChange.channel_id)
@@ -1262,16 +1261,16 @@ export const Channel = new CreateModelResource({
           if (result.length === 0) {
             subscription.unsubscribe();
             resolve();
-          } else  {
+          } else {
             if (result[0].disallowed || result[0].errored) {
               subscription.unsubscribe();
-              reject("Publish draft failed");
+              reject('Publish draft failed');
             }
           }
         },
         error() {
           subscription.unsubscribe();
-          reject("Live query failed");
+          reject('Live query failed');
         },
       });
     });
