@@ -5,6 +5,7 @@ import urls from 'shared/urls';
 import { ChannelListTypes } from 'shared/constants';
 
 import { Channel, Recommendation, SavedSearch } from 'shared/data/resources';
+import { FeedbackEventTypes, sendRequest } from 'shared/feedbackApiUtils';
 
 export async function fetchResourceSearchResults(context, params) {
   params = { ...params };
@@ -114,4 +115,44 @@ export function deleteSearch({ commit }, searchId) {
 
 export function fetchRecommendations(context, params) {
   return Recommendation.fetchCollection(params);
+}
+
+export function captureFeedbackEvent(context, params = {}) {
+  /**
+   * Captures a feedback event based on the provided parameters.
+   *
+   * @param {Object} context - The Vuex context object.
+   * @param {Object} params - Parameters for the feedback event.
+   * @param {string} params.event - The type of event ('flag', 'recommendations', 'interaction').
+   * @param {string} [params.method='post'] - The HTTP method for request ('post', 'put', 'patch').
+   * @param {Object|Array} params.data - The event data. It can be an object or an array of objects.
+   * @throws {Error} If the event is invalid or not provided.
+   * @returns {Promise<Object>} A promise that resolves to the response data from the API.
+   */
+  const event = params.event;
+  const method = params.method;
+  const rawData = params.data;
+  const isDataArray = Array.isArray(rawData);
+  const isDataObject = rawData && typeof rawData === 'object';
+
+  if (!event || !FeedbackEventTypes[event]) {
+    throw new Error(
+      `Invalid event: '${event}'. Event must be provided and be one of the valid FeedbackEventTypes.`,
+    );
+  }
+
+  const dataObject = item => ({
+    id: item.id,
+    recommendation_event_id: item.recommendationEventId,
+    contentnode_id: item.contentNodeId,
+    content_id: item.contentId,
+    target_channel_id: item.channelId,
+    user_id: item.userId,
+    content: item.content,
+    context: item.context || {},
+    feedback_type: item.feedbackType,
+    feedback_reason: item.feedbackReason,
+  });
+  const data = isDataArray ? rawData.map(dataObject) : isDataObject ? dataObject(rawData) : {};
+  return sendRequest(new FeedbackEventTypes[event]({ method, data }));
 }

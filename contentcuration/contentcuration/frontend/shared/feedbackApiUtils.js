@@ -13,6 +13,12 @@ export const FeedbackTypeOptions = {
   flagged: 'FLAGGED',
 };
 
+export const FeedbackEventTypes = {
+  flag: FlagFeedbackEvent,
+  recommendations: RecommendationsEvent,
+  interaction: RecommendationsInteractionEvent,
+};
+
 export const FLAG_FEEDBACK_EVENT_ENDPOINT = 'flagged';
 export const RECOMMENDATION_EVENT_ENDPOINT = 'recommendations';
 export const RECOMMENDATION_INTERACTION_EVENT_ENDPOINT = 'recommendations-interaction';
@@ -67,6 +73,8 @@ class BaseFeedback {
           item.id = uuidv4();
         }
         required.forEach(field => {
+          // Skip validation for 'id' field
+          if (field === 'id') return;
           if (typeof item[field] === 'undefined') {
             throw new Error(`Missing required property in 'data': ${field} at position: ${idx}`);
           }
@@ -84,6 +92,11 @@ class BaseFeedback {
     } else {
       throw new Error("The 'data' must be either a non-null object or an array of objects");
     }
+  }
+
+  getEventId() {
+    const data = this.getData();
+    return data && typeof data === 'object' ? data.id : null;
   }
 
   // Returns the data based on the backend contract

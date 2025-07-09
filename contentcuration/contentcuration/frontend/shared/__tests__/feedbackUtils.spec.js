@@ -11,10 +11,11 @@ import client from '../client';
 jest.mock('uuid', () => ({ v4: jest.fn(() => 'mocked-uuid') }));
 jest.mock('../client');
 
-function setupRecommendationsEvent(method) {
+function setupRecommendationsEvent({ method, id }) {
   return new RecommendationsEvent({
     method: method,
     data: {
+      id: id,
       context: { model_version: 1, breadcrumbs: '#Title#->Random' },
       contentnode_id: uuidv4(),
       content_id: uuidv4(),
@@ -32,13 +33,15 @@ function setupRecommendationsEvent(method) {
   });
 }
 
-function setupRecommendationsInteractionEvent(
+function setupRecommendationsInteractionEvent({
   method,
   bulk = false,
   dataOverride = null,
   override = false,
-) {
+  id = null,
+}) {
   const data = {
+    id: id,
     context: { test_key: 'test_value' },
     contentnode_id: uuidv4(),
     content_id: uuidv4(),
@@ -73,8 +76,10 @@ describe('FeedBackUtility Tests', () => {
       },
     });
 
-    recommendationsEvent = setupRecommendationsEvent('post');
-    recommendationsInteractionEvent = setupRecommendationsInteractionEvent('post');
+    recommendationsEvent = setupRecommendationsEvent({
+      method: 'post',
+    });
+    recommendationsInteractionEvent = setupRecommendationsInteractionEvent({ method: 'post' });
 
     // Reset all client method mocks
     client.post.mockRestore();
@@ -86,8 +91,10 @@ describe('FeedBackUtility Tests', () => {
 
   describe('FlagFeedbackEvent Tests', () => {
     it('should generate data object without functions', () => {
+      const eventId = flagFeedbackEvent.getEventId();
       const dataObject = flagFeedbackEvent.getData();
       expect(dataObject.id).toEqual('mocked-uuid');
+      expect(eventId).toEqual(dataObject.id);
       expect(dataObject.context).toEqual({ key: 'value' });
       expect(dataObject.contentnode_id).toEqual('mocked-uuid');
       expect(dataObject.content_id).toEqual('mocked-uuid');
@@ -136,8 +143,10 @@ describe('FeedBackUtility Tests', () => {
 
   describe('RecommendationsEvent Tests', () => {
     it('should generate data object without functions', () => {
+      const eventId = recommendationsEvent.getEventId();
       const dataObject = recommendationsEvent.getData();
       expect(dataObject.id).toEqual('mocked-uuid');
+      expect(eventId).toEqual(dataObject.id);
       expect(dataObject.context).toEqual({ model_version: 1, breadcrumbs: '#Title#->Random' });
       expect(dataObject.contentnode_id).toEqual('mocked-uuid');
       expect(dataObject.content_id).toEqual('mocked-uuid');
@@ -172,7 +181,9 @@ describe('FeedBackUtility Tests', () => {
     describe('HTTP Methods', () => {
       it('should send POST request successfully', async () => {
         client.post.mockResolvedValue(Promise.resolve({ data: 'Mocked API Response' }));
-        recommendationsEvent = setupRecommendationsEvent('post');
+        recommendationsEvent = setupRecommendationsEvent({
+          method: 'post',
+        });
         const result = await sendRequest(recommendationsEvent);
         expect(result).toEqual('Mocked API Response');
         expect(client.post).toHaveBeenCalledWith(
@@ -183,7 +194,10 @@ describe('FeedBackUtility Tests', () => {
 
       it('should send PUT request successfully', async () => {
         client.put.mockResolvedValue(Promise.resolve({ data: 'Mocked API Response' }));
-        recommendationsEvent = setupRecommendationsEvent('put');
+        recommendationsEvent = setupRecommendationsEvent({
+          method: 'put',
+          id: uuidv4(),
+        });
         const result = await sendRequest(recommendationsEvent);
         expect(result).toEqual('Mocked API Response');
         expect(client.put).toHaveBeenCalledWith(
@@ -194,7 +208,10 @@ describe('FeedBackUtility Tests', () => {
 
       it('should send PATCH request successfully', async () => {
         client.patch.mockResolvedValue(Promise.resolve({ data: 'Mocked API Response' }));
-        recommendationsEvent = setupRecommendationsEvent('patch');
+        recommendationsEvent = setupRecommendationsEvent({
+          method: 'patch',
+          id: uuidv4(),
+        });
         const result = await sendRequest(recommendationsEvent);
         expect(result).toEqual('Mocked API Response');
         expect(client.patch).toHaveBeenCalledWith(
@@ -205,7 +222,9 @@ describe('FeedBackUtility Tests', () => {
 
       it('should handle errors for POST request', async () => {
         client.post.mockRejectedValue(new Error('Mocked API Error'));
-        recommendationsEvent = setupRecommendationsEvent('post');
+        recommendationsEvent = setupRecommendationsEvent({
+          method: 'post',
+        });
         await expect(sendRequest(recommendationsEvent)).rejects.toThrowError('Mocked API Error');
         expect(client.post).toHaveBeenCalledWith(
           recommendationsEvent.getUrl(),
@@ -215,7 +234,10 @@ describe('FeedBackUtility Tests', () => {
 
       it('should handle errors for PUT request', async () => {
         client.put.mockRejectedValue(new Error('Mocked API Error'));
-        recommendationsEvent = setupRecommendationsEvent('put');
+        recommendationsEvent = setupRecommendationsEvent({
+          method: 'put',
+          id: uuidv4(),
+        });
         await expect(sendRequest(recommendationsEvent)).rejects.toThrowError('Mocked API Error');
         expect(client.put).toHaveBeenCalledWith(
           recommendationsEvent.getUrl(),
@@ -225,7 +247,10 @@ describe('FeedBackUtility Tests', () => {
 
       it('should handle errors for PATCH request', async () => {
         client.patch.mockRejectedValue(new Error('Mocked API Error'));
-        recommendationsEvent = setupRecommendationsEvent('patch');
+        recommendationsEvent = setupRecommendationsEvent({
+          method: 'patch',
+          id: uuidv4(),
+        });
         await expect(sendRequest(recommendationsEvent)).rejects.toThrowError('Mocked API Error');
         expect(client.patch).toHaveBeenCalledWith(
           recommendationsEvent.getUrl(),
@@ -234,14 +259,20 @@ describe('FeedBackUtility Tests', () => {
       });
 
       it('should throw error for unsupported DELETE method', async () => {
-        recommendationsEvent = setupRecommendationsEvent('delete');
+        recommendationsEvent = setupRecommendationsEvent({
+          method: 'delete',
+          id: uuidv4(),
+        });
         await expect(sendRequest(recommendationsEvent)).rejects.toThrowError(
           'Unsupported HTTP method: delete',
         );
       });
 
       it('should throw error for unsupported GET method', async () => {
-        recommendationsEvent = setupRecommendationsEvent('get');
+        recommendationsEvent = setupRecommendationsEvent({
+          method: 'get',
+          id: uuidv4(),
+        });
         await expect(sendRequest(recommendationsEvent)).rejects.toThrowError(
           'Unsupported HTTP method: get',
         );
@@ -251,8 +282,10 @@ describe('FeedBackUtility Tests', () => {
 
   describe('RecommendationsInteractionEvent Tests', () => {
     it('should generate data object without functions', () => {
+      const eventId = recommendationsInteractionEvent.getEventId();
       const dataObject = recommendationsInteractionEvent.getData();
       expect(dataObject.id).toEqual('mocked-uuid');
+      expect(eventId).toEqual(dataObject.id);
       expect(dataObject.context).toEqual({ test_key: 'test_value' });
       expect(dataObject.contentnode_id).toEqual('mocked-uuid');
       expect(dataObject.content_id).toEqual('mocked-uuid');
@@ -264,45 +297,80 @@ describe('FeedBackUtility Tests', () => {
     });
 
     it('should throw an error when data is not defined', () => {
-      expect(() => setupRecommendationsInteractionEvent('post', true, null, true)).toThrowError(
-        'The data property cannot be null or undefined',
-      );
+      expect(() =>
+        setupRecommendationsInteractionEvent({
+          method: 'post',
+          bulk: true,
+          dataOverride: null,
+          override: true,
+        }),
+      ).toThrowError('The data property cannot be null or undefined');
     });
 
     it('should throw an error when data is an array but method is not a POST', () => {
-      expect(() => setupRecommendationsInteractionEvent('put', true, [], true)).toThrowError(
-        "Array 'data' is only allowed for 'post' requests",
-      );
+      expect(() =>
+        setupRecommendationsInteractionEvent({
+          method: 'put',
+          bulk: true,
+          dataOverride: [],
+          override: true,
+        }),
+      ).toThrowError("Array 'data' is only allowed for 'post' requests");
     });
 
     it('should throw an error when data is an empty array and method is a POST', () => {
-      expect(() => setupRecommendationsInteractionEvent('post', true, [], true)).toThrowError(
-        "The 'data' array cannot be empty",
-      );
+      expect(() =>
+        setupRecommendationsInteractionEvent({
+          method: 'post',
+          bulk: true,
+          dataOverride: [],
+          override: true,
+        }),
+      ).toThrowError("The 'data' array cannot be empty");
     });
 
     it('should throw an error when data is any of any type other than array or object', () => {
       expect(() =>
-        setupRecommendationsInteractionEvent('post', true, 'Invalid data type', true),
+        setupRecommendationsInteractionEvent({
+          method: 'post',
+          bulk: true,
+          dataOverride: 'invalid data type',
+          override: true,
+        }),
       ).toThrowError("The 'data' must be either a non-null object or an array of objects");
     });
 
     it('should throw an error when submitted data has missing fields', () => {
-      expect(() => setupRecommendationsInteractionEvent('patch', false, {}, true)).toThrowError(
-        /The 'data' object is missing required property: \w+/,
-      );
+      expect(() =>
+        setupRecommendationsInteractionEvent({
+          method: 'post',
+          bulk: false,
+          dataOverride: {},
+          override: true,
+        }),
+      ).toThrowError(/The 'data' object is missing required property: \w+/);
     });
 
     it('should throw an error when submitted data array has invalid data', () => {
-      expect(() => setupRecommendationsInteractionEvent('post', false, [null], true)).toThrowError(
-        /Item at position \w+ in 'data' is not a valid object/,
-      );
+      expect(() =>
+        setupRecommendationsInteractionEvent({
+          method: 'post',
+          bulk: false,
+          dataOverride: [null],
+          override: true,
+        }),
+      ).toThrowError(/Item at position \w+ in 'data' is not a valid object/);
     });
 
     it('should throw an error when submitted data array has valid data but with missing fields', () => {
-      expect(() => setupRecommendationsInteractionEvent('post', false, [{}], true)).toThrowError(
-        /Missing required property in 'data': \w+ at position: \w+/,
-      );
+      expect(() =>
+        setupRecommendationsInteractionEvent({
+          method: 'post',
+          bulk: false,
+          dataOverride: [{}],
+          override: true,
+        }),
+      ).toThrowError(/Missing required property in 'data': \w+ at position: \w+/);
     });
 
     it('should throw an error when endpoint is not defined', () => {
@@ -322,7 +390,9 @@ describe('FeedBackUtility Tests', () => {
     describe('HTTP Methods', () => {
       it('should send POST request successfully', async () => {
         client.post.mockResolvedValue(Promise.resolve({ data: 'Mocked API Response' }));
-        recommendationsInteractionEvent = setupRecommendationsInteractionEvent('post');
+        recommendationsInteractionEvent = setupRecommendationsInteractionEvent({
+          method: 'post',
+        });
         const result = await sendRequest(recommendationsInteractionEvent);
         expect(result).toEqual('Mocked API Response');
         expect(client.post).toHaveBeenCalledWith(
@@ -333,7 +403,10 @@ describe('FeedBackUtility Tests', () => {
 
       it('should send Bulk POST request successfully', async () => {
         client.post.mockResolvedValue(Promise.resolve({ data: 'Mocked API Response' }));
-        recommendationsInteractionEvent = setupRecommendationsInteractionEvent('post', true);
+        recommendationsInteractionEvent = setupRecommendationsInteractionEvent({
+          method: 'post',
+          bulk: true,
+        });
         const result = await sendRequest(recommendationsInteractionEvent);
         expect(result).toEqual('Mocked API Response');
         expect(client.post).toHaveBeenCalledWith(
@@ -344,7 +417,9 @@ describe('FeedBackUtility Tests', () => {
 
       it('should send PUT request successfully', async () => {
         client.put.mockResolvedValue(Promise.resolve({ data: 'Mocked API Response' }));
-        recommendationsInteractionEvent = setupRecommendationsInteractionEvent('put');
+        recommendationsInteractionEvent = setupRecommendationsInteractionEvent({
+          method: 'put',
+        });
         const result = await sendRequest(recommendationsInteractionEvent);
         expect(result).toEqual('Mocked API Response');
         expect(client.put).toHaveBeenCalledWith(
@@ -355,7 +430,9 @@ describe('FeedBackUtility Tests', () => {
 
       it('should send PATCH request successfully', async () => {
         client.patch.mockResolvedValue(Promise.resolve({ data: 'Mocked API Response' }));
-        recommendationsInteractionEvent = setupRecommendationsInteractionEvent('patch');
+        recommendationsInteractionEvent = setupRecommendationsInteractionEvent({
+          method: 'patch',
+        });
         const result = await sendRequest(recommendationsInteractionEvent);
         expect(result).toEqual('Mocked API Response');
         expect(client.patch).toHaveBeenCalledWith(
@@ -366,7 +443,9 @@ describe('FeedBackUtility Tests', () => {
 
       it('should handle errors for POST request', async () => {
         client.post.mockRejectedValue(new Error('Mocked API Error'));
-        recommendationsInteractionEvent = setupRecommendationsInteractionEvent('post');
+        recommendationsInteractionEvent = setupRecommendationsInteractionEvent({
+          method: 'post',
+        });
         await expect(sendRequest(recommendationsInteractionEvent)).rejects.toThrowError(
           'Mocked API Error',
         );
@@ -378,7 +457,9 @@ describe('FeedBackUtility Tests', () => {
 
       it('should handle errors for PUT request', async () => {
         client.put.mockRejectedValue(new Error('Mocked API Error'));
-        recommendationsInteractionEvent = setupRecommendationsInteractionEvent('put');
+        recommendationsInteractionEvent = setupRecommendationsInteractionEvent({
+          method: 'put',
+        });
         await expect(sendRequest(recommendationsInteractionEvent)).rejects.toThrowError(
           'Mocked API Error',
         );
@@ -390,7 +471,9 @@ describe('FeedBackUtility Tests', () => {
 
       it('should handle errors for PATCH request', async () => {
         client.patch.mockRejectedValue(new Error('Mocked API Error'));
-        recommendationsInteractionEvent = setupRecommendationsInteractionEvent('patch');
+        recommendationsInteractionEvent = setupRecommendationsInteractionEvent({
+          method: 'patch',
+        });
         await expect(sendRequest(recommendationsInteractionEvent)).rejects.toThrowError(
           'Mocked API Error',
         );
@@ -401,14 +484,19 @@ describe('FeedBackUtility Tests', () => {
       });
 
       it('should throw error for unsupported DELETE method', async () => {
-        recommendationsInteractionEvent = setupRecommendationsInteractionEvent('delete');
+        recommendationsInteractionEvent = setupRecommendationsInteractionEvent({
+          method: 'delete',
+        });
         await expect(sendRequest(recommendationsInteractionEvent)).rejects.toThrowError(
           'Unsupported HTTP method: delete',
         );
       });
 
       it('should throw error for unsupported GET method', async () => {
-        recommendationsInteractionEvent = setupRecommendationsInteractionEvent('get');
+        recommendationsInteractionEvent = setupRecommendationsInteractionEvent({
+          method: 'get',
+          id: uuidv4(),
+        });
         await expect(sendRequest(recommendationsInteractionEvent)).rejects.toThrowError(
           'Unsupported HTTP method: get',
         );
