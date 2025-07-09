@@ -83,12 +83,12 @@
         },
       );
 
-      const styleWidth = computed(() => {
-        return width.value ? `${width.value}px` : 'auto';
+      const isRtl = computed(() => {
+        return props.editor.view.dom.closest('[dir="rtl"]') !== null;
       });
-      const isCompact = computed(() => {
-        return width.value < compactThreshold;
-      });
+
+      const styleWidth = computed(() => (width.value ? `${width.value}px` : 'auto'));
+      const isCompact = computed(() => width.value < compactThreshold);
 
       const saveWidth = () => {
         props.updateAttributes({
@@ -102,7 +102,12 @@
         const startWidth = width.value || startEvent.target.parentElement.offsetWidth;
 
         const onMouseMove = moveEvent => {
-          const newWidth = startWidth + (moveEvent.clientX - startX);
+          const deltaX = moveEvent.clientX - startX;
+
+          const newWidth = isRtl.value
+            ? startWidth - deltaX // In RTL, moving right should decrease width
+            : startWidth + deltaX; // In LTR, moving right should increase width
+
           width.value = Math.max(minWidth, newWidth);
         };
 
@@ -117,19 +122,21 @@
       };
 
       const onResizeKeyDown = event => {
-        const step = 10; // Define the resize step
+        const step = 10;
         const currentWidth = width.value || event.target.parentElement.offsetWidth;
         let newWidth = currentWidth;
 
-        if (event.key === 'ArrowRight') {
+        // Invert keyboard controls for RTL
+        const rightKey = isRtl.value ? 'ArrowLeft' : 'ArrowRight';
+        const leftKey = isRtl.value ? 'ArrowRight' : 'ArrowLeft';
+
+        if (event.key === rightKey) {
           newWidth = currentWidth + step;
-        } else if (event.key === 'ArrowLeft') {
+        } else if (event.key === leftKey) {
           newWidth = currentWidth - step;
         } else if (event.key === 'Escape' || event.key === 'Enter') {
           event.target.blur();
           const endPosition = props.getPos() + props.node.nodeSize;
-
-          // Insert a new paragraph at the end and move to it
           props.editor.chain().focus().insertContentAt(endPosition, { type: 'paragraph' }).run();
           return;
         } else {
@@ -138,21 +145,15 @@
 
         width.value = Math.max(minWidth, newWidth);
 
-        // Debounce the saveWidth call to avoid excessive updates that can clutter the undo stack
         clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-          saveWidth();
-        }, 500);
+        debounceTimer = setTimeout(saveWidth, 500);
       };
 
       const removeImage = () => {
         const position = props.getPos();
         const nodeSize = props.node.nodeSize;
-
-        // Now we can calculate the full range of the node.
         const from = position;
         const to = position + nodeSize;
-
         props.editor.chain().focus().deleteRange({ from, to }).run();
       };
 
@@ -212,7 +213,7 @@
 
   .resize-handle {
     position: absolute;
-    right: -6px;
+    inset-inline-end: -6px;
     bottom: -6px;
     width: 24px;
     height: 24px;
@@ -224,6 +225,10 @@
     transition: opacity 0.2s;
   }
 
+  [dir='rtl'] .resize-handle {
+    cursor: nesw-resize;
+  }
+
   .image-node-view:hover .resize-handle,
   .image-node-view.is-selected .resize-handle,
   .resize-handle:focus {
@@ -232,8 +237,8 @@
 
   .image-actions {
     position: absolute;
+    inset-inline-end: 6px;
     top: 6px;
-    right: 6px;
     z-index: 10;
     display: flex;
     gap: 10px;
@@ -246,6 +251,10 @@
       opacity 0.2s,
       transform 0.2s ease-in-out;
     transform-origin: top right;
+  }
+
+  [dir='rtl'] .image-actions {
+    transform-origin: top left;
   }
 
   .image-actions.is-compact {
