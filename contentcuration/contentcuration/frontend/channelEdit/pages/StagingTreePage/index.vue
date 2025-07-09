@@ -647,12 +647,11 @@
         this.isPublishingDraft = true;
 
         this.publishDraftChannel()
+          .then(publishDraftchange => Channel.waitForPublishingDraft(publishDraftchange))
           .then(() => {
-            Channel.waitForPublishingDraft(this.currentChannel.id).then(() => {
-              this.isPublishingDraft = false;
-              this.showSnackbar({
-                text: this.$tr('draftPublished'),
-              });
+            this.isPublishingDraft = false;
+            this.showSnackbar({
+              text: this.$tr('draftPublished'),
             });
           })
           .catch(error => {

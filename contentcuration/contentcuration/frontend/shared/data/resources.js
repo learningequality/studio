@@ -1235,40 +1235,43 @@ export const Channel = new CreateModelResource({
   },
 
   publishDraft(id) {
-    return this.transaction({ mode: 'rw' }, () => {
-      return this.table.update(id, { staging_publishing: true });
-    }).then(() => {
-      const change = new PublishedNextChange({
-        key: id,
-        table: this.tableName,
-        source: CLIENTID,
-      });
-      return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
-        return this._saveAndQueueChange(change);
-      });
+    const change = new PublishedNextChange({
+      key: id,
+      table: this.tableName,
+      source: CLIENTID,
     });
+    return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
+      return this._saveAndQueueChange(change);
+    }).then(() => change);
   },
 
-  waitForPublishingDraft(id) {
+  waitForPublishingDraft(publishDraftChange) {
     const observable = liveQuery(() => {
-      return this.table
-        .where('id')
-        .equals(id)
-        .filter(channel => !channel['staging_publishing'])
+      return db[CHANGES_TABLE]
+        .where('rev')
+        .equals(publishDraftChange.rev)
+        .and(change => change.type === publishDraftChange.type)
+        .and(change => change.channel_id === publishDraftChange.channel_id)
         .toArray();
     });
 
     return new Promise((resolve, reject) => {
       const subscription = observable.subscribe({
         next(result) {
-          if (result.length === 1) {
+          // Successfully applied change will be removed.
+          if (result.length === 0) {
             subscription.unsubscribe();
             resolve();
+          } else  {
+            if (result[0].disallowed || result[0].errored) {
+              subscription.unsubscribe();
+              reject("Publish draft failed");
+            }
           }
         },
         error() {
           subscription.unsubscribe();
-          reject();
+          reject("Live query failed");
         },
       });
     });
