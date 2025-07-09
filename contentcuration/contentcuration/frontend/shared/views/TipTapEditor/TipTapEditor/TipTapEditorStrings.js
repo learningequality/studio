@@ -287,6 +287,28 @@ const MESSAGES = {
     message: 'Special Characters',
     context: 'Title for the menu containing special characters and mathematical symbols.',
   },
+
+  // Error Messages
+  noFileProvided: {
+    message: 'No file provided.',
+    context: 'Error message when no file is provided for upload',
+  },
+  invalidFileType: {
+    message: 'Invalid file type. Please use: ',
+    context: 'Error message when an unsupported file type is uploaded',
+  },
+  fileTooLarge: {
+    message: 'File is too large. Maximum size is ',
+    context: 'Error message when uploaded file exceeds size limit',
+  },
+  fileSizeUnit: {
+    message: 'MB.',
+    context: 'Unit for file size in megabytes',
+  },
+  failedToProcessImage: {
+    message: 'Failed to process the image file.',
+    context: 'Error message when image processing fails',
+  },
 };
 
 let TipTapEditorStrings = null;

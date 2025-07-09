@@ -1,3 +1,5 @@
+import { getTipTapEditorStrings } from '../TipTapEditorStrings';
+
 const MAX_FILE_SIZE_MB = 10; // I think I need review on this value, I just picked what seemed reasonable
 export const ACCEPTED_MIME_TYPES = [
   'image/png',
@@ -7,6 +9,9 @@ export const ACCEPTED_MIME_TYPES = [
   'image/svg+xml',
 ];
 
+const { noFileProvided$, invalidFileType$, fileTooLarge$, fileSizeUnit$, failedToProcessImage$ } =
+  getTipTapEditorStrings();
+
 /**
  * Validates a file based on type and size.
  * @param {File} file - The file to validate.
@@ -14,16 +19,19 @@ export const ACCEPTED_MIME_TYPES = [
  */
 export function validateFile(file) {
   if (!file) {
-    return { isValid: false, error: 'No file provided.' };
+    return { isValid: false, error: noFileProvided$ };
   }
   if (!ACCEPTED_MIME_TYPES.includes(file.type)) {
     return {
       isValid: false,
-      error: `Invalid file type. Please use: ${ACCEPTED_MIME_TYPES.join(', ')}`,
+      error: invalidFileType$ + ACCEPTED_MIME_TYPES.join(', '),
     };
   }
   if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-    return { isValid: false, error: `File is too large. Maximum size is ${MAX_FILE_SIZE_MB}MB.` };
+    return {
+      isValid: false,
+      error: fileTooLarge$ + MAX_FILE_SIZE_MB + fileSizeUnit$,
+    };
   }
   return { isValid: true };
 }
@@ -72,6 +80,6 @@ export async function processFile(file) {
     const { width, height } = await getImageDimensions(src);
     return { src, width, height, file };
   } catch (error) {
-    throw new Error('Failed to process the image file.');
+    throw new Error(failedToProcessImage$);
   }
 }
