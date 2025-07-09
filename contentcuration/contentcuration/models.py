@@ -2616,6 +2616,10 @@ class CommunityLibrarySubmission(models.Model):
                 name="unique_channel_with_channel_version",
             ),
         ]
+        indexes = [
+            # Useful for cursor pagination
+            models.Index(fields=["-date_created"], name="submission_date_created_idx"),
+        ]
 
 
 ASSESSMENT_ID_INDEX_NAME = "assessment_id_idx"
@@ -2655,6 +2659,7 @@ class AssessmentItem(models.Model):
 
     class Meta:
         indexes = [
+            # Useful for cursor pagination
             models.Index(fields=["assessment_id"], name=ASSESSMENT_ID_INDEX_NAME),
         ]
 

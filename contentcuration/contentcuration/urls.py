@@ -38,6 +38,9 @@ from contentcuration.viewsets.channel import CatalogViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.clipboard import ClipboardViewSet
+from contentcuration.viewsets.community_library_submission import (
+    CommunityLibrarySubmissionViewSet,
+)
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 from contentcuration.viewsets.feedback import FlagFeedbackEventViewSet
 from contentcuration.viewsets.feedback import RecommendationsEventViewSet
@@ -79,6 +82,11 @@ router.register(
     r"recommendationsinteraction",
     RecommendationsInteractionEventViewSet,
     basename="recommendations-interaction",
+)
+router.register(
+    r"communitylibrary_submission",
+    CommunityLibrarySubmissionViewSet,
+    basename="community-library-submission",
 )
 
 urlpatterns = [
