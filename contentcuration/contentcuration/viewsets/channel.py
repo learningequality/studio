@@ -1,4 +1,3 @@
-
 import logging
 from functools import reduce
 from operator import or_
