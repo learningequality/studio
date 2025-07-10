@@ -81,7 +81,7 @@ django-mptt==0.16.0
     # via -r requirements.in
 django-postmark==0.1.6
     # via -r requirements.in
-django-prometheus==2.3.1
+django-prometheus==2.4.0
     # via -r requirements.in
 django-redis==5.4.0
     # via -r requirements.in
