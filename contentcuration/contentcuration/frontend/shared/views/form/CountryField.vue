@@ -30,6 +30,9 @@
 
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
+  // NOTE that this list MUST stay in sync with the list of countries
+  // generated on the backend in contentcuration/management/commands/loadconstants.py,
+  // and special care should be taken when updating the i18n-iso-countries library.
   var countries = require('i18n-iso-countries');
   countries.registerLocale(require('i18n-iso-countries/langs/en.json'));
   countries.registerLocale(require('i18n-iso-countries/langs/es.json'));
