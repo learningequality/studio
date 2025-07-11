@@ -692,14 +692,77 @@ class ChannelExportPrerequisiteTestCase(StudioTestCase):
 
 
 class ChannelExportPublishedData(StudioTestCase):
-    def test_fill_published_fields(self):
+    def setUp(self):
+        super().setUpBase()
+
+        self.license1 = cc.License.objects.create(
+            id=100,
+            license_name="License 1",
+            license_description="Description 1",
+            license_url="http://example.com/license1",
+        )
+        self.license2 = cc.License.objects.create(
+            id=101,
+            license_name="License 2",
+            license_description="Description 2",
+            license_url="http://example.com/license2",
+        )
+
+        self.category1 = "Category 1"
+        self.category2 = "Category 2"
+
+        self.node1 = self.channel.main_tree.get_root()
+        self.node2 = self.channel.main_tree.get_children().first()
+        self.node3 = self.node2.get_children().first()
+        self.node4 = self.node3.get_next_sibling()
+
+        self.node1.license = self.license1
+        self.node1.categories = {self.category1: True}
+        self.node1.published = True
+        self.node1.save()
+
+        self.node2.license = self.license2
+        self.node2.categories = {self.category2: True}
+        self.node2.published = True
+        self.node2.save()
+
+        self.node3.license = self.license1
+        self.node3.categories = {self.category1: True}
+        self.node3.published = True
+        self.node3.save()
+
+        self.node4.license = None
+        self.node4.categories = None
+        self.node4.published = True
+        self.node4.save()
+
+    def test_fill_published_fields__version_notes(self):
         version_notes = description()
-        channel = cc.Channel.objects.create(actor_id=self.admin_user.id)
-        channel.last_published
-        fill_published_fields(channel, version_notes)
-        self.assertTrue(channel.published_data)
-        self.assertIsNotNone(channel.published_data.get(0))
-        self.assertEqual(channel.published_data[0]["version_notes"], version_notes)
+        self.channel.last_published
+        fill_published_fields(self.channel, version_notes)
+        self.assertTrue(self.channel.published_data)
+        self.assertIsNotNone(self.channel.published_data.get(0))
+        self.assertEqual(self.channel.published_data[0]["version_notes"], version_notes)
+
+    def test_fill_published_fields__included_licenses(self):
+        version_notes = description()
+        fill_published_fields(self.channel, version_notes)
+
+        returned_license_ids = self.channel.published_data[0]["included_licenses"]
+        expected_license_ids = [self.license1.id, self.license2.id]
+
+        self.assertEqual(len(returned_license_ids), len(expected_license_ids))
+        self.assertSetEqual(set(returned_license_ids), set(expected_license_ids))
+
+    def test_fill_published_fields__included_categories(self):
+        version_notes = description()
+        fill_published_fields(self.channel, version_notes)
+
+        expected_categories = [self.category1, self.category2]
+        returned_categories = self.channel.published_data[0]["included_categories"]
+
+        self.assertEqual(len(returned_categories), len(expected_categories))
+        self.assertSetEqual(set(returned_categories), set(expected_categories))
 
 
 class PublishFailCleansUpTaskObjects(StudioTestCase):
