@@ -188,6 +188,8 @@ pyasn1==0.4.8
     #   rsa
 pyasn1-modules==0.2.8
     # via google-auth
+pycountry==24.6.1
+    # via -r requirements.in
 pyparsing==2.4.7
     # via httplib2
 python-dateutil==2.9.0.post0
