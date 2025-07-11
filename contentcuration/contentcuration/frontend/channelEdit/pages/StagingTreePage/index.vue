@@ -25,7 +25,7 @@
       <span class="grey--darken-2 grey--text">{{ $tr('reviewMode') }}</span>
     </ToolBar>
     <MainNavigationDrawer v-model="drawer" />
-    <LoadingText v-if="isLoading || isDeploying" />
+    <LoadingText v-if="isLoading || isDeploying || isPublishingDraft" />
     <VContent v-else-if="isEmpty">
       <VLayout
         justify-center
@@ -647,6 +647,7 @@
         this.isPublishingDraft = true;
 
         this.publishDraftChannel()
+          .then(publishDraftchange => Channel.waitForPublishingDraft(publishDraftchange))
           .then(() => {
             this.isPublishingDraft = false;
             this.showSnackbar({

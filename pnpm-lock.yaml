@@ -181,16 +181,16 @@ importers:
         version: 7.3.0
     devDependencies:
       '@babel/core':
-        specifier: ^7.27.4
+        specifier: ^7.28.0
         version: 7.28.0
       '@babel/plugin-syntax-import-assertions':
         specifier: ^7.27.1
         version: 7.27.1(@babel/core@7.28.0)
       '@babel/plugin-transform-runtime':
-        specifier: ^7.27.4
+        specifier: ^7.28.0
         version: 7.28.0(@babel/core@7.28.0)
       '@babel/preset-env':
-        specifier: ^7.27.2
+        specifier: ^7.28.0
         version: 7.28.0(@babel/core@7.28.0)
       '@testing-library/jest-dom':
         specifier: ^6.6.3
@@ -218,7 +218,7 @@ importers:
         version: 29.7.0(@babel/core@7.28.0)
       babel-loader:
         specifier: ^9.2.1
-        version: 9.2.1(@babel/core@7.28.0)(webpack@5.99.9)
+        version: 9.2.1(@babel/core@7.28.0)(webpack@5.99.7)
       circular-dependency-plugin:
         specifier: ^5.2.0
         version: 5.2.2(webpack@5.99.9)
@@ -310,8 +310,8 @@ importers:
         specifier: ^4.0.9
         version: 4.0.9(postcss@8.5.6)
       sass-loader:
-        specifier: 16.0.4
-        version: 16.0.4(node-sass@9.0.0)(webpack@5.99.9)
+        specifier: 16.0.5
+        version: 16.0.5(node-sass@9.0.0)(webpack@5.99.7)
       style-loader:
         specifier: ^4.0.0
         version: 4.0.0(webpack@5.99.9)
@@ -353,7 +353,7 @@ importers:
         version: 3.0.7(babel-core@7.0.0-bridge.0(@babel/core@7.28.0))(vue-template-compiler@2.7.16)(vue@2.7.16)
       vue-loader:
         specifier: 15.11.1
-        version: 15.11.1(babel-core@7.0.0-bridge.0(@babel/core@7.28.0))(css-loader@7.1.2(webpack@5.99.9))(ejs@3.1.10)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.99.9)
+        version: 15.11.1(babel-core@7.0.0-bridge.0(@babel/core@7.28.0))(css-loader@7.1.2(webpack@5.99.7))(ejs@3.1.10)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.99.7)
       vue-style-loader:
         specifier: ^4.1.3
         version: 4.1.3
@@ -1240,11 +1240,17 @@ packages:
     resolution: {integrity: sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==}
     engines: {node: '>=6.0.0'}
 
-  '@jridgewell/source-map@0.3.10':
-    resolution: {integrity: sha512-0pPkgz9dY+bijgistcTTJ5mR+ocqRXLuhXHYdzoMmmoJ2C9S46RCm2GMUbatPEUK9Yjy26IrAy8D/M00lLkv+Q==}
+  '@jridgewell/source-map@0.3.6':
+    resolution: {integrity: sha512-1ZJTZebgqllO79ue2bm3rIGud/bOe0pP5BjSRCRxxYkEZS8STV7zN84UBbiYu7jy+eCKSnVIUgoWWE/tt+shMQ==}
 
   '@jridgewell/sourcemap-codec@1.5.4':
     resolution: {integrity: sha512-VT2+G1VQs/9oz078bLrYbecdZKs912zQlkelYpuf+SXF+QvZDYJlbx/LSx+meSAwdDFnF8FVXW92AVjjkVmgFw==}
+
+  '@jridgewell/sourcemap-codec@1.5.4':
+    resolution: {integrity: sha512-VT2+G1VQs/9oz078bLrYbecdZKs912zQlkelYpuf+SXF+QvZDYJlbx/LSx+meSAwdDFnF8FVXW92AVjjkVmgFw==}
+
+  '@jridgewell/trace-mapping@0.3.25':
+    resolution: {integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==}
 
   '@jridgewell/trace-mapping@0.3.29':
     resolution: {integrity: sha512-uw6guiW/gcAGPDhLmd77/6lW8QLeiV5RUTsAX46Db6oLhGaVj4lhnPwb184s1bkc8kdVg/+h988dro8GRDpmYQ==}
@@ -2838,14 +2844,8 @@ packages:
     resolution: {integrity: sha512-yki5XnKuf750l50uGTllt6kKILY4nQ1eNIQatoXEByZ5dWgnKqbnqmTrBE5B4N7lrMJKQ2ytWMiTO2o0v6Ew/w==}
     engines: {node: '>= 0.6'}
 
-  copy-webpack-plugin@13.0.0:
-    resolution: {integrity: sha512-FgR/h5a6hzJqATDGd9YG41SeDViH+0bkHn6WNXCi5zKAZkeESeSxLySSsFLHqLEVCh0E+rITmCf0dusXWYukeQ==}
-    engines: {node: '>= 18.12.0'}
-    peerDependencies:
-      webpack: ^5.1.0
-
-  core-js-compat@3.43.0:
-    resolution: {integrity: sha512-2GML2ZsCc5LR7hZYz4AXmjQw8zuy2T//2QntwdnpuYI7jteT6GVYJL7F6C2C57R7gSYrcqVW3lAALefdbhBLDA==}
+  core-js-compat@3.44.0:
+    resolution: {integrity: sha512-JepmAj2zfl6ogy34qfWtcE7nHKAJnKsQFRn++scjVS2bZFllwptzw61BZcZFYBPpUznLfAvh0LGhxKppk04ClA==}
 
   core-js@2.6.12:
     resolution: {integrity: sha512-Kb2wC0fvsWfQrgk8HU5lW6U/Lcs8+9aaYcy4ZFc6DDlo4nZ7n70dEgE5rtR0oG6ufKDUnrwfWL1mXR5ljDatrQ==}
@@ -6379,27 +6379,6 @@ packages:
     engines: {node: '>=12'}
     hasBin: true
 
-  sass-loader@16.0.4:
-    resolution: {integrity: sha512-LavLbgbBGUt3wCiYzhuLLu65+fWXaXLmq7YxivLhEqmiupCFZ5sKUAipK3do6V80YSU0jvSxNhEdT13IXNr3rg==}
-    engines: {node: '>= 18.12.0'}
-    peerDependencies:
-      '@rspack/core': 0.x || 1.x
-      node-sass: ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0 || ^9.0.0
-      sass: ^1.3.0
-      sass-embedded: '*'
-      webpack: ^5.0.0
-    peerDependenciesMeta:
-      '@rspack/core':
-        optional: true
-      node-sass:
-        optional: true
-      sass:
-        optional: true
-      sass-embedded:
-        optional: true
-      webpack:
-        optional: true
-
   sass-loader@16.0.5:
     resolution: {integrity: sha512-oL+CMBXrj6BZ/zOq4os+UECPL+bWqt6OAC6DWS8Ln8GZRcMDjlJ4JC3FBDuHJdYaFWIdKNIBYmtZtK2MaMkNIw==}
     engines: {node: '>= 18.12.0'}
@@ -8411,7 +8390,7 @@ snapshots:
       '@babel/core': 7.28.0
       '@babel/helper-plugin-utils': 7.27.1
 
-  '@babel/plugin-transform-typescript@7.28.0(@babel/core@7.28.0)':
+  '@babel/plugin-transform-typescript@7.27.1(@babel/core@7.28.0)':
     dependencies:
       '@babel/core': 7.28.0
       '@babel/helper-annotate-as-pure': 7.27.3
@@ -8516,7 +8495,7 @@ snapshots:
       babel-plugin-polyfill-corejs2: 0.4.14(@babel/core@7.28.0)
       babel-plugin-polyfill-corejs3: 0.13.0(@babel/core@7.28.0)
       babel-plugin-polyfill-regenerator: 0.6.5(@babel/core@7.28.0)
-      core-js-compat: 3.43.0
+      core-js-compat: 3.44.0
       semver: 6.3.1
     transitivePeerDependencies:
       - supports-color
@@ -8542,7 +8521,7 @@ snapshots:
       '@babel/helper-validator-option': 7.27.1
       '@babel/plugin-syntax-jsx': 7.27.1(@babel/core@7.28.0)
       '@babel/plugin-transform-modules-commonjs': 7.27.1(@babel/core@7.28.0)
-      '@babel/plugin-transform-typescript': 7.28.0(@babel/core@7.28.0)
+      '@babel/plugin-transform-typescript': 7.27.1(@babel/core@7.28.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -8776,7 +8755,7 @@ snapshots:
       '@jest/transform': 29.7.0
       '@jest/types': 29.6.3
       '@jridgewell/trace-mapping': 0.3.29
-      '@types/node': 24.0.10
+      '@types/node': 24.0.4
       chalk: 4.1.2
       collect-v8-coverage: 1.0.2
       exit: 0.1.2
@@ -8937,12 +8916,19 @@ snapshots:
 
   '@jridgewell/resolve-uri@3.1.2': {}
 
-  '@jridgewell/source-map@0.3.10':
+  '@jridgewell/source-map@0.3.6':
     dependencies:
       '@jridgewell/gen-mapping': 0.3.12
-      '@jridgewell/trace-mapping': 0.3.29
+      '@jridgewell/trace-mapping': 0.3.25
+
+  '@jridgewell/sourcemap-codec@1.5.0': {}
 
   '@jridgewell/sourcemap-codec@1.5.4': {}
+
+  '@jridgewell/trace-mapping@0.3.29':
+    dependencies:
+      '@jridgewell/resolve-uri': 3.1.2
+      '@jridgewell/sourcemap-codec': 1.5.0
 
   '@jridgewell/trace-mapping@0.3.29':
     dependencies:
@@ -10113,13 +10099,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  babel-loader@10.0.0(@babel/core@7.28.0)(webpack@5.99.9):
+  babel-loader@10.0.0(@babel/core@7.28.0)(webpack@5.99.7):
     dependencies:
       '@babel/core': 7.28.0
       find-up: 5.0.0
       webpack: 5.99.9(webpack-cli@6.0.1)
 
-  babel-loader@9.2.1(@babel/core@7.28.0)(webpack@5.99.9):
+  babel-loader@9.2.1(@babel/core@7.28.0)(webpack@5.99.7):
     dependencies:
       '@babel/core': 7.28.0
       find-cache-dir: 4.0.0
@@ -10160,7 +10146,7 @@ snapshots:
     dependencies:
       '@babel/core': 7.28.0
       '@babel/helper-define-polyfill-provider': 0.6.5(@babel/core@7.28.0)
-      core-js-compat: 3.43.0
+      core-js-compat: 3.44.0
     transitivePeerDependencies:
       - supports-color
 
@@ -10677,16 +10663,7 @@ snapshots:
 
   cookie@0.7.2: {}
 
-  copy-webpack-plugin@13.0.0(webpack@5.99.9):
-    dependencies:
-      glob-parent: 6.0.2
-      normalize-path: 3.0.0
-      schema-utils: 4.3.2
-      serialize-javascript: 6.0.2
-      tinyglobby: 0.2.14
-      webpack: 5.99.9(webpack-cli@6.0.1)
-
-  core-js-compat@3.43.0:
+  core-js-compat@3.44.0:
     dependencies:
       browserslist: 4.25.1
 
@@ -12973,7 +12950,7 @@ snapshots:
       '@babel/preset-flow': 7.27.1(@babel/core@7.28.0)
       '@babel/preset-typescript': 7.27.1(@babel/core@7.28.0)
       '@babel/register': 7.27.1(@babel/core@7.28.0)
-      flow-parser: 0.274.2
+      flow-parser: 0.274.0
       graceful-fs: 4.2.11
       micromatch: 4.0.8
       neo-async: 2.6.2
@@ -13205,7 +13182,7 @@ snapshots:
       '@babel/plugin-syntax-import-assertions': 7.27.1(@babel/core@7.28.0)
       '@babel/plugin-transform-runtime': 7.28.0(@babel/core@7.28.0)
       '@babel/preset-env': 7.28.0(@babel/core@7.28.0)
-      '@rushstack/eslint-patch': 1.12.0
+      '@rushstack/eslint-patch': 1.11.0
       '@testing-library/jest-dom': 6.6.3
       '@testing-library/user-event': 14.6.1(@testing-library/dom@9.3.4)
       '@testing-library/vue': 5.9.0(vue-template-compiler@2.7.16)(vue@2.7.16)
@@ -13214,7 +13191,7 @@ snapshots:
       autoprefixer: 10.4.21(postcss@8.5.6)
       babel-core: 7.0.0-bridge.0(@babel/core@7.28.0)
       babel-jest: 29.7.0(@babel/core@7.28.0)
-      babel-loader: 10.0.0(@babel/core@7.28.0)(webpack@5.99.9)
+      babel-loader: 10.0.0(@babel/core@7.28.0)(webpack@5.99.7)
       browserslist-config-kolibri: 0.18.0
       chalk: 4.1.2
       check-node-version: 4.2.1
@@ -13254,9 +13231,9 @@ snapshots:
       temp: 0.8.4
       terser-webpack-plugin: 5.3.14(webpack@5.99.9)
       toml: 3.0.0
-      url-loader: 4.1.1(file-loader@6.2.0(webpack@5.99.9))(webpack@5.99.9)
+      url-loader: 4.1.1(file-loader@6.2.0(webpack@5.99.7))(webpack@5.99.7)
       vue-jest: 3.0.7(babel-core@7.0.0-bridge.0(@babel/core@7.28.0))(vue-template-compiler@2.7.16)(vue@2.7.16)
-      vue-loader: 15.11.1(babel-core@7.0.0-bridge.0(@babel/core@7.28.0))(css-loader@7.1.2(webpack@5.99.9))(ejs@3.1.10)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.99.9)
+      vue-loader: 15.11.1(babel-core@7.0.0-bridge.0(@babel/core@7.28.0))(css-loader@7.1.2(webpack@5.99.7))(ejs@3.1.10)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.99.7)
       vue-sfc-descriptor-to-string: 1.0.0
       vue-style-loader: 4.1.3
       vue-template-compiler: 2.7.16
@@ -14984,14 +14961,7 @@ snapshots:
       scss-tokenizer: 0.4.3
       yargs: 17.7.2
 
-  sass-loader@16.0.4(node-sass@9.0.0)(webpack@5.99.9):
-    dependencies:
-      neo-async: 2.6.2
-    optionalDependencies:
-      node-sass: 9.0.0
-      webpack: 5.99.9(webpack-cli@6.0.1)
-
-  sass-loader@16.0.5(node-sass@9.0.0)(webpack@5.99.9):
+  sass-loader@16.0.5(node-sass@9.0.0)(webpack@5.99.7):
     dependencies:
       neo-async: 2.6.2
     optionalDependencies:
@@ -16096,10 +16066,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  vue-loader@15.11.1(babel-core@7.0.0-bridge.0(@babel/core@7.28.0))(css-loader@7.1.2(webpack@5.99.9))(ejs@3.1.10)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.99.9):
+  vue-loader@15.11.1(babel-core@7.0.0-bridge.0(@babel/core@7.28.0))(css-loader@7.1.2(webpack@5.99.7))(ejs@3.1.10)(lodash@4.17.21)(vue-template-compiler@2.7.16)(webpack@5.99.7):
     dependencies:
       '@vue/component-compiler-utils': 3.3.0(babel-core@7.0.0-bridge.0(@babel/core@7.28.0))(ejs@3.1.10)(lodash@4.17.21)
-      css-loader: 7.1.2(webpack@5.99.9)
+      css-loader: 7.1.2(webpack@5.99.7)
       hash-sum: 1.0.2
       loader-utils: 1.4.2
       vue-hot-reload-api: 2.3.4

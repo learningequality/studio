@@ -112,10 +112,10 @@
     "workbox-window": "^7.3.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.27.4",
+    "@babel/core": "^7.28.0",
     "@babel/plugin-syntax-import-assertions": "^7.27.1",
-    "@babel/plugin-transform-runtime": "^7.27.4",
-    "@babel/preset-env": "^7.27.2",
+    "@babel/plugin-transform-runtime": "^7.28.0",
+    "@babel/preset-env": "^7.28.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/user-event": "^14.6.1",
     "@testing-library/vue": "^5",
@@ -155,7 +155,7 @@
     "postcss-loader": "^8.1.1",
     "postcss-sass": "^0.5.0",
     "postcss-scss": "^4.0.9",
-    "sass-loader": "16.0.4",
+    "sass-loader": "16.0.5",
     "style-loader": "^4.0.0",
     "stylelint": "^15.11.0",
     "stylelint-config-html": "^1.1.0",
