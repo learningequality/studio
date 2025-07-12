@@ -211,12 +211,10 @@ class CRUDTestCase(StudioAPITestCase):
         self.assertEqual(len(results), 1)
         self.assertIsNotNone(more)
 
-        cursor = more["cursor"]
-
         response = self.client.get(
             reverse_with_query(
                 "community-library-submission-list",
-                query={"max_results": 1, "cursor": cursor},
+                query=more,
             )
         )
         self.assertEqual(response.status_code, 200, response.content)

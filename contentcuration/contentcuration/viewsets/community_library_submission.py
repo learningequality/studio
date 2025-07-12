@@ -61,8 +61,7 @@ class CommunityLibrarySubmissionSerializer(BulkModelSerializer):
         countries = validated_data.pop("countries", [])
         instance = super().create(validated_data)
 
-        for country in countries:
-            instance.countries.add(country)
+        instance.countries.set(countries)
 
         instance.save()
         return instance
@@ -113,22 +112,7 @@ class CommunityLibrarySubmissionViewSet(
     permission_classes = [IsAuthenticated]
     pagination_class = CommunityLibrarySubmissionPagination
     serializer_class = CommunityLibrarySubmissionSerializer
-
-    def get_queryset(self):
-        base_queryset = CommunityLibrarySubmission.objects.all()
-        user = self.request.user
-        queryset = CommunityLibrarySubmission.filter_view_queryset(
-            base_queryset, user
-        ).order_by("-date_created")
-
-        return queryset
-
-    def get_edit_queryset(self):
-        base_queryset = CommunityLibrarySubmission.objects.all()
-        user = self.request.user
-        queryset = CommunityLibrarySubmission.filter_edit_queryset(base_queryset, user)
-
-        return queryset
+    queryset = CommunityLibrarySubmission.objects.all().order_by("-date_created")
 
     def consolidate(self, items, queryset):
         countries = {}

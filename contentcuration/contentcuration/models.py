@@ -2659,7 +2659,6 @@ class AssessmentItem(models.Model):
 
     class Meta:
         indexes = [
-            # Useful for cursor pagination
             models.Index(fields=["assessment_id"], name=ASSESSMENT_ID_INDEX_NAME),
         ]
 
