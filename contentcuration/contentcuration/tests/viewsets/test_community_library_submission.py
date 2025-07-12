@@ -341,6 +341,24 @@ class CRUDTestCase(StudioAPITestCase):
         )
         self.assertEqual(response.status_code, 400, response.content)
 
+    def test_partial_update_submission__missing_channel(self):
+        self.client.force_authenticate(user=self.admin_user)
+        submission_metadata = self.updated_submission_metadata
+        del submission_metadata["channel"]
+        response = self.client.patch(
+            reverse(
+                "community-library-submission-detail",
+                args=[self.existing_submission1.id],
+            ),
+            submission_metadata,
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        updated_submission = CommunityLibrarySubmission.objects.get(
+            id=self.existing_submission1.id
+        )
+        self.assertEqual(updated_submission.channel, self.channel_with_submission1)
+
     def test_delete_submission__is_author(self):
         self.client.force_authenticate(user=self.author_user)
         response = self.client.delete(

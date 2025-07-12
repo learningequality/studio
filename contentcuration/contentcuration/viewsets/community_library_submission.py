@@ -67,7 +67,10 @@ class CommunityLibrarySubmissionSerializer(BulkModelSerializer):
         return instance
 
     def update(self, instance, validated_data):
-        if instance.channel.id != validated_data["channel"].id:
+        if (
+            "channel" in validated_data
+            and instance.channel.id != validated_data["channel"].id
+        ):
             raise ValidationError(
                 "Cannot change the channel corresponding to "
                 "a community library submission."
