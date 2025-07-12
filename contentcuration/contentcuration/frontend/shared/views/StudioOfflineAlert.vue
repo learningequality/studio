@@ -38,15 +38,23 @@ export default {
     libraryMode() {
       return window.libraryMode;
     },
-    computedstyle() {
-      return {
-        position: 'fixed',
-        top: `${this.offset}px`,
-        left: '0',
-        right: '0',
-        backgroundColor: this.$themeTokens.surface,
-        zIndex: 300,
-      };
+    computed: {
+      ...mapState({
+        offline: state => !state.connection.online,
+      }),
+      libraryMode() {
+        return window.libraryMode;
+      },
+      computedstyle() {
+        return {
+          position: 'fixed',
+          top: `${this.offset}px`,
+          left: '0',
+          right: '0',
+          backgroundColor: this.$themeTokens.surface,
+          zIndex: 16,
+        };
+      },
     },
   },
   watch: {
