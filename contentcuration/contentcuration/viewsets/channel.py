@@ -774,9 +774,7 @@ class ChannelViewSet(ValuesViewset):
         url_path="language_exists",
         url_name="language-exists",
     )
-    def channel_language_exists(
-        self, request, pk=None
-    ) -> Union[JsonResponse, HttpResponse]:
+    def channel_language_exists(self, request, pk=None) -> JsonResponse:
         """
         Verify that the language set for a channel is present in at least one of its resources.
 
@@ -813,6 +811,27 @@ class ChannelViewSet(ValuesViewset):
         main_tree_id = channel_details.get("main_tree_id")
         langs_in_content = self._get_channel_content_languages(pk, main_tree_id)
         return JsonResponse({"languages": langs_in_content})
+
+    @action(
+        detail=True,
+        methods=["get"],
+        url_path="published_data",
+        url_name="published-data",
+    )
+    def get_published_data(self, request, pk=None) -> Union[JsonResponse, HttpResponse]:
+        """
+        Get the published data for a channel.
+
+        :param request: The request object
+        :param pk: The ID of the channel
+        :return: JsonResponse with the published data of the channel
+        :rtype: JsonResponse
+        """
+        # Allow exactly users with permission to edit the channel to
+        # access the published data.
+        channel = self.get_edit_object()
+
+        return Response(channel.published_data)
 
     def _channel_exists(self, channel_id) -> bool:
         """
