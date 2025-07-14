@@ -60,7 +60,7 @@
               <button
                 v-for="(symbol, symbolIdx) in symbolsGroup.symbols"
                 :key="symbolIdx"
-                :class="getSymbolClasses(symbolsGroup)"
+                :class="getSymbolClasses(symbolsGroup, symbolsGroupIdx)"
                 class="symbol-button"
                 :aria-label="symbol.title"
                 @click="onSymbolClick(symbolsGroupIdx, symbolIdx)"
@@ -100,13 +100,13 @@
   import { useFocusTrap } from '../../composables/useFocusTrap';
   import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
   import { useMathLiveLocale } from '../../composables/useMathLiveLocale';
+  import { getFormulasStrings } from './FormulasStrings';
   import symbolsData from './symbols.json';
 
   export default defineComponent({
     setup(props, { emit }) {
       const rootEl = ref(null);
       const mathfieldEl = ref(null);
-      const symbolGroups = ref(symbolsData);
       const infoText = ref('');
 
       useFocusTrap(rootEl);
@@ -152,10 +152,15 @@
         return symbolGroups.value[symbolsGroupIdx].symbols[symbolIdx];
       };
 
-      const getSymbolClasses = symbolsGroup => {
+      const getSymbolClasses = (symbolsGroup, symbolsGroupIdx) => {
         const classes = ['symbol'];
 
-        if (['Formulas', 'Lines'].includes(symbolsGroup.title)) {
+        // Get the original titleKey from symbolsData
+        const originalGroup = symbolsData[symbolsGroupIdx];
+        if (
+          originalGroup &&
+          ['formulasCategory', 'linesCategory'].includes(originalGroup.titleKey)
+        ) {
           classes.push('equation');
         }
 
@@ -173,12 +178,14 @@
 
       const onSymbolClick = (symbolsGroupIdx, symbolIdx) => {
         const symbol = getSymbol(symbolsGroupIdx, symbolIdx);
-        const symbolsGroup = symbolGroups.value[symbolsGroupIdx];
 
         if (mathfieldEl.value) {
-          // Use template if available, otherwise use preview
+          // Use template if available (for formulas category), otherwise use preview
+          const originalGroup = symbolsData[symbolsGroupIdx];
           const valueToInsert =
-            symbolsGroup.title === 'Formulas' && symbol.template ? symbol.template : symbol.preview;
+            originalGroup?.titleKey === 'formulasCategory' && symbol.template
+              ? symbol.template
+              : symbol.preview;
 
           mathfieldEl.value.executeCommand(['insert', valueToInsert]);
           mathfieldEl.value.focus();
@@ -193,6 +200,26 @@
       };
 
       const { formulasMenuTitle$, insert$, closeModal$ } = getTipTapEditorStrings();
+      const formulasStrings = getFormulasStrings();
+
+      // Transform symbols data to use translations
+      const symbolGroups = computed(() => {
+        return symbolsData.map(group => {
+          const translatedTitle = formulasStrings[`${group.titleKey}$`]
+            ? formulasStrings[`${group.titleKey}$`]()
+            : group.title || group.titleKey;
+
+          return {
+            title: translatedTitle,
+            symbols: group.symbols.map(symbol => ({
+              ...symbol,
+              title: formulasStrings[`${symbol.titleKey}$`]
+                ? formulasStrings[`${symbol.titleKey}$`]()
+                : symbol.title || symbol.titleKey,
+            })),
+          };
+        });
+      });
 
       const currentLocale = ref(navigator.language || 'en');
       useMathLiveLocale(currentLocale);
