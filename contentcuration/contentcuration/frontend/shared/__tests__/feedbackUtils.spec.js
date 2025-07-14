@@ -11,16 +11,15 @@ import client from '../client';
 jest.mock('uuid', () => ({ v4: jest.fn(() => 'mocked-uuid') }));
 jest.mock('../client');
 
-function setupRecommendationsEvent({ method, id }) {
+function setupRecommendationsEvent({ method, eventId }) {
   return new RecommendationsEvent({
     method: method,
     data: {
-      id: id,
       context: { model_version: 1, breadcrumbs: '#Title#->Random' },
       contentnode_id: uuidv4(),
       content_id: uuidv4(),
       target_channel_id: uuidv4(),
-      user_id: uuidv4(),
+      user: uuidv4(),
       content: [
         {
           content_id: uuidv4(),
@@ -30,6 +29,7 @@ function setupRecommendationsEvent({ method, id }) {
         },
       ],
     },
+    eventId: eventId,
   });
 }
 
@@ -38,10 +38,9 @@ function setupRecommendationsInteractionEvent({
   bulk = false,
   dataOverride = null,
   override = false,
-  id = null,
+  eventId = null,
 }) {
   const data = {
-    id: id,
     context: { test_key: 'test_value' },
     contentnode_id: uuidv4(),
     content_id: uuidv4(),
@@ -52,6 +51,7 @@ function setupRecommendationsInteractionEvent({
   return new RecommendationsInteractionEvent({
     method: method,
     data: override ? dataOverride : bulk ? [data] : data,
+    eventId: eventId,
   });
 }
 
@@ -91,10 +91,7 @@ describe('FeedBackUtility Tests', () => {
 
   describe('FlagFeedbackEvent Tests', () => {
     it('should generate data object without functions', () => {
-      const eventId = flagFeedbackEvent.getEventId();
       const dataObject = flagFeedbackEvent.getData();
-      expect(dataObject.id).toEqual('mocked-uuid');
-      expect(eventId).toEqual(dataObject.id);
       expect(dataObject.context).toEqual({ key: 'value' });
       expect(dataObject.contentnode_id).toEqual('mocked-uuid');
       expect(dataObject.content_id).toEqual('mocked-uuid');
@@ -143,15 +140,12 @@ describe('FeedBackUtility Tests', () => {
 
   describe('RecommendationsEvent Tests', () => {
     it('should generate data object without functions', () => {
-      const eventId = recommendationsEvent.getEventId();
       const dataObject = recommendationsEvent.getData();
-      expect(dataObject.id).toEqual('mocked-uuid');
-      expect(eventId).toEqual(dataObject.id);
       expect(dataObject.context).toEqual({ model_version: 1, breadcrumbs: '#Title#->Random' });
       expect(dataObject.contentnode_id).toEqual('mocked-uuid');
       expect(dataObject.content_id).toEqual('mocked-uuid');
       expect(dataObject.target_channel_id).toEqual('mocked-uuid');
-      expect(dataObject.user_id).toEqual('mocked-uuid');
+      expect(dataObject.user).toEqual('mocked-uuid');
       expect(dataObject.content).toEqual([
         {
           content_id: 'mocked-uuid',
@@ -196,7 +190,7 @@ describe('FeedBackUtility Tests', () => {
         client.put.mockResolvedValue(Promise.resolve({ data: 'Mocked API Response' }));
         recommendationsEvent = setupRecommendationsEvent({
           method: 'put',
-          id: uuidv4(),
+          eventId: uuidv4(),
         });
         const result = await sendRequest(recommendationsEvent);
         expect(result).toEqual('Mocked API Response');
@@ -210,7 +204,7 @@ describe('FeedBackUtility Tests', () => {
         client.patch.mockResolvedValue(Promise.resolve({ data: 'Mocked API Response' }));
         recommendationsEvent = setupRecommendationsEvent({
           method: 'patch',
-          id: uuidv4(),
+          eventId: uuidv4(),
         });
         const result = await sendRequest(recommendationsEvent);
         expect(result).toEqual('Mocked API Response');
@@ -236,7 +230,7 @@ describe('FeedBackUtility Tests', () => {
         client.put.mockRejectedValue(new Error('Mocked API Error'));
         recommendationsEvent = setupRecommendationsEvent({
           method: 'put',
-          id: uuidv4(),
+          eventId: uuidv4(),
         });
         await expect(sendRequest(recommendationsEvent)).rejects.toThrowError('Mocked API Error');
         expect(client.put).toHaveBeenCalledWith(
@@ -249,7 +243,7 @@ describe('FeedBackUtility Tests', () => {
         client.patch.mockRejectedValue(new Error('Mocked API Error'));
         recommendationsEvent = setupRecommendationsEvent({
           method: 'patch',
-          id: uuidv4(),
+          eventId: uuidv4(),
         });
         await expect(sendRequest(recommendationsEvent)).rejects.toThrowError('Mocked API Error');
         expect(client.patch).toHaveBeenCalledWith(
@@ -261,7 +255,7 @@ describe('FeedBackUtility Tests', () => {
       it('should throw error for unsupported DELETE method', async () => {
         recommendationsEvent = setupRecommendationsEvent({
           method: 'delete',
-          id: uuidv4(),
+          eventId: uuidv4(),
         });
         await expect(sendRequest(recommendationsEvent)).rejects.toThrowError(
           'Unsupported HTTP method: delete',
@@ -271,7 +265,7 @@ describe('FeedBackUtility Tests', () => {
       it('should throw error for unsupported GET method', async () => {
         recommendationsEvent = setupRecommendationsEvent({
           method: 'get',
-          id: uuidv4(),
+          eventId: uuidv4(),
         });
         await expect(sendRequest(recommendationsEvent)).rejects.toThrowError(
           'Unsupported HTTP method: get',
@@ -282,10 +276,7 @@ describe('FeedBackUtility Tests', () => {
 
   describe('RecommendationsInteractionEvent Tests', () => {
     it('should generate data object without functions', () => {
-      const eventId = recommendationsInteractionEvent.getEventId();
       const dataObject = recommendationsInteractionEvent.getData();
-      expect(dataObject.id).toEqual('mocked-uuid');
-      expect(eventId).toEqual(dataObject.id);
       expect(dataObject.context).toEqual({ test_key: 'test_value' });
       expect(dataObject.contentnode_id).toEqual('mocked-uuid');
       expect(dataObject.content_id).toEqual('mocked-uuid');
@@ -314,6 +305,7 @@ describe('FeedBackUtility Tests', () => {
           bulk: true,
           dataOverride: [],
           override: true,
+          eventId: uuidv4(),
         }),
       ).toThrowError("Array 'data' is only allowed for 'post' requests");
     });
@@ -419,6 +411,7 @@ describe('FeedBackUtility Tests', () => {
         client.put.mockResolvedValue(Promise.resolve({ data: 'Mocked API Response' }));
         recommendationsInteractionEvent = setupRecommendationsInteractionEvent({
           method: 'put',
+          eventId: uuidv4(),
         });
         const result = await sendRequest(recommendationsInteractionEvent);
         expect(result).toEqual('Mocked API Response');
@@ -432,6 +425,7 @@ describe('FeedBackUtility Tests', () => {
         client.patch.mockResolvedValue(Promise.resolve({ data: 'Mocked API Response' }));
         recommendationsInteractionEvent = setupRecommendationsInteractionEvent({
           method: 'patch',
+          eventId: uuidv4(),
         });
         const result = await sendRequest(recommendationsInteractionEvent);
         expect(result).toEqual('Mocked API Response');
@@ -459,6 +453,7 @@ describe('FeedBackUtility Tests', () => {
         client.put.mockRejectedValue(new Error('Mocked API Error'));
         recommendationsInteractionEvent = setupRecommendationsInteractionEvent({
           method: 'put',
+          eventId: uuidv4(),
         });
         await expect(sendRequest(recommendationsInteractionEvent)).rejects.toThrowError(
           'Mocked API Error',
@@ -473,6 +468,7 @@ describe('FeedBackUtility Tests', () => {
         client.patch.mockRejectedValue(new Error('Mocked API Error'));
         recommendationsInteractionEvent = setupRecommendationsInteractionEvent({
           method: 'patch',
+          eventId: uuidv4(),
         });
         await expect(sendRequest(recommendationsInteractionEvent)).rejects.toThrowError(
           'Mocked API Error',

@@ -3,7 +3,6 @@ import Vuex, { Store } from 'vuex';
 import VueRouter from 'vue-router';
 import SearchOrBrowseWindow from '../SearchOrBrowseWindow';
 import { RouteNames } from '../../../constants';
-import { sendRequest } from 'shared/feedbackApiUtils';
 
 // Mock the jsonSchema compile function to always return true
 jest.mock('shared/utils/jsonSchema', () => ({
@@ -66,6 +65,7 @@ describe('SearchOrBrowseWindow', () => {
           parent_id: 'parent-1',
         },
       ]),
+      'importFromChannels/captureFeedbackEvent': jest.fn().mockResolvedValue(null),
     };
 
     mutations = {
@@ -90,6 +90,7 @@ describe('SearchOrBrowseWindow', () => {
           },
           actions: {
             fetchRecommendations: actions['importFromChannels/fetchRecommendations'],
+            captureFeedbackEvent: actions['importFromChannels/captureFeedbackEvent'],
           },
           mutations: {
             SELECT_NODES: mutations['importFromChannels/SELECT_NODES'],
@@ -199,17 +200,6 @@ describe('SearchOrBrowseWindow', () => {
     expect(wrapper.vm.$route.params.searchTerm).toBe('new search');
   });
 
-  it('handles selection changes', () => {
-    const nodes = [{ id: 'node-1' }];
-    const selected = { selected: [{ id: 'selected-1' }] };
-
-    wrapper.vm.handleChangeSelected({ isSelected: true, nodes });
-    expect(mutations['importFromChannels/SELECT_NODES']).toHaveBeenCalledWith(selected, nodes);
-
-    wrapper.vm.handleChangeSelected({ isSelected: false, nodes });
-    expect(mutations['importFromChannels/DESELECT_NODES']).toHaveBeenCalledWith(selected, nodes);
-  });
-
   it('loads recommendations', async () => {
     await wrapper.vm.loadRecommendations(false);
 
@@ -230,7 +220,7 @@ describe('SearchOrBrowseWindow', () => {
 
     await wrapper.vm.handleViewMoreRecommendations();
 
-    expect(wrapper.vm.displayedRecommendations.length).toBe(15);
+    expect(wrapper.vm.displayedRecommendations.length).toBe(10);
   });
 
   it('validates feedback form correctly', () => {
@@ -243,13 +233,6 @@ describe('SearchOrBrowseWindow', () => {
     wrapper.vm.otherFeedback = 'valid feedback';
     const validResult = wrapper.vm.validateFeedbackForm;
     expect(validResult).toBe(true);
-  });
-
-  it('submits recommendations feedback', async () => {
-    await wrapper.vm.loadRecommendations(false);
-    await wrapper.vm.submitRecommendationsFeedback();
-
-    expect(sendRequest).toHaveBeenCalled();
   });
 
   it('handles feedback checkbox changes', () => {

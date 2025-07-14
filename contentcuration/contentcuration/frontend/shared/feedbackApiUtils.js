@@ -1,6 +1,5 @@
 // Helper functions and Utils for creating an API request to
 // Feedback mechanism endpoints
-import { v4 as uuidv4 } from 'uuid';
 import client from './client';
 import urls from 'shared/urls';
 
@@ -11,12 +10,6 @@ export const FeedbackTypeOptions = {
   showmore: 'SHOWMORE',
   ignored: 'IGNORED',
   flagged: 'FLAGGED',
-};
-
-export const FeedbackEventTypes = {
-  flag: FlagFeedbackEvent,
-  recommendations: RecommendationsEvent,
-  interaction: RecommendationsInteractionEvent,
 };
 
 export const FLAG_FEEDBACK_EVENT_ENDPOINT = 'flagged';
@@ -41,12 +34,14 @@ class BaseFeedback {
    * @classdesc Represents a base feedback object with common properties and methods.
    * @param {BaseFeedbackParams} object
    */
-  constructor({ method, endpoint, data }) {
+  constructor({ method, endpoint, data, eventId }) {
     this.method = method || 'post';
     this.endpoint = endpoint;
     this.data = data;
+    this.eventId = eventId;
 
     this.validateData();
+    this.validateEventId();
   }
 
   validateData() {
@@ -69,23 +64,15 @@ class BaseFeedback {
         if (typeof item !== 'object' || item === null) {
           throw new Error(`Item at position ${idx} in 'data' is not a valid object`);
         }
-        if (!item.id) {
-          item.id = uuidv4();
-        }
         required.forEach(field => {
-          // Skip validation for 'id' field
-          if (field === 'id') return;
           if (typeof item[field] === 'undefined') {
             throw new Error(`Missing required property in 'data': ${field} at position: ${idx}`);
           }
         });
       });
     } else if (typeof this.data === 'object') {
-      if (!this.data.id) {
-        this.data.id = uuidv4();
-      }
       required.forEach(field => {
-        if (typeof this.data[field] === 'undefined') {
+        if (this.getMethod() !== 'patch' && typeof this.data[field] === 'undefined') {
           throw new Error(`The 'data' object is missing required property: ${field}`);
         }
       });
@@ -94,9 +81,10 @@ class BaseFeedback {
     }
   }
 
-  getEventId() {
-    const data = this.getData();
-    return data && typeof data === 'object' ? data.id : null;
+  validateEventId() {
+    if (!this.eventId && ['put', 'patch'].includes(this.getMethod())) {
+      throw new Error("The 'eventId' is required for 'put' and 'patch' requests");
+    }
   }
 
   // Returns the data based on the backend contract
@@ -105,7 +93,7 @@ class BaseFeedback {
   }
 
   getRequiredDataFields() {
-    return ['id', 'context', 'contentnode_id', 'content_id'];
+    return ['context', 'contentnode_id', 'content_id'];
   }
 
   // Return the url associated with the ObjectType
@@ -116,7 +104,7 @@ class BaseFeedback {
 
     let url;
     if (['patch', 'put'].includes(this.getMethod())) {
-      url = urls[`${this.endpoint}-detail`](this.getData().id);
+      url = urls[`${this.endpoint}-detail`](this.eventId);
     } else {
       url = urls[`${this.endpoint}-list`]();
     }
@@ -140,7 +128,7 @@ class BaseFeedback {
 // eslint-disable-next-line no-unused-vars
 class BaseFeedbackEvent extends BaseFeedback {
   getRequiredDataFields() {
-    return [...super.getRequiredDataFields(), 'user_id', 'target_channel_id'];
+    return [...super.getRequiredDataFields(), 'user', 'target_channel_id'];
   }
 }
 
@@ -226,6 +214,12 @@ export class RecommendationsInteractionEvent extends BaseFeedbackInteractionEven
     return [...super.getRequiredDataFields(), 'recommendation_event_id'];
   }
 }
+
+export const FeedbackEventTypes = {
+  flag: FlagFeedbackEvent,
+  recommendations: RecommendationsEvent,
+  interaction: RecommendationsInteractionEvent,
+};
 
 /**
  * Sends a request using the provided feedback object.
