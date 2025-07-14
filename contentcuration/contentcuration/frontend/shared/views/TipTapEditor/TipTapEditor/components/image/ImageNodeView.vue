@@ -17,6 +17,7 @@
         class="image-actions"
         :class="{ 'is-compact': isCompact }"
         aria-label="Image actions"
+        data-copy-ignore
       >
         <button
           title="Edit Image"
@@ -50,6 +51,7 @@
         aria-label="Resize image"
         aria-valuemin="50"
         :aria-valuenow="width"
+        data-copy-ignore
         @mousedown.prevent="onResizeStart"
         @keydown.prevent="onResizeKeyDown"
       ></div>

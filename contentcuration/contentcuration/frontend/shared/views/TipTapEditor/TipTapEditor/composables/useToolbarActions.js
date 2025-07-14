@@ -61,38 +61,76 @@ export function useToolbarActions() {
 
   // Copy with formatting
   const handleCopy = async () => {
-    if (editor.value) {
-      const { state } = editor.value;
-      const { from, to } = state.selection;
+    if (!editor.value) return;
 
-      if (from === to) return; // No selection
+    const { state } = editor.value;
+    const { from, to } = state.selection;
 
-      // Get selected text
-      const selectedText = state.doc.textBetween(from, to, '\n');
+    if (from === to) return; // No selection
 
-      // Use browser's native selection to get the actual selected HTML
+    // Get selected text for plain text fallback
+    const selectedText = state.doc.textBetween(from, to, '\n');
+
+    try {
+      // Get HTML directly from the current selection
       const selection = window.getSelection();
-      let selectedHtml = '';
-
       if (selection.rangeCount > 0) {
         const range = selection.getRangeAt(0);
-        const contents = range.cloneContents();
-        const tempDiv = document.createElement('div');
-        tempDiv.appendChild(contents);
-        selectedHtml = tempDiv.innerHTML;
-      }
+        const container = document.createElement('div');
+        container.appendChild(range.cloneContents());
 
-      try {
+        // Process math elements specifically
+        const mathFields = container.querySelectorAll('math-field');
+        mathFields.forEach(mathField => {
+          const latex = mathField.getAttribute('value') || '';
+          const span = document.createElement('span');
+          span.className = 'math-inline';
+          span.setAttribute('data-latex', latex);
+          span.textContent = `\\(${latex}\\)`;
+          mathField.parentNode.replaceChild(span, mathField);
+        });
+
+        // Remove elements marked with data-copy-ignore
+        const copyIgnoreElements = container.querySelectorAll('[data-copy-ignore]');
+        copyIgnoreElements.forEach(el => el.remove());
+
+        // Remove Vue-specific attributes and wrapper divs
+        const allElements = container.querySelectorAll('*');
+        allElements.forEach(el => {
+          // Remove Vue data attributes
+          Array.from(el.attributes).forEach(attr => {
+            if (
+              attr.name.startsWith('data-v-') ||
+              attr.name === 'data-node-view-wrapper' ||
+              attr.name === 'contenteditable' ||
+              attr.name === 'tabindex' ||
+              attr.name === 'data-copy-ignore'
+            ) {
+              el.removeAttribute(attr.name);
+            }
+          });
+
+          // Remove wrapper divs
+          if (el.classList.contains('math-node-wrapper')) {
+            while (el.firstChild) {
+              el.parentNode.insertBefore(el.firstChild, el);
+            }
+            el.remove();
+          }
+        });
+
+        const cleanHtml = container.innerHTML;
+
         await navigator.clipboard.write([
           new ClipboardItem({
-            'text/html': new Blob([selectedHtml], { type: 'text/html' }),
+            'text/html': new Blob([cleanHtml], { type: 'text/html' }),
             'text/plain': new Blob([selectedText], { type: 'text/plain' }),
           }),
         ]);
-      } catch (err) {
-        // Fallback to plain text
-        await navigator.clipboard.writeText(selectedText);
       }
+    } catch (err) {
+      // Fallback to plain text
+      await navigator.clipboard.writeText(selectedText);
     }
   };
 
