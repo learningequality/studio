@@ -2574,6 +2574,7 @@ class CommunityLibrarySubmission(models.Model):
     resolution_reason = models.CharField(
         max_length=50,
         choices=community_library_submission.resolution_reason_choices,
+        blank=True,
         null=True,
     )
     feedback_notes = models.TextField(blank=True, null=True)
