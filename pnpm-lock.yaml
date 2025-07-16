@@ -105,8 +105,8 @@ importers:
         specifier: ^6.11.2
         version: 6.14.0
       regenerator-runtime:
-        specifier: ^0.13.5
-        version: 0.13.11
+        specifier: ^0.14.1
+        version: 0.14.1
       showdown:
         specifier: ^2.1.0
         version: 2.1.0
