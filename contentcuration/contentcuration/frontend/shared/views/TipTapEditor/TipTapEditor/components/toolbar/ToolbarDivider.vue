@@ -21,7 +21,7 @@
   .toolbar-divider {
     width: 1px;
     height: 20px;
-    margin: 0 4px;
+    margin: 0 3px;
     background: #dee2e6;
   }
 

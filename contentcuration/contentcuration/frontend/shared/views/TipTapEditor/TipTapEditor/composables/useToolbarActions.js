@@ -61,38 +61,76 @@ export function useToolbarActions() {
 
   // Copy with formatting
   const handleCopy = async () => {
-    if (editor.value) {
-      const { state } = editor.value;
-      const { from, to } = state.selection;
+    if (!editor.value) return;
 
-      if (from === to) return; // No selection
+    const { state } = editor.value;
+    const { from, to } = state.selection;
 
-      // Get selected text
-      const selectedText = state.doc.textBetween(from, to, '\n');
+    if (from === to) return; // No selection
 
-      // Use browser's native selection to get the actual selected HTML
+    // Get selected text for plain text fallback
+    const selectedText = state.doc.textBetween(from, to, '\n');
+
+    try {
+      // Get HTML directly from the current selection
       const selection = window.getSelection();
-      let selectedHtml = '';
-
       if (selection.rangeCount > 0) {
         const range = selection.getRangeAt(0);
-        const contents = range.cloneContents();
-        const tempDiv = document.createElement('div');
-        tempDiv.appendChild(contents);
-        selectedHtml = tempDiv.innerHTML;
-      }
+        const container = document.createElement('div');
+        container.appendChild(range.cloneContents());
 
-      try {
+        // Process math elements specifically
+        const mathFields = container.querySelectorAll('math-field');
+        mathFields.forEach(mathField => {
+          const latex = mathField.getAttribute('value') || '';
+          const span = document.createElement('span');
+          span.className = 'math-inline';
+          span.setAttribute('data-latex', latex);
+          span.textContent = `\\(${latex}\\)`;
+          mathField.parentNode.replaceChild(span, mathField);
+        });
+
+        // Remove elements marked with data-copy-ignore
+        const copyIgnoreElements = container.querySelectorAll('[data-copy-ignore]');
+        copyIgnoreElements.forEach(el => el.remove());
+
+        // Remove Vue-specific attributes and wrapper divs
+        const allElements = container.querySelectorAll('*');
+        allElements.forEach(el => {
+          // Remove Vue data attributes
+          Array.from(el.attributes).forEach(attr => {
+            if (
+              attr.name.startsWith('data-v-') ||
+              attr.name === 'data-node-view-wrapper' ||
+              attr.name === 'contenteditable' ||
+              attr.name === 'tabindex' ||
+              attr.name === 'data-copy-ignore'
+            ) {
+              el.removeAttribute(attr.name);
+            }
+          });
+
+          // Remove wrapper divs
+          if (el.classList.contains('math-node-wrapper')) {
+            while (el.firstChild) {
+              el.parentNode.insertBefore(el.firstChild, el);
+            }
+            el.remove();
+          }
+        });
+
+        const cleanHtml = container.innerHTML;
+
         await navigator.clipboard.write([
           new ClipboardItem({
-            'text/html': new Blob([selectedHtml], { type: 'text/html' }),
+            'text/html': new Blob([cleanHtml], { type: 'text/html' }),
             'text/plain': new Blob([selectedText], { type: 'text/plain' }),
           }),
         ]);
-      } catch (err) {
-        // Fallback to plain text
-        await navigator.clipboard.writeText(selectedText);
       }
+    } catch (err) {
+      // Fallback to plain text
+      await navigator.clipboard.writeText(selectedText);
     }
   };
 
@@ -142,19 +180,23 @@ export function useToolbarActions() {
   };
 
   const handleSubscript = () => {
-    // TipTap subscript logic will be added here
+    if (editor?.value) {
+      editor.value.chain().focus().toggleSubscript().run();
+    }
   };
 
   const handleSuperscript = () => {
-    // TipTap superscript logic will be added here
+    if (editor?.value) {
+      editor.value.chain().focus().toggleSuperscript().run();
+    }
   };
 
   const handleInsertImage = () => {
-    // TipTap insert image logic will be added here
+    // placeholder
   };
 
   const handleInsertLink = () => {
-    // TipTap insert link logic will be added here
+    // placeholder
   };
 
   const handleMath = () => {
@@ -162,7 +204,9 @@ export function useToolbarActions() {
   };
 
   const handleCodeBlock = () => {
-    // TipTap code block logic may be added here
+    if (editor?.value) {
+      editor.value.chain().focus().toggleCodeBlock().run();
+    }
   };
 
   const handleFormatChange = format => {
@@ -191,12 +235,34 @@ export function useToolbarActions() {
     }
   };
 
+  const handleClearFormat = () => {
+    if (editor?.value) {
+      editor.value.chain().focus().unsetAllMarks().run();
+    }
+  };
+
   // Helper function to check if a mark is active
   const isMarkActive = markName => {
     return editor?.value?.isActive(markName) || false;
   };
 
-  // Helper function to check if a button is clickable
+  // Helper function to check if any of the main marks are active
+  const hasClearableMark = () => {
+    if (!editor?.value) return false;
+    const { from, to, empty } = editor.value.state.selection;
+    if (empty) {
+      return false;
+    }
+
+    let hasMarks = false;
+    editor.value.state.doc.nodesBetween(from, to, node => {
+      if (node.marks.length > 0) {
+        hasMarks = true;
+      }
+    });
+    return hasMarks;
+  };
+
   const isButtonAvailable = action => {
     if (!editor?.value) return false;
 
@@ -205,8 +271,10 @@ export function useToolbarActions() {
         return editor.value.can().undo();
       case 'redo':
         return editor.value.can().redo();
+      case 'removeFormat':
+        return hasClearableMark();
       default:
-        return true; // Default to true for other actions
+        return true;
     }
   };
 
@@ -282,13 +350,17 @@ export function useToolbarActions() {
       name: 'subscript',
       title: subscript$(),
       icon: require('../../assets/icon-subscript.svg'),
+      rtlIcon: require('../../assets/icon-subscriptRTL.svg'),
       handler: handleSubscript,
+      isActive: isMarkActive('subscript'),
     },
     {
       name: 'superscript',
       title: superscript$(),
       icon: require('../../assets/icon-superscript.svg'),
+      rtlIcon: require('../../assets/icon-superscriptRTL.svg'),
       handler: handleSuperscript,
+      isActive: isMarkActive('superscript'),
     },
   ]);
 
@@ -303,6 +375,7 @@ export function useToolbarActions() {
       name: 'link',
       title: insertLink$(),
       icon: require('../../assets/icon-link.svg'),
+      isActive: isMarkActive('link'),
       handler: handleInsertLink,
     },
     {
@@ -316,6 +389,7 @@ export function useToolbarActions() {
       title: codeBlock$(),
       icon: require('../../assets/icon-codeblock.svg'),
       handler: handleCodeBlock,
+      isActive: isMarkActive('codeBlock'),
     },
   ]);
 
@@ -339,6 +413,8 @@ export function useToolbarActions() {
     handleMath,
     handleCodeBlock,
     handleFormatChange,
+    handleClearFormat,
+    canClearFormat: computed(() => isButtonAvailable('removeFormat')),
 
     // Action arrays
     historyActions,

@@ -41,9 +41,9 @@
         return props.icon;
       });
 
-      const handleClick = () => {
+      const handleClick = event => {
         if (props.isAvailable) {
-          emit('click');
+          emit('click', event);
         }
       };
 
@@ -51,7 +51,7 @@
         // Handle Enter and Space keys
         if ((event.key === 'Enter' || event.key === ' ') && props.isAvailable) {
           event.preventDefault();
-          emit('click');
+          emit('click', event);
         }
       };
 
@@ -129,12 +129,11 @@
     background: #e6e6e6;
     border-radius: 4px;
     outline: 2px solid #0097f2;
-    outline-offset: 2px;
   }
 
   .toolbar-icon {
-    width: 19px;
-    height: 19px;
+    width: 21px;
+    height: 21px;
     opacity: 0.7;
   }
 

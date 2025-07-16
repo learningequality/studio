@@ -65,6 +65,15 @@
 
     <ToolbarDivider />
 
+    <ToolbarButton
+      :title="'clearFormatting'"
+      :icon="require('../../assets/icon-clearFormat.svg')"
+      :is-available="canClearFormat"
+      @click="handleClearFormat"
+    />
+
+    <ToolbarDivider />
+
     <!-- Lists -->
     <div
       role="group"
@@ -94,6 +103,8 @@
         :key="script.name"
         :title="script.title"
         :icon="script.icon"
+        :rtl-icon="script.rtlIcon"
+        :is-active="script.isActive"
         @click="script.handler"
       />
     </div>
@@ -110,7 +121,8 @@
         :key="tool.name"
         :title="tool.title"
         :icon="tool.icon"
-        @click="tool.handler"
+        :is-active="tool.isActive"
+        @click="onToolClick(tool, $event)"
       />
     </div>
   </div>
@@ -136,9 +148,17 @@
       PasteDropdown,
       ToolbarDivider,
     },
-    setup() {
-      const { handleCopy, historyActions, textActions, listActions, scriptActions, insertTools } =
-        useToolbarActions();
+    setup(props, { emit }) {
+      const {
+        handleCopy,
+        handleClearFormat,
+        canClearFormat,
+        historyActions,
+        textActions,
+        listActions,
+        scriptActions,
+        insertTools,
+      } = useToolbarActions();
 
       const {
         copy$,
@@ -152,8 +172,24 @@
         insertTools$,
       } = getTipTapEditorStrings();
 
+      const onToolClick = (tool, event) => {
+        if (tool.name === 'image') {
+          emit('insert-image', event.currentTarget);
+        } else if (tool.name === 'link') {
+          emit('insert-link');
+        } else if (tool.name === 'math') {
+          emit('insert-math', event.currentTarget);
+        } else {
+          // For all other buttons, call their original handler
+          tool.handler();
+        }
+      };
+
       return {
         handleCopy,
+        handleClearFormat,
+        onToolClick,
+        canClearFormat,
         historyActions,
         textActions,
         listActions,
@@ -179,7 +215,7 @@
 
   .toolbar {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
     padding: 8px 12px;
     background: #f8f9fa;
