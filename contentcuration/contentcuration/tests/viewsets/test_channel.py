@@ -940,3 +940,49 @@ class ChannelLanguageTestCase(StudioAPITestCase):
             reverse(url_path, kwargs={"pk": channel_id}), format="json"
         )
         return response
+
+
+class GetPublishedDataTestCase(StudioAPITestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.editor_user = testdata.user(email="editor@user.com")
+        self.forbidden_user = testdata.user(email="forbidden@user.com")
+
+        self.channel = testdata.channel()
+        self.channel.editors.add(self.editor_user)
+
+        self.channel.published_data = {
+            "key1": "value1",
+            "key2": "value2",
+        }
+        self.channel.save()
+
+    def test_get_published_data__is_editor(self):
+        self.client.force_authenticate(user=self.editor_user)
+
+        response = self.client.get(
+            reverse("channel-published-data", kwargs={"pk": self.channel.id}),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.json(), self.channel.published_data)
+
+    def test_get_published_data__is_admin(self):
+        self.client.force_authenticate(user=self.admin_user)
+
+        response = self.client.get(
+            reverse("channel-published-data", kwargs={"pk": self.channel.id}),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.json(), self.channel.published_data)
+
+    def test_get_published_data__is_forbidden_user(self):
+        self.client.force_authenticate(user=self.forbidden_user)
+
+        response = self.client.get(
+            reverse("channel-published-data", kwargs={"pk": self.channel.id}),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 404, response.content)

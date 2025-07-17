@@ -814,6 +814,27 @@ class ChannelViewSet(ValuesViewset):
         langs_in_content = self._get_channel_content_languages(pk, main_tree_id)
         return JsonResponse({"languages": langs_in_content})
 
+    @action(
+        detail=True,
+        methods=["get"],
+        url_path="published_data",
+        url_name="published-data",
+    )
+    def get_published_data(self, request, pk=None) -> Response:
+        """
+        Get the published data for a channel.
+
+        :param request: The request object
+        :param pk: The ID of the channel
+        :return: Response with the published data of the channel
+        :rtype: Response
+        """
+        # Allow exactly users with permission to edit the channel to
+        # access the published data.
+        channel = self.get_edit_object()
+
+        return Response(channel.published_data)
+
     def _channel_exists(self, channel_id) -> bool:
         """
         Check if a channel exists.

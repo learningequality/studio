@@ -1184,6 +1184,25 @@ def fill_published_fields(channel, version_notes):
         if lang:
             channel.included_languages.add(lang)
 
+    included_licenses = published_nodes.exclude(license=None).values_list(
+        "license", flat=True
+    )
+    license_list = sorted(set(included_licenses))
+
+    included_categories_dicts = published_nodes.exclude(categories=None).values_list(
+        "categories", flat=True
+    )
+    category_list = sorted(
+        set(
+            chain.from_iterable(
+                (
+                    node_categories_dict.keys()
+                    for node_categories_dict in included_categories_dicts
+                )
+            )
+        )
+    )
+
     # TODO: Eventually, consolidate above operations to just use this field for storing historical data
     channel.published_data.update(
         {
@@ -1196,6 +1215,8 @@ def fill_published_fields(channel, version_notes):
                 ),
                 "version_notes": version_notes,
                 "included_languages": language_list,
+                "included_licenses": license_list,
+                "included_categories": category_list,
             }
         }
     )
