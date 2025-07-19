@@ -9,12 +9,13 @@ import { Image } from '../extensions/Image';
 import { CodeBlockSyntaxHighlight } from '../extensions/CodeBlockSyntaxHighlight';
 import { CustomLink } from '../extensions/Link';
 import { Math } from '../extensions/Math';
+import { Markdown } from '../extensions/Markdown';
 
 export function useEditor() {
   const editor = ref(null);
   const isReady = ref(false);
 
-  const initializeEditor = () => {
+  const initializeEditor = content => {
     editor.value = new Editor({
       extensions: [
         StarterKitExtension.configure({
@@ -29,17 +30,19 @@ export function useEditor() {
         Image,
         CustomLink, // Use our custom Link extension
         Math,
+        Markdown,
       ],
-      content: '<p></p>',
+      content: content || '<p></p>',
       editorProps: {
         attributes: {
           class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none',
           dir: 'auto',
         },
       },
+      onCreate: () => {
+        isReady.value = true;
+      },
     });
-
-    isReady.value = true;
   };
 
   const destroyEditor = () => {
