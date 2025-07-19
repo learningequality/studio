@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import VueRouter from 'vue-router';
-import TipTapEditor from '../shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue';
+import DevHarness from '../shared/views/TipTapEditor/TipTapEditor/DevHarness.vue';
 import startApp from 'shared/app';
 import storeFactory from 'shared/vuex/baseStore';
 
@@ -17,7 +17,7 @@ startApp({
     routes: [
       {
         path: '/',
-        component: TipTapEditor,
+        component: DevHarness,
       },
     ],
   }),

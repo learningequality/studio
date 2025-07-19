@@ -73,7 +73,7 @@
 
 <script>
 
-  import { defineComponent, provide, onMounted } from 'vue';
+  import { defineComponent, provide, watch, nextTick } from 'vue';
   import EditorToolbar from './components/EditorToolbar.vue';
   import EditorContentWrapper from './components/EditorContentWrapper.vue';
   import { useEditor } from './composables/useEditor';
@@ -96,7 +96,7 @@
       LinkEditor,
       FormulasMenu,
     },
-    setup() {
+    setup(props, { emit }) {
       const { editor, isReady, initializeEditor } = useEditor();
       provide('editor', editor);
       provide('isReady', isReady);
@@ -106,10 +106,6 @@
 
       const mathHandler = useMathHandling(editor);
       provide('mathHandler', mathHandler);
-
-      onMounted(() => {
-        initializeEditor();
-      });
 
       const {
         modalMode,
@@ -130,6 +126,70 @@
         }
       };
 
+      const getMarkdownContent = () => {
+        if (!editor.value || !isReady.value || !editor.value.storage?.markdown) {
+          return '';
+        }
+        return editor.value.storage.markdown.getMarkdown();
+      };
+
+      const setMarkdownContent = (content, emitUpdate = false) => {
+        if (!editor.value || !isReady.value || !editor.value.storage?.markdown) {
+          return;
+        }
+        editor.value.storage.markdown.setMarkdown(content, emitUpdate);
+      };
+
+      let isUpdatingFromOutside = false; // A flag to prevent infinite update loops
+
+      // sync changes from the parent component to the editor
+      watch(
+        () => props.value,
+        newValue => {
+          if (!editor.value) {
+            initializeEditor(newValue);
+            return;
+          }
+
+          if (!isReady.value || !editor.value.storage?.markdown) {
+            return;
+          }
+
+          const editorContent = getMarkdownContent();
+
+          if (editorContent !== newValue) {
+            isUpdatingFromOutside = true;
+            setMarkdownContent(newValue, false);
+            nextTick(() => {
+              isUpdatingFromOutside = false;
+            });
+          }
+        },
+        { immediate: true },
+      );
+
+      // sync changes from the editor to the parent component
+      watch(
+        () => editor.value?.state,
+        () => {
+          if (
+            !editor.value ||
+            !isReady.value ||
+            isUpdatingFromOutside ||
+            !editor.value.storage?.markdown
+          ) {
+            return;
+          }
+
+          const markdown = getMarkdownContent();
+
+          if (markdown !== props.value) {
+            emit('input', markdown);
+          }
+        },
+        { deep: true },
+      );
+
       return {
         isReady,
         modalMode,
@@ -147,6 +207,13 @@
         mathHandler,
       };
     },
+    props: {
+      value: {
+        type: String,
+        default: '',
+      },
+    },
+    emits: ['input'],
   });
 
 </script>
