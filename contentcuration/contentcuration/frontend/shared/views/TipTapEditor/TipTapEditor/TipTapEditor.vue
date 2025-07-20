@@ -85,6 +85,7 @@
   import LinkEditor from './components/link/LinkEditor.vue';
   import { useMathHandling } from './composables/useMathHandling';
   import FormulasMenu from './components/math/FormulasMenu.vue';
+  import { preprocessMarkdown } from './utils/markdown';
 
   export default defineComponent({
     name: 'RichTextEditor',
@@ -133,33 +134,23 @@
         return editor.value.storage.markdown.getMarkdown();
       };
 
-      const setMarkdownContent = (content, emitUpdate = false) => {
-        if (!editor.value || !isReady.value || !editor.value.storage?.markdown) {
-          return;
-        }
-        editor.value.storage.markdown.setMarkdown(content, emitUpdate);
-      };
-
       let isUpdatingFromOutside = false; // A flag to prevent infinite update loops
 
       // sync changes from the parent component to the editor
       watch(
         () => props.value,
         newValue => {
-          if (!editor.value) {
-            initializeEditor(newValue);
-            return;
-          }
+          const processedContent = preprocessMarkdown(newValue);
 
-          if (!isReady.value || !editor.value.storage?.markdown) {
+          if (!editor.value) {
+            initializeEditor(processedContent);
             return;
           }
 
           const editorContent = getMarkdownContent();
-
           if (editorContent !== newValue) {
             isUpdatingFromOutside = true;
-            setMarkdownContent(newValue, false);
+            editor.value.commands.setContent(processedContent, false);
             nextTick(() => {
               isUpdatingFromOutside = false;
             });
@@ -182,7 +173,6 @@
           }
 
           const markdown = getMarkdownContent();
-
           if (markdown !== props.value) {
             emit('input', markdown);
           }

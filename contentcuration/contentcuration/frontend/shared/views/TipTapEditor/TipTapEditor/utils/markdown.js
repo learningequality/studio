@@ -44,3 +44,30 @@ export const mathMdToParams = markdown => {
 export const paramsToMathMd = ({ latex }) => {
   return `$$${latex || ''}$$`;
 };
+
+/**
+ * Pre-processes a raw Markdown string to convert custom syntax into HTML tags
+ * that Tiptap's extensions can understand. This is our custom "loader".
+ * @param {string} markdown - The raw markdown string.
+ * @returns {string} - The processed string with HTML tags.
+ */
+export function preprocessMarkdown(markdown) {
+  if (!markdown) return '';
+  let processedMarkdown = markdown;
+
+  // Replace custom images with standard <img> tags
+  processedMarkdown = processedMarkdown.replace(IMAGE_REGEX, match => {
+    const params = imageMdToParams(match);
+    if (!params) return match;
+    return `<img src="${params.src}" alt="${params.alt}" width="${params.width}" height="${params.height}" />`;
+  });
+
+  // Replace $$...$$ with a custom <span> tag for our Math extension
+  processedMarkdown = processedMarkdown.replace(MATH_REGEX, match => {
+    const params = mathMdToParams(match);
+    if (!params) return match;
+    return `<span data-latex="${params.latex}"></span>`;
+  });
+
+  return processedMarkdown;
+}

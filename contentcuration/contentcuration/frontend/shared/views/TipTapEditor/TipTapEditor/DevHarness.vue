@@ -6,10 +6,7 @@
       <p>This page simulates a parent component to test the editor in isolation.</p>
     </header>
     <hr >
-    <TipTapEditor
-      v-model="markdownContent"
-      :mode="mode"
-    />
+    <TipTapEditor v-model="markdownContent" />
     <hr >
     <div class="raw-output-wrapper">
       <h2>Live Markdown Output (v-model state)</h2>
@@ -29,7 +26,7 @@
 
 **bold** *italic* <u>underline</u> ~~strikethrough~~
 
-try inline formulas<span data-latex="x^2"></span> test
+try inline formulas $$x^2$$ test
 
 - list a
 - list b

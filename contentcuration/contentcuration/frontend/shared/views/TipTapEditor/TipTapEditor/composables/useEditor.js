@@ -10,6 +10,7 @@ import { CodeBlockSyntaxHighlight } from '../extensions/CodeBlockSyntaxHighlight
 import { CustomLink } from '../extensions/Link';
 import { Math } from '../extensions/Math';
 import { Markdown } from '../extensions/Markdown';
+import { createCustomMarkdownSerializer } from '../utils/markdownSerializer';
 
 export function useEditor() {
   const editor = ref(null);
@@ -41,6 +42,11 @@ export function useEditor() {
       },
       onCreate: () => {
         isReady.value = true;
+
+        const markdownStorage = editor.value.storage.markdown;
+        if (markdownStorage) {
+          markdownStorage.getMarkdown = createCustomMarkdownSerializer(editor.value);
+        }
       },
     });
   };
