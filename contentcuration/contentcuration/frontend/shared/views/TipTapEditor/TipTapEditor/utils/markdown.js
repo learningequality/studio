@@ -1,4 +1,6 @@
 // Contains utilities for handling Markdown content bidirectional conversion in TipTap editor.
+// eslint-disable-next-line import/namespace
+import { marked } from 'marked';
 
 // --- Image Translation ---
 export const IMAGE_PLACEHOLDER = 'placeholder';
@@ -53,21 +55,22 @@ export const paramsToMathMd = ({ latex }) => {
  */
 export function preprocessMarkdown(markdown) {
   if (!markdown) return '';
+
   let processedMarkdown = markdown;
 
-  // Replace custom images with standard <img> tags
+  // First handle your custom syntax (images and math) as before
   processedMarkdown = processedMarkdown.replace(IMAGE_REGEX, match => {
     const params = imageMdToParams(match);
     if (!params) return match;
     return `<img src="${params.src}" alt="${params.alt}" width="${params.width}" height="${params.height}" />`;
   });
 
-  // Replace $$...$$ with a custom <span> tag for our Math extension
   processedMarkdown = processedMarkdown.replace(MATH_REGEX, match => {
     const params = mathMdToParams(match);
     if (!params) return match;
     return `<span data-latex="${params.latex}"></span>`;
   });
 
-  return processedMarkdown;
+  // Use marked.js to parse the rest of the markdown
+  return marked(processedMarkdown);
 }

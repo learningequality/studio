@@ -35,7 +35,7 @@ try inline formulas $$x^2$$ test
 small text
 </small>
 
-1. list one
+1. list one<sub>[1]</sub>
 2. list two
 
 There is a [link here](https://github.com/learningequality/studio/pull/5155/checks)!
