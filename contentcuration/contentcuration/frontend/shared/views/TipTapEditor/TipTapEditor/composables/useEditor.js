@@ -9,7 +9,6 @@ import { Image } from '../extensions/Image';
 import { CodeBlockSyntaxHighlight } from '../extensions/CodeBlockSyntaxHighlight';
 import { CustomLink } from '../extensions/Link';
 import { Math } from '../extensions/Math';
-import { Markdown } from '../extensions/Markdown';
 import { createCustomMarkdownSerializer } from '../utils/markdownSerializer';
 
 export function useEditor() {
@@ -31,7 +30,6 @@ export function useEditor() {
         Image,
         CustomLink, // Use our custom Link extension
         Math,
-        Markdown,
       ],
       content: content || '<p></p>',
       editorProps: {
@@ -43,10 +41,11 @@ export function useEditor() {
       onCreate: () => {
         isReady.value = true;
 
-        const markdownStorage = editor.value.storage.markdown;
-        if (markdownStorage) {
-          markdownStorage.getMarkdown = createCustomMarkdownSerializer(editor.value);
+        // Create a simple storage object to hold our custom markdown serializer
+        if (!editor.value.storage.markdown) {
+          editor.value.storage.markdown = {};
         }
+        editor.value.storage.markdown.getMarkdown = createCustomMarkdownSerializer(editor.value);
       },
     });
   };
