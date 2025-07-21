@@ -251,4 +251,4 @@ class AdminCommunityLibrarySubmissionViewSet(
         if submission.status == community_library_submission_constants.STATUS_APPROVED:
             self._mark_previous_pending_submissions_as_superseded(submission)
 
-        return Response(self.serialize_object(pk=submission.id))
+        return Response(self.serialize_object())
