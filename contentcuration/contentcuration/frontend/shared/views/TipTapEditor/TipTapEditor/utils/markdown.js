@@ -1,9 +1,10 @@
 // Contains utilities for handling Markdown content bidirectional conversion in TipTap editor.
 // eslint-disable-next-line import/namespace
 import { marked } from 'marked';
+import { storageUrl } from '../../../../vuex/file/utils';
 
 // --- Image Translation ---
-export const IMAGE_PLACEHOLDER = 'placeholder';
+export const IMAGE_PLACEHOLDER = '${☣ CONTENTSTORAGE}';
 export const IMAGE_REGEX = /!\[([^\]]*)\]\(([^/]+\/[^\s=)]+)(?:\s*=\s*([0-9.]+)x([0-9.]+))?\)/g;
 
 export const imageMdToParams = markdown => {
@@ -13,20 +14,31 @@ export const imageMdToParams = markdown => {
   if (!match) return null;
 
   const [, alt, fullPath, width, height] = match;
-  const pathParts = fullPath.split('/');
 
-  // Ensure it matches the "placeholder/checksum.ext" structure
-  if (pathParts.length < 2 || pathParts[0] !== IMAGE_PLACEHOLDER) {
-    return null;
-  }
+  // Extract just the filename from the full path
+  const checksumWithExt = fullPath.split('/').pop();
 
-  const src = pathParts.slice(1).join('/'); // The "checksum.ext" part
+  // Now, split the filename into its parts
+  const parts = checksumWithExt.split('.');
+  const extension = parts.pop();
+  const checksum = parts.join('.');
 
-  return { src, alt: alt || '', width: width || null, height: height || null };
+  // Return the data with the correct property names that the rest of the system expects.
+  return { checksum, extension, alt: alt || '', width, height };
 };
 
-export const paramsToImageMd = ({ src, alt, width, height }) => {
-  const fileName = src.split('/').pop();
+export const paramsToImageMd = ({ src, alt, width, height, permanentSrc }) => {
+  const sourceToSave = permanentSrc || src;
+
+  // As a safety net, if the source is still a data/blob URL, we should not
+  // try to create a placeholder format. This should not happen with our new logic,
+  // but it makes the function more robust.
+  if (sourceToSave.startsWith('data:') || sourceToSave.startsWith('blob:')) {
+    // TODO: This is not a good permanent format, temp fix
+    return `![${alt || ''}](${sourceToSave})`;
+  }
+
+  const fileName = sourceToSave.split('/').pop();
   if (width && height) {
     return `![${alt || ''}](${IMAGE_PLACEHOLDER}/${fileName} =${width}x${height})`;
   }
@@ -58,11 +70,18 @@ export function preprocessMarkdown(markdown) {
 
   let processedMarkdown = markdown;
 
-  // First handle your custom syntax (images and math) as before
   processedMarkdown = processedMarkdown.replace(IMAGE_REGEX, match => {
     const params = imageMdToParams(match);
     if (!params) return match;
-    return `<img src="${params.src}" alt="${params.alt}" width="${params.width}" height="${params.height}" />`;
+
+    // 1. Convert the checksum into a real, displayable URL.
+    const displayUrl = storageUrl(params.checksum, params.extension);
+
+    // 2. The permanentSrc is just the checksum + extension.
+    const permanentSrc = `${params.checksum}.${params.extension}`;
+
+    // 3. Create an <img> tag with the REAL display URL in `src`.
+    return `<img src="${displayUrl}" permanentSrc="${permanentSrc}" alt="${params.alt}" width="${params.width}" height="${params.height}" />`;
   });
 
   processedMarkdown = processedMarkdown.replace(MATH_REGEX, match => {
