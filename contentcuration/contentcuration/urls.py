@@ -87,7 +87,7 @@ router.register(
     basename="recommendations-interaction",
 )
 router.register(
-    r"communitylibrary-submission",
+    r"communitylibrary_submission",
     CommunityLibrarySubmissionViewSet,
     basename="community-library-submission",
 )
