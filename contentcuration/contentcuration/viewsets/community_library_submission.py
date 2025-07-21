@@ -170,6 +170,9 @@ class CommunityLibrarySubmissionViewSetMixin:
         "author_name": get_author_name,
     }
     queryset = CommunityLibrarySubmission.objects.all().order_by("-date_created")
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["channel"]
+    pagination_class = CommunityLibrarySubmissionPagination
 
     def consolidate(self, items, queryset):
         countries = {}
@@ -193,10 +196,7 @@ class CommunityLibrarySubmissionViewSet(
     RESTDestroyModelMixin,
     ReadOnlyValuesViewset,
 ):
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ["channel"]
     permission_classes = [IsAuthenticated]
-    pagination_class = CommunityLibrarySubmissionPagination
     serializer_class = CommunityLibrarySubmissionSerializer
 
 
