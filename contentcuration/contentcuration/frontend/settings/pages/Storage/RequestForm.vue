@@ -73,15 +73,18 @@
           {{ translateConstant(item.license_name) }}
         </template>
         <template #description="{ item }">
-          {{ translateConstant(`${item.license_name}_description`) }}
+          <p class="license-description">
+            {{ translateConstant(`${item.license_name}_description`) }}
+          </p>
           <p
             v-if="item.license_url"
             class="mt-1"
           >
-            <ActionLink
+            <KExternalLink
+              class="license-link"
               :href="getLicenseUrl(item)"
-              target="_blank"
               :text="$tr('learnMoreButton')"
+              openInNewTab
             />
           </p>
         </template>
@@ -505,6 +508,20 @@
   h3 {
     margin-top: 32px;
     margin-bottom: 8px;
+  }
+
+  .license-link {
+    font-size: 14px;
+  }
+
+  /* fixes unintended margin caused by KDS styles */
+  .license-link ::v-deep span {
+    margin-left: 0 !important;
+  }
+
+  .license-description {
+    margin-bottom: 8px;
+    line-height: 1.5;
   }
 
 </style>

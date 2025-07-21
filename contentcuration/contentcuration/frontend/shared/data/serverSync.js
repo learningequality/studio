@@ -36,6 +36,7 @@ const ChangeTypeMapFields = {
     'excluded_descendants',
   ]),
   [CHANGE_TYPES.PUBLISHED]: commonFields.concat(['version_notes', 'language']),
+  [CHANGE_TYPES.PUBLISHED_NEXT]: commonFields,
   [CHANGE_TYPES.SYNCED]: commonFields.concat([
     'titles_and_descriptions',
     'resource_details',
@@ -135,6 +136,7 @@ function handleErrors(response) {
     return db[CHANGES_TABLE].where('server_rev')
       .anyOf(Object.keys(errorMap).map(Number))
       .modify(obj => {
+        obj['errored'] = true;
         for (const key in errorMap[obj.server_rev]) {
           if (!noModifyKeys[key] || typeof obj[key] === 'undefined') {
             obj[key] = errorMap[obj.server_rev][key];

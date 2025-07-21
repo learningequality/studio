@@ -37,7 +37,7 @@ Feature: View metadata in previewers across Studio
 			And I see multiple learning activity labels
 
 	Scenario: View previewer with empty fields
-		Given <resource> has empty <metadata> field
-		When I left-click <resource>
+		Given a resource has an empty metadata field
+		When I left-click the resource
 		Then I see the previewer panel
 			And I see there is a *–* in the field

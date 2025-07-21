@@ -117,7 +117,7 @@ google-cloud-logging==2.3.1
     # via google-cloud-error-reporting
 google-cloud-storage==1.41.1
     # via -r requirements.in
-google-crc32c==1.5.0
+google-crc32c==1.7.1
     # via
     #   -r requirements.in
     #   google-resumable-media
@@ -154,7 +154,7 @@ jsonschema-specifications==2024.10.1
     # via jsonschema
 kombu==5.5.2
     # via celery
-le-utils==0.2.10
+le-utils==0.2.12
     # via -r requirements.in
 packaging==25.0
     # via
@@ -164,7 +164,7 @@ packaging==25.0
     #   google-cloud-error-reporting
     #   google-cloud-kms
     #   gunicorn
-pillow==11.2.1
+pillow==11.3.0
     # via -r requirements.in
 prometheus-client==0.10.1
     # via django-prometheus
@@ -190,7 +190,7 @@ pyasn1-modules==0.2.8
     # via google-auth
 pyparsing==2.4.7
     # via httplib2
-python-dateutil==2.9.0
+python-dateutil==2.9.0.post0
     # via
     #   -r requirements.in
     #   botocore
@@ -223,7 +223,7 @@ rsa==4.7.2
     # via google-auth
 s3transfer==0.4.2
     # via boto3
-sentry-sdk==2.29.1
+sentry-sdk==2.33.0
     # via -r requirements.in
 six==1.16.0
     # via

@@ -4,9 +4,9 @@ Feature: Edit *Category* field
 	Background:
 		Given I am signed into Studio
 			And I am in an editable channel with all resource types
-		When I right click a <resource>
+		When I right click a resource
 			And I click *Edit details*
-		Then I see the *Edit details* modal for the <resource>
+		Then I see the *Edit details* modal for the resource
 			And I see the *Category* dropdown in the *Basic information* section
 
 	Scenario: View category options

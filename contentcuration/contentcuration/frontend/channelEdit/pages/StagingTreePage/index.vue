@@ -25,7 +25,7 @@
       <span class="grey--darken-2 grey--text">{{ $tr('reviewMode') }}</span>
     </ToolBar>
     <MainNavigationDrawer v-model="drawer" />
-    <LoadingText v-if="isLoading || isDeploying" />
+    <LoadingText v-if="isLoading || isDeploying || isPublishingDraft" />
     <VContent v-else-if="isEmpty">
       <VLayout
         justify-center
@@ -228,6 +228,14 @@
 
             <VBtn
               color="primary"
+              data-test="display-publish-draft-dialog-btn"
+              @click="displayPublishDraftDialog = true"
+            >
+              {{ $tr('publishDraft') }}
+            </VBtn>
+
+            <VBtn
+              color="primary"
               data-test="display-deploy-dialog-btn"
               @click="displayDeployDialog = true"
             >
@@ -262,6 +270,46 @@
         @cancel="displayDeployDialog = false"
       >
         <p>{{ $tr('deployDialogDescription') }}</p>
+
+        <VLayout data-test="deploy-dialog-live-resources">
+          <VFlex
+            xs4
+            class="font-weight-bold"
+          >
+            {{ $tr('liveResources') }}:
+          </VFlex>
+          <VFlex>
+            {{ $tr('topicsCount', { count: topicsCountLive }) }},
+            {{ $tr('resourcesCount', { count: resourcesCountLive }) }}
+          </VFlex>
+        </VLayout>
+
+        <VLayout data-test="deploy-dialog-staged-resources">
+          <VFlex
+            xs4
+            class="font-weight-bold"
+          >
+            {{ $tr('stagedResources') }}:
+          </VFlex>
+          <VFlex>
+            {{ $tr('topicsCount', { count: topicsCountStaged }) }},
+            {{ $tr('resourcesCount', { count: resourcesCountStaged }) }}
+          </VFlex>
+        </VLayout>
+      </KModal>
+
+      <KModal
+        v-if="displayPublishDraftDialog"
+        data-test="publish-draft-dialog"
+        :title="$tr('publishDraft')"
+        :submitText="$tr('confirmPublishDraftBtn')"
+        :submitDisabled="isPublishingDraft"
+        :cancelDisabled="isPublishingDraft"
+        :cancelText="$tr('cancelPublishDraftBtn')"
+        @submit="onPublishDraftClick"
+        @cancel="displayPublishDraftDialog = false"
+      >
+        <p>{{ $tr('publishDraftDialogDescription') }}</p>
 
         <VLayout data-test="deploy-dialog-live-resources">
           <VFlex
@@ -352,9 +400,11 @@
         isLoading: true,
         displaySummaryDetailsDialog: false,
         displayDeployDialog: false,
+        displayPublishDraftDialog: false,
         drawer: false,
         elevated: false,
         isDeploying: false,
+        isPublishingDraft: false,
       };
     },
     computed: {
@@ -502,6 +552,7 @@
       ...mapActions('currentChannel', [
         'loadCurrentChannelStagingDiff',
         'deployCurrentChannel',
+        'publishDraftChannel',
         'reloadCurrentChannelStagingDiff',
       ]),
       ...mapActions('currentChannel', { loadCurrentChannel: 'loadChannel' }),
@@ -591,6 +642,26 @@
 
         this.deployCurrentChannel();
       },
+      onPublishDraftClick() {
+        this.displayPublishDraftDialog = false;
+        this.isPublishingDraft = true;
+
+        this.publishDraftChannel()
+          .then(publishDraftchange => Channel.waitForPublishingDraft(publishDraftchange))
+          .then(() => {
+            this.isPublishingDraft = false;
+            this.showSnackbar({
+              text: this.$tr('draftPublished'),
+            });
+          })
+          .catch(error => {
+            this.isPublishingDraft = false;
+            this.showSnackbar({
+              text: error.response?.data?.message || this.$tr('publishDraftError'),
+              color: 'error',
+            });
+          });
+      },
     },
     $trs: {
       deploy: 'Deploy',
@@ -617,6 +688,12 @@
       channelDeployed: 'Channel has been deployed',
       emptyTopicText: 'This topic is empty',
       viewDetails: 'View details',
+      publishDraft: 'Publish draft',
+      publishDraftDialogDescription: 'You are about to publish a draft of your staged changes.',
+      cancelPublishDraftBtn: 'Cancel',
+      confirmPublishDraftBtn: 'Publish',
+      draftPublished: 'Draft channel has been published',
+      publishDraftError: 'An error occurred while publishing the draft channel',
     },
   };
 

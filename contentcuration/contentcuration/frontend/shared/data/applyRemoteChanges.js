@@ -8,8 +8,17 @@ import { INDEXEDDB_RESOURCES } from './registry';
 import { RolesNames } from 'shared/leUtils/Roles';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
-const { CREATED, DELETED, UPDATED, MOVED, PUBLISHED, SYNCED, DEPLOYED, UPDATED_DESCENDANTS } =
-  CHANGE_TYPES;
+const {
+  CREATED,
+  DELETED,
+  UPDATED,
+  MOVED,
+  PUBLISHED,
+  PUBLISHED_NEXT,
+  SYNCED,
+  DEPLOYED,
+  UPDATED_DESCENDANTS,
+} = CHANGE_TYPES;
 
 export function applyMods(obj, mods) {
   for (const keyPath in mods) {
@@ -32,6 +41,7 @@ export function collectChanges(changes) {
         [UPDATED]: [],
         [MOVED]: [],
         [PUBLISHED]: [],
+        [PUBLISHED_NEXT]: [],
         [SYNCED]: [],
         [DEPLOYED]: [],
         [UPDATED_DESCENDANTS]: [],

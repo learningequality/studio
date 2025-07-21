@@ -16,6 +16,8 @@ const WebpackRTLPlugin = require('kolibri-tools/lib/webpackRtlPlugin');
 
 const { InjectManifest } = require('workbox-webpack-plugin');
 
+const CopyPlugin = require('copy-webpack-plugin');
+
 // Function to detect if running in WSL
 function isWSL() {
   try {
@@ -103,6 +105,7 @@ module.exports = (env = {}) => {
       pdfJSWorker: ['pdfjs-dist/build/pdf.worker.entry.js'],
       // Utility for taking screenshots inside an iframe sandbox
       htmlScreenshot: ['./shared/utils/htmlScreenshot.js'],
+      editorDev: './editorDev/index.js',
     },
     output: {
       filename: dev ? '[name].js' : '[name]-[fullhash].js',
@@ -117,6 +120,13 @@ module.exports = (env = {}) => {
       headers: {
         'Access-Control-Allow-Origin': '*',
       },
+      allowedHosts: [
+        '127.0.0.1',
+        'localhost',
+      ].concat(
+        // For WSL, allow the WSL IP address
+        isWSLEnvironment ? [getWSLIP()] : []
+      ),
     },
     module: {
       rules: [
@@ -158,6 +168,14 @@ module.exports = (env = {}) => {
       }),
       new WebpackRTLPlugin({
         minify: false,
+      }),
+      new CopyPlugin({
+        patterns: [
+          {
+            from: path.resolve(__dirname, 'node_modules/mathlive/fonts'),
+            to: path.join(bundleOutputDir, 'fonts'),
+          },
+        ],
       }),
       new CircularDependencyPlugin({
         // exclude detection of files based on a RegExp
