@@ -1,8 +1,6 @@
-import datetime
-
+from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
-from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.response import Response
@@ -91,16 +89,6 @@ class CommunityLibrarySubmissionSerializer(BulkModelSerializer):
         return super().update(instance, validated_data)
 
 
-def timezoned_datetime_now():
-    """
-    Simple wrapper around datetime.datetime.now. The point of using a wrapper
-    is that mocking datetime.datetime in tests runs into issues with
-    isinstance in the serializer, and it is a lot easier to just mock this
-    wrapper.
-    """
-    return datetime.datetime.now(datetime.timezone.utc)
-
-
 class CommunityLibrarySubmissionResolveSerializer(CommunityLibrarySubmissionSerializer):
     class Meta(CommunityLibrarySubmissionSerializer.Meta):
         fields = CommunityLibrarySubmissionSerializer.Meta.fields + [
@@ -135,11 +123,11 @@ class CommunityLibrarySubmissionResolveSerializer(CommunityLibrarySubmissionSeri
             or validated_data["status"]
             == community_library_submission_constants.STATUS_REJECTED
         ):
-            if "resolution_reason" not in validated_data:
+            if not validated_data.get("resolution_reason", "").strip():
                 raise ValidationError(
                     "Resolution reason must be provided when rejecting a submission."
                 )
-            if "feedback_notes" not in validated_data:
+            if not validated_data.get("feedback_notes", "").strip():
                 raise ValidationError(
                     "Feedback notes must be provided when rejecting a submission."
                 )
@@ -153,12 +141,16 @@ class CommunityLibrarySubmissionPagination(ValuesViewsetCursorPagination):
     max_page_size = 100
 
 
-class CommunityLibrarySubmissionViewSet(
-    RESTCreateModelMixin,
-    RESTUpdateModelMixin,
-    RESTDestroyModelMixin,
-    ReadOnlyValuesViewset,
-):
+def get_author_name(item):
+    return "{} {}".format(item["author__first_name"], item["author__last_name"])
+
+
+class CommunityLibrarySubmissionViewSetMixin:
+    """
+    Mixin with logic shared between the CommunityLibrarySubmissionViewSet and
+    AdminCommunityLibrarySubmissionViewSet.
+    """
+
     values = (
         "id",
         "description",
@@ -175,14 +167,8 @@ class CommunityLibrarySubmissionViewSet(
         "date_resolved",
     )
     field_map = {
-        "author_first_name": "author__first_name",
-        "author_last_name": "author__last_name",
+        "author_name": get_author_name,
     }
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ["channel"]
-    permission_classes = [IsAuthenticated]
-    pagination_class = CommunityLibrarySubmissionPagination
-    serializer_class = CommunityLibrarySubmissionSerializer
     queryset = CommunityLibrarySubmission.objects.all().order_by("-date_created")
 
     def consolidate(self, items, queryset):
@@ -200,40 +186,44 @@ class CommunityLibrarySubmissionViewSet(
         return items
 
 
-class CommunityLibrarySubmissionAdminViewSet(CommunityLibrarySubmissionViewSet):
+class CommunityLibrarySubmissionViewSet(
+    CommunityLibrarySubmissionViewSetMixin,
+    RESTCreateModelMixin,
+    RESTUpdateModelMixin,
+    RESTDestroyModelMixin,
+    ReadOnlyValuesViewset,
+):
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["channel"]
+    permission_classes = [IsAuthenticated]
+    pagination_class = CommunityLibrarySubmissionPagination
+    serializer_class = CommunityLibrarySubmissionSerializer
+
+
+def get_resolved_by_name(item):
+    return "{} {}".format(
+        item["resolved_by__first_name"], item["resolved_by__last_name"]
+    )
+
+
+class AdminCommunityLibrarySubmissionViewSet(
+    CommunityLibrarySubmissionViewSetMixin,
+    ReadOnlyValuesViewset,
+):
     permission_classes = [IsAdminUser]
 
-    values = CommunityLibrarySubmissionViewSet.values + (
+    values = CommunityLibrarySubmissionViewSetMixin.values + (
         "resolved_by_id",
         "resolved_by__first_name",
         "resolved_by__last_name",
         "internal_notes",
     )
-    field_map = CommunityLibrarySubmissionViewSet.field_map.copy()
+    field_map = CommunityLibrarySubmissionViewSetMixin.field_map.copy()
     field_map.update(
         {
-            "resolved_by_first_name": "resolved_by__first_name",
-            "resolved_by_last_name": "resolved_by__last_name",
+            "resolved_by_name": get_resolved_by_name,
         }
     )
-
-    def create(self, request, *args, **kwargs):
-        raise MethodNotAllowed(
-            "Cannot create a community library submission with this viewset. "
-            "Use the standard CommunityLibrarySubmissionViewSet instead."
-        )
-
-    def update(self, instance, *args, **kwargs):
-        raise MethodNotAllowed(
-            "Cannot update a community library submission with this viewset. "
-            "Use the standard CommunityLibrarySubmissionViewSet instead."
-        )
-
-    def destroy(self, instance, *args, **kwargs):
-        raise MethodNotAllowed(
-            "Cannot delete a community library submission with this viewset. "
-            "Use the standard CommunityLibrarySubmissionViewSet instead."
-        )
 
     def _mark_previous_pending_submissions_as_superseded(self, submission):
         CommunityLibrarySubmission.objects.filter(
@@ -252,7 +242,7 @@ class CommunityLibrarySubmissionAdminViewSet(CommunityLibrarySubmissionViewSet):
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
-        date_resolved = timezoned_datetime_now()
+        date_resolved = timezone.now()
         submission = serializer.save(
             date_resolved=date_resolved,
             resolved_by=request.user,
@@ -261,4 +251,4 @@ class CommunityLibrarySubmissionAdminViewSet(CommunityLibrarySubmissionViewSet):
         if submission.status == community_library_submission_constants.STATUS_APPROVED:
             self._mark_previous_pending_submissions_as_superseded(submission)
 
-        return Response(serializer.data)
+        return Response(self.serialize_object(pk=submission.id))

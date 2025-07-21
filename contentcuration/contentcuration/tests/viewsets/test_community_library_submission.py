@@ -282,8 +282,10 @@ class CRUDTestCase(StudioAPITestCase):
         self.assertEqual(response.status_code, 200, response.content)
 
         result = response.data
-        self.assertEqual(result["author_first_name"], self.author_user.first_name)
-        self.assertEqual(result["author_last_name"], self.author_user.last_name)
+        self.assertEqual(
+            result["author_name"],
+            f"{self.author_user.first_name} {self.author_user.last_name}",
+        )
 
     def test_update_submission__is_author(self):
         self.client.force_authenticate(user=self.author_user)
@@ -477,7 +479,7 @@ class AdminViewSetTestCase(StudioAPITestCase):
 
         self.resolved_time = datetime.datetime(2023, 10, 1, tzinfo=pytz.utc)
         self.patcher = mock.patch(
-            "contentcuration.viewsets.community_library_submission.timezoned_datetime_now",
+            "contentcuration.viewsets.community_library_submission.timezone.now",
             return_value=self.resolved_time,
         )
         self.mock_datetime = self.patcher.start()
@@ -486,7 +488,7 @@ class AdminViewSetTestCase(StudioAPITestCase):
         self.patcher.stop()
         super().tearDown()
 
-    def _manually_resolve_submission(self):
+    def _manually_reject_submission(self):
         self.submission.status = community_library_submission_constants.STATUS_REJECTED
         self.submission.resolved_by = self.admin_user
         self.submission.resolution_reason = (
@@ -506,10 +508,10 @@ class AdminViewSetTestCase(StudioAPITestCase):
     def test_list_submissions__admin(self):
         self.client.force_authenticate(user=self.admin_user)
 
-        self._manually_resolve_submission()
+        self._manually_reject_submission()
 
         response = self.client.get(
-            reverse("community-library-submission-admin-list"),
+            reverse("admin-community-library-submission-list"),
         )
         self.assertEqual(response.status_code, 200, response.content)
 
@@ -525,28 +527,30 @@ class AdminViewSetTestCase(StudioAPITestCase):
         result = rejected_results[0]
 
         self.assertEqual(result["resolved_by_id"], self.admin_user.id)
-        self.assertEqual(result["resolved_by_first_name"], self.admin_user.first_name)
-        self.assertEqual(result["resolved_by_last_name"], self.admin_user.last_name)
+        self.assertEqual(
+            result["resolved_by_name"],
+            f"{self.admin_user.first_name} {self.admin_user.last_name}",
+        )
         self.assertEqual(result["internal_notes"], self.internal_notes)
 
     def test_list_submissions__editor(self):
         self.client.force_authenticate(user=self.editor_user)
 
-        self._manually_resolve_submission()
+        self._manually_reject_submission()
 
         response = self.client.get(
-            reverse("community-library-submission-admin-list"),
+            reverse("admin-community-library-submission-list"),
         )
         self.assertEqual(response.status_code, 403, response.content)
 
     def test_submission_detail__admin(self):
         self.client.force_authenticate(user=self.admin_user)
 
-        self._manually_resolve_submission()
+        self._manually_reject_submission()
 
         response = self.client.get(
             reverse(
-                "community-library-submission-admin-detail",
+                "admin-community-library-submission-detail",
                 args=[self.submission.id],
             ),
         )
@@ -555,18 +559,20 @@ class AdminViewSetTestCase(StudioAPITestCase):
         result = response.data
         self.assertEqual(result["id"], self.submission.id)
         self.assertEqual(result["resolved_by_id"], self.admin_user.id)
-        self.assertEqual(result["resolved_by_first_name"], self.admin_user.first_name)
-        self.assertEqual(result["resolved_by_last_name"], self.admin_user.last_name)
+        self.assertEqual(
+            result["resolved_by_name"],
+            f"{self.admin_user.first_name} {self.admin_user.last_name}",
+        )
         self.assertEqual(result["internal_notes"], self.internal_notes)
 
     def test_submission_detail__editor(self):
         self.client.force_authenticate(user=self.editor_user)
 
-        self._manually_resolve_submission()
+        self._manually_reject_submission()
 
         response = self.client.get(
             reverse(
-                "community-library-submission-admin-detail",
+                "admin-community-library-submission-detail",
                 args=[self.submission.id],
             ),
         )
@@ -577,7 +583,7 @@ class AdminViewSetTestCase(StudioAPITestCase):
 
         response = self.client.put(
             reverse(
-                "community-library-submission-admin-detail",
+                "admin-community-library-submission-detail",
                 args=[self.submission.id],
             ),
             {},
@@ -590,7 +596,7 @@ class AdminViewSetTestCase(StudioAPITestCase):
 
         response = self.client.patch(
             reverse(
-                "community-library-submission-admin-detail",
+                "admin-community-library-submission-detail",
                 args=[self.submission.id],
             ),
             {},
@@ -603,7 +609,7 @@ class AdminViewSetTestCase(StudioAPITestCase):
 
         response = self.client.delete(
             reverse(
-                "community-library-submission-admin-detail",
+                "admin-community-library-submission-detail",
                 args=[self.submission.id],
             ),
             format="json",
@@ -614,7 +620,7 @@ class AdminViewSetTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.editor_user)
         response = self.client.post(
             reverse(
-                "community-library-submission-admin-resolve",
+                "admin-community-library-submission-resolve",
                 args=[self.submission.id],
             ),
             self.resolve_approve_metadata,
@@ -626,7 +632,7 @@ class AdminViewSetTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.admin_user)
         response = self.client.post(
             reverse(
-                "community-library-submission-admin-resolve",
+                "admin-community-library-submission-resolve",
                 args=[self.submission.id],
             ),
             self.resolve_approve_metadata,
@@ -650,7 +656,7 @@ class AdminViewSetTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.admin_user)
         response = self.client.post(
             reverse(
-                "community-library-submission-admin-resolve",
+                "admin-community-library-submission-resolve",
                 args=[self.submission.id],
             ),
             self.resolve_reject_metadata,
@@ -680,7 +686,7 @@ class AdminViewSetTestCase(StudioAPITestCase):
         del metadata["resolution_reason"]
         response = self.client.post(
             reverse(
-                "community-library-submission-admin-resolve",
+                "admin-community-library-submission-resolve",
                 args=[self.submission.id],
             ),
             metadata,
@@ -694,7 +700,7 @@ class AdminViewSetTestCase(StudioAPITestCase):
         del metadata["feedback_notes"]
         response = self.client.post(
             reverse(
-                "community-library-submission-admin-resolve",
+                "admin-community-library-submission-resolve",
                 args=[self.submission.id],
             ),
             metadata,
@@ -708,7 +714,7 @@ class AdminViewSetTestCase(StudioAPITestCase):
         metadata["status"] = (community_library_submission_constants.STATUS_PENDING,)
         response = self.client.post(
             reverse(
-                "community-library-submission-admin-resolve",
+                "admin-community-library-submission-resolve",
                 args=[self.submission.id],
             ),
             metadata,
@@ -723,7 +729,7 @@ class AdminViewSetTestCase(StudioAPITestCase):
 
         response = self.client.post(
             reverse(
-                "community-library-submission-admin-resolve",
+                "admin-community-library-submission-resolve",
                 args=[self.submission.id],
             ),
             self.resolve_approve_metadata,
@@ -738,7 +744,7 @@ class AdminViewSetTestCase(StudioAPITestCase):
 
         response = self.client.post(
             reverse(
-                "community-library-submission-admin-resolve",
+                "admin-community-library-submission-resolve",
                 args=[self.submission.id],
             ),
             self.resolve_approve_metadata,
@@ -756,7 +762,7 @@ class AdminViewSetTestCase(StudioAPITestCase):
 
         response = self.client.post(
             reverse(
-                "community-library-submission-admin-resolve",
+                "admin-community-library-submission-resolve",
                 args=[self.submission.id],
             ),
             self.resolve_approve_metadata,
@@ -784,7 +790,7 @@ class AdminViewSetTestCase(StudioAPITestCase):
 
         response = self.client.post(
             reverse(
-                "community-library-submission-admin-resolve",
+                "admin-community-library-submission-resolve",
                 args=[self.submission.id],
             ),
             self.resolve_reject_metadata,

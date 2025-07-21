@@ -34,6 +34,7 @@ class Migration(migrations.Migration):
             model_name="communitylibrarysubmission",
             name="resolution_reason",
             field=models.CharField(
+                blank=True,
                 choices=[
                     ("INVALID_LICENSING", "Invalid Licensing"),
                     ("TECHNICAL_QUALITY_ASSURANCE", "Technical Quality Assurance"),

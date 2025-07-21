@@ -39,7 +39,7 @@ from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.clipboard import ClipboardViewSet
 from contentcuration.viewsets.community_library_submission import (
-    CommunityLibrarySubmissionAdminViewSet,
+    AdminCommunityLibrarySubmissionViewSet,
 )
 from contentcuration.viewsets.community_library_submission import (
     CommunityLibrarySubmissionViewSet,
@@ -87,14 +87,14 @@ router.register(
     basename="recommendations-interaction",
 )
 router.register(
-    r"communitylibrary_submission",
+    r"communitylibrary-submission",
     CommunityLibrarySubmissionViewSet,
     basename="community-library-submission",
 )
 router.register(
-    r"communitylibrary_submission_admin",
-    CommunityLibrarySubmissionAdminViewSet,
-    basename="community-library-submission-admin",
+    r"admin_communitylibrary_submission",
+    AdminCommunityLibrarySubmissionViewSet,
+    basename="admin-community-library-submission",
 )
 
 urlpatterns = [
