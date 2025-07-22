@@ -51,8 +51,8 @@ importers:
         specifier: 5.58.2
         version: 5.58.2
       core-js:
-        specifier: ^3.43.0
-        version: 3.43.0
+        specifier: ^3.44.0
+        version: 3.44.0
       crc-32:
         specifier: ^1.2.2
         version: 1.2.2
@@ -129,8 +129,8 @@ importers:
         specifier: ^6.11.2
         version: 6.14.0
       regenerator-runtime:
-        specifier: ^0.13.5
-        version: 0.13.11
+        specifier: ^0.14.1
+        version: 0.14.1
       showdown:
         specifier: ^2.1.0
         version: 2.1.0
@@ -225,9 +225,6 @@ importers:
       circular-dependency-plugin:
         specifier: ^5.2.0
         version: 5.2.2(webpack@5.99.9)
-      copy-webpack-plugin:
-        specifier: ^13.0.0
-        version: 13.0.0(webpack@5.99.9)
       css-loader:
         specifier: 7.1.2
         version: 7.1.2(webpack@5.99.9)
@@ -2841,12 +2838,6 @@ packages:
     resolution: {integrity: sha512-yki5XnKuf750l50uGTllt6kKILY4nQ1eNIQatoXEByZ5dWgnKqbnqmTrBE5B4N7lrMJKQ2ytWMiTO2o0v6Ew/w==}
     engines: {node: '>= 0.6'}
 
-  copy-webpack-plugin@13.0.0:
-    resolution: {integrity: sha512-FgR/h5a6hzJqATDGd9YG41SeDViH+0bkHn6WNXCi5zKAZkeESeSxLySSsFLHqLEVCh0E+rITmCf0dusXWYukeQ==}
-    engines: {node: '>= 18.12.0'}
-    peerDependencies:
-      webpack: ^5.1.0
-
   core-js-compat@3.43.0:
     resolution: {integrity: sha512-2GML2ZsCc5LR7hZYz4AXmjQw8zuy2T//2QntwdnpuYI7jteT6GVYJL7F6C2C57R7gSYrcqVW3lAALefdbhBLDA==}
 
@@ -2854,8 +2845,8 @@ packages:
     resolution: {integrity: sha512-Kb2wC0fvsWfQrgk8HU5lW6U/Lcs8+9aaYcy4ZFc6DDlo4nZ7n70dEgE5rtR0oG6ufKDUnrwfWL1mXR5ljDatrQ==}
     deprecated: core-js@<3.23.3 is no longer maintained and not recommended for usage due to the number of issues. Because of the V8 engine whims, feature detection in old core-js versions could cause a slowdown up to 100x even if nothing is polyfilled. Some versions have web compatibility issues. Please, upgrade your dependencies to the actual version of core-js.
 
-  core-js@3.43.0:
-    resolution: {integrity: sha512-N6wEbTTZSYOY2rYAn85CuvWWkCK6QweMn7/4Nr3w+gDBeBhk/x4EJeY6FPo4QzDoJZxVTv8U7CMvgWk6pOHHqA==}
+  core-js@3.44.0:
+    resolution: {integrity: sha512-aFCtd4l6GvAXwVEh3XbbVqJGHDJt0OZRa+5ePGx3LLwi12WfexqQxcsohb2wgsa/92xtl19Hd66G/L+TaAxDMw==}
 
   core-util-is@1.0.2:
     resolution: {integrity: sha512-3lqz5YjWTYnW6dlDa5TLaTCcShfar1e40rmcJVwCBJC6mWlFuj0eCHIElmG1g5kyuJ/GD+8Wn4FFCcz4gJPfaQ==}
@@ -3677,14 +3668,6 @@ packages:
 
   fb-watchman@2.0.2:
     resolution: {integrity: sha512-p5161BqbuCaSnB8jIbzQHOlpgsPmK5rJVDfDKO91Axs5NC1uu3HRQm6wt9cd9/+GtQQIO53JdGXXoyDpTAsgYA==}
-
-  fdir@6.4.6:
-    resolution: {integrity: sha512-hiFoqpyZcfNm1yc4u8oWCf9A2c4D3QjCrks3zmoVKVxpQRzmPNar1hUJcBG2RQHvEVGDN+Jm81ZheVLAQMK6+w==}
-    peerDependencies:
-      picomatch: ^3 || ^4
-    peerDependenciesMeta:
-      picomatch:
-        optional: true
 
   file-entry-cache@6.0.1:
     resolution: {integrity: sha512-7Gps/XWymbLk2QLYK4NzpMOrYjMhdIxXuIvy2QBsLE6ljuodKvdkWs/cpyJJ3CVIVpH0Oi1Hvg1ovbMzLdFBBg==}
@@ -7026,10 +7009,6 @@ packages:
 
   tinycolor2@1.6.0:
     resolution: {integrity: sha512-XPaBkWQJdsf3pLKJV9p4qN/S+fm2Oj8AIPo1BTUhg5oxkvm9+SVEGFdhyOz7tTdUTfvxMiAs4sp6/eZO2Ew+pw==}
-
-  tinyglobby@0.2.14:
-    resolution: {integrity: sha512-tX5e7OM1HnYr2+a2C/4V0htOcSQcoSTH9KgJnVvNm5zm/cyEWKJ7j7YutsH9CxMdtOkkLFy2AHrMci9IM8IPZQ==}
-    engines: {node: '>=12.0.0'}
 
   tippy.js@4.3.5:
     resolution: {integrity: sha512-NDq3efte8nGK6BOJ1dDN1/WelAwfmh3UtIYXXck6+SxLzbIQNZE/cmRSnwScZ/FyiKdIcvFHvYUgqmoGx8CcyA==}
@@ -10664,22 +10643,13 @@ snapshots:
 
   cookie@0.7.2: {}
 
-  copy-webpack-plugin@13.0.0(webpack@5.99.9):
-    dependencies:
-      glob-parent: 6.0.2
-      normalize-path: 3.0.0
-      schema-utils: 4.3.2
-      serialize-javascript: 6.0.2
-      tinyglobby: 0.2.14
-      webpack: 5.99.9(webpack-cli@6.0.1)
-
   core-js-compat@3.43.0:
     dependencies:
       browserslist: 4.25.1
 
   core-js@2.6.12: {}
 
-  core-js@3.43.0: {}
+  core-js@3.44.0: {}
 
   core-util-is@1.0.2: {}
 
@@ -11157,7 +11127,7 @@ snapshots:
     dependencies:
       '@types/localforage': 0.0.34
       '@xmldom/xmldom': 0.7.13
-      core-js: 3.43.0
+      core-js: 3.44.0
       event-emitter: 0.3.5
       jszip: 3.10.1
       localforage: 1.10.0
@@ -11718,10 +11688,6 @@ snapshots:
   fb-watchman@2.0.2:
     dependencies:
       bser: 2.1.1
-
-  fdir@6.4.6(picomatch@4.0.2):
-    optionalDependencies:
-      picomatch: 4.0.2
 
   file-entry-cache@6.0.1:
     dependencies:
@@ -13207,7 +13173,7 @@ snapshots:
       check-node-version: 4.2.1
       cli-table: 0.3.11
       commander: 13.1.0
-      core-js: 3.43.0
+      core-js: 3.44.0
       css-loader: 7.1.2(webpack@5.99.9)
       css-minimizer-webpack-plugin: 7.0.2(webpack@5.99.9)
       csv-parse: 5.6.0
@@ -15738,11 +15704,6 @@ snapshots:
   tiny-invariant@1.3.3: {}
 
   tinycolor2@1.6.0: {}
-
-  tinyglobby@0.2.14:
-    dependencies:
-      fdir: 6.4.6(picomatch@4.0.2)
-      picomatch: 4.0.2
 
   tippy.js@4.3.5:
     dependencies:
