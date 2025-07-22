@@ -8,6 +8,10 @@ asgiref==3.3.4
     # via
     #   -c requirements.txt
     #   django
+attrs==23.1.0
+    # via
+    #   -c requirements.txt
+    #   pytest-subtests
 build==1.2.1
     # via pip-tools
 cfgv==3.3.1
@@ -77,8 +81,11 @@ pytest==8.4.1
     # via
     #   -r requirements-dev.in
     #   pytest-django
+    #   pytest-subtests
     #   pytest-timeout
 pytest-django==4.11.1
+    # via -r requirements-dev.in
+pytest-subtests==0.14.1
     # via -r requirements-dev.in
 pytest-timeout==2.4.0
     # via -r requirements-dev.in

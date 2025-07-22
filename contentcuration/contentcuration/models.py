@@ -2250,11 +2250,13 @@ class ContentNode(MPTTModel, models.Model):
                     | (
                         # A non-blank question
                         ~Q(question="")
-                        # Non-blank answers
-                        & ~Q(answers="[]")
-                        # With either an input question or one answer marked as correct
+                        # Non-blank answers, unless it is a free response question
+                        # (which is allowed to have no answers)
+                        & (~Q(answers="[]") | Q(type=exercises.FREE_RESPONSE))
+                        # With either an input or free response question or one answer marked as correct
                         & (
                             Q(type=exercises.INPUT_QUESTION)
+                            | Q(type=exercises.FREE_RESPONSE)
                             | Q(answers__iregex=r'"correct":\s*true')
                         )
                     )
