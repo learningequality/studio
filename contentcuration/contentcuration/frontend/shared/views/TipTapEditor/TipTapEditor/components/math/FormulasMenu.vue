@@ -253,6 +253,8 @@
 
 <style scoped>
 
+  @import 'mathlive/fonts.css';
+
   .formulas-menu {
     position: relative;
     max-width: 500px;
