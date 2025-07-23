@@ -10,6 +10,11 @@ esLintConfig.globals = {
 };
 esLintConfig.settings['import/resolver']['webpack'] = { config: require.resolve('./webpack.config.js')};
 
+// Update resolver settings to allow for pnpm's symlinked structure
+// https://github.com/import-js/eslint-plugin-import/issues/3110
+const nodeResolverSettings = esLintConfig.settings['import/resolver']['node'];
+esLintConfig.settings['import/resolver']['node'] = { ...(nodeResolverSettings || {}), preserveSymlinks: false };
+
 // Remove once Vuetify is gone-- Vuetify uses too many unacceptable class names
 esLintConfig.rules['kolibri/vue-component-class-name-casing'] = 0;
 
