@@ -232,11 +232,11 @@ importers:
         specifier: ^10.0.1
         version: 10.1.5(eslint@8.57.1)
       eslint-import-resolver-webpack:
-        specifier: 0.13.8
-        version: 0.13.8(eslint-plugin-import@2.32.0)(webpack@5.99.9)
+        specifier: 0.13.10
+        version: 0.13.10(eslint-plugin-import@2.32.0)(webpack@5.99.9)
       eslint-plugin-import:
         specifier: ^2.31.0
-        version: 2.32.0(eslint-import-resolver-webpack@0.13.8)(eslint@8.57.1)
+        version: 2.32.0(eslint-import-resolver-webpack@0.13.10)(eslint@8.57.1)
       eslint-plugin-jest:
         specifier: ^28.11.0
         version: 28.14.0(eslint@8.57.1)(jest@29.7.0(@types/node@24.0.10))(typescript@5.8.3)
@@ -278,10 +278,10 @@ importers:
         version: 3.1.0
       kolibri-format:
         specifier: 1.0.1
-        version: 1.0.1(@testing-library/dom@9.3.4)(eslint-import-resolver-webpack@0.13.8)(jest@29.7.0(@types/node@24.0.10))(postcss@8.5.6)(typescript@5.8.3)
+        version: 1.0.1(@testing-library/dom@9.3.4)(eslint-import-resolver-webpack@0.13.10)(jest@29.7.0(@types/node@24.0.10))(postcss@8.5.6)(typescript@5.8.3)
       kolibri-tools:
         specifier: 0.18.2
-        version: 0.18.2(@testing-library/dom@9.3.4)(@types/node@24.0.10)(ejs@3.1.10)(eslint-import-resolver-webpack@0.13.8)(file-loader@6.2.0(webpack@5.99.9))(postcss@8.5.6)(typescript@5.8.3)(vue@2.7.16)
+        version: 0.18.2(@testing-library/dom@9.3.4)(@types/node@24.0.10)(ejs@3.1.10)(eslint-import-resolver-webpack@0.13.10)(file-loader@6.2.0(webpack@5.99.9))(postcss@8.5.6)(typescript@5.8.3)(vue@2.7.16)
       mini-css-extract-plugin:
         specifier: ^2.8.1
         version: 2.9.2(webpack@5.99.9)
@@ -2141,10 +2141,6 @@ packages:
     resolution: {integrity: sha512-HGyxoOTYUyCM6stUe6EJgnd4EoewAI7zMdfqO+kGjnlZmBDz/cR5pf8r/cR4Wq60sL/p0IkcjUEEPwS3GFrIyw==}
     engines: {node: '>=8'}
 
-  array.prototype.find@2.2.3:
-    resolution: {integrity: sha512-fO/ORdOELvjbbeIfZfzrXFMhYHGofRGqd+am9zm3tZ4GlJINj/pA2eITyfd65Vg6+ZbHd/Cys7stpoRSWtQFdA==}
-    engines: {node: '>= 0.4'}
-
   array.prototype.findlastindex@1.2.6:
     resolution: {integrity: sha512-F/TKATkzseUExPlfvmwQKGITM3DGTK+vkAsCZoDc5daVygbJBnjEUCbgkAvVFsgfXfX4YIqZ/27G3k3tdXrTxQ==}
     engines: {node: '>= 0.4'}
@@ -3445,8 +3441,8 @@ packages:
   eslint-import-resolver-node@0.3.9:
     resolution: {integrity: sha512-WFj2isz22JahUv+B788TlO3N6zL3nNJGU8CcZbPZvVEkBPaJdCV4vy5wyghty5ROFbCRnm132v8BScu5/1BQ8g==}
 
-  eslint-import-resolver-webpack@0.13.8:
-    resolution: {integrity: sha512-Y7WIaXWV+Q21Rz/PJgUxiW/FTBOWmU8NTLdz+nz9mMoiz5vAev/fOaQxwD7qRzTfE3HSm1qsxZ5uRd7eX+VEtA==}
+  eslint-import-resolver-webpack@0.13.10:
+    resolution: {integrity: sha512-ciVTEg7sA56wRMR772PyjcBRmyBMLS46xgzQZqt6cWBEKc7cK65ZSSLCTLVRu2gGtKyXUb5stwf4xxLBfERLFA==}
     engines: {node: '>= 6'}
     peerDependencies:
       eslint-plugin-import: '>=1.4.0'
@@ -10015,14 +10011,6 @@ snapshots:
 
   array-union@2.1.0: {}
 
-  array.prototype.find@2.2.3:
-    dependencies:
-      call-bind: 1.0.8
-      define-properties: 1.2.1
-      es-abstract: 1.24.0
-      es-object-atoms: 1.1.1
-      es-shim-unscopables: 1.1.0
-
   array.prototype.findlastindex@1.2.6:
     dependencies:
       call-bind: 1.0.8
@@ -11359,12 +11347,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-import-resolver-webpack@0.13.8(eslint-plugin-import@2.32.0)(webpack@5.99.9):
+  eslint-import-resolver-webpack@0.13.10(eslint-plugin-import@2.32.0)(webpack@5.99.9):
     dependencies:
-      array.prototype.find: 2.2.3
       debug: 3.2.7
       enhanced-resolve: 0.9.1
-      eslint-plugin-import: 2.32.0(eslint-import-resolver-webpack@0.13.8)(eslint@8.57.1)
+      eslint-plugin-import: 2.32.0(eslint-import-resolver-webpack@0.13.10)(eslint@8.57.1)
       find-root: 1.1.0
       hasown: 2.0.2
       interpret: 1.4.0
@@ -11377,17 +11364,17 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.12.1(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-webpack@0.13.8)(eslint@8.57.1):
+  eslint-module-utils@2.12.1(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-webpack@0.13.10)(eslint@8.57.1):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.9
-      eslint-import-resolver-webpack: 0.13.8(eslint-plugin-import@2.32.0)(webpack@5.99.9)
+      eslint-import-resolver-webpack: 0.13.10(eslint-plugin-import@2.32.0)(webpack@5.99.9)
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-import@2.32.0(eslint-import-resolver-webpack@0.13.8)(eslint@8.57.1):
+  eslint-plugin-import@2.32.0(eslint-import-resolver-webpack@0.13.10)(eslint@8.57.1):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.1.9
@@ -11398,7 +11385,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.1(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-webpack@0.13.8)(eslint@8.57.1)
+      eslint-module-utils: 2.12.1(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-webpack@0.13.10)(eslint@8.57.1)
       hasown: 2.0.2
       is-core-module: 2.16.1
       is-glob: 4.0.3
@@ -13191,13 +13178,13 @@ snapshots:
       vue2-teleport: 1.1.4
       xstate: 4.38.3
 
-  kolibri-format@1.0.1(@testing-library/dom@9.3.4)(eslint-import-resolver-webpack@0.13.8)(jest@29.7.0(@types/node@24.0.10))(postcss@8.5.6)(typescript@5.8.3):
+  kolibri-format@1.0.1(@testing-library/dom@9.3.4)(eslint-import-resolver-webpack@0.13.10)(jest@29.7.0(@types/node@24.0.10))(postcss@8.5.6)(typescript@5.8.3):
     dependencies:
       chalk: 4.1.2
       commander: 13.1.0
       eslint: 8.57.1
       eslint-config-prettier: 10.1.5(eslint@8.57.1)
-      eslint-plugin-import: 2.32.0(eslint-import-resolver-webpack@0.13.8)(eslint@8.57.1)
+      eslint-plugin-import: 2.32.0(eslint-import-resolver-webpack@0.13.10)(eslint@8.57.1)
       eslint-plugin-jest: 28.14.0(eslint@8.57.1)(jest@29.7.0(@types/node@24.0.10))(typescript@5.8.3)
       eslint-plugin-jest-dom: 5.5.0(@testing-library/dom@9.3.4)(eslint@8.57.1)
       eslint-plugin-kolibri: 0.18.0
@@ -13234,7 +13221,7 @@ snapshots:
       chalk: 4.1.2
       loglevel: 1.9.2
 
-  kolibri-tools@0.18.2(@testing-library/dom@9.3.4)(@types/node@24.0.10)(ejs@3.1.10)(eslint-import-resolver-webpack@0.13.8)(file-loader@6.2.0(webpack@5.99.9))(postcss@8.5.6)(typescript@5.8.3)(vue@2.7.16):
+  kolibri-tools@0.18.2(@testing-library/dom@9.3.4)(@types/node@24.0.10)(ejs@3.1.10)(eslint-import-resolver-webpack@0.13.10)(file-loader@6.2.0(webpack@5.99.9))(postcss@8.5.6)(typescript@5.8.3)(vue@2.7.16):
     dependencies:
       '@babel/core': 7.28.0
       '@babel/plugin-syntax-import-assertions': 7.27.1(@babel/core@7.28.0)
@@ -13270,7 +13257,7 @@ snapshots:
       jest-serializer-vue: 3.1.0
       jscodeshift: 17.3.0(@babel/preset-env@7.28.0(@babel/core@7.28.0))
       kolibri: 0.18.0
-      kolibri-format: 1.0.1(@testing-library/dom@9.3.4)(eslint-import-resolver-webpack@0.13.8)(jest@29.7.0(@types/node@24.0.10))(postcss@8.5.6)(typescript@5.8.3)
+      kolibri-format: 1.0.1(@testing-library/dom@9.3.4)(eslint-import-resolver-webpack@0.13.10)(jest@29.7.0(@types/node@24.0.10))(postcss@8.5.6)(typescript@5.8.3)
       launch-editor-middleware: 2.10.0
       lodash: 4.17.21
       mini-css-extract-plugin: 2.9.2(webpack@5.99.9)
