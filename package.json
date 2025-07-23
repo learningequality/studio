@@ -58,7 +58,7 @@
     "@tiptap/extension-code-block-lowlight": "^2.23.0",
     "@tiptap/extension-link": "^2.23.1",
     "@tiptap/extension-subscript": "^2.14.0",
-    "@tiptap/extension-superscript": "^2.14.0",
+    "@tiptap/extension-superscript": "^2.26.1",
     "@tiptap/extension-underline": "^2.14.0",
     "@tiptap/starter-kit": "^2.13.0",
     "@tiptap/vue-2": "^2.13.0",
