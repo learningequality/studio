@@ -22,6 +22,8 @@ updates:
       babel:
         patterns:
           - "@babel/*"
+          - "@tiptap/*"
+          - "jest*"
 
   # Maintain dependencies for Github Actions
   - package-ecosystem: "github-actions"
