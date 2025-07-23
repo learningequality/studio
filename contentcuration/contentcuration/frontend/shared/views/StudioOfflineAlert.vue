@@ -4,14 +4,12 @@
       :style="computedstyle"
       data-test="studio-offline-alert"
     >
-      <div class="alert-content">
         <KIcon
           icon="disconnected"
-          class="mx-3"
+          class="kicon-style"
         />
-        <span class="notranslate">{{ $tr('offlineText') }}</span>
+        <span>{{ $tr('offlineText') }}</span>
       </div>
-    </div>
   </KTransition>
 </template>
 
@@ -32,30 +30,22 @@ export default {
     return { sendPoliteMessage };
   },
   computed: {
-    ...mapState({
-      offline: state => !state.connection.online,
-    }),
-    libraryMode() {
-      return window.libraryMode;
-    },
-    computed: {
-      ...mapState({
-        offline: state => !state.connection.online,
-      }),
-      libraryMode() {
-        return window.libraryMode;
-      },
-      computedstyle() {
-        return {
-          position: 'fixed',
-          top: `${this.offset}px`,
-          left: '0',
-          right: '0',
-          backgroundColor: this.$themeTokens.surface,
-          zIndex: 16,
-        };
-      },
-    },
+  ...mapState({
+    offline: state => !state.connection.online,
+  }),
+  libraryMode() {
+    return window.libraryMode;
+  },
+  computedstyle() {
+    return {
+      position: 'fixed',
+      top: `${this.offset}px`,
+      left: '0',
+      right: '0',
+      backgroundColor: this.$themeTokens.surface,
+      zIndex: 16,
+    };
+  },
   },
   watch: {
     offline(newVal) {
@@ -81,12 +71,11 @@ export default {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.alert-content {
-  display: flex;
-  align-items: center;
+.kicon-style {
+  margin-left: 3px;
+  margin-right: 6px;
+  flex-shrink: 0;
 }
 
-.alert-content span {
-  vertical-align: bottom;
-}
+
 </style>
