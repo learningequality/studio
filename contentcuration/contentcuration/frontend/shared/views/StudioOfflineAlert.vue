@@ -83,7 +83,7 @@
 
   .kicon-style {
     flex-shrink: 0;
-    margin-right: 6px;
+    margin-right: 14px;
     margin-left: 3px;
   }
 
