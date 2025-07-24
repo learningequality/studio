@@ -190,7 +190,7 @@
       >
         {{ $tr('fieldRequiredText') }}
       </div>
-      <label :style="{ color: orgSelected ? $themePalette.black : $themePalette.grey.v_300 }">
+      <label :style="{ color: orgSelected ? $themeTokens.text : $themeTokens.textDisabled }">
         {{ $tr('typeOfOrganizationLabel') }}
       </label>
     </div>
