@@ -17,9 +17,7 @@
         </VTab>
       </template>
     </AppBar>
-    <StudioOfflineAlert
-      :offset="104"
-    />
+    <StudioOfflineAlert :offset="104" />
     <VContent>
       <VContainer
         fluid

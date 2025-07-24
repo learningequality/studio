@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import StudioOfflineAlert from '../StudioOfflineAlert.vue';
-import storeFactory from 'shared/vuex/baseStore'; 
+import storeFactory from 'shared/vuex/baseStore';
 
 function makeWrapper() {
   const store = storeFactory();
@@ -26,7 +26,9 @@ describe('StudioOfflineAlert', () => {
     await wrapper.vm.$nextTick();
 
     expect(wrapper.find('[data-test="studio-offline-alert"]').exists()).toBe(true);
-    expect(wrapper.text()).toMatch("You seem to be offline. Your changes will be saved once your connection is back");
+    expect(wrapper.text()).toMatch(
+      'You seem to be offline. Your changes will be saved once your connection is back',
+    );
   });
 
   it('hides alert component when online', async () => {
@@ -35,6 +37,4 @@ describe('StudioOfflineAlert', () => {
 
     expect(wrapper.find('[data-test="studio-offline-alert"]').exists()).toBe(false);
   });
-
 });
-
