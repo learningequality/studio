@@ -84,7 +84,7 @@
   .kicon-style {
     flex-shrink: 0;
     margin-right: 14px;
-    margin-left: 3px;
+    margin-left: 10px;
   }
 
 </style>
