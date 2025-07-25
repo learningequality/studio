@@ -727,6 +727,7 @@
             const recommendedNodes = await this.fetchRecommendedNodes(recommendations);
             const pageSize = this.recommendationsPageSize;
             const currentIndex = this.recommendationsCurrentIndex;
+            const isLoadingOthers = this.shouldLoadOtherRecommendations;
 
             if (belowThreshold) {
               const nodeIds = new Set(this.recommendations.map(node => node.id));
@@ -752,7 +753,7 @@
             this.recommendationsLoading = false;
 
             await this.handleRecommendationsEvent(data, recommendations);
-            await this.handleShowMoreRecommendationsEvent(recommendedNodes);
+            await this.handleShowMoreRecommendationsEvent(recommendedNodes, isLoadingOthers);
           } catch (error) {
             this.recommendationsLoading = false;
             this.recommendationsLoadingError = true;
@@ -907,8 +908,8 @@
           this.formatRecommendationInteractionEventData(FeedbackTypeOptions.previewed, [node]),
         );
       },
-      async handleShowMoreRecommendationsEvent(nodes) {
-        if (this.shouldLoadOtherRecommendations) {
+      async handleShowMoreRecommendationsEvent(nodes, loadedOthers) {
+        if (loadedOthers) {
           await this.captureFeedbackEvent(
             this.formatRecommendationInteractionEventData(FeedbackTypeOptions.showmore, nodes),
           );
