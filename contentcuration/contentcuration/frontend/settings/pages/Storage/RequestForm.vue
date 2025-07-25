@@ -93,7 +93,7 @@
     <div class="mt-2">
       <div
         v-if="errors.license"
-        style="color: red"
+        :style="{ color: $themeTokens.error }"
       >
         {{ $tr('fieldRequiredText') }}
       </div>
@@ -153,7 +153,7 @@
     <div class="mt-2">
       <div
         v-if="errors.org_or_personal"
-        style="color: red"
+        :style="{ color: $themeTokens.error }"
       >
         {{ $tr('fieldRequiredText') }}
       </div>
@@ -186,11 +186,11 @@
     <div class="mb-1 mt-3">
       <div
         v-if="errors.organization_type"
-        style="color: red"
+        :style="{ color: $themeTokens.error }"
       >
         {{ $tr('fieldRequiredText') }}
       </div>
-      <label :style="{ color: orgSelected ? 'black' : 'gray' }">
+      <label :style="{ color: orgSelected ? $themeTokens.text : $themeTokens.textDisabled }">
         {{ $tr('typeOfOrganizationLabel') }}
       </label>
     </div>
