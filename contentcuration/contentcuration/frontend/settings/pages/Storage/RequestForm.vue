@@ -4,12 +4,13 @@
     ref="form"
     @submit.prevent="submit"
   >
-    <Banner
-      :value="Boolean(errorCount())"
-      error
-      :text="errorText()"
+    <StudioBanner 
+      v-if="Boolean(errorCount())" 
       class="my-2"
-    />
+      error
+    >
+      {{ errorText() }}
+    </StudioBanner>
 
     <!-- Nature of content -->
     <h3>{{ $tr('natureOfYourContentLabel') }}</h3>
@@ -268,7 +269,7 @@
   import { LicensesList } from 'shared/leUtils/Licenses';
   import CountryField from 'shared/views/form/CountryField';
   import MultiSelect from 'shared/views/form/MultiSelect';
-  import Banner from 'shared/views/Banner';
+  import StudioBanner from 'shared/views/StudioBanner';
   import InfoModal from 'shared/views/InfoModal';
 
   const formMixin = generateFormMixin({
@@ -320,7 +321,7 @@
     components: {
       CountryField,
       MultiSelect,
-      Banner,
+      StudioBanner,
       InfoModal,
     },
     mixins: [constantsTranslationMixin, formMixin],
