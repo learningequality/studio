@@ -2,10 +2,20 @@
 
   <div class="editor-container">
     <EditorToolbar
+      v-if="true"
       @insert-image="target => openCreateModal({ targetElement: target })"
       @insert-link="linkHandler.openLinkEditor()"
       @insert-math="target => mathHandler.openCreateMathModal({ targetElement: target })"
     />
+
+    <div v-else>
+      <MobileTopBar
+        @insert-image="target => openCreateModal({ targetElement: target })"
+        @insert-link="linkHandler.openLinkEditor()"
+        @insert-math="target => mathHandler.openCreateMathModal({ targetElement: target })"
+      />
+      <MobileFormattingBar v-if="isFocused" />
+    </div>
 
     <div
       v-if="linkHandler.isBubbleMenuOpen.value"
@@ -86,6 +96,8 @@
   import { useMathHandling } from './composables/useMathHandling';
   import FormulasMenu from './components/math/FormulasMenu.vue';
   import { preprocessMarkdown } from './utils/markdown';
+  import MobileTopBar from './components/toolbar/MobileTopBar.vue';
+  import MobileFormattingBar from './components/toolbar/MobileFormattingBar.vue';
 
   export default defineComponent({
     name: 'RichTextEditor',
@@ -96,9 +108,11 @@
       LinkBubbleMenu,
       LinkEditor,
       FormulasMenu,
+      MobileTopBar,
+      MobileFormattingBar,
     },
     setup(props, { emit }) {
-      const { editor, isReady, initializeEditor } = useEditor();
+      const { editor, isReady, isFocused, initializeEditor } = useEditor();
       provide('editor', editor);
       provide('isReady', isReady);
 
@@ -182,6 +196,7 @@
 
       return {
         isReady,
+        isFocused,
         modalMode,
         modalInitialData,
         popoverStyle,
@@ -213,7 +228,7 @@
 
   .editor-container {
     position: relative;
-    width: 1000px;
+    min-width: 200px;
     margin: 80px auto;
     font-family:
       'Noto Sans',

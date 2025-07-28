@@ -8,6 +8,7 @@
     :tabindex="isAvailable ? 0 : -1"
     :aria-label="title"
     :aria-pressed="isActive ? 'true' : 'false'"
+    @mousedown.prevent
     @click="handleClick"
     @keydown="handleKeydown"
   >

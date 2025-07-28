@@ -14,6 +14,7 @@ import { createCustomMarkdownSerializer } from '../utils/markdownSerializer';
 export function useEditor() {
   const editor = ref(null);
   const isReady = ref(false);
+  const isFocused = ref(false);
 
   const initializeEditor = content => {
     editor.value = new Editor({
@@ -47,6 +48,13 @@ export function useEditor() {
         }
         editor.value.storage.markdown.getMarkdown = createCustomMarkdownSerializer(editor.value);
       },
+
+      onFocus: () => {
+        isFocused.value = true;
+      },
+      onBlur: () => {
+        isFocused.value = false;
+      },
     });
   };
 
@@ -65,6 +73,7 @@ export function useEditor() {
   return {
     editor,
     isReady,
+    isFocused,
     initializeEditor,
     destroyEditor,
   };
