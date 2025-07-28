@@ -51,11 +51,8 @@
       v-else
       class="circular-loader"
     >
-      <KCircularLoader
-        size="70"
-      />
+      <KCircularLoader size="70" />
     </div>
-    
 
     <h2 ref="requestheader">
       {{ $tr('requestMoreSpaceHeading') }}
