@@ -4,8 +4,8 @@
     ref="form"
     @submit.prevent="submit"
   >
-    <StudioBanner 
-      v-if="Boolean(errorCount())" 
+    <StudioBanner
+      v-if="Boolean(errorCount())"
       class="my-2"
       error
     >

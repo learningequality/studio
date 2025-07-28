@@ -2,7 +2,7 @@
 
   <div
     class="banner notranslate"
-    :style="{ backgroundColor: error ? $themePalette.red.v_100 : '' } "
+    :style="{ backgroundColor: error ? $themePalette.red.v_100 : '' }"
   >
     <slot>
       {{ text }}
@@ -29,8 +29,8 @@
 
 <style lang="scss" scoped>
 
-.banner {
- padding: 16px;
-}
+  .banner {
+    padding: 16px;
+  }
 
 </style>
