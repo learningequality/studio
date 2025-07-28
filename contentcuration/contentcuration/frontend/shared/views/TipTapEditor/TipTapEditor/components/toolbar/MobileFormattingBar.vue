@@ -94,6 +94,7 @@
     display: flex;
     align-items: center;
     height: 3.5rem;
+    background: white;
     backdrop-filter: blur(0.625rem);
     border-top: 1px solid #cccccc;
     box-shadow: 0 -0.125rem 0.5rem rgba(0, 0, 0, 0.1);
