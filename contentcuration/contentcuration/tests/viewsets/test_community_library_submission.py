@@ -1,7 +1,13 @@
+import datetime
+from unittest import mock
 from urllib.parse import urlencode
 
+import pytz
 from django.urls import reverse
 
+from contentcuration.constants import (
+    community_library_submission as community_library_submission_constants,
+)
 from contentcuration.models import CommunityLibrarySubmission
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
@@ -276,8 +282,10 @@ class CRUDTestCase(StudioAPITestCase):
         self.assertEqual(response.status_code, 200, response.content)
 
         result = response.data
-        self.assertEqual(result["author_first_name"], self.author_user.first_name)
-        self.assertEqual(result["author_last_name"], self.author_user.last_name)
+        self.assertEqual(
+            result["author_name"],
+            f"{self.author_user.first_name} {self.author_user.last_name}",
+        )
 
     def test_update_submission__is_author(self):
         self.client.force_authenticate(user=self.author_user)
@@ -421,4 +429,386 @@ class CRUDTestCase(StudioAPITestCase):
             CommunityLibrarySubmission.objects.filter(
                 id=self.existing_submission1.id
             ).exists()
+        )
+
+
+class AdminViewSetTestCase(StudioAPITestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.submission = testdata.community_library_submission()
+        self.submission.channel.version = 3
+        self.submission.channel.save()
+        self.submission.channel_version = 2
+        self.submission.save()
+
+        self.editor_user = self.submission.channel.editors.first()
+
+        self.superseded_submission = CommunityLibrarySubmission.objects.create(
+            channel=self.submission.channel,
+            author=self.editor_user,
+            status=community_library_submission_constants.STATUS_PENDING,
+            date_created=datetime.datetime(2023, 1, 1, tzinfo=pytz.utc),
+            channel_version=1,
+        )
+        self.not_superseded_submission = CommunityLibrarySubmission.objects.create(
+            channel=self.submission.channel,
+            author=self.editor_user,
+            status=community_library_submission_constants.STATUS_PENDING,
+            date_created=datetime.datetime(2024, 1, 1, tzinfo=pytz.utc),
+            channel_version=3,
+        )
+        self.submission_for_other_channel = testdata.community_library_submission()
+        self.submission_for_other_channel.channel_version = 1
+        self.submission_for_other_channel.save()
+
+        self.feedback_notes = "Feedback"
+        self.internal_notes = "Internal notes"
+
+        self.resolve_approve_metadata = {
+            "status": community_library_submission_constants.STATUS_APPROVED,
+            "feedback_notes": self.feedback_notes,
+            "internal_notes": self.internal_notes,
+        }
+        self.resolve_reject_metadata = {
+            "status": community_library_submission_constants.STATUS_REJECTED,
+            "resolution_reason": community_library_submission_constants.REASON_INVALID_METADATA,
+            "feedback_notes": self.feedback_notes,
+            "internal_notes": self.internal_notes,
+        }
+
+        self.resolved_time = datetime.datetime(2023, 10, 1, tzinfo=pytz.utc)
+        self.patcher = mock.patch(
+            "contentcuration.viewsets.community_library_submission.timezone.now",
+            return_value=self.resolved_time,
+        )
+        self.mock_datetime = self.patcher.start()
+
+    def tearDown(self):
+        self.patcher.stop()
+        super().tearDown()
+
+    def _manually_reject_submission(self):
+        self.submission.status = community_library_submission_constants.STATUS_REJECTED
+        self.submission.resolved_by = self.admin_user
+        self.submission.resolution_reason = (
+            community_library_submission_constants.REASON_INVALID_METADATA
+        )
+        self.submission.feedback_notes = self.feedback_notes
+        self.submission.internal_notes = self.internal_notes
+        self.submission.date_resolved = self.resolved_time
+        self.submission.save()
+
+    def _refresh_submissions_from_db(self):
+        self.submission.refresh_from_db()
+        self.superseded_submission.refresh_from_db()
+        self.not_superseded_submission.refresh_from_db()
+        self.submission_for_other_channel.refresh_from_db()
+
+    def test_list_submissions__admin(self):
+        self.client.force_authenticate(user=self.admin_user)
+
+        self._manually_reject_submission()
+
+        response = self.client.get(
+            reverse("admin-community-library-submission-list"),
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        results = response.data
+        self.assertEqual(len(results), 4)
+        rejected_results = [
+            result
+            for result in results
+            if result["status"]
+            == community_library_submission_constants.STATUS_REJECTED
+        ]
+        self.assertEqual(len(rejected_results), 1)
+        result = rejected_results[0]
+
+        self.assertEqual(result["resolved_by_id"], self.admin_user.id)
+        self.assertEqual(
+            result["resolved_by_name"],
+            f"{self.admin_user.first_name} {self.admin_user.last_name}",
+        )
+        self.assertEqual(result["internal_notes"], self.internal_notes)
+
+    def test_list_submissions__editor(self):
+        self.client.force_authenticate(user=self.editor_user)
+
+        self._manually_reject_submission()
+
+        response = self.client.get(
+            reverse("admin-community-library-submission-list"),
+        )
+        self.assertEqual(response.status_code, 403, response.content)
+
+    def test_submission_detail__admin(self):
+        self.client.force_authenticate(user=self.admin_user)
+
+        self._manually_reject_submission()
+
+        response = self.client.get(
+            reverse(
+                "admin-community-library-submission-detail",
+                args=[self.submission.id],
+            ),
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        result = response.data
+        self.assertEqual(result["id"], self.submission.id)
+        self.assertEqual(result["resolved_by_id"], self.admin_user.id)
+        self.assertEqual(
+            result["resolved_by_name"],
+            f"{self.admin_user.first_name} {self.admin_user.last_name}",
+        )
+        self.assertEqual(result["internal_notes"], self.internal_notes)
+
+    def test_submission_detail__editor(self):
+        self.client.force_authenticate(user=self.editor_user)
+
+        self._manually_reject_submission()
+
+        response = self.client.get(
+            reverse(
+                "admin-community-library-submission-detail",
+                args=[self.submission.id],
+            ),
+        )
+        self.assertEqual(response.status_code, 403, response.content)
+
+    def test_update_submission(self):
+        self.client.force_authenticate(user=self.admin_user)
+
+        response = self.client.put(
+            reverse(
+                "admin-community-library-submission-detail",
+                args=[self.submission.id],
+            ),
+            {},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 405, response.content)
+
+    def test_partial_update_submission(self):
+        self.client.force_authenticate(user=self.admin_user)
+
+        response = self.client.patch(
+            reverse(
+                "admin-community-library-submission-detail",
+                args=[self.submission.id],
+            ),
+            {},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 405, response.content)
+
+    def test_destroy_submission(self):
+        self.client.force_authenticate(user=self.admin_user)
+
+        response = self.client.delete(
+            reverse(
+                "admin-community-library-submission-detail",
+                args=[self.submission.id],
+            ),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 405, response.content)
+
+    def test_resolve_submission__editor(self):
+        self.client.force_authenticate(user=self.editor_user)
+        response = self.client.post(
+            reverse(
+                "admin-community-library-submission-resolve",
+                args=[self.submission.id],
+            ),
+            self.resolve_approve_metadata,
+            format="json",
+        )
+        self.assertEqual(response.status_code, 403, response.content)
+
+    def test_resolve_submission__accept_correct(self):
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.post(
+            reverse(
+                "admin-community-library-submission-resolve",
+                args=[self.submission.id],
+            ),
+            self.resolve_approve_metadata,
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        resolved_submission = CommunityLibrarySubmission.objects.get(
+            id=self.submission.id
+        )
+        self.assertEqual(
+            resolved_submission.status,
+            community_library_submission_constants.STATUS_APPROVED,
+        )
+        self.assertEqual(resolved_submission.feedback_notes, self.feedback_notes)
+        self.assertEqual(resolved_submission.internal_notes, self.internal_notes)
+        self.assertEqual(resolved_submission.resolved_by, self.admin_user)
+        self.assertEqual(resolved_submission.date_resolved, self.resolved_time)
+
+    def test_resolve_submission__reject_correct(self):
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.post(
+            reverse(
+                "admin-community-library-submission-resolve",
+                args=[self.submission.id],
+            ),
+            self.resolve_reject_metadata,
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        resolved_submission = CommunityLibrarySubmission.objects.get(
+            id=self.submission.id
+        )
+        self.assertEqual(
+            resolved_submission.status,
+            community_library_submission_constants.STATUS_REJECTED,
+        )
+        self.assertEqual(
+            resolved_submission.resolution_reason,
+            community_library_submission_constants.REASON_INVALID_METADATA,
+        )
+        self.assertEqual(resolved_submission.feedback_notes, self.feedback_notes)
+        self.assertEqual(resolved_submission.internal_notes, self.internal_notes)
+        self.assertEqual(resolved_submission.resolved_by, self.admin_user)
+        self.assertEqual(resolved_submission.date_resolved, self.resolved_time)
+
+    def test_resolve_submission__reject_missing_resolution_reason(self):
+        self.client.force_authenticate(user=self.admin_user)
+        metadata = self.resolve_reject_metadata.copy()
+        del metadata["resolution_reason"]
+        response = self.client.post(
+            reverse(
+                "admin-community-library-submission-resolve",
+                args=[self.submission.id],
+            ),
+            metadata,
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+
+    def test_resolve_submission__reject_missing_feedback_notes(self):
+        self.client.force_authenticate(user=self.admin_user)
+        metadata = self.resolve_reject_metadata.copy()
+        del metadata["feedback_notes"]
+        response = self.client.post(
+            reverse(
+                "admin-community-library-submission-resolve",
+                args=[self.submission.id],
+            ),
+            metadata,
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+
+    def test_resolve_submission__invalid_status(self):
+        self.client.force_authenticate(user=self.admin_user)
+        metadata = self.resolve_approve_metadata.copy()
+        metadata["status"] = (community_library_submission_constants.STATUS_PENDING,)
+        response = self.client.post(
+            reverse(
+                "admin-community-library-submission-resolve",
+                args=[self.submission.id],
+            ),
+            metadata,
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+
+    def test_resolve_submission__not_pending(self):
+        self.client.force_authenticate(user=self.admin_user)
+        self.submission.status = community_library_submission_constants.STATUS_APPROVED
+        self.submission.save()
+
+        response = self.client.post(
+            reverse(
+                "admin-community-library-submission-resolve",
+                args=[self.submission.id],
+            ),
+            self.resolve_approve_metadata,
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+
+    def test_resolve_submission__overrite_categories(self):
+        self.client.force_authenticate(user=self.admin_user)
+        categories = ["Category 1"]
+        self.resolve_approve_metadata["categories"] = categories
+
+        response = self.client.post(
+            reverse(
+                "admin-community-library-submission-resolve",
+                args=[self.submission.id],
+            ),
+            self.resolve_approve_metadata,
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        resolved_submission = CommunityLibrarySubmission.objects.get(
+            id=self.submission.id
+        )
+        self.assertListEqual(resolved_submission.categories, categories)
+
+    def test_resolve_submission__accept_mark_superseded(self):
+        self.client.force_authenticate(user=self.admin_user)
+
+        response = self.client.post(
+            reverse(
+                "admin-community-library-submission-resolve",
+                args=[self.submission.id],
+            ),
+            self.resolve_approve_metadata,
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        self._refresh_submissions_from_db()
+
+        self.assertEqual(
+            self.superseded_submission.status,
+            community_library_submission_constants.STATUS_SUPERSEDED,
+        )
+        self.assertEqual(
+            self.not_superseded_submission.status,
+            community_library_submission_constants.STATUS_PENDING,
+        )
+        self.assertEqual(
+            self.submission_for_other_channel.status,
+            community_library_submission_constants.STATUS_PENDING,
+        )
+
+    def test_resolve_submission__reject_do_not_mark_superseded(self):
+        self.client.force_authenticate(user=self.admin_user)
+
+        response = self.client.post(
+            reverse(
+                "admin-community-library-submission-resolve",
+                args=[self.submission.id],
+            ),
+            self.resolve_reject_metadata,
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        self._refresh_submissions_from_db()
+
+        self.assertEqual(
+            self.superseded_submission.status,
+            community_library_submission_constants.STATUS_PENDING,
+        )
+        self.assertEqual(
+            self.not_superseded_submission.status,
+            community_library_submission_constants.STATUS_PENDING,
+        )
+        self.assertEqual(
+            self.submission_for_other_channel.status,
+            community_library_submission_constants.STATUS_PENDING,
         )

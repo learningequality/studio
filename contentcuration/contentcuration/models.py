@@ -2558,11 +2558,27 @@ class CommunityLibrarySubmission(models.Model):
     )
     categories = models.JSONField(blank=True, null=True)
     date_created = models.DateTimeField(auto_now_add=True)
+    date_resolved = models.DateTimeField(blank=True, null=True)
     status = models.CharField(
         max_length=20,
         choices=community_library_submission.status_choices,
         default=community_library_submission.STATUS_PENDING,
     )
+    resolved_by = models.ForeignKey(
+        User,
+        related_name="resolved_community_library_submissions",
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+    )
+    resolution_reason = models.CharField(
+        max_length=50,
+        choices=community_library_submission.resolution_reason_choices,
+        blank=True,
+        null=True,
+    )
+    feedback_notes = models.TextField(blank=True, null=True)
+    internal_notes = models.TextField(blank=True, null=True)
 
     def save(self, *args, **kwargs):
         # Validate on save that the submission author is an editor of the channel

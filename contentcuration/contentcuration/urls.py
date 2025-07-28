@@ -39,6 +39,9 @@ from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.clipboard import ClipboardViewSet
 from contentcuration.viewsets.community_library_submission import (
+    AdminCommunityLibrarySubmissionViewSet,
+)
+from contentcuration.viewsets.community_library_submission import (
     CommunityLibrarySubmissionViewSet,
 )
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
@@ -87,6 +90,11 @@ router.register(
     r"communitylibrary_submission",
     CommunityLibrarySubmissionViewSet,
     basename="community-library-submission",
+)
+router.register(
+    r"admin_communitylibrary_submission",
+    AdminCommunityLibrarySubmissionViewSet,
+    basename="admin-community-library-submission",
 )
 
 urlpatterns = [
