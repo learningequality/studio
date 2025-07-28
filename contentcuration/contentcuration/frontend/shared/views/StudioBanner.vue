@@ -4,8 +4,7 @@
     class="banner notranslate"
     :style="{ backgroundColor: error ? $themePalette.red.v_100 : '' }"
   >
-    <slot>
-    </slot>
+    <slot> </slot>
   </div>
 
 </template>
