@@ -5,7 +5,6 @@
     :style="{ backgroundColor: error ? $themePalette.red.v_100 : '' }"
   >
     <slot>
-      {{ text }}
     </slot>
   </div>
 
