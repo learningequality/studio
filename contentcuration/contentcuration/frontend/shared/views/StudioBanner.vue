@@ -28,11 +28,11 @@
     },
     mounted() {
       const slotContent = this.$slots.default;
-      const textContent = slotContent[0].text
+      const textContent = slotContent[0].text;
       if (textContent && this.error) {
         this.sendPoliteMessage(textContent);
       }
-    }
+    },
   };
 
 </script>

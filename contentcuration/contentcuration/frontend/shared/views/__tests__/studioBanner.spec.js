@@ -7,6 +7,9 @@ describe('StudioBanner', () => {
       propsData: {
         error: false,
       },
+      slots: {
+        default: '',
+      },
     });
     expect(wrapper.text()).toBe('');
   });
