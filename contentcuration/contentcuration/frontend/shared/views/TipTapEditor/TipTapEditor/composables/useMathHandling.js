@@ -1,4 +1,4 @@
-import { ref, onUnmounted, watch } from 'vue';
+import { ref, onUnmounted, watch, nextTick } from 'vue';
 import { useModalPositioning } from './useModalPositioning';
 
 export function useMathHandling(editor) {
@@ -16,7 +16,6 @@ export function useMathHandling(editor) {
     cleanup,
   } = useModalPositioning();
 
-  // for consistency with other modals
   const closeMathModal = () => {
     closeModalBase();
   };
@@ -34,7 +33,13 @@ export function useMathHandling(editor) {
     mathModalMode.value = 'edit';
     mathModalInitialLatex.value = latex;
     editingMathNodePos.value = pos;
-    openModal({ centered: true }); // Edit mode is always centered
+
+    // Important to stop the propagation of the click event
+    nextTick(() => {
+      setTimeout(() => {
+        openModal({ centered: true });
+      }, 100);
+    });
   };
 
   const handleSaveMath = newLatex => {

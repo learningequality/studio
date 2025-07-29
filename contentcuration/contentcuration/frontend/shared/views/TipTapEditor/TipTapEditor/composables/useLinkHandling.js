@@ -43,7 +43,6 @@ export function useLinkHandling(editor) {
     const { state } = editor.value;
     const { from, to, empty } = state.selection;
 
-    popoverStyle.value = calculatePosition(true);
     editorMode.value = mode;
 
     if (mode === 'edit') {
@@ -67,6 +66,7 @@ export function useLinkHandling(editor) {
       };
     }
 
+    popoverStyle.value = calculatePosition(true);
     isEditorOpen.value = true;
   };
 
