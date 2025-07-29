@@ -79,7 +79,7 @@
             ref="contentTreeList"
             :topicNode="topicNode"
             :selected.sync="selected"
-            :topicId="topicId"
+            :topicId="$route.params.nodeId"
             @preview="preview($event)"
             @change_selected="handleChangeSelected"
             @copy_to_clipboard="handleCopyToClipboard"
@@ -454,9 +454,6 @@
           maxWidth: this.shouldShowRecommendations ? '1200px' : '800px',
         };
       },
-      topicId() {
-        return this.$route.params.destNodeId;
-      },
       recommendationsSectionTitle() {
         return this.resourcesMightBeRelevantTitle$({
           topic: this.importDestinationTitle,
@@ -489,7 +486,7 @@
         };
       },
       importDestinationAncestors() {
-        return this.getContentNodeAncestors(this.topicId, true);
+        return this.getContentNodeAncestors(this.$route.params.destNodeId, true);
       },
       importDestinationFolder() {
         return this.importDestinationAncestors.slice(-1)[0];
