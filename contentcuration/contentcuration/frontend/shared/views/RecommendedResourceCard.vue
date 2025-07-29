@@ -42,7 +42,11 @@
             :tooltip="$tr('goToLocationTooltip')"
             @click.stop="goToLocation"
           />
-          <KIconButton icon="thumbDown" />
+          <KIconButton
+            icon="thumbDown"
+            :tooltip="$tr('markNotRelevantTooltip')"
+            @click.stop="markNotRelevant"
+          />
         </KFixedGridItem>
       </KFixedGrid>
     </template>
@@ -111,10 +115,14 @@
       goToLocation() {
         window.open(this.goToLocationUrl, '_blank');
       },
+      markNotRelevant() {
+        this.$emit('irrelevant', this.node);
+      },
     },
     $trs: {
       selectCard: 'Select { title }',
       goToLocationTooltip: 'Go to location',
+      markNotRelevantTooltip: 'Mark as not relevant',
     },
   };
 
