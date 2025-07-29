@@ -17,6 +17,35 @@
       class="scrollable-tools"
       aria-label="Text formatting tools"
     >
+      <div class="formatting-buttons">
+        <button
+          :disabled="!canDecreaseFormat"
+          title="Decrease format size"
+          aria-label="Decrease format size"
+          class="format-btn"
+          @mousedown.prevent
+          @click="decreaseFormat"
+        >
+          -
+        </button>
+        <img
+          src="../../../assets/icon-formatSize.svg"
+          alt="Format size"
+        >
+        <button
+          :disabled="!canIncreaseFormat"
+          title="Increase format size"
+          aria-label="Increase format size"
+          class="format-btn"
+          @mousedown.prevent
+          @click="increaseFormat"
+        >
+          +
+        </button>
+      </div>
+
+      <ToolbarDivider />
+
       <ToolbarButton
         v-for="action in textActions"
         :key="action.name"
@@ -53,6 +82,7 @@
 
   import { defineComponent, ref } from 'vue';
   import { useToolbarActions } from '../../composables/useToolbarActions';
+  import { useFormatControls } from '../../composables/useFormatControls';
   import ToolbarButton from './ToolbarButton.vue';
   import ToolbarDivider from './ToolbarDivider.vue';
 
@@ -62,9 +92,12 @@
     setup() {
       const isExpanded = ref(true);
 
-      // Pull ONLY the formatting-related actions from the central composable
-      // TODO: Should we include insertion actions like the figma design here?
+      // TODO: Should we include insertion actions like the figma design here AGAIN?
+      // If yes ->merge with MobileTopBar.vue and get the editor field using a slot
       const { textActions, listActions, scriptActions } = useToolbarActions();
+
+      const { canIncreaseFormat, canDecreaseFormat, increaseFormat, decreaseFormat } =
+        useFormatControls();
 
       const toggleToolbar = () => {
         isExpanded.value = !isExpanded.value;
@@ -76,6 +109,10 @@
         listActions,
         scriptActions,
         toggleToolbar,
+        canIncreaseFormat,
+        canDecreaseFormat,
+        increaseFormat,
+        decreaseFormat,
       };
     },
   });
@@ -123,15 +160,32 @@
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .toggle-btn:hover {
-    color: #333333;
-    background: rgba(0, 0, 0, 0.05);
-    transform: scale(1.1);
-  }
-
   .toggle-btn:active {
     background: rgba(0, 0, 0, 0.1);
     transform: scale(0.95);
+  }
+
+  .formatting-buttons {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+    font-size: 2.125rem;
+    color: #666666;
+  }
+
+  .format-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.25rem;
+  }
+
+  .format-btn:disabled {
+    color: #d1d5da;
+    cursor: not-allowed;
+    border-color: #e1e5e9;
   }
 
   .scrollable-tools {
