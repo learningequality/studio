@@ -134,7 +134,17 @@ export function useLinkHandling(editor) {
         closeAll();
       }
     };
-    const scrollHandler = () => closeAll();
+
+    const scrollHandler = event => {
+      // Don't close on horizontal scroll within input fields
+      const target = event.target;
+      const isInputField = target.tagName === 'INPUT';
+      const isInsideModal = document.querySelector('.link-editor-popover')?.contains(target);
+
+      if (!isInputField || !isInsideModal) {
+        closeAll();
+      }
+    };
 
     if (isOpen) {
       setTimeout(() => {
