@@ -1,13 +1,15 @@
 import { ref, watch } from 'vue';
+import { useBreakpoint } from './useBreakpoint';
 
 export function useModalPositioning() {
   const isModalOpen = ref(false);
   const popoverStyle = ref({});
   const isModalCentered = ref(false);
   const anchorElement = ref(null);
+  const { isMobile } = useBreakpoint();
 
   const updatePosition = () => {
-    if (!anchorElement.value || isModalCentered.value) {
+    if (!anchorElement.value || isModalCentered.value || isMobile) {
       return;
     }
     const rect = anchorElement.value.getBoundingClientRect();
@@ -37,7 +39,8 @@ export function useModalPositioning() {
   };
 
   const openModal = ({ targetElement = null, centered = false } = {}) => {
-    if (centered || !targetElement) {
+    // Force centered positioning on mobile
+    if (centered || !targetElement || isMobile) {
       setCenteredPosition();
     } else {
       setAnchoredPosition(targetElement);
@@ -61,18 +64,29 @@ export function useModalPositioning() {
       }
     };
 
+    const handleResize = () => {
+      if (isModalOpen.value) {
+        // Re-evaluate positioning on resize
+        if (isMobile && !isModalCentered.value) {
+          setCenteredPosition();
+        } else if (!isMobile && anchorElement.value) {
+          updatePosition();
+        }
+      }
+    };
+
     watch(isModalOpen, isOpen => {
       if (isOpen) {
         // The timeout prevents the click that opened the modal from immediately closing it.
         setTimeout(() => {
           document.addEventListener('mousedown', clickOutsideHandler, true);
           window.addEventListener('scroll', updatePosition, true);
-          window.addEventListener('resize', updatePosition, true);
+          window.addEventListener('resize', handleResize, true);
         }, 0);
       } else {
         document.removeEventListener('mousedown', clickOutsideHandler, true);
         window.removeEventListener('scroll', updatePosition, true);
-        window.removeEventListener('resize', updatePosition, true);
+        window.removeEventListener('resize', handleResize, true);
       }
     });
   };

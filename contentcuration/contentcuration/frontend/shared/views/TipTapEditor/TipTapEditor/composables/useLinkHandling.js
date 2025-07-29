@@ -1,4 +1,5 @@
 import { ref, watch, onUnmounted } from 'vue';
+import { useBreakpoint } from './useBreakpoint';
 
 export function useLinkHandling(editor) {
   const isEditorOpen = ref(false);
@@ -7,9 +8,22 @@ export function useLinkHandling(editor) {
   const editorInitialState = ref({ text: '', href: '' });
   const editorMode = ref('create');
   const savedSelection = ref(null);
+  const { isMobile } = useBreakpoint();
 
   const calculatePosition = () => {
     if (!editor.value) return {};
+
+    // Force centered positioning on mobile
+    if (isMobile) {
+      return {
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        zIndex: 1001,
+      };
+    }
+
     const { view } = editor.value;
     const { from } = view.state.selection;
     const coords = view.coordsAtPos(from);
@@ -104,6 +118,12 @@ export function useLinkHandling(editor) {
     }
   };
 
+  const handleResize = () => {
+    if (isEditorOpen.value || isBubbleMenuOpen.value) {
+      popoverStyle.value = calculatePosition();
+    }
+  };
+
   watch([isEditorOpen, isBubbleMenuOpen], ([editorIsOpen, bubbleIsOpen]) => {
     const isOpen = editorIsOpen || bubbleIsOpen;
     const clickHandler = event => {
@@ -120,10 +140,12 @@ export function useLinkHandling(editor) {
       setTimeout(() => {
         document.addEventListener('mousedown', clickHandler, true);
         document.addEventListener('scroll', scrollHandler, true);
+        window.addEventListener('resize', handleResize, true);
       }, 0);
     } else {
       document.removeEventListener('mousedown', clickHandler, true);
       document.removeEventListener('scroll', scrollHandler, true);
+      window.removeEventListener('resize', handleResize, true);
     }
   });
 

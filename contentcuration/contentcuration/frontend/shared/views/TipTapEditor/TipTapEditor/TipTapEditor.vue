@@ -2,7 +2,7 @@
 
   <div class="editor-container">
     <EditorToolbar
-      v-if="true"
+      v-if="!isMobile"
       @insert-image="target => openCreateModal({ targetElement: target })"
       @insert-link="linkHandler.openLinkEditor()"
       @insert-math="target => mathHandler.openCreateMathModal({ targetElement: target })"
@@ -98,6 +98,7 @@
   import { preprocessMarkdown } from './utils/markdown';
   import MobileTopBar from './components/toolbar/MobileTopBar.vue';
   import MobileFormattingBar from './components/toolbar/MobileFormattingBar.vue';
+  import { useBreakpoint } from './composables/useBreakpoint';
 
   export default defineComponent({
     name: 'RichTextEditor',
@@ -121,6 +122,8 @@
 
       const mathHandler = useMathHandling(editor);
       provide('mathHandler', mathHandler);
+
+      const { isMobile } = useBreakpoint();
 
       const {
         modalMode,
@@ -210,6 +213,7 @@
         linkHandler,
         editor,
         mathHandler,
+        isMobile,
       };
     },
     props: {
