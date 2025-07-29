@@ -137,7 +137,7 @@
       const handleDrop = event => {
         const file = event.dataTransfer.files[0];
         if (file) {
-          openCreateModal(file);
+          openCreateModal({ file });
         }
       };
 

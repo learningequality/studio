@@ -1,15 +1,21 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 
 export function useImageHandling(editor) {
-  const modalMode = ref(null); // 'create' or 'edit'
+  const modalMode = ref(null);
   const modalInitialData = ref({});
   const popoverStyle = ref({});
   const editingNodePos = ref(null);
   const isModalCentered = ref(false);
 
-  const setPopoverPosition = targetElement => {
-    isModalCentered.value = false;
-    const rect = targetElement.getBoundingClientRect();
+  // to store the button element that opened the popover
+  const anchorElement = ref(null);
+
+  const updatePosition = () => {
+    // If there's no anchor (centered), do nothing.
+    if (!anchorElement.value || isModalCentered.value) {
+      return;
+    }
+    const rect = anchorElement.value.getBoundingClientRect();
     popoverStyle.value = {
       position: 'fixed',
       top: `${rect.bottom + 5}px`,
@@ -20,6 +26,7 @@ export function useImageHandling(editor) {
 
   const setCenteredPosition = () => {
     isModalCentered.value = true;
+    anchorElement.value = null; // Ensure we don't try to update a centered modal
     popoverStyle.value = {
       position: 'fixed',
       top: '50%',
@@ -30,7 +37,10 @@ export function useImageHandling(editor) {
 
   const openCreateModal = ({ file = null, targetElement = null } = {}) => {
     if (targetElement) {
-      setPopoverPosition(targetElement);
+      // Save the anchor element and run the initial position calculation
+      anchorElement.value = targetElement;
+      isModalCentered.value = false;
+      updatePosition();
     } else {
       setCenteredPosition();
     }
@@ -50,7 +60,31 @@ export function useImageHandling(editor) {
     modalInitialData.value = {};
     editingNodePos.value = null;
     isModalCentered.value = false;
+    anchorElement.value = null; // Clear the anchor on close
   };
+
+  // This watcher now also manages the crucial scroll/resize listeners.
+  watch(modalMode, newMode => {
+    const clickOutsideHandler = event => {
+      const popover = document.querySelector('.image-upload-modal');
+      if (popover && !popover.contains(event.target)) {
+        closeModal();
+      }
+    };
+
+    if (newMode) {
+      setTimeout(() => {
+        // Use setTimeout to avoid capturing the opening click
+        document.addEventListener('mousedown', clickOutsideHandler, true);
+        window.addEventListener('scroll', updatePosition, true);
+        window.addEventListener('resize', updatePosition, true);
+      }, 0);
+    } else {
+      document.removeEventListener('mousedown', clickOutsideHandler, true);
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition, true);
+    }
+  });
 
   const handleInsert = async data => {
     if (!data.src || !editor?.value) return;
