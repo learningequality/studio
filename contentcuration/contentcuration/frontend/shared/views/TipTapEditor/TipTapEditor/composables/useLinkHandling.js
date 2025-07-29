@@ -10,11 +10,11 @@ export function useLinkHandling(editor) {
   const savedSelection = ref(null);
   const { isMobile } = useBreakpoint();
 
-  const calculatePosition = () => {
+  const calculatePosition = (forceCenter = false) => {
     if (!editor.value) return {};
 
-    // Force centered positioning on mobile
-    if (isMobile) {
+    // Only center the edit modal on mobile, not the bubble menu
+    if (isMobile.value && forceCenter) {
       return {
         position: 'fixed',
         top: '50%',
@@ -43,7 +43,7 @@ export function useLinkHandling(editor) {
     const { state } = editor.value;
     const { from, to, empty } = state.selection;
 
-    popoverStyle.value = calculatePosition();
+    popoverStyle.value = calculatePosition(true);
     editorMode.value = mode;
 
     if (mode === 'edit') {
@@ -78,7 +78,7 @@ export function useLinkHandling(editor) {
 
   const openBubbleMenu = () => {
     if (isEditorOpen.value) return;
-    popoverStyle.value = calculatePosition();
+    popoverStyle.value = calculatePosition(false);
     isBubbleMenuOpen.value = true;
   };
 
@@ -119,8 +119,10 @@ export function useLinkHandling(editor) {
   };
 
   const handleResize = () => {
-    if (isEditorOpen.value || isBubbleMenuOpen.value) {
-      popoverStyle.value = calculatePosition();
+    if (isEditorOpen.value) {
+      popoverStyle.value = calculatePosition(true);
+    } else if (isBubbleMenuOpen.value) {
+      popoverStyle.value = calculatePosition(false);
     }
   };
 

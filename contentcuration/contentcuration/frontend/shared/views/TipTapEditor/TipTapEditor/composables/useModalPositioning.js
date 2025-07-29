@@ -9,7 +9,7 @@ export function useModalPositioning() {
   const { isMobile } = useBreakpoint();
 
   const updatePosition = () => {
-    if (!anchorElement.value || isModalCentered.value || isMobile) {
+    if (!anchorElement.value || isModalCentered.value || isMobile.value) {
       return;
     }
     const rect = anchorElement.value.getBoundingClientRect();
@@ -40,7 +40,7 @@ export function useModalPositioning() {
 
   const openModal = ({ targetElement = null, centered = false } = {}) => {
     // Force centered positioning on mobile
-    if (centered || !targetElement || isMobile) {
+    if (centered || !targetElement || isMobile.value) {
       setCenteredPosition();
     } else {
       setAnchoredPosition(targetElement);
@@ -67,9 +67,9 @@ export function useModalPositioning() {
     const handleResize = () => {
       if (isModalOpen.value) {
         // Re-evaluate positioning on resize
-        if (isMobile && !isModalCentered.value) {
+        if (isMobile.value && !isModalCentered.value) {
           setCenteredPosition();
-        } else if (!isMobile && anchorElement.value) {
+        } else if (!isMobile.value && anchorElement.value) {
           updatePosition();
         }
       }
