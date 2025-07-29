@@ -1,69 +1,40 @@
 import { ref, onUnmounted, watch } from 'vue';
+import { useModalPositioning } from './useModalPositioning';
 
 export function useMathHandling(editor) {
-  const isMathModalOpen = ref(false);
   const mathModalMode = ref('create');
   const mathModalInitialLatex = ref('');
   const editingMathNodePos = ref(null);
-  const popoverStyle = ref({});
-  const isModalCentered = ref(false);
 
-  // to store the button element that opened the popover
-  const anchorElement = ref(null);
+  const {
+    isModalOpen: isMathModalOpen,
+    popoverStyle,
+    isModalCentered,
+    openModal,
+    closeModal: closeModalBase,
+    setupClickOutside,
+    cleanup,
+  } = useModalPositioning();
 
-  const updatePosition = () => {
-    // If there's no anchor (centered), do nothing.
-    if (!anchorElement.value || isModalCentered.value) {
-      return;
-    }
-    const rect = anchorElement.value.getBoundingClientRect();
-    popoverStyle.value = {
-      position: 'fixed',
-      top: `${rect.bottom + 5}px`,
-      left: `${rect.right}px`,
-      transform: 'translateX(-100%)',
-    };
+  // for consistency with other modals
+  const closeMathModal = () => {
+    closeModalBase();
   };
 
-  const setCenteredPosition = () => {
-    isModalCentered.value = true;
-    anchorElement.value = null; // Ensure we don't try to update a centered modal
-    popoverStyle.value = {
-      position: 'fixed',
-      top: '50%',
-      left: '50%',
-      transform: 'translate(-50%, -50%)',
-    };
-  };
+  setupClickOutside('.formulas-menu', closeMathModal);
 
   const openCreateMathModal = ({ targetElement = null } = {}) => {
     mathModalMode.value = 'create';
     mathModalInitialLatex.value = '';
     editingMathNodePos.value = null;
-
-    if (targetElement) {
-      // Save the anchor element and run the initial position calculation
-      anchorElement.value = targetElement;
-      isModalCentered.value = false;
-      updatePosition();
-    } else {
-      setCenteredPosition();
-    }
-    isMathModalOpen.value = true;
+    openModal({ targetElement });
   };
 
   const openEditMathModal = ({ pos, latex }) => {
     mathModalMode.value = 'edit';
     mathModalInitialLatex.value = latex;
     editingMathNodePos.value = pos;
-    setCenteredPosition(); // Edit mode stays centered
-    isMathModalOpen.value = true;
-  };
-
-  const closeMathModal = () => {
-    isMathModalOpen.value = false;
-    isModalCentered.value = false;
-    anchorElement.value = null; // Clear the anchor on close
+    openModal({ centered: true }); // Edit mode is always centered
   };
 
   const handleSaveMath = newLatex => {
@@ -98,34 +69,11 @@ export function useMathHandling(editor) {
     { immediate: true },
   );
 
-  // Close modal when clicking outside
-  watch(isMathModalOpen, isOpen => {
-    const clickOutsideHandler = event => {
-      const modalElement = document.querySelector('.formulas-menu');
-      if (modalElement && !modalElement.contains(event.target)) {
-        closeMathModal();
-      }
-    };
-
-    if (isOpen) {
-      setTimeout(() => {
-        document.addEventListener('mousedown', clickOutsideHandler, true);
-        window.addEventListener('scroll', updatePosition, true);
-        window.addEventListener('resize', updatePosition, true);
-      }, 0);
-    } else {
-      document.removeEventListener('mousedown', clickOutsideHandler, true);
-      window.removeEventListener('scroll', updatePosition, true);
-      window.removeEventListener('resize', updatePosition, true);
-    }
-  });
-
   onUnmounted(() => {
     if (editor.value) {
       editor.value.off('open-math-editor', openEditMathModal);
     }
-    window.removeEventListener('scroll', updatePosition, true);
-    window.removeEventListener('resize', updatePosition, true);
+    cleanup();
   });
 
   return {
