@@ -1,6 +1,7 @@
 <template>
 
   <div
+    ref="toolbarRef"
     class="toolbar"
     role="toolbar"
     :aria-label="textFormattingToolbar$()"
@@ -66,16 +67,18 @@
     <ToolbarDivider />
 
     <ToolbarButton
+      v-if="visibleCategories.includes('clearFormat')"
       :title="'clearFormatting'"
       :icon="require('../../assets/icon-clearFormat.svg')"
       :is-available="canClearFormat"
       @click="handleClearFormat"
     />
 
-    <ToolbarDivider />
+    <ToolbarDivider v-if="visibleCategories.includes('clearFormat')" />
 
-    <!-- Lists -->
+    <!-- Lists - conditionally visible -->
     <div
+      v-if="visibleCategories.includes('lists')"
       role="group"
       :aria-label="listFormatting$()"
     >
@@ -91,10 +94,11 @@
       />
     </div>
 
-    <ToolbarDivider />
+    <ToolbarDivider v-if="visibleCategories.includes('lists')" />
 
     <!-- Script formatting -->
     <div
+      v-if="visibleCategories.includes('script')"
       role="group"
       :aria-label="scriptFormatting$()"
     >
@@ -109,10 +113,11 @@
       />
     </div>
 
-    <ToolbarDivider />
+    <ToolbarDivider v-if="visibleCategories.includes('scripts')" />
 
     <!-- Insert tools -->
     <div
+      v-if="visibleCategories.includes('insert')"
       role="group"
       :aria-label="insertTools$()"
     >
@@ -125,6 +130,97 @@
         @click="onToolClick(tool, $event)"
       />
     </div>
+
+    <!-- More dropdown - only visible when there are overflow categories -->
+    <div
+      v-if="overflowCategories.length > 0"
+      class="more-dropdown-container"
+      role="group"
+    >
+      <ToolbarButton
+        :title="'More options'"
+        :icon="require('../../assets/icon-chevron-down.svg')"
+        :is-active="isMoreDropdownOpen"
+        @click="toggleMoreDropdown"
+      />
+
+      <div
+        v-if="isMoreDropdownOpen"
+        class="more-dropdown"
+        role="menu"
+        @click.stop
+      >
+        <!-- Overflow Clear Format -->
+        <template v-if="overflowCategories.includes('clearFormat')">
+          <button
+            class="dropdown-item"
+            :disabled="!canClearFormat"
+            @click="handleClearFormat"
+          >
+            <img
+              :src="require('../../assets/icon-clearFormat.svg')"
+              class="dropdown-item-icon"
+              alt=""
+            >
+            <span class="dropdown-item-text">Clear Formatting</span>
+          </button>
+        </template>
+
+        <!-- Overflow Lists -->
+        <template v-if="overflowCategories.includes('lists')">
+          <button
+            v-for="list in listActions"
+            :key="list.name"
+            class="dropdown-item"
+            :class="{ active: list.isActive }"
+            @click="list.handler"
+          >
+            <img
+              :src="list.icon"
+              class="dropdown-item-icon"
+              alt=""
+            >
+            <span class="dropdown-item-text">{{ list.title }}</span>
+          </button>
+        </template>
+
+        <!-- Overflow Script -->
+        <template v-if="overflowCategories.includes('script')">
+          <button
+            v-for="script in scriptActions"
+            :key="script.name"
+            class="dropdown-item"
+            :class="{ active: script.isActive }"
+            @click="script.handler"
+          >
+            <img
+              :src="script.icon"
+              class="dropdown-item-icon"
+              alt=""
+            >
+            <span class="dropdown-item-text">{{ script.title }}</span>
+          </button>
+        </template>
+
+        <!-- Overflow Insert Tools -->
+        <template v-if="overflowCategories.includes('insert')">
+          <button
+            v-for="tool in insertTools"
+            :key="tool.name"
+            class="dropdown-item"
+            :class="{ active: tool.isActive }"
+            @click="onToolClick(tool, $event)"
+          >
+            <img
+              :src="tool.icon"
+              class="dropdown-item-icon"
+              alt=""
+            >
+            <span class="dropdown-item-text">{{ tool.title }}</span>
+          </button>
+        </template>
+      </div>
+    </div>
   </div>
 
 </template>
@@ -132,7 +228,7 @@
 
 <script>
 
-  import { defineComponent } from 'vue';
+  import { defineComponent, ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
   import { useToolbarActions } from '../composables/useToolbarActions';
   import { getTipTapEditorStrings } from '../TipTapEditorStrings';
   import ToolbarButton from './toolbar/ToolbarButton.vue';
@@ -149,6 +245,20 @@
       ToolbarDivider,
     },
     setup(props, { emit }) {
+      const toolbarRef = ref(null);
+      const isMoreDropdownOpen = ref(false);
+      const toolbarWidth = ref(0);
+
+      const OVERFLOW_BREAKPOINTS = {
+        insert: 800,
+        script: 650,
+        lists: 500,
+        clearFormat: 450,
+      };
+
+      // Categories that can overflow (in order of overflow priority)
+      const OVERFLOW_CATEGORIES = ['insert', 'script', 'lists', 'clearFormat'];
+
       const {
         handleCopy,
         handleClearFormat,
@@ -172,7 +282,33 @@
         insertTools$,
       } = getTipTapEditorStrings();
 
+      // Compute which categories should be visible vs in overflow
+      const visibleCategories = computed(() => {
+        const visible = [];
+        OVERFLOW_CATEGORIES.forEach(category => {
+          if (toolbarWidth.value >= OVERFLOW_BREAKPOINTS[category]) {
+            visible.push(category);
+          }
+        });
+        return visible;
+      });
+
+      const overflowCategories = computed(() => {
+        return OVERFLOW_CATEGORIES.filter(category => !visibleCategories.value.includes(category));
+      });
+
+      // Handle resize observer
+      let resizeObserver = null;
+
+      const updateToolbarWidth = () => {
+        if (toolbarRef.value) {
+          toolbarWidth.value = toolbarRef.value.offsetWidth;
+        }
+      };
+
       const onToolClick = (tool, event) => {
+        isMoreDropdownOpen.value = false;
+
         if (tool.name === 'image') {
           emit('insert-image', event.currentTarget);
         } else if (tool.name === 'link') {
@@ -185,10 +321,58 @@
         }
       };
 
+      const toggleMoreDropdown = () => {
+        isMoreDropdownOpen.value = !isMoreDropdownOpen.value;
+      };
+
+      // Close dropdown when clicking outside
+      const handleClickOutside = event => {
+        const dropdown = event.target.closest('.more-dropdown-container');
+        if (!dropdown) {
+          isMoreDropdownOpen.value = false;
+        }
+      };
+
+      onMounted(async () => {
+        await nextTick();
+
+        // Initial width measurement
+        updateToolbarWidth();
+
+        // Set up resize observer
+        if (toolbarRef.value && window.ResizeObserver) {
+          resizeObserver = new ResizeObserver(entries => {
+            for (const entry of entries) {
+              toolbarWidth.value = entry.contentRect.width;
+            }
+          });
+          resizeObserver.observe(toolbarRef.value);
+        } else {
+          // Fallback to window resize listener
+          window.addEventListener('resize', updateToolbarWidth);
+        }
+
+        document.addEventListener('click', handleClickOutside);
+      });
+
+      onUnmounted(() => {
+        if (resizeObserver) {
+          resizeObserver.disconnect();
+        } else {
+          window.removeEventListener('resize', updateToolbarWidth);
+        }
+        document.removeEventListener('click', handleClickOutside);
+      });
+
       return {
+        toolbarRef,
+        isMoreDropdownOpen,
+        visibleCategories,
+        overflowCategories,
         handleCopy,
         handleClearFormat,
         onToolClick,
+        toggleMoreDropdown,
         canClearFormat,
         historyActions,
         textActions,
@@ -214,10 +398,11 @@
 <style scoped>
 
   .toolbar {
+    position: relative;
     display: flex;
-    gap: 6px;
+    gap: 4px;
     align-items: center;
-    padding: 8px 12px;
+    padding: 8px 4px;
     background: #f8f9fa;
     border-bottom: 1px solid #e1e5e9;
     border-radius: 8px 8px 0 0;
@@ -227,6 +412,76 @@
     display: flex;
     gap: 2px;
     align-items: center;
+  }
+
+  .more-dropdown-container {
+    position: relative;
+  }
+
+  .more-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 1000;
+    min-width: 220px;
+    padding: 4px 0;
+    margin-top: 4px;
+    background: white;
+    border: 1px solid #e1e5e9;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .dropdown-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 14px;
+    color: #374151;
+    text-align: left;
+    cursor: pointer;
+    background: none;
+    border: 0;
+    transition: background-color 0.15s ease;
+  }
+
+  .dropdown-item:hover {
+    background-color: #f3f4f6;
+  }
+
+  .dropdown-item.active {
+    color: #3730a3;
+    background-color: #e0e7ff;
+  }
+
+  .dropdown-item-icon {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    margin-right: 12px;
+  }
+
+  .dropdown-item-text {
+    flex: 1;
+    white-space: nowrap;
+  }
+
+  .dropdown-item:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .dropdown-item:disabled:hover {
+    background-color: transparent;
+  }
+
+  /* Ensure dropdown stays on screen */
+  @media (max-width: 300px) {
+    .more-dropdown {
+      right: auto;
+      left: 0;
+    }
   }
 
 </style>

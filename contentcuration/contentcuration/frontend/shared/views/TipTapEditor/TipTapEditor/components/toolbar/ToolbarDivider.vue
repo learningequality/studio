@@ -19,7 +19,7 @@
 <style scoped>
 
   .toolbar-divider {
-    width: 1.5px;
+    width: 1px;
     height: 20px;
     margin: 0 3px;
     background: #dee2e6;
