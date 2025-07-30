@@ -14,16 +14,15 @@
       >
         <VLayout>
           <VSpacer />
-         <KButton
-  v-if="isEditable && !loading"
-  appearance="raised-button"
-  primary
-  class="add-channel-button"
-  data-test="add-channel"
-  @click="newChannel"
-  :text="$tr('channel')"
->
-         </KButton>
+          <KButton
+            v-if="isEditable && !loading"
+            appearance="raised-button"
+            primary
+            class="add-channel-button"
+            data-test="add-channel"
+            :text="$tr('channel')"
+            @click="newChannel"
+          />
         </VLayout>
       </VFlex>
     </VLayout>
@@ -78,7 +77,7 @@
   import LoadingText from 'shared/views/LoadingText';
   import { ChannelListTypes } from 'shared/constants';
 
-function listTypeValidator(value) {
+  function listTypeValidator(value) {
     // The value must match one of the ListTypes
     return Object.values(ChannelListTypes).includes(value);
   }
@@ -88,7 +87,7 @@ function listTypeValidator(value) {
     components: {
       ChannelItem,
       LoadingText,
-     },
+    },
     props: {
       listType: {
         type: String,

@@ -44,11 +44,9 @@
           appearance="raised-button"
           primary
           data-test="add-channelset"
+          :text="$tr('addChannelSetTitle')"
           @click="newChannelSet"
-          :text= "$tr('addChannelSetTitle')"
-        >
-        
-        </KButton>
+        />
       </VFlex>
     </VLayout>
     <VLayout
