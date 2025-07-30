@@ -1,7 +1,15 @@
 <template>
 
-  <div class="top-bar">
-    <div class="history-actions">
+  <div
+    class="top-bar"
+    role="toolbar"
+    aria-label="Editor controls"
+  >
+    <div
+      class="history-actions"
+      role="group"
+      aria-label="History actions"
+    >
       <ToolbarButton
         v-for="action in historyActions"
         :key="action.name"
@@ -17,6 +25,9 @@
         class="insert-button"
         title="Insert content"
         aria-label="Insert content menu"
+        :aria-expanded="isInsertMenuOpen"
+        aria-haspopup="menu"
+        aria-controls="insert-menu"
         @click="isInsertMenuOpen = !isInsertMenuOpen"
       >
         +
@@ -24,19 +35,24 @@
 
       <div
         v-if="isInsertMenuOpen"
+        id="insert-menu"
         ref="dropdown"
         class="insert-dropdown"
+        role="menu"
+        aria-label="Insert content options"
       >
         <button
           v-for="tool in insertTools"
           :key="tool.name"
           class="dropdown-item"
+          role="menuitem"
           @click="onToolClick(tool, $event)"
         >
           <img
             :src="tool.icon"
-            :alt="tool.title"
+            alt=""
             class="dropdown-icon"
+            aria-hidden="true"
           >
           <span class="dropdown-title">{{ tool.title }}</span>
         </button>
@@ -49,7 +65,7 @@
 
 <script>
 
-  import { defineComponent, ref, onMounted, onBeforeUnmount } from 'vue';
+  import { defineComponent, ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
   import { useToolbarActions } from '../../composables/useToolbarActions';
   import ToolbarButton from './ToolbarButton.vue';
 
@@ -62,8 +78,6 @@
 
       const { historyActions, insertTools } = useToolbarActions();
 
-      // TODO: duplicated code from EditorToolbar.vue
-      // consider refactoring
       const onToolClick = (tool, event) => {
         if (tool.name === 'image') {
           emit('insert-image', event.currentTarget);
@@ -88,15 +102,35 @@
         }
       };
 
+      const handleKeydown = async event => {
+        if (event.key === 'Escape' && isInsertMenuOpen.value) {
+          isInsertMenuOpen.value = false;
+          // Return focus to the trigger button
+          await nextTick();
+          const insertButton = event.target
+            .closest('.insert-container')
+            ?.querySelector('.insert-button');
+          insertButton?.focus();
+        }
+      };
+
       onMounted(() => {
         document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleKeydown);
       });
 
       onBeforeUnmount(() => {
         document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('keydown', handleKeydown);
       });
 
-      return { historyActions, insertTools, isInsertMenuOpen, onToolClick, dropdown };
+      return {
+        historyActions,
+        insertTools,
+        isInsertMenuOpen,
+        onToolClick,
+        dropdown,
+      };
     },
   });
 
@@ -125,7 +159,11 @@
 
   .insert-button {
     width: 36px;
+
+    /* Minimum touch target size for accessibility */
+    min-width: 44px;
     height: 36px;
+    min-height: 44px;
     font-size: 1.6rem;
     color: #666666;
     cursor: pointer;
@@ -148,6 +186,9 @@
     display: flex;
     align-items: center;
     width: 100%;
+
+    /* Minimum touch target size for accessibility */
+    min-height: 44px;
     padding: 0.75rem 1rem;
     text-align: left;
     cursor: pointer;

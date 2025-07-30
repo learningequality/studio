@@ -1,11 +1,17 @@
 <template>
 
-  <div class="floating-panel">
+  <div
+    class="floating-panel"
+    role="toolbar"
+    :aria-label="textFormattingToolbar$()"
+  >
     <div class="fixed-actions">
       <button
         class="toggle-btn"
-        :title="isExpanded ? 'Collapse formatting bar' : 'Expand formatting bar'"
-        :aria-label="isExpanded ? 'Collapse formatting bar' : 'Expand formatting bar'"
+        :title="isExpanded ? collapseFormattingBar$() : expandFormattingBar$()"
+        :aria-label="isExpanded ? collapseFormattingBar$() : expandFormattingBar$()"
+        :aria-expanded="isExpanded"
+        aria-controls="formatting-tools"
         @mousedown.prevent
         @click="toggleToolbar"
       >
@@ -14,14 +20,19 @@
     </div>
     <div
       v-if="isExpanded"
+      id="formatting-tools"
       class="scrollable-tools"
-      aria-label="Text formatting tools"
+      :aria-label="textFormattingToolbar$()"
     >
-      <div class="formatting-buttons">
+      <div
+        class="formatting-buttons"
+        role="group"
+        :aria-label="formatSize$()"
+      >
         <button
           :disabled="!canDecreaseFormat"
-          title="Decrease format size"
-          aria-label="Decrease format size"
+          :title="decreaseFormatSize$()"
+          :aria-label="decreaseFormatSize$()"
           class="format-btn"
           @mousedown.prevent
           @click="decreaseFormat"
@@ -30,12 +41,13 @@
         </button>
         <img
           src="../../../assets/icon-formatSize.svg"
-          alt="Format size"
+          :alt="formatSize$()"
+          aria-hidden="true"
         >
         <button
           :disabled="!canIncreaseFormat"
-          title="Increase format size"
-          aria-label="Increase format size"
+          :title="increaseFormatSize$()"
+          :aria-label="increaseFormatSize$()"
           class="format-btn"
           @mousedown.prevent
           @click="increaseFormat"
@@ -83,6 +95,7 @@
   import { defineComponent, ref } from 'vue';
   import { useToolbarActions } from '../../composables/useToolbarActions';
   import { useFormatControls } from '../../composables/useFormatControls';
+  import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
   import ToolbarButton from './ToolbarButton.vue';
   import ToolbarDivider from './ToolbarDivider.vue';
 
@@ -92,8 +105,15 @@
     setup() {
       const isExpanded = ref(true);
 
-      // TODO: Should we include insertion actions like the figma design here AGAIN?
-      // If yes ->merge with MobileTopBar.vue and get the editor field using a slot
+      const {
+        collapseFormattingBar$,
+        expandFormattingBar$,
+        decreaseFormatSize$,
+        increaseFormatSize$,
+        formatSize$,
+        textFormattingToolbar$,
+      } = getTipTapEditorStrings();
+
       const { textActions, listActions, scriptActions } = useToolbarActions();
 
       const { canIncreaseFormat, canDecreaseFormat, increaseFormat, decreaseFormat } =
@@ -113,6 +133,12 @@
         canDecreaseFormat,
         increaseFormat,
         decreaseFormat,
+        collapseFormattingBar$,
+        expandFormattingBar$,
+        decreaseFormatSize$,
+        increaseFormatSize$,
+        formatSize$,
+        textFormattingToolbar$,
       };
     },
   });
@@ -167,7 +193,7 @@
 
   .formatting-buttons {
     display: flex;
-    gap: 0.6rem;
+    gap: 0.9rem;
     align-items: center;
     font-size: 2.125rem;
     color: #666666;
@@ -195,8 +221,8 @@
     align-items: center;
     padding: 0 1rem;
     overflow-x: auto;
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
     opacity: 0;
     transform: translateX(-1.25rem);
     animation: slide-in-fade 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
@@ -214,7 +240,6 @@
     }
   }
 
-  /* Hide scrollbar for a cleaner look */
   .scrollable-tools::-webkit-scrollbar {
     display: none;
   }

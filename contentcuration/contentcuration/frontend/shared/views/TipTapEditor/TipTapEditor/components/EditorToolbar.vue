@@ -68,7 +68,7 @@
 
     <ToolbarButton
       v-if="visibleCategories.includes('clearFormat')"
-      :title="'clearFormatting'"
+      :title="clearFormatting$()"
       :icon="require('../../assets/icon-clearFormat.svg')"
       :is-available="canClearFormat"
       @click="handleClearFormat"
@@ -76,7 +76,7 @@
 
     <ToolbarDivider v-if="visibleCategories.includes('clearFormat')" />
 
-    <!-- Lists - conditionally visible -->
+    <!-- Lists -->
     <div
       v-if="visibleCategories.includes('lists')"
       role="group"
@@ -136,24 +136,32 @@
       v-if="overflowCategories.length > 0"
       class="more-dropdown-container"
       role="group"
+      :aria-label="'More options'"
     >
       <ToolbarButton
         :title="'More options'"
         :icon="require('../../assets/icon-chevron-down.svg')"
         :is-active="isMoreDropdownOpen"
+        :aria-expanded="isMoreDropdownOpen"
+        aria-haspopup="menu"
+        aria-controls="more-options-menu"
         @click="toggleMoreDropdown"
       />
 
       <div
         v-if="isMoreDropdownOpen"
+        id="more-options-menu"
         class="more-dropdown"
         role="menu"
+        :aria-label="'Additional formatting options'"
         @click.stop
+        @keydown="handleMenuKeydown"
       >
         <!-- Overflow Clear Format -->
         <template v-if="overflowCategories.includes('clearFormat')">
           <button
             class="dropdown-item"
+            role="menuitem"
             :disabled="!canClearFormat"
             @click="handleClearFormat"
           >
@@ -161,8 +169,9 @@
               :src="require('../../assets/icon-clearFormat.svg')"
               class="dropdown-item-icon"
               alt=""
+              aria-hidden="true"
             >
-            <span class="dropdown-item-text">Clear Formatting</span>
+            <span class="dropdown-item-text">{{ clearFormatting$() }}</span>
           </button>
         </template>
 
@@ -172,13 +181,16 @@
             v-for="list in listActions"
             :key="list.name"
             class="dropdown-item"
+            role="menuitem"
             :class="{ active: list.isActive }"
+            :aria-pressed="list.isActive"
             @click="list.handler"
           >
             <img
               :src="list.icon"
               class="dropdown-item-icon"
               alt=""
+              aria-hidden="true"
             >
             <span class="dropdown-item-text">{{ list.title }}</span>
           </button>
@@ -190,13 +202,16 @@
             v-for="script in scriptActions"
             :key="script.name"
             class="dropdown-item"
+            role="menuitem"
             :class="{ active: script.isActive }"
+            :aria-pressed="script.isActive"
             @click="script.handler"
           >
             <img
               :src="script.icon"
               class="dropdown-item-icon"
               alt=""
+              aria-hidden="true"
             >
             <span class="dropdown-item-text">{{ script.title }}</span>
           </button>
@@ -208,6 +223,7 @@
             v-for="tool in insertTools"
             :key="tool.name"
             class="dropdown-item"
+            role="menuitem"
             :class="{ active: tool.isActive }"
             @click="onToolClick(tool, $event)"
           >
@@ -215,6 +231,7 @@
               :src="tool.icon"
               class="dropdown-item-icon"
               alt=""
+              aria-hidden="true"
             >
             <span class="dropdown-item-text">{{ tool.title }}</span>
           </button>
@@ -249,6 +266,7 @@
       const isMoreDropdownOpen = ref(false);
       const toolbarWidth = ref(0);
 
+      // Maybe these shouldnt be hardcoded?
       const OVERFLOW_BREAKPOINTS = {
         insert: 800,
         script: 650,
@@ -280,6 +298,7 @@
         listFormatting$,
         scriptFormatting$,
         insertTools$,
+        clearFormatting$,
       } = getTipTapEditorStrings();
 
       // Compute which categories should be visible vs in overflow
@@ -323,6 +342,34 @@
 
       const toggleMoreDropdown = () => {
         isMoreDropdownOpen.value = !isMoreDropdownOpen.value;
+      };
+
+      // Handle keyboard navigation in dropdown menu
+      const handleMenuKeydown = async event => {
+        if (event.key === 'Escape') {
+          isMoreDropdownOpen.value = false;
+          // Return focus to the more button
+          await nextTick();
+          const moreButton = toolbarRef.value?.querySelector(
+            '.more-dropdown-container [role="button"]',
+          );
+          moreButton?.focus();
+        } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+          event.preventDefault();
+          const menuItems = Array.from(
+            event.currentTarget.querySelectorAll('[role="menuitem"]:not(:disabled)'),
+          );
+          const currentIndex = menuItems.indexOf(document.activeElement);
+
+          let nextIndex;
+          if (event.key === 'ArrowDown') {
+            nextIndex = currentIndex < menuItems.length - 1 ? currentIndex + 1 : 0;
+          } else {
+            nextIndex = currentIndex > 0 ? currentIndex - 1 : menuItems.length - 1;
+          }
+
+          menuItems[nextIndex]?.focus();
+        }
       };
 
       // Close dropdown when clicking outside
@@ -373,6 +420,7 @@
         handleClearFormat,
         onToolClick,
         toggleMoreDropdown,
+        handleMenuKeydown,
         canClearFormat,
         historyActions,
         textActions,
@@ -388,6 +436,7 @@
         listFormatting$,
         scriptFormatting$,
         insertTools$,
+        clearFormatting$,
       };
     },
   });
@@ -446,8 +495,10 @@
     transition: background-color 0.15s ease;
   }
 
-  .dropdown-item:hover {
+  .dropdown-item:hover,
+  .dropdown-item:focus {
     background-color: #f3f4f6;
+    outline: none;
   }
 
   .dropdown-item.active {

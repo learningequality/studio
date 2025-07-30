@@ -40,6 +40,10 @@ const MESSAGES = {
     message: 'Paste without formatting',
     context: 'Button to paste text without any formatting',
   },
+  clearFormatting: {
+    message: 'Clear formatting',
+    context: 'Button to clear all formatting from the selected text',
+  },
   bulletList: {
     message: 'Bullet list',
     context: 'Button to create a bullet list',
@@ -308,6 +312,28 @@ const MESSAGES = {
   failedToProcessImage: {
     message: 'Failed to process the image file.',
     context: 'Error message when image processing fails',
+  },
+
+  // for MobileFormattingBar
+  collapseFormattingBar: {
+    message: 'Collapse formatting bar',
+    context: 'Button label or tooltip to collapse the formatting toolbar on mobile',
+  },
+  expandFormattingBar: {
+    message: 'Expand formatting bar',
+    context: 'Button label or tooltip to expand the formatting toolbar on mobile',
+  },
+  decreaseFormatSize: {
+    message: 'Decrease format size',
+    context: 'Button label or tooltip to decrease the text format size',
+  },
+  increaseFormatSize: {
+    message: 'Increase format size',
+    context: 'Button label or tooltip to increase the text format size',
+  },
+  formatSize: {
+    message: 'Format size',
+    context: 'Alt text for the format size icon',
   },
 };
 
