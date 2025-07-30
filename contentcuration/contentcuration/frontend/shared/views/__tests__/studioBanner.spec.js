@@ -11,8 +11,8 @@ jest.mock('kolibri-design-system/lib/composables/useKLiveRegion', () => ({
   }),
 }));
 
-const sampleErrorMessage = "This is an error message";
-const sampleInfoMessage = "This is an info message";
+const sampleErrorMessage = 'This is an error message';
+const sampleInfoMessage = 'This is an info message';
 
 // Helper function to render the component with the provided props
 const renderComponent = (props = {}) =>
@@ -20,7 +20,7 @@ const renderComponent = (props = {}) =>
     props: {
       error: false,
       errorText: '',
-      ...props
+      ...props,
     },
     routes: new VueRouter(),
   });
@@ -40,9 +40,9 @@ describe('StudioBanner', () => {
   });
 
   test('error true with errorText', () => {
-    renderComponent({ 
-      error: true, 
-      errorText: sampleErrorMessage 
+    renderComponent({
+      error: true,
+      errorText: sampleErrorMessage,
     });
 
     const banner = screen.getByTestId('studio-banner');

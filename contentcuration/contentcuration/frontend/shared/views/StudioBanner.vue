@@ -29,7 +29,7 @@
       errorText: {
         type: String,
         default: '',
-      }
+      },
     },
     watch: {
       errorText(newText) {
