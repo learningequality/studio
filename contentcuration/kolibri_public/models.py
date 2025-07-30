@@ -7,6 +7,7 @@ from kolibri_public.search import metadata_bitmasks
 from mptt.managers import TreeManager
 from mptt.querysets import TreeQuerySet
 
+from contentcuration.models import Country
 from contentcuration.models import Language
 
 
@@ -104,6 +105,8 @@ class ChannelMetadata(base_models.ChannelMetadata):
     )
     order = models.PositiveIntegerField(default=0, null=True, blank=True)
     public = models.BooleanField()
+    categories = models.JSONField(null=True, blank=True)
+    countries = models.ManyToManyField(Country, related_name="public_channels")
 
 
 class MPTTTreeIDManager(models.Model):

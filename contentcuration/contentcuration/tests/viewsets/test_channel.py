@@ -11,7 +11,10 @@ from mock import patch
 from contentcuration import models
 from contentcuration import models as cc
 from contentcuration.constants import channel_history
+from contentcuration.models import Change
 from contentcuration.models import ContentNode
+from contentcuration.models import Country
+from contentcuration.tasks import apply_channel_changes_task
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.tests.viewsets.base import generate_create_event
@@ -24,6 +27,9 @@ from contentcuration.tests.viewsets.base import generate_update_event
 from contentcuration.tests.viewsets.base import SyncTestMixin
 from contentcuration.viewsets.channel import _unpublished_changes_query
 from contentcuration.viewsets.sync.constants import CHANNEL
+from contentcuration.viewsets.sync.utils import (
+    generate_added_to_community_library_event,
+)
 
 
 class SyncTestCase(SyncTestMixin, StudioAPITestCase):
@@ -516,6 +522,87 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         )
         modified_channel = models.Channel.objects.get(id=channel.id)
         self.assertEqual(modified_channel.staging_tree.published, False)
+
+    def test_sync_added_to_community_library_change(self):
+        # Syncing the change from the frontend should be disallowed
+        self.client.force_authenticate(self.admin_user)
+
+        channel = testdata.channel()
+        channel.version = 1
+        channel.public = True
+        channel.save()
+
+        added_to_community_library_change = generate_added_to_community_library_event(
+            key=channel.id,
+            channel_version=1,
+        )
+        response = self.sync_changes([added_to_community_library_change])
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(len(response.json()["allowed"]), 0, response.content)
+        self.assertEqual(len(response.json()["disallowed"]), 1, response.content)
+
+    @mock.patch("contentcuration.viewsets.channel.export_channel_to_kolibri_public")
+    def test_process_added_to_community_library_change(self, mock_export_func):
+        # Creating the change on the backend should be supported
+        self.client.force_authenticate(self.admin_user)
+
+        channel = testdata.channel()
+        channel.version = 1
+        channel.public = True
+        channel.save()
+
+        categories = {
+            "category1": True,
+            "category2": True,
+        }
+
+        country1 = Country.objects.create(code="C1", name="Country 1")
+        country2 = Country.objects.create(code="C2", name="Country 2")
+        countries = [country1, country2]
+        country_codes = [country.code for country in countries]
+
+        added_to_community_library_change = generate_added_to_community_library_event(
+            key=channel.id,
+            channel_version=1,
+            categories=categories,
+            country_codes=country_codes,
+        )
+        Change.create_change(
+            added_to_community_library_change, created_by_id=self.admin_user.id
+        )
+
+        # This task will run immediately thanks to SyncTestMixin
+        apply_channel_changes_task.fetch_or_enqueue(
+            user=self.admin_user,
+            channel_id=channel.id,
+        )
+
+        # We cannot easily use the assert_called_once_with method here
+        # because we are not checking countries for strict equality,
+        # so we need to check the call arguments manually
+        mock_export_func.assert_called_once()
+
+        (call_args, call_kwargs) = mock_export_func.call_args
+        self.assertEqual(len(call_args), 0)
+        self.assertCountEqual(
+            call_kwargs.keys(),
+            [
+                "channel_id",
+                "channel_version",
+                "categories",
+                "countries",
+                "public",
+            ],
+        )
+        self.assertEqual(call_kwargs["channel_id"], channel.id)
+        self.assertEqual(call_kwargs["channel_version"], 1)
+        self.assertEqual(call_kwargs["categories"], categories)
+
+        # The countries argument used when creating the mapper is in fact
+        # not a list, but a QuerySet, but it contains the same elements
+        self.assertCountEqual(call_kwargs["countries"], countries)
+        self.assertEqual(call_kwargs["public"], False)
 
 
 class CRUDTestCase(StudioAPITestCase):

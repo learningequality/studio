@@ -19,9 +19,19 @@ class ChannelMapper(object):
     Foreign Keyed from the root ContentNode.
     """
 
-    def __init__(self, channel, public=True):
+    def __init__(
+        self,
+        channel,
+        channel_version=None,
+        public=True,
+        categories=None,
+        countries=None,
+    ):
         self.channel = channel
+        self.channel_version = channel_version
         self.public = public
+        self.categories = categories
+        self.countries = countries
 
     @property
     def overrides(self):
@@ -57,7 +67,19 @@ class ChannelMapper(object):
             annotate_label_bitmasks(self.mapped_root.get_descendants(include_self=True))
             # Rather than set the ancestors fields after mapping, like it is done in Kolibri
             # here we set it during mapping as we are already recursing through the tree.
-            set_channel_metadata_fields(self.mapped_channel.id, public=self.public)
+
+            set_channel_metadata_fields(
+                self.mapped_channel.id,
+                channel_version=self.channel_version,
+                public=self.public,
+                categories=self.categories,
+                countries=self.countries,
+            )
+
+            # Refreshing this is needed, because otherwise the fields set in the
+            # set_channel_metadata_fields function will not be reflected in the
+            # self.mapped_channel object.
+            self.mapped_channel.refresh_from_db()
 
     def _map_model(self, source, Model):
         properties = {}

@@ -9,9 +9,11 @@ from rest_framework.serializers import ValidationError
 from contentcuration.constants import (
     community_library_submission as community_library_submission_constants,
 )
+from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import CommunityLibrarySubmission
 from contentcuration.models import Country
+from contentcuration.tasks import apply_channel_changes_task
 from contentcuration.utils.pagination import ValuesViewsetCursorPagination
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
@@ -20,6 +22,9 @@ from contentcuration.viewsets.base import RESTCreateModelMixin
 from contentcuration.viewsets.base import RESTDestroyModelMixin
 from contentcuration.viewsets.base import RESTUpdateModelMixin
 from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
+from contentcuration.viewsets.sync.utils import (
+    generate_added_to_community_library_event,
+)
 from contentcuration.viewsets.user import IsAdminUser
 
 
@@ -232,10 +237,29 @@ class AdminCommunityLibrarySubmissionViewSet(
             channel_version__lt=submission.channel_version,
         ).update(status=community_library_submission_constants.STATUS_SUPERSEDED)
 
+    def _add_to_community_library(self, submission):
+        country_codes = sorted(country.code for country in submission.countries.all())
+
+        Change.create_change(
+            generate_added_to_community_library_event(
+                key=submission.channel.id,
+                channel_version=submission.channel_version,
+                categories=submission.categories,
+                country_codes=country_codes,
+            ),
+            created_by_id=submission.resolved_by_id,
+        )
+        apply_channel_changes_task.fetch_or_enqueue(
+            submission.resolved_by,
+            channel_id=submission.channel.id,
+        )
+
     @action(
         methods=["post"],
         detail=True,
         serializer_class=CommunityLibrarySubmissionResolveSerializer,
+        url_name="resolve",
+        url_path="resolve",
     )
     def resolve(self, request, pk=None):
         instance = self.get_edit_object()
@@ -250,5 +274,6 @@ class AdminCommunityLibrarySubmissionViewSet(
 
         if submission.status == community_library_submission_constants.STATUS_APPROVED:
             self._mark_previous_pending_submissions_as_superseded(submission)
+            self._add_to_community_library(submission)
 
         return Response(self.serialize_object())

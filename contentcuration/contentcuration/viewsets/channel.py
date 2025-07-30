@@ -21,6 +21,9 @@ from django.views.decorators.cache import cache_page
 from django_cte import With
 from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
+from kolibri_public.utils.export_channel_to_kolibri_public import (
+    export_channel_to_kolibri_public,
+)
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
 from rest_framework import serializers
@@ -43,6 +46,7 @@ from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
+from contentcuration.models import Country
 from contentcuration.models import File
 from contentcuration.models import generate_storage_url
 from contentcuration.models import SecretToken
@@ -766,6 +770,48 @@ class ChannelViewSet(ValuesViewset):
             ),
             applied=True,
             created_by_id=user.id,
+        )
+
+    def add_to_community_library_from_changes(self, changes):
+        errors = []
+        for change in changes:
+            try:
+                self.add_to_community_library(
+                    channel_id=change["channel_id"],
+                    channel_version=change["channel_version"],
+                    categories=change["categories"],
+                    country_codes=change["country_codes"],
+                )
+            except Exception as e:
+                log_sync_exception(e, user=self.request.user, change=change)
+                change["errors"] = [str(e)]
+                errors.append(change)
+        return errors
+
+    def add_to_community_library(
+        self, channel_id, channel_version, categories, country_codes
+    ):
+        # The change to add a channel to the community library can only
+        # be created server-side, so in theory we should not be getting
+        # malformed requests here. However, just to be safe, we still
+        # do basic checks.
+
+        channel = self.get_edit_queryset().get(pk=channel_id)
+        countries = Country.objects.filter(code__in=country_codes)
+
+        if not channel.public:
+            raise ValidationError(
+                "Only public channels can be added to the community library"
+            )
+        if channel_version <= 0 or channel_version > channel.version:
+            raise ValidationError("Invalid channel version")
+
+        export_channel_to_kolibri_public(
+            channel_id=channel_id,
+            channel_version=channel_version,
+            public=False,  # Community library
+            categories=categories,
+            countries=countries,
         )
 
     @action(

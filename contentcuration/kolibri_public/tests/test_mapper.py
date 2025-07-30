@@ -1,6 +1,9 @@
+import datetime
 import os
 import tempfile
+from unittest import mock
 
+import pytz
 from django.core.management import call_command
 from django.test import TestCase
 from kolibri_content import models as kolibri_content_models
@@ -14,6 +17,7 @@ from kolibri_public.utils.mapper import ChannelMapper
 from le_utils.constants import content_kinds
 
 from contentcuration.models import Channel
+from contentcuration.models import Country
 from contentcuration.tests.testdata import user
 
 
@@ -28,16 +32,24 @@ class ChannelMapperTest(TestCase):
             kolibri_public_models.LocalFile: {
                 "available": True,
             },
+            kolibri_public_models.ChannelMetadata: {
+                "last_updated": self.dummy_date,
+            },
         }
 
-    @classmethod
-    def setUpClass(cls):
-        super(ChannelMapperTest, cls).setUpClass()
+    def setUp(self):
+        super().setUp()
         call_command("loadconstants")
-        _, cls.tempdb = tempfile.mkstemp(suffix=".sqlite3")
+        _, self.tempdb = tempfile.mkstemp(suffix=".sqlite3")
         admin_user = user()
 
-        with using_content_database(cls.tempdb):
+        self.dummy_date = datetime.datetime(2020, 1, 1, 0, 0, 0, tzinfo=pytz.utc)
+        self._date_patcher = mock.patch(
+            "kolibri_public.utils.annotation.timezone.now", return_value=self.dummy_date
+        )
+        self._date_patcher.start()
+
+        with using_content_database(self.tempdb):
             call_command(
                 "migrate",
                 "content",
@@ -52,23 +64,20 @@ class ChannelMapperTest(TestCase):
                 },
             )
             builder.insert_into_default_db()
-            cls.source_root = kolibri_content_models.ContentNode.objects.get(
+            self.source_root = kolibri_content_models.ContentNode.objects.get(
                 id=builder.root_node["id"]
             )
-            cls.channel = kolibri_content_models.ChannelMetadata.objects.get(
+            self.channel = kolibri_content_models.ChannelMetadata.objects.get(
                 id=builder.channel["id"]
             )
             contentcuration_channel = Channel.objects.create(
                 actor_id=admin_user.id,
-                id=cls.channel.id,
-                name=cls.channel.name,
+                id=self.channel.id,
+                name=self.channel.name,
                 public=True,
             )
             contentcuration_channel.main_tree.published = True
             contentcuration_channel.main_tree.save()
-            cls.mapper = ChannelMapper(cls.channel)
-            cls.mapper.run()
-            cls.mapped_root = cls.mapper.mapped_root
 
     def _assert_model(self, source, mapped, Model):
         for field in Model._meta.fields:
@@ -79,7 +88,11 @@ class ChannelMapperTest(TestCase):
                         self.overrides[Model][column], getattr(mapped, column)
                     )
                 else:
-                    self.assertEqual(getattr(source, column), getattr(mapped, column))
+                    self.assertEqual(
+                        getattr(source, column),
+                        getattr(mapped, column),
+                        f"Mismatch in model {Model.__name__}, column {column}",
+                    )
 
     def _assert_node(self, source, mapped):
         """
@@ -133,6 +146,10 @@ class ChannelMapperTest(TestCase):
 
     def test_map(self):
         with using_content_database(self.tempdb):
+            self.mapper = ChannelMapper(self.channel)
+            self.mapper.run()
+            self.mapped_root = self.mapper.mapped_root
+
             self._recurse_and_assert([self.source_root], [self.mapped_root])
             self._assert_model(
                 self.channel,
@@ -142,6 +159,10 @@ class ChannelMapperTest(TestCase):
 
     def test_map_replace(self):
         with using_content_database(self.tempdb):
+            self.mapper = ChannelMapper(self.channel)
+            self.mapper.run()
+            self.mapped_root = self.mapper.mapped_root
+
             mapper = ChannelMapper(self.channel)
             mapper.run()
             self._recurse_and_assert([self.source_root], [mapper.mapped_root])
@@ -151,10 +172,105 @@ class ChannelMapperTest(TestCase):
                 kolibri_public_models.ChannelMetadata,
             )
 
-    @classmethod
-    def tearDownClass(cls):
+    def test_categories__none_provided(self):
+        with using_content_database(self.tempdb):
+            kolibri_content_models.ContentNode.objects.filter(
+                channel_id=self.channel.id,
+            ).update(categories=None)
+
+            mapper = ChannelMapper(self.channel)
+            mapper.run()
+
+            self.assertEqual(mapper.mapped_channel.categories, {})
+
+    def test_categories__only_provided(self):
+        with using_content_database(self.tempdb):
+            kolibri_content_models.ContentNode.objects.filter(
+                channel_id=self.channel.id,
+            ).update(categories=None)
+
+            categories = {"Category1": True, "Category2": True}
+            mapper = ChannelMapper(self.channel, categories=categories)
+            mapper.run()
+
+            self.assertEqual(mapper.mapped_channel.categories, categories)
+
+    def test_categories__only_on_content_nodes(self):
+        with using_content_database(self.tempdb):
+            source_contentnodes_queryset = (
+                kolibri_content_models.ContentNode.objects.filter(
+                    channel_id=self.channel.id,
+                )
+            )
+            contentnode1 = source_contentnodes_queryset[0]
+            contentnode2 = source_contentnodes_queryset[1]
+
+            source_contentnodes_queryset.update(categories=None)
+            contentnode1.categories = "Category1,Category2"
+            contentnode2.categories = "Category3"
+            contentnode1.save()
+            contentnode2.save()
+
+            mapper = ChannelMapper(self.channel)
+            mapper.run()
+
+            self.assertEqual(
+                mapper.mapped_channel.categories,
+                {"Category1": True, "Category2": True, "Category3": True},
+            )
+
+    def test_categories__both_provided_and_on_content_nodes(self):
+        with using_content_database(self.tempdb):
+            source_contentnodes_queryset = (
+                kolibri_content_models.ContentNode.objects.filter(
+                    channel_id=self.channel.id,
+                )
+            )
+            contentnode1 = source_contentnodes_queryset[0]
+            contentnode2 = source_contentnodes_queryset[1]
+
+            source_contentnodes_queryset.update(categories=None)
+            contentnode1.categories = "Category1,Category2"
+            contentnode2.categories = "Category3"
+            contentnode1.save()
+            contentnode2.save()
+
+            categories = {"Category3": True, "Category4": True}
+            mapper = ChannelMapper(self.channel, categories=categories)
+            mapper.run()
+
+            self.assertEqual(
+                mapper.mapped_channel.categories,
+                {
+                    "Category1": True,
+                    "Category2": True,
+                    "Category3": True,
+                    "Category4": True,
+                },
+            )
+
+    def test_countries__none_provided(self):
+        with using_content_database(self.tempdb):
+            mapper = ChannelMapper(self.channel)
+            mapper.run()
+
+            self.assertEqual(mapper.mapped_channel.countries.count(), 0)
+
+    def test_countries__provided(self):
+        with using_content_database(self.tempdb):
+            country1 = Country.objects.create(code="C1", name="Country 1")
+            country2 = Country.objects.create(code="C2", name="Country 2")
+
+            countries = [country1, country2]
+            mapper = ChannelMapper(self.channel, countries=countries)
+            mapper.run()
+
+            self.assertCountEqual(mapper.mapped_channel.countries.all(), countries)
+
+    def tearDown(self):
         # Clean up datbase connection after the test
-        cleanup_content_database_connection(cls.tempdb)
-        super(ChannelMapperTest, cls).tearDownClass()
-        if os.path.exists(cls.tempdb):
-            os.remove(cls.tempdb)
+        self._date_patcher.stop()
+        cleanup_content_database_connection(self.tempdb)
+        super().tearDown()
+        if os.path.exists(self.tempdb):
+            os.remove(self.tempdb)

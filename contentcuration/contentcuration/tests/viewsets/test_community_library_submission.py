@@ -8,9 +8,11 @@ from django.urls import reverse
 from contentcuration.constants import (
     community_library_submission as community_library_submission_constants,
 )
+from contentcuration.models import Change
 from contentcuration.models import CommunityLibrarySubmission
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
+from contentcuration.viewsets.sync.constants import ADDED_TO_COMMUNITY_LIBRARY
 
 
 def reverse_with_query(
@@ -628,7 +630,10 @@ class AdminViewSetTestCase(StudioAPITestCase):
         )
         self.assertEqual(response.status_code, 403, response.content)
 
-    def test_resolve_submission__accept_correct(self):
+    @mock.patch(
+        "contentcuration.viewsets.community_library_submission.apply_channel_changes_task"
+    )
+    def test_resolve_submission__accept_correct(self, apply_task_mock):
         self.client.force_authenticate(user=self.admin_user)
         response = self.client.post(
             reverse(
@@ -652,7 +657,21 @@ class AdminViewSetTestCase(StudioAPITestCase):
         self.assertEqual(resolved_submission.resolved_by, self.admin_user)
         self.assertEqual(resolved_submission.date_resolved, self.resolved_time)
 
-    def test_resolve_submission__reject_correct(self):
+        self.assertTrue(
+            Change.objects.filter(
+                channel=self.submission.channel,
+                change_type=ADDED_TO_COMMUNITY_LIBRARY,
+            ).exists()
+        )
+        apply_task_mock.fetch_or_enqueue.assert_called_once_with(
+            self.admin_user,
+            channel_id=self.submission.channel.id,
+        )
+
+    @mock.patch(
+        "contentcuration.viewsets.community_library_submission.apply_channel_changes_task"
+    )
+    def test_resolve_submission__reject_correct(self, apply_task_mock):
         self.client.force_authenticate(user=self.admin_user)
         response = self.client.post(
             reverse(
@@ -679,6 +698,14 @@ class AdminViewSetTestCase(StudioAPITestCase):
         self.assertEqual(resolved_submission.internal_notes, self.internal_notes)
         self.assertEqual(resolved_submission.resolved_by, self.admin_user)
         self.assertEqual(resolved_submission.date_resolved, self.resolved_time)
+
+        self.assertFalse(
+            Change.objects.filter(
+                channel=self.submission.channel,
+                change_type=ADDED_TO_COMMUNITY_LIBRARY,
+            ).exists()
+        )
+        apply_task_mock.fetch_or_enqueue.assert_not_called()
 
     def test_resolve_submission__reject_missing_resolution_reason(self):
         self.client.force_authenticate(user=self.admin_user)

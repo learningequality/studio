@@ -1,11 +1,12 @@
 """
-Functions in here are the subset of annotation functions from Kolibri related to channel metadata.
+Functions in here are a modified subset of annotation functions from Kolibri related to channel metadata.
 https://github.com/learningequality/kolibri/blob/caec91dd2da5617adfb50332fb698068248e8e47/kolibri/core/content/utils/annotation.py#L731
 """
-import datetime
+from itertools import chain
 
 from django.db.models import Q
 from django.db.models import Sum
+from django.utils import timezone
 from kolibri_public.models import ChannelMetadata
 from kolibri_public.models import ContentNode
 from kolibri_public.models import LocalFile
@@ -14,18 +15,29 @@ from le_utils.constants import content_kinds
 from contentcuration.models import Channel
 
 
-def set_channel_metadata_fields(channel_id, public=None):
+def set_channel_metadata_fields(
+    channel_id,
+    channel_version=None,
+    public=None,
+    categories=None,
+    countries=None,
+):
     # Remove unneeded db_lock
     channel = ChannelMetadata.objects.get(id=channel_id)
     calculate_published_size(channel)
     calculate_total_resource_count(channel)
     calculate_included_languages(channel)
+    calculate_included_categories(channel, categories)
     calculate_next_order(channel, public=public)
     # Add this to ensure we keep this up to date.
-    channel.last_updated = datetime.datetime.now()
+    channel.last_updated = timezone.now()
 
     if public is not None:
         channel.public = public
+    if channel_version is not None:
+        channel.version = channel_version
+    if countries is not None:
+        channel.countries.set(countries)
     channel.save()
 
 
@@ -65,6 +77,28 @@ def calculate_included_languages(channel):
     ).exclude(lang=None)
     languages = content_nodes.order_by("lang").values_list("lang", flat=True).distinct()
     channel.included_languages.add(*list(languages))
+
+
+def calculate_included_categories(channel, categories):
+    content_nodes = ContentNode.objects.filter(
+        channel_id=channel.id, available=True
+    ).exclude(categories=None)
+
+    categories_comma_separated_lists = content_nodes.values_list(
+        "categories", flat=True
+    )
+    contentnode_categories = set(
+        chain.from_iterable(
+            (
+                categories_comma_separated_list.split(",")
+                for categories_comma_separated_list in categories_comma_separated_lists
+            )
+        )
+    )
+    categories_dict = {category: True for category in contentnode_categories}
+    categories_dict.update(categories or {})
+    channel.categories = categories_dict
+    channel.save()
 
 
 def calculate_next_order(channel, public=False):
