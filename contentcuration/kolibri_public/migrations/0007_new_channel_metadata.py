@@ -6,7 +6,7 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("contentcuration", "0157_alter_communitylibrarysubmission_resolution_reason"),
+        ("contentcuration", "0156_communitylibrarysubmission_admin_fields"),
         ("kolibri_public", "0006_auto_20250417_1516"),
     ]
 
