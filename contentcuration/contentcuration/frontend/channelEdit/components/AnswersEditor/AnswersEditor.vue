@@ -73,7 +73,7 @@
                   </div>
 
                   <div v-else>
-                    <MarkdownEditor
+                    <!-- <MarkdownEditor
                       v-if="isAnswerOpen(answerIdx)"
                       class="editor"
                       analyticsLabel="Answer"
@@ -87,7 +87,8 @@
                     <MarkdownViewer
                       v-else
                       :markdown="answer.answer"
-                    />
+                    /> -->
+                    <TipTapEditor v-model="answer.answer" />
                   </div>
                 </keep-alive>
               </VFlex>
@@ -127,6 +128,8 @@
 
 <script>
 
+  /* eslint-disable */
+
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
   import { AssessmentItemToolbarActions } from '../../constants';
   import { floatOrIntRegex, getCorrectAnswersIndices, mapCorrectAnswers } from '../../utils';
@@ -136,6 +139,7 @@
 
   import MarkdownEditor from 'shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor';
   import MarkdownViewer from 'shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer';
+  import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue';
 
   const updateAnswersOrder = answers => {
     return answers.map((answer, idx) => {
@@ -153,6 +157,7 @@
       MarkdownEditor,
       MarkdownViewer,
       Checkbox,
+      TipTapEditor,
     },
     model: {
       prop: 'answers',
@@ -285,7 +290,7 @@
           if (
             !this.shouldHaveOneCorrectAnswer &&
             JSON.stringify([...newIndices].sort()) ===
-            JSON.stringify([...this.correctAnswersIndices].sort())
+              JSON.stringify([...this.correctAnswersIndices].sort())
           ) {
             return;
           }
@@ -424,12 +429,9 @@
       numberFieldErrorLabel: 'Answer must be a number',
     },
   };
-
 </script>
 
-
 <style lang="scss" scoped>
-
   $exercise-answer-correct: #4caf50;
   $exercise-answer-wrong: #ef5350;
 
@@ -482,5 +484,4 @@
   ::v-deep .no-border.v-text-field > .v-input__control > .v-input__slot::after {
     border-style: none;
   }
-
 </style>
