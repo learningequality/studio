@@ -39,14 +39,16 @@
       </VFlex>
       <VSpacer />
       <VFlex class="text-xs-right">
-        <VBtn
+        <KButton
           v-if="!loading"
-          color="primary"
+          appearance="raised-button"
+          primary
           data-test="add-channelset"
           @click="newChannelSet"
+          :text= "$tr('addChannelSetTitle')"
         >
-          {{ $tr('addChannelSetTitle') }}
-        </VBtn>
+        
+        </KButton>
       </VFlex>
     </VLayout>
     <VLayout
