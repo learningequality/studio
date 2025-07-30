@@ -53,6 +53,7 @@
 
     <!-- Copy/Paste -->
     <div
+      v-if="visibleCategories.includes('clipboard')"
       role="group"
       :aria-label="copyAndPasteActions$()"
     >
@@ -64,7 +65,7 @@
       <PasteDropdown />
     </div>
 
-    <ToolbarDivider />
+    <ToolbarDivider v-if="visibleCategories.includes('clipboard')" />
 
     <ToolbarButton
       v-if="visibleCategories.includes('clearFormat')"
@@ -154,9 +155,41 @@
         class="more-dropdown"
         role="menu"
         :aria-label="'Additional formatting options'"
-        @click.stop
+        @click.stop="isMoreDropdownOpen = false"
         @keydown="handleMenuKeydown"
       >
+        <!-- Overflow Clipboard -->
+        <template v-if="overflowCategories.includes('clipboard')">
+          <button
+            class="dropdown-item"
+            role="menuitem"
+            @click="handleCopy"
+          >
+            <img
+              :src="require('../../assets/icon-copy.svg')"
+              class="dropdown-item-icon"
+              alt=""
+              aria-hidden="true"
+            >
+            <span class="dropdown-item-text">{{ copy$() }}</span>
+          </button>
+          <button
+            v-for="option in pasteOptions"
+            :key="option.name"
+            class="dropdown-item"
+            role="menuitem"
+            @click="option.handler"
+          >
+            <img
+              :src="option.icon"
+              class="dropdown-item-icon"
+              alt=""
+              aria-hidden="true"
+            >
+            <span class="dropdown-item-text">{{ option.title }}</span>
+          </button>
+        </template>
+
         <!-- Overflow Clear Format -->
         <template v-if="overflowCategories.includes('clearFormat')">
           <button
@@ -248,6 +281,7 @@
   import { defineComponent, ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
   import { useToolbarActions } from '../composables/useToolbarActions';
   import { getTipTapEditorStrings } from '../TipTapEditorStrings';
+  import { useDropdowns } from '../composables/useDropdowns';
   import ToolbarButton from './toolbar/ToolbarButton.vue';
   import FormatDropdown from './toolbar/FormatDropdown.vue';
   import PasteDropdown from './toolbar/PasteDropdown.vue';
@@ -266,16 +300,17 @@
       const isMoreDropdownOpen = ref(false);
       const toolbarWidth = ref(0);
 
-      // Maybe these shouldnt be hardcoded?
+      // TODO: Maybe these shouldnt be hardcoded?
       const OVERFLOW_BREAKPOINTS = {
-        insert: 800,
+        insert: 750,
         script: 650,
-        lists: 500,
+        lists: 550,
         clearFormat: 450,
+        clipboard: 395,
       };
 
       // Categories that can overflow (in order of overflow priority)
-      const OVERFLOW_CATEGORIES = ['insert', 'script', 'lists', 'clearFormat'];
+      const OVERFLOW_CATEGORIES = ['insert', 'script', 'lists', 'clearFormat', 'clipboard'];
 
       const {
         handleCopy,
@@ -287,6 +322,8 @@
         scriptActions,
         insertTools,
       } = useToolbarActions();
+
+      const { pasteOptions } = useDropdowns();
 
       const {
         copy$,
@@ -431,6 +468,7 @@
         listActions,
         scriptActions,
         insertTools,
+        pasteOptions,
         copy$,
         textFormattingToolbar$,
         historyActions$,
