@@ -3,14 +3,14 @@
   <div class="editor-container">
     <EditorToolbar
       v-if="!isMobile"
-      @insert-image="target => openCreateModal({ targetElement: target })"
+      @insert-image="target => imageHandler.openCreateModal({ targetElement: target })"
       @insert-link="linkHandler.openLinkEditor()"
       @insert-math="target => mathHandler.openCreateMathModal({ targetElement: target })"
     />
 
     <div v-else>
       <MobileTopBar
-        @insert-image="target => openCreateModal({ targetElement: target })"
+        @insert-image="target => imageHandler.openCreateModal({ targetElement: target })"
         @insert-link="linkHandler.openLinkEditor()"
         @insert-math="target => mathHandler.openCreateMathModal({ targetElement: target })"
       />
@@ -29,9 +29,13 @@
 
     <div
       v-if="linkHandler.isEditorOpen.value"
-      :style="linkHandler.popoverStyle.value"
+      class="link-editor-popover-wrapper"
+      :class="{ 'has-overlay': linkHandler.isEditorCentered.value }"
+      :style="linkHandler.isEditorCentered.value ? {} : linkHandler.popoverStyle.value"
+      @click.self="linkHandler.closeLinkEditor"
     >
       <LinkEditor
+        :style="linkHandler.isEditorCentered.value ? linkHandler.popoverStyle.value : {}"
         :mode="linkHandler.editorMode.value"
         :initial-state="linkHandler.editorInitialState.value"
         @save="linkHandler.saveLink"
@@ -41,19 +45,19 @@
     </div>
 
     <div
-      v-if="modalMode"
+      v-if="imageHandler.modalMode.value"
       class="image-upload-popover-wrapper"
-      :class="{ 'has-overlay': isModalCentered }"
-      @click.self="closeModal"
+      :class="{ 'has-overlay': imageHandler.isModalCentered.value }"
+      @click.self="imageHandler.closeModal"
     >
       <ImageUploadModal
-        :style="popoverStyle"
-        :mode="modalMode"
-        :initial-data="modalInitialData"
-        @close="closeModal"
-        @insert="handleInsert"
-        @update="handleUpdate"
-        @remove="handleRemove"
+        :style="imageHandler.popoverStyle.value"
+        :mode="imageHandler.modalMode.value"
+        :initial-data="imageHandler.modalInitialData.value"
+        @close="imageHandler.closeModal"
+        @insert="imageHandler.handleInsert"
+        @update="imageHandler.handleUpdate"
+        @remove="imageHandler.handleRemove"
       />
     </div>
 
@@ -125,22 +129,12 @@
 
       const { isMobile } = useBreakpoint();
 
-      const {
-        modalMode,
-        modalInitialData,
-        popoverStyle,
-        isModalCentered,
-        openCreateModal,
-        closeModal,
-        handleInsert,
-        handleUpdate,
-        handleRemove,
-      } = useImageHandling(editor);
+      const imageHandler = useImageHandling(editor);
 
       const handleDrop = event => {
         const file = event.dataTransfer.files[0];
         if (file) {
-          openCreateModal({ file });
+          imageHandler.openCreateModal({ file });
         }
       };
 
@@ -200,20 +194,12 @@
       return {
         isReady,
         isFocused,
-        modalMode,
-        modalInitialData,
-        popoverStyle,
-        openCreateModal,
-        closeModal,
-        handleInsert,
-        handleUpdate,
-        handleRemove,
         handleDrop,
-        isModalCentered,
         linkHandler,
         editor,
         mathHandler,
         isMobile,
+        imageHandler,
       };
     },
     props: {
@@ -247,6 +233,7 @@
     border-radius: 8px;
   }
 
+  .link-editor-popover-wrapper,
   .image-upload-popover-wrapper,
   .math-modal-popover-wrapper {
     position: fixed;
@@ -258,14 +245,14 @@
     pointer-events: none;
   }
 
+  .link-editor-popover-wrapper > *,
   .image-upload-popover-wrapper > *,
   .math-modal-popover-wrapper > * {
     pointer-events: auto;
   }
 
   /* Overlay for edit mode to allow clicking outside to close */
-  .image-upload-popover-wrapper.has-overlay,
-  .math-modal-popover-wrapper.has-overlay {
+  .has-overlay {
     pointer-events: auto;
     background: rgba(0, 0, 0, 0.5);
   }
