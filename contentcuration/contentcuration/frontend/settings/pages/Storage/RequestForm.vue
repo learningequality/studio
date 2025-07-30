@@ -8,9 +8,8 @@
       v-if="Boolean(errorCount())"
       class="my-2"
       error
-    >
-      {{ errorText() }}
-    </StudioBanner>
+      :errorText="errorText()"
+    />
 
     <!-- Nature of content -->
     <h3>{{ $tr('natureOfYourContentLabel') }}</h3>

@@ -2,9 +2,10 @@
 
   <div
     class="banner notranslate"
+    data-testid="studio-banner"
     :style="{ backgroundColor: error ? $themePalette.red.v_100 : '' }"
   >
-    <slot> </slot>
+    {{ errorText }}
   </div>
 
 </template>
@@ -25,12 +26,21 @@
         type: Boolean,
         default: false,
       },
+      errorText: {
+        type: String,
+        default: '',
+      }
+    },
+    watch: {
+      errorText(newText) {
+        if (newText.length && this.error) {
+          this.sendPoliteMessage(newText);
+        }
+      },
     },
     mounted() {
-      const slotContent = this.$slots.default;
-      const textContent = slotContent[0].text;
-      if (textContent && this.error) {
-        this.sendPoliteMessage(textContent);
+      if (this.errorText.length && this.error) {
+        this.sendPoliteMessage(this.errorText);
       }
     },
   };
