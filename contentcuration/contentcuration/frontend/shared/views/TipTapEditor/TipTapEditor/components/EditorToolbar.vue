@@ -327,9 +327,13 @@
 
       const onToolClick = (tool, event) => {
         isMoreDropdownOpen.value = false;
+        let target = event.currentTarget;
+
+        // If the tool is in the overflow menu, we center the modal
+        if (!visibleCategories.value.includes('insert')) target = null;
 
         if (tool.name === 'image') {
-          emit('insert-image', event.currentTarget);
+          emit('insert-image', target);
         } else if (tool.name === 'link') {
           emit('insert-link');
         } else if (tool.name === 'math') {
@@ -486,7 +490,7 @@
     align-items: center;
     width: 100%;
     padding: 8px 12px;
-    font-size: 14px;
+    font-size: 1.2rem;
     color: #374151;
     text-align: left;
     cursor: pointer;
@@ -508,8 +512,8 @@
 
   .dropdown-item-icon {
     flex-shrink: 0;
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     margin-right: 12px;
   }
 
