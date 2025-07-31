@@ -14,15 +14,15 @@
       >
         <VLayout>
           <VSpacer />
-          <VBtn
+          <KButton
             v-if="isEditable && !loading"
-            color="primary"
+            appearance="raised-button"
+            primary
             class="add-channel-button"
             data-test="add-channel"
+            :text="$tr('channel')"
             @click="newChannel"
-          >
-            {{ $tr('channel') }}
-          </VBtn>
+          />
         </VLayout>
       </VFlex>
     </VLayout>
