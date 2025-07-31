@@ -5,7 +5,10 @@
     role="toolbar"
     :aria-label="textFormattingToolbar$()"
   >
-    <div class="fixed-actions">
+    <div
+      class="fixed-actions"
+      :class="{ 'is-expanded': isExpanded }"
+    >
       <button
         class="toggle-btn"
         :title="isExpanded ? collapseFormattingBar$() : expandFormattingBar$()"
@@ -168,11 +171,7 @@
     z-index: 100;
     display: flex;
     align-items: center;
-    height: 3.5rem;
-    background: white;
-    backdrop-filter: blur(0.625rem);
-    border-top: 1px solid #cccccc;
-    box-shadow: 0 -0.125rem 0.5rem rgba(0, 0, 0, 0.1);
+    padding: 0.25rem;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
@@ -187,8 +186,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2.7rem;
-    height: 2.7rem;
+    width: 3.3rem;
+    height: 3.3rem;
     font-size: 2.2rem;
     color: #555555;
     cursor: pointer;
@@ -208,6 +207,14 @@
     align-items: center;
     font-size: 2rem;
     color: #666666;
+  }
+
+  .fixed-actions.is-expanded,
+  .scrollable-tools {
+    height: 3.5rem;
+    background: white;
+    backdrop-filter: blur(0.625rem);
+    border-top: 1px solid #cccccc;
   }
 
   .format-btn {
@@ -233,8 +240,6 @@
     padding: 0 1rem;
     overflow-x: auto;
     -ms-overflow-style: none;
-    scrollbar-width: none;
-    opacity: 0;
     transform: translateX(-1.25rem);
     animation: slide-in-fade 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }

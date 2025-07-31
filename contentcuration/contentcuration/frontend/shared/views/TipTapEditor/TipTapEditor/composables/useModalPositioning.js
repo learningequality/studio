@@ -54,12 +54,11 @@ export function useModalPositioning() {
     anchorElement.value = null;
   };
 
-  // Allow passing a custom close function
   const setupClickOutside = (modalSelector, closeFunction) => {
     const clickOutsideHandler = event => {
       const modalElement = document.querySelector(modalSelector);
       if (isModalOpen.value && modalElement && !modalElement.contains(event.target)) {
-        // Call the provided close function, which allows the consumer to do its own cleanup.
+        // Allow the consumer to do its own cleanup.
         closeFunction();
       }
     };

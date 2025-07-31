@@ -13,6 +13,7 @@ export function useLinkHandling(editor) {
 
   const calculatePosition = (forceCenter = false) => {
     if (!editor.value) return {};
+    const isRTL = document.dir === 'rtl';
 
     isEditorCentered.value = false;
     // Only center the edit modal on mobile, not the bubble menu
@@ -30,12 +31,24 @@ export function useLinkHandling(editor) {
     const { view } = editor.value;
     const { from } = view.state.selection;
     const coords = view.coordsAtPos(from);
-    return {
-      position: 'fixed',
-      left: `${coords.left}px`,
-      top: `${coords.bottom + 8}px`,
-      zIndex: 1001,
-    };
+
+    // Calculate position based on direction
+    if (isRTL) {
+      const right = window.innerWidth - coords.left;
+      return {
+        position: 'fixed',
+        right: `${right}px`,
+        top: `${coords.bottom + 8}px`,
+        zIndex: 1001,
+      };
+    } else {
+      return {
+        position: 'fixed',
+        left: `${coords.left}px`,
+        top: `${coords.bottom + 8}px`,
+        zIndex: 1001,
+      };
+    }
   };
 
   const openLinkEditor = (mode = 'create') => {
