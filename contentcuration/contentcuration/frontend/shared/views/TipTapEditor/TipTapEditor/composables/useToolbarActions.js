@@ -1,7 +1,7 @@
 import { computed, inject } from 'vue';
 import { getTipTapEditorStrings } from '../TipTapEditorStrings';
 
-export function useToolbarActions() {
+export function useToolbarActions(emit) {
   const editor = inject('editor', null);
 
   const {
@@ -191,16 +191,16 @@ export function useToolbarActions() {
     }
   };
 
-  const handleInsertImage = () => {
-    // placeholder
+  const handleInsertImage = target => {
+    emit('insert-image', target);
   };
 
   const handleInsertLink = () => {
-    // placeholder
+    emit('insert-link');
   };
 
   const handleMath = () => {
-    // TipTap math formula logic may be added here
+    emit('insert-math', event.currentTarget);
   };
 
   const handleCodeBlock = () => {

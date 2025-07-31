@@ -46,7 +46,7 @@
           :key="tool.name"
           class="dropdown-item"
           role="menuitem"
-          @click="onToolClick(tool, $event)"
+          @click="tool.handler($event)"
         >
           <img
             :src="tool.icon"
@@ -76,20 +76,7 @@
       const isInsertMenuOpen = ref(false);
       const dropdown = ref(null);
 
-      const { historyActions, insertTools } = useToolbarActions();
-
-      const onToolClick = (tool, event) => {
-        if (tool.name === 'image') {
-          emit('insert-image', event.currentTarget);
-        } else if (tool.name === 'link') {
-          emit('insert-link');
-        } else if (tool.name === 'math') {
-          emit('insert-math', event.currentTarget);
-        } else {
-          tool.handler();
-        }
-        isInsertMenuOpen.value = false;
-      };
+      const { historyActions, insertTools } = useToolbarActions(emit);
 
       const handleClickOutside = event => {
         if (
@@ -114,7 +101,6 @@
         historyActions,
         insertTools,
         isInsertMenuOpen,
-        onToolClick,
         dropdown,
       };
     },

@@ -93,7 +93,7 @@
         :title="tool.title"
         :icon="tool.icon"
         :is-active="tool.isActive"
-        @click="onToolClick(tool, $event)"
+        @click="tool.handler($event)"
       />
     </div>
   </div>
@@ -125,26 +125,13 @@
         textFormattingToolbar$,
       } = getTipTapEditorStrings();
 
-      const { textActions, listActions, scriptActions, insertTools } = useToolbarActions();
+      const { textActions, listActions, scriptActions, insertTools } = useToolbarActions(emit);
 
       const { canIncreaseFormat, canDecreaseFormat, increaseFormat, decreaseFormat } =
         useFormatControls();
 
       const toggleToolbar = () => {
         isExpanded.value = !isExpanded.value;
-      };
-
-      const onToolClick = (tool, event) => {
-        if (tool.name === 'image') {
-          emit('insert-image', event.currentTarget);
-        } else if (tool.name === 'link') {
-          emit('insert-link');
-        } else if (tool.name === 'math') {
-          emit('insert-math', event.currentTarget);
-        } else {
-          tool.handler();
-        }
-        isExpanded.value = false;
       };
 
       return {
@@ -158,7 +145,6 @@
         canDecreaseFormat,
         increaseFormat,
         decreaseFormat,
-        onToolClick,
         collapseFormattingBar$,
         expandFormattingBar$,
         decreaseFormatSize$,
