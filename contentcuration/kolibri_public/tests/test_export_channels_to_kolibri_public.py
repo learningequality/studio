@@ -40,14 +40,14 @@ class ExportTestCase(TestCase):
         self.channel_id = uuid.UUID(int=42).hex
         self.channel_version = 1
 
-        db_path = os.path.join(
+        self.versioned_db_path = os.path.join(
             test_db_root_dir,
             settings.DB_ROOT,
             f"{self.channel_id}-{self.channel_version}.sqlite3",
         )
-        open(db_path, "w").close()
+        open(self.versioned_db_path, "w").close()
 
-        with using_content_database(db_path):
+        with using_content_database(self.versioned_db_path):
             call_command(
                 "migrate",
                 app_label=KolibriContentConfig.label,
@@ -61,10 +61,10 @@ class ExportTestCase(TestCase):
                 version=self.channel_version,
             )
 
-        self.db_path_without_version = os.path.join(
+        self.unversioned_db_path = os.path.join(
             test_db_root_dir, settings.DB_ROOT, f"{self.channel_id}.sqlite3"
         )
-        shutil.copyfile(db_path, self.db_path_without_version)
+        shutil.copyfile(self.versioned_db_path, self.unversioned_db_path)
 
     def tearDown(self):
         self._temp_directory_ctx.__exit__(None, None, None)
@@ -73,7 +73,7 @@ class ExportTestCase(TestCase):
         super().tearDown()
 
     @mock.patch("kolibri_public.utils.export_channel_to_kolibri_public.ChannelMapper")
-    def test_export_channel_to_kolibri_public__existing_version(
+    def test_export_channel_to_kolibri_public__existing_version__versioned(
         self, mock_channel_mapper
     ):
         categories = ["Category1", "Category2"]
@@ -98,6 +98,29 @@ class ExportTestCase(TestCase):
         mock_channel_mapper.return_value.run.assert_called_once_with()
 
     @mock.patch("kolibri_public.utils.export_channel_to_kolibri_public.ChannelMapper")
+    def test_export_channel_to_kolibri_public__existing_version__unversioned(
+        self, mock_channel_mapper
+    ):
+        os.remove(self.versioned_db_path)
+
+        export_channel_to_kolibri_public(
+            channel_id=self.channel_id,
+            channel_version=1,
+            public=True,
+            categories=None,
+            countries=None,
+        )
+
+        mock_channel_mapper.assert_called_once_with(
+            channel=self.exported_channel_metadata,
+            channel_version=1,
+            public=True,
+            categories=None,
+            countries=None,
+        )
+        mock_channel_mapper.return_value.run.assert_called_once_with()
+
+    @mock.patch("kolibri_public.utils.export_channel_to_kolibri_public.ChannelMapper")
     def test_export_channel_to_kolibri_public__without_version(
         self, mock_channel_mapper
     ):
@@ -112,6 +135,13 @@ class ExportTestCase(TestCase):
             countries=None,
         )
         mock_channel_mapper.return_value.run.assert_called_once_with()
+
+    def test_export_channel_to_kolibri_public__bad_channel(self):
+        with self.assertRaises(FileNotFoundError):
+            export_channel_to_kolibri_public(
+                channel_id="dummy_id",
+                channel_version=1,
+            )
 
     def test_export_channel_to_kolibri_public__bad_version(self):
         with self.assertRaises(FileNotFoundError):

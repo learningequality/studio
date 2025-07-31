@@ -16,6 +16,41 @@ from kolibri_public.utils.mapper import ChannelMapper
 logger = logging.getLogger(__file__)
 
 
+class using_temp_migrated_database:
+    """
+    A wrapper context manager for read-only access to a content database
+    that might not have all current migrations applied. Works by copying
+    the database to a temporary file, applying migrations to this temporary
+    database and then using this temporary database.
+    """
+
+    def __init__(self, database_path):
+        self.database_path = database_path
+        self._inner_mgr = None
+
+    def __enter__(self):
+        self._named_temporary_file_mgr = tempfile.NamedTemporaryFile(suffix=".sqlite3")
+        self.temp_database_file = self._named_temporary_file_mgr.__enter__()
+
+        shutil.copy(self.database_path, self.temp_database_file.name)
+        self.temp_database_file.seek(0)
+
+        with using_content_database(self.temp_database_file.name):
+            # Run migration to handle old content databases published prior to current fields being added.
+            call_command(
+                "migrate",
+                app_label=KolibriContentConfig.label,
+                database=get_active_content_database(),
+            )
+
+        self._inner_mgr = using_content_database(self.temp_database_file.name)
+        self._inner_mgr.__enter__()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._inner_mgr.__exit__(exc_type, exc_val, exc_tb)
+        self._named_temporary_file_mgr.__exit__(exc_type, exc_val, exc_tb)
+
+
 def export_channel_to_kolibri_public(
     channel_id,
     channel_version=None,
@@ -26,35 +61,66 @@ def export_channel_to_kolibri_public(
     # Note: The `categories` argument should be a _list_, NOT a _dict_.
     logger.info("Putting channel {} into kolibri_public".format(channel_id))
 
-    if channel_version is not None:
-        db_filename = "{id}-{version}.sqlite3".format(
-            id=channel_id, version=channel_version
-        )
-    else:
-        db_filename = "{id}.sqlite3".format(id=channel_id)
-    db_location = os.path.join(settings.DB_ROOT, db_filename)
+    versioned_db_filename = "{id}-{version}.sqlite3".format(
+        id=channel_id, version=channel_version
+    )
+    unversioned_db_filename = "{id}.sqlite3".format(id=channel_id)
 
-    with storage.open(db_location) as storage_file:
-        with tempfile.NamedTemporaryFile(suffix=".sqlite3") as db_file:
-            shutil.copyfileobj(storage_file, db_file)
-            db_file.seek(0)
-            with using_content_database(db_file.name):
-                # Run migration to handle old content databases published prior to current fields being added.
-                call_command(
-                    "migrate",
-                    app_label=KolibriContentConfig.label,
-                    database=get_active_content_database(),
-                )
-                channel = ExportedChannelMetadata.objects.get(id=channel_id)
-                logger.info(
-                    "Found channel {} for id: {} mapping now".format(
-                        channel.name, channel_id
-                    )
-                )
-                mapper = ChannelMapper(
-                    channel=channel,
-                    public=public,
-                    categories=categories,
-                    countries=countries,
-                )
-                mapper.run()
+    versioned_db_path = storage.path(
+        os.path.join(settings.DB_ROOT, versioned_db_filename)
+    )
+    unversioned_db_path = storage.path(
+        os.path.join(settings.DB_ROOT, unversioned_db_filename)
+    )
+
+    if channel_version is None:
+        db_path = unversioned_db_path
+    else:
+        db_path = versioned_db_path
+        _possibly_migrate_unversioned_database(
+            channel_id=channel_id,
+            channel_version=channel_version,
+            unversioned_db_path=unversioned_db_path,
+            versioned_db_path=versioned_db_path,
+        )
+
+    with using_temp_migrated_database(db_path):
+        channel = ExportedChannelMetadata.objects.get(id=channel_id)
+        logger.info(
+            "Found channel {} for id: {} mapping now".format(channel.name, channel_id)
+        )
+        mapper = ChannelMapper(
+            channel=channel,
+            channel_version=channel_version,
+            public=public,
+            categories=categories,
+            countries=countries,
+        )
+        mapper.run()
+
+
+def _possibly_migrate_unversioned_database(
+    channel_id,
+    channel_version,
+    unversioned_db_path,
+    versioned_db_path,
+):
+    """
+    Older channels may only have a single database file and not
+    versioned databases. If this is the case and the requested channel version
+    is present in the single database file, this function copies the database to a file
+    containing the version in the filename.
+    """
+    if os.path.exists(versioned_db_path) or not os.path.exists(unversioned_db_path):
+        return
+
+    with using_temp_migrated_database(unversioned_db_path):
+        contains_requested_version = ExportedChannelMetadata.objects.filter(
+            id=channel_id, version=channel_version
+        ).exists()
+
+    if contains_requested_version:
+        logger.info(
+            f"Migrating unversioned database {unversioned_db_path} to versioned database {versioned_db_path}"
+        )
+        shutil.copy(unversioned_db_path, versioned_db_path)
