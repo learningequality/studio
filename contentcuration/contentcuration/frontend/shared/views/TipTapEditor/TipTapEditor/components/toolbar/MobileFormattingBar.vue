@@ -23,6 +23,8 @@
       id="formatting-tools"
       class="scrollable-tools"
       :aria-label="textFormattingToolbar$()"
+      @touchstart="event => event.stopPropagation()"
+      @touchend="event => event.stopPropagation()"
     >
       <div
         class="formatting-buttons"
@@ -84,6 +86,15 @@
         :is-active="action.isActive"
         @click="action.handler"
       />
+      <ToolbarDivider />
+      <ToolbarButton
+        v-for="tool in insertTools"
+        :key="tool.name"
+        :title="tool.title"
+        :icon="tool.icon"
+        :is-active="tool.isActive"
+        @click="onToolClick(tool, $event)"
+      />
     </div>
   </div>
 
@@ -102,7 +113,7 @@
   export default defineComponent({
     name: 'MobileFormattingBar',
     components: { ToolbarButton, ToolbarDivider },
-    setup() {
+    setup(props, { emit }) {
       const isExpanded = ref(true);
 
       const {
@@ -114,7 +125,7 @@
         textFormattingToolbar$,
       } = getTipTapEditorStrings();
 
-      const { textActions, listActions, scriptActions } = useToolbarActions();
+      const { textActions, listActions, scriptActions, insertTools } = useToolbarActions();
 
       const { canIncreaseFormat, canDecreaseFormat, increaseFormat, decreaseFormat } =
         useFormatControls();
@@ -123,16 +134,31 @@
         isExpanded.value = !isExpanded.value;
       };
 
+      const onToolClick = (tool, event) => {
+        if (tool.name === 'image') {
+          emit('insert-image', event.currentTarget);
+        } else if (tool.name === 'link') {
+          emit('insert-link');
+        } else if (tool.name === 'math') {
+          emit('insert-math', event.currentTarget);
+        } else {
+          tool.handler();
+        }
+        isExpanded.value = false;
+      };
+
       return {
         isExpanded,
         textActions,
         listActions,
         scriptActions,
+        insertTools,
         toggleToolbar,
         canIncreaseFormat,
         canDecreaseFormat,
         increaseFormat,
         decreaseFormat,
+        onToolClick,
         collapseFormattingBar$,
         expandFormattingBar$,
         decreaseFormatSize$,
@@ -168,21 +194,20 @@
     display: flex;
     align-items: center;
     height: 100%;
-    padding: 0 1rem;
-    background: rgba(248, 249, 250, 0.8);
-    border-right: 1px solid #cccccc;
+    padding-left: 1rem;
   }
 
   .toggle-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    font-size: 1.5rem;
+    width: 2.7rem;
+    height: 2.7rem;
+    font-size: 2.2rem;
     color: #555555;
     cursor: pointer;
-    border-radius: 0.375rem;
+    background-color: #f5f5f5;
+    border-radius: 3rem;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
@@ -195,7 +220,7 @@
     display: flex;
     gap: 0.9rem;
     align-items: center;
-    font-size: 2.125rem;
+    font-size: 2rem;
     color: #666666;
   }
 

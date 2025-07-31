@@ -14,7 +14,12 @@
         @insert-link="linkHandler.openLinkEditor()"
         @insert-math="target => mathHandler.openCreateMathModal({ targetElement: target })"
       />
-      <MobileFormattingBar v-if="isFocused" />
+      <MobileFormattingBar
+        v-if="isFocused"
+        @insert-image="target => imageHandler.openCreateModal({ targetElement: target })"
+        @insert-link="linkHandler.openLinkEditor()"
+        @insert-math="target => mathHandler.openCreateMathModal({ targetElement: target })"
+      />
     </div>
 
     <div
@@ -230,7 +235,6 @@
       sans-serif;
     background: white;
     border: 1px solid #e1e5e9;
-    border-radius: 8px;
   }
 
   .link-editor-popover-wrapper,

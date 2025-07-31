@@ -65,7 +65,7 @@
 
 <script>
 
-  import { defineComponent, ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
+  import { defineComponent, ref, onMounted, onBeforeUnmount } from 'vue';
   import { useToolbarActions } from '../../composables/useToolbarActions';
   import ToolbarButton from './ToolbarButton.vue';
 
@@ -102,26 +102,12 @@
         }
       };
 
-      const handleKeydown = async event => {
-        if (event.key === 'Escape' && isInsertMenuOpen.value) {
-          isInsertMenuOpen.value = false;
-          // Return focus to the trigger button
-          await nextTick();
-          const insertButton = event.target
-            .closest('.insert-container')
-            ?.querySelector('.insert-button');
-          insertButton?.focus();
-        }
-      };
-
       onMounted(() => {
         document.addEventListener('mousedown', handleClickOutside);
-        document.addEventListener('keydown', handleKeydown);
       });
 
       onBeforeUnmount(() => {
         document.removeEventListener('mousedown', handleClickOutside);
-        document.removeEventListener('keydown', handleKeydown);
       });
 
       return {
@@ -159,8 +145,6 @@
 
   .insert-button {
     width: 36px;
-
-    /* Minimum touch target size for accessibility */
     min-width: 44px;
     height: 36px;
     min-height: 44px;
@@ -186,8 +170,6 @@
     display: flex;
     align-items: center;
     width: 100%;
-
-    /* Minimum touch target size for accessibility */
     min-height: 44px;
     padding: 0.75rem 1rem;
     text-align: left;
