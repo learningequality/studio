@@ -44,7 +44,7 @@ export const createCustomMarkdownSerializer = editor => {
       return text;
     };
 
-    const serializeNode = (node, listNumber = null) => {
+    const serializeNode = (node, listNumber = null, depth = 0) => {
       if (!node || !node.type) {
         return;
       }
@@ -57,7 +57,7 @@ export const createCustomMarkdownSerializer = editor => {
               const child = node.content.content[i];
               if (child) {
                 if (i > 0) result += '\n\n';
-                serializeNode(child);
+                serializeNode(child, null, depth);
               }
             }
           }
@@ -68,7 +68,7 @@ export const createCustomMarkdownSerializer = editor => {
             for (let i = 0; i < node.content.size; i++) {
               const child = node.content.content[i];
               if (child) {
-                serializeNode(child);
+                serializeNode(child, null, depth);
               }
             }
           }
@@ -81,7 +81,7 @@ export const createCustomMarkdownSerializer = editor => {
             for (let i = 0; i < node.content.size; i++) {
               const child = node.content.content[i];
               if (child) {
-                serializeNode(child);
+                serializeNode(child, null, depth);
               }
             }
           }
@@ -106,7 +106,7 @@ export const createCustomMarkdownSerializer = editor => {
             for (let i = 0; i < node.content.size; i++) {
               const child = node.content.content[i];
               if (child) {
-                serializeNode(child);
+                serializeNode(child, null, depth);
               }
             }
           }
@@ -117,7 +117,7 @@ export const createCustomMarkdownSerializer = editor => {
           for (let i = 0; i < node.content.size; i++) {
             const child = node.content.content[i];
             if (child) {
-              serializeNode(child, 'bullet');
+              serializeNode(child, 'bullet', depth);
               if (i < node.content.size - 1) result += '\n';
             }
           }
@@ -127,22 +127,27 @@ export const createCustomMarkdownSerializer = editor => {
           for (let i = 0; i < node.content.size; i++) {
             const child = node.content.content[i];
             if (child) {
-              serializeNode(child, i + 1);
+              serializeNode(child, i + 1, depth);
               if (i < node.content.size - 1) result += '\n';
             }
           }
           break;
 
-        case 'listItem':
+        case 'listItem': {
+          // Add indentation for nested lists
+          const indent = '  '.repeat(depth);
+
           // Use the passed listNumber parameter
           if (listNumber === 'bullet') {
-            result += '- ';
+            result += indent + '- ';
           } else if (typeof listNumber === 'number') {
-            result += `${listNumber}. `;
+            result += indent + `${listNumber}. `;
           }
 
           // Process list item content properly
           if (node.content && node.content.size > 0) {
+            let hasProcessedFirstParagraph = false;
+
             for (let i = 0; i < node.content.size; i++) {
               const child = node.content.content[i];
               if (child && child.type) {
@@ -152,17 +157,25 @@ export const createCustomMarkdownSerializer = editor => {
                     for (let j = 0; j < child.content.size; j++) {
                       const grandchild = child.content.content[j];
                       if (grandchild) {
-                        serializeNode(grandchild);
+                        serializeNode(grandchild, null, depth);
                       }
                     }
                   }
+                  hasProcessedFirstParagraph = true;
+                } else if (child.type.name === 'bulletList' || child.type.name === 'orderedList') {
+                  // Handle nested lists
+                  if (hasProcessedFirstParagraph) {
+                    result += '\n';
+                  }
+                  serializeNode(child, null, depth + 1);
                 } else {
-                  serializeNode(child);
+                  serializeNode(child, null, depth);
                 }
               }
             }
           }
           break;
+        }
 
         case 'blockquote':
           result += '> ';
@@ -170,7 +183,7 @@ export const createCustomMarkdownSerializer = editor => {
             for (let i = 0; i < node.content.size; i++) {
               const child = node.content.content[i];
               if (child) {
-                serializeNode(child);
+                serializeNode(child, null, depth);
               }
             }
           }
@@ -195,13 +208,13 @@ export const createCustomMarkdownSerializer = editor => {
         default:
           // Fallback: try to process children
           if (node.content) {
-            node.content.forEach(child => serializeNode(child));
+            node.content.forEach(child => serializeNode(child, null, depth));
           }
           break;
       }
     };
 
-    serializeNode(doc, true);
+    serializeNode(doc, null, 0);
     return result.trim();
   };
 };
