@@ -492,7 +492,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
         self.assertEqual(response.status_code, 200)
         modified_channel = models.Channel.objects.get(id=channel.id)
-        self.assertEqual(modified_channel.staging_tree.published, True)
+        self.assertEqual(modified_channel.staging_tree.published, False)
 
     def test_publish_next_with_incomplete_staging_tree(self):
         channel = testdata.channel()
@@ -507,7 +507,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         channel.save()
         self.assertEqual(channel.staging_tree.published, False)
 
-        response = self.sync_changes([generate_publish_next_event(channel.id)])
+        response = self.sync_changes([generate_publish_next_event(channel.id, use_staging_tree=True)])
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(

@@ -552,7 +552,7 @@
       ...mapActions('currentChannel', [
         'loadCurrentChannelStagingDiff',
         'deployCurrentChannel',
-        'publishDraftChannel',
+        'publishStagingChannel',
         'reloadCurrentChannelStagingDiff',
       ]),
       ...mapActions('currentChannel', { loadCurrentChannel: 'loadChannel' }),
@@ -646,7 +646,7 @@
         this.displayPublishDraftDialog = false;
         this.isPublishingDraft = true;
 
-        this.publishDraftChannel()
+        this.publishStagingChannel()
           .then(() => {
             this.isPublishingDraft = false;
             this.showSnackbar({

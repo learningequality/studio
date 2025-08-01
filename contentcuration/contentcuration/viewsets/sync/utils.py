@@ -97,10 +97,11 @@ def generate_update_descendants_event(key, mods, channel_id=None, user_id=None):
     return event
 
 
-def generate_publish_next_event(key, version_notes="", language=None):
+def generate_publish_next_event(key, version_notes="", language=None, use_staging_tree=False):
     event = _generate_event(key, CHANNEL, PUBLISHED_NEXT, key, None)
     event["version_notes"] = version_notes
     event["language"] = language
+    event["use_staging_tree"] = use_staging_tree
     return event
 
 

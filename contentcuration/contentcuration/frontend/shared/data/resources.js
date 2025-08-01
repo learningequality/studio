@@ -1234,9 +1234,12 @@ export const Channel = new CreateModelResource({
     });
   },
 
-  publishDraft(id) {
+  publishDraft(id, use_staging_tree=false, version_notes="") {
     const change = new PublishedNextChange({
       key: id,
+      use_staging_tree: use_staging_tree,
+      version_notes: version_notes,
+      language: currentLanguage,
       table: this.tableName,
       source: CLIENTID,
     });
