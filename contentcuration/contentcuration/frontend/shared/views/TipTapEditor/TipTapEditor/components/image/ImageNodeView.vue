@@ -67,6 +67,7 @@
 
   import { defineComponent, ref, computed, onUnmounted, onMounted, watch } from 'vue';
   import { NodeViewWrapper } from '@tiptap/vue-2';
+  import _ from 'lodash';
 
   export default defineComponent({
     name: 'ImageNodeView',
@@ -80,7 +81,14 @@
       const naturalAspectRatio = ref(null);
       const minWidth = 50;
       const compactThreshold = 200;
-      let debounceTimer = null;
+
+      // Create debounced version of saveSize function
+      const debouncedSaveSize = _.debounce(() => {
+        props.updateAttributes({
+          width: width.value,
+          height: height.value,
+        });
+      }, 500);
 
       // (to work with undo/redo) Watch for external changes to the node's width and height
       watch(
@@ -209,8 +217,7 @@
         width.value = clampedWidth;
         height.value = calculateProportionalHeight(clampedWidth);
 
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(saveSize, 500);
+        debouncedSaveSize();
       };
 
       const removeImage = () => {
@@ -235,7 +242,8 @@
       });
 
       onUnmounted(() => {
-        clearTimeout(debounceTimer);
+        // Cancel any pending debounced calls
+        debouncedSaveSize.cancel();
       });
 
       return {
