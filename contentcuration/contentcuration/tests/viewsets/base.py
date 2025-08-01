@@ -94,8 +94,8 @@ def generate_publish_channel_event(channel_id):
     return event
 
 
-def generate_publish_next_event(channel_id):
-    event = base_generate_publish_next_event(channel_id)
+def generate_publish_next_event(channel_id, use_staging_tree=False):
+    event = base_generate_publish_next_event(channel_id, use_staging_tree=use_staging_tree)
     event["rev"] = random.randint(1, 10000000)
     return event
 
