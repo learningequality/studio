@@ -22,7 +22,11 @@ updates:
       babel:
         patterns:
           - "@babel/*"
+      tiptap:
+        patterns:
           - "@tiptap/*"
+      jest:
+        patterns:
           - "jest*"
 
   # Maintain dependencies for Github Actions
