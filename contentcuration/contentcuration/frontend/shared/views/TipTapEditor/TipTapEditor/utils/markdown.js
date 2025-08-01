@@ -95,8 +95,12 @@ export function preprocessMarkdown(markdown) {
     // 2. The permanentSrc is just the checksum + extension.
     const permanentSrc = `${params.checksum}.${params.extension}`;
 
-    // 3. Create an <img> tag with the REAL display URL in `src`.
-    return `<img src="${displayUrl}" permanentSrc="${permanentSrc}" alt="${params.alt}" width="${params.width}" height="${params.height}" />`;
+    // 3. Create attributes string for width and height only if they exist
+    const widthAttr = params.width ? ` width="${params.width}"` : '';
+    const heightAttr = params.height ? ` height="${params.height}"` : '';
+
+    // 4. Create an <img> tag with the REAL display URL in `src`.
+    return `<img src="${displayUrl}" permanentSrc="${permanentSrc}" alt="${params.alt}"${widthAttr}${heightAttr} />`;
   });
 
   processedMarkdown = processedMarkdown.replace(MATH_REGEX, match => {
