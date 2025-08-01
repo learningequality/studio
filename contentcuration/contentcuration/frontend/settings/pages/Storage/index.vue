@@ -47,7 +47,12 @@
         </KFixedGridItem>
       </template>
     </KFixedGrid>
-    <LoadingText v-else />
+    <div
+      v-else
+      class="circular-loader"
+    >
+      <KCircularLoader size="70" />
+    </div>
 
     <h2 ref="requestheader">
       {{ $tr('requestMoreSpaceHeading') }}
@@ -87,11 +92,10 @@
   import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
   import { ContentKindsList, ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import theme from 'shared/vuetify/theme';
-  import LoadingText from 'shared/views/LoadingText';
 
   export default {
     name: 'Storage',
-    components: { LoadingText, RequestForm },
+    components: { RequestForm },
     mixins: [fileSizeMixin, constantsTranslationMixin],
     data() {
       return {
@@ -175,6 +179,10 @@
     ::v-deep .is-determinate {
       height: 8px !important;
     }
+  }
+
+  .circular-loader {
+    padding: 24px;
   }
 
 </style>
