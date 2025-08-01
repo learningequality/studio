@@ -146,18 +146,22 @@ def create_content_database(
     user_id,
     force_exercises,
     progress_tracker=None,
+    is_draft_version=False,
     use_staging_tree=False,
 ):
     """
     :type progress_tracker: contentcuration.utils.celery.ProgressTracker|None
     """
+    if not is_draft_version and use_staging_tree:
+        raise ValueError("Staging tree is only supported for draft versions")
+
     # increment the channel version
     if not use_staging_tree and not force:
         raise_if_nodes_are_all_unchanged(channel)
     fh, tempdb = tempfile.mkstemp(suffix=".sqlite3")
 
     with using_content_database(tempdb):
-        if not use_staging_tree and not channel.main_tree.publishing:
+        if not is_draft_version and not channel.main_tree.publishing:
             channel.mark_publishing(user_id)
 
         call_command(
@@ -183,7 +187,7 @@ def create_content_database(
             progress_tracker.track(90)
         map_prerequisites(base_tree)
         # Need to save as version being published, not current version
-        version = "next" if use_staging_tree else channel.version + 1
+        version = "next" if is_draft_version else channel.version + 1
         save_export_database(
             channel.pk,
             version,
@@ -1297,6 +1301,7 @@ def publish_channel(  # noqa: C901
     send_email=False,
     progress_tracker=None,
     language=settings.LANGUAGE_CODE,
+    is_draft_version=False,
     use_staging_tree=False,
 ):
     """
@@ -1317,10 +1322,11 @@ def publish_channel(  # noqa: C901
             user_id,
             force_exercises,
             progress_tracker=progress_tracker,
-            use_staging_tree=use_staging_tree,
+            is_draft_version=is_draft_version,
+            use_staging_tree=use_staging_tree,   
         )
         add_tokens_to_channel(channel)
-        if not use_staging_tree:
+        if not is_draft_version:
             increment_channel_version(channel)
             sync_contentnode_and_channel_tsvectors(channel_id=channel.id)
             mark_all_nodes_as_published(base_tree)

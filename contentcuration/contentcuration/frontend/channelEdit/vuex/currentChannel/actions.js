@@ -59,6 +59,10 @@ export function publishDraftChannel(context) {
   return Channel.publishDraft(context.state.currentChannelId);
 }
 
+export function publishStagingChannel(context) {
+  return Channel.publishDraft(context.state.currentChannelId, true);
+}
+
 export function channelLanguageExistsInResources(context) {
   const channelId = context.state.currentChannelId;
   return Channel.languageExistsInResources(channelId);

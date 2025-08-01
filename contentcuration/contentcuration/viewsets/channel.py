@@ -525,6 +525,7 @@ class ChannelViewSet(ValuesViewset):
                     publish["key"],
                     version_notes=publish.get("version_notes"),
                     language=publish.get("language"),
+                    is_draft_version=publish.get("is_draft_version", False),
                 )
             except Exception as e:
                 log_sync_exception(e, user=self.request.user, change=publish)
@@ -555,6 +556,8 @@ class ChannelViewSet(ValuesViewset):
                     send_email=True,
                     progress_tracker=progress_tracker,
                     language=language,
+                    use_staging_tree=False,
+                    is_draft_version=False,
                 )
                 Change.create_changes(
                     [
@@ -609,14 +612,20 @@ class ChannelViewSet(ValuesViewset):
         errors = []
         for publish in changes:
             try:
-                self.publish_next(publish["key"])
+                use_staging_tree = publish.get("use_staging_tree", False)
+                self.publish_next(
+                publish["key"],
+                version_notes=publish.get("version_notes"),
+                language=publish.get("language"),
+                use_staging_tree=use_staging_tree, 
+            )
             except Exception as e:
                 log_sync_exception(e, user=self.request.user, change=publish)
                 publish["errors"] = [str(e)]
                 errors.append(publish)
         return errors
 
-    def publish_next(self, pk):
+    def publish_next(self, pk, version_notes="", language=None, use_staging_tree=False):
         logging.debug("Entering the publish staging channel endpoint")
 
         channel = self.get_edit_queryset().get(pk=pk)
@@ -636,8 +645,12 @@ class ChannelViewSet(ValuesViewset):
                 channel = publish_channel(
                     self.request.user.pk,
                     channel.id,
+                    version_notes=version_notes,
+                    send_email=True,
                     progress_tracker=progress_tracker,
-                    use_staging_tree=True,
+                    language=language,
+                    is_draft_version=True,
+                    use_staging_tree=use_staging_tree,
                 )
                 Change.create_changes(
                     [
