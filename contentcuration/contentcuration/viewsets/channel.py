@@ -525,7 +525,6 @@ class ChannelViewSet(ValuesViewset):
                     publish["key"],
                     version_notes=publish.get("version_notes"),
                     language=publish.get("language"),
-                    is_draft_version=publish.get("is_draft_version", False),
                 )
             except Exception as e:
                 log_sync_exception(e, user=self.request.user, change=publish)
@@ -556,8 +555,6 @@ class ChannelViewSet(ValuesViewset):
                     send_email=True,
                     progress_tracker=progress_tracker,
                     language=language,
-                    use_staging_tree=False,
-                    is_draft_version=False,
                 )
                 Change.create_changes(
                     [
@@ -612,13 +609,12 @@ class ChannelViewSet(ValuesViewset):
         errors = []
         for publish in changes:
             try:
-                use_staging_tree = publish.get("use_staging_tree", False)
                 self.publish_next(
-                publish["key"],
-                version_notes=publish.get("version_notes"),
-                language=publish.get("language"),
-                use_staging_tree=use_staging_tree, 
-            )
+                    publish["key"],
+                    version_notes=publish.get("version_notes"),
+                    language=publish.get("language"),
+                    use_staging_tree=publish.get("use_staging_tree", False), 
+                )
             except Exception as e:
                 log_sync_exception(e, user=self.request.user, change=publish)
                 publish["errors"] = [str(e)]
@@ -632,11 +628,6 @@ class ChannelViewSet(ValuesViewset):
 
         if channel.deleted:
             raise ValidationError("Cannot publish a deleted channel")
-        elif channel.staging_tree.publishing:
-            raise ValidationError("Channel staging tree is already publishing")
-
-        channel.staging_tree.publishing = True
-        channel.staging_tree.save()
 
         with create_change_tracker(
             pk, CHANNEL, channel.id, self.request.user, "export-channel-staging-tree"
@@ -646,7 +637,6 @@ class ChannelViewSet(ValuesViewset):
                     self.request.user.pk,
                     channel.id,
                     version_notes=version_notes,
-                    send_email=True,
                     progress_tracker=progress_tracker,
                     language=language,
                     is_draft_version=True,
@@ -666,12 +656,8 @@ class ChannelViewSet(ValuesViewset):
                     applied=True,
                 )
             except ChannelIncompleteError:
-                channel.staging_tree.publishing = False
-                channel.staging_tree.save()
                 raise ValidationError("Channel is not ready to be published")
             except Exception:
-                channel.staging_tree.publishing = False
-                channel.staging_tree.save()
                 raise
 
     def sync_from_changes(self, changes):

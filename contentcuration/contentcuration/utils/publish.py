@@ -156,7 +156,7 @@ def create_content_database(
         raise ValueError("Staging tree is only supported for draft versions")
 
     # increment the channel version
-    if not use_staging_tree and not force:
+    if not is_draft_version and not force:
         raise_if_nodes_are_all_unchanged(channel)
     fh, tempdb = tempfile.mkstemp(suffix=".sqlite3")
 
@@ -1331,15 +1331,13 @@ def publish_channel(  # noqa: C901
             sync_contentnode_and_channel_tsvectors(channel_id=channel.id)
             mark_all_nodes_as_published(base_tree)
             fill_published_fields(channel, version_notes)
-
-        # Attributes not getting set for some reason, so just save it here
-        base_tree.publishing = False
-        base_tree.changed = False
-        base_tree.published = True
-        base_tree.save()
+            base_tree.publishing = False
+            base_tree.changed = False
+            base_tree.published = True
+            base_tree.save()
 
         # Delete public channel cache.
-        if not use_staging_tree and channel.public:
+        if not is_draft_version and channel.public:
             delete_public_channel_cache_keys()
 
         if send_email:
@@ -1361,8 +1359,9 @@ def publish_channel(  # noqa: C901
     finally:
         if kolibri_temp_db and os.path.exists(kolibri_temp_db):
             os.remove(kolibri_temp_db)
-        base_tree.publishing = False
-        base_tree.save()
+        if not is_draft_version:
+            base_tree.publishing = False
+            base_tree.save()
 
     elapsed = time.time() - start
 
