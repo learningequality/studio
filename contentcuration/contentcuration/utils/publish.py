@@ -152,6 +152,7 @@ def create_content_database(
     """
     :type progress_tracker: contentcuration.utils.celery.ProgressTracker|None
     """
+    logging.debug("create_content_database - use_staging_tree %s", use_staging_tree)
     if not is_draft_version and use_staging_tree:
         raise ValueError("Staging tree is only supported for draft versions")
 
@@ -191,7 +192,7 @@ def create_content_database(
         save_export_database(
             channel.pk,
             version,
-            use_staging_tree,
+            is_draft_version,
         )
         if channel.public:
             mapper = ChannelMapper(kolibri_channel)
@@ -1131,14 +1132,14 @@ def mark_all_nodes_as_published(tree):
     logging.info("Marked all nodes as published.")
 
 
-def save_export_database(channel_id, version, use_staging_tree=False):
+def save_export_database(channel_id, version, is_draft_version=False):
     logging.debug("Saving export database")
     current_export_db_location = get_active_content_database()
     target_paths = [
         os.path.join(settings.DB_ROOT, "{}-{}.sqlite3".format(channel_id, version))
     ]
     # Only create non-version path if not using the staging tree
-    if not use_staging_tree:
+    if not is_draft_version:
         target_paths.append(
             os.path.join(settings.DB_ROOT, "{id}.sqlite3".format(id=channel_id))
         )
@@ -1307,6 +1308,7 @@ def publish_channel(  # noqa: C901
     """
     :type progress_tracker: contentcuration.utils.celery.ProgressTracker|None
     """
+    logging.debug("publish_channel - use_staging_tree %s", use_staging_tree)
     channel = ccmodels.Channel.objects.get(pk=channel_id)
     base_tree = channel.staging_tree if use_staging_tree else channel.main_tree
     if base_tree is None:
@@ -1335,6 +1337,7 @@ def publish_channel(  # noqa: C901
             base_tree.changed = False
             base_tree.published = True
             base_tree.save()
+        
 
         # Delete public channel cache.
         if not is_draft_version and channel.public:
