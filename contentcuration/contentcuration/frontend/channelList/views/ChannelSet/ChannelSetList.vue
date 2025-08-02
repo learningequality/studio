@@ -11,14 +11,16 @@
       justify-center
     >
       <VFlex>
-        <ActionLink
+        <KButton
           :text="$tr('aboutChannelSetsLink')"
+          appearance="basic-link"
           class="mx-2"
           @click="infoDialog = true"
         />
-        <MessageDialog
-          v-model="infoDialog"
-          :header="$tr('aboutChannelSets')"
+        <KModal
+          :title="$tr('aboutChannelSets')"
+          :isOpen="infoDialog"
+          @cancel="infoDialog = false"
         >
           <p>
             {{ $tr('channelSetsDescriptionText') }}
@@ -26,16 +28,18 @@
           <p>
             {{ $tr('channelSetsInstructionsText') }}
           </p>
-          <p class="red--text">
+          <p :style="{ color: palette.red.v_500 }">
             {{ $tr('channelSetsDisclaimer') }}
           </p>
-          <template #buttons>
-            <VSpacer />
-            <VBtn @click="infoDialog = false">
+          <template #actions>
+            <KButton
+              appearance="basic"
+              @click="infoDialog = false"
+            >
               {{ $tr('cancelButtonLabel') }}
-            </VBtn>
+            </KButton>
           </template>
-        </MessageDialog>
+        </KModal>
       </VFlex>
       <VSpacer />
       <VFlex class="text-xs-right">
@@ -87,15 +91,16 @@
   import sortBy from 'lodash/sortBy';
   import { mapGetters, mapActions } from 'vuex';
   import { RouteNames } from '../../constants';
+  import { KButton, KModal, palette } from 'kolibri-design-system';
   import ChannelSetItem from './ChannelSetItem.vue';
-  import MessageDialog from 'shared/views/MessageDialog';
   import LoadingText from 'shared/views/LoadingText';
 
   export default {
     name: 'ChannelSetList',
     components: {
       ChannelSetItem,
-      MessageDialog,
+      KButton,
+      KModal,
       LoadingText,
     },
     data() {
