@@ -3,22 +3,14 @@
   <div class="editor-container">
     <EditorToolbar
       v-if="!isMobile"
-      @insert-image="target => imageHandler.openCreateModal({ targetElement: target })"
-      @insert-link="linkHandler.openLinkEditor()"
-      @insert-math="target => mathHandler.openCreateMathModal({ targetElement: target })"
+      v-on="sharedEventHandlers"
     />
 
     <div v-else>
-      <MobileTopBar
-        @insert-image="target => imageHandler.openCreateModal({ targetElement: target })"
-        @insert-link="linkHandler.openLinkEditor()"
-        @insert-math="target => mathHandler.openCreateMathModal({ targetElement: target })"
-      />
+      <MobileTopBar v-on="sharedEventHandlers" />
       <MobileFormattingBar
         v-if="isFocused"
-        @insert-image="target => imageHandler.openCreateModal({ targetElement: target })"
-        @insert-link="linkHandler.openLinkEditor()"
-        @insert-math="target => mathHandler.openCreateMathModal({ targetElement: target })"
+        v-on="sharedEventHandlers"
       />
     </div>
 
@@ -92,7 +84,7 @@
 
 <script>
 
-  import { defineComponent, provide, watch, nextTick } from 'vue';
+  import { defineComponent, provide, watch, nextTick, computed } from 'vue';
   import EditorToolbar from './components/EditorToolbar.vue';
   import EditorContentWrapper from './components/EditorContentWrapper.vue';
   import { useEditor } from './composables/useEditor';
@@ -135,6 +127,12 @@
       const { isMobile } = useBreakpoint();
 
       const imageHandler = useImageHandling(editor);
+
+      const sharedEventHandlers = computed(() => ({
+        'insert-image': target => imageHandler.openCreateModal({ targetElement: target }),
+        'insert-link': () => linkHandler.openLinkEditor(),
+        'insert-math': target => mathHandler.openCreateMathModal({ targetElement: target }),
+      }));
 
       const handleDrop = event => {
         const file = event.dataTransfer.files[0];
@@ -205,6 +203,7 @@
         mathHandler,
         isMobile,
         imageHandler,
+        sharedEventHandlers,
       };
     },
     props: {

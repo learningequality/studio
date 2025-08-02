@@ -306,7 +306,7 @@
         script: 650,
         lists: 550,
         clearFormat: 450,
-        clipboard: 395,
+        clipboard: 405,
       };
 
       // Categories that can overflow (in order of overflow priority)
@@ -340,13 +340,9 @@
 
       // Compute which categories should be visible vs in overflow
       const visibleCategories = computed(() => {
-        const visible = [];
-        OVERFLOW_CATEGORIES.forEach(category => {
-          if (toolbarWidth.value >= OVERFLOW_BREAKPOINTS[category]) {
-            visible.push(category);
-          }
-        });
-        return visible;
+        return OVERFLOW_CATEGORIES.filter(
+          category => toolbarWidth.value >= OVERFLOW_BREAKPOINTS[category],
+        );
       });
 
       const overflowCategories = computed(() => {
@@ -374,7 +370,7 @@
         } else if (tool.name === 'link') {
           emit('insert-link');
         } else if (tool.name === 'math') {
-          emit('insert-math', event.currentTarget);
+          emit('insert-math', target);
         } else {
           // For all other buttons, call their original handler
           tool.handler();
@@ -574,6 +570,12 @@
     .more-dropdown {
       right: auto;
       left: 0;
+    }
+  }
+
+  @media (max-width: 820px) {
+    .toolbar {
+      gap: 1px;
     }
   }
 
