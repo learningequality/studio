@@ -610,7 +610,6 @@ class ChannelViewSet(ValuesViewset):
         errors = []
         for publish in changes:
             try:
-                logging.debug("publish_next_from_changes - use_staging_tree %s", publish.get("use_staging_tree", False))
                 self.publish_next(
                     publish["key"],
                     version_notes=publish.get("version_notes"),
@@ -625,7 +624,6 @@ class ChannelViewSet(ValuesViewset):
 
     def publish_next(self, pk, version_notes="", language=None, use_staging_tree=False):
         logging.debug("Entering the publish staging channel endpoint")
-        logging.debug("publish_next - use_staging_tree %s", use_staging_tree)
 
         channel = self.get_edit_queryset().get(pk=pk)
 
