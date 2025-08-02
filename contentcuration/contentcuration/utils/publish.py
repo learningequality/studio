@@ -152,7 +152,6 @@ def create_content_database(
     """
     :type progress_tracker: contentcuration.utils.celery.ProgressTracker|None
     """
-    logging.debug("create_content_database - use_staging_tree %s", use_staging_tree)
     if not is_draft_version and use_staging_tree:
         raise ValueError("Staging tree is only supported for draft versions")
 
@@ -1308,7 +1307,6 @@ def publish_channel(  # noqa: C901
     """
     :type progress_tracker: contentcuration.utils.celery.ProgressTracker|None
     """
-    logging.debug("publish_channel - use_staging_tree %s", use_staging_tree)
     channel = ccmodels.Channel.objects.get(pk=channel_id)
     base_tree = channel.staging_tree if use_staging_tree else channel.main_tree
     if base_tree is None:
