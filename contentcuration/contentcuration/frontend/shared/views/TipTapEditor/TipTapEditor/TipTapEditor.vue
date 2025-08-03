@@ -1,6 +1,7 @@
 <template>
 
   <div
+    ref="editorContainer"
     class="editor-container"
     :class="{ 'view-mode': editorMode === 'view' }"
   >
@@ -89,7 +90,16 @@
 
 <script>
 
-  import { defineComponent, provide, watch, nextTick, computed } from 'vue';
+  import {
+    defineComponent,
+    provide,
+    watch,
+    computed,
+    ref,
+    nextTick,
+    onMounted,
+    onUnmounted,
+  } from 'vue';
   import EditorToolbar from './components/EditorToolbar.vue';
   import EditorContentWrapper from './components/EditorContentWrapper.vue';
   import { useEditor } from './composables/useEditor';
@@ -119,6 +129,7 @@
       MobileFormattingBar,
     },
     setup(props, { emit }) {
+      const editorContainer = ref(null);
       const { editor, isReady, isFocused, initializeEditor } = useEditor();
       provide('editor', editor);
       provide('isReady', isReady);
@@ -148,6 +159,26 @@
           imageHandler.openCreateModal({ file });
         }
       };
+
+      // Handle click outside to minimize
+      const handleClickOutside = event => {
+        if (props.mode !== 'edit') {
+          return;
+        }
+
+        if (editorContainer.value && !editorContainer.value.contains(event.target)) {
+          emit('minimize');
+        }
+      };
+
+      onMounted(() => {
+        // capture
+        document.addEventListener('click', handleClickOutside, true);
+      });
+
+      onUnmounted(() => {
+        document.removeEventListener('click', handleClickOutside, true);
+      });
 
       const getMarkdownContent = () => {
         if (!editor.value || !isReady.value || !editor.value.storage?.markdown) {
@@ -212,6 +243,7 @@
       );
 
       return {
+        editorContainer,
         isReady,
         isFocused,
         handleDrop,
@@ -234,7 +266,7 @@
         default: 'edit', // 'edit' or 'view'
       },
     },
-    emits: ['update'],
+    emits: ['update', 'minimize'],
   });
 
 </script>
