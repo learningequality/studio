@@ -39,14 +39,12 @@
           </div>
 
           <transition name="fade">
-            <keep-alive include="MarkdownEditor">
-              <MarkdownEditor
+            <keep-alive include="TipTapEditor">
+              <!--analyticsLabel="Question"-->
+              <TipTapEditor
                 v-if="isQuestionOpen"
-                analyticsLabel="Question"
-                :markdown="question"
-                :handleFileUpload="handleFiles"
-                :getFileUpload="getFileUpload"
-                :imagePreset="imagePreset"
+                v-model="question"
+                mode="edit"
                 @update="onQuestionUpdate"
                 @minimize="closeQuestion"
               />
@@ -61,13 +59,20 @@
                   align-start
                   justify-space-between
                 >
-                  <MarkdownViewer :markdown="question" />
+                  <VFlex grow>
+                    <TipTapEditor
+                      v-model="question"
+                      mode="view"
+                    />
+                  </VFlex>
 
-                  <Icon
-                    :color="$themePalette.grey.v_800"
-                    icon="edit"
-                    class="mr-2"
-                  />
+                  <VFlex shrink>
+                    <Icon
+                      :color="$themePalette.grey.v_800"
+                      icon="edit"
+                      class="mr-2"
+                    />
+                  </VFlex>
                 </VLayout>
               </div>
             </keep-alive>
@@ -89,9 +94,6 @@
             :questionKind="kind"
             :answers="answers"
             :openAnswerIdx="openAnswerIdx"
-            :handleFileUpload="handleFiles"
-            :getFileUpload="getFileUpload"
-            :imagePreset="imagePreset"
             @update="onAnswersUpdate"
             @open="openAnswer"
             @close="closeAnswer"
@@ -102,8 +104,6 @@
             :hints="hints"
             :openHintIdx="openHintIdx"
             :handleFileUpload="handleFiles"
-            :getFileUpload="getFileUpload"
-            :imagePreset="imagePreset"
             @update="onHintsUpdate"
             @open="openHint"
             @close="closeHint"
@@ -133,21 +133,19 @@
   } from 'shared/constants';
   import ErrorList from 'shared/views/ErrorList/ErrorList';
   import Uploader from 'shared/views/files/Uploader';
-  import MarkdownEditor from 'shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor';
-  import MarkdownViewer from 'shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer';
   import { FormatPresetsNames } from 'shared/leUtils/FormatPresets';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
+  import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue';
 
   export default {
     name: 'AssessmentItemEditor',
     components: {
       DropdownWrapper,
       ErrorList,
-      MarkdownEditor,
-      MarkdownViewer,
       AnswersEditor,
       HintsEditor,
       Uploader,
+      TipTapEditor,
     },
     model: {
       prop: 'item',
@@ -210,7 +208,6 @@
       };
     },
     computed: {
-      ...mapGetters('file', ['getFileUpload']),
       ...mapGetters(['hasFeatureEnabled']),
       ...mapGetters('contentNode', ['getContentNode']),
       question() {

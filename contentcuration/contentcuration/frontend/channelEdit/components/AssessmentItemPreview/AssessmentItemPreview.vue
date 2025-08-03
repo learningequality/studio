@@ -9,7 +9,10 @@
         <div class="caption grey--text mb-2">
           {{ kindLabel }}
         </div>
-        <MarkdownViewer :markdown="question" />
+        <TipTapEditor
+          v-model="question"
+          mode="view"
+        />
       </VFlex>
     </VLayout>
 
@@ -39,7 +42,10 @@
               >
                 <template #label>
                   <div class="px-2">
-                    <MarkdownViewer :markdown="answer.answer" />
+                    <TipTapEditor
+                      v-model="answer.answer"
+                      mode="view"
+                    />
                   </div>
                 </template>
               </VRadio>
@@ -55,7 +61,10 @@
               disabled
             >
               <div class="px-2">
-                <MarkdownViewer :markdown="answer.answer" />
+                <TipTapEditor
+                  v-model="answer.answer"
+                  mode="view"
+                />
               </div>
             </Checkbox>
           </template>
@@ -103,7 +112,10 @@
                   {{ hintIdx + 1 }}
                 </VFlex>
                 <VFlex>
-                  <MarkdownViewer :markdown="hint.hint" />
+                  <TipTapEditor
+                    v-model="hint.hint"
+                    mode="view"
+                  />
                 </VFlex>
               </VLayout>
             </div>
@@ -124,13 +136,13 @@
   import translator from '../../translator';
   import { AssessmentItemTypes } from 'shared/constants';
   import Checkbox from 'shared/views/form/Checkbox';
-  import MarkdownViewer from 'shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue';
+  import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue';
 
   export default {
     name: 'AssessmentItemPreview',
     components: {
-      MarkdownViewer,
       Checkbox,
+      TipTapEditor,
     },
     props: {
       /**

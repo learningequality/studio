@@ -358,6 +358,18 @@
         }
       };
 
+      const handleResize = entries => {
+        setTimeout(() => {
+          for (const entry of entries) {
+            toolbarWidth.value = entry.contentRect.width;
+          }
+        }, 0);
+      };
+
+      const handleWindowResize = () => {
+        setTimeout(updateToolbarWidth, 0);
+      };
+
       const onToolClick = (tool, event) => {
         isMoreDropdownOpen.value = false;
         let target = event.currentTarget;
@@ -425,15 +437,11 @@
 
         // Set up resize observer
         if (toolbarRef.value && window.ResizeObserver) {
-          resizeObserver = new ResizeObserver(entries => {
-            for (const entry of entries) {
-              toolbarWidth.value = entry.contentRect.width;
-            }
-          });
+          resizeObserver = new ResizeObserver(handleResize);
           resizeObserver.observe(toolbarRef.value);
         } else {
           // Fallback to window resize listener
-          window.addEventListener('resize', updateToolbarWidth);
+          window.addEventListener('resize', handleWindowResize);
         }
 
         document.addEventListener('click', handleClickOutside);
@@ -443,7 +451,7 @@
         if (resizeObserver) {
           resizeObserver.disconnect();
         } else {
-          window.removeEventListener('resize', updateToolbarWidth);
+          window.removeEventListener('resize', handleWindowResize);
         }
         document.removeEventListener('click', handleClickOutside);
       });
