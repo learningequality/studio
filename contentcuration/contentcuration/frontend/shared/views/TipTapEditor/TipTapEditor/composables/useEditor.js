@@ -16,8 +16,9 @@ export function useEditor() {
   const isReady = ref(false);
   const isFocused = ref(false);
 
-  const initializeEditor = content => {
+  const initializeEditor = (content, mode = 'edit') => {
     editor.value = new Editor({
+      editable: mode === 'edit',
       extensions: [
         StarterKitExtension.configure({
           codeBlock: false, // Disable default code block to use the extended version

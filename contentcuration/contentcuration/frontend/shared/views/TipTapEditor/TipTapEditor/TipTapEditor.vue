@@ -1,17 +1,22 @@
 <template>
 
-  <div class="editor-container">
-    <EditorToolbar
-      v-if="!isMobile"
-      v-on="sharedEventHandlers"
-    />
-
-    <div v-else>
-      <MobileTopBar v-on="sharedEventHandlers" />
-      <MobileFormattingBar
-        v-if="isFocused"
+  <div
+    class="editor-container"
+    :class="{ 'view-mode': editorMode === 'view' }"
+  >
+    <div v-if="editorMode === 'edit'">
+      <EditorToolbar
+        v-if="!isMobile"
         v-on="sharedEventHandlers"
       />
+
+      <div v-else>
+        <MobileTopBar v-on="sharedEventHandlers" />
+        <MobileFormattingBar
+          v-if="isFocused"
+          v-on="sharedEventHandlers"
+        />
+      </div>
     </div>
 
     <div
@@ -121,7 +126,10 @@
       const linkHandler = useLinkHandling(editor);
       provide('linkHandler', linkHandler);
 
-      const mathHandler = useMathHandling(editor);
+      const mathHandler = useMathHandling(
+        editor,
+        computed(() => props.mode),
+      );
       provide('mathHandler', mathHandler);
 
       const { isMobile } = useBreakpoint();
@@ -150,6 +158,15 @@
 
       let isUpdatingFromOutside = false; // A flag to prevent infinite update loops
 
+      watch(
+        () => props.mode,
+        newMode => {
+          if (editor.value && editor.value.isEditable !== (newMode === 'edit')) {
+            editor.value.setEditable(newMode === 'edit');
+          }
+        },
+      );
+
       // sync changes from the parent component to the editor
       watch(
         () => props.value,
@@ -157,7 +174,7 @@
           const processedContent = preprocessMarkdown(newValue);
 
           if (!editor.value) {
-            initializeEditor(processedContent);
+            initializeEditor(processedContent, props.mode);
             return;
           }
 
@@ -188,7 +205,7 @@
 
           const markdown = getMarkdownContent();
           if (markdown !== props.value) {
-            emit('input', markdown);
+            emit('update', markdown);
           }
         },
         { deep: true },
@@ -204,6 +221,7 @@
         isMobile,
         imageHandler,
         sharedEventHandlers,
+        editorMode: computed(() => props.mode),
       };
     },
     props: {
@@ -211,8 +229,12 @@
         type: String,
         default: '',
       },
+      mode: {
+        type: String,
+        default: 'edit', // 'edit' or 'view'
+      },
     },
-    emits: ['input'],
+    emits: ['update'],
   });
 
 </script>
@@ -222,8 +244,8 @@
 
   .editor-container {
     position: relative;
-    min-width: 200px;
-    margin: 80px auto;
+    min-height: 200px;
+    margin: auto;
     font-family:
       'Noto Sans',
       -apple-system,
@@ -232,8 +254,13 @@
       'Helvetica Neue',
       Arial,
       sans-serif;
-    background: white;
     border: 1px solid #e1e5e9;
+  }
+
+  .editor-container.view-mode {
+    min-height: 0;
+    pointer-events: none;
+    border: 0;
   }
 
   .link-editor-popover-wrapper,
@@ -242,7 +269,7 @@
     position: fixed;
     top: 0;
     left: 0;
-    z-index: 1000;
+    z-index: 2;
     width: 100%;
     height: 100%;
     pointer-events: none;

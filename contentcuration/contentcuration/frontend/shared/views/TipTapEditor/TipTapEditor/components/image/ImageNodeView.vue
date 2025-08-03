@@ -3,7 +3,7 @@
   <NodeViewWrapper class="image-node-wrapper">
     <div
       class="image-node-view"
-      :class="{ 'is-selected': selected }"
+      :class="{ 'is-selected': selected && editor.isEditable }"
       :style="{ width: styleWidth }"
     >
       <img
@@ -309,7 +309,6 @@
     cursor: nesw-resize;
   }
 
-  .image-node-view:hover .resize-handle,
   .image-node-view.is-selected .resize-handle,
   .resize-handle:focus {
     opacity: 1;
@@ -319,7 +318,7 @@
     position: absolute;
     inset-inline-end: 6px;
     top: 6px;
-    z-index: 10;
+    z-index: 1.5;
     display: flex;
     gap: 10px;
     padding: 9px;
@@ -341,7 +340,6 @@
     transform: scale(0.75);
   }
 
-  .image-node-view:hover .image-actions,
   .image-node-view.is-selected .image-actions,
   .image-node-view:focus-within .image-actions {
     pointer-events: auto;

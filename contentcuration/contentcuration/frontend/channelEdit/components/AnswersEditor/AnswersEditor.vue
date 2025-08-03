@@ -88,7 +88,12 @@
                       v-else
                       :markdown="answer.answer"
                     /> -->
-                    <TipTapEditor v-model="answer.answer" />
+                    <TipTapEditor
+                      v-model="answer.answer"
+                      class="editor"
+                      :mode="isAnswerOpen(answerIdx) ? 'edit' : 'view'"
+                      @update="updateAnswerText($event, answerIdx)"
+                    />
                   </div>
                 </keep-alive>
               </VFlex>
