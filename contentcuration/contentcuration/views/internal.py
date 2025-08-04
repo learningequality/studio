@@ -169,7 +169,10 @@ def file_diff(request):
 @authentication_classes((TokenAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_file_upload(request):
-    """ Upload a file to the storage system """
+    """Upload a file to the storage system
+
+    .. deprecated:: Ricecooker 0.7+ no longer uses this endpoint
+    """
     try:
         fobj = request.FILES["file"]
         checksum, ext = fobj._name.split(".")
