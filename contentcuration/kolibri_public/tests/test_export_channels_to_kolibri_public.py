@@ -102,10 +102,7 @@ class ExportTestCase(TestCase):
     def test_export_channel_to_kolibri_public__existing_version(
         self, mock_channel_mapper
     ):
-        categories = {
-            "Category1": True,
-            "Category2": True,
-        }
+        categories = ["Category1", "Category2"]
         country1 = Country.objects.create(code="C1", name="Country 1")
         country2 = Country.objects.create(code="C2", name="Country 2")
         countries = [country1, country2]

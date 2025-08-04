@@ -21,6 +21,8 @@ def set_channel_metadata_fields(
     categories=None,
     countries=None,
 ):
+    # Note: The `categories` argument should be a _list_, NOT a _dict_.
+
     # Remove unneeded db_lock
     channel = ChannelMetadata.objects.get(id=channel_id)
     calculate_published_size(channel)
@@ -92,9 +94,9 @@ def calculate_included_categories(channel, categories):
             )
         )
     )
-    categories_dict = {category: True for category in contentnode_categories}
-    categories_dict.update(categories or {})
-    channel.categories = categories_dict
+
+    all_categories = sorted(set(categories or []).union(contentnode_categories))
+    channel.categories = all_categories
     channel.save()
 
 

@@ -29,6 +29,9 @@ class ChannelMapper(object):
         # Note: The argument `channel` is an instance of `kolibri_content.models.ChannelMetadata,`
         # which belongs to a specific channel version to be exported. Therefore, we do not
         # need to explicitly pass the channel version as an argument here.
+
+        # Note: The `categories` argument should be a _list_, NOT a _dict_.
+
         self.channel = channel
         self.public = public
         self.categories = categories

@@ -23,6 +23,7 @@ def export_channel_to_kolibri_public(
     categories=None,
     countries=None,
 ):
+    # Note: The `categories` argument should be a _list_, NOT a _dict_.
     logger.info("Putting channel {} into kolibri_public".format(channel_id))
 
     if channel_version is not None:

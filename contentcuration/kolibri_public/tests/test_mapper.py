@@ -181,7 +181,7 @@ class ChannelMapperTest(TestCase):
             mapper = ChannelMapper(self.channel)
             mapper.run()
 
-            self.assertEqual(mapper.mapped_channel.categories, {})
+            self.assertEqual(mapper.mapped_channel.categories, [])
 
     def test_categories__only_provided(self):
         with using_content_database(self.tempdb):
@@ -189,7 +189,7 @@ class ChannelMapperTest(TestCase):
                 channel_id=self.channel.id,
             ).update(categories=None)
 
-            categories = {"Category1": True, "Category2": True}
+            categories = ["Category1", "Category2"]
             mapper = ChannelMapper(self.channel, categories=categories)
             mapper.run()
 
@@ -216,7 +216,7 @@ class ChannelMapperTest(TestCase):
 
             self.assertEqual(
                 mapper.mapped_channel.categories,
-                {"Category1": True, "Category2": True, "Category3": True},
+                ["Category1", "Category2", "Category3"],
             )
 
     def test_categories__both_provided_and_on_content_nodes(self):
@@ -235,18 +235,13 @@ class ChannelMapperTest(TestCase):
             contentnode1.save()
             contentnode2.save()
 
-            categories = {"Category3": True, "Category4": True}
+            categories = ["Category3", "Category4"]
             mapper = ChannelMapper(self.channel, categories=categories)
             mapper.run()
 
             self.assertEqual(
                 mapper.mapped_channel.categories,
-                {
-                    "Category1": True,
-                    "Category2": True,
-                    "Category3": True,
-                    "Category4": True,
-                },
+                ["Category1", "Category2", "Category3", "Category4"],
             )
 
     def test_countries__none_provided(self):

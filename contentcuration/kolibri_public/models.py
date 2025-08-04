@@ -97,6 +97,8 @@ class AssessmentMetaData(base_models.AssessmentMetaData):
 
 
 class ChannelMetadata(base_models.ChannelMetadata):
+    # Note: The `categories` field should contain a _list_, NOT a _dict_.
+
     # precalculated fields during annotation/migration
     published_size = models.BigIntegerField(default=0, null=True, blank=True)
     total_resource_count = models.IntegerField(default=0, null=True, blank=True)

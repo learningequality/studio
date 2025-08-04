@@ -795,6 +795,10 @@ class ChannelViewSet(ValuesViewset):
     def add_to_community_library(
         self, channel_id, channel_version, categories, country_codes
     ):
+        # Note: The `categories` field should contain a _dict_, with the category IDs as keys
+        # and `True` as a value. This is to match the representation
+        # of sets in the changes architecture.
+
         # The change to add a channel to the community library can only
         # be created server-side, so in theory we should not be getting
         # malformed requests here. However, just to be safe, we still
@@ -810,11 +814,17 @@ class ChannelViewSet(ValuesViewset):
         if channel_version <= 0 or channel_version > channel.version:
             raise ValidationError("Invalid channel version")
 
+        # Because of changes architecture, the categories are passed as a dict
+        # with the category IDs as keys and `True` as a value. At this point,
+        # we are no longer working with changes, so we switch to the more
+        # convenient representation as a list.
+        categories_list = [key for key, val in categories.items() if val]
+
         export_channel_to_kolibri_public(
             channel_id=channel_id,
             channel_version=channel_version,
             public=False,  # Community library
-            categories=categories,
+            categories=categories_list,
             countries=countries,
         )
 

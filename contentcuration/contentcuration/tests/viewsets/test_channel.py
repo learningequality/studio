@@ -615,7 +615,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         )
         self.assertEqual(call_kwargs["channel_id"], channel.id)
         self.assertEqual(call_kwargs["channel_version"], 2)
-        self.assertEqual(call_kwargs["categories"], categories)
+        self.assertCountEqual(call_kwargs["categories"], categories.keys())
 
         # The countries argument used when creating the mapper is in fact
         # not a list, but a QuerySet, but it contains the same elements
