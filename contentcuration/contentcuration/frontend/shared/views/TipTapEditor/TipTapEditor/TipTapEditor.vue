@@ -9,10 +9,14 @@
       <EditorToolbar
         v-if="!isMobile"
         v-on="sharedEventHandlers"
+        @minimize="emitMinimize"
       />
 
       <div v-else>
-        <MobileTopBar v-on="sharedEventHandlers" />
+        <MobileTopBar
+          v-on="sharedEventHandlers"
+          @minimize="emitMinimize"
+        />
         <MobileFormattingBar
           v-if="isFocused"
           v-on="sharedEventHandlers"
@@ -254,6 +258,13 @@
         imageHandler,
         sharedEventHandlers,
         editorMode: computed(() => props.mode),
+        emitMinimize: () => {
+          // force lose focus
+          if (editor.value) {
+            emit('minimize');
+            editor.value.commands.blur();
+          }
+        },
       };
     },
     props: {

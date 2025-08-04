@@ -211,7 +211,7 @@
     gap: 8px;
     align-items: center;
     justify-content: space-between;
-    min-width: 80px;
+    min-width: 100px;
     padding: 6px 8px;
     font-size: 14px;
     color: #495057;

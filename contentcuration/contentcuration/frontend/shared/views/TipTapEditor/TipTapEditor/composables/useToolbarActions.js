@@ -241,6 +241,10 @@ export function useToolbarActions(emit) {
     }
   };
 
+  const handleMinimize = () => {
+    emit('minimize');
+  };
+
   // Helper function to check if a mark is active
   const isMarkActive = markName => {
     return editor?.value?.isActive(markName) || false;
@@ -393,6 +397,13 @@ export function useToolbarActions(emit) {
     },
   ]);
 
+  const minimizeAction = {
+    name: 'minimize',
+    title: 'Minimize Toolbar',
+    icon: require('../../assets/icon-unfold.svg'),
+    handler: handleMinimize,
+  };
+
   return {
     // Individual handlers
     handleUndo,
@@ -422,5 +433,6 @@ export function useToolbarActions(emit) {
     listActions,
     scriptActions,
     insertTools,
+    minimizeAction,
   };
 }

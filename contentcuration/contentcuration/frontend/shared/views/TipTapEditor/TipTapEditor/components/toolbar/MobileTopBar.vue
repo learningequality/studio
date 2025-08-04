@@ -1,7 +1,7 @@
 <template>
 
   <div
-    class="top-bar"
+    class="toolbar top-bar"
     role="toolbar"
     aria-label="Editor controls"
   >
@@ -21,17 +21,24 @@
     </div>
 
     <div class="insert-container">
-      <button
-        class="insert-button"
-        title="Insert content"
-        aria-label="Insert content menu"
-        :aria-expanded="isInsertMenuOpen"
-        aria-haspopup="menu"
-        aria-controls="insert-menu"
-        @click="isInsertMenuOpen = !isInsertMenuOpen"
-      >
-        +
-      </button>
+      <div class="topbar-actions">
+        <button
+          class="insert-button"
+          title="Insert content"
+          aria-label="Insert content menu"
+          :aria-expanded="isInsertMenuOpen"
+          aria-haspopup="menu"
+          aria-controls="insert-menu"
+          @click="isInsertMenuOpen = !isInsertMenuOpen"
+        >
+          +
+        </button>
+        <ToolbarButton
+          :title="minimizeAction.title"
+          :icon="minimizeAction.icon"
+          @click="minimizeAction.handler"
+        />
+      </div>
 
       <div
         v-if="isInsertMenuOpen"
@@ -76,7 +83,7 @@
       const isInsertMenuOpen = ref(false);
       const dropdown = ref(null);
 
-      const { historyActions, insertTools } = useToolbarActions(emit);
+      const { historyActions, insertTools, minimizeAction } = useToolbarActions(emit);
 
       const handleClickOutside = event => {
         if (
@@ -100,6 +107,7 @@
       return {
         historyActions,
         insertTools,
+        minimizeAction,
         isInsertMenuOpen,
         dropdown,
       };
@@ -113,7 +121,8 @@
 
   .top-bar {
     display: flex;
-    flex-shrink: 0;
+
+    /* flex-shrink: 0; */
     align-items: center;
     justify-content: space-between;
     padding: 0.5rem;
@@ -125,25 +134,35 @@
     gap: 0.25rem;
   }
 
+  .topbar-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+
   .insert-container {
     position: relative;
   }
 
   .insert-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 36px;
     min-width: 44px;
     height: 36px;
     min-height: 44px;
-    font-size: 1.6rem;
+    font-size: 2.5rem;
     color: #666666;
     cursor: pointer;
+    opacity: 0.8;
   }
 
   .insert-dropdown {
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
-    z-index: 10;
+    z-index: 2;
     width: 200px;
     padding: 0.5rem 0;
     background: white;

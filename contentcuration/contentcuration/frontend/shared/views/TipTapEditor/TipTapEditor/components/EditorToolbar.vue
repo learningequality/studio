@@ -114,7 +114,7 @@
       />
     </div>
 
-    <ToolbarDivider v-if="visibleCategories.includes('scripts')" />
+    <ToolbarDivider v-if="visibleCategories.includes('script')" />
 
     <!-- Insert tools -->
     <div
@@ -271,6 +271,11 @@
         </template>
       </div>
     </div>
+    <ToolbarButton
+      :title="minimizeAction.title"
+      :icon="minimizeAction.icon"
+      @click="minimizeAction.handler"
+    />
   </div>
 
 </template>
@@ -303,10 +308,10 @@
       // TODO: Maybe these shouldnt be hardcoded?
       const OVERFLOW_BREAKPOINTS = {
         insert: 750,
-        script: 650,
-        lists: 550,
-        clearFormat: 450,
-        clipboard: 405,
+        script: 660,
+        lists: 600,
+        clearFormat: 500,
+        clipboard: 465,
       };
 
       // Categories that can overflow (in order of overflow priority)
@@ -321,7 +326,8 @@
         listActions,
         scriptActions,
         insertTools,
-      } = useToolbarActions();
+        minimizeAction,
+      } = useToolbarActions(emit);
 
       const { pasteOptions } = useDropdowns();
 
@@ -472,6 +478,7 @@
         listActions,
         scriptActions,
         insertTools,
+        minimizeAction,
         pasteOptions,
         copy$,
         textFormattingToolbar$,
@@ -495,12 +502,16 @@
   .toolbar {
     position: relative;
     display: flex;
-    gap: 4px;
+    gap: 6px;
     align-items: center;
-    padding: 8px 4px;
+    padding: 8px;
     background: #f8f9fa;
     border-bottom: 1px solid #e1e5e9;
     border-radius: 8px 8px 0 0;
+  }
+
+  .toolbar > :last-child {
+    margin-left: auto;
   }
 
   [role='group'] {
@@ -578,12 +589,6 @@
     .more-dropdown {
       right: auto;
       left: 0;
-    }
-  }
-
-  @media (max-width: 820px) {
-    .toolbar {
-      gap: 1px;
     }
   }
 
