@@ -347,22 +347,37 @@ class User(AbstractBaseUser, PermissionsMixin):
         return feature_flags.get(flag_name, False)
 
     def check_channel_space(self, channel):
-        active_files = self.get_user_active_files()
-        staging_tree_id = channel.staging_tree.tree_id
-        channel_files = (
-            self.files.filter(contentnode__tree_id=staging_tree_id)
+        tree_cte = With(self.get_user_active_trees().distinct(), name="trees")
+        files_cte = With(
+            tree_cte.join(
+                self.files.get_queryset(), contentnode__tree_id=tree_cte.col.tree_id
+            )
+            .values("checksum")
+            .distinct(),
+            name="files",
+        )
+
+        staging_tree_files = (
+            self.files.filter(contentnode__tree_id=channel.staging_tree.tree_id)
+            .with_cte(tree_cte)
+            .with_cte(files_cte)
+            .exclude(Exists(files_cte.queryset().filter(checksum=OuterRef("checksum"))))
             .values("checksum")
             .distinct()
-            .exclude(checksum__in=active_files.values_list("checksum", flat=True))
         )
-        staged_size = float(channel_files.aggregate(used=Sum("file_size"))["used"] or 0)
+        staged_size = float(
+            staging_tree_files.aggregate(used=Sum("file_size"))["used"] or 0
+        )
 
-        if self.get_available_space(active_files=active_files) < (staged_size):
+        if self.get_available_space() < staged_size:
             raise PermissionDenied(
                 _("Out of storage! Request more space under Settings > Storage.")
             )
 
     def check_staged_space(self, size, checksum):
+        """
+        .. deprecated:: only used in `api_file_upload` which is now deprecated
+        """
         if self.staged_files.filter(checksum=checksum).exists():
             return True
         space = self.get_available_staged_space()
@@ -372,6 +387,9 @@ class User(AbstractBaseUser, PermissionsMixin):
             )
 
     def get_available_staged_space(self):
+        """
+        .. deprecated:: only used in `api_file_upload` which is now deprecated
+        """
         space_used = (
             self.staged_files.values("checksum")
             .distinct()
