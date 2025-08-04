@@ -42,9 +42,13 @@ from search.models import ContentNodeFullTextSearch
 from search.utils import get_fts_search_query
 
 import contentcuration.models as models
+from contentcuration.constants import (
+    community_library_submission as community_library_submission_constants,
+)
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Change
 from contentcuration.models import Channel
+from contentcuration.models import CommunityLibrarySubmission
 from contentcuration.models import ContentNode
 from contentcuration.models import Country
 from contentcuration.models import File
@@ -813,6 +817,23 @@ class ChannelViewSet(ValuesViewset):
             categories=categories,
             countries=countries,
         )
+
+        # Mark the submission corresponding to the channel version
+        # as the only live submission for the channel
+        CommunityLibrarySubmission.objects.filter(
+            channel_id=channel_id,
+            status=community_library_submission_constants.STATUS_LIVE,
+        ).update(
+            status=community_library_submission_constants.STATUS_APPROVED,
+        )
+
+        new_live_submission = CommunityLibrarySubmission.objects.get(
+            channel_id=channel_id,
+            channel_version=channel_version,
+            status=community_library_submission_constants.STATUS_APPROVED,
+        )
+        new_live_submission.status = community_library_submission_constants.STATUS_LIVE
+        new_live_submission.save()
 
     @action(
         detail=True,

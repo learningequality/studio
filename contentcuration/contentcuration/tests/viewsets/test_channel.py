@@ -11,7 +11,9 @@ from mock import patch
 from contentcuration import models
 from contentcuration import models as cc
 from contentcuration.constants import channel_history
+from contentcuration.constants import community_library_submission
 from contentcuration.models import Change
+from contentcuration.models import CommunityLibrarySubmission
 from contentcuration.models import ContentNode
 from contentcuration.models import Country
 from contentcuration.tasks import apply_channel_changes_task
@@ -547,10 +549,26 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         # Creating the change on the backend should be supported
         self.client.force_authenticate(self.admin_user)
 
+        editor_user = testdata.user("channel@editor.com")
+
         channel = testdata.channel()
-        channel.version = 1
+        channel.version = 2
         channel.public = False
+        channel.editors.add(editor_user)
         channel.save()
+
+        current_live_submission = CommunityLibrarySubmission.objects.create(
+            channel=channel,
+            channel_version=1,
+            author=editor_user,
+            status=community_library_submission.STATUS_LIVE,
+        )
+        new_submission = CommunityLibrarySubmission.objects.create(
+            channel=channel,
+            channel_version=2,
+            author=editor_user,
+            status=community_library_submission.STATUS_APPROVED,
+        )
 
         categories = {
             "category1": True,
@@ -564,7 +582,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
         added_to_community_library_change = generate_added_to_community_library_event(
             key=channel.id,
-            channel_version=1,
+            channel_version=2,
             categories=categories,
             country_codes=country_codes,
         )
@@ -596,13 +614,25 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             ],
         )
         self.assertEqual(call_kwargs["channel_id"], channel.id)
-        self.assertEqual(call_kwargs["channel_version"], 1)
+        self.assertEqual(call_kwargs["channel_version"], 2)
         self.assertEqual(call_kwargs["categories"], categories)
 
         # The countries argument used when creating the mapper is in fact
         # not a list, but a QuerySet, but it contains the same elements
         self.assertCountEqual(call_kwargs["countries"], countries)
         self.assertEqual(call_kwargs["public"], False)
+
+        # Check that the current submission became the live one
+        current_live_submission.refresh_from_db()
+        new_submission.refresh_from_db()
+        self.assertEqual(
+            current_live_submission.status,
+            community_library_submission.STATUS_APPROVED,
+        )
+        self.assertEqual(
+            new_submission.status,
+            community_library_submission.STATUS_LIVE,
+        )
 
 
 class CRUDTestCase(StudioAPITestCase):
