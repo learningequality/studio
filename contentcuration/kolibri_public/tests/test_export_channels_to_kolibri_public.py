@@ -120,7 +120,6 @@ class ExportTestCase(TestCase):
 
         mock_channel_mapper.assert_called_once_with(
             channel=self.exported_channel_metadata,
-            channel_version=1,
             public=True,
             categories=categories,
             countries=countries,
@@ -137,7 +136,6 @@ class ExportTestCase(TestCase):
 
         mock_channel_mapper.assert_called_once_with(
             channel=self.exported_channel_metadata,
-            channel_version=None,
             public=True,
             categories=None,
             countries=None,
