@@ -549,7 +549,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
         channel = testdata.channel()
         channel.version = 1
-        channel.public = True
+        channel.public = False
         channel.save()
 
         categories = {

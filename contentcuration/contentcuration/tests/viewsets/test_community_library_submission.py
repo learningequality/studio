@@ -61,21 +61,21 @@ class CRUDTestCase(StudioAPITestCase):
         self.country2 = testdata.country(name="Country 2", code="C2")
 
         self.channel_with_submission1 = testdata.channel()
-        self.channel_with_submission1.public = True
+        self.channel_with_submission1.public = False
         self.channel_with_submission1.version = 1
         self.channel_with_submission1.editors.add(self.author_user)
         self.channel_with_submission1.editors.add(self.editor_user)
         self.channel_with_submission1.save()
 
         self.channel_with_submission2 = testdata.channel()
-        self.channel_with_submission2.public = True
+        self.channel_with_submission2.public = False
         self.channel_with_submission2.version = 1
         self.channel_with_submission2.editors.add(self.author_user)
         self.channel_with_submission2.editors.add(self.editor_user)
         self.channel_with_submission2.save()
 
         self.channel_without_submission = testdata.channel()
-        self.channel_without_submission.public = True
+        self.channel_without_submission.public = False
         self.channel_without_submission.version = 1
         self.channel_without_submission.editors.add(self.author_user)
         self.channel_without_submission.editors.add(self.editor_user)
@@ -87,6 +87,13 @@ class CRUDTestCase(StudioAPITestCase):
         self.unpublished_channel.editors.add(self.author_user)
         self.unpublished_channel.editors.add(self.editor_user)
         self.unpublished_channel.save()
+
+        self.public_channel = testdata.channel()
+        self.public_channel.public = True
+        self.public_channel.version = 1
+        self.public_channel.editors.add(self.author_user)
+        self.public_channel.editors.add(self.editor_user)
+        self.public_channel.save()
 
         self.existing_submission1 = testdata.community_library_submission()
         self.existing_submission1.channel = self.channel_with_submission1
@@ -126,6 +133,18 @@ class CRUDTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.editor_user)
         submission = self.new_submission_metadata
         submission["channel"] = self.unpublished_channel.id
+
+        response = self.client.post(
+            reverse("community-library-submission-list"),
+            submission,
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+
+    def test_create_submission__public_channel(self):
+        self.client.force_authenticate(user=self.editor_user)
+        submission = self.new_submission_metadata
+        submission["channel"] = self.public_channel.id
 
         response = self.client.post(
             reverse("community-library-submission-list"),
