@@ -777,7 +777,7 @@ class ChannelViewSet(ValuesViewset):
         for change in changes:
             try:
                 self.add_to_community_library(
-                    channel_id=change["channel_id"],
+                    channel_id=change["key"],
                     channel_version=change["channel_version"],
                     categories=change["categories"],
                     country_codes=change["country_codes"],
