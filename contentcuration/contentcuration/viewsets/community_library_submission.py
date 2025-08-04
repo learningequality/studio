@@ -93,8 +93,9 @@ class CommunityLibrarySubmissionSerializer(BulkModelSerializer):
                 "a community library submission."
             )
 
-        countries = validated_data.pop("countries", [])
-        instance.countries.set(countries)
+        if "countries" in validated_data:
+            countries = validated_data.pop("countries")
+            instance.countries.set(countries)
 
         return super().update(instance, validated_data)
 

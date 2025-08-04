@@ -338,7 +338,7 @@ class CRUDTestCase(StudioAPITestCase):
         )
         self.assertEqual(response.status_code, 404, response.content)
 
-    def test_update_submission__is_admin(self):
+    def test_update_submission__is_admin__change_countries(self):
         self.client.force_authenticate(user=self.admin_user)
         response = self.client.put(
             reverse(
@@ -355,6 +355,28 @@ class CRUDTestCase(StudioAPITestCase):
         )
         self.assertEqual(updated_submission.countries.count(), 1)
         self.assertEqual(updated_submission.countries.first().code, "C2")
+
+    def test_update_submission__is_admin__keep_countries(self):
+        self.client.force_authenticate(user=self.admin_user)
+
+        updated_submission_metadata = self.updated_submission_metadata.copy()
+        updated_submission_metadata.pop("countries")
+
+        response = self.client.put(
+            reverse(
+                "community-library-submission-detail",
+                args=[self.existing_submission1.id],
+            ),
+            updated_submission_metadata,
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        updated_submission = CommunityLibrarySubmission.objects.get(
+            id=self.existing_submission1.id
+        )
+        self.assertEqual(updated_submission.countries.count(), 1)
+        self.assertEqual(updated_submission.countries.first().code, "C1")
 
     def test_update_submission__change_channel(self):
         self.client.force_authenticate(user=self.admin_user)
