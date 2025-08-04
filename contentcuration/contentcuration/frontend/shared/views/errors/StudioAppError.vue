@@ -26,19 +26,19 @@
 
 <style lang="scss" scoped>
 
-.studio-app-error {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 50vh;
-  text-align: center;
-  padding: 0 1rem;
-}
+  .studio-app-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 50vh;
+    padding: 0 1rem;
+    text-align: center;
+  }
 
-.details {
-  max-width: 675px;
-  margin: 1rem 0;
-}
+  .details {
+    max-width: 675px;
+    margin: 1rem 0;
+  }
 
 </style>

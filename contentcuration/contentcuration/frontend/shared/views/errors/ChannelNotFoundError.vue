@@ -12,7 +12,7 @@
         v-bind="backHomeLink"
         appearance="raised-button"
         :primary="true"
-        style="margin-top: 1rem;"
+        style="margin-top: 1rem"
       >
         {{ $tr('backToHomeAction') }}
       </KRouterLink>
