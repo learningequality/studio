@@ -1,6 +1,6 @@
 <template>
 
-  <AppError>
+  <StudioAppError>
     <template #header>
       {{ $tr('channelNotFoundHeader') }}
     </template>
@@ -8,26 +8,28 @@
       {{ $tr('channelNotFoundDetails') }}
     </template>
     <template #actions>
-      <VBtn
+      <KRouterLink
         v-bind="backHomeLink"
-        color="primary"
+        appearance="raised-button"
+        :primary="true"
+        style="margin-top: 1rem;"
       >
         {{ $tr('backToHomeAction') }}
-      </VBtn>
+      </KRouterLink>
     </template>
-  </AppError>
+  </StudioAppError>
 
 </template>
 
 
 <script>
 
-  import AppError from './AppError';
+  import StudioAppError from './StudioAppError.vue';
 
   export default {
     name: 'ChannelNotFoundError',
     components: {
-      AppError,
+      StudioAppError,
     },
     props: {
       backHomeLink: {
