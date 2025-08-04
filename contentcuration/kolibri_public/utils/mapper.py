@@ -22,13 +22,14 @@ class ChannelMapper(object):
     def __init__(
         self,
         channel,
-        channel_version=None,
         public=True,
         categories=None,
         countries=None,
     ):
+        # Note: The argument `channel` is an instance of `kolibri_content.models.ChannelMetadata,`
+        # which belongs to a specific channel version to be exported. Therefore, we do not
+        # need to explicitly pass the channel version as an argument here.
         self.channel = channel
-        self.channel_version = channel_version
         self.public = public
         self.categories = categories
         self.countries = countries
@@ -70,7 +71,6 @@ class ChannelMapper(object):
 
             set_channel_metadata_fields(
                 self.mapped_channel.id,
-                channel_version=self.channel_version,
                 public=self.public,
                 categories=self.categories,
                 countries=self.countries,

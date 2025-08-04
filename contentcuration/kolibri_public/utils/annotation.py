@@ -17,7 +17,6 @@ from contentcuration.models import Channel
 
 def set_channel_metadata_fields(
     channel_id,
-    channel_version=None,
     public=None,
     categories=None,
     countries=None,
@@ -34,8 +33,6 @@ def set_channel_metadata_fields(
 
     if public is not None:
         channel.public = public
-    if channel_version is not None:
-        channel.version = channel_version
     if countries is not None:
         channel.countries.set(countries)
     channel.save()
