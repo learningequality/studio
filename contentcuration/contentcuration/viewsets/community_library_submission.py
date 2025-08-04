@@ -61,6 +61,11 @@ class CommunityLibrarySubmissionSerializer(BulkModelSerializer):
                 "unpublished channel."
             )
 
+        if channel.public:
+            raise ValidationError(
+                "Cannot create a community library submission for a public channel."
+            )
+
         if not channel.editors.filter(id=user.id).exists():
             raise ValidationError(
                 "Only editors can create a community library "

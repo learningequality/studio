@@ -799,9 +799,9 @@ class ChannelViewSet(ValuesViewset):
         channel = self.get_edit_queryset().get(pk=channel_id)
         countries = Country.objects.filter(code__in=country_codes)
 
-        if not channel.public:
+        if channel.public:
             raise ValidationError(
-                "Only public channels can be added to the community library"
+                "Public channels cannot be added to the community library"
             )
         if channel_version <= 0 or channel_version > channel.version:
             raise ValidationError("Invalid channel version")
