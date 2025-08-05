@@ -7,8 +7,7 @@ import { AssessmentItemTypes, ValidationErrors } from 'shared/constants';
 
 const store = factory();
 
-jest.mock('shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor.vue');
-jest.mock('shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue');
+jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue');
 
 const listeners = {
   update: jest.fn(),
@@ -34,8 +33,7 @@ const openQuestion = async wrapper => {
 };
 
 const updateQuestion = async (wrapper, newQuestionText) => {
-  // only one editor is rendered at a time => "wrapper.find"
-  wrapper.findComponent({ name: 'MarkdownEditor' }).vm.$emit('update', newQuestionText);
+  wrapper.findComponent({ name: 'RichTextEditor' }).vm.$emit('update', newQuestionText);
   await wrapper.vm.$nextTick();
 };
 
@@ -63,13 +61,16 @@ describe('AssessmentItemEditor', () => {
       listeners,
     });
 
-    expect(wrapper.html()).toContain('Exercise 2 - Question 2');
+    // Find the first RichTextEditor component, which is used for the question.
+    const questionEditor = wrapper.findComponent({ name: 'RichTextEditor' });
+    expect(questionEditor.exists()).toBe(true);
 
-    // expect(wrapper.html()).toContain('Mayonnaise (I mean you can, but...)');
-    // expect(wrapper.html()).toContain('Peanut butter');
+    // Assert that it received the correct `value` prop.
+    expect(questionEditor.props('value')).toBe('Exercise 2 - Question 2');
 
-    // expect(wrapper.html()).toContain("It's not healthy");
-    // expect(wrapper.html()).toContain('Tasty!');
+    // Check that the child editor components also exist.
+    expect(wrapper.findComponent({ name: 'AnswersEditor' }).exists()).toBe(true);
+    expect(wrapper.findComponent({ name: 'HintsEditor' }).exists()).toBe(true);
   });
 
   describe('on question text update', () => {

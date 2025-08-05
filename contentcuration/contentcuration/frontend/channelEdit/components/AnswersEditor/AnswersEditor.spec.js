@@ -4,8 +4,7 @@ import { AssessmentItemToolbarActions } from '../../constants';
 import AnswersEditor from './AnswersEditor';
 import { AssessmentItemTypes } from 'shared/constants';
 
-jest.mock('shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor.vue');
-jest.mock('shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue');
+jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue');
 
 const clickNewAnswerBtn = async wrapper => {
   await wrapper.findComponent('[data-test="newAnswerBtn"]').trigger('click');
@@ -302,33 +301,37 @@ describe('AnswersEditor', () => {
     });
   });
 
-  // describe('on answer text update', () => {
-  //   beforeEach(async () => {
-  //     wrapper = mount(AnswersEditor, {
-  //       propsData: {
-  //         questionKind: AssessmentItemTypes.SINGLE_SELECTION,
-  //         answers: [
-  //           { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-  //           { answer: 'Peanut butter', correct: false, order: 2 },
-  //         ],
-  //         openAnswerIdx: 1,
-  //       },
-  //     });
+  describe('on answer text update', () => {
+    beforeEach(async () => {
+      wrapper = mount(AnswersEditor, {
+        propsData: {
+          questionKind: AssessmentItemTypes.SINGLE_SELECTION,
+          answers: [
+            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            { answer: 'Peanut butter', correct: false, order: 2 },
+          ],
+          openAnswerIdx: 1,
+        },
+      });
 
-  //     // only one editor is rendered at a time => "wrapper.find"
-  //     wrapper.findComponent({ name: 'MarkdownEditor' }).vm.$emit('update', 'European butter');
-  //     await wrapper.vm.$nextTick();
-  //   });
+      const editors = wrapper.findAllComponents({ name: 'RichTextEditor' });
+      editors.at(1).vm.$emit('update', 'European butter');
 
-  //   it('emits update event with a payload containing updated answers', () => {
-  //     expect(wrapper.emitted().update).toBeTruthy();
-  //     expect(wrapper.emitted().update.length).toBe(1);
-  //     expect(wrapper.emitted().update[0][0]).toEqual([
-  //       { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-  //       { answer: 'European butter', correct: false, order: 2 },
-  //     ]);
-  //   });
-  // });
+      await wrapper.vm.$nextTick();
+    });
+
+    it('emits update event with a payload containing updated answers', () => {
+      expect(wrapper.emitted().update).toBeTruthy();
+      expect(wrapper.emitted().update.length).toBe(1);
+
+      const emittedAnswers = JSON.parse(JSON.stringify(wrapper.emitted().update[0][0]));
+
+      expect(emittedAnswers).toEqual([
+        { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+        { answer: 'European butter', correct: false, order: 2 },
+      ]);
+    });
+  });
 
   describe('on correct answer change', () => {
     beforeEach(async () => {
