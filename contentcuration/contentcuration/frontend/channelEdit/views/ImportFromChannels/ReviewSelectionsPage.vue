@@ -67,7 +67,7 @@
                 class="center-contents channel-name"
               >
                 <KTextTruncator
-                  :text="node.original_channel_name"
+                  :text="node.original_channel_name || node.channel_name"
                   :maxLines="2"
                   class="notranslate"
                 />
