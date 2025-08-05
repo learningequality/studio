@@ -28,7 +28,7 @@
       />
     </VListTile>
     <VListTile @click="removeNode()">
-      <VListTileTitle>{{ $tr('remove') }}</VListTileTitle>
+      <VListTileTitle>{{ $tr('removeNode') }}</VListTileTitle>
     </VListTile>
   </VList>
 
@@ -151,7 +151,7 @@
       goToOriginalLocation: 'Go to original location',
       makeACopy: 'Make a copy',
       moveTo: 'Move to...',
-      remove: 'Delete',
+      removeNode: 'Delete',
       // undo: 'Undo',
       copiedItemsToClipboard: 'Copied in clipboard',
       removedFromClipboard: 'Deleted from clipboard',
