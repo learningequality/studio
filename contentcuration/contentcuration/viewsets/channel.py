@@ -828,22 +828,12 @@ class ChannelViewSet(ValuesViewset):
             countries=countries,
         )
 
-        # Mark the submission corresponding to the channel version
-        # as the only live submission for the channel
-        CommunityLibrarySubmission.objects.filter(
-            channel_id=channel_id,
-            status=community_library_submission_constants.STATUS_LIVE,
-        ).update(
-            status=community_library_submission_constants.STATUS_APPROVED,
-        )
-
         new_live_submission = CommunityLibrarySubmission.objects.get(
             channel_id=channel_id,
             channel_version=channel_version,
             status=community_library_submission_constants.STATUS_APPROVED,
         )
-        new_live_submission.status = community_library_submission_constants.STATUS_LIVE
-        new_live_submission.save()
+        new_live_submission.mark_live()
 
     @action(
         detail=True,
