@@ -128,11 +128,12 @@
       },
       reviewSelectionsStyle() {
         return {
-          width: '50%',
+          width: '100%',
           padding: '24px',
           borderRadius: '4px',
           marginTop: '16px',
           boxShadow: '0 2px 4px ' + this.$themePalette.grey.v_300,
+          maxWidth: '1200px',
         };
       },
       resourcesDescription() {
