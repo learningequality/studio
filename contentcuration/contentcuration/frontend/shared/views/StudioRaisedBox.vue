@@ -21,25 +21,26 @@
 <script>
 
   export default {
-    name: 'StudioRaisedBox'
-  }
+    name: 'StudioRaisedBox',
+  };
 
 </script>
 
 
 <style lang="scss" scoped>
 
-@import '~kolibri-design-system/lib/styles/definitions';
+  @import '~kolibri-design-system/lib/styles/definitions';
 
-.studio-raised-box {
-  @extend %dropshadow-2dp;
-  &__header {
-    padding: 16px 16px 0 16px;
+  .studio-raised-box {
+    @extend %dropshadow-2dp;
+
+    &__header {
+      padding: 16px 16px 0;
+    }
+
+    &__main {
+      padding-bottom: 18px;
+    }
   }
-  &__main {
-    padding-bottom: 18px;
-  }
-  
-}
 
 </style>

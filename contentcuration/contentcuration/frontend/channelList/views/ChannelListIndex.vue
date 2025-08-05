@@ -165,7 +165,7 @@
       GlobalSnackbar,
       PolicyModals,
       OfflineText,
-      StudioRaisedBox
+      StudioRaisedBox,
     },
     mixins: [constantsTranslationMixin, routerMixin],
     computed: {

@@ -4,7 +4,7 @@
     <li class="invitation">
       <div class="invitation__main">
         <div class="invitation__main--left">
-          {{ invitationText }} 
+          {{ invitationText }}
         </div>
         <div class="invitation__main--right">
           <div class="invitation__main--right__btn-one">
@@ -69,13 +69,9 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import { InvitationShareModes } from '../../constants';
-  import MessageDialog from 'shared/views/MessageDialog';
 
   export default {
     name: 'ChannelInvitation',
-    components: {
-      MessageDialog,
-    },
     props: {
       invitationID: {
         type: String,
@@ -159,21 +155,26 @@
   }
 
   .invitation {
-    list-style: none;
+    padding: 16px 16px 0;
     font-size: 16px;
-    padding: 16px 16px 0 16px;
-    &__main{ 
+    list-style: none;
+
+    &__main {
       display: flex;
       align-items: center;
       justify-content: space-between;
+
       &--right {
         display: flex;
         flex-direction: row;
+
         [dir='ltr'] &__btn-one {
           margin-right: 15px;
           margin-left: 0;
         }
-        [dir='rtl'] &__btn-two, &__btn-one {
+
+        [dir='rtl'] &__btn-two,
+        &__btn-one {
           margin-right: 0;
           margin-left: 15px;
         }
@@ -184,6 +185,7 @@
   .modal-actions {
     display: flex;
     justify-content: end;
+
     &__close {
       margin-right: 10px;
     }
