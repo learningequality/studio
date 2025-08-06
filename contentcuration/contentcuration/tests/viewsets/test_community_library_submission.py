@@ -8,9 +8,11 @@ from django.urls import reverse
 from contentcuration.constants import (
     community_library_submission as community_library_submission_constants,
 )
+from contentcuration.models import Change
 from contentcuration.models import CommunityLibrarySubmission
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
+from contentcuration.viewsets.sync.constants import ADDED_TO_COMMUNITY_LIBRARY
 
 
 def reverse_with_query(
@@ -59,21 +61,21 @@ class CRUDTestCase(StudioAPITestCase):
         self.country2 = testdata.country(name="Country 2", code="C2")
 
         self.channel_with_submission1 = testdata.channel()
-        self.channel_with_submission1.public = True
+        self.channel_with_submission1.public = False
         self.channel_with_submission1.version = 1
         self.channel_with_submission1.editors.add(self.author_user)
         self.channel_with_submission1.editors.add(self.editor_user)
         self.channel_with_submission1.save()
 
         self.channel_with_submission2 = testdata.channel()
-        self.channel_with_submission2.public = True
+        self.channel_with_submission2.public = False
         self.channel_with_submission2.version = 1
         self.channel_with_submission2.editors.add(self.author_user)
         self.channel_with_submission2.editors.add(self.editor_user)
         self.channel_with_submission2.save()
 
         self.channel_without_submission = testdata.channel()
-        self.channel_without_submission.public = True
+        self.channel_without_submission.public = False
         self.channel_without_submission.version = 1
         self.channel_without_submission.editors.add(self.author_user)
         self.channel_without_submission.editors.add(self.editor_user)
@@ -85,6 +87,13 @@ class CRUDTestCase(StudioAPITestCase):
         self.unpublished_channel.editors.add(self.author_user)
         self.unpublished_channel.editors.add(self.editor_user)
         self.unpublished_channel.save()
+
+        self.public_channel = testdata.channel()
+        self.public_channel.public = True
+        self.public_channel.version = 1
+        self.public_channel.editors.add(self.author_user)
+        self.public_channel.editors.add(self.editor_user)
+        self.public_channel.save()
 
         self.existing_submission1 = testdata.community_library_submission()
         self.existing_submission1.channel = self.channel_with_submission1
@@ -124,6 +133,18 @@ class CRUDTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.editor_user)
         submission = self.new_submission_metadata
         submission["channel"] = self.unpublished_channel.id
+
+        response = self.client.post(
+            reverse("community-library-submission-list"),
+            submission,
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+
+    def test_create_submission__public_channel(self):
+        self.client.force_authenticate(user=self.editor_user)
+        submission = self.new_submission_metadata
+        submission["channel"] = self.public_channel.id
 
         response = self.client.post(
             reverse("community-library-submission-list"),
@@ -317,7 +338,7 @@ class CRUDTestCase(StudioAPITestCase):
         )
         self.assertEqual(response.status_code, 404, response.content)
 
-    def test_update_submission__is_admin(self):
+    def test_update_submission__is_admin__change_countries(self):
         self.client.force_authenticate(user=self.admin_user)
         response = self.client.put(
             reverse(
@@ -334,6 +355,28 @@ class CRUDTestCase(StudioAPITestCase):
         )
         self.assertEqual(updated_submission.countries.count(), 1)
         self.assertEqual(updated_submission.countries.first().code, "C2")
+
+    def test_update_submission__is_admin__keep_countries(self):
+        self.client.force_authenticate(user=self.admin_user)
+
+        updated_submission_metadata = self.updated_submission_metadata.copy()
+        updated_submission_metadata.pop("countries")
+
+        response = self.client.put(
+            reverse(
+                "community-library-submission-detail",
+                args=[self.existing_submission1.id],
+            ),
+            updated_submission_metadata,
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        updated_submission = CommunityLibrarySubmission.objects.get(
+            id=self.existing_submission1.id
+        )
+        self.assertEqual(updated_submission.countries.count(), 1)
+        self.assertEqual(updated_submission.countries.first().code, "C1")
 
     def test_update_submission__change_channel(self):
         self.client.force_authenticate(user=self.admin_user)
@@ -628,7 +671,10 @@ class AdminViewSetTestCase(StudioAPITestCase):
         )
         self.assertEqual(response.status_code, 403, response.content)
 
-    def test_resolve_submission__accept_correct(self):
+    @mock.patch(
+        "contentcuration.viewsets.community_library_submission.apply_channel_changes_task"
+    )
+    def test_resolve_submission__accept_correct(self, apply_task_mock):
         self.client.force_authenticate(user=self.admin_user)
         response = self.client.post(
             reverse(
@@ -652,7 +698,21 @@ class AdminViewSetTestCase(StudioAPITestCase):
         self.assertEqual(resolved_submission.resolved_by, self.admin_user)
         self.assertEqual(resolved_submission.date_resolved, self.resolved_time)
 
-    def test_resolve_submission__reject_correct(self):
+        self.assertTrue(
+            Change.objects.filter(
+                channel=self.submission.channel,
+                change_type=ADDED_TO_COMMUNITY_LIBRARY,
+            ).exists()
+        )
+        apply_task_mock.fetch_or_enqueue.assert_called_once_with(
+            self.admin_user,
+            channel_id=self.submission.channel.id,
+        )
+
+    @mock.patch(
+        "contentcuration.viewsets.community_library_submission.apply_channel_changes_task"
+    )
+    def test_resolve_submission__reject_correct(self, apply_task_mock):
         self.client.force_authenticate(user=self.admin_user)
         response = self.client.post(
             reverse(
@@ -679,6 +739,14 @@ class AdminViewSetTestCase(StudioAPITestCase):
         self.assertEqual(resolved_submission.internal_notes, self.internal_notes)
         self.assertEqual(resolved_submission.resolved_by, self.admin_user)
         self.assertEqual(resolved_submission.date_resolved, self.resolved_time)
+
+        self.assertFalse(
+            Change.objects.filter(
+                channel=self.submission.channel,
+                change_type=ADDED_TO_COMMUNITY_LIBRARY,
+            ).exists()
+        )
+        apply_task_mock.fetch_or_enqueue.assert_not_called()
 
     def test_resolve_submission__reject_missing_resolution_reason(self):
         self.client.force_authenticate(user=self.admin_user)

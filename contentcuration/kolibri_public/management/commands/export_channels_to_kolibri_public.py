@@ -1,23 +1,14 @@
 import logging
 import os
-import shutil
-import tempfile
 from datetime import datetime
 from datetime import timedelta
 
-from django.conf import settings
-from django.core.files.storage import default_storage as storage
-from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db.models import F
 from django.db.models import Q
 from django.utils import timezone
-from kolibri_content.apps import KolibriContentConfig
-from kolibri_content.models import ChannelMetadata as ExportedChannelMetadata
-from kolibri_content.router import get_active_content_database
-from kolibri_content.router import using_content_database
 from kolibri_public.models import ChannelMetadata
-from kolibri_public.utils.mapper import ChannelMapper
+from kolibri_public.utils import export_channel_to_kolibri_public
 
 from contentcuration.models import Channel
 from contentcuration.models import User
@@ -55,7 +46,7 @@ class Command(BaseCommand):
         count = 0
         for channel_id in ids_to_export:
             try:
-                self._export_channel(channel_id)
+                export_channel_to_kolibri_public(channel_id)
                 count += 1
             except FileNotFoundError:
                 logger.warning(
@@ -70,31 +61,6 @@ class Command(BaseCommand):
                     )
                 )
         logger.info("Successfully put {} channels into kolibri_public".format(count))
-
-    def _export_channel(self, channel_id):
-        logger.info("Putting channel {} into kolibri_public".format(channel_id))
-        db_location = os.path.join(
-            settings.DB_ROOT, "{id}.sqlite3".format(id=channel_id)
-        )
-        with storage.open(db_location) as storage_file:
-            with tempfile.NamedTemporaryFile(suffix=".sqlite3") as db_file:
-                shutil.copyfileobj(storage_file, db_file)
-                db_file.seek(0)
-                with using_content_database(db_file.name):
-                    # Run migration to handle old content databases published prior to current fields being added.
-                    call_command(
-                        "migrate",
-                        app_label=KolibriContentConfig.label,
-                        database=get_active_content_database(),
-                    )
-                    channel = ExportedChannelMetadata.objects.get(id=channel_id)
-                    logger.info(
-                        "Found channel {} for id: {} mapping now".format(
-                            channel.name, channel_id
-                        )
-                    )
-                    mapper = ChannelMapper(channel)
-                    mapper.run()
 
     def _republish_problem_channels(self):
         twenty_19 = datetime(year=2019, month=1, day=1)

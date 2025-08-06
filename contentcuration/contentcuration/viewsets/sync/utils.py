@@ -3,6 +3,7 @@ import logging
 from django.conf import settings
 
 from contentcuration.utils.sentry import report_exception
+from contentcuration.viewsets.sync.constants import ADDED_TO_COMMUNITY_LIBRARY
 from contentcuration.viewsets.sync.constants import ALL_TABLES
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import CONTENTNODE
@@ -101,6 +102,25 @@ def generate_publish_next_event(key, version_notes="", language=None):
     event = _generate_event(key, CHANNEL, PUBLISHED_NEXT, key, None)
     event["version_notes"] = version_notes
     event["language"] = language
+    return event
+
+
+def generate_added_to_community_library_event(
+    key,
+    channel_version,
+    categories=None,
+    country_codes=None,
+):
+    event = _generate_event(
+        key,
+        CHANNEL,
+        ADDED_TO_COMMUNITY_LIBRARY,
+        channel_id=key,
+        user_id=None,
+    )
+    event["channel_version"] = channel_version
+    event["categories"] = categories or dict()
+    event["country_codes"] = country_codes or list()
     return event
 
 
