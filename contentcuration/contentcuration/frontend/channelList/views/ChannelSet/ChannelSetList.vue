@@ -11,31 +11,33 @@
       justify-center
     >
       <VFlex>
-        <ActionLink
+        <KButton
           :text="$tr('aboutChannelSetsLink')"
           class="mx-2"
+          appearance="basic-link"
           @click="infoDialog = true"
         />
-        <MessageDialog
-          v-model="infoDialog"
-          :header="$tr('aboutChannelSets')"
+        <KModal
+          v-if="infoDialog"
+          :title="$tr('aboutChannelSets')"
         >
-          <p>
-            {{ $tr('channelSetsDescriptionText') }}
-          </p>
-          <p>
-            {{ $tr('channelSetsInstructionsText') }}
-          </p>
-          <p class="red--text">
-            {{ $tr('channelSetsDisclaimer') }}
-          </p>
-          <template #buttons>
-            <VSpacer />
-            <VBtn @click="infoDialog = false">
-              {{ $tr('cancelButtonLabel') }}
-            </VBtn>
+          <template>
+            <div>
+              <p>
+                {{ $tr('channelSetsDescriptionText') }}
+              </p>
+              <p>
+                {{ $tr('channelSetsInstructionsText') }}
+              </p>
+              <p :style="{ color: $themePalette.red.v_500 }">
+                {{ $tr('channelSetsDisclaimer') }}
+              </p>
+            </div>
           </template>
-        </MessageDialog>
+          <template #actions>
+            <KButton @click="infoDialog = false"> {{ $tr('cancelButtonLabel') }} </KButton>
+          </template>
+        </KModal>
       </VFlex>
       <VSpacer />
       <VFlex class="text-xs-right">
