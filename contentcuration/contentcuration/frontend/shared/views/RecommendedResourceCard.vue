@@ -51,7 +51,10 @@
       </KFixedGrid>
     </template>
     <template #thumbnailPlaceholder>
-      <ContentNodeLearningActivityIcon :learningActivities="learningActivities" />
+      <ContentNodeLearningActivityIcon
+        :learningActivities="learningActivities"
+        :style="{ fontSize: '32px' }"
+      />
     </template>
   </KCard>
 

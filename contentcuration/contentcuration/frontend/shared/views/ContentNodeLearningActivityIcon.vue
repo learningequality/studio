@@ -17,12 +17,14 @@
         <KLabeledIcon
           :icon="icon(activity)"
           :label="text(activity)"
+          :style="iconStyle"
         />
       </div>
       <div v-else>
         <KLabeledIcon
           :icon="icon(activity)"
           :label="text(activity)"
+          :style="iconStyle"
         />
       </div>
     </span>
@@ -35,6 +37,7 @@
         :icon="icon('multiple')"
         :aria-label="text('multiple')"
         data-test="multiple-activities-icon"
+        :style="iconStyle"
       />
     </span>
     <!--otherwise, display one or more activities individually, each with its own icon -->
@@ -45,6 +48,7 @@
         data-test="icon-only"
         :icon="icon(activity)"
         :aria-label="text(activity)"
+        :style="iconStyle"
       />
     </span>
   </span>
@@ -84,6 +88,10 @@
       small: {
         type: Boolean,
         default: false,
+      },
+      iconStyle: {
+        type: Object,
+        default: () => ({}),
       },
     },
     computed: {
