@@ -20,6 +20,59 @@ from kolibri_public.utils.export_channel_to_kolibri_public import (
 from contentcuration.models import Country
 
 
+class FileSystemStorageWithoutPath:
+    """
+    A wrapper around FileSystemStorage that does not expose the `path` method,
+    as this will not be available in production where S3Storage is used.
+    This cannot be solved by just mocking the `path` method, because
+    it is used by the `FileSystemStorage` class internally.
+    """
+
+    def __init__(self, *args, **kwargs):
+        self._inner = FileSystemStorage(*args, **kwargs)
+
+    def __getattr__(self, name):
+        if name == "path":
+            raise NotImplementedError(
+                "The 'path' method is intentionally not available."
+            )
+        return getattr(self._inner, name)
+
+    def __dir__(self):
+        return [x for x in dir(self._inner) if x != "path"]
+
+
+class FileSystemStorageWithoutPathTestCase(TestCase):
+    # Sanity-checks that the wrapper above works as expected,
+    # not actually testing application code
+
+    def setUp(self):
+        super().setUp()
+
+        self._temp_directory_ctx = tempfile.TemporaryDirectory()
+        self.temp_dir = self._temp_directory_ctx.__enter__()
+
+        self.storage = FileSystemStorageWithoutPath(location=self.temp_dir)
+
+    def tearDown(self):
+        self._temp_directory_ctx.__exit__(None, None, None)
+        super().tearDown()
+
+    def test_open_works(self):
+        test_content = "test content"
+
+        with self.storage.open("filename", "w") as f:
+            f.write(test_content)
+
+        with open(os.path.join(self.temp_dir, "filename"), "r") as f:
+            content = f.read()
+            self.assertEqual(content, test_content)
+
+    def test_path_does_not_work(self):
+        with self.assertRaises(NotImplementedError):
+            self.storage.path("filename")
+
+
 class ExportTestCase(TestCase):
     def setUp(self):
         super().setUp()
@@ -27,11 +80,11 @@ class ExportTestCase(TestCase):
         self._temp_directory_ctx = tempfile.TemporaryDirectory()
         test_db_root_dir = self._temp_directory_ctx.__enter__()
 
-        storage = FileSystemStorage(location=test_db_root_dir)
+        self.storage = FileSystemStorageWithoutPath(location=test_db_root_dir)
 
         self._storage_patch_ctx = mock.patch(
             "kolibri_public.utils.export_channel_to_kolibri_public.storage",
-            new=storage,
+            new=self.storage,
         )
         self._storage_patch_ctx.__enter__()
 

@@ -24,15 +24,16 @@ class using_temp_migrated_database:
     database and then using this temporary database.
     """
 
-    def __init__(self, database_path):
-        self.database_path = database_path
+    def __init__(self, database_storage_path):
+        self.database_path = database_storage_path
         self._inner_mgr = None
 
     def __enter__(self):
         self._named_temporary_file_mgr = tempfile.NamedTemporaryFile(suffix=".sqlite3")
         self.temp_database_file = self._named_temporary_file_mgr.__enter__()
 
-        shutil.copy(self.database_path, self.temp_database_file.name)
+        with storage.open(self.database_path, "rb") as db_file:
+            shutil.copyfileobj(db_file, self.temp_database_file)
         self.temp_database_file.seek(0)
 
         with using_content_database(self.temp_database_file.name):
@@ -66,25 +67,23 @@ def export_channel_to_kolibri_public(
     )
     unversioned_db_filename = "{id}.sqlite3".format(id=channel_id)
 
-    versioned_db_path = storage.path(
-        os.path.join(settings.DB_ROOT, versioned_db_filename)
-    )
-    unversioned_db_path = storage.path(
-        os.path.join(settings.DB_ROOT, unversioned_db_filename)
+    versioned_db_storage_path = os.path.join(settings.DB_ROOT, versioned_db_filename)
+    unversioned_db_storage_path = os.path.join(
+        settings.DB_ROOT, unversioned_db_filename
     )
 
     if channel_version is None:
-        db_path = unversioned_db_path
+        db_storage_path = unversioned_db_storage_path
     else:
-        db_path = versioned_db_path
+        db_storage_path = versioned_db_storage_path
         _possibly_migrate_unversioned_database(
             channel_id=channel_id,
             channel_version=channel_version,
-            unversioned_db_path=unversioned_db_path,
-            versioned_db_path=versioned_db_path,
+            unversioned_db_storage_path=unversioned_db_storage_path,
+            versioned_db_storage_path=versioned_db_storage_path,
         )
 
-    with using_temp_migrated_database(db_path):
+    with using_temp_migrated_database(db_storage_path):
         channel = ExportedChannelMetadata.objects.get(id=channel_id)
         logger.info(
             "Found channel {} for id: {} mapping now".format(channel.name, channel_id)
@@ -102,8 +101,8 @@ def export_channel_to_kolibri_public(
 def _possibly_migrate_unversioned_database(
     channel_id,
     channel_version,
-    unversioned_db_path,
-    versioned_db_path,
+    unversioned_db_storage_path,
+    versioned_db_storage_path,
 ):
     """
     Older channels may only have a single database file and not
@@ -111,16 +110,21 @@ def _possibly_migrate_unversioned_database(
     is present in the single database file, this function copies the database to a file
     containing the version in the filename.
     """
-    if os.path.exists(versioned_db_path) or not os.path.exists(unversioned_db_path):
+    if storage.exists(versioned_db_storage_path) or not storage.exists(
+        unversioned_db_storage_path
+    ):
         return
 
-    with using_temp_migrated_database(unversioned_db_path):
+    with using_temp_migrated_database(unversioned_db_storage_path):
         contains_requested_version = ExportedChannelMetadata.objects.filter(
             id=channel_id, version=channel_version
         ).exists()
 
     if contains_requested_version:
         logger.info(
-            f"Migrating unversioned database {unversioned_db_path} to versioned database {versioned_db_path}"
+            f"Migrating unversioned database {unversioned_db_storage_path} to versioned database {versioned_db_storage_path}"
         )
-        shutil.copy(unversioned_db_path, versioned_db_path)
+
+        with storage.open(unversioned_db_storage_path, "rb") as unversioned_db_file:
+            with storage.open(versioned_db_storage_path, "wb") as versioned_db_file:
+                shutil.copyfileobj(unversioned_db_file, versioned_db_file)
