@@ -126,7 +126,7 @@ class ExportTestCase(TestCase):
         super().tearDown()
 
     @mock.patch("kolibri_public.utils.export_channel_to_kolibri_public.ChannelMapper")
-    def test_export_channel_to_kolibri_public__existing_version__versioned(
+    def test_export_channel_to_kolibri_public__existing_version(
         self, mock_channel_mapper
     ):
         categories = ["Category1", "Category2"]
@@ -147,29 +147,6 @@ class ExportTestCase(TestCase):
             public=True,
             categories=categories,
             countries=countries,
-        )
-        mock_channel_mapper.return_value.run.assert_called_once_with()
-
-    @mock.patch("kolibri_public.utils.export_channel_to_kolibri_public.ChannelMapper")
-    def test_export_channel_to_kolibri_public__existing_version__unversioned(
-        self, mock_channel_mapper
-    ):
-        os.remove(self.versioned_db_path)
-
-        export_channel_to_kolibri_public(
-            channel_id=self.channel_id,
-            channel_version=1,
-            public=True,
-            categories=None,
-            countries=None,
-        )
-
-        mock_channel_mapper.assert_called_once_with(
-            channel=self.exported_channel_metadata,
-            channel_version=1,
-            public=True,
-            categories=None,
-            countries=None,
         )
         mock_channel_mapper.return_value.run.assert_called_once_with()
 

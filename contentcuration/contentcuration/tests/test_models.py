@@ -549,12 +549,15 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
         self.assertNotEqual(copied_node_old_content_id, copied_node.content_id)
 
 
+@mock.patch(
+    "contentcuration.utils.publish.ensure_versioned_database_exists", return_value=None
+)
 class CommunityLibrarySubmissionTestCase(PermissionQuerysetTestCase):
     @property
     def base_queryset(self):
         return CommunityLibrarySubmission.objects.all()
 
-    def test_create_submission(self):
+    def test_create_submission(self, mock_ensure_db_exists):
         # Smoke test
         channel = testdata.channel()
         author = testdata.user()
@@ -577,27 +580,27 @@ class CommunityLibrarySubmissionTestCase(PermissionQuerysetTestCase):
         submission.full_clean()
         submission.save()
 
-    def test_save__author_not_editor(self):
+    def test_save__author_not_editor(self, mock_ensure_db_exists):
         submission = testdata.community_library_submission()
         user = testdata.user("some@email.com")
         submission.author = user
         with self.assertRaises(ValidationError):
             submission.save()
 
-    def test_save__nonpositive_channel_version(self):
+    def test_save__nonpositive_channel_version(self, mock_ensure_db_exists):
         submission = testdata.community_library_submission()
         submission.channel_version = 0
         with self.assertRaises(ValidationError):
             submission.save()
 
-    def test_save__matching_channel_version(self):
+    def test_save__matching_channel_version(self, mock_ensure_db_exists):
         submission = testdata.community_library_submission()
         submission.channel.version = 5
         submission.channel.save()
         submission.channel_version = 5
         submission.save()
 
-    def test_save__impossibly_high_channel_version(self):
+    def test_save__impossibly_high_channel_version(self, mock_ensure_db_exists):
         submission = testdata.community_library_submission()
         submission.channel.version = 5
         submission.channel.save()
@@ -605,7 +608,25 @@ class CommunityLibrarySubmissionTestCase(PermissionQuerysetTestCase):
         with self.assertRaises(ValidationError):
             submission.save()
 
-    def test_filter_view_queryset__anonymous(self):
+    def test_save__ensure_versioned_database_exists_on_create(
+        self, mock_ensure_db_exists
+    ):
+        submission = testdata.community_library_submission()
+
+        mock_ensure_db_exists.assert_called_once_with(submission.channel)
+
+    def test_save__dont_ensure_versioned_database_exists_on_update(
+        self, mock_ensure_db_exists
+    ):
+        submission = testdata.community_library_submission()
+        mock_ensure_db_exists.reset_mock()
+
+        submission.description = "Updated description"
+        submission.save()
+
+        mock_ensure_db_exists.assert_not_called()
+
+    def test_filter_view_queryset__anonymous(self, mock_ensure_db_exists):
         _ = testdata.community_library_submission()
 
         queryset = CommunityLibrarySubmission.filter_view_queryset(
@@ -613,7 +634,7 @@ class CommunityLibrarySubmissionTestCase(PermissionQuerysetTestCase):
         )
         self.assertFalse(queryset.exists())
 
-    def test_filter_view_queryset__forbidden_user(self):
+    def test_filter_view_queryset__forbidden_user(self, mock_ensure_db_exists):
         _ = testdata.community_library_submission()
 
         queryset = CommunityLibrarySubmission.filter_view_queryset(
@@ -621,7 +642,7 @@ class CommunityLibrarySubmissionTestCase(PermissionQuerysetTestCase):
         )
         self.assertFalse(queryset.exists())
 
-    def test_filter_view_queryset__channel_editor(self):
+    def test_filter_view_queryset__channel_editor(self, mock_ensure_db_exists):
         submission_a = testdata.community_library_submission()
         submission_b = testdata.community_library_submission()
 
@@ -635,7 +656,7 @@ class CommunityLibrarySubmissionTestCase(PermissionQuerysetTestCase):
         self.assertQuerysetContains(queryset, pk=submission_a.id)
         self.assertQuerysetDoesNotContain(queryset, pk=submission_b.id)
 
-    def test_filter_view_queryset__admin(self):
+    def test_filter_view_queryset__admin(self, mock_ensure_db_exists):
         submission_a = testdata.community_library_submission()
 
         queryset = CommunityLibrarySubmission.filter_view_queryset(
@@ -643,7 +664,7 @@ class CommunityLibrarySubmissionTestCase(PermissionQuerysetTestCase):
         )
         self.assertQuerysetContains(queryset, pk=submission_a.id)
 
-    def test_filter_edit_queryset__anonymous(self):
+    def test_filter_edit_queryset__anonymous(self, mock_ensure_db_exists):
         _ = testdata.community_library_submission()
 
         queryset = CommunityLibrarySubmission.filter_edit_queryset(
@@ -651,7 +672,7 @@ class CommunityLibrarySubmissionTestCase(PermissionQuerysetTestCase):
         )
         self.assertFalse(queryset.exists())
 
-    def test_filter_edit_queryset__forbidden_user(self):
+    def test_filter_edit_queryset__forbidden_user(self, mock_ensure_db_exists):
         _ = testdata.community_library_submission()
 
         queryset = CommunityLibrarySubmission.filter_edit_queryset(
@@ -659,7 +680,7 @@ class CommunityLibrarySubmissionTestCase(PermissionQuerysetTestCase):
         )
         self.assertFalse(queryset.exists())
 
-    def test_filter_edit_queryset__channel_editor(self):
+    def test_filter_edit_queryset__channel_editor(self, mock_ensure_db_exists):
         submission = testdata.community_library_submission()
 
         user = testdata.user()
@@ -671,7 +692,7 @@ class CommunityLibrarySubmissionTestCase(PermissionQuerysetTestCase):
         )
         self.assertFalse(queryset.exists())
 
-    def test_filter_edit_queryset__author(self):
+    def test_filter_edit_queryset__author(self, mock_ensure_db_exists):
         submission_a = testdata.community_library_submission()
         submission_b = testdata.community_library_submission()
 
@@ -681,7 +702,7 @@ class CommunityLibrarySubmissionTestCase(PermissionQuerysetTestCase):
         self.assertQuerysetContains(queryset, pk=submission_a.id)
         self.assertQuerysetDoesNotContain(queryset, pk=submission_b.id)
 
-    def test_filter_edit_queryset__admin(self):
+    def test_filter_edit_queryset__admin(self, mock_ensure_db_exists):
         submission_a = testdata.community_library_submission()
 
         queryset = CommunityLibrarySubmission.filter_edit_queryset(

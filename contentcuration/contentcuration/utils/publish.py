@@ -2,6 +2,7 @@ import itertools
 import json
 import logging as logmodule
 import os
+import shutil
 import tempfile
 import time
 import uuid
@@ -1092,3 +1093,35 @@ def publish_channel(  # noqa: C901
         except SlowPublishError as e:
             report_exception(e)
     return channel
+
+
+def ensure_versioned_database_exists(channel):
+    """
+    Ensures that the versioned database exists, and if not, copies the unversioned database to the versioned path.
+    This happens if the channel was published back when versioned databases were not used.
+    """
+    if channel.version == 0:
+        raise ValueError("An unpublished channel cannot have a versioned database.")
+
+    unversioned_db_storage_path = os.path.join(
+        settings.DB_ROOT, "{id}.sqlite3".format(id=channel.id)
+    )
+    versioned_db_storage_path = os.path.join(
+        settings.DB_ROOT,
+        "{id}-{version}.sqlite3".format(id=channel.id, version=channel.version),
+    )
+
+    if not storage.exists(versioned_db_storage_path):
+        if not storage.exists(unversioned_db_storage_path):
+            # This should never happen, a published channel should always have an unversioned database
+            raise FileNotFoundError(
+                f"Neither unversioned nor versioned database found for channel {channel.id}."
+            )
+
+        with storage.open(unversioned_db_storage_path, "rb") as unversioned_db_file:
+            with storage.open(versioned_db_storage_path, "wb") as versioned_db_file:
+                shutil.copyfileobj(unversioned_db_file, versioned_db_file)
+
+        logging.info(
+            f"Versioned database for channel {channel.id} did not exist, copied the unversioned database to {versioned_db_storage_path}."
+        )
