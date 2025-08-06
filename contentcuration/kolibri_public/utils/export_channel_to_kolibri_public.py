@@ -84,7 +84,6 @@ def export_channel_to_kolibri_public(
         )
         mapper = ChannelMapper(
             channel=channel,
-            channel_version=channel_version,
             public=public,
             categories=categories,
             countries=countries,

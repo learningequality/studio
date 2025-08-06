@@ -710,7 +710,7 @@ class CommunityLibrarySubmissionTestCase(PermissionQuerysetTestCase):
         )
         self.assertQuerysetContains(queryset, pk=submission_a.id)
 
-    def test_mark_live(self):
+    def test_mark_live(self, mock_ensure_db_exists):
         submission_a = testdata.community_library_submission()
         submission_b = testdata.community_library_submission()
 
