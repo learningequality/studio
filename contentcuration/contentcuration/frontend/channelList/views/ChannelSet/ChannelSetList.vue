@@ -90,14 +90,12 @@
   import { mapGetters, mapActions } from 'vuex';
   import { RouteNames } from '../../constants';
   import ChannelSetItem from './ChannelSetItem.vue';
-  import MessageDialog from 'shared/views/MessageDialog';
   import LoadingText from 'shared/views/LoadingText';
 
   export default {
     name: 'ChannelSetList',
     components: {
       ChannelSetItem,
-      MessageDialog,
       LoadingText,
     },
     data() {
