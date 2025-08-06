@@ -50,6 +50,12 @@
         </KFixedGridItem>
       </KFixedGrid>
     </template>
+    <template #thumbnailPlaceholder>
+      <ContentNodeLearningActivityIcon
+        :learningActivities="learningActivities"
+        :style="{ fontSize: '32px' }"
+      />
+    </template>
   </KCard>
 
 </template>
