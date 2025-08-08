@@ -439,7 +439,7 @@ export class PublishedChange extends Change {
 }
 
 export class PublishedNextChange extends Change {
-  constructor({ use_staging_tree, version_notes, language, ...fields }) {
+  constructor({ use_staging_tree, ...fields }) {
     fields.type = CHANGE_TYPES.PUBLISHED_NEXT;
     super(fields);
     if (this.table !== TABLE_NAMES.CHANNEL) {

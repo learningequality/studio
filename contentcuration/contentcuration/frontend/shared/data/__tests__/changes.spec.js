@@ -258,8 +258,6 @@ describe('Change Types', () => {
       key: '1',
       table: TABLE_NAMES.CHANNEL,
       use_staging_tree: false,
-      version_notes: 'Test version notes',
-      language: 'en',
       source: CLIENTID,
     });
     const rev = await change.saveChange();
@@ -267,7 +265,7 @@ describe('Change Types', () => {
     expect(persistedChange).toEqual({
       rev,
       channel_id: change.key,
-      ...pick(change, ['type', 'key', 'table', 'use_staging_tree', 'version_notes', 'language', 'source']),
+      ...pick(change, ['type', 'key', 'table', 'use_staging_tree', 'source']),
     });
   });
 

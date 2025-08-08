@@ -879,12 +879,10 @@ class PublishStagingTreeTestCase(StudioTestCase):
         publish_channel(
             self.admin_user.id,
             self.content_channel.id,
-            version_notes="",
             force=False,
             force_exercises=False,
             send_email=False,
             progress_tracker=None,
-            language="fr",
             is_draft_version=True,
             use_staging_tree=True,
         )
@@ -990,12 +988,10 @@ class PublishDraftUsingMainTreeTestCase(StudioTestCase):
         publish_channel(
             self.admin_user.id,
             self.content_channel.id,
-            version_notes="",
             force=False,
             force_exercises=False,
             send_email=False,
             progress_tracker=None,
-            language="fr",
             is_draft_version=True,
             use_staging_tree=False,
         )
