@@ -1234,12 +1234,18 @@ export const Channel = new CreateModelResource({
     });
   },
 
-  publishDraft(id, use_staging_tree=false, version_notes="") {
+  publishDraft(id, opts={}) {
+    const {
+      use_staging_tree = false,
+      version_notes = '',
+      language = currentLanguage,
+    } = opts;
+
     const change = new PublishedNextChange({
       key: id,
-      use_staging_tree: use_staging_tree,
-      version_notes: version_notes,
-      language: currentLanguage,
+      use_staging_tree,
+      version_notes,
+      language,
       table: this.tableName,
       source: CLIENTID,
     });

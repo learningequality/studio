@@ -1137,7 +1137,7 @@ def save_export_database(channel_id, version, is_draft_version=False):
     target_paths = [
         os.path.join(settings.DB_ROOT, "{}-{}.sqlite3".format(channel_id, version))
     ]
-    # Only create non-version path if not using the staging tree
+    # Only create non-version path if not is_draft_version
     if not is_draft_version:
         target_paths.append(
             os.path.join(settings.DB_ROOT, "{id}.sqlite3".format(id=channel_id))

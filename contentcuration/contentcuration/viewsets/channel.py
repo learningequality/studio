@@ -620,8 +620,8 @@ class ChannelViewSet(ValuesViewset):
             try:
                 self.publish_next(
                     publish["key"],
-                    version_notes=publish.get("version_notes"),
-                    language=publish.get("language"),
+                    # version_notes=publish.get("version_notes"),
+                    # language=publish.get("language"),
                     use_staging_tree=publish.get("use_staging_tree", False), 
                 )
             except Exception as e:
@@ -630,7 +630,7 @@ class ChannelViewSet(ValuesViewset):
                 errors.append(publish)
         return errors
 
-    def publish_next(self, pk, version_notes="", language=None, use_staging_tree=False):
+    def publish_next(self, pk, use_staging_tree=False):
         logging.debug("Entering the publish staging channel endpoint")
 
         channel = self.get_edit_queryset().get(pk=pk)
@@ -645,9 +645,7 @@ class ChannelViewSet(ValuesViewset):
                 channel = publish_channel(
                     self.request.user.pk,
                     channel.id,
-                    version_notes=version_notes,
                     progress_tracker=progress_tracker,
-                    language=language,
                     is_draft_version=True,
                     use_staging_tree=use_staging_tree,
                 )
