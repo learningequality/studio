@@ -448,8 +448,6 @@ export class PublishedNextChange extends Change {
       );
     }
     this.setAndValidateBoolean(use_staging_tree, 'use_staging_tree');
-    this.setAndValidateIsDefined(version_notes, 'version_notes');
-    this.setAndValidateIsDefined(language, 'language');
     this.setChannelAndUserId({ id: this.key });
   }
 }
