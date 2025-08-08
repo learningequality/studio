@@ -620,8 +620,6 @@ class ChannelViewSet(ValuesViewset):
             try:
                 self.publish_next(
                     publish["key"],
-                    # version_notes=publish.get("version_notes"),
-                    # language=publish.get("language"),
                     use_staging_tree=publish.get("use_staging_tree", False), 
                 )
             except Exception as e:
