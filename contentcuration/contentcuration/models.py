@@ -2605,6 +2605,21 @@ class CommunityLibrarySubmission(models.Model):
 
         super().save(*args, **kwargs)
 
+    def mark_live(self):
+        """
+        Marks this submission as the live submission for the channel,
+        and marks any previously live submissions as approved but not live.
+        """
+        CommunityLibrarySubmission.objects.filter(
+            channel=self.channel,
+            status=community_library_submission.STATUS_LIVE,
+        ).update(
+            status=community_library_submission.STATUS_APPROVED,
+        )
+
+        self.status = community_library_submission.STATUS_LIVE
+        self.save()
+
     @classmethod
     def filter_view_queryset(cls, queryset, user):
         if user.is_anonymous:
