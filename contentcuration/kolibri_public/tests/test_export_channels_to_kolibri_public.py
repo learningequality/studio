@@ -7,43 +7,17 @@ from unittest import mock
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 from django.core.management import call_command
-from django.db import models as django_models
 from django.test import TestCase
 from kolibri_content.apps import KolibriContentConfig
-from kolibri_content.fields import UUIDField
 from kolibri_content.models import ChannelMetadata as ExportedChannelMetadata
 from kolibri_content.router import get_active_content_database
 from kolibri_content.router import using_content_database
+from kolibri_public.tests.utils.mixer import KolibriPublicMixer
 from kolibri_public.utils.export_channel_to_kolibri_public import (
     export_channel_to_kolibri_public,
 )
-from mixer.backend.django import GenFactory
-from mixer.backend.django import Mixer
 
 from contentcuration.models import Country
-
-
-class CustomizedMixer(Mixer):
-    """Slightly modified Mixer that works correctly with the active
-    content database and with UUIDField.
-    """
-
-    def __init__(self, *args, **kwargs):
-        mixer_factory = GenFactory()
-        mixer_factory.generators[UUIDField] = mixer_factory.generators[
-            django_models.UUIDField
-        ]
-
-        return super().__init__(*args, factory=mixer_factory, **kwargs)
-
-    def postprocess(self, target):
-        if self.params.get("commit"):
-            # Not sure why the `force_insert` is needed, but using the
-            # mixer causes "Save with update_fields did not affect any rows" error
-            # if this is not specified
-            target.save(using=get_active_content_database(), force_insert=True)
-
-        return target
 
 
 class ExportTestCase(TestCase):
@@ -80,7 +54,7 @@ class ExportTestCase(TestCase):
                 database=get_active_content_database(),
             )
 
-            mixer = CustomizedMixer()
+            mixer = KolibriPublicMixer()
             self.exported_channel_metadata = mixer.blend(
                 ExportedChannelMetadata,
                 id=self.channel_id,

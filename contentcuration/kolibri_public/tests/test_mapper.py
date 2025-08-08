@@ -15,6 +15,7 @@ from kolibri_public.tests.base import ChannelBuilder
 from kolibri_public.tests.base import OKAY_TAG
 from kolibri_public.utils.mapper import ChannelMapper
 from le_utils.constants import content_kinds
+from le_utils.constants.labels.subjects import SUBJECTSLIST
 
 from contentcuration.models import Channel
 from contentcuration.models import Country
@@ -261,6 +262,33 @@ class ChannelMapperTest(TestCase):
             mapper.run()
 
             self.assertCountEqual(mapper.mapped_channel.countries.all(), countries)
+
+    def test_categories_bitmask_annotation(self):
+        with using_content_database(self.tempdb):
+            categories = [
+                SUBJECTSLIST[0],  # 1
+                SUBJECTSLIST[2],  # 4
+                SUBJECTSLIST[4],  # 16
+            ]
+
+            # Delete all categories in the tree, so that only explicitly provided categories
+            # are used
+            kolibri_content_models.ContentNode.objects.filter(
+                channel_id=self.channel.id,
+            ).update(categories=None)
+
+            mapper = ChannelMapper(
+                channel=self.channel,
+                public=False,
+                categories=categories,
+            )
+            mapper.run()
+
+            self.assertTrue(
+                hasattr(mapper.mapped_channel, "categories_bitmask_0"),
+                "ChannelMetadata should have categories_bitmask_0 field",
+            )
+            self.assertEqual(mapper.mapped_channel.categories_bitmask_0, 1 | 4 | 16)
 
     def tearDown(self):
         # Clean up datbase connection after the test

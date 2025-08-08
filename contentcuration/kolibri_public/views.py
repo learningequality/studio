@@ -33,7 +33,7 @@ from django_filters.rest_framework import FilterSet
 from django_filters.rest_framework import NumberFilter
 from django_filters.rest_framework import UUIDFilter
 from kolibri_public import models
-from kolibri_public.search import get_available_metadata_labels
+from kolibri_public.search import get_contentnode_available_metadata_labels
 from kolibri_public.stopwords import stopwords_set
 from le_utils.constants import content_kinds
 from rest_framework import status
@@ -82,13 +82,22 @@ def metadata_cache(some_func):
 MODALITIES = set(["QUIZ"])
 
 
+def bitmask_contains_and(queryset, name, value):
+    """
+    A filtering method that filters instances matching all provided
+    comma-separated values using bitmask fields on the model.
+    """
+    return queryset.has_all_labels(name, value.split(","))
+
+
 class ChannelMetadataFilter(FilterSet):
     available = BooleanFilter(method="filter_available", label="Available")
     has_exercise = BooleanFilter(method="filter_has_exercise", label="Has exercises")
+    categories = CharFilter(method=bitmask_contains_and, label="Categories")
 
     class Meta:
         model = models.ChannelMetadata
-        fields = ("available", "has_exercise")
+        fields = ("available", "has_exercise", "categories")
 
     def filter_has_exercise(self, queryset, name, value):
         queryset = queryset.annotate(
@@ -133,6 +142,8 @@ class ChannelMetadataViewSet(ReadOnlyValuesViewset):
         "public",
         "total_resource_count",
         "published_size",
+        "categories",
+        "countries",
     )
 
     field_map = {
@@ -228,12 +239,12 @@ class ContentNodeFilter(FilterSet):
     parent__isnull = BooleanFilter(field_name="parent", lookup_expr="isnull")
     include_coach_content = BooleanFilter(method="filter_include_coach_content")
     contains_quiz = CharFilter(method="filter_contains_quiz")
-    grade_levels = CharFilter(method="bitmask_contains_and")
-    resource_types = CharFilter(method="bitmask_contains_and")
-    learning_activities = CharFilter(method="bitmask_contains_and")
-    accessibility_labels = CharFilter(method="bitmask_contains_and")
-    categories = CharFilter(method="bitmask_contains_and")
-    learner_needs = CharFilter(method="bitmask_contains_and")
+    grade_levels = CharFilter(method=bitmask_contains_and)
+    resource_types = CharFilter(method=bitmask_contains_and)
+    learning_activities = CharFilter(method=bitmask_contains_and)
+    accessibility_labels = CharFilter(method=bitmask_contains_and)
+    categories = CharFilter(method=bitmask_contains_and)
+    learner_needs = CharFilter(method=bitmask_contains_and)
     keywords = CharFilter(method="filter_keywords")
     channels = UUIDInFilter(field_name="channel_id")
     languages = CharInFilter(field_name="lang_id")
@@ -343,9 +354,6 @@ class ContentNodeFilter(FilterSet):
         )
 
         return queryset.filter(query)
-
-    def bitmask_contains_and(self, queryset, name, value):
-        return queryset.has_all_labels(name, value.split(","))
 
 
 def map_file(file):
@@ -533,7 +541,10 @@ class OptionalContentNodePagination(ValuesViewsetCursorPagination):
                 [
                     ("more", self.get_more()),
                     ("results", data),
-                    ("labels", get_available_metadata_labels(self.queryset)),
+                    (
+                        "labels",
+                        get_contentnode_available_metadata_labels(self.queryset),
+                    ),
                 ]
             )
         )
