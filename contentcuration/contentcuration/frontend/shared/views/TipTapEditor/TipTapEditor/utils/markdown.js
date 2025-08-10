@@ -43,7 +43,7 @@ export const paramsToImageMd = ({ src, alt, width, height, permanentSrc }) => {
   }
 
   const fileName = sourceToSave.split('/').pop();
-  if (width && height) {
+  if (Number.isFinite(+width) && Number.isFinite(+height)) {
     return `![${alt || ''}](${IMAGE_PLACEHOLDER}/${fileName} =${width}x${height})`;
   }
   return `![${alt || ''}](${IMAGE_PLACEHOLDER}/${fileName})`;
