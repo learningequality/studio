@@ -75,7 +75,7 @@
       <KIcon
         icon="image"
         class="icon-thumbnail"
-        :style="{ fill: '#999999', fontSize: '3em' }"
+        :style="{ fill: '#123345', width: '40%', height: 'auto' }"
       />
     </div>
   </figure>
