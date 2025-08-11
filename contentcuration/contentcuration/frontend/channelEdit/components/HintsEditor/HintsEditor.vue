@@ -38,6 +38,7 @@
                     <TipTapEditor
                       v-model="hint.hint"
                       :mode="isHintOpen(hintIdx) ? 'edit' : 'view'"
+                      :image-processor="EditorImageProcessor"
                       @update="updateHintText($event, hintIdx)"
                       @minimize="emitClose"
                       @open-editor="emitOpen(answerIdx)"
@@ -82,6 +83,7 @@
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
   import { AssessmentItemToolbarActions } from '../../constants';
   import { swapElements } from 'shared/utils/helpers';
+  import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
 
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue';
 
@@ -121,6 +123,7 @@
           AssessmentItemToolbarActions.MOVE_ITEM_DOWN,
           AssessmentItemToolbarActions.DELETE_ITEM,
         ],
+        EditorImageProcessor,
       };
     },
     methods: {

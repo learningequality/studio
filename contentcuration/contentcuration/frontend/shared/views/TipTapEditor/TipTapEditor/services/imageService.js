@@ -9,13 +9,7 @@ import { FormatPresetsNames } from 'shared/leUtils/FormatPresets';
 
 const MAX_FILE_SIZE_MB = 10;
 // see: shared/leUtils/FormatPresets.js
-export const ACCEPTED_MIME_TYPES = [
-  'image/png',
-  'image/jpeg',
-  'image/jpg',
-  'image/gif',
-  'image/svg+xml',
-];
+const ACCEPTED_MIME_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/svg+xml'];
 
 const { noFileProvided$, invalidFileType$, fileTooLarge$, fileSizeUnit$, failedToProcessImage$ } =
   getTipTapEditorStrings();
@@ -25,7 +19,7 @@ const { noFileProvided$, invalidFileType$, fileTooLarge$, fileSizeUnit$, failedT
  * @param {File} file - The file to validate.
  * @returns {{isValid: boolean, error?: string}}
  */
-export function validateFile(file) {
+function validateFile(file) {
   if (!file) {
     return { isValid: false, error: noFileProvided$() };
   }
@@ -65,21 +59,12 @@ function uploadFileToStorage({ file_format, mightSkip, checksum, file, url, cont
 }
 
 /**
- * Gets accepted file types string for file input.
- * @returns {string}
- */
-export function getAcceptedFileTypes() {
-  const extensions = ['.png', '.jpg', '.jpeg', '.webp', '.svg'];
-  return [...ACCEPTED_MIME_TYPES, ...extensions].join(',');
-}
-
-/**
  * Main file processing function that uploads to server.
  * Adapted from uploadFile action but simplified for image-specific use.
  * @param {File} file - The image file to process.
  * @returns {Promise<{src: string, width: number, height: number, file: File, id: string}>}
  */
-export async function processFile(file) {
+async function processFile(file) {
   const validation = validateFile(file);
   if (!validation.isValid) {
     throw new Error(validation.error);
@@ -150,3 +135,10 @@ export async function processFile(file) {
     }
   }
 }
+
+const EditorImageProcessor = {
+  ACCEPTED_MIME_TYPES,
+  processFile,
+};
+
+export default EditorImageProcessor;

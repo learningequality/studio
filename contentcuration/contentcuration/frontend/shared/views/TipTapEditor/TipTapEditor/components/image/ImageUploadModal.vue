@@ -144,8 +144,7 @@
 
 <script>
 
-  import { defineComponent, ref, computed, onMounted } from 'vue';
-  import { processFile, ACCEPTED_MIME_TYPES } from '../../services/imageService';
+  import { defineComponent, ref, computed, onMounted, inject } from 'vue';
   import { useFocusTrap } from '../../composables/useFocusTrap';
   import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
   import ImageDropZone from './ImageDropZone.vue';
@@ -194,6 +193,10 @@
         () => file.value?.name || (isEditMode.value ? defaultImageName$() : ''),
       );
       const canInsert = computed(() => !!previewSrc.value);
+
+      // Inject the image processor service
+      const imageProcessor = inject('imageProcessor', {});
+      const { processFile, ACCEPTED_MIME_TYPES } = imageProcessor;
 
       onMounted(() => {
         originalData.value = { ...props.initialData };

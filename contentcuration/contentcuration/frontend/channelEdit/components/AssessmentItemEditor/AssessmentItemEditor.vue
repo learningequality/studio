@@ -45,6 +45,7 @@
                 v-if="isQuestionOpen"
                 v-model="question"
                 mode="edit"
+                :imageProcessor="EditorImageProcessor"
                 @update="onQuestionUpdate"
                 @minimize="closeQuestion"
               />
@@ -143,6 +144,7 @@
   import { FormatPresetsNames } from 'shared/leUtils/FormatPresets';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue';
+  import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
 
   export default {
     name: 'AssessmentItemEditor',
@@ -212,6 +214,7 @@
         openAnswerIdx: null,
         kindSelectKey: 0,
         AssessmentItemTypes,
+        EditorImageProcessor,
       };
     },
     computed: {
