@@ -205,7 +205,6 @@
         openAnswerIdx: null,
         kindSelectKey: 0,
         AssessmentItemTypes,
-        EditorImageProcessor,
       };
     },
     computed: {
