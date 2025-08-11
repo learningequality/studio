@@ -671,6 +671,50 @@ class CRUDTestCase(StudioAPITestCase):
         )
         self.assertEqual(response.status_code, 200, response.content)
 
+    def test_admin_channel_detail__latest_community_library_submission__exists(self):
+        older_submission = testdata.community_library_submission()
+        older_submission.channel.version = 2
+        older_submission.channel_version = 1
+        older_submission.channel.save()
+        older_submission.save()
+
+        latest_submission = CommunityLibrarySubmission.objects.create(
+            channel=older_submission.channel,
+            channel_version=2,
+            author=older_submission.author,
+        )
+
+        self.client.force_authenticate(self.admin_user)
+        response = self.client.get(
+            reverse(
+                "admin-channels-detail", kwargs={"pk": older_submission.channel.id}
+            ),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(
+            response.data["latest_community_library_submission_id"],
+            latest_submission.id,
+        )
+        self.assertEqual(
+            response.data["latest_community_library_submission_status"],
+            community_library_submission.STATUS_PENDING,
+        )
+
+    def test_admin_channel_detail__latest_community_library_submission__none_exist(
+        self,
+    ):
+        channel = testdata.channel()
+
+        self.client.force_authenticate(self.admin_user)
+        response = self.client.get(
+            reverse("admin-channels-detail", kwargs={"pk": channel.id}),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertIsNone(response.data["latest_community_library_submission_id"])
+        self.assertIsNone(response.data["latest_community_library_submission_status"])
+
     def test_create_channel(self):
         user = testdata.user()
         self.client.force_authenticate(user=user)
