@@ -247,7 +247,12 @@
       const triggerFileInput = () => fileInput.value.click();
       const onFileSelect = event => handleFileChange(event.target.files[0]);
       const onInsert = () => emit('insert', { src: previewSrc.value, alt: altText.value });
-      const onSave = () => emit('update', { src: previewSrc.value, alt: altText.value });
+      const onSave = () =>
+        emit('update', {
+          src: previewSrc.value,
+          alt: altText.value,
+          permanentSrc: previewSrc.value,
+        });
 
       useFocusTrap(modalRoot);
 
