@@ -1,74 +1,69 @@
 <template>
 
-  <Uploader
-    ref="uploader"
-    :presetID="imagePreset"
-  >
-    <template #default="{ handleFiles }">
-      <VLayout>
-        <DropdownWrapper
-          component="VFlex"
-          xs7
-          lg5
-        >
-          <template #default="{ attach, menuProps }">
-            <VSelect
-              :key="kindSelectKey"
-              :items="kindSelectItems"
-              :value="kind"
-              :label="$tr('questionTypeLabel')"
-              data-test="kindSelect"
-              :menu-props="menuProps"
-              :attach="attach"
-              box
-              @input="onKindUpdate"
-            />
-          </template>
-        </DropdownWrapper>
-      </VLayout>
-
-      <VLayout>
-        <VFlex>
-          <ErrorList
-            :errors="questionErrorMessages"
-            data-test="questionErrors"
+  <div>
+    <VLayout>
+      <DropdownWrapper
+        component="VFlex"
+        xs7
+        lg5
+      >
+        <template #default="{ attach, menuProps }">
+          <VSelect
+            :key="kindSelectKey"
+            :items="kindSelectItems"
+            :value="kind"
+            :label="$tr('questionTypeLabel')"
+            data-test="kindSelect"
+            :menu-props="menuProps"
+            :attach="attach"
+            box
+            @input="onKindUpdate"
           />
+        </template>
+      </DropdownWrapper>
+    </VLayout>
 
-          <div class="grey--text mb-1 text--darken-2">
-            {{ $tr('questionLabel') }}
-          </div>
+    <VLayout>
+      <VFlex>
+        <ErrorList
+          :errors="questionErrorMessages"
+          data-test="questionErrors"
+        />
 
-          <transition name="fade">
-            <keep-alive include="TipTapEditor">
-              <!--analyticsLabel="Question"-->
-              <TipTapEditor
-                v-if="isQuestionOpen"
-                v-model="question"
-                mode="edit"
-                :imageProcessor="EditorImageProcessor"
-                @update="onQuestionUpdate"
-                @minimize="closeQuestion"
-              />
+        <div class="grey--text mb-1 text--darken-2">
+          {{ $tr('questionLabel') }}
+        </div>
 
-              <div
-                v-else
-                class="pb-3 pl-2 pr-2 pt-3 question-text"
-                data-test="questionText"
-                @click="openQuestion"
+        <transition name="fade">
+          <keep-alive include="TipTapEditor">
+            <!--analyticsLabel="Question"-->
+            <TipTapEditor
+              v-if="isQuestionOpen"
+              v-model="question"
+              mode="edit"
+              @update="onQuestionUpdate"
+              @minimize="closeQuestion"
+            />
+
+            <div
+              v-else
+              class="pb-3 pl-2 pr-2 pt-3 question-text"
+              data-test="questionText"
+              @click="openQuestion"
+            >
+              <VLayout
+                align-start
+                justify-space-between
               >
-                <VLayout
-                  align-start
-                  justify-space-between
-                >
-                  <VFlex grow>
-                    <TipTapEditor
-                      v-model="question"
-                      mode="view"
-                      tabindex="-1"
-                    />
-                  </VFlex>
+                <VFlex grow>
+                  <TipTapEditor
+                    v-model="question"
+                    mode="view"
+                    tabindex="-1"
+                  />
+                </VFlex>
 
-                  <VFlex shrink>
+                <VFlex shrink>
                     <button
                       class="v-btn v-btn--flat v-btn--icon v-size--default"
                       data-test="editQuestionButton"
@@ -80,46 +75,44 @@
                         class="mr-2"
                       />
                     </button>
-                  </VFlex>
-                </VLayout>
-              </div>
-            </keep-alive>
-          </transition>
-        </VFlex>
-      </VLayout>
+                </VFlex>
+              </VLayout>
+            </div>
+          </keep-alive>
+        </transition>
+      </VFlex>
+    </VLayout>
 
-      <VLayout
-        v-if="kind !== AssessmentItemTypes.FREE_RESPONSE"
-        mt-4
-      >
-        <VFlex>
-          <ErrorList
-            :errors="answersErrorMessages"
-            data-test="answersErrors"
-          />
+    <VLayout
+      v-if="kind !== AssessmentItemTypes.FREE_RESPONSE"
+      mt-4
+    >
+      <VFlex>
+        <ErrorList
+          :errors="answersErrorMessages"
+          data-test="answersErrors"
+        />
 
-          <AnswersEditor
-            :questionKind="kind"
-            :answers="answers"
-            :openAnswerIdx="openAnswerIdx"
-            @update="onAnswersUpdate"
-            @open="openAnswer"
-            @close="closeAnswer"
-          />
+        <AnswersEditor
+          :questionKind="kind"
+          :answers="answers"
+          :openAnswerIdx="openAnswerIdx"
+          @update="onAnswersUpdate"
+          @open="openAnswer"
+          @close="closeAnswer"
+        />
 
-          <HintsEditor
-            class="mt-4"
-            :hints="hints"
-            :openHintIdx="openHintIdx"
-            :handleFileUpload="handleFiles"
-            @update="onHintsUpdate"
-            @open="openHint"
-            @close="closeHint"
-          />
-        </VFlex>
-      </VLayout>
-    </template>
-  </Uploader>
+        <HintsEditor
+          class="mt-4"
+          :hints="hints"
+          :openHintIdx="openHintIdx"
+          @update="onHintsUpdate"
+          @open="openHint"
+          @close="closeHint"
+        />
+      </VFlex>
+    </VLayout>
+  </div>
 
 </template>
 
@@ -140,11 +133,8 @@
     FeatureFlagKeys,
   } from 'shared/constants';
   import ErrorList from 'shared/views/ErrorList/ErrorList';
-  import Uploader from 'shared/views/files/Uploader';
-  import { FormatPresetsNames } from 'shared/leUtils/FormatPresets';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue';
-  import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
 
   export default {
     name: 'AssessmentItemEditor',
@@ -153,7 +143,6 @@
       ErrorList,
       AnswersEditor,
       HintsEditor,
-      Uploader,
       TipTapEditor,
     },
     model: {
@@ -214,7 +203,6 @@
         openAnswerIdx: null,
         kindSelectKey: 0,
         AssessmentItemTypes,
-        EditorImageProcessor,
       };
     },
     computed: {
@@ -226,9 +214,6 @@
         }
 
         return this.item.question;
-      },
-      imagePreset() {
-        return FormatPresetsNames.EXERCISE_IMAGE;
       },
       modality() {
         return this.getContentNode(this.nodeId)?.extra_fields?.options?.modality;
