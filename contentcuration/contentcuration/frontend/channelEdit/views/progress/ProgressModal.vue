@@ -101,7 +101,8 @@
                  !this.currentChannel.publishing && 
                  !this.currentChannel.publishing_draft && 
                  this.currentChannel.last_published &&
-                 !this.currentChannel.published; // Only show for drafts, not live publishes
+                 !this.currentChannel.published &&
+                 !this.currentTask; 
         }
         return false;
       },
