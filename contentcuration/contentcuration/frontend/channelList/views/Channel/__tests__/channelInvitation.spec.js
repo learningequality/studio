@@ -45,7 +45,10 @@ describe('channelInvitation', () => {
     await wrapper.find('[data-test="decline"]').trigger('click');
     const declineInvitation = jest.spyOn(wrapper.vm, 'declineInvitation');
     declineInvitation.mockImplementation(() => Promise.resolve());
-    await wrapper.findComponent('[data-testid="channel-invitation-modal"]').find('form').trigger('submit');
+    await wrapper
+      .findComponent('[data-testid="channel-invitation-modal"]')
+      .find('form')
+      .trigger('submit');
     expect(declineInvitation).toHaveBeenCalledWith(invitationID);
   });
 });
