@@ -1238,16 +1238,55 @@ export const Channel = new CreateModelResource({
     const {
       use_staging_tree = false,
     } = opts;
+  
+    return this.transaction({ mode: 'rw' }, () => {
+      return this.table.update(id, { 
+        publishing: true,
+        publishing_draft: true  
+      });
+    }).then(() => {
+      const change = new PublishedNextChange({
+        key: id,
+        use_staging_tree,
+        table: this.tableName,
+        source: CLIENTID,
+      });
+      return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
+        return this._saveAndQueueChange(change);
+      });
+    }).then(() => {
+      this._monitorDraftCompletion(id);
+      return Promise.resolve();
+    });
+  },
 
-    const change = new PublishedNextChange({
-      key: id,
-      use_staging_tree,
-      table: this.tableName,
-      source: CLIENTID,
-    });
-    return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
-      return this._saveAndQueueChange(change);
-    });
+  _monitorDraftCompletion(channelId) {
+    const checkInterval = setInterval(async () => {
+      try {
+        const changes = await this.table.db.table(CHANGES_TABLE)
+          .where('table')
+          .equals(TABLE_NAMES.CHANNEL)
+          .and(change => change.key === channelId && change.type === CHANGE_TYPES.PUBLISHED_NEXT)
+          .toArray();
+        
+        if (changes.length === 0) {
+          clearInterval(checkInterval);
+          await this.transaction({ mode: 'rw' }, () => {
+            return this.table.update(channelId, { 
+              publishing: false,
+              publishing_draft: false
+            });
+          });
+        }
+      } catch (error) {
+        console.error('Error monitoring draft completion:', error);
+        clearInterval(checkInterval);
+      }
+    }, 2000); 
+    
+    setTimeout(() => {
+      clearInterval(checkInterval);
+    }, 300000); 
   },
 
   deploy(id) {

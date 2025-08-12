@@ -30,11 +30,31 @@
       <span>{{ $tr('publishHeader') }}</span>&nbsp;<span>{{ progressPercent }}</span>
     </div>
     <div
+      v-else-if="isPublishingDraft"
+      class="grey--text"
+      data-test="progress"
+    >
+      <VProgressCircular
+        indeterminate
+        size="16"
+        width="2"
+        color="loading"
+        class="mr-2"
+      />
+      <span>{{ $tr('draftHeader') }}</span>
+    </div>
+    <div
+      v-else-if="showDraftSaved"
+      class="grey--text"
+    >
+      {{ $tr('draftSaved') }}
+    </div>
+    <div
       v-else
       class="grey--text"
     >
       {{
-        lastPublished
+        lastPublished && !isPublishingDraft
           ? $tr('lastPublished', { last_published: $formatRelative(lastPublished, now) })
           : $tr('unpublishedText')
       }}
@@ -65,7 +85,24 @@
         // add condition so that publishing modal is only visible for users
         // who have channel publishing permissions
         if (this.canManage) {
-          return this.currentChannel && this.currentChannel.publishing;
+          return this.currentChannel && this.currentChannel.publishing && !this.currentChannel.publishing_draft;
+        }
+        return false;
+      },
+      isPublishingDraft() {
+        if (this.canManage) {
+          return this.currentChannel && this.currentChannel.publishing && this.currentChannel.publishing_draft;
+        }
+        return false;
+      },
+      showDraftSaved() {
+        if (this.canManage) {
+          return this.currentChannel && 
+                 !this.currentChannel.publishing && 
+                 !this.currentChannel.publishing_draft && 
+                 this.currentChannel.last_published &&
+                 !this.currentChannel.published &&
+                 !this.currentTask; 
         }
         return false;
       },
@@ -137,6 +174,8 @@
     $trs: {
       defaultErrorText: 'Last attempt to publish failed',
       publishHeader: 'Publishing channel',
+      draftHeader: 'Saving draft...',
+      draftSaved: 'Saved just now',
       lastPublished: 'Published {last_published}',
       unpublishedText: 'Unpublished',
       syncHeader: 'Syncing resources',
