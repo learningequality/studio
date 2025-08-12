@@ -53,7 +53,7 @@
         </KRouterLink>
       </VToolbarItems>
       <VSpacer />
-      <SavingIndicator v-if="!offline" />
+      <SavingIndicator v-if="!offline && !isDraftPublishing" />
       <OfflineText indicator />
       <ProgressModal />
       <div
@@ -207,9 +207,12 @@
     />
     <slot></slot>
 
-    <PublishModal
-      v-if="showPublishModal"
-      v-model="showPublishModal"
+    <PublishSidePanel
+      v-if="showPublishSidePanel && currentChannel && currentChannel.id"
+      :open="showPublishSidePanel"
+      :channelId="currentChannel.id"
+      @close="showPublishSidePanel = false"
+      @submitted="showPublishSidePanel = false"
     />
     <template v-if="isPublished">
       <ChannelTokenModal
@@ -328,6 +331,7 @@
   import DraggableRegion from 'shared/views/draggable/DraggableRegion';
   import { DropEffect } from 'shared/mixins/draggable/constants';
   import DraggablePlaceholder from 'shared/views/draggable/DraggablePlaceholder';
+  import PublishSidePanel from '../../sidePanels/PublishSidePanel';
 
   export default {
     name: 'TreeViewBase',
@@ -346,6 +350,7 @@
       MessageDialog,
       SavingIndicator,
       QuickEditModal,
+      PublishSidePanel,
     },
     mixins: [titleMixin],
     props: {
@@ -363,6 +368,7 @@
         showClipboard: false,
         showDeleteModal: false,
         syncing: false,
+        showPublishSidePanel: false,
       };
     },
     computed: {
@@ -389,9 +395,12 @@
       isRicecooker() {
         return Boolean(this.currentChannel.ricecooker_version);
       },
+      isDraftPublishing() {
+        return this.currentChannel && this.currentChannel.publishing && this.currentChannel.publishing_draft;
+      },
       disablePublish() {
         return (
-          this.currentChannel.publishing ||
+          (this.currentChannel.publishing && !this.currentChannel.publishing_draft) || 
           !this.isChanged ||
           !this.currentChannel.language ||
           (this.rootNode && !this.rootNode.resource_count)
@@ -502,7 +511,9 @@
         this.trackClickEvent('Delete channel');
       },
       publishChannel() {
-        this.showPublishModal = true;
+        console.log('publishChannel called, currentChannel:', this.currentChannel);
+        console.log('Setting showPublishSidePanel to true');
+        this.showPublishSidePanel = true;
         this.trackClickEvent('Publish');
       },
       trackClickEvent(eventLabel) {

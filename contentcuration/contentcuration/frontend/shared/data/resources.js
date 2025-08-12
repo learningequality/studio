@@ -1238,16 +1238,63 @@ export const Channel = new CreateModelResource({
     const {
       use_staging_tree = false,
     } = opts;
+  
+    return this.transaction({ mode: 'rw' }, () => {
+      return this.table.update(id, { 
+        publishing: true,
+        publishing_draft: true  
+      });
+    }).then(() => {
+      const change = new PublishedNextChange({
+        key: id,
+        use_staging_tree,
+        table: this.tableName,
+        source: CLIENTID,
+      });
+      return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
+        return this._saveAndQueueChange(change);
+      });
+    }).then(() => {
+      // Monitor the change table for backend completion
+      // When the PublishedNextChange is processed and returned as applied,
+      // we can reset the publishing status
+      this._monitorDraftCompletion(id);
+      return Promise.resolve();
+    });
+  },
 
-    const change = new PublishedNextChange({
-      key: id,
-      use_staging_tree,
-      table: this.tableName,
-      source: CLIENTID,
-    });
-    return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
-      return this._saveAndQueueChange(change);
-    });
+  _monitorDraftCompletion(channelId) {
+    // Check every 2 seconds if the draft publishing change has been processed
+    const checkInterval = setInterval(async () => {
+      try {
+        // Look for the PublishedNextChange in the changes table
+        const changes = await this.table.db.table(CHANGES_TABLE)
+          .where('table')
+          .equals(TABLE_NAMES.CHANNEL)
+          .and(change => change.key === channelId && change.type === CHANGE_TYPES.PUBLISHED_NEXT)
+          .toArray();
+        
+        // If no changes found, the backend has processed and removed them
+        if (changes.length === 0) {
+          clearInterval(checkInterval);
+          // Reset publishing status since backend has completed
+          await this.transaction({ mode: 'rw' }, () => {
+            return this.table.update(channelId, { 
+              publishing: false,
+              publishing_draft: false
+            });
+          });
+        }
+      } catch (error) {
+        console.error('Error monitoring draft completion:', error);
+        clearInterval(checkInterval);
+      }
+    }, 2000); // Check every 2 seconds
+    
+    // Stop monitoring after 5 minutes to prevent infinite checking
+    setTimeout(() => {
+      clearInterval(checkInterval);
+    }, 300000); // 5 minutes timeout
   },
 
   deploy(id) {
