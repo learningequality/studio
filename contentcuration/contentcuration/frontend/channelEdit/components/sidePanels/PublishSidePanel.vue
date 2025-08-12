@@ -12,7 +12,7 @@
 
       <template #default>
         <div class="form-section">
-                    <KRadioButtonGroup>
+          <KRadioButtonGroup>
             <KRadioButton
               :label="modeLive$()"
               :buttonValue="'live'"
@@ -171,8 +171,6 @@ export default {
       const rootNode = getContentNode.value(currentChannel.value.root_id);
       return rootNode ? rootNode.error_count || 0 : 0;
     });
-
-
 
     const showLanguageDropdown = computed(() => {
       return mode.value === 'live';
