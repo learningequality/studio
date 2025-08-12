@@ -1255,29 +1255,22 @@ export const Channel = new CreateModelResource({
         return this._saveAndQueueChange(change);
       });
     }).then(() => {
-      // Monitor the change table for backend completion
-      // When the PublishedNextChange is processed and returned as applied,
-      // we can reset the publishing status
       this._monitorDraftCompletion(id);
       return Promise.resolve();
     });
   },
 
   _monitorDraftCompletion(channelId) {
-    // Check every 2 seconds if the draft publishing change has been processed
     const checkInterval = setInterval(async () => {
       try {
-        // Look for the PublishedNextChange in the changes table
         const changes = await this.table.db.table(CHANGES_TABLE)
           .where('table')
           .equals(TABLE_NAMES.CHANNEL)
           .and(change => change.key === channelId && change.type === CHANGE_TYPES.PUBLISHED_NEXT)
           .toArray();
         
-        // If no changes found, the backend has processed and removed them
         if (changes.length === 0) {
           clearInterval(checkInterval);
-          // Reset publishing status since backend has completed
           await this.transaction({ mode: 'rw' }, () => {
             return this.table.update(channelId, { 
               publishing: false,
@@ -1289,12 +1282,11 @@ export const Channel = new CreateModelResource({
         console.error('Error monitoring draft completion:', error);
         clearInterval(checkInterval);
       }
-    }, 2000); // Check every 2 seconds
+    }, 2000); 
     
-    // Stop monitoring after 5 minutes to prevent infinite checking
     setTimeout(() => {
       clearInterval(checkInterval);
-    }, 300000); // 5 minutes timeout
+    }, 300000); 
   },
 
   deploy(id) {
