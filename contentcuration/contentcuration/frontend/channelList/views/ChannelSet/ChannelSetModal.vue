@@ -82,7 +82,6 @@
                 <KButton
                   :text="$tr('selectChannelsHeader')"
                   :primary="true"
-                  class="mb-4"
                   data-test="button-select"
                   appearance="raised-button"
                   @click="step++"
