@@ -13,30 +13,27 @@
       <VFlex>
         <KButton
           :text="$tr('aboutChannelSetsLink')"
-          class="mx-2"
+          class="link-btn"
           appearance="basic-link"
           @click="infoDialog = true"
         />
         <KModal
           v-if="infoDialog"
+          :cancelText="$tr('cancelButtonLabel')"
           :title="$tr('aboutChannelSets')"
+          @cancel="infoDialog = false"
         >
-          <template>
-            <div>
-              <p>
-                {{ $tr('channelSetsDescriptionText') }}
-              </p>
-              <p>
-                {{ $tr('channelSetsInstructionsText') }}
-              </p>
-              <p :style="{ color: $themePalette.red.v_500 }">
-                {{ $tr('channelSetsDisclaimer') }}
-              </p>
-            </div>
-          </template>
-          <template #actions>
-            <KButton @click="infoDialog = false"> {{ $tr('cancelButtonLabel') }} </KButton>
-          </template>
+          <div>
+            <p>
+              {{ $tr('channelSetsDescriptionText') }}
+            </p>
+            <p>
+              {{ $tr('channelSetsInstructionsText') }}
+            </p>
+            <p :style="{ color: $themePalette.red.v_500 }">
+              {{ $tr('channelSetsDisclaimer') }}
+            </p>
+          </div>
         </KModal>
       </VFlex>
       <VSpacer />
@@ -158,6 +155,10 @@
 
   .list-items {
     margin: 0 auto;
+  }
+
+  .link-btn {
+    margin: 0 8px;
   }
 
   ::v-deep .v-datatable {
