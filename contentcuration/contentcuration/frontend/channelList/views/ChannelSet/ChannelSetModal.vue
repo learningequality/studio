@@ -79,14 +79,14 @@
                 v-else
                 fluid
               >
-                <VBtn
-                  color="primary"
+                <KButton
+                  :text="$tr('selectChannelsHeader')"
+                  :primary="true"
                   class="mb-4"
                   data-test="button-select"
+                  appearance="raised-button"
                   @click="step++"
-                >
-                  {{ $tr('selectChannelsHeader') }}
-                </VBtn>
+                />
                 <VCard
                   v-for="channelId in channels"
                   :key="channelId"
@@ -183,22 +183,25 @@
         {{ $tr('channelSelectedCountText', { channelCount: channels.length }) }}
       </div>
       <VSpacer />
-      <VBtn
-        v-if="step === 1"
-        color="primary"
-        data-test="button-save"
-        @click="save"
-      >
-        {{ saveText }}
-      </VBtn>
-      <VBtn
-        v-else
-        color="primary"
-        data-test="button-finish"
-        @click="finish"
-      >
-        {{ $tr('finish') }}
-      </VBtn>
+      <div class="save-btn">
+        <KButton
+          v-if="step === 1"
+          :text="saveText"
+          :primary="true"
+          data-test="button-save"
+          appearance="raised-button"
+          @click="save"
+        />
+        <KButton
+          v-else
+          :text="$tr('finish')"
+          :primary="true"
+          data-test="button-finish"
+          appearance="raised-button"
+          @click="finish"
+        />
+      </div>
+      
     </template>
   </FullscreenModal>
 
