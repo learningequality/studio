@@ -2,20 +2,22 @@
   <div>
     <SidePanelModal
       alignment="right"
-      :ariaLabel="$tr('publishPanelAria')"
-      @keyup.esc="onClose"
+      sidePanelWidth="700px"
+      closeButtonIconType="close"
       @closePanel="onClose"
     >
       <template #header>
-        <h2 style="margin: 0">{{ getPanelTitle() }}</h2>
+        <h1 style="margin: 0">{{ getPanelTitle() }}</h1>
       </template>
 
       <template #default>
         <div class="form-section">
-          <VRadioGroup v-model="mode">
-            <VRadio
-              :label="$tr('modeLive')"
-              value="live"
+                    <KRadioButtonGroup>
+            <KRadioButton
+              :label="modeLive$()"
+              :buttonValue="'live'"
+              :currentValue="mode"
+              @input="mode = 'live'"
             />
             <div class="radio-description">{{ getLiveModeDescription() }}</div>
             
@@ -23,46 +25,58 @@
             <div v-if="mode === 'live'" class="live-mode-content" style="margin-left: 24px; margin-top: 16px;">
               <div class="info-section">
                 <VIconWrapper class="info-icon">info</VIconWrapper>
-                <span>{{ $tr('publishingInfo', { version: currentChannel.version, time: formattedPublishTime }) }}</span>
+                <span>{{ publishingInfo$({ version: currentChannel.version, time: formattedPublishTime }) }}</span>
               </div>
               
-                                            <div class="form-section" style="width: 100%; max-width: 100%;">
-                  <div class="textarea-container">
-                    <label class="label">{{ $tr('versionNotesLabel') }}</label>
-                    <textarea
-                      v-model="version_notes"
-                      :rows="4"
-                      :maxlength="30"
-                      class="custom-textarea"
-                      :placeholder="$tr('versionNotesLabel')"
-                    ></textarea>
-                    <div class="char-counter">{{ version_notes.length }} / 30</div>
-                  </div>
-                </div>
+              <div class="form-section">
+                <KTextbox
+                  v-model="version_notes"
+                  :label="versionNotesLabel$()"
+                  :invalid="version_notes.length > 250"
+                  :invalidText="maxLengthError$()"
+                  :showInvalidText="version_notes.length > 250"
+                  textArea
+                  :maxlength="250"
+                />
+              </div>
+              
+              <!-- Language selector -->
+              <div v-if="showLanguageDropdown" class="form-section">
+                <KSelect
+                  v-model="language"
+                  :label="languageLabel$()"
+                  :invalid="showLanguageInvalidText"
+                  :invalidText="languageRequiredMessage$()"
+                  :options="languages"
+                  @change="onLanguageChange"
+                />
+              </div>
               
               <div v-if="incompleteResourcesCount > 0" class="form-section warning-section">
                 <div class="warning-content">
                   <VIconWrapper class="warning-icon">warning</VIconWrapper>
                   <div class="warning-text">
-                    <div class="warning-title">{{ $tr('incompleteResourcesWarning', { count: incompleteResourcesCount }) }}</div>
-                    <div class="warning-description">{{ $tr('incompleteResourcesDescription') }}</div>
+                    <div class="warning-title">{{ incompleteResourcesWarning$({ count: incompleteResourcesCount }) }}</div>
+                    <div class="warning-description">{{ incompleteResourcesDescription$() }}</div>
                   </div>
                 </div>
               </div>
             </div>
             
-            <VRadio
-              :label="$tr('modeDraft')"
-              value="draft"
+            <KRadioButton
+              :label="modeDraft$()"
+              :buttonValue="'draft'"
+              :currentValue="mode"
+              @input="mode = 'draft'"
             />
-            <div class="radio-description">{{ $tr('modeDraftDescription') }}</div>
-          </VRadioGroup>
+            <div class="radio-description">{{ modeDraftDescription$() }}</div>
+          </KRadioButtonGroup>
         </div>
       </template>
 
       <template #bottomNavigation>
         <div class="footer">
-          <VBtn flat @click="onClose">{{ $tr('cancel') }}</VBtn>
+          <VBtn flat @click="onClose">{{ cancel$() }}</VBtn>
           <VBtn
             color="primary"
             :disabled="submitting"
@@ -77,37 +91,67 @@
 </template>
 
 <script>
+import { ref, computed, getCurrentInstance, watch, onMounted } from 'vue';
 import SidePanelModal from 'shared/views/SidePanelModal';
 import VIconWrapper from 'shared/views/VIconWrapper';
+import KRadioButtonGroup from 'kolibri-design-system/lib/KRadioButtonGroup';
+import KRadioButton from 'kolibri-design-system/lib/KRadioButton';
+import KTextbox from 'kolibri-design-system/lib/KTextbox';
+import KSelect from 'kolibri-design-system/lib/KSelect';
 import { Channel } from 'shared/data/resources';
 import { forceServerSync } from 'shared/data/serverSync';
 import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
-
-import { mapGetters } from 'vuex';
+import { LanguagesList } from 'shared/leUtils/Languages';
 
 export default {
   name: 'PublishSidePanel',
   components: { 
     SidePanelModal,
     VIconWrapper,
+    KRadioButtonGroup,
+    KRadioButton,
+    KTextbox,
+    KSelect,
   },
   props: {
     open: { type: Boolean, required: true },
     channelId: { type: String, required: true },
   },
   emits: ['close', 'submitted'],
-  data() {
-    return {
-      mode: 'live',
-      version_notes: '',
-      submitting: false,
-    };
-  },
-  computed: {
-    ...mapGetters('currentChannel', ['currentChannel']),
-    ...mapGetters('contentNode', ['getContentNode']),
-    formattedPublishTime() {
-      if (!this.currentChannel) return '';
+  setup(props, { emit }) {
+    const mode = ref('live');
+    const version_notes = ref('');
+    const submitting = ref(false);
+    const language = ref({});
+    const showLanguageInvalidText = ref(false);
+
+    const instance = getCurrentInstance();
+    const store = instance.proxy.$store;
+
+    const {
+      publishToLibrary$,
+      publishChannel$,
+      publishLive$,
+      saveDraft$,
+      modeLive$,
+      modeDraft$,
+      versionNotesLabel$,
+      modeLiveDescription$,
+      modeDraftDescription$,
+      publishingInfo$,
+      incompleteResourcesWarning$,
+      incompleteResourcesDescription$,
+      maxLengthError$,
+      cancel$,
+      languageLabel$,
+      languageRequiredMessage$,
+    } = communityChannelsStrings;
+
+    const currentChannel = computed(() => store.getters['currentChannel/currentChannel']);
+    const getContentNode = computed(() => store.getters['contentNode/getContentNode']);
+
+    const formattedPublishTime = computed(() => {
+      if (!currentChannel.value) return '';
       const now = new Date();
       const timeString = now.toLocaleTimeString('en-US', { 
         hour: 'numeric', 
@@ -120,64 +164,148 @@ export default {
         year: 'numeric' 
       });
       return `${timeString} - ${dateString}`;
-    },
-    incompleteResourcesCount() {
-      if (!this.currentChannel) return 0;
-      const rootNode = this.getContentNode(this.currentChannel.root_id);
+    });
+
+    const incompleteResourcesCount = computed(() => {
+      if (!currentChannel.value) return 0;
+      const rootNode = getContentNode.value(currentChannel.value.root_id);
       return rootNode ? rootNode.error_count || 0 : 0;
-    },
-  },
-  methods: {
-    onClose() {
-      if (!this.submitting) this.$emit('close');
-    },
-    async submit() {
+    });
+
+
+
+    const showLanguageDropdown = computed(() => {
+      return mode.value === 'live';
+    });
+
+    const languages = computed(() => {
+      return filterLanguages(() => true);
+    });
+
+    const isLanguageValid = computed(() => {
+      return Object.keys(language.value).length > 0;
+    });
+
+    watch(currentChannel, (newChannel) => {
+      if (newChannel) {
+        initializeLanguage();
+      }
+    }, { immediate: true });
+
+    onMounted(() => {
+      initializeLanguage();
+    });
+
+    const onClose = () => {
+      if (!submitting.value) emit('close');
+    };
+
+    const submit = async () => {
       try {
-        this.submitting = true;
-        if (this.mode === 'draft') {
-          await Channel.publishDraft(this.currentChannel.id, { use_staging_tree: false });
+        submitting.value = true;
+        if (mode.value === 'draft') {
+          await Channel.publishDraft(currentChannel.value.id, { use_staging_tree: false });
           await forceServerSync();
-          this.$emit('submitted');
-          this.$emit('close');
+          emit('submitted');
+          emit('close');
         } else {
-          await Channel.publish(this.channelId, {
-            version_notes: this.version_notes,
-          });
-          this.$emit('submitted');
-          this.$emit('close');
+          if (language.value && language.value.value && language.value.value !== currentChannel.value?.language) {
+            await store.dispatch('channel/updateChannel', {
+              id: currentChannel.value.id,
+              language: language.value.value,
+            });
+          }
+          
+          await Channel.publish(props.channelId, version_notes.value);
+          
+          emit('submitted');
+          emit('close');
         }
       } catch (error) {
-        this.$store.dispatch('shared/handleAxiosError', error);
+        store.dispatch('shared/handleAxiosError', error);
       } finally {
-        this.submitting = false;
+        submitting.value = false;
       }
-    },
-    getPanelTitle() {
-      return this.mode === 'draft' ? this.$tr('publishToLibrary') : this.$tr('publishChannel');
-    },
-    getLiveModeDescription() {
-      return this.$tr('modeLiveDescription');
-    },
-    getButtonText() {
-      return this.mode === 'draft' ? this.$tr('saveDraft') : this.$tr('publishLive');
-    },
-  },
-  $trs: {
-    publishToLibrary: 'Publish to library',
-    publishChannel: 'Publish channel',
-    publishPanelAria: 'Publish channel side panel',
-    publishLive: 'PUBLISH',
-    saveDraft: 'SAVE DRAFT',
-    modeLive: 'Live',
-    modeDraft: 'Draft (staging)',
-    versionNotesLabel: 'Describe what\'s new in this channel version',
-    cancel: 'CANCEL',
-    modeLiveDescription: 'This edition will be accessible to the public through the Kolibri public library.',
-    modeDraftDescription: 'Your channel will be saved as a draft, allowing you to review or conduct quality checks without altering the published version on Kolibri public library.',
-    publishingInfo: 'You\'re publishing: Version {version} ({time})',
-    incompleteResourcesWarning: '{count} incomplete resources.',
-    incompleteResourcesDescription: 'Incomplete resources will not be published and made available for download in Kolibri. Click \'Publish\' to confirm that you would like to publish anyway.',
-    maxLengthError: 'Maximum 30 characters allowed',
+    };
+
+    const getPanelTitle = () => {
+      return mode.value === 'draft' ? publishToLibrary$() : publishChannel$();
+    };
+
+    const getLiveModeDescription = () => {
+      return modeLiveDescription$();
+    };
+
+    const getButtonText = () => {
+      return mode.value === 'draft' ? saveDraft$() : publishLive$();
+    };
+
+    const onLanguageChange = () => {
+      showLanguageInvalidText.value = !isLanguageValid.value;
+    };
+
+    const filterLanguages = (filterFn) => {
+      return LanguagesList.filter(filterFn).map(l => ({
+        value: l.id,
+        label: l.native_name,
+      }));
+    };
+
+    const initializeLanguage = () => {
+      if (currentChannel.value?.language) {
+        const channelLang = filterLanguages(l => l.id === currentChannel.value.language)[0];
+        if (channelLang) {
+          language.value = channelLang;
+        } else {
+          language.value = {
+            value: currentChannel.value.language,
+            label: currentChannel.value.language
+          };
+        }
+      } else {
+        language.value = { value: 'en', label: 'English' };
+      }
+    };
+
+    return {
+      mode,
+      version_notes,
+      submitting,
+      language,
+      showLanguageInvalidText,
+      
+      currentChannel,
+      getContentNode,
+      formattedPublishTime,
+      incompleteResourcesCount,
+      showLanguageDropdown,
+      languages,
+      isLanguageValid,
+      
+      publishToLibrary$,
+      publishChannel$,
+      publishLive$,
+      saveDraft$,
+      modeLive$,
+      modeDraft$,
+      versionNotesLabel$,
+      modeLiveDescription$,
+      modeDraftDescription$,
+      publishingInfo$,
+      incompleteResourcesWarning$,
+      incompleteResourcesDescription$,
+      maxLengthError$,
+      cancel$,
+      languageLabel$,
+      languageRequiredMessage$,
+      
+      onClose,
+      submit,
+      getPanelTitle,
+      getLiveModeDescription,
+      getButtonText,
+      onLanguageChange,
+    };
   },
 };
 </script>
@@ -242,26 +370,5 @@ export default {
 .warning-description {
   color: #6c757d;
   line-height: 1.4;
-}
-.textarea-container {
-  width: 100%;
-}
-.custom-textarea {
-  width: 100%;
-  min-height: 100px;
-  padding: 12px;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  font-family: inherit;
-  font-size: 14px;
-  line-height: 1.5;
-  resize: vertical;
-  box-sizing: border-box;
-}
-.char-counter {
-  text-align: center;
-  color: #666;
-  font-size: 12px;
-  margin-top: 4px;
 }
 </style> 

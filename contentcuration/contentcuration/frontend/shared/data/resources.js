@@ -1213,23 +1213,25 @@ export const Channel = new CreateModelResource({
     return this.transaction({ mode: 'rw' }, () => {
       return this.table.update(id, { publishing: true });
     }).then(() => {
-      const change = new PublishedChange({
-        key: id,
-        version_notes,
-        language: currentLanguage,
-        table: this.tableName,
-        source: CLIENTID,
-      });
-      return this.transaction({ mode: 'rw' }, CHANGES_TABLE, TABLE_NAMES.CONTENTNODE, () => {
-        return Promise.all([
-          this._saveAndQueueChange(change),
-          ContentNode.table.where({ channel_id: id }).modify({
-            changed: false,
-            published: true,
-            has_new_descendants: false,
-            has_updated_descendants: false,
-          }),
-        ]);
+      return this.table.get(id).then(channel => {
+        const change = new PublishedChange({
+          key: id,
+          version_notes,
+          language: channel.language || currentLanguage,
+          table: this.tableName,
+          source: CLIENTID,
+        });
+        return this.transaction({ mode: 'rw' }, CHANGES_TABLE, TABLE_NAMES.CONTENTNODE, () => {
+          return Promise.all([
+            this._saveAndQueueChange(change),
+            ContentNode.table.where({ channel_id: id }).modify({
+              changed: false,
+              published: true,
+              has_new_descendants: false,
+              has_updated_descendants: false,
+            }),
+          ]);
+        });
       });
     });
   },
