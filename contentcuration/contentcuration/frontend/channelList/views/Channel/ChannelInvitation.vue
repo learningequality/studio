@@ -37,27 +37,15 @@
     <KModal
       v-if="dialog"
       size="small"
+      :submitText="$tr('decline')"
+      :cancelText="$tr('cancel')"
       :title="$tr('decliningInvitation')"
+      data-testid="channel-invitation-modal"
+      @submit="declineAndClose"
+      @cancel="close"
     >
       <template>
         {{ $tr('decliningInvitationMessage') }}
-      </template>
-      <template #actions>
-        <div class="modal-actions">
-          <div class="modal-actions__close">
-            <KButton @click="close">{{ $tr('cancel') }} </KButton>
-          </div>
-          <div class="modal-actions__decline">
-            <KButton
-              :primary="true"
-              appearance="raised-button"
-              data-test="decline-close"
-              @click="declineAndClose"
-            >
-              {{ $tr('decline') }}
-            </KButton>
-          </div>
-        </div>
       </template>
     </KModal>
   </div>
