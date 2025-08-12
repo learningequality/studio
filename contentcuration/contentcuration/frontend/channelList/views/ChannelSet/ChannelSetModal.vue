@@ -201,7 +201,6 @@
           @click="finish"
         />
       </div>
-      
     </template>
   </FullscreenModal>
 
