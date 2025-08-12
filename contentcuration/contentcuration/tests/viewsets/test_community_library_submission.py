@@ -1,6 +1,5 @@
 import datetime
 from unittest import mock
-from urllib.parse import urlencode
 
 import pytz
 from django.urls import reverse
@@ -12,23 +11,8 @@ from contentcuration.models import Change
 from contentcuration.models import CommunityLibrarySubmission
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
+from contentcuration.tests.helpers import reverse_with_query
 from contentcuration.viewsets.sync.constants import ADDED_TO_COMMUNITY_LIBRARY
-
-
-def reverse_with_query(
-    viewname, urlconf=None, args=None, kwargs=None, current_app=None, query=None
-):
-    """
-    This helper wraps the Django `reverse` function to support the `query` argument.
-    This argument is supported natively since Django 5.2, so when Django is updated
-    above this version, this helper can be removed.
-    """
-    url = reverse(
-        viewname, urlconf=urlconf, args=args, kwargs=kwargs, current_app=current_app
-    )
-    if query:
-        return f"{url}?{urlencode(query)}"
-    return url
 
 
 class CRUDTestCase(StudioAPITestCase):

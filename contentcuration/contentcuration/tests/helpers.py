@@ -1,7 +1,9 @@
 from importlib import import_module
+from urllib.parse import urlencode
 
 import mock
 from celery import states
+from django.urls import reverse
 from django_celery_results.models import TaskResult
 from search.models import ContentNodeFullTextSearch
 
@@ -53,3 +55,19 @@ def mock_class_instance(target):
             return mock.Mock(spec_set=cls)
 
     return MockClass()
+
+
+def reverse_with_query(
+    viewname, urlconf=None, args=None, kwargs=None, current_app=None, query=None
+):
+    """
+    This helper wraps the Django `reverse` function to support the `query` argument.
+    This argument is supported natively since Django 5.2, so when Django is updated
+    above this version, this helper can be removed.
+    """
+    url = reverse(
+        viewname, urlconf=urlconf, args=args, kwargs=kwargs, current_app=current_app
+    )
+    if query:
+        return f"{url}?{urlencode(query)}"
+    return url

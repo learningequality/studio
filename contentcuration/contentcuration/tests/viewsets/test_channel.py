@@ -19,6 +19,7 @@ from contentcuration.models import Country
 from contentcuration.tasks import apply_channel_changes_task
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
+from contentcuration.tests.helpers import reverse_with_query
 from contentcuration.tests.viewsets.base import generate_create_event
 from contentcuration.tests.viewsets.base import generate_delete_event
 from contentcuration.tests.viewsets.base import generate_deploy_channel_event
@@ -717,6 +718,67 @@ class CRUDTestCase(StudioAPITestCase):
         self.assertIsNone(response.data["latest_community_library_submission_id"])
         self.assertIsNone(response.data["latest_community_library_submission_status"])
         self.assertFalse(response.data["has_any_live_community_library_submission"])
+
+    def test_admin_channel_filter__latest_community_library_submission_status__any(
+        self,
+    ):
+        self.client.force_authenticate(user=self.admin_user)
+
+        submission = testdata.community_library_submission()
+
+        response = self.client.get(
+            reverse_with_query(
+                "admin-channels-list",
+                query={
+                    "id__in": submission.channel.id,
+                },
+            ),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(len(response.data), 1)
+
+    def test_admin_channel_filter__latest_community_library_submission_status__multiple(
+        self,
+    ):
+        self.client.force_authenticate(user=self.admin_user)
+
+        submission1 = testdata.community_library_submission()
+        submission1.status = community_library_submission.STATUS_LIVE
+        submission1.save()
+
+        submission2 = testdata.community_library_submission()
+        submission2.status = community_library_submission.STATUS_PENDING
+        submission2.save()
+
+        submission3 = testdata.community_library_submission()
+        submission3.status = community_library_submission.STATUS_APPROVED
+        submission3.save()
+
+        response = self.client.get(
+            reverse_with_query(
+                "admin-channels-list",
+                query=[
+                    (
+                        "latest_community_library_submission_status",
+                        community_library_submission.STATUS_LIVE,
+                    ),
+                    (
+                        "latest_community_library_submission_status",
+                        community_library_submission.STATUS_PENDING,
+                    ),
+                ],
+            ),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertCountEqual(
+            [ch["id"] for ch in response.data],
+            [
+                submission1.channel.id,
+                submission2.channel.id,
+            ],
+        )
 
     def test_create_channel(self):
         user = testdata.user()

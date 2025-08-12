@@ -1054,6 +1054,10 @@ class CatalogViewSet(ReadOnlyValuesViewset):
 
 
 class AdminChannelFilter(BaseChannelFilter):
+    latest_community_library_submission_status = CharFilter(
+        method="filter_latest_community_library_submission_status"
+    )
+
     def filter_keywords(self, queryset, name, value):
         keywords = value.split(" ")
         editors_first_name = reduce(
@@ -1070,6 +1074,14 @@ class AdminChannelFilter(BaseChannelFilter):
             | (editors_first_name & editors_last_name)
             | editors_email
         )
+
+    def filter_latest_community_library_submission_status(self, queryset, name, value):
+        values = self.request.query_params.getlist(name)
+        if values:
+            return queryset.filter(
+                latest_community_library_submission__status__in=values
+            )
+        return queryset
 
 
 class AdminChannelSerializer(ChannelSerializer):
