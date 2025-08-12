@@ -4,14 +4,13 @@
     ref="form"
     @submit.prevent="submit"
   >
-    <StudioBanner 
-      v-if="Boolean(errorCount())" 
+    <StudioBanner
+      v-if="Boolean(errorCount())"
       error
       class="my-2"
     >
       {{ errorText() }}
     </StudioBanner>
-
 
     <!-- Nature of content -->
     <h3>{{ $tr('natureOfYourContentLabel') }}</h3>

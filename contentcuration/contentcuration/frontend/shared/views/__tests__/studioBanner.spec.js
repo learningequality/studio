@@ -26,7 +26,7 @@ describe('StudioBanner', () => {
       routes: new VueRouter(),
       slots: {
         default: '',
-      }
+      },
     });
 
     const banner = screen.getByTestId('studio-banner');
@@ -42,7 +42,7 @@ describe('StudioBanner', () => {
       routes: new VueRouter(),
       slots: {
         default: sampleErrorMessage,
-      }
+      },
     });
 
     const banner = screen.getByTestId('studio-banner');
