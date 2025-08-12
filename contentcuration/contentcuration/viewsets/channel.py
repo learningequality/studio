@@ -1125,6 +1125,7 @@ class AdminChannelViewSet(ChannelViewSet, RESTUpdateModelMixin, RESTDestroyModel
         "primary_token",
         "latest_community_library_submission__id",
         "latest_community_library_submission__status",
+        "has_any_live_community_library_submission",
     )
 
     def perform_destroy(self, instance):
@@ -1169,6 +1170,12 @@ class AdminChannelViewSet(ChannelViewSet, RESTUpdateModelMixin, RESTDestroyModel
                 condition=Q(
                     community_library_submissions__id=latest_community_library_submission_id,
                 ),
+            ),
+            has_any_live_community_library_submission=Exists(
+                CommunityLibrarySubmission.objects.filter(
+                    channel_id=OuterRef("id"),
+                    status=community_library_submission_constants.STATUS_LIVE,
+                )
             ),
         )
         return queryset

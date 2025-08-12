@@ -675,6 +675,7 @@ class CRUDTestCase(StudioAPITestCase):
         older_submission = testdata.community_library_submission()
         older_submission.channel.version = 2
         older_submission.channel_version = 1
+        older_submission.status = community_library_submission.STATUS_LIVE
         older_submission.channel.save()
         older_submission.save()
 
@@ -700,6 +701,7 @@ class CRUDTestCase(StudioAPITestCase):
             response.data["latest_community_library_submission_status"],
             community_library_submission.STATUS_PENDING,
         )
+        self.assertTrue(response.data["has_any_live_community_library_submission"])
 
     def test_admin_channel_detail__latest_community_library_submission__none_exist(
         self,
@@ -714,6 +716,7 @@ class CRUDTestCase(StudioAPITestCase):
         self.assertEqual(response.status_code, 200, response.content)
         self.assertIsNone(response.data["latest_community_library_submission_id"])
         self.assertIsNone(response.data["latest_community_library_submission_status"])
+        self.assertFalse(response.data["has_any_live_community_library_submission"])
 
     def test_create_channel(self):
         user = testdata.user()
