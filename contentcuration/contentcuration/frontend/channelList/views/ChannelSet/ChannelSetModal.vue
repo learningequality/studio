@@ -292,7 +292,6 @@
         return Object.values(ChannelListTypes).filter(l => l !== 'bookmark');
       },
       channelSet() {
-        console.log('channelSet', this.getChannelSet(this.channelSetId));
         return this.getChannelSet(this.channelSetId) || {};
       },
       headerText() {
