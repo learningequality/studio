@@ -1090,9 +1090,7 @@ class AdminChannelFilter(BaseChannelFilter):
         return queryset
 
     def filter_community_library_live(self, queryset, name, value):
-        return queryset.filter(
-            community_library_submissions__status=community_library_submission_constants.STATUS_LIVE
-        ).distinct()
+        return queryset.filter(has_any_live_community_library_submission=True)
 
     def filter_has_community_library_submission(self, queryset, name, value):
         return queryset.filter(latest_community_library_submission__isnull=False)
