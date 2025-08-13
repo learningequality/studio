@@ -82,6 +82,7 @@
                 <KButton
                   :text="$tr('selectChannelsHeader')"
                   :primary="true"
+                  class="link-btn"
                   data-test="button-select"
                   appearance="raised-button"
                   @click="step++"
@@ -292,6 +293,7 @@
         return Object.values(ChannelListTypes).filter(l => l !== 'bookmark');
       },
       channelSet() {
+        console.log('channelSet', this.getChannelSet(this.channelSetId));
         return this.getChannelSet(this.channelSetId) || {};
       },
       headerText() {
@@ -516,4 +518,10 @@
 </script>
 
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+
+  .link-btn {
+    margin-bottom: 25px;
+  }
+
+</style>
