@@ -1,14 +1,9 @@
-from future import standard_library
-
-standard_library.install_aliases()
-
-
 """
 Latest ricecooker version
 Any version >= VERSION_OK will get a message that
 the version is "up to date" (log level = info)
 """
-VERSION_OK = "0.6.32"  # this gets overwritten to current v. after XML RPC call
+VERSION_OK = "0.7.3"
 VERSION_OK_MESSAGE = "Ricecooker v{} is up-to-date."
 
 """
@@ -16,7 +11,7 @@ Recommended minimum ricecooker version
 Any version < VERSION_OK and >= VERSION_SOFT_WARNING will get a
 recommendation to upgrade before running (log level = warning)
 """
-VERSION_SOFT_WARNING = "0.6.30"
+VERSION_SOFT_WARNING = "0.7.0"
 VERSION_SOFT_WARNING_MESSAGE = (
     "You are using Ricecooker v{}, however v{} is available. "
     "You should consider upgrading your Ricecooker."

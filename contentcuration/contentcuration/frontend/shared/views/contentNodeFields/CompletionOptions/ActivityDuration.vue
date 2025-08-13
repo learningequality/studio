@@ -1,7 +1,10 @@
 <template>
 
   <VFlex>
-    <VLayout row wrap>
+    <VLayout
+      row
+      wrap
+    >
       <VFlex
         v-if="audioVideoUpload && isExactTime"
         class="defaultUpload md2 sm3"
@@ -28,7 +31,11 @@
           </template>
         </DropdownWrapper>
       </VFlex>
-      <VFlex v-else md3 sm3>
+      <VFlex
+        v-else
+        md3
+        sm3
+      >
         <VTextField
           v-model="minutes"
           type="number"
@@ -54,7 +61,10 @@
         >
       </div>
     </VLayout>
-    <VLayout row wrap>
+    <VLayout
+      row
+      wrap
+    >
       <VFlex v-if="showRequiredLabel">
         {{ $tr('notOptionalLabel') }}
       </VFlex>
@@ -65,6 +75,7 @@
   </VFlex>
 
 </template>
+
 
 <script>
 
@@ -223,7 +234,9 @@
   };
 
 </script>
-<style lang="less" scoped>
+
+
+<style lang="scss" scoped>
 
   .defaultUpload {
     margin: 0.8em;
@@ -240,8 +253,8 @@
     width: 100%;
     max-width: 300px;
     height: 2px;
-    outline: none;
     appearance: none;
+    outline: none;
   }
 
   input[type='range']::-webkit-slider-thumb {

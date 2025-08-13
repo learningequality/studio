@@ -85,7 +85,7 @@ def current_user_for_context(user):
 
     user_data = {field: getattr(user, field) for field in user_fields}
 
-    user_data["user_rev"] = Change.objects.filter(applied=True, user=user).values_list("server_rev", flat=True).order_by("-server_rev").first() or 0
+    user_data["user_rev"] = user.get_server_rev()
 
     return json_for_parse_from_data(user_data)
 
@@ -123,9 +123,12 @@ def get_prober_channel(request):
 
     channel = Channel.objects.filter(editors=request.user).first()
     if not channel:
-        channel = Channel.objects.create(actor_id=request.user.id, name="Prober channel", editors=[request.user])
+        channel = Channel.objects.create(
+            actor_id=request.user.id, name="Prober channel", editors=[request.user]
+        )
 
     return Response(SimplifiedChannelProbeCheckSerializer(channel).data)
+
 
 @api_view(["GET"])
 @authentication_classes((TokenAuthentication, SessionAuthentication))
@@ -133,18 +136,23 @@ def get_prober_channel(request):
 def publishing_status(request):
     if not request.user.is_admin:
         return HttpResponseForbidden()
-    associated_custom_task_metadata_ids = CustomTaskMetadata.objects.filter(channel_id=Cast(OuterRef(OuterRef("channel_id")), UUIDField())).values_list("task_id",flat=True)
+    associated_custom_task_metadata_ids = CustomTaskMetadata.objects.filter(
+        channel_id=Cast(OuterRef(OuterRef("channel_id")), UUIDField())
+    ).values_list("task_id", flat=True)
     associated_tasks = TaskResult.objects.filter(
         task_name="export-channel",
         task_id__in=Subquery(associated_custom_task_metadata_ids),
     )
     channel_publish_status = (
-        ChannelHistory.objects
-        .filter(
+        ChannelHistory.objects.filter(
             action=channel_history.PUBLICATION,
-            channel_id__in=Channel.objects.filter(main_tree__publishing=True).values("id"),
+            channel_id__in=Channel.objects.filter(main_tree__publishing=True).values(
+                "id"
+            ),
         )
-        .annotate(task_id=associated_tasks.order_by("-date_created").values("task_id")[:1])
+        .annotate(
+            task_id=associated_tasks.order_by("-date_created").values("task_id")[:1]
+        )
         .distinct("channel_id")
         .order_by("channel_id", "-performed")
         .values("channel_id", "performed", "task_id")
@@ -176,9 +184,11 @@ def task_queue_status(request):
 
     from contentcuration.celery import app
 
-    return Response({
-        'queued_task_count': app.count_queued_tasks(),
-    })
+    return Response(
+        {
+            "queued_task_count": app.count_queued_tasks(),
+        }
+    )
 
 
 @api_view(["GET"])
@@ -194,10 +204,14 @@ def unapplied_changes_status(request):
     for _ in app.get_active_and_reserved_tasks():
         active_task_count += 1
 
-    return Response({
-        'active_task_count': active_task_count,
-        'unapplied_changes_count': Change.objects.filter(applied=False, errored=False).count(),
-    })
+    return Response(
+        {
+            "active_task_count": active_task_count,
+            "unapplied_changes_count": Change.objects.filter(
+                applied=False, errored=False
+            ).count(),
+        }
+    )
 
 
 """ END HEALTH CHECKS """
@@ -213,7 +227,9 @@ def channel_list(request):
     public_channel_list = cache.get(PUBLIC_CHANNELS_CACHE_KEYS["list"])
     if public_channel_list is None:
         public_channel_list = Channel.objects.filter(
-            public=True, main_tree__published=True, deleted=False,
+            public=True,
+            main_tree__published=True,
+            deleted=False,
         ).values_list("main_tree__tree_id", flat=True)
         cache.set(PUBLIC_CHANNELS_CACHE_KEYS["list"], public_channel_list, None)
 
@@ -231,7 +247,11 @@ def channel_list(request):
             .order_by("lang_code")
         )
         languages = {lang["lang_code"]: lang["count"] for lang in public_lang_query}
-        cache.set(PUBLIC_CHANNELS_CACHE_KEYS["languages"], json_for_parse_from_data(languages), None)
+        cache.set(
+            PUBLIC_CHANNELS_CACHE_KEYS["languages"],
+            json_for_parse_from_data(languages),
+            None,
+        )
 
     # Get public channel licenses
     licenses = cache.get(PUBLIC_CHANNELS_CACHE_KEYS["licenses"])
@@ -243,7 +263,11 @@ def channel_list(request):
             .distinct()
         )
         licenses = list(public_license_query)
-        cache.set(PUBLIC_CHANNELS_CACHE_KEYS["licenses"], json_for_parse_from_data(licenses), None)
+        cache.set(
+            PUBLIC_CHANNELS_CACHE_KEYS["licenses"],
+            json_for_parse_from_data(licenses),
+            None,
+        )
 
     # Get public channel kinds
     kinds = cache.get(PUBLIC_CHANNELS_CACHE_KEYS["kinds"])
@@ -255,7 +279,9 @@ def channel_list(request):
             .distinct()
         )
         kinds = list(public_kind_query)
-        cache.set(PUBLIC_CHANNELS_CACHE_KEYS["kinds"], json_for_parse_from_data(kinds), None)
+        cache.set(
+            PUBLIC_CHANNELS_CACHE_KEYS["kinds"], json_for_parse_from_data(kinds), None
+        )
 
     return render(
         request,
@@ -299,7 +325,9 @@ def channel(request, channel_id):
 
     # Check if channel exists
     try:
-        channel = Channel.filter_view_queryset(Channel.objects.all(), request.user).get(id=channel_id)
+        channel = Channel.filter_view_queryset(Channel.objects.all(), request.user).get(
+            id=channel_id
+        )
     except Channel.DoesNotExist:
         channel_error = "CHANNEL_EDIT_ERROR_CHANNEL_NOT_FOUND"
         channel = None
@@ -308,7 +336,7 @@ def channel(request, channel_id):
         # If user can view channel, but it's deleted, then we show
         # an option to restore the channel in the Administration page
         if channel.deleted:
-            channel_error = 'CHANNEL_EDIT_ERROR_CHANNEL_DELETED'
+            channel_error = "CHANNEL_EDIT_ERROR_CHANNEL_DELETED"
         else:
             channel_rev = channel.get_server_rev()
 
@@ -317,7 +345,11 @@ def channel(request, channel_id):
         "channel_edit.html",
         {
             CHANNEL_EDIT_GLOBAL: json_for_parse_from_data(
-                {"channel_id": channel_id, "channel_error": channel_error, "channel_rev": channel_rev}
+                {
+                    "channel_id": channel_id,
+                    "channel_error": channel_error,
+                    "channel_rev": channel_rev,
+                }
             ),
             CURRENT_USER: current_user_for_context(request.user),
             PREFERENCES: json_for_parse_from_data(request.user.content_defaults),
@@ -353,36 +385,36 @@ def set_language(request):
     next_url = payload.get("next")
 
     if (
-        (next_url or request.accepts('text/html')) and
-        not url_has_allowed_host_and_scheme(
-            url=next_url,
-            allowed_hosts={request.get_host()},
-            require_https=request.is_secure(),
-        )
+        next_url or request.accepts("text/html")
+    ) and not url_has_allowed_host_and_scheme(
+        url=next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
     ):
-        next_url = request.META.get('HTTP_REFERER')
+        next_url = request.META.get("HTTP_REFERER")
         if not url_has_allowed_host_and_scheme(
             url=next_url,
             allowed_hosts={request.get_host()},
             require_https=request.is_secure(),
         ):
-            next_url = translate_url(reverse('base'), lang_code)
+            next_url = translate_url(reverse("base"), lang_code)
     next_url_split = urlsplit(next_url) if next_url else None
     if next_url and not is_valid_path(next_url_split.path):
-        next_url = translate_url(reverse('base'), lang_code)
+        next_url = translate_url(reverse("base"), lang_code)
     response = HttpResponse(next_url) if next_url else HttpResponse(status=204)
-    if request.method == 'POST':
+    if request.method == "POST":
         if lang_code and check_for_language(lang_code):
             if next_url:
                 next_trans = translate_url(next_url, lang_code)
                 if next_trans != next_url:
                     response = HttpResponse(next_trans)
-            if hasattr(request, 'session'):
+            if hasattr(request, "session"):
                 # Storing the language in the session is deprecated.
                 # (RemovedInDjango40Warning)
                 request.session[LANGUAGE_SESSION_KEY] = lang_code
             response.set_cookie(
-                settings.LANGUAGE_COOKIE_NAME, lang_code,
+                settings.LANGUAGE_COOKIE_NAME,
+                lang_code,
                 max_age=settings.LANGUAGE_COOKIE_AGE,
                 path=settings.LANGUAGE_COOKIE_PATH,
                 domain=settings.LANGUAGE_COOKIE_DOMAIN,

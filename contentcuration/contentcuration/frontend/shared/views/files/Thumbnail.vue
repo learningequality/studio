@@ -5,7 +5,7 @@
     :class="{
       [kind]: compact,
       'icon-only': compact,
-      'nothumbnail': !showThumbnail && !compact,
+      nothumbnail: !showThumbnail && !compact,
     }"
     :style="{ 'max-width': maxWidth }"
   >
@@ -17,7 +17,10 @@
       class="caption"
       :class="kind"
     >
-      <VFlex shrink class="px-1">
+      <VFlex
+        shrink
+        class="px-1"
+      >
         <VIconWrapper
           v-if="!compact"
           dark
@@ -39,8 +42,14 @@
     >
 
     <!-- If printing the default icon, need to set as printable icon -->
-    <div v-else-if="printing" class="printable-icon">
-      <VIconWrapper :color="$vuetify.theme[kind]" capture-as-image>
+    <div
+      v-else-if="printing"
+      class="printable-icon"
+    >
+      <VIconWrapper
+        :color="$vuetify.theme[kind]"
+        capture-as-image
+      >
         {{ icon }}
       </VIconWrapper>
     </div>
@@ -52,31 +61,31 @@
       :aria-label="kindTitle"
       class="thumbnail-image"
     >
-      <text
-        :x="-1"
-        :y="y"
-        fill="#ffffff"
-        class="material-icons notranslate v-icon"
-      >{{ icon }}</text>
+      <KIcon
+        icon="infoOutline"
+        :x="+10"
+        :y="y + 20"
+        :style="{ fill: '#ffffff' }"
+      />
     </svg>
     <svg
       v-else
-      viewBox="0 0 24 24"
+      viewBox="0 0 40 40"
       :aria-label="kindTitle"
       class="nothumbnail-image"
       :class="$isRTL ? 'rtl-image' : 'ltr-image'"
     >
-      <text
-        :x="-1"
-        :y="y - 3"
-        :fill="$vuetify.theme.greyBorder"
-        class="material-icons notranslate v-icon"
-      >image</text>
+      <KIcon
+        icon="image"
+        :x="-3"
+        :y="y - 14"
+        :style="{ fill: '#999999' }"
+      />
     </svg>
-
   </figure>
 
 </template>
+
 
 <script>
 
@@ -163,14 +172,25 @@
 
 </script>
 
-<style lang="less" scoped>
 
-  @caption-height: 25px;
+<style lang="scss" scoped>
+
+  $caption-height: 25px;
+  $svg-scale: 1.25;
+  $aspect-ratio: 9 / 16;
+
+  $aspect-percentage: $aspect-ratio * 100%;
+  $half-aspect-percentage: $aspect-percentage / 2;
+
+  $svg-width: $aspect-percentage / $svg-scale;
+  $svg-top: $half-aspect-percentage - ($svg-width / 2);
+  $svg-width-quarter: $svg-width / 4;
+  $svg-left-position: 50% - $svg-width-quarter;
 
   .thumbnail {
     position: relative;
     /* stylelint-disable-next-line  */
-    padding-bottom: 100% * 9 / 16;
+    padding-bottom: $aspect-percentage;
 
     &.icon-only {
       padding-top: 0;
@@ -193,7 +213,7 @@
 
   .caption {
     width: 100%;
-    height: @caption-height;
+    height: $caption-height;
     padding: 0 5px;
     line-height: 11px;
   }
@@ -212,18 +232,14 @@
     overflow: hidden; // Don't show alt text outside of img boundaries
 
     .caption + & {
-      height: calc(100% - @caption-height);
+      height: calc(100% - #{$caption-height});
     }
   }
 
-  @svg-scale: 1.25;
-  @svg-width: 100% * 9 / 16 / @svg-scale;
-  @svg-top: (100% * 9 / 16 / 2) - (@svg-width / 2);
-
   svg.thumbnail-image {
     top: 0;
-    left: 50% - (@svg-width / 4);
-    width: @svg-width / 4;
+    left: $svg-left-position;
+    width: $svg-width-quarter;
     margin: 0 auto;
     overflow: visible;
 
@@ -246,7 +262,7 @@
 
   svg.nothumbnail-image {
     top: 0;
-    width: @svg-width;
+    width: $svg-width;
     margin: 0 auto;
     overflow: visible;
 
@@ -259,7 +275,7 @@
     }
 
     .caption + & {
-      top: calc((@caption-height / 2) + @svg-top);
+      top: calc(#{$caption-height / 2} + #{$svg-top});
     }
 
     .icon-only & {

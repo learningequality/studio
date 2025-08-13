@@ -6,14 +6,19 @@ import ChannelTable from '../ChannelTable';
 
 const store = factory();
 
-const loadChannels = jest.fn().mockReturnValue(Promise.resolve());
 const channelList = ['test', 'channel', 'table'];
+let loadItems;
+
 function makeWrapper() {
+  loadItems = jest.spyOn(ChannelTable.mixins[0].methods, '_loadItems');
+  loadItems.mockImplementation(() => Promise.resolve());
+
   router.replace({ name: RouteNames.CHANNELS });
+
   return mount(ChannelTable, {
     router,
     store,
-    sync: false,
+    attachTo: document.body,
     computed: {
       count() {
         return 10;
@@ -21,9 +26,6 @@ function makeWrapper() {
       channels() {
         return channelList;
       },
-    },
-    methods: {
-      loadChannels,
     },
     stubs: {
       ChannelItem: true,
@@ -33,8 +35,12 @@ function makeWrapper() {
 
 describe('channelTable', () => {
   let wrapper;
+
   beforeEach(() => {
     wrapper = makeWrapper();
+  });
+  afterEach(() => {
+    loadItems.mockRestore();
   });
   describe('filters', () => {
     it('changing filter should set query params', () => {
@@ -55,18 +61,17 @@ describe('channelTable', () => {
       wrapper.vm.selectAll = true;
       expect(wrapper.vm.selected).toEqual(channelList);
     });
-    it('removing selectAll should set selected to empty list', () => {
+    it('removing selectAll should set selected to empty list', async () => {
       wrapper.vm.selected = channelList;
       wrapper.vm.selectAll = false;
-      wrapper.vm.$nextTick(() => {
-        expect(wrapper.vm.selected).toEqual([]);
-      });
+      await wrapper.vm.$nextTick();
+      expect(wrapper.vm.selected).toEqual([]);
     });
     it('selectedCount should match the selected length', () => {
       wrapper.vm.selected = ['test'];
       expect(wrapper.vm.selectedCount).toBe(1);
     });
-    it('selected should clear on query changes', () => {
+    it('selected should clear on query changes', async () => {
       wrapper.vm.selected = ['test'];
       router.push({
         ...wrapper.vm.$route,
@@ -74,9 +79,8 @@ describe('channelTable', () => {
           param: 'test',
         },
       });
-      wrapper.vm.$nextTick(() => {
-        expect(wrapper.vm.selected).toEqual([]);
-      });
+      await wrapper.vm.$nextTick();
+      expect(wrapper.vm.selected).toEqual([]);
     });
   });
   describe('bulk actions', () => {
@@ -84,30 +88,27 @@ describe('channelTable', () => {
       expect(wrapper.find('[data-test="csv"]').exists()).toBe(false);
       expect(wrapper.find('[data-test="pdf"]').exists()).toBe(false);
     });
-    it('should be visible if items are selected', () => {
+    it('should be visible if items are selected', async () => {
       wrapper.vm.selected = channelList;
-      wrapper.vm.$nextTick(() => {
-        expect(wrapper.find('[data-test="csv"]').exists()).toBe(true);
-        expect(wrapper.find('[data-test="pdf"]').exists()).toBe(true);
-      });
+      await wrapper.vm.$nextTick();
+      expect(wrapper.find('[data-test="csv"]').exists()).toBe(true);
+      expect(wrapper.find('[data-test="pdf"]').exists()).toBe(true);
     });
-    it('download PDF should call downloadPDF', () => {
-      const downloadPDF = jest.fn();
-      wrapper.setMethods({ downloadPDF });
+    it('download PDF should call downloadPDF', async () => {
+      const downloadPDF = jest.spyOn(wrapper.vm, 'downloadPDF');
+      downloadPDF.mockImplementation(() => Promise.resolve());
       wrapper.vm.selected = channelList;
-      wrapper.vm.$nextTick(() => {
-        wrapper.find('[data-test="pdf"] .v-btn').trigger('click');
-        expect(downloadPDF).toHaveBeenCalled();
-      });
+      await wrapper.vm.$nextTick();
+      wrapper.findComponent('[data-test="pdf"]').trigger('click');
+      expect(downloadPDF).toHaveBeenCalled();
     });
-    it('download CSV should call downloadCSV', () => {
-      const downloadCSV = jest.fn();
-      wrapper.setMethods({ downloadCSV });
+    it('download CSV should call downloadCSV', async () => {
+      const downloadCSV = jest.spyOn(wrapper.vm, 'downloadCSV');
+      downloadCSV.mockImplementation(() => Promise.resolve());
       wrapper.vm.selected = channelList;
-      wrapper.vm.$nextTick(() => {
-        wrapper.find('[data-test="csv"] .v-btn').trigger('click');
-        expect(downloadCSV).toHaveBeenCalled();
-      });
+      await wrapper.vm.$nextTick();
+      wrapper.findComponent('[data-test="csv"]').trigger('click');
+      expect(downloadCSV).toHaveBeenCalled();
     });
   });
 });

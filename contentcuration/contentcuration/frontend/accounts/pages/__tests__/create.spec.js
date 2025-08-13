@@ -31,9 +31,7 @@ const defaultData = {
   accepted_tos: true,
 };
 
-const register = jest.fn();
-
-function makeWrapper(formData) {
+async function makeWrapper(formData) {
   const wrapper = mount(Create, {
     router,
     computed: {
@@ -46,21 +44,15 @@ function makeWrapper(formData) {
     stubs: ['PolicyModals'],
     mocks: connectionStateMocks,
   });
-  wrapper.setData({
+  await wrapper.setData({
     form: {
       ...defaultData,
       ...formData,
     },
   });
-  wrapper.setMethods({
-    register: data => {
-      return new Promise(resolve => {
-        register(data);
-        resolve();
-      });
-    },
-  });
-  return wrapper;
+  const register = jest.spyOn(wrapper.vm, 'register');
+  register.mockImplementation(() => Promise.resolve());
+  return [wrapper, { register }];
 }
 function makeFailedPromise(statusCode) {
   return () => {
@@ -75,38 +67,39 @@ function makeFailedPromise(statusCode) {
 }
 
 describe('create', () => {
-  beforeEach(() => {
-    register.mockReset();
-  });
-  it('should trigger submit method when form is submitted', () => {
-    const submit = jest.fn();
-    const wrapper = makeWrapper();
-    wrapper.setMethods({ submit });
-    wrapper.find({ ref: 'form' }).trigger('submit');
+  it('should trigger submit method when form is submitted', async () => {
+    const [wrapper] = await makeWrapper();
+    const submit = jest.spyOn(wrapper.vm, 'submit');
+    submit.mockImplementation(() => Promise.resolve());
+    await wrapper.findComponent({ ref: 'form' }).trigger('submit');
     expect(submit).toHaveBeenCalled();
   });
-  it('should call register with form data', () => {
-    const wrapper = makeWrapper();
-    wrapper.find({ ref: 'form' }).trigger('submit');
-    expect(register.mock.calls[0][0]).toEqual({
+
+  it('should call register with form data', async () => {
+    const [wrapper, mocks] = await makeWrapper();
+    await wrapper.findComponent({ ref: 'form' }).trigger('submit');
+    expect(mocks.register.mock.calls[0][0]).toEqual({
       ...defaultData,
       locations: defaultData.locations.join('|'),
       uses: defaultData.uses.join('|'),
       policies: '{}',
     });
   });
+
   it('should automatically fill the email if provided in the query param', () => {
     router.push({ name: 'Create', query: { email: 'newtest@test.com' } });
     const wrapper = mount(Create, { router, stubs: ['PolicyModals'], mocks: connectionStateMocks });
     expect(wrapper.vm.form.email).toBe('newtest@test.com');
   });
+
   describe('validation', () => {
-    it('should call register if form is valid', () => {
-      const wrapper = makeWrapper();
+    it('should call register if form is valid', async () => {
+      const [wrapper, mocks] = await makeWrapper();
       wrapper.vm.submit();
-      expect(register).toHaveBeenCalled();
+      expect(mocks.register).toHaveBeenCalled();
     });
-    it('should fail if required fields are not set', () => {
+
+    it('should fail if required fields are not set', async () => {
       const form = {
         first_name: '',
         last_name: '',
@@ -120,55 +113,67 @@ describe('create', () => {
         accepted_tos: false,
       };
 
-      Object.keys(form).forEach(field => {
-        const wrapper = makeWrapper({ [field]: form[field] });
-        wrapper.vm.submit();
-        expect(register).not.toHaveBeenCalled();
-      });
+      for (const field of Object.keys(form)) {
+        const [wrapper, mocks] = await makeWrapper({ [field]: form[field] });
+        await wrapper.vm.submit();
+        expect(mocks.register).not.toHaveBeenCalled();
+      }
     });
-    it('should fail if password1 is too short', () => {
-      const wrapper = makeWrapper({ password1: '123' });
-      wrapper.vm.submit();
-      expect(register).not.toHaveBeenCalled();
+
+    it('should fail if password1 is too short', async () => {
+      const [wrapper, mocks] = await makeWrapper({ password1: '123' });
+      await wrapper.vm.submit();
+      expect(mocks.register).not.toHaveBeenCalled();
     });
-    it('should fail if password1 and password2 do not match', () => {
-      const wrapper = makeWrapper({ password1: 'some other password' });
-      wrapper.vm.submit();
-      expect(register).not.toHaveBeenCalled();
+
+    it('should fail if password1 and password2 do not match', async () => {
+      const [wrapper, mocks] = await makeWrapper({ password1: 'some other password' });
+      await wrapper.vm.submit();
+      expect(mocks.register).not.toHaveBeenCalled();
     });
-    it('should fail if uses field is set to fields that require more input that is not provided', () => {
-      [uses.STORING, uses.OTHER].forEach(use => {
-        const wrapper = makeWrapper({ uses: [use] });
-        wrapper.vm.submit();
-        expect(register).not.toHaveBeenCalled();
-      });
-    });
-    it('should fail if source field is set to an option that requires more input that is not provided', () => {
-      [sources.ORGANIZATION, sources.CONFERENCE, sources.OTHER].forEach(source => {
-        const wrapper = makeWrapper({ source });
-        wrapper.vm.submit();
-        expect(register).not.toHaveBeenCalled();
-      });
-    });
+
+    it.each(
+      [uses.STORING, uses.OTHER],
+      'should fail if uses field is set to fields that require more input that is not provided',
+      async use => {
+        const [wrapper, mocks] = await makeWrapper({ uses: [use] });
+        await wrapper.vm.submit();
+        expect(mocks.register).not.toHaveBeenCalled();
+      },
+    );
+
+    it.each(
+      [sources.ORGANIZATION, sources.CONFERENCE, sources.OTHER],
+      'should fail if source field is set to an option that requires more input that is not provided',
+      async source => {
+        const [wrapper, mocks] = await makeWrapper({ source });
+        await wrapper.vm.submit();
+        expect(mocks.register).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe('on backend failures', () => {
-    let wrapper;
-    beforeEach(() => {
-      wrapper = makeWrapper();
+    let wrapper, mocks;
+
+    beforeEach(async () => {
+      [wrapper, mocks] = await makeWrapper();
     });
+
     it('should say account with email already exists if register returns a 403', async () => {
-      wrapper.setMethods({ register: makeFailedPromise(403) });
+      mocks.register.mockImplementation(makeFailedPromise(403));
       await wrapper.vm.submit();
       expect(wrapper.vm.errors.email).toHaveLength(1);
     });
+
     it('should say account has not been activated if register returns 405', async () => {
-      wrapper.setMethods({ register: makeFailedPromise(405) });
+      mocks.register.mockImplementation(makeFailedPromise(405));
       await wrapper.vm.submit();
       expect(wrapper.vm.$route.name).toBe('AccountNotActivated');
     });
+
     it('registrationFailed should be true if any other error is returned', async () => {
-      wrapper.setMethods({ register: makeFailedPromise() });
+      mocks.register.mockImplementation(makeFailedPromise());
       await wrapper.vm.submit();
       expect(wrapper.vm.valid).toBe(false);
       expect(wrapper.vm.registrationFailed).toBe(true);

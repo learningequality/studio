@@ -145,8 +145,13 @@ class InvitationViewSet(ValuesViewset):
         invitation.save()
         Change.create_change(
             generate_update_event(
-                invitation.id, INVITATION, {"accepted": True}, channel_id=invitation.channel_id
-            ), applied=True, created_by_id=request.user.id
+                invitation.id,
+                INVITATION,
+                {"accepted": True},
+                channel_id=invitation.channel_id,
+            ),
+            applied=True,
+            created_by_id=request.user.id,
         )
         return Response({"status": "success"})
 
@@ -157,7 +162,12 @@ class InvitationViewSet(ValuesViewset):
         invitation.save()
         Change.create_change(
             generate_update_event(
-                invitation.id, INVITATION, {"declined": True}, channel_id=invitation.channel_id
-            ), applied=True, created_by_id=request.user.id
+                invitation.id,
+                INVITATION,
+                {"declined": True},
+                channel_id=invitation.channel_id,
+            ),
+            applied=True,
+            created_by_id=request.user.id,
         )
         return Response({"status": "success"})

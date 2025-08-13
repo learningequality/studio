@@ -1,4 +1,4 @@
-import Vuex from 'vuex';
+import { Store } from 'vuex';
 import { mount } from '@vue/test-utils';
 import camelCase from 'lodash/camelCase';
 import EditBooleanMapModal from '../EditBooleanMapModal';
@@ -28,9 +28,9 @@ Object.entries(Categories).forEach(([key, value]) => {
 
 const getOptionsValues = wrapper => {
   const categories = {};
-  const checkboxes = wrapper.findAll('[data-test="option-checkbox"]');
+  const checkboxes = wrapper.findAllComponents('[data-test="option-checkbox"]');
   checkboxes.wrappers.forEach(checkbox => {
-    const { label, checked } = checkbox.vm.$props || {};
+    const { label, checked } = checkbox.props();
     let value;
     if (checked) {
       value = CheckboxValue.CHECKED;
@@ -43,9 +43,9 @@ const getOptionsValues = wrapper => {
 };
 
 const findOptionCheckbox = (wrapper, category) => {
-  const checkboxes = wrapper.findAll('[data-test="option-checkbox"]');
+  const checkboxes = wrapper.findAllComponents('[data-test="option-checkbox"]');
   return checkboxes.wrappers.find(checkbox => {
-    const { label } = checkbox.vm.$props || {};
+    const label = checkbox.props('label');
     return categoriesLookup[label] === category;
   });
 };
@@ -70,7 +70,7 @@ const makeWrapper = ({ nodeIds, field = 'categories', ...restOptions }) => {
       ...restOptions,
     },
     scopedSlots: {
-      input: function(props) {
+      input: function (props) {
         return this.$createElement(CategoryOptions, {
           props: {
             ...props,
@@ -104,7 +104,7 @@ describe('EditBooleanMapModal', () => {
     generalActions = {
       showSnackbarSimple: jest.fn(),
     };
-    store = new Vuex.Store({
+    store = new Store({
       actions: generalActions,
       modules: {
         contentNode: {
@@ -121,7 +121,7 @@ describe('EditBooleanMapModal', () => {
 
   test('smoke test', () => {
     const wrapper = makeWrapper({ nodeIds: ['node1'] });
-    expect(wrapper.isVueInstance()).toBe(true);
+    expect(wrapper.exists()).toBe(true);
   });
 
   describe('Selected options on first render', () => {
@@ -131,7 +131,7 @@ describe('EditBooleanMapModal', () => {
 
         const optionsValues = getOptionsValues(wrapper);
         expect(
-          Object.values(optionsValues).every(value => value === CheckboxValue.UNCHECKED)
+          Object.values(optionsValues).every(value => value === CheckboxValue.UNCHECKED),
         ).toBeTruthy();
       });
 
@@ -140,7 +140,7 @@ describe('EditBooleanMapModal', () => {
 
         const optionsValues = getOptionsValues(wrapper);
         expect(
-          Object.values(optionsValues).every(value => value === CheckboxValue.UNCHECKED)
+          Object.values(optionsValues).every(value => value === CheckboxValue.UNCHECKED),
         ).toBeTruthy();
       });
 
@@ -159,7 +159,7 @@ describe('EditBooleanMapModal', () => {
           ...otheroptionsValues
         } = optionsValues;
         expect(
-          Object.values(otheroptionsValues).every(value => value === CheckboxValue.UNCHECKED)
+          Object.values(otheroptionsValues).every(value => value === CheckboxValue.UNCHECKED),
         ).toBeTruthy();
         expect(dailyLifeValue).toBe(CheckboxValue.CHECKED);
         expect(foundationsValue).toBe(CheckboxValue.CHECKED);
@@ -209,9 +209,9 @@ describe('EditBooleanMapModal', () => {
       const wrapper = makeWrapper({ nodeIds: ['node1', 'node2'] });
 
       const schoolCheckbox = findOptionCheckbox(wrapper, Categories.SCHOOL);
-      schoolCheckbox.element.click();
+      await schoolCheckbox.trigger('click');
       const sociologyCheckbox = findOptionCheckbox(wrapper, Categories.SOCIOLOGY);
-      sociologyCheckbox.element.click();
+      await sociologyCheckbox.trigger('click');
 
       await wrapper.vm.handleSave();
       expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
@@ -299,7 +299,7 @@ describe('EditBooleanMapModal', () => {
         {
           id: 'node1',
           categories: {},
-        }
+        },
       );
     });
   });

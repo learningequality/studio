@@ -9,10 +9,9 @@ Feature: Drag-drop to clipboard
 		Then the clipboard opens up
 		When the clipboard is open
 			And I begin to drag resources from the channel editor into the open clipboard
-		Then I see the clipboard shows a thick border and turns opaque to indicate this is a draggable area
+		Then the clipboard changes color to indicate that this is an area where the selected resource can be dropped
 		When I drop the resource into the clipboard
-		Then the opaque area disappears
-			And I see the clipboard updated to reflect the newly dragged resources
+		Then I see the clipboard updated to reflect the newly dragged resources
 
 	Scenario: Drag-drop resources to the clipboard button
 		When the clipboard is closed and the interface shows the clipboard button

@@ -2,7 +2,10 @@
 
   <div>
     <!-- Navigation -->
-    <ToolBar v-if="true" color="white">
+    <ToolBar
+      v-if="true"
+      color="white"
+    >
       <VToolbarSideIcon @click="drawer = true" />
     </ToolBar>
     <MainNavigationDrawer v-model="drawer" />
@@ -25,7 +28,6 @@
         :backHomeLink="myChannelsUrl"
       />
     </VContent>
-
   </div>
 
 </template>
@@ -85,4 +87,4 @@
 </script>
 
 
-<style lang="less" scoped></style>
+<style lang="scss" scoped></style>

@@ -1,9 +1,21 @@
 <template>
 
-  <FullscreenModal v-model="dialog" :header="headerText">
-    <template v-if="isReview" #close>
-      <VBtn icon @click.stop="goBackToBrowse">
-        <Icon icon="back" :color="$themeTokens.textInverted" />
+  <FullscreenModal
+    v-model="dialog"
+    :header="headerText"
+  >
+    <template
+      v-if="isReview"
+      #close
+    >
+      <VBtn
+        icon
+        @click.stop="goBackToBrowse"
+      >
+        <Icon
+          icon="back"
+          :color="$themeTokens.textInverted"
+        />
       </VBtn>
     </template>
     <!-- Hack to make sure preview overlay appears inside import modal -->
@@ -15,7 +27,10 @@
       ></div>
     </VFadeTransition>
 
-    <VContainer fluid class="mb-5 modal-container mx-0 pb-5 px-4">
+    <VContainer
+      fluid
+      class="mb-5 modal-container mx-0 pb-5 px-4"
+    >
       <slot :preview="handlePreview"></slot>
     </VContainer>
     <ResourceDrawer
@@ -30,17 +45,26 @@
     >
       <template #actions>
         <VFadeTransition hide-on-leave>
-          <VLayout v-show="previewIsSelected" align-center justify-end>
-            <VIconWrapper small>
-              check_circle
-            </VIconWrapper>
+          <VLayout
+            v-show="previewIsSelected"
+            align-center
+            justify-end
+          >
+            <VIconWrapper small> check_circle </VIconWrapper>
             <span class="mx-1">{{ $tr('addedText') }}</span>
-            <VBtn color="primary" @click="deselectNode(previewNode)">
+            <VBtn
+              color="primary"
+              @click="deselectNode(previewNode)"
+            >
               {{ $tr('removeButton') }}
             </VBtn>
           </VLayout>
         </VFadeTransition>
-        <VBtn v-if="!previewIsSelected" color="primary" @click="selectNode(previewNode)">
+        <VBtn
+          v-if="!previewIsSelected"
+          color="primary"
+          @click="selectNode(previewNode)"
+        >
           {{ $tr('addButton') }}
         </VBtn>
       </template>
@@ -70,6 +94,7 @@
   </FullscreenModal>
 
 </template>
+
 
 <script>
 
@@ -113,7 +138,7 @@
       RouteNames,
     },
     computed: {
-      ...mapState('importFromChannels', ['selected']),
+      ...mapState('importFromChannels', ['selected', 'recommendationsData']),
       ...mapGetters('contentNode', ['getContentNode']),
       dialog: {
         get() {
@@ -181,6 +206,7 @@
     },
     methods: {
       ...mapActions('contentNode', ['copyContentNodes', 'waitForCopyingStatus']),
+      ...mapActions('importFromChannels', ['captureFeedbackEvent']),
       ...mapMutations('importFromChannels', {
         selectNode: 'SELECT_NODE',
         deselectNode: 'DESELECT_NODE',
@@ -209,7 +235,7 @@
           },
         });
       },
-      handleClickImport: withChangeTracker(function(changeTracker) {
+      handleClickImport: withChangeTracker(function (changeTracker) {
         const nodeIds = this.selected.map(({ id }) => id);
         // Grab the source nodes from Vuex, since search should have loaded them into it
         const sourceNodes = nodeIds.map(id => this.getContentNode(id));
@@ -218,6 +244,8 @@
           target: this.$route.params.destNodeId,
           sourceNodes,
         }).then(nodes => {
+          this.handleRecommendationInteractionEvent();
+
           // When exiting, do not show snackbar when clearing selections
           this.showSnackbar = false;
           this.$store.commit('importFromChannels/CLEAR_NODES');
@@ -233,8 +261,8 @@
               this.waitForCopyingStatus({
                 contentNodeId: n.id,
                 startingRev: changeTracker._startingRev,
-              })
-            )
+              }),
+            ),
           );
         });
       }),
@@ -247,10 +275,19 @@
         // NOTE: Tab title for ReviewSelectionPage is handled in that component
         if (
           [RouteNames.IMPORT_FROM_CHANNELS_BROWSE, RouteNames.IMPORT_FROM_CHANNELS_SEARCH].includes(
-            this.$route.name
+            this.$route.name,
           )
         ) {
           this.updateTabTitle(this.$store.getters.appendChannelName(this.$tr('importTitle')));
+        }
+      },
+      handleRecommendationInteractionEvent() {
+        // captureFeedbackEvent runs async to avoid blocking the UI during navigation
+        const { selected = {}, ignored = {} } = this.recommendationsData;
+        if (selected.data && selected.data.length > 0) {
+          this.captureFeedbackEvent(selected);
+        } else if (ignored.data && ignored.data.length > 0) {
+          this.captureFeedbackEvent(ignored);
         }
       },
     },
@@ -274,10 +311,13 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .modal-container.fluid {
-    max-width: 1200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 100%;
   }
 
 </style>

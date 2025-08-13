@@ -1,12 +1,18 @@
 <template>
 
-  <VAlert v-model="alert" class="black--text ma-0" :color="backgroundColor" :style="style">
+  <VAlert
+    v-model="alert"
+    class="black--text ma-0"
+    :color="backgroundColor"
+    :style="style"
+  >
     <slot>
       {{ text }}
     </slot>
   </VAlert>
 
 </template>
+
 
 <script>
 
@@ -63,7 +69,8 @@
 
 </script>
 
-<style lang="less" scoped>
+
+<style lang="scss" scoped>
 
   .v-alert {
     border: 0;

@@ -31,7 +31,7 @@ export function clipboardChildren(state, getters, rootState, rootGetters) {
 }
 
 export function hasClipboardChildren(state, getters) {
-  return function(id) {
+  return function (id) {
     return Boolean(getters.getClipboardChildren(id).length);
   };
 }
@@ -41,7 +41,7 @@ export function hasClipboardChildren(state, getters) {
  * we copied to the clipboard by reference.
  */
 export function isLegacyNode(state, getters, rootState, rootGetters) {
-  return function(id) {
+  return function (id) {
     const rootId = rootGetters['clipboardRootId'];
     const node = state.clipboardNodesMap[id];
     return id !== rootId && node && legacyNode(node);
@@ -49,7 +49,7 @@ export function isLegacyNode(state, getters, rootState, rootGetters) {
 }
 
 export function isClipboardNode(state, getters) {
-  return function(id) {
+  return function (id) {
     return !getters.isLegacyNode(id);
   };
 }
@@ -60,7 +60,7 @@ export function legacyNodesSelected(state, getters) {
 }
 
 export function getClipboardAncestorNode(state, getters, rootState, rootGetters) {
-  return function(id) {
+  return function (id) {
     const rootId = rootGetters['clipboardRootId'];
     if (id === rootId || getters.channelIds.includes(id)) {
       return null;
@@ -83,7 +83,7 @@ export function getClipboardChildren(state, getters, rootState, rootGetters) {
    *
    * @param {string} id
    */
-  return function(id) {
+  return function (id) {
     const rootId = rootGetters['clipboardRootId'];
 
     if (id === rootId) {
@@ -94,13 +94,13 @@ export function getClipboardChildren(state, getters, rootState, rootGetters) {
     if (getters.channelIds.includes(id)) {
       return sortBy(
         getters.clipboardChildren.filter(child => child.source_channel_id === id),
-        'lft'
+        'lft',
       );
     }
 
     return sortBy(
       Object.values(state.clipboardNodesMap).filter(c => c.parent === id),
-      'lft'
+      'lft',
     );
   };
 }
@@ -112,7 +112,7 @@ export function getClipboardParentId(state, getters, rootState, rootGetters) {
    *
    * @param {string} id
    */
-  return function(id) {
+  return function (id) {
     const rootId = rootGetters['clipboardRootId'];
 
     if (id === rootId) {
@@ -142,7 +142,7 @@ export function getContentNodeForRender(state, getters, rootState, rootGetters) 
    *
    * @param {string} id
    */
-  return function(id) {
+  return function (id) {
     const rootId = rootGetters['clipboardRootId'];
 
     // Don't need to fetch a contentnode for the root or channels
@@ -187,14 +187,14 @@ export function filterSelectionIds(state) {
    *
    * @param {Number|Function} filter
    */
-  return function(filter) {
+  return function (filter) {
     const filterFunc = isFunction(filter)
       ? filter
       : (id, selectionState) => Boolean(selectionState & filter);
 
     return Object.entries(state.selected)
       .filter(
-        ([id, selectionState]) => state.clipboardNodesMap[id] && filterFunc(id, selectionState)
+        ([id, selectionState]) => state.clipboardNodesMap[id] && filterFunc(id, selectionState),
       )
       .map(([id]) => id);
   };
@@ -213,7 +213,7 @@ export function getChannelColor(state) {
    *
    * @param {string} channelId
    */
-  return function(channelId) {
+  return function (channelId) {
     return state.channelColors[channelId];
   };
 }
@@ -224,7 +224,7 @@ export function currentSelectionState(state) {
    *
    * @param {string} id
    */
-  return function(id) {
+  return function (id) {
     return state.selected[id];
   };
 }
@@ -267,7 +267,7 @@ export function getSelectionState(state, getters, rootState, rootGetters) {
    *
    * @param {string} id
    */
-  return function(id) {
+  return function (id) {
     const rootId = rootGetters['clipboardRootId'];
 
     // Start with simply just 0 or 1, selection state
@@ -275,7 +275,7 @@ export function getSelectionState(state, getters, rootState, rootGetters) {
 
     // Compute the children state, if any
     const childrenState = getters.getSelectionStateFromIds(
-      getters.getClipboardChildren(id).map(c => c.id)
+      getters.getClipboardChildren(id).map(c => c.id),
     );
 
     // No children state, we're done
@@ -309,7 +309,7 @@ export function getSelectionStateFromIds(state, getters) {
    *
    * @param {string[]} ids
    */
-  return function(ids) {
+  return function (ids) {
     if (!ids.length) {
       // undefined state
       return null;
@@ -350,7 +350,7 @@ export function getNextSelectionState(state, getters) {
    *
    * @param {string} id
    */
-  return function(id) {
+  return function (id) {
     // Compute the current state
     const current = getters.getSelectionState(id);
 
@@ -389,7 +389,7 @@ export function getCopyTrees(state, getters, rootState, rootGetters) {
    * @param {Boolean} [ignoreSelection]
    * @return {[{ id: Number, deep: Boolean, target: string, children: [] }]}
    */
-  return function(id, ignoreSelection = false) {
+  return function (id, ignoreSelection = false) {
     function recurseForUnselectedIds(id) {
       const selectionState = getters.currentSelectionState(id);
       // Nothing is selected, so return early.
@@ -415,7 +415,7 @@ export function getCopyTrees(state, getters, rootState, rootGetters) {
       (!(selectionState & SelectionFlags.SELECTED) && !ignoreSelection)
     ) {
       return flatten(children.map(c => getters.getCopyTrees(c.id, ignoreSelection))).filter(
-        Boolean
+        Boolean,
       );
     }
 
@@ -454,7 +454,7 @@ export function getCopyTrees(state, getters, rootState, rootGetters) {
 }
 
 export function getMoveTrees(state, getters) {
-  return function(rootId, ignoreSelection = false) {
+  return function (rootId, ignoreSelection = false) {
     const trees = getters.getCopyTrees(rootId, ignoreSelection);
 
     const [legacyTrees, newTrees] = partition(trees, t => t.legacy);
@@ -474,13 +474,13 @@ export function previewSourceNode(state, getters) {
 }
 
 export function isPreloading(state) {
-  return function(parent) {
+  return function (parent) {
     return parent in state.preloadNodes && state.preloadNodes[parent] !== LoadStatus.LOADED;
   };
 }
 
 export function isLoaded(state) {
-  return function(parent) {
+  return function (parent) {
     return parent in state.preloadNodes && state.preloadNodes[parent] === LoadStatus.LOADED;
   };
 }

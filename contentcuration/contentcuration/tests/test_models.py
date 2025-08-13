@@ -1,5 +1,4 @@
 import uuid
-from uuid import uuid4
 
 import mock
 import pytest
@@ -43,25 +42,25 @@ def object_storage_name_tests():
             "no_extension",  # filename
             "8818ed27d0a84b016eb7907b5b4766c4",  # checksum
             "vtt",  # file_format_id
-            "storage/8/8/8818ed27d0a84b016eb7907b5b4766c4.vtt"  # expected
+            "storage/8/8/8818ed27d0a84b016eb7907b5b4766c4.vtt",  # expected
         ),
         (
             "no_extension",  # filename
             "8818ed27d0a84b016eb7907b5b4766c4",  # checksum
             "",  # file_format_id
-            "storage/8/8/8818ed27d0a84b016eb7907b5b4766c4"  # expected
+            "storage/8/8/8818ed27d0a84b016eb7907b5b4766c4",  # expected
         ),
         (
             "has_extension.txt",  # filename
             "8818ed27d0a84b016eb7907b5b4766c4",  # checksum
             "vtt",  # file_format_id
-            "storage/8/8/8818ed27d0a84b016eb7907b5b4766c4.txt"  # expected
+            "storage/8/8/8818ed27d0a84b016eb7907b5b4766c4.txt",  # expected
         ),
         (
             "has_extension.txt",  # filename
             "8818ed27d0a84b016eb7907b5b4766c4",  # checksum
             "",  # file_format_id
-            "storage/8/8/8818ed27d0a84b016eb7907b5b4766c4.txt"  # expected
+            "storage/8/8/8818ed27d0a84b016eb7907b5b4766c4.txt",  # expected
         ),
     ]
 
@@ -72,22 +71,26 @@ def test_object_storage_name(object_storage_name_tests):
 
         actual_name = object_storage_name(test_file, filename)
 
-        assert actual_name == expected_name, \
-            "Storage names don't match: Expected: '{}' Actual '{}'".format(expected_name,
-                                                                           actual_name)
+        assert (
+            actual_name == expected_name
+        ), "Storage names don't match: Expected: '{}' Actual '{}'".format(
+            expected_name, actual_name
+        )
 
 
 def test_generate_object_storage_name(object_storage_name_tests):
     for filename, checksum, file_format_id, expected_name in object_storage_name_tests:
-        default_ext = ''
+        default_ext = ""
         if file_format_id:
-            default_ext = '.{}'.format(file_format_id)
+            default_ext = ".{}".format(file_format_id)
 
         actual_name = generate_object_storage_name(checksum, filename, default_ext)
 
-        assert actual_name == expected_name, \
-            "Storage names don't match: Expected: '{}' Actual '{}'".format(expected_name,
-                                                                           actual_name)
+        assert (
+            actual_name == expected_name
+        ), "Storage names don't match: Expected: '{}' Actual '{}'".format(
+            expected_name, actual_name
+        )
 
 
 def create_contentnode(parent_id):
@@ -102,21 +105,15 @@ def create_contentnode(parent_id):
 
 
 def create_assessment_item(parent_id):
-    return AssessmentItem.objects.create(
-        contentnode=create_contentnode(parent_id)
-    )
+    return AssessmentItem.objects.create(contentnode=create_contentnode(parent_id))
 
 
 def create_assessment_item_file(parent_id):
-    return File.objects.create(
-        assessment_item=create_assessment_item(parent_id)
-    )
+    return File.objects.create(assessment_item=create_assessment_item(parent_id))
 
 
 def create_file(parent_id):
-    return File.objects.create(
-        contentnode=create_contentnode(parent_id)
-    )
+    return File.objects.create(contentnode=create_contentnode(parent_id))
 
 
 class PermissionQuerysetTestCase(StudioTestCase):
@@ -140,12 +137,18 @@ class PermissionQuerysetTestCase(StudioTestCase):
         return user
 
     def assertQuerysetContains(self, queryset, **filters):
-        self.assertGreater(queryset.filter(**filters).count(), 0,
-                           "Queryset does not contain objects for: {}".format(filters))
+        self.assertGreater(
+            queryset.filter(**filters).count(),
+            0,
+            "Queryset does not contain objects for: {}".format(filters),
+        )
 
     def assertQuerysetDoesNotContain(self, queryset, **filters):
-        self.assertEqual(queryset.filter(**filters).count(), 0,
-                         "Queryset contains objects for: {}".format(filters))
+        self.assertEqual(
+            queryset.filter(**filters).count(),
+            0,
+            "Queryset contains objects for: {}".format(filters),
+        )
 
 
 class ChannelTestCase(PermissionQuerysetTestCase):
@@ -156,7 +159,9 @@ class ChannelTestCase(PermissionQuerysetTestCase):
     def test_filter_view_queryset__public_channel(self):
         channel = self.public_channel
 
-        queryset = Channel.filter_view_queryset(self.base_queryset, user=self.forbidden_user)
+        queryset = Channel.filter_view_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
         self.assertQuerysetContains(queryset, pk=channel.id)
 
         user = testdata.user()
@@ -169,7 +174,9 @@ class ChannelTestCase(PermissionQuerysetTestCase):
         channel.deleted = True
         channel.save(actor_id=self.admin_user.id)
 
-        queryset = Channel.filter_view_queryset(self.base_queryset, user=self.forbidden_user)
+        queryset = Channel.filter_view_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=channel.id)
 
         user = testdata.user()
@@ -180,13 +187,17 @@ class ChannelTestCase(PermissionQuerysetTestCase):
     def test_filter_view_queryset__public_channel__anonymous(self):
         channel = self.public_channel
 
-        queryset = Channel.filter_view_queryset(self.base_queryset, user=self.anonymous_user)
+        queryset = Channel.filter_view_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
         self.assertQuerysetContains(queryset, pk=channel.id)
 
     def test_filter_view_queryset__private_channel(self):
         channel = testdata.channel()
 
-        queryset = Channel.filter_view_queryset(self.base_queryset, user=self.forbidden_user)
+        queryset = Channel.filter_view_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=channel.id)
 
         user = testdata.user()
@@ -208,13 +219,17 @@ class ChannelTestCase(PermissionQuerysetTestCase):
     def test_filter_view_queryset__private_channel__anonymous(self):
         channel = testdata.channel()
 
-        queryset = Channel.filter_view_queryset(self.base_queryset, user=self.anonymous_user)
+        queryset = Channel.filter_view_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=channel.id)
 
     def test_filter_edit_queryset__public_channel(self):
         channel = self.public_channel
 
-        queryset = Channel.filter_edit_queryset(self.base_queryset, user=self.forbidden_user)
+        queryset = Channel.filter_edit_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=channel.id)
 
         user = testdata.user()
@@ -229,13 +244,17 @@ class ChannelTestCase(PermissionQuerysetTestCase):
     def test_filter_edit_queryset__public_channel__anonymous(self):
         channel = self.public_channel
 
-        queryset = Channel.filter_edit_queryset(self.base_queryset, user=self.anonymous_user)
+        queryset = Channel.filter_edit_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=channel.id)
 
     def test_filter_edit_queryset__private_channel(self):
         channel = testdata.channel()
 
-        queryset = Channel.filter_edit_queryset(self.base_queryset, user=self.forbidden_user)
+        queryset = Channel.filter_edit_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=channel.id)
 
         user = testdata.user()
@@ -250,7 +269,9 @@ class ChannelTestCase(PermissionQuerysetTestCase):
     def test_filter_edit_queryset__private_channel__anonymous(self):
         channel = testdata.channel()
 
-        queryset = Channel.filter_edit_queryset(self.base_queryset, user=self.anonymous_user)
+        queryset = Channel.filter_edit_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=channel.id)
 
     def test_get_server_rev(self):
@@ -268,11 +289,13 @@ class ChannelTestCase(PermissionQuerysetTestCase):
                 kwargs={},
             )
 
-        Change.objects.bulk_create([
-            create_change(1, True),
-            create_change(2, True),
-            create_change(3, False),
-        ])
+        Change.objects.bulk_create(
+            [
+                create_change(1, True),
+                create_change(2, True),
+                create_change(3, False),
+            ]
+        )
 
         self.assertEqual(channel.get_server_rev(), 2)
 
@@ -286,7 +309,9 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
         channel = self.public_channel
         contentnode = create_contentnode(channel.main_tree_id)
 
-        queryset = ContentNode.filter_view_queryset(self.base_queryset, user=self.forbidden_user)
+        queryset = ContentNode.filter_view_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
         self.assertQuerysetContains(queryset, pk=contentnode.id)
 
@@ -300,7 +325,9 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
         channel = self.public_channel
         contentnode = create_contentnode(channel.main_tree_id)
 
-        queryset = ContentNode.filter_view_queryset(self.base_queryset, user=self.anonymous_user)
+        queryset = ContentNode.filter_view_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
         self.assertQuerysetContains(queryset, pk=contentnode.id)
 
@@ -308,7 +335,9 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
         channel = testdata.channel()
         contentnode = create_contentnode(channel.main_tree_id)
 
-        queryset = ContentNode.filter_view_queryset(self.base_queryset, user=self.forbidden_user)
+        queryset = ContentNode.filter_view_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
         self.assertQuerysetDoesNotContain(queryset, pk=contentnode.id)
 
@@ -322,7 +351,9 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
         channel = testdata.channel()
         contentnode = create_contentnode(channel.main_tree_id)
 
-        queryset = ContentNode.filter_view_queryset(self.base_queryset, user=self.anonymous_user)
+        queryset = ContentNode.filter_view_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
         self.assertQuerysetDoesNotContain(queryset, pk=contentnode.id)
 
@@ -337,7 +368,9 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
     def test_filter_view_queryset__orphan_tree__anonymous(self):
         contentnode = create_contentnode(settings.ORPHANAGE_ROOT_ID)
 
-        queryset = ContentNode.filter_view_queryset(self.base_queryset, user=self.anonymous_user)
+        queryset = ContentNode.filter_view_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
         self.assertQuerysetDoesNotContain(queryset, pk=contentnode.id)
 
@@ -345,7 +378,9 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
         channel = self.public_channel
         contentnode = create_contentnode(channel.main_tree_id)
 
-        queryset = ContentNode.filter_edit_queryset(self.base_queryset, user=self.forbidden_user)
+        queryset = ContentNode.filter_edit_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
         self.assertQuerysetDoesNotContain(queryset, pk=contentnode.id)
 
@@ -364,7 +399,9 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
         channel = self.public_channel
         contentnode = create_contentnode(channel.main_tree_id)
 
-        queryset = ContentNode.filter_edit_queryset(self.base_queryset, user=self.anonymous_user)
+        queryset = ContentNode.filter_edit_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
         self.assertQuerysetDoesNotContain(queryset, pk=contentnode.id)
 
@@ -372,7 +409,9 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
         channel = testdata.channel()
         contentnode = create_contentnode(channel.main_tree_id)
 
-        queryset = ContentNode.filter_edit_queryset(self.base_queryset, user=self.forbidden_user)
+        queryset = ContentNode.filter_edit_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
         self.assertQuerysetDoesNotContain(queryset, pk=contentnode.id)
 
@@ -391,7 +430,9 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
         channel = testdata.channel()
         contentnode = create_contentnode(channel.main_tree_id)
 
-        queryset = ContentNode.filter_edit_queryset(self.base_queryset, user=self.anonymous_user)
+        queryset = ContentNode.filter_edit_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
         self.assertQuerysetDoesNotContain(queryset, pk=contentnode.id)
 
@@ -406,7 +447,9 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
     def test_filter_edit_queryset__orphan_tree__anonymous(self):
         contentnode = create_contentnode(settings.ORPHANAGE_ROOT_ID)
 
-        queryset = ContentNode.filter_edit_queryset(self.base_queryset, user=self.anonymous_user)
+        queryset = ContentNode.filter_edit_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=settings.ORPHANAGE_ROOT_ID)
         self.assertQuerysetDoesNotContain(queryset, pk=contentnode.id)
 
@@ -438,7 +481,9 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
 
         with self.settings(IS_CONTENTNODE_TABLE_PARTITIONED=True):
             node = ContentNode.filter_by_pk(pk=contentnode.id).first()
-            tree_id_from_cache = cache.get(CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=contentnode.id))
+            tree_id_from_cache = cache.get(
+                CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=contentnode.id)
+            )
             self.assertEqual(node.tree_id, tree_id_from_cache)
 
     def test_filter_by_pk__doesnot_query_db_when_cache_hit(self):
@@ -467,9 +512,13 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
             sourcenode.move_to(targetnode, "last-child")
 
             after_move_sourcenode = ContentNode.filter_by_pk(sourcenode.id).first()
-            tree_id_from_cache = cache.get(CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=sourcenode.id))
+            tree_id_from_cache = cache.get(
+                CONTENTNODE_TREE_ID_CACHE_KEY.format(pk=sourcenode.id)
+            )
 
-            self.assertEqual(after_move_sourcenode.tree_id, testchannel.trash_tree.tree_id)
+            self.assertEqual(
+                after_move_sourcenode.tree_id, testchannel.trash_tree.tree_id
+            )
             self.assertEqual(tree_id_from_cache, testchannel.trash_tree.tree_id)
 
     def test_make_content_id_unique(self):
@@ -507,7 +556,9 @@ class AssessmentItemTestCase(PermissionQuerysetTestCase):
         channel = self.public_channel
         assessment_item = create_assessment_item(channel.main_tree_id)
 
-        queryset = AssessmentItem.filter_view_queryset(self.base_queryset, user=self.forbidden_user)
+        queryset = AssessmentItem.filter_view_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
         self.assertQuerysetContains(queryset, pk=assessment_item.id)
 
         user = testdata.user()
@@ -519,14 +570,18 @@ class AssessmentItemTestCase(PermissionQuerysetTestCase):
         channel = self.public_channel
         assessment_item = create_assessment_item(channel.main_tree_id)
 
-        queryset = AssessmentItem.filter_view_queryset(self.base_queryset, user=self.anonymous_user)
+        queryset = AssessmentItem.filter_view_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
         self.assertQuerysetContains(queryset, pk=assessment_item.id)
 
     def test_filter_view_queryset__private_channel(self):
         channel = testdata.channel()
         assessment_item = create_assessment_item(channel.main_tree_id)
 
-        queryset = AssessmentItem.filter_view_queryset(self.base_queryset, user=self.forbidden_user)
+        queryset = AssessmentItem.filter_view_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=assessment_item.id)
 
         user = testdata.user()
@@ -538,14 +593,18 @@ class AssessmentItemTestCase(PermissionQuerysetTestCase):
         channel = testdata.channel()
         assessment_item = create_assessment_item(channel.main_tree_id)
 
-        queryset = AssessmentItem.filter_view_queryset(self.base_queryset, user=self.anonymous_user)
+        queryset = AssessmentItem.filter_view_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=assessment_item.id)
 
     def test_filter_edit_queryset__public_channel(self):
         channel = self.public_channel
         assessment_item = create_assessment_item(channel.main_tree_id)
 
-        queryset = AssessmentItem.filter_edit_queryset(self.base_queryset, user=self.forbidden_user)
+        queryset = AssessmentItem.filter_edit_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=assessment_item.id)
 
         user = testdata.user()
@@ -561,14 +620,18 @@ class AssessmentItemTestCase(PermissionQuerysetTestCase):
         channel = self.public_channel
         assessment_item = create_assessment_item(channel.main_tree_id)
 
-        queryset = AssessmentItem.filter_edit_queryset(self.base_queryset, user=self.anonymous_user)
+        queryset = AssessmentItem.filter_edit_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=assessment_item.id)
 
     def test_filter_edit_queryset__private_channel(self):
         channel = testdata.channel()
         assessment_item = create_assessment_item(channel.main_tree_id)
 
-        queryset = AssessmentItem.filter_edit_queryset(self.base_queryset, user=self.forbidden_user)
+        queryset = AssessmentItem.filter_edit_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=assessment_item.id)
 
         user = testdata.user()
@@ -584,7 +647,9 @@ class AssessmentItemTestCase(PermissionQuerysetTestCase):
         channel = testdata.channel()
         assessment_item = create_assessment_item(channel.main_tree_id)
 
-        queryset = AssessmentItem.filter_edit_queryset(self.base_queryset, user=self.anonymous_user)
+        queryset = AssessmentItem.filter_edit_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=assessment_item.id)
 
 
@@ -597,7 +662,9 @@ class FileTestCase(PermissionQuerysetTestCase):
         channel = self.public_channel
         node_file = create_file(channel.main_tree_id)
 
-        queryset = File.filter_view_queryset(self.base_queryset, user=self.forbidden_user)
+        queryset = File.filter_view_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
         self.assertQuerysetContains(queryset, pk=node_file.id)
 
         user = testdata.user()
@@ -609,14 +676,18 @@ class FileTestCase(PermissionQuerysetTestCase):
         channel = self.public_channel
         node_file = create_file(channel.main_tree_id)
 
-        queryset = File.filter_view_queryset(self.base_queryset, user=self.anonymous_user)
+        queryset = File.filter_view_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
         self.assertQuerysetContains(queryset, pk=node_file.id)
 
     def test_filter_view_queryset__private_channel(self):
         channel = testdata.channel()
         node_file = create_file(channel.main_tree_id)
 
-        queryset = File.filter_view_queryset(self.base_queryset, user=self.forbidden_user)
+        queryset = File.filter_view_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=node_file.id)
 
         user = testdata.user()
@@ -628,14 +699,18 @@ class FileTestCase(PermissionQuerysetTestCase):
         channel = testdata.channel()
         node_file = create_file(channel.main_tree_id)
 
-        queryset = File.filter_view_queryset(self.base_queryset, user=self.anonymous_user)
+        queryset = File.filter_view_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=node_file.id)
 
     def test_filter_view_queryset__uploaded_by(self):
         user = testdata.user()
         node_file = File.objects.create(uploaded_by=user)
 
-        queryset = File.filter_view_queryset(self.base_queryset, user=self.forbidden_user)
+        queryset = File.filter_view_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=node_file.id)
 
         queryset = File.filter_view_queryset(self.base_queryset, user=user)
@@ -645,7 +720,9 @@ class FileTestCase(PermissionQuerysetTestCase):
         channel = self.public_channel
         node_file = create_file(channel.main_tree_id)
 
-        queryset = File.filter_edit_queryset(self.base_queryset, user=self.forbidden_user)
+        queryset = File.filter_edit_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=node_file.id)
 
         user = testdata.user()
@@ -661,14 +738,18 @@ class FileTestCase(PermissionQuerysetTestCase):
         channel = self.public_channel
         node_file = create_file(channel.main_tree_id)
 
-        queryset = File.filter_edit_queryset(self.base_queryset, user=self.anonymous_user)
+        queryset = File.filter_edit_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=node_file.id)
 
     def test_filter_edit_queryset__private_channel(self):
         channel = testdata.channel()
         node_file = create_file(channel.main_tree_id)
 
-        queryset = File.filter_edit_queryset(self.base_queryset, user=self.forbidden_user)
+        queryset = File.filter_edit_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=node_file.id)
 
         user = testdata.user()
@@ -684,14 +765,18 @@ class FileTestCase(PermissionQuerysetTestCase):
         channel = testdata.channel()
         node_file = create_file(channel.main_tree_id)
 
-        queryset = File.filter_edit_queryset(self.base_queryset, user=self.anonymous_user)
+        queryset = File.filter_edit_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=node_file.id)
 
     def test_filter_edit_queryset__uploaded_by(self):
         user = testdata.user()
         node_file = File.objects.create(uploaded_by=user)
 
-        queryset = File.filter_edit_queryset(self.base_queryset, user=self.forbidden_user)
+        queryset = File.filter_edit_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=node_file.id)
 
         queryset = File.filter_edit_queryset(self.base_queryset, user=user)
@@ -734,7 +819,7 @@ class FileTestCase(PermissionQuerysetTestCase):
             File.objects.create(
                 contentnode=create_contentnode(channel.main_tree_id),
                 preset_id=format_presets.EPUB,
-                file_format_id='pptx',
+                file_format_id="pptx",
             )
 
 
@@ -747,7 +832,9 @@ class AssessmentItemFilePermissionTestCase(PermissionQuerysetTestCase):
         channel = self.public_channel
         assessment_file = create_assessment_item_file(channel.main_tree_id)
 
-        queryset = File.filter_view_queryset(self.base_queryset, user=self.forbidden_user)
+        queryset = File.filter_view_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
         self.assertQuerysetContains(queryset, pk=assessment_file.id)
 
         user = testdata.user()
@@ -759,14 +846,18 @@ class AssessmentItemFilePermissionTestCase(PermissionQuerysetTestCase):
         channel = self.public_channel
         assessment_file = create_assessment_item_file(channel.main_tree_id)
 
-        queryset = File.filter_view_queryset(self.base_queryset, user=self.anonymous_user)
+        queryset = File.filter_view_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
         self.assertQuerysetContains(queryset, pk=assessment_file.id)
 
     def test_filter_view_queryset__private_channel(self):
         channel = testdata.channel()
         assessment_file = create_assessment_item_file(channel.main_tree_id)
 
-        queryset = File.filter_view_queryset(self.base_queryset, user=self.forbidden_user)
+        queryset = File.filter_view_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=assessment_file.id)
 
         user = testdata.user()
@@ -778,14 +869,18 @@ class AssessmentItemFilePermissionTestCase(PermissionQuerysetTestCase):
         channel = testdata.channel()
         assessment_file = create_assessment_item_file(channel.main_tree_id)
 
-        queryset = File.filter_view_queryset(self.base_queryset, user=self.anonymous_user)
+        queryset = File.filter_view_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=assessment_file.id)
 
     def test_filter_edit_queryset__public_channel(self):
         channel = self.public_channel
         assessment_file = create_assessment_item_file(channel.main_tree_id)
 
-        queryset = File.filter_edit_queryset(self.base_queryset, user=self.forbidden_user)
+        queryset = File.filter_edit_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=assessment_file.id)
 
         user = testdata.user()
@@ -801,14 +896,18 @@ class AssessmentItemFilePermissionTestCase(PermissionQuerysetTestCase):
         channel = self.public_channel
         assessment_file = create_assessment_item_file(channel.main_tree_id)
 
-        queryset = File.filter_edit_queryset(self.base_queryset, user=self.anonymous_user)
+        queryset = File.filter_edit_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=assessment_file.id)
 
     def test_filter_edit_queryset__private_channel(self):
         channel = testdata.channel()
         assessment_file = create_assessment_item_file(channel.main_tree_id)
 
-        queryset = File.filter_edit_queryset(self.base_queryset, user=self.forbidden_user)
+        queryset = File.filter_edit_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=assessment_file.id)
 
         user = testdata.user()
@@ -824,12 +923,14 @@ class AssessmentItemFilePermissionTestCase(PermissionQuerysetTestCase):
         channel = testdata.channel()
         assessment_file = create_assessment_item_file(channel.main_tree_id)
 
-        queryset = File.filter_edit_queryset(self.base_queryset, user=self.anonymous_user)
+        queryset = File.filter_edit_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
         self.assertQuerysetDoesNotContain(queryset, pk=assessment_file.id)
 
 
 class UserTestCase(StudioTestCase):
-    def _create_user(self, email, password='password', is_active=True):
+    def _create_user(self, email, password="password", is_active=True):
         user = User.objects.create(email=email)
         user.set_password(password)
         user.is_active = is_active
@@ -841,15 +942,20 @@ class UserTestCase(StudioTestCase):
         user_b = self._create_user("b@tester.com")
 
         # Create a sole editor non-public channel.
-        sole_editor_channel = Channel.objects.create(name="sole-editor", actor_id=user_a.id)
+        sole_editor_channel = Channel.objects.create(
+            name="sole-editor", actor_id=user_a.id
+        )
         sole_editor_channel.editors.add(user_a)
 
         # Create sole-editor channel nodes.
         for i in range(0, 3):
-            testdata.node({
-                "title": "sole-editor-channel-node",
-                "kind_id": "video",
-            }, parent=sole_editor_channel.main_tree)
+            testdata.node(
+                {
+                    "title": "sole-editor-channel-node",
+                    "kind_id": "video",
+                },
+                parent=sole_editor_channel.main_tree,
+            )
 
         # Create a sole editor public channel.
         public_channel = testdata.channel("public")
@@ -918,7 +1024,9 @@ class UserTestCase(StudioTestCase):
         # Sets is_active to False?
         self.assertEqual(user.is_active, False)
         # Creates user history?
-        user_delete_history = UserHistory.objects.filter(user_id=user.id, action=user_history.DELETION).first()
+        user_delete_history = UserHistory.objects.filter(
+            user_id=user.id, action=user_history.DELETION
+        ).first()
         self.assertIsNotNone(user_delete_history)
 
     def test_recover(self):
@@ -931,7 +1039,9 @@ class UserTestCase(StudioTestCase):
         # Keeps is_active to False?
         self.assertEqual(user.is_active, False)
         # Creates user history?
-        user_recover_history = UserHistory.objects.filter(user_id=user.id, action=user_history.RECOVERY).first()
+        user_recover_history = UserHistory.objects.filter(
+            user_id=user.id, action=user_history.RECOVERY
+        ).first()
         self.assertIsNotNone(user_recover_history)
 
     def test_hard_delete_user_related_data(self):
@@ -946,7 +1056,11 @@ class UserTestCase(StudioTestCase):
         self.assertTrue(Channel.objects.filter(name="public").exists())
 
         # Deletes all user related invitations.
-        self.assertFalse(Invitation.objects.filter(Q(sender_id=user.id) | Q(invited_id=user.id)).exists())
+        self.assertFalse(
+            Invitation.objects.filter(
+                Q(sender_id=user.id) | Q(invited_id=user.id)
+            ).exists()
+        )
 
         # Deletes sole-editor channelsets.
         self.assertFalse(ChannelSet.objects.filter(name="sole-editor").exists())
@@ -956,11 +1070,41 @@ class UserTestCase(StudioTestCase):
         self.assertTrue(ChannelSet.objects.filter(name="public").exists())
 
         # All contentnodes of sole-editor channel points to ORPHANGE ROOT NODE?
-        self.assertFalse(ContentNode.objects.filter(~Q(parent_id=settings.ORPHANAGE_ROOT_ID)
-                                                    & Q(title="sole-editor-channel-node")).exists())
+        self.assertFalse(
+            ContentNode.objects.filter(
+                ~Q(parent_id=settings.ORPHANAGE_ROOT_ID)
+                & Q(title="sole-editor-channel-node")
+            ).exists()
+        )
         # Creates user history?
-        user_hard_delete_history = UserHistory.objects.filter(user_id=user.id, action=user_history.RELATED_DATA_HARD_DELETION).first()
+        user_hard_delete_history = UserHistory.objects.filter(
+            user_id=user.id, action=user_history.RELATED_DATA_HARD_DELETION
+        ).first()
         self.assertIsNotNone(user_hard_delete_history)
+
+    def test_get_server_rev(self):
+        user = testdata.user()
+
+        def create_change(server_rev, applied):
+            return Change(
+                user=user,
+                server_rev=server_rev,
+                created_by=user,
+                change_type=DELETED,
+                table=User.__name__,
+                applied=applied,
+                kwargs={},
+            )
+
+        Change.objects.bulk_create(
+            [
+                create_change(1, True),
+                create_change(2, True),
+                create_change(3, False),
+            ]
+        )
+
+        self.assertEqual(user.get_server_rev(), 2)
 
 
 class ChannelHistoryTestCase(StudioTestCase):
@@ -969,29 +1113,40 @@ class ChannelHistoryTestCase(StudioTestCase):
         self.channel = testdata.channel()
 
     def test_mark_channel_created(self):
-        self.assertEqual(1, self.channel.history.filter(action=channel_history.CREATION).count())
+        self.assertEqual(
+            1, self.channel.history.filter(action=channel_history.CREATION).count()
+        )
 
     def test_mark_channel_deleted(self):
         self.assertEqual(0, self.channel.deletion_history.count())
         self.channel.deleted = True
         self.channel.save(actor_id=self.admin_user.id)
-        self.assertEqual(1, self.channel.deletion_history.filter(actor=self.admin_user).count())
+        self.assertEqual(
+            1, self.channel.deletion_history.filter(actor=self.admin_user).count()
+        )
 
     def test_mark_channel_recovered(self):
-        self.assertEqual(0, self.channel.history.filter(actor=self.admin_user, action=channel_history.RECOVERY).count())
+        self.assertEqual(
+            0,
+            self.channel.history.filter(
+                actor=self.admin_user, action=channel_history.RECOVERY
+            ).count(),
+        )
         self.channel.deleted = True
         self.channel.save(actor_id=self.admin_user.id)
         self.channel.deleted = False
         self.channel.save(actor_id=self.admin_user.id)
-        self.assertEqual(1, self.channel.history.filter(actor=self.admin_user, action=channel_history.RECOVERY).count())
+        self.assertEqual(
+            1,
+            self.channel.history.filter(
+                actor=self.admin_user, action=channel_history.RECOVERY
+            ).count(),
+        )
 
     def test_prune(self):
         i = 10
         now = timezone.now()
-        channels = [
-            self.channel,
-            testdata.channel()
-        ]
+        channels = [self.channel, testdata.channel()]
         last_history_ids = []
         ChannelHistory.objects.all().delete()
 
@@ -1012,11 +1167,12 @@ class ChannelHistoryTestCase(StudioTestCase):
         self.assertEqual(20, ChannelHistory.objects.count())
         ChannelHistory.prune()
         self.assertEqual(2, ChannelHistory.objects.count())
-        self.assertEqual(2, ChannelHistory.objects.filter(id__in=last_history_ids).count())
+        self.assertEqual(
+            2, ChannelHistory.objects.filter(id__in=last_history_ids).count()
+        )
 
 
 class FeedbackModelTests(StudioTestCase):
-
     @classmethod
     def setUpClass(cls):
         super(FeedbackModelTests, cls).setUpClass()
@@ -1027,25 +1183,34 @@ class FeedbackModelTests(StudioTestCase):
 
     def _create_base_feedback_data(self, context, contentnode_id, content_id):
         base_feedback_data = {
-            'context': context,
-            'contentnode_id': contentnode_id,
-            'content_id': content_id,
+            "context": context,
+            "contentnode_id": contentnode_id,
+            "content_id": content_id,
         }
         return base_feedback_data
 
     def _create_recommendation_event(self):
         channel = testdata.channel()
-        node_where_import_was_initiated = testdata.node({"kind_id": content_kinds.TOPIC, "title": "recomendations provided here"})
+        node_where_import_was_initiated = testdata.node(
+            {"kind_id": content_kinds.TOPIC, "title": "recomendations provided here"}
+        )
         base_feedback_data = self._create_base_feedback_data(
-            {'model_version': 1, 'breadcrums': "#Title#->Random"},
+            {"model_version": 1, "breadcrums": "#Title#->Random"},
             node_where_import_was_initiated.id,
-            node_where_import_was_initiated.content_id
+            node_where_import_was_initiated.content_id,
         )
         recommendations_event = RecommendationsEvent.objects.create(
             user=self.user,
             target_channel_id=channel.id,
             time_hidden=timezone.now(),
-            content=[{'content_id': str(uuid4()), 'node_id': str(uuid4()), 'channel_id': str(uuid4()), 'score': 4}],
+            content=[
+                {
+                    "content_id": str(uuid.uuid4()),
+                    "node_id": str(uuid.uuid4()),
+                    "channel_id": str(uuid.uuid4()),
+                    "score": 4,
+                }
+            ],
             **base_feedback_data
         )
 
@@ -1053,52 +1218,67 @@ class FeedbackModelTests(StudioTestCase):
 
     def test_create_flag_feedback_event(self):
         channel = testdata.channel("testchannel")
-        flagged_node = testdata.node({"kind_id": content_kinds.TOPIC, "title": "SuS ContentNode"})
+        flagged_node = testdata.node(
+            {"kind_id": content_kinds.TOPIC, "title": "SuS ContentNode"}
+        )
         base_feedback_data = self._create_base_feedback_data(
-            {'spam': 'Spam or misleading'},
-            flagged_node.id,
-            flagged_node.content_id
+            {"spam": "Spam or misleading"}, flagged_node.id, flagged_node.content_id
         )
         flag_feedback_event = FlagFeedbackEvent.objects.create(
-            user=self.user,
-            target_channel_id=channel.id,
-            **base_feedback_data
+            user=self.user, target_channel_id=channel.id, **base_feedback_data
         )
         self.assertEqual(flag_feedback_event.user, self.user)
-        self.assertEqual(flag_feedback_event.context['spam'], 'Spam or misleading')
+        self.assertEqual(flag_feedback_event.context["spam"], "Spam or misleading")
 
     def test_create_recommendations_interaction_event(self):
         # This represents a node that was recommended by the model and was interacted by user!
-        recommended_node = testdata.node({"kind_id": content_kinds.TOPIC, "title": "This node was recommended by the model"})
+        recommended_node = testdata.node(
+            {
+                "kind_id": content_kinds.TOPIC,
+                "title": "This node was recommended by the model",
+            }
+        )
         base_feedback_data = self._create_base_feedback_data(
             {"comment": "explicit reason given by user why he rejected this node!"},
             recommended_node.id,
-            recommended_node.content_id
-            )
+            recommended_node.content_id,
+        )
         fk = self._create_recommendation_event().id
         rec_interaction_event = RecommendationsInteractionEvent.objects.create(
-            feedback_type='rejected',
-            feedback_reason='some predefined reasons like (not related)',
+            feedback_type="rejected",
+            feedback_reason="some predefined reasons like (not related)",
             recommendation_event_id=fk,
             **base_feedback_data
         )
-        self.assertEqual(rec_interaction_event.feedback_type, 'rejected')
-        self.assertEqual(rec_interaction_event.feedback_reason, 'some predefined reasons like (not related)')
+        self.assertEqual(rec_interaction_event.feedback_type, "rejected")
+        self.assertEqual(
+            rec_interaction_event.feedback_reason,
+            "some predefined reasons like (not related)",
+        )
 
     def test_create_recommendations_event(self):
         channel = testdata.channel()
-        node_where_import_was_initiated = testdata.node({"kind_id": content_kinds.TOPIC, "title": "recomendations provided here"})
+        node_where_import_was_initiated = testdata.node(
+            {"kind_id": content_kinds.TOPIC, "title": "recomendations provided here"}
+        )
         base_feedback_data = self._create_base_feedback_data(
-            {'model_version': 1, 'breadcrums': "#Title#->Random"},
+            {"model_version": 1, "breadcrums": "#Title#->Random"},
             node_where_import_was_initiated.id,
-            node_where_import_was_initiated.content_id
+            node_where_import_was_initiated.content_id,
         )
         recommendations_event = RecommendationsEvent.objects.create(
             user=self.user,
             target_channel_id=channel.id,
             time_hidden=timezone.now(),
-            content=[{'content_id': str(uuid4()), 'node_id': str(uuid4()), 'channel_id': str(uuid4()), 'score': 4}],
+            content=[
+                {
+                    "content_id": str(uuid.uuid4()),
+                    "node_id": str(uuid.uuid4()),
+                    "channel_id": str(uuid.uuid4()),
+                    "score": 4,
+                }
+            ],
             **base_feedback_data
         )
         self.assertEqual(len(recommendations_event.content), 1)
-        self.assertEqual(recommendations_event.content[0]['score'], 4)
+        self.assertEqual(recommendations_event.content[0]["score"], 4)

@@ -1,14 +1,43 @@
 <template>
 
-  <VLayout :key="fileId" :class="{ fullscreen, renderer: loading }">
-    <VCard v-if="!file" flat class="message-card">
-      <VLayout align-center justify-center fill-height>
+  <VLayout
+    :key="fileId"
+    :class="{ fullscreen }"
+  >
+    <KLogo
+      v-if="loading"
+      altText=""
+      :animate="true"
+      :size="300"
+    />
+    <VCard
+      v-if="!file"
+      flat
+      class="message-card"
+    >
+      <VLayout
+        align-center
+        justify-center
+        fill-height
+      >
         {{ $tr('noFileText') }}
       </VLayout>
     </VCard>
-    <VCard v-else-if="file.uploading || file.error" flat class="message-card">
-      <VLayout align-center justify-center fill-height data-test="progress">
-        <FileStatus :fileId="file.id" large />
+    <VCard
+      v-else-if="file.uploading || file.error"
+      flat
+      class="message-card"
+    >
+      <VLayout
+        align-center
+        justify-center
+        fill-height
+        data-test="progress"
+      >
+        <FileStatus
+          :fileId="file.id"
+          large
+        />
       </VLayout>
     </VCard>
     <VFlex v-else-if="isVideo">
@@ -19,7 +48,10 @@
         crossOrigin
         @loadeddata="loading = false"
       >
-        <source :src="src" :type="file.mimetype">
+        <source
+          :src="src"
+          :type="file.mimetype"
+        >
         <track
           v-for="subtitle in subtitles"
           :key="subtitle.id"
@@ -30,9 +62,21 @@
         >
       </video>
     </VFlex>
-    <VCard v-else-if="isAudio" flat>
-      <VLayout align-center justify-center fill-height>
-        <audio controls :src="src" :type="file.mimetype" @loadeddata="loading = false"></audio>
+    <VCard
+      v-else-if="isAudio"
+      flat
+    >
+      <VLayout
+        align-center
+        justify-center
+        fill-height
+      >
+        <audio
+          controls
+          :src="src"
+          :type="file.mimetype"
+          @loadeddata="loading = false"
+        ></audio>
       </VLayout>
     </VCard>
     <iframe
@@ -41,16 +85,43 @@
       sandbox="allow-scripts"
       @load="loading = false"
     ></iframe>
-    <embed v-else-if="isPDF" :src="src" :type="file.mimetype" @load="loading = false">
-    <div v-else-if="isEpub" class="epub">
-      <EpubRenderer :src="src" @load="loading = false" />
+    <embed
+      v-else-if="isPDF"
+      :src="src"
+      :type="file.mimetype"
+      @load="loading = false"
+    >
+    <div
+      v-else-if="isEpub"
+      class="epub"
+    >
+      <EpubRenderer
+        :src="src"
+        @load="loading = false"
+      />
     </div>
 
-    <VCard v-else class="message-card" flat>
-      <VLayout align-center justify-center fill-height data-test="not-supported">
-        <VTooltip bottom lazy>
+    <VCard
+      v-else
+      class="message-card"
+      flat
+    >
+      <VLayout
+        align-center
+        justify-center
+        fill-height
+        data-test="not-supported"
+      >
+        <VTooltip
+          bottom
+          lazy
+        >
           <template #activator="{ on }">
-            <VIconWrapper color="grey lighten-2" large v-on="on">
+            <VIconWrapper
+              color="grey lighten-2"
+              large
+              v-on="on"
+            >
               visibility_off
             </VIconWrapper>
           </template>
@@ -62,8 +133,10 @@
 
 </template>
 
+
 <script>
 
+  import get from 'lodash/get';
   import uniqBy from 'lodash/uniqBy';
   import sortBy from 'lodash/sortBy';
   import { mapGetters } from 'vuex';
@@ -99,6 +172,10 @@
     },
     computed: {
       ...mapGetters('file', ['getContentNodeFileById', 'getContentNodeFiles']),
+      ...mapGetters('contentNode', ['getContentNode']),
+      contentNode() {
+        return this.getContentNode(this.nodeId);
+      },
       file() {
         return this.getContentNodeFileById(this.nodeId, this.fileId);
       },
@@ -110,7 +187,7 @@
         const files = this.supplementaryFiles.filter(f => f.preset.subtitle);
         return sortBy(
           uniqBy(files, f => f.language.id),
-          f => f.language.id
+          f => f.language.id,
         );
       },
       isVideo() {
@@ -129,7 +206,8 @@
         return this.file.file_format === 'epub';
       },
       htmlPath() {
-        return `/zipcontent/${this.file.checksum}.${this.file.file_format}`;
+        const entry = get(this.contentNode, ['extra_fields', 'options', 'entry'], 'index.html');
+        return `/zipcontent/${this.file.checksum}.${this.file.file_format}/${entry}`;
       },
       src() {
         return this.file && this.file.url;
@@ -148,9 +226,10 @@
 
 </script>
 
-<style lang="less" scoped>
 
-  @max-height: calc(100vh - 96px);
+<style lang="scss" scoped>
+
+  $max-height: calc(100vh - 96px);
 
   .v-card,
   video,
@@ -168,11 +247,11 @@
   iframe,
   .epub {
     min-height: 200px;
-    max-height: @max-height;
+    max-height: $max-height;
   }
 
   video {
-    max-height: @max-height;
+    max-height: $max-height;
   }
 
   .message-card,
@@ -187,20 +266,15 @@
   }
 
   .fullscreen {
-    min-height: @max-height;
+    min-height: $max-height;
 
     .v-card,
     audio,
     embed,
     iframe,
     .epub {
-      min-height: @max-height;
+      min-height: $max-height;
     }
-  }
-
-  .renderer {
-    background: url('./kolibri_load.gif') no-repeat center;
-    background-size: 150px auto;
   }
 
   video::-webkit-media-controls-fullscreen-button {

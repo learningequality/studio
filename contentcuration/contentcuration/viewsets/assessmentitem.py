@@ -3,6 +3,7 @@ import re
 
 from django.db import transaction
 from le_utils.constants import exercises
+from le_utils.constants import format_presets
 from rest_framework import serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.serializers import ValidationError
@@ -10,6 +11,7 @@ from rest_framework.serializers import ValidationError
 from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
 from contentcuration.models import File
+from contentcuration.models import generate_object_storage_name
 from contentcuration.viewsets.base import BulkCreateMixin
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
@@ -23,7 +25,7 @@ from contentcuration.viewsets.common import UUIDRegexField
 
 exercise_image_filename_regex = re.compile(
     r"\!\[[^]]*\]\(\${placeholder}/([a-f0-9]{{32}}\.[0-9a-z]+)\)".format(
-        placeholder=exercises.IMG_PLACEHOLDER
+        placeholder=exercises.CONTENT_STORAGE_PLACEHOLDER
     )
 )
 
@@ -107,18 +109,18 @@ class AssessmentItemSerializer(BulkModelSerializer):
         answers = json.loads(value)
         for answer in answers:
             if not type(answer) is dict:
-                raise ValidationError('JSON Data Invalid for answers')
-            if not all(k in answer for k in ('answer', 'correct', 'order')):
-                raise ValidationError('Incorrect field in answers')
+                raise ValidationError("JSON Data Invalid for answers")
+            if not all(k in answer for k in ("answer", "correct", "order")):
+                raise ValidationError("Incorrect field in answers")
         return value
 
     def validate_hints(self, value):
         hints = json.loads(value)
         for hint in hints:
             if not type(hint) is dict:
-                raise ValidationError('JSON Data Invalid for hints')
-            if not all(k in hint for k in ('hint', 'order')):
-                raise ValidationError('Incorrect field in hints')
+                raise ValidationError("JSON Data Invalid for hints")
+            if not all(k in hint for k in ("hint", "order")):
+                raise ValidationError("Incorrect field in hints")
         return value
 
     def set_files(self, all_objects, all_validated_data=None):  # noqa C901
@@ -131,15 +133,21 @@ class AssessmentItemSerializer(BulkModelSerializer):
             # If this is an update operation, check the validated data for which items
             # have had these fields modified.
             md_fields_modified = {
-                self.id_value_lookup(ai) for ai in all_validated_data if "question" in ai or "hints" in ai or "answers" in ai
+                self.id_value_lookup(ai)
+                for ai in all_validated_data
+                if "question" in ai or "hints" in ai or "answers" in ai
             }
         else:
             # If this is a create operation, just check if these fields are not null.
             md_fields_modified = {
-                self.id_value_lookup(ai) for ai in all_objects if ai.question or ai.hints or ai.answers
+                self.id_value_lookup(ai)
+                for ai in all_objects
+                if ai.question or ai.hints or ai.answers
             }
 
-        all_objects = [ai for ai in all_objects if self.id_value_lookup(ai) in md_fields_modified]
+        all_objects = [
+            ai for ai in all_objects if self.id_value_lookup(ai) in md_fields_modified
+        ]
 
         for file in File.objects.filter(assessment_item__in=all_objects):
             if file.assessment_item_id not in current_files_by_aitem:
@@ -155,11 +163,11 @@ class AssessmentItemSerializer(BulkModelSerializer):
             missing_checksums = set_checksums.difference(current_checksums)
 
             for filename in filenames:
-                checksum = filename.split(".")[0]
+                checksum, ext = filename.split(".")
                 if checksum in missing_checksums:
                     if checksum not in files_to_update:
                         files_to_update[checksum] = []
-                    files_to_update[checksum].append(aitem)
+                    files_to_update[checksum].append({"aitem": aitem, "ext": ext})
 
             redundant_checksums = current_checksums.difference(set_checksums)
 
@@ -184,15 +192,39 @@ class AssessmentItemSerializer(BulkModelSerializer):
 
             for file in source_files:
                 if file.checksum in files_to_update and files_to_update[file.checksum]:
-                    aitem = files_to_update[file.checksum].pop()
+                    file_dict = files_to_update[file.checksum].pop()
+                    aitem = file_dict["aitem"]
                     file.assessment_item = aitem
                     updated_files.append(file)
-            if any(files_to_update.values()):
-                # Not all the files to update had a file, raise an error
-                raise ValidationError(
-                    "Attempted to set files to an assessment item that do not have a file on the server"
-                )
-            File.objects.bulk_update(source_files, ['assessment_item'])
+            # The previous loop will have updated all the files for file objects that already exist.
+            # Now we need to create new file objects for the files that do not exist yet.
+            # This may have happened because the file object got garbage collected
+            # or because the file was uploaded by a different user.
+            for checksum, file_dict_list in files_to_update.items():
+                for file_dict in file_dict_list:
+                    aitem = file_dict["aitem"]
+                    ext = file_dict["ext"]
+                    filepath = generate_object_storage_name(
+                        checksum, f"{checksum}.{ext}", default_ext=ext
+                    )
+                    file = File(
+                        checksum=checksum,
+                        file_on_disk=filepath,
+                        file_format_id=ext,
+                        preset_id=format_presets.EXERCISE_IMAGE,
+                        uploaded_by=self.context["request"].user,
+                    )
+                    try:
+                        file.save()
+                    except FileNotFoundError:
+                        # Not all the files to update had a file, raise an error
+                        raise ValidationError(
+                            "Attempted to set files to an assessment item that do not have a file on the server"
+                        )
+                    file.assessment_item = aitem
+                    updated_files.append(file)
+
+            File.objects.bulk_update(source_files, ["assessment_item"])
 
     def create(self, validated_data):
         with transaction.atomic():

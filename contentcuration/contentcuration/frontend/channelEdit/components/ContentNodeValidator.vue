@@ -1,25 +1,46 @@
 <template>
 
-  <span v-if="noTitle && !hideTitleValidation" class="red--text title">
+  <span
+    v-if="noTitle && !hideTitleValidation"
+    class="red--text title"
+  >
     <VIconWrapper color="red">error</VIconWrapper>
     <span class="mx-1">
       {{ $tr('missingTitle') }}
     </span>
   </span>
-  <span v-else-if="error" class="mx-2">
-    <VTooltip bottom lazy>
+  <span
+    v-else-if="error"
+    class="mx-2"
+  >
+    <VTooltip
+      bottom
+      lazy
+    >
       <template #activator="{ on }">
-        <VIconWrapper :color="$themePalette.red.v_1100" v-on="on">
+        <VIconWrapper
+          :color="$themePalette.red.v_600"
+          v-on="on"
+        >
           error
         </VIconWrapper>
       </template>
       <span>{{ error }}</span>
     </VTooltip>
   </span>
-  <span v-else-if="warning" class="mx-2">
-    <VTooltip bottom lazy>
+  <span
+    v-else-if="warning"
+    class="mx-2"
+  >
+    <VTooltip
+      bottom
+      lazy
+    >
       <template #activator="{ on }">
-        <VIconWrapper :color="$themePalette.yellow.v_1100" v-on="on">
+        <VIconWrapper
+          :color="$themePalette.yellow.v_600"
+          v-on="on"
+        >
           warning
         </VIconWrapper>
       </template>
@@ -28,6 +49,8 @@
   </span>
 
 </template>
+
+
 <script>
 
   export default {
@@ -72,9 +95,12 @@
 
 </script>
 
+
 <style scoped>
+
   .v-icon {
     vertical-align: bottom;
     cursor: default;
   }
+
 </style>

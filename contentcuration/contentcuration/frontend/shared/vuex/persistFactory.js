@@ -83,7 +83,7 @@ function prepareMutations(ns, mutations, prefixMutations) {
   const prefix = prefixMutations ? `${ns}/` : '';
   return mutations.reduce(
     (mutationMap, mutation) => ({ ...mutationMap, [prefix + mutation]: mutation }),
-    {}
+    {},
   );
 }
 
@@ -101,7 +101,7 @@ function prepareMutations(ns, mutations, prefixMutations) {
 export default function persistFactory(ns, mutations, prefixMutations = true) {
   const storage = PersistStorage.namespace(ns, prepareMutations(ns, mutations, prefixMutations));
 
-  return function(store) {
+  return function (store) {
     store.subscribe(({ type, payload }) => {
       // Only triggered when the mutation is one we've been told to persist
       if (storage.shouldPersist(type, payload)) {
@@ -125,7 +125,7 @@ export default function persistFactory(ns, mutations, prefixMutations = true) {
 export function persistAllFactory(ns, mutations, prefixMutations = true) {
   const storage = PersistStorage.namespace(ns, prepareMutations(ns, mutations, prefixMutations));
 
-  return function(store) {
+  return function (store) {
     store.subscribe(({ type, payload }) => {
       // Only triggered when the mutation is one we've been told to persist
       if (storage.shouldPersist(type, payload)) {

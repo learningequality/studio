@@ -3,8 +3,6 @@ These models are defined by combining the base_models from Kolibri
 and then manually adding the fields and models from legacy_models
 in order to create a completely backwards compatible export database.
 """
-from __future__ import unicode_literals
-
 from django.db import models
 from kolibri_content import base_models
 from kolibri_content.fields import UUIDField

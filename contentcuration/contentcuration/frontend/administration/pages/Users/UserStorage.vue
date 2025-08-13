@@ -1,8 +1,15 @@
 <template>
 
-  <VForm ref="form" lazy-validation @submit.prevent="submit">
-    <VLayout row wrap>
-      <VFlex style="max-width: 148px;">
+  <VForm
+    ref="form"
+    lazy-validation
+    @submit.prevent="submit"
+  >
+    <VLayout
+      row
+      wrap
+    >
+      <VFlex style="max-width: 148px">
         <VTextField
           v-model="space"
           label="Size"
@@ -16,7 +23,10 @@
           :rules="spaceRules"
         />
       </VFlex>
-      <DropdownWrapper component="VFlex" style="max-width: 75px;">
+      <DropdownWrapper
+        component="VFlex"
+        style="max-width: 75px"
+      >
         <template #default="{ attach, menuProps }">
           <VSelect
             v-model="unit"

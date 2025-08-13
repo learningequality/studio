@@ -1,4 +1,6 @@
 import find from 'lodash/find';
+import findIndex from 'lodash/findIndex';
+import pick from 'lodash/pick';
 import Vue from 'vue';
 import Vuetify from 'vuetify';
 import { mount } from '@vue/test-utils';
@@ -31,7 +33,7 @@ function makeWrapper(props = {}) {
     // See: https://github.com/vuejs/vue-test-utils/issues/1130
     sync: false,
     store: localStore,
-    attachToDocument: true,
+    attachTo: document.body,
     propsData: {
       viewOnly: false,
       ...props,
@@ -51,10 +53,10 @@ window.Urls = {
 
 describe.skip('detailsTabView', () => {
   let wrapper;
-  const topicIndex = _.findIndex(testNodes, { id: DEFAULT_TOPIC.id });
-  const videoIndex = _.findIndex(testNodes, { id: DEFAULT_VIDEO.id });
-  const exerciseIndex = _.findIndex(testNodes, { id: DEFAULT_EXERCISE.id });
-  const exercise2Index = _.findIndex(testNodes, { id: DEFAULT_EXERCISE2.id });
+  const topicIndex = findIndex(testNodes, { id: DEFAULT_TOPIC.id });
+  const videoIndex = findIndex(testNodes, { id: DEFAULT_VIDEO.id });
+  const exerciseIndex = findIndex(testNodes, { id: DEFAULT_EXERCISE.id });
+  const exercise2Index = findIndex(testNodes, { id: DEFAULT_EXERCISE2.id });
   beforeEach(() => {
     localStore.commit('edit_modal/SET_NODE', exerciseIndex);
     wrapper = makeWrapper();
@@ -77,8 +79,8 @@ describe.skip('detailsTabView', () => {
         'randomizeOrder',
         'copyrightHolder',
       ];
-      expect(_.pick(wrapper.vm, keys)).toEqual({
-        ..._.pick(DEFAULT_EXERCISE, keys),
+      expect(pick(wrapper.vm, keys)).toEqual({
+        ...pick(DEFAULT_EXERCISE, keys),
         license: {
           license: DEFAULT_EXERCISE.license,
           description: DEFAULT_EXERCISE.license_description,

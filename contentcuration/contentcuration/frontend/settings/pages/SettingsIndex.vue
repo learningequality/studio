@@ -17,14 +17,17 @@
         </VTab>
       </template>
     </AppBar>
-    <OfflineText toolbar :offset="112" />
+    <StudioOfflineAlert :offset="104" />
     <VContent>
       <VContainer
         fluid
         class="pa-0"
-        style="height: calc(100vh - 112px);overflow: auto;overflow-x: hidden;"
+        style="height: calc(100vh - 112px); overflow: auto; overflow-x: hidden"
       >
-        <VContainer class="ml-0 pl-5" :class="offline ? 'pt-5' : 'pt-2'">
+        <VContainer
+          class="ml-0 pl-5"
+          :class="offline ? 'pt-5' : 'pt-2'"
+        >
           <router-view />
         </VContainer>
       </VContainer>
@@ -43,12 +46,12 @@
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import AppBar from 'shared/views/AppBar';
   import { routerMixin } from 'shared/mixins';
-  import OfflineText from 'shared/views/OfflineText';
+  import StudioOfflineAlert from 'shared/views/StudioOfflineAlert';
   import PolicyModals from 'shared/views/policies/PolicyModals';
 
   export default {
     name: 'SettingsIndex',
-    components: { GlobalSnackbar, AppBar, OfflineText, PolicyModals },
+    components: { GlobalSnackbar, AppBar, StudioOfflineAlert, PolicyModals },
     mixins: [routerMixin],
     computed: {
       ...mapState({

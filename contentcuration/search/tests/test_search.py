@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from django.urls import reverse
 
 from contentcuration.models import Channel
@@ -29,7 +27,9 @@ class SearchViewsetTestCase(StudioAPITestCase):
     def test_filter_exclude_channels(self):
         self.client.force_authenticate(user=self.user)
         response = self.client.get(
-            reverse("search-list"), data={"exclude_channel": self.channel.id}, format="json",
+            reverse("search-list"),
+            data={"exclude_channel": self.channel.id},
+            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(response.data["results"], [])
@@ -37,7 +37,9 @@ class SearchViewsetTestCase(StudioAPITestCase):
     def test_filter_channels_by_edit(self):
         self.client.force_authenticate(user=self.user)
         response = self.client.get(
-            reverse("search-list"), data={"channel_list": "edit"}, format="json",
+            reverse("search-list"),
+            data={"channel_list": "edit"},
+            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertNotEqual(response.data["results"], [])
@@ -51,18 +53,28 @@ class SearchViewsetTestCase(StudioAPITestCase):
             user = testdata.user(email="a{}@a.com".format(i))
             users.append(user)
 
-            channel = Channel.objects.create(actor_id=user.id, name="user_a{}_channel".format(i))
+            channel = Channel.objects.create(
+                actor_id=user.id, name="user_a{}_channel".format(i)
+            )
             channel.save()
             channels.append(channel)
             channel.editors.add(user)
 
-        public_channel, editable_channel, viewable_channel, inaccessible_channel = channels
+        (
+            public_channel,
+            editable_channel,
+            viewable_channel,
+            inaccessible_channel,
+        ) = channels
 
         # Create public video node.
-        public_video_node = testdata.node({
-            "title": "Kolibri video",
-            "kind_id": "video",
-        }, parent=public_channel.main_tree)
+        public_video_node = testdata.node(
+            {
+                "title": "Kolibri video",
+                "kind_id": "video",
+            },
+            parent=public_channel.main_tree,
+        )
         public_channel.public = True
         public_channel.save()
 
@@ -85,7 +97,9 @@ class SearchViewsetTestCase(StudioAPITestCase):
         viewable_channel.main_tree.refresh_from_db()
         viewable_video_node = viewable_channel.main_tree.get_descendants().first()
         inaccessible_channel.main_tree.refresh_from_db()
-        inaccessible_video_node = inaccessible_channel.main_tree.get_descendants().first()
+        inaccessible_video_node = (
+            inaccessible_channel.main_tree.get_descendants().first()
+        )
 
         # Send request from user_b to the search endpoint.
         self.client.force_authenticate(user=user_b)
@@ -93,10 +107,7 @@ class SearchViewsetTestCase(StudioAPITestCase):
         for channel_list in ("public", "edit", "view"):
             response = self.client.get(
                 reverse("search-list"),
-                data={
-                    "channel_list": channel_list,
-                    "keywords": "video"
-                },
+                data={"channel_list": channel_list, "keywords": "video"},
                 format="json",
             )
 

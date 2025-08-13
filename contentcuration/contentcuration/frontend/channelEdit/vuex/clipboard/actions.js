@@ -4,7 +4,7 @@ import chunk from 'lodash/chunk';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 import defer from 'lodash/defer';
-import * as Vibrant from 'node-vibrant';
+import { Vibrant } from 'node-vibrant/browser';
 import { ClipboardNodeFlag, LoadStatus, SelectionFlags } from './constants';
 import { selectionId, isLegacyNode, isExcludedNode, addExcludedNode } from './utils';
 import { promiseChunk } from 'shared/utils/helpers';
@@ -29,7 +29,7 @@ export function initialize(context) {
     .then(nodes =>
       context.dispatch('loadChannels', {
         id__in: nodes.map(node => node.source_channel_id),
-      })
+      }),
     )
     .then(() => {
       context.dispatch('loadChannelColors');
@@ -77,10 +77,9 @@ export function loadClipboardNodes(context, { parent }) {
       }
 
       const [legacyNodes, nodes] = partition(clipboardNodes, isLegacyNode);
-      const nodeIdChannelIdPairs = uniqBy(
-        nodes,
-        c => c.source_node_id + c.source_channel_id
-      ).map(c => [c.source_node_id, c.source_channel_id]);
+      const nodeIdChannelIdPairs = uniqBy(nodes, c => c.source_node_id + c.source_channel_id).map(
+        c => [c.source_node_id, c.source_channel_id],
+      );
       const legacyNodeIds = legacyNodes.map(n => n.id);
 
       return Promise.all([
@@ -91,12 +90,12 @@ export function loadClipboardNodes(context, { parent }) {
           context.dispatch(
             'contentNode/loadContentNodes',
             { '[node_id+channel_id]__in': chunkPairs },
-            { root }
-          )
+            { root },
+          ),
         ),
         // Chunk legacy nodes, double the size since not pairs
         ...chunk(legacyNodeIds, 50).map(legacyChunk =>
-          context.dispatch('contentNode/loadContentNodes', { id__in: legacyChunk }, { root })
+          context.dispatch('contentNode/loadContentNodes', { id__in: legacyChunk }, { root }),
         ),
       ]).then(() => {
         return context.dispatch('addClipboardNodes', {
@@ -194,14 +193,14 @@ export function addClipboardNodeFromListener(context, obj) {
       context.dispatch(
         'contentNode/loadContentNodes',
         { '[node_id+channel_id]__in': [[obj.source_node_id, obj.source_channel_id]] },
-        { root }
-      )
+        { root },
+      ),
     )
     .then(() =>
       context.dispatch('addClipboardNodes', {
         nodes: [obj],
         parent: obj.parent,
-      })
+      }),
     )
     .then(() => context.dispatch('loadChannelColors'));
 }
@@ -235,7 +234,7 @@ export function doPreloadClipboardNodes(context, { parent }) {
     return context.dispatch('loadClipboardNodes', { parent }).then(() =>
       context.commit('SET_PRELOAD_NODES', {
         [parent]: LoadStatus.LOADED,
-      })
+      }),
     );
   }
 }
@@ -265,42 +264,45 @@ const colorChoiceOrder = [
 export function loadChannelColors(context) {
   // Reducing the channels, going one by one processing colors, and collection an array
   // of all of them
-  return context.getters.channels.reduce((promise, channel) => {
-    const src = channel.thumbnail_encoding['base64']
-      ? channel.thumbnail_encoding['base64']
-      : channel.thumbnail_url;
+  return context.getters.channels.reduce(
+    (promise, channel) => {
+      const src = channel.thumbnail_encoding['base64']
+        ? channel.thumbnail_encoding['base64']
+        : channel.thumbnail_url;
 
-    // If we already have the color, just no src, then we'll just skip
-    if (context.getters.getChannelColor(channel.id) || !src) {
-      return promise;
-    }
+      // If we already have the color, just no src, then we'll just skip
+      if (context.getters.getChannelColor(channel.id) || !src) {
+        return promise;
+      }
 
-    const image = new Image();
-    image.src = src;
+      const image = new Image();
+      image.src = src;
 
-    //
-    return promise.then(allColors => {
-      return Vibrant.from(image)
-        .getPalette()
-        .then(palette => {
-          let color = null;
+      //
+      return promise.then(allColors => {
+        return Vibrant.from(image)
+          .getPalette()
+          .then(palette => {
+            let color = null;
 
-          if (palette) {
-            const colors = colorChoiceOrder.map(name => palette[name].getHex());
-            // Find the first color that we don't already have
-            color = colors.find(color => !allColors.includes(color)) || color;
-            allColors.push(color);
-          }
+            if (palette) {
+              const colors = colorChoiceOrder.map(name => palette[name].getHex());
+              // Find the first color that we don't already have
+              color = colors.find(color => !allColors.includes(color)) || color;
+              allColors.push(color);
+            }
 
-          // Add it now so the user can see it
-          context.commit('ADD_CHANNEL_COLOR', { id: channel.id, color });
-          return allColors;
-        })
-        .catch(() => {
-          return allColors;
-        });
-    });
-  }, Promise.resolve(Object.values(context.state.channelColors)));
+            // Add it now so the user can see it
+            context.commit('ADD_CHANNEL_COLOR', { id: channel.id, color });
+            return allColors;
+          })
+          .catch(() => {
+            return allColors;
+          });
+      });
+    },
+    Promise.resolve(Object.values(context.state.channelColors)),
+  );
 }
 
 export function doCopy(context, { node_id, channel_id, extra_fields = {} }) {
@@ -324,7 +326,7 @@ export function copy(context, { node_id, channel_id, extra_fields = {} }) {
       context.dispatch('addClipboardNodes', {
         nodes: [node],
         parent: context.rootGetters['clipboardRootId'],
-      })
+      }),
     );
   });
 }
@@ -352,7 +354,7 @@ export function copyAll(context, { nodes }) {
       context.dispatch('addClipboardNodes', {
         nodes,
         parent: context.rootGetters['clipboardRootId'],
-      })
+      }),
     );
   });
 }
@@ -450,7 +452,7 @@ export function deleteClipboardNodes(context, ids) {
       }
 
       return deleteClipboardNode(context, { id });
-    })
+    }),
   );
 }
 
@@ -467,8 +469,8 @@ export function moveClipboardNodes(context, { legacyTrees, newTrees, target }) {
       context.dispatch(
         'contentNode/moveContentNodes',
         { id__in: legacyTrees.map(tree => tree.id), parent: target },
-        { root: true }
-      )
+        { root: true },
+      ),
     );
   }
   if (newTrees.length) {
@@ -481,8 +483,8 @@ export function moveClipboardNodes(context, { legacyTrees, newTrees, target }) {
             target,
             excluded_descendants: get(copyNode, ['extra_fields', 'excluded_descendants'], null),
           },
-          { root: true }
-        )
+          { root: true },
+        ),
       );
     }
   }
@@ -492,16 +494,16 @@ export function moveClipboardNodes(context, { legacyTrees, newTrees, target }) {
       deletionPromises.push(
         context.dispatch(
           'deleteClipboardNodes',
-          newTrees.map(copyNode => copyNode.clipboardNodeId)
-        )
+          newTrees.map(copyNode => copyNode.clipboardNodeId),
+        ),
       );
     }
     if (legacyTrees.length) {
       deletionPromises.push(
         context.dispatch(
           'deleteLegacyNodes',
-          legacyTrees.map(tree => tree.id)
-        )
+          legacyTrees.map(tree => tree.id),
+        ),
       );
     }
     return Promise.all(deletionPromises);

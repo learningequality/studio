@@ -4,14 +4,14 @@ import TestForm from './TestForm.vue';
 import Roles from 'shared/leUtils/Roles';
 import { constantStrings } from 'shared/mixins';
 
-document.body.setAttribute('data-app', true); // Vuetify prints a warning without this
-
-function makeWrapper() {
-  return mount(TestForm, {
-    slots: {
-      testComponent: VisibilityDropdown,
-    },
+async function makeWrapper(propsData = {}) {
+  const form = mount(TestForm);
+  await form.vm.$nextTick();
+  const field = mount(VisibilityDropdown, {
+    attachTo: form.element,
+    propsData,
   });
+  return [form, field];
 }
 
 const RolesArray = Array.from(Roles);
@@ -19,65 +19,64 @@ const RolesArray = Array.from(Roles);
 describe('visibilityDropdown', () => {
   let wrapper;
   let formWrapper;
-  beforeEach(() => {
-    formWrapper = makeWrapper();
-    wrapper = formWrapper.find(VisibilityDropdown);
+  beforeEach(async () => {
+    [formWrapper, wrapper] = await makeWrapper();
   });
 
   describe('on load', () => {
     it.each(RolesArray)('all visibility options should be an option to select', async role => {
       await wrapper.find('.v-input__slot').trigger('click');
-      expect(wrapper.find('.v-list').text()).toContain(constantStrings.$tr(role));
+      expect(wrapper.findComponent('.v-list').text()).toContain(constantStrings.$tr(role));
     });
-    it.each(RolesArray)('should render according to visibility prop %s', visibility => {
-      wrapper.setProps({ value: visibility });
+
+    it.each(RolesArray)('should render according to visibility prop %s', async visibility => {
+      await wrapper.setProps({ value: visibility });
       expect(wrapper.vm.$refs.visibility.value).toEqual(visibility);
     });
   });
+
   describe('props', () => {
-    it('setting readonly should prevent any edits', () => {
-      expect(wrapper.find({ ref: 'visibility' }).classes()).not.toContain('v-input--is-readonly');
-      wrapper.setProps({ readonly: true });
-      expect(wrapper.find({ ref: 'visibility' }).classes()).toContain('v-input--is-readonly');
+    it('setting readonly should prevent any edits', async () => {
+      expect(wrapper.findComponent({ ref: 'visibility' }).classes()).not.toContain(
+        'v-input--is-readonly',
+      );
+      await wrapper.setProps({ readonly: true });
+      expect(wrapper.findComponent({ ref: 'visibility' }).classes()).toContain(
+        'v-input--is-readonly',
+      );
     });
-    it('setting required should make fields required', () => {
+
+    it('setting required should make fields required', async () => {
       expect(
-        wrapper
-          .find({ ref: 'visibility' })
-          .find('input')
-          .attributes('required')
+        wrapper.findComponent({ ref: 'visibility' }).find('input').attributes('required'),
       ).toBeFalsy();
-      wrapper.setProps({ required: true });
+      await wrapper.setProps({ required: true });
       expect(
-        wrapper
-          .find({ ref: 'visibility' })
-          .find('input')
-          .attributes('required')
+        wrapper.findComponent({ ref: 'visibility' }).find('input').attributes('required'),
       ).toEqual('required');
     });
-    it('validation should flag empty required fields', () => {
+
+    it('validation should flag empty required fields', async () => {
       formWrapper.vm.validate();
-      expect(wrapper.find('.error--text').exists()).toBe(false);
-      wrapper.setProps({ required: true, value: null });
+      await wrapper.vm.$nextTick();
+      expect(wrapper.findComponent('.error--text').exists()).toBe(false);
+      await wrapper.setProps({ required: true, value: null });
       formWrapper.vm.validate();
-      expect(wrapper.find('.error--text').exists()).toBe(true);
+      await wrapper.vm.$nextTick();
+      expect(wrapper.findComponent('.error--text').exists()).toBe(true);
     });
-    it('setting disabled should make fields required', () => {
+
+    it('setting disabled should make fields required', async () => {
       expect(
-        wrapper
-          .find({ ref: 'visibility' })
-          .find('input')
-          .attributes('disabled')
+        wrapper.findComponent({ ref: 'visibility' }).find('input').attributes('disabled'),
       ).toBeFalsy();
-      wrapper.setProps({ disabled: true });
+      await wrapper.setProps({ disabled: true });
       expect(
-        wrapper
-          .find({ ref: 'visibility' })
-          .find('input')
-          .attributes('disabled')
+        wrapper.findComponent({ ref: 'visibility' }).find('input').attributes('disabled'),
       ).toEqual('disabled');
     });
   });
+
   describe('emitted events', () => {
     it('should emit changed event when visibility is changed', () => {
       const firstRole = Roles.values().next().value;

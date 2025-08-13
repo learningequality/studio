@@ -1,28 +1,39 @@
 <template>
 
   <VList>
-    <VListTile :href="viewLink" target="_blank" @click="track('Edit')">
+    <VListTile
+      :href="viewLink"
+      target="_blank"
+      @click="track('Edit')"
+    >
       <VListTileTitle>{{ $tr('goToOriginalLocation') }}</VListTileTitle>
     </VListTile>
-    <VListTile v-if="!isLegacy" @click="duplicateNode()">
+    <VListTile
+      v-if="!isLegacy"
+      @click="duplicateNode()"
+    >
       <VListTileTitle>{{ $tr('makeACopy') }}</VListTileTitle>
     </VListTile>
-    <VListTile v-if="allowMove" @click.stop="calculateMoveNodes">
+    <VListTile
+      v-if="allowMove"
+      @click.stop="calculateMoveNodes"
+    >
       <VListTileTitle>{{ $tr('moveTo') }}</VListTileTitle>
-      <MoveModal 
-        v-if="moveModalOpen" 
-        ref="moveModal" 
-        v-model="moveModalOpen" 
+      <MoveModal
+        v-if="moveModalOpen"
+        ref="moveModal"
+        v-model="moveModalOpen"
         :clipboardTopicResourceCount="topicAndResourceCount"
-        @target="moveNodes" 
+        @target="moveNodes"
       />
     </VListTile>
     <VListTile @click="removeNode()">
-      <VListTileTitle>{{ $tr('remove') }}</VListTileTitle>
+      <VListTileTitle>{{ $tr('removeNode') }}</VListTileTitle>
     </VListTile>
   </VList>
 
 </template>
+
 
 <script>
 
@@ -73,7 +84,7 @@
         if (this.contentNode.kind === 'topic') {
           topicCount = 1;
           resourceCount = Object.values(this.clipboardNodesMap).filter(
-            node => node.parent === this.nodeId
+            node => node.parent === this.nodeId,
           ).length;
         } else {
           resourceCount = 1;
@@ -104,7 +115,7 @@
           target,
         }).then(this.$refs.moveModal.moveComplete);
       },
-      removeNode: withChangeTracker(function(changeTracker) {
+      removeNode: withChangeTracker(function (changeTracker) {
         this.track('Delete');
 
         return this.deleteClipboardNode({
@@ -118,7 +129,7 @@
           }).then(() => changeTracker.cleanUp());
         });
       }),
-      duplicateNode: withChangeTracker(function(changeTracker) {
+      duplicateNode: withChangeTracker(function (changeTracker) {
         this.track('Copy');
 
         return this.copyAll({
@@ -140,7 +151,7 @@
       goToOriginalLocation: 'Go to original location',
       makeACopy: 'Make a copy',
       moveTo: 'Move to...',
-      remove: 'Delete',
+      removeNode: 'Delete',
       // undo: 'Undo',
       copiedItemsToClipboard: 'Copied in clipboard',
       removedFromClipboard: 'Deleted from clipboard',
@@ -149,6 +160,5 @@
 
 </script>
 
-<style scoped>
 
-</style>
+<style scoped></style>

@@ -1,8 +1,18 @@
 <template>
 
-  <FullscreenModal v-model="dialog" :header="$tr('trashModalTitle')">
-    <LoadingText v-if="loading" data-test="loading" />
-    <VContainer v-else-if="!items.length" fluid data-test="empty">
+  <FullscreenModal
+    v-model="dialog"
+    :header="$tr('trashModalTitle')"
+  >
+    <LoadingText
+      v-if="loading"
+      data-test="loading"
+    />
+    <VContainer
+      v-else-if="!items.length"
+      fluid
+      data-test="empty"
+    >
       <h1 class="font-weight-bold headline mt-4 pt-4 text-xs-center">
         {{ $tr('trashEmptyText') }}
       </h1>
@@ -15,12 +25,25 @@
         fluid
         class="pa-4"
         data-test="list"
-        style="max-height: calc(100vh - 128px); overflow-y: auto;"
+        style="max-height: calc(100vh - 128px); overflow-y: auto"
       >
-        <VCard style="width: 100%; max-width: 900px; margin: 0 auto;" flat class="pa-2">
-          <VDataTable :headers="headers" :items="items" hide-actions must-sort>
+        <VCard
+          style="width: 100%; max-width: 900px; margin: 0 auto"
+          flat
+          class="pa-2"
+        >
+          <VDataTable
+            :headers="headers"
+            :items="items"
+            hide-actions
+            must-sort
+          >
             <template #headerCell="props">
-              <VLayout v-if="props.header.selectAll" row align-center>
+              <VLayout
+                v-if="props.header.selectAll"
+                row
+                align-center
+              >
                 <VFlex shrink>
                   <Checkbox
                     :inputValue="selected.length === items.length"
@@ -38,9 +61,15 @@
               </span>
             </template>
             <template #items="{ item }">
-              <tr :key="item.id" :style="{ backgroundColor: getItemBackground(item.id) }">
+              <tr
+                :key="item.id"
+                :style="{ backgroundColor: getItemBackground(item.id) }"
+              >
                 <td>
-                  <VLayout row align-center>
+                  <VLayout
+                    row
+                    align-center
+                  >
                     <VFlex shrink>
                       <Checkbox
                         v-model="selected"
@@ -48,10 +77,16 @@
                         data-test="checkbox"
                       />
                     </VFlex>
-                    <VFlex shrink class="mx-3">
+                    <VFlex
+                      shrink
+                      class="mx-3"
+                    >
                       <ContentNodeIcon :kind="item.kind" />
                     </VFlex>
-                    <VFlex :class="getTitleClass(item)" grow>
+                    <VFlex
+                      :class="getTitleClass(item)"
+                      grow
+                    >
                       <ActionLink
                         :text="getTitle(item)"
                         data-test="item"
@@ -67,14 +102,18 @@
             </template>
           </VDataTable>
           <div class="show-more-button-container">
-            <KButton v-if="more" :disabled="moreLoading" @click="loadMore">
+            <KButton
+              v-if="more"
+              :disabled="moreLoading"
+              @click="loadMore"
+            >
               {{ showMoreLabel }}
             </KButton>
           </div>
         </VCard>
       </VContainer>
       <ResourceDrawer
-        style="margin-top: 64px;"
+        style="margin-top: 64px"
         :nodeId="previewNodeId"
         :channelId="currentChannel.id"
         app
@@ -82,7 +121,10 @@
       />
     </VContent>
     <template #bottom>
-      <span v-if="selected.length" class="mr-4 subheading">
+      <span
+        v-if="selected.length"
+        class="mr-4 subheading"
+      >
         {{ getSelectedTopicAndResourceCountText(selected) }}
       </span>
       <VSpacer />
@@ -109,10 +151,18 @@
       :text="$tr('deleteConfirmationText')"
     >
       <template #buttons="{ close }">
-        <VBtn flat data-test="closeconfirm" @click="close">
+        <VBtn
+          flat
+          data-test="closeconfirm"
+          @click="close"
+        >
           {{ $tr('deleteConfirmationCancelButton') }}
         </VBtn>
-        <VBtn color="primary" data-test="deleteconfirm" @click="deleteNodes">
+        <VBtn
+          color="primary"
+          data-test="deleteconfirm"
+          @click="deleteNodes"
+        >
           {{ $tr('deleteConfirmationDeleteButton') }}
         </VBtn>
       </template>
@@ -128,6 +178,8 @@
   </FullscreenModal>
 
 </template>
+
+
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
@@ -250,7 +302,7 @@
           childrenResponse => {
             this.loading = false;
             this.more = childrenResponse.more || null;
-          }
+          },
         );
       },
       moveNodes(target) {
@@ -313,6 +365,8 @@
   };
 
 </script>
+
+
 <style lang="scss" scoped>
 
   .show-more-button-container {

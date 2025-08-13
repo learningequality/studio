@@ -3,9 +3,6 @@ All task functions decorated with `app.task` transform the function to an instan
 `contentcuration.utils.celery.tasks.CeleryTask`. See the methods of that class for enqueuing and fetching results of
 the tasks.
 """
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import logging
 import time
 
@@ -35,7 +32,10 @@ def apply_user_changes_task(self, user_id):
     :param user_id: The user ID for which to process changes
     """
     from contentcuration.viewsets.sync.base import apply_changes
-    changes_qs = Change.objects.filter(applied=False, errored=False, user_id=user_id, channel__isnull=True)
+
+    changes_qs = Change.objects.filter(
+        applied=False, errored=False, user_id=user_id, channel__isnull=True
+    )
     apply_changes(changes_qs)
     if changes_qs.exists():
         self.requeue()
@@ -48,7 +48,10 @@ def apply_channel_changes_task(self, channel_id):
     :param channel_id: The channel ID for which to process changes
     """
     from contentcuration.viewsets.sync.base import apply_changes
-    changes_qs = Change.objects.filter(applied=False, errored=False, channel_id=channel_id)
+
+    changes_qs = Change.objects.filter(
+        applied=False, errored=False, channel_id=channel_id
+    )
     apply_changes(changes_qs)
     if changes_qs.exists():
         self.requeue()
@@ -56,13 +59,14 @@ def apply_channel_changes_task(self, channel_id):
 
 class CustomEmailMessage(EmailMessage):
     """
-        jayoshih: There's an issue with the django postmark backend where
-        _build_message attempts to attach files as base64. However,
-        the django EmailMessage attach method makes all content with a text/*
-        mimetype to be encoded as a string, causing `base64.b64encode(content)`
-        to fail. This is a workaround to ensure that content is still encoded as
-        bytes when it comes to encoding the attachment as base64
+    jayoshih: There's an issue with the django postmark backend where
+    _build_message attempts to attach files as base64. However,
+    the django EmailMessage attach method makes all content with a text/*
+    mimetype to be encoded as a string, causing `base64.b64encode(content)`
+    to fail. This is a workaround to ensure that content is still encoded as
+    bytes when it comes to encoding the attachment as base64
     """
+
     def attach(self, filename=None, content=None, mimetype=None):
         if filename is None:
             raise AssertionError
@@ -79,6 +83,7 @@ def generateusercsv_task(user_id, language=settings.LANGUAGE_CODE):
         user = User.objects.get(pk=user_id)
         csv_path = write_user_csv(user)
         subject = render_to_string("export/user_csv_email_subject.txt", {})
+        subject = "".join(subject.splitlines())
         message = render_to_string(
             "export/user_csv_email.txt",
             {
@@ -89,8 +94,10 @@ def generateusercsv_task(user_id, language=settings.LANGUAGE_CODE):
             },
         )
 
-        email = CustomEmailMessage(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
-        email.encoding = 'utf-8'
+        email = CustomEmailMessage(
+            subject, message, settings.DEFAULT_FROM_EMAIL, [user.email]
+        )
+        email.encoding = "utf-8"
         email.attach_file(csv_path, mimetype="text/csv")
 
         email.send()
@@ -118,7 +125,11 @@ def calculate_user_storage_task(user_id):
         user = User.objects.get(pk=user_id)
         user.set_space_used()
     except User.DoesNotExist:
-        logging.error("Tried to calculate user storage for user with id {} but they do not exist".format(user_id))
+        logging.error(
+            "Tried to calculate user storage for user with id {} but they do not exist".format(
+                user_id
+            )
+        )
 
 
 @app.task(name="calculate_resource_size_task")
@@ -130,10 +141,21 @@ def calculate_resource_size_task(node_id, channel_id):
 
 @app.task(name="sendcustomemails_task")
 def sendcustomemails_task(subject, message, query):
-    subject = render_to_string('registration/custom_email_subject.txt', {'subject': subject})
+    subject = render_to_string(
+        "registration/custom_email_subject.txt", {"subject": subject}
+    )
+    subject = "".join(subject.splitlines())
     recipients = AdminUserFilter(data=query).qs.distinct()
 
     for recipient in recipients:
-        text = message.format(current_date=time.strftime("%A, %B %d"), current_time=time.strftime("%H:%M %Z"), **recipient.__dict__)
-        text = render_to_string('registration/custom_email.txt', {'message': text})
-        recipient.email_user(subject, text, settings.DEFAULT_FROM_EMAIL, )
+        text = message.format(
+            current_date=time.strftime("%A, %B %d"),
+            current_time=time.strftime("%H:%M %Z"),
+            **recipient.__dict__
+        )
+        text = render_to_string("registration/custom_email.txt", {"message": text})
+        recipient.email_user(
+            subject,
+            text,
+            settings.DEFAULT_FROM_EMAIL,
+        )

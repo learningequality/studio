@@ -23,50 +23,48 @@ function makeWrapper(props = {}) {
 describe('userStorage', () => {
   let wrapper;
   let updateUser;
-  beforeEach(() => {
+
+  beforeEach(async () => {
     wrapper = makeWrapper();
-    wrapper.setProps({ value: true }); // Allow watch event to trigger
-    updateUser = jest.fn().mockReturnValue(Promise.resolve());
-    wrapper.setMethods({ updateUser });
+    await wrapper.setProps({ value: true }); // Allow watch event to trigger
+    updateUser = jest.spyOn(wrapper.vm, 'updateUser');
+    updateUser.mockResolvedValue(null);
   });
-  it('clicking cancel should reset the values', () => {
+
+  it('clicking cancel should reset the values', async () => {
     wrapper = makeWrapper({ showCancel: true });
-    wrapper.setData({ space: diskSpace + 100 });
-    wrapper.find('[data-test="cancel"]').trigger('click');
+    await wrapper.setData({ space: diskSpace + 100 });
+    await wrapper.findComponent('[data-test="cancel"]').trigger('click');
     expect(wrapper.vm.space).toBe(diskSpace);
   });
-  it('submitting form should call submit', () => {
-    const submit = jest.fn();
-    wrapper.setMethods({ submit });
-    wrapper.find({ ref: 'form' }).trigger('submit');
+
+  it('submitting form should call submit', async () => {
+    const submit = jest.spyOn(wrapper.vm, 'submit');
+    await wrapper.findComponent({ ref: 'form' }).trigger('submit');
     expect(submit).toHaveBeenCalled();
   });
+
   it('submit should not call updateUser if space is blank', async () => {
-    wrapper.setData({ space: '' });
-    await wrapper.vm.$nextTick();
-    return wrapper.vm.submit().then(() => {
-      expect(updateUser).not.toHaveBeenCalled();
-    });
+    await wrapper.setData({ space: '' });
+    await wrapper.vm.submit();
+    expect(updateUser).not.toHaveBeenCalled();
   });
+
   it('submit should not call updateUser if unit is blank', async () => {
-    wrapper.setData({ unit: '' });
-    await wrapper.vm.$nextTick();
-    return wrapper.vm.submit().then(() => {
-      expect(updateUser).not.toHaveBeenCalled();
-    });
+    await wrapper.setData({ unit: '' });
+    await wrapper.vm.submit();
+    expect(updateUser).not.toHaveBeenCalled();
   });
+
   it('submit should not call updateUser if space is negative', async () => {
-    wrapper.setData({ space: -100 });
-    await wrapper.vm.$nextTick();
-    return wrapper.vm.submit().then(() => {
-      expect(updateUser).not.toHaveBeenCalled();
-    });
+    await wrapper.setData({ space: -100 });
+    await wrapper.vm.submit();
+    expect(updateUser).not.toHaveBeenCalled();
   });
+
   it('submit should call updateUser if form is valid', async () => {
-    wrapper.setData({ space: 100, unit: 'ONE_TB' });
-    await wrapper.vm.$nextTick();
-    return wrapper.vm.submit().then(() => {
-      expect(updateUser).toHaveBeenCalledWith({ id: userId, disk_space: 100 * ONE_TB });
-    });
+    await wrapper.setData({ space: 100, unit: 'ONE_TB' });
+    await wrapper.vm.submit();
+    expect(updateUser).toHaveBeenCalledWith({ id: userId, disk_space: 100 * ONE_TB });
   });
 });

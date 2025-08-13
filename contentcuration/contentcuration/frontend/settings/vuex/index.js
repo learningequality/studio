@@ -3,16 +3,16 @@ import client from 'shared/client';
 
 const throttleTime = 30 * 1000;
 
-const settingsDeferredUserApiToken = function() {
+const settingsDeferredUserApiToken = function () {
   return client.get(window.Urls.deferred_user_api_token());
 };
 
 const settingsDeferredUserSpaceByKind = throttle(
-  function() {
+  function () {
     return client.get(window.Urls.deferred_user_space_by_kind());
   },
   throttleTime,
-  { trailing: false }
+  { trailing: false },
 );
 
 export default {
@@ -51,7 +51,7 @@ export default {
           headers: {
             'Content-type': 'application/form-url-encode',
           },
-        }
+        },
       );
     },
 
@@ -94,7 +94,7 @@ export default {
           {
             api_token: response.data.api_token,
           },
-          { root: true }
+          { root: true },
         );
       });
     },
@@ -111,7 +111,7 @@ export default {
           {
             space_used_by_kind: response.data.space_used_by_kind,
           },
-          { root: true }
+          { root: true },
         );
       });
     },

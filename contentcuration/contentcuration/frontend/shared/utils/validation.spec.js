@@ -354,10 +354,10 @@ describe('channelEdit utils', () => {
     describe('for all kinds of nodes', () => {
       it('throws a reference error if node details are not defined', () => {
         expect(() => isNodeComplete({ nodeDetails: undefined })).toThrowError(
-          new ReferenceError('node details must be defined')
+          new ReferenceError('node details must be defined'),
         );
         expect(() => isNodeComplete({ nodeDetails: null })).toThrowError(
-          new ReferenceError('node details must be defined')
+          new ReferenceError('node details must be defined'),
         );
       });
     });
@@ -418,7 +418,7 @@ describe('channelEdit utils', () => {
       it('throws a reference error if assessment items are not defined', () => {
         const error = new ReferenceError('assessment items must be defined for exercises');
         expect(() => isNodeComplete({ nodeDetails, assessmentItems: undefined })).toThrowError(
-          error
+          error,
         );
         expect(() => isNodeComplete({ nodeDetails, assessmentItems: null })).toThrowError(error);
       });
@@ -448,7 +448,7 @@ describe('channelEdit utils', () => {
               ...assessmentItems,
               invalidAssessmentItem,
             },
-          })
+          }),
         ).toBe(false);
       });
 
@@ -494,8 +494,8 @@ describe('channelEdit utils', () => {
 
     each(
       Object.values(ContentKindsNames).filter(
-        kind => ![ContentKindsNames.TOPIC, ContentKindsNames.EXERCISE].includes(kind)
-      )
+        kind => ![ContentKindsNames.TOPIC, ContentKindsNames.EXERCISE].includes(kind),
+      ),
     ).describe('for nodes other than topic or exercise', kind => {
       let nodeDetails, files;
       beforeEach(() => {
@@ -526,7 +526,7 @@ describe('channelEdit utils', () => {
 
       it('throws a reference error if files are not defined', () => {
         const error = new ReferenceError(
-          'files must be defined for a node other than topic or exercise'
+          'files must be defined for a node other than topic or exercise',
         );
         expect(() => isNodeComplete({ nodeDetails, files: undefined })).toThrowError(error);
         expect(() => isNodeComplete({ nodeDetails, files: null })).toThrowError(error);
@@ -592,7 +592,7 @@ describe('channelEdit utils', () => {
           kind: 'document',
           license: 8,
           learning_activities: { test: true },
-        })
+        }),
       ).toEqual([ValidationErrors.TITLE_REQUIRED]);
     });
 

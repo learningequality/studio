@@ -8,7 +8,10 @@
     @accept="$emit('accept', policy)"
     @close="$emit('close')"
   >
-    <div class="privacy-wrapper" dir="auto">
+    <div
+      class="privacy-wrapper"
+      dir="auto"
+    >
       <p class="emphasis">
         {{ $untranslated('introductionHeader') }}
       </p>
@@ -86,14 +89,19 @@
       </ol>
 
       <!-- 1. Important Information and Who We Are -->
-      <div id="important-info" class="section">
+      <div
+        id="important-info"
+        class="section"
+      >
         <h2>{{ $untranslated('importantInfoHeader') }}</h2>
         <p>
           {{ $untranslated('importantInfoP1Part1') }}
           <b>{{ $untranslated('importantInfoP1Terms') }}</b>
           {{ $untranslated('importantInfoP1Part2') }}
         </p>
-        <p><b>{{ $untranslated('importantInfoP2') }}</b></p>
+        <p>
+          <b>{{ $untranslated('importantInfoP2') }}</b>
+        </p>
         <p>{{ $untranslated('importantInfoP3') }}</p>
         <ul>
           <li>{{ $untranslated('importantInfoItem1') }}</li>
@@ -105,17 +113,24 @@
           <b>{{ $untranslated('importantInfoP4ICO') }}</b>
           {{ $untranslated('importantInfoP4Part2') }}
         </p>
-        <p><b>{{ $untranslated('importantInfoP5') }}</b></p>
+        <p>
+          <b>{{ $untranslated('importantInfoP5') }}</b>
+        </p>
         <p>{{ $untranslated('importantInfoP6') }}</p>
         <p>{{ $untranslated('importantInfoP7') }}</p>
         <p>{{ $untranslated('importantInfoP8') }}</p>
         <p>{{ $untranslated('importantInfoP9') }}</p>
-        <p><b>{{ $untranslated('importantInfoP10') }}</b></p>
+        <p>
+          <b>{{ $untranslated('importantInfoP10') }}</b>
+        </p>
         <p>{{ $untranslated('importantInfoP11') }}</p>
       </div>
 
       <!-- 2. The Data We Collect About You -->
-      <div id="data-collection" class="section">
+      <div
+        id="data-collection"
+        class="section"
+      >
         <h2>{{ $untranslated('dataCollectionHeader') }}</h2>
         <p>{{ $untranslated('dataCollectionP1') }}</p>
         <ul>
@@ -126,7 +141,10 @@
       </div>
 
       <!-- 3. How is Your Personal Data Collected? -->
-      <div id="personal-data-collection" class="section">
+      <div
+        id="personal-data-collection"
+        class="section"
+      >
         <h2>{{ $untranslated('personalDataCollectionHeader') }}</h2>
         <p>{{ $untranslated('personalDataCollectionP1') }}</p>
         <ul>
@@ -142,7 +160,10 @@
       </div>
 
       <!-- 4. How We Use Your Personal Data -->
-      <div id="personal-data-use" class="section">
+      <div
+        id="personal-data-use"
+        class="section"
+      >
         <h2>{{ $untranslated('personalDataUseHeader') }}</h2>
         <p>{{ $untranslated('personalDataUseP1') }}</p>
         <ul>
@@ -164,7 +185,10 @@
       </div>
 
       <!-- 5. Disclosures of Your Personal Data -->
-      <div id="personal-data-disclosure" class="section">
+      <div
+        id="personal-data-disclosure"
+        class="section"
+      >
         <h2>{{ $untranslated('personalDataDisclosureHeader') }}</h2>
         <p>{{ $untranslated('personalDataDisclosureP1') }}</p>
         <ul>
@@ -177,13 +201,19 @@
       </div>
 
       <!-- 6. International Transfers -->
-      <div id="international-transfers" class="section">
+      <div
+        id="international-transfers"
+        class="section"
+      >
         <h2>{{ $untranslated('internationalTransfersHeader') }}</h2>
         <p>{{ $untranslated('internationalTransfersP1') }}</p>
       </div>
 
       <!-- 7. Data Security -->
-      <div id="data-security" class="section">
+      <div
+        id="data-security"
+        class="section"
+      >
         <h2>{{ $untranslated('dataSecurityHeader') }}</h2>
         <p>{{ $untranslated('dataSecurityP1') }}</p>
         <p>{{ $untranslated('dataSecurityP2') }}</p>
@@ -191,14 +221,20 @@
       </div>
 
       <!-- 8. Data Retention -->
-      <div id="data-retention" class="section">
+      <div
+        id="data-retention"
+        class="section"
+      >
         <h2>{{ $untranslated('dataRetentionHeader') }}</h2>
         <p>{{ $untranslated('dataRetentionP1') }}</p>
         <p>{{ $untranslated('dataRetentionP2') }}</p>
       </div>
 
       <!-- 9. Expectation of Privacy in Kolibri Studio -->
-      <div id="expectation-of-privacy" class="section">
+      <div
+        id="expectation-of-privacy"
+        class="section"
+      >
         <h2>{{ $untranslated('expectationOfPrivacyHeader') }}</h2>
         <p>
           {{ $untranslated('expectationOfPrivacyP1') }}
@@ -210,7 +246,10 @@
       </div>
 
       <!-- 10. Your Legal Rights -->
-      <div id="legal-rights" class="section">
+      <div
+        id="legal-rights"
+        class="section"
+      >
         <h2>{{ $untranslated('legalRightsHeader') }}</h2>
         <p>{{ $untranslated('legalRightsP1') }}</p>
         <ul>
@@ -228,13 +267,19 @@
       </div>
 
       <!-- 11. Contact Us -->
-      <div id="contact-us" class="section">
+      <div
+        id="contact-us"
+        class="section"
+      >
         <h2>{{ $untranslated('contactUsHeader') }}</h2>
         <p>{{ $untranslated('contactUsP1') }}</p>
       </div>
 
       <!-- 12. Cookies -->
-      <div id="cookies" class="section">
+      <div
+        id="cookies"
+        class="section"
+      >
         <h2>{{ $untranslated('cookiesHeader') }}</h2>
         <p>{{ $untranslated('cookiesP1') }}</p>
         <p>
@@ -248,7 +293,10 @@
       </div>
 
       <!-- 13. Glossary -->
-      <div id="glossary" class="section">
+      <div
+        id="glossary"
+        class="section"
+      >
         <h2>{{ $untranslated('glossaryHeader') }}</h2>
         <p>
           <b>{{ $untranslated('glossaryP1Consent') }}</b>
@@ -262,9 +310,15 @@
           <b>{{ $untranslated('glossaryP3PerformanceOfContract') }}</b>
           {{ $untranslated('glossaryP3') }}
         </p>
-        <p><b>{{ $untranslated('glossaryP4Comply') }}</b>{{ $untranslated('glossaryP4') }}</p>
-        <p><b>{{ $untranslated('glossaryP5ThirdParty') }}</b>{{ $untranslated('glossaryP5') }}</p>
-        <p><b>{{ $untranslated('glossaryP6') }}</b></p>
+        <p>
+          <b>{{ $untranslated('glossaryP4Comply') }}</b>{{ $untranslated('glossaryP4') }}
+        </p>
+        <p>
+          <b>{{ $untranslated('glossaryP5ThirdParty') }}</b>{{ $untranslated('glossaryP5') }}
+        </p>
+        <p>
+          <b>{{ $untranslated('glossaryP6') }}</b>
+        </p>
         <p>{{ $untranslated('glossaryP7') }}</p>
         <ul>
           <li>
@@ -307,6 +361,8 @@
   </PoliciesModal>
 
 </template>
+
+
 <script>
 
   import PoliciesModal from './PoliciesModal';
@@ -557,31 +613,37 @@
 
 </script>
 
+
 <style scoped>
+
   .emphasis {
-    text-transform: uppercase;
     font-weight: bold;
+    text-transform: uppercase;
   }
 
   .privacy-wrapper {
     counter-reset: section;
   }
+
   .section {
     margin-bottom: 24px;
   }
+
   h2::before {
+    content: counter(section) '. ';
     counter-increment: section;
-    content: counter(section) ". ";
   }
 
   ul {
     margin-bottom: 16px;
   }
+
   li {
-    margin: 0px 24px;
+    margin: 0 24px;
   }
 
   .toc li {
     margin-bottom: 8px;
   }
+
 </style>

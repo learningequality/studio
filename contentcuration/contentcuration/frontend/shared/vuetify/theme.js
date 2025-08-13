@@ -6,12 +6,12 @@ export default function theme() {
   const tokens = themeTokens();
   return Object.assign(
     {
-      loading: palette.black,
-      primaryBackground: brand.primary.v_200,
-      backgroundColor: palette.grey.v_50,
-      greyBackground: palette.grey.v_200,
+      loading: palette.grey.v_900,
+      primaryBackground: brand.primary.v_100,
+      backgroundColor: palette.grey.v_100,
+      greyBackground: palette.grey.v_300,
       greyBorder: palette.grey.v_400,
-      grey: palette.grey.v_600,
+      grey: palette.grey.v_700,
       darkGrey: palette.grey.v_800,
       greenSuccess: tokens.success,
       topic: palette.grey.v_400,
@@ -23,12 +23,12 @@ export default function theme() {
       html5: tokens.explore,
       zim: tokens.explore,
       slideshow: tokens.read,
-      channelHighlightDefault: palette.grey.v_200,
-      draggableDropZone: palette.grey.v_100,
-      draggableDropOverlay: brand.primary.v_400,
-      greenHighlightBackground: brand.secondary.v_200,
-      roleVisibilityCoach: palette.lightblue.v_1100,
+      channelHighlightDefault: palette.grey.v_300,
+      draggableDropZone: palette.grey.v_200,
+      draggableDropOverlay: brand.primary.v_200,
+      greenHighlightBackground: brand.secondary.v_100,
+      roleVisibilityCoach: palette.lightblue.v_600,
     },
-    tokens
+    tokens,
   );
 }

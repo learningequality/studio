@@ -43,9 +43,15 @@
 .mq-math-mode .mq-editable-field.mq-focused {
   border-color: #709ac0;
   border-radius: 1px;
-  -webkit-box-shadow: #88bbdd 0 0 1px 2px, inset #66aaee 0 0 2px 0;
-  -moz-box-shadow: #88bbdd 0 0 1px 2px, inset #66aaee 0 0 2px 0;
-  box-shadow: #88bbdd 0 0 1px 2px, inset #66aaee 0 0 2px 0;
+  -webkit-box-shadow:
+    #88bbdd 0 0 1px 2px,
+    inset #66aaee 0 0 2px 0;
+  -moz-box-shadow:
+    #88bbdd 0 0 1px 2px,
+    inset #66aaee 0 0 2px 0;
+  box-shadow:
+    #88bbdd 0 0 1px 2px,
+    inset #66aaee 0 0 2px 0;
 }
 .mq-math-mode .mq-editable-field {
   margin: 1px;
@@ -145,7 +151,9 @@
   box-shadow: inset darkgray 0 0.1em 0.2em;
 }
 .mq-math-mode .mq-font {
-  font: 1em MathJax, serif;
+  font:
+    1em MathJax,
+    serif;
 }
 .mq-math-mode .mq-font * {
   font-family: inherit;

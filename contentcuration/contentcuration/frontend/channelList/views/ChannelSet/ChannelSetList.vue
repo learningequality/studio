@@ -1,14 +1,25 @@
 <template>
 
-  <VContainer class="list-items" fluid>
-    <VLayout row wrap align-end justify-center>
+  <VContainer
+    class="list-items"
+    fluid
+  >
+    <VLayout
+      row
+      wrap
+      align-end
+      justify-center
+    >
       <VFlex>
         <ActionLink
           :text="$tr('aboutChannelSetsLink')"
           class="mx-2"
           @click="infoDialog = true"
         />
-        <MessageDialog v-model="infoDialog" :header="$tr('aboutChannelSets')">
+        <MessageDialog
+          v-model="infoDialog"
+          :header="$tr('aboutChannelSets')"
+        >
           <p>
             {{ $tr('channelSetsDescriptionText') }}
           </p>
@@ -28,22 +39,29 @@
       </VFlex>
       <VSpacer />
       <VFlex class="text-xs-right">
-        <VBtn
+        <KButton
           v-if="!loading"
-          color="primary"
+          appearance="raised-button"
+          primary
           data-test="add-channelset"
+          :text="$tr('addChannelSetTitle')"
           @click="newChannelSet"
-        >
-          {{ $tr('addChannelSetTitle') }}
-        </VBtn>
+        />
       </VFlex>
     </VLayout>
-    <VLayout row justify-center class="pt-2">
+    <VLayout
+      row
+      justify-center
+      class="pt-2"
+    >
       <VFlex xs12>
         <template v-if="loading">
           <LoadingText />
         </template>
-        <p v-else-if="channelSets && !channelSets.length" class="mb-0 text-xs-center">
+        <p
+          v-else-if="channelSets && !channelSets.length"
+          class="mb-0 text-xs-center"
+        >
           {{ $tr('noChannelSetsFound') }}
         </p>
         <template v-else>
@@ -53,9 +71,7 @@
             hide-actions
           >
             <template #items="{ item }">
-              <ChannelSetItem
-                :channelSetId="item.id"
-              />
+              <ChannelSetItem :channelSetId="item.id" />
             </template>
           </VDataTable>
         </template>
@@ -64,6 +80,7 @@
   </VContainer>
 
 </template>
+
 
 <script>
 
@@ -107,13 +124,10 @@
       });
     },
     methods: {
-      ...mapActions('channelSet', ['loadChannelSetList', 'createChannelSet']),
+      ...mapActions('channelSet', ['loadChannelSetList']),
       newChannelSet() {
-        this.createChannelSet().then(id => {
-          this.$router.push({
-            name: RouteNames.CHANNEL_SET_DETAILS,
-            params: { channelSetId: id },
-          });
+        this.$router.push({
+          name: RouteNames.NEW_CHANNEL_SET,
         });
       },
     },
@@ -140,13 +154,13 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .list-items {
     margin: 0 auto;
   }
 
-  /deep/ .v-datatable {
+  ::v-deep .v-datatable {
     background-color: transparent !important;
   }
 

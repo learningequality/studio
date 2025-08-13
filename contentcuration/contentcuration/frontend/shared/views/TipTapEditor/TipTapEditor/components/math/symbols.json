@@ -1,0 +1,277 @@
+[
+  {
+    "titleKey": "formulasCategory",
+    "symbols": [
+      {
+        "key": "^",
+        "preview": "{a}^{b}",
+        "titleKey": "superscript",
+        "template": "\\placeholder{}^{\\placeholder{}}"
+      },
+      {
+        "key": "_",
+        "preview": "{a}_{b}",
+        "titleKey": "subscript",
+        "template": "\\placeholder{}_{\\placeholder{}}"
+      },
+      {
+        "key": "\\frac",
+        "preview": "\\frac{a}{b}",
+        "titleKey": "fraction",
+        "template": "\\frac{\\placeholder{}}{\\placeholder{}}"
+      },
+      {
+        "key": "\\binom",
+        "preview": "(\\binom{_b}{^a})",
+        "titleKey": "binomialCoefficient",
+        "template": "\\binom{\\placeholder{}}{\\placeholder{}}"
+      },
+      {
+        "key": "\\sum",
+        "preview": "\\sum_{i=0}^{n}x_{i}",
+        "titleKey": "sum",
+        "template": "\\sum_{\\placeholder{}}^{\\placeholder{}}\\placeholder{}"
+      },
+      {
+        "key": "\\prod",
+        "preview": "\\prod_b^a",
+        "titleKey": "product",
+        "template": "\\prod_{\\placeholder{}}^{\\placeholder{}}\\placeholder{}"
+      },
+      {
+        "key": "\\coprod",
+        "preview": "\\coprod_b^a",
+        "titleKey": "coproduct",
+        "template": "\\coprod_{\\placeholder{}}^{\\placeholder{}}\\placeholder{}"
+      },
+      {
+        "key": "",
+        "preview": "\\int_{a}^{b}f\\left(x\r)\\,dx",
+        "titleKey": "integral",
+        "template": "\\int_{\\placeholder{}}^{\\placeholder{}}\\placeholder{}\\,d\\placeholder{}"
+      }
+    ]
+  },
+  {
+    "titleKey": "linesCategory",
+    "symbols": [
+      { "key": "\\sqrt", "preview": "\\sqrt{abc}", "titleKey": "squareRoot" },
+      { "key": "\\bar", "preview": "\\overline{abc}", "titleKey": "bar" },
+      { "key": "\\underline", "preview": "\\underline{abc}", "titleKey": "underline" },
+      { "key": "\\overleftarrow", "preview": "\\overleftarrow{abc}", "titleKey": "leftArrow" },
+      { "key": "\\overrightarrow", "preview": "\\overrightarrow{abc}", "titleKey": "rightArrow" },
+      { "key": "\\vec", "preview": "\\vec{v}", "titleKey": "vector" }
+    ]
+  },
+  {
+    "titleKey": "basicCategory",
+    "symbols": [
+      { "key": "+", "preview": "+", "titleKey": "addition" },
+      { "key": "-", "preview": "−", "titleKey": "subtraction" },
+      { "key": "\\times", "preview": "×", "titleKey": "multiplication" },
+      { "key": "\\div", "preview": "÷", "titleKey": "division" },
+      { "key": "\\cdot", "preview": "·", "titleKey": "dot" },
+      { "key": "\\neg", "preview": "¬", "titleKey": "negation" },
+      { "key": "\\pm", "preview": "±", "titleKey": "plusMinus" },
+      { "key": "\\mp", "preview": "∓", "titleKey": "minusPlus" },
+      { "key": "\\neq", "preview": "≠", "titleKey": "doesNotEqual" },
+      { "key": "\\approx", "preview": "≈", "titleKey": "approximately" },
+      { "key": "\\propto", "preview": "∝", "titleKey": "proportional" },
+      { "key": "\\doteq", "preview": "≐", "titleKey": "definition" },
+      { "key": "\\gt", "preview": ">", "titleKey": "greaterThan" },
+      { "key": "\\ge", "preview": "≥", "titleKey": "greaterThanOrEqual" },
+      { "key": "\\ngtr", "preview": "≯", "titleKey": "notGreaterThan" },
+      { "key": "\\gg", "preview": "≫", "titleKey": "significantlyGreaterThan" },
+      { "key": "\\lt", "preview": "<", "titleKey": "lessThan" },
+      { "key": "\\le", "preview": "≤", "titleKey": "lessThanOrEqual" },
+      { "key": "\\nless", "preview": "≮", "titleKey": "notLessThan" },
+      { "key": "\\ll", "preview": "≪", "titleKey": "significantlyLessThan" },
+      { "key": "\\lceil", "preview": "⌈", "titleKey": "leftCeiling" },
+      { "key": "\\lfloor", "preview": "⌊", "titleKey": "leftFloor" },
+      { "key": "\\rceil", "preview": "⌉", "titleKey": "rightCeiling" },
+      { "key": "\\rfloor", "preview": "⌋", "titleKey": "rightFloor" }
+    ]
+  },
+  {
+    "titleKey": "advancedCategory",
+    "symbols": [
+      { "key": "\\bigotimes", "preview": "⨂", "titleKey": "tensorProduct" },
+      { "key": "\\otimes", "preview": "⊗", "titleKey": "tensorProduct" },
+      { "key": "\\oint", "preview": "∮", "titleKey": "contourIntegral" },
+      { "key": "\\nabla", "preview": "∇", "titleKey": "nabla" },
+      { "key": "\\ast", "preview": "*", "titleKey": "conjugate" },
+      { "key": "\\dagger", "preview": "†", "titleKey": "conjugateTranspose" },
+      { "key": "\\partial", "preview": "∂", "titleKey": "partial" },
+      { "key": "\\wedge", "preview": "∧", "titleKey": "wedgeProduct" },
+      { "key": "\\infty", "preview": "∞", "titleKey": "infinity" },
+      { "key": "\\top", "preview": "⊤", "titleKey": "topElement" },
+      { "key": "\\prec", "preview": "≺", "titleKey": "reducibleTo" },
+      { "key": "\\succ", "preview": "≻", "titleKey": "nondominatedBy" }
+    ]
+  },
+  {
+    "titleKey": "logicCategory",
+    "symbols": [
+      { "key": "\\land", "preview": "∧", "titleKey": "and" },
+      { "key": "\\lor", "preview": "∨", "titleKey": "or" },
+      { "key": "\\iff", "preview": "⟺", "titleKey": "ifAndOnlyIf" },
+      { "key": "\\models", "preview": "⊨", "titleKey": "entails" },
+      { "key": "\\vdash", "preview": "⊢", "titleKey": "implies" },
+      { "key": "\\vert", "preview": "|", "titleKey": "givenThat" },
+      { "key": "\\exists", "preview": "∃", "titleKey": "exists" },
+      { "key": "\\forall", "preview": "∀", "titleKey": "forAll" },
+      { "key": "\\because", "preview": "∵", "titleKey": "because" },
+      { "key": "\\therefore", "preview": "∴", "titleKey": "therefore" },
+      { "key": "\\square", "preview": "□", "titleKey": "qed" },
+      { "key": "\\bigoplus", "preview": "⨁", "titleKey": "exclusiveOr" },
+      { "key": "\\oplus", "preview": "⊕", "titleKey": "exclusiveOr" }
+    ]
+  },
+  {
+    "titleKey": "geometryCategory",
+    "symbols": [
+      { "key": "\\circ", "preview": "∘", "titleKey": "degrees" },
+      { "key": "\\angle", "preview": "∠", "titleKey": "angle" },
+      { "key": "\\measuredangle", "preview": "∡", "titleKey": "measuredAngle" },
+      { "key": "\\parallel", "preview": "∥", "titleKey": "parallel" },
+      { "key": "\\perp", "preview": "⊥", "titleKey": "perpendicular" },
+      { "key": "\\nparallel", "preview": "∦", "titleKey": "incomparableTo" },
+      { "key": "\\sim", "preview": "∼", "titleKey": "similarTo" },
+      { "key": "\\simeq", "preview": "≃", "titleKey": "similarOrEqual" },
+      { "key": "\\cong", "preview": "≅", "titleKey": "congruentTo" },
+      { "key": "\\equiv", "preview": "≡", "titleKey": "congruentTo" }
+    ]
+  },
+  {
+    "titleKey": "setsCategory",
+    "symbols": [
+      { "key": "\\dots", "preview": "…", "titleKey": "ellipsis" },
+      { "key": "\\vdots", "preview": "⋮", "titleKey": "ellipsisVertical" },
+      { "key": "\\cdots", "preview": "⋯", "titleKey": "ellipsisCentered" },
+      { "key": "\\ddots", "preview": "⋱", "titleKey": "ellipsisDiagonal" },
+      { "key": "\\aleph", "preview": "ℵ", "titleKey": "cardinality" },
+      { "key": "\\bigcap", "preview": "⋂", "titleKey": "intersection" },
+      { "key": "\\cap", "preview": "∩", "titleKey": "intersection" },
+      { "key": "\\sqcap", "preview": "⊓", "titleKey": "intersection" },
+      { "key": "\\bigcup", "preview": "⋃", "titleKey": "union" },
+      { "key": "\\cup", "preview": "∪", "titleKey": "union" },
+      { "key": "\\sqcup", "preview": "⊔", "titleKey": "union" },
+      { "key": "\\emptyset", "preview": "∅", "titleKey": "emptySet" },
+      { "key": "\\in", "preview": "∈", "titleKey": "in" },
+      { "key": "\\notin", "preview": "∉", "titleKey": "notIn" },
+      { "key": "\\ni", "preview": "∋", "titleKey": "contains" },
+      { "key": "\\ominus", "preview": "⊖", "titleKey": "symmetricDifference" },
+      { "key": "\\setminus", "preview": "∖", "titleKey": "setDifference" },
+      { "key": "\\subset", "preview": "⊂", "titleKey": "subset" },
+      { "key": "\\sqsubset", "preview": "⊏", "titleKey": "subset" },
+      { "key": "\\subseteq", "preview": "⊆", "titleKey": "subsetOrEqual" },
+      { "key": "\\sqsubseteq", "preview": "⊑", "titleKey": "subsetOrEqual" },
+      { "key": "\\nsubseteq", "preview": "⊈", "titleKey": "notSubsetOrEqual" },
+      { "key": "\\supset", "preview": "⊃", "titleKey": "superset" },
+      { "key": "\\sqsupset", "preview": "⊐", "titleKey": "superset" },
+      { "key": "\\supseteq", "preview": "⊇", "titleKey": "supersetOrEqual" },
+      { "key": "\\sqsupseteq", "preview": "⊒", "titleKey": "supersetOrEqual" },
+      { "key": "\\nsupseteq", "preview": "⊉", "titleKey": "notSupersetOrEqual" },
+      { "key": "\\wr", "preview": "≀", "titleKey": "wreathProduct" },
+      { "key": "\\bowtie", "preview": "⋈", "titleKey": "naturalJoin" }
+    ]
+  },
+  {
+    "titleKey": "directionalCategory",
+    "symbols": [
+      { "key": "\\downarrow", "preview": "↓", "titleKey": "down" },
+      { "key": "\\Downarrow", "preview": "⇓", "titleKey": "downDouble" },
+      { "key": "\\bigtriangledown", "preview": "▽", "titleKey": "triangleDown" },
+      { "key": "\\uparrow", "preview": "↑", "titleKey": "up" },
+      { "key": "\\Uparrow", "preview": "⇑", "titleKey": "upDouble" },
+      { "key": "\\bigtriangleup", "preview": "△", "titleKey": "triangleUp" },
+      { "key": "\\updownarrow", "preview": "↕", "titleKey": "upDown" },
+      { "key": "\\Updownarrow", "preview": "⇕", "titleKey": "upDownDouble" },
+      { "key": "\\leftarrow", "preview": "←", "titleKey": "left" },
+      { "key": "\\Leftarrow", "preview": "⇐", "titleKey": "leftDouble" },
+      { "key": "\\longleftarrow", "preview": "⟵", "titleKey": "leftLong" },
+      { "key": "\\Longleftarrow", "preview": "⟸", "titleKey": "leftLongDouble" },
+      { "key": "\\hookleftarrow", "preview": "↩", "titleKey": "leftHooked" },
+      { "key": "\\leftharpoondown", "preview": "↽", "titleKey": "leftHarpoonDown" },
+      { "key": "\\leftharpoondup", "preview": "↼", "titleKey": "leftHarpoonUp" },
+      { "key": "\\rightarrow", "preview": "→", "titleKey": "right" },
+      { "key": "\\Rightarrow", "preview": "⇒", "titleKey": "rightDouble" },
+      { "key": "\\longrightarrow", "preview": "⟶", "titleKey": "rightLong" },
+      { "key": "\\Longrightarrow", "preview": "⟹", "titleKey": "rightLongDouble" },
+      { "key": "\\hookrightarrow", "preview": "↪", "titleKey": "rightHooked" },
+      { "key": "\\rightharpoondown", "preview": "⇁", "titleKey": "rightHarpoonDown" },
+      { "key": "\\rightharpoondup", "preview": "⇀", "titleKey": "rightHarpoonUp" },
+      { "key": "\\leftrightarrow", "preview": "↔", "titleKey": "leftRight" },
+      { "key": "\\Leftrightarrow", "preview": "⇔", "titleKey": "leftRightDouble" },
+      { "key": "\\longleftrightarrow", "preview": "⟷", "titleKey": "leftRightLong" },
+      { "key": "\\Longleftrightarrow", "preview": "⟺", "titleKey": "leftRightLongDouble" },
+      { "key": "\\nearrow", "preview": "↗", "titleKey": "northeast" },
+      { "key": "\\nwarrow", "preview": "↖", "titleKey": "northwest" },
+      { "key": "\\searrow", "preview": "↘", "titleKey": "southeast" },
+      { "key": "\\swarrow", "preview": "↙", "titleKey": "southwest" }
+    ]
+  },
+  {
+    "titleKey": "charactersCategory",
+    "symbols": [
+      { "key": "\\alpha", "preview": "α", "titleKey": "alpha" },
+      { "key": "\\beta", "preview": "β", "titleKey": "beta" },
+      { "key": "\\chi", "preview": "χ", "titleKey": "chi" },
+      { "key": "\\Delta", "preview": "Δ", "titleKey": "deltaCapital" },
+      { "key": "\\delta", "preview": "δ", "titleKey": "delta" },
+      { "key": "\\digamma", "preview": "ϝ", "titleKey": "digamma" },
+      { "key": "\\ell", "preview": "ℓ", "titleKey": "ell" },
+      { "key": "\\epsilon", "preview": "ϵ", "titleKey": "epsilon" },
+      { "key": "\\varepsilon", "preview": "ε", "titleKey": "epsilon" },
+      { "key": "\\eta", "preview": "η", "titleKey": "eta" },
+      { "key": "\\Gamma", "preview": "Γ", "titleKey": "gammaCapital" },
+      { "key": "\\gamma", "preview": "γ", "titleKey": "gamma" },
+      { "key": "\\hbar", "preview": "ℏ", "titleKey": "planckConstant" },
+      { "key": "\\iota", "preview": "ι", "titleKey": "iota" },
+      { "key": "\\kappa", "preview": "κ", "titleKey": "kappa" },
+      { "key": "\\varkappa", "preview": "ϰ", "titleKey": "kappa" },
+      { "key": "\\Lambda", "preview": "Λ", "titleKey": "lambdaCapital" },
+      { "key": "\\lambda", "preview": "λ", "titleKey": "lambda" },
+      { "key": "\\mu", "preview": "μ", "titleKey": "mu" },
+      { "key": "\\nu", "preview": "ν", "titleKey": "nu" },
+      { "key": "\\Omega", "preview": "Ω", "titleKey": "omegaCapital" },
+      { "key": "\\omega", "preview": "ω", "titleKey": "omega" },
+      { "key": "\\Phi", "preview": "Φ", "titleKey": "phiCapital" },
+      { "key": "\\phi", "preview": "ϕ", "titleKey": "phi" },
+      { "key": "\\varphi", "preview": "φ", "titleKey": "phi" },
+      { "key": "\\Pi", "preview": "Π", "titleKey": "piCapital" },
+      { "key": "\\pi", "preview": "π", "titleKey": "pi" },
+      { "key": "\\varpi", "preview": "ϖ", "titleKey": "pi" },
+      { "key": "\\Psi", "preview": "Ψ", "titleKey": "psiCapital" },
+      { "key": "\\psi", "preview": "ψ", "titleKey": "psi" },
+      { "key": "\\rho", "preview": "ρ", "titleKey": "rho" },
+      { "key": "\\varrho", "preview": "ϱ", "titleKey": "rho" },
+      { "key": "\\Sigma", "preview": "Σ", "titleKey": "sigmaCapital" },
+      { "key": "\\sigma", "preview": "σ", "titleKey": "sigma" },
+      { "key": "\\varsigma", "preview": "ς", "titleKey": "sigma" },
+      { "key": "\\tau", "preview": "τ", "titleKey": "tau" },
+      { "key": "\\Theta", "preview": "Θ", "titleKey": "thetaCapital" },
+      { "key": "\\theta", "preview": "θ", "titleKey": "theta" },
+      { "key": "\\vartheta", "preview": "ϑ", "titleKey": "theta" },
+      { "key": "\\Upsilon", "preview": "Υ", "titleKey": "upsilonCapital" },
+      { "key": "\\upsilon", "preview": "υ", "titleKey": "upsilon" },
+      { "key": "\\wp", "preview": "℘", "titleKey": "pWeierstrass" },
+      { "key": "\\Xi", "preview": "Ξ", "titleKey": "xiCapital" },
+      { "key": "\\xi", "preview": "ξ", "titleKey": "xi" },
+      { "key": "\\zeta", "preview": "ζ", "titleKey": "zeta" }
+    ]
+  },
+  {
+    "titleKey": "miscellaneousCategory",
+    "symbols": [
+      { "key": "\\bigcirc", "preview": "◯", "titleKey": "circle" },
+      { "key": "\\clubsuit", "preview": "♣", "titleKey": "club" },
+      { "key": "\\diamondsuit", "preview": "♢", "titleKey": "diamond" },
+      { "key": "\\heartsuit", "preview": "♡", "titleKey": "heart" },
+      { "key": "\\spadesuit", "preview": "♠", "titleKey": "spade" },
+      { "key": "\\flat", "preview": "♭", "titleKey": "flat" },
+      { "key": "\\natural", "preview": "♮", "titleKey": "natural" },
+      { "key": "\\sharp", "preview": "♯", "titleKey": "sharp" }
+    ]
+  }
+]

@@ -1,7 +1,7 @@
 <template>
 
   <div
-    style="border: 4px solid transparent;"
+    style="border: 4px solid transparent"
     class="uploader"
     :style="{
       backgroundColor: highlightDropzone ? $vuetify.theme.primaryBackground : 'transparent',
@@ -20,6 +20,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -70,7 +71,5 @@
 
 </script>
 
-<style lang="less" scoped>
 
-
-</style>
+<style lang="scss" scoped></style>

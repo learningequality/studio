@@ -12,7 +12,7 @@ const testFile = {
 function makeWrapper(props = {}) {
   return mount(ContentRenderer, {
     store,
-    attachToDocument: true,
+    attachTo: document.body,
     propsData: {
       file: {
         id: 'test',

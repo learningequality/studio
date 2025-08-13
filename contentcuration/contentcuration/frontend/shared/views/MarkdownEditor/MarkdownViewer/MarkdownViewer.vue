@@ -6,6 +6,7 @@
 
 </template>
 
+
 <script>
 
   /**
@@ -77,7 +78,8 @@
 
 </script>
 
-<style lang="less" scoped>
+
+<style lang="scss" scoped>
 
   .markdown-viewer {
     max-width: calc(100% - 2em);

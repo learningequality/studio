@@ -50,7 +50,9 @@ class Metadata(object):
         :return: A dict of metadata for the node identified by `node_pk`
         """
         if self.query is None:
-            return Metadata(ContentNode.filter_by_pk(pk=node_pk), **self.annotations).get(node_pk)
+            return Metadata(
+                ContentNode.filter_by_pk(pk=node_pk), **self.annotations
+            ).get(node_pk)
 
         if self.metadata is None:
             self.metadata = {}
@@ -58,7 +60,7 @@ class Metadata(object):
 
             # Finally, clear ordering (MPTT adds ordering by default)
             for row in query:
-                self.metadata.update({row.pop('id'): row})
+                self.metadata.update({row.pop("id"): row})
 
         return self.metadata.get(node_pk)
 
@@ -67,7 +69,7 @@ class Metadata(object):
         :return: A complete queryset to return the metadata
         """
         if len(self.annotations) == 0:
-            raise ValueError('No metadata to retrieve')
+            raise ValueError("No metadata to retrieve")
 
         ctes = []
 
@@ -90,19 +92,26 @@ class Metadata(object):
         if len(ctes) > 0:
             for cte in ctes:
                 query = cte.join(query)
-                annotations.update({
-                    field_name: annotation.get_annotation(cte)
-                    for field_name, annotation in self.annotations.items()
-                    if isinstance(annotation, MetadataAnnotation)
-                    and annotation.cte and isinstance(cte, annotation.cte)
-                })
+                annotations.update(
+                    {
+                        field_name: annotation.get_annotation(cte)
+                        for field_name, annotation in self.annotations.items()
+                        if isinstance(annotation, MetadataAnnotation)
+                        and annotation.cte
+                        and isinstance(cte, annotation.cte)
+                    }
+                )
 
-        annotations.update(**{
-            field_name: annotation.get_annotation(None)
-            if isinstance(annotation, MetadataAnnotation) else annotation
-            for field_name, annotation in self.annotations.items()
-            if not isinstance(annotation, MetadataAnnotation) or annotation.cte is None
-        })
+        annotations.update(
+            **{
+                field_name: annotation.get_annotation(None)
+                if isinstance(annotation, MetadataAnnotation)
+                else annotation
+                for field_name, annotation in self.annotations.items()
+                if not isinstance(annotation, MetadataAnnotation)
+                or annotation.cte is None
+            }
+        )
 
         # Finally, clear ordering (MPTT adds ordering by default)
-        return query.values('id').annotate(**annotations).order_by()
+        return query.values("id").annotate(**annotations).order_by()

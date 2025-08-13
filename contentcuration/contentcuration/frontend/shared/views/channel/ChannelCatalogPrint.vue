@@ -8,7 +8,7 @@
       :channelList="channelList"
       :style="pageStyle"
     />
-    <Details
+    <DetailsPanel
       v-for="channelWithDetails in channelList"
       :key="channelWithDetails.id"
       ref="details"
@@ -22,9 +22,10 @@
 
 </template>
 
+
 <script>
 
-  import Details from '../details/Details';
+  import DetailsPanel from '../details/DetailsPanel.vue';
   import { fitToScale, generatePdf } from '../../utils/helpers';
   import ChannelCatalogFrontPage from './ChannelCatalogFrontPage';
 
@@ -32,7 +33,7 @@
     name: 'ChannelCatalogPrint',
     components: {
       ChannelCatalogFrontPage,
-      Details,
+      DetailsPanel,
     },
     provide: {
       printing: true,
@@ -69,7 +70,7 @@
       },
     },
     methods: {
-      /*
+      /**
        * @public
        */
       async savePDF(filename) {
@@ -84,7 +85,7 @@
             }
             return currentScale;
           },
-          1
+          1,
         );
 
         this.pageHeight = pageHeight;
@@ -115,7 +116,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .underlay {
     position: fixed;

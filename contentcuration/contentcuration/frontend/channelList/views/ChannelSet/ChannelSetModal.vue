@@ -5,11 +5,21 @@
     :header="headerText"
     @input="onDialogInput"
   >
-    <template v-if="step === 1 && !isNew" #header>
+    <template
+      v-if="step === 1 && !isNew"
+      #header
+    >
       <span class="notranslate">{{ title }}</span>
     </template>
-    <template v-if="step === 2" #close>
-      <VBtn icon class="rtl-flip" @click="step--">
+    <template
+      v-if="step === 2"
+      #close
+    >
+      <VBtn
+        icon
+        class="rtl-flip"
+        @click="step--"
+      >
         <Icon
           icon="back"
           :color="$themeTokens.textInverted"
@@ -17,10 +27,17 @@
       </VBtn>
     </template>
     <VWindow v-model="step">
-      <VWindowItem :value="1" data-test="collection-channels-view">
-        <VContainer class="mx-0 pt-5">
+      <VWindowItem :value="1">
+        <VContainer
+          class="mx-0 pt-5"
+          data-test="collection-channels-view"
+        >
           <VLayout row>
-            <VFlex md12 lg10 xl8>
+            <VFlex
+              md12
+              lg10
+              xl8
+            >
               <VForm ref="channelsetform">
                 <VTextField
                   v-model="name"
@@ -40,26 +57,41 @@
                 </div>
                 <CopyToken
                   :token="channelSet.secret_token"
-                  style="max-width: max-content;"
+                  style="max-width: max-content"
                 />
               </div>
 
               <h1 class="font-weight-bold headline mt-4 pt-4">
                 {{ $tr('channels') }}
               </h1>
-              <p v-if="!loadingChannels" class="subheading">
-                {{ $tr('channelCountText', { 'channelCount': channels.length }) }}
+              <p
+                v-if="!loadingChannels"
+                class="subheading"
+              >
+                {{ $tr('channelCountText', { channelCount: channels.length }) }}
               </p>
 
               <!-- Channel list section -->
               <VCardText v-if="loadingChannels">
                 <LoadingText />
               </VCardText>
-              <div v-else fluid>
-                <VBtn color="primary" class="mb-4" data-test="button-select" @click="step++">
+              <div
+                v-else
+                fluid
+              >
+                <VBtn
+                  color="primary"
+                  class="mb-4"
+                  data-test="button-select"
+                  @click="step++"
+                >
                   {{ $tr('selectChannelsHeader') }}
                 </VBtn>
-                <VCard v-for="channelId in channels" :key="channelId" flat>
+                <VCard
+                  v-for="channelId in channels"
+                  :key="channelId"
+                  flat
+                >
                   <ChannelItem :channelId="channelId">
                     <VBtn
                       flat
@@ -76,16 +108,30 @@
           </VLayout>
         </VContainer>
       </VWindowItem>
-      <VWindowItem :value="2" lazy data-test="channels-selection-view">
-        <VContainer fill-height class="mx-0 pt-5">
+      <VWindowItem
+        :value="2"
+        lazy
+      >
+        <VContainer
+          fill-height
+          class="mx-0 pt-5"
+          data-test="channels-selection-view"
+        >
           <VLayout row>
-            <VFlex md12 lg10 xl8>
+            <VFlex
+              md12
+              lg10
+              xl8
+            >
               <h1 class="font-weight-bold headline mb-2">
                 {{ $tr('selectChannelsHeader') }}
               </h1>
               <p>{{ $tr('publishedChannelsOnlyText') }}</p>
               <VContainer class="px-0">
-                <Tabs showArrows slider-color="primary">
+                <Tabs
+                  showArrows
+                  slider-color="primary"
+                >
                   <VTab
                     v-for="listType in lists"
                     :key="listType.id"
@@ -97,7 +143,10 @@
                     :key="listType.id"
                     lazy
                   >
-                    <ChannelSelectionList v-model="channels" :listType="listType" />
+                    <ChannelSelectionList
+                      v-model="channels"
+                      :listType="listType"
+                    />
                   </VTabItem>
                 </Tabs>
               </VContainer>
@@ -115,17 +164,23 @@
     >
       <template #buttons>
         <VSpacer />
-        <VBtn flat @click="confirmCancel">
+        <VBtn
+          flat
+          @click="confirmCancel"
+        >
           {{ $tr('closeButton') }}
         </VBtn>
-        <VBtn color="primary" @click="save">
+        <VBtn
+          color="primary"
+          @click="save"
+        >
           {{ $tr('saveButton') }}
         </VBtn>
       </template>
     </MessageDialog>
     <template #bottom>
       <div class="mx-4 subheading">
-        {{ $tr('channelSelectedCountText', { 'channelCount': channels.length }) }}
+        {{ $tr('channelSelectedCountText', { channelCount: channels.length }) }}
       </div>
       <VSpacer />
       <VBtn
@@ -140,7 +195,7 @@
         v-else
         color="primary"
         data-test="button-finish"
-        @click="step--"
+        @click="finish"
       >
         {{ $tr('finish') }}
       </VBtn>
@@ -152,13 +207,13 @@
 
 <script>
 
-  import Vue from 'vue';
+  import { set } from 'vue';
   import { mapGetters, mapActions } from 'vuex';
   import difference from 'lodash/difference';
   import { RouteNames } from '../../constants';
   import ChannelItem from './ChannelItem';
   import ChannelSelectionList from './ChannelSelectionList';
-  import { NEW_OBJECT, ChannelListTypes, ErrorTypes } from 'shared/constants';
+  import { ChannelListTypes, ErrorTypes } from 'shared/constants';
   import { constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import CopyToken from 'shared/views/CopyToken';
   import MessageDialog from 'shared/views/MessageDialog';
@@ -181,7 +236,7 @@
     props: {
       channelSetId: {
         type: String,
-        required: true,
+        default: '',
       },
     },
     data() {
@@ -199,7 +254,7 @@
     computed: {
       ...mapGetters('channelSet', ['getChannelSet']),
       isNew() {
-        return Boolean(this.channelSet[NEW_OBJECT]);
+        return this.$route.path === '/collections/new';
       },
       nameRules() {
         return [name => (name && name.trim().length ? true : this.$tr('titleRequiredText'))];
@@ -245,7 +300,11 @@
       },
     },
     beforeMount() {
-      return this.verifyChannelSet(this.channelSetId);
+      if (this.channelSetId) {
+        return this.verifyChannelSet(this.channelSetId);
+      } else {
+        this.setup();
+      }
     },
     mounted() {
       this.updateTitleForPage();
@@ -284,7 +343,7 @@
           const promises = [];
           if (remove.length) {
             promises.push(
-              this.removeChannels({ channelSetId: this.channelSetId, channelIds: remove })
+              this.removeChannels({ channelSetId: this.channelSetId, channelIds: remove }),
             );
           }
           if (add.length) {
@@ -297,6 +356,7 @@
       removeChannel(channelId) {
         this.channels = this.channels.filter(c => c !== channelId);
       },
+
       loadChannels() {
         if (this.channelSet.channels && this.channelSet.channels.length) {
           this.loadingChannels = true;
@@ -307,9 +367,10 @@
           this.loadingChannels = false;
         }
       },
+
       setChannelSet(data) {
         for (const key in data) {
-          Vue.set(this.diffTracker, key, data[key]);
+          set(this.diffTracker, key, data[key]);
         }
         this.changed = true;
       },
@@ -323,15 +384,37 @@
         }
         this.saving = true;
         this.showUnsavedDialog = false;
+
         if (this.$refs.channelsetform.validate()) {
           let promise;
+
           if (this.isNew) {
-            promise = this.commitChannelSet({ id: this.channelSetId, ...this.diffTracker });
+            const channelSetData = { ...this.diffTracker };
+            promise = this.commitChannelSet(channelSetData)
+              .then(newCollection => {
+                if (!newCollection || !newCollection.id) {
+                  this.saving = false;
+                  return;
+                }
+
+                const newCollectionId = newCollection.id;
+
+                this.$router.replace({
+                  name: 'CHANNEL_SET_DETAILS',
+                  params: { channelSetId: newCollectionId },
+                });
+
+                return newCollection;
+              })
+              .catch(() => {
+                this.saving = false;
+              });
           } else {
             promise = this.saveChannels().then(() => {
               return this.updateChannelSet({ id: this.channelSetId, ...this.diffTracker });
             });
           }
+
           promise
             .then(() => {
               this.close();
@@ -341,6 +424,7 @@
             });
         }
       },
+
       cancelChanges() {
         if (this.changed) {
           this.showUnsavedDialog = true;
@@ -350,16 +434,26 @@
       },
       confirmCancel() {
         if (this.isNew) {
-          return this.deleteChannelSet(this.channelSet).then(this.close);
+          if (this.channelSet && this.channelSet.id) {
+            return this.deleteChannelSet(this.channelSet).then(this.close);
+          } else {
+            this.close();
+          }
+        } else {
+          this.close();
         }
-        this.close();
       },
+      finish() {
+        this.step = Math.max(this.step - 1, 1);
+      },
+
       close() {
         this.changed = false;
         this.showUnsavedDialog = false;
         this.diffTracker = {};
         this.$router.push({ name: RouteNames.CHANNEL_SETS });
       },
+
       verifyChannelSet(channelSetId) {
         return new Promise((resolve, reject) => {
           // Check if we already have the channel locally
@@ -368,7 +462,6 @@
             resolve();
             return;
           }
-
           // If not, try to load the channel
           this.loadChannelSet(channelSetId).then(channelset => {
             // Did our fetch return any channels, then we have a channel!
@@ -378,7 +471,6 @@
               return;
             }
             // If not, reject!
-
             this.$store.dispatch('errors/handleGenericError', {
               errorType: ErrorTypes.PAGE_NOT_FOUND,
               errorText: this.$tr('collectionErrorText'),
@@ -388,6 +480,7 @@
         });
       },
     },
+
     $trs: {
       creatingChannelSet: 'New collection',
       collectionErrorText: 'This collection does not exist',
@@ -421,6 +514,4 @@
 </script>
 
 
-<style lang="less" scoped>
-
-</style>
+<style lang="scss" scoped></style>

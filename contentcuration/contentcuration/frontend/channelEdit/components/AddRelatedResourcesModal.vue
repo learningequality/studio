@@ -1,6 +1,9 @@
 <template>
 
-  <FullscreenModal :value="true" :header="toolbarTitle">
+  <FullscreenModal
+    :value="true"
+    :header="toolbarTitle"
+  >
     <template #close>
       <span></span>
     </template>
@@ -86,11 +89,14 @@
     <ResourceDrawer
       :nodeId="previewNodeId"
       :channelId="currentChannelId"
-      style="margin-top: 64px; max-height: calc(100vh - 64px);"
+      style="max-height: calc(100vh - 64px); margin-top: 64px"
       app
       @close="previewNodeId = null"
     >
-      <template v-if="displayActionsButtons" #actions>
+      <template
+        v-if="displayActionsButtons"
+        #actions
+      >
         <VBtn
           flat
           color="primary"
@@ -104,6 +110,7 @@
   </FullscreenModal>
 
 </template>
+
 
 <script>
 
@@ -236,12 +243,13 @@
 
 </script>
 
-<style lang="less" scoped>
+
+<style lang="scss" scoped>
 
   .list-item-disabled {
     opacity: 0.5;
 
-    /deep/ .v-list__tile--link:hover {
+    ::v-deep .v-list__tile--link:hover {
       color: inherit;
       background-color: transparent;
     }

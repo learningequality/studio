@@ -7,7 +7,6 @@ import io
 import json
 import sys
 import tempfile
-from builtins import range
 
 from django.core.management import call_command
 from django.test import TransactionTestCase

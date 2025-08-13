@@ -11,7 +11,7 @@ describe('mixins', () => {
         {
           mixins: [catalogFilterMixin],
         },
-        { router }
+        { router },
       );
     });
 

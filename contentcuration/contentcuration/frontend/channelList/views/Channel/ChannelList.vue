@@ -1,29 +1,53 @@
 <template>
 
   <VContainer fluid>
-    <VLayout row wrap justify-center>
-      <VFlex xs12 sm10 md8 lg6>
+    <VLayout
+      row
+      wrap
+      justify-center
+    >
+      <VFlex
+        xs12
+        sm10
+        md8
+        lg6
+      >
         <VLayout>
           <VSpacer />
-          <VBtn
+          <KButton
             v-if="isEditable && !loading"
-            color="primary"
+            appearance="raised-button"
+            primary
             class="add-channel-button"
             data-test="add-channel"
+            :text="$tr('channel')"
             @click="newChannel"
-          >
-            {{ $tr('channel') }}
-          </VBtn>
+          />
         </VLayout>
       </VFlex>
     </VLayout>
 
-    <VLayout row wrap justify-center>
-      <VFlex xs12 sm10 md8 lg6>
-        <VLayout row justify-center>
+    <VLayout
+      row
+      wrap
+      justify-center
+    >
+      <VFlex
+        xs12
+        sm10
+        md8
+        lg6
+      >
+        <VLayout
+          row
+          justify-center
+        >
           <VFlex xs12>
             <LoadingText v-if="loading" />
-            <p v-else-if="listChannels && !listChannels.length" class="headline mb-0">
+            <p
+              v-else-if="listChannels && !listChannels.length"
+              class="headline mb-0"
+            >
               {{ $tr('noChannelsFound') }}
             </p>
             <template v-else>
@@ -34,7 +58,6 @@
                 allowEdit
                 fullWidth
               />
-
             </template>
           </VFlex>
         </VLayout>
@@ -93,7 +116,7 @@
         return orderBy(
           this.channels.filter(channel => channel[this.listType] && !channel.deleted),
           sortFields,
-          orderFields
+          orderFields,
         );
       },
       isEditable() {
@@ -114,15 +137,12 @@
       this.loadData(this.listType);
     },
     methods: {
-      ...mapActions('channel', ['loadChannelList', 'createChannel']),
+      ...mapActions('channel', ['loadChannelList']),
       newChannel() {
         this.$analytics.trackClick('channel_list', 'Create channel');
-        this.createChannel().then(id => {
-          this.$router.push({
-            name: RouteNames.CHANNEL_EDIT,
-            params: { channelId: id, tab: 'edit' },
-            query: { last: this.$route.name },
-          });
+        this.$router.push({
+          name: RouteNames.NEW_CHANNEL,
+          query: { last: this.$route.name },
         });
       },
       loadData(listType) {
@@ -142,7 +162,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .add-channel-button {
     margin: 0;

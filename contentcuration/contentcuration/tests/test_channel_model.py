@@ -1,11 +1,8 @@
 #!/usr/bin/env python
-from __future__ import division
-
 import json
 from datetime import datetime
 
 from django.urls import reverse_lazy
-from past.utils import old_div
 
 from .base import BaseAPITestCase
 from .base import StudioTestCase
@@ -160,7 +157,9 @@ class GetAllChannelsTestCase(StudioTestCase):
         super(GetAllChannelsTestCase, self).setUp()
 
         # create 10 channels for comparison
-        self.channels = [Channel.objects.create(actor_id=self.admin_user.id) for _ in range(10)]
+        self.channels = [
+            Channel.objects.create(actor_id=self.admin_user.id) for _ in range(10)
+        ]
 
     def test_returns_all_channels_in_the_db(self):
         """
@@ -179,7 +178,9 @@ class ChannelSetTestCase(BaseAPITestCase):
     def setUp(self):
         super(ChannelSetTestCase, self).setUp()
         self.channelset = mixer.blend(ChannelSet, editors=[self.user])
-        self.channels = [Channel.objects.create(actor_id=self.user.id) for _ in range(10)]
+        self.channels = [
+            Channel.objects.create(actor_id=self.user.id) for _ in range(10)
+        ]
         for chann in self.channels:
             chann.secret_tokens.add(self.channelset.secret_token)
             chann.editors.add(self.user)
@@ -234,7 +235,7 @@ class ChannelSetTestCase(BaseAPITestCase):
 
     def test_public_endpoint(self):
         """ Make sure public endpoint returns all the channels under the token """
-        published_channel_count = int(old_div(len(self.channels), 2))
+        published_channel_count = int(len(self.channels) // 2)
         for c in self.channels[:published_channel_count]:
             c.main_tree.published = True
             c.main_tree.save()
@@ -275,7 +276,9 @@ class ChannelMetadataSaveTestCase(StudioTestCase):
 
     def setUp(self):
         super(ChannelMetadataSaveTestCase, self).setUp()
-        self.channels = [Channel.objects.create(actor_id=self.admin_user.id) for _ in range(5)]
+        self.channels = [
+            Channel.objects.create(actor_id=self.admin_user.id) for _ in range(5)
+        ]
         for c in self.channels:
             c.main_tree.changed = False
             c.main_tree.save()

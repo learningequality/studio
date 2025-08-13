@@ -55,6 +55,10 @@ export function publishChannel(context, version_notes) {
   return Channel.publish(context.state.currentChannelId, version_notes);
 }
 
+export function publishDraftChannel(context) {
+  return Channel.publishDraft(context.state.currentChannelId);
+}
+
 export function channelLanguageExistsInResources(context) {
   const channelId = context.state.currentChannelId;
   return Channel.languageExistsInResources(channelId);

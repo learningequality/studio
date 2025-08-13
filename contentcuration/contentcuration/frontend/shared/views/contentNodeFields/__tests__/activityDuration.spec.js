@@ -1,14 +1,10 @@
-import Vue from 'vue';
-import Vuetify from 'vuetify';
 import { shallowMount, mount } from '@vue/test-utils';
 import ActivityDuration from '../CompletionOptions/ActivityDuration';
-
-Vue.use(Vuetify);
 
 describe('ActivityDuration', () => {
   it('smoke test', () => {
     const wrapper = shallowMount(ActivityDuration);
-    expect(wrapper.isVueInstance()).toBe(true);
+    expect(wrapper.exists()).toBe(true);
   });
 
   describe(`minutes input`, () => {
@@ -18,28 +14,25 @@ describe('ActivityDuration', () => {
     const longActivityMax = 120;
 
     describe(`convert seconds to minutes for display`, () => {
-      it(`should display the seconds passed down from parent as minutes`, () => {
+      it(`should display the seconds passed down from parent as minutes`, async () => {
         const wrapper = shallowMount(ActivityDuration, {
           propsData: { value: 600 },
         });
         expect(wrapper.vm.minutes).toBe(10);
-        wrapper.setProps({ value: 4821 });
-        return wrapper.vm.$nextTick().then(() => {
-          expect(wrapper.vm.minutes).toBe(80);
-        });
+        await wrapper.setProps({ value: 4821 });
+        expect(wrapper.vm.minutes).toBe(80);
       });
     });
 
     describe(`convert minutes to seconds to emit to parent`, () => {
-      it(`should emit time to parent`, () => {
+      it(`should emit time to parent`, async () => {
         const seconds = 2400;
         const wrapper = mount(ActivityDuration);
         wrapper.vm.minutes = 40;
+        await wrapper.vm.$nextTick();
 
-        return Vue.nextTick().then(() => {
-          const emittedTime = wrapper.emitted('input').pop()[0];
-          expect(emittedTime).toEqual(seconds);
-        });
+        const emittedTime = wrapper.emitted('input').pop()[0];
+        expect(emittedTime).toEqual(seconds);
       });
     });
 

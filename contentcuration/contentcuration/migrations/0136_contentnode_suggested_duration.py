@@ -6,13 +6,17 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0135_add_metadata_labels'),
+        ("contentcuration", "0135_add_metadata_labels"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='contentnode',
-            name='suggested_duration',
-            field=models.IntegerField(blank=True, help_text='Suggested duration for the content node (in seconds)', null=True),
+            model_name="contentnode",
+            name="suggested_duration",
+            field=models.IntegerField(
+                blank=True,
+                help_text="Suggested duration for the content node (in seconds)",
+                null=True,
+            ),
         ),
     ]

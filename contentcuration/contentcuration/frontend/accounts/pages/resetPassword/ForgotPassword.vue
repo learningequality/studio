@@ -4,9 +4,21 @@
     :header="$tr('forgotPasswordTitle')"
     :text="$tr('forgotPasswordPrompt')"
   >
-    <VForm ref="form" lazy-validation @submit.prevent="submit">
-      <Banner :text="$tr('forgotPasswordFailed')" :value="error" error class="mb-4" />
-      <EmailField v-model="email" autofocus />
+    <VForm
+      ref="form"
+      lazy-validation
+      @submit.prevent="submit"
+    >
+      <Banner
+        :text="$tr('forgotPasswordFailed')"
+        :value="error"
+        error
+        class="mb-4"
+      />
+      <EmailField
+        v-model="email"
+        autofocus
+      />
       <KButton
         primary
         class="w-100"
@@ -69,7 +81,8 @@
 
 </script>
 
-<style lang="less" scoped>
+
+<style lang="scss" scoped>
 
   .w-100 {
     width: 100%;

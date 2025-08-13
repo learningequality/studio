@@ -19,12 +19,12 @@ RUN apt-get update && \
         python3-pip python3-dev \
         gcc libpq-dev libssl-dev libffi-dev make git gettext libjpeg-dev ffmpeg
 
-# Pin, Download and install node 16.x
+# Pin, Download and install node 18.x
 RUN apt-get update \
     && apt-get install -y ca-certificates curl gnupg \
     && mkdir -p /etc/apt/keyrings \
     && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
-    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_16.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
+    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
     && echo "Package: nodejs" >> /etc/apt/preferences.d/preferences \
     && echo "Pin: origin deb.nodesource.com" >> /etc/apt/preferences.d/preferences \
     && echo "Pin-Priority: 1001" >> /etc/apt/preferences.d/preferences\
@@ -34,9 +34,9 @@ RUN apt-get update \
 
 
 # Node packages ################################################################
-RUN npm install -g yarn && npm cache clean --force
-COPY ./package.json ./yarn.lock   /src/
-RUN yarn install && yarn cache clean
+RUN corepack enable pnpm
+COPY ./package.json ./pnpm-lock.yaml  /src/
+RUN pnpm install
 ################################################################################
 
 
@@ -54,4 +54,4 @@ RUN pip install -r requirements-dev.txt
 RUN apt-get -y autoremove
 ################################################################################
 
-CMD ["yarn", "run", "devserver"]
+CMD ["pnpm", "run", "devserver"]

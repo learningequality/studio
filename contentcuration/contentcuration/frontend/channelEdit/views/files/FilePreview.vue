@@ -9,15 +9,28 @@
       class="preview-area"
       app
     >
-      <VToolbar v-if="fullscreen" dark color="grey darken-3" dense>
+      <VToolbar
+        v-if="fullscreen"
+        dark
+        color="grey darken-3"
+        dense
+      >
         <VToolbarTitle class="notranslate">
           {{ nodeTitle }}
         </VToolbarTitle>
       </VToolbar>
-      <VToolbar v-if="fullscreen" light dense>
+      <VToolbar
+        v-if="fullscreen"
+        light
+        dense
+      >
         {{ $tr('fullscreenModeText') }}
         <VSpacer />
-        <VBtn data-test="closefullscreen" flat @click="fullscreen = false">
+        <VBtn
+          data-test="closefullscreen"
+          flat
+          @click="fullscreen = false"
+        >
           {{ $tr('exitFullscreen') }}
         </VBtn>
       </VToolbar>
@@ -26,7 +39,10 @@
         :fileId="fileId"
         :fullscreen="fullscreen"
       />
-      <p v-if="!fullscreen" class="mt-2">
+      <p
+        v-if="!fullscreen"
+        class="mt-2"
+      >
         <ActionLink
           v-if="showFullscreenOption"
           data-test="openfullscreen"
@@ -39,6 +55,7 @@
 
 </template>
 
+
 <script>
 
   import fromPairs from 'lodash/fromPairs';
@@ -50,8 +67,8 @@
   const availablePreviewFormats = fromPairs(
     flatMap(
       FormatPresetsList.filter(f => f.display && !f.supplementary),
-      f => f.allowed_formats
-    ).map(allowedFormat => [allowedFormat, allowedFormat])
+      f => f.allowed_formats,
+    ).map(allowedFormat => [allowedFormat, allowedFormat]),
   );
 
   export default {
@@ -174,7 +191,8 @@
 
 </script>
 
-<style lang="less" scoped>
+
+<style lang="scss" scoped>
 
   .preview-area {
     outline: none;

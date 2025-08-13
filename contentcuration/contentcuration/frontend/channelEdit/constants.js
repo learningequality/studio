@@ -1,7 +1,6 @@
 import { AssessmentItemTypes } from 'shared/constants';
 
 export const RouteNames = {
-  SANDBOX: 'SANDBOX',
   TREE_ROOT_VIEW: 'TREE_ROOT_VIEW',
   TREE_VIEW: 'TREE_VIEW',
   STAGING_TREE_VIEW: 'STAGING_TREE_VIEW',
@@ -48,6 +47,7 @@ export const AssessmentItemTypeLabels = {
   [AssessmentItemTypes.TRUE_FALSE]: 'questionTypeTrueFalse',
   [AssessmentItemTypes.INPUT_QUESTION]: 'questionTypeInput',
   [AssessmentItemTypes.PERSEUS_QUESTION]: 'questionTypePerseus',
+  [AssessmentItemTypes.FREE_RESPONSE]: 'questionTypeFreeResponse',
 };
 
 export const TabNames = {

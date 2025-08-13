@@ -16,7 +16,9 @@ class ProgressTrackerTestCase(SimpleTestCase):
         self.assertEqual(200, self.tracker.total)
 
     def test_increment(self):
-        with mock.patch("contentcuration.utils.celery.tasks.ProgressTracker.track") as track:
+        with mock.patch(
+            "contentcuration.utils.celery.tasks.ProgressTracker.track"
+        ) as track:
             self.tracker.increment()
             track.assert_called_with(1.0)
             self.tracker.progress = 1

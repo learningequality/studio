@@ -54,6 +54,7 @@ export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
 
   if (getNodeDetailsErrors(nodeDetails).length) {
     if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
+      // eslint-disable-next-line no-console
       console.info('Node is incomplete', getNodeDetailsErrors(nodeDetails));
     }
     return false;
@@ -64,6 +65,7 @@ export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
   ) {
     if (getNodeFilesErrors(files).length) {
       if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
+        // eslint-disable-next-line no-console
         console.info("Node's files are incomplete", getNodeFilesErrors(files));
       }
       return false;
@@ -73,6 +75,7 @@ export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
     const completionCriteria = get(nodeDetails, 'extra_fields.options.completion_criteria');
     if (completionCriteria && !validateCompletionCriteria(completionCriteria, nodeDetails.kind)) {
       if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
+        // eslint-disable-next-line no-console
         console.info("Node's completion criteria is invalid", validateCompletionCriteria.errors);
       }
       return false;
@@ -81,6 +84,7 @@ export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
   if (nodeDetails.kind === ContentKindsNames.EXERCISE) {
     if (!assessmentItems.length) {
       if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
+        // eslint-disable-next-line no-console
         console.info('Exercise node is missing assessment items');
       }
       return false;
@@ -92,9 +96,10 @@ export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
     };
     if (assessmentItems.some(isInvalid)) {
       if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
+        // eslint-disable-next-line no-console
         console.info(
           "Exercise node's assessment items are invalid",
-          assessmentItems.some(isInvalid)
+          assessmentItems.some(isInvalid),
         );
       }
       return false;
@@ -107,6 +112,10 @@ export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
 // Private helpers
 function _isPracticeQuiz(node) {
   return get(node, 'extra_fields.options.modality') === ContentModalities.QUIZ;
+}
+
+function _isSurvey(node) {
+  return get(node, 'extra_fields.options.modality') === ContentModalities.SURVEY;
 }
 
 function _getLicense(node) {
@@ -143,17 +152,14 @@ function _getErrorMsg(error) {
     [ValidationErrors.DURATION_REQUIRED]: translator.$tr('fieldRequired'),
     [ValidationErrors.COMPLETION_REQUIRED]: translator.$tr('fieldRequired'),
     [ValidationErrors.ACTIVITY_DURATION_REQUIRED]: translator.$tr('fieldRequired'),
-    [ValidationErrors.ACTIVITY_DURATION_MIN_FOR_SHORT_ACTIVITY]: translator.$tr(
-      'activityDurationGteOne'
-    ),
-    [ValidationErrors.ACTIVITY_DURATION_MAX_FOR_SHORT_ACTIVITY]: translator.$tr(
-      'shortActivityLteThirty'
-    ),
-    [ValidationErrors.ACTIVITY_DURATION_MIN_FOR_LONG_ACTIVITY]: translator.$tr(
-      'longActivityGtThirty'
-    ),
+    [ValidationErrors.ACTIVITY_DURATION_MIN_FOR_SHORT_ACTIVITY]:
+      translator.$tr('activityDurationGteOne'),
+    [ValidationErrors.ACTIVITY_DURATION_MAX_FOR_SHORT_ACTIVITY]:
+      translator.$tr('shortActivityLteThirty'),
+    [ValidationErrors.ACTIVITY_DURATION_MIN_FOR_LONG_ACTIVITY]:
+      translator.$tr('longActivityGtThirty'),
     [ValidationErrors.ACTIVITY_DURATION_MAX_FOR_LONG_ACTIVITY]: translator.$tr(
-      'longActivityLteOneTwenty'
+      'longActivityLteOneTwenty',
     ),
     [ValidationErrors.ACTIVITY_DURATION_MIN_REQUIREMENT]: translator.$tr('activityDurationGteOne'),
     [ValidationErrors.ACTIVITY_DURATION_TOO_LONG]: translator.$tr('activityDurationTooLongWarning'),
@@ -390,7 +396,7 @@ export function getNodeDetailsErrors(node) {
   // mastery is required on exercises but not on practice quizzes
   // Practice quiz requirements are set in the background, and separate validations
   // run to check this based on the completion_criteria in LE utils
-  if (node.kind === ContentKindsNames.EXERCISE && !_isPracticeQuiz(node)) {
+  if (node.kind === ContentKindsNames.EXERCISE && !_isPracticeQuiz(node) && !_isSurvey(node)) {
     const masteryModelErrors = getNodeMasteryModelErrors(node);
     const masteryModelMErrors = getNodeMasteryModelMErrors(node);
     const masteryModelNErrors = getNodeMasteryModelNErrors(node);
@@ -530,7 +536,7 @@ export function sanitizeAssessmentItem(assessmentItem, removeEmpty = false) {
  * @param {Object} assessmentItem An assessment item.
  * @returns {Array} An array of error codes.
  */
-export function getAssessmentItemErrors(assessmentItem) {
+export function getAssessmentItemErrors(assessmentItem, freeResponseInvalid = false) {
   const errors = [];
 
   // Don't validate perseus questions
@@ -541,16 +547,19 @@ export function getAssessmentItemErrors(assessmentItem) {
   const hasOneCorrectAnswer =
     assessmentItem.answers &&
     assessmentItem.answers.filter(
-      answer => answer.answer && String(answer.answer).trim() && answer.correct === true
+      answer => answer.answer && String(answer.answer).trim() && answer.correct === true,
     ).length === 1;
   const hasAtLeatOneCorrectAnswer =
     assessmentItem.answers &&
     assessmentItem.answers.filter(
-      answer => answer.answer && String(answer.answer).trim() && answer.correct === true
+      answer => answer.answer && String(answer.answer).trim() && answer.correct === true,
     ).length > 0;
 
   if (!assessmentItem.question || !assessmentItem.question.trim()) {
     errors.push(ValidationErrors.QUESTION_REQUIRED);
+  }
+  if (freeResponseInvalid) {
+    errors.push(ValidationErrors.INVALID_COMPLETION_TYPE_FOR_FREE_RESPONSE_QUESTION);
   }
 
   switch (assessmentItem.type) {

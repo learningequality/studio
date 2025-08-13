@@ -16,8 +16,16 @@
         :query="{ ...$route.query, filter }"
       />
     </h1>
-    <VLayout wrap class="mb-2">
-      <VFlex xs12 sm4 xl3 class="px-3">
+    <VLayout
+      wrap
+      class="mb-2"
+    >
+      <VFlex
+        xs12
+        sm4
+        xl3
+        class="px-3"
+      >
         <VSelect
           v-model="filter"
           :items="filters"
@@ -28,7 +36,12 @@
           :menu-props="{ offsetY: true }"
         />
       </VFlex>
-      <VFlex xs12 sm4 xl3 class="px-3">
+      <VFlex
+        xs12
+        sm4
+        xl3
+        class="px-3"
+      >
         <CountryField
           v-model="location"
           :outline="false"
@@ -36,7 +49,12 @@
           label="Target location"
         />
       </VFlex>
-      <VFlex xs12 sm4 xl3 class="px-3">
+      <VFlex
+        xs12
+        sm4
+        xl3
+        class="px-3"
+      >
         <VTextField
           v-model="keywordInput"
           label="Search for a user..."
@@ -63,11 +81,18 @@
       :class="{ expanded: $vuetify.breakpoint.mdAndUp }"
     >
       <template #progress>
-        <VProgressLinear v-if="loading" color="loading" indeterminate />
+        <VProgressLinear
+          v-if="loading"
+          color="loading"
+          indeterminate
+        />
       </template>
 
       <template #headerCell="{ header }">
-        <div style="display: inline-block; width: min-content;" @click.stop>
+        <div
+          style="display: inline-block; width: min-content"
+          @click.stop
+        >
           <Checkbox
             v-if="header.class === 'first'"
             v-model="selectAll"
@@ -91,10 +116,16 @@
         </span>
       </template>
       <template #items="{ item }">
-        <UserItem v-model="selected" :userId="item" />
+        <UserItem
+          v-model="selected"
+          :userId="item"
+        />
       </template>
     </VDataTable>
-    <EmailUsersDialog v-model="showEmailDialog" :query="{ ids: selected }" />
+    <EmailUsersDialog
+      v-model="showEmailDialog"
+      :query="{ ids: selected }"
+    />
   </div>
 
 </template>
@@ -210,7 +241,11 @@
     },
     methods: {
       ...mapActions('userAdmin', ['loadUsers']),
-      /* @public - used in generated filterMixin */
+      /**
+       * @public
+       * @param params
+       * @return {Promise<any>}
+       */
       fetch(params) {
         return this.loadUsers(params);
       },
@@ -219,6 +254,5 @@
 
 </script>
 
-<style lang="less" scoped>
 
-</style>
+<style lang="scss" scoped></style>

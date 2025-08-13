@@ -6,13 +6,13 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('search', '0001_initial'),
+        ("search", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='savedsearch',
-            name='params',
+            model_name="savedsearch",
+            name="params",
             field=models.JSONField(default=dict),
         ),
     ]

@@ -1,17 +1,29 @@
 <template>
 
-  <section class="list-group" :class="{ open }">
+  <section
+    class="list-group"
+    :class="{ open }"
+  >
     <header
       class="list-group-header"
       @click="open = !open"
     >
-      <div v-if="prependIcon" class="icon-container">
+      <div
+        v-if="prependIcon"
+        class="icon-container"
+      >
         <VIconWrapper>{{ prependIcon }}</VIconWrapper>
       </div>
-      <div class="header-content" :class="{ 'has-icon': appendIcon || prependIcon }">
+      <div
+        class="header-content"
+        :class="{ 'has-icon': appendIcon || prependIcon }"
+      >
         <slot name="header"></slot>
       </div>
-      <div v-if="appendIcon" class="icon-container">
+      <div
+        v-if="appendIcon"
+        class="icon-container"
+      >
         <VIconWrapper>{{ appendIcon }}</VIconWrapper>
       </div>
     </header>
@@ -27,6 +39,7 @@
   </section>
 
 </template>
+
 
 <script>
 
@@ -78,11 +91,12 @@
 
 </script>
 
-<style lang="less" scoped>
 
-  @icon-padding: 16px;
-  @icon-width: 25px;
-  @header-width: calc(2 * @icon-padding + @icon-width);
+<style lang="scss" scoped>
+
+  $icon-padding: 16px;
+  $icon-width: 25px;
+  $header-width: calc(2 * #{$icon-padding} + #{$icon-width});
 
   .list-group {
     box-sizing: border-box;
@@ -108,9 +122,7 @@
   }
 
   .header-content.has-icon {
-    // stylelint-disable
-    width: calc(100% ~'-' @header-width);
-    // stylelint-enable
+    width: calc(100% - #{$header-width});
   }
 
   .list-group.open > .list-group-header .v-icon {
@@ -119,8 +131,8 @@
 
   .icon-container {
     box-sizing: border-box;
-    width: @icon-width;
-    padding: 0 @icon-padding;
+    width: $icon-width;
+    padding: 0 $icon-padding;
   }
 
 </style>

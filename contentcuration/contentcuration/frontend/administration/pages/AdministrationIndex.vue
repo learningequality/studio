@@ -2,7 +2,10 @@
 
   <VApp>
     <AppBar>
-      <template v-if="$store.getters.currentUserIsAdmin" #tabs>
+      <template
+        v-if="$store.getters.currentUserIsAdmin"
+        #tabs
+      >
         <VTab :to="channelsLink">
           {{ $tr('channelsLabel') }}
         </VTab>
@@ -12,7 +15,10 @@
       </template>
     </AppBar>
     <VContent>
-      <VContainer fluid class="admin-wrapper">
+      <VContainer
+        fluid
+        class="admin-wrapper"
+      >
         <AdministrationAppError
           v-if="fullPageError"
           :error="fullPageError"
@@ -71,9 +77,6 @@
 
 
 <style lang="scss">
-
-  $first-col-width: 75px;
-  $first-col-expanded-width: 350px;
 
   @mixin freeze {
     position: sticky;

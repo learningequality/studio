@@ -28,33 +28,46 @@ def _get_channel_list(version, params, identifier=None):
 
 
 def _get_channel_list_v1(params, identifier=None):
-    keyword = params.get('keyword', '').strip()
-    language_id = params.get('language', '').strip()
-    token_list = params.get('tokens', '').strip().replace('-', '').split(',')
+    keyword = params.get("keyword", "").strip()
+    language_id = params.get("language", "").strip()
+    token_list = params.get("tokens", "").strip().replace("-", "").split(",")
 
     channels = None
     if identifier:
-        channels = Channel.objects.prefetch_related('secret_tokens').filter(secret_tokens__token=identifier)
+        channels = Channel.objects.prefetch_related("secret_tokens").filter(
+            secret_tokens__token=identifier
+        )
         if not channels.exists():
             channels = Channel.objects.filter(pk=identifier)
     else:
-        channels = Channel.objects.prefetch_related('secret_tokens').filter(Q(public=True) | Q(secret_tokens__token__in=token_list))
+        channels = Channel.objects.prefetch_related("secret_tokens").filter(
+            Q(public=True) | Q(secret_tokens__token__in=token_list)
+        )
 
-    if keyword != '':
-        channels = channels.prefetch_related('tags').filter(Q(name__icontains=keyword) | Q(
-            description__icontains=keyword) | Q(tags__tag_name__icontains=keyword))
+    if keyword != "":
+        channels = channels.prefetch_related("tags").filter(
+            Q(name__icontains=keyword)
+            | Q(description__icontains=keyword)
+            | Q(tags__tag_name__icontains=keyword)
+        )
 
-    if language_id != '':
+    if language_id != "":
         channels.filter(included_languages__id=language_id)
 
-    return channels.annotate(tokens=Value(json.dumps(token_list), output_field=TextField()))\
-        .filter(deleted=False, main_tree__published=True)\
-        .order_by("-priority")\
+    return (
+        channels.annotate(
+            tokens=Value(json.dumps(token_list), output_field=TextField())
+        )
+        .filter(deleted=False, main_tree__published=True)
+        .order_by("-priority")
         .distinct()
+    )
 
 
-@cache_page(settings.PUBLIC_CHANNELS_CACHE_DURATION, key_prefix='get_public_channel_list')
-@api_view(['GET'])
+@cache_page(
+    settings.PUBLIC_CHANNELS_CACHE_DURATION, key_prefix="get_public_channel_list"
+)
+@api_view(["GET"])
 @permission_classes((AllowAny,))
 @cache_no_user_data
 def get_public_channel_list(request, version):
@@ -62,34 +75,44 @@ def get_public_channel_list(request, version):
     try:
         channel_list = _get_channel_list(version, request.query_params)
     except LookupError:
-        return HttpResponseNotFound(_("Api endpoint {} is not available").format(version))
+        return HttpResponseNotFound(
+            _("Api endpoint {} is not available").format(version)
+        )
     return Response(PublicChannelSerializer(channel_list, many=True).data)
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes((AllowAny,))
 def get_public_channel_lookup(request, version, identifier):
     """ Endpoint: /public/<version>/channels/lookup/<identifier> """
     try:
-        channel_list = _get_channel_list(version, request.query_params, identifier=identifier.strip().replace('-', ''))
+        channel_list = _get_channel_list(
+            version,
+            request.query_params,
+            identifier=identifier.strip().replace("-", ""),
+        )
     except LookupError:
-        return HttpResponseNotFound(_("Api endpoint {} is not available").format(version))
+        return HttpResponseNotFound(
+            _("Api endpoint {} is not available").format(version)
+        )
     if not channel_list.exists():
-        return HttpResponseNotFound(_("No channel matching {} found").format(identifier))
+        return HttpResponseNotFound(
+            _("No channel matching {} found").format(identifier)
+        )
     return Response(PublicChannelSerializer(channel_list, many=True).data)
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes((AllowAny,))
 def get_channel_name_by_id(request, channel_id):
     """ Endpoint: /public/channels/<channel_id> """
     channel = Channel.objects.filter(pk=channel_id).first()
     if not channel:
-        return HttpResponseNotFound('Channel with id {} not found'.format(channel_id))
+        return HttpResponseNotFound("Channel with id {} not found".format(channel_id))
     channel_info = {
         "name": channel.name,
         "description": channel.description,
-        "version": channel.version
+        "version": channel.version,
     }
     return Response(channel_info)
 
@@ -134,7 +157,9 @@ def get_instance_id():
     global INSTANCE_ID
 
     if INSTANCE_ID is None:
-        INSTANCE_ID = generate_ecosystem_namespaced_uuid(Site.objects.get_current().domain).hex
+        INSTANCE_ID = generate_ecosystem_namespaced_uuid(
+            Site.objects.get_current().domain
+        ).hex
     return INSTANCE_ID
 
 
@@ -153,7 +178,7 @@ def get_device_info(version=DEVICE_INFO_VERSION):
         "application": "studio",
         "kolibri_version": "0.16.0",
         "instance_id": get_instance_id(),
-        'device_name': "Kolibri Studio",
+        "device_name": "Kolibri Studio",
         "operating_system": None,
         "subset_of_users_device": False,
         "min_content_schema_version": MIN_CONTENT_SCHEMA_VERSION,
@@ -175,7 +200,7 @@ class InfoViewSet(viewsets.ViewSet):
     Ref: https://github.com/learningequality/kolibri/blob/develop/kolibri/core/public/api.py#L53
     """
 
-    permission_classes = (AllowAny, )
+    permission_classes = (AllowAny,)
 
     def list(self, request):
         """Returns metadata information about the type of device"""

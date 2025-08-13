@@ -83,6 +83,7 @@
 
 </template>
 
+
 <script>
 
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
@@ -259,7 +260,7 @@
         let updatedHints = [];
         if (this.hints) {
           updatedHints = this.hints.filter(
-            hint => hint.hint !== undefined && hint.hint.trim() !== ''
+            hint => hint.hint !== undefined && hint.hint.trim() !== '',
           );
         }
         updatedHints = updateHintsOrder(updatedHints);
@@ -295,7 +296,8 @@
 
 </script>
 
-<style lang="less" scoped>
+
+<style lang="scss" scoped>
 
   .card-border-light {
     /* stylelint-disable-next-line custom-property-pattern */

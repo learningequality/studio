@@ -10,8 +10,12 @@ from django.http import HttpResponseBadRequest
 from django.utils.decorators import method_decorator
 from kolibri_content import base_models
 from kolibri_content import models as kolibri_content_models
-from kolibri_content.constants.schema_versions import CONTENT_SCHEMA_VERSION  # Use kolibri_content
-from kolibri_content.constants.schema_versions import MIN_CONTENT_SCHEMA_VERSION  # Use kolibri_content
+from kolibri_content.constants.schema_versions import (
+    CONTENT_SCHEMA_VERSION,
+)  # Use kolibri_content
+from kolibri_content.constants.schema_versions import (
+    MIN_CONTENT_SCHEMA_VERSION,
+)  # Use kolibri_content
 from kolibri_public import models  # Use kolibri_public models
 from kolibri_public.views import metadata_cache
 from rest_framework import status
@@ -28,7 +32,9 @@ def _get_kc_and_base_models(model):
     except AttributeError:
         # This will happen if it's a M2M through model, which only exist on ContentNode
         through_model_name = model.__name__.replace("ContentNode_", "")
-        kc_model = getattr(kolibri_content_models.ContentNode, through_model_name).through
+        kc_model = getattr(
+            kolibri_content_models.ContentNode, through_model_name
+        ).through
         # Through models are not defined for the abstract base models, so we just cheat and
         # use these instead.
         base_model = kc_model
@@ -74,8 +80,7 @@ class ImportMetadataViewset(GenericViewSet):
             UUID(pk)
         except ValueError:
             return Response(
-                {"error": "Invalid UUID format."},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "Invalid UUID format."}, status=status.HTTP_400_BAD_REQUEST
             )
 
         content_schema = request.query_params.get(
@@ -159,9 +164,15 @@ class ImportMetadataViewset(GenericViewSet):
                 field_names.add(base_model._mptt_meta.left_attr)
                 field_names.add(base_model._mptt_meta.right_attr)
                 field_names.add(base_model._mptt_meta.level_attr)
-            raw_fields = [field.column for field in kc_model._meta.fields if field.column in field_names]
+            raw_fields = [
+                field.column
+                for field in kc_model._meta.fields
+                if field.column in field_names
+            ]
             if qs.model is models.Language:
-                raw_fields = [rf for rf in raw_fields if rf != "lang_name"] + ["native_name"]
+                raw_fields = [rf for rf in raw_fields if rf != "lang_name"] + [
+                    "native_name"
+                ]
             qs = qs.values(*raw_fields)
             # Avoid using the Django queryset directly, as it will coerce the database values
             # via its field 'from_db_value' transformers, whereas import metadata is read
@@ -171,7 +182,16 @@ class ImportMetadataViewset(GenericViewSet):
             cursor.execute(*qs.query.sql_with_params())
             data[table_name] = [
                 # Coerce any UUIDs to their hex representation, as Postgres raw values will be UUIDs
-                dict(zip(raw_fields, (value.hex if isinstance(value, UUID) else value for value in row))) for row in cursor
+                dict(
+                    zip(
+                        raw_fields,
+                        (
+                            value.hex if isinstance(value, UUID) else value
+                            for value in row
+                        ),
+                    )
+                )
+                for row in cursor
             ]
             if qs.model is models.Language:
                 for lang in data[table_name]:

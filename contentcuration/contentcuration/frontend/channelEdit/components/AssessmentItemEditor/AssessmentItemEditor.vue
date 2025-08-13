@@ -1,9 +1,16 @@
 <template>
 
-  <Uploader ref="uploader" :presetID="imagePreset">
+  <Uploader
+    ref="uploader"
+    :presetID="imagePreset"
+  >
     <template #default="{ handleFiles }">
       <VLayout>
-        <DropdownWrapper component="VFlex" xs7 lg5>
+        <DropdownWrapper
+          component="VFlex"
+          xs7
+          lg5
+        >
           <template #default="{ attach, menuProps }">
             <VSelect
               :key="kindSelectKey"
@@ -50,7 +57,10 @@
                 data-test="questionText"
                 @click="openQuestion"
               >
-                <VLayout align-start justify-space-between>
+                <VLayout
+                  align-start
+                  justify-space-between
+                >
                   <MarkdownViewer :markdown="question" />
 
                   <Icon
@@ -58,7 +68,6 @@
                     icon="edit"
                     class="mr-2"
                   />
-
                 </VLayout>
               </div>
             </keep-alive>
@@ -66,7 +75,10 @@
         </VFlex>
       </VLayout>
 
-      <VLayout mt-4>
+      <VLayout
+        v-if="kind !== AssessmentItemTypes.FREE_RESPONSE"
+        mt-4
+      >
         <VFlex>
           <ErrorList
             :errors="answersErrorMessages"
@@ -103,6 +115,7 @@
 
 </template>
 
+
 <script>
 
   import { mapGetters } from 'vuex';
@@ -112,7 +125,12 @@
   import translator from '../../translator';
   import { updateAnswersToQuestionType, assessmentItemKey } from '../../utils';
   import { AssessmentItemTypeLabels } from '../../constants';
-  import { AssessmentItemTypes, ValidationErrors } from 'shared/constants';
+  import {
+    ContentModalities,
+    AssessmentItemTypes,
+    ValidationErrors,
+    FeatureFlagKeys,
+  } from 'shared/constants';
   import ErrorList from 'shared/views/ErrorList/ErrorList';
   import Uploader from 'shared/views/files/Uploader';
   import MarkdownEditor from 'shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor';
@@ -147,6 +165,10 @@
        *    ...
        * }
        */
+      nodeId: {
+        type: String,
+        required: true,
+      },
       item: {
         type: Object,
         default: null,
@@ -184,10 +206,13 @@
         openHintIdx: null,
         openAnswerIdx: null,
         kindSelectKey: 0,
+        AssessmentItemTypes,
       };
     },
     computed: {
       ...mapGetters('file', ['getFileUpload']),
+      ...mapGetters(['hasFeatureEnabled']),
+      ...mapGetters('contentNode', ['getContentNode']),
       question() {
         if (!this.item || !this.item.question) {
           return '';
@@ -198,6 +223,9 @@
       imagePreset() {
         return FormatPresetsNames.EXERCISE_IMAGE;
       },
+      modality() {
+        return this.getContentNode(this.nodeId)?.extra_fields?.options?.modality;
+      },
       kind() {
         if (!this.item || !this.item.type) {
           return AssessmentItemTypes.SINGLE_SELECTION;
@@ -206,7 +234,7 @@
         return this.item.type;
       },
       kindSelectItems() {
-        return [
+        const items = [
           {
             value: AssessmentItemTypes.SINGLE_SELECTION,
             text: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.SINGLE_SELECTION]),
@@ -224,6 +252,18 @@
             text: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.TRUE_FALSE]),
           },
         ];
+
+        if (
+          this.hasFeatureEnabled(FeatureFlagKeys.survey) &&
+          this.modality === ContentModalities.SURVEY
+        ) {
+          items.push({
+            value: AssessmentItemTypes.FREE_RESPONSE,
+            text: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.FREE_RESPONSE]),
+          });
+        }
+
+        return items;
       },
       answers() {
         if (!this.item || !this.item.answers) {
@@ -244,8 +284,12 @@
 
         if (this.errors && this.errors.includes(ValidationErrors.QUESTION_REQUIRED)) {
           errorMessages.push(translator.$tr(`errorQuestionRequired`));
+        } else if (
+          this.errors &&
+          this.errors.includes(ValidationErrors.INVALID_COMPLETION_TYPE_FOR_FREE_RESPONSE_QUESTION)
+        ) {
+          errorMessages.push(translator.$tr(`errorInvalidQuestionType`));
         }
-
         return errorMessages;
       },
       answersErrorMessages() {
@@ -292,12 +336,10 @@
           ...assessmentItemKey(this.item),
           ...payload,
         };
-
         this.$emit('update', payload);
       },
       changeKind(newKind) {
         const newAnswers = updateAnswersToQuestionType(newKind, this.answers);
-
         this.closeAnswer();
         this.updateItem({
           type: newKind,
@@ -365,6 +407,21 @@
 
             break;
 
+          case AssessmentItemTypes.FREE_RESPONSE:
+            if (typeof this.openDialog === 'function' && this.answers.length > 0) {
+              this.openDialog({
+                title: this.$tr('dialogTitle'),
+                message: this.$tr('dialogMessageChangeToFreeResponse'),
+                submitLabel: this.$tr('dialogSubmitBtnLabel'),
+                onSubmit: () => this.changeKind(newKind),
+                onCancel: this.rerenderKindSelect,
+              });
+            } else {
+              this.changeKind(newKind);
+            }
+
+            break;
+
           default:
             this.changeKind(newKind);
             break;
@@ -415,12 +472,15 @@
         "Switching to 'true or false' will remove all current answers. Continue?",
       dialogMessageChangeToInput:
         "Switching to 'numeric input' will set all answers as correct and remove all non-numeric answers. Continue?",
+      dialogMessageChangeToFreeResponse:
+        "Switching to 'free response' will remove all current answers. Continue?",
     },
   };
 
 </script>
 
-<style lang="less" scoped>
+
+<style lang="scss" scoped>
 
   .question-text {
     transition: 0.7s;

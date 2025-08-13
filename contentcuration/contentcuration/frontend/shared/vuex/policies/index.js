@@ -1,4 +1,4 @@
-import Vue from 'vue';
+import { set } from 'vue';
 import { policyDates, policyKeys, createPolicyKey, policies } from 'shared/constants';
 import client from 'shared/client';
 
@@ -41,12 +41,7 @@ export const getters = {
   nonAcceptedPolicies(state) {
     return policyKeys
       .filter(key => !state.policies[key])
-      .map(key =>
-        key
-          .split('_')
-          .slice(0, -3)
-          .join('_')
-      );
+      .map(key => key.split('_').slice(0, -3).join('_'));
   },
   /**
    * @returns `true` if a policy hasn't been
@@ -54,7 +49,7 @@ export const getters = {
    * Always returns `false` for logged out users.
    */
   isPolicyUnaccepted(state, getters, rootState, rootGetters) {
-    return function(policy) {
+    return function (policy) {
       if (!rootGetters.loggedIn) {
         return false;
       }
@@ -84,7 +79,7 @@ export const getters = {
 export const mutations = {
   SET_POLICIES(state, policies) {
     for (const policy in policies) {
-      Vue.set(state.policies, policy, policies[policy]);
+      set(state.policies, policy, policies[policy]);
     }
   },
 };

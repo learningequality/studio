@@ -1,6 +1,5 @@
 import json
 import logging
-from builtins import str
 from collections import namedtuple
 
 from distutils.version import LooseVersion
@@ -16,13 +15,14 @@ from django.http import HttpResponseServerError
 from django.http import JsonResponse
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
-from le_utils.constants.labels.accessibility_categories import ACCESSIBILITYCATEGORIESLIST
+from le_utils.constants.labels.accessibility_categories import (
+    ACCESSIBILITYCATEGORIESLIST,
+)
 from le_utils.constants.labels.learning_activities import LEARNINGACTIVITIESLIST
 from le_utils.constants.labels.levels import LEVELSLIST
 from le_utils.constants.labels.needs import NEEDSLIST
 from le_utils.constants.labels.resource_type import RESOURCETYPELIST
 from le_utils.constants.labels.subjects import SUBJECTSLIST
-from past.builtins import basestring
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.authentication import TokenAuthentication
@@ -83,7 +83,12 @@ def handle_server_error(e, request):
 
 
 @api_view(["POST", "GET"])
-@authentication_classes((TokenAuthentication, SessionAuthentication,))
+@authentication_classes(
+    (
+        TokenAuthentication,
+        SessionAuthentication,
+    )
+)
 @permission_classes((IsAuthenticated,))
 def authenticate_user_internal(request):
     """ Verify user is valid """
@@ -101,7 +106,12 @@ def authenticate_user_internal(request):
 
 
 @api_view(["POST"])
-@authentication_classes((TokenAuthentication, SessionAuthentication,))
+@authentication_classes(
+    (
+        TokenAuthentication,
+        SessionAuthentication,
+    )
+)
 @permission_classes((IsAuthenticated,))
 def check_version(request):
     """ Get version of Ricecooker with which CC is compatible """
@@ -131,7 +141,12 @@ def check_version(request):
 
 
 @api_view(["POST"])
-@authentication_classes((TokenAuthentication, SessionAuthentication,))
+@authentication_classes(
+    (
+        TokenAuthentication,
+        SessionAuthentication,
+    )
+)
 @permission_classes((IsAuthenticated,))
 def file_diff(request):
     """ Determine which files don't exist on server """
@@ -154,7 +169,10 @@ def file_diff(request):
 @authentication_classes((TokenAuthentication,))
 @permission_classes((IsAuthenticated,))
 def api_file_upload(request):
-    """ Upload a file to the storage system """
+    """Upload a file to the storage system
+
+    .. deprecated:: Ricecooker 0.7+ no longer uses this endpoint
+    """
     try:
         fobj = request.FILES["file"]
         checksum, ext = fobj._name.split(".")
@@ -181,7 +199,12 @@ def api_file_upload(request):
 
 
 @api_view(["POST"])
-@authentication_classes((TokenAuthentication, SessionAuthentication,))
+@authentication_classes(
+    (
+        TokenAuthentication,
+        SessionAuthentication,
+    )
+)
 @permission_classes((IsAuthenticated,))
 def api_create_channel_endpoint(request):
     """ Create the channel node """
@@ -191,20 +214,29 @@ def api_create_channel_endpoint(request):
 
         obj = create_channel(channel_data, request.user)
 
-        return Response({
-            "success": True,
-            "root": obj.chef_tree.pk,
-            "channel_id": obj.pk,
-        })
+        return Response(
+            {
+                "success": True,
+                "root": obj.chef_tree.pk,
+                "channel_id": obj.pk,
+            }
+        )
     except KeyError:
-        return HttpResponseBadRequest("Required attribute missing from data: {}".format(data))
+        return HttpResponseBadRequest(
+            "Required attribute missing from data: {}".format(data)
+        )
     except Exception as e:
         handle_server_error(e, request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
 @api_view(["POST"])
-@authentication_classes((TokenAuthentication, SessionAuthentication,))
+@authentication_classes(
+    (
+        TokenAuthentication,
+        SessionAuthentication,
+    )
+)
 @permission_classes((IsAuthenticated,))
 def api_commit_channel(request):
     """
@@ -248,25 +280,36 @@ def api_commit_channel(request):
                 old_staging.title = "Old staging tree for channel {}".format(obj.pk)
                 old_staging.save()
 
-        async_result = generatenodediff_task.enqueue(request.user, updated_id=obj.staging_tree.id, original_id=obj.main_tree.id)
+        async_result = generatenodediff_task.enqueue(
+            request.user, updated_id=obj.staging_tree.id, original_id=obj.main_tree.id
+        )
 
         # Send response back to the content integration script
-        return Response({
-            "success": True,
-            "new_channel": obj.pk,
-            "diff_task_id": async_result.task_id,
-        })
+        return Response(
+            {
+                "success": True,
+                "new_channel": obj.pk,
+                "diff_task_id": async_result.task_id,
+            }
+        )
     except (Channel.DoesNotExist, PermissionDenied):
         return HttpResponseNotFound("No channel matching: {}".format(channel_id))
     except KeyError:
-        return HttpResponseBadRequest("Required attribute missing from data: {}".format(data))
+        return HttpResponseBadRequest(
+            "Required attribute missing from data: {}".format(data)
+        )
     except Exception as e:
         handle_server_error(e, request)
         return HttpResponseServerError(content=str(e), reason=str(e))
 
 
 @api_view(["POST"])
-@authentication_classes((TokenAuthentication, SessionAuthentication,))
+@authentication_classes(
+    (
+        TokenAuthentication,
+        SessionAuthentication,
+    )
+)
 @permission_classes((IsAuthenticated,))
 def api_add_nodes_to_tree(request):
     """
@@ -291,19 +334,27 @@ def api_add_nodes_to_tree(request):
     """
     data = json.loads(request.body)
     try:
-        content_data = data['content_data']
-        parent_id = data['root_id']
-        ContentNode.filter_edit_queryset(ContentNode.objects.all(), request.user).get(id=parent_id)
-        return Response({
-            "success": True,
-            "root_ids": convert_data_to_nodes(request.user, content_data, parent_id)
-        })
+        content_data = data["content_data"]
+        parent_id = data["root_id"]
+        ContentNode.filter_edit_queryset(ContentNode.objects.all(), request.user).get(
+            id=parent_id
+        )
+        return Response(
+            {
+                "success": True,
+                "root_ids": convert_data_to_nodes(
+                    request.user, content_data, parent_id
+                ),
+            }
+        )
     except ContentNode.DoesNotExist:
         return HttpResponseNotFound("No content matching: {}".format(parent_id))
     except ValidationError as e:
         return HttpResponseBadRequest(content=str(e))
     except KeyError:
-        return HttpResponseBadRequest("Required attribute missing from data: {}".format(data))
+        return HttpResponseBadRequest(
+            "Required attribute missing from data: {}".format(data)
+        )
     except NodeValidationError as e:
         return HttpResponseBadRequest(str(e))
     except Exception as e:
@@ -312,7 +363,12 @@ def api_add_nodes_to_tree(request):
 
 
 @api_view(["POST"])
-@authentication_classes((TokenAuthentication, SessionAuthentication,))
+@authentication_classes(
+    (
+        TokenAuthentication,
+        SessionAuthentication,
+    )
+)
 @permission_classes((IsAuthenticated,))
 def api_publish_channel(request):
     logging.debug("Entering the publish_channel endpoint")
@@ -323,16 +379,20 @@ def api_publish_channel(request):
         # Ensure that the user has permission to edit this channel.
         Channel.get_editable(request.user, channel_id)
 
-        event = generate_publish_event(channel_id, version_notes=data.get('version_notes'))
+        event = generate_publish_event(
+            channel_id, version_notes=data.get("version_notes")
+        )
 
         Change.create_change(event, created_by_id=request.user.pk)
 
         apply_channel_changes_task.fetch_or_enqueue(request.user, channel_id=channel_id)
 
-        return Response({
-            "success": True,
-            "channel": channel_id,
-        })
+        return Response(
+            {
+                "success": True,
+                "channel": channel_id,
+            }
+        )
     except (KeyError, Channel.DoesNotExist):
         return HttpResponseNotFound("No channel matching: {}".format(data))
     except Exception as e:
@@ -341,7 +401,12 @@ def api_publish_channel(request):
 
 
 @api_view(["POST"])
-@authentication_classes((TokenAuthentication, SessionAuthentication,))
+@authentication_classes(
+    (
+        TokenAuthentication,
+        SessionAuthentication,
+    )
+)
 @permission_classes((IsAuthenticated,))
 def check_user_is_editor(request):
     """ Create the channel node """
@@ -359,7 +424,12 @@ def check_user_is_editor(request):
 
 
 @api_view(["POST"])
-@authentication_classes((TokenAuthentication, SessionAuthentication,))
+@authentication_classes(
+    (
+        TokenAuthentication,
+        SessionAuthentication,
+    )
+)
 @permission_classes((IsAuthenticated,))
 def get_tree_data(request):
     """
@@ -371,9 +441,9 @@ def get_tree_data(request):
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     try:
-        channel_id = serializer.validated_data['channel_id']
+        channel_id = serializer.validated_data["channel_id"]
         channel = Channel.get_editable(request.user, channel_id)
-        tree_name = "{}_tree".format(serializer.validated_data['tree'])
+        tree_name = "{}_tree".format(serializer.validated_data["tree"])
         tree_root = getattr(channel, tree_name, None)
         if tree_root is None:
             raise ValueError("Invalid tree name")
@@ -390,7 +460,12 @@ def get_tree_data(request):
 
 
 @api_view(["POST"])
-@authentication_classes((TokenAuthentication, SessionAuthentication,))
+@authentication_classes(
+    (
+        TokenAuthentication,
+        SessionAuthentication,
+    )
+)
 @permission_classes((IsAuthenticated,))
 def get_node_tree_data(request):
     """
@@ -402,9 +477,9 @@ def get_node_tree_data(request):
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     try:
-        channel_id = serializer.validated_data['channel_id']
+        channel_id = serializer.validated_data["channel_id"]
         channel = Channel.get_editable(request.user, channel_id)
-        tree_name = "{}_tree".format(serializer.validated_data['tree'])
+        tree_name = "{}_tree".format(serializer.validated_data["tree"])
         tree_root = getattr(channel, tree_name, None)
         if "node_id" in serializer.validated_data:
             node = (
@@ -430,17 +505,26 @@ def get_node_tree_data(request):
 
 
 @api_view(["POST"])
-@authentication_classes((TokenAuthentication, SessionAuthentication,))
+@authentication_classes(
+    (
+        TokenAuthentication,
+        SessionAuthentication,
+    )
+)
 @permission_classes((IsAuthenticated,))
 def get_channel_status_bulk(request):
     """ Create the channel node """
     data = json.loads(request.body)
     try:
-        channel_ids = data['channel_ids']
-        permissioned_ids = set(Channel.filter_edit_queryset(Channel.objects.all(), request.user).filter(id__in=channel_ids).values_list("id", flat=True))
+        channel_ids = data["channel_ids"]
+        permissioned_ids = set(
+            Channel.filter_edit_queryset(Channel.objects.all(), request.user)
+            .filter(id__in=channel_ids)
+            .values_list("id", flat=True)
+        )
         if permissioned_ids != set(channel_ids):
             raise PermissionDenied()
-        statuses = {cid: get_status(cid) for cid in data['channel_ids']}
+        statuses = {cid: get_status(cid) for cid in data["channel_ids"]}
 
         return Response({"success": True, "statuses": statuses})
     except (Channel.DoesNotExist, PermissionDenied):
@@ -471,23 +555,27 @@ def get_status(channel_id):
 def create_channel(channel_data, user):
     """ Set up channel """
     # Set up initial channel
-    channel, isNew = Channel.objects.get_or_create(id=channel_data["id"], actor_id=user.id)
+    channel, isNew = Channel.objects.get_or_create(
+        id=channel_data["id"], actor_id=user.id
+    )
 
-    # Add user as editor if channel is new or channel has no editors
-    # Otherwise, check if user is an editor
-    if isNew or channel.editors.count() == 0:
+    # Add user as editor if channel is new
+    if isNew:
         channel.editors.add(user)
-    elif user not in channel.editors.all():
+    try:
+        # Check if user is an editor
+        channel = Channel.get_editable(user, channel.id)
+    except Channel.DoesNotExist:
         raise SuspiciousOperation("User is not authorized to edit this channel")
 
-    extra_fields = channel_data.get('extra_fields') or {}
-    if isinstance(extra_fields, basestring):
+    extra_fields = channel_data.get("extra_fields") or {}
+    if isinstance(extra_fields, str):
         extra_fields = json.loads(extra_fields)
-    extra_fields.update({'ricecooker_version': channel.ricecooker_version})
+    extra_fields.update({"ricecooker_version": channel.ricecooker_version})
 
-    channel.name = channel_data['name']
-    channel.description = channel_data['description']
-    channel.thumbnail = channel_data['thumbnail']
+    channel.name = channel_data["name"]
+    channel.description = channel_data["description"]
+    channel.thumbnail = channel_data["thumbnail"]
     channel.deleted = False
     channel.source_id = channel_data.get("source_id")
     channel.source_domain = channel_data.get("source_domain")
@@ -542,8 +630,8 @@ class IncompleteNodeError(Exception):
     """
 
     def __init__(self, node, errors):
-        self.message = (
-            "Node {} had the following errors: {}".format(node, ",".join(errors))
+        self.message = "Node {} had the following errors: {}".format(
+            node, ",".join(errors)
         )
 
         super(IncompleteNodeError, self).__init__(self.message)
@@ -560,7 +648,9 @@ def add_tags(node, node_data):
                     raise ValidationError("tag is greater than 30 characters")
                 else:
                     tags.append(
-                        ContentTag.objects.get_or_create(tag_name=tag, channel=channel)[0]
+                        ContentTag.objects.get_or_create(tag_name=tag, channel=channel)[
+                            0
+                        ]
                     )
 
     if len(tags) > 0:
@@ -577,7 +667,9 @@ def validate_metadata_labels(node_data):
             metadata_labels[label] = {}
             for value in node_data[label]:
                 if value not in valid_values:
-                    raise NodeValidationError("{} is not a valid value for {}".format(value, label))
+                    raise NodeValidationError(
+                        "{} is not a valid value for {}".format(value, label)
+                    )
                 metadata_labels[label][value] = True
 
     return metadata_labels
@@ -596,13 +688,17 @@ def handle_remote_node(user, node_data, parent_node):
         raise NodeValidationError("Both source_node_id and source_content_id are None")
 
     try:
-        channel = Channel.filter_view_queryset(Channel.objects.all(), user).get(id=source_channel_id)
+        channel = Channel.filter_view_queryset(Channel.objects.all(), user).get(
+            id=source_channel_id
+        )
     except Channel.DoesNotExist:
         raise NodeValidationError("source_channel_id does not exist")
 
     contentnode = None
 
-    channel_resource_nodes = channel.main_tree.get_descendants().exclude(kind=content_kinds.TOPIC)
+    channel_resource_nodes = channel.main_tree.get_descendants().exclude(
+        kind=content_kinds.TOPIC
+    )
 
     if source_node_id:
         try:
@@ -611,7 +707,9 @@ def handle_remote_node(user, node_data, parent_node):
             pass
 
     if contentnode is None and source_content_id:
-        contentnode = channel_resource_nodes.filter(content_id=source_content_id).first()
+        contentnode = channel_resource_nodes.filter(
+            content_id=source_content_id
+        ).first()
 
     if contentnode is None:
         raise NodeValidationError(
@@ -630,7 +728,11 @@ def handle_remote_node(user, node_data, parent_node):
         ContentNode.filter_by_pk(pk=contentnode.id), user=user
     ).exists()
 
-    return contentnode.copy_to(target=parent_node, mods=node_data, can_edit_source_channel=can_edit_source_channel)
+    return contentnode.copy_to(
+        target=parent_node,
+        mods=node_data,
+        can_edit_source_channel=can_edit_source_channel,
+    )
 
 
 @delay_user_storage_calculation
@@ -640,7 +742,11 @@ def convert_data_to_nodes(user, content_data, parent_node):  # noqa: C901
         root_mapping = {}
         parent_node = ContentNode.objects.get(pk=parent_node)
         if parent_node.kind_id != content_kinds.TOPIC:
-            raise NodeValidationError("Parent node must be a topic/folder | actual={}".format(parent_node.kind_id))
+            raise NodeValidationError(
+                "Parent node must be a topic/folder | actual={}".format(
+                    parent_node.kind_id
+                )
+            )
 
         sort_order = parent_node.children.count() + 1
         existing_node_ids = ContentNode.objects.filter(
@@ -726,20 +832,24 @@ def create_node(node_data, parent_node, sort_order):  # noqa: C901
             raise ObjectDoesNotExist("Invalid license found")
 
     extra_fields = node_data["extra_fields"] or {}
-    if isinstance(extra_fields, basestring):
+    if isinstance(extra_fields, str):
         extra_fields = json.loads(extra_fields)
 
     # validate completion criteria
     if "options" in extra_fields and "completion_criteria" in extra_fields["options"]:
         try:
-            completion_criteria.validate(extra_fields["options"]["completion_criteria"], kind=node_data['kind'])
+            completion_criteria.validate(
+                extra_fields["options"]["completion_criteria"], kind=node_data["kind"]
+            )
         except completion_criteria.ValidationError:
-            raise NodeValidationError("Node {} has invalid completion criteria".format(node_data["node_id"]))
+            raise NodeValidationError(
+                "Node {} has invalid completion criteria".format(node_data["node_id"])
+            )
 
     # Validate title and license fields
-    title = node_data.get('title', "")
-    license_description = node_data.get('license_description', "")
-    copyright_holder = node_data.get('copyright_holder', "")
+    title = node_data.get("title", "")
+    license_description = node_data.get("license_description", "")
+    copyright_holder = node_data.get("copyright_holder", "")
 
     metadata_labels = validate_metadata_labels(node_data)
 
@@ -763,7 +873,7 @@ def create_node(node_data, parent_node, sort_order):  # noqa: C901
         source_domain=node_data.get("source_domain"),
         language_id=node_data.get("language"),
         freeze_authoring_data=True,
-        role_visibility=node_data.get('role') or roles.LEARNER,
+        role_visibility=node_data.get("role") or roles.LEARNER,
         # Assume it is complete to start with, we will do validation
         # later when we have all data available to determine if it is
         # complete or not.
@@ -782,7 +892,9 @@ def create_exercises(user, node, data):
     # First check that all assessment_ids are unique within the node
     assessment_ids = [question.get("assessment_id") for question in data]
     if len(assessment_ids) != len(set(assessment_ids)):
-        raise NodeValidationError("Duplicate assessment_ids found in node {}".format(node.node_id))
+        raise NodeValidationError(
+            "Duplicate assessment_ids found in node {}".format(node.node_id)
+        )
 
     with transaction.atomic():
         order = 0

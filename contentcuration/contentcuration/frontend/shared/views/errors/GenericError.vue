@@ -9,9 +9,15 @@
         {{ $tr('genericErrorDetails') }}
       </template>
       <template #actions>
-        <VLayout column align-center>
+        <VLayout
+          column
+          align-center
+        >
           <div class="mb-3">
-            <VBtn color="primary" @click="reloadPage">
+            <VBtn
+              color="primary"
+              @click="reloadPage"
+            >
               {{ $tr('refreshAction') }}
             </VBtn>
             <VBtn v-bind="backHomeLink">
@@ -80,4 +86,4 @@
 </script>
 
 
-<style lang="less" scoped></style>
+<style lang="scss" scoped></style>

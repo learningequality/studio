@@ -6,14 +6,22 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('kolibri_public', '0001_initial'),
+        ("kolibri_public", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='MPTTTreeIDManager',
+            name="MPTTTreeIDManager",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
             ],
         ),
     ]

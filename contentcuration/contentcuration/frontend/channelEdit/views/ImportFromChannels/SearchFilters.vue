@@ -3,7 +3,7 @@
   <VNavigationDrawer
     permanent
     floating
-    class="import-search-filters px-2"
+    class="import-search-filters"
   >
     <!-- Channel -->
     <p class="font-weight-bold grey--text mb-1">
@@ -51,7 +51,10 @@
     />
 
     <!-- Show coach content toggle -->
-    <Checkbox v-model="coach" class="mb-4 mt-2">
+    <Checkbox
+      v-model="coach"
+      class="mb-4 mt-2"
+    >
       <Icon icon="coachContent" />
       <span class="mx-2 text-xs-left">{{ $tr('coachContentLabel') }}</span>
     </Checkbox>
@@ -80,7 +83,7 @@
 
     <!-- Created after -->
     <!-- Box styling throws menu alignment off, so nudge accordingly -->
-    <Menu
+    <BaseMenu
       v-model="showDatePicker"
       :close-on-content-click="false"
       full-width
@@ -109,7 +112,7 @@
         min="2017-01-01"
         @input="showDatePicker = false"
       />
-    </Menu>
+    </BaseMenu>
   </VNavigationDrawer>
 
 </template>
@@ -229,7 +232,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .import-search-filters {
     z-index: 0;

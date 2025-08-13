@@ -1,4 +1,5 @@
-import Dexie from 'dexie';
+// eslint-disable-next-line import/no-named-as-default
+import Dexie, { liveQuery } from 'dexie';
 import Mutex from 'mutex-js';
 import findIndex from 'lodash/findIndex';
 import flatMap from 'lodash/flatMap';
@@ -41,6 +42,7 @@ import {
   SyncedChange,
   DeployedChange,
   UpdatedDescendantsChange,
+  PublishedNextChange,
 } from './changes';
 import urls from 'shared/urls';
 import { currentLanguage } from 'shared/i18n';
@@ -84,13 +86,27 @@ function getUserIdFromStore() {
     ```
   Attempted to get the user_id from the store to set on a change object,
   but the store has not been injected into the resources.js module using injectVuexStore function
-  ```
+  ```,
   );
 }
 
 // Custom uuid4 function to match our dashless uuids on the server side
 export function uuid4() {
   return uuidv4().replace(/-/g, '');
+}
+
+export function formatUUID4(uuid) {
+  if (!uuid || typeof uuid !== 'string') {
+    return uuid;
+  }
+  const cleanId = uuid.replace(/-/g, '');
+  if (cleanId.length !== 32) {
+    return uuid;
+  }
+  return `${cleanId.slice(0, 8)}-${cleanId.slice(8, 12)}-${cleanId.slice(12, 16)}-${cleanId.slice(
+    16,
+    20,
+  )}-${cleanId.slice(20)}`;
 }
 
 /*
@@ -184,7 +200,7 @@ class IndexedDBResource {
     if (process.env.NODE_ENV !== 'production' && !db[this.tableName]) {
       /* eslint-disable no-console */
       console.error(
-        `Tried to access table ${this.tableName} but it does not exist. Either requires a migration or clearing indexedDB`
+        `Tried to access table ${this.tableName} but it does not exist. Either requires a migration or clearing indexedDB`,
       );
       /* eslint-enable */
     }
@@ -246,7 +262,7 @@ class IndexedDBResource {
       const parent = ancestors[ancestors.length - 1];
       const ancestorsIds = ancestors.map(ancestor => ancestor.id);
       const parentChanges = updatedDescendantsChanges.filter(change =>
-        ancestorsIds.includes(change.key)
+        ancestorsIds.includes(change.key),
       );
       if (!parentChanges.length) {
         return;
@@ -264,7 +280,7 @@ class IndexedDBResource {
               },
               key: item.id,
               type: CHANGE_TYPES.UPDATED,
-            }))
+            })),
           );
         });
     });
@@ -350,7 +366,7 @@ class IndexedDBResource {
             .filter(
               datum =>
                 !collectedChanges[CHANGE_TYPES.DELETED] ||
-                !collectedChanges[CHANGE_TYPES.DELETED][this.getIdValue(datum)]
+                !collectedChanges[CHANGE_TYPES.DELETED][this.getIdValue(datum)],
             );
           return this.table.bulkPut(data).then(() => {
             // Move changes need to be reapplied on top of fetched data in case anything
@@ -376,10 +392,10 @@ class IndexedDBResource {
                     // the end of the returned objects
                   })
                   .concat(Object.values(collectedChanges[CHANGE_TYPES.CREATED]).map(c => c.obj));
-              }
+              },
             );
           });
-        }
+        },
       );
     });
   }
@@ -453,8 +469,8 @@ class IndexedDBResource {
             /* eslint-disable no-console */
             console.warn(
               `Tried to query ${Object.keys(whereParams).join(
-                ', '
-              )} alongside array parameters which is not currently supported`
+                ', ',
+              )} alongside array parameters which is not currently supported`,
             );
             /* eslint-enable */
           }
@@ -469,8 +485,8 @@ class IndexedDBResource {
           /* eslint-disable no-console */
           console.warn(
             `Tried to query multiple __in params ${Object.keys(arrayParams).join(
-              ', '
-            )} which is not currently supported`
+              ', ',
+            )} which is not currently supported`,
           );
           /* eslint-enable */
         }
@@ -527,14 +543,14 @@ class IndexedDBResource {
                 // Because of how we are initially generating these
                 // we should never get to here and returning undefined
               });
-            }
+            },
           ),
           // If there are filter Params, this will be defined
           filterFn,
           // If there were not, it will be undefined and filtered by the final filter
           // In addition, in the unlikely case that the suffix was not recognized,
           // this will filter out those cases too.
-        ].filter(f => f)
+        ].filter(f => f),
       );
     }
     if (filterFn) {
@@ -582,7 +598,7 @@ class IndexedDBResource {
   }
 
   whereLiveQuery(params = {}) {
-    return Dexie.liveQuery(() => this.where(params));
+    return liveQuery(() => this.where(params));
   }
 
   get(id) {
@@ -813,6 +829,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
         itemData = pageData.results;
         more = pageData.more;
       } else {
+        // eslint-disable-next-line no-console
         console.error(`Unexpected response from ${this.urlName}`, response);
         itemData = [];
       }
@@ -916,7 +933,7 @@ class Resource extends mix(APIResource, IndexedDBResource) {
       console.groupEnd();
       /* eslint-enable */
     }
-    const observable = Dexie.liveQuery(() => super.where(params));
+    const observable = liveQuery(() => super.where(params));
     let fetched = false;
     observable.subscribe({
       next: objs => {
@@ -1226,6 +1243,48 @@ export const Channel = new CreateModelResource({
     });
   },
 
+  publishDraft(id) {
+    const change = new PublishedNextChange({
+      key: id,
+      table: this.tableName,
+      source: CLIENTID,
+    });
+    return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
+      return this._saveAndQueueChange(change);
+    }).then(() => change);
+  },
+
+  waitForPublishingDraft(publishDraftChange) {
+    const observable = liveQuery(() => {
+      return db[CHANGES_TABLE].where('rev')
+        .equals(publishDraftChange.rev)
+        .and(change => change.type === publishDraftChange.type)
+        .and(change => change.channel_id === publishDraftChange.channel_id)
+        .toArray();
+    });
+
+    return new Promise((resolve, reject) => {
+      const subscription = observable.subscribe({
+        next(result) {
+          // Successfully applied change will be removed.
+          if (result.length === 0) {
+            subscription.unsubscribe();
+            resolve();
+          } else {
+            if (result[0].disallowed || result[0].errored) {
+              subscription.unsubscribe();
+              reject('Publish draft failed');
+            }
+          }
+        },
+        error() {
+          subscription.unsubscribe();
+          reject('Live query failed');
+        },
+      });
+    });
+  },
+
   deploy(id) {
     const change = new DeployedChange({
       key: id,
@@ -1238,7 +1297,7 @@ export const Channel = new CreateModelResource({
   },
 
   waitForDeploying(id) {
-    const observable = Dexie.liveQuery(() => {
+    const observable = liveQuery(() => {
       return this.table
         .where('id')
         .equals(id)
@@ -1269,7 +1328,7 @@ export const Channel = new CreateModelResource({
       resource_details = false,
       files = false,
       assessment_items = false,
-    } = {}
+    } = {},
   ) {
     const change = new SyncedChange({
       key: id,
@@ -1316,7 +1375,7 @@ export const Channel = new CreateModelResource({
               .count()) > 0
           );
         });
-      }
+      },
     );
     if (!langExists) {
       langExists = await client
@@ -1346,7 +1405,7 @@ function getChannelFromChannelScope() {
     return channel_id;
   }
   throw ReferenceError(
-    'Attempted to get the channel_id from the channelScope object, but it has not been set.'
+    'Attempted to get the channel_id from the channelScope object, but it has not been set.',
   );
 }
 
@@ -1412,7 +1471,7 @@ export const ContentNode = new TreeResource({
     }
     return this.queryRequisites(ids).then(entries => {
       const entryIds = uniq(flatMap(entries, e => [e.target_node, e.prerequisite])).filter(
-        id => !visited.has(id)
+        id => !visited.has(id),
       );
       if (entryIds.length) {
         return this.recurseRequisites(entryIds, visited).then(nextEntries => {
@@ -1580,7 +1639,7 @@ export const ContentNode = new TreeResource({
               payload,
               changeData,
             });
-          }
+          },
         );
       });
     });
@@ -1610,7 +1669,7 @@ export const ContentNode = new TreeResource({
             return this._createChange(id, obj).then(() => id);
           });
         });
-      }
+      },
     );
   },
 
@@ -1658,7 +1717,7 @@ export const ContentNode = new TreeResource({
     target,
     position = RELATIVE_TREE_POSITIONS.LAST_CHILD,
     excluded_descendants = null,
-    sourceNode = null
+    sourceNode = null,
   ) {
     if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
       /* eslint-disable no-console */
@@ -1695,7 +1754,7 @@ export const ContentNode = new TreeResource({
           change.key === id &&
           change.table === this.tableName &&
           (change.errors || change.errors === '') &&
-          change.type === CHANGE_TYPES.COPIED
+          change.type === CHANGE_TYPES.COPIED,
       )
       .last();
 
@@ -1709,7 +1768,7 @@ export const ContentNode = new TreeResource({
             node.parent === failedCopyNode.parent &&
             node.lft <= failedCopyNode.lft &&
             node[COPYING_STATUS] !== COPYING_STATUS_VALUES.FAILED &&
-            node[COPYING_STATUS] !== COPYING_STATUS_VALUES.COPYING
+            node[COPYING_STATUS] !== COPYING_STATUS_VALUES.COPYING,
         )
         .last();
 
@@ -1823,7 +1882,7 @@ export const ContentNode = new TreeResource({
     return this.table.get({ '[node_id+channel_id]': values }).then(node => {
       if (!node) {
         return this.fetchCollection({ '[node_id+channel_id]__in': [values] }).then(
-          nodes => nodes[0]
+          nodes => nodes[0],
         );
       }
       return node;
@@ -1839,7 +1898,7 @@ export const ContentNode = new TreeResource({
    * @returns {Promise<void>}
    */
   waitForCopying(id, startingRev) {
-    const observable = Dexie.liveQuery(async () => {
+    const observable = liveQuery(async () => {
       let copy_success_flag = 0;
       let change_error_flag = 0;
 
@@ -1932,7 +1991,7 @@ export const ContentNode = new TreeResource({
           return this.getLoadedDescendants(child.id);
         }
         return child;
-      })
+      }),
     );
     return [node].concat(flatMap(descendants, d => d));
   },
@@ -1944,7 +2003,7 @@ export const ContentNode = new TreeResource({
           ...changes,
           ...getMergedMapFields(descendant, changes),
         });
-      })
+      }),
     );
   },
   /**
@@ -2067,7 +2126,14 @@ export const ChannelUser = new APIResource({
     });
   },
   removeViewer(channel, user) {
-    return ViewerM2M.delete([user, channel]);
+    const modelUrl = urls.channeluser_remove_self(user);
+    const params = { channel_id: channel };
+    return ViewerM2M.delete([user, channel])
+      .then(() => client.delete(modelUrl, { params }))
+      .then(() => Channel.table.delete(channel))
+      .catch(err => {
+        throw err;
+      });
   },
   fetchCollection(params) {
     return client.get(this.collectionUrl(), { params }).then(response => {
@@ -2143,7 +2209,7 @@ export const ChannelUser = new APIResource({
               };
             });
           });
-      }
+      },
     );
   },
 });
@@ -2259,7 +2325,7 @@ export const Clipboard = new TreeResource({
         null,
         clipboardRootId,
         RELATIVE_TREE_POSITIONS.LAST_CHILD,
-        siblings
+        siblings,
       );
 
       // Next, we'll add the new node immediately
@@ -2300,6 +2366,15 @@ export const Task = new IndexedDBResource({
         .then(() => {
           return this.table.bulkPut(tasks);
         });
+    });
+  },
+});
+
+export const Recommendation = new APIResource({
+  urlName: 'recommendations',
+  fetchCollection(params) {
+    return client.post(window.Urls.recommendations(), params).then(response => {
+      return response.data || [];
     });
   },
 });

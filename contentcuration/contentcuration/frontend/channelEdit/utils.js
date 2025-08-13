@@ -93,6 +93,10 @@ export function updateAnswersToQuestionType(questionType, answers) {
     }
   }
 
+  if (questionType === AssessmentItemTypes.FREE_RESPONSE) {
+    return [];
+  }
+
   const answersCopy = JSON.parse(JSON.stringify(answers));
 
   switch (questionType) {
@@ -136,7 +140,7 @@ export function updateAnswersToQuestionType(questionType, answers) {
 
 export function isImportedContent(node) {
   return Boolean(
-    node && node.original_source_node_id && node.node_id !== node.original_source_node_id
+    node && node.original_source_node_id && node.node_id !== node.original_source_node_id,
   );
 }
 
@@ -267,13 +271,8 @@ export function getCompletionCriteriaLabels(node = {}, files = []) {
   if (!node && !files) {
     return;
   }
-  const {
-    completionModel,
-    completionThreshold,
-    masteryModel,
-    modality,
-    suggestedDuration,
-  } = getCompletionDataFromNode(node);
+  const { completionModel, completionThreshold, masteryModel, modality, suggestedDuration } =
+    getCompletionDataFromNode(node);
 
   const labels = {
     completion: '-',

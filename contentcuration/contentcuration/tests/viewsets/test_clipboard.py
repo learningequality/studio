@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import uuid
 
 from django.core.management import call_command
@@ -58,7 +56,11 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         clipboard = self.clipboard_metadata
         response = self.sync_changes(
-            [generate_create_event(clipboard["id"], CLIPBOARD, clipboard, user_id=self.user.id)],
+            [
+                generate_create_event(
+                    clipboard["id"], CLIPBOARD, clipboard, user_id=self.user.id
+                )
+            ],
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -71,7 +73,11 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         clipboard = self.clipboard_metadata
         clipboard["extra_fields"] = None
         response = self.sync_changes(
-            [generate_create_event(clipboard["id"], CLIPBOARD, clipboard, user_id=self.user.id)],
+            [
+                generate_create_event(
+                    clipboard["id"], CLIPBOARD, clipboard, user_id=self.user.id
+                )
+            ],
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -86,7 +92,11 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         clipboard = self.clipboard_metadata
         clipboard["parent"] = channel.main_tree_id
         response = self.sync_changes(
-            [generate_create_event(clipboard["id"], CLIPBOARD, clipboard, user_id=self.user.id)],
+            [
+                generate_create_event(
+                    clipboard["id"], CLIPBOARD, clipboard, user_id=self.user.id
+                )
+            ],
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -102,8 +112,12 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         clipboard2 = self.clipboard_metadata
         response = self.sync_changes(
             [
-                generate_create_event(clipboard1["id"], CLIPBOARD, clipboard1, user_id=self.user.id),
-                generate_create_event(clipboard2["id"], CLIPBOARD, clipboard2, user_id=self.user.id),
+                generate_create_event(
+                    clipboard1["id"], CLIPBOARD, clipboard1, user_id=self.user.id
+                ),
+                generate_create_event(
+                    clipboard2["id"], CLIPBOARD, clipboard2, user_id=self.user.id
+                ),
             ],
         )
         self.assertEqual(response.status_code, 200, response.content)
@@ -241,7 +255,9 @@ class CRUDTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         clipboard = self.clipboard_metadata
         response = self.client.post(
-            reverse("clipboard-list"), clipboard, format="json",
+            reverse("clipboard-list"),
+            clipboard,
+            format="json",
         )
         self.assertEqual(response.status_code, 405, response.content)
 

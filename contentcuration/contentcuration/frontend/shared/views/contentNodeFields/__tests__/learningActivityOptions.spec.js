@@ -1,10 +1,6 @@
-import Vue from 'vue';
-import Vuetify from 'vuetify';
 import { shallowMount, mount } from '@vue/test-utils';
 import LearningActivityOptions from '../LearningActivityOptions.vue';
 import { LearningActivities } from 'shared/constants';
-
-Vue.use(Vuetify);
 
 function makeWrapper({ value = {}, nodeIds = ['node1'] } = {}) {
   return mount(LearningActivityOptions, {
@@ -18,7 +14,7 @@ function makeWrapper({ value = {}, nodeIds = ['node1'] } = {}) {
 describe('LearningActivityOptions', () => {
   it('smoke test', () => {
     const wrapper = shallowMount(LearningActivityOptions);
-    expect(wrapper.isVueInstance()).toBe(true);
+    expect(wrapper.exists()).toBe(true);
   });
 
   it('number of items in the dropdown should be equal to number of items available in ', async () => {
@@ -32,17 +28,17 @@ describe('LearningActivityOptions', () => {
   });
 
   describe('updating state', () => {
-    it('should update learning_activity field with new values received from a parent', () => {
+    it('should update learning_activity field with new values received from a parent', async () => {
       const learningActivity = {
         activity_1: ['node1'],
         activity_2: ['node1'],
       };
       const wrapper = makeWrapper({ value: learningActivity, nodeIds: ['node1'] });
-      const dropdown = wrapper.find({ name: 'v-select' });
+      const dropdown = wrapper.findComponent({ name: 'v-select' });
 
       expect(dropdown.props('value')).toEqual(['activity_1', 'activity_2']);
 
-      wrapper.setProps({
+      await wrapper.setProps({
         value: {
           activity_4: ['node1'],
         },
@@ -50,18 +46,17 @@ describe('LearningActivityOptions', () => {
       expect(dropdown.props('value')).toEqual(['activity_4']);
     });
 
-    it('should emit new input values', () => {
+    it('should emit new input values', async () => {
       const learningActivity = ['activity_1', 'activity_2'];
       const wrapper = makeWrapper();
-      const dropdown = wrapper.find({ name: 'v-select' });
+      const dropdown = wrapper.findComponent({ name: 'v-select' });
       dropdown.vm.$emit('input', learningActivity);
 
-      return Vue.nextTick().then(() => {
-        const emittedLevels = wrapper.emitted('input').pop()[0];
-        expect(emittedLevels).toEqual({
-          activity_1: ['node1'],
-          activity_2: ['node1'],
-        });
+      await wrapper.vm.$nextTick();
+      const emittedLevels = wrapper.emitted('input').pop()[0];
+      expect(emittedLevels).toEqual({
+        activity_1: ['node1'],
+        activity_2: ['node1'],
       });
     });
   });

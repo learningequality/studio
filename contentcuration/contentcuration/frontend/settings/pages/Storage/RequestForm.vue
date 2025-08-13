@@ -1,7 +1,9 @@
 <template>
 
-  <form ref="form" @submit.prevent="submit">
-
+  <form
+    ref="form"
+    @submit.prevent="submit"
+  >
     <Banner
       :value="Boolean(errorCount())"
       error
@@ -63,24 +65,36 @@
     <!-- Who can use content -->
     <h3>
       {{ $tr('whoCanUseContentLabel') }}
-      <InfoModal :header="$tr('licenseInfoHeader')" :items="licenseOptions">
+      <InfoModal
+        :header="$tr('licenseInfoHeader')"
+        :items="licenseOptions"
+      >
         <template #header="{ item }">
           {{ translateConstant(item.license_name) }}
         </template>
         <template #description="{ item }">
-          {{ translateConstant(`${item.license_name}_description`) }}
-          <p v-if="item.license_url" class="mt-1">
-            <ActionLink
+          <p class="license-description">
+            {{ translateConstant(`${item.license_name}_description`) }}
+          </p>
+          <p
+            v-if="item.license_url"
+            class="mt-1"
+          >
+            <KExternalLink
+              class="license-link"
               :href="getLicenseUrl(item)"
-              target="_blank"
               :text="$tr('learnMoreButton')"
+              openInNewTab
             />
           </p>
         </template>
       </InfoModal>
     </h3>
     <div class="mt-2">
-      <div v-if="errors.license" style="color: red">
+      <div
+        v-if="errors.license"
+        :style="{ color: $themeTokens.error }"
+      >
         {{ $tr('fieldRequiredText') }}
       </div>
       <label>{{ $tr('licensingQuestionLabel') }}</label>
@@ -120,7 +134,11 @@
     <div class="mb-1 mt-3">
       <label>{{ $tr('targetRegionsLabel') }}</label>
     </div>
-    <CountryField v-model="location" :box="false" :menu-props="{ zIndex: 1, offsetY: true }" />
+    <CountryField
+      v-model="location"
+      :box="false"
+      :menu-props="{ zIndex: 1, offsetY: true }"
+    />
     <KTextbox
       v-model="import_count"
       :invalid="errors.import_count"
@@ -133,21 +151,26 @@
 
     <h3>{{ $tr('usageLabel') }}</h3>
     <div class="mt-2">
-      <div v-if="errors.org_or_personal" style="color: red">
+      <div
+        v-if="errors.org_or_personal"
+        :style="{ color: $themeTokens.error }"
+      >
         {{ $tr('fieldRequiredText') }}
       </div>
       <label>{{ $tr('organizationalAffiliationLabel') }}</label>
     </div>
-    <KRadioButton
-      v-for="affiliation in affiliationOptions"
-      :key="affiliation.value"
-      v-model="org_or_personal"
-      :buttonValue="affiliation.value"
-      :invalid="errors.org_or_personal"
-      :showInvalidText="errors.org_or_personal"
-      :invalidText="$tr('fieldRequiredText')"
-      :label="affiliation.text"
-    />
+    <KRadioButtonGroup>
+      <KRadioButton
+        v-for="affiliation in affiliationOptions"
+        :key="affiliation.value"
+        v-model="org_or_personal"
+        :buttonValue="affiliation.value"
+        :invalid="errors.org_or_personal"
+        :showInvalidText="errors.org_or_personal"
+        :invalidText="$tr('fieldRequiredText')"
+        :label="affiliation.text"
+      />
+    </KRadioButtonGroup>
     <KTextbox
       v-model="organization"
       :invalid="errors.organization"
@@ -156,29 +179,34 @@
       label=" "
       :placeholder="$tr('organizationNamePlaceholder')"
       :floatingLabel="false"
-      style="margin-left: 36px;"
+      style="margin-left: 36px"
       :disabled="!orgSelected"
     />
 
     <div class="mb-1 mt-3">
-      <div v-if="errors.organization_type" style="color: red">
+      <div
+        v-if="errors.organization_type"
+        :style="{ color: $themeTokens.error }"
+      >
         {{ $tr('fieldRequiredText') }}
       </div>
-      <label :style="{ color: orgSelected ? 'black' : 'gray' }">
+      <label :style="{ color: orgSelected ? $themeTokens.text : $themeTokens.textDisabled }">
         {{ $tr('typeOfOrganizationLabel') }}
       </label>
     </div>
-    <KRadioButton
-      v-for="orgType in organizationTypeOptions"
-      :key="orgType.value"
-      v-model="organization_type"
-      :buttonValue="orgType.value"
-      :invalid="errors.organization_type"
-      :showInvalidText="errors.organization_type"
-      :invalidText="$tr('fieldRequiredText')"
-      :label="orgType.text"
-      :disabled="!orgSelected"
-    />
+    <KRadioButtonGroup>
+      <KRadioButton
+        v-for="orgType in organizationTypeOptions"
+        :key="orgType.value"
+        v-model="organization_type"
+        :buttonValue="orgType.value"
+        :invalid="errors.organization_type"
+        :showInvalidText="errors.organization_type"
+        :invalidText="$tr('fieldRequiredText')"
+        :label="orgType.text"
+        :disabled="!orgSelected"
+      />
+    </KRadioButtonGroup>
     <KTextbox
       v-model="organization_other"
       :invalid="errors.organization_other"
@@ -187,7 +215,7 @@
       :label="' '"
       :placeholder="$tr('organizationNamePlaceholder')"
       :floatingLabel="false"
-      style="margin-left: 36px;"
+      style="margin-left: 36px"
       :disabled="!orgSelected || !orgTypeOtherSelected"
     />
 
@@ -195,13 +223,15 @@
     <div class="mb-1">
       <label>{{ $tr('timelineLabel') }}</label>
     </div>
-    <KRadioButton
-      v-for="constraint in timeConstraintOptions"
-      :key="constraint.value"
-      v-model="time_constraint"
-      :buttonValue="constraint.value"
-      :label="constraint.text"
-    />
+    <KRadioButtonGroup>
+      <KRadioButton
+        v-for="constraint in timeConstraintOptions"
+        :key="constraint.value"
+        v-model="time_constraint"
+        :buttonValue="constraint.value"
+        :label="constraint.text"
+      />
+    </KRadioButtonGroup>
 
     <!-- Use case -->
     <div class="mb-1 mt-4">
@@ -219,9 +249,12 @@
     />
 
     <div class="my-5">
-      <KButton primary :text="$tr('sendRequestAction')" @click="submit" />
+      <KButton
+        primary
+        :text="$tr('sendRequestAction')"
+        @click="submit"
+      />
     </div>
-
   </form>
 
 </template>
@@ -353,7 +386,7 @@
       channelName(channel) {
         return `${channel.name} (${channel.id})`;
       },
-      // eslint-disable-next-line kolibri/vue-no-unused-methods
+      // eslint-disable-next-line kolibri/vue-no-unused-methods, vue/no-unused-properties
       onValidationFailed() {
         // Scroll to error banner
         if (this.$refs.form.scrollIntoView) {
@@ -361,7 +394,7 @@
         }
       },
 
-      // eslint-disable-next-line kolibri/vue-no-unused-methods
+      // eslint-disable-next-line kolibri/vue-no-unused-methods, vue/no-unused-properties
       onSubmit(formData) {
         // Convert list-based fields to comma-separated string
         // Can use commas as storage email needs to be in English
@@ -471,8 +504,24 @@
 
 
 <style scoped>
+
   h3 {
     margin-top: 32px;
     margin-bottom: 8px;
   }
+
+  .license-link {
+    font-size: 14px;
+  }
+
+  /* fixes unintended margin caused by KDS styles */
+  .license-link ::v-deep span {
+    margin-left: 0 !important;
+  }
+
+  .license-description {
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+
 </style>

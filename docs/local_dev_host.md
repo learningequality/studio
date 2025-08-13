@@ -2,6 +2,8 @@
 
 This guide will walk through setting up Kolibri Studio for local development, where you'll run Studio's Python apps and all of Studio's services on your host machine, without the need for docker.
 
+**Note:** If you are developing on Windows, it is recommended to use WSL (Windows Subsystem for Linux). Please follow the [WSL setup guide](./local_dev_wsl.md) for detailed instructions.
+
 ## Prerequisites
 - [volta](https://docs.volta.sh/guide/getting-started)
 - [pyenv](https://kolibri-dev.readthedocs.io/en/develop/howtos/installing_pyenv.html) and [pyenv-virtualenv](https://github.com/pyenv/pyenv-virtualenv#installation)
@@ -17,20 +19,20 @@ Studio requires some background services to be running:
 ```bash
 # Install packages
 sudo apt-get install -y python-tk \
-    postgresql-server-dev-all postgresql-contrib postgresql-client postgresql-12 \
+    postgresql-server-dev-all postgresql-contrib postgresql-client postgresql-16 \
     ffmpeg libmagickwand-dev redis-server wkhtmltopdf
 
 # Install minio
-wget https://dl.minio.io/server/minio/release/linux-amd64/archive/minio.RELEASE.2020-06-01T17-28-03Z -O bin/minio
+wget https://dl.minio.io/server/minio/release/linux-amd64/minio -O bin/minio
 sudo chmod +x bin/minio
 ```
 
 ### Mac OS
 ```bash
-brew install postgresql@12 redis ffmpeg imagemagick@6 gs
+brew install postgresql@16 redis ffmpeg imagemagick@6 gs
 # note, this version of minio may not be compatible with Studio
 brew install minio/stable/minio
-brew link --force postgresql@12
+brew link --force postgresql@16
 brew link --force imagemagick@6
 ```
 
@@ -44,7 +46,7 @@ Make sure postgres is running:
 
 ```bash
 service postgresql start
-# alternatively: pg_ctl -D /usr/local/var/postgresql@12 start
+# alternatively: pg_ctl -D /usr/local/var/postgresql@16 start
 ```
 
 Start the client with:
@@ -71,7 +73,6 @@ Press <kbd>Ctrl</kbd>+<kbd>D</kbd> to exit the `psql` client. Finally
 ```bash
 exit  # leave the postgres account
 ```
-
 
 ## Build your python virtual environment
 To determine what version of Python studio needs, you can check the `runtime.txt` file:
@@ -100,7 +101,7 @@ pyenv deactivate
 ```
 
 ### A note about `psycopg2`
-The packages `postgresql-12`, `postgresql-contrib`, and `postgresql-server-dev-all` are required to build `psycopg2` python driver.
+The packages `postgresql-16`, `postgresql-contrib`, and `postgresql-server-dev-all` are required to build `psycopg2` python driver.
 
 ### A note about dependencies on Apple Silicon M1+
 If you run into an error with `pip install` related to the `grcpio` package, it is because it currently [does not support M1 with the version for `grcpio` Studio uses](https://github.com/grpc/grpc/issues/25082). In order to fix it, you will need to add the following environmental variables before running `pip install`:
@@ -112,38 +113,34 @@ export LDFLAGS="-L/opt/homebrew/opt/openssl/lib"
 ```
 
 ## Install frontend dependencies
-Ready the version of node.js supported by Studio, and install yarn.
+The project requires `Node 20.X` as the runtime and `pnpm` as the package manager. We make use of [`Volta`](https://docs.volta.sh/guide/getting-started) to manage the same automatically. Please make sure you have volta installed and your shell configured to use volta. You can then install all the dependencies by running:
 ```bash
-volta install node@16
-volta install yarn
-```
-Then you can install frontend dependencies
-```bash
-yarn install
+corepack use pnpm # or `volta install pnpm`
+pnpm install
 ```
 
 ## Run the services
 
-Having installed all the necessary services, initialized your python virtual environment, and installed `yarn`, you're now ready to start the services. Generally speaking, you'll want to open a separate terminal/terminal-tab to run the services. The following will ensure all services are started, in addition to starting the celery workers service:
+Having installed all the necessary services, initialized your python virtual environment, and installed `pnpm`, you're now ready to start the services. Generally speaking, you'll want to open a separate terminal/terminal-tab to run the services. The following will ensure all services are started, in addition to starting the celery workers service:
 ```bash
-yarn run services
+pnpm run services
 ```
 
 ## Initializing Studio
 With the services running, in a separate terminal/terminal-tab, we can now initialize the database for Studio development purposes. The command below will initialize the database, in addition to adding a user account for development:
 ```bash
-yarn run devsetup
+pnpm run devsetup
 ```
 
 ## Running the development server
 With the services running, in a separate terminal/terminal-tab, and the database initialized, we can start the dev server:
 ```bash
-yarn run devserver:hot  # with Vue hot module reloading
+pnpm run devserver:hot  # with Vue hot module reloading
 # or
-yarn run devserver  # without hot module reloading
+pnpm run devserver  # without hot module reloading
 ```
 
-Either of the above commands will take a few minutes to build the frontend. When it's done, you can sign in with the account created by the `yarn run devsetup` command:
+Either of the above commands will take a few minutes to build the frontend. When it's done, you can sign in with the account created by the `pnpm run devsetup` command:
 - url: `http://localhost:8080/accounts/login/`
 - username: `a@a.com`
 - password: `a`

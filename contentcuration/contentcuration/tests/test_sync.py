@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import uuid
 
 from django.urls import reverse
@@ -38,7 +36,9 @@ class SyncTestCase(StudioTestCase):
 
     def setUp(self):
         super(SyncTestCase, self).setUpBase()
-        self.derivative_channel = Channel.objects.create(name="testchannel", actor_id=self.admin_user.id)
+        self.derivative_channel = Channel.objects.create(
+            name="testchannel", actor_id=self.admin_user.id
+        )
         self.channel.main_tree.copy_to(self.derivative_channel.main_tree)
         self.derivative_channel.main_tree.refresh_from_db()
         self.derivative_channel.save()
@@ -50,8 +50,8 @@ class SyncTestCase(StudioTestCase):
 
         # Put all nodes into a clean state so we can track when syncing
         # causes changes in the tree.
-        mark_all_nodes_as_published(self.channel)
-        mark_all_nodes_as_published(self.derivative_channel)
+        mark_all_nodes_as_published(self.channel.main_tree)
+        mark_all_nodes_as_published(self.derivative_channel.main_tree)
 
     def _add_temp_file_to_content_node(self, node):
         new_file = create_temp_file("mybytes")
@@ -130,10 +130,11 @@ class SyncTestCase(StudioTestCase):
         """
         Tests whether sync_files remove additional files from the copied node or not.
         """
-        video_node = (self.channel.main_tree.get_descendants()
-                      .filter(kind_id=content_kinds.VIDEO)
-                      .first()
-                      )
+        video_node = (
+            self.channel.main_tree.get_descendants()
+            .filter(kind_id=content_kinds.VIDEO)
+            .first()
+        )
         video_node_copy = self.derivative_channel.main_tree.get_descendants().get(
             source_node_id=video_node.node_id
         )
@@ -149,7 +150,9 @@ class SyncTestCase(StudioTestCase):
         self.assertEqual(video_node.files.count(), video_node_copy.files.count())
 
         for file in File.objects.filter(contentnode=video_node.id):
-            self.assertTrue(video_node_copy.files.filter(checksum=file.checksum).exists())
+            self.assertTrue(
+                video_node_copy.files.filter(checksum=file.checksum).exists()
+            )
 
     def test_sync_assessment_item_add(self):
         """
@@ -222,29 +225,21 @@ class SyncTestCase(StudioTestCase):
         )
 
         self.assertIsNotNone(target_child)
-        self.assertEqual(
-            target_child.tags.count(), contentnode.tags.count()
-        )
+        self.assertEqual(target_child.tags.count(), contentnode.tags.count())
 
         tag = ContentTag.objects.create(tag_name="tagname")
 
         contentnode.tags.add(tag)
 
-        self.assertNotEqual(
-            target_child.tags.count(), contentnode.tags.count()
-        )
+        self.assertNotEqual(target_child.tags.count(), contentnode.tags.count())
 
         sync_channel(self.derivative_channel, sync_resource_details=True)
         self.derivative_channel.main_tree.refresh_from_db()
 
-        self.assertEqual(
-            target_child.tags.count(), contentnode.tags.count()
-        )
+        self.assertEqual(target_child.tags.count(), contentnode.tags.count())
 
         self.assertEqual(
-            target_child.tags.filter(
-                tag_name=tag.tag_name
-            ).count(),
+            target_child.tags.filter(tag_name=tag.tag_name).count(),
             1,
         )
 
@@ -269,9 +264,7 @@ class SyncTestCase(StudioTestCase):
         )
 
         self.assertIsNotNone(target_child)
-        self.assertEqual(
-            target_child.tags.count(), contentnode.tags.count()
-        )
+        self.assertEqual(target_child.tags.count(), contentnode.tags.count())
 
         # Create the same tag twice
         ContentTag.objects.create(tag_name="tagname")
@@ -280,23 +273,19 @@ class SyncTestCase(StudioTestCase):
 
         contentnode.tags.add(tag)
 
-        self.assertNotEqual(
-            target_child.tags.count(), contentnode.tags.count()
-        )
+        self.assertNotEqual(target_child.tags.count(), contentnode.tags.count())
         try:
             sync_channel(self.derivative_channel, sync_resource_details=True)
         except Exception as e:
-            self.fail("Could not run sync_channel without raising exception: {}".format(e))
+            self.fail(
+                "Could not run sync_channel without raising exception: {}".format(e)
+            )
         self.derivative_channel.main_tree.refresh_from_db()
 
-        self.assertEqual(
-            target_child.tags.count(), contentnode.tags.count()
-        )
+        self.assertEqual(target_child.tags.count(), contentnode.tags.count())
 
         self.assertEqual(
-            target_child.tags.filter(
-                tag_name=tag.tag_name
-            ).count(),
+            target_child.tags.filter(tag_name=tag.tag_name).count(),
             1,
         )
 
@@ -361,7 +350,9 @@ class SyncTestCase(StudioTestCase):
             .first()
         )
 
-        special_permissions_license = License.objects.get(license_name="Special Permissions")
+        special_permissions_license = License.objects.get(
+            license_name="Special Permissions"
+        )
 
         contentnode.license = special_permissions_license
         contentnode.license_description = "You cannot use this content on a Thursday"
@@ -381,8 +372,13 @@ class SyncTestCase(StudioTestCase):
         )
 
         self.assertEqual(target_child.license, special_permissions_license)
-        self.assertEqual(target_child.license_description, "You cannot use this content on a Thursday")
-        self.assertEqual(target_child.copyright_holder, "Thursday's child has far to go")
+        self.assertEqual(
+            target_child.license_description,
+            "You cannot use this content on a Thursday",
+        )
+        self.assertEqual(
+            target_child.copyright_holder, "Thursday's child has far to go"
+        )
 
     def test_sync_channel_other_metadata_labels(self):
         """
@@ -445,7 +441,8 @@ class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):
     def _get_assessmentitem_metadata(self, assessment_id=None, contentnode_id=None):
         return {
             "assessment_id": assessment_id or uuid.uuid4().hex,
-            "contentnode_id": contentnode_id or self.channel.main_tree.get_descendants()
+            "contentnode_id": contentnode_id
+            or self.channel.main_tree.get_descendants()
             .filter(kind_id=content_kinds.EXERCISE)
             .first()
             .id,
@@ -458,6 +455,7 @@ class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):
             "name": "le_studio_file",
             "file_format": file_formats.MP3,
             "preset": format_presets.AUDIO,
+            "duration": 17,
         }
 
     def _upload_file_to_contentnode(self, file_metadata=None, contentnode_id=None):
@@ -468,16 +466,25 @@ class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):
         to point to the contentnode.
         """
         file = file_metadata or self._get_file_metadata()
-        self.client.post(reverse("file-upload-url"), file, format="json",)
+        self.client.post(
+            reverse("file-upload-url"),
+            file,
+            format="json",
+        )
         file_from_db = File.objects.get(checksum=file["checksum"])
         self.sync_changes(
-            [generate_update_event(
-                file_from_db.id,
-                FILE,
-                {
-                    "contentnode": contentnode_id or self.channel.main_tree.get_descendants().first().id
-                },
-                channel_id=self.channel.id)],)
+            [
+                generate_update_event(
+                    file_from_db.id,
+                    FILE,
+                    {
+                        "contentnode": contentnode_id
+                        or self.channel.main_tree.get_descendants().first().id
+                    },
+                    channel_id=self.channel.id,
+                )
+            ],
+        )
         file_from_db.refresh_from_db()
         return file_from_db
 
@@ -495,19 +502,29 @@ class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):
 
     def test_content_id__becomes_equal_on_channel_sync_assessment_item(self):
         # Make a copy of an existing assessmentitem contentnode.
-        assessmentitem_node = self.channel.main_tree.get_descendants().filter(kind_id=content_kinds.EXERCISE).first()
-        assessmentitem_node_copy = assessmentitem_node.copy_to(target=self.channel.main_tree)
+        assessmentitem_node = (
+            self.channel.main_tree.get_descendants()
+            .filter(kind_id=content_kinds.EXERCISE)
+            .first()
+        )
+        assessmentitem_node_copy = assessmentitem_node.copy_to(
+            target=self.channel.main_tree
+        )
 
         # Create a new assessmentitem.
         self._create_assessmentitem(
-            assessmentitem=self._get_assessmentitem_metadata(contentnode_id=assessmentitem_node_copy.id),
-            channel_id=self.channel.id
+            assessmentitem=self._get_assessmentitem_metadata(
+                contentnode_id=assessmentitem_node_copy.id
+            ),
+            channel_id=self.channel.id,
         )
 
         # Assert after creating a new assessmentitem on copied node, it's content_id is changed.
         assessmentitem_node.refresh_from_db()
         assessmentitem_node_copy.refresh_from_db()
-        self.assertNotEqual(assessmentitem_node.content_id, assessmentitem_node_copy.content_id)
+        self.assertNotEqual(
+            assessmentitem_node.content_id, assessmentitem_node_copy.content_id
+        )
 
         # Syncs channel.
         self.channel.main_tree.refresh_from_db()
@@ -520,7 +537,9 @@ class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):
         # Now after syncing the original and copied node should have same content_id.
         assessmentitem_node.refresh_from_db()
         assessmentitem_node_copy.refresh_from_db()
-        self.assertEqual(assessmentitem_node.content_id, assessmentitem_node_copy.content_id)
+        self.assertEqual(
+            assessmentitem_node.content_id, assessmentitem_node_copy.content_id
+        )
 
     def test_content_id__becomes_equal_on_channel_sync_file(self):
         file = self._upload_file_to_contentnode()
@@ -532,7 +551,9 @@ class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):
         # Assert after new file upload, content_id changes.
         file.contentnode.refresh_from_db()
         file_contentnode_copy.refresh_from_db()
-        self.assertNotEqual(file.contentnode.content_id, file_contentnode_copy.content_id)
+        self.assertNotEqual(
+            file.contentnode.content_id, file_contentnode_copy.content_id
+        )
 
         # Syncs channel.
         self.channel.main_tree.refresh_from_db()

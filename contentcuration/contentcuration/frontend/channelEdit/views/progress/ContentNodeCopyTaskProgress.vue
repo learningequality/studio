@@ -1,6 +1,6 @@
 <template>
 
-  <div :style="{ 'cursor': copying && !hasCopyingErrored ? 'progress' : 'default' }">
+  <div :style="{ cursor: copying && !hasCopyingErrored ? 'progress' : 'default' }">
     <VProgressCircular
       v-if="copying && !hasCopyingErrored"
       indeterminate
@@ -13,7 +13,10 @@
       lazy
     >
       <template #activator="{ on }">
-        <VIconWrapper color="red" v-on="on">
+        <VIconWrapper
+          color="red"
+          v-on="on"
+        >
           error
         </VIconWrapper>
       </template>

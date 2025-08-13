@@ -6,38 +6,38 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contentcuration', '0134_alter_contentkind_kind'),
+        ("contentcuration", "0134_alter_contentkind_kind"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='contentnode',
-            name='accessibility_labels',
+            model_name="contentnode",
+            name="accessibility_labels",
             field=models.JSONField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='contentnode',
-            name='categories',
+            model_name="contentnode",
+            name="categories",
             field=models.JSONField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='contentnode',
-            name='grade_levels',
+            model_name="contentnode",
+            name="grade_levels",
             field=models.JSONField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='contentnode',
-            name='learner_needs',
+            model_name="contentnode",
+            name="learner_needs",
             field=models.JSONField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='contentnode',
-            name='learning_activities',
+            model_name="contentnode",
+            name="learning_activities",
             field=models.JSONField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='contentnode',
-            name='resource_types',
+            model_name="contentnode",
+            name="resource_types",
             field=models.JSONField(blank=True, null=True),
         ),
     ]

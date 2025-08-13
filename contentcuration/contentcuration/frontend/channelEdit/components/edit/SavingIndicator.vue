@@ -2,8 +2,16 @@
 
   <div class="mx-2">
     <template v-if="hasChanges">
-      <VProgressCircular indeterminate size="16" width="2" color="loading" />
-      <span class="mx-2" style="vertical-align: middle;">
+      <VProgressCircular
+        indeterminate
+        size="16"
+        width="2"
+        color="loading"
+      />
+      <span
+        class="mx-2"
+        style="vertical-align: middle"
+      >
         {{ $tr('savingIndicator') }}
       </span>
     </template>
@@ -13,6 +21,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -103,6 +112,5 @@
 
 </script>
 
-<style lang="less" scoped>
 
-</style>
+<style lang="scss" scoped></style>

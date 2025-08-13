@@ -55,11 +55,12 @@
           showContextMenu: this.showContextMenu,
           positionX: this.x,
           positionY: this.y,
-        }
+        },
       );
     },
   };
 
 </script>
+
 
 <style scoped></style>

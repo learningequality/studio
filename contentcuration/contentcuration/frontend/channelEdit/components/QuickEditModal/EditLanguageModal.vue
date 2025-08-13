@@ -1,18 +1,24 @@
 <template>
 
   <KModal
+    ref="modal"
     :title="$tr('editLanguage')"
     :submitText="$tr('saveAction')"
     :cancelText="$tr('cancelAction')"
-    data-test="edit-language-modal"
     :submitDisabled="!selectedLanguage"
     @submit="handleSave"
     @cancel="close"
   >
-    <p v-if="resourcesSelectedText.length > 0" data-test="resources-selected-message">
+    <p
+      v-if="resourcesSelectedText.length > 0"
+      data-test="resources-selected-message"
+    >
       {{ resourcesSelectedText }}
     </p>
-    <p v-if="isMultipleNodeLanguages" data-test="different-languages-message">
+    <p
+      v-if="isMultipleNodeLanguages"
+      data-test="different-languages-message"
+    >
       {{ $tr('differentLanguages') }}
     </p>
     <KTextbox
@@ -27,7 +33,11 @@
         :checked="updateDescendants"
         data-test="update-descendants-checkbox"
         :label="$tr('updateDescendantsCheckbox')"
-        @change="(value) => { updateDescendants = value }"
+        @change="
+          value => {
+            updateDescendants = value;
+          }
+        "
       />
       <Divider />
     </template>
@@ -36,14 +46,17 @@
       class="languages-options"
       data-test="language-options-list"
     >
-      <KRadioButton
-        v-for="language in languageOptions"
-        :key="language.id"
-        v-model="selectedLanguage"
-        :buttonValue="language.id"
-        :label="languageText(language)"
-        :labelDir="null"
-      />
+      <KRadioButtonGroup>
+        <KRadioButton
+          v-for="language in languageOptions"
+          :key="language.id"
+          :ref="`radioLanguage_${language.id}`"
+          v-model="selectedLanguage"
+          :buttonValue="language.id"
+          :label="languageText(language)"
+          :labelDir="null"
+        />
+      </KRadioButtonGroup>
       <p
         v-if="!languageOptions.length"
         :style="{ color: $themeTokens.annotation }"
@@ -99,7 +112,7 @@
         }
         const criteria = ['id', 'native_name', 'readable_name'];
         return LanguagesList.filter(lang =>
-          criteria.some(key => lang[key] && lang[key].toLowerCase().includes(searchQuery))
+          criteria.some(key => lang[key] && lang[key].toLowerCase().includes(searchQuery)),
         );
       },
     },
@@ -123,7 +136,7 @@
       if (this.selectedLanguage) {
         // Search for the selected KRadioButton and scroll to it
         const selectedInput = this.$refs.languages.querySelector(
-          `input[value="${this.selectedLanguage}"]`
+          `input[value="${this.selectedLanguage}"]`,
         );
         const selectedRadio = selectedInput && selectedInput.parentElement;
         if (selectedRadio && selectedRadio.scrollIntoView) {
@@ -162,11 +175,14 @@
               id: node.id,
               language: this.selectedLanguage,
             });
-          })
+          }),
         );
         /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
-        this.$store.dispatch('showSnackbarSimple', commonStrings.$tr('changesSaved'));
+        await this.showSnackbarSimple(commonStrings.$tr('changesSaved'));
         this.close(this.changed);
+      },
+      showSnackbarSimple(message) {
+        return this.$store.dispatch('showSnackbarSimple', message);
       },
     },
     $trs: {
@@ -185,9 +201,12 @@
 
 </script>
 
+
 <style scoped>
+
   .languages-options {
     height: 250px;
     overflow-y: auto;
   }
+
 </style>

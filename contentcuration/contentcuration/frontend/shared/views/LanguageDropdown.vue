@@ -27,13 +27,19 @@
         @focus="$emit('focus')"
       >
         <template #item="{ item }">
-          <VTooltip bottom lazy>
+          <VTooltip
+            bottom
+            lazy
+          >
             <template #activator="{ on }">
-              <span class="text-truncate" dir="auto" v-on="on">{{ languageText(item) }}</span>
+              <span
+                class="text-truncate"
+                dir="auto"
+                v-on="on"
+              >{{ languageText(item) }}</span>
             </template>
             <span>{{ languageText(item) }}</span>
           </VTooltip>
-
         </template>
       </VAutocomplete>
     </template>
@@ -57,7 +63,7 @@
       value: {
         type: [String, Array, Object],
         required: false,
-        validator: function(value) {
+        validator: function (value) {
           if (typeof value === 'string') {
             return !value || Languages.has(value);
           } else if (isArray(value)) {
@@ -122,15 +128,15 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  /deep/ .v-select__selections {
+  ::v-deep .v-select__selections {
     width: calc(100% - 48px);
     min-height: 0 !important;
   }
 
   .v-chip,
-  /deep/ .v-chip__content,
+  ::v-deep .v-chip__content,
   .text-truncate {
     max-width: 100%;
   }

@@ -6,15 +6,19 @@
 #
 amqp==5.1.1
     # via kombu
+annotated-types==0.7.0
+    # via pydantic
 asgiref==3.3.4
     # via django
-async-timeout==4.0.2
+async-timeout==5.0.1
     # via redis
 attrs==23.1.0
-    # via jsonschema
+    # via
+    #   jsonschema
+    #   referencing
 backoff==2.2.1
     # via -r requirements.in
-billiard==3.6.4.0
+billiard==4.2.1
     # via celery
 boto3==1.17.75
     # via django-s3-storage
@@ -24,7 +28,7 @@ botocore==1.20.75
     #   s3transfer
 cachetools==4.2.2
     # via google-auth
-celery==5.2.7
+celery==5.5.3
     # via
     #   -r requirements.in
     #   django-celery-results
@@ -32,8 +36,6 @@ certifi==2020.12.5
     # via
     #   requests
     #   sentry-sdk
-cffi==1.14.5
-    # via google-crc32c
 charset-normalizer==3.3.2
     # via requests
 click==8.1.3
@@ -53,6 +55,7 @@ confusable-homoglyphs==3.2.0
 django==3.2.24
     # via
     #   -r requirements.in
+    #   django-celery-results
     #   django-db-readonly
     #   django-filter
     #   django-js-reverse
@@ -62,9 +65,9 @@ django==3.2.24
     #   django-s3-storage
     #   djangorestframework
     #   jsonfield
-django-celery-results==2.4.0
+django-celery-results==2.5.1
     # via -r requirements.in
-django-cte==1.3.2
+django-cte==1.3.3
     # via -r requirements.in
 django-db-readonly==0.7.0
     # via -r requirements.in
@@ -72,13 +75,11 @@ django-filter==23.5
     # via -r requirements.in
 django-js-asset==1.2.2
     # via django-mptt
-django-js-reverse==0.9.1
+django-js-reverse==0.10.2
     # via -r requirements.in
-django-mathfilters==1.0.0
+django-model-utils==5.0.0
     # via -r requirements.in
-django-model-utils==4.5.1
-    # via -r requirements.in
-django-mptt==0.14.0
+django-mptt==0.16.0
     # via -r requirements.in
 django-postmark==0.1.6
     # via -r requirements.in
@@ -88,13 +89,11 @@ django-redis==5.4.0
     # via -r requirements.in
 django-registration==3.4
     # via -r requirements.in
-django-s3-storage==0.14.0
+django-s3-storage==0.15.0
     # via -r requirements.in
 django-webpack-loader==0.7.0
     # via -r requirements.in
 djangorestframework==3.15.1
-    # via -r requirements.in
-future==0.18.3
     # via -r requirements.in
 google-api-core[grpc]==1.27.0
     # via
@@ -120,7 +119,7 @@ google-cloud-logging==2.3.1
     # via google-cloud-error-reporting
 google-cloud-storage==1.41.1
     # via -r requirements.in
-google-crc32c==1.1.2
+google-crc32c==1.7.1
     # via
     #   -r requirements.in
     #   google-resumable-media
@@ -137,7 +136,7 @@ grpcio==1.53.2
     #   google-api-core
     #   googleapis-common-protos
     #   grpc-google-iam-v1
-gunicorn==20.1.0
+gunicorn==23.0.0
     # via -r requirements.in
 html5lib==1.1
     # via -r requirements.in
@@ -151,19 +150,35 @@ jmespath==0.10.0
     #   botocore
 jsonfield==3.1.0
     # via -r requirements.in
-jsonschema==4.17.3
+jsonschema==4.25.0
     # via -r requirements.in
-kombu==5.2.4
+jsonschema-specifications==2024.10.1
+    # via jsonschema
+kombu==5.5.2
     # via celery
-le-utils==0.2.10
+langcodes==3.5.0
     # via -r requirements.in
-packaging==24.0
+language-data==1.3.0
+    # via langcodes
+latex2mathml==3.78.0
+    # via -r requirements.in
+le-utils==0.2.12
+    # via -r requirements.in
+marisa-trie==1.2.1
+    # via language-data
+markdown-it-py==3.0.0
+    # via -r requirements.in
+mdurl==0.1.2
+    # via markdown-it-py
+packaging==25.0
     # via
     #   -r requirements.in
+    #   django-js-reverse
     #   google-api-core
     #   google-cloud-error-reporting
     #   google-cloud-kms
-pillow==10.3.0
+    #   gunicorn
+pillow==11.3.0
     # via -r requirements.in
 prometheus-client==0.10.1
     # via django-prometheus
@@ -174,12 +189,12 @@ proto-plus==1.18.1
     #   google-cloud-error-reporting
     #   google-cloud-kms
     #   google-cloud-logging
-protobuf==3.20.3
+protobuf==4.25.8
     # via
     #   google-api-core
     #   googleapis-common-protos
     #   proto-plus
-psycopg2-binary==2.9.5
+psycopg2-binary==2.9.10
     # via -r requirements.in
 pyasn1==0.4.8
     # via
@@ -187,38 +202,46 @@ pyasn1==0.4.8
     #   rsa
 pyasn1-modules==0.2.8
     # via google-auth
-pycparser==2.20
-    # via cffi
+pydantic==2.11.7
+    # via -r requirements.in
+pydantic-core==2.33.2
+    # via pydantic
 pyparsing==2.4.7
     # via httplib2
-pyrsistent==0.17.3
-    # via jsonschema
-python-dateutil==2.8.2
+python-dateutil==2.9.0.post0
     # via
     #   -r requirements.in
     #   botocore
-python-postmark==0.6.0
+    #   celery
+python-postmark==0.6.1
     # via -r requirements.in
 pytz==2022.1
     # via
-    #   celery
     #   django
     #   django-postmark
     #   google-api-core
-redis==4.5.4
+redis==6.4.0
     # via
     #   -r requirements.in
     #   django-redis
-requests==2.32.2
+referencing==0.36.2
+    # via
+    #   jsonschema
+    #   jsonschema-specifications
+requests==2.32.4
     # via
     #   -r requirements.in
     #   google-api-core
     #   google-cloud-storage
+rpds-py==0.24.0
+    # via
+    #   jsonschema
+    #   referencing
 rsa==4.7.2
     # via google-auth
 s3transfer==0.4.2
     # via boto3
-sentry-sdk==2.12.0
+sentry-sdk==2.34.1
     # via -r requirements.in
 six==1.16.0
     # via
@@ -231,12 +254,22 @@ six==1.16.0
     #   python-dateutil
 sqlparse==0.4.1
     # via django
+typing-extensions==4.13.0
+    # via
+    #   pydantic
+    #   pydantic-core
+    #   referencing
+    #   typing-inspection
+typing-inspection==0.4.1
+    # via pydantic
+tzdata==2025.2
+    # via kombu
 urllib3==1.26.18
     # via
     #   botocore
     #   requests
     #   sentry-sdk
-vine==5.0.0
+vine==5.1.0
     # via
     #   amqp
     #   celery

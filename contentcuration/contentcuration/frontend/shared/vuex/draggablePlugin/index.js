@@ -68,12 +68,12 @@ function DraggablePlugin(store) {
 
   let clientX, clientY;
   let addedDragOverListener = false;
-  const dragOverEventListener = function(e) {
+  const dragOverEventListener = function (e) {
     clientX = e.clientX;
     clientY = e.clientY;
   };
 
-  const cancelEventListener = function(e) {
+  const cancelEventListener = function (e) {
     if ('code' in e) {
       if (e.code !== 'Escape') {
         return;

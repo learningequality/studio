@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import uuid
 
 from django.urls import reverse
@@ -19,7 +17,6 @@ from contentcuration.viewsets.sync.constants import FILE
 
 
 class SyncTestCase(SyncTestMixin, StudioAPITestCase):
-
     @property
     def file_metadata(self):
         return {
@@ -66,8 +63,12 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         file2 = self.file_metadata
         response = self.sync_changes(
             [
-                generate_create_event(file1["id"], FILE, file1, channel_id=self.channel.id),
-                generate_create_event(file2["id"], FILE, file2, channel_id=self.channel.id),
+                generate_create_event(
+                    file1["id"], FILE, file1, channel_id=self.channel.id
+                ),
+                generate_create_event(
+                    file2["id"], FILE, file2, channel_id=self.channel.id
+                ),
             ],
         )
         self.assertEqual(len(response.data["errors"]), 2)
@@ -89,11 +90,16 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         new_preset = format_presets.VIDEO_HIGH_RES
 
         response = self.sync_changes(
-            [generate_update_event(file.id, FILE, {"preset": new_preset}, channel_id=self.channel.id)],
+            [
+                generate_update_event(
+                    file.id, FILE, {"preset": new_preset}, channel_id=self.channel.id
+                )
+            ],
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(
-            models.File.objects.get(id=file.id).preset_id, new_preset,
+            models.File.objects.get(id=file.id).preset_id,
+            new_preset,
         )
 
     def test_update_file_no_channel(self):
@@ -102,11 +108,19 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         file = models.File.objects.create(**file_metadata)
 
         response = self.sync_changes(
-            [generate_update_event(file.id, FILE, {"contentnode": contentnode_id}, channel_id=self.channel.id)],
+            [
+                generate_update_event(
+                    file.id,
+                    FILE,
+                    {"contentnode": contentnode_id},
+                    channel_id=self.channel.id,
+                )
+            ],
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(
-            models.File.objects.get(id=file.id).contentnode_id, contentnode_id,
+            models.File.objects.get(id=file.id).contentnode_id,
+            contentnode_id,
         )
 
     def test_update_file_with_complete_contentnode(self):
@@ -120,7 +134,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             parent=self.channel.main_tree,
             license_id=models.License.objects.first().id,
             license_description="don't do this!",
-            copyright_holder="Some person"
+            copyright_holder="Some person",
         )
         errors = complete_except_no_file.mark_complete()
         complete_except_no_file.save()
@@ -130,15 +144,19 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.assertEqual(complete_except_no_file.complete, False)
 
         self.sync_changes(
-            [generate_update_event(file.id, FILE, {"contentnode": complete_except_no_file.id}, channel_id=self.channel.id)],
+            [
+                generate_update_event(
+                    file.id,
+                    FILE,
+                    {"contentnode": complete_except_no_file.id},
+                    channel_id=self.channel.id,
+                )
+            ],
         )
 
         # We should see two Changes, one of them should be for the CONTENTNODE table
         self.assertEqual(models.Change.objects.count(), 2)
-        self.assertEqual(
-            models.Change.objects.filter(table=CONTENTNODE).count(),
-            1
-        )
+        self.assertEqual(models.Change.objects.filter(table=CONTENTNODE).count(), 1)
 
         complete_except_no_file.refresh_from_db()
 
@@ -151,11 +169,16 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.channel.editors.remove(self.user)
 
         response = self.sync_changes(
-            [generate_update_event(file.id, FILE, {"preset": new_preset}, channel_id=self.channel.id)],
+            [
+                generate_update_event(
+                    file.id, FILE, {"preset": new_preset}, channel_id=self.channel.id
+                )
+            ],
         )
         self.assertEqual(len(response.data["disallowed"]), 1)
         self.assertNotEqual(
-            models.File.objects.get(id=file.id).preset_id, new_preset,
+            models.File.objects.get(id=file.id).preset_id,
+            new_preset,
         )
 
     def test_update_file_no_channel_edit_permission(self):
@@ -166,11 +189,16 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.channel.viewers.add(self.user)
 
         response = self.sync_changes(
-            [generate_update_event(file.id, FILE, {"preset": new_preset}, channel_id=self.channel.id)],
+            [
+                generate_update_event(
+                    file.id, FILE, {"preset": new_preset}, channel_id=self.channel.id
+                )
+            ],
         )
         self.assertEqual(len(response.data["disallowed"]), 1)
         self.assertNotEqual(
-            models.File.objects.get(id=file.id).preset_id, new_preset,
+            models.File.objects.get(id=file.id).preset_id,
+            new_preset,
         )
 
     def test_update_file_no_node_permission(self):
@@ -179,10 +207,18 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         new_channel_node = new_channel.main_tree.get_descendants().first().id
 
         self.sync_changes(
-            [generate_update_event(file.id, FILE, {"contentnode": new_channel_node}, channel_id=self.channel.id)],
+            [
+                generate_update_event(
+                    file.id,
+                    FILE,
+                    {"contentnode": new_channel_node},
+                    channel_id=self.channel.id,
+                )
+            ],
         )
         self.assertNotEqual(
-            models.File.objects.get(id=file.id).contentnode, new_channel_node,
+            models.File.objects.get(id=file.id).contentnode,
+            new_channel_node,
         )
 
     def test_update_file_no_assessmentitem_permission(self):
@@ -196,10 +232,18 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         new_channel_assessmentitem = new_channel_exercise.assessment_items.first().id
 
         self.sync_changes(
-            [generate_update_event(file.id, FILE, {"assessment_item": new_channel_assessmentitem}, channel_id=self.channel.id)],
+            [
+                generate_update_event(
+                    file.id,
+                    FILE,
+                    {"assessment_item": new_channel_assessmentitem},
+                    channel_id=self.channel.id,
+                )
+            ],
         )
         self.assertNotEqual(
-            models.File.objects.get(id=file.id).assessment_item, new_channel_assessmentitem,
+            models.File.objects.get(id=file.id).assessment_item,
+            new_channel_assessmentitem,
         )
 
     def test_update_files(self):
@@ -210,29 +254,44 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
         response = self.sync_changes(
             [
-                generate_update_event(file1.id, FILE, {"preset": new_preset}, channel_id=self.channel.id),
-                generate_update_event(file2.id, FILE, {"preset": new_preset}, channel_id=self.channel.id),
+                generate_update_event(
+                    file1.id, FILE, {"preset": new_preset}, channel_id=self.channel.id
+                ),
+                generate_update_event(
+                    file2.id, FILE, {"preset": new_preset}, channel_id=self.channel.id
+                ),
             ],
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(
-            models.File.objects.get(id=file1.id).preset_id, new_preset,
+            models.File.objects.get(id=file1.id).preset_id,
+            new_preset,
         )
         self.assertEqual(
-            models.File.objects.get(id=file2.id).preset_id, new_preset,
+            models.File.objects.get(id=file2.id).preset_id,
+            new_preset,
         )
 
     def test_update_file_empty(self):
 
         file = models.File.objects.create(**self.file_db_metadata)
-        response = self.sync_changes([generate_update_event(file.id, FILE, {}, channel_id=self.channel.id)])
+        response = self.sync_changes(
+            [generate_update_event(file.id, FILE, {}, channel_id=self.channel.id)]
+        )
         self.assertEqual(response.status_code, 200, response.content)
 
     def test_update_file_unwriteable_fields(self):
 
         file = models.File.objects.create(**self.file_db_metadata)
         response = self.sync_changes(
-            [generate_update_event(file.id, FILE, {"not_a_field": "not_a_value"}, channel_id=self.channel.id)],
+            [
+                generate_update_event(
+                    file.id,
+                    FILE,
+                    {"not_a_field": "not_a_value"},
+                    channel_id=self.channel.id,
+                )
+            ],
         )
         self.assertEqual(response.status_code, 200, response.content)
 
@@ -241,7 +300,9 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         file = models.File.objects.create(**self.file_db_metadata)
 
         self.client.force_authenticate(user=self.user)
-        response = self.sync_changes([generate_delete_event(file.id, FILE, channel_id=self.channel.id)])
+        response = self.sync_changes(
+            [generate_delete_event(file.id, FILE, channel_id=self.channel.id)]
+        )
         self.assertEqual(response.status_code, 200, response.content)
         try:
             models.File.objects.get(id=file.id)
@@ -307,7 +368,11 @@ class CRUDTestCase(StudioAPITestCase):
     def test_cannot_create_file(self):
         self.client.force_authenticate(user=self.user)
         file = self.file_metadata
-        response = self.client.post(reverse("file-list"), file, format="json",)
+        response = self.client.post(
+            reverse("file-list"),
+            file,
+            format="json",
+        )
         self.assertEqual(response.status_code, 405, response.content)
         try:
             models.File.objects.get(id=file["id"])
@@ -345,25 +410,94 @@ class UploadFileURLTestCase(StudioAPITestCase):
             "name": "le_studio",
             "file_format": file_formats.MP3,
             "preset": format_presets.AUDIO,
-            "duration": 10.123
+            "duration": 10.123,
         }
 
     def test_required_keys(self):
         del self.file["name"]
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("file-upload-url"),
+            self.file,
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_duration_invalid(self):
+        self.file["duration"] = "1.23"
 
         self.client.force_authenticate(user=self.user)
         response = self.client.post(
-            reverse("file-upload-url"), self.file, format="json",
+            reverse("file-upload-url"),
+            self.file,
+            format="json",
         )
 
         self.assertEqual(response.status_code, 400)
 
-    def test_duration_invalid(self):
-        self.file["duration"] = '1.23'
+    def test_duration_missing(self):
+        del self.file["duration"]
+        self.file["file_format"] = file_formats.EPUB
+        self.file["preset"] = format_presets.EPUB
 
         self.client.force_authenticate(user=self.user)
         response = self.client.post(
-            reverse("file-upload-url"), self.file, format="json",
+            reverse("file-upload-url"),
+            self.file,
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_duration_missing_but_required(self):
+        del self.file["duration"]
+        self.file["file_format"] = file_formats.MP4
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("file-upload-url"),
+            self.file,
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_duration_present_but_not_allowed(self):
+        self.file["file_format"] = file_formats.EPUB
+        self.file["preset"] = format_presets.DOCUMENT
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("file-upload-url"),
+            self.file,
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_duration_null(self):
+        self.file["duration"] = None
+        self.file["file_format"] = file_formats.EPUB
+        self.file["preset"] = format_presets.EPUB
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("file-upload-url"),
+            self.file,
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_duration_null_but_required(self):
+        self.file["duration"] = None
+        self.file["file_format"] = file_formats.MP4
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("file-upload-url"),
+            self.file,
+            format="json",
         )
 
         self.assertEqual(response.status_code, 400)
@@ -376,10 +510,36 @@ class UploadFileURLTestCase(StudioAPITestCase):
             "name": "le_studio",
             "file_format": "ppx",
             "preset": format_presets.AUDIO,
-            "duration": 10.123
+            "duration": 10.123,
         }
         response = self.client.post(
-            reverse("file-upload-url"), file, format="json",
+            reverse("file-upload-url"),
+            file,
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_invalid_preset_upload(self):
+        self.client.force_authenticate(user=self.user)
+        file = {
+            "size": 1000,
+            "checksum": uuid.uuid4().hex,
+            "name": "le_studio",
+            "file_format": file_formats.MP3,
+            "preset": "invalid_preset",  # Deliberately invalid
+            "duration": 10.123,
+        }
+        response = self.client.post(reverse("file-upload-url"), file, format="json")
+        self.assertEqual(response.status_code, 400)
+
+    def test_mismatched_preset_upload(self):
+        self.file["file_format"] = file_formats.EPUB
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("file-upload-url"),
+            self.file,
+            format="json",
         )
 
         self.assertEqual(response.status_code, 400)
@@ -388,20 +548,32 @@ class UploadFileURLTestCase(StudioAPITestCase):
         self.file["size"] = 100000000000000
 
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(reverse("file-upload-url"), self.file, format="json",)
+        response = self.client.post(
+            reverse("file-upload-url"),
+            self.file,
+            format="json",
+        )
 
         self.assertEqual(response.status_code, 412)
 
     def test_upload_url(self):
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(reverse("file-upload-url"), self.file, format="json",)
+        response = self.client.post(
+            reverse("file-upload-url"),
+            self.file,
+            format="json",
+        )
         self.assertEqual(response.status_code, 200)
         file = models.File.objects.get(checksum=self.file["checksum"])
         self.assertEqual(10, file.duration)
 
     def test_upload_url_doesnot_sets_contentnode(self):
         self.client.force_authenticate(user=self.user)
-        response = self.client.post(reverse("file-upload-url"), self.file, format="json",)
+        response = self.client.post(
+            reverse("file-upload-url"),
+            self.file,
+            format="json",
+        )
         file = models.File.objects.get(checksum=self.file["checksum"])
         self.assertEqual(response.status_code, 200)
         self.assertEqual(file.contentnode, None)
@@ -411,7 +583,9 @@ class UploadFileURLTestCase(StudioAPITestCase):
 
         self.client.force_authenticate(user=self.user)
         response = self.client.post(
-            reverse("file-upload-url"), self.file, format="json",
+            reverse("file-upload-url"),
+            self.file,
+            format="json",
         )
 
         self.assertEqual(response.status_code, 400)
@@ -432,6 +606,7 @@ class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):
             "name": "le_studio_file",
             "file_format": file_formats.MP3,
             "preset": format_presets.AUDIO,
+            "duration": 17,
         }
 
     def _upload_file_to_contentnode(self, file_metadata=None, contentnode_id=None):
@@ -442,23 +617,34 @@ class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):
         to point to the contentnode.
         """
         file = file_metadata or self._get_file_metadata()
-        self.client.post(reverse("file-upload-url"), file, format="json",)
+        self.client.post(
+            reverse("file-upload-url"),
+            file,
+            format="json",
+        )
         file_from_db = models.File.objects.get(checksum=file["checksum"])
         self.sync_changes(
-            [generate_update_event(
-                file_from_db.id,
-                FILE,
-                {
-                    "contentnode": contentnode_id or self.channel.main_tree.get_descendants().first().id
-                },
-                channel_id=self.channel.id)],)
+            [
+                generate_update_event(
+                    file_from_db.id,
+                    FILE,
+                    {
+                        "contentnode": contentnode_id
+                        or self.channel.main_tree.get_descendants().first().id
+                    },
+                    channel_id=self.channel.id,
+                )
+            ],
+        )
         file_from_db.refresh_from_db()
         return file_from_db
 
     def _delete_file_from_contentnode(self, file_from_db):
         self.sync_changes(
             [
-                generate_delete_event(file_from_db.id, FILE, channel_id=self.channel.id),
+                generate_delete_event(
+                    file_from_db.id, FILE, channel_id=self.channel.id
+                ),
             ],
         )
 
@@ -481,19 +667,25 @@ class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):
         # Assert after new file upload, content_id changes.
         file.contentnode.refresh_from_db()
         file_contentnode_copy.refresh_from_db()
-        self.assertNotEqual(file.contentnode.content_id, file_contentnode_copy.content_id)
+        self.assertNotEqual(
+            file.contentnode.content_id, file_contentnode_copy.content_id
+        )
 
     def test_content_id__changes_on_delete_file_from_node(self):
         file = self._upload_file_to_contentnode()
         file_contentnode_copy = file.contentnode.copy_to(target=self.channel.main_tree)
 
         # Delete file from the copied contentnode.
-        self._delete_file_from_contentnode(file_from_db=file_contentnode_copy.files.first())
+        self._delete_file_from_contentnode(
+            file_from_db=file_contentnode_copy.files.first()
+        )
 
         # Assert after deleting file, content_id changes.
         file.contentnode.refresh_from_db()
         file_contentnode_copy.refresh_from_db()
-        self.assertNotEqual(file.contentnode.content_id, file_contentnode_copy.content_id)
+        self.assertNotEqual(
+            file.contentnode.content_id, file_contentnode_copy.content_id
+        )
 
     def test_content_id__doesnot_changes_on_update_original_file_node(self):
         file = self._upload_file_to_contentnode()
@@ -532,15 +724,31 @@ class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):
 
         thumbnail_file_meta_1 = self._get_file_metadata()
         thumbnail_file_meta_2 = self._get_file_metadata()
-        thumbnail_file_meta_1.update({"preset": format_presets.AUDIO_THUMBNAIL, "file_format": file_formats.JPEG, })
-        thumbnail_file_meta_2.update({"preset": format_presets.AUDIO_THUMBNAIL, "file_format": file_formats.JPEG, })
+        thumbnail_file_meta_1.update(
+            {
+                "preset": format_presets.AUDIO_THUMBNAIL,
+                "file_format": file_formats.JPEG,
+            }
+        )
+        del thumbnail_file_meta_1["duration"]
+        thumbnail_file_meta_2.update(
+            {
+                "preset": format_presets.AUDIO_THUMBNAIL,
+                "file_format": file_formats.JPEG,
+            }
+        )
+        del thumbnail_file_meta_2["duration"]
 
         # Upload thumbnail to original contentnode and copied contentnode.
         # content_id should remain same for both these nodes.
         original_node_content_id_before_upload = file.contentnode.content_id
         copied_node_content_id_before_upload = file_contentnode_copy.content_id
-        self._upload_file_to_contentnode(file_metadata=thumbnail_file_meta_1, contentnode_id=file.contentnode.id)
-        self._upload_file_to_contentnode(file_metadata=thumbnail_file_meta_2, contentnode_id=file_contentnode_copy.id)
+        self._upload_file_to_contentnode(
+            file_metadata=thumbnail_file_meta_1, contentnode_id=file.contentnode.id
+        )
+        self._upload_file_to_contentnode(
+            file_metadata=thumbnail_file_meta_2, contentnode_id=file_contentnode_copy.id
+        )
 
         # Assert content_id is same after uploading thumbnails to nodes.
         file.contentnode.refresh_from_db()
@@ -548,5 +756,10 @@ class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):
         original_node_content_id_after_upload = file.contentnode.content_id
         copied_node_content_id_after_upload = file_contentnode_copy.content_id
 
-        self.assertEqual(original_node_content_id_before_upload, original_node_content_id_after_upload)
-        self.assertEqual(copied_node_content_id_before_upload, copied_node_content_id_after_upload)
+        self.assertEqual(
+            original_node_content_id_before_upload,
+            original_node_content_id_after_upload,
+        )
+        self.assertEqual(
+            copied_node_content_id_before_upload, copied_node_content_id_after_upload
+        )

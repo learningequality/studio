@@ -32,44 +32,47 @@ function makeWrapper() {
 
 describe('channelDetails', () => {
   let wrapper;
+
   beforeEach(() => {
     wrapper = makeWrapper();
   });
+
   it('clicking close should close the modal', () => {
     wrapper.vm.dialog = false;
     expect(wrapper.vm.$route.name).toBe(RouteNames.CHANNELS);
   });
+
   describe('load', () => {
-    it('should automatically close if loadChannel does not find a channel', () => {
-      wrapper.setMethods({
-        loadChannel: jest.fn().mockReturnValue(Promise.resolve()),
-        loadChannelDetails: jest.fn().mockReturnValue(Promise.resolve()),
-      });
-      return wrapper.vm.load().then(() => {
-        expect(wrapper.vm.$route.name).toBe(RouteNames.CHANNELS);
-      });
+    it('should automatically close if loadChannel does not find a channel', async () => {
+      const loadChannel = jest.spyOn(wrapper.vm, 'loadChannel');
+      loadChannel.mockReturnValue(Promise.resolve());
+      const loadChannelDetails = jest.spyOn(wrapper.vm, 'loadChannelDetails');
+      loadChannelDetails.mockReturnValue(Promise.resolve());
+      await wrapper.vm.load();
+      expect(wrapper.vm.$route.name).toBe(RouteNames.CHANNELS);
     });
-    it('load should call loadChannel and loadChannelDetails', () => {
-      const loadChannel = jest.fn().mockReturnValue(Promise.resolve({ id: channelId }));
-      const loadChannelDetails = jest.fn().mockReturnValue(Promise.resolve());
-      wrapper.setMethods({ loadChannel, loadChannelDetails });
-      return wrapper.vm.load().then(() => {
-        expect(loadChannel).toHaveBeenCalled();
-        expect(loadChannelDetails).toHaveBeenCalled();
-      });
+
+    it('load should call loadChannel and loadChannelDetails', async () => {
+      const loadChannel = jest.spyOn(wrapper.vm, 'loadChannel');
+      loadChannel.mockReturnValue(Promise.resolve({ id: channelId }));
+      const loadChannelDetails = jest.spyOn(wrapper.vm, 'loadChannelDetails');
+      loadChannelDetails.mockReturnValue(Promise.resolve());
+      await wrapper.vm.load();
+      expect(loadChannel).toHaveBeenCalled();
+      expect(loadChannelDetails).toHaveBeenCalled();
     });
   });
-  it('clicking info tab should navigate to info tab', () => {
+
+  it('clicking info tab should navigate to info tab', async () => {
     wrapper.vm.tab = 'share';
-    wrapper.find('[data-test="info-tab"] a').trigger('click');
-    wrapper.vm.$nextTick(() => {
-      expect(wrapper.vm.tab).toBe('info');
-    });
+    await wrapper.findComponent('[data-test="info-tab"] a').trigger('click');
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.tab).toBe('info');
   });
-  it('clicking share tab should navigate to share tab', () => {
-    wrapper.find('[data-test="share-tab"] a').trigger('click');
-    wrapper.vm.$nextTick(() => {
-      expect(wrapper.vm.tab).toBe('share');
-    });
+
+  it('clicking share tab should navigate to share tab', async () => {
+    await wrapper.find('[data-test="share-tab"] a').trigger('click');
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.tab).toBe('share');
   });
 });

@@ -1,7 +1,15 @@
 <template>
 
-  <div v-if="nodes.length" class="details-edit-view">
-    <VForm ref="form" v-model="valid" :lazy-validation="newContent" class="px-2">
+  <div
+    v-if="nodes.length"
+    class="details-edit-view"
+  >
+    <VForm
+      ref="form"
+      v-model="valid"
+      :lazy-validation="newContent"
+      class="px-2"
+    >
       <!-- File upload and preview section -->
       <template v-if="oneSelected && allResources && !allExercises">
         <FileUpload
@@ -13,7 +21,11 @@
       </template>
 
       <!-- Basic information section -->
-      <VLayout row wrap class="section">
+      <VLayout
+        row
+        wrap
+        class="section"
+      >
         <VFlex xs12>
           <h1 class="subheading">
             {{ $tr('basicInfoHeader') }}
@@ -32,7 +44,10 @@
             box
             @focus="trackClick('Title')"
           />
-          <VLayout row wrap>
+          <VLayout
+            row
+            wrap
+          >
             <VFlex
               v-if="oneSelected"
               xs12
@@ -124,7 +139,12 @@
       </VLayout>
 
       <!-- Completion section for exercises -->
-      <VLayout v-if="allExercises" row wrap class="section">
+      <VLayout
+        v-if="allExercises"
+        row
+        wrap
+        class="section"
+      >
         <VFlex xs12>
           <h1 class="subheading">
             {{ $tr('assessmentOptionsLabel') }}
@@ -135,13 +155,18 @@
             v-model="randomizeOrder"
             :label="$tr('randomizeQuestionLabel')"
             :indeterminate="!isUnique(randomizeOrder)"
-            style="font-size: 16px;"
+            style="font-size: 16px"
           />
         </VFlex>
       </VLayout>
 
       <!-- Completion section for all resources -->
-      <VLayout v-if="!anyIsTopic && allSameKind" row wrap class="section">
+      <VLayout
+        v-if="!anyIsTopic && allSameKind"
+        row
+        wrap
+        class="section"
+      >
         <VFlex xs12>
           <h1 class="subheading">
             {{ $tr('completionLabel') }}
@@ -156,8 +181,15 @@
       </VLayout>
 
       <!-- Thumbnail section -->
-      <VLayout row wrap class="section">
-        <VFlex v-if="oneSelected" xs12>
+      <VLayout
+        row
+        wrap
+        class="section"
+      >
+        <VFlex
+          v-if="oneSelected"
+          xs12
+        >
           <h1 class="subheading">
             {{ $tr('thumbnailHeader') }}
           </h1>
@@ -174,7 +206,11 @@
       </VLayout>
 
       <!-- Audience section -->
-      <VLayout row wrap class="section">
+      <VLayout
+        row
+        wrap
+        class="section"
+      >
         <VFlex xs12>
           <h1 class="subheading">
             {{ $tr('audienceHeader') }}
@@ -207,9 +243,12 @@
             id="beginners"
             ref="beginners"
             :checked="forBeginners"
-            @change="value => forBeginners = value"
+            @change="value => (forBeginners = value)"
           >
-            <span class="text-xs-left v-label" style="padding-left: 8px;">
+            <span
+              class="text-xs-left v-label"
+              style="padding-left: 8px"
+            >
               {{ translateMetadataString('forBeginners') }}
             </span>
           </KCheckbox>
@@ -217,7 +256,11 @@
       </VLayout>
 
       <!-- Accessibility section -->
-      <VLayout row wrap class="section">
+      <VLayout
+        row
+        wrap
+        class="section"
+      >
         <template v-if="requiresAccessibility">
           <VFlex xs12>
             <h1 class="subheading">
@@ -233,13 +276,23 @@
       </VLayout>
 
       <!-- Source section -->
-      <VLayout row wrap class="section">
+      <VLayout
+        row
+        wrap
+        class="section"
+      >
         <template v-if="allResources">
-          <VFlex xs12 class="auth-section">
+          <VFlex
+            xs12
+            class="auth-section"
+          >
             <h1 class="subheading">
               {{ $tr('sourceHeader') }}
             </h1>
-            <p v-if="disableAuthEdits" class="grey--text">
+            <p
+              v-if="disableAuthEdits"
+              class="grey--text"
+            >
               {{ detectedImportText }}
             </p>
             <p v-if="oneSelected && isImported">
@@ -262,15 +315,22 @@
               box
               :placeholder="getPlaceholder('author')"
               :value="author && author.toString()"
-              @input.native="(e) => (author = e.srcElement.value)"
+              @input.native="e => (author = e.srcElement.value)"
               @input="author = $event"
               @focus="trackClick('Author')"
             >
               <template #append-outer>
-                <HelpTooltip :text="$tr('authorToolTip')" top :small="false" />
+                <HelpTooltip
+                  :text="$tr('authorToolTip')"
+                  top
+                  :small="false"
+                />
               </template>
             </VCombobox>
-            <p v-if="disableSourceEdits" class="help">
+            <p
+              v-if="disableSourceEdits"
+              class="help"
+            >
               {{ helpTextString.$tr('cannotEditPublic') }}
             </p>
 
@@ -286,12 +346,16 @@
               autoSelectFirst
               box
               :value="provider && provider.toString()"
-              @input.native="(e) => (provider = e.srcElement.value)"
+              @input.native="e => (provider = e.srcElement.value)"
               @input="provider = $event"
               @focus="trackClick('Provider')"
             >
               <template #append-outer>
-                <HelpTooltip :text="$tr('providerToolTip')" top :small="false" />
+                <HelpTooltip
+                  :text="$tr('providerToolTip')"
+                  top
+                  :small="false"
+                />
               </template>
             </VCombobox>
 
@@ -307,12 +371,16 @@
               :placeholder="getPlaceholder('aggregator')"
               box
               :value="aggregator && aggregator.toString()"
-              @input.native="(e) => (aggregator = e.srcElement.value)"
+              @input.native="e => (aggregator = e.srcElement.value)"
               @input="aggregator = $event"
               @focus="trackClick('Aggregator')"
             >
               <template #append-outer>
-                <HelpTooltip :text="$tr('aggregatorToolTip')" top :small="false" />
+                <HelpTooltip
+                  :text="$tr('aggregatorToolTip')"
+                  top
+                  :small="false"
+                />
               </template>
             </VCombobox>
 
@@ -344,11 +412,14 @@
               :disabled="disableSourceEdits"
               box
               :value="copyright_holder && copyright_holder.toString()"
-              @input.native="(e) => (copyright_holder = e.srcElement.value)"
+              @input.native="e => (copyright_holder = e.srcElement.value)"
               @input="copyright_holder = $event"
               @focus="trackClick('Copyright holder')"
             />
-            <p v-if="disableSourceEdits" class="help">
+            <p
+              v-if="disableSourceEdits"
+              class="help"
+            >
               {{ helpTextString.$tr('cannotEditPublic') }}
             </p>
           </VFlex>
@@ -356,7 +427,12 @@
       </VLayout>
 
       <!-- Subtitles -->
-      <VLayout v-if="videoSelected" row wrap class="section">
+      <VLayout
+        v-if="videoSelected"
+        row
+        wrap
+        class="section"
+      >
         <VFlex xs12>
           <SubtitlesList
             :nodeId="firstNode.id"
@@ -366,7 +442,11 @@
       </VLayout>
 
       <!-- Audio accessibility section -->
-      <VLayout row wrap class="section">
+      <VLayout
+        row
+        wrap
+        class="section"
+      >
         <template v-if="audioAccessibility">
           <VFlex xs12>
             <SubtitlesList :nodeId="firstNode.id" />
@@ -377,6 +457,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -475,8 +556,8 @@
               // otherwise an empty array, which will cause `intersection`
               // to result in an empty array
               return [];
-            })
-          )
+            }),
+          ),
         );
       },
       set(value) {
@@ -691,9 +772,8 @@
             return nonUniqueValue;
           }
           const { completion_criteria, modality } = options;
-          const suggested_duration_type = this.getExtraFieldsValueFromNodes(
-            'suggested_duration_type'
-          );
+          const suggested_duration_type =
+            this.getExtraFieldsValueFromNodes('suggested_duration_type');
           const suggested_duration = this.getValueFromNodes('suggested_duration');
           return {
             suggested_duration,
@@ -732,7 +812,7 @@
         return this.nodes.some(
           node =>
             findLicense(node.license, { copyright_holder_required: false })
-              .copyright_holder_required
+              .copyright_holder_required,
         );
       },
       titleRules() {
@@ -754,7 +834,7 @@
         return this.oneSelected && this.firstNode.kind === ContentKindsNames.VIDEO;
       },
       // Dynamically compute the size of the VFlex used
-      /* eslint-disable-next-line kolibri/vue-no-unused-properties */
+      /* eslint-disable-next-line vue/no-unused-properties */
       mdValue() {
         return this.oneSelected ? 'md6' : 'md12';
       },
@@ -777,11 +857,11 @@
       ...mapActions('contentNode', ['updateContentNode', 'addTags', 'removeTags']),
       ...mapActions('file', ['updateFile', 'deleteFile']),
       saveNode: memoizeDebounce(
-        function(id) {
+        function (id) {
           this.saveFromDiffTracker(id);
         },
         1000,
-        { trailing: true }
+        { trailing: true },
       ),
       saveFromDiffTracker(id) {
         if (this.diffTracker[id]) {
@@ -790,7 +870,7 @@
             () => {
               delete this.diffTracker[id];
               return this.changed;
-            }
+            },
           );
         }
         return Promise.resolve(this.changed);
@@ -800,7 +880,7 @@
        */
       immediateSaveAll() {
         return Promise.all(Object.keys(this.diffTracker).map(this.saveFromDiffTracker)).then(
-          results => this.changed || results.some(Boolean)
+          results => this.changed || results.some(Boolean),
         );
       },
       update(payload) {
@@ -843,7 +923,7 @@
               return this.diffTracker[node.id][key];
             }
             return node[key] || null;
-          })
+          }),
         );
         return getValueFromResults(results);
       },
@@ -853,7 +933,7 @@
             if (
               Object.prototype.hasOwnProperty.call(
                 this.diffTracker[node.id] || {},
-                'extra_fields'
+                'extra_fields',
               ) &&
               Object.prototype.hasOwnProperty.call(this.diffTracker[node.id].extra_fields, key)
             ) {
@@ -861,7 +941,7 @@
             }
             return get(node.extra_fields, key, defaultValue);
           }),
-          isEqual
+          isEqual,
         );
         return getValueFromResults(results);
       },
@@ -922,12 +1002,11 @@
 
 </script>
 
-<style lang="less" scoped>
 
-  @space-between-sections: 64px;
+<style lang="scss" scoped>
 
-  /deep/ a,
-  /deep/ a:hover {
+  ::v-deep a,
+  ::v-deep a:hover {
     color: inherit;
     text-decoration: none;
   }
@@ -935,7 +1014,7 @@
   .details-edit-view {
     padding: 10px;
 
-    /deep/ .subheading {
+    ::v-deep .subheading {
       margin-bottom: 8px;
       font-weight: bold;
     }
@@ -945,7 +1024,7 @@
     }
 
     .auth-section {
-      /deep/ .v-autocomplete .v-input__append-inner {
+      ::v-deep .v-autocomplete .v-input__append-inner {
         visibility: hidden;
       }
     }
@@ -954,29 +1033,29 @@
       max-width: 960px;
 
       .tagbox {
-        /deep/ .v-select__selections {
+        ::v-deep .v-select__selections {
           min-height: 0 !important;
         }
 
-        /deep/ .v-chip__content {
+        ::v-deep .v-chip__content {
           color: black; // Read-only tag box grays out tags
         }
 
-        /deep/ .v-input__append-inner {
+        ::v-deep .v-input__append-inner {
           display: none;
         }
       }
 
-      /deep/ .v-input--is-readonly {
-        /deep/ label {
+      ::v-deep .v-input--is-readonly {
+        ::v-deep label {
           color: var(--v-grey-darken2) !important;
         }
 
-        /deep/ .v-input__append-inner {
+        ::v-deep .v-input__append-inner {
           display: none;
         }
 
-        /deep/ .v-input__slot {
+        ::v-deep .v-input__slot {
           &::before {
             border-style: dotted;
           }
@@ -990,12 +1069,12 @@
       .basicInfoColumn {
         display: flex;
 
-        /deep/ .v-input {
+        ::v-deep .v-input {
           // Stretches the "Description" text area to fill the column vertically
           align-items: stretch;
         }
 
-        /deep/ .v-input__control {
+        ::v-deep .v-input__control {
           // Makes sure that the character count does not get pushed to second column
           flex-wrap: nowrap;
         }

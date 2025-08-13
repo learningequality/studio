@@ -6,7 +6,7 @@
       v-model="selectAll"
       class="mb-2 ml-1 mt-0 px-3 py-2"
       :label="$tr('selectAllLabel')"
-      style="font-size: 16px;"
+      style="font-size: 16px"
     />
     <EditListItem
       v-for="nodeId in nodeIds"
@@ -16,10 +16,10 @@
       @input="trackSelect"
       @removed="handleRemoved"
     />
-
   </VList>
 
 </template>
+
 
 <script>
 
@@ -98,7 +98,8 @@
 
 </script>
 
-<style lang="less" scoped>
+
+<style lang="scss" scoped>
 
   .v-divider {
     margin-top: 0;

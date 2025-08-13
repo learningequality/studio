@@ -7,7 +7,9 @@ from base import ProberException
 from base import PRODUCTION_MODE_ON
 
 
-ALERT_THRESHOLD = int(os.getenv("PROBER_PUBLISHING_ALERT_THRESHOLD") or 2 * 3600)  # default = 2 hours
+ALERT_THRESHOLD = int(
+    os.getenv("PROBER_PUBLISHING_ALERT_THRESHOLD") or 2 * 3600
+)  # default = 2 hours
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 
@@ -27,19 +29,24 @@ class PublishingStatusProbe(BaseProbe):
         channel_ids = []
 
         for result in results:
-            duration = (now - datetime.datetime.strptime(result["performed"], DATE_FORMAT)).seconds
+            duration = (
+                now - datetime.datetime.strptime(result["performed"], DATE_FORMAT)
+            ).seconds
             max_duration = max(max_duration, duration)
             if duration >= ALERT_THRESHOLD or not result["task_id"]:
                 channel_ids.append(result["channel_id"])
 
         if max_duration > 0:
-            print("{metric_name} {duration_sec}".format(
-                metric_name=self.metric,
-                duration_sec=max_duration
-            ))
+            print(  # noqa: T201
+                "{metric_name} {duration_sec}".format(
+                    metric_name=self.metric, duration_sec=max_duration
+                )
+            )
 
         if channel_ids:
-            raise ProberException("Publishing alert for channels: {}".format(", ".join(channel_ids)))
+            raise ProberException(
+                "Publishing alert for channels: {}".format(", ".join(channel_ids))
+            )
 
 
 if __name__ == "__main__":
