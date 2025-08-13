@@ -11,31 +11,30 @@
       justify-center
     >
       <VFlex>
-        <ActionLink
+        <KButton
           :text="$tr('aboutChannelSetsLink')"
-          class="mx-2"
+          class="link-btn"
+          appearance="basic-link"
           @click="infoDialog = true"
         />
-        <MessageDialog
-          v-model="infoDialog"
-          :header="$tr('aboutChannelSets')"
+        <KModal
+          v-if="infoDialog"
+          :cancelText="$tr('cancelButtonLabel')"
+          :title="$tr('aboutChannelSets')"
+          @cancel="infoDialog = false"
         >
-          <p>
-            {{ $tr('channelSetsDescriptionText') }}
-          </p>
-          <p>
-            {{ $tr('channelSetsInstructionsText') }}
-          </p>
-          <p class="red--text">
-            {{ $tr('channelSetsDisclaimer') }}
-          </p>
-          <template #buttons>
-            <VSpacer />
-            <VBtn @click="infoDialog = false">
-              {{ $tr('cancelButtonLabel') }}
-            </VBtn>
-          </template>
-        </MessageDialog>
+          <div>
+            <p>
+              {{ $tr('channelSetsDescriptionText') }}
+            </p>
+            <p>
+              {{ $tr('channelSetsInstructionsText') }}
+            </p>
+            <p :style="{ color: $themePalette.red.v_500 }">
+              {{ $tr('channelSetsDisclaimer') }}
+            </p>
+          </div>
+        </KModal>
       </VFlex>
       <VSpacer />
       <VFlex class="text-xs-right">
@@ -88,14 +87,12 @@
   import { mapGetters, mapActions } from 'vuex';
   import { RouteNames } from '../../constants';
   import ChannelSetItem from './ChannelSetItem.vue';
-  import MessageDialog from 'shared/views/MessageDialog';
   import LoadingText from 'shared/views/LoadingText';
 
   export default {
     name: 'ChannelSetList',
     components: {
       ChannelSetItem,
-      MessageDialog,
       LoadingText,
     },
     data() {
@@ -158,6 +155,10 @@
 
   .list-items {
     margin: 0 auto;
+  }
+
+  .link-btn {
+    margin: 0 8px;
   }
 
   ::v-deep .v-datatable {
