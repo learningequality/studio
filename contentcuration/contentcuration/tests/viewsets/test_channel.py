@@ -780,6 +780,60 @@ class CRUDTestCase(StudioAPITestCase):
             ],
         )
 
+    def test_admin_channel_filter__community_library_live(self):
+        self.client.force_authenticate(user=self.admin_user)
+
+        submission1 = testdata.community_library_submission()
+        submission1.channel.version = 2
+        submission1.channel.save()
+        submission1.status = community_library_submission.STATUS_LIVE
+        submission1.channel_version = 1
+        submission1.save()
+
+        CommunityLibrarySubmission.objects.create(
+            channel=submission1.channel,
+            channel_version=2,
+            author=submission1.author,
+            status=community_library_submission.STATUS_PENDING,
+        )
+
+        other_channel_submission = testdata.community_library_submission()
+        other_channel_submission.status = community_library_submission.STATUS_PENDING
+        other_channel_submission.save()
+
+        response = self.client.get(
+            reverse_with_query(
+                "admin-channels-list",
+                query={"community_library_live": True},
+            ),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertCountEqual(
+            [ch["id"] for ch in response.data],
+            [submission1.channel.id],
+        )
+
+    def test_admin_channel_filter__has_community_library_submission(self):
+        self.client.force_authenticate(user=self.admin_user)
+
+        submission = testdata.community_library_submission()
+
+        testdata.channel()  # Another channel without submission
+
+        response = self.client.get(
+            reverse_with_query(
+                "admin-channels-list",
+                query={"has_community_library_submission": True},
+            ),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertCountEqual(
+            [ch["id"] for ch in response.data],
+            [submission.channel.id],
+        )
+
     def test_create_channel(self):
         user = testdata.user()
         self.client.force_authenticate(user=user)

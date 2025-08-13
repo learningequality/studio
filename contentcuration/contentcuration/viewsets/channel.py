@@ -1057,6 +1057,12 @@ class AdminChannelFilter(BaseChannelFilter):
     latest_community_library_submission_status = CharFilter(
         method="filter_latest_community_library_submission_status"
     )
+    community_library_live = BooleanFilter(
+        method="filter_community_library_live",
+    )
+    has_community_library_submission = BooleanFilter(
+        method="filter_has_community_library_submission",
+    )
 
     def filter_keywords(self, queryset, name, value):
         keywords = value.split(" ")
@@ -1082,6 +1088,14 @@ class AdminChannelFilter(BaseChannelFilter):
                 latest_community_library_submission__status__in=values
             )
         return queryset
+
+    def filter_community_library_live(self, queryset, name, value):
+        return queryset.filter(
+            community_library_submissions__status=community_library_submission_constants.STATUS_LIVE
+        ).distinct()
+
+    def filter_has_community_library_submission(self, queryset, name, value):
+        return queryset.filter(latest_community_library_submission__isnull=False)
 
 
 class AdminChannelSerializer(ChannelSerializer):
