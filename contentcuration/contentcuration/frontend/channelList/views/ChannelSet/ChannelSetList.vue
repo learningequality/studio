@@ -11,31 +11,30 @@
       justify-center
     >
       <VFlex>
-        <ActionLink
+        <KButton
           :text="$tr('aboutChannelSetsLink')"
-          class="mx-2"
+          class="link-btn"
+          appearance="basic-link"
           @click="infoDialog = true"
         />
-        <MessageDialog
-          v-model="infoDialog"
-          :header="$tr('aboutChannelSets')"
+        <KModal
+          v-if="infoDialog"
+          :cancelText="$tr('cancelButtonLabel')"
+          :title="$tr('aboutChannelSets')"
+          @cancel="infoDialog = false"
         >
-          <p>
-            {{ $tr('channelSetsDescriptionText') }}
-          </p>
-          <p>
-            {{ $tr('channelSetsInstructionsText') }}
-          </p>
-          <p class="red--text">
-            {{ $tr('channelSetsDisclaimer') }}
-          </p>
-          <template #buttons>
-            <VSpacer />
-            <VBtn @click="infoDialog = false">
-              {{ $tr('cancelButtonLabel') }}
-            </VBtn>
-          </template>
-        </MessageDialog>
+          <div>
+            <p>
+              {{ $tr('channelSetsDescriptionText') }}
+            </p>
+            <p>
+              {{ $tr('channelSetsInstructionsText') }}
+            </p>
+            <p :class="$computedClass(channelSetsDisclamerStyle)">
+              {{ $tr('channelSetsDisclaimer') }}
+            </p>
+          </div>
+        </KModal>
       </VFlex>
       <VSpacer />
       <VFlex class="text-xs-right">
@@ -88,14 +87,12 @@
   import { mapGetters, mapActions } from 'vuex';
   import { RouteNames } from '../../constants';
   import ChannelSetItem from './ChannelSetItem.vue';
-  import MessageDialog from 'shared/views/MessageDialog';
   import LoadingText from 'shared/views/LoadingText';
 
   export default {
     name: 'ChannelSetList',
     components: {
       ChannelSetItem,
-      MessageDialog,
       LoadingText,
     },
     data() {
@@ -113,6 +110,11 @@
           { text: this.$tr('channelNumber'), sortable: false, align: 'right', width: '50px' },
           { text: this.$tr('options'), sortable: false, align: 'center', width: '100px' },
         ];
+      },
+      channelSetsDisclamerStyle() {
+        return {
+          color: this.$themePalette.red.v_500,
+        };
       },
       sortedChannelSets() {
         return sortBy(this.channelSets, s => s.name.toLowerCase()) || [];
@@ -158,6 +160,10 @@
 
   .list-items {
     margin: 0 auto;
+  }
+
+  .link-btn {
+    margin: 0 8px;
   }
 
   ::v-deep .v-datatable {
