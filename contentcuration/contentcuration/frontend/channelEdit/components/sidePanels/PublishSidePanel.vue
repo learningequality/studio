@@ -249,6 +249,12 @@
         return filterLanguages(l => channelLanguages.value.includes(l.id));
       });
 
+      const defaultLanguage = computed(() => {
+        if (!currentChannel.value?.language) return {};
+        const channelLang = filterLanguages(l => l.id === currentChannel.value.language)[0];
+        return languages.value.some(lang => lang.value === channelLang?.value) ? channelLang : {};
+      });
+
       const isLanguageValid = computed(() => {
         return Object.keys(language.value).length > 0;
       });
@@ -294,28 +300,12 @@
                 channelLanguages.value = languages.length
                   ? languages
                   : [currentChannel.value.language];
-                // Set language and validate
-                if (currentChannel.value.language) {
-                  const channelLang = languages.value.find(
-                    l => l.value === currentChannel.value.language,
-                  );
-                  language.value = channelLang || {};
-                } else {
-                  language.value = {};
-                }
+                language.value = defaultLanguage.value;
                 validateSelectedLanguage();
               });
             } else {
               channelLanguages.value = [currentChannel.value.language];
-              // Set language and validate
-              if (currentChannel.value.language) {
-                const channelLang = languages.value.find(
-                  l => l.value === currentChannel.value.language,
-                );
-                language.value = channelLang || {};
-              } else {
-                language.value = {};
-              }
+              language.value = defaultLanguage.value;
               validateSelectedLanguage();
             }
           });
