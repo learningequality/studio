@@ -279,13 +279,9 @@
           const channelLang = defaultLanguage.value;
           if (Object.keys(channelLang).length > 0) {
             language.value = channelLang;
-          } else {
-            // Fallback to channel language even if not in available options
-            language.value = {
-              value: currentChannel.value.language,
-              label: currentChannel.value.language,
-            };
-          }
+                  } else {
+          language.value = {};
+        }
         } else {
           language.value = {};
         }
@@ -294,6 +290,7 @@
       };
 
       // Validate the selected language when it changes
+      // Ensure language is always valid within available options
       const validateSelectedLanguage = () => {
         if (Object.keys(language.value).length > 0 && languages.value.length > 0) {
           const isValidLanguage = languages.value.some(lang => lang.value === language.value.value);
@@ -369,6 +366,7 @@
 
       const onLanguageChange = () => {
         showLanguageInvalidText.value = !isLanguageValid.value;
+        validateSelectedLanguage();
       };
 
       return {
