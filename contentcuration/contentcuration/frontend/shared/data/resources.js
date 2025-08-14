@@ -1209,7 +1209,7 @@ export const Channel = new CreateModelResource({
     });
   },
 
-  publish(id, version_notes) {
+  publish(id, version_notes, language) {
     return this.transaction({ mode: 'rw' }, () => {
       return this.table.update(id, { publishing: true });
     }).then(() => {
@@ -1217,7 +1217,7 @@ export const Channel = new CreateModelResource({
         const change = new PublishedChange({
           key: id,
           version_notes,
-          language: currentLanguage || channel.language,
+          language: language || currentLanguage || channel.language,
           table: this.tableName,
           source: CLIENTID,
         });

@@ -155,7 +155,7 @@
 
 <script>
 
-  import { ref, computed, getCurrentInstance, watch, onMounted } from 'vue';
+  import { ref, computed, getCurrentInstance, onMounted } from 'vue';
   import SidePanelModal from 'shared/views/SidePanelModal';
   import { Channel } from 'shared/data/resources';
   import { forceServerSync } from 'shared/data/serverSync';
@@ -178,9 +178,16 @@
       const submitting = ref(false);
       const language = ref({});
       const showLanguageInvalidText = ref(false);
+      const channelLanguages = ref([]);
+      const channelLanguageExists = ref(true);
 
       const instance = getCurrentInstance();
       const store = instance.proxy.$store;
+
+      const channelLanguageExistsInResources = () =>
+        store.dispatch('currentChannel/channelLanguageExistsInResources');
+      const getLanguagesInChannelResources = () =>
+        store.dispatch('currentChannel/getLanguagesInChannelResources');
 
       const {
         publishChannel$,
@@ -239,17 +246,11 @@
 
       const languages = computed(() => {
         if (!currentChannel.value) return [];
-        return filterLanguages(l => currentChannel.value.channelLanguages?.includes(l.id));
+        return filterLanguages(l => channelLanguages.value.includes(l.id));
       });
 
       const isLanguageValid = computed(() => {
         return Object.keys(language.value).length > 0;
-      });
-
-      const defaultLanguage = computed(() => {
-        if (!currentChannel.value?.language) return {};
-        const channelLang = filterLanguages(l => l.id === currentChannel.value.language)[0];
-        return languages.value.some(lang => lang.value === channelLang?.value) ? channelLang : {};
       });
 
       // Validate the version and language for live mode
@@ -274,23 +275,7 @@
         }));
       };
 
-      const initializeLanguage = () => {
-        if (currentChannel.value?.language) {
-          const channelLang = defaultLanguage.value;
-          if (Object.keys(channelLang).length > 0) {
-            language.value = channelLang;
-                  } else {
-          language.value = {};
-        }
-        } else {
-          language.value = {};
-        }
-
-        validateSelectedLanguage();
-      };
-
       // Validate the selected language when it changes
-      // Ensure language is always valid within available options
       const validateSelectedLanguage = () => {
         if (Object.keys(language.value).length > 0 && languages.value.length > 0) {
           const isValidLanguage = languages.value.some(lang => lang.value === language.value.value);
@@ -300,18 +285,41 @@
         }
       };
 
-      watch(
-        currentChannel,
-        newChannel => {
-          if (newChannel) {
-            initializeLanguage();
-          }
-        },
-        { immediate: true },
-      );
-
       onMounted(() => {
-        initializeLanguage();
+        if (currentChannel.value) {
+          channelLanguageExistsInResources().then(exists => {
+            channelLanguageExists.value = exists;
+            if (!exists) {
+              getLanguagesInChannelResources().then(languages => {
+                channelLanguages.value = languages.length
+                  ? languages
+                  : [currentChannel.value.language];
+                // Set language and validate
+                if (currentChannel.value.language) {
+                  const channelLang = languages.value.find(
+                    l => l.value === currentChannel.value.language,
+                  );
+                  language.value = channelLang || {};
+                } else {
+                  language.value = {};
+                }
+                validateSelectedLanguage();
+              });
+            } else {
+              channelLanguages.value = [currentChannel.value.language];
+              // Set language and validate
+              if (currentChannel.value.language) {
+                const channelLang = languages.value.find(
+                  l => l.value === currentChannel.value.language,
+                );
+                language.value = channelLang || {};
+              } else {
+                language.value = {};
+              }
+              validateSelectedLanguage();
+            }
+          });
+        }
       });
 
       const onClose = () => {
@@ -348,7 +356,7 @@
               });
             }
 
-            await Channel.publish(props.channelId, version_notes.value);
+            await Channel.publish(props.channelId, version_notes.value, language.value.value);
 
             emit('submitted');
             emit('close');
@@ -366,7 +374,7 @@
 
       const onLanguageChange = () => {
         showLanguageInvalidText.value = !isLanguageValid.value;
-        validateSelectedLanguage();
+        validateSelectedLanguage(); // Ensure language is always valid
       };
 
       return {
