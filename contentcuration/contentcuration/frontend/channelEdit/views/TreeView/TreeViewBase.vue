@@ -209,7 +209,6 @@
 
     <PublishSidePanel
       v-if="showPublishSidePanel && currentChannel && currentChannel.id"
-      :open="showPublishSidePanel"
       :channelId="currentChannel.id"
       @close="showPublishSidePanel = false"
       @submitted="showPublishSidePanel = false"
@@ -320,6 +319,7 @@
   import QuickEditModal from '../../components/QuickEditModal';
   import SavingIndicator from '../../components/edit/SavingIndicator';
   import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
+  import PublishSidePanel from '../../components/sidePanels/PublishSidePanel';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import ToolBar from 'shared/views/ToolBar';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
@@ -331,7 +331,6 @@
   import DraggableRegion from 'shared/views/draggable/DraggableRegion';
   import { DropEffect } from 'shared/mixins/draggable/constants';
   import DraggablePlaceholder from 'shared/views/draggable/DraggablePlaceholder';
-  import PublishSidePanel from '../../components/sidePanels/PublishSidePanel';
 
   export default {
     name: 'TreeViewBase',
@@ -394,11 +393,15 @@
         return Boolean(this.currentChannel.ricecooker_version);
       },
       isDraftPublishing() {
-        return this.currentChannel && this.currentChannel.publishing && this.currentChannel.publishing_draft;
+        return (
+          this.currentChannel &&
+          this.currentChannel.publishing &&
+          this.currentChannel.publishing_draft
+        );
       },
       disablePublish() {
         return (
-          (this.currentChannel.publishing && !this.currentChannel.publishing_draft) || 
+          (this.currentChannel.publishing && !this.currentChannel.publishing_draft) ||
           !this.isChanged ||
           !this.currentChannel.language ||
           (this.rootNode && !this.rootNode.resource_count)
@@ -509,8 +512,6 @@
         this.trackClickEvent('Delete channel');
       },
       publishChannel() {
-        console.log('publishChannel called, currentChannel:', this.currentChannel);
-        console.log('Setting showPublishSidePanel to true');
         this.showPublishSidePanel = true;
         this.trackClickEvent('Publish');
       },

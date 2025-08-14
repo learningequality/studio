@@ -1217,7 +1217,7 @@ export const Channel = new CreateModelResource({
         const change = new PublishedChange({
           key: id,
           version_notes,
-          language: channel.language || currentLanguage,
+          language: currentLanguage || channel.language,
           table: this.tableName,
           source: CLIENTID,
         });
@@ -1236,59 +1236,59 @@ export const Channel = new CreateModelResource({
     });
   },
 
-  publishDraft(id, opts={}) {
-    const {
-      use_staging_tree = false,
-    } = opts;
-  
+  publishDraft(id, opts = {}) {
+    const { use_staging_tree = false } = opts;
+
     return this.transaction({ mode: 'rw' }, () => {
-      return this.table.update(id, { 
+      return this.table.update(id, {
         publishing: true,
-        publishing_draft: true  
+        publishing_draft: true,
       });
-    }).then(() => {
-      const change = new PublishedNextChange({
-        key: id,
-        use_staging_tree,
-        table: this.tableName,
-        source: CLIENTID,
+    })
+      .then(() => {
+        const change = new PublishedNextChange({
+          key: id,
+          use_staging_tree,
+          table: this.tableName,
+          source: CLIENTID,
+        });
+        return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
+          return this._saveAndQueueChange(change);
+        });
+      })
+      .then(() => {
+        this._monitorDraftCompletion(id);
+        return Promise.resolve();
       });
-      return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
-        return this._saveAndQueueChange(change);
-      });
-    }).then(() => {
-      this._monitorDraftCompletion(id);
-      return Promise.resolve();
-    });
   },
 
   _monitorDraftCompletion(channelId) {
-    const checkInterval = setInterval(async () => {
-      try {
-        const changes = await this.table.db.table(CHANGES_TABLE)
-          .where('table')
-          .equals(TABLE_NAMES.CHANNEL)
-          .and(change => change.key === channelId && change.type === CHANGE_TYPES.PUBLISHED_NEXT)
-          .toArray();
-        
+    const observable = liveQuery(() => {
+      return this.table.db
+        .table(CHANGES_TABLE)
+        .where('table')
+        .equals(TABLE_NAMES.CHANNEL)
+        .and(change => change.key === channelId && change.type === CHANGE_TYPES.PUBLISHED_NEXT)
+        .toArray();
+    });
+
+    const subscription = observable.subscribe({
+      next: async changes => {
         if (changes.length === 0) {
-          clearInterval(checkInterval);
+          subscription.unsubscribe();
           await this.transaction({ mode: 'rw' }, () => {
-            return this.table.update(channelId, { 
+            return this.table.update(channelId, {
               publishing: false,
-              publishing_draft: false
+              publishing_draft: false,
             });
           });
         }
-      } catch (error) {
-        console.error('Error monitoring draft completion:', error);
-        clearInterval(checkInterval);
-      }
-    }, 2000); 
-    
+      },
+    });
+
     setTimeout(() => {
-      clearInterval(checkInterval);
-    }, 300000); 
+      subscription.unsubscribe();
+    }, 300000);
   },
 
   deploy(id) {

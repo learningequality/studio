@@ -44,12 +44,6 @@
       <span>{{ $tr('draftHeader') }}</span>
     </div>
     <div
-      v-else-if="showDraftSaved"
-      class="grey--text"
-    >
-      {{ $tr('draftSaved') }}
-    </div>
-    <div
       v-else
       class="grey--text"
     >
@@ -85,24 +79,21 @@
         // add condition so that publishing modal is only visible for users
         // who have channel publishing permissions
         if (this.canManage) {
-          return this.currentChannel && this.currentChannel.publishing && !this.currentChannel.publishing_draft;
+          return (
+            this.currentChannel &&
+            this.currentChannel.publishing &&
+            !this.currentChannel.publishing_draft
+          );
         }
         return false;
       },
       isPublishingDraft() {
         if (this.canManage) {
-          return this.currentChannel && this.currentChannel.publishing && this.currentChannel.publishing_draft;
-        }
-        return false;
-      },
-      showDraftSaved() {
-        if (this.canManage) {
-          return this.currentChannel && 
-                 !this.currentChannel.publishing && 
-                 !this.currentChannel.publishing_draft && 
-                 this.currentChannel.last_published &&
-                 !this.currentChannel.published &&
-                 !this.currentTask; 
+          return (
+            this.currentChannel &&
+            this.currentChannel.publishing &&
+            this.currentChannel.publishing_draft
+          );
         }
         return false;
       },
@@ -175,7 +166,6 @@
       defaultErrorText: 'Last attempt to publish failed',
       publishHeader: 'Publishing channel',
       draftHeader: 'Saving draft...',
-      draftSaved: 'Saved just now',
       lastPublished: 'Published {last_published}',
       unpublishedText: 'Unpublished',
       syncHeader: 'Syncing resources',
