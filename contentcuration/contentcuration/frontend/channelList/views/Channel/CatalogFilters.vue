@@ -86,11 +86,13 @@
         <div :style="{ display: 'flex', alignItems: 'center' }">
           <Checkbox
             v-model="coach"
+            aria-describedby="tooltip-coach"
             :label="$tr('coachLabel')"
           />
           <HelpTooltip
             :text="$tr('coachDescription')"
             maxWidth="250px"
+            tooltipId="tooltip-coach"
           />
         </div>
 

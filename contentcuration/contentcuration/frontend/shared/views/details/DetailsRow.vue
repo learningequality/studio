@@ -16,6 +16,7 @@
         <label
           class="body-1 font-weight-bold"
           :style="{ color: $vuetify.theme.darkGrey }"
+          :aria-describedby="`tooltip-${_uid}`"
         >
           {{ label }}
         </label>
@@ -23,6 +24,7 @@
           v-if="definition"
           class="help-icon"
           :text="definition"
+          :tooltipId="`tooltip-${_uid}`"
         />
       </div>
     </VFlex>

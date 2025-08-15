@@ -16,7 +16,7 @@
       :maxWidth="maxWidth ? maxWidth : '450px'"
       :refs="$refs"
     >
-      {{ text }}
+      <span :id="tooltipId">{{ text }}</span>
     </KTooltip>
   </span>
 
@@ -52,6 +52,14 @@
         type: String,
         required: false,
         default: null,
+      },
+      /**
+       * Unique id of the tooltip element.
+       **/
+      tooltipId: {
+        type: String,
+        required: false,
+        default: '',
       },
     },
   };

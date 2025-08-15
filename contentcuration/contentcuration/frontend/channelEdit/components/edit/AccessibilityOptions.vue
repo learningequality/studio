@@ -15,6 +15,9 @@
           :value="accessibilityItem.value"
           color="primary"
           :data-test="`checkbox-${accessibilityItem.help}`"
+          :aria-describedby="
+            accessibilityItem.showTooltip ? `tooltip-${accessibilityItem.value}` : undefined
+          "
         >
           <span :style="{ display: 'inline-flex', alignItems: 'top' }">
             <span>{{ accessibilityItem.label }}</span>
@@ -23,6 +26,7 @@
               :text="$tr(accessibilityItem.help)"
               :data-test="`tooltip-${accessibilityItem.help}`"
               :style="{ position: 'relative', top: '-10px' }"
+              :tooltipId="`tooltip-${accessibilityItem.value}`"
             />
           </span>
         </Checkbox>

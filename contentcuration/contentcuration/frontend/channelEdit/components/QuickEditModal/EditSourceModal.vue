@@ -25,9 +25,11 @@
             :disabled="!isEditable"
             :label="$tr('authorLabel')"
             class="input-textbox"
+            aria-describedby="tooltip-author"
           />
           <HelpTooltip
             :text="$tr('authorToolTip')"
+            tooltipId="tooltip-author"
             maxWidth="300px"
             class="input-tooltip"
           />
@@ -48,11 +50,13 @@
             :disabled="!isEditable"
             :label="$tr('providerLabel')"
             class="input-textbox"
+            aria-describedby="tooltip-provider"
           />
           <HelpTooltip
             :text="$tr('providerToolTip')"
             maxWidth="300px"
             class="input-tooltip"
+            tooltipId="tooltip-provider"
           />
         </div>
       </div>
@@ -65,11 +69,13 @@
             :disabled="!isEditable"
             :label="$tr('aggregatorLabel')"
             class="input-textbox"
+            aria-describedby="tooltip-aggregator"
           />
           <HelpTooltip
             :text="$tr('aggregatorToolTip')"
             maxWidth="300px"
             class="input-tooltip"
+            tooltipId="tooltip-aggregator"
           />
         </div>
       </div>

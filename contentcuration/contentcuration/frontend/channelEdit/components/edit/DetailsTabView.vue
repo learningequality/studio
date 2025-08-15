@@ -306,6 +306,7 @@
             <!-- Author -->
             <VCombobox
               ref="author"
+              aria-describedby="tooltip-author"
               :items="authors"
               :label="$tr('authorLabel')"
               :disabled="disableSourceEdits"
@@ -322,6 +323,7 @@
               <template #append-outer>
                 <HelpTooltip
                   :text="$tr('authorToolTip')"
+                  tooltipId="tooltip-author"
                   top
                   :small="false"
                 />
@@ -337,6 +339,7 @@
             <!-- Provider -->
             <VCombobox
               ref="provider"
+              aria-describedby="tooltip-provider"
               :items="providers"
               :label="$tr('providerLabel')"
               :disabled="disableSourceEdits"
@@ -353,6 +356,7 @@
               <template #append-outer>
                 <HelpTooltip
                   :text="$tr('providerToolTip')"
+                  tooltipId="tooltip-provider"
                   top
                   :small="false"
                 />
@@ -362,6 +366,7 @@
             <!-- Aggregator -->
             <VCombobox
               ref="aggregator"
+              aria-describedby="tooltip-aggregator"
               :items="aggregators"
               :label="$tr('aggregatorLabel')"
               :disabled="disableSourceEdits"
@@ -378,6 +383,7 @@
               <template #append-outer>
                 <HelpTooltip
                   :text="$tr('aggregatorToolTip')"
+                  tooltipId="tooltip-aggregator"
                   top
                   :small="false"
                 />

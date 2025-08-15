@@ -46,6 +46,7 @@
         <KTextbox
           v-model="publishDescription"
           class="input"
+          aria-describedby="tooltip-description"
           :label="$tr('versionDescriptionLabel')"
           :invalid="!isDescriptionValid"
           :invalidText="$tr('descriptionRequiredMessage')"
@@ -57,6 +58,7 @@
           :text="$tr('descriptionDescriptionTooltip')"
           class="icon"
           maxWidth="300px"
+          tooltipId="tooltip-description"
         />
       </div>
 
@@ -67,6 +69,7 @@
         <KSelect
           v-model="language"
           class="input"
+          aria-describedby="tooltip-language"
           :label="$tr('languageLabel')"
           :invalid="showLanguageInvalidText"
           :invalidText="$tr('languageRequiredMessage')"
@@ -77,6 +80,7 @@
           :text="$tr('languageDescriptionTooltip')"
           class="icon"
           maxWidth="300px"
+          tooltipId="tooltip-language"
         />
       </div>
     </KModal>
