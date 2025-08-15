@@ -63,15 +63,22 @@
                     <TipTapEditor
                       v-model="question"
                       mode="view"
+                      tabindex="-1"
                     />
                   </VFlex>
 
                   <VFlex shrink>
-                    <Icon
-                      :color="$themePalette.grey.v_800"
-                      icon="edit"
-                      class="mr-2"
-                    />
+                    <button
+                      class="v-btn v-btn--flat v-btn--icon v-size--default"
+                      data-test="editQuestionButton"
+                      @click.stop="openQuestion"
+                    >
+                      <Icon
+                        :color="$themePalette.grey.v_800"
+                        icon="edit"
+                        class="mr-2"
+                      />
+                    </button>
                   </VFlex>
                 </VLayout>
               </div>

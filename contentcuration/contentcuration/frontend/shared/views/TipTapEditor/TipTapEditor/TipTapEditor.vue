@@ -4,6 +4,13 @@
     ref="editorContainer"
     class="editor-container"
     :class="{ 'view-mode': editorMode === 'view' }"
+    :tabindex="tabindex"
+    role="textbox"
+    :aria-label="
+      editorMode === 'edit' ? 'text editor - Press Enter to start editing' : 'text editor content'
+    "
+    aria-multiline="true"
+    @keydown="handleContainerKeydown"
   >
     <div v-if="editorMode === 'edit'">
       <EditorToolbar
@@ -84,6 +91,7 @@
     </div>
 
     <EditorContentWrapper
+      :inert="editorMode === 'view'"
       @drop.native.prevent="handleDrop"
       @dragover.native.prevent
     />
@@ -246,6 +254,12 @@
         { deep: true },
       );
 
+      const handleContainerKeydown = event => {
+        if (event.key === 'Enter') {
+          emit('open-editor');
+        }
+      };
+
       return {
         editorContainer,
         isReady,
@@ -259,12 +273,9 @@
         sharedEventHandlers,
         editorMode: computed(() => props.mode),
         emitMinimize: () => {
-          // force lose focus
-          if (editor.value) {
-            emit('minimize');
-            editor.value.commands.blur();
-          }
+          emit('minimize');
         },
+        handleContainerKeydown,
       };
     },
     props: {
@@ -276,8 +287,12 @@
         type: String,
         default: 'edit', // 'edit' or 'view'
       },
+      tabindex: {
+        type: [String, Number],
+        default: 0,
+      },
     },
-    emits: ['update', 'minimize'],
+    emits: ['update', 'minimize', 'open-editor'],
   });
 
 </script>
@@ -304,6 +319,10 @@
     min-height: 0;
     pointer-events: none;
     border: 0;
+  }
+
+  .editor-container:focus-visible {
+    outline-color: #007bff;
   }
 
   .link-editor-popover-wrapper,

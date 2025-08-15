@@ -12,6 +12,7 @@
         <TipTapEditor
           v-model="question"
           mode="view"
+          tabindex="-1"
         />
       </VFlex>
     </VLayout>
@@ -45,6 +46,7 @@
                     <TipTapEditor
                       v-model="answer.answer"
                       mode="view"
+                      tabindex="-1"
                     />
                   </div>
                 </template>
@@ -64,6 +66,7 @@
                 <TipTapEditor
                   v-model="answer.answer"
                   mode="view"
+                  tabindex="-1"
                 />
               </div>
             </Checkbox>
@@ -115,6 +118,7 @@
                   <TipTapEditor
                     v-model="hint.hint"
                     mode="view"
+                    tabindex="-1"
                   />
                 </VFlex>
               </VLayout>

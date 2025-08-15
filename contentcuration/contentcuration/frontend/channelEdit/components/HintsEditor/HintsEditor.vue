@@ -40,6 +40,7 @@
                       :mode="isHintOpen(hintIdx) ? 'edit' : 'view'"
                       @update="updateHintText($event, hintIdx)"
                       @minimize="emitClose"
+                      @open-editor="emitOpen(answerIdx)"
                     />
                   </keep-alive>
                 </transition>

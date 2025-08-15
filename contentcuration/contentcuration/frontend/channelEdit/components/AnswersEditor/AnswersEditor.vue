@@ -80,6 +80,7 @@
                       :mode="isAnswerOpen(answerIdx) ? 'edit' : 'view'"
                       @update="updateAnswerText($event, answerIdx)"
                       @minimize="emitClose"
+                      @open-editor="emitOpen(answerIdx)"
                     />
                   </div>
                 </keep-alive>
