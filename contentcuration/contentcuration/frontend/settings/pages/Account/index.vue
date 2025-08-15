@@ -75,7 +75,7 @@
         rel="noopener noreferrer"
       />
     </p>
-    <CopyToken
+    <StudioCopyToken
       class="copy-token"
       :token="user.api_token || ' '"
       :loading="!user.api_token"
@@ -158,15 +158,15 @@
   import FullNameForm from './FullNameForm';
   import ChangePasswordForm from './ChangePasswordForm';
   import DeleteAccountForm from './DeleteAccountForm';
-  import CopyToken from 'shared/views/CopyToken';
+  import StudioCopyToken from './StudioCopyToken.vue';
 
   export default {
     name: 'Account',
     components: {
       ChangePasswordForm,
-      CopyToken,
       FullNameForm,
       DeleteAccountForm,
+      StudioCopyToken,
     },
     data() {
       return {
