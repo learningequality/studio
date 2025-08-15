@@ -3,12 +3,12 @@
   <div
     class="toolbar top-bar"
     role="toolbar"
-    aria-label="Editor controls"
+    :aria-label="editorControls$()"
   >
     <div
       class="history-actions"
       role="group"
-      aria-label="History actions"
+      :aria-label="historyActions$()"
     >
       <ToolbarButton
         v-for="action in historyActions"
@@ -24,8 +24,8 @@
       <div class="topbar-actions">
         <button
           class="insert-button"
-          title="Insert content"
-          aria-label="Insert content menu"
+          :title="insertContent$()"
+          :aria-label="insertContentMenu$()"
           :aria-expanded="isInsertMenuOpen"
           aria-haspopup="menu"
           aria-controls="insert-menu"
@@ -46,7 +46,7 @@
         ref="dropdown"
         class="insert-dropdown"
         role="menu"
-        aria-label="Insert content options"
+        :aria-label="insertContentOption$()"
       >
         <button
           v-for="tool in insertTools"
@@ -74,6 +74,7 @@
 
   import { defineComponent, ref, onMounted, onBeforeUnmount } from 'vue';
   import { useToolbarActions } from '../../composables/useToolbarActions';
+  import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
   import ToolbarButton from './ToolbarButton.vue';
 
   export default defineComponent({
@@ -84,6 +85,15 @@
       const dropdown = ref(null);
 
       const { historyActions, insertTools, minimizeAction } = useToolbarActions(emit);
+
+      // Get translation functions
+      const {
+        editorControls$,
+        historyActions$,
+        insertContent$,
+        insertContentMenu$,
+        insertContentOption$,
+      } = getTipTapEditorStrings();
 
       const handleClickOutside = event => {
         if (
@@ -110,6 +120,11 @@
         minimizeAction,
         isInsertMenuOpen,
         dropdown,
+        editorControls$,
+        historyActions$,
+        insertContent$,
+        insertContentMenu$,
+        insertContentOption$,
       };
     },
   });

@@ -6,9 +6,7 @@
     :class="{ 'view-mode': editorMode === 'view' }"
     :tabindex="tabindex"
     role="textbox"
-    :aria-label="
-      editorMode === 'edit' ? 'text editor - Press Enter to start editing' : 'text editor content'
-    "
+    :aria-label="editorMode === 'edit' ? TipTapEditorLabel$() : TipTapViewerLabel$()"
     aria-multiline="true"
     @keydown="handleContainerKeydown"
   >
@@ -127,6 +125,7 @@
   import MobileTopBar from './components/toolbar/MobileTopBar.vue';
   import MobileFormattingBar from './components/toolbar/MobileFormattingBar.vue';
   import { useBreakpoint } from './composables/useBreakpoint';
+  import { getTipTapEditorStrings } from './TipTapEditorStrings';
 
   export default defineComponent({
     name: 'RichTextEditor',
@@ -260,6 +259,8 @@
         }
       };
 
+      const { TipTapEditorLabel$, TipTapViewerLabel$ } = getTipTapEditorStrings();
+
       return {
         editorContainer,
         isReady,
@@ -276,6 +277,8 @@
           emit('minimize');
         },
         handleContainerKeydown,
+        TipTapEditorLabel$,
+        TipTapViewerLabel$,
       };
     },
     props: {

@@ -152,6 +152,14 @@ const MESSAGES = {
     message: 'Clipboard access failed. Try copying again.',
     context: 'Message shown when clipboard access fails during paste operation',
   },
+  TipTapEditorLabel: {
+    message: 'text editor - Press Enter to start editing',
+    context: 'Label for the TipTap editor',
+  },
+  TipTapViewerLabel: {
+    message: 'text editor content',
+    context: 'Label for the TipTap editor in view mode',
+  },
 
   // Image Upload
   editImage: {
@@ -334,6 +342,24 @@ const MESSAGES = {
   formatSize: {
     message: 'Format size',
     context: 'Alt text for the format size icon',
+  },
+
+  // for MobileTopBar
+  editorControls: {
+    message: 'Editor controls',
+    context: 'Accessibility label for the editor controls toolbar',
+  },
+  insertContent: {
+    message: 'Insert content',
+    context: 'Button title for inserting content',
+  },
+  insertContentMenu: {
+    message: 'Insert content menu',
+    context: 'Accessibility label for the insert content menu button',
+  },
+  insertContentOption: {
+    message: 'Insert content option',
+    context: 'Accessibility label for the insert content dropdown menu',
   },
 };
 
