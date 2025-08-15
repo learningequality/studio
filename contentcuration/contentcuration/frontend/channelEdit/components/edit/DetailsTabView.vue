@@ -324,8 +324,6 @@
                 <HelpTooltip
                   :text="$tr('authorToolTip')"
                   tooltipId="tooltip-author"
-                  top
-                  :small="false"
                 />
               </template>
             </VCombobox>
@@ -357,8 +355,6 @@
                 <HelpTooltip
                   :text="$tr('providerToolTip')"
                   tooltipId="tooltip-provider"
-                  top
-                  :small="false"
                 />
               </template>
             </VCombobox>
@@ -384,8 +380,6 @@
                 <HelpTooltip
                   :text="$tr('aggregatorToolTip')"
                   tooltipId="tooltip-aggregator"
-                  top
-                  :small="false"
                 />
               </template>
             </VCombobox>
