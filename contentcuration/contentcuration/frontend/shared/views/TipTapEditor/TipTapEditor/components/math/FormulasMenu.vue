@@ -128,11 +128,8 @@
       // Load MathLive dynamically
       const loadMathLive = async () => {
         try {
-          // Dynamic import of mathlive and its CSS
-          await Promise.all([
-            import(/* webpackChunkName: "mathlive" */ 'mathlive'),
-            import(/* webpackChunkName: "mathlive-css" */ 'mathlive/fonts.css'),
-          ]);
+          // Dynamic import of mathlive
+          await import(/* webpackChunkName: "mathlive" */ 'mathlive');
 
           mathLiveLoaded.value = true;
 
@@ -283,6 +280,8 @@
 
 
 <style scoped>
+
+  @import 'mathlive/fonts.css';
 
   .formulas-menu {
     position: relative;
