@@ -1,6 +1,6 @@
 import { Node, mergeAttributes } from '@tiptap/core';
 import { VueNodeViewRenderer } from '@tiptap/vue-2';
-import MathNodeView from '../components/math/MathNodeView.vue';
+import LazyMathNodeView from '../components/math/LazyMathNodeView.vue';
 
 export const Math = Node.create({
   name: 'math',
@@ -31,7 +31,7 @@ export const Math = Node.create({
   },
 
   addNodeView() {
-    return VueNodeViewRenderer(MathNodeView);
+    return VueNodeViewRenderer(LazyMathNodeView);
   },
 
   addCommands() {
