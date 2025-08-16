@@ -29,7 +29,14 @@
 
       <div class="card-content">
         <div class="symbol-editor">
+          <div
+            v-if="!mathLiveLoaded"
+            class="loading-placeholder"
+          >
+            Loading math editor...
+          </div>
           <math-field
+            v-else
             ref="mathfieldEl"
             aria-label="Math formula editor"
           />
@@ -68,10 +75,15 @@
                 @mouseleave="onSymbolMouseLeave"
               >
                 <math-field
+                  v-if="mathLiveLoaded"
                   read-only
                   tabindex="-1"
                   :value="symbol.preview"
                 />
+                <span
+                  v-else
+                  class="symbol-fallback"
+                >{{ symbol.preview }}</span>
               </button>
             </div>
           </div>
@@ -81,7 +93,7 @@
       <footer>
         <button
           class="insert-button"
-          :disabled="isFormulaEmpty"
+          :disabled="isFormulaEmpty || !mathLiveLoaded"
           @click="onSave"
         >
           {{ insert$() }}
@@ -96,7 +108,6 @@
 <script>
 
   import { ref, onMounted, defineComponent, computed } from 'vue';
-  import 'mathlive';
   import { useFocusTrap } from '../../composables/useFocusTrap';
   import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
   import { useMathLiveLocale } from '../../composables/useMathLiveLocale';
@@ -108,14 +119,56 @@
       const rootEl = ref(null);
       const mathfieldEl = ref(null);
       const infoText = ref('');
+      const mathLiveLoaded = ref(false);
 
       useFocusTrap(rootEl);
 
       const currentLatex = ref('');
 
+      // Load MathLive dynamically
+      const loadMathLive = async () => {
+        try {
+          // Dynamic import of mathlive and its CSS
+          await Promise.all([
+            import(/* webpackChunkName: "mathlive" */ 'mathlive'),
+            import(/* webpackChunkName: "mathlive-css" */ 'mathlive/fonts.css'),
+          ]);
+
+          mathLiveLoaded.value = true;
+
+          // Configure MathLive after it's loaded
+          if (typeof window !== 'undefined' && window.MathfieldElement) {
+            window.MathfieldElement.soundsDirectory = null;
+            if (window.mathVirtualKeyboard) {
+              window.mathVirtualKeyboard.plonkSound = null;
+              window.mathVirtualKeyboard.keypressSound = null;
+            }
+          }
+
+          // Initialize the mathfield after MathLive is loaded
+          await initializeMathfield();
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.error('Failed to load MathLive:', error);
+        }
+      };
+
+      const initializeMathfield = async () => {
+        // Wait for next tick to ensure the mathfield element is rendered
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        if (mathfieldEl.value) {
+          mathfieldEl.value.mathVirtualKeyboardPolicy = 'manual';
+          mathfieldEl.value.value = props.initialLatex;
+          mathfieldEl.value.focus();
+          mathfieldEl.value.addEventListener('input', updateLatex);
+          currentLatex.value = props.initialLatex;
+        }
+      };
+
       // Watch for changes in the mathfield
       const updateLatex = () => {
-        if (mathfieldEl.value) {
+        if (mathfieldEl.value && mathLiveLoaded.value) {
           currentLatex.value = mathfieldEl.value.getValue('latex');
         }
       };
@@ -125,27 +178,7 @@
       });
 
       onMounted(() => {
-        if (typeof window !== 'undefined' && window.MathfieldElement) {
-          // Disable sounds globally
-          window.MathfieldElement.soundsDirectory = null;
-
-          // Disable virtual keyboard globally
-          if (window.mathVirtualKeyboard) {
-            window.mathVirtualKeyboard.plonkSound = null;
-            window.mathVirtualKeyboard.keypressSound = null;
-          }
-        }
-
-        if (mathfieldEl.value) {
-          // Configure the specific mathfield instance
-          mathfieldEl.value.mathVirtualKeyboardPolicy = 'manual';
-          mathfieldEl.value.value = props.initialLatex;
-          mathfieldEl.value.focus();
-
-          // Listen for input changes
-          mathfieldEl.value.addEventListener('input', updateLatex);
-          currentLatex.value = props.initialLatex;
-        }
+        loadMathLive();
       });
 
       const getSymbol = (symbolsGroupIdx, symbolIdx) => {
@@ -155,7 +188,6 @@
       const getSymbolClasses = (symbolsGroup, symbolsGroupIdx) => {
         const classes = ['symbol'];
 
-        // Get the original titleKey from symbolsData
         const originalGroup = symbolsData[symbolsGroupIdx];
         if (
           originalGroup &&
@@ -177,23 +209,21 @@
       };
 
       const onSymbolClick = (symbolsGroupIdx, symbolIdx) => {
+        if (!mathLiveLoaded.value || !mathfieldEl.value) return;
+
         const symbol = getSymbol(symbolsGroupIdx, symbolIdx);
+        const originalGroup = symbolsData[symbolsGroupIdx];
+        const valueToInsert =
+          originalGroup?.titleKey === 'formulasCategory' && symbol.template
+            ? symbol.template
+            : symbol.preview;
 
-        if (mathfieldEl.value) {
-          // Use template if available (for formulas category), otherwise use preview
-          const originalGroup = symbolsData[symbolsGroupIdx];
-          const valueToInsert =
-            originalGroup?.titleKey === 'formulasCategory' && symbol.template
-              ? symbol.template
-              : symbol.preview;
-
-          mathfieldEl.value.executeCommand(['insert', valueToInsert]);
-          mathfieldEl.value.focus();
-        }
+        mathfieldEl.value.executeCommand(['insert', valueToInsert]);
+        mathfieldEl.value.focus();
       };
 
       const onSave = () => {
-        if (mathfieldEl.value) {
+        if (mathfieldEl.value && mathLiveLoaded.value) {
           const newLatex = mathfieldEl.value.getValue('latex');
           emit('save', newLatex);
         }
@@ -227,6 +257,7 @@
       return {
         rootEl,
         mathfieldEl,
+        mathLiveLoaded,
         symbolGroups,
         infoText,
         getSymbolClasses,
@@ -252,8 +283,6 @@
 
 
 <style scoped>
-
-  @import 'mathlive/fonts.css';
 
   .formulas-menu {
     position: relative;
@@ -305,6 +334,20 @@
     padding: 12px;
     overflow-x: auto;
     text-align: center;
+  }
+
+  .loading-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 80px;
+    padding: 8px;
+    font-size: 1.2rem;
+    color: #666666;
+    background-color: #f9f9f9;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
   }
 
   .symbol-editor math-field {
@@ -396,6 +439,12 @@
     pointer-events: none;
     background: transparent;
     border: 0;
+  }
+
+  .symbol-fallback {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    color: #666666;
   }
 
   footer {
