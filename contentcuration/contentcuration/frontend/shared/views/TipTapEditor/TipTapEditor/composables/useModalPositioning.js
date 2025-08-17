@@ -1,16 +1,18 @@
 import { ref, watch } from 'vue';
 import { throttle } from 'lodash';
-import { useBreakpoint } from './useBreakpoint';
+import { isTouchDevice } from 'shared/utils/browserInfo';
 
 export function useModalPositioning() {
   const isModalOpen = ref(false);
   const popoverStyle = ref({});
   const isModalCentered = ref(false);
   const anchorElement = ref(null);
-  const { isMobile } = useBreakpoint();
+
+  let scrollRaf = null;
+  let resizeRaf = null;
 
   const updatePosition = () => {
-    if (!anchorElement.value || isModalCentered.value || isMobile.value) {
+    if (!anchorElement.value || isModalCentered.value || isTouchDevice) {
       return;
     }
     const rect = anchorElement.value.getBoundingClientRect();
@@ -25,9 +27,9 @@ export function useModalPositioning() {
   const handleResize = () => {
     if (isModalOpen.value) {
       // Re-evaluate positioning on resize
-      if (isMobile.value && !isModalCentered.value) {
+      if (isTouchDevice && !isModalCentered.value) {
         setCenteredPosition();
-      } else if (!isMobile.value && anchorElement.value) {
+      } else if (!isTouchDevice && anchorElement.value) {
         updatePosition();
       }
     }
@@ -56,7 +58,7 @@ export function useModalPositioning() {
 
   const openModal = ({ targetElement = null, centered = false } = {}) => {
     // Force centered positioning on mobile
-    if (centered || !targetElement || isMobile.value) {
+    if (centered || !targetElement || isTouchDevice) {
       setCenteredPosition();
     } else {
       setAnchoredPosition(targetElement);

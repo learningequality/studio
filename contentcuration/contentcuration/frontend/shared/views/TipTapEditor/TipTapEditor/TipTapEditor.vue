@@ -12,7 +12,7 @@
   >
     <div v-if="editorMode === 'edit'">
       <EditorToolbar
-        v-if="!isMobile"
+        v-if="!isTouchDevice"
         v-on="sharedEventHandlers"
         @minimize="emitMinimize"
       />
@@ -124,8 +124,8 @@
   import { preprocessMarkdown } from './utils/markdown';
   import MobileTopBar from './components/toolbar/MobileTopBar.vue';
   import MobileFormattingBar from './components/toolbar/MobileFormattingBar.vue';
-  import { useBreakpoint } from './composables/useBreakpoint';
   import { getTipTapEditorStrings } from './TipTapEditorStrings';
+  import { isTouchDevice } from 'shared/utils/browserInfo.js';
 
   export default defineComponent({
     name: 'RichTextEditor',
@@ -153,8 +153,6 @@
         computed(() => props.mode),
       );
       provide('mathHandler', mathHandler);
-
-      const { isMobile } = useBreakpoint();
 
       const imageHandler = useImageHandling(editor);
       provide('imageProcessor', props.imageProcessor);
@@ -270,7 +268,7 @@
         linkHandler,
         editor,
         mathHandler,
-        isMobile,
+        isTouchDevice,
         imageHandler,
         sharedEventHandlers,
         editorMode: computed(() => props.mode),
