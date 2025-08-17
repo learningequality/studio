@@ -135,11 +135,13 @@
     <!-- More dropdown - only visible when there are overflow categories -->
     <div
       v-if="overflowCategories.length > 0"
+      ref="moreDropdownContainer"
       class="more-dropdown-container"
       role="group"
       :aria-label="'More options'"
     >
       <ToolbarButton
+        ref="moreButton"
         :title="'More options'"
         :icon="require('../../assets/icon-chevron-down.svg')"
         :is-active="isMoreDropdownOpen"
@@ -150,8 +152,9 @@
       />
 
       <div
-        v-if="isMoreDropdownOpen"
+        v-show="isMoreDropdownOpen"
         id="more-options-menu"
+        ref="moreDropdown"
         class="more-dropdown"
         role="menu"
         :aria-label="'Additional formatting options'"
@@ -302,6 +305,9 @@
     },
     setup(props, { emit }) {
       const toolbarRef = ref(null);
+      const moreButton = ref(null);
+      const moreDropdown = ref(null);
+      const moreDropdownContainer = ref(null);
       const isMoreDropdownOpen = ref(false);
       const toolbarWidth = ref(0);
 
@@ -360,20 +366,24 @@
 
       const updateToolbarWidth = () => {
         if (toolbarRef.value) {
-          toolbarWidth.value = toolbarRef.value.offsetWidth;
+          // Batch layout reads in next frame
+          requestAnimationFrame(() => {
+            toolbarWidth.value = toolbarRef.value.offsetWidth;
+          });
         }
       };
 
       const handleResize = entries => {
-        setTimeout(() => {
+        // Use ResizeObserver data directly - no DOM reading
+        requestAnimationFrame(() => {
           for (const entry of entries) {
             toolbarWidth.value = entry.contentRect.width;
           }
-        }, 0);
+        });
       };
 
       const handleWindowResize = () => {
-        setTimeout(updateToolbarWidth, 0);
+        requestAnimationFrame(updateToolbarWidth);
       };
 
       const onToolClick = (tool, event) => {
@@ -405,14 +415,11 @@
           isMoreDropdownOpen.value = false;
           // Return focus to the more button
           await nextTick();
-          const moreButton = toolbarRef.value?.querySelector(
-            '.more-dropdown-container [role="button"]',
-          );
-          moreButton?.focus();
+          moreButton.value?.$el?.focus();
         } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
           event.preventDefault();
           const menuItems = Array.from(
-            event.currentTarget.querySelectorAll('[role="menuitem"]:not(:disabled)'),
+            moreDropdown.value?.querySelectorAll('[role="menuitem"]:not(:disabled)') || [],
           );
           const currentIndex = menuItems.indexOf(document.activeElement);
 
@@ -429,8 +436,7 @@
 
       // Close dropdown when clicking outside
       const handleClickOutside = event => {
-        const dropdown = event.target.closest('.more-dropdown-container');
-        if (!dropdown) {
+        if (moreDropdownContainer.value && !moreDropdownContainer.value.contains(event.target)) {
           isMoreDropdownOpen.value = false;
         }
       };
@@ -438,19 +444,21 @@
       onMounted(async () => {
         await nextTick();
 
-        // Initial width measurement
-        updateToolbarWidth();
+        // Initial width measurement in next frame
+        requestAnimationFrame(() => {
+          updateToolbarWidth();
+        });
 
         // Set up resize observer
         if (toolbarRef.value && window.ResizeObserver) {
           resizeObserver = new ResizeObserver(handleResize);
           resizeObserver.observe(toolbarRef.value);
         } else {
-          // Fallback to window resize listener
-          window.addEventListener('resize', handleWindowResize);
+          // Fallback to window resize listener with passive flag
+          window.addEventListener('resize', handleWindowResize, { passive: true });
         }
 
-        document.addEventListener('click', handleClickOutside);
+        document.addEventListener('click', handleClickOutside, { passive: true });
       });
 
       onUnmounted(() => {
@@ -464,6 +472,9 @@
 
       return {
         toolbarRef,
+        moreButton,
+        moreDropdown,
+        moreDropdownContainer,
         isMoreDropdownOpen,
         visibleCategories,
         overflowCategories,
