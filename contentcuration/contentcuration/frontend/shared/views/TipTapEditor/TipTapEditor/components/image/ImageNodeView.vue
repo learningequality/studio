@@ -280,7 +280,8 @@
       });
 
       onUnmounted(() => {
-        clearTimeout(debounceTimer);
+        // Cancel any pending debounced calls
+        debouncedSaveSize.cancel();
 
         // Clean up any remaining resize listeners
         if (resizeListeners) {
