@@ -289,6 +289,7 @@
     position: relative;
     width: 90%;
     max-width: 500px;
+    max-height: 90vh;
   }
 
   .card {
@@ -373,7 +374,7 @@
   }
 
   .symbols-list {
-    height: 320px;
+    height: min(320px, calc(60vh - 180px));
     padding: 8px;
     overflow-y: auto;
   }
@@ -469,6 +470,43 @@
     color: #bdbdbd;
     cursor: not-allowed;
     background: #e0e0e0;
+  }
+
+  @media screen and (max-height: 500px) and (orientation: landscape) {
+    .formulas-menu {
+      width: 95%;
+      max-width: 600px;
+    }
+
+    .symbols-list {
+      height: min(240px, calc(60vh - 120px));
+    }
+
+    .symbol-editor math-field {
+      min-height: 30px;
+      font-size: 1.1rem;
+    }
+
+    .info-bar {
+      min-height: 18px;
+      margin-top: 0;
+      font-size: 0.8rem;
+    }
+
+    .symbol {
+      min-height: 32px;
+      padding: 4px;
+    }
+
+    footer {
+      height: fit-content;
+      padding: 0.3rem;
+    }
+
+    .insert-button {
+      padding: 4px 8px;
+      font-size: 0.9rem;
+    }
   }
 
 </style>

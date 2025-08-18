@@ -351,6 +351,7 @@
 
   /* Overlay for edit mode to allow clicking outside to close */
   .has-overlay {
+    z-index: 10;
     pointer-events: auto;
     background: rgba(0, 0, 0, 0.5);
   }
