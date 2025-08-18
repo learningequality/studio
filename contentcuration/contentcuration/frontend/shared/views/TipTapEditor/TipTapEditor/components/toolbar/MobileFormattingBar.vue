@@ -166,13 +166,35 @@
   .floating-panel {
     position: fixed;
     right: 0;
-    bottom: 0;
+
+    /* Use visual viewport bottom instead of layout viewport */
+    bottom: calc(100vh - 100dvh);
     left: 0;
     z-index: 100;
     display: flex;
     align-items: center;
     padding: 0.25rem;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slide-up 0.2s ease-out;
+  }
+
+  /* Fallback for older browsers */
+  @supports not (height: 100dvh) {
+    .floating-panel {
+      bottom: 0;
+    }
+  }
+
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .fixed-actions {
