@@ -144,7 +144,7 @@
 
 <script>
 
-  import { defineComponent, ref, computed, onMounted, inject } from 'vue';
+  import { defineComponent, ref, computed, onMounted, inject, getCurrentInstance } from 'vue';
   import { useFocusTrap } from '../../composables/useFocusTrap';
   import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
   import ImageDropZone from './ImageDropZone.vue';
@@ -198,6 +198,9 @@
       const imageProcessor = inject('imageProcessor', {});
       const { processFile, ACCEPTED_MIME_TYPES } = imageProcessor;
 
+      const instance = getCurrentInstance();
+      const store = instance.proxy.$store;
+
       onMounted(() => {
         originalData.value = { ...props.initialData };
         previewSrc.value = props.initialData.src || '';
@@ -223,7 +226,7 @@
         if (!selectedFile) return;
         modalState.value = 'loading';
         try {
-          const { src, file: processedFile } = await processFile(selectedFile);
+          const { src, file: processedFile } = await processFile(selectedFile, { $store: store });
           previewSrc.value = src;
           file.value = processedFile;
           modalState.value = 'preview';

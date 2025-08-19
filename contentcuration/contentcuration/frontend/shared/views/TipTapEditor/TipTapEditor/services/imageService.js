@@ -11,30 +11,47 @@ const MAX_FILE_SIZE_MB = 10;
 // see: shared/leUtils/FormatPresets.js
 const ACCEPTED_MIME_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/svg+xml'];
 
-const { noFileProvided$, invalidFileType$, fileTooLarge$, fileSizeUnit$, failedToProcessImage$ } =
-  getTipTapEditorStrings();
+const {
+  noFileProvided$,
+  invalidFileType$,
+  fileTooLarge$,
+  fileSizeUnit$,
+  failedToProcessImage$,
+  noEnoughStorageSpace$,
+} = getTipTapEditorStrings();
 
 /**
- * Validates a file based on type and size.
+ * Validates a file based on type, size, and available storage.
  * @param {File} file - The file to validate.
+ * @param {number} availableSpace - Available storage space in bytes.
  * @returns {{isValid: boolean, error?: string}}
  */
-function validateFile(file) {
+function validateFile(file, availableSpace = null) {
   if (!file) {
     return { isValid: false, error: noFileProvided$() };
   }
+
   if (!ACCEPTED_MIME_TYPES.includes(file.type)) {
     return {
       isValid: false,
       error: invalidFileType$() + ACCEPTED_MIME_TYPES.join(', '),
     };
   }
+
   if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
     return {
       isValid: false,
       error: fileTooLarge$() + MAX_FILE_SIZE_MB + fileSizeUnit$(),
     };
   }
+
+  if (availableSpace !== null && file.size > availableSpace) {
+    return {
+      isValid: false,
+      error: noEnoughStorageSpace$(),
+    };
+  }
+
   return { isValid: true };
 }
 
@@ -62,10 +79,19 @@ function uploadFileToStorage({ file_format, mightSkip, checksum, file, url, cont
  * Main file processing function that uploads to server.
  * Adapted from uploadFile action but simplified for image-specific use.
  * @param {File} file - The image file to process.
+ * @param {Object} context - Vue component context with $store access.
  * @returns {Promise<{src: string, width: number, height: number, file: File, id: string}>}
  */
-async function processFile(file) {
-  const validation = validateFile(file);
+async function processFile(file, context = null) {
+  let availableSpace = null;
+
+  // Get available space if context is provided
+  if (context && context.$store) {
+    await context.$store.dispatch('fetchUserStorage');
+    availableSpace = context.$store.getters.availableSpace;
+  }
+
+  const validation = validateFile(file, availableSpace);
   if (!validation.isValid) {
     throw new Error(validation.error);
   }

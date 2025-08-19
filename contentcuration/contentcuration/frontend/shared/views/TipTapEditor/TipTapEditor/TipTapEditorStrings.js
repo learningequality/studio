@@ -321,6 +321,10 @@ const MESSAGES = {
     message: 'Failed to process the image file.',
     context: 'Error message when image processing fails',
   },
+  noEnoughStorageSpace: {
+    message: 'Not enough storage space available. File size exceeds remaining storage.',
+    context: 'Error message when there is insufficient storage space for the file',
+  },
 
   // for MobileFormattingBar
   collapseFormattingBar: {
