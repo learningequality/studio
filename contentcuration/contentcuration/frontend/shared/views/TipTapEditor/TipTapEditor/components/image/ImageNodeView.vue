@@ -122,10 +122,17 @@
         if (imageRef.value && imageRef.value.naturalWidth && imageRef.value.naturalHeight) {
           naturalAspectRatio.value = imageRef.value.naturalWidth / imageRef.value.naturalHeight;
 
-          // If no dimensions are set, use natural dimensions
+          // If no dimensions are set, use natural dimensions but constrain to editor width
           if (!width.value && !height.value) {
-            width.value = imageRef.value.naturalWidth;
-            height.value = imageRef.value.naturalHeight;
+            // Get the editor's actual container width
+            const editorContainer = props.editor.view.dom.closest('.editor-container');
+            const editorWidth = editorContainer ? editorContainer.offsetWidth : 800; // fallback width
+
+            const maxWidth = Math.min(imageRef.value.naturalWidth, editorWidth);
+
+            width.value = maxWidth;
+            height.value = Math.round(maxWidth / naturalAspectRatio.value);
+
             saveSize();
           } else if (width.value && !height.value) {
             // If we have width but no height, calculate height
