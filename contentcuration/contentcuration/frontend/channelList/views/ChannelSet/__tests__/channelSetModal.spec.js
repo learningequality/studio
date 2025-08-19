@@ -217,12 +217,12 @@ describe('ChannelSetModal', () => {
       });
 
       it('should prompt user if there are unsaved changes', async () => {
-        expect(getUnsavedDialog(wrapper).attributes('data-test-visible')).toBeFalsy();
+        expect(getUnsavedDialog(wrapper).exists()).toBeFalsy();
 
         await getCollectionNameInput(wrapper).setValue('My collection');
         await getCloseButton(wrapper).trigger('click');
 
-        expect(getUnsavedDialog(wrapper).attributes('data-test-visible')).toBeTruthy();
+        expect(getUnsavedDialog(wrapper).exists()).toBeTruthy();
       });
     });
 
