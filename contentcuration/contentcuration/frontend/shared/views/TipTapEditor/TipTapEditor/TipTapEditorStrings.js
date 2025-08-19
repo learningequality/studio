@@ -301,6 +301,10 @@ const MESSAGES = {
   },
 
   // Error Messages
+  errorUploadingImage: {
+    message: 'Error uploading image',
+    context: 'Title for the error modal when an image upload fails.',
+  },
   noFileProvided: {
     message: 'No file provided.',
     context: 'Error message when no file is provided for upload',

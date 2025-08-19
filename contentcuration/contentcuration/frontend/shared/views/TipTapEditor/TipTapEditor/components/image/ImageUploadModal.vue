@@ -137,6 +137,16 @@
         </button>
       </template>
     </footer>
+    <KModal
+      v-if="showErrorModal"
+      :appendToOverlay="true"
+      :title="errorUploadingImage$()"
+    >
+      <template> {{ errorMessage }} </template>
+      <template #actions>
+        <KButton @click="showErrorModal = false"> {{ close$() }} </KButton>
+      </template>
+    </KModal>
   </div>
 
 </template>
@@ -159,6 +169,7 @@
         closeModal$,
         cancelLoading$,
         cancel$,
+        close$,
         replaceFile$,
         selectFile$,
         imagePreview$,
@@ -176,6 +187,7 @@
         insertImage$,
         defaultImageName$,
         multipleFilesDroppedWarning$,
+        errorUploadingImage$,
       } = getTipTapEditorStrings();
 
       const modalRoot = ref(null);
@@ -186,6 +198,8 @@
       const altText = ref('');
       const file = ref(null);
       const uploadWarning = ref('');
+      const showErrorModal = ref(false);
+      const errorMessage = ref('');
       let warningTimer = null;
 
       const isEditMode = computed(() => props.mode === 'edit');
@@ -221,7 +235,6 @@
           uploadWarning.value = '';
         }, 5000);
       };
-
       const handleFileChange = async selectedFile => {
         if (!selectedFile) return;
         modalState.value = 'loading';
@@ -231,11 +244,11 @@
           file.value = processedFile;
           modalState.value = 'preview';
         } catch (error) {
-          alert(error.message);
+          errorMessage.value = error.message;
+          showErrorModal.value = true;
           resetToPreview();
         }
       };
-
       const resetToPreview = () => {
         if (props.mode === 'create' && !originalData.value.file) {
           modalState.value = 'initial';
@@ -280,6 +293,8 @@
         handleFileChange,
         uploadWarning,
         showMultiFileWarning,
+        errorMessage,
+        showErrorModal,
 
         // Strings
         editImage$,
@@ -287,6 +302,7 @@
         closeModal$,
         cancelLoading$,
         cancel$,
+        close$,
         replaceFile$,
         selectFile$,
         imagePreview$,
@@ -302,6 +318,7 @@
         save$,
         insert$,
         insertImage$,
+        errorUploadingImage$,
       };
     },
     props: {
