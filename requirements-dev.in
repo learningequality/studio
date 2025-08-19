@@ -8,5 +8,5 @@ pytest-timeout
 pytest-subtests
 pre-commit==4.2.0
 nodeenv
-pip-tools==7.4.1
+pip-tools==7.5.0
 drf-yasg==1.21.10

@@ -30,7 +30,7 @@
             <p>
               {{ $tr('channelSetsInstructionsText') }}
             </p>
-            <p :style="{ color: $themePalette.red.v_500 }">
+            <p :class="$computedClass(channelSetsDisclamerStyle)">
               {{ $tr('channelSetsDisclaimer') }}
             </p>
           </div>
@@ -110,6 +110,11 @@
           { text: this.$tr('channelNumber'), sortable: false, align: 'right', width: '50px' },
           { text: this.$tr('options'), sortable: false, align: 'center', width: '100px' },
         ];
+      },
+      channelSetsDisclamerStyle() {
+        return {
+          color: this.$themePalette.red.v_500,
+        };
       },
       sortedChannelSets() {
         return sortBy(this.channelSets, s => s.name.toLowerCase()) || [];
