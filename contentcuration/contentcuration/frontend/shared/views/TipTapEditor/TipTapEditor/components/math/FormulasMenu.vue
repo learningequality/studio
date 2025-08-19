@@ -33,7 +33,7 @@
             v-if="!mathLiveLoaded"
             class="loading-placeholder"
           >
-            Loading math editor...
+            {{ loadingFormulas$() }}...
           </div>
           <math-field
             v-else
@@ -107,7 +107,7 @@
 
 <script>
 
-  import { ref, onMounted, defineComponent, computed } from 'vue';
+  import { ref, onMounted, defineComponent, computed, nextTick } from 'vue';
   import { useFocusTrap } from '../../composables/useFocusTrap';
   import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
   import { useMathLiveLocale } from '../../composables/useMathLiveLocale';
@@ -131,8 +131,6 @@
           // Dynamic import of mathlive
           await import(/* webpackChunkName: "mathlive" */ 'mathlive');
 
-          mathLiveLoaded.value = true;
-
           // Configure MathLive after it's loaded
           if (typeof window !== 'undefined' && window.MathfieldElement) {
             window.MathfieldElement.soundsDirectory = null;
@@ -141,6 +139,8 @@
               window.mathVirtualKeyboard.keypressSound = null;
             }
           }
+
+          mathLiveLoaded.value = true;
 
           // Initialize the mathfield after MathLive is loaded
           await initializeMathfield();
@@ -152,7 +152,7 @@
 
       const initializeMathfield = async () => {
         // Wait for next tick to ensure the mathfield element is rendered
-        await new Promise(resolve => setTimeout(resolve, 0));
+        await nextTick();
 
         if (mathfieldEl.value) {
           mathfieldEl.value.mathVirtualKeyboardPolicy = 'manual';
@@ -226,7 +226,8 @@
         }
       };
 
-      const { formulasMenuTitle$, insert$, closeModal$ } = getTipTapEditorStrings();
+      const { formulasMenuTitle$, insert$, closeModal$, loadingFormulas$ } =
+        getTipTapEditorStrings();
       const formulasStrings = getFormulasStrings();
 
       // Transform symbols data to use translations
@@ -265,6 +266,7 @@
         formulasMenuTitle$,
         insert$,
         closeModal$,
+        loadingFormulas$,
         isFormulaEmpty,
       };
     },

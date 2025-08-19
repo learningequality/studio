@@ -1,4 +1,5 @@
 import { ref, watch } from 'vue';
+import { throttle } from 'lodash';
 import { useBreakpoint } from './useBreakpoint';
 
 export function useModalPositioning() {
@@ -7,9 +8,6 @@ export function useModalPositioning() {
   const isModalCentered = ref(false);
   const anchorElement = ref(null);
   const { isMobile } = useBreakpoint();
-
-  let scrollRaf = null;
-  let resizeRaf = null;
 
   const updatePosition = () => {
     if (!anchorElement.value || isModalCentered.value || isMobile.value) {
@@ -24,29 +22,20 @@ export function useModalPositioning() {
     };
   };
 
-  // Throttle scroll and resize events
-  const throttledUpdatePosition = () => {
-    if (scrollRaf) {
-      cancelAnimationFrame(scrollRaf);
+  const handleResize = () => {
+    if (isModalOpen.value) {
+      // Re-evaluate positioning on resize
+      if (isMobile.value && !isModalCentered.value) {
+        setCenteredPosition();
+      } else if (!isMobile.value && anchorElement.value) {
+        updatePosition();
+      }
     }
-    scrollRaf = requestAnimationFrame(updatePosition);
   };
 
-  const throttledHandleResize = () => {
-    if (resizeRaf) {
-      cancelAnimationFrame(resizeRaf);
-    }
-    resizeRaf = requestAnimationFrame(() => {
-      if (isModalOpen.value) {
-        // Re-evaluate positioning on resize
-        if (isMobile.value && !isModalCentered.value) {
-          setCenteredPosition();
-        } else if (!isMobile.value && anchorElement.value) {
-          updatePosition();
-        }
-      }
-    });
-  };
+  // Throttle scroll and resize events
+  const throttledUpdatePosition = throttle(updatePosition, 10);
+  const throttledHandleResize = throttle(handleResize, 10);
 
   const setCenteredPosition = () => {
     isModalCentered.value = true;
@@ -102,15 +91,9 @@ export function useModalPositioning() {
         document.removeEventListener('mousedown', clickOutsideHandler, true);
         window.removeEventListener('scroll', throttledUpdatePosition, true);
         window.removeEventListener('resize', throttledHandleResize, true);
-        // Cancel any pending animation frames
-        if (scrollRaf) {
-          cancelAnimationFrame(scrollRaf);
-          scrollRaf = null;
-        }
-        if (resizeRaf) {
-          cancelAnimationFrame(resizeRaf);
-          resizeRaf = null;
-        }
+        // Cancel any pending throttled calls
+        throttledUpdatePosition.cancel();
+        throttledHandleResize.cancel();
       }
     });
   };
@@ -118,15 +101,9 @@ export function useModalPositioning() {
   const cleanup = () => {
     window.removeEventListener('scroll', throttledUpdatePosition, true);
     window.removeEventListener('resize', throttledHandleResize, true);
-    // Cancel any pending animation frames
-    if (scrollRaf) {
-      cancelAnimationFrame(scrollRaf);
-      scrollRaf = null;
-    }
-    if (resizeRaf) {
-      cancelAnimationFrame(resizeRaf);
-      resizeRaf = null;
-    }
+    // Cancel any pending throttled calls
+    throttledUpdatePosition.cancel();
+    throttledHandleResize.cancel();
   };
 
   return {
