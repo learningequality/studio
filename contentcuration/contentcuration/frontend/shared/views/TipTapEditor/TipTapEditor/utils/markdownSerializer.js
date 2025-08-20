@@ -10,38 +10,43 @@ export const createCustomMarkdownSerializer = editor => {
     const serializeMarks = node => {
       if (!node.marks || node.marks.length === 0) return node.text || '';
 
-      let text = node.text || '';
+      const text = node.text || '';
+      // Markdown only works if it's sticky to the text
+      const leadingWhitespace = text.match(/^\s+/)?.[0] || '';
+      const trailingWhitespace = text.match(/\s+$/)?.[0] || '';
+      let trimmedText = text.trim();
+
       node.marks.forEach(mark => {
         switch (mark.type.name) {
           case 'bold':
-            text = `**${text}**`;
+            trimmedText = `**${trimmedText}**`;
             break;
           case 'italic':
-            text = `*${text}*`;
+            trimmedText = `*${trimmedText}*`;
             break;
           case 'underline':
-            text = `<u>${text}</u>`;
+            trimmedText = `<u>${trimmedText}</u>`;
             break;
           case 'strike':
-            text = `~~${text}~~`;
+            trimmedText = `~~${trimmedText}~~`;
             break;
           case 'code':
-            text = `\`${text}\``;
+            trimmedText = `\`${trimmedText}\``;
             break;
           case 'link': {
             const href = mark.attrs.href || '';
-            text = `[${text}](${href})`;
+            trimmedText = `[${trimmedText}](${href})`;
             break;
           }
           case 'superscript':
-            text = `<sup>${text}</sup>`;
+            trimmedText = `<sup>${trimmedText}</sup>`;
             break;
           case 'subscript':
-            text = `<sub>${text}</sub>`;
+            trimmedText = `<sub>${trimmedText}</sub>`;
             break;
         }
       });
-      return text;
+      return leadingWhitespace + trimmedText + trailingWhitespace;
     };
 
     const serializeNode = (node, listNumber = null, depth = 0) => {
