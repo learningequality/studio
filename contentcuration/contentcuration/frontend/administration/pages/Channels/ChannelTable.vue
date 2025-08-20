@@ -207,6 +207,11 @@
           { text: 'Last updated', value: 'modified' },
           { text: 'Demo URL', value: 'demo_server_url' },
           { text: 'Source URL', value: 'source_url' },
+          {
+            text: 'Community Library Status',
+            value: 'latest_community_library_submission_status',
+            sortable: false,
+          },
           { text: 'Actions', sortable: false, align: 'center' },
         ]);
       },

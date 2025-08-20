@@ -197,6 +197,13 @@
       </VEditDialog>
       <span v-else>Deleted</span>
     </td>
+    <td>
+      <CommunityLibraryStatusButton
+        v-if="communityLibraryStatus"
+        :status="communityLibraryStatus"
+      />
+      <template v-else>—</template>
+    </td>
     <td class="text-xs-center">
       <ChannelActionsDropdown
         :channelId="channelId"
@@ -212,6 +219,7 @@
 
   import { mapGetters, mapActions } from 'vuex';
   import ClipboardChip from '../../components/ClipboardChip';
+  import CommunityLibraryStatusButton from '../../components/CommunityLibraryStatusButton.vue';
   import { RouteNames } from '../../constants';
   import ChannelActionsDropdown from './ChannelActionsDropdown';
   import { fileSizeMixin } from 'shared/mixins';
@@ -223,6 +231,7 @@
       ChannelActionsDropdown,
       ClipboardChip,
       Checkbox,
+      CommunityLibraryStatusButton,
     },
     mixins: [fileSizeMixin],
     props: {
@@ -273,6 +282,22 @@
             keywords: `${this.channelId}`,
           },
         };
+      },
+      communityLibraryStatus() {
+        switch (this.channel.latest_community_library_submission_status) {
+          case null:
+            return null;
+          case 'SUBMITTED':
+            return 'submitted';
+          case 'APPROVED':
+          case 'LIVE':
+            return 'approved';
+          case 'FLAGGED':
+            return 'flagged';
+
+          default:
+            return 'unknown';
+        }
       },
     },
     methods: {
