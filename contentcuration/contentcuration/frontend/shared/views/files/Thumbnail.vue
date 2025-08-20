@@ -25,7 +25,7 @@
         <KIcon
           :icon="icon"
           class="icon-thumbnail"
-          :style="{ fill: '#ffffff' }"
+          :style="{ fill: $themeTokens.textInverted }"
         />
       </VFlex>
       <VFlex shrink>
@@ -45,19 +45,13 @@
       v-else-if="printing"
       class="printable-icon"
     >
-      <!-- <VIconWrapper
-        :color="$vuetify.theme[kind]"
-        capture-as-image
-      >
-        {{ icon }}
-      </VIconWrapper> -->
       <KIcon
         class="icon-thumbnail"
         :icon="icon"
+        capture-as-image
       />
     </div>
 
-    <!-- Bury icon within SVG so it's more responsive, since font-size scaling is more difficult -->
     <div
       v-else-if="compact"
       class="kicon-wrapper"
@@ -65,7 +59,7 @@
       <KIcon
         :icon="icon"
         class="icon-thumbnail"
-        :style="{ fill: '#ffffff' }"
+        :style="{ fill: $themeTokens.textInverted }"
       />
     </div>
     <div
@@ -75,7 +69,7 @@
       <KIcon
         icon="image"
         class="icon-thumbnail"
-        :style="{ fill: '#123345', width: '40%', height: 'auto' }"
+        :style="{ fill: $themePalette.grey.v_400, width: '40%', height: '50px' }"
       />
     </div>
   </figure>
@@ -165,16 +159,8 @@
 <style lang="scss" scoped>
 
   $caption-height: 25px;
-  $svg-scale: 1.25;
   $aspect-ratio: 9 / 16;
-
   $aspect-percentage: $aspect-ratio * 100%;
-  $half-aspect-percentage: $aspect-percentage / 2;
-
-  $svg-width: $aspect-percentage / $svg-scale;
-  $svg-top: $half-aspect-percentage - ($svg-width / 2);
-  $svg-width-quarter: $svg-width / 4;
-  $svg-left-position: 50% - $svg-width-quarter;
 
   .thumbnail {
     position: relative;
@@ -207,76 +193,17 @@
     line-height: 11px;
   }
 
-  .thumbnail-image,
-  .nothumbnail-image {
+  .thumbnail-image {
     position: absolute;
-    display: block;
-  }
-
-  img.thumbnail-image {
     bottom: 0;
     left: 0;
+    display: block;
     width: 100%;
     height: 100%;
     overflow: hidden; // Don't show alt text outside of img boundaries
 
     .caption + & {
       height: calc(100% - #{$caption-height});
-    }
-  }
-
-  svg.thumbnail-image {
-    top: 0;
-    left: $svg-left-position;
-    width: $svg-width-quarter;
-    margin: 0 auto;
-    overflow: visible;
-
-    .icon-only & {
-      top: 18%;
-      left: 21%;
-      display: block;
-      width: 55%;
-
-      [dir='rtl'] & {
-        left: -10px;
-      }
-    }
-
-    text {
-      font-size: 1.8em;
-      line-height: 1.8em;
-    }
-  }
-
-  svg.nothumbnail-image {
-    top: 0;
-    width: $svg-width;
-    margin: 0 auto;
-    overflow: visible;
-
-    &.ltr-image {
-      left: 36%;
-    }
-
-    &.rtl-image {
-      right: 66%;
-    }
-
-    .caption + & {
-      top: calc(#{$caption-height / 2} + #{$svg-top});
-    }
-
-    .icon-only & {
-      top: 18%;
-      left: 21%;
-      display: block;
-      width: 55%;
-    }
-
-    text {
-      font-size: 1em;
-      line-height: 1em;
     }
   }
 
