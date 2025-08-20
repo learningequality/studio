@@ -265,6 +265,27 @@ describe('createCustomMarkdownSerializer', () => {
       const getMarkdown = createCustomMarkdownSerializer(mockEditor);
       expect(getMarkdown()).toBe('[Google](https://google.com)');
     });
+
+    it('should preserve whitespace around marks correctly', () => {
+      const docContent = [
+        {
+          type: 'paragraph',
+          content: [
+            { type: 'text', text: 'Text with' },
+            {
+              type: 'text',
+              text: ' bold text ',
+              marks: [{ type: 'bold' }],
+            },
+            { type: 'text', text: 'at the end.' },
+          ],
+        },
+      ];
+      const mockEditor = createMockEditor(docContent);
+      const getMarkdown = createCustomMarkdownSerializer(mockEditor);
+      // Whitespace should be preserved outside the markdown formatting
+      expect(getMarkdown()).toBe('Text with **bold text** at the end.');
+    });
   });
 
   // 5: Edge cases
