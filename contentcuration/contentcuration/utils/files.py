@@ -108,7 +108,13 @@ def get_thumbnail_encoding(filename, dimension=THUMBNAIL_WIDTH):
             inbuffer = default_storage.open(filename, "rb")
 
         else:
-            inbuffer = open(filename, "rb")
+            # Normalize the path and ensure it is indeed within STATIC_ROOT
+            normalized_path = os.path.normpath(filename)
+            static_root = os.path.abspath(settings.STATIC_ROOT)
+            abs_path = os.path.abspath(normalized_path)
+            if not abs_path.startswith(static_root + os.sep):
+                raise ValueError("Attempted access to file outside of STATIC_ROOT")
+            inbuffer = open(abs_path, "rb")
 
         if not inbuffer:
             raise AssertionError
