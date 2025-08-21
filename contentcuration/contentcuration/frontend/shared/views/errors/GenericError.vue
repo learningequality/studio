@@ -15,12 +15,10 @@
             :text="$tr('refreshAction')"
             @click="reloadPage"
           />
-          <KRouterLink
+          <KButton
             v-bind="backHomeLink"
-            appearance="raised-button"
-          >
-            {{ $tr('backToHomeAction') }}
-          </KRouterLink>
+            :text="$tr('backToHomeAction')"
+          />
         </KButtonGroup>
         <div style="margin-top: 1rem">
           <KButton
