@@ -1,6 +1,6 @@
 <template>
 
-  <AppError>
+  <StudioAppError>
     <template #header>
       {{ $tr('pageNotFoundHeader') }}
     </template>
@@ -8,27 +8,28 @@
       {{ $tr('pageNotFoundDetails') }}
     </template>
     <template #actions>
-      <VBtn
+      <KRouterLink
         v-bind="backHomeLink"
-        color="primary"
+        appearance="raised-button"
+        primary
       >
         {{ $tr('backToHomeAction') }}
-      </VBtn>
+      </KRouterLink>
     </template>
-  </AppError>
+  </StudioAppError>
 
 </template>
 
 
 <script>
 
-  import AppError from './AppError';
   import { routerMixin } from 'shared/mixins';
+  import StudioAppError from './StudioAppError.vue';
 
   export default {
     name: 'PageNotFoundError',
     components: {
-      AppError,
+      StudioAppError,
     },
     mixins: [routerMixin],
     props: {
