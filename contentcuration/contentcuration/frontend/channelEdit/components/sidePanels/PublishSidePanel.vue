@@ -285,24 +285,18 @@
 
       onMounted(async () => {
         if (currentChannel.value) {
-          try {
-            const exists = await channelLanguageExistsInResources();
-            channelLanguageExists.value = exists;
+          const exists = await channelLanguageExistsInResources();
+          channelLanguageExists.value = exists;
 
-            if (!exists) {
-              const languages = await getLanguagesInChannelResources();
-              channelLanguages.value = languages.length
-                ? languages
-                : [currentChannel.value.language];
-              language.value = defaultLanguage.value;
-              validateSelectedLanguage();
-            } else {
-              channelLanguages.value = [currentChannel.value.language];
-              language.value = defaultLanguage.value;
-              validateSelectedLanguage();
-            }
-          } catch (error) {
-            // Error loading channel language information
+          if (!exists) {
+            const languages = await getLanguagesInChannelResources();
+            channelLanguages.value = languages.length ? languages : [currentChannel.value.language];
+            language.value = defaultLanguage.value;
+            validateSelectedLanguage();
+          } else {
+            channelLanguages.value = [currentChannel.value.language];
+            language.value = defaultLanguage.value;
+            validateSelectedLanguage();
           }
         }
       });
