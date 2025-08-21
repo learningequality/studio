@@ -6,6 +6,7 @@ from django.db.models import Q
 from django.db.models import TextField
 from django.db.models import Value
 from django.http import HttpResponseNotFound
+from django.utils.html import escape
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import cache_page
 from kolibri_content.constants.schema_versions import MIN_CONTENT_SCHEMA_VERSION
@@ -75,9 +76,7 @@ def get_public_channel_list(request, version):
     try:
         channel_list = _get_channel_list(version, request.query_params)
     except LookupError:
-        return HttpResponseNotFound(
-            _("Api endpoint {} is not available").format(version)
-        )
+        return HttpResponseNotFound(_("API version is unavailable"))
     return Response(PublicChannelSerializer(channel_list, many=True).data)
 
 
@@ -92,12 +91,10 @@ def get_public_channel_lookup(request, version, identifier):
             identifier=identifier.strip().replace("-", ""),
         )
     except LookupError:
-        return HttpResponseNotFound(
-            _("Api endpoint {} is not available").format(version)
-        )
+        return HttpResponseNotFound(_("API version is unavailable"))
     if not channel_list.exists():
         return HttpResponseNotFound(
-            _("No channel matching {} found").format(identifier)
+            _("No channel matching {} found").format(escape(identifier))
         )
     return Response(PublicChannelSerializer(channel_list, many=True).data)
 
@@ -108,7 +105,9 @@ def get_channel_name_by_id(request, channel_id):
     """ Endpoint: /public/channels/<channel_id> """
     channel = Channel.objects.filter(pk=channel_id).first()
     if not channel:
-        return HttpResponseNotFound("Channel with id {} not found".format(channel_id))
+        return HttpResponseNotFound(
+            "Channel with id {} not found".format(escape(channel_id))
+        )
     channel_info = {
         "name": channel.name,
         "description": channel.description,
