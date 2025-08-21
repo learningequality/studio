@@ -1,7 +1,7 @@
 <template>
 
   <div>
-    <AppError>
+    <StudioAppError>
       <template #header>
         {{ $tr('genericErrorHeader') }}
       </template>
@@ -9,29 +9,28 @@
         {{ $tr('genericErrorDetails') }}
       </template>
       <template #actions>
-        <VLayout
-          column
-          align-center
-        >
-          <div class="mb-3">
-            <VBtn
-              color="primary"
-              @click="reloadPage"
-            >
-              {{ $tr('refreshAction') }}
-            </VBtn>
-            <VBtn v-bind="backHomeLink">
-              {{ $tr('backToHomeAction') }}
-            </VBtn>
-          </div>
+        <KButtonGroup>
+          <KButton
+            :primary="true"
+            :text="$tr('refreshAction')"
+            @click="reloadPage"
+          />
+          <KRouterLink
+            v-bind="backHomeLink"
+            appearance="raised-button"
+          >
+            {{ $tr('backToHomeAction') }}
+          </KRouterLink>
+        </KButtonGroup>
+        <div style="margin-top: 1rem">
           <KButton
             appearance="basic-link"
             :text="$tr('helpByReportingAction')"
             @click="showModal = true"
           />
-        </VLayout>
+        </div>
       </template>
-    </AppError>
+    </StudioAppError>
     <!-- Modal here -->
     <ReportErrorModal
       v-if="showModal"
@@ -45,13 +44,13 @@
 
 <script>
 
-  import AppError from './AppError';
+  import StudioAppError from './StudioAppError';
   import ReportErrorModal from './ReportErrorModal';
 
   export default {
     name: 'GenericError',
     components: {
-      AppError,
+      StudioAppError,
       ReportErrorModal,
     },
     props: {
