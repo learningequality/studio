@@ -23,8 +23,8 @@
 
 <script>
 
-  import { routerMixin } from 'shared/mixins';
   import StudioAppError from './StudioAppError.vue';
+  import { routerMixin } from 'shared/mixins';
 
   export default {
     name: 'PageNotFoundError',
