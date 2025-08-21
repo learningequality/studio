@@ -42,12 +42,11 @@
               >
                 <KIcon
                   icon="info"
-                  :style="{ color: $themeTokens.primary }"
+                  :color="$themeTokens.primary"
                 />
                 <span>{{
                   publishingInfo$({
                     version: currentChannel.version + 1,
-                    time: formattedPublishTime,
                   })
                 }}</span>
               </div>
@@ -56,13 +55,12 @@
                 <KTextbox
                   v-model="version_notes"
                   :label="versionNotesLabel$()"
-                  :invalid="version_notes.length === 0 || version_notes.length > 250"
-                  :invalidText="
-                    version_notes.length === 0 ? 'Version notes are required' : maxLengthError$()
-                  "
-                  :showInvalidText="version_notes.length === 0 || version_notes.length > 250"
+                  :invalid="version_notes.length === 0"
+                  :invalidText="'Version notes are required'"
+                  :showInvalidText="showVersionNotesInvalidText"
                   textArea
                   :maxlength="250"
+                  @blur="onVersionNotesBlur"
                 />
               </div>
 
@@ -88,13 +86,13 @@
                 <div
                   class="warning-content"
                   :style="{
-                    backgroundColor: $themeTokens.warning,
-                    border: `1px solid ${$themeTokens.warningOutline}`,
+                    backgroundColor: $themePalette.yellow.v_100,
+                    borderRadius: '4px',
                   }"
                 >
                   <KIcon
                     icon="warning"
-                    :style="{ color: $themeTokens.warningText }"
+                    :color="$themePalette.yellow.v_500"
                   />
                   <div class="warning-text">
                     <div
@@ -107,7 +105,13 @@
                       class="warning-description"
                       :style="{ color: $themeTokens.annotation }"
                     >
-                      {{ incompleteResourcesDescription$() }}
+                      {{ incompleteResourcesDescription1$() }}
+                    </div>
+                    <div
+                      class="warning-description"
+                      :style="{ color: $themeTokens.annotation }"
+                    >
+                      {{ incompleteResourcesDescription2$() }}
                     </div>
                   </div>
                 </div>
@@ -133,17 +137,17 @@
       <template #bottomNavigation>
         <div class="footer">
           <KButton
-            flat
+            appearance="flat-button"
             @click="onClose"
           >
-            {{ cancel$() }}
+            {{ cancelAction$() }}
           </KButton>
           <KButton
-            color="primary"
+            primary
             :disabled="submitting || !isFormValid"
             @click="submit"
           >
-            {{ buttonText }}
+            {{ submitText }}
           </KButton>
         </div>
       </template>
@@ -178,6 +182,7 @@
       const submitting = ref(false);
       const language = ref({});
       const showLanguageInvalidText = ref(false);
+      const showVersionNotesInvalidText = ref(false); // lazy validation
       const channelLanguages = ref([]);
       const channelLanguageExists = ref(true);
 
@@ -200,9 +205,9 @@
         modeDraftDescription$,
         publishingInfo$,
         incompleteResourcesWarning$,
-        incompleteResourcesDescription$,
-        maxLengthError$,
-        cancel$,
+        incompleteResourcesDescription1$,
+        incompleteResourcesDescription2$,
+        cancelAction$,
         languageLabel$,
         languageRequiredMessage$,
       } = communityChannelsStrings;
@@ -210,22 +215,6 @@
       const currentChannel = computed(() => store.getters['currentChannel/currentChannel']);
       const getContentNode = computed(() => store.getters['contentNode/getContentNode']);
       const areAllChangesSaved = computed(() => store.getters['areAllChangesSaved']);
-
-      const formattedPublishTime = computed(() => {
-        if (!currentChannel.value) return '';
-        const now = new Date();
-        const timeString = now.toLocaleTimeString('en-US', {
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true,
-        });
-        const dateString = now.toLocaleDateString('en-US', {
-          month: 'numeric',
-          day: 'numeric',
-          year: 'numeric',
-        });
-        return `${timeString} - ${dateString}`;
-      });
 
       const incompleteResourcesCount = computed(() => {
         if (!currentChannel.value) return 0;
@@ -259,18 +248,21 @@
         return Object.keys(language.value).length > 0;
       });
 
+      const isVersionNotesValid = computed(() => {
+        return version_notes.value.length > 0;
+      });
+
       // Validate the version and language for live mode
       const isFormValid = computed(() => {
         if (mode.value === PublishModes.LIVE) {
-          const versionNotesValid =
-            version_notes.value.length > 0 && version_notes.value.length <= 250;
+          const versionNotesValid = isVersionNotesValid.value;
           const languageValid = showLanguageDropdown.value ? isLanguageValid.value : true;
           return versionNotesValid && languageValid;
         }
         return true;
       });
 
-      const buttonText = computed(() => {
+      const submitText = computed(() => {
         return mode.value === PublishModes.DRAFT ? saveDraft$() : publishLive$();
       });
 
@@ -291,24 +283,27 @@
         }
       };
 
-      onMounted(() => {
+      onMounted(async () => {
         if (currentChannel.value) {
-          channelLanguageExistsInResources().then(exists => {
+          try {
+            const exists = await channelLanguageExistsInResources();
             channelLanguageExists.value = exists;
+
             if (!exists) {
-              getLanguagesInChannelResources().then(languages => {
-                channelLanguages.value = languages.length
-                  ? languages
-                  : [currentChannel.value.language];
-                language.value = defaultLanguage.value;
-                validateSelectedLanguage();
-              });
+              const languages = await getLanguagesInChannelResources();
+              channelLanguages.value = languages.length
+                ? languages
+                : [currentChannel.value.language];
+              language.value = defaultLanguage.value;
+              validateSelectedLanguage();
             } else {
               channelLanguages.value = [currentChannel.value.language];
               language.value = defaultLanguage.value;
               validateSelectedLanguage();
             }
-          });
+          } catch (error) {
+            // Error loading channel language information
+          }
         }
       });
 
@@ -317,8 +312,8 @@
       };
 
       const submit = async () => {
-        // Prevent submission if form is invalid
-        if (!isFormValid.value) {
+        // Validate form before submission
+        if (!validate()) {
           return;
         }
 
@@ -332,7 +327,6 @@
 
           if (mode.value === PublishModes.DRAFT) {
             await Channel.publishDraft(currentChannel.value.id, { use_staging_tree: false });
-            emit('submitted');
             emit('close');
           } else {
             if (
@@ -346,9 +340,8 @@
               });
             }
 
-            await Channel.publish(props.channelId, version_notes.value, language.value.value);
+            await Channel.publish(currentChannel.value.id, version_notes.value);
 
-            emit('submitted');
             emit('close');
           }
         } catch (error) {
@@ -367,6 +360,22 @@
         validateSelectedLanguage(); // Ensure language is always valid
       };
 
+      const onVersionNotesBlur = () => {
+        showVersionNotesInvalidText.value = !isVersionNotesValid.value;
+      };
+
+      const validate = () => {
+        if (mode.value === PublishModes.DRAFT) {
+          // For draft mode, no validation is required
+          return true;
+        } else {
+          // For live mode, validate version notes and language
+          showVersionNotesInvalidText.value = !isVersionNotesValid.value;
+          showLanguageInvalidText.value = !isLanguageValid.value;
+          return !showVersionNotesInvalidText.value && !showLanguageInvalidText.value;
+        }
+      };
+
       return {
         PublishModes,
         mode,
@@ -374,14 +383,14 @@
         submitting,
         language,
         showLanguageInvalidText,
+        showVersionNotesInvalidText,
 
         currentChannel,
-        formattedPublishTime,
         incompleteResourcesCount,
         showLanguageDropdown,
         languages,
         isFormValid,
-        buttonText,
+        submitText,
 
         modeLive$,
         modeDraft$,
@@ -390,9 +399,9 @@
         modeDraftDescription$,
         publishingInfo$,
         incompleteResourcesWarning$,
-        incompleteResourcesDescription$,
-        maxLengthError$,
-        cancel$,
+        incompleteResourcesDescription1$,
+        incompleteResourcesDescription2$,
+        cancelAction$,
         languageLabel$,
         languageRequiredMessage$,
 
@@ -400,12 +409,11 @@
         submit,
         getPanelTitle,
         onLanguageChange,
+        onVersionNotesBlur,
       };
     },
-    props: {
-      channelId: { type: String, required: true },
-    },
-    emits: ['close', 'submitted'],
+
+    emits: ['close'],
   };
 
 </script>
@@ -427,6 +435,7 @@
     display: flex;
     gap: 8px;
     justify-content: flex-end;
+    width: 100%;
     padding: 12px 0;
   }
 
@@ -452,7 +461,6 @@
     gap: 12px;
     align-items: flex-start;
     padding: 16px;
-    border-radius: 8px;
   }
 
   .warning-icon {

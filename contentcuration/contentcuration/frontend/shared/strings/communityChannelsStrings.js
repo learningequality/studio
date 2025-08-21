@@ -6,10 +6,10 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Publish channel',
   },
   publishLive: {
-    message: 'PUBLISH',
+    message: 'Publish',
   },
   saveDraft: {
-    message: 'SAVE DRAFT',
+    message: 'Save draft',
   },
   modeLive: {
     message: 'Live',
@@ -28,19 +28,20 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
       'Your channel will be saved as a draft, allowing you to review or conduct quality checks without altering the published version on Kolibri public library.',
   },
   publishingInfo: {
-    message: "You're publishing: Version {version} ({time})",
+    message: "You're publishing: Version {version}",
   },
   incompleteResourcesWarning: {
-    message: '{count} incomplete resources.',
-  },
-  incompleteResourcesDescription: {
     message:
-      "Incomplete resources will not be published and made available for download in Kolibri. Click 'Publish' to confirm that you would like to publish anyway.",
+      '{count, number} {count, plural, one {incomplete resource} other {incomplete resources}}.',
   },
-  maxLengthError: {
-    message: 'Maximum 250 characters allowed',
+  incompleteResourcesDescription1: {
+    message:
+      'Incomplete resources will not be published and made available for download in Kolibri.',
   },
-  cancel: {
+  incompleteResourcesDescription2: {
+    message: "Click 'Publish' to confirm that you would like to publish anyway.",
+  },
+  cancelAction: {
     message: 'CANCEL',
   },
   languageLabel: {

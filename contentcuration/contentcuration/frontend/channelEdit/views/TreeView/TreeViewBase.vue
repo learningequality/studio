@@ -208,10 +208,8 @@
     <slot></slot>
 
     <PublishSidePanel
-      v-if="showPublishSidePanel && currentChannel && currentChannel.id"
-      :channelId="currentChannel.id"
+      v-if="showPublishSidePanel"
       @close="showPublishSidePanel = false"
-      @submitted="showPublishSidePanel = false"
     />
     <template v-if="isPublished">
       <ChannelTokenModal
