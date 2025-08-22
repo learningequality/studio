@@ -182,22 +182,22 @@
         {{ $tr('channelSelectedCountText', { channelCount: channels.length }) }}
       </div>
       <VSpacer />
-      <div>
-        <KButton
-          v-if="step === 1"
-          :text="saveText"
-          :primary="true"
-          data-test="button-save"
-          @click="save"
-        />
-        <KButton
-          v-else
-          :text="$tr('finish')"
-          :primary="true"
-          data-test="button-finish"
-          @click="finish"
-        />
-      </div>
+      <KButton
+        v-if="step === 1"
+        class="save-finish-btn"
+        :text="saveText"
+        :primary="true"
+        data-test="button-save"
+        @click="save"
+      />
+      <KButton
+        v-else
+        class="save-finish-btn"
+        :text="$tr('finish')"
+        :primary="true"
+        data-test="button-finish"
+        @click="finish"
+      />
     </template>
   </FullscreenModal>
 
@@ -517,6 +517,10 @@
 
   .select-channels-btn {
     margin-bottom: 25px;
+  }
+
+  .save-finish-btn {
+    height: 36px;
   }
 
 </style>
