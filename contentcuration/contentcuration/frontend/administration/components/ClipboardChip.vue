@@ -1,22 +1,23 @@
 <template>
 
   <div>
-    <VChip label class="ml-0">
+    <VChip
+      label
+      class="ml-0"
+    >
       <div class="label">
         {{ value }}
       </div>
     </VChip>
     <VBtn
       v-if="clipboardAvailable"
+      ref="copyButton"
       icon
       small
       right
-      data-test="copy"
       @click="copyToClipboard"
     >
-      <Icon
-        icon="copy"
-      />
+      <Icon icon="copy" />
     </VBtn>
   </div>
 
@@ -56,7 +57,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   div {
     white-space: nowrap;
@@ -66,11 +67,6 @@
     max-width: 8em;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-
-  .VBtn:hover::before,
-  .VBtn:focus::before {
-    background-color: transparent;
   }
 
 </style>

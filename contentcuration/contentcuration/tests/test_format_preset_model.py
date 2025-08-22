@@ -1,13 +1,8 @@
-from __future__ import absolute_import
-
-import types
-
 from .base import StudioTestCase
 from contentcuration.models import FormatPreset
 
 
 class GetPresetTestCase(StudioTestCase):
-
     def test_accepts_string(self):
         """
         Check that if we pass in a string, we won't error out.
@@ -33,7 +28,6 @@ class GetPresetTestCase(StudioTestCase):
 
 
 class GuessFormatPresetTestCase(StudioTestCase):
-
     def test_accepts_string(self):
         """
         Make sure we don't raise an error if we pass a string.

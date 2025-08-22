@@ -9,6 +9,7 @@ export default {
     return {
       savedSearches: {},
       selected: [],
+      recommendationsData: {},
     };
   },
   getters,

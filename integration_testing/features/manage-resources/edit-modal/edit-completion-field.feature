@@ -4,10 +4,10 @@ Feature: Edit completion/duration field
 	Background:
 		Given I am signed into Studio
 			And I am in an editable channel with all resource types
-		When I right click a <resource>
+		When I right click a resource
 			And I click *Edit details*
-		Then I see the *Edit details* modal for the <resource>
-			And I see the *Completion* section underneath the *Basic information* section
+		Then I see the *Edit details* modal for the resource
+			And I see the *Completion* section under the *Basic information* section
 
 	Scenario: Default options for .MP4 or .MP3 on file upload
 		Given I am viewing an .MP4 or an .MP3 file that I have just added
@@ -24,7 +24,6 @@ Feature: Edit completion/duration field
 		When I click the *Duration* dropdown
 		Then I see the options: *Time to complete*, *Short activity*, and *Long activity*
 
-
 	Scenario: Default options for .PDF, .EPUB or slides
 		Given I am viewing a .PDF, .EPUB or slidesfile that I have just added
 			And I see the *Completion* section
@@ -35,7 +34,6 @@ Feature: Edit completion/duration field
 		Given I am viewing .PDF, .EPUB or slides
 		When I click the *Completion* dropdown
 		Then I see the options: *Viewed in its entirety*, *When time spent is equal to duration*, and *Reference material*
-
 
 	Scenario: Default options for .ZIP on file upload
 		Given I am viewing a .ZIP file that I have just added
@@ -140,7 +138,7 @@ Feature: Edit completion/duration field
 			And I don't see any errors
 
 	Scenario: See that *Completion* field is required
-		Given that a required *Completion* or *Duration* field of <resource> is empty
+		Given that a required *Completion* or *Duration* field of resource is empty
 		When I click the *Completion* or *Duration* text field
 			And I lose focus on the *Completion* or *Duration* text field
 		Then I see *Completion* or *Duration* is in an error state
@@ -149,9 +147,9 @@ Feature: Edit completion/duration field
 		Then I see a pop up that informs me that the resource is incomplete
 			And I can *Exit anyway* or *Keep editing*
 		When I click *EXIT* without adding the required fields
-		Then I see <resource> in the topic tree
-			And I see a red error icon on <resource>
-		When I left-click the <resource>
-		Then I see the previewer for the <resource>
+		Then I see resource in the topic tree
+			And I see a red error icon on resource
+		When I left-click the resource
+		Then I see the previewer for the resource
 			And I see the missing *Completion* or *Duration* field has a red outline error
 		And I see *This field is required* below the field

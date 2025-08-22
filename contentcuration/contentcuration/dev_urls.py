@@ -8,6 +8,7 @@ from django.http.response import HttpResponseRedirect
 from django.urls import include
 from django.urls import path
 from django.urls import re_path
+from django.views.generic import TemplateView
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
@@ -33,7 +34,7 @@ def file_server(request, storage_path=None):
         return HttpResponseNotFound()
 
     params = urllib.parse.urlparse(default_storage.url(storage_path)).query
-    host = request.META['HTTP_HOST'].split(":")[0]
+    host = request.META["HTTP_HOST"].split(":")[0]
     port = 9000  # hardcoded to the default minio IP address
     url = "http://{host}:{port}/{bucket}/{path}?{params}".format(
         host=host,
@@ -58,7 +59,7 @@ schema_view = get_schema_view(
 
 urlpatterns = urlpatterns + [
     re_path(r"^__open-in-editor/", webpack_redirect_view),
-    path('admin/', admin.site.urls),
+    path("admin/", admin.site.urls),
     re_path(
         r"^swagger(?P<format>\.json|\.yaml)$",
         schema_view.without_ui(cache_timeout=0),
@@ -76,8 +77,9 @@ urlpatterns = urlpatterns + [
     re_path(r"^content/(?P<storage_path>.+)$", file_server),
 ]
 
-if getattr(settings, "DEBUG_PANEL_ACTIVE", False):
-
-    import debug_toolbar
-
-    urlpatterns = [re_path(r"^__debug__/", include(debug_toolbar.urls))] + urlpatterns
+urlpatterns += [
+    re_path(
+        r"^editor-dev(?:/.*)?$",
+        TemplateView.as_view(template_name="contentcuration/editor_dev.html"),
+    ),
+]

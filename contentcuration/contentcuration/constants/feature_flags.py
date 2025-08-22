@@ -9,7 +9,9 @@ def _schema():
     """
     Loads JSON schema file
     """
-    file = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../static/feature_flags.json')
+    file = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "../static/feature_flags.json"
+    )
     with open(file) as f:
         data = json.load(f)
     return data

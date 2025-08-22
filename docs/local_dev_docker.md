@@ -2,38 +2,14 @@
 
 The following guide utilizes docker and docker-compose to run select services required for Studio to function. It's our recommended setup. However, if you would rather install these services on your host, please follow the [host-setup guide](./local_dev_host.md).
 
-## Prerequisites
-Please install these prerequisites, or alternatives for setting up your local development environment:
-- [volta](https://docs.volta.sh/guide/getting-started) or a different node.js manager
-- [pyenv](https://kolibri-dev.readthedocs.io/en/develop/howtos/installing_pyenv.html) and [pyenv-virtualenv](https://github.com/pyenv/pyenv-virtualenv#installation)
-- [docker](https://docs.docker.com/install/) and [docker-compose](https://docs.docker.com/compose/install/)
+**Note:** If you are developing on Windows, it is recommended to use WSL (Windows Subsystem for Linux). Please follow the [WSL setup guide](./local_dev_wsl.md) for detailed instructions.
 
+## Prerequisites
+For detailed instructions on installing and configuring Volta, pyenv, and pyenv-virtualenv, please see the [Prerequisites](./local_dev_host.md#prerequisites) section in our Local Development with host guide.
 
 ## Build your python virtual environment
-To determine the preferred version of Python, you can check the `runtime.txt` file:
-```bash
-$ cat runtime.txt
-# This is the required version of Python to run Studio currently.
-# This is determined by the default Python 3 version that is installed
-# inside Ubuntu Bionic, which is used to build images for Studio.
-# We encode it here so that it can be picked up by Github's dependabot
-# to manage automated package upgrades.
-python-3.10.13
-```
-Use `pyenv` to install the version of Python listed in that file, and to also set up a virtual environment:
-```bash
-pyenv install 3.10.13
-pyenv virtualenv 3.10.13 studio-py3.10
-pyenv activate studio-py3.10
-```
-Now you may install Studio's Python dependencies:
-```bash
-pip install -r requirements.txt -r requirements-dev.txt
-```
-To deactivate the virtual environment, when you're finished developing on Studio for the time being:
-```bash
-pyenv deactivate
-```
+For complete instructions on installing Python 3.10.13, creating and activating the virtual environment, and installing Studio’s Python dependencies, please refer to the [Build Your Python Virtual Environment](./local_dev_host.md#build-your-python-virtual-environment) section in our Local Development with host guide.
+
 
 ### A note about dependencies on Apple Silicon M1+
 If you run into an error with `pip install` related to the `grcpio` package, it is because it currently [does not support M1 with the version for `grcpio` Studio uses](https://github.com/grpc/grpc/issues/25082). In order to fix it, you will need to add the following environmental variables before running `pip install`:
@@ -45,14 +21,10 @@ export LDFLAGS="-L/opt/homebrew/opt/openssl/lib"
 ```
 
 ## Install frontend dependencies
-Install the version of node.js supported by Studio, and install `yarn` version 1.x:
+The project requires `Node 20.X` as the runtime and `pnpm` as the package manager. We make use of [`Volta`](https://docs.volta.sh/guide/getting-started) to manage the same automatically. Please make sure you have volta installed and your shell configured to use volta. You can then install all the dependencies by running:
 ```bash
-volta install node@16
-volta install yarn@1
-```
-After installing `yarn`, you may now install frontend dependencies:
-```bash
-yarn install
+corepack use pnpm # or `volta install pnpm`
+pnpm install
 ```
 
 ## Install and run services
@@ -92,20 +64,20 @@ make dcservicesdown
 ```
 
 ## Initializing Studio
-With the services running, in a separate terminal/terminal-tab, we can now initialize the database for Studio development purposes. The command below will initialize the database tables, import constants, and a user account for development:
+With the services running, in a separate terminal/terminal-tab, we can now initialize the database for Studio development purposes. The command below will initialize the database tables, import constants, enable required postgres extensions and a studio user account for development:
 ```bash
-yarn run devsetup
+pnpm run devsetup
 ```
 
 ## Running the development server
 With the services running, in a separate terminal/terminal-tab, and the database initialized, we can start the dev server:
 ```bash
-yarn run devserver:hot  # with Vue hot module reloading
+pnpm run devserver:hot  # with Vue hot module reloading
 # or
-yarn run devserver  # without hot module reloading
+pnpm run devserver  # without hot module reloading
 ```
 
-Either of the above commands will take a few moments to build the frontend. When it finishes, you can sign in with the account created by the `yarn run devsetup` command:
+Either of the above commands will take a few moments to build the frontend. When it finishes, you can sign in with the account created by the `pnpm run devsetup` command:
 - url: `http://localhost:8080/accounts/login/`
 - username: `a@a.com`
 - password: `a`

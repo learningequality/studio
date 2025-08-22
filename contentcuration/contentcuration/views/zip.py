@@ -57,7 +57,7 @@ def parse_html(content):
         # always create head and body tags if they are missing.
         head = document.find("head")
         for file in get_files("htmlScreenshot", "js"):
-            SubElement(head, "script", attrib={"src": file['url']})
+            SubElement(head, "script", attrib={"src": file["url"]})
         # Currently, html5lib strips the doctype, but it's important for correct rendering, so check the original
         # content for the doctype and, if found, prepend it to the content serialized by html5lib
         doctype = None
@@ -97,11 +97,11 @@ def parse_html(content):
     except html5lib.html5parser.ParseError:
         return content
 
+
 # DISK PATHS
 
 
 class ZipContentView(View):
-
     @xframe_options_exempt
     def options(self, request, *args, **kwargs):
         """
@@ -117,7 +117,7 @@ class ZipContentView(View):
         Handles GET requests and serves a static file from within the zip file.
         """
         if not VALID_STORAGE_FILENAME.match(zipped_filename):
-            return HttpResponseNotFound("'{}' is not a valid URL for this zip file".format(zipped_filename))
+            return HttpResponseNotFound("Invalid URL for this zip file")
 
         storage = default_storage
 
@@ -130,10 +130,10 @@ class ZipContentView(View):
 
         # if the zipfile does not exist on disk, return a 404
         if not storage.exists(zipped_path):
-            return HttpResponseNotFound('"%(filename)s" does not exist in storage' % {'filename': zipped_path})
+            return HttpResponseNotFound("Zipfile does not exist in storage")
 
         # if client has a cached version, use that (we can safely assume nothing has changed, due to MD5)
-        if request.META.get('HTTP_IF_MODIFIED_SINCE'):
+        if request.META.get("HTTP_IF_MODIFIED_SINCE"):
             return HttpResponseNotModified()
 
         zf_obj = storage.open(zipped_path)
@@ -148,41 +148,61 @@ class ZipContentView(View):
                 try:
                     info = zf.getinfo(embedded_filepath)
                 except KeyError:
-                    return HttpResponseNotFound('"{}" does not exist inside "{}"'.format(embedded_filepath, zipped_filename))
+                    return HttpResponseNotFound(
+                        "Embedded file does not exist inside zip"
+                    )
 
                 # try to guess the MIME type of the embedded file being referenced
-                content_type = mimetypes.guess_type(embedded_filepath)[0] or 'application/octet-stream'
+                content_type = (
+                    mimetypes.guess_type(embedded_filepath)[0]
+                    or "application/octet-stream"
+                )
 
-                if embedded_filepath.endswith(".html") and request.GET.get("screenshot"):
-                    content_type = 'text/html'
+                if embedded_filepath.endswith(".html") and request.GET.get(
+                    "screenshot"
+                ):
+                    content_type = "text/html"
 
                     content = zf.open(info).read()
 
-                    response = HttpResponse(parse_html(content), content_type=content_type)
+                    response = HttpResponse(
+                        parse_html(content), content_type=content_type
+                    )
                     file_size = info.file_size
-                elif not os.path.splitext(embedded_filepath)[1] == '.json':
+                elif not os.path.splitext(embedded_filepath)[1] == ".json":
                     # generate a streaming response object, pulling data from within the zip  file
                     response = FileResponse(zf.open(info), content_type=content_type)
                     file_size = info.file_size
                 else:
                     # load the stream from json file into memory, replace the path_place_holder.
                     content = zf.open(info).read()
-                    str_to_be_replaced = ('$' + exercises.IMG_PLACEHOLDER).encode()
-                    zipcontent = ('/' + request.resolver_match.url_name + "/" + zipped_filename).encode()
+                    str_to_be_replaced = ("$" + exercises.IMG_PLACEHOLDER).encode()
+                    zipcontent = (
+                        "/" + request.resolver_match.url_name + "/" + zipped_filename
+                    ).encode()
                     content_with_path = content.replace(str_to_be_replaced, zipcontent)
-                    response = HttpResponse(content_with_path, content_type=content_type)
+                    response = HttpResponse(
+                        content_with_path, content_type=content_type
+                    )
                     file_size = len(content_with_path)
         except zipfile.BadZipfile:
-            just_downloaded = getattr(zf_obj, 'just_downloaded', "Unknown (Most likely local file)")
-            capture_message("Unable to open zip file. File info: name={}, size={}, mode={}, just_downloaded={}".format(
-                zf_obj.name, zf_obj.size, zf_obj.mode, just_downloaded))
+            just_downloaded = getattr(
+                zf_obj, "just_downloaded", "Unknown (Most likely local file)"
+            )
+            capture_message(
+                "Unable to open zip file. File info: name={}, size={}, mode={}, just_downloaded={}".format(
+                    zf_obj.name, zf_obj.size, zf_obj.mode, just_downloaded
+                )
+            )
             return HttpResponseServerError(
                 "Attempt to open zip file failed. Please try again, and if you continue to receive this message, please check that the zip file is valid."
             )
 
         # set the last-modified header to the date marked on the embedded file
         if info.date_time:
-            response["Last-Modified"] = http_date(time.mktime(datetime.datetime(*info.date_time).timetuple()))
+            response["Last-Modified"] = http_date(
+                time.mktime(datetime.datetime(*info.date_time).timetuple())
+            )
 
         # cache these resources forever; this is safe due to the MD5-naming used on content files
         response["Expires"] = "Sun, 17-Jan-2038 19:14:07 GMT"
@@ -198,10 +218,14 @@ class ZipContentView(View):
 
         # restrict CSP to only allow resources to be loaded from the Studio host, to prevent info leakage
         # (e.g. via passing user info out as GET parameters to an attacker's server), or inadvertent data usage
-        host = request.build_absolute_uri('/').strip("/")
-        response["Content-Security-Policy"] = "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: " + host
+        host = request.build_absolute_uri("/").strip("/")
+        response["Content-Security-Policy"] = (
+            "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: " + host
+        )
 
         if getattr(settings, "DEBUG", False):
-            response["Content-Security-Policy"] += " http://127.0.0.1:4000 ws://127.0.0.1:4000"
+            response[
+                "Content-Security-Policy"
+            ] += " http://127.0.0.1:4000 ws://127.0.0.1:4000"
 
         return response

@@ -1,18 +1,27 @@
 <template>
 
   <div>
-    <p class="text" :class="{ notranslate }" :dir="dir">
+    <p
+      class="text"
+      :class="{ notranslate }"
+      :dir="dir"
+    >
       {{ initialText }}
       <VSlideYTransition>
-        <span v-show="expanded" data-test="overflow">
+        <span
+          v-show="expanded"
+          data-test="overflow"
+        >
           {{ overflowText }}
         </span>
       </VSlideYTransition>
-      <a v-if="overflowText" class="caption toggler" @click.stop.prevent="toggle">
+      <a
+        v-if="overflowText"
+        class="caption toggler"
+        @click.stop.prevent="toggle"
+      >
         <span>{{ togglerText }}</span>
-        <Icon
-          :icon="expanded ? 'chevronUp' : 'chevronDown' "
-        />
+        <Icon :icon="expanded ? 'chevronUp' : 'chevronDown'" />
       </a>
     </p>
   </div>
@@ -30,13 +39,13 @@
         default: '',
       },
 
-      /*
-        Arbitrarily split at this index
-
-        jayoshih: unfortunately, using css ends up throwing off the styling
-          of the parent elements too easily. Instead, we'll split it arbitrarily
-          and handle the truncating more manually
-      */
+      /**
+       * Arbitrarily split at this index
+       *
+       * jayoshih: unfortunately, using css ends up throwing off the styling
+       * of the parent elements too easily. Instead, we'll split it arbitrarily
+       * and handle the truncating more manually
+       */
       splitAt: {
         type: Number,
         default: 120,
@@ -93,7 +102,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .text {
     margin: 0;

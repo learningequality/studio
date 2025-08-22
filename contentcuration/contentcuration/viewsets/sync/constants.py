@@ -8,19 +8,23 @@ PUBLISHED = 6
 SYNCED = 7
 DEPLOYED = 8
 UPDATED_DESCENDANTS = 9
+PUBLISHED_NEXT = 10
 
 
-ALL_CHANGES = set([
-    CREATED,
-    UPDATED,
-    DELETED,
-    MOVED,
-    COPIED,
-    PUBLISHED,
-    SYNCED,
-    DEPLOYED,
-    UPDATED_DESCENDANTS,
-])
+ALL_CHANGES = set(
+    [
+        CREATED,
+        UPDATED,
+        DELETED,
+        MOVED,
+        COPIED,
+        PUBLISHED,
+        SYNCED,
+        DEPLOYED,
+        UPDATED_DESCENDANTS,
+        PUBLISHED_NEXT,
+    ]
+)
 
 # Client-side table constants
 BOOKMARK = "bookmark"
@@ -60,13 +64,15 @@ ALL_TABLES = set(
 # but do not affect whether a channel is publishable or not
 # only edits to these tables are considered publishable changes
 # although individual changes can still be marked as unpublishable.
-PUBLISHABLE_CHANGE_TABLES = set([
-    CHANNEL,
-    CONTENTNODE,
-    CONTENTNODE_PREREQUISITE,
-    ASSESSMENTITEM,
-    FILE,
-])
+PUBLISHABLE_CHANGE_TABLES = set(
+    [
+        CHANNEL,
+        CONTENTNODE,
+        CONTENTNODE_PREREQUISITE,
+        ASSESSMENTITEM,
+        FILE,
+    ]
+)
 
 
 # Enum for copying states

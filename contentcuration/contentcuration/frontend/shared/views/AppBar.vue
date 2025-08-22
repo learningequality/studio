@@ -9,14 +9,17 @@
       height="56"
       :tabs="Boolean($slots.tabs)"
     >
-      <VToolbarSideIcon v-if="loggedIn" @click="drawer = true" />
+      <VToolbarSideIcon
+        v-if="loggedIn"
+        @click="drawer = true"
+      />
       <VToolbarSideIcon
         v-else
         :href="homeLink"
         exact
         color="appBar"
         class="ma-0"
-        style="border-radius: 8px;"
+        style="border-radius: 8px"
       >
         <KLogo
           altText="Kolibri Logo with background"
@@ -30,9 +33,13 @@
       <VSpacer />
       <VToolbarItems>
         <template v-if="loggedIn">
-          <Menu>
+          <BaseMenu>
             <template #activator="{ on }">
-              <VBtn flat style="text-transform: none;" v-on="on">
+              <VBtn
+                flat
+                style="text-transform: none"
+                v-on="on"
+              >
                 <KIconButton
                   :disabled="true"
                   icon="person"
@@ -47,7 +54,10 @@
               </VBtn>
             </template>
             <VList>
-              <VListTile v-if="user.is_admin" :href="administrationLink">
+              <VListTile
+                v-if="user.is_admin"
+                :href="administrationLink"
+              >
                 <VListTileAction>
                   <KIconButton
                     :disabled="true"
@@ -65,9 +75,7 @@
                 </VListTileAction>
                 <VListTileTitle v-text="$tr('settings')" />
               </VListTile>
-              <VListTile
-                @click="showLanguageModal = true"
-              >
+              <VListTile @click="showLanguageModal = true">
                 <VListTileAction>
                   <KIconButton
                     :disabled="true"
@@ -98,43 +106,42 @@
                 <VListTileTitle v-text="$tr('logOut')" />
               </VListTile>
             </VList>
-          </Menu>
+          </BaseMenu>
         </template>
         <template v-else>
-          <Menu>
+          <BaseMenu>
             <template #activator="{ on }">
-              <VBtn flat style="text-transform: none;" v-on="on">
-                <Icon
-                  icon="person"
-                />
-                <Icon
-                  icon="dropdown"
-                />
+              <VBtn
+                flat
+                style="text-transform: none"
+                v-on="on"
+              >
+                <Icon icon="person" />
+                <Icon icon="dropdown" />
               </VBtn>
             </template>
             <VList>
               <VListTile :href="'/accounts/'">
                 <VListTileAction>
-                  <Icon
-                    icon="login"
-                  />
+                  <Icon icon="login" />
                 </VListTileAction>
                 <VListTileTitle v-text="$tr('logIn')" />
               </VListTile>
               <VListTile @click="showLanguageModal = true">
                 <VListTileAction>
-                  <Icon
-                    icon="language"
-                  />
+                  <Icon icon="language" />
                 </VListTileAction>
                 <VListTileTitle v-text="$tr('changeLanguage')" />
               </VListTile>
             </VList>
-          </Menu>
+          </BaseMenu>
         </template>
       </VToolbarItems>
 
-      <template v-if="$slots.tabs" #extension>
+      <template
+        v-if="$slots.tabs"
+        #extension
+      >
         <Tabs slider-color="white">
           <slot name="tabs"></slot>
         </Tabs>
@@ -148,7 +155,6 @@
       :style="{ color: $themeTokens.text }"
       @cancel="showLanguageModal = false"
     />
-
   </div>
 
 </template>
@@ -212,7 +218,8 @@
 
 </script>
 
-<style lang="less" scoped>
+
+<style lang="scss" scoped>
 
   .v-toolbar {
     z-index: 5;
@@ -222,7 +229,7 @@
     border-radius: 8px;
   }
 
-  /deep/ .v-tabs__div {
+  ::v-deep .v-tabs__div {
     min-width: 160px;
   }
 

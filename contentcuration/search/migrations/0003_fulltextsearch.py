@@ -16,39 +16,97 @@ class Migration(migrations.Migration):
     atomic = False
 
     dependencies = [
-        ('contentcuration', '0140_delete_task'),
-        ('search', '0002_auto_20201215_2110'),
+        ("contentcuration", "0140_delete_task"),
+        ("search", "0002_auto_20201215_2110"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ContentNodeFullTextSearch',
+            name="ContentNodeFullTextSearch",
             fields=[
-                ('id', contentcuration.models.UUIDField(default=uuid.uuid4, max_length=32, primary_key=True, serialize=False)),
-                ('keywords_tsvector', django.contrib.postgres.search.SearchVectorField(blank=True, null=True)),
-                ('author_tsvector', django.contrib.postgres.search.SearchVectorField(blank=True, null=True)),
-                ('channel', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='channel_nodes_fts', to='contentcuration.channel')),
-                ('contentnode', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='node_fts', to='contentcuration.contentnode')),
+                (
+                    "id",
+                    contentcuration.models.UUIDField(
+                        default=uuid.uuid4,
+                        max_length=32,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                (
+                    "keywords_tsvector",
+                    django.contrib.postgres.search.SearchVectorField(
+                        blank=True, null=True
+                    ),
+                ),
+                (
+                    "author_tsvector",
+                    django.contrib.postgres.search.SearchVectorField(
+                        blank=True, null=True
+                    ),
+                ),
+                (
+                    "channel",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="channel_nodes_fts",
+                        to="contentcuration.channel",
+                    ),
+                ),
+                (
+                    "contentnode",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="node_fts",
+                        to="contentcuration.contentnode",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='ChannelFullTextSearch',
+            name="ChannelFullTextSearch",
             fields=[
-                ('id', contentcuration.models.UUIDField(default=uuid.uuid4, max_length=32, primary_key=True, serialize=False)),
-                ('keywords_tsvector', django.contrib.postgres.search.SearchVectorField(blank=True, null=True)),
-                ('channel', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='channel_fts', to='contentcuration.channel')),
+                (
+                    "id",
+                    contentcuration.models.UUIDField(
+                        default=uuid.uuid4,
+                        max_length=32,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                (
+                    "keywords_tsvector",
+                    django.contrib.postgres.search.SearchVectorField(
+                        blank=True, null=True
+                    ),
+                ),
+                (
+                    "channel",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="channel_fts",
+                        to="contentcuration.channel",
+                    ),
+                ),
             ],
         ),
         AddIndexConcurrently(
-            model_name='contentnodefulltextsearch',
-            index=django.contrib.postgres.indexes.GinIndex(fields=['keywords_tsvector'], name='node_keywords_tsv__gin_idx'),
+            model_name="contentnodefulltextsearch",
+            index=django.contrib.postgres.indexes.GinIndex(
+                fields=["keywords_tsvector"], name="node_keywords_tsv__gin_idx"
+            ),
         ),
         AddIndexConcurrently(
-            model_name='contentnodefulltextsearch',
-            index=django.contrib.postgres.indexes.GinIndex(fields=['author_tsvector'], name='node_author_tsv__gin_idx'),
+            model_name="contentnodefulltextsearch",
+            index=django.contrib.postgres.indexes.GinIndex(
+                fields=["author_tsvector"], name="node_author_tsv__gin_idx"
+            ),
         ),
         AddIndexConcurrently(
-            model_name='channelfulltextsearch',
-            index=django.contrib.postgres.indexes.GinIndex(fields=['keywords_tsvector'], name='channel_keywords_tsv__gin_idx'),
+            model_name="channelfulltextsearch",
+            index=django.contrib.postgres.indexes.GinIndex(
+                fields=["keywords_tsvector"], name="channel_keywords_tsv__gin_idx"
+            ),
         ),
     ]

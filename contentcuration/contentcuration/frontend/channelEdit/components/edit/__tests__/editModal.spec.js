@@ -10,7 +10,7 @@ const testNodes = [DEFAULT_TOPIC, DEFAULT_TOPIC2];
 function makeWrapper(props = {}) {
   const wrapper = mount(EditModal, {
     store: localStore,
-    attachToDocument: true,
+    attachTo: document.body,
     propsData: props,
     stubs: ['SavingIndicator'],
   });

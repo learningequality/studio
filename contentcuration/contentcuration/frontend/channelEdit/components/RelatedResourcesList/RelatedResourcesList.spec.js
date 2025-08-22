@@ -7,17 +7,11 @@ const getResources = wrapper => {
 };
 
 const clickResourceLink = (wrapper, resourceIdx) => {
-  getResources(wrapper)
-    .at(resourceIdx)
-    .find("[data-test='resourceLink']")
-    .trigger('click');
+  getResources(wrapper).at(resourceIdx).find("[data-test='resourceLink']").trigger('click');
 };
 
 const clickResourceRemoveBtn = (wrapper, resourceIdx) => {
-  getResources(wrapper)
-    .at(resourceIdx)
-    .find("[data-test='resourceRemoveBtn']")
-    .trigger('click');
+  getResources(wrapper).at(resourceIdx).find("[data-test='resourceRemoveBtn']").trigger('click');
 };
 
 describe('RelatedResourcesList', () => {
@@ -47,7 +41,7 @@ describe('RelatedResourcesList', () => {
   it('smoke test', () => {
     const wrapper = shallowMount(RelatedResourcesList);
 
-    expect(wrapper.isVueInstance()).toBe(true);
+    expect(wrapper.exists()).toBe(true);
   });
 
   it('renders all items', () => {

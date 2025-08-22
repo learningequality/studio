@@ -1,7 +1,10 @@
 /* eslint-env node */
 
-const path = require('path');
-const process = require('process');
+const path = require('node:path');
+const process = require('node:process');
+const fs = require('node:fs');
+const { execSync } = require('node:child_process');
+
 const baseConfig = require('kolibri-tools/lib/webpack.config.base');
 const { merge } = require('webpack-merge');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -13,12 +16,30 @@ const WebpackRTLPlugin = require('kolibri-tools/lib/webpackRtlPlugin');
 
 const { InjectManifest } = require('workbox-webpack-plugin');
 
-const webpack = require('webpack');
+// Function to detect if running in WSL
+function isWSL() {
+  try {
+    const version = fs.readFileSync('/proc/version', 'utf8');
+    return version.toLowerCase().includes('microsoft');
+  } catch (err) {
+    return false;
+  }
+}
+
+// Function to get WSL IP address
+function getWSLIP() {
+  try {
+    const ip = execSync('hostname -I').toString().trim().split(' ')[0];
+    return ip;
+  } catch (err) {
+    console.warn('Failed to get WSL IP address:', err);
+    return '127.0.0.1';
+  }
+}
 
 const djangoProjectDir = path.resolve('contentcuration');
 const staticFilesDir = path.resolve(djangoProjectDir, 'contentcuration', 'static');
 const srcDir = path.resolve(djangoProjectDir, 'contentcuration', 'frontend');
-const dummyModule = path.resolve(srcDir, 'shared', 'styles', 'modulePlaceholder.js')
 
 const bundleOutputDir = path.resolve(staticFilesDir, 'studio');
 
@@ -32,17 +53,24 @@ module.exports = (env = {}) => {
   }
 
   const rootDir = __dirname;
-
   const rootNodeModules = path.join(rootDir, 'node_modules');
-
   const baseCssLoaders = base.module.rules[1].use;
+  // For pnpm, this directory holds symlinks to a particular version of each package, not unlike
+  // a hoisted node_modules directory.
+  const pnpmNodeModules = path.join(rootDir, 'node_modules', '.pnpm', 'node_modules');
+
+  // Determine the appropriate dev server host and public path based on environment
+  const isWSLEnvironment = isWSL();
+  const devServerHost = isWSLEnvironment ? '0.0.0.0' : '127.0.0.1';
+  const devPublicPath = isWSLEnvironment ?
+    `http://${getWSLIP()}:4000/dist/` :
+    'http://127.0.0.1:4000/dist/';
 
   const workboxPlugin = new InjectManifest({
     swSrc: path.resolve(srcDir, 'serviceWorker/index.js'),
     swDest: 'serviceWorker.js',
     exclude: dev ? [/./] : [/\.map$/, /^manifest.*\.js$/]
   });
-
 
   if (dev) {
     // Suppress the "InjectManifest has been called multiple times" warning by reaching into
@@ -62,7 +90,7 @@ module.exports = (env = {}) => {
     })
   }
 
-  return merge(base, {
+  const config = merge(base, {
     context: srcDir,
     entry: {
       // Use arrays for every entry to allow for hot reloading.
@@ -80,24 +108,34 @@ module.exports = (env = {}) => {
       filename: dev ? '[name].js' : '[name]-[fullhash].js',
       chunkFilename: '[name]-[id]-[fullhash].js',
       path: bundleOutputDir,
-      publicPath: dev ? 'http://127.0.0.1:4000/dist/' : '/static/studio/',
+      publicPath: dev ? devPublicPath : '/static/studio/',
       pathinfo: !dev,
     },
     devServer: {
       port: 4000,
+      host: devServerHost,
       headers: {
         'Access-Control-Allow-Origin': '*',
       },
+      allowedHosts: [
+        '127.0.0.1',
+        'localhost',
+      ].concat(
+        // For WSL, allow the WSL IP address
+        isWSLEnvironment ? [getWSLIP()] : []
+      ),
     },
     module: {
       rules: [
         {
-          test: /\.styl(us)?$/,
-          use: baseCssLoaders.concat('stylus-loader'),
+          test: /\.m?js/,
+          resolve: {
+            fullySpecified: false
+          }
         },
         {
-          test: /\.less?$/,
-          use: baseCssLoaders.concat('less-loader'),
+          test: /\.styl(us)?$/,
+          use: baseCssLoaders.concat(require.resolve('stylus-loader')),
         },
       ],
     },
@@ -110,8 +148,9 @@ module.exports = (env = {}) => {
         vuetify: path.resolve('node_modules', 'vuetify'),
         static: staticFilesDir,
       },
-      extensions: ['.js', '.vue', '.css', '.less'],
-      modules: [rootNodeModules],
+      extensions: ['.js', '.vue', '.css'],
+      symlinks: true,
+      modules: [rootNodeModules, pnpmNodeModules],
     },
     resolveLoader: {
       modules: [rootNodeModules],
@@ -138,19 +177,15 @@ module.exports = (env = {}) => {
         // e.g. via import(/* webpackMode: "weak" */ './file.js')
         allowAsyncCycles: false,
         // set the current working directory for displaying module paths
+
         cwd: process.cwd(),
       }),
       workboxPlugin,
-    ].concat(
-      hot
-        ? []
-        : [
-          new webpack.NormalModuleReplacementPlugin(
-            /vuetify\/src\/stylus\//,
-            dummyModule
-          )
-        ]
-    ),
+    ],
     stats: 'normal',
   });
+  if (dev) {
+    config.entry.editorDev = './editorDev/index.js';
+  }
+  return config;
 };

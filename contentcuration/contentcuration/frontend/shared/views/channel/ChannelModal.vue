@@ -5,14 +5,32 @@
     :header="isNew ? $tr('creatingHeader') : header"
     @input="onDialogInput"
   >
-    <ToolBar v-if="!isNew" class="tabs" color="white">
-      <Tabs v-model="currentTab" slider-color="primary" height="64px">
+    <ToolBar
+      v-if="!isNew"
+      class="tabs"
+      color="white"
+    >
+      <Tabs
+        v-model="currentTab"
+        slider-color="primary"
+        height="64px"
+      >
         <!-- Details tab -->
-        <VTab href="#edit" class="px-3" data-test="details-tab" @click="currentTab = 'edit'">
+        <VTab
+          href="#edit"
+          class="px-3"
+          data-test="details-tab"
+          @click="currentTab = 'edit'"
+        >
           {{ $tr('editTab') }}
         </VTab>
         <!-- Share tab -->
-        <VTab href="#share" class="px-3" data-test="share-tab" @click="currentTab = 'share'">
+        <VTab
+          href="#share"
+          class="px-3"
+          data-test="share-tab"
+          @click="currentTab = 'share'"
+        >
           {{ $tr('shareTab') }}
         </VTab>
       </Tabs>
@@ -21,20 +39,30 @@
       v-if="loading"
       indeterminate
       color="loading"
-      style="margin: 0;"
+      style="margin: 0"
       height="5"
     />
     <VCardText>
       <VTabsItems v-model="currentTab">
-        <VTabItem value="edit" data-test="edit-content">
-          <Banner fluid :value="isRicecooker" color="secondary lighten-1">
+        <VTabItem
+          value="edit"
+          data-test="edit-content"
+        >
+          <Banner
+            fluid
+            :value="isRicecooker"
+            color="secondary lighten-1"
+          >
             {{ $tr('APIText') }}
           </Banner>
-          <VContainer class="mx-0" :class="{ ricecooker: isRicecooker }">
+          <VContainer
+            class="mx-0"
+            :class="{ ricecooker: isRicecooker }"
+          >
             <VForm
               ref="detailsform"
               class="mb-5"
-              style="max-width: 960px;"
+              style="max-width: 960px"
               @submit.prevent="saveChannel"
             >
               <ChannelThumbnail v-model="thumbnail" />
@@ -68,19 +96,31 @@
                 />
               </fieldset>
 
-              <ContentDefaults
-                v-model="contentDefaults"
-              />
+              <ContentDefaults v-model="contentDefaults" />
 
-              <VBtn class="mt-5" color="primary" type="submit" :disabled="isDisable">
-                {{ isNew ? $tr('createButton') : $tr('saveChangesButton' ) }}
+              <VBtn
+                class="mt-5"
+                color="primary"
+                type="submit"
+                :disabled="isDisable"
+              >
+                {{ isNew ? $tr('createButton') : $tr('saveChangesButton') }}
               </VBtn>
             </VForm>
           </VContainer>
         </VTabItem>
-        <VTabItem value="share" data-test="share-content">
-          <VCard flat class="pa-5">
-            <ChannelSharing :channelId="channelId" />
+        <VTabItem
+          value="share"
+          data-test="share-content"
+        >
+          <VCard
+            flat
+            class="pa-5"
+          >
+            <ChannelSharing
+              v-if="!isNew"
+              :channelId="channelId"
+            />
           </VCard>
         </VTabItem>
       </VTabsItems>
@@ -92,10 +132,16 @@
       :text="$tr('unsavedChangesText')"
     >
       <template #buttons="{ close }">
-        <VBtn flat @click="confirmCancel">
+        <VBtn
+          flat
+          @click="confirmCancel"
+        >
           {{ $tr('closeButton') }}
         </VBtn>
-        <VBtn color="primary" @click="close">
+        <VBtn
+          color="primary"
+          @click="close"
+        >
           {{ $tr('keepEditingButton') }}
         </VBtn>
       </template>
@@ -107,11 +153,11 @@
 
 <script>
 
-  import Vue from 'vue';
+  import { set } from 'vue';
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import ChannelThumbnail from './ChannelThumbnail';
   import ChannelSharing from './ChannelSharing';
-  import { NEW_OBJECT, ErrorTypes } from 'shared/constants';
+  import { ErrorTypes } from 'shared/constants';
   import MessageDialog from 'shared/views/MessageDialog';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import ContentDefaults from 'shared/views/form/ContentDefaults';
@@ -166,7 +212,7 @@
         return this.getChannel(this.channelId) || {};
       },
       isNew() {
-        return Boolean(this.channel[NEW_OBJECT]);
+        return !this.channelId || this.$route.path === '/new';
       },
       isRicecooker() {
         return Boolean(this.channel.ricecooker_version);
@@ -269,6 +315,9 @@
     // will never be rendered.
     beforeMount() {
       const channelId = this.$route.params.channelId;
+      if (!channelId) {
+        return;
+      }
       return this.verifyChannel(channelId)
         .then(() => {
           this.header = this.channel.name; // Get channel name when user enters modal
@@ -280,35 +329,44 @@
         .catch(() => {});
     },
     mounted() {
-      // Set expiry to 1ms
-      this.header = this.channel.name; // Get channel name when user enters modal
+      if (this.isNew) {
+        this.header = this.$tr('creatingHeader');
+      } else {
+        this.header = this.channel.name;
+      }
       this.updateTitleForPage();
     },
+
     methods: {
       ...mapActions('channel', ['updateChannel', 'loadChannel', 'commitChannel']),
       ...mapMutations('channel', ['REMOVE_CHANNEL']),
       saveChannel() {
         this.isDisable = true;
+
         if (this.$refs.detailsform.validate()) {
           this.changed = false;
-          if (this.isNew) {
-            return this.commitChannel({ id: this.channelId, ...this.diffTracker }).then(() => {
-              // TODO: Make sure channel gets created before navigating to channel
-              window.location = window.Urls.channel(this.channelId);
-              this.isDisable = false;
-            });
-          } else {
-            return this.updateChannel({ id: this.channelId, ...this.diffTracker }).then(() => {
+
+          const commitOrUpdateChannel = this.isNew
+            ? this.commitChannel({ ...this.diffTracker })
+            : this.updateChannel({ id: this.channelId, ...this.diffTracker });
+
+          return commitOrUpdateChannel.then(channel => {
+            if (this.isNew) {
+              const newChannelId = channel.id;
+
+              window.location.replace(window.Urls.channel(newChannelId));
+            } else {
               this.$store.dispatch('showSnackbarSimple', this.$tr('changesSaved'));
               this.header = this.channel.name;
-              this.isDisable = false;
-            });
-          }
+            }
+            this.isDisable = false;
+          });
         } else if (this.$refs.detailsform.$el.scrollIntoView) {
           this.$refs.detailsform.$el.scrollIntoView({ behavior: 'smooth' });
           this.isDisable = false;
         }
       },
+
       updateTitleForPage() {
         if (this.isNew) {
           this.updateTabTitle(this.$tr('creatingHeader'));
@@ -327,7 +385,7 @@
       },
       setChannel(data) {
         for (const key in data) {
-          Vue.set(this.diffTracker, key, data[key]);
+          set(this.diffTracker, key, data[key]);
         }
         this.changed = true;
       },
@@ -419,7 +477,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .channel-info {
     border: 0;

@@ -1,6 +1,10 @@
 <template>
 
-  <VToolbar v-bind="$attrs" :flat="flat" :color="color">
+  <VToolbar
+    v-bind="$attrs"
+    :flat="flat"
+    :color="color"
+  >
     <slot></slot>
     <template #extension>
       <slot name="extension"></slot>
@@ -28,9 +32,10 @@
 
 </script>
 
-<style lang="less" scoped>
 
-  /deep/ .v-toolbar__content {
+<style lang="scss" scoped>
+
+  ::v-deep .v-toolbar__content {
     border-bottom: 1px solid transparent;
 
     .elevation-0 & {

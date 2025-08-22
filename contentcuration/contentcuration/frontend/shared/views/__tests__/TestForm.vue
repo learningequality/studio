@@ -8,16 +8,18 @@
 
 </template>
 
+
 <script>
 
   export default {
     name: 'TestForm',
+    /* eslint-disable vue/no-unused-properties */
     methods: {
       /*
        * @public
        */
       validate() {
-        this.$refs.form.validate();
+        return this.$refs.form.validate();
       },
       /*
        * @public
@@ -27,6 +29,7 @@
         this.$refs.form.resetValidation();
       },
     },
+    /* eslint-enable vue/no-unused-properties */
   };
 
 </script>

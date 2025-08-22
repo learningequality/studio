@@ -22,7 +22,7 @@ export function compile(schema, dependentSchemas = null) {
   if (dependentSchemas) {
     instance = dependentSchemas.reduce(
       (instance, dependentSchema) => instance.addSchema(dependentSchema),
-      instance
+      instance,
     );
   }
   return instance.compile(schema);

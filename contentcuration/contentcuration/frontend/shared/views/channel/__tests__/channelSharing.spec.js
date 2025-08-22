@@ -5,9 +5,12 @@ import { SharingPermissions } from 'shared/constants';
 
 const store = storeFactory();
 const channelId = '11111111111111111111111111111111';
-const loadChannelUsers = jest.fn();
+let loadChannelUsers;
 
 function makeWrapper(computed = {}) {
+  loadChannelUsers = jest.spyOn(ChannelSharing.methods, 'loadChannelUsers');
+  loadChannelUsers.mockImplementation(() => Promise.resolve());
+
   return mount(ChannelSharing, {
     sync: false,
     store,
@@ -33,12 +36,6 @@ function makeWrapper(computed = {}) {
       },
       ...computed,
     },
-    methods: {
-      loadChannelUsers: () => {
-        loadChannelUsers();
-        return Promise.resolve();
-      },
-    },
     stubs: {
       ChannelSharingTable: true,
     },
@@ -47,29 +44,29 @@ function makeWrapper(computed = {}) {
 
 describe('channelSharing', () => {
   let wrapper;
-  const sendInvitation = jest.fn();
+  let sendInvitation;
   beforeEach(() => {
     wrapper = makeWrapper();
-    wrapper.setMethods({
-      sendInvitation(data) {
-        sendInvitation(data);
-        return Promise.resolve();
-      },
-    });
-    sendInvitation.mockReset();
+    sendInvitation = jest.spyOn(wrapper.vm, 'sendInvitation');
+    sendInvitation.mockImplementation(() => Promise.resolve());
   });
-  it('should load users on mounted', () => {
+  afterEach(() => {
+    loadChannelUsers.mockRestore();
+  });
+  it('should load users on mounted', async () => {
+    await wrapper.vm.$nextTick();
     expect(loadChannelUsers).toHaveBeenCalled();
   });
-  it('should call submitEmail on form submit', () => {
-    const submitEmail = jest.fn();
-    wrapper.setMethods({ submitEmail });
-    wrapper.find({ ref: 'form' }).trigger('submit');
+  it('should call submitEmail on form submit', async () => {
+    const submitEmail = jest.spyOn(wrapper.vm, 'submitEmail');
+    wrapper.findComponent({ ref: 'form' }).trigger('submit');
+    await wrapper.vm.$nextTick();
     expect(submitEmail).toHaveBeenCalled();
   });
-  it('should not call sendInvitation if email is blank', () => {
+  it('should not call sendInvitation if email is blank', async () => {
     wrapper.setData({ loading: false });
-    wrapper.vm.submitEmail();
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.submitEmail();
     expect(sendInvitation).not.toHaveBeenCalled();
   });
   // Examples drawn from:
@@ -87,30 +84,33 @@ describe('channelSharing', () => {
     '1234567890123456789012345678901234567890123456789012345678901234+x@example.com',
     'i_like_underscore@but_its_not_allowed_in_this_part.example.com',
     'QA[icon]CHOCOLATE[icon]@test.com',
-  ])('should not call sendInvitation if email is invalid: %s', email => {
+  ])('should not call sendInvitation if email is invalid: %s', async email => {
     wrapper.setData({ email, loading: false });
-    wrapper.vm.submitEmail();
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.submitEmail();
     expect(sendInvitation).not.toHaveBeenCalled();
   });
-  it('should set an error if user already has access to channel', () => {
+  it('should set an error if user already has access to channel', async () => {
     wrapper = makeWrapper({
       checkUsers() {
         return () => true;
       },
     });
     wrapper.setData({ email: 'test@test.com', loading: false });
-    wrapper.vm.submitEmail();
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.submitEmail();
     expect(wrapper.vm.error).toBeTruthy();
     expect(sendInvitation).not.toHaveBeenCalled();
   });
-  it('should set an error if user has already been invited', () => {
+  it('should set an error if user has already been invited', async () => {
     wrapper = makeWrapper({
       checkInvitations() {
         return () => true;
       },
     });
     wrapper.setData({ email: 'test@test.com', loading: false });
-    wrapper.vm.submitEmail();
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.submitEmail();
     expect(wrapper.vm.error).toBeTruthy();
     expect(sendInvitation).not.toHaveBeenCalled();
   });
@@ -133,18 +133,20 @@ describe('channelSharing', () => {
     'mailhost!username@example.org',
     'user%example.com@example.org',
     'user-@example.org',
-  ])('should call sendInvitation if email is valid: %s', email => {
+  ])('should call sendInvitation if email is valid: %s', async email => {
     wrapper.setData({ email });
-    wrapper.vm.submitEmail();
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.submitEmail();
     expect(sendInvitation).toHaveBeenCalledWith({
       email,
       shareMode: SharingPermissions.EDIT,
       channelId,
     });
   });
-  it('should call sendInvitation with correct share permission', () => {
+  it('should call sendInvitation with correct share permission', async () => {
     wrapper.setData({ email: 'test@test.com', shareMode: SharingPermissions.VIEW_ONLY });
-    wrapper.vm.submitEmail();
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.submitEmail();
     expect(sendInvitation).toHaveBeenCalledWith({
       email: 'test@test.com',
       shareMode: SharingPermissions.VIEW_ONLY,

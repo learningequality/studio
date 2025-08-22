@@ -14,33 +14,33 @@ const channelSet = {
 
 store.commit('channelSet/ADD_CHANNELSET', channelSet);
 
-function makeWrapper(deleteStub) {
+function makeWrapper() {
   const wrapper = mount(ChannelSetItem, {
     router,
     store,
     sync: false,
     propsData: { channelSetId: channelSet.id },
   });
-  wrapper.setMethods({
-    deleteChannelSet: deleteStub,
-  });
-  return wrapper;
+  const deleteChannelSet = jest.spyOn(wrapper.vm, 'deleteChannelSet');
+  deleteChannelSet.mockImplementation(() => Promise.resolve());
+  return [wrapper, { deleteChannelSet }];
 }
 
 describe('channelSetItem', () => {
-  let wrapper;
-  const deleteStub = jest.fn();
+  let wrapper, mocks;
+
   beforeEach(() => {
-    deleteStub.mockReset();
-    wrapper = makeWrapper(deleteStub);
+    [wrapper, mocks] = makeWrapper();
   });
+
   it('clicking the edit option should open the channel set edit modal', () => {
     wrapper.find('[data-test="edit"]').trigger('click');
     expect(wrapper.vm.$route.name).toEqual(RouteNames.CHANNEL_SET_DETAILS);
   });
+
   it('clicking delete button in dialog should delete the channel set', () => {
     wrapper.vm.deleteDialog = true;
     wrapper.find('[data-test="delete"]').trigger('click');
-    expect(deleteStub).toHaveBeenCalled();
+    expect(mocks.deleteChannelSet).toHaveBeenCalled();
   });
 });

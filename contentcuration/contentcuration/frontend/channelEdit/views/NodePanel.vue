@@ -7,7 +7,10 @@
     justify-center
     fill-height
   >
-    <VFlex v-if="isRoot && canEdit" class="text-xs-center">
+    <VFlex
+      v-if="isRoot && canEdit"
+      class="text-xs-center"
+    >
       <h1 class="font-weight-bold headline mb-2">
         {{ $tr('emptyChannelText') }}
       </h1>
@@ -15,18 +18,26 @@
         {{ $tr('emptyChannelSubText') }}
       </p>
     </VFlex>
-    <VFlex v-else-if="isRoot" class="subheading text-xs-center">
+    <VFlex
+      v-else-if="isRoot"
+      class="subheading text-xs-center"
+    >
       {{ $tr('emptyViewOnlyChannelText') }}
     </VFlex>
-    <VFlex v-else class="subheading text-xs-center">
+    <VFlex
+      v-else
+      class="subheading text-xs-center"
+    >
       {{ $tr('emptyTopicText') }}
     </VFlex>
   </VLayout>
-  <div v-else class="node-list" @scroll="$emit('scroll', $event)">
+  <div
+    v-else
+    class="node-list"
+    @scroll="$emit('scroll', $event)"
+  >
     <VList class="py-0">
-      <template
-        v-for="child in children"
-      >
+      <template v-for="child in children">
         <ContentNodeEditListItem
           :key="child.id"
           :nodeId="child.id"
@@ -46,13 +57,18 @@
       </template>
     </VList>
     <div class="pagination-container">
-      <KButton v-if="displayShowMoreButton" :disabled="moreLoading" @click="loadMore">
+      <KButton
+        v-if="displayShowMoreButton"
+        :disabled="moreLoading"
+        @click="loadMore"
+      >
         {{ $tr('showMore') }}
       </KButton>
     </div>
   </div>
 
 </template>
+
 
 <script>
 
@@ -202,7 +218,8 @@
 
 </script>
 
-<style lang="less" scoped>
+
+<style lang="scss" scoped>
 
   .node-list {
     width: 100%;

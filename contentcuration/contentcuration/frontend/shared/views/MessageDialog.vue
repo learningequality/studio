@@ -1,6 +1,10 @@
 <template>
 
-  <VDialog v-model="dialog" v-bind="$attrs" width="400">
+  <VDialog
+    v-model="dialog"
+    v-bind="$attrs"
+    width="400"
+  >
     <VCard class="px-2 py-3">
       <VCardTitle class="pb-0">
         <h1 class="font-weight-bold title">
@@ -8,18 +12,25 @@
         </h1>
       </VCardTitle>
 
-      <VCardText class="pb-4 pt-3" data-test="text">
+      <VCardText
+        class="pb-4 pt-3"
+        data-test="text"
+      >
         <p>{{ text }}</p>
         <slot></slot>
       </VCardText>
       <VCardActions data-test="buttons">
         <VSpacer />
-        <slot name="buttons" :close="close"></slot>
+        <slot
+          name="buttons"
+          :close="close"
+        ></slot>
       </VCardActions>
     </VCard>
   </VDialog>
 
 </template>
+
 
 <script>
 
@@ -59,13 +70,14 @@
 
 </script>
 
-<style lang="less" scoped>
+
+<style lang="scss" scoped>
 
   p {
     font-size: 12pt;
   }
 
-  /deep/ .v-btn {
+  ::v-deep .v-btn {
     font-weight: bold;
   }
 

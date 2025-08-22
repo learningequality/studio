@@ -1,4 +1,4 @@
-import { shallowMount, mount } from '@vue/test-utils';
+import { mount } from '@vue/test-utils';
 
 import AssessmentItemPreview from './AssessmentItemPreview';
 import { AssessmentItemTypes } from 'shared/constants';
@@ -27,9 +27,7 @@ describe('AssessmentItemPreview', () => {
   });
 
   it('smoke test', () => {
-    const wrapper = shallowMount(AssessmentItemPreview);
-
-    expect(wrapper.isVueInstance()).toBe(true);
+    expect(wrapper.exists()).toBe(true);
   });
 
   it('renders question', () => {
@@ -43,15 +41,15 @@ describe('AssessmentItemPreview', () => {
   });
 
   it("doesn't render hints and hints toggle by default", () => {
-    expect(wrapper.contains('[data-test="hintsToggle"]')).toBe(false);
+    expect(wrapper.findComponent('[data-test="hintsToggle"]').exists()).toBe(false);
 
     expect(wrapper.html()).not.toContain('Hint 1');
     expect(wrapper.html()).not.toContain('Hint 2');
   });
 
   describe('if detailed true', () => {
-    beforeEach(() => {
-      wrapper.setProps({
+    beforeEach(async () => {
+      await wrapper.setProps({
         detailed: true,
       });
     });
@@ -68,11 +66,11 @@ describe('AssessmentItemPreview', () => {
     });
 
     it('renders hints toggle', () => {
-      expect(wrapper.contains('[data-test="hintsToggle"]')).toBe(true);
+      expect(wrapper.findComponent('[data-test="hintsToggle"]').exists()).toBe(true);
     });
 
-    it('renders hints on hints toggle click', () => {
-      wrapper.find('[data-test="hintsToggle"]').trigger('click');
+    it('renders hints on hints toggle click', async () => {
+      await wrapper.findComponent('[data-test="hintsToggle"]').trigger('click');
 
       expect(wrapper.html()).toContain('Hint 1');
       expect(wrapper.html()).toContain('Hint 2');

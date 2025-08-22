@@ -1,6 +1,10 @@
 <template>
 
-  <MessageDialog v-model="open" :header="header" :text="text">
+  <MessageDialog
+    v-model="open"
+    :header="header"
+    :text="text"
+  >
     <slot></slot>
     <VCheckbox
       v-if="messageId"
@@ -10,13 +14,19 @@
     />
     <template #buttons="{ close }">
       <VSpacer />
-      <VBtn depressed color="primary" data-test="ok" @click="close">
+      <VBtn
+        depressed
+        color="primary"
+        data-test="ok"
+        @click="close"
+      >
         {{ $tr('closeButtonLabel') }}
       </VBtn>
     </template>
   </MessageDialog>
 
 </template>
+
 
 <script>
 
@@ -71,7 +81,7 @@
       },
     },
     methods: {
-      /*
+      /**
        * @public
        */
       prompt() {
@@ -86,9 +96,10 @@
 
 </script>
 
-<style lang="less" scoped>
 
-  /deep/ label {
+<style lang="scss" scoped>
+
+  ::v-deep label {
     margin: 0;
     font-weight: normal;
   }

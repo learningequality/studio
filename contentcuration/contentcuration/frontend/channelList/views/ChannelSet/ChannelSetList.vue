@@ -1,49 +1,66 @@
 <template>
 
-  <VContainer class="list-items" fluid>
-    <VLayout row wrap align-end justify-center>
+  <VContainer
+    class="list-items"
+    fluid
+  >
+    <VLayout
+      row
+      wrap
+      align-end
+      justify-center
+    >
       <VFlex>
-        <ActionLink
+        <KButton
           :text="$tr('aboutChannelSetsLink')"
-          class="mx-2"
+          class="link-btn"
+          appearance="basic-link"
           @click="infoDialog = true"
         />
-        <MessageDialog v-model="infoDialog" :header="$tr('aboutChannelSets')">
-          <p>
-            {{ $tr('channelSetsDescriptionText') }}
-          </p>
-          <p>
-            {{ $tr('channelSetsInstructionsText') }}
-          </p>
-          <p class="red--text">
-            {{ $tr('channelSetsDisclaimer') }}
-          </p>
-          <template #buttons>
-            <VSpacer />
-            <VBtn @click="infoDialog = false">
-              {{ $tr('cancelButtonLabel') }}
-            </VBtn>
-          </template>
-        </MessageDialog>
+        <KModal
+          v-if="infoDialog"
+          :cancelText="$tr('cancelButtonLabel')"
+          :title="$tr('aboutChannelSets')"
+          @cancel="infoDialog = false"
+        >
+          <div>
+            <p>
+              {{ $tr('channelSetsDescriptionText') }}
+            </p>
+            <p>
+              {{ $tr('channelSetsInstructionsText') }}
+            </p>
+            <p :class="$computedClass(channelSetsDisclamerStyle)">
+              {{ $tr('channelSetsDisclaimer') }}
+            </p>
+          </div>
+        </KModal>
       </VFlex>
       <VSpacer />
       <VFlex class="text-xs-right">
-        <VBtn
+        <KButton
           v-if="!loading"
-          color="primary"
+          appearance="raised-button"
+          primary
           data-test="add-channelset"
+          :text="$tr('addChannelSetTitle')"
           @click="newChannelSet"
-        >
-          {{ $tr('addChannelSetTitle') }}
-        </VBtn>
+        />
       </VFlex>
     </VLayout>
-    <VLayout row justify-center class="pt-2">
+    <VLayout
+      row
+      justify-center
+      class="pt-2"
+    >
       <VFlex xs12>
         <template v-if="loading">
           <LoadingText />
         </template>
-        <p v-else-if="channelSets && !channelSets.length" class="mb-0 text-xs-center">
+        <p
+          v-else-if="channelSets && !channelSets.length"
+          class="mb-0 text-xs-center"
+        >
           {{ $tr('noChannelSetsFound') }}
         </p>
         <template v-else>
@@ -53,9 +70,7 @@
             hide-actions
           >
             <template #items="{ item }">
-              <ChannelSetItem
-                :channelSetId="item.id"
-              />
+              <ChannelSetItem :channelSetId="item.id" />
             </template>
           </VDataTable>
         </template>
@@ -65,20 +80,19 @@
 
 </template>
 
+
 <script>
 
   import sortBy from 'lodash/sortBy';
   import { mapGetters, mapActions } from 'vuex';
   import { RouteNames } from '../../constants';
   import ChannelSetItem from './ChannelSetItem.vue';
-  import MessageDialog from 'shared/views/MessageDialog';
   import LoadingText from 'shared/views/LoadingText';
 
   export default {
     name: 'ChannelSetList',
     components: {
       ChannelSetItem,
-      MessageDialog,
       LoadingText,
     },
     data() {
@@ -97,6 +111,11 @@
           { text: this.$tr('options'), sortable: false, align: 'center', width: '100px' },
         ];
       },
+      channelSetsDisclamerStyle() {
+        return {
+          color: this.$themePalette.red.v_500,
+        };
+      },
       sortedChannelSets() {
         return sortBy(this.channelSets, s => s.name.toLowerCase()) || [];
       },
@@ -107,13 +126,10 @@
       });
     },
     methods: {
-      ...mapActions('channelSet', ['loadChannelSetList', 'createChannelSet']),
+      ...mapActions('channelSet', ['loadChannelSetList']),
       newChannelSet() {
-        this.createChannelSet().then(id => {
-          this.$router.push({
-            name: RouteNames.CHANNEL_SET_DETAILS,
-            params: { channelSetId: id },
-          });
+        this.$router.push({
+          name: RouteNames.NEW_CHANNEL_SET,
         });
       },
     },
@@ -140,13 +156,17 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .list-items {
     margin: 0 auto;
   }
 
-  /deep/ .v-datatable {
+  .link-btn {
+    margin: 0 8px;
+  }
+
+  ::v-deep .v-datatable {
     background-color: transparent !important;
   }
 

@@ -5,22 +5,28 @@
       v-model="drawer"
       fixed
       temporary
-      style="z-index: 1000;"
+      style="z-index: 1000"
       :right="$isRTL"
     >
       <VToolbar :color="color">
-        <VBtn flat icon :tabindex="handleclickTab" @click="drawer = false">
+        <VBtn
+          flat
+          icon
+          :tabindex="handleclickTab"
+          @click="drawer = false"
+        >
           <KIconButton
             icon="clear"
             color="black"
           />
         </VBtn>
-        <VToolbarTitle class="notranslate">
-          Kolibri Studio
-        </VToolbarTitle>
+        <VToolbarTitle class="notranslate"> Kolibri Studio </VToolbarTitle>
       </VToolbar>
       <VList>
-        <VListTile :href="channelsLink" :tabindex="handleclickTab">
+        <VListTile
+          :href="channelsLink"
+          :tabindex="handleclickTab"
+        >
           <VListTileAction>
             <KIconButton
               :disabled="true"
@@ -31,7 +37,11 @@
             <VListTileTitle>{{ $tr('channelsLink') }}</VListTileTitle>
           </VListTileContent>
         </VListTile>
-        <VListTile v-if="user.is_admin" :href="administrationLink" :tabindex="handleclickTab">
+        <VListTile
+          v-if="user.is_admin"
+          :href="administrationLink"
+          :tabindex="handleclickTab"
+        >
           <VListTileAction>
             <KIconButton
               :disabled="true"
@@ -41,9 +51,12 @@
           <VListTileContent class="subheading">
             <VListTileTitle>{{ $tr('administrationLink') }}</VListTileTitle>
           </VListTileContent>
-
         </VListTile>
-        <VListTile :href="settingsLink" :tabindex="handleclickTab" @click="trackClick('Settings')">
+        <VListTile
+          :href="settingsLink"
+          :tabindex="handleclickTab"
+          @click="trackClick('Settings')"
+        >
           <VListTileAction>
             <KIconButton
               :disabled="true"
@@ -114,7 +127,6 @@
           />
         </p>
       </VContainer>
-
     </VNavigationDrawer>
 
     <LanguageSwitcherModal
@@ -122,7 +134,6 @@
       :style="{ color: $themeTokens.text }"
       @cancel="showLanguageModal = false"
     />
-
   </div>
 
 </template>
@@ -210,6 +221,4 @@
 </script>
 
 
-<style lang="less" scoped>
-
-</style>
+<style lang="scss" scoped></style>

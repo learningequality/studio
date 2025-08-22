@@ -7,6 +7,7 @@
 - [Local development tools](./dev_tools.md)
 - [Running tests](./running_tests.md)
 - [Adding or updating dependencies](./dependencies.md)
+- [Preparing a pull request](../pull_requests.md)
 
 ## Additional development tools
 

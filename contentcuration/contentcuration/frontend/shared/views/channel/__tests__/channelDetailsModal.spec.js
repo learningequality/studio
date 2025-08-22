@@ -1,10 +1,7 @@
-import Vue from 'vue';
 import { mount } from '@vue/test-utils';
 import VueRouter from 'vue-router';
 import ChannelDetailsModal from './../ChannelDetailsModal';
 import storeFactory from 'shared/vuex/baseStore';
-
-Vue.use(VueRouter);
 
 const PARENTROUTE = 'Parent route';
 const TESTROUTE = 'test channel details modal route';
@@ -48,6 +45,7 @@ function makeWrapper() {
 
 describe('channelDetailsModal', () => {
   let wrapper;
+
   beforeEach(() => {
     router.push({
       name: TESTROUTE,
@@ -57,64 +55,45 @@ describe('channelDetailsModal', () => {
     });
     wrapper = makeWrapper();
   });
-  it('clicking close should close the modal', () => {
-    const close = jest.fn();
-    wrapper.setMethods({ close });
-    wrapper.find('[data-test="close"]').trigger('click');
+
+  it('clicking close should close the modal', async () => {
+    await wrapper.findComponent('[data-test="close"]').trigger('click');
     expect(wrapper.vm.dialog).toBe(false);
   });
-  it('clicking download CSV button should call generateChannelsCSV', () => {
-    wrapper.setData({ loading: false });
-    const generateChannelsCSV = jest.fn();
-    wrapper.setMethods({ generateChannelsCSV });
-    wrapper.find('[data-test="dl-csv"]').trigger('click');
+
+  it('clicking download CSV button should call generateChannelsCSV', async () => {
+    await wrapper.setData({ loading: false });
+    const generateChannelsCSV = jest.spyOn(wrapper.vm, 'generateChannelsCSV');
+    generateChannelsCSV.mockImplementation(() => Promise.resolve());
+    await wrapper.findComponent('[data-test="dl-csv"]').trigger('click');
     expect(generateChannelsCSV).toHaveBeenCalledWith([wrapper.vm.channelWithDetails]);
   });
 
   describe('load', () => {
+    let loadChannel;
+    let loadChannelDetails;
+
     beforeEach(() => {
-      wrapper.setMethods({
-        loadChannel() {
-          return Promise.resolve();
-        },
-        loadChannelDetails() {
-          return Promise.resolve();
-        },
-      });
+      loadChannel = jest.spyOn(wrapper.vm, 'loadChannel');
+      loadChannelDetails = jest.spyOn(wrapper.vm, 'loadChannelDetails');
     });
-    it('should automatically close if loadChannel does not find a channel', () => {
-      return wrapper.vm.load().then(() => {
-        expect(wrapper.vm.dialog).toBe(false);
-      });
+
+    it('should automatically close if loadChannel does not find a channel', async () => {
+      await wrapper.vm.load();
+      expect(wrapper.vm.dialog).toBe(false);
     });
-    it('load should call loadChannel and loadChannelDetails', () => {
-      const loadChannel = jest.fn();
-      const loadChannelDetails = jest.fn();
-      wrapper.setMethods({
-        loadChannel() {
-          loadChannel();
-          return Promise.resolve({ id: channelId });
-        },
-        loadChannelDetails() {
-          loadChannelDetails();
-          return Promise.resolve();
-        },
-      });
-      return wrapper.vm.load().then(() => {
-        expect(loadChannel).toHaveBeenCalled();
-        expect(loadChannelDetails).toHaveBeenCalled();
-      });
+
+    it('load should call loadChannel and loadChannelDetails', async () => {
+      await wrapper.vm.load();
+      expect(loadChannel).toHaveBeenCalled();
+      expect(loadChannelDetails).toHaveBeenCalled();
     });
-    it('load should update document.title', () => {
+
+    it('load should update document.title', async () => {
       const channel = { name: 'testing channel' };
-      wrapper.setMethods({
-        loadChannel() {
-          return Promise.resolve(channel);
-        },
-      });
-      return wrapper.vm.load().then(() => {
-        expect(document.title).toContain(channel.name);
-      });
+      loadChannel.mockImplementation(() => Promise.resolve(channel));
+      await wrapper.vm.load();
+      expect(document.title).toContain(channel.name);
     });
   });
 });

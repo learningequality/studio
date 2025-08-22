@@ -170,7 +170,11 @@ def _create_deleted_user_in_past(deletion_datetime, email="test@test.com"):
     user = create_user(email, "password", "test", "test")
     user.delete()
 
-    user_latest_delete_history = UserHistory.objects.filter(user_id=user.id, action=user_history.DELETION).order_by("-performed_at").first()
+    user_latest_delete_history = (
+        UserHistory.objects.filter(user_id=user.id, action=user_history.DELETION)
+        .order_by("-performed_at")
+        .first()
+    )
     user_latest_delete_history.performed_at = deletion_datetime
     user_latest_delete_history.save()
     return user
@@ -180,28 +184,46 @@ class CleanUpSoftDeletedExpiredUsersTestCase(StudioTestCase):
     def test_cleanup__all_expired_soft_deleted_users(self):
         expired_users = []
         for i in range(0, 5):
-            expired_users.append(_create_deleted_user_in_past(deletion_datetime=THREE_MONTHS_AGO, email=f"test-{i}@test.com"))
+            expired_users.append(
+                _create_deleted_user_in_past(
+                    deletion_datetime=THREE_MONTHS_AGO, email=f"test-{i}@test.com"
+                )
+            )
 
         clean_up_soft_deleted_users()
 
         for user in expired_users:
-            assert UserHistory.objects.filter(user_id=user.id, action=user_history.RELATED_DATA_HARD_DELETION).exists() is True
+            assert (
+                UserHistory.objects.filter(
+                    user_id=user.id, action=user_history.RELATED_DATA_HARD_DELETION
+                ).exists()
+                is True
+            )
 
     def test_no_cleanup__unexpired_soft_deleted_users(self):
         two_months_ago = datetime.now() - timedelta(days=63)
         user = _create_deleted_user_in_past(deletion_datetime=two_months_ago)
         clean_up_soft_deleted_users()
-        assert UserHistory.objects.filter(user_id=user.id, action=user_history.RELATED_DATA_HARD_DELETION).exists() is False
+        assert (
+            UserHistory.objects.filter(
+                user_id=user.id, action=user_history.RELATED_DATA_HARD_DELETION
+            ).exists()
+            is False
+        )
 
     def test_no_cleanup__undeleted_users(self):
         user = create_user("test@test.com", "password", "test", "test")
         clean_up_soft_deleted_users()
         assert user.deleted is False
-        assert UserHistory.objects.filter(user_id=user.id, action=user_history.RELATED_DATA_HARD_DELETION).exists() is False
+        assert (
+            UserHistory.objects.filter(
+                user_id=user.id, action=user_history.RELATED_DATA_HARD_DELETION
+            ).exists()
+            is False
+        )
 
 
 class CleanUpContentNodesTestCase(StudioTestCase):
-
     def test_delete_all_contentnodes_in_orphanage_tree(self):
         """
         Make sure that by default, all nodes created with a timestamp of 3 months
@@ -214,11 +236,17 @@ class CleanUpContentNodesTestCase(StudioTestCase):
             _create_expired_contentnode()
 
         # sanity check to see if we have X contentnodes under the garbage tree
-        assert ContentNode.objects.filter(parent_id=settings.ORPHANAGE_ROOT_ID).count() == num_contentnodes
+        assert (
+            ContentNode.objects.filter(parent_id=settings.ORPHANAGE_ROOT_ID).count()
+            == num_contentnodes
+        )
 
         # now clean up our contentnodes, and check that our descendant count is indeed 0 now
         clean_up_contentnodes()
-        assert ContentNode.objects.filter(parent_id=settings.ORPHANAGE_ROOT_ID).count() == 0
+        assert (
+            ContentNode.objects.filter(parent_id=settings.ORPHANAGE_ROOT_ID).count()
+            == 0
+        )
 
     def test_deletes_associated_files(self):
 
@@ -366,15 +394,12 @@ class CleanUpContentNodesTestCase(StudioTestCase):
 
 
 class CleanUpFeatureFlagsTestCase(StudioTestCase):
-
     def setUp(self):
         return super(CleanUpFeatureFlagsTestCase, self).setUpBase()
 
     def test_clean_up(self):
         key = "feature_flag_does_not_exist"
-        self.user.feature_flags = {
-            key: True
-        }
+        self.user.feature_flags = {key: True}
         self.user.save()
         clean_up_feature_flags()
         self.user.refresh_from_db()
@@ -382,15 +407,22 @@ class CleanUpFeatureFlagsTestCase(StudioTestCase):
 
 
 class CleanupTaskTestCase(StudioTestCase):
-
     def setUp(self):
-        self.pruned_task = TaskResult.objects.create(task_id=uuid.uuid4().hex, status=states.SUCCESS, task_name="pruned_task")
-        self.failed_task = TaskResult.objects.create(task_id=uuid.uuid4().hex, status=states.FAILURE, task_name="failed_task")
-        self.recent_task = TaskResult.objects.create(task_id=uuid.uuid4().hex, status=states.SUCCESS, task_name="recent_task")
+        self.pruned_task = TaskResult.objects.create(
+            task_id=uuid.uuid4().hex, status=states.SUCCESS, task_name="pruned_task"
+        )
+        self.failed_task = TaskResult.objects.create(
+            task_id=uuid.uuid4().hex, status=states.FAILURE, task_name="failed_task"
+        )
+        self.recent_task = TaskResult.objects.create(
+            task_id=uuid.uuid4().hex, status=states.SUCCESS, task_name="recent_task"
+        )
 
         # `date_done` uses `auto_now`, so manually set it
         done = datetime.now() - timedelta(days=8)
-        TaskResult.objects.filter(pk__in=[self.pruned_task.pk, self.failed_task.pk]).update(date_done=done)
+        TaskResult.objects.filter(
+            pk__in=[self.pruned_task.pk, self.failed_task.pk]
+        ).update(date_done=done)
         # run
         clean_up_tasks()
 
@@ -413,7 +445,7 @@ TWO_DAYS_AGO = datetime.now() - timedelta(days=2)
 
 
 def _create_stale_file(user, modified_date):
-    checksum = '%32x' % random.getrandbits(16 * 8)
+    checksum = "%32x" % random.getrandbits(16 * 8)
     file = File(
         file_size=5,
         checksum=checksum,
@@ -433,7 +465,6 @@ def _create_stale_file(user, modified_date):
 
 
 class CleanupStaleFilesTestCase(StudioTestCase):
-
     def setUp(self):
         user = self.admin_user
 

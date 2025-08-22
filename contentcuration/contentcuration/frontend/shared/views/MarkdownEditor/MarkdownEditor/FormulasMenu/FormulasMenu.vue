@@ -5,13 +5,14 @@
 
     <VCard elevation="20">
       <VCardTitle class="pb-1 pt-1">
-        <VLayout align-center justify-space-between>
+        <VLayout
+          align-center
+          justify-space-between
+        >
           <VFlex class="font-weight-bold">
             {{ $tr('formulasMenuTitle') }}
           </VFlex>
-          <VBtn
-            @click="onInsertClick"
-          >
+          <VBtn @click="onInsertClick">
             {{ $tr('btnLabelInsert') }}
           </VBtn>
         </VLayout>
@@ -46,7 +47,10 @@
               {{ symbolsTranslator.$tr(symbolsGroup.title) }}
             </div>
 
-            <VLayout row wrap>
+            <VLayout
+              row
+              wrap
+            >
               <VFlex
                 v-for="(_, symbolIdx) in symbolsGroup.symbols"
                 :key="symbolIdx"
@@ -68,6 +72,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -179,7 +184,8 @@
 
 </script>
 
-<style lang="less" scoped>
+
+<style lang="scss" scoped>
 
   .formulas-menu {
     position: relative;

@@ -1,7 +1,7 @@
 <template>
 
   <!-- Adding div wrapper as tests fail when VTooltip is the root -->
-  <div style="display: inline-block;">
+  <div style="display: inline-block">
     <KIconButton
       data-test="button"
       :icon="bookmark ? 'star' : 'starBorder'"
@@ -12,6 +12,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -47,7 +48,7 @@
         this.bookmarkChannel({ id: this.channelId, bookmark: !this.bookmark }).then(() => {
           this.$store.dispatch(
             'showSnackbarSimple',
-            isBookmarked ? this.$tr('unstarred') : this.$tr('starred')
+            isBookmarked ? this.$tr('unstarred') : this.$tr('starred'),
           );
 
           this.$analytics.trackAction('channel_list', isBookmarked ? 'Unstar' : 'Star', {
@@ -67,6 +68,4 @@
 </script>
 
 
-<style lang="less" scoped>
-
-</style>
+<style lang="scss" scoped></style>

@@ -93,13 +93,13 @@ export default VueComponent => {
         if (hasLeftwardSpace(this)) {
           this.previousSibling.textContent = this.previousSibling.textContent.replace(
             leftwardSpaceRegex,
-            ''
+            '',
           );
         }
         if (hasRightwardSpace(this)) {
           this.nextSibling.textContent = this.nextSibling.textContent.replace(
             rightwardSpaceRegex,
-            ''
+            '',
           );
         }
         if (this.parentNode) {

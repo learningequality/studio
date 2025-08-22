@@ -1,17 +1,39 @@
 <template>
 
-  <VContainer v-resize="handleWindowResize" fluid class="ma-0 main pa-0 panel">
+  <VContainer
+    v-resize="handleWindowResize"
+    fluid
+    class="ma-0 main pa-0 panel"
+  >
     <!-- Breadcrumbs -->
-    <VToolbar dense color="transparent" flat>
+    <VToolbar
+      dense
+      color="transparent"
+      flat
+    >
       <slot name="action"></slot>
-      <Breadcrumbs :items="ancestors" class="mx-1 px-2 py-0">
+      <Breadcrumbs
+        :items="ancestors"
+        class="mx-1 px-2 py-0"
+      >
         <template #item="{ item, isLast }">
           <!-- Current item -->
-          <VLayout v-if="isLast" align-center row>
-            <VFlex class="font-weight-bold text-truncate" shrink :class="getTitleClass(item)">
+          <VLayout
+            v-if="isLast"
+            align-center
+            row
+          >
+            <VFlex
+              class="font-weight-bold text-truncate"
+              shrink
+              :class="getTitleClass(item)"
+            >
               {{ getTitle(item) }}
             </VFlex>
-            <Menu v-if="item.displayNodeOptions" v-model="breadcrumbsMenu">
+            <BaseMenu
+              v-if="item.displayNodeOptions"
+              v-model="breadcrumbsMenu"
+            >
               <template #activator="{ on }">
                 <IconButton
                   icon="dropdown"
@@ -19,15 +41,22 @@
                   v-on="on"
                 />
               </template>
-              <ContentNodeOptions v-if="node && breadcrumbsMenu" :nodeId="topicId" />
-            </Menu>
+              <ContentNodeOptions
+                v-if="node && breadcrumbsMenu"
+                :nodeId="topicId"
+              />
+            </BaseMenu>
           </VLayout>
-          <span v-else class="grey--text" :class="getTitleClass(item)">
+          <span
+            v-else
+            class="grey--text"
+            :class="getTitleClass(item)"
+          >
             {{ getTitle(item) }}
           </span>
         </template>
       </Breadcrumbs>
-      <Menu
+      <BaseMenu
         v-if="!loadingAncestors"
         class="pa-1"
       >
@@ -42,29 +71,39 @@
           <VListTile
             v-for="mode in viewModes"
             :key="mode"
-            @click="setViewMode(mode), trackViewMode(mode)"
+            @click="(setViewMode(mode), trackViewMode(mode))"
           >
-            <VListTileAction style="min-width: 32px;">
-              <Icon v-if="mode === viewMode" icon="check" />
+            <VListTileAction style="min-width: 32px">
+              <Icon
+                v-if="mode === viewMode"
+                icon="check"
+              />
             </VListTileAction>
             <VListTileTitle>{{ $tr(mode) }}</VListTileTitle>
           </VListTile>
         </VList>
-      </Menu>
+      </BaseMenu>
     </VToolbar>
 
     <!-- Topic actions -->
-    <ToolBar dense :flat="!elevated" style="z-index: 4;">
+    <ToolBar
+      dense
+      :flat="!elevated"
+      style="z-index: 4"
+    >
       <div class="mx-3">
         <Checkbox
           v-if="node && node.total_count"
           v-model="selectAll"
           :indeterminate="selected.length > 0 && !selectAll"
           :label="selected.length ? selectionText : $tr('selectAllLabel')"
-          style="font-size: 16px;"
+          style="font-size: 16px"
         />
       </div>
-      <div v-if="selected.length" class="command-palette-wrapper">
+      <div
+        v-if="selected.length"
+        class="command-palette-wrapper"
+      >
         <KListWithOverflow
           :items="commandPaletteOptions"
           :appearanceOverrides="{ justifyContent: 'flex-end' }"
@@ -88,7 +127,7 @@
               <template #menu>
                 <KDropdownMenu
                   :options="overflowItems"
-                  @select="(option) => option.onClick()"
+                  @select="option => option.onClick()"
                 />
               </template>
             </KIconButton>
@@ -109,11 +148,19 @@
       />
       <VSpacer v-if="!selected.length" />
       <VToolbarItems v-if="!loadingAncestors">
-        <Menu v-if="canEdit">
+        <BaseMenu v-if="canEdit">
           <template #activator="{ on }">
-            <VBtn color="primary" class="ml-2" style="height: 32px;" v-on="on">
+            <VBtn
+              color="primary"
+              class="ml-2"
+              style="height: 32px"
+              v-on="on"
+            >
               {{ $tr('addButton') }}
-              <Icon icon="dropdown" :color="$themeTokens.textInverted" />
+              <Icon
+                icon="dropdown"
+                :color="$themeTokens.textInverted"
+              />
             </VBtn>
           </template>
           <VList>
@@ -136,7 +183,7 @@
               <VListTileTitle>{{ $tr('importFromChannels') }}</VListTileTitle>
             </VListTile>
           </VList>
-        </Menu>
+        </BaseMenu>
       </VToolbarItems>
     </ToolBar>
 
@@ -178,14 +225,17 @@
         @resize="handleResourceDrawerResize"
         @scroll="scroll"
       >
-        <template v-if="canEdit" #actions>
+        <template
+          v-if="canEdit"
+          #actions
+        >
           <IconButton
             size="small"
             icon="edit"
             :text="$tr('editButton')"
             @click="editNodes([detailNodeId])"
           />
-          <Menu v-model="resourceDrawerMenu">
+          <BaseMenu v-model="resourceDrawerMenu">
             <template #activator="{ on }">
               <IconButton
                 size="small"
@@ -201,9 +251,12 @@
               hideEditLink
               @removed="closePanel"
             />
-          </Menu>
+          </BaseMenu>
         </template>
-        <template v-else #actions>
+        <template
+          v-else
+          #actions
+        >
           <IconButton
             size="small"
             icon="clipboard"
@@ -221,6 +274,7 @@
   </VContainer>
 
 </template>
+
 
 <script>
 
@@ -778,7 +832,7 @@
                   return Promise.resolve();
                 } else if (trees.length > 1) {
                   throw new Error(
-                    'Multiple copy trees are unexpected for drag and drop copy operation'
+                    'Multiple copy trees are unexpected for drag and drop copy operation',
                   );
                 }
 
@@ -787,7 +841,7 @@
                   id: source.metadata.id,
                   excluded_descendants: get(trees, [0, 'extra_fields', 'excluded_descendants'], {}),
                 });
-              })
+              }),
             );
           }
 
@@ -831,10 +885,10 @@
           () => {
             this.clearSelections();
             this.$refs.moveModal.moveComplete();
-          }
+          },
         );
       },
-      removeNodes: withChangeTracker(function(id__in, changeTracker) {
+      removeNodes: withChangeTracker(function (id__in, changeTracker) {
         this.trackClickEvent('Delete');
         let nextRoute;
         // If the NodePanel for one of the deleted nodes is open, close it
@@ -853,7 +907,7 @@
           }).then(() => changeTracker.cleanUp());
         });
       }),
-      copyToClipboard: withChangeTracker(function(ids, changeTracker) {
+      copyToClipboard: withChangeTracker(function (ids, changeTracker) {
         this.trackClickEvent('Copy to clipboard');
         const nodes = this.getContentNodes(ids);
 
@@ -867,7 +921,7 @@
           }).then(() => changeTracker.cleanUp());
         });
       }),
-      duplicateNodes: withChangeTracker(function(id__in, changeTracker) {
+      duplicateNodes: withChangeTracker(function (id__in, changeTracker) {
         this.trackClickEvent('Copy');
         this.showSnackbar({
           duration: null,
@@ -883,8 +937,8 @@
               id,
               target: id,
               position: RELATIVE_TREE_POSITIONS.RIGHT,
-            })
-          )
+            }),
+          ),
         ).then(nodes => {
           this.clearSelections();
           Promise.allSettled(
@@ -892,8 +946,8 @@
               this.waitForCopyingStatus({
                 contentNodeId: n.id,
                 startingRev: changeTracker._startingRev,
-              })
-            )
+              }),
+            ),
           ).then(results => {
             let isAllCopySuccess = true;
             for (const result of results) {
@@ -989,10 +1043,13 @@
 
 </script>
 
+
 <style scoped>
+
   .main {
     background-color: white;
   }
+
   .panel {
     height: inherit;
     overflow-y: auto;
@@ -1000,18 +1057,20 @@
 
   .fade-transition-enter-active,
   .fade-transition-leave-active {
-    transition-duration: 0.1s
+    transition-duration: 0.1s;
   }
 
   .divider-wrapper {
-    padding: 8px 12px;
     align-self: stretch;
+    padding: 8px 12px;
   }
+
   .command-palette-wrapper {
-    min-width: 0;
     flex-grow: 1;
+    min-width: 0;
     padding-right: 4px;
   }
+
   .no-shrink {
     flex-shrink: 0;
   }

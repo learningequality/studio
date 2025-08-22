@@ -16,6 +16,7 @@
 
 </template>
 
+
 <script>
 
   import KCheckbox from 'kolibri-design-system/lib/KCheckbox';
@@ -149,9 +150,9 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  /deep/ label.theme--light {
+  ::v-deep label.theme--light {
     padding: 0 8px;
     color: var(--v-text);
   }

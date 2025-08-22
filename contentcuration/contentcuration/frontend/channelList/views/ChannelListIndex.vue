@@ -14,7 +14,7 @@
         exact
         color="appBarDark"
         class="ma-0"
-        style="border-radius: 8px;"
+        style="border-radius: 8px"
       >
         <KLogo
           altText="Kolibri Logo with background"
@@ -28,39 +28,70 @@
       </VToolbarTitle>
     </VToolbar>
     <AppBar v-else>
-      <template v-if="loggedIn" #tabs>
+      <template
+        v-if="loggedIn"
+        #tabs
+      >
         <VTab
           v-for="listType in lists"
           :key="listType.id"
           :to="getChannelLink(listType)"
           @click="trackTabClick(listType)"
         >
-          <VBadge :value="invitationsByListCounts[listType]" color="black">
+          <VBadge
+            :value="invitationsByListCounts[listType]"
+            color="black"
+          >
             <template #badge>
               <span>{{ $formatNumber(invitationsByListCounts[listType]) }}</span>
             </template>
             <span>{{ translateConstant(listType) }}</span>
           </VBadge>
         </VTab>
-        <VTab :to="catalogLink" @click="publicTabClick">
-          {{ $tr("catalog") }}
+        <VTab
+          :to="catalogLink"
+          @click="publicTabClick"
+        >
+          {{ $tr('catalog') }}
         </VTab>
-        <VTab :to="channelSetLink" @click="channelSetsTabClick">
-          {{ $tr("channelSets") }}
+        <VTab
+          :to="channelSetLink"
+          @click="channelSetsTabClick"
+        >
+          {{ $tr('channelSets') }}
         </VTab>
       </template>
     </AppBar>
     <VContent>
-      <OfflineText v-if="!isCatalogPage" toolbar :offset="toolbarHeight" />
+      <OfflineText
+        v-if="!isCatalogPage"
+        toolbar
+        :offset="toolbarHeight"
+      />
       <VContainer
         fluid
         class="main-container pa-0"
         :style="`height: calc(100vh - ${contentOffset}px); margin-top: ${offline ? 48 : 0}px;`"
       >
-        <VContainer fluid :class="isCatalogPage ? 'pa-0' : 'pa-4'">
-          <VLayout row wrap justify-center>
-            <VFlex xs12 sm10 md8 lg6>
-              <VCard v-if="invitationList.length" v-show="isChannelList">
+        <VContainer
+          fluid
+          :class="isCatalogPage ? 'pa-0' : 'pa-4'"
+        >
+          <VLayout
+            row
+            wrap
+            justify-center
+          >
+            <VFlex
+              xs12
+              sm10
+              md8
+              lg6
+            >
+              <VCard
+                v-if="invitationList.length"
+                v-show="isChannelList"
+              >
                 <VList subheader>
                   <VSubheader>
                     {{ $tr('invitations', { count: invitationList.length }) }}
@@ -74,7 +105,10 @@
               </VCard>
             </VFlex>
           </VLayout>
-          <ChannelListAppError v-if="fullPageError" :error="fullPageError" />
+          <ChannelListAppError
+            v-if="fullPageError"
+            :error="fullPageError"
+          />
           <RouterView v-else />
         </VContainer>
       </VContainer>
@@ -164,7 +198,7 @@
         const invitations = this.invitations;
         return (
           invitations.filter(
-            i => ChannelInvitationMapping[i.share_mode] === this.currentListType
+            i => ChannelInvitationMapping[i.share_mode] === this.currentListType,
           ) || []
         );
       },
@@ -172,7 +206,7 @@
         const inviteMap = {};
         Object.values(ChannelListTypes).forEach(type => {
           inviteMap[type] = this.invitations.filter(
-            i => ChannelInvitationMapping[i.share_mode] === type
+            i => ChannelInvitationMapping[i.share_mode] === type,
           ).length;
         });
         return inviteMap;
@@ -267,7 +301,7 @@
 </script>
 
 
-<style lang="less">
+<style lang="scss">
 
   html {
     overflow-y: auto !important;

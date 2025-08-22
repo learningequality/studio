@@ -1,4 +1,4 @@
-import Vue from 'vue';
+import Vue, { set } from 'vue';
 import { DraggableFlags } from './constants';
 import { DraggableIdentityHelper } from 'shared/vuex/draggablePlugin/module/utils';
 
@@ -20,7 +20,7 @@ export function RESET_ACTIVE_DRAGGABLE_UNIVERSE(state) {
 
 export function ADD_GROUPED_HANDLE(state, identity) {
   const { key } = new DraggableIdentityHelper(identity);
-  Vue.set(state.groupedDraggableHandles, key, identity);
+  set(state.groupedDraggableHandles, key, identity);
 }
 
 export function REMOVE_GROUPED_HANDLE(state, identity) {
@@ -43,7 +43,7 @@ export function RESET_DRAGGABLE_DIRECTION(state) {
 
 export function ADD_DRAGGABLE_CONTAINER_DROPS(state, data) {
   for (const key in data) {
-    Vue.set(state.draggableContainerDrops, key, data[key]);
+    set(state.draggableContainerDrops, key, data[key]);
   }
 }
 

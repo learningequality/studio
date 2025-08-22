@@ -1,5 +1,5 @@
 import omit from 'lodash/omit';
-import axios from 'axios';
+import axios, { isCancel } from 'axios';
 import qs from 'qs';
 import * as Sentry from '@sentry/vue';
 
@@ -7,7 +7,7 @@ export function paramsSerializer(params) {
   // Do custom querystring stingifying to comma separate array params
   return qs.stringify(params, {
     arrayFormat: 'comma',
-    encoder: function(str, defaultEncoder, charset, type) {
+    encoder: function (str, defaultEncoder, charset, type) {
       if (type === 'key') {
         // Handle params for queries to joint indexes
         // of the form [index1+index2]
@@ -38,25 +38,48 @@ window.addEventListener('offline', () => {
   lastOffline = Date.now();
 });
 
+const pendingRequests = new Set();
+
+const abortController = new AbortController();
+
+window.addEventListener('navigate', () => {
+  // Create a fresh AbortController to ensure proper cancellation of requests
+  // for each navigation and prevent interference from previous aborts.
+  const newAbortController = new AbortController();
+  abortController.signal = newAbortController.signal;
+
+  abortController.abort();
+});
+
+window.addEventListener('beforeunload', () => {
+  abortController.abort();
+});
+
+client.interceptors.request.use(config => {
+  config.signal = abortController.signal;
+  pendingRequests.add(config);
+  return config;
+});
+
 client.interceptors.response.use(
-  response => response,
+  response => {
+    pendingRequests.delete(response.config);
+    return response;
+  },
   error => {
-    const url = error.config.url;
-    let message = error.message;
-    let status = 0;
-    if (error.response) {
-      status = error.response.status;
-      message = error.response.statusText;
-      // Don't send a Sentry report for permissions errors
-      // Many 404s are in fact also unauthorized requests so
-      // we should silence those on the front end and try
-      // to catch legitimate request issues in the backend.
-      //
-      // Allow 412 too as that's specific to out of storage checks
-      if (status === 403 || status === 404 || status === 405 || status === 412) {
-        return Promise.reject(error);
-      }
+    if (error.config) {
+      pendingRequests.delete(error.config);
     }
+
+    if (
+      isCancel(error) ||
+      (error.response && [302, 403, 404, 405, 412].includes(error.response.status))
+    ) {
+      return Promise.reject(error);
+    }
+    const url = error.config?.url || 'unknown';
+    let message = error.message;
+    const status = error.response?.status || 0;
 
     message = message ? `${message}: [${status}] ${url}` : `Network Error: [${status}] ${url}`;
 
@@ -65,7 +88,7 @@ client.interceptors.response.use(
       console.warn('AJAX Request Error: ' + message); // eslint-disable-line no-console
       console.warn('Error data: ', error); // eslint-disable-line no-console
     } else if (error.code !== 'ECONNABORTED') {
-      Sentry.withScope(function(scope) {
+      Sentry.withScope(function (scope) {
         scope.addAttachment({
           filename: 'error.json',
           // strip csrf token from headers
@@ -88,7 +111,7 @@ client.interceptors.response.use(
       });
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default client;

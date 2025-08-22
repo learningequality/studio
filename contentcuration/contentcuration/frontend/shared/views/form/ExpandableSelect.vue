@@ -36,13 +36,15 @@
     </h5>
     <div>
       <template v-if="!multiple">
-        <KRadioButton
-          v-for="option in options"
-          :key="option.value"
-          v-model="valueModel"
-          :buttonValue="option.value"
-          :label="option.text"
-        />
+        <KRadioButtonGroup>
+          <KRadioButton
+            v-for="option in options"
+            :key="option.value"
+            v-model="valueModel"
+            :buttonValue="option.value"
+            :label="option.text"
+          />
+        </KRadioButtonGroup>
       </template>
       <template v-else>
         <KCheckbox
@@ -61,10 +63,10 @@
     >
       {{ hint }}
     </p>
-
   </div>
 
 </template>
+
 
 <script>
 
@@ -154,7 +156,7 @@
         get() {
           if (this.multiple) {
             return Object.keys(this.valueModel).filter(
-              key => this.valueModel[key].length === this.availableItems.length
+              key => this.valueModel[key].length === this.availableItems.length,
             );
           }
           return this.valueModel;
@@ -204,9 +206,12 @@
 
 </script>
 
+
 <style scoped>
+
   .disabled {
     pointer-events: none;
     opacity: 0.5;
   }
+
 </style>

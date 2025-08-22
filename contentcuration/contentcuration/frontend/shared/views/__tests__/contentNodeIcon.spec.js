@@ -1,15 +1,9 @@
-import Vue from 'vue';
-import Vuetify from 'vuetify';
 import { mount } from '@vue/test-utils';
 import ContentNodeIcon from '../ContentNodeIcon.vue';
 
-Vue.use(Vuetify);
-
-document.body.setAttribute('data-app', true); // Vuetify prints a warning without this
-
 function makeWrapper(kind) {
   return mount(ContentNodeIcon, {
-    attachToDocument: true,
+    attachTo: document.body,
     propsData: {
       kind: kind,
     },
@@ -26,8 +20,9 @@ describe('ContentNodeIcon', () => {
     { value: 'html5', icon: 'widgets' },
     { value: 'zim', icon: 'widgets' },
   ];
+
   it.each(testIcons)('should display the correct icon $value', kind => {
     const wrapper = makeWrapper(kind.value);
-    expect(wrapper.find('.v-icon').text()).toContain(kind.icon);
+    expect(wrapper.findComponent('.v-icon').text()).toContain(kind.icon);
   });
 });

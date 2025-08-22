@@ -21,9 +21,7 @@ class BookmarkSerializer(BulkModelSerializer):
 
     class Meta:
         model = Channel.bookmarked_by.through
-        fields = (
-            "channel",
-        )
+        fields = ("channel",)
         list_serializer_class = BulkListSerializer
         update_lookup_field = "channel"
 
@@ -37,9 +35,7 @@ class BookmarkViewSet(ReadOnlyValuesViewset, CreateModelMixin, DestroyModelMixin
     permission_classes = [IsAuthenticated]
     serializer_class = BookmarkSerializer
 
-    values = (
-        "channel_id",
-    )
+    values = ("channel_id",)
 
     field_map = {
         "channel": "channel_id",

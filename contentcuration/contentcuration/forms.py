@@ -13,14 +13,14 @@ from django.template.loader import render_to_string
 from contentcuration.models import User
 
 
-REGISTRATION_SALT = getattr(settings, 'REGISTRATION_SALT', 'registration')
+REGISTRATION_SALT = getattr(settings, "REGISTRATION_SALT", "registration")
 
 
 # LOGIN/REGISTRATION FORMS
 #################################################################
 class RegistrationForm(UserCreationForm):
-    CODE_ACCOUNT_ACTIVE = 'account_active'
-    CODE_ACCOUNT_INACTIVE = 'account_inactive'
+    CODE_ACCOUNT_ACTIVE = "account_active"
+    CODE_ACCOUNT_INACTIVE = "account_inactive"
 
     first_name = forms.CharField(required=True)
     last_name = forms.CharField(required=True)
@@ -43,9 +43,13 @@ class RegistrationForm(UserCreationForm):
         user_qs = User.objects.filter(email__iexact=email)
         if user_qs.exists():
             if user_qs.filter(Q(is_active=True) | Q(deleted=True)).exists():
-                raise ValidationError("Account already active", code=self.CODE_ACCOUNT_ACTIVE)
+                raise ValidationError(
+                    "Account already active", code=self.CODE_ACCOUNT_ACTIVE
+                )
             else:
-                raise ValidationError("Already registered.", code=self.CODE_ACCOUNT_INACTIVE)
+                raise ValidationError(
+                    "Already registered.", code=self.CODE_ACCOUNT_INACTIVE
+                )
         return email
 
     def save(self, commit=True):
@@ -53,12 +57,12 @@ class RegistrationForm(UserCreationForm):
         user.first_name = self.cleaned_data["first_name"]
         user.last_name = self.cleaned_data["last_name"]
         user.information = {
-            "uses": self.cleaned_data['uses'].split('|'),
-            "locations": self.cleaned_data['locations'].split('|'),
-            "space_needed": self.cleaned_data['storage'],
-            "heard_from": self.cleaned_data['source'],
+            "uses": self.cleaned_data["uses"].split("|"),
+            "locations": self.cleaned_data["locations"].split("|"),
+            "space_needed": self.cleaned_data["storage"],
+            "heard_from": self.cleaned_data["source"],
         }
-        user.policies = json.loads(self.cleaned_data['policies'])
+        user.policies = json.loads(self.cleaned_data["policies"])
 
         if commit:
             user.save()
@@ -67,7 +71,7 @@ class RegistrationForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ('first_name', 'last_name', 'email')
+        fields = ("first_name", "last_name", "email")
 
 
 class ForgotPasswordForm(PasswordResetForm):
@@ -82,40 +86,57 @@ class ForgotPasswordForm(PasswordResetForm):
         user = User.get_for_email(email)
 
         if user and user.is_active:
-            super(ForgotPasswordForm, self).save(request=request, extra_email_context=extra_email_context, **kwargs)
+            super(ForgotPasswordForm, self).save(
+                request=request, extra_email_context=extra_email_context, **kwargs
+            )
         elif user:
             # For users who were invited but hadn't registered yet
             if not user.password:
                 context = {
-                    'site': extra_email_context.get('site'),
-                    'user': user,
-                    'domain': extra_email_context.get('domain'),
+                    "site": extra_email_context.get("site"),
+                    "user": user,
+                    "domain": extra_email_context.get("domain"),
                 }
-                subject = render_to_string('registration/password_reset_subject.txt', context)
-                subject = ''.join(subject.splitlines())
-                message = render_to_string('registration/registration_needed_email.txt', context)
-                user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
+                subject = render_to_string(
+                    "registration/password_reset_subject.txt", context
+                )
+                subject = "".join(subject.splitlines())
+                message = render_to_string(
+                    "registration/registration_needed_email.txt", context
+                )
+                user.email_user(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                )
             else:
                 activation_key = self.get_activation_key(user)
                 context = {
-                    'activation_key': activation_key,
-                    'expiration_days': settings.ACCOUNT_ACTIVATION_DAYS,
-                    'site': extra_email_context.get('site'),
-                    'user': user,
-                    'domain': extra_email_context.get('domain'),
+                    "activation_key": activation_key,
+                    "expiration_days": settings.ACCOUNT_ACTIVATION_DAYS,
+                    "site": extra_email_context.get("site"),
+                    "user": user,
+                    "domain": extra_email_context.get("domain"),
                 }
-                subject = render_to_string('registration/password_reset_subject.txt', context)
-                subject = ''.join(subject.splitlines())
-                message = render_to_string('registration/activation_needed_email.txt', context)
-                user.email_user(subject, message, settings.DEFAULT_FROM_EMAIL, )
+                subject = render_to_string(
+                    "registration/password_reset_subject.txt", context
+                )
+                subject = "".join(subject.splitlines())
+                message = render_to_string(
+                    "registration/activation_needed_email.txt", context
+                )
+                user.email_user(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                )
 
     def get_activation_key(self, user):
         """
         Generate the activation key which will be emailed to the user.
         """
         return signing.dumps(
-            obj=getattr(user, user.USERNAME_FIELD),
-            salt=REGISTRATION_SALT
+            obj=getattr(user, user.USERNAME_FIELD), salt=REGISTRATION_SALT
         )
 
 
@@ -124,11 +145,11 @@ class PolicyAcceptForm(forms.Form):
 
     class Meta:
         model = User
-        fields = ('accepted', 'policy_names')
+        fields = ("accepted", "policy_names")
 
     def save(self, user):
         user.policies = user.policies or {}
-        user.policies.update(json.loads(self.cleaned_data['policy']))
+        user.policies.update(json.loads(self.cleaned_data["policy"]))
         user.save()
         return user
 
@@ -141,8 +162,8 @@ class UsernameChangeForm(UserChangeForm):
 
     class Meta:
         model = User
-        fields = ('first_name', 'last_name')
-        exclude = ('password', 'email')
+        fields = ("first_name", "last_name")
+        exclude = ("password", "email")
 
     def clean_password(self):
         return True
@@ -179,8 +200,23 @@ class StorageRequestForm(forms.Form):
     message = forms.CharField(required=True)
 
     class Meta:
-        fields = ("storage", "kind", "resource_count", "resource_size", "creators", "sample_link", "license", "public",
-                  "audience", "import_count", "location", "uploading_for", "organization_type", "time_constraint", "message")
+        fields = (
+            "storage",
+            "kind",
+            "resource_count",
+            "resource_size",
+            "creators",
+            "sample_link",
+            "license",
+            "public",
+            "audience",
+            "import_count",
+            "location",
+            "uploading_for",
+            "organization_type",
+            "time_constraint",
+            "message",
+        )
 
 
 class IssueReportForm(forms.Form):
@@ -201,7 +237,7 @@ class DeleteAccountForm(forms.Form):
         super(DeleteAccountForm, self).__init__(*args, **kwargs)
 
     def clean_email(self):
-        email = self.cleaned_data['email'].strip().lower()
-        if self.user.is_admin or self.user.email.lower() != self.cleaned_data['email']:
+        email = self.cleaned_data["email"].strip().lower()
+        if self.user.is_admin or self.user.email.lower() != self.cleaned_data["email"]:
             raise ValidationError("Not allowed")
         return email

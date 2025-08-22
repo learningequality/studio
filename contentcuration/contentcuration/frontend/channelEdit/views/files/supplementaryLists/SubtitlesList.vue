@@ -3,7 +3,10 @@
   <div>
     <h1 class="subheading">
       {{ $tr('subtitlesHeader') }}
-      <HelpTooltip :text="$tr('acceptedFormatsTooltip', { extensions })" bottom />
+      <HelpTooltip
+        :text="$tr('acceptedFormatsTooltip', { extensions })"
+        bottom
+      />
     </h1>
     <SupplementaryList
       :presetID="subtitlePreset.id"
@@ -16,6 +19,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -67,9 +71,10 @@
 
 </script>
 
-<style lang="less" scoped>
 
-  .subheading /deep/ .v-icon {
+<style lang="scss" scoped>
+
+  .subheading ::v-deep .v-icon {
     margin-left: 4px;
     vertical-align: text-top;
   }

@@ -41,7 +41,7 @@ function makeWrapper(files) {
 
   return mount(FileUpload, {
     store,
-    attachToDocument: true,
+    attachTo: document.body,
     propsData: {
       nodeId: 'testnode',
     },
@@ -51,11 +51,6 @@ function makeWrapper(files) {
       },
       files() {
         return files;
-      },
-    },
-    methods: {
-      updateFile() {
-        return Promise.resolve();
       },
     },
     stubs: {
@@ -72,12 +67,12 @@ describe('fileUpload', () => {
   describe('computed', () => {
     it('should map the files to the correct presets', () => {
       expect(wrapper.vm.primaryFileMapping.find(m => m.preset.id === 'epub').file.id).toBe(
-        'file-3'
+        'file-3',
       );
       expect(wrapper.vm.primaryFileMapping.find(m => m.preset.id === 'document').file.id).toBe(
-        'file-1'
+        'file-1',
       );
-      expect(wrapper.vm.primaryFileMapping).toHaveLength(4);
+      expect(wrapper.vm.primaryFileMapping).toHaveLength(2);
     });
     it('should disallow file removal if there is only one primary file', () => {
       const testFiles2 = [
@@ -99,26 +94,35 @@ describe('fileUpload', () => {
   describe('methods', () => {
     let uploadItem;
     beforeEach(() => {
-      uploadItem = wrapper.findAll(FileUploadItem).at(2);
+      uploadItem = wrapper.findAllComponents(FileUploadItem).at(0);
     });
     it('should automatically select the first file on load', () => {
       expect(wrapper.vm.selected).toBe('file-3');
     });
     it('selectPreview should select the preview when items are selected in the list', () => {
       uploadItem.vm.$emit('selected');
-      expect(wrapper.vm.selected).toBe('file-1');
+      expect(wrapper.vm.selected).toBe('file-3');
     });
-    it('emitted remove event should trigger delete file', () => {
+    it('emitted remove event should trigger removal dialog', async () => {
       const deleteFile = jest.fn();
-      wrapper.setData({ selected: 'file-1' });
-      wrapper.setMethods({ deleteFile });
+      await wrapper.setData({
+        selected: 'file-1',
+        showRemoveFileWarning: false,
+      });
       uploadItem.vm.$emit('remove', testFiles[0]);
-      expect(deleteFile).toHaveBeenCalled();
-      expect(deleteFile.mock.calls[0][0]).toBe(testFiles[0]);
+      await wrapper.vm.$nextTick();
+
+      expect(wrapper.vm.showRemoveFileWarning).toBe(true);
+
+      const modal = wrapper.find('[data-test="remove-file-warning"]');
+      expect(modal.exists()).toBe(true);
+      expect(modal.isVisible()).toBe(true);
+
+      expect(deleteFile).not.toHaveBeenCalled();
     });
-    it('calling uploadCompleteHandler should trigger update file', () => {
-      const updateFile = jest.fn(() => Promise.resolve());
-      wrapper.setMethods({ updateFile });
+    it('calling uploadCompleteHandler should trigger update file', async () => {
+      const updateFile = jest.spyOn(wrapper.vm, 'updateFile');
+      updateFile.mockImplementation(() => Promise.resolve());
       uploadItem.vm.uploadCompleteHandler(testFiles[1]);
       expect(updateFile).toHaveBeenCalled();
       expect(updateFile.mock.calls[0][0]).toEqual({

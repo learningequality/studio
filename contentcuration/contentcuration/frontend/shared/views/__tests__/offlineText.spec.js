@@ -14,12 +14,14 @@ describe('offlineText', () => {
   beforeEach(() => {
     wrapper = makeWrapper();
   });
-  it('should show if connection is offline', () => {
+  it('should show if connection is offline', async () => {
     store.state.connection.online = false;
-    expect(wrapper.find('[data-test="text"]').exists()).toBe(true);
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find('[data-test="fallback"]').exists()).toBe(true);
   });
-  it('should be hidden if connection is online', () => {
+  it('should be hidden if connection is online', async () => {
     store.state.connection.online = true;
-    expect(wrapper.find('[data-test="text"]').exists()).toBe(false);
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find('[data-test="fallback"]').exists()).toBe(false);
   });
 });

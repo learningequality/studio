@@ -40,7 +40,7 @@ export function updateChannel(
     source_url = NOVALUE,
     deleted = NOVALUE,
     isPublic = NOVALUE,
-  } = {}
+  } = {},
 ) {
   if (context.rootState.channel.channelsMap[id]) {
     const channelData = {};

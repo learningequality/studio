@@ -135,6 +135,12 @@ export function convertContentNodeResponse(id, root_id, parent, publicNode) {
   if (publicNode.parent === publicNode.channel_id) {
     contentNode.parent = root_id;
   }
+
+  // Add the channel name to the content node
+  const ancestors = publicNode.ancestors || [];
+  const channel = ancestors.find(ancestor => ancestor.id === publicNode.channel_id);
+  contentNode.channel_name = channel ? channel.title : '';
+
   return contentNode;
 }
 

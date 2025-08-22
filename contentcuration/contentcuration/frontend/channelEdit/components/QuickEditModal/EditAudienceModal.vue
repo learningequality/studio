@@ -8,7 +8,10 @@
     @submit="handleSave"
     @cancel="close"
   >
-    <p v-if="resourcesSelectedText.length > 0" data-test="resources-selected-message">
+    <p
+      v-if="resourcesSelectedText.length > 0"
+      data-test="resources-selected-message"
+    >
       {{ resourcesSelectedText }}
     </p>
     <template v-if="isMultipleAudience">
@@ -16,23 +19,22 @@
         {{ $tr('multipleAudience') }}
       </p>
       <Divider />
-
     </template>
     <h4 class="modal-subheading">
       {{ $tr('visibleTo') }}
     </h4>
-    <div
-      data-test="roles-options-list"
-    >
-      <KRadioButton
-        v-for="rol in rolesOptions"
-        :key="rol.value"
-        v-model="selectedRol"
-        data-test="rol-radio-button"
-        :label="rol.label"
-        :value="rol.value"
-        :description="rol.description"
-      />
+    <div data-test="roles-options-list">
+      <KRadioButtonGroup>
+        <KRadioButton
+          v-for="rol in rolesOptions"
+          :key="rol.value"
+          v-model="selectedRol"
+          data-test="rol-radio-button"
+          :label="rol.label"
+          :buttonValue="rol.value"
+          :description="rol.description"
+        />
+      </KRadioButtonGroup>
     </div>
     <Divider />
 
@@ -40,7 +42,7 @@
       :checked="forBeginners"
       data-test="for-beginners-checkbox"
       :label="$tr('forBeginnersCheckbox')"
-      @change="value => forBeginners = value"
+      @change="value => (forBeginners = value)"
     />
   </KModal>
 
@@ -100,7 +102,7 @@
         let accValue = null;
         for (const node of this.nodes) {
           const value = Boolean(
-            node.learner_needs && node.learner_needs[ResourcesNeededTypes.FOR_BEGINNERS]
+            node.learner_needs && node.learner_needs[ResourcesNeededTypes.FOR_BEGINNERS],
           );
           if (accValue === null) {
             accValue = value;
@@ -150,7 +152,7 @@
               learner_needs: learnerNeeds,
               role_visibility: this.selectedRol || null,
             });
-          })
+          }),
         );
         /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
         this.$store.dispatch('showSnackbarSimple', commonStrings.$tr('changesSaved'));
@@ -173,8 +175,11 @@
 
 </script>
 
+
 <style scoped>
+
   .modal-subheading {
     margin-bottom: 12px;
   }
+
 </style>

@@ -1,24 +1,53 @@
 <template>
 
-  <VCard hover :to="channelRoute">
+  <VCard
+    hover
+    :to="channelRoute"
+  >
     <VCardTitle>
-      <VLayout row wrap>
-        <VFlex lg2 md4 sm5 xs12 class="px-3">
-          <VLayout align-center justify-center fill-height>
+      <VLayout
+        row
+        wrap
+      >
+        <VFlex
+          lg2
+          md4
+          sm5
+          xs12
+          class="px-3"
+        >
+          <VLayout
+            align-center
+            justify-center
+            fill-height
+          >
             <Thumbnail
               v-if="channel.thumbnail_url"
               :src="channel.thumbnail_url"
               :encoding="channel.thumbnail_encoding"
-              style="width: 100%;"
+              style="width: 100%"
             />
-            <VIconWrapper v-else size="80px" class="channel-icon">
+            <VIconWrapper
+              v-else
+              size="80px"
+              class="channel-icon"
+            >
               apps
             </VIconWrapper>
           </VLayout>
         </VFlex>
 
-        <VFlex lg10 md8 sm7 xs12 class="px-4">
-          <h3 class="font-weight-bold notranslate text-truncate title" dir="auto">
+        <VFlex
+          lg10
+          md8
+          sm7
+          xs12
+          class="px-4"
+        >
+          <h3
+            class="font-weight-bold notranslate text-truncate title"
+            dir="auto"
+          >
             {{ channel.name }}
           </h3>
           <!-- Metadata -->
@@ -37,7 +66,7 @@
             :splitAt="250"
             dir="auto"
           />
-        </VFLex>
+        </VFlex>
       </VLayout>
     </VCardTitle>
   </VCard>
@@ -85,7 +114,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .show-more-btn {
     margin-left: -7px;

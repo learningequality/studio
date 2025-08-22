@@ -36,6 +36,7 @@ const ChangeTypeMapFields = {
     'excluded_descendants',
   ]),
   [CHANGE_TYPES.PUBLISHED]: commonFields.concat(['version_notes', 'language']),
+  [CHANGE_TYPES.PUBLISHED_NEXT]: commonFields,
   [CHANGE_TYPES.SYNCED]: commonFields.concat([
     'titles_and_descriptions',
     'resource_details',
@@ -135,6 +136,7 @@ function handleErrors(response) {
     return db[CHANGES_TABLE].where('server_rev')
       .anyOf(Object.keys(errorMap).map(Number))
       .modify(obj => {
+        obj['errored'] = true;
         for (const key in errorMap[obj.server_rev]) {
           if (!noModifyKeys[key] || typeof obj[key] === 'undefined') {
             obj[key] = errorMap[obj.server_rev][key];
@@ -163,7 +165,7 @@ function handleMaxRevs(response, userId) {
       .concat(get(response, ['data', 'errors'], []))
       .concat(get(response, ['data', 'successes'], [])),
     'server_rev',
-    'desc'
+    'desc',
   );
   const channelIds = uniq(allChanges.map(c => c.channel_id)).filter(Boolean);
   const maxRevs = {};
@@ -173,17 +175,17 @@ function handleMaxRevs(response, userId) {
     maxRevs[`${MAX_REV_KEY}.${channelId}`] = channelChanges[0].server_rev;
     const lastChannelEditIndex = findLastIndex(
       channelChanges,
-      c => !c.errors && !c.user_id && c.created_by_id && c.type !== CHANGE_TYPES.PUBLISHED
+      c => !c.errors && !c.user_id && c.created_by_id && c.type !== CHANGE_TYPES.PUBLISHED,
     );
     const lastPublishIndex = findLastIndex(
       channelChanges,
-      c => !c.errors && !c.user_id && c.created_by_id && c.type === CHANGE_TYPES.PUBLISHED
+      c => !c.errors && !c.user_id && c.created_by_id && c.type === CHANGE_TYPES.PUBLISHED,
     );
     if (lastChannelEditIndex > lastPublishIndex) {
       promises.push(
         Channel.transaction({ mode: 'rw' }, () => {
           return Channel.table.update(channelId, { unpublished_changes: true });
-        })
+        }),
       );
     }
   }
@@ -327,8 +329,8 @@ function doSyncChanges(syncAll = false) {
           // already held.
           exclusive: syncAll,
         },
-        () => syncChanges(syncAll)
-      )
+        () => syncChanges(syncAll),
+      ),
     )
     .then(() => {
       // If it is successful call all of the resolve functions that we have stored

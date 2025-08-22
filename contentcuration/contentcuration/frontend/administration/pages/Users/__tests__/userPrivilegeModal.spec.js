@@ -2,7 +2,6 @@ import { mount } from '@vue/test-utils';
 import UserPrivilegeModal from '../UserPrivilegeModal';
 
 const userId = 'test-user-id';
-const updateUser = jest.fn().mockReturnValue(Promise.resolve());
 const currentEmail = 'mytest@email.com';
 
 function makeWrapper(props = {}) {
@@ -10,7 +9,6 @@ function makeWrapper(props = {}) {
     propsData: {
       userId,
       value: true,
-      confirmAction: jest.fn(),
       ...props,
     },
     computed: {
@@ -23,46 +21,50 @@ function makeWrapper(props = {}) {
         return currentEmail;
       },
     },
-    methods: { updateUser },
   });
 }
 
 describe('userPrivilegeModal', () => {
   let wrapper;
+  let confirmAction;
 
   beforeEach(() => {
-    wrapper = makeWrapper();
-    updateUser.mockClear();
+    confirmAction = jest.fn();
+    wrapper = makeWrapper({ confirmAction });
   });
-  it('clicking cancel should reset the values', () => {
+
+  it('clicking cancel should reset the values', async () => {
     wrapper = makeWrapper({ emailConfirm: 'testing' });
-    wrapper.find('[data-test="cancel"]').trigger('click');
+    wrapper.findComponent('[data-test="cancel"]').trigger('click');
+    await wrapper.vm.$nextTick();
     expect(wrapper.vm.emailConfirm).toBe('');
   });
-  it('submitting form should call confirm', () => {
-    const confirm = jest.fn();
-    wrapper.setMethods({ confirm });
-    wrapper.find({ ref: 'form' }).trigger('submit');
+
+  it('submitting form should call confirm', async () => {
+    const confirm = jest.spyOn(wrapper.vm, 'confirm');
+    confirm.mockImplementation(() => {});
+    wrapper.findComponent({ ref: 'form' }).trigger('submit');
+    await wrapper.vm.$nextTick();
     expect(confirm).toHaveBeenCalled();
   });
-  it('confirm should not call confirmAction if emailConfirm is blank', () => {
-    const confirmAction = jest.fn();
-    wrapper.setProps({ confirmAction });
+
+  it('confirm should not call confirmAction if emailConfirm is blank', async () => {
     wrapper.vm.confirm();
+    await wrapper.vm.$nextTick();
     expect(confirmAction).not.toHaveBeenCalled();
   });
-  it('confirm should not call confirmAction if emailConfirm is not correct', () => {
-    const confirmAction = jest.fn();
-    wrapper.setProps({ confirmAction });
-    wrapper.setData({ emailConfirm: 'notmytest@email.com' });
+
+  it('confirm should not call confirmAction if emailConfirm is not correct', async () => {
+    await wrapper.setData({ emailConfirm: 'notmytest@email.com' });
     wrapper.vm.confirm();
+    await wrapper.vm.$nextTick();
     expect(confirmAction).not.toHaveBeenCalled();
   });
-  it('confirm should call confirmAction if form is valid', () => {
-    const confirmAction = jest.fn();
-    wrapper.setProps({ confirmAction });
-    wrapper.setData({ emailConfirm: currentEmail });
+
+  it('confirm should call confirmAction if form is valid', async () => {
+    await wrapper.setData({ emailConfirm: currentEmail });
     wrapper.vm.confirm();
+    await wrapper.vm.$nextTick();
     expect(confirmAction).toHaveBeenCalled();
   });
 });

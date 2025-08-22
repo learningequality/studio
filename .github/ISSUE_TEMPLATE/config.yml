@@ -1,8 +1,0 @@
-blank_issues_enabled: false
-contact_links:
-  - name: Studio GitHub Discussions
-    url: https://github.com/learningequality/studio/discussions
-    about: Please ask general questions about contributing to Studio or report development server issues here.
-  - name: Learning Equality Community Forum
-    url: https://community.learningequality.org/
-    about: Ask and answer questions about Learning Equality's products and tools, share your experiences using Kolibri, and connect with users around the world.

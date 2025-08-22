@@ -11,7 +11,11 @@
       wrap
       :class="{ 'is-root': root }"
     >
-      <LoadingText v-if="root && loading" class="loading-text" absolute />
+      <LoadingText
+        v-if="root && loading"
+        class="loading-text"
+        absolute
+      />
       <DraggableItem
         :draggableSize="draggableSize"
         :draggableMetadata="node"
@@ -30,9 +34,8 @@
                   disabled: copying,
                 }"
                 :style="{
-                  backgroundColor: !root && selected
-                    ? $vuetify.theme.greyBackground
-                    : 'transparent',
+                  backgroundColor:
+                    !root && selected ? $vuetify.theme.greyBackground : 'transparent',
                 }"
                 data-test="item"
                 @click="click"
@@ -48,13 +51,21 @@
                     class="draggable-background"
                     :style="{
                       height: '40px',
-                      backgroundColor: itemProps.isDraggingOver && itemProps.isDropAllowed
-                        ? $vuetify.theme.draggableDropZone
-                        : 'transparent'
+                      backgroundColor:
+                        itemProps.isDraggingOver && itemProps.isDropAllowed
+                          ? $vuetify.theme.draggableDropZone
+                          : 'transparent',
                     }"
                   >
-                    <div v-if="copying" class="disabled-overlay"></div>
-                    <VFlex shrink style="min-width: 28px;" class="text-xs-center">
+                    <div
+                      v-if="copying"
+                      class="disabled-overlay"
+                    ></div>
+                    <VFlex
+                      shrink
+                      style="min-width: 28px"
+                      class="text-xs-center"
+                    >
                       <VBtn
                         v-if="showExpansion"
                         icon
@@ -66,11 +77,19 @@
                         <Icon icon="chevronRight" />
                       </VBtn>
                     </VFlex>
-                    <VFlex shrink class="px-1">
-                      <VTooltip :disabled="!hasTitle(node)" bottom open-delay="500" lazy>
+                    <VFlex
+                      shrink
+                      class="px-1"
+                    >
+                      <VTooltip
+                        :disabled="!hasTitle(node)"
+                        bottom
+                        open-delay="500"
+                        lazy
+                      >
                         <template #activator="{ on }">
                           <VIconWrapper v-on="on">
-                            {{ node.resource_count ? "folder" : "folder_open" }}
+                            {{ node.resource_count ? 'folder' : 'folder_open' }}
                           </VIconWrapper>
                         </template>
                         <span>{{ getTitle(node) }}</span>
@@ -80,26 +99,38 @@
                       class="caption px-1 text-truncate"
                       :class="getTitleClass(node)"
                     >
-                      <span v-if="hasTitle(node) || !allowEditing" class="content-title">
+                      <span
+                        v-if="hasTitle(node) || !allowEditing"
+                        class="content-title"
+                      >
                         {{ getTitle(node) }}
                       </span>
-                      <span v-else class="red--text">
+                      <span
+                        v-else
+                        class="red--text"
+                      >
                         {{ $tr('missingTitle') }}
                       </span>
                     </VFlex>
                     <VSpacer />
-                    <VFlex v-if="canEdit && !copying" shrink>
+                    <VFlex
+                      v-if="canEdit && !copying"
+                      shrink
+                    >
                       <ContentNodeValidator
                         v-if="!node.complete || node.error_count"
                         :node="node"
                         hideTitleValidation
                       />
-                      <ContentNodeChangedIcon v-else :node="node" />
+                      <ContentNodeChangedIcon
+                        v-else
+                        :node="node"
+                      />
                     </VFlex>
                     <VFlex
                       v-if="copying"
                       class="mx-2"
-                      style="width: 24px;"
+                      style="width: 24px"
                       shrink
                     >
                       <ContentNodeCopyTaskProgress
@@ -111,7 +142,7 @@
                     </VFlex>
                     <VFlex
                       v-if="allowEditing && !copying"
-                      style="width: 40px;"
+                      style="width: 40px"
                       shrink
                     >
                       <VProgressCircular
@@ -122,7 +153,7 @@
                         size="15"
                         width="2"
                       />
-                      <Menu
+                      <BaseMenu
                         v-else
                         v-model="showMenu"
                         data-test="editMenu"
@@ -135,8 +166,11 @@
                             @click.stop
                           />
                         </template>
-                        <ContentNodeOptions v-if="showMenu" :nodeId="nodeId" />
-                      </Menu>
+                        <ContentNodeOptions
+                          v-if="showMenu"
+                          :nodeId="nodeId"
+                        />
+                      </BaseMenu>
                     </VFlex>
                     <ContentNodeContextMenu
                       v-if="allowEditing && !copying"
@@ -146,7 +180,10 @@
                       :nodeId="nodeId"
                       data-test="contextMenu"
                     >
-                      <div class="caption grey--text pt-2 px-3" :class="getTitleClass(node)">
+                      <div
+                        class="caption grey--text pt-2 px-3"
+                        :class="getTitleClass(node)"
+                      >
                         {{ getTitle(node) }}
                       </div>
                       <ContentNodeOptions :nodeId="nodeId" />
@@ -160,7 +197,11 @@
       </DraggableItem>
       <VFlex v-if="node && (root || hasContent) && !loading && !copying">
         <VSlideYTransition>
-          <div v-show="expanded" :class="{ 'ml-4': !root }" class="nested-tree">
+          <div
+            v-show="expanded"
+            :class="{ 'ml-4': !root }"
+            class="nested-tree"
+          >
             <StudioTree
               v-for="child in subtopics"
               :key="child.id"
@@ -178,6 +219,7 @@
   </DraggableCollection>
 
 </template>
+
 
 <script>
 
@@ -412,9 +454,10 @@
 
 </script>
 
-<style scoped lang="less">
 
-  .v-badge /deep/ .v-badge__badge {
+<style scoped lang="scss">
+
+  .v-badge ::v-deep .v-badge__badge {
     top: -5px;
     left: 10px;
   }
@@ -431,7 +474,9 @@
       overflow: hidden;
       content: ' ';
       background-color: transparent;
-      transition: background-color ease 0.2s, height ease 0.2s;
+      transition:
+        background-color ease 0.2s,
+        height ease 0.2s;
     }
 
     &::before {
@@ -453,7 +498,7 @@
   }
 
   // size causes rows to shift
-  /deep/ .v-btn {
+  ::v-deep .v-btn {
     width: 24px;
     height: 24px;
     margin: 0;

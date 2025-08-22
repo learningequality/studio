@@ -7,7 +7,7 @@ const store = factory();
 function makeWrapper(props = {}) {
   return mount(FilePreview, {
     store,
-    attachToDocument: true,
+    attachTo: document.body,
     stubs: {
       ContentRenderer: true,
     },
@@ -46,20 +46,25 @@ describe('filePreview', () => {
     test('zip', true);
     test('wut', false);
   });
-  it('clicking view fullscreen button should set fullscreen to true', () => {
+  it('clicking view fullscreen button should set fullscreen to true', async () => {
     const wrapper = makeWrapper();
-    wrapper.find('[data-test="openfullscreen"]').trigger('click');
+    wrapper.findComponent('[data-test="openfullscreen"]').trigger('click');
+    await wrapper.vm.$nextTick();
     expect(wrapper.vm.fullscreen).toBe(true);
   });
-  it('clicking close fullscreen button should set fullscreen to false', () => {
+  it('clicking close fullscreen button should set fullscreen to false', async () => {
     const wrapper = makeWrapper({ file_format: 'mp4' });
     wrapper.setData({ fullscreen: true });
-    wrapper.find('[data-test="closefullscreen"]').trigger('click');
+    await wrapper.vm.$nextTick();
+    wrapper.findComponent('[data-test="closefullscreen"]').trigger('click');
+    await wrapper.vm.$nextTick();
     expect(wrapper.vm.fullscreen).toBe(false);
 
     const wrapperWebm = makeWrapper({ file_format: 'webm' });
     wrapperWebm.setData({ fullscreen: true });
-    wrapperWebm.find('[data-test="closefullscreen"]').trigger('click');
+    await wrapper.vm.$nextTick();
+    wrapperWebm.findComponent('[data-test="closefullscreen"]').trigger('click');
+    await wrapper.vm.$nextTick();
     expect(wrapperWebm.vm.fullscreen).toBe(false);
   });
 });

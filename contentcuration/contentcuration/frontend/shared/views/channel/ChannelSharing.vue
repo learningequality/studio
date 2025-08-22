@@ -1,6 +1,10 @@
 <template>
 
-  <VCard v-if="loading" flat style="min-height: 500px;">
+  <VCard
+    v-if="loading"
+    flat
+    style="min-height: 500px"
+  >
     <LoadingText absolute />
   </VCard>
   <div v-else>
@@ -9,12 +13,18 @@
     </h1>
     <VForm
       ref="form"
-      style="max-width: 600px;"
+      style="max-width: 600px"
       class="py-4"
       @submit.prevent="submitEmail"
     >
-      <VLayout row align-top>
-        <VFlex grow class="pr-2">
+      <VLayout
+        row
+        align-top
+      >
+        <VFlex
+          grow
+          class="pr-2"
+        >
           <VTextField
             v-model="email"
             box
@@ -26,7 +36,11 @@
             @input="error = null"
           />
         </VFlex>
-        <DropdownWrapper component="VFlex" shrink :menuHeight="120">
+        <DropdownWrapper
+          component="VFlex"
+          shrink
+          :menuHeight="120"
+        >
           <template #default="{ attach, menuProps }">
             <VSelect
               v-model="shareMode"
@@ -36,7 +50,7 @@
               :items="permissions"
               item-value="id"
               item-text="text"
-              style="max-width: 200px;"
+              style="max-width: 200px"
               single-line
               hide-details
               :attach="attach"
@@ -45,7 +59,11 @@
           </template>
         </DropdownWrapper>
       </VLayout>
-      <VBtn color="primary" type="submit" :disabled="sharing">
+      <VBtn
+        color="primary"
+        type="submit"
+        :disabled="sharing"
+      >
         {{ $tr('inviteButton') }}
       </VBtn>
     </VForm>
@@ -126,25 +144,25 @@
         }
         return !this.error;
       },
-      submitEmail() {
+      async submitEmail() {
         this.error = null;
         if (this.validate()) {
           this.sharing = true;
-          this.sendInvitation({
-            email: this.email,
-            shareMode: this.shareMode,
-            channelId: this.channelId,
-          })
-            .then(() => {
-              this.sharing = false;
-              this.$store.dispatch('showSnackbar', { text: this.$tr('invitationSentMessage') });
-              this.email = '';
-              this.$refs.form.resetValidation();
-            })
-            .catch(() => {
-              this.sharing = false;
-              this.error = this.$tr('invitationFailedError');
+          try {
+            await this.sendInvitation({
+              email: this.email,
+              shareMode: this.shareMode,
+              channelId: this.channelId,
             });
+
+            this.sharing = false;
+            this.$store.dispatch('showSnackbar', { text: this.$tr('invitationSentMessage') });
+            this.email = '';
+            this.$refs.form.resetValidation();
+          } catch (e) {
+            this.sharing = false;
+            this.error = this.$tr('invitationFailedError');
+          }
         }
       },
     },
@@ -166,7 +184,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .v-select .v-input__slot {
     height: 56px;

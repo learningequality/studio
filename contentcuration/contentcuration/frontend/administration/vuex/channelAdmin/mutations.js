@@ -9,7 +9,7 @@ export function SET_PAGE_DATA(
     count = null,
     total_pages = null,
     results = [],
-  } = {}
+  } = {},
 ) {
   state.pageData.next = next;
   state.pageData.previous = previous;

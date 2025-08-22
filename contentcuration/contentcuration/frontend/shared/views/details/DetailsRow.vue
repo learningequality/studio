@@ -1,12 +1,30 @@
 <template>
 
-  <VLayout row wrap class="my-4">
-    <VFlex :xs12="!printing" :xs4="printing" :sm5="!printing" md4 xl4>
+  <VLayout
+    row
+    wrap
+    class="my-4"
+  >
+    <VFlex
+      :xs12="!printing"
+      :xs4="printing"
+      :sm5="!printing"
+      md4
+      xl4
+    >
       <div class="label-container">
-        <label class="body-1 font-weight-bold" :style="{ color: $vuetify.theme.darkGrey }">
+        <label
+          class="body-1 font-weight-bold"
+          :style="{ color: $vuetify.theme.darkGrey }"
+        >
           {{ label }}
         </label>
-        <HelpTooltip v-if="definition" :text="definition" bottom class="mx-1" />
+        <HelpTooltip
+          v-if="definition"
+          :text="definition"
+          bottom
+          class="mx-1"
+        />
       </div>
     </VFlex>
     <VFlex
@@ -24,6 +42,7 @@
   </VLayout>
 
 </template>
+
 
 <script>
 
@@ -59,7 +78,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .flex {
     word-break: break-word;

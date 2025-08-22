@@ -24,29 +24,38 @@ describe('deleteAccountForm', () => {
 
   beforeEach(() => {
     wrapper = makeWrapper();
-    deleteAccount = jest.fn().mockReturnValue(Promise.resolve());
-    wrapper.setMethods({ deleteAccount });
+    deleteAccount = jest.spyOn(wrapper.vm, 'deleteAccount');
+    deleteAccount.mockImplementation(() => Promise.resolve());
   });
 
   it('should fail if accountDeletionEmail is null', () => {
     wrapper.vm.deleteUserAccount();
     expect(deleteAccount).not.toHaveBeenCalled();
   });
-  it('should fail if accountDeletionEmail does not match user email', () => {
-    wrapper.setData({ accountDeletionEmail: 'nottherightemail@test.com' });
+  it('should fail if accountDeletionEmail does not match user email', async () => {
+    await wrapper.setData({ accountDeletionEmail: 'nottherightemail@test.com' });
     wrapper.vm.deleteUserAccount();
     expect(deleteAccount).not.toHaveBeenCalled();
   });
-  it('should succeed if form is valid', () => {
-    wrapper.setData({ accountDeletionEmail: email });
+  it('should succeed if form is valid', async () => {
+    await wrapper.setData({ accountDeletionEmail: email });
     wrapper.vm.deleteUserAccount();
     expect(deleteAccount).toHaveBeenCalled();
   });
-  it('should show alert if account deletion fails', () => {
-    wrapper.setData({ accountDeletionEmail: email });
-    deleteAccount = jest.fn(() => Promise.reject('error'));
-    wrapper.vm.deleteUserAccount().catch(() => {
-      expect(wrapper.vm.deletionFailed).toBe(true);
-    });
+  it('should show KModal if account deletion fails', async () => {
+    await wrapper.setData({ accountDeletionEmail: email });
+    deleteAccount.mockImplementation(() => Promise.reject('error'));
+    try {
+      await wrapper.vm.deleteUserAccount();
+    } catch (e) {
+      throw new Error(e);
+    }
+    await wrapper.vm.$nextTick();
+    const modals = wrapper.findAllComponents({ name: 'KModal' });
+    const errorModal = modals.at(1);
+    expect(errorModal.exists()).toBe(true);
+    expect(errorModal.text()).toContain(
+      'Failed to delete your account. Please contact us here: https://community.learningequality.org.',
+    );
   });
 });

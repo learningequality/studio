@@ -158,6 +158,7 @@ export const AssessmentItemTypes = {
   TRUE_FALSE: 'true_false',
   INPUT_QUESTION: 'input_question',
   PERSEUS_QUESTION: 'perseus_question',
+  FREE_RESPONSE: 'free_response',
 };
 
 export const ValidationErrors = {
@@ -175,6 +176,8 @@ export const ValidationErrors = {
   MASTERY_MODEL_N_GT_ZERO: 'MASTERY_MODEL_N_GT_ZERO',
   QUESTION_REQUIRED: 'QUESTION_REQUIRED',
   INVALID_NUMBER_OF_CORRECT_ANSWERS: 'INVALID_NUMBER_OF_CORRECT_ANSWERS',
+  INVALID_COMPLETION_TYPE_FOR_FREE_RESPONSE_QUESTION:
+    'INVALID_COMPLETION_TYPE_FOR_FREE_RESPONSE_QUESTION',
   NO_VALID_PRIMARY_FILES: 'NO_VALID_PRIMARY_FILES',
   INVALID_COMPLETION_CRITERIA_MODEL: 'INVALID_COMPLETION_CRITERIA_MODEL',
   COMPLETION_REQUIRED: 'COMPLETION_REQUIRED',
@@ -197,11 +200,12 @@ export const FeatureFlagKeys = Object.keys(FeatureFlagsSchema.properties).reduce
     featureFlags[featureFlag] = featureFlag;
     return featureFlags;
   },
-  {}
+  {},
 );
 
 export const ContentModalities = {
   QUIZ: 'QUIZ',
+  SURVEY: 'SURVEY',
 };
 
 export const AccessibilityCategoriesMap = {
@@ -223,6 +227,7 @@ export const CompletionDropdownMap = {
   goal: 'goal',
   practiceQuiz: 'practiceQuiz',
   reference: 'reference',
+  survey: 'survey',
 };
 
 export const DurationDropdownMap = {
@@ -284,7 +289,11 @@ export const CompletionOptionsDropdownMap = {
     CompletionDropdownMap.completeDuration,
     CompletionDropdownMap.reference,
   ],
-  [ContentKindsNames.EXERCISE]: [CompletionDropdownMap.goal, CompletionDropdownMap.practiceQuiz],
+  [ContentKindsNames.EXERCISE]: [
+    CompletionDropdownMap.goal,
+    CompletionDropdownMap.practiceQuiz,
+    CompletionDropdownMap.survey,
+  ],
   [ContentKindsNames.HTML5]: [
     CompletionDropdownMap.completeDuration,
     CompletionDropdownMap.determinedByResource,

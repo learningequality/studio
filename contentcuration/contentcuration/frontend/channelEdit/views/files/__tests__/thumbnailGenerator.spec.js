@@ -4,49 +4,50 @@ import { factory } from '../../../store';
 
 function makeWrapper(filePath) {
   const store = factory();
-  return mount(ThumbnailGenerator, {
+  const handleFiles = jest.fn(() => true);
+
+  const wrapper = mount(ThumbnailGenerator, {
     store,
-    attachToDocument: true,
+    attachTo: document.body,
     propsData: {
       filePath,
       presetID: 'video_thumbnail',
+      handleFiles,
     },
   });
+
+  const fileExists = jest.spyOn(wrapper.vm, 'fileExists');
+  fileExists.mockImplementation(() => true);
+
+  const generateVideoThumbnail = jest.spyOn(wrapper.vm, 'generateVideoThumbnail');
+  generateVideoThumbnail.mockImplementation(() => Promise.resolve());
+
+  return [wrapper, { fileExists, generateVideoThumbnail, handleFiles }];
 }
 
 describe('thumbnailGenerator', () => {
-  it('correct generation code should be called', () => {
-    const generateVideoThumbnail = jest.fn();
-    const videoWrapper = makeWrapper('test.mp4');
-    const fileExists = jest.fn(() => true);
-    videoWrapper.setMethods({ fileExists, generateVideoThumbnail });
-    videoWrapper.vm.generate();
-    expect(generateVideoThumbnail).toHaveBeenCalled();
+  let wrapper, mocks;
 
-    const videoWrapperWebm = makeWrapper('test.webm');
-    videoWrapperWebm.setMethods({ fileExists, generateVideoThumbnail });
-    videoWrapperWebm.vm.generate();
-    expect(generateVideoThumbnail).toHaveBeenCalled();
+  it.each(
+    ['test.mp4', 'test.webm', 'test.mp3'],
+    'correct generation code should be called',
+    fileName => {
+      [wrapper, mocks] = makeWrapper(fileName);
+      wrapper.vm.generate();
+      expect(mocks.generateVideoThumbnail).toHaveBeenCalled();
+    },
+  );
 
-    const generateAudioThumbnail = jest.fn();
-    const audioWrapper = makeWrapper('test.mp3');
-    audioWrapper.setMethods({ generateAudioThumbnail });
-    audioWrapper.vm.generate();
-    expect(generateAudioThumbnail).toHaveBeenCalled();
-  });
   it('error alert should show if the file path is an unrecognized type', () => {
-    const wrapper = makeWrapper('test.wut');
-    const fileExists = jest.fn(() => true);
-    wrapper.setMethods({ fileExists });
+    [wrapper, mocks] = makeWrapper('test.wut');
     wrapper.vm.generate();
     expect(wrapper.vm.showErrorAlert).toBe(true);
   });
-  it('handleGenerated should not call handleFiles if cancelled', () => {
-    const wrapper = makeWrapper('test.wut');
-    const handleFiles = jest.fn(() => true);
-    wrapper.setMethods({ handleFiles });
-    wrapper.setData({ cancelled: true });
+
+  it('handleGenerated should not call handleFiles if cancelled', async () => {
+    [wrapper, mocks] = makeWrapper('test.wut');
+    await wrapper.setData({ cancelled: true });
     wrapper.vm.handleGenerated('');
-    expect(handleFiles).not.toHaveBeenCalled();
+    expect(mocks.handleFiles).not.toHaveBeenCalled();
   });
 });

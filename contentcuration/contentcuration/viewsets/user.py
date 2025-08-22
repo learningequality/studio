@@ -11,6 +11,9 @@ from django.db.models import Q
 from django.db.models import Value
 from django.db.models.functions import Cast
 from django.db.models.functions import Concat
+from django.http import HttpResponseBadRequest
+from django.http.response import HttpResponseForbidden
+from django.http.response import HttpResponseNotFound
 from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import FilterSet
@@ -19,6 +22,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import BasePermission
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.status import HTTP_204_NO_CONTENT
 
 from contentcuration.constants import feature_flags
 from contentcuration.models import boolean_val
@@ -52,6 +56,27 @@ class IsAdminUser(BasePermission):
             return False
 
 
+class IsAIFeatureEnabledForUser(BasePermission):
+    """
+    Permission to check if the AI feature is enabled for a user.
+    """
+
+    def _can_user_access_feature(self, request):
+        try:
+            if request.user.is_admin:
+                return True
+            else:
+                return request.user.check_feature_flag("ai_feature")
+        except AttributeError:
+            return False
+
+    def has_permission(self, request, view):
+        return self._can_user_access_feature(request)
+
+    def has_object_permission(self, request, view, obj):
+        return self._can_user_access_feature(request)
+
+
 class UserListPagination(ValuesViewsetPageNumberPagination):
     page_size = None
     page_size_query_param = "page_size"
@@ -77,7 +102,8 @@ class UserFilter(FilterSet):
             can_edit=Cast(
                 Cast(
                     SQCount(
-                        channel_queryset.filter(editors=OuterRef("id")), field="id",
+                        channel_queryset.filter(editors=OuterRef("id")),
+                        field="id",
                     ),
                     IntegerField(),
                 ),
@@ -86,7 +112,8 @@ class UserFilter(FilterSet):
             can_view=Cast(
                 Cast(
                     SQCount(
-                        channel_queryset.filter(viewers=OuterRef("id")), field="id",
+                        channel_queryset.filter(viewers=OuterRef("id")),
+                        field="id",
                     ),
                     IntegerField(),
                 ),
@@ -157,7 +184,9 @@ class ChannelUserFilter(RequiredFilterSet):
     def filter_channel(self, queryset, name, value):
         # Check permissions
         if not self.request.user.can_edit(value):
-            return queryset.none().annotate(can_edit=boolean_val(False), can_view=boolean_val(False))
+            return queryset.none().annotate(
+                can_edit=boolean_val(False), can_view=boolean_val(False)
+            )
         user_queryset = User.objects.filter(id=OuterRef("id"))
         queryset = queryset.annotate(
             can_edit=Exists(user_queryset.filter(editable_channels=value)),
@@ -267,6 +296,32 @@ class ChannelUserViewSet(ReadOnlyValuesViewset):
     def delete_from_changes(self, changes):
         return self._handle_relationship_changes(changes)
 
+    @action(detail=True, methods=["delete"])
+    def remove_self(self, request, pk=None):
+        """
+        Allows a user to remove themselves from a channel as a viewer.
+        """
+        user = self.get_object()
+        channel_id = request.query_params.get("channel_id", None)
+
+        if not channel_id:
+            return HttpResponseBadRequest("Channel ID is required.")
+
+        channel = Channel.objects.get(id=channel_id)
+        if not channel:
+            return HttpResponseNotFound("Channel not found {}".format(channel_id))
+
+        if request.user != user and not request.user.can_edit(channel_id):
+            return HttpResponseForbidden(
+                "You do not have permission to remove this user {}".format(user.id)
+            )
+
+        if channel.viewers.filter(id=user.id).exists():
+            channel.viewers.remove(user)
+            return Response(status=HTTP_204_NO_CONTENT)
+        else:
+            return HttpResponseBadRequest("User is not a viewer of this channel.")
+
 
 class AdminUserFilter(FilterSet):
     keywords = CharFilter(method="filter_keywords")
@@ -347,7 +402,9 @@ class AdminUserSerializer(UserSerializer):
         list_serializer_class = BulkListSerializer
 
 
-class AdminUserViewSet(ReadOnlyValuesViewset, RESTUpdateModelMixin, RESTDestroyModelMixin):
+class AdminUserViewSet(
+    ReadOnlyValuesViewset, RESTUpdateModelMixin, RESTDestroyModelMixin
+):
     pagination_class = UserListPagination
     permission_classes = [IsAdminUser]
     serializer_class = AdminUserSerializer
@@ -395,12 +452,18 @@ class AdminUserViewSet(ReadOnlyValuesViewset, RESTUpdateModelMixin, RESTDestroyM
     def metadata(self, request, pk=None):
         user = self._get_object_from_queryset(self.queryset)
         information = user.information or {}
-        information.update({
-            'edit_channels': user.editable_channels.filter(deleted=False).values('id', 'name'),
-            'viewonly_channels': user.view_only_channels.filter(deleted=False).values('id', 'name'),
-            'total_space': user.disk_space,
-            'used_space': user.disk_space_used,
-            'policies': user.policies,
-            'feature_flags': user.feature_flags or {}
-        })
+        information.update(
+            {
+                "edit_channels": user.editable_channels.filter(deleted=False).values(
+                    "id", "name"
+                ),
+                "viewonly_channels": user.view_only_channels.filter(
+                    deleted=False
+                ).values("id", "name"),
+                "total_space": user.disk_space,
+                "used_space": user.disk_space_used,
+                "policies": user.policies,
+                "feature_flags": user.feature_flags or {},
+            }
+        )
         return Response(information)

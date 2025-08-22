@@ -27,14 +27,28 @@
         @topicChevronClick="$emit('topicChevronClick', $event)"
       >
         <template #actions-start="{ hover }">
-          <VListTileAction class="handle-col" :aria-hidden="!hover" @click.stop>
+          <VListTileAction
+            class="handle-col"
+            :aria-hidden="!hover"
+            @click.stop
+          >
             <transition name="fade">
-              <VBtn :disabled="copying" flat icon>
-                <Icon :color="$themePalette.grey.v_600" icon="dragVertical" />
+              <VBtn
+                :disabled="copying"
+                flat
+                icon
+              >
+                <Icon
+                  :color="$themePalette.grey.v_700"
+                  icon="dragVertical"
+                />
               </VBtn>
             </transition>
           </VListTileAction>
-          <VListTileAction class="mx-2 select-col" @click.stop>
+          <VListTileAction
+            class="mx-2 select-col"
+            @click.stop
+          >
             <Checkbox
               v-model="selected"
               :disabled="copying"
@@ -45,7 +59,11 @@
         </template>
 
         <template #actions-end>
-          <VListTileAction v-if="canEdit" class="action-icon px-1" @click.stop>
+          <VListTileAction
+            v-if="canEdit"
+            class="action-icon px-1"
+            @click.stop
+          >
             <transition name="fade">
               <IconButton
                 icon="rename"
@@ -57,8 +75,11 @@
               />
             </transition>
           </VListTileAction>
-          <VListTileAction :aria-hidden="!active" class="action-icon px-1">
-            <Menu v-model="activated">
+          <VListTileAction
+            :aria-hidden="!active"
+            class="action-icon px-1"
+          >
+            <BaseMenu v-model="activated">
               <template #activator="{ on }">
                 <IconButton
                   icon="optionsVertical"
@@ -69,14 +90,21 @@
                   @click.stop
                 />
               </template>
-              <ContentNodeOptions v-if="!copying && activated" :nodeId="nodeId" />
-            </Menu>
+              <ContentNodeOptions
+                v-if="!copying && activated"
+                :nodeId="nodeId"
+              />
+            </BaseMenu>
           </VListTileAction>
         </template>
 
         <template #copy-fail-retry-action>
           <span v-if="hasCopyingErrored">
-            <ActionLink class="copy-retry-btn" :text="$tr('retryCopy')" @click="retryFailedCopy" />
+            <ActionLink
+              class="copy-retry-btn"
+              :text="$tr('retryCopy')"
+              @click="retryFailedCopy"
+            />
           </span>
         </template>
 
@@ -156,7 +184,7 @@
        * The `hasSelection` prop is used for disabling draggability specifically to handle
        * behaviors related to selecting and dragging multiple items.
        */
-      /* eslint-disable-next-line kolibri/vue-no-unused-properties */
+      /* eslint-disable-next-line vue/no-unused-properties */
       hasSelection: {
         type: Boolean,
         default: false,
@@ -255,7 +283,7 @@
           nodeIds: [this.nodeId],
         });
       },
-      retryFailedCopy: withChangeTracker(function(changeTracker) {
+      retryFailedCopy: withChangeTracker(function (changeTracker) {
         this.updateContentNode({
           id: this.nodeId,
           checkComplete: true,
@@ -307,7 +335,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .content-node-edit-item {
     position: relative;
@@ -322,7 +350,9 @@
       content: ' ';
       /* stylelint-disable-next-line custom-property-pattern */
       background: var(--v-draggableDropZone-base);
-      transition: height ease 0.2s, bottom ease 0.2s;
+      transition:
+        height ease 0.2s,
+        bottom ease 0.2s;
     }
 
     &.active-draggable {
@@ -370,7 +400,7 @@
     cursor: grab;
   }
 
-  /deep/ .v-input--selection-controls__input {
+  ::v-deep .v-input--selection-controls__input {
     margin-right: 0;
   }
 

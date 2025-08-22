@@ -157,7 +157,7 @@ const FormatPresetsMap = new Map([
       order: 4,
       kind_id: 'exercise',
       allowed_formats: ['svg', 'json', 'graphie'],
-      associated_mimetypes: ['application/json', 'image/svg', '.graphie'],
+      associated_mimetypes: ['image/svg', '.graphie', 'application/json'],
     },
   ],
   [

@@ -52,7 +52,6 @@
                 />
               </VFlex>
 
-
               <VFlex xs7>
                 <keep-alive :max="5">
                   <!-- Input question shows a text field with type of `number` -->
@@ -65,7 +64,12 @@
                       :rules="[numericRule]"
                       @change="updateAnswerText($event, answerIdx)"
                     />
-                    <VTextField v-else :value="answer.answer" class="no-border" type="number" />
+                    <VTextField
+                      v-else
+                      :value="answer.answer"
+                      class="no-border"
+                      type="number"
+                    />
                   </div>
 
                   <div v-else>
@@ -119,6 +123,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -280,7 +285,7 @@
           if (
             !this.shouldHaveOneCorrectAnswer &&
             JSON.stringify([...newIndices].sort()) ===
-              JSON.stringify([...this.correctAnswersIndices].sort())
+            JSON.stringify([...this.correctAnswersIndices].sort())
           ) {
             return;
           }
@@ -422,10 +427,11 @@
 
 </script>
 
-<style lang="less" scoped>
 
-  @exercise-answer-correct: #4caf50;
-  @exercise-answer-wrong: #ef5350;
+<style lang="scss" scoped>
+
+  $exercise-answer-correct: #4caf50;
+  $exercise-answer-wrong: #ef5350;
 
   .card-border-light {
     /* stylelint-disable-next-line custom-property-pattern */
@@ -445,11 +451,11 @@
     }
 
     &.closed.answer-correct:hover {
-      background-color: fade(@exercise-answer-correct, 15%);
+      background-color: rgba($exercise-answer-correct, 0.15);
     }
 
     &.closed.answer-wrong:hover {
-      background-color: fade(@exercise-answer-wrong, 15%);
+      background-color: rgba($exercise-answer-wrong, 0.15);
     }
 
     .indicator {
@@ -458,11 +464,11 @@
       height: 100%;
 
       &.correct {
-        background-color: @exercise-answer-correct;
+        background-color: $exercise-answer-correct;
       }
 
       &.wrong {
-        background-color: @exercise-answer-wrong;
+        background-color: $exercise-answer-wrong;
       }
     }
   }
@@ -472,8 +478,8 @@
   }
 
   /* Remove the underline on text fields that are not focused */
-  /deep/.no-border.v-text-field > .v-input__control > .v-input__slot::before,
-  /deep/.no-border.v-text-field > .v-input__control > .v-input__slot::after {
+  ::v-deep .no-border.v-text-field > .v-input__control > .v-input__slot::before,
+  ::v-deep .no-border.v-text-field > .v-input__control > .v-input__slot::after {
     border-style: none;
   }
 

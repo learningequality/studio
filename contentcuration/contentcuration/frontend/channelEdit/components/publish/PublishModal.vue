@@ -45,7 +45,10 @@
       <!-- Setting the height is a temporal fix for -->
       <!-- https://github.com/learningequality/kolibri-design-system/issues/324 -->
       <!-- Should be removed after it is fixed -->
-      <KFixedGrid :numCols="12" style="height: 200px;">
+      <KFixedGrid
+        :numCols="12"
+        style="height: 200px"
+      >
         <KGridItem :layout="{ span: 11 }">
           <KTextbox
             v-model="publishDescription"
@@ -58,10 +61,16 @@
           />
         </KGridItem>
         <KGridItem :layout="{ span: 1 }">
-          <HelpTooltip :text="$tr('descriptionDescriptionTooltip')" bottom />
+          <HelpTooltip
+            :text="$tr('descriptionDescriptionTooltip')"
+            bottom
+          />
         </KGridItem>
 
-        <KGridItem v-show="showLanguageDropdown" :layout="{ span: 11 }">
+        <KGridItem
+          v-show="showLanguageDropdown"
+          :layout="{ span: 11 }"
+        >
           <KSelect
             v-model="language"
             :label="$tr('languageLabel')"
@@ -71,8 +80,14 @@
             @change="showLanguageInvalidText = !isLanguageValid"
           />
         </KGridItem>
-        <KGridItem v-show="showLanguageDropdown" :layout="{ span: 1 }">
-          <HelpTooltip :text="$tr('languageDescriptionTooltip')" bottom />
+        <KGridItem
+          v-show="showLanguageDropdown"
+          :layout="{ span: 1 }"
+        >
+          <HelpTooltip
+            :text="$tr('languageDescriptionTooltip')"
+            bottom
+          />
         </KGridItem>
       </KFixedGrid>
     </KModal>
@@ -82,6 +97,7 @@
   </div>
 
 </template>
+
 
 <script>
 

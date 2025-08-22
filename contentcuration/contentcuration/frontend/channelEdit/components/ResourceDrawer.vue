@@ -15,7 +15,10 @@
       @resize="v => $emit('resize', v)"
       @scroll="$emit('scroll', $event)"
     >
-      <div class="pa-4" style="margin-bottom: 64px;">
+      <div
+        class="pa-4"
+        style="margin-bottom: 64px"
+      >
         <ResourcePanel
           :nodeId="nodeId"
           :channelId="channelId"
@@ -36,6 +39,8 @@
   </VExpandXTransition>
 
 </template>
+
+
 <script>
 
   import ResourcePanel from './ResourcePanel';
@@ -73,7 +78,10 @@
       },
     },
     methods: {
-      // @public
+      /**
+       * @public
+       * @return {number}
+       */
       getWidth() {
         return this.$refs.drawer.getWidth();
       },
@@ -81,6 +89,6 @@
   };
 
 </script>
-<style lang="less" scoped>
 
-</style>
+
+<style lang="scss" scoped></style>

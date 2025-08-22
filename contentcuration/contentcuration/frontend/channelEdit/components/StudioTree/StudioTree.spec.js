@@ -86,7 +86,7 @@ function getItems(wrapper) {
 describe('StudioTree', () => {
   it('smoke test', () => {
     const wrapper = initWrapper();
-    expect(wrapper.isVueInstance()).toBe(true);
+    expect(wrapper.exists()).toBe(true);
   });
 
   describe('when mounted', () => {
@@ -359,8 +359,11 @@ describe('StudioTree', () => {
         propsData: { nodeId: 'root-topic', root: true },
         getters,
       });
-      await nextTickWaitFor(wrapper, () => !wrapper.contains('[data-test="editMenu"]'));
-      expect(wrapper.contains('[data-test="editMenu"]')).toBe(false);
+      await nextTickWaitFor(
+        wrapper,
+        () => !wrapper.findComponent('[data-test="editMenu"]').exists(),
+      );
+      expect(wrapper.findComponent('[data-test="editMenu"]').exists()).toBe(false);
     });
 
     it('renders edit menu when editing is allowed', async () => {
@@ -369,8 +372,10 @@ describe('StudioTree', () => {
         getters,
       });
 
-      await nextTickWaitFor(wrapper, () => wrapper.contains('[data-test="editMenu"]'));
-      expect(wrapper.contains('[data-test="editMenu"]')).toBe(true);
+      await nextTickWaitFor(wrapper, () =>
+        wrapper.findComponent('[data-test="editMenu"]').exists(),
+      );
+      expect(wrapper.findComponent('[data-test="editMenu"]').exists()).toBe(true);
     });
 
     it("doesn't display context edit menu on right-click by default", async () => {
@@ -382,8 +387,11 @@ describe('StudioTree', () => {
       const item = getItems(wrapper).at(0);
       item.trigger('contextmenu');
 
-      await nextTickWaitFor(wrapper, () => !item.contains('[data-test="contextMenu"]'));
-      expect(item.contains('[data-test="contextMenu"]')).toBe(false);
+      await nextTickWaitFor(
+        wrapper,
+        () => !item.findComponent('[data-test="contextMenu"]').exists(),
+      );
+      expect(item.findComponent('[data-test="contextMenu"]').exists()).toBe(false);
     });
 
     it('displays context edit menu on right-click when editing is allowed', async () => {
@@ -395,7 +403,9 @@ describe('StudioTree', () => {
       const item = getItems(wrapper).at(0);
       item.trigger('contextmenu');
 
-      await nextTickWaitFor(wrapper, () => item.contains('[data-test="contextMenu"]'));
+      await nextTickWaitFor(wrapper, () =>
+        item.findComponent('[data-test="contextMenu"]').exists(),
+      );
       const menu = item.findAll('[data-test="contextMenu"]').at(0);
       expect(menu.isVisible()).toBe(true);
     });
@@ -424,7 +434,7 @@ describe('StudioTree', () => {
       const items = getItems(wrapper);
       const subTopic2 = items.at(3);
 
-      expect(subTopic2.contains('[data-test="expansionToggle"]')).toBe(false);
+      expect(subTopic2.findComponent('[data-test="expansionToggle"]').exists()).toBe(false);
     });
 
     it('renders expansion toggle when a topic contains subtopics', async () => {
@@ -436,7 +446,7 @@ describe('StudioTree', () => {
       const items = getItems(wrapper);
       const subTopic1 = items.at(0);
 
-      expect(subTopic1.contains('[data-test="expansionToggle"]')).toBe(true);
+      expect(subTopic1.findComponent('[data-test="expansionToggle"]').exists()).toBe(true);
     });
 
     it('commits toggle mutation when expansion toggle is clicked', async () => {

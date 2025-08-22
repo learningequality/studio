@@ -1,9 +1,5 @@
-import Vue from 'vue';
-import Vuetify from 'vuetify';
 import { shallowMount, mount } from '@vue/test-utils';
 import AccessibilityOptions from '../AccessibilityOptions.vue';
-
-Vue.use(Vuetify);
 
 describe('AccessibilityOptions', () => {
   it('smoke test', () => {
@@ -12,7 +8,7 @@ describe('AccessibilityOptions', () => {
         kind: 'document',
       },
     });
-    expect(wrapper.isVueInstance()).toBe(true);
+    expect(wrapper.exists()).toBe(true);
   });
 
   it('should display the correct list of accessibility options if resource is a document', () => {
@@ -22,11 +18,11 @@ describe('AccessibilityOptions', () => {
       },
     });
 
-    expect(wrapper.find('[data-test="checkbox-altText"]').exists()).toBe(true);
-    expect(wrapper.find('[data-test="checkbox-highContrast"]').exists()).toBe(true);
-    expect(wrapper.find('[data-test="checkbox-taggedPdf"]').exists()).toBe(true);
-    expect(wrapper.find('[data-test="checkbox-signLanguage"]').exists()).toBe(false);
-    expect(wrapper.find('[data-test="checkbox-audioDescription"]').exists()).toBe(false);
+    expect(wrapper.findComponent('[data-test="checkbox-altText"]').exists()).toBe(true);
+    expect(wrapper.findComponent('[data-test="checkbox-highContrast"]').exists()).toBe(true);
+    expect(wrapper.findComponent('[data-test="checkbox-taggedPdf"]').exists()).toBe(true);
+    expect(wrapper.findComponent('[data-test="checkbox-signLanguage"]').exists()).toBe(false);
+    expect(wrapper.findComponent('[data-test="checkbox-audioDescription"]').exists()).toBe(false);
   });
 
   it('should display the correct list of accessibility options if resource is a video', () => {
@@ -36,13 +32,13 @@ describe('AccessibilityOptions', () => {
       },
     });
 
-    expect(wrapper.find('[data-test="checkbox-altText"]').exists()).toBe(false);
-    expect(wrapper.find('[data-test="checkbox-highContrast"]').exists()).toBe(false);
-    expect(wrapper.find('[data-test="checkbox-taggedPdf"]').exists()).toBe(false);
-    expect(wrapper.find('[data-test="checkbox-signLanguage"]').exists()).toBe(true);
-    expect(wrapper.find('[data-test="checkbox-audioDescription"]').exists()).toBe(true);
-    expect(wrapper.find('[data-test="checkbox-captionsSubtitles"]').exists()).toBe(true);
-    expect(wrapper.find('[data-test="tooltip-captionsSubtitles"]').exists()).toBe(false);
+    expect(wrapper.findComponent('[data-test="checkbox-altText"]').exists()).toBe(false);
+    expect(wrapper.findComponent('[data-test="checkbox-highContrast"]').exists()).toBe(false);
+    expect(wrapper.findComponent('[data-test="checkbox-taggedPdf"]').exists()).toBe(false);
+    expect(wrapper.findComponent('[data-test="checkbox-signLanguage"]').exists()).toBe(true);
+    expect(wrapper.findComponent('[data-test="checkbox-audioDescription"]').exists()).toBe(true);
+    expect(wrapper.findComponent('[data-test="checkbox-captionsSubtitles"]').exists()).toBe(true);
+    expect(wrapper.findComponent('[data-test="tooltip-captionsSubtitles"]').exists()).toBe(false);
   });
 
   it('should display the correct list of accessibility options if resource is an exercise/practice', () => {
@@ -52,11 +48,11 @@ describe('AccessibilityOptions', () => {
       },
     });
 
-    expect(wrapper.find('[data-test="checkbox-altText"]').exists()).toBe(true);
-    expect(wrapper.find('[data-test="checkbox-highContrast"]').exists()).toBe(false);
-    expect(wrapper.find('[data-test="checkbox-taggedPdf"]').exists()).toBe(false);
-    expect(wrapper.find('[data-test="checkbox-signLanguage"]').exists()).toBe(false);
-    expect(wrapper.find('[data-test="checkbox-audioDescription"]').exists()).toBe(false);
+    expect(wrapper.findComponent('[data-test="checkbox-altText"]').exists()).toBe(true);
+    expect(wrapper.findComponent('[data-test="checkbox-highContrast"]').exists()).toBe(false);
+    expect(wrapper.findComponent('[data-test="checkbox-taggedPdf"]').exists()).toBe(false);
+    expect(wrapper.findComponent('[data-test="checkbox-signLanguage"]').exists()).toBe(false);
+    expect(wrapper.findComponent('[data-test="checkbox-audioDescription"]').exists()).toBe(false);
   });
 
   it('should display the correct list of accessibility options if resource is html5/zip', () => {
@@ -66,11 +62,11 @@ describe('AccessibilityOptions', () => {
       },
     });
 
-    expect(wrapper.find('[data-test="checkbox-altText"]').exists()).toBe(true);
-    expect(wrapper.find('[data-test="checkbox-highContrast"]').exists()).toBe(true);
-    expect(wrapper.find('[data-test="checkbox-taggedPdf"]').exists()).toBe(false);
-    expect(wrapper.find('[data-test="checkbox-signLanguage"]').exists()).toBe(false);
-    expect(wrapper.find('[data-test="checkbox-audioDescription"]').exists()).toBe(false);
+    expect(wrapper.findComponent('[data-test="checkbox-altText"]').exists()).toBe(true);
+    expect(wrapper.findComponent('[data-test="checkbox-highContrast"]').exists()).toBe(true);
+    expect(wrapper.findComponent('[data-test="checkbox-taggedPdf"]').exists()).toBe(false);
+    expect(wrapper.findComponent('[data-test="checkbox-signLanguage"]').exists()).toBe(false);
+    expect(wrapper.findComponent('[data-test="checkbox-audioDescription"]').exists()).toBe(false);
   });
 
   it('should display the correct list of accessibility options if resource is an audio', () => {
@@ -80,8 +76,8 @@ describe('AccessibilityOptions', () => {
       },
     });
 
-    expect(wrapper.find('[data-test="checkbox-captionsSubtitles"]').exists()).toBe(true);
-    expect(wrapper.find('[data-test="tooltip-captionsSubtitles"]').exists()).toBe(false);
+    expect(wrapper.findComponent('[data-test="checkbox-captionsSubtitles"]').exists()).toBe(true);
+    expect(wrapper.findComponent('[data-test="tooltip-captionsSubtitles"]').exists()).toBe(false);
   });
 
   it('should render appropriate tooltips along with the checkbox', () => {
@@ -91,15 +87,15 @@ describe('AccessibilityOptions', () => {
       },
     });
 
-    expect(wrapper.find('[data-test="checkbox-altText"]').exists()).toBe(true);
-    expect(wrapper.find('[data-test="tooltip-altText"]').exists()).toBe(true);
-    expect(wrapper.find('[data-test="checkbox-highContrast"]').exists()).toBe(true);
-    expect(wrapper.find('[data-test="tooltip-highContrast"]').exists()).toBe(true);
-    expect(wrapper.find('[data-test="checkbox-taggedPdf"]').exists()).toBe(true);
-    expect(wrapper.find('[data-test="tooltip-taggedPdf"]').exists()).toBe(true);
-    expect(wrapper.find('[data-test="checkbox-signLanguage"]').exists()).toBe(false);
-    expect(wrapper.find('[data-test="tooltip-signLanguage"]').exists()).toBe(false);
-    expect(wrapper.find('[data-test="checkbox-audioDescription"]').exists()).toBe(false);
-    expect(wrapper.find('[data-test="tooltip-audioDescription"]').exists()).toBe(false);
+    expect(wrapper.findComponent('[data-test="checkbox-altText"]').exists()).toBe(true);
+    expect(wrapper.findComponent('[data-test="tooltip-altText"]').exists()).toBe(true);
+    expect(wrapper.findComponent('[data-test="checkbox-highContrast"]').exists()).toBe(true);
+    expect(wrapper.findComponent('[data-test="tooltip-highContrast"]').exists()).toBe(true);
+    expect(wrapper.findComponent('[data-test="checkbox-taggedPdf"]').exists()).toBe(true);
+    expect(wrapper.findComponent('[data-test="tooltip-taggedPdf"]').exists()).toBe(true);
+    expect(wrapper.findComponent('[data-test="checkbox-signLanguage"]').exists()).toBe(false);
+    expect(wrapper.findComponent('[data-test="tooltip-signLanguage"]').exists()).toBe(false);
+    expect(wrapper.findComponent('[data-test="checkbox-audioDescription"]').exists()).toBe(false);
+    expect(wrapper.findComponent('[data-test="tooltip-audioDescription"]').exists()).toBe(false);
   });
 });

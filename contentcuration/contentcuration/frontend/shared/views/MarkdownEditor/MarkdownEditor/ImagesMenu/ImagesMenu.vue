@@ -1,11 +1,22 @@
 <template>
 
-  <div class="images-menu" @click.stop>
+  <div
+    class="images-menu"
+    @click.stop
+  >
     <div :class="anchorArrowClasses"></div>
 
-    <VCard elevation="20" style="min-width: 500px;" @dragenter.stop @dragover.stop>
+    <VCard
+      elevation="20"
+      style="min-width: 500px"
+      @dragenter.stop
+      @dragover.stop
+    >
       <VCardTitle class="py-1">
-        <VLayout align-center justify-space-between>
+        <VLayout
+          align-center
+          justify-space-between
+        >
           <VFlex class="font-weight-bold">
             {{ $tr('imageHeader') }}
           </VFlex>
@@ -26,7 +37,10 @@
             permanent
             @open="openFileDialog"
           />
-          <span v-else-if="fileSrc" class="grey--text">
+          <span
+            v-else-if="fileSrc"
+            class="grey--text"
+          >
             <ActionLink
               :text="$tr('selectFile')"
               class="mr-2"
@@ -39,13 +53,31 @@
           @dropped="handleFiles"
           @click="openFileDialog"
         >
-          <VCard class="pa-0 upload-area" flat>
+          <VCard
+            class="pa-0 upload-area"
+            flat
+          >
             <!-- Uploading status -->
-            <VCard v-if="uploading || hasError" flat style="padding: 28% 0;">
-              <VLayout wrap align-center justify-center style="max-height: 0px;">
-                <div class="text-xs-center" style="position: absolute;">
+            <VCard
+              v-if="uploading || hasError"
+              flat
+              style="padding: 28% 0"
+            >
+              <VLayout
+                wrap
+                align-center
+                justify-center
+                style="max-height: 0"
+              >
+                <div
+                  class="text-xs-center"
+                  style="position: absolute"
+                >
                   <p>
-                    <FileStatus :fileId="uploadingId" large />
+                    <FileStatus
+                      :fileId="uploadingId"
+                      large
+                    />
                   </p>
                   <ActionLink
                     v-if="!hasError"
@@ -58,8 +90,16 @@
             </VCard>
 
             <!-- Default drop text -->
-            <VContainer v-else-if="!fileSrc" fluid class="py-5">
-              <VLayout align-center space-around class="text-xs-center">
+            <VContainer
+              v-else-if="!fileSrc"
+              fluid
+              class="py-5"
+            >
+              <VLayout
+                align-center
+                space-around
+                class="text-xs-center"
+              >
                 <VFlex>
                   <p class="subheading">
                     {{ $tr('defaultDropText') }}
@@ -75,14 +115,20 @@
             </VContainer>
 
             <!-- Image preview -->
-            <div v-else class="text-xs-center">
-              <img :src="fileSrc" class="image-preview">
+            <div
+              v-else
+              class="text-xs-center"
+            >
+              <img
+                :src="fileSrc"
+                class="image-preview"
+              >
             </div>
           </VCard>
         </FileDropzone>
         <input
           ref="fileUpload"
-          style="display: none;"
+          style="display: none"
           type="file"
           :accept="acceptedMimetypes"
           @change="handleFiles($event.target.files)"
@@ -102,6 +148,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -233,7 +280,8 @@
 
 </script>
 
-<style lang="less" scoped>
+
+<style lang="scss" scoped>
 
   .images-menu {
     position: relative;

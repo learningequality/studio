@@ -55,7 +55,7 @@
       },
       rules() {
         return [v => (!this.required || v.trim() ? true : this.$tr('fieldRequiredMessage'))].concat(
-          this.additionalRules
+          this.additionalRules,
         );
       },
     },
@@ -67,6 +67,4 @@
 </script>
 
 
-<style lang="less" scoped>
-
-</style>
+<style lang="scss" scoped></style>

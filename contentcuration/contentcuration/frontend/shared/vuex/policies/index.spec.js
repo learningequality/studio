@@ -59,8 +59,8 @@ describe('policies store', () => {
             {}, // state
             { nonAcceptedPolicies: [] }, // getters
             {}, // rootState
-            { loggedIn: true } // rootGetters
-          )
+            { loggedIn: true }, // rootGetters
+          ),
         ).toBeNull();
       });
 
@@ -71,8 +71,8 @@ describe('policies store', () => {
             {}, // state
             { nonAcceptedPolicies: ['privacy_policy', 'terms_of_service'] }, // getters
             {}, // rootState
-            { loggedIn: true } // rootGetters
-          )
+            { loggedIn: true }, // rootGetters
+          ),
         ).toEqual('terms_of_service');
       });
 
@@ -82,8 +82,8 @@ describe('policies store', () => {
             {}, // state
             { nonAcceptedPolicies: ['privacy_policy', 'terms_of_service'] }, // getters
             {}, // rootState
-            { loggedIn: false } // rootGetters
-          )
+            { loggedIn: false }, // rootGetters
+          ),
         ).toBeNull();
       });
     });
@@ -103,8 +103,9 @@ describe('policies store', () => {
         const hour = ('0' + (now.getUTCHours() + 1)).slice(-2);
         const minute = ('0' + (now.getUTCMinutes() + 1)).slice(-2);
 
-        const expectedKey = `${testKey}_${date.getUTCFullYear()}_${date.getUTCMonth() +
-          1}_${date.getUTCDate()}`;
+        const expectedKey = `${testKey}_${date.getUTCFullYear()}_${
+          date.getUTCMonth() + 1
+        }_${date.getUTCDate()}`;
         const expectedValue = `${day}/${month}/${year} ${hour}:${minute}`;
 
         expect(getters.getPolicyAcceptedData()(policies.PRIVACY)).toEqual({

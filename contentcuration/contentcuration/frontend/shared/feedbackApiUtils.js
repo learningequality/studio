@@ -1,21 +1,20 @@
 // Helper functions and Utils for creating an API request to
 // Feedback mechanism endpoints
-import { v4 as uuidv4 } from 'uuid';
 import client from './client';
 import urls from 'shared/urls';
 
 export const FeedbackTypeOptions = {
-  imported: 'imported',
-  rejected: 'rejected',
-  previewed: 'previewed',
-  showmore: 'showmore',
-  ignored: 'ignored',
-  flagged: 'flagged',
+  imported: 'IMPORTED',
+  rejected: 'REJECTED',
+  previewed: 'PREVIEWED',
+  showmore: 'SHOWMORE',
+  ignored: 'IGNORED',
+  flagged: 'FLAGGED',
 };
 
-// This is mock currently, fixed value of URL still to be decided
-// referencing the url by name
-export const FLAG_FEEDBACK_EVENT_URL = urls[`${'flagged'}_${'list'}`];
+export const FLAG_FEEDBACK_EVENT_ENDPOINT = 'flagged';
+export const RECOMMENDATION_EVENT_ENDPOINT = 'recommendations';
+export const RECOMMENDATION_INTERACTION_EVENT_ENDPOINT = 'recommendations-interaction';
 
 /**
  * @typedef {Object} BaseFeedbackParams
@@ -35,35 +34,85 @@ class BaseFeedback {
    * @classdesc Represents a base feedback object with common properties and methods.
    * @param {BaseFeedbackParams} object
    */
-  constructor({ context = {}, contentnode_id, content_id }) {
-    this.id = uuidv4();
-    this.context = context;
-    this.contentnode_id = contentnode_id;
-    this.content_id = content_id;
+  constructor({ method, endpoint, data, eventId }) {
+    this.method = method || 'post';
+    this.endpoint = endpoint;
+    this.data = data;
+    this.eventId = eventId;
+
+    this.validateData();
+    this.validateEventId();
   }
 
-  // Creates a data object according to Backends expectation,
-  // excluding functions and the "URL" property.
-  getDataObject() {
-    const dataObject = {};
-    for (const key in this) {
-      if (
-        Object.prototype.hasOwnProperty.call(this, key) &&
-        typeof this[key] !== 'function' &&
-        key !== 'URL'
-      ) {
-        dataObject[key] = this[key];
+  validateData() {
+    const required = this.getRequiredDataFields();
+
+    if (this.data === null || this.data === undefined) {
+      throw new Error('The data property cannot be null or undefined');
+    }
+
+    if (Array.isArray(this.data)) {
+      if (this.getMethod() !== 'post') {
+        throw new Error("Array 'data' is only allowed for 'post' requests");
       }
+
+      if (!this.data.length) {
+        throw new Error("The 'data' array cannot be empty");
+      }
+
+      this.data.forEach((item, idx) => {
+        if (typeof item !== 'object' || item === null) {
+          throw new Error(`Item at position ${idx} in 'data' is not a valid object`);
+        }
+        required.forEach(field => {
+          if (typeof item[field] === 'undefined') {
+            throw new Error(`Missing required property in 'data': ${field} at position: ${idx}`);
+          }
+        });
+      });
+    } else if (typeof this.data === 'object') {
+      required.forEach(field => {
+        if (this.getMethod() !== 'patch' && typeof this.data[field] === 'undefined') {
+          throw new Error(`The 'data' object is missing required property: ${field}`);
+        }
+      });
+    } else {
+      throw new Error("The 'data' must be either a non-null object or an array of objects");
     }
-    return dataObject;
   }
 
-  // Return URL associated with the ObjectType
-  getUrl() {
-    if (this.defaultURL === null || this.URL === undefined) {
-      throw new Error('URL is not defined for the FeedBack Object.');
+  validateEventId() {
+    if (!this.eventId && ['put', 'patch'].includes(this.getMethod())) {
+      throw new Error("The 'eventId' is required for 'put' and 'patch' requests");
     }
-    return this.URL;
+  }
+
+  // Returns the data based on the backend contract
+  getData() {
+    return this.data;
+  }
+
+  getRequiredDataFields() {
+    return ['context', 'contentnode_id', 'content_id'];
+  }
+
+  // Return the url associated with the ObjectType
+  getUrl() {
+    if (!this.endpoint) {
+      throw new Error('Resource is not defined for the FeedBack Object.');
+    }
+
+    let url;
+    if (['patch', 'put'].includes(this.getMethod())) {
+      url = urls[`${this.endpoint}-detail`](this.eventId);
+    } else {
+      url = urls[`${this.endpoint}-list`]();
+    }
+    return url;
+  }
+
+  getMethod() {
+    return this.method.toLowerCase();
   }
 }
 
@@ -78,10 +127,8 @@ class BaseFeedback {
  */
 // eslint-disable-next-line no-unused-vars
 class BaseFeedbackEvent extends BaseFeedback {
-  constructor({ user_id, target_channel_id, ...baseFeedbackParams }) {
-    super(baseFeedbackParams);
-    this.user_id = user_id;
-    this.target_channel_id = target_channel_id;
+  getRequiredDataFields() {
+    return [...super.getRequiredDataFields(), 'user', 'target_channel_id'];
   }
 }
 
@@ -94,10 +141,8 @@ class BaseFeedbackEvent extends BaseFeedback {
  * base feedbackclass.
  */
 class BaseFeedbackInteractionEvent extends BaseFeedback {
-  constructor({ feedback_type, feedback_reason, ...baseFeedbackParams }) {
-    super(baseFeedbackParams);
-    this.feedback_type = feedback_type;
-    this.feedback_reason = feedback_reason;
+  getRequiredDataFields() {
+    return [...super.getRequiredDataFields(), 'feedback_type', 'feedback_reason'];
   }
 }
 
@@ -111,9 +156,8 @@ class BaseFeedbackInteractionEvent extends BaseFeedback {
  * base interaction event class.
  */
 class BaseFlagFeedback extends BaseFeedbackInteractionEvent {
-  constructor({ target_topic_id, ...baseFeedbackParams }) {
-    super({ ...baseFeedbackParams });
-    this.target_topic_id = target_topic_id;
+  getRequiredDataFields() {
+    return [...super.getRequiredDataFields(), 'target_topic_id'];
   }
 }
 
@@ -127,11 +171,55 @@ class BaseFlagFeedback extends BaseFeedbackInteractionEvent {
  * base flag feedback class.
  */
 export class FlagFeedbackEvent extends BaseFlagFeedback {
-  constructor({ target_topic_id, ...baseFeedbackParams }) {
-    super({ target_topic_id, ...baseFeedbackParams });
-    this.URL = FLAG_FEEDBACK_EVENT_URL;
+  constructor(baseFeedbackParams) {
+    super(baseFeedbackParams);
+    this.endpoint = FLAG_FEEDBACK_EVENT_ENDPOINT;
   }
 }
+
+/**
+ * Initializes a new RecommendationsEvent object.
+ *
+ * @param {Object} params - Parameters for initializing the recommendations event.
+ * @param {Object[]} params.content - An array of JSON objects,
+ * each representing a recommended content item.
+ */
+export class RecommendationsEvent extends BaseFeedbackEvent {
+  constructor(baseFeedbackEventParams) {
+    super(baseFeedbackEventParams);
+    this.endpoint = RECOMMENDATION_EVENT_ENDPOINT;
+  }
+
+  getRequiredDataFields() {
+    return [...super.getRequiredDataFields(), 'content'];
+  }
+}
+
+/**
+ * Initializes a new RecommendationsInteractionEvent object.
+ *
+ * @param {Object} params - Parameters for initializing the recommendations interaction event.
+ * @param {string} params.recommendation_event_id - The ID of the recommendation event this
+ * interaction is for.
+ * @param {BaseFeedbackParams} feedbackInteractionEventParams - Parameters inherited from the
+ * base feedback interaction event class.
+ */
+export class RecommendationsInteractionEvent extends BaseFeedbackInteractionEvent {
+  constructor(feedbackInteractionEventParams) {
+    super(feedbackInteractionEventParams);
+    this.endpoint = RECOMMENDATION_INTERACTION_EVENT_ENDPOINT;
+  }
+
+  getRequiredDataFields() {
+    return [...super.getRequiredDataFields(), 'recommendation_event_id'];
+  }
+}
+
+export const FeedbackEventTypes = {
+  flag: FlagFeedbackEvent,
+  recommendations: RecommendationsEvent,
+  interaction: RecommendationsInteractionEvent,
+};
 
 /**
  * Sends a request using the provided feedback object.
@@ -139,17 +227,33 @@ export class FlagFeedbackEvent extends BaseFlagFeedback {
  * @function
  *
  * @param {BaseFeedback} feedbackObject - The feedback object to use for the request.
- * @throws {Error} Throws an error if the URL is not defined for the feedback object.
+ * @throws {Error} An error if an unsupported HTTP method is specified in the feedback object.
  * @returns {Promise<Object>} A promise that resolves to the response data from the API.
  */
 export async function sendRequest(feedbackObject) {
   try {
     const url = feedbackObject.getUrl();
-    const response = await client.post(url, feedbackObject.getDataObject());
-    console.log('API response:', response.data);
+    const data = feedbackObject.getData();
+    const method = feedbackObject.getMethod();
+
+    let response;
+    switch (method) {
+      case 'post':
+        response = await client.post(url, data);
+        break;
+      case 'put':
+        response = await client.put(url, data);
+        break;
+      case 'patch':
+        response = await client.patch(url, data);
+        break;
+      default:
+        throw new Error(`Unsupported HTTP method: ${method}`);
+    }
     return response.data;
   } catch (error) {
-    console.error('Error:', error);
+    // eslint-disable-next-line no-console
+    console.error('Error sending feedback request:', error);
     throw error;
   }
 }

@@ -19,10 +19,11 @@ describe('textField', () => {
     expect(runValidation(wrapper, ' ')).toBe(false);
     expect(runValidation(wrapper, 'text')).toBe(true);
   });
-  it('should validate additionalRules', () => {
+  it('should validate additionalRules', async () => {
     wrapper.setProps({
       additionalRules: () => false,
     });
+    await wrapper.vm.$nextTick();
     expect(runValidation(wrapper, 'text')).toBe(false);
   });
 });
