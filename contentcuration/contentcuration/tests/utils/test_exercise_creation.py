@@ -1568,7 +1568,7 @@ class TestQTIExerciseCreation(StudioTestCase):
     <resources>
         <resource identifier="KERGqqiIiu7szM8zMRETd3Q" type="imsqti_item_xmlv3p0" href="items/KERGqqiIiu7szM8zMRETd3Q.xml">
             <file href="items/KERGqqiIiu7szM8zMRETd3Q.xml" />
-            <file href="{image_path}" />
+            <file href="images/{image_file.filename()}" />
         </resource>
     </resources>
 </manifest>"""
@@ -1579,7 +1579,103 @@ class TestQTIExerciseCreation(StudioTestCase):
             self._normalize_xml(actual_manifest_xml),
         )
 
-        self.assertEqual(exercise_file.checksum, "51ba0d6e3c7f30239265c5294abe6ac5")
+        self.assertEqual(exercise_file.checksum, "8df26b0c7009ae84fe148cceda8e0138")
+
+    def test_image_resizing(self):
+        # Create a base image file
+        base_image = fileobj_exercise_image(size=(400, 300), color="blue")
+        base_image_url = exercises.CONTENT_STORAGE_FORMAT.format(base_image.filename())
+
+        # For questions, test multiple sizes of the same image
+        question_text = (
+            f"First resized image: ![shape1]({base_image_url} =200x150)\n\n"
+            f"Second resized image (same): ![shape2]({base_image_url} =200x150)\n\n"
+            f"Third resized image (different): ![shape3]({base_image_url} =100x75)"
+        )
+        answers = [{"answer": "Answer A", "correct": True, "order": 1}]
+        hints = [{"hint": "Hint text", "order": 1}]
+
+        # Create the assessment item
+        item_type = exercises.SINGLE_SELECTION
+
+        item = self._create_assessment_item(item_type, question_text, answers, hints)
+
+        # Associate the image with the assessment item
+        base_image.assessment_item = item
+        base_image.save()
+
+        # Create exercise data
+        exercise_data = {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": 2,
+            "m": 1,
+            "all_assessment_items": [item.assessment_id],
+            "assessment_mapping": {item.assessment_id: item_type},
+        }
+
+        # Create the Perseus exercise
+        self._create_qti_zip(exercise_data)
+
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+
+        # Get all image files in the zip
+        image_files = [
+            name for name in zip_file.namelist() if name.startswith("items/images/")
+        ]
+
+        # Verify we have exactly 2 image files (one for each unique size)
+        # We should have one at 200x150 and one at 100x75
+        self.assertEqual(
+            len(image_files),
+            2,
+            f"Expected 2 resized images, found {len(image_files)}: {image_files}",
+        )
+
+        # The original image should not be present unless it was referenced without resizing
+        original_image_name = f"images/{base_image.filename()}"
+        self.assertNotIn(
+            original_image_name,
+            zip_file.namelist(),
+            "Original image should not be included when only resized versions are used",
+        )
+
+        qti_id = hex_to_qti_id(item.assessment_id)
+
+        # Check the QTI XML for mathematical content conversion to MathML
+        expected_item_file = f"items/{qti_id}.xml"
+        actual_item_xml = zip_file.read(expected_item_file).decode("utf-8")
+
+        # Expected QTI item XML content with MathML conversion
+        expected_item_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+        <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqtiasi_v3p0 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqti_asiv3p0p1_v1p0.xsd" identifier="{qti_id}" title="Test QTI Exercise 1" adaptive="false" time-dependent="false" language="en-US" tool-name="kolibri" tool-version="0.1">
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+        <qti-correct-response>
+        <qti-value>choice_0</qti-value>
+        </qti-correct-response>
+        </qti-response-declaration>
+        <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float" />
+        <qti-item-body>
+        <qti-choice-interaction response-identifier="RESPONSE" shuffle="true" max-choices="1" min-choices="0" orientation="vertical">
+        <qti-prompt>
+            <p>First resized image: <img alt="shape1" src="images/b8f3062ca5795e39ff813958296b4884.jpg" /></p>
+            <p>Second resized image (same): <img alt="shape2" src="images/b8f3062ca5795e39ff813958296b4884.jpg" /></p>
+            <p>Third resized image (different): <img alt="shape3" src="images/abb0589d29a3852a5ebfd2726a832761.jpg" /></p>
+        </qti-prompt>
+        <qti-simple-choice identifier="choice_0" show-hide="show" fixed="false">
+        <p>Answer A</p>
+        </qti-simple-choice>
+        </qti-choice-interaction>
+        </qti-item-body>
+        <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct" />
+        </qti-assessment-item>"""
+
+        # Compare normalized XML
+        self.assertEqual(
+            self._normalize_xml(expected_item_xml),
+            self._normalize_xml(actual_item_xml),
+        )
 
     def test_question_with_mathematical_content(self):
         """Test QTI generation for questions containing mathematical formulas converted to MathML"""

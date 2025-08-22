@@ -47,6 +47,8 @@ class ExerciseArchiveGenerator(ABC):
     ZIP_DATE_TIME = (2015, 10, 21, 7, 28, 0)
     ZIP_COMPRESS_TYPE = zipfile.ZIP_DEFLATED
     ZIP_COMMENT = "".encode()
+    # Whether to keep width/height in image refs
+    RETAIN_IMAGE_DIMENSIONS = True
 
     @property
     @abstractmethod
@@ -68,12 +70,13 @@ class ExerciseArchiveGenerator(ABC):
         """
         pass
 
+    @abstractmethod
     def get_image_ref_prefix(self):
         """
-        A value to insert in front of the image file path - this is needed for Perseus to properly
-        find all image file paths in the frontend.
+        A value to insert in front of the image path - this adds both the special placeholder
+        that our Perseus viewer uses to find images, and the relative path to the images directory.
         """
-        return ""
+        pass
 
     @abstractmethod
     def create_assessment_item(self, assessment_item, processed_data):
@@ -203,6 +206,11 @@ class ExerciseArchiveGenerator(ABC):
         start, end = img_match.span()
         old_match = content[start:end]
         new_match = old_match.replace(old_filename, new_filename)
+        if not self.RETAIN_IMAGE_DIMENSIONS:
+            # Remove dimensions from image ref
+            new_match = re.sub(
+                rf"{new_filename}\s=([0-9\.]+)x([0-9\.]+)", new_filename, new_match
+            )
         return content[:start] + new_match + content[end:]
 
     def _is_valid_image_filename(self, filename):
@@ -231,7 +239,7 @@ class ExerciseArchiveGenerator(ABC):
 
     def process_image_strings(self, content):
         new_file_path = self.get_image_file_path()
-        new_image_path = f"{self.get_image_ref_prefix()}{new_file_path}"
+        new_image_path = self.get_image_ref_prefix()
         image_list = []
         processed_files = []
         for img_match in re.finditer(image_pattern, content):
