@@ -272,7 +272,7 @@
 
   .card-title {
     position: relative;
-    z-index: 500000;
+    z-index: 5;
     padding: 16px 16px 8px;
   }
 

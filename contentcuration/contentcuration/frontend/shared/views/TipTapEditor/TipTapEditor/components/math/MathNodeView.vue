@@ -73,8 +73,9 @@
   /* https://mathlive.io/mathfield/guides/customizing/#styling */
 
   math-field {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
     font-display: swap;
+    background-color: transparent;
     border: 0;
   }
 

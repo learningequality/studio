@@ -114,7 +114,7 @@
       />
     </div>
 
-    <ToolbarDivider v-if="visibleCategories.includes('scripts')" />
+    <ToolbarDivider v-if="visibleCategories.includes('script')" />
 
     <!-- Insert tools -->
     <div
@@ -271,6 +271,11 @@
         </template>
       </div>
     </div>
+    <ToolbarButton
+      :title="minimizeAction.title"
+      :icon="minimizeAction.icon"
+      @click="minimizeAction.handler"
+    />
   </div>
 
 </template>
@@ -303,10 +308,10 @@
       // TODO: Maybe these shouldnt be hardcoded?
       const OVERFLOW_BREAKPOINTS = {
         insert: 750,
-        script: 650,
-        lists: 550,
-        clearFormat: 450,
-        clipboard: 405,
+        script: 660,
+        lists: 600,
+        clearFormat: 500,
+        clipboard: 465,
       };
 
       // Categories that can overflow (in order of overflow priority)
@@ -321,7 +326,8 @@
         listActions,
         scriptActions,
         insertTools,
-      } = useToolbarActions();
+        minimizeAction,
+      } = useToolbarActions(emit);
 
       const { pasteOptions } = useDropdowns();
 
@@ -356,6 +362,18 @@
         if (toolbarRef.value) {
           toolbarWidth.value = toolbarRef.value.offsetWidth;
         }
+      };
+
+      const handleResize = entries => {
+        setTimeout(() => {
+          for (const entry of entries) {
+            toolbarWidth.value = entry.contentRect.width;
+          }
+        }, 0);
+      };
+
+      const handleWindowResize = () => {
+        setTimeout(updateToolbarWidth, 0);
       };
 
       const onToolClick = (tool, event) => {
@@ -425,15 +443,11 @@
 
         // Set up resize observer
         if (toolbarRef.value && window.ResizeObserver) {
-          resizeObserver = new ResizeObserver(entries => {
-            for (const entry of entries) {
-              toolbarWidth.value = entry.contentRect.width;
-            }
-          });
+          resizeObserver = new ResizeObserver(handleResize);
           resizeObserver.observe(toolbarRef.value);
         } else {
           // Fallback to window resize listener
-          window.addEventListener('resize', updateToolbarWidth);
+          window.addEventListener('resize', handleWindowResize);
         }
 
         document.addEventListener('click', handleClickOutside);
@@ -443,7 +457,7 @@
         if (resizeObserver) {
           resizeObserver.disconnect();
         } else {
-          window.removeEventListener('resize', updateToolbarWidth);
+          window.removeEventListener('resize', handleWindowResize);
         }
         document.removeEventListener('click', handleClickOutside);
       });
@@ -464,6 +478,7 @@
         listActions,
         scriptActions,
         insertTools,
+        minimizeAction,
         pasteOptions,
         copy$,
         textFormattingToolbar$,
@@ -487,12 +502,16 @@
   .toolbar {
     position: relative;
     display: flex;
-    gap: 4px;
+    gap: 6px;
     align-items: center;
-    padding: 8px 4px;
+    padding: 8px;
     background: #f8f9fa;
     border-bottom: 1px solid #e1e5e9;
     border-radius: 8px 8px 0 0;
+  }
+
+  .toolbar > :last-child {
+    margin-left: auto;
   }
 
   [role='group'] {
@@ -570,12 +589,6 @@
     .more-dropdown {
       right: auto;
       left: 0;
-    }
-  }
-
-  @media (max-width: 820px) {
-    .toolbar {
-      gap: 1px;
     }
   }
 

@@ -1,7 +1,7 @@
 import { ref, onUnmounted, watch, nextTick } from 'vue';
 import { useModalPositioning } from './useModalPositioning';
 
-export function useMathHandling(editor) {
+export function useMathHandling(editor, editorMode) {
   const mathModalMode = ref('create');
   const mathModalInitialLatex = ref('');
   const editingMathNodePos = ref(null);
@@ -30,6 +30,9 @@ export function useMathHandling(editor) {
   };
 
   const openEditMathModal = ({ pos, latex }) => {
+    // Don't open modal in view mode
+    if (editorMode?.value === 'view') return;
+
     mathModalMode.value = 'edit';
     mathModalInitialLatex.value = latex;
     editingMathNodePos.value = pos;
@@ -38,7 +41,7 @@ export function useMathHandling(editor) {
     nextTick(() => {
       setTimeout(() => {
         openModal({ centered: true });
-      }, 100);
+      }, 150);
     });
   };
 
