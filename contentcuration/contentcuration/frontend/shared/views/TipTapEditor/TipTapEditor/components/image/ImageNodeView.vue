@@ -7,9 +7,11 @@
       :style="{ width: styleWidth }"
     >
       <img
+        ref="imageRef"
         :src="node.attrs.src"
         :alt="node.attrs.alt || 'Image content'"
         class="content"
+        @load="onImageLoad"
       >
 
       <div
@@ -63,8 +65,9 @@
 
 <script>
 
-  import { defineComponent, ref, computed, onUnmounted, watch } from 'vue';
+  import { defineComponent, ref, computed, onUnmounted, onMounted, watch } from 'vue';
   import { NodeViewWrapper } from '@tiptap/vue-2';
+  import _ from 'lodash';
 
   export default defineComponent({
     name: 'ImageNodeView',
@@ -72,18 +75,69 @@
       NodeViewWrapper,
     },
     setup(props) {
-      const width = ref(props.node.attrs.width);
+      const width = ref(props.node.attrs.width || null);
+      const height = ref(props.node.attrs.height || null);
+      const imageRef = ref(null);
+      const naturalAspectRatio = ref(null);
       const minWidth = 50;
       const compactThreshold = 200;
-      let debounceTimer = null;
 
-      // (to work with undo/redo) Watch for external changes to the node's width
+      // Create debounced version of saveSize function
+      const debouncedSaveSize = _.debounce(() => {
+        props.updateAttributes({
+          width: width.value,
+          height: height.value,
+        });
+      }, 500);
+
+      // (to work with undo/redo) Watch for external changes to the node's width and height
       watch(
         () => props.node.attrs.width,
         newWidth => {
           width.value = newWidth;
         },
       );
+
+      watch(
+        () => props.node.attrs.height,
+        newHeight => {
+          height.value = newHeight;
+        },
+      );
+
+      // Watch for src changes to recalculate aspect ratio
+      watch(
+        () => props.node.attrs.src,
+        () => {
+          // Reset aspect ratio when src changes
+          naturalAspectRatio.value = null;
+          // Force image to reload and recalculate dimensions
+          if (imageRef.value) {
+            imageRef.value.onload = onImageLoad;
+          }
+        },
+      );
+
+      const onImageLoad = () => {
+        if (imageRef.value && imageRef.value.naturalWidth && imageRef.value.naturalHeight) {
+          naturalAspectRatio.value = imageRef.value.naturalWidth / imageRef.value.naturalHeight;
+
+          // If no dimensions are set, use natural dimensions
+          if (!width.value && !height.value) {
+            width.value = imageRef.value.naturalWidth;
+            height.value = imageRef.value.naturalHeight;
+            saveSize();
+          } else if (width.value && !height.value) {
+            // If we have width but no height, calculate height
+            height.value = calculateProportionalHeight(width.value);
+            saveSize();
+          } else if (!width.value && height.value) {
+            // If we have height but no width, calculate width
+            width.value = Math.round(height.value * naturalAspectRatio.value);
+            saveSize();
+          }
+        }
+      };
 
       const isRtl = computed(() => {
         return props.editor.view.dom.closest('[dir="rtl"]') !== null;
@@ -92,11 +146,23 @@
       const styleWidth = computed(() => (width.value ? `${width.value}px` : 'auto'));
       const isCompact = computed(() => width.value < compactThreshold);
 
-      const saveWidth = () => {
+      const saveSize = () => {
         props.updateAttributes({
           width: width.value,
-          height: null,
+          height: height.value,
         });
+      };
+
+      const calculateProportionalHeight = newWidth => {
+        if (naturalAspectRatio.value) {
+          return Math.round(newWidth / naturalAspectRatio.value);
+        }
+        // Fallback: try to get aspect ratio directly from the image element
+        if (imageRef.value && imageRef.value.naturalWidth && imageRef.value.naturalHeight) {
+          const ratio = imageRef.value.naturalWidth / imageRef.value.naturalHeight;
+          return Math.round(newWidth / ratio);
+        }
+        return null;
       };
 
       const onResizeStart = startEvent => {
@@ -110,13 +176,15 @@
             ? startWidth - deltaX // In RTL, moving right should decrease width
             : startWidth + deltaX; // In LTR, moving right should increase width
 
-          width.value = Math.max(minWidth, newWidth);
+          const clampedWidth = Math.max(minWidth, newWidth);
+          width.value = clampedWidth;
+          height.value = calculateProportionalHeight(clampedWidth);
         };
 
         const onMouseUp = () => {
           document.removeEventListener('mousemove', onMouseMove);
           document.removeEventListener('mouseup', onMouseUp);
-          saveWidth();
+          saveSize();
         };
 
         document.addEventListener('mousemove', onMouseMove);
@@ -145,10 +213,11 @@
           return;
         }
 
-        width.value = Math.max(minWidth, newWidth);
+        const clampedWidth = Math.max(minWidth, newWidth);
+        width.value = clampedWidth;
+        height.value = calculateProportionalHeight(clampedWidth);
 
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(saveWidth, 500);
+        debouncedSaveSize();
       };
 
       const removeImage = () => {
@@ -166,18 +235,27 @@
         });
       };
 
+      onMounted(() => {
+        if (imageRef.value && imageRef.value.complete) {
+          onImageLoad();
+        }
+      });
+
       onUnmounted(() => {
-        clearTimeout(debounceTimer);
+        // Cancel any pending debounced calls
+        debouncedSaveSize.cancel();
       });
 
       return {
         width,
+        imageRef,
         styleWidth,
         onResizeStart,
         removeImage,
         editImage,
         isCompact,
         onResizeKeyDown,
+        onImageLoad,
       };
     },
     props: {

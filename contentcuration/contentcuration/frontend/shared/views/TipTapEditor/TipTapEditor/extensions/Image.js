@@ -14,6 +14,7 @@ export const Image = Node.create({
   addAttributes() {
     return {
       src: { default: null },
+      permanentSrc: { default: null },
       alt: { default: null },
       width: { default: null },
       height: { default: null },
