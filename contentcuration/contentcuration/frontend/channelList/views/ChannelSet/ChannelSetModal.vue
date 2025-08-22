@@ -82,9 +82,8 @@
                 <KButton
                   :text="$tr('selectChannelsHeader')"
                   :primary="true"
-                  class="link-btn"
+                  class="select-channels-btn"
                   data-test="button-select"
-                  appearance="raised-button"
                   @click="step++"
                 />
                 <VCard
@@ -183,13 +182,12 @@
         {{ $tr('channelSelectedCountText', { channelCount: channels.length }) }}
       </div>
       <VSpacer />
-      <div class="save-btn">
+      <div>
         <KButton
           v-if="step === 1"
           :text="saveText"
           :primary="true"
           data-test="button-save"
-          appearance="raised-button"
           @click="save"
         />
         <KButton
@@ -197,7 +195,6 @@
           :text="$tr('finish')"
           :primary="true"
           data-test="button-finish"
-          appearance="raised-button"
           @click="finish"
         />
       </div>
@@ -518,7 +515,7 @@
 
 <style lang="scss" scoped>
 
-  .link-btn {
+  .select-channels-btn {
     margin-bottom: 25px;
   }
 
