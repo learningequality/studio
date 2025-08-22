@@ -1,7 +1,7 @@
 <template>
 
   <div
-    class="banner notranslate"
+    class="banner"
     data-testid="studio-banner"
     :style="{ backgroundColor: error ? $themePalette.red.v_100 : '' }"
   >
@@ -15,13 +15,26 @@
 
 <script>
 
+  import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
+
   export default {
     name: 'StudioBanner',
+    setup() {
+      const { sendPoliteMessage } = useKLiveRegion();
+      return { sendPoliteMessage };
+    },
     props: {
       error: {
         type: Boolean,
         default: false,
       },
+    },
+    mounted() {
+      const slotContent = this.$slots.default;
+      const textContent = slotContent[0].text;
+      if (textContent && this.error) {
+        this.sendPoliteMessage(textContent);
+      }
     },
   };
 

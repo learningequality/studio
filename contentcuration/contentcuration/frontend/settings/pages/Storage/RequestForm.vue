@@ -7,7 +7,7 @@
     <StudioBanner
       v-if="Boolean(errorCount())"
       error
-      class="my-2"
+      class="studio-banner"
     >
       {{ errorText() }}
     </StudioBanner>
@@ -523,6 +523,11 @@
   .license-description {
     margin-bottom: 8px;
     line-height: 1.5;
+  }
+
+  .studio-banner {
+    margin-top: 8px !important;
+    margin-bottom: 8px !important;
   }
 
 </style>

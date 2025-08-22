@@ -25,13 +25,11 @@ describe('StudioBanner', () => {
       },
       routes: new VueRouter(),
       slots: {
-        default: '',
+        default: 'normal text',
       },
     });
-
     const banner = screen.getByTestId('studio-banner');
     expect(banner).toBeInTheDocument();
-    expect(banner).toHaveClass('banner', 'notranslate');
   });
 
   test('render with error true', () => {
@@ -47,7 +45,6 @@ describe('StudioBanner', () => {
 
     const banner = screen.getByTestId('studio-banner');
     expect(banner).toBeInTheDocument();
-    expect(banner).toHaveClass('banner', 'notranslate');
     expect(banner).toHaveStyle('background-color: rgb(255, 217, 211)');
     expect(screen.getByText(sampleErrorMessage)).toBeInTheDocument();
   });
