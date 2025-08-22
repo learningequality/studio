@@ -306,6 +306,7 @@
             <!-- Author -->
             <VCombobox
               ref="author"
+              aria-describedby="tooltip-author"
               :items="authors"
               :label="$tr('authorLabel')"
               :disabled="disableSourceEdits"
@@ -322,8 +323,7 @@
               <template #append-outer>
                 <HelpTooltip
                   :text="$tr('authorToolTip')"
-                  top
-                  :small="false"
+                  tooltipId="tooltip-author"
                 />
               </template>
             </VCombobox>
@@ -337,6 +337,7 @@
             <!-- Provider -->
             <VCombobox
               ref="provider"
+              aria-describedby="tooltip-provider"
               :items="providers"
               :label="$tr('providerLabel')"
               :disabled="disableSourceEdits"
@@ -353,8 +354,7 @@
               <template #append-outer>
                 <HelpTooltip
                   :text="$tr('providerToolTip')"
-                  top
-                  :small="false"
+                  tooltipId="tooltip-provider"
                 />
               </template>
             </VCombobox>
@@ -362,6 +362,7 @@
             <!-- Aggregator -->
             <VCombobox
               ref="aggregator"
+              aria-describedby="tooltip-aggregator"
               :items="aggregators"
               :label="$tr('aggregatorLabel')"
               :disabled="disableSourceEdits"
@@ -378,8 +379,7 @@
               <template #append-outer>
                 <HelpTooltip
                   :text="$tr('aggregatorToolTip')"
-                  top
-                  :small="false"
+                  tooltipId="tooltip-aggregator"
                 />
               </template>
             </VCombobox>
@@ -1004,6 +1004,12 @@
 
 
 <style lang="scss" scoped>
+
+  // decrese default Vuetify margin to allow for precise
+  // alignment of help and info icons
+  ::v-deep .v-input__append-outer {
+    margin-top: 6px !important;
+  }
 
   ::v-deep a,
   ::v-deep a:hover {
