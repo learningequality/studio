@@ -88,7 +88,7 @@
     "node-vibrant": "^4.0.3",
     "pako": "^2.1.0",
     "papaparse": "^5.4.1",
-    "pdfjs-dist": "^2.16.105",
+    "pdfjs-dist": "^5.4.54",
     "qs": "^6.11.2",
     "regenerator-runtime": "^0.14.1",
     "spark-md5": "^3.0.0",
