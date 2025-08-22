@@ -15,8 +15,8 @@
         class="px-3"
       >
         <VSelect
-          v-model="filter"
-          :items="filters"
+          v-model="channelTypeFilter"
+          :items="channelTypeFilters"
           item-text="label"
           item-value="key"
           label="Channel Type"
@@ -31,9 +31,8 @@
         class="px-3"
       >
         <LanguageDropdown
-          v-model="language"
-          item-id="id"
-          item-text="readable_name"
+          ref="languageDropdown"
+          v-model="languageFilter"
         />
       </VFlex>
       <VFlex
@@ -124,8 +123,11 @@
 <script>
 
   import { mapGetters, mapActions } from 'vuex';
+  import { onMounted, ref } from 'vue';
+  import { transform } from 'lodash';
   import { RouteNames, rowsPerPageItems } from '../../constants';
-  import { tableMixin, generateFilterMixin } from '../../mixins';
+  import { tableMixin } from '../../mixins';
+  import { useFilter, useKeywordSearch } from '../../composables';
   import ChannelItem from './ChannelItem';
   import { channelExportMixin } from 'shared/views/channel/mixins';
   import { routerMixin } from 'shared/mixins';
@@ -133,7 +135,7 @@
   import IconButton from 'shared/views/IconButton';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
 
-  const channelFilters = {
+  const channelTypeFilterMap = {
     live: { label: 'Live', params: { deleted: false } },
     mychannels: { label: 'My channels', params: { edit: true, deleted: false } },
     published: { label: 'Published', params: { published: true, deleted: false } },
@@ -143,8 +145,6 @@
     deleted: { label: 'Deleted', params: { deleted: true } },
   };
 
-  const filterMixin = generateFilterMixin(channelFilters);
-
   export default {
     name: 'ChannelTable',
     components: {
@@ -153,7 +153,41 @@
       LanguageDropdown,
       IconButton,
     },
-    mixins: [tableMixin, filterMixin, channelExportMixin, routerMixin],
+    mixins: [tableMixin, channelExportMixin, routerMixin],
+    setup() {
+      const languageDropdown = ref(null);
+      const languageFilterMap = ref({});
+
+      onMounted(() => {
+        // The languageFilterMap is built from the options in the LanguageDropdown component,
+        // so we need to wait until it's mounted to access them.
+        const languages = languageDropdown.value.languages;
+
+        languageFilterMap.value = transform(languages, (result, language) => {
+          result[language.id] = {
+            label: language.readable_name,
+            params: { languages: language.id },
+          };
+        });
+      });
+
+      const { filter: channelTypeFilter, filters: channelTypeFilters } =
+        useFilter(channelTypeFilterMap);
+
+      const { filter: languageFilter } = useFilter(languageFilterMap);
+
+      const { keywordInput, setKeywords, clearSearch } = useKeywordSearch();
+
+      return {
+        channelTypeFilter,
+        channelTypeFilters,
+        languageFilter,
+        languageDropdown,
+        keywordInput,
+        setKeywords,
+        clearSearch,
+      };
+    },
     data() {
       return {
         selected: [],
@@ -175,18 +209,6 @@
           } else {
             this.selected = [];
           }
-        },
-      },
-      language: {
-        get() {
-          return this.$route.query.languages;
-        },
-        set(languages) {
-          this.updateQueryParams({
-            ...this.$route.query,
-            languages,
-            page: 1,
-          });
         },
       },
       headers() {

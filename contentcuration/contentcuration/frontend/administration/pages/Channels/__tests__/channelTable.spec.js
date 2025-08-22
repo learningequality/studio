@@ -43,16 +43,21 @@ describe('channelTable', () => {
     loadItems.mockRestore();
   });
   describe('filters', () => {
-    it('changing filter should set query params', () => {
-      wrapper.vm.filter = 'public';
+    it('changing channel type filter should set query params', () => {
+      wrapper.vm.channelTypeFilter = 'public';
       expect(Boolean(router.currentRoute.query.public)).toBe(true);
     });
-    it('changing language should set query params', () => {
-      wrapper.vm.language = 'en';
+    it('changing language filter should set query params', () => {
+      wrapper.vm.languageFilter = 'en';
       expect(router.currentRoute.query.languages).toBe('en');
     });
     it('changing search text should set query params', () => {
-      wrapper.vm.keywords = 'keyword test';
+      jest.useFakeTimers();
+      wrapper.vm.keywordInput = 'keyword test';
+      wrapper.vm.setKeywords();
+      jest.runAllTimers();
+      jest.useRealTimers();
+
       expect(router.currentRoute.query.keywords).toBe('keyword test');
     });
   });

@@ -13,7 +13,7 @@
       />
       <EmailUsersDialog
         v-model="showMassEmailDialog"
-        :query="{ ...$route.query, filter }"
+        :query="{ ...$route.query, userTypeFilter }"
       />
     </h1>
     <VLayout
@@ -27,8 +27,8 @@
         class="px-3"
       >
         <VSelect
-          v-model="filter"
-          :items="filters"
+          v-model="userTypeFilter"
+          :items="userTypeFilters"
           item-text="label"
           item-value="key"
           label="User Type"
@@ -43,7 +43,8 @@
         class="px-3"
       >
         <CountryField
-          v-model="location"
+          ref="locationDropdown"
+          v-model="locationFilter"
           :outline="false"
           :multiple="false"
           label="Target location"
@@ -133,9 +134,12 @@
 
 <script>
 
+  import { ref, onMounted } from 'vue';
   import { mapGetters, mapActions } from 'vuex';
+  import transform from 'lodash/transform';
   import { RouteNames, rowsPerPageItems } from '../../constants';
-  import { tableMixin, generateFilterMixin } from '../../mixins';
+  import { tableMixin } from '../../mixins';
+  import { useFilter, useKeywordSearch } from '../../composables';
   import EmailUsersDialog from './EmailUsersDialog';
   import UserItem from './UserItem';
   import { routerMixin } from 'shared/mixins';
@@ -143,14 +147,13 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import CountryField from 'shared/views/form/CountryField';
 
-  const userFilters = {
+  const userTypeFilterMap = {
     all: { label: 'All', params: {} },
     active: { label: 'Active', params: { is_active: true } },
     inactive: { label: 'Inactive', params: { is_active: false } },
     administrator: { label: 'Administrators', params: { is_admin: true } },
     sushichef: { label: 'Sushi chef', params: { chef: true } },
   };
-  const filterMixin = generateFilterMixin(userFilters);
 
   export default {
     name: 'UserTable',
@@ -161,7 +164,44 @@
       UserItem,
       CountryField,
     },
-    mixins: [tableMixin, filterMixin, routerMixin],
+    mixins: [tableMixin, routerMixin],
+    setup() {
+      const { filter: userTypeFilter, filters: userTypeFilters } = useFilter(userTypeFilterMap);
+
+      const { keywordInput, setKeywords, clearSearch } = useKeywordSearch();
+
+      const locationFilterMap = ref({});
+      const locationDropdown = ref(null);
+
+      const { filter: locationFilter } = useFilter(locationFilterMap);
+
+      onMounted(() => {
+        // The locationFilterMap is built from the options in the CountryField component,
+        // so we need to wait until it's mounted to access them.
+        const locationOptions = locationDropdown.value.options;
+
+        locationFilterMap.value = transform(
+          locationOptions,
+          (result, option) => {
+            result[option.id] = {
+              label: option.name,
+              params: { location: option.id },
+            };
+          },
+          {},
+        );
+      });
+
+      return {
+        userTypeFilter,
+        userTypeFilters,
+        keywordInput,
+        setKeywords,
+        clearSearch,
+        locationDropdown,
+        locationFilter,
+      };
+    },
     data() {
       return {
         selected: [],
@@ -185,18 +225,6 @@
           } else {
             this.selected = [];
           }
-        },
-      },
-      location: {
-        get() {
-          return this.$route.query.location;
-        },
-        set(location) {
-          this.updateQueryParams({
-            ...this.$route.query,
-            location,
-            page: 1,
-          });
         },
       },
       headers() {

@@ -45,18 +45,23 @@ describe('userTable', () => {
   });
 
   describe('filters', () => {
-    it('changing filter should set query params', () => {
-      wrapper.vm.filter = 'administrator';
+    it('changing user type filter should set query params', () => {
+      wrapper.vm.userTypeFilter = 'administrator';
       expect(Boolean(router.currentRoute.query.is_admin)).toBe(true);
     });
 
-    it('changing location should set query params', () => {
-      wrapper.vm.location = 'Afghanistan';
+    it('changing location filter should set query params', () => {
+      wrapper.vm.locationFilter = 'Afghanistan';
       expect(router.currentRoute.query.location).toBe('Afghanistan');
     });
 
     it('changing search text should set query params', () => {
-      wrapper.vm.keywords = 'keyword test';
+      jest.useFakeTimers();
+      wrapper.vm.keywordInput = 'keyword test';
+      wrapper.vm.setKeywords();
+      jest.runAllTimers();
+      jest.useRealTimers();
+
       expect(router.currentRoute.query.keywords).toBe('keyword test');
     });
   });
