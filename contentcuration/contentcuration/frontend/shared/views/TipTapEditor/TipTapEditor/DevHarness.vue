@@ -1,17 +1,17 @@
 <template>
 
   <div class="dev-harness">
-    <header class="harness-header">
+    <!-- <header class="harness-header">
       <h1>TipTap Editor - Development Harness</h1>
       <p>This page simulates a parent component to test the editor in isolation.</p>
-    </header>
+    </header> -->
     <hr >
     <TipTapEditor v-model="markdownContent" />
     <hr >
-    <div class="raw-output-wrapper">
+    <!-- <div class="raw-output-wrapper">
       <h2>Live Markdown Output (v-model state)</h2>
       <pre>{{ markdownContent }}</pre>
-    </div>
+    </div> -->
   </div>
 
 </template>
@@ -22,41 +22,7 @@
   import { defineComponent, ref } from 'vue';
   import TipTapEditor from './TipTapEditor.vue';
 
-  const SAMPLE_MARKDOWN = `# Testing basic & special nodes
-
-**bold** *italic* <u>underline</u> ~~strikethrough~~
-
-try inline formulas $$x^2$$ test
-
-- list a
-- list b
-
-<small class="small-text">
-small text
-</small>
-
-1. list one<sub>[1]</sub>
-2. list two
-
-There is a [link here](https://github.com/learningequality/studio/pull/5155/checks)!
-
-\`\`\`javascript
-export default html => {
-  const domParser = new DOMParser();
-  const doc = domParser.parseFromString(html, 'text/html');
-  const mdImages = doc.querySelectorAll('span[is="markdown-image-field"]');
-
-  for (const mdImageEl of mdImages) {
-    mdImageEl.replaceWith(mdImageEl.innerHTML.trim());
-  }
-
-  const editOptionButtons = doc.querySelectorAll('.ignore-md');
-  for (const editOptionsEl of editOptionButtons) {
-    editOptionsEl.remove();
-  }
-  return doc.body.innerHTML;
-};
-\`\`\`
+  const SAMPLE_MARKDOWN = `
 `;
 
   export default defineComponent({

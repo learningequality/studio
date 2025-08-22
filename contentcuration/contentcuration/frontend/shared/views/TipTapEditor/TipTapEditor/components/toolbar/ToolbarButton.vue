@@ -8,6 +8,7 @@
     :tabindex="isAvailable ? 0 : -1"
     :aria-label="title"
     :aria-pressed="isActive ? 'true' : 'false'"
+    @mousedown.prevent
     @click="handleClick"
     @keydown="handleKeydown"
   >
@@ -101,8 +102,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 2rem;
+    height: 2rem;
     cursor: pointer;
     background: transparent;
     border: 0;

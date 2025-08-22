@@ -257,6 +257,7 @@
 
   .formulas-menu {
     position: relative;
+    width: 90%;
     max-width: 500px;
   }
 

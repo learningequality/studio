@@ -309,7 +309,7 @@
   .image-upload-modal {
     display: flex;
     flex-direction: column;
-    width: 400px;
+    width: 25rem;
     background: white;
     border: 1px solid #e0e0e0;
     border-radius: 4px;

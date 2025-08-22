@@ -2,10 +2,17 @@
 
   <div class="editor-container">
     <EditorToolbar
-      @insert-image="target => openCreateModal({ targetElement: target })"
-      @insert-link="linkHandler.openLinkEditor()"
-      @insert-math="target => mathHandler.openCreateMathModal({ targetElement: target })"
+      v-if="!isMobile"
+      v-on="sharedEventHandlers"
     />
+
+    <div v-else>
+      <MobileTopBar v-on="sharedEventHandlers" />
+      <MobileFormattingBar
+        v-if="isFocused"
+        v-on="sharedEventHandlers"
+      />
+    </div>
 
     <div
       v-if="linkHandler.isBubbleMenuOpen.value"
@@ -19,9 +26,13 @@
 
     <div
       v-if="linkHandler.isEditorOpen.value"
-      :style="linkHandler.popoverStyle.value"
+      class="link-editor-popover-wrapper"
+      :class="{ 'has-overlay': linkHandler.isEditorCentered.value }"
+      :style="linkHandler.isEditorCentered.value ? {} : linkHandler.popoverStyle.value"
+      @click.self="linkHandler.closeLinkEditor"
     >
       <LinkEditor
+        :style="linkHandler.isEditorCentered.value ? linkHandler.popoverStyle.value : {}"
         :mode="linkHandler.editorMode.value"
         :initial-state="linkHandler.editorInitialState.value"
         @save="linkHandler.saveLink"
@@ -31,19 +42,19 @@
     </div>
 
     <div
-      v-if="modalMode"
+      v-if="imageHandler.modalMode.value"
       class="image-upload-popover-wrapper"
-      :class="{ 'has-overlay': isModalCentered }"
-      @click.self="closeModal"
+      :class="{ 'has-overlay': imageHandler.isModalCentered.value }"
+      @click.self="imageHandler.closeModal"
     >
       <ImageUploadModal
-        :style="popoverStyle"
-        :mode="modalMode"
-        :initial-data="modalInitialData"
-        @close="closeModal"
-        @insert="handleInsert"
-        @update="handleUpdate"
-        @remove="handleRemove"
+        :style="imageHandler.popoverStyle.value"
+        :mode="imageHandler.modalMode.value"
+        :initial-data="imageHandler.modalInitialData.value"
+        @close="imageHandler.closeModal"
+        @insert="imageHandler.handleInsert"
+        @update="imageHandler.handleUpdate"
+        @remove="imageHandler.handleRemove"
       />
     </div>
 
@@ -73,7 +84,7 @@
 
 <script>
 
-  import { defineComponent, provide, watch, nextTick } from 'vue';
+  import { defineComponent, provide, watch, nextTick, computed } from 'vue';
   import EditorToolbar from './components/EditorToolbar.vue';
   import EditorContentWrapper from './components/EditorContentWrapper.vue';
   import { useEditor } from './composables/useEditor';
@@ -86,6 +97,9 @@
   import { useMathHandling } from './composables/useMathHandling';
   import FormulasMenu from './components/math/FormulasMenu.vue';
   import { preprocessMarkdown } from './utils/markdown';
+  import MobileTopBar from './components/toolbar/MobileTopBar.vue';
+  import MobileFormattingBar from './components/toolbar/MobileFormattingBar.vue';
+  import { useBreakpoint } from './composables/useBreakpoint';
 
   export default defineComponent({
     name: 'RichTextEditor',
@@ -96,9 +110,11 @@
       LinkBubbleMenu,
       LinkEditor,
       FormulasMenu,
+      MobileTopBar,
+      MobileFormattingBar,
     },
     setup(props, { emit }) {
-      const { editor, isReady, initializeEditor } = useEditor();
+      const { editor, isReady, isFocused, initializeEditor } = useEditor();
       provide('editor', editor);
       provide('isReady', isReady);
 
@@ -108,22 +124,20 @@
       const mathHandler = useMathHandling(editor);
       provide('mathHandler', mathHandler);
 
-      const {
-        modalMode,
-        modalInitialData,
-        popoverStyle,
-        isModalCentered,
-        openCreateModal,
-        closeModal,
-        handleInsert,
-        handleUpdate,
-        handleRemove,
-      } = useImageHandling(editor);
+      const { isMobile } = useBreakpoint();
+
+      const imageHandler = useImageHandling(editor);
+
+      const sharedEventHandlers = computed(() => ({
+        'insert-image': target => imageHandler.openCreateModal({ targetElement: target }),
+        'insert-link': () => linkHandler.openLinkEditor(),
+        'insert-math': target => mathHandler.openCreateMathModal({ targetElement: target }),
+      }));
 
       const handleDrop = event => {
         const file = event.dataTransfer.files[0];
         if (file) {
-          openCreateModal(file);
+          imageHandler.openCreateModal({ file });
         }
       };
 
@@ -182,19 +196,14 @@
 
       return {
         isReady,
-        modalMode,
-        modalInitialData,
-        popoverStyle,
-        openCreateModal,
-        closeModal,
-        handleInsert,
-        handleUpdate,
-        handleRemove,
+        isFocused,
         handleDrop,
-        isModalCentered,
         linkHandler,
         editor,
         mathHandler,
+        isMobile,
+        imageHandler,
+        sharedEventHandlers,
       };
     },
     props: {
@@ -213,7 +222,7 @@
 
   .editor-container {
     position: relative;
-    width: 1000px;
+    min-width: 200px;
     margin: 80px auto;
     font-family:
       'Noto Sans',
@@ -225,9 +234,9 @@
       sans-serif;
     background: white;
     border: 1px solid #e1e5e9;
-    border-radius: 8px;
   }
 
+  .link-editor-popover-wrapper,
   .image-upload-popover-wrapper,
   .math-modal-popover-wrapper {
     position: fixed;
@@ -239,14 +248,14 @@
     pointer-events: none;
   }
 
+  .link-editor-popover-wrapper > *,
   .image-upload-popover-wrapper > *,
   .math-modal-popover-wrapper > * {
     pointer-events: auto;
   }
 
   /* Overlay for edit mode to allow clicking outside to close */
-  .image-upload-popover-wrapper.has-overlay,
-  .math-modal-popover-wrapper.has-overlay {
+  .has-overlay {
     pointer-events: auto;
     background: rgba(0, 0, 0, 0.5);
   }

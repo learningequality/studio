@@ -1,55 +1,41 @@
-import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
+import { useModalPositioning } from './useModalPositioning';
 
 export function useImageHandling(editor) {
-  const modalMode = ref(null); // 'create' or 'edit'
+  const modalMode = ref(null);
   const modalInitialData = ref({});
-  const popoverStyle = ref({});
   const editingNodePos = ref(null);
-  const isModalCentered = ref(false);
 
-  const setPopoverPosition = targetElement => {
-    isModalCentered.value = false;
-    const rect = targetElement.getBoundingClientRect();
-    popoverStyle.value = {
-      position: 'fixed',
-      top: `${rect.bottom + 5}px`,
-      left: `${rect.right}px`,
-      transform: 'translateX(-100%)',
-    };
-  };
-
-  const setCenteredPosition = () => {
-    isModalCentered.value = true;
-    popoverStyle.value = {
-      position: 'fixed',
-      top: '50%',
-      left: '50%',
-      transform: 'translate(-50%, -50%)',
-    };
-  };
-
-  const openCreateModal = ({ file = null, targetElement = null } = {}) => {
-    if (targetElement) {
-      setPopoverPosition(targetElement);
-    } else {
-      setCenteredPosition();
-    }
-    modalInitialData.value = { file };
-    modalMode.value = 'create';
-  };
-
-  const openEditModal = ({ pos, attrs }) => {
-    setCenteredPosition();
-    editingNodePos.value = pos;
-    modalInitialData.value = { ...attrs };
-    modalMode.value = 'edit';
-  };
+  const {
+    isModalOpen,
+    popoverStyle,
+    isModalCentered,
+    openModal,
+    closeModal: closeModalBase,
+    setupClickOutside,
+    cleanup,
+  } = useModalPositioning();
 
   const closeModal = () => {
     modalMode.value = null;
     modalInitialData.value = {};
     editingNodePos.value = null;
-    isModalCentered.value = false;
+    closeModalBase();
+  };
+
+  setupClickOutside('.image-upload-modal', closeModal);
+
+  const openCreateModal = ({ file = null, targetElement = null } = {}) => {
+    modalInitialData.value = { file };
+    modalMode.value = 'create';
+    openModal({ targetElement });
+  };
+
+  const openEditModal = ({ pos, attrs }) => {
+    editingNodePos.value = pos;
+    modalInitialData.value = { ...attrs };
+    modalMode.value = 'edit';
+    openModal({ centered: true }); // Edit mode is always centered
   };
 
   const handleInsert = async data => {
@@ -84,22 +70,6 @@ export function useImageHandling(editor) {
     closeModal();
   };
 
-  watch(modalMode, mode => {
-    const handler = event => {
-      const popover = document.querySelector('.image-upload-modal');
-      if (popover && !popover.contains(event.target)) {
-        closeModal();
-      }
-    };
-    if (mode) {
-      setTimeout(() => {
-        document.addEventListener('mousedown', handler, true);
-      }, 0);
-    } else {
-      document.removeEventListener('mousedown', handler, true);
-    }
-  });
-
   onMounted(() => {
     if (editor?.value) {
       editor.value.on('open-image-editor', openEditModal);
@@ -110,6 +80,7 @@ export function useImageHandling(editor) {
     if (editor?.value) {
       editor.value.off('open-image-editor', openEditModal);
     }
+    cleanup();
   });
 
   return {
@@ -117,6 +88,7 @@ export function useImageHandling(editor) {
     modalInitialData,
     popoverStyle,
     isModalCentered,
+    isModalOpen,
     openCreateModal,
     closeModal,
     handleInsert,
