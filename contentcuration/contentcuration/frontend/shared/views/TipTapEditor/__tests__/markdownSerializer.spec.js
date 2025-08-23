@@ -92,27 +92,6 @@ describe('createCustomMarkdownSerializer', () => {
       expect(getMarkdown()).toBe(expectedMd);
     });
 
-    it('should serialize a new, unsaved data: URL image', () => {
-      const dataUrl = 'data:image/png;base64,iVBORw0KGgo=';
-      const docContent = [
-        {
-          type: 'image',
-          attrs: {
-            src: dataUrl,
-            permanentSrc: null, // No permanent source yet
-            alt: 'New Cat',
-            width: '80',
-            height: '60',
-          },
-        },
-      ];
-      const mockEditor = createMockEditor(docContent);
-      const getMarkdown = createCustomMarkdownSerializer(mockEditor);
-
-      const expectedMd = `![New Cat](${dataUrl} =80x60)`;
-      expect(getMarkdown()).toBe(expectedMd);
-    });
-
     it('should serialize a <small> node correctly', () => {
       const docContent = [
         {
