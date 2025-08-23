@@ -3,7 +3,6 @@
   <div class="token-input-wrapper">
     <KCircularLoader
       v-if="loading"
-      :shouldShow="loading"
       size="38"
       class="loader"
     />
@@ -13,7 +12,7 @@
         :value="displayToken"
         readonly
         class="notranslate token-input"
-        label=" "
+        label="Token"
         :floatingLabel="false"
       />
       <KIconButton
@@ -80,9 +79,6 @@
   .token-input-wrapper {
     display: flex;
     align-items: center;
-    width: 100%;
-    height: 48px;
-    background-color: #ebebeb !important;
   }
 
   .loader {
@@ -90,9 +86,7 @@
   }
 
   .token-input {
-    display: flex;
     flex: 1;
-    align-items: center;
     margin: 0;
   }
 
