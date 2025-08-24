@@ -141,16 +141,24 @@
       role="group"
       :aria-label="'More options'"
     >
-      <ToolbarButton
+      <button
         ref="moreButton"
+        class="more-button"
         :title="'More options'"
-        :icon="require('../../assets/icon-chevron-down.svg')"
-        :is-active="isMoreDropdownOpen"
+        :class="{ active: isMoreDropdownOpen }"
         :aria-expanded="isMoreDropdownOpen"
         aria-haspopup="menu"
         aria-controls="more-options-menu"
         @click="toggleMoreDropdown"
-      />
+      >
+        <span>More</span>
+        <img
+          :src="require('../../assets/icon-chevron-down.svg')"
+          alt=""
+          class="more-button-icon"
+          :class="{ rotated: isMoreDropdownOpen }"
+        >
+      </button>
 
       <div
         v-show="isMoreDropdownOpen"
@@ -333,12 +341,12 @@
 
       // TODO: Maybe these shouldnt be hardcoded?
       const OVERFLOW_BREAKPOINTS = {
-        insert: 750,
-        script: 660,
-        lists: 600,
-        clearFormat: 500,
-        clipboard: 465,
-        textFormat: 390,
+        insert: 760,
+        script: 710,
+        lists: 650,
+        clearFormat: 560,
+        clipboard: 500,
+        textFormat: 400,
       };
 
       // Categories that can overflow (in order of overflow priority)
@@ -611,11 +619,6 @@
     margin-right: 12px;
   }
 
-  .dropdown-item-text {
-    flex: 1;
-    white-space: nowrap;
-  }
-
   .dropdown-item:disabled {
     cursor: not-allowed;
     opacity: 0.5;
@@ -623,6 +626,38 @@
 
   .dropdown-item:disabled:hover {
     background-color: transparent;
+  }
+
+  .more-button {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    cursor: pointer;
+    border: 0;
+    border-radius: 4px;
+    transition: background-color 0.15s ease;
+  }
+
+  .more-button:focus-visible {
+    background: #e6e6e6;
+    border-radius: 4px;
+    outline: 2px solid #0097f2;
+  }
+
+  .more-button.active {
+    color: #4368f5;
+    background: #d9e1fd;
+  }
+
+  .more-button-icon {
+    width: 16px;
+    height: 16px;
+    margin-left: 4px;
+    transition: transform 0.15s ease;
+  }
+
+  .more-button-icon.rotated {
+    transform: rotate(180deg);
   }
 
   /* Ensure dropdown stays on screen */
