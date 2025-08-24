@@ -36,6 +36,7 @@
 
     <!-- Text formatting -->
     <div
+      v-if="visibleCategories.includes('textFormat')"
       role="group"
       :aria-label="textStyleFormatting$()"
     >
@@ -49,7 +50,7 @@
       />
     </div>
 
-    <ToolbarDivider />
+    <ToolbarDivider v-if="visibleCategories.includes('textFormat')" />
 
     <!-- Copy/Paste -->
     <div
@@ -161,6 +162,25 @@
         @click.stop="isMoreDropdownOpen = false"
         @keydown="handleMenuKeydown"
       >
+        <!-- Overflow Text Formatting -->
+        <template v-if="overflowCategories.includes('textFormat')">
+          <button
+            v-for="action in textActions"
+            :key="action.name"
+            class="dropdown-item"
+            :class="{ active: action.isActive }"
+            role="menuitem"
+            @click="action.handler"
+          >
+            <img
+              :src="action.icon"
+              class="dropdown-item-icon"
+              alt=""
+              aria-hidden="true"
+            >
+            <span class="dropdown-item-text">{{ action.title }}</span>
+          </button>
+        </template>
         <!-- Overflow Clipboard -->
         <template v-if="overflowCategories.includes('clipboard')">
           <button
@@ -318,10 +338,18 @@
         lists: 600,
         clearFormat: 500,
         clipboard: 465,
+        textFormat: 390,
       };
 
       // Categories that can overflow (in order of overflow priority)
-      const OVERFLOW_CATEGORIES = ['insert', 'script', 'lists', 'clearFormat', 'clipboard'];
+      const OVERFLOW_CATEGORIES = [
+        'insert',
+        'script',
+        'lists',
+        'clearFormat',
+        'clipboard',
+        'textFormat',
+      ];
 
       const {
         handleCopy,
@@ -541,8 +569,10 @@
     right: 0;
     z-index: 1000;
     min-width: 220px;
+    max-height: 400px;
     padding: 4px 0;
     margin-top: 4px;
+    overflow-y: auto;
     background: white;
     border: 1px solid #e1e5e9;
     border-radius: 8px;
