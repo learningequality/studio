@@ -24,8 +24,8 @@
         >
           <div :class="indicatorClasses(answer)"></div>
           <VCardText :class="{ 'pb-0': !isAnswerOpen(answerIdx) }">
-            <!-- Touch device layout with toolbar always above -->
-            <template v-if="isTouchDevice">
+            <!-- Touch device & desktop layout with toolbar above -->
+            <template v-if="isTouchDevice || screenSizeLevel <= 3">
               <!-- Toolbar row for touch devices -->
               <VLayout class="mb-2">
                 <!-- Selection controls -->
@@ -208,6 +208,7 @@
 
 <script>
 
+  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
   import { AssessmentItemToolbarActions } from '../../constants';
   import { floatOrIntRegex, getCorrectAnswersIndices, mapCorrectAnswers } from '../../utils';
@@ -297,6 +298,10 @@
         }
 
         return [];
+      },
+      screenSizeLevel() {
+        const { windowBreakpoint } = useKResponsiveWindow();
+        return windowBreakpoint.value ?? 0;
       },
     },
     watch: {

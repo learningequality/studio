@@ -23,8 +23,8 @@
           :class="hintClasses(hintIdx)"
         >
           <VCardText :class="{ 'pt-0 pb-0': !isHintOpen(hintIdx) }">
-            <!-- Touch device layout -->
-            <template v-if="isTouchDevice">
+            <!-- Touch device & desktop layout with toolbar above -->
+            <template v-if="isTouchDevice || screenSizeLevel <= 3">
               <VLayout class="mb-2">
                 <VFlex
                   xs1
@@ -121,6 +121,7 @@
 
 <script>
 
+  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
   import { AssessmentItemToolbarActions } from '../../constants';
   import { swapElements } from 'shared/utils/helpers';
@@ -168,6 +169,12 @@
         EditorImageProcessor,
         isTouchDevice,
       };
+    },
+    computed: {
+      screenSizeLevel() {
+        const { windowBreakpoint } = useKResponsiveWindow();
+        return windowBreakpoint.value ?? 0;
+      },
     },
     methods: {
       emitOpen(hintIdx) {
