@@ -151,10 +151,10 @@
         aria-controls="more-options-menu"
         @click="toggleMoreDropdown"
       >
-        <span>More</span>
+        <span>{{ moreButtonText$() }}</span>
         <img
           :src="require('../../assets/icon-chevron-down.svg')"
-          alt=""
+          aria-hidden="true"
           class="more-button-icon"
           :class="{ rotated: isMoreDropdownOpen }"
         >
@@ -384,6 +384,7 @@
         scriptFormatting$,
         insertTools$,
         clearFormatting$,
+        moreButtonText$,
       } = getTipTapEditorStrings();
 
       // Compute which categories should be visible vs in overflow
@@ -537,6 +538,7 @@
         scriptFormatting$,
         insertTools$,
         clearFormatting$,
+        moreButtonText$,
       };
     },
   });
