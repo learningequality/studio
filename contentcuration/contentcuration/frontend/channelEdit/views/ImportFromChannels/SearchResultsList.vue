@@ -73,6 +73,7 @@
               >
                 <Checkbox
                   :key="`checkbox-${node.id}`"
+                  :ref="setFirstCardCheckboxRef"
                   :inputValue="isSelected(node)"
                   class="mt-0 pt-0"
                   @input="toggleSelected(node)"
@@ -147,6 +148,7 @@
         nodeIds: [],
         pageCount: 0,
         totalCount: 0,
+        firstCardCheckboxRef: null,
       };
     },
     computed: {
@@ -217,6 +219,7 @@
       fetch() {
         this.loading = true;
         this.loadFailed = false;
+        this.firstCardCheckboxRef = null;
         this.fetchResultsDebounced();
         this.loadSavedSearches();
       },
@@ -250,6 +253,19 @@
       },
       toggleSelected(node) {
         this.$emit('change_selected', { nodes: [node], isSelected: !this.isSelected(node) });
+      },
+      setFirstCardCheckboxRef(ref) {
+        if (!this.firstCardCheckboxRef) {
+          this.firstCardCheckboxRef = ref;
+        }
+      },
+      /**
+       * @public
+       */
+      focus() {
+        if (this.firstCardCheckboxRef) {
+          this.firstCardCheckboxRef.focus();
+        }
       },
     },
     $trs: {
