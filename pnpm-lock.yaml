@@ -26,9 +26,6 @@ importers:
       '@tiptap/extension-superscript':
         specifier: ^3.3.0
         version: 3.3.0(@tiptap/core@3.3.0(@tiptap/pm@3.3.0))(@tiptap/pm@3.3.0)
-      '@tiptap/extension-underline':
-        specifier: ^3.3.0
-        version: 3.3.0(@tiptap/core@3.3.0(@tiptap/pm@3.3.0))
       '@tiptap/starter-kit':
         specifier: ^3.3.0
         version: 3.3.0
