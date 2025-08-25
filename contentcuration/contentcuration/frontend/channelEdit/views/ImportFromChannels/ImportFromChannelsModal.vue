@@ -131,7 +131,6 @@
     data() {
       return {
         previewNode: null,
-        showSnackbar: true,
       };
     },
     provide: {
@@ -190,13 +189,6 @@
         return this.selected.some(node => node.id === this.previewNode.id);
       },
     },
-    watch: {
-      selectedResourcesCount(newVal, oldVal) {
-        if (this.showSnackbar) {
-          this.showResourcesSnackbar(newVal, oldVal);
-        }
-      },
-    },
     beforeRouteUpdate(to, from, next) {
       this.$store.dispatch('clearSnackbar');
       next();
@@ -213,18 +205,6 @@
       }),
       handlePreview(previewNode) {
         this.previewNode = previewNode;
-      },
-      showResourcesSnackbar(newLength, oldLength) {
-        const latestDelta = newLength - oldLength;
-        const textFromDelta = delta => {
-          const params = { count: Math.abs(delta) };
-          return delta >= 0
-            ? this.$tr('resourcesAddedSnackbar', params)
-            : this.$tr('resourcesRemovedSnackbar', params);
-        };
-        this.$store.dispatch('showSnackbar', {
-          text: textFromDelta(latestDelta),
-        });
       },
       handleClickReview() {
         this.$router.push({
@@ -246,8 +226,6 @@
         }).then(nodes => {
           this.handleRecommendationInteractionEvent();
 
-          // When exiting, do not show snackbar when clearing selections
-          this.showSnackbar = false;
           this.$store.commit('importFromChannels/CLEAR_NODES');
           this.$router.push({
             name: RouteNames.TREE_VIEW,
@@ -292,10 +270,6 @@
       },
     },
     $trs: {
-      resourcesAddedSnackbar:
-        '{count, number} {count, plural, one {resource selected} other {resources selected}}',
-      resourcesRemovedSnackbar:
-        '{count, number} {count, plural, one {resource removed} other {resources removed}}',
       importTitle: 'Import from other channels',
       reviewTitle: 'Resource selection',
       resourcesSelected:
