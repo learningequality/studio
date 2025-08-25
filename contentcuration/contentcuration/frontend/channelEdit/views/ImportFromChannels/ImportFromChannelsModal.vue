@@ -70,7 +70,7 @@
       </template>
     </ResourceDrawer>
     <template #bottom>
-      <div class="mx-4 subheading">
+      <div class="mx-2 subheading">
         {{ $tr('resourcesSelected', { count: selectedResourcesCount }) }}
       </div>
       <VSpacer />
