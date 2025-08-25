@@ -1,7 +1,6 @@
 import { ref, onUnmounted } from 'vue';
 import { Editor } from '@tiptap/vue-2';
 import StarterKitExtension from '@tiptap/starter-kit';
-import UnderlineExtension from '@tiptap/extension-underline';
 import { Superscript } from '@tiptap/extension-superscript';
 import { Subscript } from '@tiptap/extension-subscript';
 import { Small } from '../extensions/SmallTextExtension';
@@ -24,7 +23,6 @@ export function useEditor() {
           codeBlock: false, // Disable default code block to use the extended version
           link: false, // Disable default link to use the custom link extension
         }),
-        UnderlineExtension,
         CodeBlockSyntaxHighlight,
         Small,
         Superscript,
