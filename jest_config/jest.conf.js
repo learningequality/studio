@@ -19,6 +19,7 @@ module.exports = {
     'shared/urls': path.resolve(__dirname, './globalMocks/urls.js'),
     '^dexie$': require.resolve('dexie'),
     '^mathlive$': 'identity-obj-proxy',
+    '^@tiptap/extension-code-block-lowlight$': '<rootDir>/node_modules/@tiptap/extension-code-block-lowlight/dist/index.js',
   },
   testEnvironment: 'jsdom',
   testMatch: ['**/?(*.)+(spec|test).[jt]s?(x)'],
