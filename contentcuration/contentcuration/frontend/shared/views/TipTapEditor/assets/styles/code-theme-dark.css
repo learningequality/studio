@@ -1,0 +1,80 @@
+/*
+https://github.com/microsoft/vscode/blob/main/extensions/theme-defaults/themes/dark_modern.json
+*/
+
+.ProseMirror pre {
+  padding: 1rem 1.25rem;
+  font-family: 'Consolas', 'Courier New', monospace;
+  color: #d4d4d4;
+  white-space: pre-wrap;
+  background: #1e1e1e;
+  border-radius: 0.5rem;
+}
+
+.ProseMirror pre code {
+  display: block;
+  padding: 0;
+  overflow-x: auto;
+  font-size: 0.9rem;
+  color: inherit;
+  background: none;
+}
+
+/* Comments */
+.ProseMirror .hljs-comment,
+.ProseMirror .hljs-quote {
+  color: #6a9955;
+}
+
+/* Keywords (const, let, if, return, etc.) & HTML Tags */
+.ProseMirror .hljs-keyword,
+.ProseMirror .hljs-selector-tag,
+.ProseMirror .hljs-tag .hljs-name {
+  color: #569cd6;
+}
+
+/* Storage type (const) & Built-ins */
+.ProseMirror .hljs-storage.type,
+.ProseMirror .hljs-built_in {
+  color: #c586c0;
+}
+
+/* Strings */
+.ProseMirror .hljs-string,
+.ProseMirror .hljs-symbol {
+  color: #ce9178;
+}
+
+/* Numbers & Booleans */
+.ProseMirror .hljs-number,
+.ProseMirror .hljs-literal {
+  color: #b5cea8;
+}
+
+/* Function & Class Names */
+.ProseMirror .hljs-title.function_,
+.ProseMirror .hljs-title.class_ {
+  color: #dcdcaa;
+}
+
+/* HTML Attributes (class, id, etc.) & Variables/Parameters */
+.ProseMirror .hljs-attr,
+.ProseMirror .hljs-variable,
+.ProseMirror .hljs-params,
+.ProseMirror .hljs-template-variable {
+  color: #9cdcfe;
+}
+
+/* RegEx */
+.ProseMirror .hljs-regexp {
+  color: #d16969;
+}
+
+/* Special Emphasis */
+.ProseMirror .hljs-emphasis {
+  font-style: italic;
+}
+
+.ProseMirror .hljs-strong {
+  font-weight: bold;
+}

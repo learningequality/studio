@@ -1,8 +1,11 @@
+from django.db import transaction
 from django.utils import timezone
 from rest_framework import permissions
 from rest_framework import serializers
+from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from contentcuration.models import FlagFeedbackEvent
 from contentcuration.models import RecommendationsEvent
@@ -97,7 +100,21 @@ class RecommendationsEventSerializer(
         return super().update(instance, validated_data)
 
 
-class RecommendationsInteractionEventViewSet(viewsets.ModelViewSet):
+class BulkCreateModelMixin:
+    def create(self, request, *args, **kwargs):
+        if isinstance(request.data, list):
+            with transaction.atomic():
+                serializer = self.get_serializer(data=request.data, many=True)
+                serializer.is_valid(raise_exception=True)
+                self.perform_create(serializer)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return super().create(request, *args, **kwargs)
+
+
+class RecommendationsInteractionEventViewSet(
+    BulkCreateModelMixin, viewsets.ModelViewSet
+):
     # TODO: decide export procedure
     queryset = RecommendationsInteractionEvent.objects.all()
     serializer_class = RecommendationsInteractionEventSerializer

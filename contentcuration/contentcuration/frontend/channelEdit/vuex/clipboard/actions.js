@@ -4,7 +4,7 @@ import chunk from 'lodash/chunk';
 import uniq from 'lodash/uniq';
 import uniqBy from 'lodash/uniqBy';
 import defer from 'lodash/defer';
-import * as Vibrant from 'node-vibrant';
+import { Vibrant } from 'node-vibrant/browser';
 import { ClipboardNodeFlag, LoadStatus, SelectionFlags } from './constants';
 import { selectionId, isLegacyNode, isExcludedNode, addExcludedNode } from './utils';
 import { promiseChunk } from 'shared/utils/helpers';

@@ -176,11 +176,21 @@
 <style lang="scss" scoped>
 
   $caption-height: 25px;
+  $svg-scale: 1.25;
+  $aspect-ratio: 9 / 16;
+
+  $aspect-percentage: $aspect-ratio * 100%;
+  $half-aspect-percentage: $aspect-percentage / 2;
+
+  $svg-width: $aspect-percentage / $svg-scale;
+  $svg-top: $half-aspect-percentage - ($svg-width / 2);
+  $svg-width-quarter: $svg-width / 4;
+  $svg-left-position: 50% - $svg-width-quarter;
 
   .thumbnail {
     position: relative;
     /* stylelint-disable-next-line  */
-    padding-bottom: calc(100% * 9 / 16);
+    padding-bottom: $aspect-percentage;
 
     &.icon-only {
       padding-top: 0;
@@ -226,14 +236,10 @@
     }
   }
 
-  $svg-scale: 1.25;
-  $svg-width: calc(100% * 9 / 16 / #{$svg-scale});
-  $svg-top: calc((100% * 9 / 16 / 2) - ($svg-width / 2));
-
   svg.thumbnail-image {
     top: 0;
-    left: calc(50% - (#{$svg-width} / 4));
-    width: calc(#{$svg-width} / 4);
+    left: $svg-left-position;
+    width: $svg-width-quarter;
     margin: 0 auto;
     overflow: visible;
 
@@ -269,7 +275,7 @@
     }
 
     .caption + & {
-      top: calc((#{$caption-height} / 2) + #{$svg-top});
+      top: calc(#{$caption-height / 2} + #{$svg-top});
     }
 
     .icon-only & {

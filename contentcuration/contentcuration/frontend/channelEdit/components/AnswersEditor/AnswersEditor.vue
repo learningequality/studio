@@ -25,7 +25,7 @@
           <div :class="indicatorClasses(answer)"></div>
           <VCardText :class="{ 'pb-0': !isAnswerOpen(answerIdx) }">
             <VLayout align-top>
-              <VFlex xs1>
+              <VFlex shrink>
                 <!--
                   VRadio cannot be used without VRadioGroup like VCheckbox but it can
                   be solved by wrapping each VRadio to VRadioGroup
@@ -52,7 +52,7 @@
                 />
               </VFlex>
 
-              <VFlex xs7>
+              <VFlex xs10>
                 <keep-alive :max="5">
                   <!-- Input question shows a text field with type of `number` -->
                   <div v-if="isInputQuestion">
@@ -73,20 +73,14 @@
                   </div>
 
                   <div v-else>
-                    <MarkdownEditor
-                      v-if="isAnswerOpen(answerIdx)"
+                    <!-- ?? analyticsLabel="Answer" -->
+                    <TipTapEditor
+                      v-model="answer.answer"
                       class="editor"
-                      analyticsLabel="Answer"
-                      :markdown="answer.answer"
-                      :handleFileUpload="handleFileUpload"
-                      :getFileUpload="getFileUpload"
-                      :imagePreset="imagePreset"
+                      :mode="isAnswerOpen(answerIdx) ? 'edit' : 'view'"
                       @update="updateAnswerText($event, answerIdx)"
                       @minimize="emitClose"
-                    />
-                    <MarkdownViewer
-                      v-else
-                      :markdown="answer.answer"
+                      @open-editor="emitOpen(answerIdx)"
                     />
                   </div>
                 </keep-alive>
@@ -94,7 +88,7 @@
 
               <VSpacer />
 
-              <VFlex>
+              <VFlex shrink>
                 <AssessmentItemToolbar
                   :iconActionsConfig="toolbarIconActions"
                   :canMoveUp="!isAnswerFirst(answerIdx)"
@@ -134,8 +128,7 @@
   import { swapElements } from 'shared/utils/helpers';
   import Checkbox from 'shared/views/form/Checkbox';
 
-  import MarkdownEditor from 'shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor';
-  import MarkdownViewer from 'shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer';
+  import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue';
 
   const updateAnswersOrder = answers => {
     return answers.map((answer, idx) => {
@@ -150,9 +143,8 @@
     name: 'AnswersEditor',
     components: {
       AssessmentItemToolbar,
-      MarkdownEditor,
-      MarkdownViewer,
       Checkbox,
+      TipTapEditor,
     },
     model: {
       prop: 'answers',
@@ -173,20 +165,6 @@
       openAnswerIdx: {
         type: Number,
         default: 0,
-      },
-      // Inject function to handle file uploads
-      handleFileUpload: {
-        type: Function,
-        default: () => {},
-      },
-      // Inject function to get file upload object
-      getFileUpload: {
-        type: Function,
-        default: () => {},
-      },
-      imagePreset: {
-        type: String,
-        default: null,
       },
     },
     data() {

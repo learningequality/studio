@@ -5,7 +5,8 @@ mixer==7.2.2
 pytest
 pytest-django
 pytest-timeout
-pre-commit==4.2.0
+pytest-subtests
+pre-commit==4.3.0
 nodeenv
-pip-tools==7.4.1
+pip-tools==7.5.0
 drf-yasg==1.21.10

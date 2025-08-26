@@ -557,6 +557,14 @@ class IndexedDBResource {
       collection = collection.filter(filterFn);
     }
     if (paginationActive) {
+      // Default pagination field is 'lft'
+      let paginationField = 'lft';
+      if (params.ordering) {
+        paginationField = params.ordering.replace(/^-/, '');
+      }
+      // Determine the operator based on the ordering direction.
+      const operator = params.ordering && params.ordering.startsWith('-') ? 'lt' : 'gt';
+
       let results;
       if (sortBy) {
         // If we still have a sortBy value here, then we have not sorted using orderBy
@@ -574,7 +582,8 @@ class IndexedDBResource {
         more: hasMore
           ? {
               ...params,
-              lft__gt: results[maxResults - 1].lft,
+              // Dynamically set the pagination cursor based on the pagination field and operator.
+              [`${paginationField}__${operator}`]: results[maxResults - 1][paginationField],
             }
           : null,
       };
@@ -1247,6 +1256,37 @@ export const Channel = new CreateModelResource({
     });
     return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
       return this._saveAndQueueChange(change);
+    }).then(() => change);
+  },
+
+  waitForPublishingDraft(publishDraftChange) {
+    const observable = liveQuery(() => {
+      return db[CHANGES_TABLE].where('rev')
+        .equals(publishDraftChange.rev)
+        .and(change => change.type === publishDraftChange.type)
+        .and(change => change.channel_id === publishDraftChange.channel_id)
+        .toArray();
+    });
+
+    return new Promise((resolve, reject) => {
+      const subscription = observable.subscribe({
+        next(result) {
+          // Successfully applied change will be removed.
+          if (result.length === 0) {
+            subscription.unsubscribe();
+            resolve();
+          } else {
+            if (result[0].disallowed || result[0].errored) {
+              subscription.unsubscribe();
+              reject('Publish draft failed');
+            }
+          }
+        },
+        error() {
+          subscription.unsubscribe();
+          reject('Live query failed');
+        },
+      });
     });
   },
 

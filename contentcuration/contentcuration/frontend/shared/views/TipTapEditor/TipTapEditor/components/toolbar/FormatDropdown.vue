@@ -126,7 +126,6 @@
           case ' ':
             event.preventDefault();
             applyFormat(format);
-            toggleDropdown();
             break;
           case 'ArrowDown':
             event.preventDefault();
@@ -212,7 +211,7 @@
     gap: 8px;
     align-items: center;
     justify-content: space-between;
-    min-width: 80px;
+    min-width: 100px;
     padding: 6px 8px;
     font-size: 14px;
     color: #495057;
@@ -235,7 +234,6 @@
     background: #e6e6e6;
     border-radius: 4px;
     outline: 2px solid #0097f2;
-    outline-offset: 2px;
   }
 
   .dropdown-icon {
@@ -269,7 +267,6 @@
       'Segoe UI',
       sans-serif;
     font-size: 14px;
-    font-weight: 400;
     line-height: 140%;
     color: #000000;
     cursor: pointer;

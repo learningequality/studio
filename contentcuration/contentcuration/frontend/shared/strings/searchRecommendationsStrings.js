@@ -155,4 +155,17 @@ export const searchRecommendationsStrings = createTranslator('SearchRecommendati
     context:
       'A label to an input that asks the user to enter their specific reason for marking a resource as not relevant',
   },
+  feedbackFailedMessage: {
+    message: 'Feedback submission failed',
+    context:
+      'A message that explains to the user that there was an error submitting their feedback',
+  },
+  feedbackInputValidationMessage: {
+    message: 'Please enter your feedback',
+    context: 'A validation message that prompts the user to enter feedback before submitting',
+  },
+  noFeedbackSelectedErrorMessage: {
+    message: 'Please select at least one option in order to submit your feedback',
+    context: 'An error message that prompts the user to select at least one feedback option',
+  },
 });

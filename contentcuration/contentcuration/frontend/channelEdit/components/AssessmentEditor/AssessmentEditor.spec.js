@@ -5,8 +5,7 @@ import { assessmentItemKey } from '../../utils';
 import AssessmentEditor from './AssessmentEditor';
 import { AssessmentItemTypes, ValidationErrors, DELAYED_VALIDATION } from 'shared/constants';
 
-jest.mock('shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor.vue');
-jest.mock('shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue');
+jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue');
 
 const NODE_ID = 'node-id';
 const ITEM1 = {
@@ -184,10 +183,18 @@ describe('AssessmentEditor', () => {
 
     expect(items.length).toBe(4);
 
-    expect(items.at(0).html()).toContain(ITEM1.question);
-    expect(items.at(1).html()).toContain(ITEM2.question);
-    expect(items.at(2).html()).toContain(ITEM3.question);
-    expect(items.at(3).html()).toContain(ITEM4.question);
+    expect(items.at(0).findComponent({ name: 'RichTextEditor' }).props('value')).toBe(
+      ITEM1.question,
+    );
+    expect(items.at(1).findComponent({ name: 'RichTextEditor' }).props('value')).toBe(
+      ITEM2.question,
+    );
+    expect(items.at(2).findComponent({ name: 'RichTextEditor' }).props('value')).toBe(
+      ITEM3.question,
+    );
+    expect(items.at(3).findComponent({ name: 'RichTextEditor' }).props('value')).toBe(
+      ITEM4.question,
+    );
   });
 
   it('renders items as closed', () => {

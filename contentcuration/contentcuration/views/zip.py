@@ -117,9 +117,7 @@ class ZipContentView(View):
         Handles GET requests and serves a static file from within the zip file.
         """
         if not VALID_STORAGE_FILENAME.match(zipped_filename):
-            return HttpResponseNotFound(
-                "'{}' is not a valid URL for this zip file".format(zipped_filename)
-            )
+            return HttpResponseNotFound("Invalid URL for this zip file")
 
         storage = default_storage
 
@@ -132,9 +130,7 @@ class ZipContentView(View):
 
         # if the zipfile does not exist on disk, return a 404
         if not storage.exists(zipped_path):
-            return HttpResponseNotFound(
-                '"%(filename)s" does not exist in storage' % {"filename": zipped_path}
-            )
+            return HttpResponseNotFound("Zipfile does not exist in storage")
 
         # if client has a cached version, use that (we can safely assume nothing has changed, due to MD5)
         if request.META.get("HTTP_IF_MODIFIED_SINCE"):
@@ -153,9 +149,7 @@ class ZipContentView(View):
                     info = zf.getinfo(embedded_filepath)
                 except KeyError:
                     return HttpResponseNotFound(
-                        '"{}" does not exist inside "{}"'.format(
-                            embedded_filepath, zipped_filename
-                        )
+                        "Embedded file does not exist inside zip"
                     )
 
                 # try to guess the MIME type of the embedded file being referenced

@@ -90,7 +90,7 @@ module.exports = (env = {}) => {
     })
   }
 
-  return merge(base, {
+  const config = merge(base, {
     context: srcDir,
     entry: {
       // Use arrays for every entry to allow for hot reloading.
@@ -103,7 +103,6 @@ module.exports = (env = {}) => {
       pdfJSWorker: ['pdfjs-dist/build/pdf.worker.entry.js'],
       // Utility for taking screenshots inside an iframe sandbox
       htmlScreenshot: ['./shared/utils/htmlScreenshot.js'],
-      editorDev: './editorDev/index.js',
     },
     output: {
       filename: dev ? '[name].js' : '[name]-[fullhash].js',
@@ -185,4 +184,5 @@ module.exports = (env = {}) => {
     ],
     stats: 'normal',
   });
+  return config;
 };

@@ -138,7 +138,7 @@
       RouteNames,
     },
     computed: {
-      ...mapState('importFromChannels', ['selected']),
+      ...mapState('importFromChannels', ['selected', 'recommendationsData']),
       ...mapGetters('contentNode', ['getContentNode']),
       dialog: {
         get() {
@@ -206,6 +206,7 @@
     },
     methods: {
       ...mapActions('contentNode', ['copyContentNodes', 'waitForCopyingStatus']),
+      ...mapActions('importFromChannels', ['captureFeedbackEvent']),
       ...mapMutations('importFromChannels', {
         selectNode: 'SELECT_NODE',
         deselectNode: 'DESELECT_NODE',
@@ -243,6 +244,8 @@
           target: this.$route.params.destNodeId,
           sourceNodes,
         }).then(nodes => {
+          this.handleRecommendationInteractionEvent();
+
           // When exiting, do not show snackbar when clearing selections
           this.showSnackbar = false;
           this.$store.commit('importFromChannels/CLEAR_NODES');
@@ -276,6 +279,15 @@
           )
         ) {
           this.updateTabTitle(this.$store.getters.appendChannelName(this.$tr('importTitle')));
+        }
+      },
+      handleRecommendationInteractionEvent() {
+        // captureFeedbackEvent runs async to avoid blocking the UI during navigation
+        const { selected = {}, ignored = {} } = this.recommendationsData;
+        if (selected.data && selected.data.length > 0) {
+          this.captureFeedbackEvent(selected);
+        } else if (ignored.data && ignored.data.length > 0) {
+          this.captureFeedbackEvent(ignored);
         }
       },
     },

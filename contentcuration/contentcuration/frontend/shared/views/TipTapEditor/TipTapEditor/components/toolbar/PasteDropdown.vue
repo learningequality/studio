@@ -259,12 +259,11 @@
     background: #e6e6e6;
     border-radius: 4px;
     outline: 2px solid #0097f2;
-    outline-offset: 2px;
   }
 
   .toolbar-icon {
-    width: 17px;
-    height: 17px;
+    width: 20px;
+    height: 20px;
     opacity: 0.7;
   }
 
@@ -304,12 +303,11 @@
     background: #e6e6e6;
     border-radius: 4px;
     outline: 2px solid #0097f2;
-    outline-offset: 2px;
   }
 
   .dropdown-arrow {
-    width: 12px;
-    height: 12px;
+    width: 15px;
+    height: 15px;
     opacity: 0.9;
   }
 
@@ -342,8 +340,6 @@
       BlinkMacSystemFont,
       'Segoe UI',
       sans-serif;
-    font-size: 14px;
-    font-weight: 400;
     line-height: 140%;
     color: #000000;
     cursor: pointer;
@@ -362,8 +358,8 @@
   }
 
   .dropdown-item-icon {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     opacity: 0.7;
   }
 

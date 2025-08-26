@@ -71,8 +71,11 @@ export function loadContentNodeByNodeId(context, nodeId) {
     });
 }
 
-export function loadChildren(context, { parent, published = null, complete = null }) {
-  const params = { parent, max_results: 25 };
+export function loadChildren(
+  context,
+  { parent, published = null, complete = null, ordering = null },
+) {
+  const params = { parent, max_results: 25, ordering };
   if (published !== null) {
     params.published = published;
   }

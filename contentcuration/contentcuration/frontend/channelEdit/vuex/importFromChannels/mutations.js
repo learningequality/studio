@@ -45,3 +45,7 @@ export function DESELECT_NODES(state, nodes) {
 export function CLEAR_NODES(state) {
   state.selected = [];
 }
+
+export function SET_RECOMMENDATIONS_DATA(state, data) {
+  state.recommendationsData = data;
+}
