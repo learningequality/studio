@@ -14,6 +14,7 @@
         class="notranslate token-input"
         label="Token"
         :floatingLabel="false"
+        :appearanceOverrides="{ maxWidth: 'none !important', width: '100% !important' }"
       />
       <KIconButton
         icon="copy"
@@ -78,7 +79,8 @@
 
   .token-input-wrapper {
     display: flex;
-    align-items: center;
+    align-items: start;
+    justify-content: center;
   }
 
   .loader {
@@ -87,38 +89,8 @@
 
   .token-input {
     flex: 1;
-    margin: 0;
-  }
-
-  .token-input ::v-deep(.mh),
-  .token-input ::v-deep(.textbox) {
-    width: 100% !important;
-    max-width: none !important;
-  }
-
-  .token-input ::v-deep(.ui-textbox) {
-    margin: 0;
-    box-shadow: none;
-  }
-
-  .token-input ::v-deep(.ui-textbox-feedback) {
-    display: none !important;
-  }
-
-  .token-input ::v-deep(.ui-textbox-input) {
     width: 100%;
-    height: 38px !important;
-    padding-right: 38px;
-    overflow-x: auto;
-    font-size: large;
-    line-height: 2px;
-    color: #333333;
-    white-space: nowrap;
-    background-color: #ebebeb !important;
-  }
-
-  .token-input ::v-deep(.ui-textbox-label) {
-    background: none !important;
+    max-width: none;
   }
 
   .copy-button {
