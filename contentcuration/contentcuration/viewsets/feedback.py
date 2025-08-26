@@ -90,6 +90,11 @@ class RecommendationsEventSerializer(
             + ["content", "time_hidden"]
         )
 
+    def create(self, validated_data):
+        if "time_hidden" not in validated_data:
+            validated_data["time_hidden"] = timezone.now()
+        return super().create(validated_data)
+
     def update(self, instance, validated_data):
         if "time_hidden" in validated_data:
             validated_data["time_hidden"] = timezone.now()
