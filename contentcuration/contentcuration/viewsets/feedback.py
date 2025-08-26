@@ -91,7 +91,6 @@ class RecommendationsEventSerializer(
         )
 
     def create(self, validated_data):
-        validated_data.pop("time_hidden", None)
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
