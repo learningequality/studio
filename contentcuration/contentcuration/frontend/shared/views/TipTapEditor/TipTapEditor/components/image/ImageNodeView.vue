@@ -126,7 +126,9 @@
           if (!width.value && !height.value) {
             // Get the editor's actual container width
             const editorContainer = props.editor.view.dom.closest('.editor-container');
-            const editorWidth = editorContainer ? editorContainer.offsetWidth : 800; // fallback width
+            const editorWidth = editorContainer
+              ? editorContainer.offsetWidth
+              : window.innerWidth * 0.4; // fallback: 40% of viewport width
 
             const maxWidth = Math.min(imageRef.value.naturalWidth, editorWidth);
 
