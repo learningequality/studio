@@ -1243,10 +1243,8 @@ export const Channel = new CreateModelResource({
     });
   },
 
-  publishDraft(id, opts={}) {
-    const {
-      use_staging_tree = false,
-    } = opts;
+  publishDraft(id, opts = {}) {
+    const { use_staging_tree = false } = opts;
 
     const change = new PublishedNextChange({
       key: id,

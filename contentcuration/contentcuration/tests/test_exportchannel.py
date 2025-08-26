@@ -1027,6 +1027,7 @@ class PublishStagingTreeTestCase(StudioTestCase):
         if os.path.exists(self.tempdb):
             os.remove(self.tempdb)
 
+
 class PublishDraftUsingMainTreeTestCase(StudioTestCase):
     @classmethod
     def setUpClass(cls):
@@ -1127,5 +1128,5 @@ class PublishDraftUsingMainTreeTestCase(StudioTestCase):
         self.run_publish_channel()
         self.assertEqual(self.mock_save_export.call_count, 1)
         call_args = self.mock_save_export.call_args
-        self.assertEqual(call_args[0][1], "next")  
-        self.assertEqual(call_args[0][2], True)    
+        self.assertEqual(call_args[0][1], "next")
+        self.assertEqual(call_args[0][2], True)

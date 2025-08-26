@@ -1042,7 +1042,7 @@ def publish_channel(  # noqa: C901
             force_exercises,
             progress_tracker=progress_tracker,
             is_draft_version=is_draft_version,
-            use_staging_tree=use_staging_tree,   
+            use_staging_tree=use_staging_tree,
         )
         add_tokens_to_channel(channel)
         if not is_draft_version:
@@ -1054,7 +1054,6 @@ def publish_channel(  # noqa: C901
             base_tree.changed = False
             base_tree.published = True
             base_tree.save()
-        
 
         # Delete public channel cache.
         if not is_draft_version and channel.public:

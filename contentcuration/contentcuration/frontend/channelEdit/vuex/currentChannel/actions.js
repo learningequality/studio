@@ -56,7 +56,7 @@ export function publishChannel(context, version_notes) {
 }
 
 export function publishDraftChannel(context) {
-  return Channel.publishDraft(context.state.currentChannelId, {use_staging_tree: false});
+  return Channel.publishDraft(context.state.currentChannelId, { use_staging_tree: false });
 }
 
 export function publishStagingChannel(context) {
