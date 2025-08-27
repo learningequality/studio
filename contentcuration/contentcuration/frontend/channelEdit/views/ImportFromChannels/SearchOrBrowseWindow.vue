@@ -476,7 +476,12 @@
         });
       },
       embedTopicRequest() {
-        if (!this.importDestinationFolder) {
+        // Ensure destination folder is loaded, and it and its ancestors have titles
+        if (
+          !this.importDestinationFolder ||
+          !this.importDestinationFolder.title ||
+          this.topicAncestors.some(n => !n.title)
+        ) {
           return null;
         }
         return {
