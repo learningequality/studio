@@ -8,24 +8,19 @@
       @closePanel="onClose"
     >
       <template #header>
-        <h1 style="margin: 0">{{ getPanelTitle() }}</h1>
+        <h1 class="side-panel-title">{{ getPanelTitle() }}</h1>
       </template>
 
       <template #default>
-        <div class="form-section">
+        <div>
           <KRadioButtonGroup>
             <KRadioButton
               :label="modeLive$()"
               :buttonValue="PublishModes.LIVE"
               :currentValue="mode"
+              :description="modeLiveDescription$()"
               @input="mode = PublishModes.LIVE"
             />
-            <div
-              class="radio-description"
-              :style="{ color: $themeTokens.annotation }"
-            >
-              {{ modeLiveDescription$() }}
-            </div>
 
             <!-- Live mode content nested under the radio button -->
             <div
@@ -33,50 +28,52 @@
               class="live-mode-content"
               style="margin-top: 16px; margin-left: 24px"
             >
-              <div
-                class="info-section"
-                :style="{
-                  backgroundColor: $themeTokens.surface,
-                  border: `1px solid ${$themeTokens.outline}`,
-                }"
-              >
+              <div class="live-publish-info">
                 <KIcon
-                  icon="info"
-                  :color="$themeTokens.primary"
+                  class="info-icon"
+                  icon="infoOutline"
                 />
-                <span>{{
-                  publishingInfo$({
-                    version: currentChannel.version + 1,
-                  })
-                }}</span>
-              </div>
+                <div class="version-notes-wrapper">
+                  <div class="version-info">
+                    {{
+                      publishingInfo$({
+                        version: currentChannel.version + 1,
+                      })
+                    }}
+                  </div>
 
-              <div class="form-section">
-                <KTextbox
-                  v-model="version_notes"
-                  :label="versionNotesLabel$()"
-                  :invalid="version_notes.length === 0"
-                  :invalidText="'Version notes are required'"
-                  :showInvalidText="showVersionNotesInvalidText"
-                  textArea
-                  :maxlength="250"
-                  @blur="onVersionNotesBlur"
-                />
-              </div>
+                  <div class="version-notes-description">
+                    {{ versionNotesLabel$() }}
+                  </div>
 
-              <!-- Language selector -->
-              <div
-                v-if="showLanguageDropdown"
-                class="form-section"
-              >
-                <KSelect
-                  v-model="language"
-                  :label="languageLabel$()"
-                  :invalid="showLanguageInvalidText"
-                  :invalidText="languageRequiredMessage$()"
-                  :options="languages"
-                  @change="onLanguageChange"
-                />
+                  <div class="form-section">
+                    <KTextbox
+                      v-model="version_notes"
+                      :label="versionDescriptionLabel$()"
+                      :invalid="version_notes.length === 0"
+                      :invalidText="'Version notes are required'"
+                      :showInvalidText="showVersionNotesInvalidText"
+                      textArea
+                      :maxlength="250"
+                      :appearanceOverrides="{ maxWidth: 'none' }"
+                      @blur="onVersionNotesBlur"
+                    />
+                  </div>
+                  <!-- Language selector -->
+                  <div
+                    v-if="showLanguageDropdown"
+                    class="form-section"
+                  >
+                    <KSelect
+                      v-model="language"
+                      :label="languageLabel$()"
+                      :invalid="showLanguageInvalidText"
+                      :invalidText="languageRequiredMessage$()"
+                      :options="languages"
+                      @change="onLanguageChange"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div
@@ -92,6 +89,7 @@
                 >
                   <KIcon
                     icon="warning"
+                    style="font-size: 20px"
                     :color="$themePalette.yellow.v_500"
                   />
                   <div class="warning-text">
@@ -103,13 +101,16 @@
                     </div>
                     <div
                       class="warning-description"
-                      :style="{ color: $themeTokens.annotation }"
+                      :style="{ color: $themePalette.grey.v_800 }"
                     >
                       {{ incompleteResourcesDescription1$() }}
                     </div>
                     <div
                       class="warning-description"
-                      :style="{ color: $themeTokens.annotation }"
+                      :style="{
+                        color: $themePalette.grey.v_800,
+                        marginTop: '16px',
+                      }"
                     >
                       {{ incompleteResourcesDescription2$() }}
                     </div>
@@ -122,24 +123,16 @@
               :label="modeDraft$()"
               :buttonValue="PublishModes.DRAFT"
               :currentValue="mode"
+              :description="modeDraftDescription$()"
               @input="mode = PublishModes.DRAFT"
             />
-            <div
-              class="radio-description"
-              :style="{ color: $themeTokens.annotation }"
-            >
-              {{ modeDraftDescription$() }}
-            </div>
           </KRadioButtonGroup>
         </div>
       </template>
 
       <template #bottomNavigation>
         <div class="footer">
-          <KButton
-            appearance="flat-button"
-            @click="onClose"
-          >
+          <KButton @click="onClose">
             {{ cancelAction$() }}
           </KButton>
           <KButton
@@ -196,7 +189,7 @@
 
       const {
         publishChannel$,
-        publishLive$,
+        publishAction$,
         saveDraft$,
         modeLive$,
         modeDraft$,
@@ -204,6 +197,7 @@
         modeLiveDescription$,
         modeDraftDescription$,
         publishingInfo$,
+        versionDescriptionLabel$,
         incompleteResourcesWarning$,
         incompleteResourcesDescription1$,
         incompleteResourcesDescription2$,
@@ -263,7 +257,7 @@
       });
 
       const submitText = computed(() => {
-        return mode.value === PublishModes.DRAFT ? saveDraft$() : publishLive$();
+        return mode.value === PublishModes.DRAFT ? saveDraft$() : publishAction$();
       });
 
       const filterLanguages = filterFn => {
@@ -392,6 +386,7 @@
         modeLiveDescription$,
         modeDraftDescription$,
         publishingInfo$,
+        versionDescriptionLabel$,
         incompleteResourcesWarning$,
         incompleteResourcesDescription1$,
         incompleteResourcesDescription2$,
@@ -413,7 +408,33 @@
 </script>
 
 
-<style scoped>
+<style scoped lang="scss">
+
+  .side-panel-title {
+    margin: 0;
+    font-size: 20px;
+  }
+
+  .live-publish-info {
+    display: flex;
+    gap: 8px;
+
+    .info-icon {
+      font-size: 20px;
+    }
+
+    .version-notes-wrapper {
+      width: 100%;
+
+      .version-info {
+        margin-top: 2px;
+      }
+
+      .version-notes-description {
+        margin-top: 8px;
+      }
+    }
+  }
 
   .form-section {
     margin: 16px 0;
@@ -427,15 +448,9 @@
 
   .footer {
     display: flex;
-    gap: 8px;
+    gap: 16px;
     justify-content: flex-end;
     width: 100%;
-    padding: 12px 0;
-  }
-
-  .radio-description {
-    margin-bottom: 16px;
-    margin-left: 24px;
   }
 
   .info-section {
