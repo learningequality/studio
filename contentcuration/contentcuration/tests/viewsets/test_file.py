@@ -438,6 +438,7 @@ class UploadFileURLTestCase(StudioAPITestCase):
     def test_duration_missing(self):
         del self.file["duration"]
         self.file["file_format"] = file_formats.EPUB
+        self.file["preset"] = format_presets.EPUB
 
         self.client.force_authenticate(user=self.user)
         response = self.client.post(
@@ -461,9 +462,23 @@ class UploadFileURLTestCase(StudioAPITestCase):
 
         self.assertEqual(response.status_code, 400)
 
+    def test_duration_present_but_not_allowed(self):
+        self.file["file_format"] = file_formats.EPUB
+        self.file["preset"] = format_presets.DOCUMENT
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("file-upload-url"),
+            self.file,
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
     def test_duration_null(self):
         self.file["duration"] = None
         self.file["file_format"] = file_formats.EPUB
+        self.file["preset"] = format_presets.EPUB
 
         self.client.force_authenticate(user=self.user)
         response = self.client.post(
@@ -515,6 +530,18 @@ class UploadFileURLTestCase(StudioAPITestCase):
             "duration": 10.123,
         }
         response = self.client.post(reverse("file-upload-url"), file, format="json")
+        self.assertEqual(response.status_code, 400)
+
+    def test_mismatched_preset_upload(self):
+        self.file["file_format"] = file_formats.EPUB
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("file-upload-url"),
+            self.file,
+            format="json",
+        )
+
         self.assertEqual(response.status_code, 400)
 
     def test_insufficient_storage(self):

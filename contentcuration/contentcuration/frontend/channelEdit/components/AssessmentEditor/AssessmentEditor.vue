@@ -27,7 +27,8 @@
           <VCardText>
             <VLayout align-start>
               <VFlex
-                xs1
+                :style="{ 'margin-right': '1.5rem' }"
+                shrink
                 mt-2
               >
                 {{ idx + 1 }}
@@ -45,7 +46,7 @@
 
               <VFlex
                 v-else
-                xs10
+                xs11
               >
                 <AssessmentItemEditor
                   :item="item"

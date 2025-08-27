@@ -557,6 +557,14 @@ class IndexedDBResource {
       collection = collection.filter(filterFn);
     }
     if (paginationActive) {
+      // Default pagination field is 'lft'
+      let paginationField = 'lft';
+      if (params.ordering) {
+        paginationField = params.ordering.replace(/^-/, '');
+      }
+      // Determine the operator based on the ordering direction.
+      const operator = params.ordering && params.ordering.startsWith('-') ? 'lt' : 'gt';
+
       let results;
       if (sortBy) {
         // If we still have a sortBy value here, then we have not sorted using orderBy
@@ -574,7 +582,8 @@ class IndexedDBResource {
         more: hasMore
           ? {
               ...params,
-              lft__gt: results[maxResults - 1].lft,
+              // Dynamically set the pagination cursor based on the pagination field and operator.
+              [`${paginationField}__${operator}`]: results[maxResults - 1][paginationField],
             }
           : null,
       };

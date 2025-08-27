@@ -304,14 +304,18 @@ class RecommendationsAdapter(Adapter):
                 )
             )
 
-            # Add the corresponding channel_id to the recommendations
-            node_to_channel = {
-                node["node_id"]: node["channel_id"] for node in recommended_nodes
+            # Add the corresponding channel_id and rank to the recommendations
+            node_info = {
+                node["node_id"]: {
+                    "channel_id": node["channel_id"],
+                    "rank": node["rank"],
+                }
+                for node in recommended_nodes
             }
             for recommendation in recommendations:
-                recommendation["channel_id"] = node_to_channel.get(
-                    recommendation["node_id"]
-                )
+                node_data = node_info.get(recommendation["node_id"], {})
+                recommendation["channel_id"] = node_data.get("channel_id")
+                recommendation["rank"] = node_data.get("rank")
 
         return RecommendationsResponse(results=list(recommendations))
 

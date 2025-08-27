@@ -31,23 +31,16 @@
                 {{ hintIdx + 1 }}
               </VFlex>
 
-              <VFlex xs7>
+              <VFlex xs10>
                 <transition name="fade">
                   <keep-alive :max="5">
-                    <MarkdownViewer
-                      v-if="!isHintOpen(hintIdx)"
-                      :markdown="hint.hint"
-                    />
-
-                    <MarkdownEditor
-                      v-else
-                      analyticsLabel="Hint"
-                      :markdown="hint.hint"
-                      :handleFileUpload="handleFileUpload"
-                      :getFileUpload="getFileUpload"
-                      :imagePreset="imagePreset"
+                    <!-- analyticsLabel="Hint"-->
+                    <TipTapEditor
+                      v-model="hint.hint"
+                      :mode="isHintOpen(hintIdx) ? 'edit' : 'view'"
                       @update="updateHintText($event, hintIdx)"
                       @minimize="emitClose"
+                      @open-editor="emitOpen(answerIdx)"
                     />
                   </keep-alive>
                 </transition>
@@ -90,8 +83,7 @@
   import { AssessmentItemToolbarActions } from '../../constants';
   import { swapElements } from 'shared/utils/helpers';
 
-  import MarkdownEditor from 'shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor';
-  import MarkdownViewer from 'shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer';
+  import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue';
 
   const updateHintsOrder = hints => {
     return hints.map((hint, idx) => {
@@ -106,8 +98,7 @@
     name: 'HintsEditor',
     components: {
       AssessmentItemToolbar,
-      MarkdownEditor,
-      MarkdownViewer,
+      TipTapEditor,
     },
     model: {
       prop: 'hints',
@@ -121,20 +112,6 @@
       openHintIdx: {
         type: Number,
         default: 0,
-      },
-      // Inject function to handle file uploads
-      handleFileUpload: {
-        type: Function,
-        default: () => {},
-      },
-      // Inject function to get file upload object
-      getFileUpload: {
-        type: Function,
-        default: () => {},
-      },
-      imagePreset: {
-        type: String,
-        default: null,
       },
     },
     data() {

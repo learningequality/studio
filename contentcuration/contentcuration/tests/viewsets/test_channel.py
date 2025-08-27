@@ -515,7 +515,9 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         channel.save()
         self.assertEqual(channel.staging_tree.published, False)
 
-        response = self.sync_changes([generate_publish_next_event(channel.id, use_staging_tree=True)])
+        response = self.sync_changes(
+            [generate_publish_next_event(channel.id, use_staging_tree=True)]
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(

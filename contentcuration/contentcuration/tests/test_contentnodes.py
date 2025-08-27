@@ -201,6 +201,24 @@ class NodeGettersTestCase(StudioTestCase):
                 f"List field '{field}' has falsy values",
             )
 
+    def test_get_details_with_null_provenance_fields(self):
+        node = ContentNode.objects.create(
+            title="Null Fields Test",
+            parent=self.channel.main_tree,
+            kind=self.topic,
+            author=None,
+            provider=None,
+            aggregator=None,
+            copyright_holder=None,
+        )
+
+        details = node.get_details()
+
+        assert details["authors"] == []
+        assert details["providers"] == []
+        assert details["aggregators"] == []
+        assert details["copyright_holders"] == []
+
 
 class NodeOperationsTestCase(StudioTestCase):
     def setUp(self):
@@ -1222,6 +1240,29 @@ class NodeCompletionTestCase(StudioTestCase):
         )
         new_obj.mark_complete()
         self.assertFalse(new_obj.complete)
+
+    def test_create_exercise_valid_assessment_item_free_response_no_answers(self):
+        licenses = list(
+            License.objects.filter(
+                copyright_holder_required=False, is_custom=False
+            ).values_list("pk", flat=True)
+        )
+        channel = testdata.channel()
+        new_obj = ContentNode(
+            title="yes",
+            kind_id=content_kinds.EXERCISE,
+            parent=channel.main_tree,
+            license_id=licenses[0],
+            extra_fields=self.new_extra_fields,
+        )
+        new_obj.save()
+        AssessmentItem.objects.create(
+            contentnode=new_obj,
+            question="This is a question",
+            type=exercises.FREE_RESPONSE,
+        )
+        new_obj.mark_complete()
+        self.assertTrue(new_obj.complete)
 
     def test_create_exercise_invalid_assessment_item_no_correct_answers(self):
         licenses = list(

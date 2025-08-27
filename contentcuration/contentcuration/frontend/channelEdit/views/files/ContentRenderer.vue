@@ -2,8 +2,14 @@
 
   <VLayout
     :key="fileId"
-    :class="{ fullscreen, renderer: loading }"
+    :class="{ fullscreen }"
   >
+    <KLogo
+      v-if="loading"
+      altText=""
+      :animate="true"
+      :size="300"
+    />
     <VCard
       v-if="!file"
       flat
@@ -269,11 +275,6 @@
     .epub {
       min-height: $max-height;
     }
-  }
-
-  .renderer {
-    background: url('./kolibri_load.gif') no-repeat center;
-    background-size: 150px auto;
   }
 
   video::-webkit-media-controls-fullscreen-button {

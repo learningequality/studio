@@ -1,39 +1,65 @@
 <template>
 
-  <div>
-    <Icon
-      ref="tooltip"
-      :color="$themeTokens.primary"
-      style="font-size: 20px"
-      :icon="icon"
+  <span
+    ref="tooltip"
+    class="help-tooltip"
+  >
+    <HoverIcon
+      outlineIcon="infoOutline"
+      filledIcon="info"
+      :aria-label="text"
     />
-
     <KTooltip
+      class="tooltip"
       reference="tooltip"
       placement="bottom"
-      maxWidth="80%"
+      :maxWidth="maxWidth ? maxWidth : '450px'"
       :refs="$refs"
     >
-      {{ text }}
+      <span :id="tooltipId">{{ text }}</span>
     </KTooltip>
-  </div>
+  </span>
 
 </template>
 
 
 <script>
 
+  import HoverIcon from './HoverIcon';
+
+  /**
+   * Displays the outline info icon that smoothly
+   * transitions to the filled info icon on hover,
+   * when a tooltip is shown.
+   **/
   export default {
     name: 'HelpTooltip',
-
+    components: {
+      HoverIcon,
+    },
     props: {
+      /**
+       * Text to be displayed in the tooltip
+       **/
       text: {
         type: String,
         required: true,
       },
-      icon: {
+      /**
+       * Maximum width of the tooltip.
+       **/
+      maxWidth: {
         type: String,
-        default: 'info',
+        required: false,
+        default: null,
+      },
+      /**
+       * Unique id of the tooltip element.
+       **/
+      tooltipId: {
+        type: String,
+        required: false,
+        default: '',
       },
     },
   };
@@ -43,8 +69,8 @@
 
 <style lang="scss" scoped>
 
-  ::v-deep .k-tooltip {
-    width: 100%;
+  .help-tooltip {
+    display: inline-block;
   }
 
 </style>

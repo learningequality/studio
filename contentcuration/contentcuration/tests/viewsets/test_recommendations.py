@@ -48,12 +48,16 @@ class RecommendationsCRUDTestCase(StudioAPITestCase):
                 "node_id": "00000000000000000000000000000002",
                 "main_tree_id": "1",
                 "parent_id": "00000000000000000000000000000003",
+                "channel_id": "00000000000000000000000000000007",
+                "rank": 1,
             },
             {
                 "id": "00000000000000000000000000000004",
                 "node_id": "00000000000000000000000000000005",
                 "main_tree_id": "2",
                 "parent_id": "00000000000000000000000000000006",
+                "channel_id": "00000000000000000000000000000008",
+                "rank": 2,
             },
         ]
 
@@ -346,6 +350,61 @@ class RecommendationsInteractionEventViewSetTestCase(StudioAPITestCase):
             format="json",
         )
         self.assertEqual(response.status_code, 201, response.content)
+
+    def test_bulk_create_recommendations_interaction(self):
+        recommendations_interactions = [
+            {
+                "context": {"test_key": "test_value_1"},
+                "contentnode_id": self.interaction_node.id,
+                "content_id": self.interaction_node.content_id,
+                "feedback_type": "IGNORED",
+                "feedback_reason": "----",
+                "recommendation_event_id": str(self.recommendation_event.id),
+            },
+            {
+                "context": {"test_key": "test_value_2"},
+                "contentnode_id": self.interaction_node.id,
+                "content_id": self.interaction_node.content_id,
+                "feedback_type": "PREVIEWED",
+                "feedback_reason": "----",
+                "recommendation_event_id": str(self.recommendation_event.id),
+            },
+        ]
+        response = self.client.post(
+            reverse("recommendations-interaction-list"),
+            recommendations_interactions,
+            format="json",
+        )
+        self.assertEqual(response.status_code, 201, response.content)
+        self.assertEqual(len(response.json()), len(recommendations_interactions))
+
+    def test_bulk_create_recommendations_interaction_failure(self):
+        # One valid, one invalid (missing required field)
+        recommendations_interactions = [
+            {
+                "context": {"test_key": "test_value_1"},
+                "contentnode_id": self.interaction_node.id,
+                "content_id": self.interaction_node.content_id,
+                "feedback_type": "IGNORED",
+                "feedback_reason": "----",
+                "recommendation_event_id": str(self.recommendation_event.id),
+            },
+            {
+                # Missing 'feedback_type'
+                "context": {"test_key": "test_value_2"},
+                "contentnode_id": self.interaction_node.id,
+                "content_id": self.interaction_node.content_id,
+                "feedback_reason": "----",
+                "recommendation_event_id": str(self.recommendation_event.id),
+            },
+        ]
+        response = self.client.post(
+            reverse("recommendations-interaction-list"),
+            recommendations_interactions,
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertIn("feedback_type", str(response.content))
 
     def test_list_fails(self):
         response = self.client.get(
