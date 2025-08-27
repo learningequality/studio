@@ -79,7 +79,7 @@ django-js-reverse==0.10.2
     # via -r requirements.in
 django-model-utils==5.0.0
     # via -r requirements.in
-django-mptt==0.16.0
+django-mptt==0.18.0
     # via -r requirements.in
 django-postmark==0.1.6
     # via -r requirements.in
