@@ -53,7 +53,7 @@
         </KRouterLink>
       </VToolbarItems>
       <VSpacer />
-      <SavingIndicator v-if="!offline" />
+      <SavingIndicator v-if="!offline && !isDraftPublishing" />
       <OfflineText indicator />
       <ProgressModal />
       <div
@@ -207,9 +207,9 @@
     />
     <slot></slot>
 
-    <PublishModal
-      v-if="showPublishModal"
-      v-model="showPublishModal"
+    <PublishSidePanel
+      v-if="showPublishSidePanel"
+      @close="showPublishSidePanel = false"
     />
     <template v-if="isPublished">
       <ChannelTokenModal
@@ -313,10 +313,11 @@
   import Clipboard from '../../components/Clipboard';
   import SyncResourcesModal from '../sync/SyncResourcesModal';
   import ProgressModal from '../progress/ProgressModal';
-  import PublishModal from '../../components/publish/PublishModal';
+
   import QuickEditModal from '../../components/QuickEditModal';
   import SavingIndicator from '../../components/edit/SavingIndicator';
   import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
+  import PublishSidePanel from '../../components/sidePanels/PublishSidePanel';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import ToolBar from 'shared/views/ToolBar';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
@@ -335,7 +336,7 @@
       DraggableRegion,
       MainNavigationDrawer,
       ToolBar,
-      PublishModal,
+      PublishSidePanel,
       ProgressModal,
       ChannelTokenModal,
       SyncResourcesModal,
@@ -357,7 +358,7 @@
     data() {
       return {
         drawer: false,
-        showPublishModal: false,
+        showPublishSidePanel: false,
         showTokenModal: false,
         showSyncModal: false,
         showClipboard: false,
@@ -389,9 +390,16 @@
       isRicecooker() {
         return Boolean(this.currentChannel.ricecooker_version);
       },
+      isDraftPublishing() {
+        return (
+          this.currentChannel &&
+          this.currentChannel.publishing &&
+          this.currentChannel.publishing_draft
+        );
+      },
       disablePublish() {
         return (
-          this.currentChannel.publishing ||
+          (this.currentChannel.publishing && !this.currentChannel.publishing_draft) ||
           !this.isChanged ||
           !this.currentChannel.language ||
           (this.rootNode && !this.rootNode.resource_count)
@@ -502,7 +510,7 @@
         this.trackClickEvent('Delete channel');
       },
       publishChannel() {
-        this.showPublishModal = true;
+        this.showPublishSidePanel = true;
         this.trackClickEvent('Publish');
       },
       trackClickEvent(eventLabel) {

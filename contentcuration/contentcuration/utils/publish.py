@@ -144,20 +144,24 @@ def create_content_database(
     user_id,
     force_exercises,
     progress_tracker=None,
+    is_draft_version=False,
     use_staging_tree=False,
 ):
     """
     :type progress_tracker: contentcuration.utils.celery.ProgressTracker|None
     """
+    if not is_draft_version and use_staging_tree:
+        raise ValueError("Staging tree is only supported for draft versions")
+
     if not channel.language:
         raise ChannelIncompleteError("Channel must have a language set to be published")
 
-    if not use_staging_tree and not force:
+    if not is_draft_version and not force:
         raise_if_nodes_are_all_unchanged(channel)
     fh, tempdb = tempfile.mkstemp(suffix=".sqlite3")
 
     with using_content_database(tempdb):
-        if not use_staging_tree and not channel.main_tree.publishing:
+        if not is_draft_version and not channel.main_tree.publishing:
             channel.mark_publishing(user_id)
 
         call_command(
@@ -183,11 +187,11 @@ def create_content_database(
             progress_tracker.track(90)
         map_prerequisites(base_tree)
         # Need to save as version being published, not current version
-        version = "next" if use_staging_tree else channel.version + 1
+        version = "next" if is_draft_version else channel.version + 1
         save_export_database(
             channel.pk,
             version,
-            use_staging_tree,
+            is_draft_version,
         )
         if channel.public:
             mapper = ChannelMapper(kolibri_channel)
@@ -846,14 +850,14 @@ def mark_all_nodes_as_published(tree):
     logging.info("Marked all nodes as published.")
 
 
-def save_export_database(channel_id, version, use_staging_tree=False):
+def save_export_database(channel_id, version, is_draft_version=False):
     logging.debug("Saving export database")
     current_export_db_location = get_active_content_database()
     target_paths = [
         os.path.join(settings.DB_ROOT, "{}-{}.sqlite3".format(channel_id, version))
     ]
-    # Only create non-version path if not using the staging tree
-    if not use_staging_tree:
+    # Only create non-version path if not is_draft_version
+    if not is_draft_version:
         target_paths.append(
             os.path.join(settings.DB_ROOT, "{id}.sqlite3".format(id=channel_id))
         )
@@ -903,6 +907,25 @@ def fill_published_fields(channel, version_notes):
         if lang:
             channel.included_languages.add(lang)
 
+    included_licenses = published_nodes.exclude(license=None).values_list(
+        "license", flat=True
+    )
+    license_list = sorted(set(included_licenses))
+
+    included_categories_dicts = published_nodes.exclude(categories=None).values_list(
+        "categories", flat=True
+    )
+    category_list = sorted(
+        set(
+            chain.from_iterable(
+                (
+                    node_categories_dict.keys()
+                    for node_categories_dict in included_categories_dicts
+                )
+            )
+        )
+    )
+
     # TODO: Eventually, consolidate above operations to just use this field for storing historical data
     channel.published_data.update(
         {
@@ -915,6 +938,8 @@ def fill_published_fields(channel, version_notes):
                 ),
                 "version_notes": version_notes,
                 "included_languages": language_list,
+                "included_licenses": license_list,
+                "included_categories": category_list,
             }
         }
     )
@@ -995,6 +1020,7 @@ def publish_channel(  # noqa: C901
     send_email=False,
     progress_tracker=None,
     language=settings.LANGUAGE_CODE,
+    is_draft_version=False,
     use_staging_tree=False,
 ):
     """
@@ -1015,23 +1041,22 @@ def publish_channel(  # noqa: C901
             user_id,
             force_exercises,
             progress_tracker=progress_tracker,
+            is_draft_version=is_draft_version,
             use_staging_tree=use_staging_tree,
         )
         add_tokens_to_channel(channel)
-        if not use_staging_tree:
+        if not is_draft_version:
             increment_channel_version(channel)
             sync_contentnode_and_channel_tsvectors(channel_id=channel.id)
             mark_all_nodes_as_published(base_tree)
             fill_published_fields(channel, version_notes)
-
-        # Attributes not getting set for some reason, so just save it here
-        base_tree.publishing = False
-        base_tree.changed = False
-        base_tree.published = True
-        base_tree.save()
+            base_tree.publishing = False
+            base_tree.changed = False
+            base_tree.published = True
+            base_tree.save()
 
         # Delete public channel cache.
-        if not use_staging_tree and channel.public:
+        if not is_draft_version and channel.public:
             delete_public_channel_cache_keys()
 
         if send_email:
@@ -1053,8 +1078,9 @@ def publish_channel(  # noqa: C901
     finally:
         if kolibri_temp_db and os.path.exists(kolibri_temp_db):
             os.remove(kolibri_temp_db)
-        base_tree.publishing = False
-        base_tree.save()
+        if not is_draft_version:
+            base_tree.publishing = False
+            base_tree.save()
 
     elapsed = time.time() - start
 
