@@ -76,7 +76,7 @@
 
           <!-- Search or Topics Browsing -->
           <ChannelList
-            v-if="isBrowsing && !$route.params.channelId"
+            v-if="isBrowsing && !browseChannelId"
             ref="channelList"
             @update-language="updateLanguageQuery"
           />
@@ -402,6 +402,9 @@
       isBrowsing() {
         return this.$route.name === RouteNames.IMPORT_FROM_CHANNELS_BROWSE;
       },
+      browseChannelId() {
+        return this.$route.params.channelId;
+      },
       backToBrowseRoute() {
         const query = {
           channel_list: this.$route.query.channel_list,
@@ -609,6 +612,18 @@
         return this.isAnyFeedbackReasonSelected && this.isOtherFeedbackValid;
       },
     },
+    watch: {
+      isBrowsing(before, after) {
+        if (before !== after) {
+          this.$nextTick(() => this.handleJumpToSearch());
+        }
+      },
+      browseChannelId(before, after) {
+        if (before !== after) {
+          this.$nextTick(() => this.handleJumpToSearch());
+        }
+      },
+    },
     beforeRouteEnter(to, from, next) {
       next(vm => {
         vm.searchTerm = to.params.searchTerm || '';
@@ -655,7 +670,7 @@
       },
       handleJumpToSearch() {
         if (this.isBrowsing) {
-          if (this.$route.params.channelId) {
+          if (this.browseChannelId) {
             this.$refs.contentTreeList.focus();
           } else {
             this.$refs.channelList.focus();

@@ -22,7 +22,10 @@
           v-else
           class="mx-0 px-1"
         >
-          <LoadingText v-if="loading" />
+          <LoadingText
+            v-if="loading"
+            ref="loading"
+          />
           <VLayout
             v-else
             row
@@ -59,7 +62,7 @@
               </span>
             </VFlex>
           </VLayout>
-          <div>
+          <div v-if="!loading">
             <VLayout
               v-for="node in nodes"
               :key="node.id"
@@ -145,6 +148,7 @@
       return {
         loading: false,
         loadFailed: false,
+        hasLoaded: false,
         nodeIds: [],
         pageCount: 0,
         totalCount: 0,
@@ -222,6 +226,12 @@
         this.firstCardCheckboxRef = null;
         this.fetchResultsDebounced();
         this.loadSavedSearches();
+        // Ensure loading spinner is in view after initial load
+        if (this.hasLoaded) {
+          this.$nextTick(() => {
+            this.$refs.loading.$el.scrollIntoView();
+          });
+        }
       },
       fetchResultsDebounced: debounce(
         function () {
@@ -237,6 +247,8 @@
               this.nodeIds = page.results.map(n => n.id);
               this.pageCount = page.total_pages;
               this.totalCount = page.count;
+              this.hasLoaded = true;
+              this.$nextTick(() => this.focus());
             })
             .catch(e => {
               this.loadFailed = true;

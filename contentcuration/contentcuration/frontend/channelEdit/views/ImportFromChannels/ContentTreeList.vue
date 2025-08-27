@@ -204,6 +204,8 @@
           this.loadAncestors({ id: this.topicId }),
         ]).then(() => {
           this.loading = false;
+          // scroll to top via focus
+          this.$nextTick(() => this.focus());
         });
       },
       /**
