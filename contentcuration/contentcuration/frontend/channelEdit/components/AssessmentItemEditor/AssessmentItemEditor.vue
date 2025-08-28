@@ -127,6 +127,7 @@
   import translator from '../../translator';
   import { updateAnswersToQuestionType, assessmentItemKey } from '../../utils';
   import { AssessmentItemTypeLabels } from '../../constants';
+  import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
   import {
     ContentModalities,
     AssessmentItemTypes,
@@ -204,6 +205,7 @@
         openAnswerIdx: null,
         kindSelectKey: 0,
         AssessmentItemTypes,
+        EditorImageProcessor,
       };
     },
     computed: {
