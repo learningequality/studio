@@ -58,20 +58,26 @@
             </VTextField>
           </VForm>
 
-          <div
-            v-if="!isBrowsing"
-            class="my-2 px-2"
-          >
+          <div class="my-2">
             <ActionLink
-              class="mb-3"
+              v-if="!isBrowsing"
               :text="$tr('savedSearchesLabel')"
               :disabled="!savedSearchesExist"
               @click="showSavedSearches = true"
             />
+            <ActionLink
+              v-if="shouldShowRecommendations"
+              :class="{ 'keyboard-visibility': true, 'mx-3': !isBrowsing }"
+              :text="$tr('jumpToRecommendations')"
+              :style="keyboardVisibilityStyle"
+              @click="handleJumpToRecommendations"
+            />
           </div>
+
           <!-- Search or Topics Browsing -->
           <ChannelList
-            v-if="isBrowsing && !$route.params.channelId"
+            v-if="isBrowsing && !browseChannelId"
+            ref="channelList"
             @update-language="updateLanguageQuery"
           />
           <ContentTreeList
@@ -86,11 +92,20 @@
           />
           <SearchResultsList
             v-else
+            ref="searchResultList"
             :selected.sync="selected"
             @preview="preview($event)"
             @change_selected="handleChangeSelected"
             @copy_to_clipboard="handleCopyToClipboard"
           />
+          <div style="text-align: center">
+            <ActionLink
+              :text="$tr('jumpToTop')"
+              class="keyboard-visibility"
+              :style="keyboardVisibilityStyle"
+              @click="handleJumpToSearch"
+            />
+          </div>
         </KGridItem>
 
         <!-- Recommended resources panel >= 400px -->
@@ -105,8 +120,14 @@
           </h3>
           <div class="my-3 px-2">
             <ActionLink
+              class="mr-3"
               :text="aboutRecommendationsText$()"
               @click="handleAboutRecommendations"
+            />
+            <ActionLink
+              :text="isBrowsing ? $tr('jumpToSearch') : $tr('jumpToSearchResults')"
+              :style="keyboardVisibilityStyle"
+              @click="handleJumpToSearch"
             />
           </div>
 
@@ -115,6 +136,7 @@
               <RecommendedResourceCard
                 v-for="recommendation in displayedRecommendations"
                 :key="recommendation.id"
+                :ref="setFirstRecommendationRef"
                 :node="recommendation"
                 @change_selected="handleChangeSelected"
                 @preview="
@@ -160,6 +182,13 @@
                 @click="handleViewMoreRecommendations"
               />
             </div>
+          </div>
+          <div class="px-2">
+            <ActionLink
+              :text="$tr('jumpToTop')"
+              :style="keyboardVisibilityStyle"
+              @click="handleJumpToRecommendations"
+            />
           </div>
         </KGridItem>
       </KGrid>
@@ -361,6 +390,7 @@
         importedNodeIds: [],
         rejectedNode: null,
         showFeedbackErrorMessage: false,
+        firstRecommendationRef: null,
       };
     },
     computed: {
@@ -371,6 +401,9 @@
       ...mapState('importFromChannels', ['selected']),
       isBrowsing() {
         return this.$route.name === RouteNames.IMPORT_FROM_CHANNELS_BROWSE;
+      },
+      browseChannelId() {
+        return this.$route.params.channelId;
       },
       backToBrowseRoute() {
         const query = {
@@ -389,6 +422,11 @@
           (this.searchTerm || '').trim().length > 0 &&
           this.searchTerm.trim() !== this.$route.params.searchTerm
         );
+      },
+      keyboardVisibilityStyle() {
+        return {
+          opacity: this.$inputModality === 'keyboard' ? '1' : '0',
+        };
       },
       shouldShowRecommendations() {
         if (!this.isAIFeatureEnabled) {
@@ -586,6 +624,18 @@
         return this.isAnyFeedbackReasonSelected && this.isOtherFeedbackValid;
       },
     },
+    watch: {
+      isBrowsing(before, after) {
+        if (before !== after) {
+          this.$nextTick(() => this.handleJumpToSearch());
+        }
+      },
+      browseChannelId(before, after) {
+        if (before !== after) {
+          this.$nextTick(() => this.handleJumpToSearch());
+        }
+      },
+    },
     beforeRouteEnter(to, from, next) {
       next(vm => {
         vm.searchTerm = to.params.searchTerm || '';
@@ -624,6 +674,27 @@
       }),
       handleBackToBrowse() {
         this.$router.push(this.backToBrowseRoute);
+      },
+      handleJumpToRecommendations() {
+        if (this.firstRecommendationRef) {
+          this.firstRecommendationRef.focus();
+        }
+      },
+      handleJumpToSearch() {
+        if (this.isBrowsing) {
+          if (this.browseChannelId) {
+            this.$refs.contentTreeList.focus();
+          } else {
+            this.$refs.channelList.focus();
+          }
+        } else {
+          this.$refs.searchResultList.focus();
+        }
+      },
+      setFirstRecommendationRef(ref) {
+        if (!this.firstRecommendationRef) {
+          this.firstRecommendationRef = ref;
+        }
       },
       updateLanguageQuery(language) {
         this.languageFromChannelList = language;
@@ -724,6 +795,8 @@
         }
       },
       async loadRecommendations(belowThreshold) {
+        this.firstRecommendationRef = null;
+
         if (this.shouldShowRecommendations) {
           this.recommendationsLoading = true;
           this.recommendationsLoadingError = false;
@@ -930,6 +1003,10 @@
       searchLabel: 'Search for resources…',
       searchAction: 'Search',
       savedSearchesLabel: 'View saved searches',
+      jumpToRecommendations: 'Jump to recommendations',
+      jumpToSearch: 'Jump to search',
+      jumpToSearchResults: 'Jump to search results',
+      jumpToTop: 'Jump to top',
 
       // Copy strings
       // undo: 'Undo',
@@ -976,6 +1053,14 @@
     padding: 16px;
     margin: 16px 0;
     border-radius: 4px;
+  }
+
+  .keyboard-visibility {
+    cursor: default;
+
+    &:focus {
+      opacity: 1 !important;
+    }
   }
 
 </style>
