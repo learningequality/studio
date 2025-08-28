@@ -127,6 +127,7 @@
   import translator from '../../translator';
   import { updateAnswersToQuestionType, assessmentItemKey } from '../../utils';
   import { AssessmentItemTypeLabels } from '../../constants';
+  import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
   import {
     ContentModalities,
     AssessmentItemTypes,
@@ -136,7 +137,6 @@
   import ErrorList from 'shared/views/ErrorList/ErrorList';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue';
-  import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
 
   export default {
     name: 'AssessmentItemEditor',

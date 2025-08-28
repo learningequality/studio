@@ -299,6 +299,10 @@ const MESSAGES = {
     message: 'Special Characters',
     context: 'Title for the menu containing special characters and mathematical symbols.',
   },
+  loadingFormulas: {
+    message: 'Loading math editor',
+    context: 'Text displayed while the math editor is being loaded.',
+  },
 
   // Error Messages
   errorUploadingImage: {

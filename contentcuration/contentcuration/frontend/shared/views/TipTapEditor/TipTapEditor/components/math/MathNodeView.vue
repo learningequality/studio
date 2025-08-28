@@ -1,7 +1,14 @@
 <template>
 
   <NodeViewWrapper class="math-node-wrapper">
+    <div
+      v-if="!mathLiveLoaded"
+      class="math-loading"
+    >
+      {{ node.attrs.latex }}
+    </div>
     <math-field
+      v-else
       :key="node.attrs.latex"
       read-only
       :value="node.attrs.latex"
@@ -15,12 +22,26 @@
 <script>
 
   import { NodeViewWrapper } from '@tiptap/vue-2';
+  import { ref, onMounted } from 'vue';
 
   export default {
     components: {
       NodeViewWrapper,
     },
     setup(props) {
+      const mathLiveLoaded = ref(false);
+
+      const loadMathLive = async () => {
+        try {
+          // Dynamic import of mathlive
+          await import(/* webpackChunkName: "mathlive" */ 'mathlive');
+          mathLiveLoaded.value = true;
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.error('Failed to load MathLive:', error);
+        }
+      };
+
       const openEditor = () => {
         props.editor.emit('open-math-editor', {
           pos: props.getPos(),
@@ -28,7 +49,12 @@
         });
       };
 
+      onMounted(() => {
+        loadMathLive();
+      });
+
       return {
+        mathLiveLoaded,
         openEditor,
       };
     },
@@ -65,10 +91,20 @@
     border: 1px solid #cccccc;
   }
 
+  .math-loading {
+    padding: 2px 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    background-color: #f5f5f5;
+    border-radius: 2px;
+  }
+
 </style>
 
 
 <style>
+
+  /* These styles will only be applied after mathlive is loaded */
 
   /* https://mathlive.io/mathfield/guides/customizing/#styling */
 

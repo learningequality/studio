@@ -1,4 +1,5 @@
 import { ref, watch } from 'vue';
+import { throttle } from 'lodash';
 import { useBreakpoint } from './useBreakpoint';
 
 export function useModalPositioning() {
@@ -20,6 +21,21 @@ export function useModalPositioning() {
       transform: 'translateX(-100%)',
     };
   };
+
+  const handleResize = () => {
+    if (isModalOpen.value) {
+      // Re-evaluate positioning on resize
+      if (isMobile.value && !isModalCentered.value) {
+        setCenteredPosition();
+      } else if (!isMobile.value && anchorElement.value) {
+        updatePosition();
+      }
+    }
+  };
+
+  // Throttle scroll and resize events
+  const throttledUpdatePosition = throttle(updatePosition, 10);
+  const throttledHandleResize = throttle(handleResize, 10);
 
   const setCenteredPosition = () => {
     isModalCentered.value = true;
@@ -63,36 +79,31 @@ export function useModalPositioning() {
       }
     };
 
-    const handleResize = () => {
-      if (isModalOpen.value) {
-        // Re-evaluate positioning on resize
-        if (isMobile.value && !isModalCentered.value) {
-          setCenteredPosition();
-        } else if (!isMobile.value && anchorElement.value) {
-          updatePosition();
-        }
-      }
-    };
-
     watch(isModalOpen, isOpen => {
       if (isOpen) {
         // The timeout prevents the click that opened the modal from immediately closing it.
         setTimeout(() => {
           document.addEventListener('mousedown', clickOutsideHandler, true);
-          window.addEventListener('scroll', updatePosition, true);
-          window.addEventListener('resize', handleResize, true);
+          window.addEventListener('scroll', throttledUpdatePosition, true);
+          window.addEventListener('resize', throttledHandleResize, true);
         }, 0);
       } else {
         document.removeEventListener('mousedown', clickOutsideHandler, true);
-        window.removeEventListener('scroll', updatePosition, true);
-        window.removeEventListener('resize', handleResize, true);
+        window.removeEventListener('scroll', throttledUpdatePosition, true);
+        window.removeEventListener('resize', throttledHandleResize, true);
+        // Cancel any pending throttled calls
+        throttledUpdatePosition.cancel();
+        throttledHandleResize.cancel();
       }
     });
   };
 
   const cleanup = () => {
-    window.removeEventListener('scroll', updatePosition, true);
-    window.removeEventListener('resize', updatePosition, true);
+    window.removeEventListener('scroll', throttledUpdatePosition, true);
+    window.removeEventListener('resize', throttledHandleResize, true);
+    // Cancel any pending throttled calls
+    throttledUpdatePosition.cancel();
+    throttledHandleResize.cancel();
   };
 
   return {
