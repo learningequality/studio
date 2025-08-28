@@ -78,6 +78,7 @@
                       v-model="answer.answer"
                       class="editor"
                       :mode="isAnswerOpen(answerIdx) ? 'edit' : 'view'"
+                      :imageProcessor="EditorImageProcessor"
                       @update="updateAnswerText($event, answerIdx)"
                       @minimize="emitClose"
                       @open-editor="emitOpen(answerIdx)"
@@ -127,6 +128,7 @@
   import { AssessmentItemTypes } from 'shared/constants';
   import { swapElements } from 'shared/utils/helpers';
   import Checkbox from 'shared/views/form/Checkbox';
+  import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
 
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue';
 
@@ -169,6 +171,7 @@
     },
     data() {
       return {
+        EditorImageProcessor, // Make it available in the template
         correctAnswersIndices: getCorrectAnswersIndices(this.questionKind, this.answers),
         numericRule: val => floatOrIntRegex.test(val) || this.$tr('numberFieldErrorLabel'),
       };

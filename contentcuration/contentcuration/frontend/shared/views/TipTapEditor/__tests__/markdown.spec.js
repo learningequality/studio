@@ -55,16 +55,6 @@ describe('preprocessMarkdown', () => {
     });
   });
 
-  // 2: Data URL / Blob URL Images
-  describe('Data URL Image Handling', () => {
-    it('should convert a data URL image with dimensions into an <img> tag', () => {
-      const dataUrlMd = '![Data](data:image/png;base64,iVBORw0KGgo= =300x400)';
-      const expectedHtml =
-        '<img src="data:image/png;base64,iVBORw0KGgo=" alt="Data" width="300" height="400" />';
-      expect(preprocessMarkdown(dataUrlMd)).toBe(expectedHtml);
-    });
-  });
-
   // 3: Math Formulas
   describe('Math Formula Handling', () => {
     it('should convert a simple math formula into a <span> tag', () => {
@@ -93,11 +83,10 @@ describe('preprocessMarkdown', () => {
 
   // 5: Mixed Content
   describe('Mixed Content Handling', () => {
-    it('should correctly process a string with legacy images, data URLs, math, and standard markdown', () => {
-      const mixedMd =
-        'Legacy: ![](${CONTENTSTORAGE}/file.png =10x10)\nData: ![alt](data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=)\nFormula: $$E=mc^2$$';
+    it('should correctly process a string with legacy images, math, and standard markdown', () => {
+      const mixedMd = 'Legacy: ![](${CONTENTSTORAGE}/file.png =10x10)\nFormula: $$E=mc^2$$';
       const expectedHtml =
-        'Legacy: <img src="/content/storage/file.png" permanentSrc="file.png" alt="" width="10" height="10" />\nData: <img src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="alt" />\nFormula: <span data-latex="E=mc^2"></span>';
+        'Legacy: <img src="/content/storage/file.png" permanentSrc="file.png" alt="" width="10" height="10" />\nFormula: <span data-latex="E=mc^2"></span>';
 
       const result = preprocessMarkdown(mixedMd);
       expect(result).toBe(expectedHtml);

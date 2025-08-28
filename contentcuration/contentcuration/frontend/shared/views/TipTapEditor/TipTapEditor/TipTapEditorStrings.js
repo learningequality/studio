@@ -301,6 +301,10 @@ const MESSAGES = {
   },
 
   // Error Messages
+  errorUploadingImage: {
+    message: 'Error uploading image',
+    context: 'Title for the error modal when an image upload fails.',
+  },
   noFileProvided: {
     message: 'No file provided.',
     context: 'Error message when no file is provided for upload',
@@ -320,6 +324,10 @@ const MESSAGES = {
   failedToProcessImage: {
     message: 'Failed to process the image file.',
     context: 'Error message when image processing fails',
+  },
+  noEnoughStorageSpace: {
+    message: 'Not enough storage space available. File size exceeds remaining storage.',
+    context: 'Error message when there is insufficient storage space for the file',
   },
 
   // for MobileFormattingBar

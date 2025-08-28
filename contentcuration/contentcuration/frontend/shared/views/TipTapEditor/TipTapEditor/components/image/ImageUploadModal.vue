@@ -137,6 +137,16 @@
         </button>
       </template>
     </footer>
+    <KModal
+      v-if="showErrorModal"
+      :appendToOverlay="true"
+      :title="errorUploadingImage$()"
+    >
+      <template> {{ errorMessage }} </template>
+      <template #actions>
+        <KButton @click="showErrorModal = false"> {{ close$() }} </KButton>
+      </template>
+    </KModal>
   </div>
 
 </template>
@@ -144,8 +154,7 @@
 
 <script>
 
-  import { defineComponent, ref, computed, onMounted } from 'vue';
-  import { processFile, ACCEPTED_MIME_TYPES } from '../../services/imageService';
+  import { defineComponent, ref, computed, onMounted, inject, getCurrentInstance } from 'vue';
   import { useFocusTrap } from '../../composables/useFocusTrap';
   import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
   import ImageDropZone from './ImageDropZone.vue';
@@ -160,6 +169,7 @@
         closeModal$,
         cancelLoading$,
         cancel$,
+        close$,
         replaceFile$,
         selectFile$,
         imagePreview$,
@@ -177,6 +187,7 @@
         insertImage$,
         defaultImageName$,
         multipleFilesDroppedWarning$,
+        errorUploadingImage$,
       } = getTipTapEditorStrings();
 
       const modalRoot = ref(null);
@@ -187,6 +198,8 @@
       const altText = ref('');
       const file = ref(null);
       const uploadWarning = ref('');
+      const showErrorModal = ref(false);
+      const errorMessage = ref('');
       let warningTimer = null;
 
       const isEditMode = computed(() => props.mode === 'edit');
@@ -194,6 +207,13 @@
         () => file.value?.name || (isEditMode.value ? defaultImageName$() : ''),
       );
       const canInsert = computed(() => !!previewSrc.value);
+
+      // Inject the image processor service
+      const imageProcessor = inject('imageProcessor', {});
+      const { processFile, ACCEPTED_MIME_TYPES } = imageProcessor;
+
+      const instance = getCurrentInstance();
+      const store = instance.proxy.$store;
 
       onMounted(() => {
         originalData.value = { ...props.initialData };
@@ -215,21 +235,20 @@
           uploadWarning.value = '';
         }, 5000);
       };
-
       const handleFileChange = async selectedFile => {
         if (!selectedFile) return;
         modalState.value = 'loading';
         try {
-          const { src, file: processedFile } = await processFile(selectedFile);
+          const { src, file: processedFile } = await processFile(selectedFile, { $store: store });
           previewSrc.value = src;
           file.value = processedFile;
           modalState.value = 'preview';
         } catch (error) {
-          alert(error.message);
+          errorMessage.value = error.message;
+          showErrorModal.value = true;
           resetToPreview();
         }
       };
-
       const resetToPreview = () => {
         if (props.mode === 'create' && !originalData.value.file) {
           modalState.value = 'initial';
@@ -274,6 +293,8 @@
         handleFileChange,
         uploadWarning,
         showMultiFileWarning,
+        errorMessage,
+        showErrorModal,
 
         // Strings
         editImage$,
@@ -281,6 +302,7 @@
         closeModal$,
         cancelLoading$,
         cancel$,
+        close$,
         replaceFile$,
         selectFile$,
         imagePreview$,
@@ -296,6 +318,7 @@
         save$,
         insert$,
         insertImage$,
+        errorUploadingImage$,
       };
     },
     props: {

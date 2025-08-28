@@ -6,8 +6,6 @@ import { storageUrl } from '../../../../vuex/file/utils';
 // --- Image Translation ---
 export const IMAGE_PLACEHOLDER = '${☣ CONTENTSTORAGE}';
 export const IMAGE_REGEX = /!\[([^\]]*)\]\(([^/]+\/[^\s=)]+)(?:\s*=\s*([0-9.]+)x([0-9.]+))?\)/g;
-export const DATA_URL_IMAGE_REGEX =
-  /!\[([^\]]*)\]\(((?:data:|blob:).+?)(?:\s*=\s*([0-9.]+)x([0-9.]+))?\)/g;
 
 export const imageMdToParams = markdown => {
   // Reset regex state before executing to ensure it works on all matches
@@ -31,16 +29,6 @@ export const imageMdToParams = markdown => {
 
 export const paramsToImageMd = ({ src, alt, width, height, permanentSrc }) => {
   const sourceToSave = permanentSrc || src;
-
-  // As a safety net, if the source is still a data/blob URL, we should not
-  // try to create a placeholder format. This should not happen with our new logic,
-  // but it makes the function more robust.
-  if (sourceToSave.startsWith('data:') || sourceToSave.startsWith('blob:')) {
-    if (width && height) {
-      return `![${alt || ''}](${sourceToSave} =${width}x${height})`;
-    }
-    return `![${alt || ''}](${sourceToSave})`;
-  }
 
   const fileName = sourceToSave.split('/').pop();
   if (Number.isFinite(+width) && Number.isFinite(+height)) {
@@ -73,16 +61,6 @@ export function preprocessMarkdown(markdown) {
   if (!markdown) return '';
 
   let processedMarkdown = markdown;
-
-  // First, handle data URLs and blob URLs for images.
-  processedMarkdown = processedMarkdown.replace(
-    DATA_URL_IMAGE_REGEX,
-    (match, alt, src, width, height) => {
-      const widthAttr = width ? ` width="${width}"` : '';
-      const heightAttr = height ? ` height="${height}"` : '';
-      return `<img src="${src}" alt="${alt || ''}"${widthAttr}${heightAttr} />`;
-    },
-  );
 
   // Then, handle our standard content-storage images.
   processedMarkdown = processedMarkdown.replace(IMAGE_REGEX, match => {

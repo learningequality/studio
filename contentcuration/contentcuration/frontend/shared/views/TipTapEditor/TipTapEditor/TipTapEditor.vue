@@ -157,6 +157,7 @@
       const { isMobile } = useBreakpoint();
 
       const imageHandler = useImageHandling(editor);
+      provide('imageProcessor', props.imageProcessor);
 
       const sharedEventHandlers = computed(() => ({
         'insert-image': target => imageHandler.openCreateModal({ targetElement: target }),
@@ -293,6 +294,10 @@
       tabindex: {
         type: [String, Number],
         default: 0,
+      },
+      imageProcessor: {
+        type: Object,
+        default: () => ({}),
       },
     },
     emits: ['update', 'minimize', 'open-editor'],
