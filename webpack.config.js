@@ -5,6 +5,7 @@ const process = require('node:process');
 const fs = require('node:fs');
 const { execSync } = require('node:child_process');
 
+const { NormalModuleReplacementPlugin } = require('webpack');
 const baseConfig = require('kolibri-tools/lib/webpack.config.base');
 const { merge } = require('webpack-merge');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -40,6 +41,7 @@ function getWSLIP() {
 const djangoProjectDir = path.resolve('contentcuration');
 const staticFilesDir = path.resolve(djangoProjectDir, 'contentcuration', 'static');
 const srcDir = path.resolve(djangoProjectDir, 'contentcuration', 'frontend');
+const dummyModule = path.resolve(srcDir, 'shared', 'styles', 'modulePlaceholder.js')
 
 const bundleOutputDir = path.resolve(staticFilesDir, 'studio');
 
@@ -186,6 +188,13 @@ module.exports = (env = {}) => {
   });
   if (dev) {
     config.entry.editorDev = './editorDev/index.js';
+  } else {
+    config.plugins.push(
+      new NormalModuleReplacementPlugin(
+        /styl$/,
+        dummyModule
+      ),
+    )
   }
   return config;
 };
