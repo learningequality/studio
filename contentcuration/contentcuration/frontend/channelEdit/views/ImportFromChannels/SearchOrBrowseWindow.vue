@@ -395,6 +395,10 @@
           return false;
         }
 
+        if (this.embedTopicRequest === null) {
+          return false;
+        }
+
         if (!validateEmbedTopicRequest(this.embedTopicRequest)) {
           // log to sentry-- this is unexpected, since we use the channel's language as a fallback
           // and channels are required to have a language
@@ -472,6 +476,14 @@
         });
       },
       embedTopicRequest() {
+        // Ensure destination folder is loaded, and it and its ancestors have titles
+        if (
+          !this.importDestinationFolder ||
+          !this.importDestinationFolder.title ||
+          this.topicAncestors.some(n => !n.title)
+        ) {
+          return null;
+        }
         return {
           topics: [
             {

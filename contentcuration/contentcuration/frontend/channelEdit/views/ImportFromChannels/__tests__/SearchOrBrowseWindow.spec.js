@@ -78,7 +78,7 @@ describe('SearchOrBrowseWindow', () => {
       'currentChannel/currentChannel': () => ({ language: 'en' }),
       'importFromChannels/savedSearchesExist': () => true,
       isAIFeatureEnabled: () => true,
-      'contentNode/getContentNodeAncestors': () => () => [{ id: 'node-1' }],
+      'contentNode/getContentNodeAncestors': () => () => [{ id: 'node-1', title: 'Test folder' }],
     };
 
     store = new Store({
