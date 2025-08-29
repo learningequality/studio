@@ -265,6 +265,7 @@
 
   import sortBy from 'lodash/sortBy';
   import { mapActions, mapState } from 'vuex';
+  import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
   import { generateFormMixin, constantsTranslationMixin } from 'shared/mixins';
   import { LicensesList } from 'shared/leUtils/Licenses';
   import CountryField from 'shared/views/form/CountryField';
@@ -325,6 +326,10 @@
       InfoModal,
     },
     mixins: [constantsTranslationMixin, formMixin],
+    setup() {
+      const { sendPoliteMessage } = useKLiveRegion();
+      return { sendPoliteMessage };
+    },
     computed: {
       ...mapState('settings', ['channels']),
       orgSelected() {
@@ -393,6 +398,7 @@
         if (this.$refs.form.scrollIntoView) {
           this.$refs.form.scrollIntoView({ behavior: 'smooth' });
         }
+        this.sendPoliteMessage(this.errorText());
       },
 
       // eslint-disable-next-line kolibri/vue-no-unused-methods, vue/no-unused-properties
@@ -526,8 +532,8 @@
   }
 
   .studio-banner {
-    margin-top: 8px !important;
-    margin-bottom: 8px !important;
+    margin-top: 8px;
+    margin-bottom: 8px;
   }
 
 </style>

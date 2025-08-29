@@ -2,22 +2,9 @@ import { render, screen } from '@testing-library/vue';
 import VueRouter from 'vue-router';
 import StudioBanner from '../StudioBanner.vue';
 
-// Mock the Kolibri design system composable
-const mockSendPoliteMessage = jest.fn();
-jest.mock('kolibri-design-system/lib/composables/useKLiveRegion', () => ({
-  __esModule: true,
-  default: () => ({
-    sendPoliteMessage: mockSendPoliteMessage,
-  }),
-}));
-
 const sampleErrorMessage = 'This is an error message';
 
 describe('StudioBanner', () => {
-  beforeEach(() => {
-    mockSendPoliteMessage.mockClear();
-  });
-
   test('render with defaults values', () => {
     render(StudioBanner, {
       props: {
