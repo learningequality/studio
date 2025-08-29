@@ -1,6 +1,6 @@
 import { render, fireEvent, screen, within } from '@testing-library/vue';
 import VueRouter from 'vue-router';
-import Vuex, { Store } from 'vuex';
+import { Store } from 'vuex';
 import StudioMyChannels from '../StudioMyChannels.vue';
 
 const mockChannels = [
@@ -98,7 +98,7 @@ describe('StudioMyChannels.vue', () => {
   test('renders my channels', async () => {
     renderComponent(store);
     const card0 = await screen.findByTestId('card-0');
-    const cardElements = screen.queryAllByTestId((testId, element) => testId.startsWith('card-'));
+    const cardElements = screen.queryAllByTestId(testId => testId.startsWith('card-'));
     expect(await screen.findByText('New channel')).toBeInTheDocument();
 
     expect(card0).toHaveTextContent('channel one');
@@ -132,7 +132,7 @@ describe('StudioMyChannels.vue', () => {
       },
     });
     renderComponent(store);
-    const cardElements = screen.queryAllByTestId((testId, element) => testId.startsWith('card-'));
+    const cardElements = screen.queryAllByTestId(testId => testId.startsWith('card-'));
     expect(cardElements.length).toBe(0);
     expect(screen.getByText('No channels found')).toBeInTheDocument();
   });

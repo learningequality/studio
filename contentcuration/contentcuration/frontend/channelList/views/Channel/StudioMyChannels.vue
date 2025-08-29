@@ -217,7 +217,6 @@
           sortFields,
           orderFields,
         );
-        this.isContextMenu.fill(false, 0, data.length);
         return data;
       },
       isEditable() {
@@ -282,6 +281,7 @@
           .catch(() => {
             this.loading = false;
           });
+        this.isContextMenu = new Array(this.listChannels.length).fill(false);
       },
 
       hasUnpublishedChanges(channel) {
@@ -309,7 +309,7 @@
       openDropDown(channel, index) {
         this.selectedChannel = channel;
         this.isContextMenu[index] = !this.isContextMenu[index];
-        this.dropDownArr = this.dropDownItems(channel)
+        this.dropDownArr = this.dropDownItems(channel);
       },
       dropDownItems(channel) {
         this.selectedChannel = channel;
@@ -398,7 +398,9 @@
         }
       },
       thumbnailSrc(channel) {
-        return channel.thumbnail_encoding && channel.thumbnail_encoding.base64 ? channel.thumbnail_encoding.base64 : channel.thumbnail_url;
+        return channel.thumbnail_encoding && channel.thumbnail_encoding.base64
+          ? channel.thumbnail_encoding.base64
+          : channel.thumbnail_url;
       },
     },
     $trs: {
