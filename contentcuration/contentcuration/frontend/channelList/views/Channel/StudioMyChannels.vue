@@ -138,8 +138,8 @@
     </KModal>
     <ChannelTokenModal
       v-if="selectedChannel && selectedChannel.published"
-      data-testid="copy-modal"
       v-model="tokenDialog"
+      data-testid="copy-modal"
       :channel="selectedChannel"
       @copied="trackTokenCopy"
     />
@@ -192,7 +192,7 @@
           published: false,
         },
         isContextMenu: [],
-        dropDownArr: []
+        dropDownArr: [],
       };
     },
     computed: {
@@ -310,7 +310,6 @@
         this.selectedChannel = channel;
         this.isContextMenu[index] = !this.isContextMenu[index];
         this.dropDownArr = !this.isContextMenu[index] ? this.dropDownItems(channel) : [];
-
       },
       dropDownItems(channel) {
         this.selectedChannel = channel;
