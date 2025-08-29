@@ -30,7 +30,7 @@
           :key="channel.id"
           :headingLevel="2"
           thumbnailDisplay="small"
-          :thumbnailSrc="channel.thumbnail_url"
+          :thumbnailSrc="thumbnailSrc(channel)"
           :thumbnailAlign="'left'"
           :thumbnailScaleType="'fitXY'"
           :orientation="windowIsSmall ? 'vertical' : 'horizontal'"
@@ -65,7 +65,7 @@
                 </span>
                 <div>
                   <KTooltip
-                    reference="lastUpdatedTime"
+                    :reference="`lastUpdatedTime-${index}`"
                     placement="bottom"
                     :refs="$refs"
                   >
@@ -76,8 +76,8 @@
                     }}
                   </KTooltip>
                   <KIcon
-                    v-if="hasUnpublishedChanges"
-                    ref="lastUpdatedTime"
+                    v-if="hasUnpublishedChanges(channel)"
+                    :ref="`lastUpdatedTime-${index}`"
                     :color="$themePalette.green.v_600"
                     icon="dot"
                   />
@@ -309,7 +309,7 @@
       openDropDown(channel, index) {
         this.selectedChannel = channel;
         this.isContextMenu[index] = !this.isContextMenu[index];
-        this.dropDownArr = !this.isContextMenu[index] ? this.dropDownItems(channel) : [];
+        this.dropDownArr = this.dropDownItems(channel)
       },
       dropDownItems(channel) {
         this.selectedChannel = channel;
@@ -396,6 +396,9 @@
             this.$store.dispatch('showSnackbarSimple', this.$tr('channelDeletedSnackbar'));
           });
         }
+      },
+      thumbnailSrc(channel) {
+        return channel.thumbnail_encoding && channel.thumbnail_encoding.base64 ? channel.thumbnail_encoding.base64 : channel.thumbnail_url;
       },
     },
     $trs: {
