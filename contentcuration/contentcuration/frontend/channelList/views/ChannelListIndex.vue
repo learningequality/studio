@@ -88,21 +88,23 @@
               md8
               lg6
             >
-              <VCard
+              <StudioRaisedBox
                 v-if="invitationList.length"
                 v-show="isChannelList"
               >
-                <VList subheader>
-                  <VSubheader>
-                    {{ $tr('invitations', { count: invitationList.length }) }}
-                  </VSubheader>
-                  <ChannelInvitation
-                    v-for="invitation in invitationList"
-                    :key="invitation.id"
-                    :invitationID="invitation.id"
-                  />
-                </VList>
-              </VCard>
+                <template #header>
+                  {{ $tr('invitations', { count: invitationList.length }) }}
+                </template>
+                <template #main>
+                  <ul class="invitation-list">
+                    <ChannelInvitation
+                      v-for="invitation in invitationList"
+                      :key="invitation.id"
+                      :invitationID="invitation.id"
+                    />
+                  </ul>
+                </template>
+              </StudioRaisedBox>
             </VFlex>
           </VLayout>
           <ChannelListAppError
@@ -131,6 +133,7 @@
   } from '../constants';
   import ChannelListAppError from './ChannelListAppError';
   import ChannelInvitation from './Channel/ChannelInvitation';
+  import StudioRaisedBox from 'shared/views/StudioRaisedBox.vue';
   import { ChannelListTypes } from 'shared/constants';
   import { constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
@@ -162,6 +165,7 @@
       GlobalSnackbar,
       PolicyModals,
       OfflineText,
+      StudioRaisedBox,
     },
     mixins: [constantsTranslationMixin, routerMixin],
     computed: {
@@ -335,6 +339,10 @@
 
   .main-container {
     overflow: auto;
+  }
+
+  .invitation-list {
+    padding: 0;
   }
 
 </style>
