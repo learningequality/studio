@@ -886,8 +886,8 @@
           this.clearGiveFeedbackForm();
         } else {
           this.showOtherFeedbackInvalidText = !this.isOtherFeedbackValid;
+          this.showFeedbackErrorMessage = !this.isAnyFeedbackReasonSelected;
         }
-        this.showFeedbackErrorMessage = !this.isAnyFeedbackReasonSelected;
       },
       formatRecommendationInteractionEventData(feedbackType, nodes) {
         const data = nodes.map(node => ({
