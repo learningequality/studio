@@ -768,6 +768,7 @@
       },
       closeGiveFeedbackModal() {
         this.showFeedbackModal = false;
+        this.clearGiveFeedbackForm();
       },
       handleViewMoreRecommendations() {
         if (!this.recommendationsLoadingError) {
@@ -967,10 +968,11 @@
             this.showSnackbar({ text: this.feedbackFailedMessage$() });
           }
           this.showFeedbackModal = false;
+          this.clearGiveFeedbackForm();
         } else {
           this.showOtherFeedbackInvalidText = !this.isOtherFeedbackValid;
+          this.showFeedbackErrorMessage = !this.isAnyFeedbackReasonSelected;
         }
-        this.showFeedbackErrorMessage = !this.isAnyFeedbackReasonSelected;
       },
       formatRecommendationInteractionEventData(feedbackType, nodes) {
         const data = nodes.map(node => ({
@@ -996,6 +998,12 @@
             this.formatRecommendationInteractionEventData(FeedbackTypeOptions.showmore, nodes),
           );
         }
+      },
+      clearGiveFeedbackForm() {
+        this.feedbackReason = [];
+        this.otherFeedback = '';
+        this.showOtherFeedbackInvalidText = false;
+        this.showFeedbackErrorMessage = false;
       },
     },
     $trs: {
