@@ -63,7 +63,7 @@ class EnsureVersionedDatabaseTestCase(StudioTestCase):
         with open(self.unversioned_db_path, "w") as f:
             f.write(unversioned_db_content)
 
-        ensure_versioned_database_exists(self.channel)
+        ensure_versioned_database_exists(self.channel.id, self.channel.version)
 
         with open(self.versioned_db_path) as f:
             read_versioned_content = f.read()
@@ -75,7 +75,7 @@ class EnsureVersionedDatabaseTestCase(StudioTestCase):
         with open(self.unversioned_db_path, "w") as f:
             f.write(unversioned_db_content)
 
-        ensure_versioned_database_exists(self.channel)
+        ensure_versioned_database_exists(self.channel.id, self.channel.version)
 
         with open(self.versioned_db_path) as f:
             read_versioned_content = f.read()
@@ -91,4 +91,4 @@ class EnsureVersionedDatabaseTestCase(StudioTestCase):
         )
 
         with self.assertRaises(ValueError):
-            ensure_versioned_database_exists(self.channel)
+            ensure_versioned_database_exists(self.channel.id, self.channel.version)
