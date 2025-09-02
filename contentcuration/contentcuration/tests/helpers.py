@@ -7,6 +7,7 @@ from django.urls import reverse
 from django_celery_results.models import TaskResult
 from search.models import ContentNodeFullTextSearch
 
+from contentcuration.celery import app
 from contentcuration.models import ContentNode
 
 
@@ -71,3 +72,27 @@ def reverse_with_query(
     if query:
         return f"{url}?{urlencode(query)}"
     return url
+
+
+class EagerTasksTestMixin(object):
+    """
+    Mixin to make Celery tasks run synchronously during the tests.
+    """
+
+    celery_task_always_eager = None
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        # update celery so tasks are always eager for this test, meaning they'll execute synchronously
+        cls.celery_task_always_eager = app.conf.task_always_eager
+        app.conf.update(task_always_eager=True)
+
+    def setUp(self):
+        super().setUp()
+        clear_tasks()
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        app.conf.update(task_always_eager=cls.celery_task_always_eager)

@@ -2602,7 +2602,7 @@ class CommunityLibrarySubmission(models.Model):
 
     def save(self, *args, **kwargs):
         # Not a top-level import to avoid circular import issues
-        from contentcuration.utils.publish import ensure_versioned_database_exists
+        from contentcuration.tasks import ensure_versioned_database_exists_task
 
         # Validate on save that the submission author is an editor of the channel
         # and that the version is not greater than the current channel version.
@@ -2630,7 +2630,11 @@ class CommunityLibrarySubmission(models.Model):
             # When creating a new submission, ensure the channel has a versioned database
             # (it might not have if the channel was published before versioned databases
             # were introduced).
-            ensure_versioned_database_exists(self.channel)
+            ensure_versioned_database_exists_task.fetch_or_enqueue(
+                user=self.author,
+                channel_id=self.channel.id,
+                channel_version=self.channel.version,
+            )
 
         super().save(*args, **kwargs)
 

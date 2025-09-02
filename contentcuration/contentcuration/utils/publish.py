@@ -1094,32 +1094,39 @@ def publish_channel(  # noqa: C901
     return channel
 
 
-def ensure_versioned_database_exists(channel):
+def ensure_versioned_database_exists(channel_id, channel_version):
     """
     Ensures that the versioned database exists, and if not, copies the unversioned database to the versioned path.
     This happens if the channel was published back when versioned databases were not used.
     """
-    if channel.version == 0:
+    if channel_version == 0:
         raise ValueError("An unpublished channel cannot have a versioned database.")
 
     unversioned_db_storage_path = os.path.join(
-        settings.DB_ROOT, "{id}.sqlite3".format(id=channel.id)
+        settings.DB_ROOT, "{id}.sqlite3".format(id=channel_id)
     )
     versioned_db_storage_path = os.path.join(
         settings.DB_ROOT,
-        "{id}-{version}.sqlite3".format(id=channel.id, version=channel.version),
+        "{id}-{version}.sqlite3".format(id=channel_id, version=channel_version),
     )
 
     if not storage.exists(versioned_db_storage_path):
         if not storage.exists(unversioned_db_storage_path):
             # This should never happen, a published channel should always have an unversioned database
             raise FileNotFoundError(
-                f"Neither unversioned nor versioned database found for channel {channel.id}."
+                f"Neither unversioned nor versioned database found for channel {channel_id}."
             )
 
+        # NOTE: This should not result in a race condition in the case that a newer
+        # version of the channel is published before the task running this function
+        # is executed. In that case, the publishing logic would have already created
+        # the versioned database. The only case where this could be problematic is
+        # if this happens between the check above this comment and the commands below
+        # it. However, this is EXTREMELY unlikely, and could probably only be solved
+        # by introducing a locking mechanism for the database storage objects.
         with storage.open(unversioned_db_storage_path, "rb") as unversioned_db_file:
             storage.save(versioned_db_storage_path, unversioned_db_file)
 
         logging.info(
-            f"Versioned database for channel {channel.id} did not exist, copied the unversioned database to {versioned_db_storage_path}."
+            f"Versioned database for channel {channel_id} did not exist, copied the unversioned database to {versioned_db_storage_path}."
         )
