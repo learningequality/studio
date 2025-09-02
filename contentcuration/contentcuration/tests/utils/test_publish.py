@@ -3,10 +3,12 @@ import tempfile
 from unittest import mock
 
 from django.conf import settings
-from django.core.files.storage import FileSystemStorage
 
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioTestCase
+from contentcuration.tests.utils.restricted_filesystemstorage import (
+    RestrictedFileSystemStorage,
+)
 from contentcuration.utils.publish import ensure_versioned_database_exists
 
 
@@ -17,7 +19,7 @@ class EnsureVersionedDatabaseTestCase(StudioTestCase):
         self._temp_directory_ctx = tempfile.TemporaryDirectory()
         self.test_db_root_dir = self._temp_directory_ctx.__enter__()
 
-        storage = FileSystemStorage(location=self.test_db_root_dir)
+        storage = RestrictedFileSystemStorage(location=self.test_db_root_dir)
 
         self._storage_patch_ctx = mock.patch(
             "contentcuration.utils.publish.storage",

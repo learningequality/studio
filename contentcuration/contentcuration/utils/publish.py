@@ -2,7 +2,6 @@ import itertools
 import json
 import logging as logmodule
 import os
-import shutil
 import tempfile
 import time
 import uuid
@@ -1119,8 +1118,7 @@ def ensure_versioned_database_exists(channel):
             )
 
         with storage.open(unversioned_db_storage_path, "rb") as unversioned_db_file:
-            with storage.open(versioned_db_storage_path, "wb") as versioned_db_file:
-                shutil.copyfileobj(unversioned_db_file, versioned_db_file)
+            storage.save(versioned_db_storage_path, unversioned_db_file)
 
         logging.info(
             f"Versioned database for channel {channel.id} did not exist, copied the unversioned database to {versioned_db_storage_path}."
