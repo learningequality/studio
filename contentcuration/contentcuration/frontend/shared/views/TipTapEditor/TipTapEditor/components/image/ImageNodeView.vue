@@ -86,7 +86,6 @@
       const naturalAspectRatio = ref(null);
       const minWidth = 50;
       const compactThreshold = 200;
-      const debounceTimer = null;
       let resizeListeners = null;
 
       // Create debounced version of saveSize function

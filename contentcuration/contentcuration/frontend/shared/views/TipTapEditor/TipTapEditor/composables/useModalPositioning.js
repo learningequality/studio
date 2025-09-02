@@ -8,9 +8,6 @@ export function useModalPositioning() {
   const isModalCentered = ref(false);
   const anchorElement = ref(null);
 
-  let scrollRaf = null;
-  let resizeRaf = null;
-
   const updatePosition = () => {
     if (!anchorElement.value || isModalCentered.value || isTouchDevice) {
       return;
