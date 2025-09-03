@@ -5,9 +5,29 @@ from kolibri_public.models import ChannelMetadata
 from kolibri_public.tests.utils.mixer import KolibriPublicMixer
 from le_utils.constants.labels.subjects import SUBJECTSLIST
 
+from contentcuration.models import Country
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.tests.helpers import reverse_with_query
+
+
+class ChannelMetadataViewSetTestCase(StudioAPITestCase):
+    def test_annotate_countries(self):
+        mixer = KolibriPublicMixer()
+
+        country1 = mixer.blend(Country, code="C1")
+        country2 = mixer.blend(Country, code="C2")
+        country3 = mixer.blend(Country, code="C3")
+
+        channel = mixer.blend(ChannelMetadata, countries=[country1, country2, country3])
+
+        user = testdata.user("any@user.com")
+        self.client.force_authenticate(user)
+
+        response = self.client.get(reverse("publicchannel-detail", args=[channel.id]))
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertCountEqual(response.data["countries"], ["C1", "C2", "C3"])
 
 
 class ChannelMetadataFilterTestCase(StudioAPITestCase):

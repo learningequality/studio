@@ -42,6 +42,7 @@ from rest_framework.response import Response
 
 from contentcuration.middleware.locale import locale_exempt
 from contentcuration.middleware.session import session_exempt
+from contentcuration.models import Country
 from contentcuration.models import generate_storage_url
 from contentcuration.utils.pagination import ValuesViewsetCursorPagination
 from contentcuration.viewsets.base import BaseValuesViewset
@@ -143,7 +144,6 @@ class ChannelMetadataViewSet(ReadOnlyValuesViewset):
         "total_resource_count",
         "published_size",
         "categories",
-        "countries",
     )
 
     field_map = {
@@ -174,6 +174,18 @@ class ChannelMetadataViewSet(ReadOnlyValuesViewset):
         for item in items:
             item["included_languages"] = included_languages.get(item["id"], [])
             item["last_published"] = item["last_updated"]
+
+        countries = {}
+        for (channel_id, country_code) in Country.objects.filter(
+            public_channels__in=queryset
+        ).values_list("public_channels", "code"):
+            if channel_id not in countries:
+                countries[channel_id] = []
+            countries[channel_id].append(country_code)
+
+        for item in items:
+            item["countries"] = countries.get(item["id"], [])
+
         return items
 
 
