@@ -10,6 +10,7 @@ from django.utils import timezone
 from kolibri_public.models import ChannelMetadata
 from kolibri_public.models import ContentNode
 from kolibri_public.models import LocalFile
+from kolibri_public.search import annotate_channelmetadata_label_bitmasks
 from le_utils.constants import content_kinds
 
 from contentcuration.models import Channel
@@ -24,7 +25,9 @@ def set_channel_metadata_fields(
     # Note: The `categories` argument should be a _list_, NOT a _dict_.
 
     # Remove unneeded db_lock
-    channel = ChannelMetadata.objects.get(id=channel_id)
+    channel_queryset = ChannelMetadata.objects.filter(id=channel_id)
+    channel = channel_queryset.get()
+
     calculate_published_size(channel)
     calculate_total_resource_count(channel)
     calculate_included_languages(channel)
@@ -38,6 +41,8 @@ def set_channel_metadata_fields(
     if countries is not None:
         channel.countries.set(countries)
     channel.save()
+
+    annotate_channelmetadata_label_bitmasks(channel_queryset)
 
 
 def files_for_nodes(nodes):
