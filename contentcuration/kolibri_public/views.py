@@ -91,14 +91,23 @@ def bitmask_contains_and(queryset, name, value):
     return queryset.has_all_labels(name, value.split(","))
 
 
+class UUIDInFilter(BaseInFilter, UUIDFilter):
+    pass
+
+
+class CharInFilter(BaseInFilter, CharFilter):
+    pass
+
+
 class ChannelMetadataFilter(FilterSet):
     available = BooleanFilter(method="filter_available", label="Available")
     has_exercise = BooleanFilter(method="filter_has_exercise", label="Has exercises")
     categories = CharFilter(method=bitmask_contains_and, label="Categories")
+    countries = CharInFilter(field_name="countries", label="Countries")
 
     class Meta:
         model = models.ChannelMetadata
-        fields = ("available", "has_exercise", "categories")
+        fields = ("available", "has_exercise", "categories", "countries")
 
     def filter_has_exercise(self, queryset, name, value):
         queryset = queryset.annotate(
@@ -159,6 +168,10 @@ class ChannelMetadataViewSet(ReadOnlyValuesViewset):
         return models.ChannelMetadata.objects.all()
 
     def consolidate(self, items, queryset):
+        # Only keep a single item for every channel ID, to get rid of possible
+        # duplicates caused by filtering
+        items = list(OrderedDict((item["id"], item) for item in items).values())
+
         included_languages = {}
         for (
             channel_id,
@@ -187,14 +200,6 @@ class ChannelMetadataViewSet(ReadOnlyValuesViewset):
             item["countries"] = countries.get(item["id"], [])
 
         return items
-
-
-class UUIDInFilter(BaseInFilter, UUIDFilter):
-    pass
-
-
-class CharInFilter(BaseInFilter, CharFilter):
-    pass
 
 
 contentnode_filter_fields = [

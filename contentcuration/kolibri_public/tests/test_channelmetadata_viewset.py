@@ -49,6 +49,10 @@ class ChannelMetadataFilterTestCase(StudioAPITestCase):
             8,
         ]
 
+        mixer.blend(Country, code="C1")
+        mixer.blend(Country, code="C2")
+        mixer.blend(Country, code="C3")
+
         self.user = testdata.user("any@user.com")
 
         # Manually set the bitmasks for testing
@@ -59,6 +63,7 @@ class ChannelMetadataFilterTestCase(StudioAPITestCase):
                 | self.category_bitmasks[1]
                 | self.category_bitmasks[3]
             ),
+            countries=["C1", "C3"],
         )
         self.metadata2 = mixer.blend(
             ChannelMetadata,
@@ -67,6 +72,7 @@ class ChannelMetadataFilterTestCase(StudioAPITestCase):
                 | self.category_bitmasks[2]
                 | self.category_bitmasks[3]
             ),
+            countries=["C1", "C2", "C3"],
         )
         self.metadata3 = mixer.blend(
             ChannelMetadata,
@@ -75,6 +81,7 @@ class ChannelMetadataFilterTestCase(StudioAPITestCase):
                 | self.category_bitmasks[1]
                 | self.category_bitmasks[2]
             ),
+            countries=["C3"],
         )
 
     def test_filter_by_categories_bitmask__provided(self):
@@ -105,3 +112,34 @@ class ChannelMetadataFilterTestCase(StudioAPITestCase):
             [UUID(item["id"]) for item in response.data],
             [UUID(self.metadata1.id), UUID(self.metadata2.id), UUID(self.metadata3.id)],
         )
+
+    def test_filter_by_countries(self):
+        self.client.force_authenticate(self.user)
+
+        filter_query = {"countries": "C1,C2"}
+
+        response = self.client.get(
+            reverse_with_query(
+                "publicchannel-list",
+                query=filter_query,
+            ),
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertCountEqual(
+            [UUID(item["id"]) for item in response.data],
+            [UUID(self.metadata1.id), UUID(self.metadata2.id)],
+        )
+
+        response1 = next(
+            filter(
+                lambda item: UUID(item["id"]) == UUID(self.metadata1.id), response.data
+            )
+        )
+        response2 = next(
+            filter(
+                lambda item: UUID(item["id"]) == UUID(self.metadata2.id), response.data
+            )
+        )
+
+        self.assertCountEqual(response1["countries"], ["C1", "C3"])
+        self.assertCountEqual(response2["countries"], ["C1", "C2", "C3"])
