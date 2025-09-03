@@ -52,11 +52,6 @@ body {
   .v-btn:focus-visible {
     outline: 2px solid var(--v-secondary-base) !important;
   }
-
-  > .v-dialog__content,
-  > .v-overlay {
-    z-index: 16 !important;
-  }
 }
 
 /* RTL-related rules */

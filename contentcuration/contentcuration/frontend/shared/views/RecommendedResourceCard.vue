@@ -39,15 +39,31 @@
       <KFixedGrid :numCols="2">
         <KFixedGridItem alignment="right">
           <KIconButton
+            ref="goToLocation"
             icon="openNewTab"
-            :tooltip="$tr('goToLocationTooltip')"
             @click.stop="goToLocation"
           />
+          <KTooltip
+            reference="goToLocation"
+            :refs="$refs"
+            appendToOverlay
+            :appearanceOverrides="{ zIndex: 202 }"
+          >
+            {{ $tr('goToLocationTooltip') }}
+          </KTooltip>
           <KIconButton
+            ref="markNotRelevant"
             icon="thumbDown"
-            :tooltip="$tr('markNotRelevantTooltip')"
             @click.stop="markNotRelevant"
           />
+          <KTooltip
+            reference="markNotRelevant"
+            :refs="$refs"
+            appendToOverlay
+            :appearanceOverrides="{ zIndex: 202 }"
+          >
+            {{ $tr('markNotRelevantTooltip') }}
+          </KTooltip>
         </KFixedGridItem>
       </KFixedGrid>
     </template>
