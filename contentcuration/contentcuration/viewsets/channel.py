@@ -8,6 +8,7 @@ from typing import Union
 from django.conf import settings
 from django.db import IntegrityError
 from django.db.models import Exists
+from django.db.models import FilteredRelation
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
@@ -1049,6 +1050,16 @@ class CatalogViewSet(ReadOnlyValuesViewset):
 
 
 class AdminChannelFilter(BaseChannelFilter):
+    latest_community_library_submission_status = CharFilter(
+        method="filter_latest_community_library_submission_status"
+    )
+    community_library_live = BooleanFilter(
+        method="filter_community_library_live",
+    )
+    has_community_library_submission = BooleanFilter(
+        method="filter_has_community_library_submission",
+    )
+
     def filter_keywords(self, queryset, name, value):
         keywords = value.split(" ")
         editors_first_name = reduce(
@@ -1065,6 +1076,20 @@ class AdminChannelFilter(BaseChannelFilter):
             | (editors_first_name & editors_last_name)
             | editors_email
         )
+
+    def filter_latest_community_library_submission_status(self, queryset, name, value):
+        values = self.request.query_params.getlist(name)
+        if values:
+            return queryset.filter(
+                latest_community_library_submission__status__in=values
+            )
+        return queryset
+
+    def filter_community_library_live(self, queryset, name, value):
+        return queryset.filter(has_any_live_community_library_submission=True)
+
+    def filter_has_community_library_submission(self, queryset, name, value):
+        return queryset.filter(latest_community_library_submission__isnull=False)
 
 
 class AdminChannelSerializer(ChannelSerializer):
@@ -1097,6 +1122,8 @@ class AdminChannelViewSet(ChannelViewSet, RESTUpdateModelMixin, RESTDestroyModel
         "created": "main_tree__created",
         "source_url": format_source_url,
         "demo_server_url": format_demo_server_url,
+        "latest_community_library_submission_id": "latest_community_library_submission__id",
+        "latest_community_library_submission_status": "latest_community_library_submission__status",
     }
 
     values = (
@@ -1116,6 +1143,9 @@ class AdminChannelViewSet(ChannelViewSet, RESTUpdateModelMixin, RESTDestroyModel
         "source_url",
         "demo_server_url",
         "primary_token",
+        "latest_community_library_submission__id",
+        "latest_community_library_submission__status",
+        "has_any_live_community_library_submission",
     )
 
     def perform_destroy(self, instance):
@@ -1145,11 +1175,28 @@ class AdminChannelViewSet(ChannelViewSet, RESTUpdateModelMixin, RESTDestroyModel
         channel_main_tree_nodes = ContentNode.objects.filter(
             tree_id=OuterRef("main_tree__tree_id")
         )
+        latest_community_library_submission_id = Subquery(
+            CommunityLibrarySubmission.objects.filter(channel_id=OuterRef("id"))
+            .order_by("-date_created")
+            .values("id")[:1]
+        )
         queryset = Channel.objects.all().annotate(
             modified=Subquery(
                 channel_main_tree_nodes.values("modified").order_by("-modified")[:1]
             ),
             primary_token=primary_token_subquery,
+            latest_community_library_submission=FilteredRelation(
+                "community_library_submissions",
+                condition=Q(
+                    community_library_submissions__id=latest_community_library_submission_id,
+                ),
+            ),
+            has_any_live_community_library_submission=Exists(
+                CommunityLibrarySubmission.objects.filter(
+                    channel_id=OuterRef("id"),
+                    status=community_library_submission_constants.STATUS_LIVE,
+                )
+            ),
         )
         return queryset
 
