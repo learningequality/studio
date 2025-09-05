@@ -31,13 +31,14 @@
         </template>
       </Breadcrumbs>
       <VSpacer />
-      <VBtn
-        color="grey lighten-4"
+      <KButton
+        appearance="flat-button"
         data-test="newtopic"
+        class="add-folder-button"
         @click="showNewTopicModal = true"
       >
         {{ $tr('addTopic') }}
-      </VBtn>
+      </KButton>
     </ToolBar>
     <!-- list of children content -->
     <LoadingText
@@ -106,8 +107,9 @@
               </VListTileContent>
               <VListTileAction style="min-width: 102px">
                 <div class="options">
-                  <VBtn
-                    icon
+                  <KButton
+                    appearance="flat-button"
+                    :hasDropdown="false"
                     data-test="details"
                     class="mx-1"
                     @click.stop="previewNodeId = node.id"
@@ -117,15 +119,16 @@
                       style="font-size: 20px"
                       :color="$themeTokens.primary"
                     />
-                  </VBtn>
-                  <VBtn
+                  </KButton>
+                  <KButton
                     v-if="node.kind === 'topic'"
-                    icon
+                    appearance="flat-button"
+                    :hasDropdown="false"
                     class="mx-1 rtl-flip"
                     @click.stop="targetNodeId = node.id"
                   >
                     <Icon icon="chevronRight" />
-                  </VBtn>
+                  </KButton>
                 </div>
               </VListTileAction>
             </VListTile>
@@ -153,28 +156,27 @@
     </VLayout>
 
     <!-- footer buttons -->
-    <template #bottom>
-      <VSpacer />
-      <KCircularLoader
-        v-if="moveHereButtonDisabled && moveNodesInProgress"
-        :size="20"
-      />
-      <VBtn
-        flat
-        exact
-        data-test="cancel"
-        @click="dialog = false"
-      >
-        {{ $tr('cancel') }}
-      </VBtn>
-      <VBtn
-        color="primary"
-        data-test="move"
-        :disabled="moveHereButtonDisabled"
-        @click="moveNodes"
-      >
-        {{ $tr('moveHere') }}
-      </VBtn>
+        <template #bottom>
+      <BottomBar :appearanceOverrides="{ justifyContent: 'flex-end', display: 'flex', alignItems: 'center' }">
+        <div class="button-container">
+          <KButton
+            appearance="flat-button"
+            data-test="cancel"
+            @click="dialog = false"
+          >
+            {{ $tr('cancel') }}
+          </KButton>
+          <KButton
+            appearance="raised-button"
+            :primary="true"
+            data-test="move"
+            :disabled="moveHereButtonDisabled"
+            @click="moveNodes"
+          >
+            {{ $tr('moveHere') }}
+          </KButton>
+        </div>
+      </BottomBar>
     </template>
 
     <NewTopicModal
@@ -198,6 +200,7 @@
   import LoadingText from 'shared/views/LoadingText';
   import ToolBar from 'shared/views/ToolBar';
   import FullscreenModal from 'shared/views/FullscreenModal';
+  import BottomBar from 'shared/views/BottomBar';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import { titleMixin } from 'shared/mixins';
@@ -218,6 +221,7 @@
       ResourceDrawer,
       ToolBar,
       FullscreenModal,
+      BottomBar,
       Thumbnail,
     },
     mixins: [titleMixin],
@@ -434,6 +438,25 @@
     justify-content: center;
     width: 100%;
     margin-bottom: 10px;
+  }
+
+  .button-container {
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    width: 100% !important;
+    gap: 8px;
+    margin-left: auto !important;
+  }
+
+  .add-folder-button {
+    margin-left: auto;
+  }
+
+  /* Override BottomBar default alignment */
+  ::v-deep .bottom-bar {
+    justify-content: flex-end !important;
+    align-items: center !important;
   }
 
 </style>
