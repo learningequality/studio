@@ -47,14 +47,14 @@ const approvedChannel = {
 const submittedChannel = {
   ...channelCommon,
   latest_community_library_submission_id: submissionId,
-  latest_community_library_submission_status: 'SUBMITTED',
+  latest_community_library_submission_status: 'PENDING',
   has_any_live_community_library_submission: false,
 };
 
 const flaggedChannel = {
   ...channelCommon,
   latest_community_library_submission_id: submissionId,
-  latest_community_library_submission_status: 'FLAGGED',
+  latest_community_library_submission_status: 'REJECTED',
   has_any_live_community_library_submission: false,
 };
 
@@ -126,7 +126,7 @@ describe('channelItem', () => {
 
   describe('community library submission status is displayed correctly', () => {
     it('when it does not have a submission a dash is shown', () => {
-      const statusCell = wrapper.find('td:nth-of-type(11)');
+      const statusCell = wrapper.find('[data-test="community-library-status"]');
       expect(statusCell.text()).toBe('—');
     });
 
@@ -134,7 +134,7 @@ describe('channelItem', () => {
       wrapper.setData({ testedChannel: liveChannel });
       await wrapper.vm.$nextTick();
 
-      const statusCell = wrapper.find('td:nth-of-type(11)');
+      const statusCell = wrapper.find('[data-test="community-library-status"]');
       const statusButton = statusCell.findComponent(CommunityLibraryStatusButton);
       await statusButton.vm.$nextTick();
 
@@ -146,7 +146,7 @@ describe('channelItem', () => {
       wrapper.setData({ testedChannel: approvedChannel });
       await wrapper.vm.$nextTick();
 
-      const statusCell = wrapper.find('td:nth-of-type(11)');
+      const statusCell = wrapper.find('[data-test="community-library-status"]');
       const statusButton = statusCell.findComponent(CommunityLibraryStatusButton);
 
       expect(statusButton.exists()).toBe(true);
@@ -157,7 +157,7 @@ describe('channelItem', () => {
       wrapper.setData({ testedChannel: submittedChannel });
       await wrapper.vm.$nextTick();
 
-      const statusCell = wrapper.find('td:nth-of-type(11)');
+      const statusCell = wrapper.find('[data-test="community-library-status"]');
       const statusButton = statusCell.findComponent(CommunityLibraryStatusButton);
 
       expect(statusButton.exists()).toBe(true);
@@ -168,7 +168,7 @@ describe('channelItem', () => {
       wrapper.setData({ testedChannel: flaggedChannel });
       await wrapper.vm.$nextTick();
 
-      const statusCell = wrapper.find('td:nth-of-type(11)');
+      const statusCell = wrapper.find('[data-test="community-library-status"]');
       const statusButton = statusCell.findComponent(CommunityLibraryStatusButton);
 
       expect(statusButton.exists()).toBe(true);

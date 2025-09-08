@@ -1,24 +1,23 @@
-import { mount } from '@vue/test-utils';
+import { mount, createLocalVue } from '@vue/test-utils';
+import Vuex, { Store } from 'vuex';
 import router from '../../../router';
-import { factory } from '../../../store';
 import { RouteNames } from '../../../constants';
 import ChannelTable from '../ChannelTable';
 
-const store = factory();
+const localVue = createLocalVue();
+
+localVue.use(Vuex);
+localVue.use(router);
 
 const channelList = ['test', 'channel', 'table'];
-let loadItems;
 
-function makeWrapper() {
-  loadItems = jest.spyOn(ChannelTable.mixins[0].methods, '_loadItems');
-  loadItems.mockImplementation(() => Promise.resolve());
-
+function makeWrapper(store) {
   router.replace({ name: RouteNames.CHANNELS });
 
   return mount(ChannelTable, {
     router,
     store,
-    attachTo: document.body,
+    localVue,
     computed: {
       count() {
         return 10;
@@ -35,21 +34,33 @@ function makeWrapper() {
 
 describe('channelTable', () => {
   let wrapper;
+  let store;
+  const loadChannels = jest.fn(() => Promise.resolve({}));
 
   beforeEach(() => {
-    wrapper = makeWrapper();
+    store = new Store({
+      modules: {
+        channelAdmin: {
+          namespaced: true,
+          actions: {
+            loadChannels,
+          },
+        },
+      },
+    });
+    wrapper = makeWrapper(store);
   });
   afterEach(() => {
-    loadItems.mockRestore();
+    loadChannels.mockRestore();
   });
   describe('filters', () => {
-    it('changing channel type filter should set query params', () => {
-      wrapper.vm.channelTypeFilter = 'public';
-      expect(Boolean(router.currentRoute.query.public)).toBe(true);
+    it('changing channel type filter should set query params', async () => {
+      wrapper.vm.channelTypeFilter = 'community';
+      expect(router.currentRoute.query.channelType).toBe('community');
     });
     it('changing language filter should set query params', () => {
       wrapper.vm.languageFilter = 'en';
-      expect(router.currentRoute.query.languages).toBe('en');
+      expect(router.currentRoute.query.language).toBe('en');
     });
     it('changing search text should set query params', () => {
       jest.useFakeTimers();
@@ -59,6 +70,14 @@ describe('channelTable', () => {
       jest.useRealTimers();
 
       expect(router.currentRoute.query.keywords).toBe('keyword test');
+    });
+    it('changing channel type filter should reset channel status filter', async () => {
+      wrapper.vm.channelTypeFilter = 'community';
+      wrapper.vm.channelStatusFilter = 'published';
+      await wrapper.vm.$nextTick();
+      wrapper.vm.channelTypeFilter = 'unlisted';
+      await wrapper.vm.$nextTick();
+      expect(wrapper.vm.channelStatusFilter).toBe('live');
     });
   });
   describe('selection', () => {

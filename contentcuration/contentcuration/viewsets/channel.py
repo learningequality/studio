@@ -1086,10 +1086,10 @@ class AdminChannelFilter(BaseChannelFilter):
         return queryset
 
     def filter_community_library_live(self, queryset, name, value):
-        return queryset.filter(has_any_live_community_library_submission=True)
+        return queryset.filter(has_any_live_community_library_submission=value)
 
     def filter_has_community_library_submission(self, queryset, name, value):
-        return queryset.filter(latest_community_library_submission__isnull=False)
+        return queryset.filter(latest_community_library_submission__isnull=(not value))
 
 
 class AdminChannelSerializer(ChannelSerializer):

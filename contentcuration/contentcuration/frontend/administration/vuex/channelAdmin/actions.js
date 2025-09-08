@@ -4,13 +4,22 @@ import { NOVALUE } from 'shared/constants';
 import { Channel } from 'shared/data/resources';
 
 export function loadChannels({ commit }, params) {
-  params.deleted = Boolean(params.deleted) && params.deleted.toString() === 'true';
-  params.page_size = params.page_size || 25;
+  const extendedParams = {
+    ...params,
+    deleted: Boolean(params.deleted) && params.deleted.toString() === 'true',
+    page_size: params.page_size || 25,
+  };
 
-  return client.get(window.Urls.admin_channels_list(), { params }).then(response => {
-    commit('SET_PAGE_DATA', response.data);
-    commit('channel/ADD_CHANNELS', response.data.results, { root: true });
-  });
+  const paramsSerializer = {
+    indexes: null, // Handle arrays by providing the same query param multiple times
+  };
+
+  return client
+    .get(window.Urls.admin_channels_list(), { params: extendedParams, paramsSerializer })
+    .then(response => {
+      commit('SET_PAGE_DATA', response.data);
+      commit('channel/ADD_CHANNELS', response.data.results, { root: true });
+    });
 }
 
 export function getAdminChannelListDetails({ rootGetters, dispatch }, channelIds = []) {

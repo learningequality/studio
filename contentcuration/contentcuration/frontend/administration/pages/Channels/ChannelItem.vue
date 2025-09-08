@@ -197,14 +197,17 @@
       </VEditDialog>
       <span v-else>Deleted</span>
     </td>
-    <td>
+    <td data-test="community-library-status">
       <CommunityLibraryStatusButton
         v-if="communityLibraryStatus"
         :status="communityLibraryStatus"
       />
       <template v-else>—</template>
     </td>
-    <td class="text-xs-center">
+    <td
+      class="text-xs-center"
+      data-test="community-library-status"
+    >
       <ChannelActionsDropdown
         :channelId="channelId"
         flat
@@ -287,12 +290,12 @@
         switch (this.channel.latest_community_library_submission_status) {
           case null:
             return null;
-          case 'SUBMITTED':
+          case 'PENDING':
             return 'submitted';
           case 'APPROVED':
           case 'LIVE':
             return 'approved';
-          case 'FLAGGED':
+          case 'REJECTED':
             return 'flagged';
 
           default:

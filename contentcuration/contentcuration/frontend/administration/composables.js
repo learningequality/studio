@@ -1,20 +1,8 @@
-import { computed, onBeforeMount, ref, watch, unref } from 'vue';
+import { computed, onBeforeMount, ref, watch, unref, nextTick } from 'vue';
 import { useRouter, useRoute } from 'vue-router/composables';
-import findKey from 'lodash/findKey';
 import transform from 'lodash/transform';
-import uniq from 'lodash/uniq';
-import intersection from 'lodash/intersection';
-import isEqual from 'lodash/isEqual';
-import difference from 'lodash/difference';
-import { debounce } from 'lodash';
-
-function getBooleanVal(value) {
-  return typeof value === 'string' ? value === 'true' : value;
-}
-
-function haveSameElements(arrayA, arrayB) {
-  return isEqual(arrayA.sort(), arrayB.sort());
-}
+import pickBy from 'lodash/pickBy';
+import { debounce, isEqual } from 'lodash';
 
 function useQueryParams() {
   const router = useRouter();
@@ -39,60 +27,16 @@ function useQueryParams() {
   return { updateQueryParams };
 }
 
-export function useFilter(filterMap) {
-  // The composable can accept both an object or a ref. We convert
-  // it to a ref explicitly to be able to use in the same way
-  // in both cases.
-  const paramKeys = computed(() =>
-    uniq(Object.values(unref(filterMap)).flatMap(f => Object.keys(f.params))),
-  );
-
+export function useFilter({ name, filterMap }) {
   const route = useRoute();
   const { updateQueryParams } = useQueryParams();
 
   const filter = computed({
-    get() {
-      // Return filter where all param conditions are met
-      const queryKeys = Object.keys(route.query);
-      const filterKeys = intersection(queryKeys, paramKeys.value);
-
-      const key = findKey(unref(filterMap), (value, key) => {
-        const requiredFilterKeys = Object.keys(unref(filterMap)[key].params);
-        if (!haveSameElements(filterKeys, requiredFilterKeys)) {
-          return false;
-        }
-
-        return filterKeys.every(field => {
-          const expected = value.params[field];
-          const provided = route.query[field];
-
-          if (typeof expected === 'boolean') {
-            return expected === getBooleanVal(provided);
-          } else {
-            return expected === provided;
-          }
-        });
-      });
-
-      return key ? key : null;
-    },
-    set(value) {
-      // Get params that aren't part of the filterMap
-      const queryKeys = Object.keys(route.query);
-      const otherFilterKeys = difference(queryKeys, paramKeys.value);
-      const otherFilters = otherFilterKeys.reduce((result, key) => {
-        result[key] = route.query[key];
-        return result;
-      }, {});
-
-      const filterParams =
-        value !== null && value !== undefined ? unref(filterMap)[value].params : {};
-
-      // Set the router with the params from the filterMap and current route
+    get: () => route.query[name] || undefined,
+    set: value => {
       updateQueryParams({
-        ...otherFilters,
-        ...filterParams,
-        page: 1,
+        ...route.query,
+        [name]: value || undefined,
       });
     },
   });
@@ -103,9 +47,14 @@ export function useFilter(filterMap) {
     });
   });
 
+  const fetchQueryParams = computed(() => {
+    return unref(filterMap)[filter.value]?.params || {};
+  });
+
   return {
     filter,
     filters,
+    fetchQueryParams,
   };
 }
 
@@ -120,7 +69,7 @@ export function useKeywordSearch() {
       return route.query.keywords || '';
     },
     set(value) {
-      const params = { ...route.query, page: 1 };
+      const params = { ...route.query };
       if (value) {
         params.keywords = value;
       } else {
@@ -149,9 +98,103 @@ export function useKeywordSearch() {
     keywordInput.value = keywords.value;
   });
 
+  const fetchQueryParams = computed(() => {
+    return keywords.value ? { keywords: keywords.value } : {};
+  });
+
   return {
     keywordInput,
     setKeywords,
     clearSearch,
+    fetchQueryParams,
+  };
+}
+
+export function useTable({ fetchFunc, filterFetchQueryParams }) {
+  const route = useRoute();
+  const { updateQueryParams } = useQueryParams();
+
+  const loading = ref(false);
+
+  const pagination = computed({
+    get() {
+      const params = {
+        rowsPerPage: Number(route.query.page_size) || 25,
+        page: Number(route.query.page) || 1,
+      };
+      // Add descending if it's in the route query params
+      if (route.query.descending !== undefined && route.query.descending !== null) {
+        params.descending = route.query.descending.toString() === 'true';
+      }
+      // Add sortBy if it's in the route query params
+      if (route.query.sortBy) {
+        params.sortBy = route.query.sortBy;
+      }
+
+      return params;
+    },
+    set(newPagination) {
+      // Removes null pagination parameters from the URL
+      const newQuery = pickBy(
+        {
+          ...route.query,
+          page_size: newPagination.rowsPerPage,
+          ...newPagination,
+        },
+        (value, key) => {
+          return value !== null && key !== 'rowsPerPage' && key !== 'totalItems';
+        },
+      );
+
+      updateQueryParams(newQuery);
+    },
+  });
+
+  const paginationFetchParams = computed(() => {
+    const params = {
+      page: pagination.value.page,
+      page_size: pagination.value.rowsPerPage,
+    };
+    if (pagination.value.sortBy) {
+      params.ordering = (pagination.value.descending ? '-' : '') + pagination.value.sortBy;
+    }
+
+    return params;
+  });
+
+  const allFetchQueryParams = computed(() => {
+    return {
+      ...unref(filterFetchQueryParams),
+      ...paginationFetchParams.value,
+    };
+  });
+
+  function loadItems() {
+    loading.value = true;
+    fetchFunc(allFetchQueryParams.value).then(() => {
+      loading.value = false;
+    });
+  }
+
+  watch(filterFetchQueryParams, (newValue, oldValue) => {
+    if (!isEqual(newValue, oldValue)) {
+      pagination.value = { ...pagination.value, page: 1 };
+    }
+  });
+
+  watch(
+    allFetchQueryParams,
+    () => {
+      // Use nextTick to ensure that pagination can be updated before fetching
+      nextTick().then(() => {
+        loadItems();
+      });
+    },
+    { immediate: true },
+  );
+
+  return {
+    pagination,
+    loading,
   };
 }

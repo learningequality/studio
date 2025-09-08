@@ -13,7 +13,10 @@
       />
       <EmailUsersDialog
         v-model="showMassEmailDialog"
-        :query="{ ...$route.query, userTypeFilter }"
+        :userTypeFilter="userTypeFilter"
+        :locationFilter="locationFilter"
+        :keywordFilter="keywordInput"
+        :usersFilterFetchQueryParams="filterFetchQueryParams"
       />
     </h1>
     <VLayout
@@ -125,7 +128,7 @@
     </VDataTable>
     <EmailUsersDialog
       v-model="showEmailDialog"
-      :query="{ ids: selected }"
+      :initialRecipients="selected"
     />
   </div>
 
@@ -134,12 +137,11 @@
 
 <script>
 
-  import { ref, onMounted } from 'vue';
-  import { mapGetters, mapActions } from 'vuex';
+  import { ref, onMounted, computed, getCurrentInstance } from 'vue';
+  import { mapGetters } from 'vuex';
   import transform from 'lodash/transform';
   import { RouteNames, rowsPerPageItems } from '../../constants';
-  import { tableMixin } from '../../mixins';
-  import { useFilter, useKeywordSearch } from '../../composables';
+  import { useFilter, useKeywordSearch, useTable } from '../../composables';
   import EmailUsersDialog from './EmailUsersDialog';
   import UserItem from './UserItem';
   import { routerMixin } from 'shared/mixins';
@@ -164,16 +166,34 @@
       UserItem,
       CountryField,
     },
-    mixins: [tableMixin, routerMixin],
+    mixins: [routerMixin],
     setup() {
-      const { filter: userTypeFilter, filters: userTypeFilters } = useFilter(userTypeFilterMap);
+      const { proxy } = getCurrentInstance();
+      const store = proxy.$store;
 
-      const { keywordInput, setKeywords, clearSearch } = useKeywordSearch();
+      const {
+        filter: userTypeFilter,
+        filters: userTypeFilters,
+        fetchQueryParams: userTypeFetchQueryParams,
+      } = useFilter({
+        name: 'userType',
+        filterMap: userTypeFilterMap,
+      });
+
+      const {
+        keywordInput,
+        setKeywords,
+        clearSearch,
+        fetchQueryParams: keywordSearchFetchQueryParams,
+      } = useKeywordSearch();
 
       const locationFilterMap = ref({});
       const locationDropdown = ref(null);
 
-      const { filter: locationFilter } = useFilter(locationFilterMap);
+      const { filter: locationFilter, fetchQueryParams: locationFetchQueryParams } = useFilter({
+        name: 'location',
+        filterMap: locationFilterMap,
+      });
 
       onMounted(() => {
         // The locationFilterMap is built from the options in the CountryField component,
@@ -192,14 +212,34 @@
         );
       });
 
+      const filterFetchQueryParams = computed(() => {
+        return {
+          ...userTypeFetchQueryParams.value,
+          ...locationFetchQueryParams.value,
+          ...keywordSearchFetchQueryParams.value,
+        };
+      });
+
+      function loadUsers(fetchParams) {
+        return store.dispatch('userAdmin/loadUsers', fetchParams);
+      }
+
+      const { pagination, loading } = useTable({
+        fetchFunc: fetchParams => loadUsers(fetchParams),
+        filterFetchQueryParams,
+      });
+
       return {
         userTypeFilter,
         userTypeFilters,
+        locationDropdown,
+        locationFilter,
         keywordInput,
         setKeywords,
         clearSearch,
-        locationDropdown,
-        locationFilter,
+        pagination,
+        loading,
+        filterFetchQueryParams,
       };
     },
     data() {
@@ -238,8 +278,8 @@
           },
           { text: 'Email', value: 'email' },
           { text: 'Disk space', value: 'disk_space' },
-          { text: 'Can edit', value: 'edit_count' },
-          { text: 'Can view', value: 'view_count' },
+          { text: 'Can edit', value: 'edit_count', sortable: false },
+          { text: 'Can view', value: 'view_count', sortable: false },
           { text: 'Date joined', value: 'date_joined' },
           { text: 'Last active', value: 'last_login' },
           { text: 'Actions', sortable: false, align: 'center' },
@@ -266,17 +306,6 @@
     },
     mounted() {
       this.updateTabTitle('Users - Administration');
-    },
-    methods: {
-      ...mapActions('userAdmin', ['loadUsers']),
-      /**
-       * @public
-       * @param params
-       * @return {Promise<any>}
-       */
-      fetch(params) {
-        return this.loadUsers(params);
-      },
     },
   };
 
