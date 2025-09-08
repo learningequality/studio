@@ -312,7 +312,9 @@
         },
       },
       headers() {
-        const firstColumn = this.$vuetify.breakpoint.smAndDown ? [{ class: 'first' }] : [];
+        const firstColumn = this.$vuetify.breakpoint.smAndDown
+          ? [{ class: 'first', sortable: false }]
+          : [];
         return firstColumn.concat([
           {
             text: 'Channel name',
