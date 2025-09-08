@@ -118,7 +118,6 @@
                 :tooltip="detailsIcon.tooltip"
               />
             </KRouterLink>
-
             <KIconButton
               v-for="config in filteredIcons"
               :key="config.key"
@@ -382,7 +381,10 @@
           },
           {
             key: 'details',
-            show: !this.libraryMode && this.loggedIn,
+            show:
+              !this.libraryMode &&
+              this.loggedIn &&
+              this.detailsRouteName !== RouteNames.CATALOG_DETAILS,
             icon: 'info',
             tooltip: this.$tr('details'),
             dataTest: 'details-button',
@@ -455,6 +457,8 @@
       viewOnKolibri() {
         if (this.channel.demo_server_url) {
           window.open(this.channel.demo_server_url, '_blank');
+        } else if (this.channel.source_url) {
+          window.open(this.channel.source_url, '_blank');
         }
       },
     },
