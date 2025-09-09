@@ -6,10 +6,10 @@
   >
     <div
       class="renderer"
-      :aria-busy="loading"
+      :aria-busy="isSupported && loading"
     >
       <div
-        v-show="loading"
+        v-show="isSupported && loading"
         class="overlay"
         :style="{ background: $themePalette.white }"
       >
@@ -215,6 +215,9 @@
       },
       isEpub() {
         return this.file.file_format === 'epub';
+      },
+      isSupported() {
+        return this.isVideo || this.isAudio || this.isHTML || this.isPDF || this.isEpub;
       },
       htmlPath() {
         const entry = get(this.contentNode, ['extra_fields', 'options', 'entry'], 'index.html');
