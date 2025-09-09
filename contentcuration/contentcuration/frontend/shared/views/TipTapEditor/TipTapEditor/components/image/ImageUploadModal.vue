@@ -536,4 +536,21 @@
     outline: 2px solid #0097f2;
   }
 
+  @media screen and (max-height: 500px) and (orientation: landscape) {
+    .image-upload-modal {
+      width: 50%;
+      height: 90%;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .modal-content {
+      padding: 1rem;
+    }
+
+    .image-preview-container {
+      height: 100px;
+    }
+  }
+
 </style>

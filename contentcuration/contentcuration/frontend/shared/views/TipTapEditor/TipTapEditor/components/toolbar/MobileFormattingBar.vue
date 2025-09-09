@@ -4,6 +4,7 @@
     class="floating-panel"
     role="toolbar"
     :aria-label="textFormattingToolbar$()"
+    :style="{ bottom: keyboardOffset + 'px' }"
   >
     <div
       class="fixed-actions"
@@ -106,7 +107,7 @@
 
 <script>
 
-  import { defineComponent, ref } from 'vue';
+  import { defineComponent, ref, onMounted, onUnmounted, inject } from 'vue';
   import { useToolbarActions } from '../../composables/useToolbarActions';
   import { useFormatControls } from '../../composables/useFormatControls';
   import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
@@ -118,6 +119,8 @@
     components: { ToolbarButton, ToolbarDivider },
     setup(props, { emit }) {
       const isExpanded = ref(true);
+      const keyboardOffset = ref(0);
+      const editor = inject('editor');
 
       const {
         collapseFormattingBar$,
@@ -137,8 +140,62 @@
         isExpanded.value = !isExpanded.value;
       };
 
+      // Keyboard detection and positioning
+      onMounted(() => {
+        if (editor.value) {
+          // Use a timeout to allow the keyboard to start appearing
+          setTimeout(() => {
+            const { from } = editor.value.state.selection;
+            editor.value.view.dom.querySelector(`[pos="${from}"]`)?.scrollIntoView({
+              behavior: 'smooth',
+              block: 'nearest',
+            });
+          }, 150);
+        }
+
+        const vk = navigator.virtualKeyboard;
+
+        const updatePositionWithVisualViewport = () => {
+          if (window.visualViewport) {
+            const visibleHeight = window.visualViewport.height;
+            const totalHeight = window.innerHeight;
+
+            if (totalHeight - visibleHeight > 50) {
+              keyboardOffset.value = totalHeight - visibleHeight;
+            } else {
+              keyboardOffset.value = 0;
+            }
+          }
+        };
+
+        if (vk) {
+          // Use the new VirtualKeyboard API if available
+          vk.overlaysContent = true;
+          const onGeometryChange = () => {
+            const { height } = vk.boundingRect;
+            keyboardOffset.value = height > 0 ? height : 0;
+          };
+          vk.addEventListener('geometrychange', onGeometryChange);
+          onUnmounted(() => {
+            vk.removeEventListener('geometrychange', onGeometryChange);
+            vk.overlaysContent = false;
+          });
+        } else if (window.visualViewport) {
+          // Fallback to visualViewport for iOS Safari
+          window.visualViewport.addEventListener('resize', updatePositionWithVisualViewport);
+          updatePositionWithVisualViewport(); // Initial check
+
+          onUnmounted(() => {
+            if (window.visualViewport) {
+              window.visualViewport.removeEventListener('resize', updatePositionWithVisualViewport);
+            }
+          });
+        }
+      });
+
       return {
         isExpanded,
+        keyboardOffset,
         textActions,
         listActions,
         scriptActions,
@@ -166,13 +223,26 @@
   .floating-panel {
     position: fixed;
     right: 0;
-    bottom: 0;
+    bottom: 0; /* Will be overridden by JavaScript */
     left: 0;
     z-index: 100;
     display: flex;
     align-items: center;
     padding: 0.25rem;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slide-up 0.2s ease-out;
+  }
+
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .fixed-actions {

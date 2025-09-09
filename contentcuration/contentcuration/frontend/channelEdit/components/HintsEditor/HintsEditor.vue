@@ -23,7 +23,48 @@
           :class="hintClasses(hintIdx)"
         >
           <VCardText :class="{ 'pt-0 pb-0': !isHintOpen(hintIdx) }">
-            <VLayout align-top>
+            <!-- Touch device & desktop layout with toolbar above -->
+            <template v-if="isTouchDevice || screenSizeLevel <= 3">
+              <VLayout class="mb-2">
+                <VFlex
+                  xs1
+                  :style="{ 'margin-top': '10px' }"
+                >
+                  {{ hintIdx + 1 }}
+                </VFlex>
+                <VSpacer />
+                <VFlex shrink>
+                  <AssessmentItemToolbar
+                    :iconActionsConfig="toolbarIconActions"
+                    :canMoveUp="!isHintFirst(hintIdx)"
+                    :canMoveDown="!isHintLast(hintIdx)"
+                    class="toolbar"
+                    analyticsLabel="Hint"
+                    @click="onToolbarClick($event, hintIdx)"
+                  />
+                </VFlex>
+              </VLayout>
+              <VLayout>
+                <VFlex xs12>
+                  <keep-alive :max="5">
+                    <!-- analyticsLabel="Hint"-->
+                    <TipTapEditor
+                      v-model="hint.hint"
+                      :mode="isHintOpen(hintIdx) ? 'edit' : 'view'"
+                      :image-processor="EditorImageProcessor"
+                      @update="updateHintText($event, hintIdx)"
+                      @minimize="emitClose"
+                    />
+                  </keep-alive>
+                </VFlex>
+              </VLayout>
+            </template>
+
+            <!-- Desktop layout -->
+            <VLayout
+              v-else
+              align-top
+            >
               <VFlex
                 xs1
                 :style="{ 'margin-top': '10px' }"
@@ -80,10 +121,12 @@
 
 <script>
 
+  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
   import { AssessmentItemToolbarActions } from '../../constants';
   import { swapElements } from 'shared/utils/helpers';
   import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
+  import { isTouchDevice } from 'shared/utils/browserInfo';
 
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue';
 
@@ -124,7 +167,14 @@
           AssessmentItemToolbarActions.DELETE_ITEM,
         ],
         EditorImageProcessor,
+        isTouchDevice,
       };
+    },
+    computed: {
+      screenSizeLevel() {
+        const { windowBreakpoint } = useKResponsiveWindow();
+        return windowBreakpoint.value ?? 0;
+      },
     },
     methods: {
       emitOpen(hintIdx) {

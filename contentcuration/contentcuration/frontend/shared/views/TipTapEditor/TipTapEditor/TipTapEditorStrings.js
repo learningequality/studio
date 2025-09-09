@@ -76,6 +76,10 @@ const MESSAGES = {
     message: 'Code block',
     context: 'Button to insert a block of code',
   },
+  moreButtonText: {
+    message: 'More',
+    context: 'Label for the "More" dropdown button in the toolbar',
+  },
 
   // Format dropdown options
   formatNormal: {

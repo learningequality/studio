@@ -255,6 +255,13 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
+  @media screen and (max-width: 600px) {
+    .format-dropdown {
+      width: 80px;
+      min-width: 0;
+    }
+  }
+
   .dropdown-item {
     display: flex;
     gap: 8px;

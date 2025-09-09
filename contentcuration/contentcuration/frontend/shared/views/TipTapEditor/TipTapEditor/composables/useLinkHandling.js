@@ -1,5 +1,5 @@
 import { ref, watch, onUnmounted } from 'vue';
-import { useBreakpoint } from './useBreakpoint';
+import { isTouchDevice } from 'shared/utils/browserInfo';
 
 export function useLinkHandling(editor) {
   const isEditorOpen = ref(false);
@@ -9,7 +9,6 @@ export function useLinkHandling(editor) {
   const editorMode = ref('create');
   const savedSelection = ref(null);
   const isEditorCentered = ref(false);
-  const { isMobile } = useBreakpoint();
 
   const calculatePosition = (forceCenter = false) => {
     if (!editor.value) return {};
@@ -17,7 +16,7 @@ export function useLinkHandling(editor) {
 
     isEditorCentered.value = false;
     // Only center the edit modal on mobile, not the bubble menu
-    if (isMobile.value && forceCenter) {
+    if (isTouchDevice && forceCenter) {
       isEditorCentered.value = true;
       return {
         position: 'fixed',

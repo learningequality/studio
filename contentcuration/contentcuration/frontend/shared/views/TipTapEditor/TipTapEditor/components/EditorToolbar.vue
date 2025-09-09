@@ -36,6 +36,7 @@
 
     <!-- Text formatting -->
     <div
+      v-if="visibleCategories.includes('textFormat')"
       role="group"
       :aria-label="textStyleFormatting$()"
     >
@@ -49,7 +50,7 @@
       />
     </div>
 
-    <ToolbarDivider />
+    <ToolbarDivider v-if="visibleCategories.includes('textFormat')" />
 
     <!-- Copy/Paste -->
     <div
@@ -140,16 +141,24 @@
       role="group"
       :aria-label="'More options'"
     >
-      <ToolbarButton
+      <button
         ref="moreButton"
+        class="more-button"
         :title="'More options'"
-        :icon="require('../../assets/icon-chevron-down.svg')"
-        :is-active="isMoreDropdownOpen"
+        :class="{ active: isMoreDropdownOpen }"
         :aria-expanded="isMoreDropdownOpen"
         aria-haspopup="menu"
         aria-controls="more-options-menu"
         @click="toggleMoreDropdown"
-      />
+      >
+        <span>{{ moreButtonText$() }}</span>
+        <img
+          :src="require('../../assets/icon-chevron-down.svg')"
+          aria-hidden="true"
+          class="more-button-icon"
+          :class="{ rotated: isMoreDropdownOpen }"
+        >
+      </button>
 
       <div
         v-show="isMoreDropdownOpen"
@@ -161,6 +170,25 @@
         @click.stop="isMoreDropdownOpen = false"
         @keydown="handleMenuKeydown"
       >
+        <!-- Overflow Text Formatting -->
+        <template v-if="overflowCategories.includes('textFormat')">
+          <button
+            v-for="action in textActions"
+            :key="action.name"
+            class="dropdown-item"
+            :class="{ active: action.isActive }"
+            role="menuitem"
+            @click="action.handler"
+          >
+            <img
+              :src="action.icon"
+              class="dropdown-item-icon"
+              alt=""
+              aria-hidden="true"
+            >
+            <span class="dropdown-item-text">{{ action.title }}</span>
+          </button>
+        </template>
         <!-- Overflow Clipboard -->
         <template v-if="overflowCategories.includes('clipboard')">
           <button
@@ -313,15 +341,23 @@
 
       // TODO: Maybe these shouldnt be hardcoded?
       const OVERFLOW_BREAKPOINTS = {
-        insert: 750,
-        script: 660,
-        lists: 600,
-        clearFormat: 500,
-        clipboard: 465,
+        insert: 760,
+        script: 710,
+        lists: 650,
+        clearFormat: 560,
+        clipboard: 500,
+        textFormat: 400,
       };
 
       // Categories that can overflow (in order of overflow priority)
-      const OVERFLOW_CATEGORIES = ['insert', 'script', 'lists', 'clearFormat', 'clipboard'];
+      const OVERFLOW_CATEGORIES = [
+        'insert',
+        'script',
+        'lists',
+        'clearFormat',
+        'clipboard',
+        'textFormat',
+      ];
 
       const {
         handleCopy,
@@ -348,6 +384,7 @@
         scriptFormatting$,
         insertTools$,
         clearFormatting$,
+        moreButtonText$,
       } = getTipTapEditorStrings();
 
       // Compute which categories should be visible vs in overflow
@@ -501,6 +538,7 @@
         scriptFormatting$,
         insertTools$,
         clearFormatting$,
+        moreButtonText$,
       };
     },
   });
@@ -541,8 +579,10 @@
     right: 0;
     z-index: 1000;
     min-width: 220px;
+    max-height: 400px;
     padding: 4px 0;
     margin-top: 4px;
+    overflow-y: auto;
     background: white;
     border: 1px solid #e1e5e9;
     border-radius: 8px;
@@ -581,11 +621,6 @@
     margin-right: 12px;
   }
 
-  .dropdown-item-text {
-    flex: 1;
-    white-space: nowrap;
-  }
-
   .dropdown-item:disabled {
     cursor: not-allowed;
     opacity: 0.5;
@@ -593,6 +628,38 @@
 
   .dropdown-item:disabled:hover {
     background-color: transparent;
+  }
+
+  .more-button {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    cursor: pointer;
+    border: 0;
+    border-radius: 4px;
+    transition: background-color 0.15s ease;
+  }
+
+  .more-button:focus-visible {
+    background: #e6e6e6;
+    border-radius: 4px;
+    outline: 2px solid #0097f2;
+  }
+
+  .more-button.active {
+    color: #4368f5;
+    background: #d9e1fd;
+  }
+
+  .more-button-icon {
+    width: 16px;
+    height: 16px;
+    margin-left: 4px;
+    transition: transform 0.15s ease;
+  }
+
+  .more-button-icon.rotated {
+    transform: rotate(180deg);
   }
 
   /* Ensure dropdown stays on screen */
