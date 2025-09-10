@@ -65,7 +65,6 @@
     <VContent>
       <StudioOfflineAlert
         v-if="!isCatalogPage"
-        toolbar
         :offset="toolbarHeight"
       />
       <VContainer
