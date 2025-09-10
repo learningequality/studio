@@ -63,9 +63,8 @@
       </template>
     </AppBar>
     <VContent>
-      <OfflineText
+      <StudioOfflineAlert
         v-if="!isCatalogPage"
-        toolbar
         :offset="toolbarHeight"
       />
       <VContainer
@@ -138,7 +137,7 @@
   import { constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import AppBar from 'shared/views/AppBar';
-  import OfflineText from 'shared/views/OfflineText';
+  import StudioOfflineAlert from 'shared/views/StudioOfflineAlert.vue';
   import PolicyModals from 'shared/views/policies/PolicyModals';
 
   const CATALOG_PAGES = [
@@ -164,7 +163,7 @@
       ChannelListAppError,
       GlobalSnackbar,
       PolicyModals,
-      OfflineText,
+      StudioOfflineAlert,
       StudioRaisedBox,
     },
     mixins: [constantsTranslationMixin, routerMixin],
