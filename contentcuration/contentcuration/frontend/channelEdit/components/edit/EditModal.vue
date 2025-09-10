@@ -80,14 +80,12 @@
                   >
                     {{ $tr('addTopic') }}
                   </VBtn>
-                  <VBtn
-                    v-else-if="uploadMode"
-                    :disabled="creatingNodes"
-                    color="greyBackground"
-                    @click="openFileDialog"
-                  >
-                    {{ $tr('uploadButton') }}
-                  </VBtn>
+                  <KButton
+                  v-else-if="uploadMode"
+                  :text="$tr('uploadButton')"
+                  :disabled="creatingNodes"
+                  @click="openFileDialog"
+                  />
                 </ToolBar>
                 <div ref="list">
                   <EditList
