@@ -34,13 +34,13 @@
                 <p class="mb-4 title">
                   {{ $tr('dropHereText') }}
                 </p>
-                <VBtn
-                  color="primary"
+                <KButton
+                  :text="$tr('chooseFilesButton')"
+                  :primary="true"
                   data-test="upload"
                   @click="openFileDialog"
-                >
-                  {{ $tr('chooseFilesButton') }}
-                </VBtn>
+                />
+
                 <p class="grey--text mt-2 small text-center">
                   {{ $tr('acceptsHelp', { extensions: acceptedFiles }) }}
                 </p>
