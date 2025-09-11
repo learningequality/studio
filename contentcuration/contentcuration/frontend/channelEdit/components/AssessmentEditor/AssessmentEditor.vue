@@ -111,14 +111,14 @@
               v-if="isItemActive(item)"
               justify-end
             >
-              <VBtn
-                color="greyBackground"
-                class="close-item-btn mr-0"
-                data-test="closeBtn"
-                @click="closeActiveItem"
-              >
-                {{ $tr('closeBtnLabel') }}
-              </VBtn>
+            <KButton
+            
+              :text="$tr('closeBtnLabel')"
+              class="close-item-btn"
+              data-test="closeBtn"
+              @click="closeActiveItem"
+            
+            />
             </VLayout>
           </VCardText>
         </VCard>
@@ -129,14 +129,14 @@
       {{ $tr('noQuestionsPlaceholder') }}
     </div>
 
-    <VBtn
-      color="greyBackground"
-      class="ml-0 mt-4"
+    <KButton
+    
+      :text="$tr('newQuestionBtnLabel')"
+      class="new-ques-btn"
       data-test="newQuestionBtn"
       @click="addItem"
-    >
-      {{ $tr('newQuestionBtnLabel') }}
-    </VBtn>
+    
+    />
   </VContainer>
 
 </template>
@@ -487,5 +487,10 @@
       cursor: pointer;
     }
   }
+
+  .new-ques-btn {
+  margin-left: 0;
+  margin-top: 20px;
+}
 
 </style>
