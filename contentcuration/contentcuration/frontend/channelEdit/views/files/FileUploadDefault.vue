@@ -35,14 +35,12 @@
                   {{ $tr('dropHereText') }}
                 </p>
                 <KButton
-                :text="$tr('chooseFilesButton')"
-                :primary="true"
-                data-test="upload"
-                @click="openFileDialog"
-
+                  :text="$tr('chooseFilesButton')"
+                  :primary="true"
+                  data-test="upload"
+                  @click="openFileDialog"
                 />
 
-                
                 <p class="grey--text mt-2 small text-center">
                   {{ $tr('acceptsHelp', { extensions: acceptedFiles }) }}
                 </p>
