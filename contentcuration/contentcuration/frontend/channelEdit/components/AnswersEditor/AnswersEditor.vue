@@ -192,15 +192,14 @@
       </div>
     </div>
 
-    <VBtn
+    <KButton
       v-if="isEditingAllowed"
-      color="greyBackground"
-      class="ml-0 mt-3"
+      :text="$tr('newAnswerBtnLabel')"
+      class="new-answer-btn"
       data-test="newAnswerBtn"
       @click="addNewAnswer"
-    >
-      {{ $tr('newAnswerBtnLabel') }}
-    </VBtn>
+    
+    />
   </div>
 
 </template>
@@ -556,5 +555,9 @@
   ::v-deep .no-border.v-text-field > .v-input__control > .v-input__slot::after {
     border-style: none;
   }
+  .new-answer-btn {
+  margin-left: 0;
+  margin-top: 16px;
+}
 
 </style>
