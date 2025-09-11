@@ -106,14 +106,14 @@
       </div>
     </div>
 
-    <VBtn
-      color="greyBackground"
-      class="ml-0 mt-3"
+    <KButton
+    
+      :text="$tr('newHintBtnLabel')"
+      class="new-hint-btn"
       data-test="newHintBtn"
       @click="addNewHint"
-    >
-      {{ $tr('newHintBtnLabel') }}
-    </VBtn>
+    
+    />
   </div>
 
 </template>
@@ -347,5 +347,10 @@
       background-color: var(--v-greyBackground-lighten1);
     }
   }
+
+  .new-hint-btn {
+  margin-left: 0;
+  margin-top: 16px;
+}
 
 </style>
