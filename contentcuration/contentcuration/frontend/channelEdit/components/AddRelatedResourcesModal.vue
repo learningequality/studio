@@ -62,24 +62,23 @@
 
             <template v-if="displayActionsButtons(childNode)">
               <VListTileAction>
-                <VBtn
-                  flat
+                <KButton
+                  :text="$tr('previewStepBtnLabel')"
                   class="font-weight-bold"
+                  appearance="flat-button"
                   @click.stop.prevent="onPreviewStepClick(childNode.id)"
-                >
-                  {{ $tr('previewStepBtnLabel') }}
-                </VBtn>
+                />
               </VListTileAction>
 
               <VListTileAction v-if="!isNodePreviewOpen">
-                <VBtn
-                  flat
-                  color="primary"
+                <KButton
+            
+                  :text="$tr('addStepBtnLabel')"
+                  :primary="true"
                   class="font-weight-bold"
+                  appearance="flat-button"
                   @click.stop.prevent="onAddStepClick(childNode.id)"
-                >
-                  {{ $tr('addStepBtnLabel') }}
-                </VBtn>
+                />
               </VListTileAction>
             </template>
           </VListTile>
@@ -97,14 +96,14 @@
         v-if="displayActionsButtons"
         #actions
       >
-        <VBtn
-          flat
-          color="primary"
+        <KButton
+            
+          :text="$tr('addStepBtnLabel')"
           class="font-weight-bold"
+          :primary="true"
+          appearance="flat-button"
           @click.stop.prevent="onAddStepClick(previewNodeId)"
-        >
-          {{ $tr('addStepBtnLabel') }}
-        </VBtn>
+        />
       </template>
     </ResourceDrawer>
   </FullscreenModal>
