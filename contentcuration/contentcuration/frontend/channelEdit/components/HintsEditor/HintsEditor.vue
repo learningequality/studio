@@ -107,12 +107,10 @@
     </div>
 
     <KButton
-    
       :text="$tr('newHintBtnLabel')"
       class="ml-0 mt-3"
       data-test="newHintBtn"
       @click="addNewHint"
-    
     />
   </div>
 

@@ -198,7 +198,6 @@
       class="ml-0 mt-3"
       data-test="newAnswerBtn"
       @click="addNewAnswer"
-    
     />
   </div>
 
@@ -555,5 +554,5 @@
   ::v-deep .no-border.v-text-field > .v-input__control > .v-input__slot::after {
     border-style: none;
   }
-  
+
 </style>

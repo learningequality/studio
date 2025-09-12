@@ -111,14 +111,12 @@
               v-if="isItemActive(item)"
               justify-end
             >
-            <KButton
-            
-              :text="$tr('closeBtnLabel')"
-              class="close-item-btn"
-              data-test="closeBtn"
-              @click="closeActiveItem"
-            
-            />
+              <KButton
+                :text="$tr('closeBtnLabel')"
+                class="close-item-btn"
+                data-test="closeBtn"
+                @click="closeActiveItem"
+              />
             </VLayout>
           </VCardText>
         </VCard>
@@ -130,12 +128,10 @@
     </div>
 
     <KButton
-    
       :text="$tr('newQuestionBtnLabel')"
       class="ml-0 mt-4"
       data-test="newQuestionBtn"
       @click="addItem"
-    
     />
   </VContainer>
 
