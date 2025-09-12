@@ -195,7 +195,7 @@
     <KButton
       v-if="isEditingAllowed"
       :text="$tr('newAnswerBtnLabel')"
-      class="new-answer-btn"
+      class="ml-0 mt-3"
       data-test="newAnswerBtn"
       @click="addNewAnswer"
     
@@ -555,9 +555,5 @@
   ::v-deep .no-border.v-text-field > .v-input__control > .v-input__slot::after {
     border-style: none;
   }
-  .new-answer-btn {
-  margin-left: 0;
-  margin-top: 16px;
-}
-
+  
 </style>

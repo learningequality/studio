@@ -109,7 +109,7 @@
     <KButton
     
       :text="$tr('newHintBtnLabel')"
-      class="new-hint-btn"
+      class="ml-0 mt-3"
       data-test="newHintBtn"
       @click="addNewHint"
     
@@ -348,9 +348,6 @@
     }
   }
 
-  .new-hint-btn {
-  margin-left: 0;
-  margin-top: 16px;
-}
+  
 
 </style>
