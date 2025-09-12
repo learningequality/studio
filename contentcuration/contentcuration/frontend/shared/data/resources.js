@@ -1412,6 +1412,10 @@ export const Channel = new CreateModelResource({
       .then(response => response.data.languages);
     return uniq(compact(localLanguages.concat(remoteLanguages)));
   },
+  async getPublishedData(id) {
+    const response = await client.get(window.Urls.channel_published_data(id));
+    return response.data;
+  },
 });
 
 function getChannelFromChannelScope() {
@@ -2389,6 +2393,15 @@ export const Recommendation = new APIResource({
   urlName: 'recommendations',
   fetchCollection(params) {
     return client.post(window.Urls.recommendations(), params).then(response => {
+      return response.data || [];
+    });
+  },
+});
+
+export const CommunityLibrarySubmission = new APIResource({
+  urlName: 'community_library_submission',
+  fetchCollection(params) {
+    return client.get(this.collectionUrl(), { params }).then(response => {
       return response.data || [];
     });
   },

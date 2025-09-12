@@ -84,6 +84,31 @@
         >
           {{ $tr('apiGenerated') }}
         </span>
+        <BaseMenu>
+          <template #activator="{ on }">
+            <KButton
+              hasDropdown
+              class="share-button"
+              v-on="on"
+            >
+              Share
+            </KButton>
+          </template>
+          <VList>
+            <VListTile @click="showSubmitToCommunityLibrarySidePanel = true">
+              <VListTileTitle>Submit to community library</VListTileTitle>
+            </VListTile>
+            <VListTile
+              :to="shareChannelLink"
+              @click="trackClickEvent('Share channel')"
+            >
+              <VListTileTitle>Invite collaborators</VListTileTitle>
+            </VListTile>
+            <VListTile @click="showTokenModal = true">
+              <VListTileTitle>Share token</VListTileTitle>
+            </VListTile>
+          </VList>
+        </BaseMenu>
         <VTooltip
           v-if="!loading && canManage"
           bottom
@@ -211,6 +236,11 @@
       v-if="showPublishSidePanel"
       @close="showPublishSidePanel = false"
     />
+    <SubmitToCommunityLibrarySidePanel
+      v-if="showSubmitToCommunityLibrarySidePanel"
+      :channel="currentChannel"
+      @close="showSubmitToCommunityLibrarySidePanel = false"
+    />
     <template v-if="isPublished">
       <ChannelTokenModal
         v-model="showTokenModal"
@@ -318,6 +348,7 @@
   import SavingIndicator from '../../components/edit/SavingIndicator';
   import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
   import PublishSidePanel from '../../components/sidePanels/PublishSidePanel';
+  import SubmitToCommunityLibrarySidePanel from '../../components/sidePanels/SubmitToCommunityLibrarySidePanel';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import ToolBar from 'shared/views/ToolBar';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
@@ -337,6 +368,7 @@
       MainNavigationDrawer,
       ToolBar,
       PublishSidePanel,
+      SubmitToCommunityLibrarySidePanel,
       ProgressModal,
       ChannelTokenModal,
       SyncResourcesModal,
@@ -359,6 +391,7 @@
       return {
         drawer: false,
         showPublishSidePanel: false,
+        showSubmitToCommunityLibrarySidePanel: false,
         showTokenModal: false,
         showSyncModal: false,
         showClipboard: false,
@@ -575,6 +608,11 @@
       width: 400px;
       max-width: 400px;
     }
+  }
+
+  .share-button {
+    margin-right: 8px;
+    margin-left: 8px;
   }
 
   .clipboard-fab.dragging-over.in-draggable-universe {

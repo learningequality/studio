@@ -1,0 +1,55 @@
+<template>
+
+  <div v-if="!omitted">
+    <div
+      v-if="loading"
+      class="loader-wrapper"
+    >
+      <KCircularLoader :size="16" />
+      Checking...
+    </div>
+    <div v-else-if="finishedLoading">
+      <slot></slot>
+    </div>
+    <div v-else>Error loading data.</div>
+  </div>
+  <div v-else>—</div>
+
+</template>
+
+
+<script setup>
+
+  defineProps({
+    loading: {
+      type: Boolean,
+      required: true,
+    },
+    finishedLoading: {
+      type: Boolean,
+      required: true,
+    },
+    omitted: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+  });
+
+</script>
+
+
+<style scoped lang="scss">
+
+  .loader-wrapper {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .loader-wrapper ::v-deep .ui-progress-circular {
+    display: inline-block;
+    margin: 0;
+  }
+
+</style>

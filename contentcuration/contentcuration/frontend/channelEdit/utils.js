@@ -2,7 +2,8 @@ import translator from './translator';
 import { RouteNames } from './constants';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
-import { metadataStrings, constantStrings } from 'shared/mixins';
+import { metadataStrings } from 'shared/strings/metadataStrings';
+import { constantStrings } from 'shared/mixins';
 import {
   ContentModalities,
   AssessmentItemTypes,
