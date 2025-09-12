@@ -132,7 +132,7 @@
     <KButton
     
       :text="$tr('newQuestionBtnLabel')"
-      class="new-ques-btn"
+      class="ml-0 mt-4"
       data-test="newQuestionBtn"
       @click="addItem"
     
@@ -487,10 +487,5 @@
       cursor: pointer;
     }
   }
-
-  .new-ques-btn {
-  margin-left: 0;
-  margin-top: 20px;
-}
 
 </style>
