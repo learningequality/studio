@@ -72,9 +72,13 @@
             This channel isn't published to Kolibri Studio yet. Publish first, then submit to the
             Community Library.
           </WarningBox>
-          <WarningBox v-if="isPublic">
+          <WarningBox v-else-if="isPublic">
             This channel is currently public in the Content Library. It is not possible to submit
             public channels to the Community Library.
+          </WarningBox>
+          <WarningBox v-else-if="isCurrentVersionAlreadySubmitted">
+            This version of the channel has already been submitted to the Community Library. Please
+            wait for review or make changes and publish a new version before submitting again.
           </WarningBox>
           <div class="channel-title">{{ props.channel.name }}</div>
           <div>
@@ -146,6 +150,7 @@
           <KButton
             primary
             :disabled="!canBeSubmitted"
+            @click="onSubmit"
           >
             Submit for review
           </KButton>
@@ -159,7 +164,7 @@
 
 <script setup>
 
-  import { computed, ref, watch } from 'vue';
+  import { computed, getCurrentInstance, ref, watch } from 'vue';
   import { themeTokens, themePalette } from 'kolibri-design-system/lib/styles/theme';
 
   import camelCase from 'lodash/camelCase';
@@ -177,9 +182,15 @@
   import LanguagesMap from 'shared/leUtils/Languages';
   import LicensesMap from 'shared/leUtils/Licenses';
   import { CategoriesLookup } from 'shared/constants';
+  import { CommunityLibrarySubmission } from 'shared/data/resources';
 
   const tokensTheme = themeTokens();
   const paletteTheme = themePalette();
+
+  const { proxy } = getCurrentInstance();
+  const store = proxy.$store;
+
+  const emit = defineEmits(['close']);
 
   const annotationColor = computed(() => tokensTheme.annotation);
   const infoBoxBackgroundColor = computed(() => paletteTheme.grey.v_100);
@@ -273,15 +284,17 @@
 
   const isPublished = computed(() => props.channel.published);
   const isPublic = computed(() => props.channel.public);
+  const isCurrentVersionAlreadySubmitted = computed(() => {
+    if (!latestSubmission.value) return false;
+    return latestSubmission.value.channel_version === props.channel.version;
+  });
 
-  const canBeEdited = computed(() => isPublished.value && !isPublic.value);
+  const canBeEdited = computed(
+    () => isPublished.value && !isPublic.value && !isCurrentVersionAlreadySubmitted.value,
+  );
 
   const canBeSubmitted = computed(
-    () =>
-      publishedDataIsFinished.value &&
-      isPublished.value &&
-      !isPublic.value &&
-      description.value.length >= 1,
+    () => canBeEdited.value && publishedDataIsFinished.value && description.value.length >= 1,
   );
 
   const {
@@ -329,6 +342,40 @@
       .map(categoryId => categoryIdToName(categoryId))
       .join(', ');
   });
+
+  function showSnackbar(params) {
+    return store.dispatch('showSnackbar', params);
+  }
+
+  function onSubmit() {
+    const submitDelayMs = 5000;
+
+    const timer = setTimeout(() => {
+      CommunityLibrarySubmission.create({
+        description: description.value,
+        channel: props.channel.id,
+        countries: countries.value.map(country => countriesUtil.getAlpha2Code(country, 'en')),
+        categories: detectedCategories.value,
+      })
+        .then(() => {
+          showSnackbar({ text: 'Channel submitted to Community Library' });
+        })
+        .catch(() => {
+          showSnackbar({ text: 'There was an error submitting the channel' });
+        });
+    }, submitDelayMs);
+
+    showSnackbar({
+      text: 'Submitting channel to Community Library...',
+      duration: null,
+      actionText: 'Cancel',
+      actionCallback: () => {
+        clearTimeout(timer);
+      },
+    });
+
+    emit('close');
+  }
 
 </script>
 

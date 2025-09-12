@@ -2405,4 +2405,9 @@ export const CommunityLibrarySubmission = new APIResource({
       return response.data || [];
     });
   },
+  create(params) {
+    return client.post(this.collectionUrl(), params).then(response => {
+      return response.data;
+    });
+  },
 });
