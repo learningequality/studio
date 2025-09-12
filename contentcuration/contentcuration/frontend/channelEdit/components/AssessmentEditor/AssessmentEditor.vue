@@ -115,7 +115,7 @@
                 :text="$tr('closeBtnLabel')"
                 class="close-item-btn"
                 data-test="closeBtn"
-                @click="closeActiveItem"
+                @click="closeActiveItem"            
               />
             </VLayout>
           </VCardText>
