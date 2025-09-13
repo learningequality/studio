@@ -1,3 +1,5 @@
+
+
 <template>
 
   <div>
@@ -47,12 +49,9 @@
         </KFixedGridItem>
       </template>
     </KFixedGrid>
-    <div
-      v-else
-      class="circular-loader"
-    >
-      <KCircularLoader size="70" />
-    </div>
+   <StudioLargeLoader>
+  Loading storage overview...
+</StudioLargeLoader>
 
     <h2 ref="requestheader">
       {{ $tr('requestMoreSpaceHeading') }}
@@ -92,10 +91,13 @@
   import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
   import { ContentKindsList, ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import theme from 'shared/vuetify/theme';
-
+   import StudioLargeLoader from 'shared/views/StudioLargeLoader.vue';
   export default {
     name: 'Storage',
-    components: { RequestForm },
+    components: { 
+      RequestForm,
+      StudioLargeLoader 
+    },
     mixins: [fileSizeMixin, constantsTranslationMixin],
     data() {
       return {
