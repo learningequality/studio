@@ -172,7 +172,8 @@
   import LoadingText from './LoadingText';
   import StatusChip from './StatusChip';
   import WarningBox from './WarningBox';
-  import { usePublishedData, useCommunityLibrarySubmissions } from './composables';
+  import { useCommunityLibrarySubmissions } from './composables/useCommunityLibrarySubmissions';
+  import { usePublishedData } from './composables/usePublishedData';
 
   import { translateMetadataString } from 'shared/utils/metadataStringsTranslation';
   import countriesUtil from 'shared/utils/countries';

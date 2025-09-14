@@ -1,8 +1,6 @@
 import { ref } from 'vue';
 
-import { Channel, CommunityLibrarySubmission } from 'shared/data/resources';
-
-function useFetch({ asyncFetchFunc }) {
+export function useFetch({ asyncFetchFunc }) {
   const isLoading = ref(true);
   const isFinished = ref(false);
   const data = ref(null);
@@ -27,14 +25,4 @@ function useFetch({ asyncFetchFunc }) {
   fetchData();
 
   return { isLoading, isFinished, data, error };
-}
-
-export function usePublishedData(channelId) {
-  return useFetch({ asyncFetchFunc: () => Channel.getPublishedData(channelId) });
-}
-
-export function useCommunityLibrarySubmissions(channelId) {
-  return useFetch({
-    asyncFetchFunc: () => CommunityLibrarySubmission.fetchCollection({ channel: channelId }),
-  });
 }
