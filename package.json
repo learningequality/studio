@@ -53,7 +53,7 @@
   },
   "homepage": "https://github.com/learningequality/studio#readme",
   "dependencies": {
-    "@sentry/vue": "^9.40.0",
+    "@sentry/vue": "^10.6.0",
     "@tiptap/core": "^3.3.0",
     "@tiptap/extension-code-block-lowlight": "^3.3.0",
     "@tiptap/extension-link": "^3.3.0",
