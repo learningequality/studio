@@ -13,7 +13,7 @@
     </div>
     <div v-else>{{ $tr('error') }}</div>
   </div>
-  <div v-else>—</div>
+  <div v-else><KEmptyPlaceholder /></div>
 
 </template>
 

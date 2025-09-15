@@ -12,69 +12,67 @@
 
       <template #default>
         <div class="content">
-          <div class="box info-box">
-            <KTransition kind="component-fade-out-in">
-              <div
-                v-if="submissionsAreLoading"
-                key="info-box-loader-wrapper"
-                class="loader-wrapper"
+          <Box
+            kind="info"
+            :loading="submissionsAreLoading"
+            class="info-box"
+          >
+            <div
+              key="box-message"
+              class="box-message"
+            >
+              {{ infoBoxPrimaryText }}
+              <span
+                v-if="infoBoxSecondaryText"
+                class="info-box-secondary-text"
               >
-                <KCircularLoader
-                  class="info-box-loader"
-                  disableDefaultTransition
-                />
-              </div>
-              <div v-else-if="submissionsAreFinished">
+                {{ infoBoxSecondaryText }}</span>
+              <template v-if="latestSubmissionStatus === 'none'">
                 <div
-                  key="box-message"
-                  class="box-message"
+                  v-if="showingMoreDetails"
+                  class="more-details-text"
                 >
-                  <KLabeledIcon icon="infoOutline">
-                    {{ infoBoxPrimaryText }}
-                    <span
-                      v-if="infoBoxSecondaryText"
-                      class="info-box-secondary-text"
-                    >
-                      {{ infoBoxSecondaryText }}</span>
-                  </KLabeledIcon>
-                  <StatusChip
-                    v-if="chipStatus"
-                    :status="chipStatus"
-                    class="status-chip"
-                  />
+                  {{ $tr('moreDetails') }}
                 </div>
-                <template v-if="latestSubmissionStatus === 'none'">
-                  <div
-                    v-if="showingMoreDetails"
-                    class="more-details-text"
-                  >
-                    {{ $tr('moreDetails') }}
-                  </div>
-                  <KButton
-                    v-if="!showingMoreDetails"
-                    appearance="basic-link"
-                    :text="$tr('moreDetailsButton')"
-                    @click="showingMoreDetails = !showingMoreDetails"
-                  />
-                  <KButton
-                    v-else
-                    appearance="basic-link"
-                    :text="$tr('lessDetailsButton')"
-                    @click="showingMoreDetails = !showingMoreDetails"
-                  />
-                </template>
-              </div>
-            </KTransition>
-          </div>
-          <WarningBox v-if="!isPublished">
+                <KButton
+                  v-if="!showingMoreDetails"
+                  appearance="basic-link"
+                  :text="$tr('moreDetailsButton')"
+                  @click="showingMoreDetails = !showingMoreDetails"
+                />
+                <KButton
+                  v-else
+                  appearance="basic-link"
+                  :text="$tr('lessDetailsButton')"
+                  @click="showingMoreDetails = !showingMoreDetails"
+                />
+              </template>
+            </div>
+            <template #chip>
+              <StatusChip
+                v-if="chipStatus"
+                :status="chipStatus"
+              />
+            </template>
+          </Box>
+          <Box
+            v-if="!isPublished"
+            kind="warning"
+          >
             {{ $tr('notPublishedWarning') }}
-          </WarningBox>
-          <WarningBox v-else-if="isPublic">
+          </Box>
+          <Box
+            v-else-if="isPublic"
+            kind="warning"
+          >
             {{ $tr('publicWarning') }}
-          </WarningBox>
-          <WarningBox v-else-if="isCurrentVersionAlreadySubmitted">
+          </Box>
+          <Box
+            v-else-if="isCurrentVersionAlreadySubmitted"
+            kind="warning"
+          >
             {{ $tr('alreadySubmittedWarning') }}
-          </WarningBox>
+          </Box>
           <div class="channel-title">{{ props.channel.name }}</div>
           <div>
             <div class="field-annotation">{{ $tr('languagesDetected') }}</div>
@@ -160,13 +158,13 @@
 <script setup>
 
   import { computed, getCurrentInstance, ref, watch } from 'vue';
-  import { themeTokens, themePalette } from 'kolibri-design-system/lib/styles/theme';
+  import { themeTokens } from 'kolibri-design-system/lib/styles/theme';
 
   import camelCase from 'lodash/camelCase';
 
+  import Box from './Box';
   import LoadingText from './LoadingText';
   import StatusChip from './StatusChip';
-  import WarningBox from './WarningBox';
   import { useCommunityLibrarySubmissions } from './composables/useCommunityLibrarySubmissions';
   import { usePublishedData } from './composables/usePublishedData';
 
@@ -181,7 +179,6 @@
   import { CommunityLibrarySubmission } from 'shared/data/resources';
 
   const tokensTheme = themeTokens();
-  const paletteTheme = themePalette();
 
   const { proxy } = getCurrentInstance();
   const store = proxy.$store;
@@ -193,7 +190,6 @@
   const emit = defineEmits(['close']);
 
   const annotationColor = computed(() => tokensTheme.annotation);
-  const infoBoxBackgroundColor = computed(() => paletteTheme.grey.v_100);
   const infoSeparatorColor = computed(() => tokensTheme.fineLine);
 
   const props = defineProps({
@@ -447,21 +443,14 @@
     line-height: 140%;
   }
 
-  .box {
+  .box-message {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding: 8px;
-    border-radius: 4px;
+    width: 100%;
   }
 
   .info-box {
-    min-height: 56px;
-    background-color: v-bind('infoBoxBackgroundColor');
-  }
-
-  .box-message {
-    display: flex;
+    min-height: 4em;
   }
 
   .loader-wrapper {
@@ -473,14 +462,6 @@
 
   .info-box-secondary-text {
     display: block;
-  }
-
-  .status-chip {
-    justify-self: flex-end;
-  }
-
-  .box ::v-deep .icon {
-    top: 0;
   }
 
   .more-details-text {
