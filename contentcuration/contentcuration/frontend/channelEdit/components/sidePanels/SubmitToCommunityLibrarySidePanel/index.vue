@@ -50,8 +50,8 @@
             </div>
             <template #chip>
               <StatusChip
-                v-if="chipStatus"
-                :status="chipStatus"
+                v-if="latestSubmissionStatus && latestSubmissionStatus !== 'none'"
+                :status="latestSubmissionStatus"
               />
             </template>
           </Box>
@@ -175,7 +175,7 @@
   import CountryField from 'shared/views/form/CountryField';
   import LanguagesMap from 'shared/leUtils/Languages';
   import LicensesMap from 'shared/leUtils/Licenses';
-  import { CategoriesLookup } from 'shared/constants';
+  import { CategoriesLookup, CommunityLibraryStatus } from 'shared/constants';
   import { CommunityLibrarySubmission } from 'shared/data/resources';
 
   const tokensTheme = themeTokens();
@@ -231,45 +231,34 @@
     if (!submissionsAreFinished.value) return null;
     if (!latestSubmission.value) return 'none';
 
-    switch (latestSubmission.value.status) {
-      case 'PENDING':
-        return 'submitted';
-      case 'APPROVED':
-      case 'LIVE':
-        return 'approved';
-      case 'REJECTED':
-        return 'flagged';
-      default:
-        throw new Error(`Unexpected submission status: ${latestSubmission.value.status}`);
-    }
+      // We do not need to distinguish LIVE from APPROVED in the UI
+    const uiSubmissionStatus =
+      latestSubmission.value.status == CommunityLibraryStatus.LIVE
+        ? CommunityLibraryStatus.APPROVED
+        : latestSubmission.value.status;
+
+    return uiSubmissionStatus;
   });
 
   const infoConfigs = {
-    submitted: {
-      chipStatus: 'submitted',
+    [CommunityLibraryStatus.PENDING]: {
       primaryText: $tr('submittedPrimaryInfo'),
       secondaryText: $tr('reviewersWillSeeLatestFirst'),
     },
-    approved: {
-      chipStatus: 'approved',
+    [CommunityLibraryStatus.APPROVED]: {
       primaryText: $tr('approvedPrimaryInfo'),
       secondaryText: $tr('reviewersWillSeeLatestFirst'),
     },
-    flagged: {
-      chipStatus: 'flagged',
+    [CommunityLibraryStatus.REJECTED]: {
       primaryText: $tr('flaggedPrimaryInfo'),
       secondaryText: null,
     },
     none: {
-      chipStatus: null,
       primaryText: $tr('nonePrimaryInfo'),
       secondaryText: null,
     },
   };
 
-  const chipStatus = computed(() =>
-    latestSubmissionStatus.value ? infoConfigs[latestSubmissionStatus.value].chipStatus : null,
-  );
   const infoBoxPrimaryText = computed(() =>
     latestSubmissionStatus.value ? infoConfigs[latestSubmissionStatus.value].primaryText : null,
   );
