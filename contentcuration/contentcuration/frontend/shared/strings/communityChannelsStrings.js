@@ -69,4 +69,16 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Language is required',
     context: 'Error message when language selection is required',
   },
+  pendingStatus: {
+    message: 'Pending',
+    context: 'Status indicating that an Community Library submission is pending',
+  },
+  approvedStatus: {
+    message: 'Approved',
+    context: 'Status indicating that an Community Library submission is approved',
+  },
+  flaggedStatus: {
+    message: 'Flagged',
+    context: 'Status indicating that an Community Library submission is rejected',
+  },
 });

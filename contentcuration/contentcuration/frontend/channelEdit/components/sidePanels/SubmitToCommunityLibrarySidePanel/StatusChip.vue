@@ -16,24 +16,27 @@
 
   import { themePalette } from 'kolibri-design-system/lib/styles/theme';
   import { computed } from 'vue';
+  import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 
   const theme = themePalette();
 
+  const { pendingStatus$, approvedStatus$, flaggedStatus$ } = communityChannelsStrings;
+
   const configChoices = {
     submitted: {
-      text: 'Submitted',
+      text: pendingStatus$(),
       color: theme.yellow.v_100,
       labelColor: theme.orange.v_600,
       icon: 'schedule',
     },
     approved: {
-      text: 'Approved',
+      text: approvedStatus$(),
       color: theme.green.v_100,
       labelColor: theme.green.v_600,
       icon: 'circleCheckmark',
     },
     flagged: {
-      text: 'Flagged',
+      text: flaggedStatus$(),
       color: theme.red.v_100,
       labelColor: theme.red.v_600,
       icon: 'error',

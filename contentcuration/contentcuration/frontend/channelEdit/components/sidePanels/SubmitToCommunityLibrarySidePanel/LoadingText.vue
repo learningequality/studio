@@ -6,12 +6,12 @@
       class="loader-wrapper"
     >
       <KCircularLoader :size="16" />
-      Checking...
+      {{ $tr('checking') }}
     </div>
     <div v-else-if="finishedLoading">
       <slot></slot>
     </div>
-    <div v-else>Error loading data.</div>
+    <div v-else>{{ $tr('error') }}</div>
   </div>
   <div v-else>—</div>
 
@@ -35,6 +35,18 @@
       default: false,
     },
   });
+
+</script>
+
+
+<script>
+
+  export default {
+    $trs: {
+      checking: 'Checking...',
+      error: 'Error loading data.',
+    },
+  };
 
 </script>
 

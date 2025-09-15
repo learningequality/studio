@@ -7,7 +7,7 @@
       @closePanel="$emit('close')"
     >
       <template #header>
-        <h1 class="side-panel-title">Submit to Community Library</h1>
+        <h1 class="side-panel-title">{{ $tr('panelTitle') }}</h1>
       </template>
 
       <template #default>
@@ -48,20 +48,18 @@
                     v-if="showingMoreDetails"
                     class="more-details-text"
                   >
-                    The Kolibri Community Library features channels created by the community. Share
-                    your openly licensed work for review, and once it's approved, it will be
-                    available to users in your selected region or language.
+                    {{ $tr('moreDetails') }}
                   </div>
                   <KButton
                     v-if="!showingMoreDetails"
                     appearance="basic-link"
-                    text="More details about the Community Library"
+                    :text="$tr('moreDetailsButton')"
                     @click="showingMoreDetails = !showingMoreDetails"
                   />
                   <KButton
                     v-else
                     appearance="basic-link"
-                    text="Show less"
+                    :text="$tr('lessDetailsButton')"
                     @click="showingMoreDetails = !showingMoreDetails"
                   />
                 </template>
@@ -69,20 +67,17 @@
             </KTransition>
           </div>
           <WarningBox v-if="!isPublished">
-            This channel isn't published to Kolibri Studio yet. Publish first, then submit to the
-            Community Library.
+            {{ $tr('notPublishedWarning') }}
           </WarningBox>
           <WarningBox v-else-if="isPublic">
-            This channel is currently public in the Content Library. It is not possible to submit
-            public channels to the Community Library.
+            {{ $tr('publicWarning') }}
           </WarningBox>
           <WarningBox v-else-if="isCurrentVersionAlreadySubmitted">
-            This version of the channel has already been submitted to the Community Library. Please
-            wait for review or make changes and publish a new version before submitting again.
+            {{ $tr('alreadySubmittedWarning') }}
           </WarningBox>
           <div class="channel-title">{{ props.channel.name }}</div>
           <div>
-            <div class="field-annotation">Language(s) detected</div>
+            <div class="field-annotation">{{ $tr('languagesDetected') }}</div>
             <LoadingText
               :loading="publishedDataIsLoading"
               :finishedLoading="publishedDataIsFinished"
@@ -92,7 +87,7 @@
             </LoadingText>
           </div>
           <div>
-            <div class="field-annotation">License(s) detected</div>
+            <div class="field-annotation">{{ $tr('licensesDetected') }}</div>
             <LoadingText
               :loading="publishedDataIsLoading"
               :finishedLoading="publishedDataIsFinished"
@@ -102,7 +97,7 @@
             </LoadingText>
           </div>
           <div>
-            <div class="field-annotation">Categories</div>
+            <div class="field-annotation">{{ $tr('categoriesDetected') }}</div>
             <LoadingText
               :loading="publishedDataIsLoading"
               :finishedLoading="publishedDataIsFinished"
@@ -124,7 +119,7 @@
                 v-model="countries"
                 class="country-field"
                 :disabled="!canBeEdited"
-                label="Country"
+                :label="$tr('countryLabel')"
                 fullWidth
                 :hide-details="true"
               />
@@ -134,9 +129,9 @@
             v-model="description"
             :disabled="!canBeEdited"
             :invalid="description.length < 1"
-            invalidText="Description is required"
+            :invalidText="$tr('descriptionRequired')"
             textArea
-            label="Describe what's new in this submission"
+            :label="$tr('descriptionLabel')"
             :maxlength="250"
             style="width: 100%"
             class="description-textbox"
@@ -146,13 +141,13 @@
 
       <template #bottomNavigation>
         <div class="footer">
-          <KButton @click="$emit('close')"> Cancel </KButton>
+          <KButton @click="$emit('close')">{{ $tr('cancelButton') }}</KButton>
           <KButton
             primary
             :disabled="!canBeSubmitted"
             @click="onSubmit"
           >
-            Submit for review
+            {{ $tr('submitButton') }}
           </KButton>
         </div>
       </template>
@@ -191,6 +186,10 @@
   const { proxy } = getCurrentInstance();
   const store = proxy.$store;
 
+  function $tr(param) {
+    return proxy.$tr(param);
+  }
+
   const emit = defineEmits(['close']);
 
   const annotationColor = computed(() => tokensTheme.annotation);
@@ -218,7 +217,7 @@
     if (!submissionsData.value) return undefined;
     if (submissionsData.value.length === 0) return null;
 
-    // Submissions are ordered by most recent first in the backend
+      // Submissions are ordered by most recent first in the backend
     return submissionsData.value[0];
   });
 
@@ -252,23 +251,22 @@
   const infoConfigs = {
     submitted: {
       chipStatus: 'submitted',
-      primaryText: 'A previous version is still pending review.',
-      secondaryText: 'Reviewers will see the latest submission first.',
+      primaryText: $tr('submittedPrimaryInfo'),
+      secondaryText: $tr('reviewersWillSeeLatestFirst'),
     },
     approved: {
       chipStatus: 'approved',
-      primaryText: 'A previous version is live in the Community Library.',
-      secondaryText: 'Reviewers will see the latest submission first.',
+      primaryText: $tr('approvedPrimaryInfo'),
+      secondaryText: $tr('reviewersWillSeeLatestFirst'),
     },
     flagged: {
       chipStatus: 'flagged',
-      primaryText:
-        'A previous version was flagged for review. Ensure you have fixed all  highlighted issues before submitting.',
+      primaryText: $tr('flaggedPrimaryInfo'),
       secondaryText: null,
     },
     none: {
       chipStatus: null,
-      primaryText: 'Your published channel will be added to the Community Library review queue.',
+      primaryText: $tr('nonePrimaryInfo'),
       secondaryText: null,
     },
   };
@@ -311,20 +309,20 @@
   });
 
   const detectedLanguages = computed(() => {
-    // We need to filter out null values due to a backend bug
-    // causing null values to sometimes be included in the list
+      // We need to filter out null values due to a backend bug
+      // causing null values to sometimes be included in the list
     const languageCodes = latestPublishedData.value?.included_languages.filter(
       code => code !== null,
     );
     if (!languageCodes) return undefined;
-    if (languageCodes.length === 0) return 'None';
+    if (languageCodes.length === 0) return $tr('none');
 
     return languageCodes.map(code => LanguagesMap.get(code).readable_name).join(', ');
   });
 
   const detectedLicenses = computed(() => {
     if (!latestPublishedData.value?.included_licenses) return undefined;
-    if (latestPublishedData.value.included_licenses.length === 0) return 'None';
+    if (latestPublishedData.value.included_licenses.length === 0) return $tr('none');
 
     return latestPublishedData.value.included_licenses
       .map(licenseId => LicensesMap.get(licenseId).license_name)
@@ -337,7 +335,7 @@
 
   const detectedCategories = computed(() => {
     if (!latestPublishedData.value?.included_categories) return undefined;
-    if (latestPublishedData.value.included_categories.length === 0) return 'None';
+    if (latestPublishedData.value.included_categories.length === 0) return $tr('none');
 
     return latestPublishedData.value.included_categories
       .map(categoryId => categoryIdToName(categoryId))
@@ -359,17 +357,17 @@
         categories: detectedCategories.value,
       })
         .then(() => {
-          showSnackbar({ text: 'Channel submitted to Community Library' });
+          showSnackbar({ text: $tr('submittedSnackbar') });
         })
         .catch(() => {
-          showSnackbar({ text: 'There was an error submitting the channel' });
+          showSnackbar({ text: $tr('errorSnackbar') });
         });
     }, submitDelayMs);
 
     showSnackbar({
-      text: 'Submitting channel to Community Library...',
+      text: $tr('submittingSnackbar'),
       duration: null,
-      actionText: 'Cancel',
+      actionText: $tr('cancelButton'),
       actionCallback: () => {
         clearTimeout(timer);
       },
@@ -377,6 +375,56 @@
 
     emit('close');
   }
+
+</script>
+
+
+<script>
+
+  export default {
+    // NOTE: Uses of translated strings inside setup are not picked up by ESLint
+    $trs: {
+      panelTitle: 'Submit to Community Library',
+      // eslint-disable-next-line kolibri/vue-no-unused-translations
+      submittedPrimaryInfo: 'A previous version is still pending review.',
+      // eslint-disable-next-line kolibri/vue-no-unused-translations
+      reviewersWillSeeLatestFirst: 'Reviewers will see the latest submission first.',
+      // eslint-disable-next-line kolibri/vue-no-unused-translations
+      approvedPrimaryInfo: 'A previous version is live in the Community Library.',
+      // eslint-disable-next-line kolibri/vue-no-unused-translations
+      flaggedPrimaryInfo:
+        'A previous version was flagged for review. Ensure you have fixed all highlighted issues before submitting.',
+      // eslint-disable-next-line kolibri/vue-no-unused-translations
+      nonePrimaryInfo:
+        'Your published channel will be added to the Community Library review queue.',
+      moreDetailsButton: 'More details about the Community Library',
+      lessDetailsButton: 'Show less',
+      moreDetails:
+        "The Kolibri Community Library features channels created by the community. Share your openly licensed work for review, and once it's approved, it will be available to users in your selected region or language.",
+      notPublishedWarning:
+        "This channel isn't published to Kolibri Studio yet. Publish first, then submit to the Community Library.",
+      publicWarning:
+        'This channel is currently public in the Content Library. It is not possible to submit public channels to the Community Library.',
+      alreadySubmittedWarning:
+        'This version of the channel has already been submitted to the Community Library. Please wait for review or make changes and publish a new version before submitting again.',
+      descriptionLabel: "Describe what's new in this submission",
+      descriptionRequired: 'Description is required',
+      submitButton: 'Submit for review',
+      cancelButton: 'Cancel',
+      // eslint-disable-next-line kolibri/vue-no-unused-translations
+      submittingSnackbar: 'Submitting channel to Community Library...',
+      // eslint-disable-next-line kolibri/vue-no-unused-translations
+      submittedSnackbar: 'Channel submitted to Community Library',
+      // eslint-disable-next-line kolibri/vue-no-unused-translations
+      errorSnackbar: 'There was an error submitting the channel',
+      countryLabel: 'Country',
+      languagesDetected: 'Language(s) detected',
+      licensesDetected: 'License(s) detected',
+      categoriesDetected: 'Categories',
+      // eslint-disable-next-line kolibri/vue-no-unused-translations
+      none: 'None',
+    },
+  };
 
 </script>
 
