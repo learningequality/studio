@@ -105,7 +105,7 @@
           >
             {{ selectFile$() }}
           </button>
-          <p class="drop-zone-text">{{ supportedFileTypes$() }}</p>
+          <p class="drop-zone-text">{{ supportedFileTypesText }}</p>
         </ImageDropZone>
       </div>
     </div>
@@ -212,6 +212,13 @@
       const imageProcessor = inject('imageProcessor', {});
       const { processFile, ACCEPTED_MIME_TYPES } = imageProcessor;
 
+      const supportedFileTypesText = computed(() => {
+        const extensions = ACCEPTED_MIME_TYPES.map(type =>
+          type.replace('image/', '').replace('svg+xml', 'svg'),
+        );
+        return supportedFileTypes$({ extensions: extensions.join(', ') });
+      });
+
       const instance = getCurrentInstance();
       const store = instance.proxy.$store;
 
@@ -285,6 +292,7 @@
         isEditMode,
         canInsert,
         ACCEPTED_MIME_TYPES,
+        supportedFileTypesText,
         triggerFileInput,
         onFileSelect,
         onInsert,
@@ -311,7 +319,6 @@
         altTextDescription$,
         imageDropZoneText$,
         selectFileToUpload$,
-        supportedFileTypes$,
         removeImage$,
         remove$,
         saveChanges$,
