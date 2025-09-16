@@ -493,7 +493,8 @@
       },
       browseWindowStyle() {
         return {
-          maxWidth: this.shouldShowRecommendations ? '1200px' : '800px',
+          maxWidth: '1200px',
+          width: '100%',
         };
       },
       recommendationsSectionTitle() {
