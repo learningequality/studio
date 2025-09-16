@@ -2,11 +2,11 @@
 
   <MessageLayout :header="$tr('accountCreatedTitle')">
     <template #back>
-      <KButton
-        appearance="raised-button"
-        :primary="true"
+      <KRouterLink
+        :to="{ name: 'Main' }"
         :text="$tr('backToLogin')"
-        @click="$router.push({ name: 'Main' })"
+        :primary="true"
+        appearance="raised-button"
       />
     </template>
   </MessageLayout>
