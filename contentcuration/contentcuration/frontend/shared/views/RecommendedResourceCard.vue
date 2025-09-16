@@ -41,11 +41,13 @@
           <KIconButton
             icon="openNewTab"
             :tooltip="$tr('goToLocationTooltip')"
+            :aria-label="$tr('goToLocationTooltip')"
             @click.stop="goToLocation"
           />
           <KIconButton
             icon="thumbDown"
             :tooltip="$tr('markNotRelevantTooltip')"
+            :aria-label="$tr('markNotRelevantTooltip')"
             @click.stop="markNotRelevant"
           />
         </KFixedGridItem>

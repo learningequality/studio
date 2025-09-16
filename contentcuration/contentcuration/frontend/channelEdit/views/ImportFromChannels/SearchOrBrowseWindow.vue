@@ -219,7 +219,7 @@
         <p
           v-if="showFeedbackErrorMessage"
           class="feedback-form-error"
-          :style="{ color: $themeTokens.error, backgroundColor: $themePalette.red.v_100 }"
+          :style="{ color: $themeTokens.error, backgroundColor: $themePalette.pink.v_100 }"
         >
           <KLabeledIcon
             icon="error"
