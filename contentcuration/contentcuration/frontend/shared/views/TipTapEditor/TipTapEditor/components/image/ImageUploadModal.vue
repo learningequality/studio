@@ -216,7 +216,7 @@
         const extensions = ACCEPTED_MIME_TYPES.map(type =>
           type.replace('image/', '').replace('svg+xml', 'svg'),
         );
-        return supportedFileTypes$() + extensions.join(', ');
+        return supportedFileTypes$({ extensions: extensions.join(', ') });
       });
 
       const instance = getCurrentInstance();
