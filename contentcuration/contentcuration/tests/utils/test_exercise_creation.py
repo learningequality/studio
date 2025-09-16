@@ -1918,3 +1918,57 @@ class TestQTIExerciseCreation(StudioTestCase):
             self._normalize_xml(expected_manifest_xml),
             self._normalize_xml(actual_manifest_xml),
         )
+
+    def test_input_question(self):
+        assessment_id = "fedcba0987654321fedcba0987654321"
+        item = self._create_assessment_item(
+            exercises.INPUT_QUESTION,
+            "What positive integers are less than 3?",
+            [
+                {"answer": 1, "correct": True, "order": 1},
+                {"answer": 2, "correct": True, "order": 2},
+            ],
+            assessment_id=assessment_id,
+        )
+
+        exercise_data = {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": 1,
+            "m": 1,
+            "all_assessment_items": [item.assessment_id],
+            "assessment_mapping": {item.assessment_id: exercises.INPUT_QUESTION},
+        }
+
+        self._create_qti_zip(exercise_data)
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+
+        # Check the QTI XML for text entry specifics
+        expected_item_file = "items/K_ty6CYdlQyH-3LoJh2VDIQ.xml"
+        actual_item_xml = zip_file.read(expected_item_file).decode("utf-8")
+
+        # Expected QTI item XML content for text entry
+        expected_item_xml = """<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqtiasi_v3p0 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqti_asiv3p0p1_v1p0.xsd" identifier="K_ty6CYdlQyH-3LoJh2VDIQ" title="Test QTI Exercise 1" adaptive="false" time-dependent="false" language="en-US" tool-name="kolibri" tool-version="0.1">
+    <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="float">
+        <qti-correct-response>
+            <qti-value>1</qti-value>
+            <qti-value>2</qti-value>
+        </qti-correct-response>
+    </qti-response-declaration>
+    <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float" />
+    <qti-item-body>
+        <div>
+            <p>What positive integers are less than 3?</p>
+            <p><qti-text-entry-interaction response-identifier="RESPONSE" expected-length="50" placeholder-text="Enter your answer here" /></p>
+        </div>
+    </qti-item-body>
+    <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct" />
+</qti-assessment-item>"""
+
+        # Compare normalized XML
+        self.assertEqual(
+            self._normalize_xml(expected_item_xml),
+            self._normalize_xml(actual_item_xml),
+        )

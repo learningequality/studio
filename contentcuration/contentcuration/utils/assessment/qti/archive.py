@@ -154,18 +154,22 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
         prompt.append(interaction_element)
         interaction = Div(children=prompt)
 
-        correct_values = [
-            Value(value=answer["answer"])
-            for answer in processed_data["answers"]
-            if answer["correct"]
-        ]
+        float_answer = True
+        correct_values = []
+        for answer in processed_data["answers"]:
+            if answer["correct"]:
+                correct_values.append(Value(value=str(answer["answer"])))
+                try:
+                    float(answer["answer"])
+                except ValueError:
+                    float_answer = False
 
         response_declaration = ResponseDeclaration(
             identifier="RESPONSE",
             cardinality=Cardinality.MULTIPLE
-            if processed_data["multiple_select"]
+            if len(correct_values) > 1
             else Cardinality.SINGLE,
-            base_type=BaseType.STRING,
+            base_type=BaseType.FLOAT if float_answer else BaseType.STRING,
             correct_response=CorrectResponse(value=correct_values)
             if correct_values
             else None,
