@@ -62,7 +62,7 @@
     "@tiptap/starter-kit": "^3.3.0",
     "@tiptap/vue-2": "^3.3.0",
     "ajv": "^8.12.0",
-    "axios": "^1.11.0",
+    "axios": "^1.12.2",
     "broadcast-channel": "^5.1.0",
     "core-js": "^3.44.0",
     "crc-32": "^1.2.2",
