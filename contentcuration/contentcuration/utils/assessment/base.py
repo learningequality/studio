@@ -272,7 +272,11 @@ class ExerciseArchiveGenerator(ABC):
             )
             if width is not None and height is not None:
                 image_list.append(
-                    {"name": processed_filename, "width": width, "height": height}
+                    {
+                        "name": f"{new_image_path}/{processed_filename}",
+                        "width": width,
+                        "height": height,
+                    }
                 )
 
         content = content.replace(
