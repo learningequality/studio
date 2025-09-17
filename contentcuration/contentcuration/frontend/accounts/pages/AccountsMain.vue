@@ -53,9 +53,10 @@
               :label="$tr('passwordLabel')"
             />
             <p>
-              <ActionLink
+              <KRouterLink
                 :to="{ name: 'ForgotPassword' }"
                 :text="$tr('forgotPasswordLink')"
+                appearance="basic-link"
               />
             </p>
             <KButton
@@ -75,9 +76,10 @@
           </VForm>
           <VDivider />
           <p class="mt-4 text-xs-center">
-            <ActionLink
+            <KButton
               href="/channels"
               :text="$tr('guestModeLink')"
+              appearance="basic-link"
             />
           </p>
         </VCard>
@@ -87,21 +89,25 @@
 
         <p class="links mt-3 text-xs-center">
           <span>
-            <ActionLink
+            <KButton
               :text="$tr('privacyPolicyLink')"
+              appearance="basic-link"
               @click="showPrivacyPolicy"
             />
           </span>
           <span>
-            <ActionLink
+            <KButton
               :text="$tr('TOSLink')"
+              appearance="basic-link"
               @click="showTermsOfService"
             />
           </span>
           <span>
-            <ActionLink
-              :text="$tr('copyright', { year: new Date().getFullYear() })"
+            <KButton
               href="https://learningequality.org/"
+              :text="$tr('copyright', { year: new Date().getFullYear() })"
+              appearance="basic-link"
+              iconAfter="openNewTab"
               target="_blank"
             />
           </span>
