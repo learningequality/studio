@@ -728,6 +728,86 @@ class TestPerseusExerciseCreation(StudioTestCase):
         # we are deliberately changing the archive generation algorithm for perseus files.
         self.assertEqual(exercise_file.checksum, "94de065d485e52d56c3032074044e7c3")
 
+    def test_image_key_full_path_regression(self):
+        """Regression test for image key containing full path in Perseus files.
+
+        This test ensures that the 'images' object in Perseus JSON files uses the full path
+        as the key (${IMG_PLACEHOLDER}/images/filename.ext) rather than just the filename.
+
+        Bug: The image key in the 'images' object was being set to just the filename
+        instead of the full path with IMG_PLACEHOLDER prefix.
+        """
+        # Create an image file
+        image_file = fileobj_exercise_image()
+
+        # Create a question with image that has dimensions (to trigger images object generation)
+        image_url = exercises.CONTENT_STORAGE_FORMAT.format(image_file.filename())
+        question_text = f"Identify the shape: ![shape]({image_url} =100x100)"
+        item = self._create_assessment_item(
+            exercises.SINGLE_SELECTION,
+            question_text,
+            [
+                {"answer": "Circle", "correct": True, "order": 1},
+                {"answer": "Square", "correct": False, "order": 2},
+            ],
+        )
+
+        # Associate the image with the assessment item
+        image_file.assessment_item = item
+        image_file.save()
+
+        # Create the exercise data
+        exercise_data = {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": 1,
+            "m": 1,
+            "all_assessment_items": [item.assessment_id],
+            "assessment_mapping": {item.assessment_id: exercises.SINGLE_SELECTION},
+        }
+
+        # Create the Perseus exercise
+        self._create_perseus_zip(exercise_data)
+
+        # Verify that a file was created
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
+
+        # Validate the zip file
+        zip_file, _ = self._validate_perseus_zip(exercise_file)
+
+        # Get the Perseus item JSON content
+        item_json = json.loads(
+            zip_file.read(f"{item.assessment_id}.json").decode("utf-8")
+        )
+
+        # The critical regression check: images object keys should contain full path
+        question_images = item_json["question"]["images"]
+
+        # Should have exactly one image entry
+        self.assertEqual(
+            len(question_images),
+            1,
+            f"Expected 1 image in images object, got {len(question_images)}: {list(question_images.keys())}",
+        )
+
+        # Get the image key from the images object
+        image_key = list(question_images.keys())[0]
+
+        # The key should be the full path, not just the filename
+        expected_full_path = (
+            f"${exercises.IMG_PLACEHOLDER}/images/{image_file.filename()}"
+        )
+        self.assertEqual(
+            image_key,
+            expected_full_path,
+            f"Image key should be '{expected_full_path}' but got: '{image_key}'",
+        )
+
+        # Verify the image has the expected dimensions
+        image_data = question_images[image_key]
+        self.assertEqual(image_data["width"], 100)
+        self.assertEqual(image_data["height"], 100)
+
     def _test_image_resizing_in_field(self, field_type):
         """
         Helper method to test image resizing in different fields (question, answer, hint)
