@@ -366,7 +366,7 @@
         const options = sortBy(this.channels, c => c.name.toLowerCase()).filter(c => !c.public);
         return options.map(option => ({
           text: option.name,
-          value: option.id,
+          value: this.channelName(option),
         }));
       },
     },
@@ -384,6 +384,9 @@
           // Vue doesn't register push, so use explicit assignment
           this.license = this.license.concat([license]);
         }
+      },
+      channelName(channel) {
+        return `${channel.name} (${channel.id})`;
       },
       // eslint-disable-next-line kolibri/vue-no-unused-methods, vue/no-unused-properties
       onValidationFailed() {
