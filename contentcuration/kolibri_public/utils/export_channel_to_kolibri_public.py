@@ -16,7 +16,7 @@ from kolibri_public.utils.mapper import ChannelMapper
 logger = logging.getLogger(__file__)
 
 
-class using_temp_migrated_database:
+class using_temp_migrated_content_database:
     """
     A wrapper context manager for read-only access to a content database
     that might not have all current migrations applied. Works by copying
@@ -77,7 +77,7 @@ def export_channel_to_kolibri_public(
     else:
         db_storage_path = versioned_db_storage_path
 
-    with using_temp_migrated_database(db_storage_path):
+    with using_temp_migrated_content_database(db_storage_path):
         channel = ExportedChannelMetadata.objects.get(id=channel_id)
         logger.info(
             "Found channel {} for id: {} mapping now".format(channel.name, channel_id)
