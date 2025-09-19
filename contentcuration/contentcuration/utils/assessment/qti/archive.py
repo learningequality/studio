@@ -64,8 +64,6 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
 
     file_format = "zip"
     preset = format_presets.QTI_ZIP
-    # Our markdown parser does not handle width/height in image refs
-    RETAIN_IMAGE_DIMENSIONS = False
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
