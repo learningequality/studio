@@ -25,8 +25,6 @@
       v-model="channel_id__in"
       :label="$tr('channelSourceLabel')"
       :items="channelOptions"
-      item-text="name"
-      item-value="id"
       :disabled="loadingChannels"
       notranslate
       useEllipsis
@@ -64,7 +62,6 @@
       v-model="kinds"
       :items="kindFilterOptions"
       :label="$tr('kindLabel')"
-      item-text="text"
     />
 
     <!-- Language -->
@@ -78,7 +75,6 @@
       v-model="licenses"
       :items="licenseOptions"
       :label="$tr('licensesLabel')"
-      item-text="text"
     />
 
     <!-- Created after -->
@@ -210,7 +206,11 @@
             this.channel_id__in = [];
           }
 
-          this.channelOptions = channels.filter(c => c.id !== this.currentChannelId);
+          const filteredChannels = channels.filter(c => c.id !== this.currentChannelId);
+          this.channelOptions = filteredChannels.map(channel => ({
+            value: channel.id,
+            text: channel.name,
+          }));
           this.loadingChannels = false;
         });
       },

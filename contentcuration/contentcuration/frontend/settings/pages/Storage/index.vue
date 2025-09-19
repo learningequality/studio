@@ -98,6 +98,7 @@
       <KTransition kind="component-vertical-slide-out-in">
         <RequestForm
           v-show="showRequestForm"
+          ref="requestform"
           @submitted="showRequestForm = false"
         />
       </KTransition>
@@ -156,12 +157,11 @@
         this.showRequestForm = !this.showRequestForm;
         if (this.showRequestForm) {
           this.$nextTick(() => {
-            if (window.scroll) {
-              window.scroll({
-                top: this.$refs.requestheader.offsetTop - 24,
-                behavior: 'smooth',
-              });
-            }
+            this.$nextTick(() => {
+              // Wait for the form to be visible
+              // then scroll to the top of the form
+              this.$refs.requestform.$el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
           });
         }
       },

@@ -18,7 +18,7 @@
       >
         <template #selection="{ item }">
           <VChip :class="{ notranslate }">
-            {{ getText(item) }}
+            {{ item.text }}
           </VChip>
         </template>
         <template #item="{ item }">
@@ -33,7 +33,7 @@
               :style="getEllipsisStyle()"
               dir="auto"
             >
-              {{ getText(item) }}
+              {{ item.text }}
             </span>
           </Checkbox>
         </template>
@@ -66,10 +66,6 @@
         default() {
           return [];
         },
-      },
-      itemText: {
-        type: [String, Function],
-        required: true,
       },
       notranslate: {
         type: Boolean,
@@ -108,14 +104,6 @@
             whiteSpace: 'nowrap',
           }
           : {};
-      },
-      getText(item) {
-        if (typeof this.itemText === 'string') {
-          return item[this.itemText];
-        } else if (typeof this.itemText === 'function') {
-          return this.itemText(item);
-        }
-        return item.text || item;
       },
       resetScroll() {
         const [{ value: firstItemValue } = {}] = this.items || [];
