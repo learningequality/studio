@@ -72,7 +72,6 @@
 
               <VListTileAction v-if="!isNodePreviewOpen">
                 <KButton
-            
                   :text="$tr('addStepBtnLabel')"
                   :primary="true"
                   class="font-weight-bold"
@@ -97,7 +96,6 @@
         #actions
       >
         <KButton
-            
           :text="$tr('addStepBtnLabel')"
           class="font-weight-bold"
           :primary="true"
