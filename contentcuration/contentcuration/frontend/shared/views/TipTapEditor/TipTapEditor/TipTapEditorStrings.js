@@ -224,7 +224,7 @@ const MESSAGES = {
     context: 'Accessibility label for the button that opens the file picker.',
   },
   supportedFileTypes: {
-    message: 'Supported file types: png, jpg, jpeg, svg, webp',
+    message: 'Supported file types: { extensions }',
     context: 'A list of supported image file formats.',
   },
   removeImage: {

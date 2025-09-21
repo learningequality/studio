@@ -204,7 +204,7 @@ pyasn1-modules==0.2.8
     # via google-auth
 pycountry==24.6.1
     # via -r requirements.in
-pydantic==2.11.7
+pydantic==2.11.9
     # via -r requirements.in
 pydantic-core==2.33.2
     # via pydantic
@@ -243,7 +243,7 @@ rsa==4.7.2
     # via google-auth
 s3transfer==0.4.2
     # via boto3
-sentry-sdk==2.37.1
+sentry-sdk==2.38.0
     # via -r requirements.in
 six==1.16.0
     # via
