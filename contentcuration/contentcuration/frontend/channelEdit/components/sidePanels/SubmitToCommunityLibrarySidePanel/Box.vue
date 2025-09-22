@@ -3,7 +3,7 @@
   <div class="box">
     <KTransition kind="component-fade-out-in">
       <div
-        v-if="props.loading"
+        v-if="loading"
         key="box-loader-wrapper"
         class="loader-wrapper"
       >
@@ -31,58 +31,68 @@
 </template>
 
 
-<script setup>
+<script>
 
   import { computed } from 'vue';
   import { themePalette, themeTokens } from 'kolibri-design-system/lib/styles/theme';
 
-  const props = defineProps({
-    kind: {
-      type: String,
-      required: false,
-      default: 'info',
-      validator: value => ['warning', 'info'].includes(value),
-    },
-    loading: {
-      type: Boolean,
-      required: false,
-      default: false,
-    },
-  });
+  export default {
+    name: 'Box',
+    setup(props) {
+      const paletteTheme = themePalette();
+      const tokensTheme = themeTokens();
 
-  const paletteTheme = themePalette();
-  const tokensTheme = themeTokens();
+      const boxBackgroundColor = computed(() => {
+        switch (props.kind) {
+          case 'warning':
+            return paletteTheme.yellow.v_100;
+          case 'info':
+            return paletteTheme.grey.v_100;
+          default:
+            throw new Error(`Unsupported box kind: ${props.kind}`);
+        }
+      });
+      const boxTextColor = computed(() => {
+        switch (props.kind) {
+          case 'warning':
+            return paletteTheme.red.v_500;
+          case 'info':
+            return tokensTheme.text;
+          default:
+            throw new Error(`Unsupported box kind: ${props.kind}`);
+        }
+      });
+      const icon = computed(() => {
+        switch (props.kind) {
+          case 'warning':
+            return 'warningIncomplete';
+          case 'info':
+            return 'infoOutline';
+          default:
+            throw new Error(`Unsupported box kind: ${props.kind}`);
+        }
+      });
 
-  const boxBackgroundColor = computed(() => {
-    switch (props.kind) {
-      case 'warning':
-        return paletteTheme.yellow.v_100;
-      case 'info':
-        return paletteTheme.grey.v_100;
-      default:
-        throw new Error(`Unsupported box kind: ${props.kind}`);
-    }
-  });
-  const boxTextColor = computed(() => {
-    switch (props.kind) {
-      case 'warning':
-        return paletteTheme.red.v_500;
-      case 'info':
-        return tokensTheme.text;
-      default:
-        throw new Error(`Unsupported box kind: ${props.kind}`);
-    }
-  });
-  const icon = computed(() => {
-    switch (props.kind) {
-      case 'warning':
-        return 'warningIncomplete';
-      case 'info':
-        return 'infoOutline';
-      default:
-        throw new Error(`Unsupported box kind: ${props.kind}`);
-    }
-  });
+      return {
+        boxBackgroundColor,
+        boxTextColor,
+        icon,
+      };
+    },
+    props: {
+      kind: {
+        type: String,
+        required: false,
+        default: 'info',
+        validator: value => ['warning', 'info'].includes(value),
+      },
+      loading: {
+        type: Boolean,
+        required: false,
+        default: false,
+      },
+    },
+  };
 
 </script>
 

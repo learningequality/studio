@@ -12,55 +12,66 @@
 </template>
 
 
-<script setup>
+<script>
 
   import { themePalette } from 'kolibri-design-system/lib/styles/theme';
   import { computed } from 'vue';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
   import { CommunityLibraryStatus } from 'shared/constants';
 
-  const theme = themePalette();
+  export default {
+    name: 'StatusChip',
+    setup(props) {
+      const theme = themePalette();
 
-  const { pendingStatus$, approvedStatus$, flaggedStatus$ } = communityChannelsStrings;
+      const { pendingStatus$, approvedStatus$, flaggedStatus$ } = communityChannelsStrings;
 
-  const configChoices = {
-    [CommunityLibraryStatus.PENDING]: {
-      text: pendingStatus$(),
-      color: theme.yellow.v_100,
-      labelColor: theme.orange.v_600,
-      icon: 'schedule',
+      const configChoices = {
+        [CommunityLibraryStatus.PENDING]: {
+          text: pendingStatus$(),
+          color: theme.yellow.v_100,
+          labelColor: theme.orange.v_600,
+          icon: 'schedule',
+        },
+        [CommunityLibraryStatus.APPROVED]: {
+          text: approvedStatus$(),
+          color: theme.green.v_100,
+          labelColor: theme.green.v_600,
+          icon: 'circleCheckmark',
+        },
+        [CommunityLibraryStatus.REJECTED]: {
+          text: flaggedStatus$(),
+          color: theme.red.v_100,
+          labelColor: theme.red.v_600,
+          icon: 'error',
+        },
+      };
+
+      const icon = computed(() => configChoices[props.status].icon);
+      const text = computed(() => configChoices[props.status].text);
+      const color = computed(() => configChoices[props.status].color);
+      const labelColor = computed(() => configChoices[props.status].labelColor);
+
+      return {
+        icon,
+        text,
+        color,
+        labelColor,
+      };
     },
-    [CommunityLibraryStatus.APPROVED]: {
-      text: approvedStatus$(),
-      color: theme.green.v_100,
-      labelColor: theme.green.v_600,
-      icon: 'circleCheckmark',
-    },
-    [CommunityLibraryStatus.REJECTED]: {
-      text: flaggedStatus$(),
-      color: theme.red.v_100,
-      labelColor: theme.red.v_600,
-      icon: 'error',
+    props: {
+      status: {
+        type: String,
+        required: true,
+        validator: value =>
+          [
+            CommunityLibraryStatus.APPROVED,
+            CommunityLibraryStatus.PENDING,
+            CommunityLibraryStatus.REJECTED,
+          ].includes(value),
+      },
     },
   };
-
-  const props = defineProps({
-    status: {
-      type: String,
-      required: true,
-      validator: value =>
-        [
-          CommunityLibraryStatus.APPROVED,
-          CommunityLibraryStatus.PENDING,
-          CommunityLibraryStatus.REJECTED,
-        ].includes(value),
-    },
-  });
-
-  const icon = computed(() => configChoices[props.status].icon);
-  const text = computed(() => configChoices[props.status].text);
-  const color = computed(() => configChoices[props.status].color);
-  const labelColor = computed(() => configChoices[props.status].labelColor);
 
 </script>
 

@@ -38,12 +38,14 @@
                   v-if="!showingMoreDetails"
                   appearance="basic-link"
                   :text="$tr('moreDetailsButton')"
+                  data-test="more-details-button"
                   @click="showingMoreDetails = !showingMoreDetails"
                 />
                 <KButton
                   v-else
                   appearance="basic-link"
                   :text="$tr('lessDetailsButton')"
+                  data-test="less-details-button"
                   @click="showingMoreDetails = !showingMoreDetails"
                 />
               </template>
@@ -58,22 +60,25 @@
           <Box
             v-if="!isPublished"
             kind="warning"
+            data-test="not-published-warning"
           >
             {{ $tr('notPublishedWarning') }}
           </Box>
           <Box
             v-else-if="isPublic"
             kind="warning"
+            data-test="public-warning"
           >
             {{ $tr('publicWarning') }}
           </Box>
           <Box
             v-else-if="isCurrentVersionAlreadySubmitted"
             kind="warning"
+            data-test="already-submitted-warning"
           >
             {{ $tr('alreadySubmittedWarning') }}
           </Box>
-          <div class="channel-title">{{ props.channel.name }}</div>
+          <div class="channel-title">{{ channel.name }}</div>
           <div>
             <div class="field-annotation">{{ $tr('languagesDetected') }}</div>
             <LoadingText
@@ -139,10 +144,16 @@
 
       <template #bottomNavigation>
         <div class="footer">
-          <KButton @click="$emit('close')">{{ $tr('cancelButton') }}</KButton>
+          <KButton
+            data-test="cancel-button"
+            @click="$emit('close')"
+          >
+            {{ $tr('cancelButton') }}
+          </KButton>
           <KButton
             primary
             :disabled="!canBeSubmitted"
+            data-test="submit-button"
             @click="onSubmit"
           >
             {{ $tr('submitButton') }}
@@ -155,7 +166,7 @@
 </template>
 
 
-<script setup>
+<script>
 
   import { computed, getCurrentInstance, ref, watch } from 'vue';
   import { themeTokens } from 'kolibri-design-system/lib/styles/theme';
@@ -178,195 +189,223 @@
   import { CategoriesLookup, CommunityLibraryStatus } from 'shared/constants';
   import { CommunityLibrarySubmission } from 'shared/data/resources';
 
-  const tokensTheme = themeTokens();
-
-  const { proxy } = getCurrentInstance();
-  const store = proxy.$store;
-
-  function $tr(param) {
-    return proxy.$tr(param);
-  }
-
-  const emit = defineEmits(['close']);
-
-  const annotationColor = computed(() => tokensTheme.annotation);
-  const infoSeparatorColor = computed(() => tokensTheme.fineLine);
-
-  const props = defineProps({
-    channel: {
-      type: Object,
-      required: true,
-    },
-  });
-
-  const showingMoreDetails = ref(false);
-  const countries = ref([]);
-  const description = ref('');
-
-  const {
-    isLoading: submissionsAreLoading,
-    isFinished: submissionsAreFinished,
-    data: submissionsData,
-  } = useCommunityLibrarySubmissions(props.channel.id);
-
-  const latestSubmission = computed(() => {
-    if (!submissionsData.value) return undefined;
-    if (submissionsData.value.length === 0) return null;
-
-      // Submissions are ordered by most recent first in the backend
-    return submissionsData.value[0];
-  });
-
-  function countryCodeToName(code) {
-    return countriesUtil.getName(code, 'en');
-  }
-
-  watch(submissionsAreFinished, newVal => {
-    if (newVal && latestSubmission.value) {
-      countries.value = latestSubmission.value.countries.map(code => countryCodeToName(code));
-    }
-  });
-
-  const latestSubmissionStatus = computed(() => {
-    if (!submissionsAreFinished.value) return null;
-    if (!latestSubmission.value) return 'none';
-
-      // We do not need to distinguish LIVE from APPROVED in the UI
-    const uiSubmissionStatus =
-      latestSubmission.value.status == CommunityLibraryStatus.LIVE
-        ? CommunityLibraryStatus.APPROVED
-        : latestSubmission.value.status;
-
-    return uiSubmissionStatus;
-  });
-
-  const infoConfigs = {
-    [CommunityLibraryStatus.PENDING]: {
-      primaryText: $tr('submittedPrimaryInfo'),
-      secondaryText: $tr('reviewersWillSeeLatestFirst'),
-    },
-    [CommunityLibraryStatus.APPROVED]: {
-      primaryText: $tr('approvedPrimaryInfo'),
-      secondaryText: $tr('reviewersWillSeeLatestFirst'),
-    },
-    [CommunityLibraryStatus.REJECTED]: {
-      primaryText: $tr('flaggedPrimaryInfo'),
-      secondaryText: null,
-    },
-    none: {
-      primaryText: $tr('nonePrimaryInfo'),
-      secondaryText: null,
-    },
-  };
-
-  const infoBoxPrimaryText = computed(() =>
-    latestSubmissionStatus.value ? infoConfigs[latestSubmissionStatus.value].primaryText : null,
-  );
-  const infoBoxSecondaryText = computed(() =>
-    latestSubmissionStatus.value ? infoConfigs[latestSubmissionStatus.value].secondaryText : null,
-  );
-
-  const isPublished = computed(() => props.channel.published);
-  const isPublic = computed(() => props.channel.public);
-  const isCurrentVersionAlreadySubmitted = computed(() => {
-    if (!latestSubmission.value) return false;
-    return latestSubmission.value.channel_version === props.channel.version;
-  });
-
-  const canBeEdited = computed(
-    () => isPublished.value && !isPublic.value && !isCurrentVersionAlreadySubmitted.value,
-  );
-
-  const canBeSubmitted = computed(
-    () => canBeEdited.value && publishedDataIsFinished.value && description.value.length >= 1,
-  );
-
-  const {
-    isLoading: publishedDataIsLoading,
-    isFinished: publishedDataIsFinished,
-    data: publishedData,
-  } = usePublishedData(props.channel.id);
-
-  const latestPublishedData = computed(() => {
-    if (!publishedData.value) return undefined;
-
-    return publishedData.value[props.channel.version];
-  });
-
-  const detectedLanguages = computed(() => {
-      // We need to filter out null values due to a backend bug
-      // causing null values to sometimes be included in the list
-    const languageCodes = latestPublishedData.value?.included_languages.filter(
-      code => code !== null,
-    );
-    if (!languageCodes) return undefined;
-    if (languageCodes.length === 0) return $tr('none');
-
-    return languageCodes.map(code => LanguagesMap.get(code).readable_name).join(', ');
-  });
-
-  const detectedLicenses = computed(() => {
-    if (!latestPublishedData.value?.included_licenses) return undefined;
-    if (latestPublishedData.value.included_licenses.length === 0) return $tr('none');
-
-    return latestPublishedData.value.included_licenses
-      .map(licenseId => LicensesMap.get(licenseId).license_name)
-      .join(', ');
-  });
-
-  function categoryIdToName(categoryId) {
-    return translateMetadataString(camelCase(CategoriesLookup[categoryId]));
-  }
-
-  const detectedCategories = computed(() => {
-    if (!latestPublishedData.value?.included_categories) return undefined;
-    if (latestPublishedData.value.included_categories.length === 0) return $tr('none');
-
-    return latestPublishedData.value.included_categories
-      .map(categoryId => categoryIdToName(categoryId))
-      .join(', ');
-  });
-
-  function showSnackbar(params) {
-    return store.dispatch('showSnackbar', params);
-  }
-
-  function onSubmit() {
-    const submitDelayMs = 5000;
-
-    const timer = setTimeout(() => {
-      CommunityLibrarySubmission.create({
-        description: description.value,
-        channel: props.channel.id,
-        countries: countries.value.map(country => countriesUtil.getAlpha2Code(country, 'en')),
-        categories: detectedCategories.value,
-      })
-        .then(() => {
-          showSnackbar({ text: $tr('submittedSnackbar') });
-        })
-        .catch(() => {
-          showSnackbar({ text: $tr('errorSnackbar') });
-        });
-    }, submitDelayMs);
-
-    showSnackbar({
-      text: $tr('submittingSnackbar'),
-      duration: null,
-      actionText: $tr('cancelButton'),
-      actionCallback: () => {
-        clearTimeout(timer);
-      },
-    });
-
-    emit('close');
-  }
-
-</script>
-
-
-<script>
-
   export default {
+    name: 'SubmitToCommunityLibrarySidePanel',
+    components: {
+      SidePanelModal,
+      Box,
+      LoadingText,
+      StatusChip,
+      CountryField,
+    },
+    emits: ['close'],
+    setup(props, { emit }) {
+      const tokensTheme = themeTokens();
+
+      const { proxy } = getCurrentInstance();
+      const store = proxy.$store;
+
+      function $tr(param) {
+        return proxy.$tr(param);
+      }
+
+      const annotationColor = computed(() => tokensTheme.annotation);
+      const infoSeparatorColor = computed(() => tokensTheme.fineLine);
+
+      const showingMoreDetails = ref(false);
+      const countries = ref([]);
+      const description = ref('');
+
+      const {
+        isLoading: submissionsAreLoading,
+        isFinished: submissionsAreFinished,
+        data: submissionsData,
+      } = useCommunityLibrarySubmissions(props.channel.id);
+
+      const latestSubmission = computed(() => {
+        if (!submissionsData.value) return undefined;
+        if (submissionsData.value.length === 0) return null;
+
+        // Submissions are ordered by most recent first in the backend
+        return submissionsData.value[0];
+      });
+
+      function countryCodeToName(code) {
+        return countriesUtil.getName(code, 'en');
+      }
+
+      watch(submissionsAreFinished, newVal => {
+        if (newVal && latestSubmission.value) {
+          countries.value = latestSubmission.value.countries.map(code => countryCodeToName(code));
+        }
+      });
+
+      const latestSubmissionStatus = computed(() => {
+        if (!submissionsAreFinished.value) return null;
+        if (!latestSubmission.value) return 'none';
+
+        // We do not need to distinguish LIVE from APPROVED in the UI
+        const uiSubmissionStatus =
+          latestSubmission.value.status == CommunityLibraryStatus.LIVE
+            ? CommunityLibraryStatus.APPROVED
+            : latestSubmission.value.status;
+
+        return uiSubmissionStatus;
+      });
+
+      const infoConfigs = {
+        [CommunityLibraryStatus.PENDING]: {
+          primaryText: $tr('submittedPrimaryInfo'),
+          secondaryText: $tr('reviewersWillSeeLatestFirst'),
+        },
+        [CommunityLibraryStatus.APPROVED]: {
+          primaryText: $tr('approvedPrimaryInfo'),
+          secondaryText: $tr('reviewersWillSeeLatestFirst'),
+        },
+        [CommunityLibraryStatus.REJECTED]: {
+          primaryText: $tr('flaggedPrimaryInfo'),
+          secondaryText: null,
+        },
+        none: {
+          primaryText: $tr('nonePrimaryInfo'),
+          secondaryText: null,
+        },
+      };
+
+      const infoBoxPrimaryText = computed(() =>
+        latestSubmissionStatus.value ? infoConfigs[latestSubmissionStatus.value].primaryText : null,
+      );
+      const infoBoxSecondaryText = computed(() =>
+        latestSubmissionStatus.value
+          ? infoConfigs[latestSubmissionStatus.value].secondaryText
+          : null,
+      );
+
+      const isPublished = computed(() => props.channel.published);
+      const isPublic = computed(() => props.channel.public);
+      const isCurrentVersionAlreadySubmitted = computed(() => {
+        if (!latestSubmission.value) return false;
+        return latestSubmission.value.channel_version === props.channel.version;
+      });
+
+      const canBeEdited = computed(
+        () => isPublished.value && !isPublic.value && !isCurrentVersionAlreadySubmitted.value,
+      );
+
+      const canBeSubmitted = computed(
+        () => canBeEdited.value && publishedDataIsFinished.value && description.value.length >= 1,
+      );
+
+      const {
+        isLoading: publishedDataIsLoading,
+        isFinished: publishedDataIsFinished,
+        data: publishedData,
+      } = usePublishedData(props.channel.id);
+
+      const latestPublishedData = computed(() => {
+        if (!publishedData.value) return undefined;
+
+        return publishedData.value[props.channel.version];
+      });
+
+      const detectedLanguages = computed(() => {
+        // We need to filter out null values due to a backend bug
+        // causing null values to sometimes be included in the list
+        const languageCodes = latestPublishedData.value?.included_languages.filter(
+          code => code !== null,
+        );
+        if (!languageCodes) return undefined;
+        if (languageCodes.length === 0) return $tr('none');
+
+        return languageCodes.map(code => LanguagesMap.get(code).readable_name).join(', ');
+      });
+
+      const detectedLicenses = computed(() => {
+        if (!latestPublishedData.value?.included_licenses) return undefined;
+        if (latestPublishedData.value.included_licenses.length === 0) return $tr('none');
+
+        return latestPublishedData.value.included_licenses
+          .map(licenseId => LicensesMap.get(licenseId).license_name)
+          .join(', ');
+      });
+
+      function categoryIdToName(categoryId) {
+        return translateMetadataString(camelCase(CategoriesLookup[categoryId]));
+      }
+
+      const detectedCategories = computed(() => {
+        if (!latestPublishedData.value?.included_categories) return undefined;
+        if (latestPublishedData.value.included_categories.length === 0) return $tr('none');
+
+        return latestPublishedData.value.included_categories
+          .map(categoryId => categoryIdToName(categoryId))
+          .join(', ');
+      });
+
+      function showSnackbar(params) {
+        return store.dispatch('showSnackbar', params);
+      }
+
+      function onSubmit() {
+        const submitDelayMs = 5000;
+
+        const timer = setTimeout(() => {
+          CommunityLibrarySubmission.create({
+            description: description.value,
+            channel: props.channel.id,
+            countries: countries.value.map(country => countriesUtil.getAlpha2Code(country, 'en')),
+            categories: latestPublishedData.value.included_categories,
+          })
+            .then(() => {
+              showSnackbar({ text: $tr('submittedSnackbar') });
+            })
+            .catch(() => {
+              showSnackbar({ text: $tr('errorSnackbar') });
+            });
+        }, submitDelayMs);
+
+        showSnackbar({
+          text: $tr('submittingSnackbar'),
+          duration: null,
+          actionText: $tr('cancelButton'),
+          actionCallback: () => {
+            clearTimeout(timer);
+          },
+        });
+
+        emit('close');
+      }
+
+      return {
+        annotationColor,
+        infoSeparatorColor,
+        showingMoreDetails,
+        countries,
+        description,
+        submissionsAreLoading,
+        submissionsAreFinished,
+        latestSubmissionStatus,
+        infoBoxPrimaryText,
+        infoBoxSecondaryText,
+        isPublished,
+        isPublic,
+        isCurrentVersionAlreadySubmitted,
+        canBeEdited,
+        canBeSubmitted,
+        publishedDataIsLoading,
+        publishedDataIsFinished,
+        detectedLanguages,
+        detectedLicenses,
+        detectedCategories,
+        onSubmit,
+      };
+    },
+    props: {
+      channel: {
+        type: Object,
+        required: true,
+      },
+    },
     // NOTE: Uses of translated strings inside setup are not picked up by ESLint
     $trs: {
       panelTitle: 'Submit to Community Library',
