@@ -1,6 +1,6 @@
 <template>
 
-  <!-- TODO(jakoma02): At the time of writing, the KLabeledIcon component does not set
+  <!-- At the time of writing, the KLabeledIcon component does not set
   the color of the label properly (issue #1102). When this is fixed, setting
   color on the button component should no longer be needed. -->
   <button
@@ -23,6 +23,7 @@
 
   import { themePalette } from 'kolibri-design-system/lib/styles/theme';
   import { computed, defineComponent } from 'vue';
+  import { CommunityLibraryStatus } from 'shared/constants';
 
   export default defineComponent({
     name: 'ChannelCommunityLibraryStatusButton',
@@ -30,7 +31,7 @@
       const theme = themePalette();
 
       const configChoices = {
-        submitted: {
+        [CommunityLibraryStatus.PENDING]: {
           text: 'Submitted',
           tooltip: 'Submission awaiting review',
           color: theme.yellow.v_100,
@@ -38,7 +39,7 @@
           labelColor: theme.orange.v_600,
           icon: 'schedule',
         },
-        approved: {
+        [CommunityLibraryStatus.APPROVED]: {
           text: 'Approved',
           tooltip: 'Live in Community Library',
           color: theme.green.v_100,
@@ -46,7 +47,7 @@
           labelColor: theme.green.v_600,
           icon: 'circleCheckmark',
         },
-        flagged: {
+        [CommunityLibraryStatus.REJECTED]: {
           text: 'Flagged',
           tooltip: 'Review flagged submission',
           color: theme.red.v_100,
@@ -84,7 +85,12 @@
       status: {
         type: String,
         required: true,
-        validator: value => ['submitted', 'approved', 'flagged'].includes(value),
+        validator: value =>
+          [
+            CommunityLibraryStatus.PENDING,
+            CommunityLibraryStatus.APPROVED,
+            CommunityLibraryStatus.REJECTED,
+          ].includes(value),
       },
     },
   });

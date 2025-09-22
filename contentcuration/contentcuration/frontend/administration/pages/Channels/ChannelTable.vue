@@ -145,7 +145,9 @@
   import { getCurrentInstance, onMounted, ref, computed, watch } from 'vue';
   import { transform } from 'lodash';
   import { RouteNames, rowsPerPageItems } from '../../constants';
-  import { useFilter, useKeywordSearch, useTable } from '../../composables';
+  import { useTable } from '../../composables/useTable';
+  import { useKeywordSearch } from '../../composables/useKeywordSearch';
+  import { useFilter } from '../../composables/useFilter';
   import ChannelItem from './ChannelItem';
   import { channelExportMixin } from 'shared/views/channel/mixins';
   import { routerMixin } from 'shared/mixins';

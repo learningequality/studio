@@ -202,12 +202,9 @@
         v-if="communityLibraryStatus"
         :status="communityLibraryStatus"
       />
-      <template v-else>—</template>
+      <KEmptyPlaceholder v-else />
     </td>
-    <td
-      class="text-xs-center"
-      data-test="community-library-status"
-    >
+    <td class="text-xs-center">
       <ChannelActionsDropdown
         :channelId="channelId"
         flat
@@ -227,6 +224,7 @@
   import ChannelActionsDropdown from './ChannelActionsDropdown';
   import { fileSizeMixin } from 'shared/mixins';
   import Checkbox from 'shared/views/form/Checkbox';
+  import { CommunityLibraryStatus } from 'shared/constants';
 
   export default {
     name: 'ChannelItem',
@@ -287,20 +285,14 @@
         };
       },
       communityLibraryStatus() {
-        switch (this.channel.latest_community_library_submission_status) {
-          case null:
-            return null;
-          case 'PENDING':
-            return 'submitted';
-          case 'APPROVED':
-          case 'LIVE':
-            return 'approved';
-          case 'REJECTED':
-            return 'flagged';
-
-          default:
-            return 'unknown';
+        // We do not need to distinguish LIVE from APPROVED in the UI
+        if (
+          this.channel.latest_community_library_submission_status === CommunityLibraryStatus.LIVE
+        ) {
+          return CommunityLibraryStatus.APPROVED;
         }
+
+        return this.channel.latest_community_library_submission_status;
       },
     },
     methods: {

@@ -3,7 +3,9 @@ import { defineComponent, ref } from 'vue';
 import { mount } from '@vue/test-utils';
 
 import VueRouter from 'vue-router';
-import { useFilter, useKeywordSearch, useTable } from '../composables';
+import { useTable } from '../useTable';
+import { useKeywordSearch } from '../useKeywordSearch';
+import { useFilter } from '../useFilter';
 
 // Because we are testing composables that use the router,
 // we need to create a dummy component that uses the composable

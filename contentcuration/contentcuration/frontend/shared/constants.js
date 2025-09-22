@@ -327,3 +327,11 @@ export const completionCriteriaToDropdownMap = {
   [CompletionCriteria.MASTERY]: CompletionDropdownMap.goal,
   [CompletionCriteria.REFERENCE]: CompletionDropdownMap.reference,
 };
+
+export const CommunityLibraryStatus = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  SUPERSEDED: 'SUPERSEDED',
+  LIVE: 'LIVE',
+};

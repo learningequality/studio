@@ -140,8 +140,10 @@
   import { ref, onMounted, computed, getCurrentInstance } from 'vue';
   import { mapGetters } from 'vuex';
   import transform from 'lodash/transform';
+  import { useTable } from '../../composables/useTable';
+  import { useKeywordSearch } from '../../composables/useKeywordSearch';
+  import { useFilter } from '../../composables/useFilter';
   import { RouteNames, rowsPerPageItems } from '../../constants';
-  import { useFilter, useKeywordSearch, useTable } from '../../composables';
   import EmailUsersDialog from './EmailUsersDialog';
   import UserItem from './UserItem';
   import { routerMixin } from 'shared/mixins';
