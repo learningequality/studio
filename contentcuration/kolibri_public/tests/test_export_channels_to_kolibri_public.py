@@ -5,7 +5,6 @@ import uuid
 from unittest import mock
 
 from django.conf import settings
-from django.core.files.storage import FileSystemStorage
 from django.core.management import call_command
 from django.test import TestCase
 from kolibri_content.apps import KolibriContentConfig
@@ -18,6 +17,9 @@ from kolibri_public.utils.export_channel_to_kolibri_public import (
 )
 
 from contentcuration.models import Country
+from contentcuration.tests.utils.restricted_filesystemstorage import (
+    RestrictedFileSystemStorage,
+)
 
 
 class ExportTestCase(TestCase):
@@ -27,11 +29,11 @@ class ExportTestCase(TestCase):
         self._temp_directory_ctx = tempfile.TemporaryDirectory()
         test_db_root_dir = self._temp_directory_ctx.__enter__()
 
-        storage = FileSystemStorage(location=test_db_root_dir)
+        self.storage = RestrictedFileSystemStorage(location=test_db_root_dir)
 
         self._storage_patch_ctx = mock.patch(
             "kolibri_public.utils.export_channel_to_kolibri_public.storage",
-            new=storage,
+            new=self.storage,
         )
         self._storage_patch_ctx.__enter__()
 
@@ -40,14 +42,14 @@ class ExportTestCase(TestCase):
         self.channel_id = uuid.UUID(int=42).hex
         self.channel_version = 1
 
-        db_path = os.path.join(
+        self.versioned_db_path = os.path.join(
             test_db_root_dir,
             settings.DB_ROOT,
             f"{self.channel_id}-{self.channel_version}.sqlite3",
         )
-        open(db_path, "w").close()
+        open(self.versioned_db_path, "w").close()
 
-        with using_content_database(db_path):
+        with using_content_database(self.versioned_db_path):
             call_command(
                 "migrate",
                 app_label=KolibriContentConfig.label,
@@ -61,10 +63,10 @@ class ExportTestCase(TestCase):
                 version=self.channel_version,
             )
 
-        self.db_path_without_version = os.path.join(
+        self.unversioned_db_path = os.path.join(
             test_db_root_dir, settings.DB_ROOT, f"{self.channel_id}.sqlite3"
         )
-        shutil.copyfile(db_path, self.db_path_without_version)
+        shutil.copyfile(self.versioned_db_path, self.unversioned_db_path)
 
     def tearDown(self):
         self._temp_directory_ctx.__exit__(None, None, None)
@@ -112,6 +114,13 @@ class ExportTestCase(TestCase):
             countries=None,
         )
         mock_channel_mapper.return_value.run.assert_called_once_with()
+
+    def test_export_channel_to_kolibri_public__bad_channel(self):
+        with self.assertRaises(FileNotFoundError):
+            export_channel_to_kolibri_public(
+                channel_id="dummy_id",
+                channel_version=1,
+            )
 
     def test_export_channel_to_kolibri_public__bad_version(self):
         with self.assertRaises(FileNotFoundError):
