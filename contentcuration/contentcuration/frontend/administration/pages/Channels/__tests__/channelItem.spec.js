@@ -4,6 +4,7 @@ import router from '../../../router';
 import { factory } from '../../../store';
 import { RouteNames } from '../../../constants';
 import ChannelItem from '../ChannelItem';
+import { CommunityLibraryStatus } from 'shared/constants';
 
 const store = factory();
 
@@ -33,28 +34,28 @@ const channelWithoutSubmission = {
 const liveChannel = {
   ...channelCommon,
   latest_community_library_submission_id: submissionId,
-  latest_community_library_submission_status: 'LIVE',
+  latest_community_library_submission_status: CommunityLibraryStatus.LIVE,
   has_any_live_community_library_submission: true,
 };
 
 const approvedChannel = {
   ...channelCommon,
   latest_community_library_submission_id: submissionId,
-  latest_community_library_submission_status: 'APPROVED',
+  latest_community_library_submission_status: CommunityLibraryStatus.APPROVED,
   has_any_live_community_library_submission: true,
 };
 
 const submittedChannel = {
   ...channelCommon,
   latest_community_library_submission_id: submissionId,
-  latest_community_library_submission_status: 'PENDING',
+  latest_community_library_submission_status: CommunityLibraryStatus.PENDING,
   has_any_live_community_library_submission: false,
 };
 
 const flaggedChannel = {
   ...channelCommon,
   latest_community_library_submission_id: submissionId,
-  latest_community_library_submission_status: 'REJECTED',
+  latest_community_library_submission_status: CommunityLibraryStatus.REJECTED,
   has_any_live_community_library_submission: false,
 };
 
@@ -139,7 +140,7 @@ describe('channelItem', () => {
       await statusButton.vm.$nextTick();
 
       expect(statusButton.exists()).toBe(true);
-      expect(statusButton.props('status')).toBe('approved');
+      expect(statusButton.props('status')).toBe(CommunityLibraryStatus.APPROVED);
     });
 
     it('when the latest submission is approved, approved status is shown', async () => {
@@ -150,7 +151,7 @@ describe('channelItem', () => {
       const statusButton = statusCell.findComponent(CommunityLibraryStatusButton);
 
       expect(statusButton.exists()).toBe(true);
-      expect(statusButton.props('status')).toBe('approved');
+      expect(statusButton.props('status')).toBe(CommunityLibraryStatus.APPROVED);
     });
 
     it('when the latest submission is submitted, submitted status is shown', async () => {
@@ -161,7 +162,7 @@ describe('channelItem', () => {
       const statusButton = statusCell.findComponent(CommunityLibraryStatusButton);
 
       expect(statusButton.exists()).toBe(true);
-      expect(statusButton.props('status')).toBe('submitted');
+      expect(statusButton.props('status')).toBe(CommunityLibraryStatus.PENDING);
     });
 
     it('when the latest submission is flagged, flagged status is shown', async () => {
@@ -172,7 +173,7 @@ describe('channelItem', () => {
       const statusButton = statusCell.findComponent(CommunityLibraryStatusButton);
 
       expect(statusButton.exists()).toBe(true);
-      expect(statusButton.props('status')).toBe('flagged');
+      expect(statusButton.props('status')).toBe(CommunityLibraryStatus.REJECTED);
     });
   });
 });
