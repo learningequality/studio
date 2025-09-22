@@ -984,6 +984,15 @@ class TestPerseusExerciseCreation(StudioTestCase):
             "Different sized images should have different file sizes",
         )
 
+        # Verify that the dimensions have been stripped from the markdown
+        for file_name in unique_image_files:
+            # Because we can't predict the set ordering, just confirm that
+            # neither dimension descriptor is applied.
+            first_file = f"{file_name} =200x150"
+            self.assertNotIn(first_file, content)
+            second_file = f"{file_name} =100x75"
+            self.assertNotIn(second_file, content)
+
     def test_image_resizing_in_question(self):
         """Test image resizing functionality in question content"""
         self._test_image_resizing_in_field("question")

@@ -18,7 +18,7 @@ from PIL import Image
 from contentcuration import models
 
 
-image_pattern = rf"!\[(?:[^\]]*)]\(\${exercises.CONTENT_STORAGE_PLACEHOLDER}/([^\s)]+)(?:\s=([0-9\.]+)x([0-9\.]+))*[^)]*\)"
+image_pattern = rf"!\[([^\]]*)]\(\${exercises.CONTENT_STORAGE_PLACEHOLDER}/([^\s)]+)(?:\s=([0-9\.]+)x([0-9\.]+))*[^)]*\)"
 
 
 def resize_image(image_content, width, height):
@@ -47,8 +47,6 @@ class ExerciseArchiveGenerator(ABC):
     ZIP_DATE_TIME = (2015, 10, 21, 7, 28, 0)
     ZIP_COMPRESS_TYPE = zipfile.ZIP_DEFLATED
     ZIP_COMMENT = "".encode()
-    # Whether to keep width/height in image refs
-    RETAIN_IMAGE_DIMENSIONS = True
 
     @property
     @abstractmethod
@@ -199,20 +197,6 @@ class ExerciseArchiveGenerator(ABC):
         )
         return resized_image or filename
 
-    def _replace_filename_in_match(
-        self, content, img_match, old_filename, new_filename
-    ):
-        """Extract filename replacement logic"""
-        start, end = img_match.span()
-        old_match = content[start:end]
-        new_match = old_match.replace(old_filename, new_filename)
-        if not self.RETAIN_IMAGE_DIMENSIONS:
-            # Remove dimensions from image ref
-            new_match = re.sub(
-                rf"{new_filename}\s=([0-9\.]+)x([0-9\.]+)", new_filename, new_match
-            )
-        return content[:start] + new_match + content[end:]
-
     def _is_valid_image_filename(self, filename):
         checksum, ext = os.path.splitext(filename)
 
@@ -241,35 +225,25 @@ class ExerciseArchiveGenerator(ABC):
         new_file_path = self.get_image_file_path()
         new_image_path = self.get_image_ref_prefix()
         image_list = []
-        processed_files = []
-        for img_match in re.finditer(image_pattern, content):
+
+        def _replace_image(img_match):
             # Add any image files that haven't been written to the zipfile
-            filename = img_match.group(1)
-            width = float(img_match.group(2)) if img_match.group(2) else None
-            height = float(img_match.group(3)) if img_match.group(3) else None
+            filename = img_match.group(2)
+            width = float(img_match.group(3)) if img_match.group(3) else None
+            height = float(img_match.group(4)) if img_match.group(4) else None
             checksum, ext = os.path.splitext(filename)
 
             if not self._is_valid_image_filename(filename):
-                continue
+                return ""
 
             if width == 0 or height == 0:
                 # Can't resize an image to 0 width or height, so just ignore.
-                continue
+                return ""
 
             processed_filename = self._process_single_image(
                 filename, checksum, ext, width, height, new_file_path
             )
-            processed_files.append(
-                (img_match, filename, processed_filename, width, height)
-            )
 
-        # Process matches in reverse order to avoid index mismatch when modifying content
-        for img_match, filename, processed_filename, width, height in reversed(
-            processed_files
-        ):
-            content = self._replace_filename_in_match(
-                content, img_match, filename, processed_filename
-            )
             if width is not None and height is not None:
                 image_list.append(
                     {
@@ -278,10 +252,10 @@ class ExerciseArchiveGenerator(ABC):
                         "height": height,
                     }
                 )
+            return f"![{img_match.group(1)}]({new_image_path}/{processed_filename})"
 
-        content = content.replace(
-            f"${exercises.CONTENT_STORAGE_PLACEHOLDER}", new_image_path
-        )
+        content = re.sub(image_pattern, _replace_image, content)
+
         return content, image_list
 
     def _process_content(self, content):
