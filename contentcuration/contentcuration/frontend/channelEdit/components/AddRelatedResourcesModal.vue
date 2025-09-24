@@ -64,9 +64,9 @@
               <VListTileAction>
                 <KButton
                   :text="$tr('previewStepBtnLabel')"
-                  class="font-weight-bold"
+                  
                   appearance="flat-button"
-                  @click.stop.prevent="onPreviewStepClick(childNode.id)"
+                  @click="onPreviewStepClick(childNode.id)"
                 />
               </VListTileAction>
 
@@ -74,9 +74,9 @@
                 <KButton
                   :text="$tr('addStepBtnLabel')"
                   :primary="true"
-                  class="font-weight-bold"
+                  
                   appearance="flat-button"
-                  @click.stop.prevent="onAddStepClick(childNode.id)"
+                  @click="onAddStepClick(childNode.id)"
                 />
               </VListTileAction>
             </template>
@@ -97,10 +97,10 @@
       >
         <KButton
           :text="$tr('addStepBtnLabel')"
-          class="font-weight-bold"
+          
           :primary="true"
           appearance="flat-button"
-          @click.stop.prevent="onAddStepClick(previewNodeId)"
+          @click="onAddStepClick(previewNodeId)"
         />
       </template>
     </ResourceDrawer>
