@@ -64,7 +64,6 @@
               <VListTileAction>
                 <KButton
                   :text="$tr('previewStepBtnLabel')"
-                  
                   appearance="flat-button"
                   @click="onPreviewStepClick(childNode.id)"
                 />
@@ -74,7 +73,6 @@
                 <KButton
                   :text="$tr('addStepBtnLabel')"
                   :primary="true"
-                  
                   appearance="flat-button"
                   @click="onAddStepClick(childNode.id)"
                 />
@@ -97,7 +95,6 @@
       >
         <KButton
           :text="$tr('addStepBtnLabel')"
-          
           :primary="true"
           appearance="flat-button"
           @click="onAddStepClick(previewNodeId)"
