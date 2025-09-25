@@ -219,7 +219,7 @@ describe('ChannelSetModal', () => {
       it('should prompt user if there are unsaved changes', async () => {
         expect(getUnsavedDialog(wrapper).attributes('data-test-visible')).toBeFalsy();
 
-        await getCollectionNameInput(wrapper).setValue('My collection');
+        await wrapper.setData({ name: 'My collection' });
         await getCloseButton(wrapper).trigger('click');
 
         expect(getUnsavedDialog(wrapper).attributes('data-test-visible')).toBeTruthy();
@@ -228,7 +228,7 @@ describe('ChannelSetModal', () => {
 
     describe('clicking save button', () => {
       it("shouldn't update a channel set when a collection name is missing", async () => {
-        await getCollectionNameInput(wrapper).setValue('');
+        await wrapper.setData({ name: '' });
         await getSaveButton(wrapper).trigger('click');
         await flushPromises();
 
@@ -236,7 +236,7 @@ describe('ChannelSetModal', () => {
       });
 
       it("shouldn't update a channel set when a collection name is made of empty characters", async () => {
-        await getCollectionNameInput(wrapper).setValue(' ');
+        await wrapper.setData({ name: ' ' });
         await getSaveButton(wrapper).trigger('click');
         await flushPromises();
 
@@ -244,7 +244,7 @@ describe('ChannelSetModal', () => {
       });
 
       it('should update a channel set when a collection name is valid', async () => {
-        await getCollectionNameInput(wrapper).setValue('My collection');
+        await wrapper.setData({ name: 'My collection' });
         await getSaveButton(wrapper).trigger('click');
         await flushPromises();
 
