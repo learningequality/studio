@@ -1,4 +1,5 @@
 import { mount } from '@vue/test-utils';
+import { VChip } from 'vuetify/lib/components/VChip';
 import EmailUsersDialog from '../EmailUsersDialog';
 import { factory } from '../../../store';
 
@@ -23,13 +24,27 @@ function makeWrapper() {
   return mount(EmailUsersDialog, {
     store,
     propsData: {
-      query: {
-        ids: [userId, userId2],
-      },
+      initialRecipients: [userId, userId2],
     },
     computed: {
       users() {
         return [user1, user2];
+      },
+    },
+  });
+}
+
+function makeBulkWrapper() {
+  return mount(EmailUsersDialog, {
+    store,
+    propsData: {
+      userTypeFilter: 'active',
+      locationFilter: 'Czech Republic',
+      keywordFilter: 'test',
+      usersFilterFetchQueryParams: {
+        is_active: true,
+        location: 'Czech Republic',
+        keywords: 'test',
       },
     },
   });
@@ -43,8 +58,8 @@ describe('emailUsersDialog', () => {
     await wrapper.setProps({ value: true }); // Allow watch event to trigger
   });
 
-  it('selected should get set to userIds on dialog open', () => {
-    expect(wrapper.vm.selected).toEqual([userId, userId2]);
+  it('recipients should get set to userIds on dialog open', () => {
+    expect(wrapper.vm.recipients).toEqual([userId, userId2]);
   });
 
   describe('on close', () => {
@@ -92,8 +107,19 @@ describe('emailUsersDialog', () => {
       await wrapper.findComponent('[data-test="send"]').trigger('click');
       expect(sendEmail).not.toHaveBeenCalled();
     });
+  });
 
-    it('should call sendEmail if form is valid', async () => {
+  it('clicking placeholder should add it to the message', async () => {
+    const message = 'Testing';
+    await wrapper.setData({ message });
+    wrapper.vm.addPlaceholder('{test}');
+    expect(wrapper.vm.message).toBe(`${message} {test}`);
+  });
+
+  describe('when used with individual users', () => {
+    it('submitting should call sendEmail with correct arguments if form is valid', async () => {
+      const sendEmail = jest.spyOn(wrapper.vm, 'sendEmail').mockReturnValue(Promise.resolve());
+
       const emailData = { subject: 'subject', message: 'message' };
       await wrapper.setData(emailData);
       await wrapper.findComponent('[data-test="send"]').trigger('click');
@@ -104,17 +130,44 @@ describe('emailUsersDialog', () => {
         },
       });
     });
+
+    it('user chips should be shown in the "To" line', () => {
+      const chips = wrapper.find('[data-test="to-line"]').findAllComponents(VChip);
+
+      expect(chips).toHaveLength(2);
+    });
+
+    it('clicking remove on user should remove user from recipients', () => {
+      wrapper.findComponent('[data-test="remove"]').vm.$emit('input', userId);
+      expect(wrapper.vm.recipients).toEqual([userId2]);
+    });
   });
 
-  it('clicking placeholder should add it to the message', async () => {
-    const message = 'Testing';
-    await wrapper.setData({ message });
-    wrapper.vm.addPlaceholder('{test}');
-    expect(wrapper.vm.message).toBe(`${message} {test}`);
-  });
+  describe('when used with user filters', () => {
+    beforeEach(async () => {
+      wrapper = makeBulkWrapper();
+      await wrapper.setProps({ value: true }); // Allow watch event to trigger
+    });
 
-  it('clicking remove on user should remove user from recipients', () => {
-    wrapper.findComponent('[data-test="remove"]').vm.$emit('input', userId);
-    expect(wrapper.vm.selected).toEqual([userId2]);
+    it('submitting should call sendEmail with correct arguments if form is valid', async () => {
+      const sendEmail = jest.spyOn(wrapper.vm, 'sendEmail').mockReturnValue(Promise.resolve());
+
+      const emailData = { subject: 'subject', message: 'message' };
+      await wrapper.setData(emailData);
+      await wrapper.findComponent('[data-test="send"]').trigger('click');
+      expect(sendEmail).toHaveBeenCalledWith({
+        ...emailData,
+        query: {
+          is_active: true,
+          location: 'Czech Republic',
+          keywords: 'test',
+        },
+      });
+    });
+
+    it('a descriptive string should be shown in the "To" line', () => {
+      const toLineChip = wrapper.find('[data-test="to-line"]').findComponent(VChip);
+      expect(toLineChip.text()).toEqual('All active users from Czech Republic matching "test"');
+    });
   });
 });

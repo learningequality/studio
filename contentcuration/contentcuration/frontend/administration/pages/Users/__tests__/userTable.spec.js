@@ -1,62 +1,75 @@
-import { mount } from '@vue/test-utils';
+import { mount, createLocalVue } from '@vue/test-utils';
+import Vuex, { Store } from 'vuex';
 import router from '../../../router';
-import { factory } from '../../../store';
 import { RouteNames } from '../../../constants';
 import UserTable from '../UserTable';
 
-const store = factory();
+const localVue = createLocalVue();
+
+localVue.use(Vuex);
+localVue.use(router);
 
 const userList = ['test', 'user', 'table'];
 
-function makeWrapper() {
-  const loadItems = jest.spyOn(UserTable.mixins[0].methods, '_loadItems');
-  loadItems.mockImplementation(() => Promise.resolve());
-
+function makeWrapper(store) {
   router.replace({ name: RouteNames.USERS });
 
   const wrapper = mount(UserTable, {
     router,
     store,
-    computed: {
-      count() {
-        return 10;
-      },
-      users() {
-        return userList;
-      },
-    },
+    localVue,
     stubs: {
       UserItem: true,
       EmailUsersDialog: true,
     },
   });
 
-  return [wrapper, loadItems];
+  return wrapper;
 }
 
 describe('userTable', () => {
-  let wrapper, loadUsers;
+  let wrapper, store;
+  const loadUsers = jest.fn(() => Promise.resolve({}));
 
   beforeEach(() => {
-    [wrapper, loadUsers] = makeWrapper();
+    store = new Store({
+      modules: {
+        userAdmin: {
+          namespaced: true,
+          actions: {
+            loadUsers,
+          },
+          getters: {
+            users: () => userList,
+            count: () => userList.length,
+          },
+        },
+      },
+    });
+    wrapper = makeWrapper(store);
   });
   afterEach(() => {
     loadUsers.mockRestore();
   });
 
   describe('filters', () => {
-    it('changing filter should set query params', () => {
-      wrapper.vm.filter = 'administrator';
-      expect(Boolean(router.currentRoute.query.is_admin)).toBe(true);
+    it('changing user type filter should set query params', () => {
+      wrapper.vm.userTypeFilter = 'administrator';
+      expect(router.currentRoute.query.userType).toBe('administrator');
     });
 
-    it('changing location should set query params', () => {
-      wrapper.vm.location = 'Afghanistan';
+    it('changing location filter should set query params', () => {
+      wrapper.vm.locationFilter = 'Afghanistan';
       expect(router.currentRoute.query.location).toBe('Afghanistan');
     });
 
     it('changing search text should set query params', () => {
-      wrapper.vm.keywords = 'keyword test';
+      jest.useFakeTimers();
+      wrapper.vm.keywordInput = 'keyword test';
+      wrapper.vm.setKeywords();
+      jest.runAllTimers();
+      jest.useRealTimers();
+
       expect(router.currentRoute.query.keywords).toBe('keyword test');
     });
   });

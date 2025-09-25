@@ -82,7 +82,13 @@
         },
         set(value) {
           this.$emit('input', value);
-          setTimeout(this.searchInputClear, 1);
+
+          // If selecting multiple countries, a chip is created for the selected item,
+          // so the input can be cleared. If selecting a single country, the search input
+          // becomes the selected country and should not be cleared to stay visible.
+          if (this.multiple) {
+            setTimeout(this.searchInputClear, 1);
+          }
         },
       },
       options() {

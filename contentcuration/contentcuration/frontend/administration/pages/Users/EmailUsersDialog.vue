@@ -41,9 +41,9 @@
             >
               To:
             </VFlex>
-            <VFlex>
+            <VFlex data-test="to-line">
               <ExpandableList
-                v-if="query.ids"
+                v-if="initialRecipients"
                 :items="users"
                 :max="4"
                 inline
@@ -57,7 +57,7 @@
                     <template #activator="{ on }">
                       <VChip
                         small
-                        :close="selected.length > 1"
+                        :close="recipients.length > 1"
                         data-test="remove"
                         v-on="on"
                         @input="remove(item.id)"
@@ -74,7 +74,7 @@
                 </template>
               </ExpandableList>
               <VChip
-                v-else
+                v-else-if="usersFilterFetchQueryParams"
                 small
               >
                 {{ searchString }}
@@ -164,9 +164,26 @@
         type: Boolean,
         default: false,
       },
-      query: {
+      userTypeFilter: {
+        type: String,
+        default: 'all',
+      },
+      locationFilter: {
+        type: String,
+        default: null,
+      },
+      keywordFilter: {
+        type: String,
+        default: null,
+      },
+      usersFilterFetchQueryParams: {
         type: Object,
-        required: true,
+        default: null,
+      },
+      initialRecipients: {
+        type: Array,
+        required: false,
+        default: null,
       },
     },
     data() {
@@ -174,7 +191,7 @@
         subject: '',
         message: '',
         showWarning: false,
-        selected: [],
+        recipients: [],
       };
     },
     computed: {
@@ -188,7 +205,7 @@
         },
       },
       users() {
-        return this.getUsers(this.selected);
+        return this.getUsers(this.recipients);
       },
       requiredRules() {
         return [v => Boolean(v.trim()) || 'Field is required'];
@@ -221,16 +238,16 @@
         ];
       },
       searchString() {
-        const users = this.query.filter === 'all' ? '' : `${this.query.filter} `;
-        const location = this.query.location ? ` from ${this.query.location}` : '';
-        const keywords = this.query.keywords ? ` matching "${this.query.keywords}"` : '';
+        const users = this.userTypeFilter === 'all' ? '' : `${this.userTypeFilter} `;
+        const location = this.locationFilter ? ` from ${this.locationFilter}` : '';
+        const keywords = this.keywordFilter ? ` matching "${this.keywordFilter}"` : '';
         return `All ${users}users${location}${keywords}`;
       },
     },
     watch: {
       value(value) {
-        if (value && this.query.ids) {
-          this.selected = this.query.ids;
+        if (value && this.initialRecipients) {
+          this.recipients = this.initialRecipients;
         }
       },
     },
@@ -251,7 +268,9 @@
       },
       emailHandler() {
         if (this.$refs.form.validate()) {
-          const query = this.query.ids ? { ids: this.selected.join(',') } : this.query;
+          const query = this.initialRecipients
+            ? { ids: this.recipients.join(',') }
+            : this.usersFilterFetchQueryParams;
 
           this.sendEmail({
             query,
@@ -272,7 +291,7 @@
         this.$refs.message.focus();
       },
       remove(id) {
-        this.selected = this.selected.filter(u => u !== id);
+        this.recipients = this.recipients.filter(u => u !== id);
       },
     },
   };
