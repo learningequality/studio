@@ -47,21 +47,25 @@
                   {{ language(channel) }}
                 </span>
               </div>
-              <div class="my-channels__cards--below-title__desc">{{ channel.description }}</div>
+              <div
+                class="my-channels__cards--below-title__desc"
+                :style="{ color: $themePalette.black }"
+              >
+                {{ channel.description }}
+              </div>
             </div>
           </template>
           <template #footer>
             <div class="my-channels__cards--footer">
               <div class="my-channels__cards--footer__left">
-                <span v-if="channel.last_published">
+                <span
+                  :style="{ color: $themePalette.grey.v_700 }"
+                > 
                   {{
-                    $tr('lastPublished', {
+                    channel.last_published ? $tr('lastPublished', {
                       last_published: $formatRelative(channel.last_published, { now: new Date() }),
-                    })
+                    }) : $tr('unpublishedText')
                   }}
-                </span>
-                <span v-else>
-                  {{ $tr('unpublishedText') }}
                 </span>
                 <div>
                   <KTooltip
@@ -476,7 +480,6 @@
 
         &__desc {
           margin-top: 4px;
-          color: #000000;
         }
       }
 
@@ -494,7 +497,6 @@
         &__left {
           span {
             font-size: 14px;
-            color: #666666;
           }
 
           div {
