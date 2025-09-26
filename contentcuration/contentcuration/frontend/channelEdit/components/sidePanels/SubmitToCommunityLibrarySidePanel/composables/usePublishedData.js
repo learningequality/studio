@@ -1,4 +1,4 @@
-import { useFetch } from './utils';
+import { useFetch } from '../../../../composables/useFetch';
 import { Channel } from 'shared/data/resources';
 
 export function usePublishedData(channelId) {
