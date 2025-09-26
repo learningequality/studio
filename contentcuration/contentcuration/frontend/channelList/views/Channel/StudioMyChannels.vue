@@ -520,11 +520,4 @@
     }
   }
 
-  .icon-wrapper {
-    ::v-deep button {
-      width: 18px;
-      height: 18px;
-    }
-  }
-
 </style>
