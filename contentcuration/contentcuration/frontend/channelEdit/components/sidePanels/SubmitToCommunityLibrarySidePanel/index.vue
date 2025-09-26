@@ -22,11 +22,9 @@
               class="box-message"
             >
               {{ infoBoxPrimaryText }}
-              <span
-                v-if="infoBoxSecondaryText"
-                class="info-box-secondary-text"
-              >
-                {{ infoBoxSecondaryText }}</span>
+              <div v-if="infoBoxSecondaryText">
+                {{ infoBoxSecondaryText }}
+              </div>
               <template v-if="latestSubmissionStatus === 'none'">
                 <div
                   v-if="showingMoreDetails"
@@ -484,10 +482,6 @@
     flex: 1;
     align-items: center;
     justify-content: center;
-  }
-
-  .info-box-secondary-text {
-    display: block;
   }
 
   .more-details-text {
