@@ -58,13 +58,15 @@
           <template #footer>
             <div class="my-channels__cards--footer">
               <div class="my-channels__cards--footer__left">
-                <span
-                  :style="{ color: $themePalette.grey.v_700 }"
-                > 
+                <span :style="{ color: $themePalette.grey.v_700 }">
                   {{
-                    channel.last_published ? $tr('lastPublished', {
-                      last_published: $formatRelative(channel.last_published, { now: new Date() }),
-                    }) : $tr('unpublishedText')
+                    channel.last_published
+                      ? $tr('lastPublished', {
+                        last_published: $formatRelative(channel.last_published, {
+                          now: new Date(),
+                        }),
+                      })
+                      : $tr('unpublishedText')
                   }}
                 </span>
                 <div>
@@ -516,7 +518,6 @@
         clip: rect(0 0 0 0);
         border: 0;
       }
-
     }
   }
 
