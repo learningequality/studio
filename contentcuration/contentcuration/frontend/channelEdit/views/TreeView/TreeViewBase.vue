@@ -91,21 +91,21 @@
               class="share-button"
               v-on="on"
             >
-              Share
+              {{ $tr('shareMenuButton') }}
             </KButton>
           </template>
           <VList>
             <VListTile @click="showSubmitToCommunityLibrarySidePanel = true">
-              <VListTileTitle>Submit to community library</VListTileTitle>
+              <VListTileTitle>{{ $tr('submitToCommunityLibrary') }}</VListTileTitle>
             </VListTile>
             <VListTile
               :to="shareChannelLink"
               @click="trackClickEvent('Share channel')"
             >
-              <VListTileTitle>Invite collaborators</VListTileTitle>
+              <VListTileTitle>{{ $tr('inviteCollaborators') }}</VListTileTitle>
             </VListTile>
             <VListTile @click="showTokenModal = true">
-              <VListTileTitle>Share token</VListTileTitle>
+              <VListTileTitle>{{ $tr('shareToken') }}</VListTileTitle>
             </VListTile>
           </VList>
         </BaseMenu>
@@ -567,6 +567,12 @@
       noLanguageSetError: 'Channel language is required',
       incompleteDescendantsText:
         '{count, number, integer} {count, plural, one {resource is incomplete and cannot be published} other {resources are incomplete and cannot be published}}',
+
+      // Share menu section
+      shareMenuButton: 'Share',
+      submitToCommunityLibrary: 'Submit to community library',
+      inviteCollaborators: 'Invite collaborators',
+      shareToken: 'Share token',
 
       // Delete channel section
       deleteChannelButton: 'Delete channel',

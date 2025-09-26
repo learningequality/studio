@@ -7,7 +7,7 @@
       @closePanel="$emit('close')"
     >
       <template #header>
-        <h1 class="side-panel-title">{{ $tr('panelTitle') }}</h1>
+        <h1 class="side-panel-title">{{ submitToCommunityLibrary$() }}</h1>
       </template>
 
       <template #default>
@@ -32,19 +32,19 @@
                   v-if="showingMoreDetails"
                   class="more-details-text"
                 >
-                  {{ $tr('moreDetails') }}
+                  {{ moreDetails$() }}
                 </div>
                 <KButton
                   v-if="!showingMoreDetails"
                   appearance="basic-link"
-                  :text="$tr('moreDetailsButton')"
+                  :text="moreDetailsButton$()"
                   data-test="more-details-button"
                   @click="showingMoreDetails = !showingMoreDetails"
                 />
                 <KButton
                   v-else
                   appearance="basic-link"
-                  :text="$tr('lessDetailsButton')"
+                  :text="lessDetailsButton$()"
                   data-test="less-details-button"
                   @click="showingMoreDetails = !showingMoreDetails"
                 />
@@ -62,49 +62,49 @@
             kind="warning"
             data-test="not-published-warning"
           >
-            {{ $tr('notPublishedWarning') }}
+            {{ notPublishedWarning$() }}
           </Box>
           <Box
             v-else-if="isPublic"
             kind="warning"
             data-test="public-warning"
           >
-            {{ $tr('publicWarning') }}
+            {{ publicWarning$() }}
           </Box>
           <Box
             v-else-if="isCurrentVersionAlreadySubmitted"
             kind="warning"
             data-test="already-submitted-warning"
           >
-            {{ $tr('alreadySubmittedWarning') }}
+            {{ alreadySubmittedWarning$() }}
           </Box>
           <div class="channel-title">{{ channel.name }}</div>
           <div>
-            <div class="field-annotation">{{ $tr('languagesDetected') }}</div>
+            <div class="field-annotation">{{ languagesDetected$() }}</div>
             <LoadingText
               :loading="publishedDataIsLoading"
               :finishedLoading="publishedDataIsFinished"
-              :omitted="!isPublished"
+              :omitted="!detectedLanguages"
             >
               {{ detectedLanguages }}
             </LoadingText>
           </div>
           <div>
-            <div class="field-annotation">{{ $tr('licensesDetected') }}</div>
+            <div class="field-annotation">{{ licensesDetected$() }}</div>
             <LoadingText
               :loading="publishedDataIsLoading"
               :finishedLoading="publishedDataIsFinished"
-              :omitted="!isPublished"
+              :omitted="!detectedLicenses"
             >
               {{ detectedLicenses }}
             </LoadingText>
           </div>
           <div>
-            <div class="field-annotation">{{ $tr('categoriesDetected') }}</div>
+            <div class="field-annotation">{{ categoriesDetected$() }}</div>
             <LoadingText
               :loading="publishedDataIsLoading"
               :finishedLoading="publishedDataIsFinished"
-              :omitted="!isPublished"
+              :omitted="!detectedCategories"
             >
               {{ detectedCategories }}
             </LoadingText>
@@ -122,7 +122,7 @@
                 v-model="countries"
                 class="country-field"
                 :disabled="!canBeEdited"
-                :label="$tr('countryLabel')"
+                :label="countryLabel$()"
                 fullWidth
                 :hide-details="true"
               />
@@ -132,9 +132,9 @@
             v-model="description"
             :disabled="!canBeEdited"
             :invalid="description.length < 1"
-            :invalidText="$tr('descriptionRequired')"
+            :invalidText="descriptionRequired$()"
             textArea
-            :label="$tr('descriptionLabel')"
+            :label="descriptionLabel$()"
             :maxlength="250"
             style="width: 100%"
             class="description-textbox"
@@ -148,7 +148,7 @@
             data-test="cancel-button"
             @click="$emit('close')"
           >
-            {{ $tr('cancelButton') }}
+            {{ cancelAction$() }}
           </KButton>
           <KButton
             primary
@@ -156,7 +156,7 @@
             data-test="submit-button"
             @click="onSubmit"
           >
-            {{ $tr('submitButton') }}
+            {{ submitButton$() }}
           </KButton>
         </div>
       </template>
@@ -181,6 +181,7 @@
 
   import { translateMetadataString } from 'shared/utils/metadataStringsTranslation';
   import countriesUtil from 'shared/utils/countries';
+  import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 
   import SidePanelModal from 'shared/views/SidePanelModal';
   import CountryField from 'shared/views/form/CountryField';
@@ -205,9 +206,32 @@
       const { proxy } = getCurrentInstance();
       const store = proxy.$store;
 
-      function $tr(param) {
-        return proxy.$tr(param);
-      }
+      // Destructure translation functions from communityChannelsStrings
+      const {
+        submitToCommunityLibrary$,
+        moreDetails$,
+        moreDetailsButton$,
+        lessDetailsButton$,
+        languagesDetected$,
+        licensesDetected$,
+        categoriesDetected$,
+        countryLabel$,
+        descriptionLabel$,
+        descriptionRequired$,
+        notPublishedWarning$,
+        publicWarning$,
+        alreadySubmittedWarning$,
+        submitButton$,
+        cancelAction$,
+        submittedPrimaryInfo$,
+        reviewersWillSeeLatestFirst$,
+        approvedPrimaryInfo$,
+        flaggedPrimaryInfo$,
+        nonePrimaryInfo$,
+        submittedSnackbar$,
+        errorSnackbar$,
+        submittingSnackbar$,
+      } = communityChannelsStrings;
 
       const annotationColor = computed(() => tokensTheme.annotation);
       const infoSeparatorColor = computed(() => tokensTheme.fineLine);
@@ -255,19 +279,19 @@
 
       const infoConfigs = {
         [CommunityLibraryStatus.PENDING]: {
-          primaryText: $tr('submittedPrimaryInfo'),
-          secondaryText: $tr('reviewersWillSeeLatestFirst'),
+          primaryText: submittedPrimaryInfo$(),
+          secondaryText: reviewersWillSeeLatestFirst$(),
         },
         [CommunityLibraryStatus.APPROVED]: {
-          primaryText: $tr('approvedPrimaryInfo'),
-          secondaryText: $tr('reviewersWillSeeLatestFirst'),
+          primaryText: approvedPrimaryInfo$(),
+          secondaryText: reviewersWillSeeLatestFirst$(),
         },
         [CommunityLibraryStatus.REJECTED]: {
-          primaryText: $tr('flaggedPrimaryInfo'),
+          primaryText: flaggedPrimaryInfo$(),
           secondaryText: null,
         },
         none: {
-          primaryText: $tr('nonePrimaryInfo'),
+          primaryText: nonePrimaryInfo$(),
           secondaryText: null,
         },
       };
@@ -315,14 +339,14 @@
           code => code !== null,
         );
         if (!languageCodes) return undefined;
-        if (languageCodes.length === 0) return $tr('none');
+        if (languageCodes.length === 0) return null;
 
         return languageCodes.map(code => LanguagesMap.get(code).readable_name).join(', ');
       });
 
       const detectedLicenses = computed(() => {
         if (!latestPublishedData.value?.included_licenses) return undefined;
-        if (latestPublishedData.value.included_licenses.length === 0) return $tr('none');
+        if (latestPublishedData.value.included_licenses.length === 0) return null;
 
         return latestPublishedData.value.included_licenses
           .map(licenseId => LicensesMap.get(licenseId).license_name)
@@ -335,7 +359,7 @@
 
       const detectedCategories = computed(() => {
         if (!latestPublishedData.value?.included_categories) return undefined;
-        if (latestPublishedData.value.included_categories.length === 0) return $tr('none');
+        if (latestPublishedData.value.included_categories.length === 0) return null;
 
         return latestPublishedData.value.included_categories
           .map(categoryId => categoryIdToName(categoryId))
@@ -357,17 +381,17 @@
             categories: latestPublishedData.value.included_categories,
           })
             .then(() => {
-              showSnackbar({ text: $tr('submittedSnackbar') });
+              showSnackbar({ text: submittedSnackbar$() });
             })
             .catch(() => {
-              showSnackbar({ text: $tr('errorSnackbar') });
+              showSnackbar({ text: errorSnackbar$() });
             });
         }, submitDelayMs);
 
         showSnackbar({
-          text: $tr('submittingSnackbar'),
+          text: submittingSnackbar$(),
           duration: null,
-          actionText: $tr('cancelButton'),
+          actionText: cancelAction$(),
           actionCallback: () => {
             clearTimeout(timer);
           },
@@ -398,6 +422,22 @@
         detectedLicenses,
         detectedCategories,
         onSubmit,
+        // Translation functions
+        submitToCommunityLibrary$,
+        moreDetails$,
+        moreDetailsButton$,
+        lessDetailsButton$,
+        languagesDetected$,
+        licensesDetected$,
+        categoriesDetected$,
+        countryLabel$,
+        descriptionLabel$,
+        descriptionRequired$,
+        notPublishedWarning$,
+        publicWarning$,
+        alreadySubmittedWarning$,
+        submitButton$,
+        cancelAction$,
       };
     },
     props: {
@@ -405,48 +445,6 @@
         type: Object,
         required: true,
       },
-    },
-    // NOTE: Uses of translated strings inside setup are not picked up by ESLint
-    $trs: {
-      panelTitle: 'Submit to Community Library',
-      // eslint-disable-next-line kolibri/vue-no-unused-translations
-      submittedPrimaryInfo: 'A previous version is still pending review.',
-      // eslint-disable-next-line kolibri/vue-no-unused-translations
-      reviewersWillSeeLatestFirst: 'Reviewers will see the latest submission first.',
-      // eslint-disable-next-line kolibri/vue-no-unused-translations
-      approvedPrimaryInfo: 'A previous version is live in the Community Library.',
-      // eslint-disable-next-line kolibri/vue-no-unused-translations
-      flaggedPrimaryInfo:
-        'A previous version was flagged for review. Ensure you have fixed all highlighted issues before submitting.',
-      // eslint-disable-next-line kolibri/vue-no-unused-translations
-      nonePrimaryInfo:
-        'Your published channel will be added to the Community Library review queue.',
-      moreDetailsButton: 'More details about the Community Library',
-      lessDetailsButton: 'Show less',
-      moreDetails:
-        "The Kolibri Community Library features channels created by the community. Share your openly licensed work for review, and once it's approved, it will be available to users in your selected region or language.",
-      notPublishedWarning:
-        "This channel isn't published to Kolibri Studio yet. Publish first, then submit to the Community Library.",
-      publicWarning:
-        'This channel is currently public in the Content Library. It is not possible to submit public channels to the Community Library.',
-      alreadySubmittedWarning:
-        'This version of the channel has already been submitted to the Community Library. Please wait for review or make changes and publish a new version before submitting again.',
-      descriptionLabel: "Describe what's new in this submission",
-      descriptionRequired: 'Description is required',
-      submitButton: 'Submit for review',
-      cancelButton: 'Cancel',
-      // eslint-disable-next-line kolibri/vue-no-unused-translations
-      submittingSnackbar: 'Submitting channel to Community Library...',
-      // eslint-disable-next-line kolibri/vue-no-unused-translations
-      submittedSnackbar: 'Channel submitted to Community Library',
-      // eslint-disable-next-line kolibri/vue-no-unused-translations
-      errorSnackbar: 'There was an error submitting the channel',
-      countryLabel: 'Country',
-      languagesDetected: 'Language(s) detected',
-      licensesDetected: 'License(s) detected',
-      categoriesDetected: 'Categories',
-      // eslint-disable-next-line kolibri/vue-no-unused-translations
-      none: 'None',
     },
   };
 

@@ -9,6 +9,7 @@ import StatusChip from '../StatusChip.vue';
 import { usePublishedData } from '../composables/usePublishedData';
 import { useCommunityLibrarySubmissions } from '../composables/useCommunityLibrarySubmissions';
 import { Categories, CommunityLibraryStatus } from 'shared/constants';
+import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 import { CommunityLibrarySubmission } from 'shared/data/resources';
 import CountryField from 'shared/views/form/CountryField.vue';
 
@@ -25,6 +26,14 @@ jest.mock('shared/data/resources', () => ({
 }));
 
 const store = factory();
+
+const {
+  nonePrimaryInfo$,
+  flaggedPrimaryInfo$,
+  approvedPrimaryInfo$,
+  submittedPrimaryInfo$,
+  reviewersWillSeeLatestFirst$,
+} = communityChannelsStrings;
 
 async function makeWrapper({ channel, publishedData, submissionsData }) {
   const isLoading = ref(true);
@@ -173,7 +182,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       const infoBoxes = wrapper.findAllComponents(Box).filter(box => box.props('kind') === 'info');
       expect(infoBoxes.length).toBe(1);
       const infoBox = infoBoxes.wrappers[0];
-      expect(infoBox.text()).toContain(wrapper.vm.$tr('nonePrimaryInfo'));
+      expect(infoBox.text()).toContain(nonePrimaryInfo$());
     });
 
     it('when the previous submission was rejected', async () => {
@@ -186,7 +195,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       const infoBoxes = wrapper.findAllComponents(Box).filter(box => box.props('kind') === 'info');
       expect(infoBoxes.length).toBe(1);
       const infoBox = infoBoxes.wrappers[0];
-      expect(infoBox.text()).toContain(wrapper.vm.$tr('flaggedPrimaryInfo'));
+      expect(infoBox.text()).toContain(flaggedPrimaryInfo$());
     });
 
     it('when the previous submission was approved', async () => {
@@ -199,8 +208,8 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       const infoBoxes = wrapper.findAllComponents(Box).filter(box => box.props('kind') === 'info');
       expect(infoBoxes.length).toBe(1);
       const infoBox = infoBoxes.wrappers[0];
-      expect(infoBox.text()).toContain(wrapper.vm.$tr('approvedPrimaryInfo'));
-      expect(infoBox.text()).toContain(wrapper.vm.$tr('reviewersWillSeeLatestFirst'));
+      expect(infoBox.text()).toContain(approvedPrimaryInfo$());
+      expect(infoBox.text()).toContain(reviewersWillSeeLatestFirst$());
     });
 
     it('when the previous submission is pending', async () => {
@@ -213,8 +222,8 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       const infoBoxes = wrapper.findAllComponents(Box).filter(box => box.props('kind') === 'info');
       expect(infoBoxes.length).toBe(1);
       const infoBox = infoBoxes.wrappers[0];
-      expect(infoBox.text()).toContain(wrapper.vm.$tr('submittedPrimaryInfo'));
-      expect(infoBox.text()).toContain(wrapper.vm.$tr('reviewersWillSeeLatestFirst'));
+      expect(infoBox.text()).toContain(submittedPrimaryInfo$());
+      expect(infoBox.text()).toContain(reviewersWillSeeLatestFirst$());
     });
   });
 
