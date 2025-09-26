@@ -500,10 +500,6 @@
           div {
             margin-left: 8px;
           }
-
-          [dir='rtl'] & div {
-            margin-right: 8px;
-          }
         }
       }
 
@@ -519,11 +515,6 @@
         border: 0;
       }
 
-      [dir='rtl'] & {
-        ::v-deep .k-thumbnail {
-          margin-right: 16px;
-        }
-      }
     }
   }
 
