@@ -7,7 +7,7 @@ import Box from '../Box.vue';
 import StatusChip from '../StatusChip.vue';
 
 import { usePublishedData } from '../composables/usePublishedData';
-import { useCommunityLibrarySubmissions } from '../composables/useCommunityLibrarySubmissions';
+import { useLatestCommunityLibrarySubmission } from '../composables/useLatestCommunityLibrarySubmission';
 import { Categories, CommunityLibraryStatus } from 'shared/constants';
 import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 import { CommunityLibrarySubmission } from 'shared/data/resources';
@@ -16,8 +16,8 @@ import CountryField from 'shared/views/form/CountryField.vue';
 jest.mock('../composables/usePublishedData', () => ({
   usePublishedData: jest.fn(),
 }));
-jest.mock('../composables/useCommunityLibrarySubmissions', () => ({
-  useCommunityLibrarySubmissions: jest.fn(),
+jest.mock('../composables/useLatestCommunityLibrarySubmission', () => ({
+  useLatestCommunityLibrarySubmission: jest.fn(),
 }));
 jest.mock('shared/data/resources', () => ({
   CommunityLibrarySubmission: {
@@ -35,7 +35,7 @@ const {
   reviewersWillSeeLatestFirst$,
 } = communityChannelsStrings;
 
-async function makeWrapper({ channel, publishedData, submissionsData }) {
+async function makeWrapper({ channel, publishedData, latestSubmission }) {
   const isLoading = ref(true);
   const isFinished = ref(false);
 
@@ -45,10 +45,10 @@ async function makeWrapper({ channel, publishedData, submissionsData }) {
     data: computed(() => publishedData),
   });
 
-  useCommunityLibrarySubmissions.mockReturnValue({
+  useLatestCommunityLibrarySubmission.mockReturnValue({
     isLoading,
     isFinished,
-    data: computed(() => submissionsData),
+    data: computed(() => latestSubmission),
   });
 
   const wrapper = mount(SubmitToCommunityLibrarySidePanel, {
@@ -107,8 +107,7 @@ const publishedData = {
   },
 };
 
-const notSubmittedSubmissionsData = [];
-const submittedSubmissionsData = [{ channel_version: 2, status: CommunityLibraryStatus.PENDING }];
+const submittedLatestSubmission = { channel_version: 2, status: CommunityLibraryStatus.PENDING };
 
 describe('SubmitToCommunityLibrarySidePanel', () => {
   describe('correct warnings are shown', () => {
@@ -116,7 +115,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       const wrapper = await makeWrapper({
         channel: publishedNonPublicChannel,
         publishedData,
-        submissionsData: notSubmittedSubmissionsData,
+        latestSubmission: null,
       });
 
       const warningBoxes = wrapper
@@ -129,7 +128,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       const wrapper = await makeWrapper({
         channel: publicChannel,
         publishedData,
-        submissionsData: notSubmittedSubmissionsData,
+        latestSubmission: null,
       });
 
       const warningBoxes = wrapper
@@ -144,7 +143,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       const wrapper = await makeWrapper({
         channel: nonPublishedChannel,
         publishedData: {},
-        submissionsData: notSubmittedSubmissionsData,
+        latestSubmission: null,
       });
 
       const warningBoxes = wrapper
@@ -159,7 +158,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       const wrapper = await makeWrapper({
         channel: publishedNonPublicChannel,
         publishedData,
-        submissionsData: submittedSubmissionsData,
+        latestSubmission: submittedLatestSubmission,
       });
 
       const warningBoxes = wrapper
@@ -176,7 +175,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       const wrapper = await makeWrapper({
         channel: publishedNonPublicChannel,
         publishedData,
-        submissionsData: notSubmittedSubmissionsData,
+        latestSubmission: null,
       });
 
       const infoBoxes = wrapper.findAllComponents(Box).filter(box => box.props('kind') === 'info');
@@ -189,7 +188,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       const wrapper = await makeWrapper({
         channel: publishedNonPublicChannel,
         publishedData,
-        submissionsData: [{ channel_version: 1, status: CommunityLibraryStatus.REJECTED }],
+        latestSubmission: { channel_version: 1, status: CommunityLibraryStatus.REJECTED },
       });
 
       const infoBoxes = wrapper.findAllComponents(Box).filter(box => box.props('kind') === 'info');
@@ -202,7 +201,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       const wrapper = await makeWrapper({
         channel: publishedNonPublicChannel,
         publishedData,
-        submissionsData: [{ channel_version: 1, status: CommunityLibraryStatus.APPROVED }],
+        latestSubmission: { channel_version: 1, status: CommunityLibraryStatus.APPROVED },
       });
 
       const infoBoxes = wrapper.findAllComponents(Box).filter(box => box.props('kind') === 'info');
@@ -216,7 +215,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       const wrapper = await makeWrapper({
         channel: publishedNonPublicChannel,
         publishedData,
-        submissionsData: [{ channel_version: 1, status: CommunityLibraryStatus.PENDING }],
+        latestSubmission: { channel_version: 1, status: CommunityLibraryStatus.PENDING },
       });
 
       const infoBoxes = wrapper.findAllComponents(Box).filter(box => box.props('kind') === 'info');
@@ -232,7 +231,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       const wrapper = await makeWrapper({
         channel: publishedNonPublicChannel,
         publishedData,
-        submissionsData: notSubmittedSubmissionsData,
+        latestSubmission: null,
       });
 
       const moreDetailsButton = wrapper.find('[data-test="more-details-button"]');
@@ -243,7 +242,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       const wrapper = await makeWrapper({
         channel: publishedNonPublicChannel,
         publishedData,
-        submissionsData: [{ channel_version: 1, status: CommunityLibraryStatus.APPROVED }],
+        latestSubmission: { channel_version: 1, status: CommunityLibraryStatus.APPROVED },
       });
 
       const moreDetailsButton = wrapper.find('[data-test="more-details-button"]');
@@ -254,7 +253,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       const wrapper = await makeWrapper({
         channel: publishedNonPublicChannel,
         publishedData,
-        submissionsData: notSubmittedSubmissionsData,
+        latestSubmission: null,
       });
 
       let moreDetails = wrapper.find('[data-test="more-details"]');
@@ -276,7 +275,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       const wrapper = await makeWrapper({
         channel: publishedNonPublicChannel,
         publishedData,
-        submissionsData: notSubmittedSubmissionsData,
+        latestSubmission: null,
       });
 
       const moreDetails = wrapper.find('[data-test="more-details"]');
@@ -296,7 +295,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       const wrapper = await makeWrapper({
         channel: publishedNonPublicChannel,
         publishedData,
-        submissionsData: notSubmittedSubmissionsData,
+        latestSubmission: null,
       });
 
       let moreDetails = wrapper.find('[data-test="more-details"]');
@@ -322,7 +321,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       const wrapper = await makeWrapper({
         channel: publishedNonPublicChannel,
         publishedData,
-        submissionsData: notSubmittedSubmissionsData,
+        latestSubmission: null,
       });
 
       const statusChip = wrapper.findAllComponents(StatusChip);
@@ -334,7 +333,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
         const wrapper = await makeWrapper({
           channel: publishedNonPublicChannel,
           publishedData,
-          submissionsData: [{ channel_version: 1, status: submissionStatus }],
+          latestSubmission: { channel_version: 1, status: submissionStatus },
         });
 
         const statusChip = wrapper.findComponent(StatusChip);
@@ -352,7 +351,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
     const wrapper = await makeWrapper({
       channel: publishedNonPublicChannel,
       publishedData,
-      submissionsData: notSubmittedSubmissionsData,
+      latestSubmission: null,
     });
 
     const descriptionTextbox = wrapper.findComponent('.description-textbox');
@@ -364,7 +363,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       const wrapper = await makeWrapper({
         channel: publicChannel,
         publishedData,
-        submissionsData: notSubmittedSubmissionsData,
+        latestSubmission: null,
       });
 
       const descriptionTextbox = wrapper.findComponent('.description-textbox');
@@ -375,7 +374,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       const wrapper = await makeWrapper({
         channel: nonPublishedChannel,
         publishedData: {},
-        submissionsData: notSubmittedSubmissionsData,
+        latestSubmission: null,
       });
 
       const descriptionTextbox = wrapper.findComponent('.description-textbox');
@@ -386,7 +385,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       const wrapper = await makeWrapper({
         channel: publishedNonPublicChannel,
         publishedData,
-        submissionsData: submittedSubmissionsData,
+        latestSubmission: submittedLatestSubmission,
       });
 
       const descriptionTextbox = wrapper.findComponent('.description-textbox');
@@ -400,7 +399,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
         const wrapper = await makeWrapper({
           channel: publicChannel,
           publishedData,
-          submissionsData: notSubmittedSubmissionsData,
+          latestSubmission: null,
         });
 
         const submitButton = wrapper.find('[data-test="submit-button"]');
@@ -411,7 +410,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
         const wrapper = await makeWrapper({
           channel: nonPublishedChannel,
           publishedData: {},
-          submissionsData: notSubmittedSubmissionsData,
+          latestSubmission: null,
         });
 
         const submitButton = wrapper.find('[data-test="submit-button"]');
@@ -422,7 +421,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
         const wrapper = await makeWrapper({
           channel: publishedNonPublicChannel,
           publishedData,
-          submissionsData: submittedSubmissionsData,
+          latestSubmission: submittedLatestSubmission,
         });
 
         const submitButton = wrapper.find('[data-test="submit-button"]');
@@ -433,7 +432,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
         const wrapper = await makeWrapper({
           channel: publishedNonPublicChannel,
           publishedData,
-          submissionsData: notSubmittedSubmissionsData,
+          latestSubmission: null,
         });
 
         const submitButton = wrapper.find('[data-test="submit-button"]');
@@ -445,7 +444,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       const wrapper = await makeWrapper({
         channel: publishedNonPublicChannel,
         publishedData,
-        submissionsData: notSubmittedSubmissionsData,
+        latestSubmission: null,
       });
 
       const descriptionTextbox = wrapper.findComponent('.description-textbox');
@@ -460,7 +459,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
     const wrapper = await makeWrapper({
       channel: publishedNonPublicChannel,
       publishedData,
-      submissionsData: notSubmittedSubmissionsData,
+      latestSubmission: null,
     });
 
     const cancelButton = wrapper.find('[data-test="cancel-button"]');
@@ -482,7 +481,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       const wrapper = await makeWrapper({
         channel: publishedNonPublicChannel,
         publishedData,
-        submissionsData: notSubmittedSubmissionsData,
+        latestSubmission: null,
       });
 
       const descriptionTextbox = wrapper.findComponent('.description-textbox');
@@ -498,7 +497,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       const wrapper = await makeWrapper({
         channel: publishedNonPublicChannel,
         publishedData,
-        submissionsData: notSubmittedSubmissionsData,
+        latestSubmission: null,
       });
 
       const descriptionTextbox = wrapper.findComponent('.description-textbox');
@@ -517,7 +516,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       const wrapper = await makeWrapper({
         channel: publishedNonPublicChannel,
         publishedData,
-        submissionsData: notSubmittedSubmissionsData,
+        latestSubmission: null,
       });
 
       const descriptionTextbox = wrapper.findComponent('.description-textbox');
@@ -547,9 +546,11 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       const wrapper = await makeWrapper({
         channel: publishedNonPublicChannel,
         publishedData,
-        submissionsData: [
-          { channel_version: 1, status: CommunityLibraryStatus.REJECTED, countries: ['CZ'] },
-        ],
+        latestSubmission: {
+          channel_version: 1,
+          status: CommunityLibraryStatus.REJECTED,
+          countries: ['CZ'],
+        },
       });
 
       const countryField = wrapper.findComponent(CountryField);

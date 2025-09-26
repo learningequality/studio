@@ -14,7 +14,7 @@
         <div class="content">
           <Box
             kind="info"
-            :loading="submissionsAreLoading"
+            :loading="latestSubmissionIsLoading"
             class="info-box"
           >
             <div
@@ -110,13 +110,13 @@
           <div class="country-area">
             <KTransition kind="component-fade-out-in">
               <div
-                v-if="submissionsAreLoading"
+                v-if="latestSubmissionIsLoading"
                 class="loader-wrapper"
               >
                 <KCircularLoader disableDefaultTransition />
               </div>
               <CountryField
-                v-else-if="submissionsAreFinished"
+                v-else-if="latestSubmissionIsFinished"
                 v-model="countries"
                 class="country-field"
                 :disabled="!canBeEdited"
@@ -174,7 +174,7 @@
   import Box from './Box';
   import LoadingText from './LoadingText';
   import StatusChip from './StatusChip';
-  import { useCommunityLibrarySubmissions } from './composables/useCommunityLibrarySubmissions';
+  import { useLatestCommunityLibrarySubmission } from './composables/useLatestCommunityLibrarySubmission';
   import { usePublishedData } from './composables/usePublishedData';
 
   import { translateMetadataString } from 'shared/utils/metadataStringsTranslation';
@@ -239,38 +239,32 @@
       const description = ref('');
 
       const {
-        isLoading: submissionsAreLoading,
-        isFinished: submissionsAreFinished,
-        data: submissionsData,
-      } = useCommunityLibrarySubmissions(props.channel.id);
-
-      const latestSubmission = computed(() => {
-        if (!submissionsData.value) return undefined;
-        if (submissionsData.value.length === 0) return null;
-
-        // Submissions are ordered by most recent first in the backend
-        return submissionsData.value[0];
-      });
+        isLoading: latestSubmissionIsLoading,
+        isFinished: latestSubmissionIsFinished,
+        data: latestSubmissionData,
+      } = useLatestCommunityLibrarySubmission(props.channel.id);
 
       function countryCodeToName(code) {
         return countriesUtil.getName(code, 'en');
       }
 
-      watch(submissionsAreFinished, newVal => {
-        if (newVal && latestSubmission.value) {
-          countries.value = latestSubmission.value.countries.map(code => countryCodeToName(code));
+      watch(latestSubmissionIsFinished, newVal => {
+        if (newVal && latestSubmissionData.value) {
+          countries.value = latestSubmissionData.value.countries.map(code =>
+            countryCodeToName(code),
+          );
         }
       });
 
       const latestSubmissionStatus = computed(() => {
-        if (!submissionsAreFinished.value) return null;
-        if (!latestSubmission.value) return 'none';
+        if (!latestSubmissionIsFinished.value) return null;
+        if (!latestSubmissionData.value) return 'none';
 
         // We do not need to distinguish LIVE from APPROVED in the UI
         const uiSubmissionStatus =
-          latestSubmission.value.status == CommunityLibraryStatus.LIVE
+          latestSubmissionData.value.status == CommunityLibraryStatus.LIVE
             ? CommunityLibraryStatus.APPROVED
-            : latestSubmission.value.status;
+            : latestSubmissionData.value.status;
 
         return uiSubmissionStatus;
       });
@@ -306,8 +300,8 @@
       const isPublished = computed(() => props.channel.published);
       const isPublic = computed(() => props.channel.public);
       const isCurrentVersionAlreadySubmitted = computed(() => {
-        if (!latestSubmission.value) return false;
-        return latestSubmission.value.channel_version === props.channel.version;
+        if (!latestSubmissionData.value) return false;
+        return latestSubmissionData.value.channel_version === props.channel.version;
       });
 
       const canBeEdited = computed(
@@ -404,8 +398,8 @@
         showingMoreDetails,
         countries,
         description,
-        submissionsAreLoading,
-        submissionsAreFinished,
+        latestSubmissionIsLoading,
+        latestSubmissionIsFinished,
         latestSubmissionStatus,
         infoBoxPrimaryText,
         infoBoxSecondaryText,
