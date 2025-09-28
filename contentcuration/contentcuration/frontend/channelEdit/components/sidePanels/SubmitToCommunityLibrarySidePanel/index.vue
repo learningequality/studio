@@ -25,7 +25,7 @@
               <div v-if="infoBoxSecondaryText">
                 {{ infoBoxSecondaryText }}
               </div>
-              <template v-if="latestSubmissionStatus === 'none'">
+              <template v-if="latestSubmissionIsFinished && latestSubmissionStatus === null">
                 <div
                   v-if="showingMoreDetails"
                   class="more-details-text"
@@ -50,7 +50,7 @@
             </div>
             <template #chip>
               <StatusChip
-                v-if="latestSubmissionStatus && latestSubmissionStatus !== 'none'"
+                v-if="latestSubmissionStatus"
                 :status="latestSubmissionStatus"
               />
             </template>
@@ -257,8 +257,8 @@
       });
 
       const latestSubmissionStatus = computed(() => {
-        if (!latestSubmissionIsFinished.value) return null;
-        if (!latestSubmissionData.value) return 'none';
+        if (!latestSubmissionIsFinished.value) return undefined;
+        if (!latestSubmissionData.value) return null;
 
         // We do not need to distinguish LIVE from APPROVED in the UI
         const uiSubmissionStatus =
@@ -269,33 +269,37 @@
         return uiSubmissionStatus;
       });
 
-      const infoConfigs = {
-        [CommunityLibraryStatus.PENDING]: {
-          primaryText: submittedPrimaryInfo$(),
-          secondaryText: reviewersWillSeeLatestFirst$(),
-        },
-        [CommunityLibraryStatus.APPROVED]: {
-          primaryText: approvedPrimaryInfo$(),
-          secondaryText: reviewersWillSeeLatestFirst$(),
-        },
-        [CommunityLibraryStatus.REJECTED]: {
-          primaryText: flaggedPrimaryInfo$(),
-          secondaryText: null,
-        },
-        none: {
-          primaryText: nonePrimaryInfo$(),
-          secondaryText: null,
-        },
-      };
+      const infoConfig = computed(() => {
+        if (!latestSubmissionIsFinished.value) return undefined;
 
-      const infoBoxPrimaryText = computed(() =>
-        latestSubmissionStatus.value ? infoConfigs[latestSubmissionStatus.value].primaryText : null,
-      );
-      const infoBoxSecondaryText = computed(() =>
-        latestSubmissionStatus.value
-          ? infoConfigs[latestSubmissionStatus.value].secondaryText
-          : null,
-      );
+        switch (latestSubmissionStatus.value) {
+          case CommunityLibraryStatus.PENDING:
+            return {
+              primaryText: submittedPrimaryInfo$(),
+              secondaryText: reviewersWillSeeLatestFirst$(),
+            };
+          case CommunityLibraryStatus.APPROVED:
+            return {
+              primaryText: approvedPrimaryInfo$(),
+              secondaryText: reviewersWillSeeLatestFirst$(),
+            };
+          case CommunityLibraryStatus.REJECTED:
+            return {
+              primaryText: flaggedPrimaryInfo$(),
+              secondaryText: null,
+            };
+          case null:
+            return {
+              primaryText: nonePrimaryInfo$(),
+              secondaryText: null,
+            };
+          default:
+            return undefined;
+        }
+      });
+
+      const infoBoxPrimaryText = computed(() => infoConfig.value?.primaryText);
+      const infoBoxSecondaryText = computed(() => infoConfig.value?.secondaryText);
 
       const isPublished = computed(() => props.channel.published);
       const isPublic = computed(() => props.channel.public);
