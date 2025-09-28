@@ -367,6 +367,11 @@
       }
 
       function onSubmit() {
+        // It should be possible to undo a submission within a short time window
+        // in case the user made a mistake and wants to change something.
+        // To avoid having to deal with undoing logic, we simply show a "submitting"
+        // snackbar for a few seconds with a cancel option, and only submit
+        // if the user doesn't cancel within that time window.
         const submitDelayMs = 5000;
 
         const timer = setTimeout(() => {
