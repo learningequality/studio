@@ -32,7 +32,6 @@
       </Breadcrumbs>
       <VSpacer />
       <KButton
-    
         :text="$tr('addTopic')"
         data-test="newtopic"
         @click="showNewTopicModal = true"
@@ -173,7 +172,6 @@
           @click="moveNodes"
         />
       </KButtonGroup>
-      
     </template>
 
     <NewTopicModal
