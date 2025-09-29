@@ -433,8 +433,9 @@
     width: 100%;
     margin-bottom: 10px;
   }
+
   .add-topic-btn {
-  flex-shrink: 0;
-}
+    flex-shrink: 0;
+  }
 
 </style>
