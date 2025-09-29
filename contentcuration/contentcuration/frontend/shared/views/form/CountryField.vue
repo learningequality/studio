@@ -28,17 +28,9 @@
 
 <script>
 
-  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
+  import countries from '../../utils/countries';
 
-  // NOTE that this list MUST stay in sync with the list of countries
-  // generated on the backend in contentcuration/management/commands/loadconstants.py,
-  // and special care should be taken when updating the i18n-iso-countries library.
-  var countries = require('i18n-iso-countries');
-  countries.registerLocale(require('i18n-iso-countries/langs/en.json'));
-  countries.registerLocale(require('i18n-iso-countries/langs/es.json'));
-  countries.registerLocale(require('i18n-iso-countries/langs/ar.json'));
-  countries.registerLocale(require('i18n-iso-countries/langs/fr.json'));
-  countries.registerLocale(require('i18n-iso-countries/langs/pt.json'));
+  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   export default {
     name: 'CountryField',
@@ -68,6 +60,10 @@
         type: String,
         required: false,
         default: null,
+      },
+      fullWidth: {
+        type: Boolean,
+        default: false,
       },
     },
     data() {
@@ -104,6 +100,9 @@
       rules() {
         return [v => (!this.required || v.length ? true : this.$tr('locationRequiredMessage'))];
       },
+      autocompleteMaxWidth() {
+        return this.fullWidth ? '100%' : '500px';
+      },
     },
     methods: {
       searchInputClear() {
@@ -128,7 +127,7 @@
   }
 
   .v-autocomplete {
-    max-width: 500px;
+    max-width: v-bind('autocompleteMaxWidth');
   }
 
 </style>
