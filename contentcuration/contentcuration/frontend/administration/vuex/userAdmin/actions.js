@@ -22,8 +22,11 @@ export function loadUserDetails(context, id) {
 }
 
 export function loadUsers({ commit }, params) {
-  params.page_size = params.page_size || 100;
-  return client.get(window.Urls.admin_users_list(), { params }).then(response => {
+  const extendedParams = {
+    ...params,
+    page_size: params.page_size || 100,
+  };
+  return client.get(window.Urls.admin_users_list(), { params: extendedParams }).then(response => {
     response.data.results = map(response.data.results, u => {
       return { ...u, id: u.id.toString() };
     });

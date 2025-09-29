@@ -197,6 +197,13 @@
       </VEditDialog>
       <span v-else>Deleted</span>
     </td>
+    <td data-test="community-library-status">
+      <CommunityLibraryStatusButton
+        v-if="communityLibraryStatus"
+        :status="communityLibraryStatus"
+      />
+      <KEmptyPlaceholder v-else />
+    </td>
     <td class="text-xs-center">
       <ChannelActionsDropdown
         :channelId="channelId"
@@ -212,10 +219,12 @@
 
   import { mapGetters, mapActions } from 'vuex';
   import ClipboardChip from '../../components/ClipboardChip';
+  import CommunityLibraryStatusButton from '../../components/CommunityLibraryStatusButton.vue';
   import { RouteNames } from '../../constants';
   import ChannelActionsDropdown from './ChannelActionsDropdown';
   import { fileSizeMixin } from 'shared/mixins';
   import Checkbox from 'shared/views/form/Checkbox';
+  import { CommunityLibraryStatus } from 'shared/constants';
 
   export default {
     name: 'ChannelItem',
@@ -223,6 +232,7 @@
       ChannelActionsDropdown,
       ClipboardChip,
       Checkbox,
+      CommunityLibraryStatusButton,
     },
     mixins: [fileSizeMixin],
     props: {
@@ -273,6 +283,16 @@
             keywords: `${this.channelId}`,
           },
         };
+      },
+      communityLibraryStatus() {
+        // We do not need to distinguish LIVE from APPROVED in the UI
+        if (
+          this.channel.latest_community_library_submission_status === CommunityLibraryStatus.LIVE
+        ) {
+          return CommunityLibraryStatus.APPROVED;
+        }
+
+        return this.channel.latest_community_library_submission_status;
       },
     },
     methods: {

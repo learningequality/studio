@@ -547,8 +547,11 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.assertEqual(len(response.json()["allowed"]), 0, response.content)
         self.assertEqual(len(response.json()["disallowed"]), 1, response.content)
 
+    @mock.patch("contentcuration.utils.publish.ensure_versioned_database_exists")
     @mock.patch("contentcuration.viewsets.channel.export_channel_to_kolibri_public")
-    def test_process_added_to_community_library_change(self, mock_export_func):
+    def test_process_added_to_community_library_change(
+        self, mock_export_func, mock_ensure_db_exists
+    ):
         # Creating the change on the backend should be supported
         self.client.force_authenticate(self.admin_user)
 

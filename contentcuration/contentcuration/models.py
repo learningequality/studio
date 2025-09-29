@@ -2601,6 +2601,9 @@ class CommunityLibrarySubmission(models.Model):
     internal_notes = models.TextField(blank=True, null=True)
 
     def save(self, *args, **kwargs):
+        # Not a top-level import to avoid circular import issues
+        from contentcuration.tasks import ensure_versioned_database_exists_task
+
         # Validate on save that the submission author is an editor of the channel
         # and that the version is not greater than the current channel version.
         # These cannot be expressed as constraints because traversing
@@ -2621,6 +2624,16 @@ class CommunityLibrarySubmission(models.Model):
             raise ValidationError(
                 "Channel version must be less than or equal to the current channel version",
                 code="impossibly_high_channel_version",
+            )
+
+        if self.pk is None:
+            # When creating a new submission, ensure the channel has a versioned database
+            # (it might not have if the channel was published before versioned databases
+            # were introduced).
+            ensure_versioned_database_exists_task.fetch_or_enqueue(
+                user=self.author,
+                channel_id=self.channel.id,
+                channel_version=self.channel.version,
             )
 
         super().save(*args, **kwargs)

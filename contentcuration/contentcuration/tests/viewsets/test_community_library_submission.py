@@ -44,6 +44,12 @@ class CRUDTestCase(StudioAPITestCase):
         self.country1 = testdata.country(name="Country 1", code="C1")
         self.country2 = testdata.country(name="Country 2", code="C2")
 
+        # Mock to allow creating submissions without having to set up content databases
+        self.ensure_db_exists_patcher = mock.patch(
+            "contentcuration.utils.publish.ensure_versioned_database_exists"
+        )
+        self.ensure_db_exists_patcher.start()
+
         self.channel_with_submission1 = testdata.channel()
         self.channel_with_submission1.public = False
         self.channel_with_submission1.version = 1
@@ -92,6 +98,10 @@ class CRUDTestCase(StudioAPITestCase):
         self.existing_submission2.save()
         self.existing_submission2.countries.add(self.country1)
         self.existing_submission2.save()
+
+    def tearDown(self):
+        self.ensure_db_exists_patcher.stop()
+        super().tearDown()
 
     def test_create_submission__is_editor(self):
         self.client.force_authenticate(user=self.editor_user)
@@ -463,6 +473,19 @@ class AdminViewSetTestCase(StudioAPITestCase):
     def setUp(self):
         super().setUp()
 
+        self.resolved_time = datetime.datetime(2023, 10, 1, tzinfo=pytz.utc)
+        self.datetime_patcher = mock.patch(
+            "contentcuration.viewsets.community_library_submission.timezone.now",
+            return_value=self.resolved_time,
+        )
+        self.mock_datetime = self.datetime_patcher.start()
+
+        # Mock to allow creating submissions without having to set up content databases
+        self.ensure_db_exists_patcher = mock.patch(
+            "contentcuration.utils.publish.ensure_versioned_database_exists"
+        )
+        self.ensure_db_exists_patcher.start()
+
         self.submission = testdata.community_library_submission()
         self.submission.channel.version = 3
         self.submission.channel.save()
@@ -504,15 +527,9 @@ class AdminViewSetTestCase(StudioAPITestCase):
             "internal_notes": self.internal_notes,
         }
 
-        self.resolved_time = datetime.datetime(2023, 10, 1, tzinfo=pytz.utc)
-        self.patcher = mock.patch(
-            "contentcuration.viewsets.community_library_submission.timezone.now",
-            return_value=self.resolved_time,
-        )
-        self.mock_datetime = self.patcher.start()
-
     def tearDown(self):
-        self.patcher.stop()
+        self.datetime_patcher.stop()
+        self.ensure_db_exists_patcher.stop()
         super().tearDown()
 
     def _manually_reject_submission(self):

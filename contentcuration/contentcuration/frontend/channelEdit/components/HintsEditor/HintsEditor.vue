@@ -106,14 +106,12 @@
       </div>
     </div>
 
-    <VBtn
-      color="greyBackground"
+    <KButton
+      :text="$tr('newHintBtnLabel')"
       class="ml-0 mt-3"
       data-test="newHintBtn"
       @click="addNewHint"
-    >
-      {{ $tr('newHintBtnLabel') }}
-    </VBtn>
+    />
   </div>
 
 </template>

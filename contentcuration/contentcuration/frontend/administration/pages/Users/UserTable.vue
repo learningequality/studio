@@ -13,7 +13,10 @@
       />
       <EmailUsersDialog
         v-model="showMassEmailDialog"
-        :query="{ ...$route.query, filter }"
+        :userTypeFilter="userTypeFilter"
+        :locationFilter="locationFilter"
+        :keywordFilter="keywordInput"
+        :usersFilterFetchQueryParams="filterFetchQueryParams"
       />
     </h1>
     <VLayout
@@ -27,8 +30,8 @@
         class="px-3"
       >
         <VSelect
-          v-model="filter"
-          :items="filters"
+          v-model="userTypeFilter"
+          :items="userTypeFilters"
           item-text="label"
           item-value="key"
           label="User Type"
@@ -43,7 +46,8 @@
         class="px-3"
       >
         <CountryField
-          v-model="location"
+          ref="locationDropdown"
+          v-model="locationFilter"
           :outline="false"
           :multiple="false"
           label="Target location"
@@ -124,7 +128,7 @@
     </VDataTable>
     <EmailUsersDialog
       v-model="showEmailDialog"
-      :query="{ ids: selected }"
+      :initialRecipients="selected"
     />
   </div>
 
@@ -133,9 +137,13 @@
 
 <script>
 
-  import { mapGetters, mapActions } from 'vuex';
+  import { ref, onMounted, computed, getCurrentInstance } from 'vue';
+  import { mapGetters } from 'vuex';
+  import transform from 'lodash/transform';
+  import { useTable } from '../../composables/useTable';
+  import { useKeywordSearch } from '../../composables/useKeywordSearch';
+  import { useFilter } from '../../composables/useFilter';
   import { RouteNames, rowsPerPageItems } from '../../constants';
-  import { tableMixin, generateFilterMixin } from '../../mixins';
   import EmailUsersDialog from './EmailUsersDialog';
   import UserItem from './UserItem';
   import { routerMixin } from 'shared/mixins';
@@ -143,14 +151,13 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import CountryField from 'shared/views/form/CountryField';
 
-  const userFilters = {
+  const userTypeFilterMap = {
     all: { label: 'All', params: {} },
     active: { label: 'Active', params: { is_active: true } },
     inactive: { label: 'Inactive', params: { is_active: false } },
     administrator: { label: 'Administrators', params: { is_admin: true } },
     sushichef: { label: 'Sushi chef', params: { chef: true } },
   };
-  const filterMixin = generateFilterMixin(userFilters);
 
   export default {
     name: 'UserTable',
@@ -161,7 +168,82 @@
       UserItem,
       CountryField,
     },
-    mixins: [tableMixin, filterMixin, routerMixin],
+    mixins: [routerMixin],
+    setup() {
+      const { proxy } = getCurrentInstance();
+      const store = proxy.$store;
+
+      const {
+        filter: userTypeFilter,
+        filters: userTypeFilters,
+        fetchQueryParams: userTypeFetchQueryParams,
+      } = useFilter({
+        name: 'userType',
+        filterMap: userTypeFilterMap,
+      });
+
+      const {
+        keywordInput,
+        setKeywords,
+        clearSearch,
+        fetchQueryParams: keywordSearchFetchQueryParams,
+      } = useKeywordSearch();
+
+      const locationFilterMap = ref({});
+      const locationDropdown = ref(null);
+
+      const { filter: locationFilter, fetchQueryParams: locationFetchQueryParams } = useFilter({
+        name: 'location',
+        filterMap: locationFilterMap,
+      });
+
+      onMounted(() => {
+        // The locationFilterMap is built from the options in the CountryField component,
+        // so we need to wait until it's mounted to access them.
+        const locationOptions = locationDropdown.value.options;
+
+        locationFilterMap.value = transform(
+          locationOptions,
+          (result, option) => {
+            result[option.id] = {
+              label: option.name,
+              params: { location: option.id },
+            };
+          },
+          {},
+        );
+      });
+
+      const filterFetchQueryParams = computed(() => {
+        return {
+          ...userTypeFetchQueryParams.value,
+          ...locationFetchQueryParams.value,
+          ...keywordSearchFetchQueryParams.value,
+        };
+      });
+
+      function loadUsers(fetchParams) {
+        return store.dispatch('userAdmin/loadUsers', fetchParams);
+      }
+
+      const { pagination, loading } = useTable({
+        fetchFunc: fetchParams => loadUsers(fetchParams),
+        filterFetchQueryParams,
+      });
+
+      return {
+        userTypeFilter,
+        userTypeFilters,
+        locationDropdown,
+        locationFilter,
+        keywordInput,
+        setKeywords,
+        clearSearch,
+        pagination,
+        loading,
+        filterFetchQueryParams,
+      };
+    },
     data() {
       return {
         selected: [],
@@ -187,20 +269,10 @@
           }
         },
       },
-      location: {
-        get() {
-          return this.$route.query.location;
-        },
-        set(location) {
-          this.updateQueryParams({
-            ...this.$route.query,
-            location,
-            page: 1,
-          });
-        },
-      },
       headers() {
-        const firstColumn = this.$vuetify.breakpoint.smAndDown ? [{ class: 'first' }] : [];
+        const firstColumn = this.$vuetify.breakpoint.smAndDown
+          ? [{ class: 'first', sortable: false }]
+          : [];
         return firstColumn.concat([
           {
             text: 'Name',
@@ -210,8 +282,8 @@
           },
           { text: 'Email', value: 'email' },
           { text: 'Disk space', value: 'disk_space' },
-          { text: 'Can edit', value: 'edit_count' },
-          { text: 'Can view', value: 'view_count' },
+          { text: 'Can edit', value: 'edit_count', sortable: false },
+          { text: 'Can view', value: 'view_count', sortable: false },
           { text: 'Date joined', value: 'date_joined' },
           { text: 'Last active', value: 'last_login' },
           { text: 'Actions', sortable: false, align: 'center' },
@@ -238,17 +310,6 @@
     },
     mounted() {
       this.updateTabTitle('Users - Administration');
-    },
-    methods: {
-      ...mapActions('userAdmin', ['loadUsers']),
-      /**
-       * @public
-       * @param params
-       * @return {Promise<any>}
-       */
-      fetch(params) {
-        return this.loadUsers(params);
-      },
     },
   };
 

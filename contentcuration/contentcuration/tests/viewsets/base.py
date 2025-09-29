@@ -2,9 +2,8 @@ import random
 
 from django.urls import reverse
 
-from contentcuration.celery import app
 from contentcuration.models import Change
-from contentcuration.tests.helpers import clear_tasks
+from contentcuration.tests.helpers import EagerTasksTestMixin
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import SYNCED
 from contentcuration.viewsets.sync.utils import _generate_event as base_generate_event
@@ -102,25 +101,7 @@ def generate_publish_next_event(channel_id, use_staging_tree=False):
     return event
 
 
-class SyncTestMixin(object):
-    celery_task_always_eager = None
-
-    @classmethod
-    def setUpClass(cls):
-        super(SyncTestMixin, cls).setUpClass()
-        # update celery so tasks are always eager for this test, meaning they'll execute synchronously
-        cls.celery_task_always_eager = app.conf.task_always_eager
-        app.conf.update(task_always_eager=True)
-
-    def setUp(self):
-        super(SyncTestMixin, self).setUp()
-        clear_tasks()
-
-    @classmethod
-    def tearDownClass(cls):
-        super(SyncTestMixin, cls).tearDownClass()
-        app.conf.update(task_always_eager=cls.celery_task_always_eager)
-
+class SyncTestMixin(EagerTasksTestMixin):
     @property
     def sync_url(self):
         return reverse("sync")
