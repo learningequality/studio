@@ -1,19 +1,29 @@
 <template>
 
-  <FullscreenModal v-model="dialog" lazy>
+  <FullscreenModal
+    v-model="dialog"
+    lazy
+  >
     <template #header>
       {{ moveHeader }}
-      <b v-if="currentNode" class="notranslate">{{ currentNode.title }}</b>
+      <b
+        v-if="currentNode"
+        class="notranslate"
+      >{{ currentNode.title }}</b>
     </template>
-    <ToolBar v-if="!loading" color="white" light>
-      <Breadcrumbs :items="crumbs" class="py-0">
+    <ToolBar
+      v-if="!loading"
+      color="white"
+      light
+    >
+      <Breadcrumbs
+        :items="crumbs"
+        class="py-0"
+      >
         <template #item="{ item, isLast }">
           <span
-            style="cursor: pointer;"
-            :class="[
-              isLast ? 'font-weight-bold' : 'grey--text',
-              getTitleClass(item),
-            ]"
+            style="cursor: pointer"
+            :class="[isLast ? 'font-weight-bold' : 'grey--text', getTitleClass(item)]"
             @click="targetNodeId = item.id"
           >
             {{ getTitle(item) }}
@@ -21,12 +31,19 @@
         </template>
       </Breadcrumbs>
       <VSpacer />
-      <VBtn color="grey lighten-4" data-test="newtopic" @click="showNewTopicModal = true">
-        {{ $tr("addTopic") }}
+      <VBtn
+        color="grey lighten-4"
+        data-test="newtopic"
+        @click="showNewTopicModal = true"
+      >
+        {{ $tr('addTopic') }}
       </VBtn>
     </ToolBar>
     <!-- list of children content -->
-    <LoadingText v-if="loading" data-test="loading" />
+    <LoadingText
+      v-if="loading"
+      data-test="loading"
+    />
     <VContainer
       v-else-if="!children.length"
       data-test="empty"
@@ -34,7 +51,11 @@
       fluid
       fill-height
     >
-      <VLayout align-center justify-center class="subheading">
+      <VLayout
+        align-center
+        justify-center
+        class="subheading"
+      >
         <div>{{ $tr('emptyTopicText') }}</div>
       </VLayout>
     </VContainer>
@@ -44,7 +65,7 @@
       align-content-start
       style="height: calc(100vh - 192px)"
     >
-      <VFlex style="height: inherit; overflow-y: auto;">
+      <VFlex style="height: inherit; overflow-y: auto">
         <VList>
           <template v-for="(node, index) in children">
             <VListTile
@@ -56,8 +77,11 @@
               data-test="listitem"
               @click="handleClick(node)"
             >
-              <VListTileContent class="px-4 py-3" style="max-width: min-content;">
-                <div style="width: 150px;">
+              <VListTileContent
+                class="px-4 py-3"
+                style="max-width: min-content"
+              >
+                <div style="width: 150px">
                   <Thumbnail
                     :src="node.thumbnail_src"
                     :kind="node.kind"
@@ -67,14 +91,20 @@
                 </div>
               </VListTileContent>
               <VListTileContent class="px-2">
-                <VListTileTitle class="text-truncate title" :class="getTitleClass(node)">
+                <VListTileTitle
+                  class="text-truncate title"
+                  :class="getTitleClass(node)"
+                >
                   {{ getTitle(node) }}
                 </VListTileTitle>
-                <VListTileSubTitle v-if="node.kind === 'topic'" class="grey--text">
+                <VListTileSubTitle
+                  v-if="node.kind === 'topic'"
+                  class="grey--text"
+                >
                   {{ $tr('resourcesCount', { count: node.resource_count || 0 }) }}
                 </VListTileSubTitle>
               </VListTileContent>
-              <VListTileAction style="min-width: 102px;">
+              <VListTileAction style="min-width: 102px">
                 <div class="options">
                   <VBtn
                     icon
@@ -82,7 +112,11 @@
                     class="mx-1"
                     @click.stop="previewNodeId = node.id"
                   >
-                    <Icon icon="info" style="font-size:20px" :color="$themeTokens.primary" />
+                    <Icon
+                      icon="info"
+                      style="font-size: 20px"
+                      :color="$themeTokens.primary"
+                    />
                   </VBtn>
                   <VBtn
                     v-if="node.kind === 'topic'"
@@ -95,11 +129,18 @@
                 </div>
               </VListTileAction>
             </VListTile>
-            <VDivider v-if="index < children.length - 1" :key="`move-divider-${node.id}`" />
+            <VDivider
+              v-if="index < children.length - 1"
+              :key="`move-divider-${node.id}`"
+            />
           </template>
         </VList>
         <div class="show-more-button-container">
-          <KButton v-if="more" :disabled="moreLoading" @click="loadMore">
+          <KButton
+            v-if="more"
+            :disabled="moreLoading"
+            @click="loadMore"
+          >
             {{ showMoreLabel }}
           </KButton>
         </div>
@@ -111,13 +152,20 @@
       />
     </VLayout>
 
-
     <!-- footer buttons -->
     <template #bottom>
       <VSpacer />
-      <KCircularLoader v-if="moveHereButtonDisabled && moveNodesInProgress" :size="20" />
-      <VBtn flat exact data-test="cancel" @click="dialog = false">
-        {{ $tr("cancel") }}
+      <KCircularLoader
+        v-if="moveHereButtonDisabled && moveNodesInProgress"
+        :size="20"
+      />
+      <VBtn
+        flat
+        exact
+        data-test="cancel"
+        @click="dialog = false"
+      >
+        {{ $tr('cancel') }}
       </VBtn>
       <VBtn
         color="primary"
@@ -125,19 +173,21 @@
         :disabled="moveHereButtonDisabled"
         @click="moveNodes"
       >
-        {{ $tr("moveHere") }}
+        {{ $tr('moveHere') }}
       </VBtn>
     </template>
 
     <NewTopicModal
       v-if="showNewTopicModal"
-      v-model="showNewTopicModal"
       data-test="newtopicmodal"
       @createTopic="createTopic"
+      @cancelCreateTopic="showNewTopicModal = false"
     />
   </FullscreenModal>
 
 </template>
+
+
 <script>
 
   import { mapGetters, mapActions } from 'vuex';
@@ -308,9 +358,9 @@
         this.moveNodesInProgress = true;
         this.$emit('target', this.targetNodeId);
       },
-      /*
-       * @public
+      /**
        * Called once the move is complete
+       * @public
        */
       moveComplete() {
         this.dialog = false;
@@ -347,14 +397,15 @@
 
 </script>
 
-<style lang="less" scoped>
 
-  /deep/ .v-toolbar__extension {
+<style lang="scss" scoped>
+
+  ::v-deep .v-toolbar__extension {
     padding: 0;
   }
 
   .content-card {
-    /deep/ .v-list__tile {
+    ::v-deep .v-list__tile {
       height: unset;
     }
 

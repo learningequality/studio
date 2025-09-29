@@ -15,7 +15,6 @@ from contentcuration.utils.publish import publish_channel
 
 
 class TestRectifyMigrationCommand(StudioAPITestCase):
-
     @classmethod
     def setUpClass(cls):
         super(TestRectifyMigrationCommand, cls).setUpClass()
@@ -36,7 +35,7 @@ class TestRectifyMigrationCommand(StudioAPITestCase):
             license_description=self.license_description_original,
             original_channel_id=None,
             source_channel_id=None,
-            author="old author"
+            author="old author",
         )
         self.user = testdata.user()
         self.original_channel.editors.add(self.user)
@@ -82,15 +81,21 @@ class TestRectifyMigrationCommand(StudioAPITestCase):
         return source_node, source_channel
 
     def run_migrations(self):
-        call_command('rectify_incorrect_contentnode_source_fields')
+        call_command("rectify_incorrect_contentnode_source_fields")
 
     def test_two_node_case(self):
-        base_node, base_channel = self.create_base_channel_and_contentnode(self.original_contentnode, self.original_channel)
+        base_node, base_channel = self.create_base_channel_and_contentnode(
+            self.original_contentnode, self.original_channel
+        )
 
         publish_channel(self.user.id, Channel.objects.get(pk=base_channel.pk).id)
 
         # main_tree node still has changed=true even after the publish
-        for node in Channel.objects.get(pk=base_channel.pk).main_tree.get_family().filter(changed=True):
+        for node in (
+            Channel.objects.get(pk=base_channel.pk)
+            .main_tree.get_family()
+            .filter(changed=True)
+        ):
             node.changed = False
             # This should probably again change the changed=true but suprisingly it doesnot
             # Meaning the changed boolean doesnot change for the main_tree no matter what we do
@@ -98,17 +103,28 @@ class TestRectifyMigrationCommand(StudioAPITestCase):
             node.save()
 
         ContentNode.objects.filter(pk=base_node.pk).update(
-        modified=datetime.datetime(2023, 7, 5, tzinfo=timezone.utc)
+            modified=datetime.datetime(2023, 7, 5, tzinfo=timezone.utc)
         )
 
         self.run_migrations()
         updated_base_node = ContentNode.objects.get(pk=base_node.pk)
-        self.assertEqual(updated_base_node.license_description, self.original_contentnode.license_description)
-        self.assertEqual(Channel.objects.get(pk=base_channel.id).main_tree.get_family().filter(changed=True).exists(), True)
+        self.assertEqual(
+            updated_base_node.license_description,
+            self.original_contentnode.license_description,
+        )
+        self.assertEqual(
+            Channel.objects.get(pk=base_channel.id)
+            .main_tree.get_family()
+            .filter(changed=True)
+            .exists(),
+            True,
+        )
 
     def test_three_node_case_implicit(self):
         source_node, source_channel = self.create_source_channel_and_contentnode()
-        base_node, base_channel = self.create_base_channel_and_contentnode(source_node, source_channel)
+        base_node, base_channel = self.create_base_channel_and_contentnode(
+            source_node, source_channel
+        )
         source_node.aggregator = "Nami"
         source_node.save()
         # Implicit case
@@ -119,12 +135,16 @@ class TestRectifyMigrationCommand(StudioAPITestCase):
 
         publish_channel(self.user.id, Channel.objects.get(pk=base_channel.pk).id)
 
-        for node in Channel.objects.get(pk=base_channel.pk).main_tree.get_family().filter(changed=True):
+        for node in (
+            Channel.objects.get(pk=base_channel.pk)
+            .main_tree.get_family()
+            .filter(changed=True)
+        ):
             node.changed = False
             node.save()
 
         ContentNode.objects.filter(pk=base_node.pk).update(
-        modified=datetime.datetime(2023, 7, 5, tzinfo=timezone.utc)
+            modified=datetime.datetime(2023, 7, 5, tzinfo=timezone.utc)
         )
 
         ContentNode.objects.filter(pk=source_node.pk).update(
@@ -134,25 +154,43 @@ class TestRectifyMigrationCommand(StudioAPITestCase):
         self.run_migrations()
         updated_base_node = ContentNode.objects.get(pk=base_node.pk)
         updated_source_node = ContentNode.objects.get(pk=source_node.pk)
-        self.assertEqual(updated_base_node.license_description, self.original_contentnode.license_description)
-        self.assertEqual(updated_source_node.license_description, self.original_contentnode.license_description)
-        self.assertEqual(Channel.objects.get(pk=base_channel.id).main_tree.get_family().filter(changed=True).exists(), True)
+        self.assertEqual(
+            updated_base_node.license_description,
+            self.original_contentnode.license_description,
+        )
+        self.assertEqual(
+            updated_source_node.license_description,
+            self.original_contentnode.license_description,
+        )
+        self.assertEqual(
+            Channel.objects.get(pk=base_channel.id)
+            .main_tree.get_family()
+            .filter(changed=True)
+            .exists(),
+            True,
+        )
 
     def test_three_node_case_explicit(self):
         source_node, source_channel = self.create_source_channel_and_contentnode()
-        base_node, base_channel = self.create_base_channel_and_contentnode(source_node, source_channel)
+        base_node, base_channel = self.create_base_channel_and_contentnode(
+            source_node, source_channel
+        )
         source_node.license_description = "luffy"
         base_node.license_description = "zoro"
         base_node.save()
         source_node.save()
         publish_channel(self.user.id, Channel.objects.get(pk=base_channel.pk).id)
 
-        for node in Channel.objects.get(pk=base_channel.pk).main_tree.get_family().filter(changed=True):
+        for node in (
+            Channel.objects.get(pk=base_channel.pk)
+            .main_tree.get_family()
+            .filter(changed=True)
+        ):
             node.changed = False
             node.save()
 
         ContentNode.objects.filter(pk=base_node.pk).update(
-        modified=datetime.datetime(2023, 7, 5, tzinfo=timezone.utc)
+            modified=datetime.datetime(2023, 7, 5, tzinfo=timezone.utc)
         )
 
         ContentNode.objects.filter(pk=source_node.pk).update(
@@ -162,6 +200,18 @@ class TestRectifyMigrationCommand(StudioAPITestCase):
         self.run_migrations()
         updated_base_node = ContentNode.objects.get(pk=base_node.pk)
         updated_source_node = ContentNode.objects.get(pk=source_node.pk)
-        self.assertEqual(updated_base_node.license_description, self.original_contentnode.license_description)
-        self.assertEqual(updated_source_node.license_description, self.original_contentnode.license_description)
-        self.assertEqual(Channel.objects.get(pk=base_channel.id).main_tree.get_family().filter(changed=True).exists(), True)
+        self.assertEqual(
+            updated_base_node.license_description,
+            self.original_contentnode.license_description,
+        )
+        self.assertEqual(
+            updated_source_node.license_description,
+            self.original_contentnode.license_description,
+        )
+        self.assertEqual(
+            Channel.objects.get(pk=base_channel.id)
+            .main_tree.get_family()
+            .filter(changed=True)
+            .exists(),
+            True,
+        )

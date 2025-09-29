@@ -11,27 +11,19 @@
         <VListTile
           data-test="list-item"
           v-bind="$attrs"
+          tabindex="0"
           @click.stop="file ? $emit('selected') : openFileDialog()"
         >
-          <VListTileAction>
-            <VRadio
-              v-if="file"
-              :key="file.id"
-              :value="file.id"
-              color="primary"
-              data-test="radio"
-            />
-          </VListTileAction>
           <VListTileContent>
             <VListTileSubTitle>{{ translateConstant(preset.id) }}</VListTileSubTitle>
-            <VListTileTitle>
-              <ActionLink
+            <VListTileTitle class="file-display">
+              <span
                 v-if="fileDisplay"
                 class="notranslate"
-                :text="formattedFileDisplay"
-                data-test="file-link"
-                @click="openFileDialog"
-              />
+                data-test="file-name"
+              >
+                {{ formattedFileDisplay }}
+              </span>
               <ActionLink
                 v-else
                 data-test="upload-link"
@@ -39,7 +31,10 @@
                 @click="openFileDialog"
               />
             </VListTileTitle>
-            <VListTileSubTitle v-if="erroredFile || uploading" data-test="status">
+            <VListTileSubTitle
+              v-if="erroredFile || uploading"
+              data-test="status"
+            >
               <FileStatusText
                 :fileId="erroredFile ? erroredFile.id : fileDisplay.id"
                 :readonly="Boolean(fileUploadId)"
@@ -49,19 +44,23 @@
             <VListTileSubTitle v-else-if="fileDisplay">
               {{ formatFileSize(fileDisplay.file_size) }}
             </VListTileSubTitle>
-
           </VListTileContent>
           <VSpacer />
           <VListTileAction v-if="fileDisplay">
-            <div v-if="allowFileRemove" class="remove-icon">
-              <IconButton
-                icon="clear"
-                color="grey"
-                :text="$tr('removeFileButton')"
-                data-test="remove"
-                @click="$emit('remove', file)"
-              />
-            </div>
+            <KIconButton
+              size="small"
+              icon="optionsHorizontal"
+              appearance="flat-button"
+              data-test="show-file-options"
+            >
+              <template #menu>
+                <KDropdownMenu
+                  :options="previewFilesOptions"
+                  data-test="file-options"
+                  @select="option => option.onClick(openFileDialog)"
+                />
+              </template>
+            </KIconButton>
           </VListTileAction>
         </VListTile>
       </FileDropzone>
@@ -70,12 +69,12 @@
 
 </template>
 
+
 <script>
 
-  import { mapGetters } from 'vuex';
+  import { mapActions, mapGetters } from 'vuex';
   import FileStatusText from 'shared/views/files/FileStatusText';
   import Uploader from 'shared/views/files/Uploader';
-  import IconButton from 'shared/views/IconButton';
   import { constantsTranslationMixin, fileSizeMixin, fileStatusMixin } from 'shared/mixins';
   import FileDropzone from 'shared/views/files/FileDropzone';
 
@@ -85,7 +84,6 @@
       Uploader,
       FileDropzone,
       FileStatusText,
-      IconButton,
     },
     mixins: [constantsTranslationMixin, fileSizeMixin, fileStatusMixin],
     props: {
@@ -150,6 +148,36 @@
         }
         return null;
       },
+      previewFilesOptions() {
+        const options = [
+          {
+            label: this.$tr('replaceFileMenuOptionLabel'),
+            value: 'REPLACE_FILE',
+            onClick: replaceFile => {
+              replaceFile();
+            },
+            condition: this.fileDisplay,
+          },
+          {
+            label: this.$tr('downloadMenuOptionLabel'),
+            value: 'DOWNLOAD_FILE',
+            onClick: () => {
+              this.initiateFileDownload();
+            },
+            condition: this.fileDisplay,
+          },
+          {
+            label: this.$tr('removeMenuOptionLabel'),
+            value: 'REMOVE_FILE',
+            onClick: () => {
+              this.removeFile();
+            },
+            condition: this.fileDisplay && this.allowFileRemove,
+          },
+        ];
+
+        return options.filter(option => option.condition);
+      },
     },
     watch: {
       'file.id': {
@@ -159,6 +187,8 @@
       },
     },
     methods: {
+      ...mapActions('file', ['downloadFile']),
+      ...mapActions(['showSnackbar']),
       completeUpload(fileUpload) {
         if (fileUpload.id === this.fileUploadId) {
           this.uploadCompleteHandler(fileUpload);
@@ -167,11 +197,30 @@
       uploadingHandler(fileUpload) {
         this.fileUploadId = fileUpload.id;
       },
+      initiateFileDownload() {
+        try {
+          this.downloadFile({
+            url: this.fileDisplay.url,
+            fileName: this.formattedFileDisplay,
+          });
+        } catch (e) {
+          this.showSnackbar({
+            text: this.$tr('downloadFailed'),
+          });
+        }
+      },
+      removeFile() {
+        this.$emit('remove', this.file);
+      },
     },
     $trs: {
       uploadButton: 'Select file',
-      removeFileButton: 'Remove',
+      replaceFileMenuOptionLabel: 'Replace file',
+      downloadMenuOptionLabel: 'Download',
+      removeMenuOptionLabel: 'Remove',
+      downloadFailed: 'Failed to download file',
       /* eslint-disable kolibri/vue-no-unused-translations */
+      removeFileButton: 'Remove',
       retryUpload: 'Retry upload',
       uploadFailed: 'Upload failed',
       unknownFile: 'Unknown filename',
@@ -181,37 +230,34 @@
 
 </script>
 
-<style lang="less" scoped>
 
-  .layout .section-header {
-    padding: 0 15px;
-    font-weight: bold;
-    color: var(--v-darken-3);
-  }
+<style lang="scss" scoped>
 
-  button {
-    margin: 0;
-  }
-
-  /deep/ .v-list__tile {
+  ::v-deep .v-list__tile {
     height: max-content !important;
     min-height: 64px;
     padding: 5px 16px;
 
-    .remove-icon {
-      display: none;
-    }
-
-    &:hover .remove-icon {
-      display: block;
+    &:focus {
+      background-color: var(--v-grey-lighten5);
+      outline-color: var(--v-primary-base);
     }
 
     .v-list__tile__title {
-      height: max-content;
+      height: 30px;
     }
 
     .v-list__tile__sub-title {
+      margin-left: 1px;
       white-space: unset;
+    }
+  }
+
+  .file-display {
+    margin-left: 1px;
+
+    span {
+      font-size: 15px;
     }
   }
 

@@ -7,11 +7,14 @@
     :style="{ 'border-left-color': channelColor }"
   >
     <template #header>
-      <VListTile class="channel-tile py-2" inactive>
+      <VListTile
+        class="channel-tile py-2"
+        inactive
+      >
         <VListTileAction class="select-col">
           <Checkbox
             ref="checkbox"
-            class="ma-0 pa-0"
+            class="ma-0 pt-1"
             :class="{ selectedIndeterminate: !selected && indeterminate }"
             :inputValue="selected"
             :indeterminate="indeterminate"
@@ -43,10 +46,11 @@
       :nodeId="child.id"
       :level="level + 1"
     />
-
   </LazyListGroup>
 
 </template>
+
+
 <script>
 
   import { mapGetters } from 'vuex';
@@ -95,7 +99,7 @@
         return Boolean(this.selectionState & SelectionFlags.ALL_DESCENDANTS);
       },
       // Overrides mixin, since channel itself cannot be solely selected
-      // eslint-disable-next-line kolibri/vue-no-unused-properties
+      // eslint-disable-next-line vue/no-unused-properties
       nextSelectionState() {
         const current = this.selectionState;
 
@@ -108,7 +112,9 @@
   };
 
 </script>
-<style lang="less" scoped>
+
+
+<style lang="scss" scoped>
 
   .channel-item {
     background: #ffffff;
@@ -119,12 +125,12 @@
   .channel-tile,
   .v-list__tile__title,
   .v-list__tile__title > h4,
-  /deep/ .channel-tile > .v-list__tile {
+  ::v-deep .channel-tile > .v-list__tile {
     width: 100%;
     max-width: 100%;
   }
 
-  /deep/ .channel-tile > .v-list__tile {
+  ::v-deep .channel-tile > .v-list__tile {
     padding-right: 0;
   }
 
@@ -137,11 +143,11 @@
   }
 
   .text-truncate {
-    /* fix clipping of dangling characters */
+    // Fix clipping of dangling characters
     line-height: 1.3 !important;
   }
 
-  /deep/ .selectedIndeterminate svg {
+  ::v-deep .selectedIndeterminate svg {
     fill: gray !important;
   }
 

@@ -28,6 +28,7 @@ const exportStrings = createTranslator('ChannelExportStrings', {
   aggregators: 'Aggregators',
   licenses: 'Licenses',
   copyrightHolders: 'Copyright holders',
+  containsContentFrom: 'Contains content from',
   yes: 'Yes',
   no: 'No',
   downloadFilename: '{year}_{month}_Kolibri_Content_Library',
@@ -99,6 +100,7 @@ export const channelExportMixin = {
         this.exportStrings.$tr('aggregators'),
         this.exportStrings.$tr('licenses'),
         this.exportStrings.$tr('copyrightHolders'),
+        this.exportStrings.$tr('containsContentFrom'),
       ];
       const csv = Papa.unparse({
         fields: headers,
@@ -113,7 +115,7 @@ export const channelExportMixin = {
           this.$formatNumber(channel.resource_count),
           this.formatFileSize(channel.resource_size),
           sortBy(channel.kind_count, 'kind_id').map(
-            kind => `${this.translateConstant(kind.kind_id)} (${this.$formatNumber(kind.count)})`
+            kind => `${this.translateConstant(kind.kind_id)} (${this.$formatNumber(kind.count)})`,
           ),
           channel.languages,
           channel.accessible_languages,
@@ -125,6 +127,7 @@ export const channelExportMixin = {
           channel.aggregators,
           channel.licenses,
           channel.copyright_holders,
+          channel.original_channels ? channel.original_channels.map(ch => ch.name).join(', ') : '',
         ]),
       });
       const blob = new Blob([csv], {

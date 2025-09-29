@@ -19,9 +19,19 @@
       :right="isRTL"
     >
       <VContainer class="filters pa-3">
-        <VToolbar v-if="$vuetify.breakpoint.xsOnly" color="transparent" flat dense>
+        <VToolbar
+          v-if="$vuetify.breakpoint.xsOnly"
+          color="transparent"
+          flat
+          dense
+        >
           <VSpacer />
-          <VBtn icon flat style="text-align: right;" @click="drawer = false">
+          <VBtn
+            icon
+            flat
+            style="text-align: right"
+            @click="drawer = false"
+          >
             <Icon icon="clear" />
           </VBtn>
         </VToolbar>
@@ -50,7 +60,6 @@
           v-model="licenses"
           :items="licenseOptions"
           :label="$tr('licenseLabel')"
-          item-text="text"
         />
 
         <!-- Formats (attach to self to keep in notranslate class) -->
@@ -58,7 +67,6 @@
           v-model="kinds"
           :items="kindOptions"
           :label="$tr('formatLabel')"
-          item-text="text"
         />
 
         <!-- Starred -->
@@ -72,13 +80,15 @@
         <div class="subheading">
           {{ $tr('includesLabel') }}
         </div>
-        <Checkbox
-          v-model="coach"
-        >
+        <Checkbox v-model="coach">
           <div class="label-container">
             {{ $tr('coachLabel') }}
 
-            <HelpTooltip :text="$tr('coachDescription')" bottom class="px-2" />
+            <HelpTooltip
+              :text="$tr('coachDescription')"
+              bottom
+              class="px-2"
+            />
           </div>
         </Checkbox>
         <Checkbox
@@ -92,7 +102,11 @@
           :text="$tr('frequentlyAskedQuestionsLink')"
         />
       </VContainer>
-      <VFooter class="pb-3 pt-2 px-4" color="transparent" height="100">
+      <VFooter
+        class="pb-3 pt-2 px-4"
+        color="transparent"
+        height="100"
+      >
         <div>
           <VImg
             height="60"
@@ -215,13 +229,13 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .v-input--checkbox {
     margin: 0;
   }
 
-  /deep/ .v-messages {
+  ::v-deep .v-messages {
     display: none;
   }
 
@@ -238,7 +252,7 @@
     overflow: auto;
   }
 
-  /deep/ .v-label * {
+  ::v-deep .v-label * {
     vertical-align: bottom;
   }
 

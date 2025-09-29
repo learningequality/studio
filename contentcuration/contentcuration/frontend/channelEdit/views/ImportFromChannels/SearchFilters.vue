@@ -3,7 +3,7 @@
   <VNavigationDrawer
     permanent
     floating
-    class="import-search-filters px-2"
+    class="import-search-filters"
   >
     <!-- Channel -->
     <p class="font-weight-bold grey--text mb-1">
@@ -25,8 +25,6 @@
       v-model="channel_id__in"
       :label="$tr('channelSourceLabel')"
       :items="channelOptions"
-      item-text="name"
-      item-value="id"
       :disabled="loadingChannels"
       notranslate
       useEllipsis
@@ -51,7 +49,10 @@
     />
 
     <!-- Show coach content toggle -->
-    <Checkbox v-model="coach" class="mb-4 mt-2">
+    <Checkbox
+      v-model="coach"
+      class="mb-4 mt-2"
+    >
       <Icon icon="coachContent" />
       <span class="mx-2 text-xs-left">{{ $tr('coachContentLabel') }}</span>
     </Checkbox>
@@ -61,7 +62,6 @@
       v-model="kinds"
       :items="kindFilterOptions"
       :label="$tr('kindLabel')"
-      item-text="text"
     />
 
     <!-- Language -->
@@ -75,12 +75,11 @@
       v-model="licenses"
       :items="licenseOptions"
       :label="$tr('licensesLabel')"
-      item-text="text"
     />
 
     <!-- Created after -->
     <!-- Box styling throws menu alignment off, so nudge accordingly -->
-    <Menu
+    <BaseMenu
       v-model="showDatePicker"
       :close-on-content-click="false"
       full-width
@@ -109,7 +108,7 @@
         min="2017-01-01"
         @input="showDatePicker = false"
       />
-    </Menu>
+    </BaseMenu>
   </VNavigationDrawer>
 
 </template>
@@ -207,7 +206,11 @@
             this.channel_id__in = [];
           }
 
-          this.channelOptions = channels.filter(c => c.id !== this.currentChannelId);
+          const filteredChannels = channels.filter(c => c.id !== this.currentChannelId);
+          this.channelOptions = filteredChannels.map(channel => ({
+            value: channel.id,
+            text: channel.name,
+          }));
           this.loadingChannels = false;
         });
       },
@@ -229,7 +232,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .import-search-filters {
     z-index: 0;

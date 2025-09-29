@@ -5,7 +5,11 @@
     :header="header"
     :text="text"
   >
-    <VForm ref="form" lazy-validation @submit.prevent="confirm">
+    <VForm
+      ref="form"
+      lazy-validation
+      @submit.prevent="confirm"
+    >
       <p>Enter your email address to continue</p>
       <VTextField
         v-model="emailConfirm"
@@ -19,10 +23,17 @@
       />
     </VForm>
     <template #buttons>
-      <VBtn flat data-test="cancel" @click="close">
+      <VBtn
+        flat
+        data-test="cancel"
+        @click="close"
+      >
         Cancel
       </VBtn>
-      <VBtn color="primary" @click="confirm">
+      <VBtn
+        color="primary"
+        @click="confirm"
+      >
         {{ confirmText }}
       </VBtn>
     </template>

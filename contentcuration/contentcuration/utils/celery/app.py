@@ -10,7 +10,7 @@ from contentcuration.utils.sentry import report_exception
 
 class CeleryApp(Celery):
     task_cls = CeleryTask
-    result_cls = 'contentcuration.utils.celery.tasks:CeleryAsyncResult'
+    result_cls = "contentcuration.utils.celery.tasks:CeleryAsyncResult"
     _result_cls = None
 
     def on_init(self):
@@ -40,7 +40,7 @@ class CeleryApp(Celery):
         for task in tasks:
             try:
                 j = json.loads(task)
-                body = json.loads(base64.b64decode(j['body']))
+                body = json.loads(base64.b64decode(j["body"]))
                 decoded_tasks.append(body)
             except (TypeError, json.JSONDecodeError, AttributeError):
                 pass

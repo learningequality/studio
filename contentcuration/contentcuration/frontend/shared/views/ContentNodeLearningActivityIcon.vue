@@ -4,16 +4,28 @@
     <!-- if include text is true, use a labeled icon.
     Currently, for icons containing text, each activity
      is displayed inidividually if there are multiple -->
-    <span v-for="(activity, index) in activities" :key="index" data-test="labeled-icon">
+    <span
+      v-for="(activity, index) in activities"
+      :key="index"
+      data-test="labeled-icon"
+    >
       <div
         v-if="chip"
         :class="small ? 'small-chip' : 'chip'"
         :style="{ backgroundColor: $themeTokens.fineLine }"
       >
-        <KLabeledIcon :icon="icon(activity)" :label="text(activity)" />
+        <KLabeledIcon
+          :icon="icon(activity)"
+          :label="text(activity)"
+          :style="iconStyle"
+        />
       </div>
       <div v-else>
-        <KLabeledIcon :icon="icon(activity)" :label="text(activity)" />
+        <KLabeledIcon
+          :icon="icon(activity)"
+          :label="text(activity)"
+          :style="iconStyle"
+        />
       </div>
     </span>
   </span>
@@ -25,6 +37,7 @@
         :icon="icon('multiple')"
         :aria-label="text('multiple')"
         data-test="multiple-activities-icon"
+        :style="iconStyle"
       />
     </span>
     <!--otherwise, display one or more activities individually, each with its own icon -->
@@ -35,11 +48,13 @@
         data-test="icon-only"
         :icon="icon(activity)"
         :aria-label="text(activity)"
+        :style="iconStyle"
       />
     </span>
   </span>
 
 </template>
+
 
 <script>
 
@@ -74,6 +89,10 @@
         type: Boolean,
         default: false,
       },
+      iconStyle: {
+        type: Object,
+        default: () => ({}),
+      },
     },
     computed: {
       activities() {
@@ -102,7 +121,8 @@
 
 </script>
 
-<style lang="less" scoped>
+
+<style lang="scss" scoped>
 
   .chip {
     display: inline-block;

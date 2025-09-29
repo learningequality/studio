@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-named-as-default
 import Dexie from 'dexie';
 import 'dexie-observable';
 import { v4 as uuidv4 } from 'uuid';
@@ -15,7 +16,8 @@ if (process.env.NODE_ENV !== 'production') {
 // represent their materialized path as Dexie uses to represent nested updates.
 // This means that when Dexie returns a change object about these,
 // it nests the dot paths that should remain unnested.
-const flatMapRegex = /^(accessibility_labels|categories|grade_levels|learner_needs|learning_activities|resource_types)\.(.+)/; // eslint-disable-line
+const flatMapRegex =
+  /^(accessibility_labels|categories|grade_levels|learner_needs|learning_activities|resource_types)\.(.+)/; // eslint-disable-line
 
 // In order to intercept these issues at the earliest possible juncture
 // we override the Dexie set and delete methods for key paths
@@ -24,7 +26,7 @@ const flatMapRegex = /^(accessibility_labels|categories|grade_levels|learner_nee
 // what it should have done.
 const originaldelByKeyPath = Dexie.delByKeyPath;
 
-Dexie.delByKeyPath = function(obj, keyPath, value) {
+Dexie.delByKeyPath = function (obj, keyPath, value) {
   const findFlatPath = flatMapRegex.exec(keyPath);
   if (findFlatPath) {
     const key = findFlatPath[1];
@@ -44,7 +46,7 @@ Dexie.delByKeyPath = function(obj, keyPath, value) {
 
 const originalsetByKeyPath = Dexie.setByKeyPath;
 
-Dexie.setByKeyPath = function(obj, keyPath, value) {
+Dexie.setByKeyPath = function (obj, keyPath, value) {
   const findFlatPath = flatMapRegex.exec(keyPath);
   if (findFlatPath) {
     const key = findFlatPath[1];

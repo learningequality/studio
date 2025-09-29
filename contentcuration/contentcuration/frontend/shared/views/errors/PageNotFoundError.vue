@@ -8,7 +8,10 @@
       {{ $tr('pageNotFoundDetails') }}
     </template>
     <template #actions>
-      <VBtn v-bind="backHomeLink" color="primary">
+      <VBtn
+        v-bind="backHomeLink"
+        color="primary"
+      >
         {{ $tr('backToHomeAction') }}
       </VBtn>
     </template>
@@ -47,4 +50,4 @@
 </script>
 
 
-<style lang="less" scoped></style>
+<style lang="scss" scoped></style>

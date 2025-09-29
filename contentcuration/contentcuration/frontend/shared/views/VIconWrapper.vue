@@ -27,14 +27,15 @@
       return createElement(
         VIcon,
         data,
-        data.props && data.props.iconName ? [data.props.iconName] : children
+        data.props && data.props.iconName ? [data.props.iconName] : children,
       );
     },
   };
 
 </script>
 
-<style lang="less" scoped>
+
+<style lang="scss" scoped>
 
   // A workaround for this issue:
   // https://github.com/vuetifyjs/vuetify/issues/3462

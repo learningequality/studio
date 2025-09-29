@@ -1,7 +1,3 @@
-from __future__ import absolute_import
-
-from builtins import str
-
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
@@ -72,6 +68,9 @@ class StudioAPITestCase(APITestCase):
     def setUpClass(cls):
         super(StudioAPITestCase, cls).setUpClass()
         call_command("loadconstants")
+        cls.admin_user = User.objects.create_superuser(
+            "big_shot", "bigshot@reallybigcompany.com", "password"
+        )
 
     def sign_in(self, user=None):
         if not user:

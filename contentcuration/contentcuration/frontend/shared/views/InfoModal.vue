@@ -15,18 +15,29 @@
       @cancel="displayDialog = false"
     >
       <slot></slot>
-      <div v-for="(item, index) in items" :key="`info-${index}`" class="mb-4 mt-3">
-        <h1 class="font-weight-bold mb-1 subheading">
-          <slot name="header" :item="item"></slot>
-        </h1>
+      <div
+        v-for="(item, index) in items"
+        :key="`info-${index}`"
+        class="mb-4 mt-3"
+      >
+        <h2 class="font-weight-bold mb-1 subheading">
+          <slot
+            name="header"
+            :item="item"
+          ></slot>
+        </h2>
         <p class="body-1 grey--text">
-          <slot name="description" :item="item"></slot>
+          <slot
+            name="description"
+            :item="item"
+          ></slot>
         </p>
       </div>
     </KModal>
   </div>
 
 </template>
+
 
 <script>
 
@@ -56,12 +67,5 @@
 
 </script>
 
-<style lang="less" scoped>
 
-  /deep/ p {
-    font-size: 12pt;
-    line-height: normal;
-    color: var(--v-grey-darken3);
-  }
-
-</style>
+<style lang="scss" scoped></style>

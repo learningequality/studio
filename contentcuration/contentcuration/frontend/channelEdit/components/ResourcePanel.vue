@@ -84,7 +84,6 @@
             icon="error"
             class="mx-2"
           />
-
         </VTab>
         <VTab
           class="px-2"
@@ -97,7 +96,6 @@
             icon="error"
             class="mx-2"
           />
-
         </VTab>
       </Tabs>
       <VTabsItems
@@ -128,7 +126,7 @@
                 v-model="showAnswers"
                 :label="$tr('showAnswers')"
                 class="ma-0"
-                style="font-size: 16px;"
+                style="font-size: 16px"
               />
             </VFlex>
             <VFlex
@@ -149,7 +147,7 @@
                   shrink
                   class="py-2"
                 >
-                  <div style="width: 64px;">
+                  <div style="width: 64px">
                     {{ index + 1 }}
                   </div>
                 </VFlex>
@@ -205,9 +203,7 @@
               v-if="!assessmentItems.length"
               class="red--text"
             >
-              <Icon
-                icon="error"
-              />
+              <Icon icon="error" />
               <span class="mx-1">{{ $tr('noQuestionsError') }}</span>
             </span>
             <span v-else>
@@ -239,9 +235,7 @@
               v-if="isExercise && noMasteryModel"
               class="red--text"
             >
-              <Icon
-                icon="error"
-              />
+              <Icon icon="error" />
               <span class="mx-1">{{ $tr('noMasteryModelError') }}</span>
             </span>
             <span v-else>
@@ -354,15 +348,14 @@
               {{ $tr('resources') }}
             </div>
             <DetailsRow
-              v-if="isImported && importedChannelLink"
+              v-if="showImportedChannelLink"
               :label="$tr('originalChannel')"
             >
               <ActionLink
                 :text="importedChannelName"
-                :href="importedChannelLink"
                 truncate
                 notranslate
-                target="_blank"
+                @click="onClickImportedFrom()"
               />
             </DetailsRow>
             <DetailsRow :label="$tr('totalResources')">
@@ -395,15 +388,14 @@
               {{ $tr('source') }}
             </div>
             <DetailsRow
-              v-if="isImported && importedChannelLink"
+              v-if="showImportedChannelLink"
               :label="$tr('originalChannel')"
             >
               <ActionLink
                 :text="importedChannelName"
-                :href="importedChannelLink"
                 truncate
                 notranslate
-                target="_blank"
+                @click="onClickImportedFrom()"
               />
             </DetailsRow>
             <DetailsRow
@@ -426,9 +418,7 @@
                 v-if="noLicense"
                 class="red--text"
               >
-                <Icon
-                  icon="error"
-                />
+                <Icon icon="error" />
                 <span class="mx-1">{{ $tr('noLicenseError') }}</span>
               </span>
               <p v-else>
@@ -438,9 +428,7 @@
                 v-if="noLicenseDescription"
                 class="red--text"
               >
-                <Icon
-                  icon="error"
-                />
+                <Icon icon="error" />
                 <span class="mx-1">{{ $tr('noLicenseDescriptionError') }}</span>
               </p>
               <p
@@ -455,9 +443,7 @@
                 v-if="noCopyrightHolder"
                 class="red--text"
               >
-                <Icon
-                  icon="error"
-                />
+                <Icon icon="error" />
                 <span class="mx-1">{{ $tr('noCopyrightHolderError') }}</span>
               </span>
               <span
@@ -481,9 +467,7 @@
                   v-if="!primaryFiles.length"
                   class="red--text"
                 >
-                  <Icon
-                    icon="error"
-                  />
+                  <Icon icon="error" />
                   <span class="mx-1">{{ $tr('noFilesError') }}</span>
                 </span>
                 <ExpandableList
@@ -494,8 +478,7 @@
                 />
               </DetailsRow>
               <DetailsRow
-                v-if="node.kind === 'video' ||
-                  node.kind === 'audio'"
+                v-if="node.kind === 'video' || node.kind === 'audio'"
                 :label="$tr('subtitles')"
               >
                 <ExpandableList
@@ -512,6 +495,7 @@
   </VLayout>
 
 </template>
+
 
 <script>
 
@@ -661,6 +645,9 @@
       importedChannelName() {
         return this.node.original_channel_name;
       },
+      showImportedChannelLink() {
+        return this.isImported && this.importedChannelLink;
+      },
       sortedTags() {
         return orderBy(this.node.tags, ['count'], ['desc']);
       },
@@ -766,7 +753,7 @@
       this.tab = this.isExercise ? 'questions' : 'details';
     },
     methods: {
-      ...mapActions('contentNode', ['loadRelatedResources']),
+      ...mapActions('contentNode', ['loadContentNodes', 'loadRelatedResources']),
       ...mapActions('file', ['loadFiles']),
       ...mapActions('assessmentItem', ['loadNodeAssessmentItems']),
       getText(field) {
@@ -849,6 +836,23 @@
           }
         }
       },
+      onClickImportedFrom() {
+        if (this.showImportedChannelLink) {
+          const originalNodeId = this.node.original_source_node_id;
+          const originalChannelId = this.node.original_channel_id;
+          this.loadContentNodes({
+            '[node_id+channel_id]__in': [[originalNodeId, originalChannelId]],
+          }).then(nodes => {
+            if (nodes.length > 0) {
+              window.open(this.importedChannelLink, '_blank');
+            } else {
+              this.$store.dispatch('showSnackbar', {
+                text: this.$tr('sourceContentDoesntExist'),
+              });
+            }
+          });
+        }
+      },
     },
     $trs: {
       questions: 'Questions',
@@ -892,22 +896,31 @@
       noQuestionsError: 'Exercise is empty',
       incompleteQuestionError:
         '{count, plural, one {# incomplete question} other {# incomplete questions}}',
+      sourceContentDoesntExist:
+        'Source content no longer exists. Please contact your administrator.',
     },
   };
 
 </script>
 
+
 <style scoped>
-.section-header {
-  font-size: 9pt;
-  margin-top: 32px;
-  color: grey;
-}
-/deep/ .v-list__tile {
-  padding: 0px;
-}
-.preview-error {
-  border: 1px solid var(--v-greyBackground-base) !important;
-  padding: 24% 0px;
-}
+
+  .section-header {
+    margin-top: 32px;
+    font-size: 9pt;
+    color: grey;
+  }
+
+  /deep/ .v-list__tile {
+    padding: 0;
+  }
+
+  .preview-error {
+    padding: 24% 0;
+
+    /* stylelint-disable-next-line custom-property-pattern */
+    border: 1px solid var(--v-greyBackground-base) !important;
+  }
+
 </style>

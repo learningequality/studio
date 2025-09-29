@@ -1,10 +1,13 @@
+import Vue from 'vue';
 import { mount, createLocalVue } from '@vue/test-utils';
-import Vuex, { Store } from 'vuex';
+import Vuex from 'vuex';
 import VueRouter from 'vue-router';
 import cloneDeep from 'lodash/cloneDeep';
 
 import { RouteNames } from '../../constants';
 import TreeView from './index';
+import storeFactory from 'shared/vuex/baseStore';
+import DraggablePlugin from 'shared/vuex/draggablePlugin';
 
 const localVue = createLocalVue();
 localVue.use(Vuex);
@@ -56,7 +59,8 @@ const initWrapper = ({ getters = GETTERS, actions = ACTIONS, mutations = MUTATIO
     ],
   });
 
-  const store = new Store({
+  const store = storeFactory({
+    plugins: [DraggablePlugin],
     modules: {
       currentChannel: {
         namespaced: true,
@@ -69,6 +73,10 @@ const initWrapper = ({ getters = GETTERS, actions = ACTIONS, mutations = MUTATIO
         mutations: mutations.contentNode,
       },
     },
+  });
+
+  const TreeViewBaseStub = Vue.component('TreeViewBase', {
+    template: '<div><slot name="extension" /></div>',
   });
 
   return mount(TreeView, {
@@ -85,7 +93,7 @@ const initWrapper = ({ getters = GETTERS, actions = ACTIONS, mutations = MUTATIO
     // mock remaining getters, actions and mutations
     // to make clear what are the dependencies
     stubs: {
-      TreeViewBase: '<div><slot name="extension" /></div>',
+      TreeViewBase: TreeViewBaseStub,
     },
   });
 };
@@ -123,18 +131,14 @@ describe('TreeView', () => {
     });
 
     it('renders modification time in ready for review banner', () => {
-      expect(
-        getStagingTreeBanner(wrapper)
-          .find('time')
-          .attributes('datetime')
-      ).toBe('2020-07-13T14:35:55Z');
+      expect(getStagingTreeBanner(wrapper).find('time').attributes('datetime')).toBe(
+        '2020-07-13T14:35:55Z',
+      );
     });
 
     it('renders a link to a channel staging tree page in ready for review banner', () => {
       expect(
-        getStagingTreeBanner(wrapper)
-          .find('[data-test="staging-tree-link"]')
-          .attributes('href')
+        getStagingTreeBanner(wrapper).find('[data-test="staging-tree-link"]').attributes('href'),
       ).toBe('#/staging/staging-tree-id');
     });
   });

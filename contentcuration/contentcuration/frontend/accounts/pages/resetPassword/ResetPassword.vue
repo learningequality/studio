@@ -4,8 +4,17 @@
     :header="$tr('resetPasswordTitle')"
     :text="$tr('resetPasswordPrompt')"
   >
-    <VForm ref="form" lazy-validation @submit.prevent="submit">
-      <Banner :text="$tr('resetPasswordFailed')" :value="error" error class="mb-4" />
+    <VForm
+      ref="form"
+      lazy-validation
+      @submit.prevent="submit"
+    >
+      <Banner
+        :text="$tr('resetPasswordFailed')"
+        :value="error"
+        error
+        class="mb-4"
+      />
       <PasswordField
         v-model="new_password1"
         :label="$tr('passwordLabel')"
@@ -27,6 +36,7 @@
   </MessageLayout>
 
 </template>
+
 
 <script>
 
@@ -93,7 +103,8 @@
 
 </script>
 
-<style lang="less" scoped>
+
+<style lang="scss" scoped>
 
   .w-100 {
     width: 100%;

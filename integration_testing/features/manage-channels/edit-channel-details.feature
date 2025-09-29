@@ -10,5 +10,5 @@ Feature: Edit channel details
 				And I see the details for the channel - channel name, language, channel description etc.
 			When I modify any of the details
 				And I click the *Save changes* button
-			Then I see a message: Changes saved
+			Then I see *Changes saved* snackbar message
 				And I can close the modal window

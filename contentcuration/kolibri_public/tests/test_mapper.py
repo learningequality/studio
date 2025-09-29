@@ -18,7 +18,6 @@ from contentcuration.tests.testdata import user
 
 
 class ChannelMapperTest(TestCase):
-
     @property
     def overrides(self):
         return {
@@ -28,7 +27,7 @@ class ChannelMapperTest(TestCase):
             },
             kolibri_public_models.LocalFile: {
                 "available": True,
-            }
+            },
         }
 
     @classmethod
@@ -39,15 +38,32 @@ class ChannelMapperTest(TestCase):
         admin_user = user()
 
         with using_content_database(cls.tempdb):
-            call_command("migrate", "content", database=get_active_content_database(), no_input=True)
-            builder = ChannelBuilder(models=kolibri_content_models, options={
-                "problematic_tags": True,
-                "problematic_nodes": True,
-            })
+            call_command(
+                "migrate",
+                "content",
+                database=get_active_content_database(),
+                no_input=True,
+            )
+            builder = ChannelBuilder(
+                models=kolibri_content_models,
+                options={
+                    "problematic_tags": True,
+                    "problematic_nodes": True,
+                },
+            )
             builder.insert_into_default_db()
-            cls.source_root = kolibri_content_models.ContentNode.objects.get(id=builder.root_node["id"])
-            cls.channel = kolibri_content_models.ChannelMetadata.objects.get(id=builder.channel["id"])
-            contentcuration_channel = Channel.objects.create(actor_id=admin_user.id, id=cls.channel.id, name=cls.channel.name, public=True)
+            cls.source_root = kolibri_content_models.ContentNode.objects.get(
+                id=builder.root_node["id"]
+            )
+            cls.channel = kolibri_content_models.ChannelMetadata.objects.get(
+                id=builder.channel["id"]
+            )
+            contentcuration_channel = Channel.objects.create(
+                actor_id=admin_user.id,
+                id=cls.channel.id,
+                name=cls.channel.name,
+                public=True,
+            )
             contentcuration_channel.main_tree.published = True
             contentcuration_channel.main_tree.save()
             cls.mapper = ChannelMapper(cls.channel)
@@ -59,7 +75,9 @@ class ChannelMapperTest(TestCase):
             column = field.column
             if hasattr(source, column):
                 if Model in self.overrides and column in self.overrides[Model]:
-                    self.assertEqual(self.overrides[Model][column], getattr(mapped, column))
+                    self.assertEqual(
+                        self.overrides[Model][column], getattr(mapped, column)
+                    )
                 else:
                     self.assertEqual(getattr(source, column), getattr(mapped, column))
 
@@ -70,18 +88,28 @@ class ChannelMapperTest(TestCase):
         """
         self._assert_model(source, mapped, kolibri_public_models.ContentNode)
 
-        for src, mpd in zip(source.assessmentmetadata.all(), mapped.assessmentmetadata.all()):
+        for src, mpd in zip(
+            source.assessmentmetadata.all(), mapped.assessmentmetadata.all()
+        ):
             self._assert_model(src, mpd, kolibri_public_models.AssessmentMetaData)
 
         for src, mpd in zip(source.files.all(), mapped.files.all()):
             self._assert_model(src, mpd, kolibri_public_models.File)
-            self._assert_model(src.local_file, mpd.local_file, kolibri_public_models.LocalFile)
+            self._assert_model(
+                src.local_file, mpd.local_file, kolibri_public_models.LocalFile
+            )
 
         # should only map OKAY_TAG and not BAD_TAG
         for mapped_tag in mapped.tags.all():
             self.assertEqual(OKAY_TAG, mapped_tag.tag_name)
 
-        self.assertEqual(mapped.ancestors, [{"id": ancestor.id, "title": ancestor.title} for ancestor in source.get_ancestors()])
+        self.assertEqual(
+            mapped.ancestors,
+            [
+                {"id": ancestor.id, "title": ancestor.title}
+                for ancestor in source.get_ancestors()
+            ],
+        )
 
     def _recurse_and_assert(self, sources, mappeds, recursion_depth=0):
         recursion_depths = []
@@ -106,14 +134,22 @@ class ChannelMapperTest(TestCase):
     def test_map(self):
         with using_content_database(self.tempdb):
             self._recurse_and_assert([self.source_root], [self.mapped_root])
-            self._assert_model(self.channel, self.mapper.mapped_channel, kolibri_public_models.ChannelMetadata)
+            self._assert_model(
+                self.channel,
+                self.mapper.mapped_channel,
+                kolibri_public_models.ChannelMetadata,
+            )
 
     def test_map_replace(self):
         with using_content_database(self.tempdb):
             mapper = ChannelMapper(self.channel)
             mapper.run()
             self._recurse_and_assert([self.source_root], [mapper.mapped_root])
-            self._assert_model(self.channel, self.mapper.mapped_channel, kolibri_public_models.ChannelMetadata)
+            self._assert_model(
+                self.channel,
+                self.mapper.mapped_channel,
+                kolibri_public_models.ChannelMetadata,
+            )
 
     @classmethod
     def tearDownClass(cls):

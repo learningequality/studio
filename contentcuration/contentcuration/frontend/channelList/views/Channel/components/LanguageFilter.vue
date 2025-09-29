@@ -18,9 +18,15 @@
     @blur="resetScroll"
   >
     <template #selection="{ item }">
-      <VTooltip bottom lazy>
+      <VTooltip
+        bottom
+        lazy
+      >
         <template #activator="{ on }">
-          <VChip class="ma-1" v-on="on">
+          <VChip
+            class="ma-1"
+            v-on="on"
+          >
             <div class="text-truncate">
               {{ item.name }}
             </div>
@@ -38,9 +44,16 @@
         class="mb-0 mt-1 scroll-margin"
         :labelDir="null"
       >
-        <VTooltip bottom lazy>
+        <VTooltip
+          bottom
+          lazy
+        >
           <template #activator="{ on }">
-            <div class="text-truncate" style="width: 250px;" v-on="on">
+            <div
+              class="text-truncate"
+              style="width: 250px"
+              v-on="on"
+            >
               {{ item.name }}
             </div>
           </template>
@@ -123,16 +136,16 @@
 
 </script>
 
-<style lang="less" scoped>
+
+<style lang="scss" scoped>
 
   // Need to set otherwise chips will exceed width of selection box
-
-  /deep/ .v-select__selections {
+  ::v-deep .v-select__selections {
     width: calc(100% - 48px);
   }
 
   .v-chip,
-  /deep/ .v-chip__content,
+  ::v-deep .v-chip__content,
   .text-truncate {
     max-width: 100%;
   }

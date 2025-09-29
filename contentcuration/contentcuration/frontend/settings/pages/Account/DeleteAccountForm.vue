@@ -20,25 +20,26 @@
         @input="deletionEmailInvalidMessage = ''"
       />
     </KModal>
-    <Alert
-      v-model="deletionFailed"
-      :header="$tr('deletionFailed')"
-      :text="$tr('deletionFailedText')"
-    />
+
+    <KModal
+      v-if="deletionFailed"
+      :title="$tr('deletionFailed')"
+      :submitText="$tr('ok')"
+      @submit="deletionFailed = false"
+    >
+      <p>{{ $tr('deletionFailedText') }}</p>
+    </KModal>
   </div>
 
 </template>
 
+
 <script>
 
   import { mapActions, mapState } from 'vuex';
-  import Alert from 'shared/views/Alert';
 
   export default {
     name: 'DeleteAccountForm',
-    components: {
-      Alert,
-    },
     props: {
       value: {
         type: Boolean,
@@ -97,6 +98,7 @@
       deletionFailed: 'Failed to delete account',
       deletionFailedText:
         'Failed to delete your account. Please contact us here: https://community.learningequality.org.',
+      ok: 'OK',
     },
   };
 

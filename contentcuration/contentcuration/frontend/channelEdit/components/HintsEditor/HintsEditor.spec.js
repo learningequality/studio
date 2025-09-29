@@ -7,37 +7,31 @@ import HintsEditor from './HintsEditor';
 jest.mock('shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor.vue');
 jest.mock('shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue');
 
-const clickNewHintBtn = wrapper => {
-  wrapper
-    .find('[data-test=newHintBtn]')
-    .find('button')
-    .trigger('click');
+const clickNewHintBtn = async wrapper => {
+  await wrapper.findComponent('[data-test=newHintBtn]').find('button').trigger('click');
 };
 
-const clickHint = (wrapper, hintIdx) => {
-  wrapper
-    .findAll('[data-test=hint]')
+const clickHint = async (wrapper, hintIdx) => {
+  await wrapper.findAll('[data-test=hint]').at(hintIdx).trigger('click');
+};
+
+const clickMoveHintUp = async (wrapper, hintIdx) => {
+  await wrapper
+    .findAllComponents(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.MOVE_ITEM_UP}"]`)
     .at(hintIdx)
     .trigger('click');
 };
 
-const clickMoveHintUp = (wrapper, hintIdx) => {
-  wrapper
-    .findAll(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.MOVE_ITEM_UP}"]`)
+const clickMoveHintDown = async (wrapper, hintIdx) => {
+  await wrapper
+    .findAllComponents(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.MOVE_ITEM_DOWN}"]`)
     .at(hintIdx)
     .trigger('click');
 };
 
-const clickMoveHintDown = (wrapper, hintIdx) => {
-  wrapper
-    .findAll(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.MOVE_ITEM_DOWN}"]`)
-    .at(hintIdx)
-    .trigger('click');
-};
-
-const clickDeleteHint = (wrapper, hintIdx) => {
-  wrapper
-    .findAll(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.DELETE_ITEM}"]`)
+const clickDeleteHint = async (wrapper, hintIdx) => {
+  await wrapper
+    .findAllComponents(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.DELETE_ITEM}"]`)
     .at(hintIdx)
     .trigger('click');
 };
@@ -48,7 +42,7 @@ describe('HintsEditor', () => {
   it('smoke test', () => {
     const wrapper = shallowMount(HintsEditor);
 
-    expect(wrapper.isVueInstance()).toBe(true);
+    expect(wrapper.exists()).toBe(true);
   });
 
   it('renders a placeholder when there are no hints', () => {
@@ -91,7 +85,7 @@ describe('HintsEditor', () => {
       });
 
       // only one editor is rendered at a time => "wrapper.find"
-      wrapper.find({ name: 'MarkdownEditor' }).vm.$emit('update', 'Updated hint');
+      wrapper.findComponent({ name: 'MarkdownEditor' }).vm.$emit('update', 'Updated hint');
     });
 
     it('emits update event with a payload containing updated hints', () => {
@@ -105,7 +99,7 @@ describe('HintsEditor', () => {
   });
 
   describe('on new hint button click', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       wrapper = mount(HintsEditor, {
         propsData: {
           hints: [
@@ -116,7 +110,7 @@ describe('HintsEditor', () => {
         },
       });
 
-      clickNewHintBtn(wrapper);
+      await clickNewHintBtn(wrapper);
     });
 
     it('emits update event with a payload containing all non-empty hints and one new empty hint', () => {
@@ -137,7 +131,7 @@ describe('HintsEditor', () => {
   });
 
   describe('on hint click', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       wrapper = mount(HintsEditor, {
         propsData: {
           hints: [
@@ -147,7 +141,7 @@ describe('HintsEditor', () => {
         },
       });
 
-      clickHint(wrapper, 1);
+      await clickHint(wrapper, 1);
     });
 
     it('emits open event with a correct hint idx', () => {
@@ -169,8 +163,8 @@ describe('HintsEditor', () => {
       });
     });
 
-    it('emits update event with a payload containing updated and properly ordered hints', () => {
-      clickMoveHintUp(wrapper, 1);
+    it('emits update event with a payload containing updated and properly ordered hints', async () => {
+      await clickMoveHintUp(wrapper, 1);
 
       expect(wrapper.emitted().update).toBeTruthy();
       expect(wrapper.emitted().update.length).toBe(1);
@@ -181,12 +175,12 @@ describe('HintsEditor', () => {
     });
 
     describe('if moved hint was open', () => {
-      beforeEach(() => {
-        wrapper.setProps({
+      beforeEach(async () => {
+        await wrapper.setProps({
           openHintIdx: 1,
         });
 
-        clickMoveHintUp(wrapper, 1);
+        await clickMoveHintUp(wrapper, 1);
       });
 
       it('emits open event with updated hint index', () => {
@@ -197,12 +191,12 @@ describe('HintsEditor', () => {
     });
 
     describe('if a hint above a moved hint was open', () => {
-      beforeEach(() => {
-        wrapper.setProps({
+      beforeEach(async () => {
+        await wrapper.setProps({
           openHintIdx: 0,
         });
 
-        clickMoveHintUp(wrapper, 1);
+        await clickMoveHintUp(wrapper, 1);
       });
 
       it('emits open event with updated, originally open, hint index', () => {
@@ -225,8 +219,8 @@ describe('HintsEditor', () => {
       });
     });
 
-    it('emits update event with a payload containing updated and properly ordered hints', () => {
-      clickMoveHintDown(wrapper, 0);
+    it('emits update event with a payload containing updated and properly ordered hints', async () => {
+      await clickMoveHintDown(wrapper, 0);
 
       expect(wrapper.emitted().update).toBeTruthy();
       expect(wrapper.emitted().update.length).toBe(1);
@@ -237,12 +231,12 @@ describe('HintsEditor', () => {
     });
 
     describe('if moved hint was open', () => {
-      beforeEach(() => {
-        wrapper.setProps({
+      beforeEach(async () => {
+        await wrapper.setProps({
           openHintIdx: 0,
         });
 
-        clickMoveHintDown(wrapper, 0);
+        await clickMoveHintDown(wrapper, 0);
       });
 
       it('emits open event with updated hint index', () => {
@@ -253,12 +247,12 @@ describe('HintsEditor', () => {
     });
 
     describe('if a hint below a moved hint was open', () => {
-      beforeEach(() => {
-        wrapper.setProps({
+      beforeEach(async () => {
+        await wrapper.setProps({
           openHintIdx: 1,
         });
 
-        clickMoveHintDown(wrapper, 0);
+        await clickMoveHintDown(wrapper, 0);
       });
 
       it('emits open event with updated, originally open, hint index', () => {
@@ -281,8 +275,8 @@ describe('HintsEditor', () => {
       });
     });
 
-    it('emits update event with a payload containing updated and properly ordered hints', () => {
-      clickDeleteHint(wrapper, 0);
+    it('emits update event with a payload containing updated and properly ordered hints', async () => {
+      await clickDeleteHint(wrapper, 0);
 
       expect(wrapper.emitted().update).toBeTruthy();
       expect(wrapper.emitted().update.length).toBe(1);
@@ -290,12 +284,12 @@ describe('HintsEditor', () => {
     });
 
     describe('if deleted hint was open', () => {
-      beforeEach(() => {
-        wrapper.setProps({
+      beforeEach(async () => {
+        await wrapper.setProps({
           openHintIdx: 0,
         });
 
-        clickDeleteHint(wrapper, 0);
+        await clickDeleteHint(wrapper, 0);
       });
 
       it('emits close event', () => {
@@ -305,12 +299,12 @@ describe('HintsEditor', () => {
     });
 
     describe('if a hint below a deleted hint was open', () => {
-      beforeEach(() => {
-        wrapper.setProps({
+      beforeEach(async () => {
+        await wrapper.setProps({
           openHintIdx: 1,
         });
 
-        clickDeleteHint(wrapper, 0);
+        await clickDeleteHint(wrapper, 0);
       });
 
       it('emits open event with updated, originally open, hint index', () => {

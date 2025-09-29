@@ -12,15 +12,19 @@
       'drawer-right': isRight,
       'drawer-left': !isRight,
       dragging,
-      draggable: !temporary
+      draggable: !temporary,
     }"
   >
-    <div class="drawer-contents" @scroll="e => $emit('scroll', e)">
+    <div
+      class="drawer-contents"
+      @scroll="e => $emit('scroll', e)"
+    >
       <slot></slot>
     </div>
   </VNavigationDrawer>
 
 </template>
+
 
 <script>
 
@@ -108,7 +112,10 @@
       });
     },
     methods: {
-      // @public
+      /**
+       * @public
+       * @return {number}
+       */
       getWidth() {
         return this.width;
       },
@@ -120,7 +127,7 @@
         const offset = this.isRight ? window.innerWidth - clientX : clientX;
         this.width = localStorage[this.localStorageName] = Math.min(
           Math.max(this.minWidth, offset),
-          this.maxWidth
+          this.maxWidth,
         );
         this.$emit('resize', this.width);
       },
@@ -172,13 +179,14 @@
 
 </script>
 
-<style lang="less" scoped>
+
+<style lang="scss" scoped>
 
   /*! rtl:begin:ignore */
   .drawer-left {
     right: auto;
 
-    /deep/ .v-navigation-drawer__border {
+    ::v-deep .v-navigation-drawer__border {
       margin-left: 3px;
       border-right: 1px solid var(--v-grey-lighten4);
     }
@@ -187,7 +195,7 @@
   .drawer-right {
     left: auto;
 
-    /deep/ .v-navigation-drawer__border {
+    ::v-deep .v-navigation-drawer__border {
       margin-right: 3px;
       border-left: 1px solid var(--v-grey-lighten4);
     }
@@ -195,7 +203,7 @@
 
   /*! rtl:end:ignore */
 
-  .draggable /deep/ .v-navigation-drawer__border {
+  .draggable ::v-deep .v-navigation-drawer__border {
     z-index: 16;
     width: 3px;
     height: 100%;
@@ -204,7 +212,7 @@
     transition: background 0.2s ease;
 
     &:hover,
-    .dragging& {
+    &.dragging {
       background: var(--v-secondary-base) !important;
     }
   }

@@ -1,6 +1,10 @@
 <template>
 
-  <span v-if="invalidFile" class="red--text" data-test="error">
+  <span
+    v-if="invalidFile"
+    class="red--text"
+    data-test="error"
+  >
     <ActionLink
       v-if="showSelectFile"
       data-test="upload"
@@ -10,10 +14,17 @@
     />
     {{ message }}
   </span>
-  <span v-else-if="uploading" class="grey--text" data-test="progress">
+  <span
+    v-else-if="uploading"
+    class="grey--text"
+    data-test="progress"
+  >
     {{ message }}
   </span>
-  <span v-else-if="permanent" class="grey--text">
+  <span
+    v-else-if="permanent"
+    class="grey--text"
+  >
     <ActionLink
       :text="$tr('selectFile')"
       class="mr-2"
@@ -23,6 +34,7 @@
   </span>
 
 </template>
+
 
 <script>
 
@@ -73,9 +85,10 @@
 
 </script>
 
-<style lang="less" scoped>
 
-  /deep/ canvas {
+<style lang="scss" scoped>
+
+  ::v-deep canvas {
     border: 2px solid var(--v-grey-darken2);
   }
 

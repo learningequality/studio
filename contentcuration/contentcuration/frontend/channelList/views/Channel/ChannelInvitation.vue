@@ -8,7 +8,10 @@
 
       <template>
         <VListTileAction>
-          <VTooltip bottom lazy>
+          <VTooltip
+            bottom
+            lazy
+          >
             <template #activator="{ on }">
               <VBtn
                 icon
@@ -23,7 +26,10 @@
           </VTooltip>
         </VListTileAction>
         <VListTileAction>
-          <VTooltip bottom lazy>
+          <VTooltip
+            bottom
+            lazy
+          >
             <template #activator="{ on }">
               <VBtn
                 icon
@@ -31,7 +37,10 @@
                 v-on="on"
                 @click="dialog = true"
               >
-                <Icon color="red" icon="clear" />
+                <Icon
+                  color="red"
+                  icon="clear"
+                />
               </VBtn>
             </template>
             <span>{{ $tr('decline') }}</span>
@@ -46,10 +55,17 @@
     >
       <template #buttons="{ close }">
         <VSpacer />
-        <VBtn flat @click="close">
+        <VBtn
+          flat
+          @click="close"
+        >
           {{ $tr('cancel') }}
         </VBtn>
-        <VBtn data-test="decline-close" color="primary" @click="declineAndClose">
+        <VBtn
+          data-test="decline-close"
+          color="primary"
+          @click="declineAndClose"
+        >
           {{ $tr('decline') }}
         </VBtn>
       </template>
@@ -135,14 +151,18 @@
 
 </script>
 
+
 <style scoped>
+
   /deep/ .v-list__tile {
     height: unset;
     padding: 16px;
     cursor: default;
   }
+
   .v-list__tile__title {
     height: unset;
     white-space: unset;
   }
+
 </style>

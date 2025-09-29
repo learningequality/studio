@@ -1,6 +1,7 @@
-from __future__ import absolute_import
+import uuid
 
 from django.db.models.query import QuerySet
+from django.utils import timezone
 from le_utils.constants import content_kinds
 from mock import Mock
 from rest_framework import serializers
@@ -9,11 +10,14 @@ from .base import BaseAPITestCase
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
+from contentcuration.models import RecommendationsEvent
 from contentcuration.tests import testdata
 from contentcuration.viewsets.channel import ChannelSerializer as BaseChannelSerializer
 from contentcuration.viewsets.common import ContentDefaultsSerializer
 from contentcuration.viewsets.contentnode import ContentNodeSerializer
 from contentcuration.viewsets.feedback import FlagFeedbackEventSerializer
+from contentcuration.viewsets.feedback import RecommendationsEventSerializer
+from contentcuration.viewsets.feedback import RecommendationsInteractionEventSerializer
 
 
 def ensure_no_querysets_in_serializer(object):
@@ -29,7 +33,9 @@ def ensure_no_querysets_in_serializer(object):
 class ContentNodeSerializerTestCase(BaseAPITestCase):
     def setUp(self):
         super(ContentNodeSerializerTestCase, self).setUp()
-        self.data = dict(extra_fields=dict(options=dict(modality="QUIZ")), complete=True)
+        self.data = dict(
+            extra_fields=dict(options=dict(modality="QUIZ")), complete=True
+        )
         self.node = ContentNode(kind_id=content_kinds.VIDEO)
 
     @property
@@ -40,7 +46,13 @@ class ContentNodeSerializerTestCase(BaseAPITestCase):
         self.assertTrue(self.serializer.is_valid())
 
     def test_completion_criteria__valid(self):
-        self.data["extra_fields"]["options"].update(completion_criteria={"model": "time", "threshold": 10, "learner_managed": True})
+        self.data["extra_fields"]["options"].update(
+            completion_criteria={
+                "model": "time",
+                "threshold": 10,
+                "learner_managed": True,
+            }
+        )
         serializer = self.serializer
         serializer.is_valid()
         try:
@@ -49,7 +61,9 @@ class ContentNodeSerializerTestCase(BaseAPITestCase):
             self.fail("Completion criteria should be valid")
 
     def test_completion_criteria__invalid(self):
-        self.data["extra_fields"]["options"].update(completion_criteria={"model": "time", "threshold": "test"})
+        self.data["extra_fields"]["options"].update(
+            completion_criteria={"model": "time", "threshold": "test"}
+        )
         serializer = self.serializer
         serializer.is_valid()
         with self.assertRaises(serializers.ValidationError):
@@ -65,17 +79,19 @@ class ContentNodeSerializerTestCase(BaseAPITestCase):
             ContentNode.objects.filter(node_id__in=node_ids), many=True
         )
 
-        object = ContentNodeSerializer(
-            ContentNode.objects.get(node_id=node_ids[0])
-        )
+        object = ContentNodeSerializer(ContentNode.objects.get(node_id=node_ids[0]))
 
         # Ensure we don't evaluate querysets when repr is called on a Serializer. See docs for
         # no_field_eval_repr in contentcuration/serializers.py for more info.
         obj_string = repr(object)
-        assert "QuerySet" not in obj_string, "object __repr__ contains queryset: {}".format(obj_string)
+        assert (
+            "QuerySet" not in obj_string
+        ), "object __repr__ contains queryset: {}".format(obj_string)
 
         objs_string = repr(objects)
-        assert "QuerySet" not in objs_string, "objects __repr__ contains queryset: {}".format(objs_string)
+        assert (
+            "QuerySet" not in objs_string
+        ), "objects __repr__ contains queryset: {}".format(objs_string)
 
 
 class ContentDefaultsSerializerTestCase(BaseAPITestCase):
@@ -117,13 +133,25 @@ class ContentDefaultsSerializerTestCase(BaseAPITestCase):
         self.assertEqual(defaults, s.save())
 
     def test_update__merge(self):
-        defaults = dict(author="Buster", aggregator="Aggregators R US", provider="USA",)
+        defaults = dict(
+            author="Buster",
+            aggregator="Aggregators R US",
+            provider="USA",
+        )
         s = ContentDefaultsSerializer(
-            defaults, data=dict(author="Duster", provider="Canada",)
+            defaults,
+            data=dict(
+                author="Duster",
+                provider="Canada",
+            ),
         )
         self.assertTrue(s.is_valid())
         self.assertEqual(
-            dict(author="Duster", aggregator="Aggregators R US", provider="Canada",),
+            dict(
+                author="Duster",
+                aggregator="Aggregators R US",
+                provider="Canada",
+            ),
             s.save(),
         )
 
@@ -199,31 +227,218 @@ class FlagFeedbackSerializerTestCase(BaseAPITestCase):
 
     def _create_base_feedback_data(self, context, contentnode_id, content_id):
         base_feedback_data = {
-            'context': context,
-            'contentnode_id': contentnode_id,
-            'content_id': content_id,
+            "context": context,
+            "contentnode_id": contentnode_id,
+            "content_id": content_id,
         }
         return base_feedback_data
 
     def test_deserialization_and_validation(self):
         data = {
-            'user': self.user.id,
-            'target_channel_id': str(self.channel.id),
-            'context': {'test_key': 'test_value'},
-            'contentnode_id': str(self.flagged_node.id),
-            'content_id': str(self.flagged_node.content_id),
-            'feedback_type': 'FLAGGED',
-            'feedback_reason': 'Reason1.....'
+            "user": self.user.id,
+            "target_channel_id": str(self.channel.id),
+            "context": {"test_key": "test_value"},
+            "contentnode_id": str(self.flagged_node.id),
+            "content_id": str(self.flagged_node.content_id),
+            "feedback_type": "FLAGGED",
+            "feedback_reason": "Reason1.....",
         }
         serializer = FlagFeedbackEventSerializer(data=data)
         self.assertTrue(serializer.is_valid(), serializer.errors)
         instance = serializer.save()
-        self.assertEqual(instance.context, data['context'])
-        self.assertEqual(instance.user.id, data['user'])
-        self.assertEqual(instance.feedback_type, data['feedback_type'])
-        self.assertEqual(instance.feedback_reason, data['feedback_reason'])
+        self.assertEqual(instance.context, data["context"])
+        self.assertEqual(instance.user.id, data["user"])
+        self.assertEqual(instance.feedback_type, data["feedback_type"])
+        self.assertEqual(instance.feedback_reason, data["feedback_reason"])
 
     def test_invalid_data(self):
-        data = {'context': 'invalid'}
+        data = {"context": "invalid"}
         serializer = FlagFeedbackEventSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+
+
+class RecommendationsInteractionEventSerializerTestCase(BaseAPITestCase):
+    def setUp(self):
+        super(RecommendationsInteractionEventSerializerTestCase, self).setUp()
+        self.channel = testdata.channel("testchannel")
+        self.interaction_node = testdata.node(
+            {
+                "kind_id": content_kinds.VIDEO,
+                "title": "Recommended Video content",
+            },
+        )
+        self.node_where_import_is_initiated = testdata.node(
+            {
+                "kind_id": content_kinds.TOPIC,
+                "title": "Node where content is imported",
+            },
+        )
+        self.recommendation_event = RecommendationsEvent.objects.create(
+            user=self.user,
+            target_channel_id=self.channel.id,
+            content_id=self.node_where_import_is_initiated.content_id,
+            contentnode_id=self.node_where_import_is_initiated.id,
+            context={"model_version": 1, "breadcrumbs": "#Title#->Random"},
+            time_hidden=timezone.now(),
+            content=[
+                {
+                    "content_id": str(uuid.uuid4()),
+                    "node_id": str(uuid.uuid4()),
+                    "channel_id": str(uuid.uuid4()),
+                    "score": 4,
+                }
+            ],
+        )
+
+    def test_deserialization_and_validation(self):
+        data = {
+            "context": {"test_key": "test_value"},
+            "contentnode_id": str(self.interaction_node.id),
+            "content_id": str(self.interaction_node.content_id),
+            "feedback_type": "IGNORED",
+            "feedback_reason": "----",
+            "recommendation_event_id": str(self.recommendation_event.id),
+        }
+        serializer = RecommendationsInteractionEventSerializer(data=data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        instance = serializer.save()
+        self.assertEqual(instance.context, data["context"])
+        self.assertEqual(instance.feedback_type, data["feedback_type"])
+        self.assertEqual(
+            str(instance.recommendation_event_id), data["recommendation_event_id"]
+        )
+
+    def test_bulk_deserialization_and_validation(self):
+        bulk_data = [
+            {
+                "context": {"test_key": "test_value_1"},
+                "contentnode_id": str(self.interaction_node.id),
+                "content_id": str(self.interaction_node.content_id),
+                "feedback_type": "IGNORED",
+                "feedback_reason": "----",
+                "recommendation_event_id": str(self.recommendation_event.id),
+            },
+            {
+                "context": {"test_key": "test_value_2"},
+                "contentnode_id": str(self.interaction_node.id),
+                "content_id": str(self.interaction_node.content_id),
+                "feedback_type": "PREVIEWED",
+                "feedback_reason": "++++",
+                "recommendation_event_id": str(self.recommendation_event.id),
+            },
+        ]
+        serializer = RecommendationsInteractionEventSerializer(
+            data=bulk_data, many=True
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        instances = serializer.save()
+        self.assertEqual(len(instances), 2)
+        self.assertEqual(instances[0].context, bulk_data[0]["context"])
+        self.assertEqual(instances[1].feedback_type, bulk_data[1]["feedback_type"])
+
+    def test_invalid_data(self):
+        data = {"context": "invalid"}
+        serializer = RecommendationsInteractionEventSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+
+        data = {
+            "context": {"test_key": "test_value"},
+            "contentnode_id": str(self.interaction_node.id),
+            "content_id": str(self.interaction_node.content_id),
+            "feedback_type": "INVALID_TYPE",
+            "feedback_reason": "-----",
+            "recommendation_event_id": "invalid-uuid",
+        }
+        serializer = RecommendationsInteractionEventSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+
+    def test_invalid_bulk_data(self):
+        # Missing 'feedback_type'
+        bulk_data = [
+            {
+                "context": {"test_key": "test_value_1"},
+                "contentnode_id": str(self.interaction_node.id),
+                "content_id": str(self.interaction_node.content_id),
+                "feedback_type": "IGNORED",
+                "feedback_reason": "----",
+                "recommendation_event_id": str(self.recommendation_event.id),
+            },
+            {
+                "context": {"test_key": "test_value_2"},
+                "contentnode_id": str(self.interaction_node.id),
+                "content_id": str(self.interaction_node.content_id),
+                "feedback_reason": "----",
+                "recommendation_event_id": str(self.recommendation_event.id),
+            },
+        ]
+        serializer = RecommendationsInteractionEventSerializer(
+            data=bulk_data, many=True
+        )
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("feedback_type", str(serializer.errors))
+
+
+class RecommendationsEventSerializerTestCase(BaseAPITestCase):
+    def setUp(self):
+        super(RecommendationsEventSerializerTestCase, self).setUp()
+        self.channel = testdata.channel("testchannel")
+        self.node_where_import_is_initiated = testdata.node(
+            {
+                "kind_id": content_kinds.TOPIC,
+                "title": "Title of the topic",
+            },
+        )
+
+    def test_deserialization_and_validation(self):
+        data = {
+            "user": self.user.id,
+            "target_channel_id": str(self.channel.id),
+            "context": {"model_version": 1, "breadcrumbs": "#Title#->Random"},
+            "contentnode_id": str(self.node_where_import_is_initiated.id),
+            "content_id": str(self.node_where_import_is_initiated.content_id),
+            "time_hidden": timezone.now().isoformat(),
+            "content": [
+                {
+                    "content_id": str(uuid.uuid4()),
+                    "node_id": str(uuid.uuid4()),
+                    "channel_id": str(uuid.uuid4()),
+                    "score": 4,
+                }
+            ],
+        }
+        serializer = RecommendationsEventSerializer(data=data)
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        instance = serializer.save()
+        self.assertEqual(instance.context, data["context"])
+        self.assertEqual(instance.user.id, data["user"])
+        self.assertEqual(
+            str(instance.contentnode_id).replace("-", ""),
+            data["contentnode_id"].replace("-", ""),
+        )
+        self.assertEqual(instance.content, data["content"])
+
+    def test_invalid_data(self):
+        # Test with missing required fields
+        data = {"context": "invalid"}
+        serializer = RecommendationsEventSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+
+        # Test with invalid contentnode_id
+        data = {
+            "user": self.user.id,
+            "target_channel_id": str(self.channel.id),
+            "context": {"model_version": 1, "breadcrumbs": "#Title#->Random"},
+            "contentnode_id": "invalid-uuid",
+            "content_id": str(self.node_where_import_is_initiated.content_id),
+            "time_hidden": timezone.now().isoformat(),
+            "content": [
+                {
+                    "content_id": str(uuid.uuid4()),
+                    "node_id": str(uuid.uuid4()),
+                    "channel_id": str(uuid.uuid4()),
+                    "score": 4,
+                }
+            ],
+        }
+        serializer = RecommendationsEventSerializer(data=data)
         self.assertFalse(serializer.is_valid())

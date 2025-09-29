@@ -1,19 +1,20 @@
-import Vue from 'vue';
+// eslint-disable-next-line import/no-named-as-default
+import Vue, { set } from 'vue';
 
 export function SET_INITIALIZING(state, isInitializing) {
   state.initializing = isInitializing;
 }
 
 export function ADD_CHANNEL_COLOR(state, { id, color }) {
-  Vue.set(state.channelColors, id, color);
+  set(state.channelColors, id, color);
 }
 
 export function UPDATE_SELECTION_STATE(state, { id, selectionState } = {}) {
-  Vue.set(state.selected, id, selectionState);
+  set(state.selected, id, selectionState);
 }
 
 export function ADD_CLIPBOARD_NODE(state, clipboardNode) {
-  Vue.set(state.clipboardNodesMap, clipboardNode.id, clipboardNode);
+  set(state.clipboardNodesMap, clipboardNode.id, clipboardNode);
 }
 
 export function ADD_CLIPBOARD_NODES(state, clipboardNodes) {
@@ -32,7 +33,7 @@ export function SET_PREVIEW_NODE(state, id) {
 
 export function SET_PRELOAD_NODES(state, preloadNodes) {
   for (const parent in preloadNodes) {
-    Vue.set(state.preloadNodes, parent, preloadNodes[parent]);
+    set(state.preloadNodes, parent, preloadNodes[parent]);
   }
 }
 

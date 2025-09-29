@@ -1,1 +1,1 @@
-./node_modules/kolibri-tools/.prettierrc.js
+module.exports = require('kolibri-format/.prettierrc');

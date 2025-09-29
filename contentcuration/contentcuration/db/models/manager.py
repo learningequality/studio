@@ -67,13 +67,15 @@ ALLOWED_OVERRIDES = {
     "suggested_duration",
 }
 
-EDIT_ALLOWED_OVERRIDES = ALLOWED_OVERRIDES.union({
-    "license_id",
-    "license_description",
-    "extra_fields",
-    "copyright_holder",
-    "author",
-})
+EDIT_ALLOWED_OVERRIDES = ALLOWED_OVERRIDES.union(
+    {
+        "license_id",
+        "license_description",
+        "extra_fields",
+        "copyright_holder",
+        "author",
+    }
+)
 
 
 class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)):
@@ -114,14 +116,16 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             # This will mean that every process acquires locks in the same order
             # and should help to minimize deadlocks
             for tree_id in tree_ids:
-                advisory_lock(TREE_LOCK, key2=tree_id, shared=tree_id in shared_tree_ids)
+                advisory_lock(
+                    TREE_LOCK, key2=tree_id, shared=tree_id in shared_tree_ids
+                )
             yield
             log_lock_time_spent(time.time() - start)
 
     @contextlib.contextmanager
     def lock_mptt(self, *tree_ids, **kwargs):
         tree_ids = sorted((t for t in set(tree_ids) if t is not None))
-        shared_tree_ids = kwargs.pop('shared_tree_ids', [])
+        shared_tree_ids = kwargs.pop("shared_tree_ids", [])
         # If this is not inside the context of a delay context manager
         # or updates are not disabled set a lock on the tree_ids.
         if (
@@ -229,14 +233,17 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             self._move_node(node, target, position=position)
             node.save(skip_lock=True)
         node_moved.send(
-            sender=node.__class__, instance=node, target=target, position=position,
+            sender=node.__class__,
+            instance=node,
+            target=target,
+            position=position,
         )
         # when moving to a new tree, like trash, we'll blanket reset the modified for the
         # new root and the old root nodes
         if old_parent.tree_id != target.tree_id:
             for size_cache in [
                 ResourceSizeCache(target.get_root()),
-                ResourceSizeCache(old_parent.get_root())
+                ResourceSizeCache(old_parent.get_root()),
             ]:
                 size_cache.reset_modified(None)
 
@@ -291,7 +298,9 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         copy.update(self.get_source_attributes(source))
 
         if isinstance(mods, dict):
-            allowed_keys = EDIT_ALLOWED_OVERRIDES if can_edit_source_channel else ALLOWED_OVERRIDES
+            allowed_keys = (
+                EDIT_ALLOWED_OVERRIDES if can_edit_source_channel else ALLOWED_OVERRIDES
+            )
             for key, value in mods.items():
                 if key in copy and key in allowed_keys:
                     copy[key] = value
@@ -324,7 +333,12 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         mods,
     ):
         copy = self._clone_node(
-            source, parent_id, source_channel_id, can_edit_source_channel, pk, mods,
+            source,
+            parent_id,
+            source_channel_id,
+            can_edit_source_channel,
+            pk,
+            mods,
         )
 
         if source.kind_id == content_kinds.TOPIC and source.id in nodes_by_parent:
@@ -367,7 +381,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         excluded_descendants=None,
         can_edit_source_channel=None,
         batch_size=None,
-        progress_tracker=None
+        progress_tracker=None,
     ):
         """
         :type progress_tracker: contentcuration.utils.celery.ProgressTracker|None
@@ -503,7 +517,9 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         # In the case that we are copying a node that is in the weird state of having a tag
         # that is duplicated (with a channel tag and a null channel tag) this can cause an error
         # so we ignore conflicts here to ignore the duplicate tags.
-        self.model.tags.through.objects.bulk_create(mappings_to_create, ignore_conflicts=True)
+        self.model.tags.through.objects.bulk_create(
+            mappings_to_create, ignore_conflicts=True
+        )
 
     def _copy_assessment_items(self, source_copy_id_map):
         from contentcuration.models import File
@@ -577,7 +593,12 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         can_edit_source_channel,
     ):
         data = self._clone_node(
-            node, None, source_channel_id, can_edit_source_channel, pk, mods,
+            node,
+            None,
+            source_channel_id,
+            can_edit_source_channel,
+            pk,
+            mods,
         )
         with self.lock_mptt(target.tree_id if target else None):
             node_copy = self.model(**data)

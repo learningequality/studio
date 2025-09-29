@@ -8,25 +8,26 @@
     @submit="setLang"
   >
     <KGrid>
-      <KGridItem
-        v-for="(languageCol, index) in splitLanguageOptions"
-        :key="index"
-        :class="{ 'offset-col': $vuetify.smAndDown && index === 1 }"
-        :layout8="{ span: 4 }"
-        :layout12="{ span: 6 }"
-      >
-        <KRadioButton
-          v-for="language in languageCol"
-          :key="language.id"
-          v-model="selectedLanguage"
-          :buttonValue="language.id"
-          :label="language.lang_name"
-          :title="language.english_name"
-          class="language-name"
-        />
-      </KGridItem>
+      <KRadioButtonGroup>
+        <KGridItem
+          v-for="(languageCol, index) in splitLanguageOptions"
+          :key="index"
+          :class="{ 'offset-col': $vuetify.smAndDown && index === 1 }"
+          :layout8="{ span: 4 }"
+          :layout12="{ span: 6 }"
+        >
+          <KRadioButton
+            v-for="language in languageCol"
+            :key="language.id"
+            v-model="selectedLanguage"
+            :buttonValue="language.id"
+            :label="language.lang_name"
+            :title="language.english_name"
+            class="language-name"
+          />
+        </KGridItem>
+      </KRadioButtonGroup>
     </KGrid>
-
   </KModal>
 
 </template>

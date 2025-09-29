@@ -42,36 +42,39 @@ function makeWrapper() {
 
 describe('channelItem', () => {
   let wrapper;
+
   beforeEach(() => {
     wrapper = makeWrapper();
   });
+
   it('selecting the channel should emit list with channel id', () => {
     wrapper.vm.selected = true;
     expect(wrapper.emitted('input')[0][0]).toEqual([channelId]);
   });
-  it('deselecting the channel should emit list without channel id', () => {
-    wrapper.setProps({ value: [channelId] });
+
+  it('deselecting the channel should emit list without channel id', async () => {
+    await wrapper.setProps({ value: [channelId] });
     wrapper.vm.selected = false;
     expect(wrapper.emitted('input')[0][0]).toEqual([]);
   });
-  it('saveDemoServerUrl should call updateChannel with new demo_server_url', () => {
-    const updateChannel = jest.fn().mockReturnValue(Promise.resolve());
-    wrapper.setMethods({ updateChannel });
-    return wrapper.vm.saveDemoServerUrl().then(() => {
-      expect(updateChannel).toHaveBeenCalledWith({
-        id: channelId,
-        demo_server_url: channel.demo_server_url,
-      });
+
+  it('saveDemoServerUrl should call updateChannel with new demo_server_url', async () => {
+    const updateChannel = jest.spyOn(wrapper.vm, 'updateChannel');
+    updateChannel.mockReturnValue(Promise.resolve());
+    await wrapper.vm.saveDemoServerUrl();
+    expect(updateChannel).toHaveBeenCalledWith({
+      id: channelId,
+      demo_server_url: channel.demo_server_url,
     });
   });
-  it('saveSourceUrl should call updateChannel with new source_url', () => {
-    const updateChannel = jest.fn().mockReturnValue(Promise.resolve());
-    wrapper.setMethods({ updateChannel });
-    return wrapper.vm.saveSourceUrl().then(() => {
-      expect(updateChannel).toHaveBeenCalledWith({
-        id: channelId,
-        source_url: channel.source_url,
-      });
+
+  it('saveSourceUrl should call updateChannel with new source_url', async () => {
+    const updateChannel = jest.spyOn(wrapper.vm, 'updateChannel');
+    updateChannel.mockReturnValue(Promise.resolve());
+    await wrapper.vm.saveSourceUrl();
+    expect(updateChannel).toHaveBeenCalledWith({
+      id: channelId,
+      source_url: channel.source_url,
     });
   });
 });

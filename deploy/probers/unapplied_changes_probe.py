@@ -11,11 +11,15 @@ class UnappliedChangesProbe(BaseProbe):
         r.raise_for_status()
         results = r.json()
 
-        active_task_count = results.get('active_task_count', 0)
-        unapplied_changes_count = results.get('unapplied_changes_count', 0)
+        active_task_count = results.get("active_task_count", 0)
+        unapplied_changes_count = results.get("unapplied_changes_count", 0)
 
         if active_task_count == 0 and unapplied_changes_count > 0:
-            raise Exception("There are unapplied changes and no active tasks! {} unapplied changes".format(unapplied_changes_count))
+            raise Exception(
+                "There are unapplied changes and no active tasks! {} unapplied changes".format(
+                    unapplied_changes_count
+                )
+            )
 
 
 if __name__ == "__main__":

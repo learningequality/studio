@@ -15,7 +15,11 @@
       @resize="v => $emit('resize', v)"
       @scroll="$emit('scroll', $event)"
     >
-      <div class="pa-4" style="margin-bottom: 64px;">
+      <div
+        ref="rootEl"
+        class="pa-4"
+        style="margin-bottom: 64px"
+      >
         <ResourcePanel
           :nodeId="nodeId"
           :channelId="channelId"
@@ -36,16 +40,29 @@
   </VExpandXTransition>
 
 </template>
+
+
 <script>
 
+  import { ref } from 'vue';
   import ResourcePanel from './ResourcePanel';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
+  import { useFocusTrap } from 'shared/views/TipTapEditor/TipTapEditor/composables/useFocusTrap';
 
   export default {
     name: 'ResourceDrawer',
     components: {
       ResizableNavigationDrawer,
       ResourcePanel,
+    },
+    setup() {
+      const rootEl = ref(null);
+
+      useFocusTrap(rootEl);
+
+      return {
+        rootEl,
+      };
     },
     props: {
       // key for sessionStorage to store width data at
@@ -73,7 +90,10 @@
       },
     },
     methods: {
-      // @public
+      /**
+       * @public
+       * @return {number}
+       */
       getWidth() {
         return this.$refs.drawer.getWidth();
       },
@@ -81,6 +101,6 @@
   };
 
 </script>
-<style lang="less" scoped>
 
-</style>
+
+<style lang="scss" scoped></style>

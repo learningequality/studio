@@ -1,133 +1,177 @@
 <template>
 
-  <FullscreenModal v-model="dialog" :header="$tr('trashModalTitle')">
-    <LoadingText v-if="loading" data-test="loading" />
-    <VContainer v-else-if="!items.length" fluid data-test="empty">
-      <h1 class="font-weight-bold headline mt-4 pt-4 text-xs-center">
-        {{ $tr('trashEmptyText') }}
-      </h1>
-      <p class="mt-3 subheading text-xs-center">
-        {{ $tr('trashEmptySubtext') }}
-      </p>
-    </VContainer>
-    <VContent v-else>
-      <VContainer
-        fluid
-        class="pa-4"
-        data-test="list"
-        style="max-height: calc(100vh - 128px); overflow-y: auto;"
-      >
-        <VCard style="width: 100%; max-width: 900px; margin: 0 auto;" flat class="pa-2">
-          <VDataTable :headers="headers" :items="items" hide-actions must-sort>
-            <template #headerCell="props">
-              <VLayout v-if="props.header.selectAll" row align-center>
-                <VFlex shrink>
-                  <Checkbox
-                    :inputValue="selected.length === items.length"
-                    :indeterminate="!!selected.length && selected.length !== items.length"
-                    data-test="selectall"
-                    @input="toggleSelectAll"
-                  />
-                </VFlex>
-                <VFlex>
-                  {{ props.header.text }}
-                </VFlex>
-              </VLayout>
-              <span v-else>
-                {{ props.header.text }}
-              </span>
-            </template>
-            <template #items="{ item }">
-              <tr :key="item.id" :style="{ backgroundColor: getItemBackground(item.id) }">
-                <td>
-                  <VLayout row align-center>
-                    <VFlex shrink>
-                      <Checkbox
-                        v-model="selected"
-                        :value="item.id"
-                        data-test="checkbox"
-                      />
-                    </VFlex>
-                    <VFlex shrink class="mx-3">
-                      <ContentNodeIcon :kind="item.kind" />
-                    </VFlex>
-                    <VFlex :class="getTitleClass(item)" grow>
-                      <ActionLink
-                        :text="getTitle(item)"
-                        data-test="item"
-                        @click="previewNodeId = item.id"
-                      />
-                    </VFlex>
-                  </VLayout>
-                </td>
-                <td class="text-xs-right">
-                  {{ $formatRelative(item.modified, { now: new Date() }) }}
-                </td>
-              </tr>
-            </template>
-          </VDataTable>
-          <div class="show-more-button-container">
-            <KButton v-if="more" :disabled="moreLoading" @click="loadMore">
-              {{ showMoreLabel }}
-            </KButton>
-          </div>
-        </VCard>
-      </VContainer>
-      <ResourceDrawer
-        style="margin-top: 64px;"
-        :nodeId="previewNodeId"
-        :channelId="currentChannel.id"
-        app
-        @close="previewNodeId = null"
-      />
-    </VContent>
-    <template #bottom>
-      <span v-if="selected.length" class="mr-4 subheading">
-        {{ getSelectedTopicAndResourceCountText(selected) }}
-      </span>
-      <VSpacer />
-      <VBtn
-        flat
-        :disabled="!selected.length"
-        data-test="restore"
-        @click="moveModalOpen = true"
-      >
-        {{ $tr('restoreButton') }}
-      </VBtn>
-      <VBtn
-        color="primary"
-        :disabled="!selected.length"
-        data-test="delete"
-        @click="showConfirmationDialog = true"
-      >
-        {{ $tr('deleteButton') }}
-      </VBtn>
-    </template>
-    <MessageDialog
-      v-model="showConfirmationDialog"
-      :header="$tr('deleteConfirmationHeader', counts)"
-      :text="$tr('deleteConfirmationText')"
+  <div>
+    <FullscreenModal
+      v-if="!moveModalOpen"
+      v-model="dialog"
+      :header="$tr('trashModalTitle')"
     >
-      <template #buttons="{ close }">
-        <VBtn flat data-test="closeconfirm" @click="close">
-          {{ $tr('deleteConfirmationCancelButton') }}
+      <LoadingText
+        v-if="loading"
+        data-test="loading"
+      />
+      <VContainer
+        v-else-if="!items.length"
+        fluid
+        data-test="empty"
+      >
+        <h1 class="font-weight-bold headline mt-4 pt-4 text-xs-center">
+          {{ $tr('trashEmptyText') }}
+        </h1>
+        <p class="mt-3 subheading text-xs-center">
+          {{ $tr('trashEmptySubtext') }}
+        </p>
+      </VContainer>
+      <VContent v-else>
+        <VContainer
+          fluid
+          class="pa-4"
+          data-test="list"
+          style="max-height: calc(100vh - 128px); overflow-y: auto"
+        >
+          <VCard
+            style="width: 100%; max-width: 900px; margin: 0 auto"
+            flat
+            class="pa-2"
+          >
+            <VDataTable
+              :headers="headers"
+              :items="items"
+              hide-actions
+              must-sort
+            >
+              <template #headerCell="props">
+                <VLayout
+                  v-if="props.header.selectAll"
+                  row
+                  align-center
+                >
+                  <VFlex shrink>
+                    <Checkbox
+                      :inputValue="selected.length === items.length"
+                      :indeterminate="!!selected.length && selected.length !== items.length"
+                      data-test="selectall"
+                      @input="toggleSelectAll"
+                    />
+                  </VFlex>
+                  <VFlex>
+                    {{ props.header.text }}
+                  </VFlex>
+                </VLayout>
+                <span v-else>
+                  {{ props.header.text }}
+                </span>
+              </template>
+              <template #items="{ item }">
+                <tr
+                  :key="item.id"
+                  :style="{ backgroundColor: getItemBackground(item.id) }"
+                >
+                  <td>
+                    <VLayout
+                      row
+                      align-center
+                    >
+                      <VFlex shrink>
+                        <Checkbox
+                          v-model="selected"
+                          :value="item.id"
+                          data-test="checkbox"
+                        />
+                      </VFlex>
+                      <VFlex
+                        shrink
+                        class="mx-3"
+                      >
+                        <ContentNodeIcon :kind="item.kind" />
+                      </VFlex>
+                      <VFlex
+                        :class="getTitleClass(item)"
+                        grow
+                      >
+                        <ActionLink
+                          :text="getTitle(item)"
+                          data-test="item"
+                          @click="previewNodeId = item.id"
+                        />
+                      </VFlex>
+                    </VLayout>
+                  </td>
+                  <td class="text-xs-right">
+                    {{ $formatRelative(item.modified, { now: new Date() }) }}
+                  </td>
+                </tr>
+              </template>
+            </VDataTable>
+            <div class="show-more-button-container">
+              <KButton
+                v-if="more"
+                :disabled="moreLoading"
+                @click="loadMore"
+              >
+                {{ showMoreLabel }}
+              </KButton>
+            </div>
+          </VCard>
+        </VContainer>
+        <ResourceDrawer
+          style="margin-top: 64px"
+          :nodeId="previewNodeId"
+          :channelId="currentChannel.id"
+          app
+          @close="previewNodeId = null"
+        />
+      </VContent>
+      <template #bottom>
+        <span
+          v-if="selected.length"
+          class="mr-4 subheading"
+        >
+          {{ getSelectedTopicAndResourceCountText(selected) }}
+        </span>
+        <VSpacer />
+        <VBtn
+          flat
+          :disabled="!selected.length"
+          data-test="restore"
+          @click="moveModalOpen = true"
+        >
+          {{ $tr('restoreButton') }}
         </VBtn>
-        <VBtn color="primary" data-test="deleteconfirm" @click="deleteNodes">
-          {{ $tr('deleteConfirmationDeleteButton') }}
+        <VBtn
+          color="primary"
+          :disabled="!selected.length"
+          data-test="delete"
+          @click="showConfirmationDialog = true"
+        >
+          {{ $tr('deleteButton') }}
         </VBtn>
       </template>
-    </MessageDialog>
+      <KModal
+        v-if="showConfirmationDialog"
+        :title="$tr('deleteConfirmationHeader', counts)"
+        :cancelText="$tr('deleteConfirmationCancelButton')"
+        :submitText="$tr('deleteConfirmationDeleteButton')"
+        data-test="deleteconfirm"
+        @cancel="showConfirmationDialog = false"
+        @submit="deleteNodes"
+      >
+        <p>{{ $tr('deleteConfirmationText') }}</p>
+      </KModal>
+    </FullscreenModal>
     <MoveModal
-      v-if="moveModalOpen"
+      v-else
       ref="moveModal"
       v-model="moveModalOpen"
       :moveNodeIds="selected"
       :movingFromTrash="true"
       @target="moveNodes"
     />
-  </FullscreenModal>
+  </div>
 
 </template>
+
+
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
@@ -138,7 +182,6 @@
   import { RouteNames } from '../../constants';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import Checkbox from 'shared/views/form/Checkbox';
-  import MessageDialog from 'shared/views/MessageDialog';
   import LoadingText from 'shared/views/LoadingText';
   import FullscreenModal from 'shared/views/FullscreenModal';
   import { titleMixin, routerMixin } from 'shared/mixins';
@@ -152,7 +195,6 @@
       ContentNodeIcon,
       ResourceDrawer,
       Checkbox,
-      MessageDialog,
       LoadingText,
       FullscreenModal,
       MoveModal,
@@ -201,7 +243,7 @@
         ];
       },
       items() {
-        return sortBy(this.getContentNodeChildren(this.trashId), 'modified');
+        return sortBy(this.getContentNodeChildren(this.trashId), 'modified').reverse();
       },
       backLink() {
         return {
@@ -225,9 +267,9 @@
       },
     },
     created() {
-      this.loadContentNodes({ parent__in: [this.rootId] }),
-        this.loadAncestors({ id: this.nodeId }),
-        this.loadNodes();
+      this.loadContentNodes({ parent__in: [this.rootId] });
+      this.loadAncestors({ id: this.nodeId });
+      this.loadNodes();
     },
     mounted() {
       this.updateTabTitle(this.$store.getters.appendChannelName(this.$tr('trashModalTitle')));
@@ -246,10 +288,12 @@
           this.loading = false;
           return;
         }
-        this.loadChildren({ parent: this.trashId }).then(childrenResponse => {
-          this.loading = false;
-          this.more = childrenResponse.more || null;
-        });
+        this.loadChildren({ parent: this.trashId, ordering: '-modified' }).then(
+          childrenResponse => {
+            this.loading = false;
+            this.more = childrenResponse.more || null;
+          },
+        );
       },
       moveNodes(target) {
         return this.moveContentNodes({
@@ -311,7 +355,9 @@
   };
 
 </script>
-<style lang="less" scoped>
+
+
+<style lang="scss" scoped>
 
   .show-more-button-container {
     display: flex;

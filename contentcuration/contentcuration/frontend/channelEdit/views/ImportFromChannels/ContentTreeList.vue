@@ -17,17 +17,26 @@
     <p v-else-if="nodes.length === 0">
       {{ $tr('noResourcesOrTopics') }}
     </p>
-    <div v-else class="px-4">
+    <div
+      v-else
+      class="px-4"
+    >
       <Checkbox
         v-model="selectAll"
         :indeterminate="someSelected"
         :disabled="ancestorIsSelected"
         :label="$tr('selectAllAction')"
       />
-      <VLayout v-for="node in nodes" :key="node.id" row align-center>
+      <VLayout
+        v-for="node in nodes"
+        :key="node.id"
+        row
+        align-center
+      >
         <VFlex shrink>
           <Checkbox
             :key="`checkbox-${node.id}`"
+            :ref="setFirstCardCheckboxRef"
             :inputValue="isSelected(node)"
             :disabled="ancestorIsSelected"
             @input="toggleSelected(node)"
@@ -44,7 +53,11 @@
         </VFlex>
       </VLayout>
       <div class="show-more-button-container">
-        <KButton v-if="more" :disabled="moreLoading" @click="loadMore">
+        <KButton
+          v-if="more"
+          :disabled="moreLoading"
+          @click="loadMore"
+        >
           {{ showMoreLabel }}
         </KButton>
       </div>
@@ -96,6 +109,7 @@
         loading: false,
         more: null,
         moreLoading: false,
+        firstCardCheckboxRef: null,
       };
     },
     computed: {
@@ -115,7 +129,7 @@
         return !this.selectAll && Boolean(intersectionBy(this.nodes, this.selected, 'id').length);
       },
       isSelected() {
-        return function(node) {
+        return function (node) {
           if (this.ancestorIsSelected) {
             return true;
           }
@@ -172,6 +186,7 @@
       ...mapActions('contentNode', ['loadChildren', 'loadAncestors', 'loadContentNodes']),
       loadData() {
         this.loading = true;
+        this.firstCardCheckboxRef = null;
         const params = {
           complete: true,
         };
@@ -189,9 +204,14 @@
           this.loadAncestors({ id: this.topicId }),
         ]).then(() => {
           this.loading = false;
+          // scroll to top via focus
+          this.$nextTick(() => this.focus());
         });
       },
-      // @public
+      /**
+       * @public
+       * @param nodeId
+       */
       scrollToNode(nodeId) {
         const ref = this.$refs[nodeId];
         if (ref) {
@@ -212,6 +232,19 @@
           });
         }
       },
+      setFirstCardCheckboxRef(ref) {
+        if (!this.firstCardCheckboxRef) {
+          this.firstCardCheckboxRef = ref;
+        }
+      },
+      /**
+       * @public
+       */
+      focus() {
+        if (this.firstCardCheckboxRef) {
+          this.firstCardCheckboxRef.focus();
+        }
+      },
     },
     $trs: {
       allChannelsLabel: 'Channels',
@@ -223,4 +256,13 @@
 </script>
 
 
-<style scoped></style>
+<style scoped>
+
+  .show-more-button-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+</style>

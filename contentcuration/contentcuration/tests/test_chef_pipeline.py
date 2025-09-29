@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import json
 
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -195,7 +193,9 @@ class ChefTestCase(BaseAPITestCase):
         node_data = node_json(
             {"kind": "video", "license": cc.License.objects.all()[0].license_name}
         )
-        unique_title = "This is a title that we can almost certainly find uniquely later"
+        unique_title = (
+            "This is a title that we can almost certainly find uniquely later"
+        )
         node_data["tags"] = ["test"]
         node_data["title"] = unique_title
         response = self.post(

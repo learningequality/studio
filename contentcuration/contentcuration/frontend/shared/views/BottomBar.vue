@@ -1,10 +1,15 @@
 <template>
 
-  <div class="bottom-bar pa-2" :style="appearanceOverrides">
+  <div
+    class="bottom-bar pa-2"
+    :style="appearanceOverrides"
+  >
     <slot></slot>
   </div>
 
 </template>
+
+
 <script>
 
   export default {
@@ -18,7 +23,9 @@
   };
 
 </script>
-<style lang="less" scoped>
+
+
+<style lang="scss" scoped>
 
   .bottom-bar {
     position: fixed;
@@ -26,6 +33,7 @@
     left: 0;
     z-index: 3;
     display: flex;
+    align-items: center;
     width: 100%;
     height: 64px;
     background-color: #ffffff;

@@ -9,7 +9,10 @@
       @submit="handleSave"
       @cancel="close"
     >
-      <p v-if="resourcesSelectedText.length > 0" data-test="resources-selected-message">
+      <p
+        v-if="resourcesSelectedText.length > 0"
+        data-test="resources-selected-message"
+      >
         {{ resourcesSelectedText }}
       </p>
       <div class="form-item">
@@ -23,9 +26,17 @@
             :label="$tr('authorLabel')"
             class="input-textbox"
           />
-          <HelpTooltip :text="$tr('authorToolTip')" top :small="false" class="input-tooltip" />
+          <HelpTooltip
+            :text="$tr('authorToolTip')"
+            top
+            :small="false"
+            class="input-tooltip"
+          />
         </div>
-        <p v-if="helpText" class="help">
+        <p
+          v-if="helpText"
+          class="help"
+        >
           {{ helpText }}
         </p>
       </div>
@@ -39,7 +50,12 @@
             :label="$tr('providerLabel')"
             class="input-textbox"
           />
-          <HelpTooltip :text="$tr('providerToolTip')" top :small="false" class="input-tooltip" />
+          <HelpTooltip
+            :text="$tr('providerToolTip')"
+            top
+            :small="false"
+            class="input-tooltip"
+          />
         </div>
       </div>
       <div class="form-item">
@@ -52,7 +68,12 @@
             :label="$tr('aggregatorLabel')"
             class="input-textbox"
           />
-          <HelpTooltip :text="$tr('aggregatorToolTip')" top :small="false" class="input-tooltip" />
+          <HelpTooltip
+            :text="$tr('aggregatorToolTip')"
+            top
+            :small="false"
+            class="input-tooltip"
+          />
         </div>
       </div>
       <div class="form-item">
@@ -82,7 +103,10 @@
             @blur="validateCopyrightHolder"
           />
         </div>
-        <p v-if="helpText" class="help">
+        <p
+          v-if="helpText"
+          class="help"
+        >
           {{ helpText }}
         </p>
       </div>
@@ -132,7 +156,7 @@
     'copyright_holder',
   ];
 
-  const hasChanged = function(newValue, oldValue) {
+  const hasChanged = function (newValue, oldValue) {
     this.changed = newValue !== oldValue;
   };
 
@@ -153,7 +177,7 @@
       },
     },
     data() {
-      /* eslint-disable  kolibri/vue-no-unused-properties */
+      /* eslint-disable  vue/no-unused-properties */
       return {
         author: '',
         provider: '',
@@ -164,7 +188,7 @@
         copyrightHolderError: '',
         changed: false,
       };
-      /* eslint-enable  kolibri/vue-no-unused-properties */
+      /* eslint-enable  vue/no-unused-properties */
     },
     computed: {
       ...mapGetters('contentNode', ['getContentNodes']),
@@ -246,7 +270,7 @@
         }
         this.copyrightHolderError = getInvalidText(
           getCopyrightHolderValidators(),
-          this.copyright_holder
+          this.copyright_holder,
         );
       },
       validate() {
@@ -274,7 +298,7 @@
               }
             });
             return this.updateContentNode(payload);
-          })
+          }),
         );
         /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
         this.$store.dispatch('showSnackbarSimple', commonStrings.$tr('changesSaved'));
@@ -300,6 +324,7 @@
   };
 
 </script>
+
 
 <style lang="scss" scoped>
 

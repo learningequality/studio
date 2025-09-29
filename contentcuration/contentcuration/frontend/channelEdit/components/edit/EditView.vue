@@ -1,23 +1,62 @@
 <template>
 
-  <VContainer id="editViewId" ref="editview" fluid class="pa-0 wrapper" @scroll="scroll">
-    <VContainer v-if="!nodeIds.length" fluid>
-      <VLayout justify-center align-center fill-height>
-        <VFlex grow class="grey--text text-xs-center title">
+  <VContainer
+    id="editViewId"
+    ref="editview"
+    fluid
+    class="pa-0 wrapper"
+    @scroll="scroll"
+  >
+    <VContainer
+      v-if="!nodeIds.length"
+      fluid
+    >
+      <VLayout
+        justify-center
+        align-center
+        fill-height
+      >
+        <VFlex
+          grow
+          class="grey--text text-xs-center title"
+        >
           {{ noItemText }}
         </VFlex>
       </VLayout>
     </VContainer>
     <VLayout v-else>
       <VFlex grow>
-        <ToolBar v-if="showTabs" :flat="!tabsElevated" class="tabs" color="white">
-          <Tabs v-model="currentTab" slider-color="primary" height="64px">
+        <ToolBar
+          v-if="showTabs"
+          :flat="!tabsElevated"
+          class="tabs"
+          color="white"
+        >
+          <Tabs
+            v-model="currentTab"
+            slider-color="primary"
+            height="64px"
+          >
             <!-- Details tab -->
-            <VTab ref="detailstab" :href="`#${tabs.DETAILS}`" @click="trackTab('Details')">
+            <VTab
+              ref="detailstab"
+              :href="`#${tabs.DETAILS}`"
+              @click="trackTab('Details')"
+            >
               {{ $tr(tabs.DETAILS) }}
-              <VTooltip v-if="!areDetailsValid || !areFilesValid" top lazy>
+              <VTooltip
+                v-if="!areDetailsValid || !areFilesValid"
+                top
+                lazy
+              >
                 <template #activator="{ on }">
-                  <VIconWrapper color="red" dark small class="ml-2" v-on="on">
+                  <VIconWrapper
+                    color="red"
+                    dark
+                    small
+                    class="ml-2"
+                    v-on="on"
+                  >
                     error
                   </VIconWrapper>
                 </template>
@@ -33,15 +72,27 @@
               @click="trackTab('Questions')"
             >
               {{ $tr(tabs.QUESTIONS) }}
-              <VTooltip v-if="!areAssessmentItemsValid" top lazy>
+              <VTooltip
+                v-if="!areAssessmentItemsValid"
+                top
+                lazy
+              >
                 <template #activator="{ on }">
-                  <VIconWrapper color="red" dark v-on="on">
+                  <VIconWrapper
+                    color="red"
+                    dark
+                    v-on="on"
+                  >
                     error
                   </VIconWrapper>
                 </template>
                 <span>{{ $tr('invalidFieldsToolTip') }}</span>
               </VTooltip>
-              <VChip v-else color="gray" dark>
+              <VChip
+                v-else
+                color="gray"
+                dark
+              >
                 {{ assessmentItemsCount }}
               </VChip>
             </VTab>
@@ -54,7 +105,10 @@
               @click="trackTab('Prerequisites')"
             >
               {{ $tr(tabs.RELATED) }}
-              <VChip color="gray" dark>
+              <VChip
+                color="gray"
+                dark
+              >
                 {{ relatedResourcesCount }}
               </VChip>
             </VTab>
@@ -62,11 +116,27 @@
         </ToolBar>
         <VContainer fluid>
           <VTabsItems v-model="currentTab">
-            <VTabItem :key="tabs.DETAILS" ref="detailswindow" :value="tabs.DETAILS">
-              <VAlert v-if="nodeIds.length > 1" :value="true" type="info" color="primary" outline>
+            <VTabItem
+              :key="tabs.DETAILS"
+              ref="detailswindow"
+              :value="tabs.DETAILS"
+            >
+              <VAlert
+                v-if="nodeIds.length > 1"
+                :value="true"
+                type="info"
+                color="primary"
+                outline
+              >
                 {{ countText }}
               </VAlert>
-              <VAlert v-else-if="!areDetailsValid" :value="true" type="error" outline icon="error">
+              <VAlert
+                v-else-if="!areDetailsValid"
+                :value="true"
+                type="error"
+                outline
+                icon="error"
+              >
                 {{ $tr('errorBannerText') }}
                 <ul>
                   <li
@@ -78,12 +148,25 @@
                   </li>
                 </ul>
               </VAlert>
-              <DetailsTabView :key="nodeIds.join('-')" ref="detailsTab" :nodeIds="nodeIds" />
+              <DetailsTabView
+                :key="nodeIds.join('-')"
+                ref="detailsTab"
+                :nodeIds="nodeIds"
+              />
             </VTabItem>
-            <VTabItem :key="tabs.QUESTIONS" ref="questionwindow" :value="tabs.QUESTIONS" lazy>
+            <VTabItem
+              :key="tabs.QUESTIONS"
+              ref="questionwindow"
+              :value="tabs.QUESTIONS"
+              lazy
+            >
               <AssessmentTab :nodeId="nodeIds[0]" />
             </VTabItem>
-            <VTabItem :key="tabs.RELATED" :value="tabs.RELATED" lazy>
+            <VTabItem
+              :key="tabs.RELATED"
+              :value="tabs.RELATED"
+              lazy
+            >
               <RelatedResourcesTab :nodeId="nodeIds[0]" />
             </VTabItem>
           </VTabsItems>
@@ -93,6 +176,7 @@
   </VContainer>
 
 </template>
+
 
 <script>
 
@@ -184,7 +268,7 @@
               resourceCount: totals.resourceCount + (isTopic ? 0 : 1),
             };
           },
-          { topicCount: 0, resourceCount: 0 }
+          { topicCount: 0, resourceCount: 0 },
         );
         return this.$tr('editingMultipleCount', totals);
       },
@@ -264,6 +348,7 @@
         const targetElement = this.$refs.detailsTab.$refs[errorRef];
 
         if (!targetElement) {
+          // eslint-disable-next-line no-console
           console.error(`Target element ref not found for error: ${error}`);
           return;
         }
@@ -302,10 +387,10 @@
         const arr = [...uniqueErrorsSet];
         this.errorsList = arr;
       },
-      /*
+      /**
        * @public
        */
-      immediateSaveAll: function() {
+      immediateSaveAll: function () {
         return this.$refs.detailsTab.immediateSaveAll();
       },
     },
@@ -335,7 +420,8 @@
 
 </script>
 
-<style lang="less" scoped>
+
+<style lang="scss" scoped>
 
   .tabs {
     position: sticky;

@@ -6,8 +6,6 @@ for custom field definitions. These have been placed in kolibri_content.fields.
 In addition, any foreign key fields have on_delete definitions added for Django 3 compatibility.
 https://github.com/learningequality/kolibri/blob/0f6bb6781a4453cd9fdc836d52b65dd69e395b20/kolibri/core/content/base_models.py#L68
 """
-from __future__ import print_function
-
 from django.db import models
 from kolibri_content.fields import DateTimeTzField
 from kolibri_content.fields import JSONField
@@ -42,7 +40,12 @@ class ContentNode(MPTTModel):
 
     id = UUIDField(primary_key=True)
     parent = TreeForeignKey(
-        "self", null=True, blank=True, related_name="children", db_index=True, on_delete=models.CASCADE
+        "self",
+        null=True,
+        blank=True,
+        related_name="children",
+        db_index=True,
+        on_delete=models.CASCADE,
     )
     license_name = models.CharField(max_length=50, null=True, blank=True)
     license_description = models.TextField(null=True, blank=True)
@@ -70,7 +73,9 @@ class ContentNode(MPTTModel):
     author = models.CharField(max_length=200, blank=True)
     kind = models.CharField(max_length=200, choices=content_kinds.choices, blank=True)
     available = models.BooleanField(default=False)
-    lang = models.ForeignKey("Language", blank=True, null=True, on_delete=models.CASCADE)
+    lang = models.ForeignKey(
+        "Language", blank=True, null=True, on_delete=models.CASCADE
+    )
 
     # A JSON Dictionary of properties to configure loading, rendering, etc. the file
     options = JSONField(default={}, blank=True, null=True)
@@ -112,12 +117,18 @@ class File(models.Model):
 
     id = UUIDField(primary_key=True)
     # The foreign key mapping happens here as many File objects can map onto a single local file
-    local_file = models.ForeignKey("LocalFile", related_name="files", on_delete=models.CASCADE)
-    contentnode = models.ForeignKey("ContentNode", related_name="files", on_delete=models.CASCADE)
+    local_file = models.ForeignKey(
+        "LocalFile", related_name="files", on_delete=models.CASCADE
+    )
+    contentnode = models.ForeignKey(
+        "ContentNode", related_name="files", on_delete=models.CASCADE
+    )
     preset = models.CharField(
         max_length=150, choices=format_presets.choices, blank=True
     )
-    lang = models.ForeignKey("Language", blank=True, null=True, on_delete=models.CASCADE)
+    lang = models.ForeignKey(
+        "Language", blank=True, null=True, on_delete=models.CASCADE
+    )
     supplementary = models.BooleanField(default=False)
     thumbnail = models.BooleanField(default=False)
     priority = models.IntegerField(blank=True, null=True, db_index=True)
@@ -152,7 +163,9 @@ class AssessmentMetaData(models.Model):
     """
 
     id = UUIDField(primary_key=True)
-    contentnode = models.ForeignKey("ContentNode", related_name="assessmentmetadata", on_delete=models.CASCADE)
+    contentnode = models.ForeignKey(
+        "ContentNode", related_name="assessmentmetadata", on_delete=models.CASCADE
+    )
     # A JSON blob containing a serialized list of ids for questions that the assessment can present.
     assessment_item_ids = JSONField(default=[])
     # Length of the above assessment_item_ids for a convenience lookup.

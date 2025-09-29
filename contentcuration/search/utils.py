@@ -24,7 +24,7 @@ def get_fts_annotated_contentnode_qs(channel_id):
         channel_id=Value(channel_id),
         contentnode_tags=StringAgg("tags__tag_name", delimiter=" "),
         keywords_tsvector=CONTENTNODE_KEYWORDS_TSVECTOR,
-        author_tsvector=CONTENTNODE_AUTHOR_TSVECTOR
+        author_tsvector=CONTENTNODE_AUTHOR_TSVECTOR,
     )
 
 
@@ -35,5 +35,7 @@ def get_fts_annotated_channel_qs():
     from contentcuration.models import Channel
     from contentcuration.viewsets.channel import primary_token_subquery
 
-    return Channel.objects.annotate(primary_channel_token=primary_token_subquery,
-                                    keywords_tsvector=CHANNEL_KEYWORDS_TSVECTOR)
+    return Channel.objects.annotate(
+        primary_channel_token=primary_token_subquery,
+        keywords_tsvector=CHANNEL_KEYWORDS_TSVECTOR,
+    )

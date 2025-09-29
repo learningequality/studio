@@ -15,7 +15,7 @@
       <span
         :class="{ 'text-truncate': truncate, notranslate }"
         :title="text"
-        style="text-decoration: underline;"
+        style="text-decoration: underline"
       >
         {{ text }}
       </span>
@@ -25,11 +25,12 @@
         :color="$themeTokens.primary"
         class="mx-1 rtl-flip"
       />
-
     </slot>
   </VBtn>
 
 </template>
+
+
 <script>
 
   export default {
@@ -60,14 +61,16 @@
   };
 
 </script>
-<style lang="less" scoped>
+
+
+<style lang="scss" scoped>
 
   .v-btn {
     min-width: min-content;
     height: unset;
     min-height: min-content;
     padding: 0;
-    margin: 0;
+    margin: 0 0 0 1px;
     font-weight: normal;
     text-transform: none;
   }

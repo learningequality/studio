@@ -1,3 +1,4 @@
+import { cleanFile } from './clean';
 import { getHash, extractMetadata, storageUrl } from './utils';
 import { File } from 'shared/data/resources';
 import client from 'shared/client';
@@ -117,14 +118,14 @@ function hexToBase64(str) {
         .replace(/\r|\n/g, '')
         .replace(/([\da-fA-F]{2}) ?/g, '0x$1 ')
         .replace(/ +$/, '')
-        .split(' ')
-    )
+        .split(' '),
+    ),
   );
 }
 
 export function uploadFileToStorage(
   context,
-  { id, file_format, mightSkip, checksum, file, url, contentType }
+  { id, file_format, mightSkip, checksum, file, url, contentType },
 ) {
   return (mightSkip ? client.head(storageUrl(checksum, file_format)) : Promise.reject())
     .then(() => {
@@ -167,11 +168,9 @@ export function uploadFileToStorage(
 /**
  * @return {Promise<{uploadPromise: Promise, fileObject: Object}>}
  */
-export function uploadFile(context, { file, preset = null } = {}) {
-  const file_format = file.name
-    .split('.')
-    .pop()
-    .toLowerCase();
+export async function uploadFile(context, { file, preset = null } = {}) {
+  const file_format = file.name.split('.').pop().toLowerCase();
+  file = await cleanFile(file, preset);
   const hashPromise = getHash(file).catch(() => Promise.reject(fileErrors.CHECKSUM_HASH_FAILED));
   let checksum,
     metadata = {};
@@ -278,4 +277,14 @@ export function getAudioData(context, url) {
       })
       .catch(reject);
   });
+}
+
+export function downloadFile(context, { url, fileName }) {
+  const anchor = document.createElement('a');
+  anchor.download = fileName;
+  anchor.href = url;
+  anchor.style.display = 'none';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
 }

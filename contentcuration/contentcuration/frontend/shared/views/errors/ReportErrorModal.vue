@@ -7,7 +7,6 @@
     size="large"
     @cancel="$emit('cancel')"
   >
-
     <section>
       <h3 v-if="offline">
         {{ $tr('forumPrompt') }}
@@ -39,7 +38,6 @@
       :text="error"
       :maxHeight="240"
     />
-
   </KModal>
 
 </template>
@@ -96,7 +94,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .error-detail-modal {
     text-align: left;

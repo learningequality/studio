@@ -2,18 +2,19 @@ Feature: Create a channel
 
 	Background:
 		Given I am signed in to Studio
-			And I am on the *My Channels* tab
+			And I am at *My Channels* tab
 
-	Scenario: Create a channel
+	Scenario: Create a new channel
 		When I click the *New channel* button
 		Then I see the *New channel* page
-		When I enter channel name <channel_name>
-			And I enter channel description <channel_description>
-			And I select a language <language>
-			And I upload the image file as a channel thumbnail
+		When I upload an image file as a channel thumbnail (optional)
+			And I enter a channel name
+			And I select a language
+			And I enter channel description (optional)
+			And I fill in the default copyright fields (optional)
 			And I click the *Create* button
-		Then I see the channel <channel_name> on *My Channels* list
-
-	Examples:
-	| channel_name  | channel_description  | language |
-	| ck-12         | sample channel       | english  |
+		Then I am at the channel editor view
+			And I see the title of the channel to the left
+			And I see a disabled *Publish* button
+			And I see *Click "ADD" to start building your channel Create, upload, or import resources from other channels*
+			And I see a blue *Add* button

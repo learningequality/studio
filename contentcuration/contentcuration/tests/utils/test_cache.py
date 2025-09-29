@@ -31,7 +31,9 @@ class ResourceSizeCacheTestCase(SimpleTestCase):
         self.assertEqual("abcdefghijklmnopqrstuvwxyz:value", self.helper.size_key)
 
     def test_modified_key(self):
-        self.assertEqual("abcdefghijklmnopqrstuvwxyz:modified", self.helper.modified_key)
+        self.assertEqual(
+            "abcdefghijklmnopqrstuvwxyz:modified", self.helper.modified_key
+        )
 
     def test_cache_get(self):
         self.redis_client.hget.return_value = 123
@@ -42,11 +44,15 @@ class ResourceSizeCacheTestCase(SimpleTestCase):
         self.cache.client = mock.Mock()
         self.cache.get.return_value = 123
         self.assertEqual(123, self.helper.cache_get("test_key"))
-        self.cache.get.assert_called_once_with("{}:{}".format(self.helper.hash_key, "test_key"))
+        self.cache.get.assert_called_once_with(
+            "{}:{}".format(self.helper.hash_key, "test_key")
+        )
 
     def test_cache_set(self):
         self.helper.cache_set("test_key", 123)
-        self.redis_client.hset.assert_called_once_with(self.helper.hash_key, "test_key", 123)
+        self.redis_client.hset.assert_called_once_with(
+            self.helper.hash_key, "test_key", 123
+        )
 
     def test_cache_set__delete(self):
         self.helper.cache_set("test_key", None)
@@ -55,28 +61,32 @@ class ResourceSizeCacheTestCase(SimpleTestCase):
     def test_cache_set__not_redis(self):
         self.cache.client = mock.Mock()
         self.helper.cache_set("test_key", 123)
-        self.cache.set.assert_called_once_with("{}:{}".format(self.helper.hash_key, "test_key"), 123)
+        self.cache.set.assert_called_once_with(
+            "{}:{}".format(self.helper.hash_key, "test_key"), 123
+        )
 
     def test_get_size(self):
-        with mock.patch.object(self.helper, 'cache_get') as cache_get:
+        with mock.patch.object(self.helper, "cache_get") as cache_get:
             cache_get.return_value = 123
             self.assertEqual(123, self.helper.get_size())
             cache_get.assert_called_once_with(self.helper.size_key)
 
     def test_set_size(self):
-        with mock.patch.object(self.helper, 'cache_set') as cache_set:
+        with mock.patch.object(self.helper, "cache_set") as cache_set:
             self.helper.set_size(123)
             cache_set.assert_called_once_with(self.helper.size_key, 123)
 
     def test_get_modified(self):
-        with mock.patch.object(self.helper, 'cache_get') as cache_get:
-            cache_get.return_value = '2021-01-01 00:00:00'
+        with mock.patch.object(self.helper, "cache_get") as cache_get:
+            cache_get.return_value = "2021-01-01 00:00:00"
             modified = self.helper.get_modified()
             self.assertIsNotNone(modified)
-            self.assertEqual('2021-01-01T00:00:00', modified.isoformat())
+            self.assertEqual("2021-01-01T00:00:00", modified.isoformat())
             cache_get.assert_called_once_with(self.helper.modified_key)
 
     def test_set_modified(self):
-        with mock.patch.object(self.helper, 'cache_set') as cache_set:
-            self.helper.set_modified('2021-01-01 00:00:00')
-            cache_set.assert_called_once_with(self.helper.modified_key, '2021-01-01 00:00:00')
+        with mock.patch.object(self.helper, "cache_set") as cache_set:
+            self.helper.set_modified("2021-01-01 00:00:00")
+            cache_set.assert_called_once_with(
+                self.helper.modified_key, "2021-01-01 00:00:00"
+            )

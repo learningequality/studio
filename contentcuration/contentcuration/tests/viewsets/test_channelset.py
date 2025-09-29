@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import uuid
 
 from django.urls import reverse
@@ -15,7 +13,6 @@ from contentcuration.viewsets.sync.constants import CHANNELSET
 
 
 class SyncTestCase(SyncTestMixin, StudioAPITestCase):
-
     @property
     def channelset_metadata(self):
         return {
@@ -41,7 +38,11 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         channelset = self.channelset_metadata
         response = self.sync_changes(
-            [generate_create_event(channelset["id"], CHANNELSET, channelset, user_id=self.user.id)],
+            [
+                generate_create_event(
+                    channelset["id"], CHANNELSET, channelset, user_id=self.user.id
+                )
+            ],
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -55,8 +56,12 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         channelset2 = self.channelset_metadata
         response = self.sync_changes(
             [
-                generate_create_event(channelset1["id"], CHANNELSET, channelset1, user_id=self.user.id),
-                generate_create_event(channelset2["id"], CHANNELSET, channelset2, user_id=self.user.id),
+                generate_create_event(
+                    channelset1["id"], CHANNELSET, channelset1, user_id=self.user.id
+                ),
+                generate_create_event(
+                    channelset2["id"], CHANNELSET, channelset2, user_id=self.user.id
+                ),
             ],
         )
         self.assertEqual(response.status_code, 200, response.content)
@@ -77,7 +82,11 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
         self.client.force_authenticate(user=self.user)
         response = self.sync_changes(
-            [generate_update_event(channelset.id, CHANNELSET, {"channels": {}}, user_id=self.user.id)],
+            [
+                generate_update_event(
+                    channelset.id, CHANNELSET, {"channels": {}}, user_id=self.user.id
+                )
+            ],
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertFalse(
@@ -96,8 +105,12 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         response = self.sync_changes(
             [
-                generate_update_event(channelset1.id, CHANNELSET, {"channels": {}}, user_id=self.user.id),
-                generate_update_event(channelset2.id, CHANNELSET, {"channels": {}}, user_id=self.user.id),
+                generate_update_event(
+                    channelset1.id, CHANNELSET, {"channels": {}}, user_id=self.user.id
+                ),
+                generate_update_event(
+                    channelset2.id, CHANNELSET, {"channels": {}}, user_id=self.user.id
+                ),
             ],
         )
         self.assertEqual(response.status_code, 200, response.content)
@@ -118,7 +131,11 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         channelset.editors.add(self.user)
         self.client.force_authenticate(user=self.user)
         response = self.sync_changes(
-            [generate_update_event(channelset.id, CHANNELSET, {}, user_id=self.user.id)],
+            [
+                generate_update_event(
+                    channelset.id, CHANNELSET, {}, user_id=self.user.id
+                )
+            ],
         )
         self.assertEqual(response.status_code, 200, response.content)
 
@@ -130,7 +147,10 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         response = self.sync_changes(
             [
                 generate_update_event(
-                    channelset.id, CHANNELSET, {"not_a_field": "not_a_value"}, user_id=self.user.id
+                    channelset.id,
+                    CHANNELSET,
+                    {"not_a_field": "not_a_value"},
+                    user_id=self.user.id,
                 )
             ],
         )
@@ -152,7 +172,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
                     channelset.id,
                     CHANNELSET,
                     {"channels.{}".format(channel1.id): True},
-                    user_id=self.user.id
+                    user_id=self.user.id,
                 )
             ],
         )
@@ -172,7 +192,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
                     channelset.id,
                     CHANNELSET,
                     {"channels.{}".format(channel2.id): True},
-                    user_id=self.user.id
+                    user_id=self.user.id,
                 )
             ],
         )
@@ -194,7 +214,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
                     channelset.id,
                     CHANNELSET,
                     {"channels.{}".format(channel2.id): None},
-                    user_id=self.user.id
+                    user_id=self.user.id,
                 )
             ],
         )
@@ -225,7 +245,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
                     channelset.id,
                     CHANNELSET,
                     {"channels.{}".format(channel1.id): True},
-                    user_id=self.user.id
+                    user_id=self.user.id,
                 )
             ],
         )
@@ -306,7 +326,9 @@ class CRUDTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         channelset = self.channelset_metadata
         response = self.client.post(
-            reverse("channelset-list"), channelset, format="json",
+            reverse("channelset-list"),
+            channelset,
+            format="json",
         )
         self.assertEqual(response.status_code, 201, response.content)
         try:
@@ -320,7 +342,9 @@ class CRUDTestCase(StudioAPITestCase):
         channelset = self.channelset_metadata
         channelset["channels"] = {new_channel.id: True}
         response = self.client.post(
-            reverse("channelset-list"), channelset, format="json",
+            reverse("channelset-list"),
+            channelset,
+            format="json",
         )
         self.assertEqual(response.status_code, 400, response.content)
 

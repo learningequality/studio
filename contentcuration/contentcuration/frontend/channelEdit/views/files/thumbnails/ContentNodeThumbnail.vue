@@ -8,17 +8,30 @@
     >
       <template #default="{ openFileDialog, handleFiles }">
         <!-- Thumbnail status -->
-        <VLayout row align-center :class="hasError ? 'red--text' : 'grey--text'" class="body-1">
+        <VLayout
+          row
+          align-center
+          :class="hasError ? 'red--text' : 'grey--text'"
+          class="body-1"
+        >
           <FileStatusText
-            v-if="fileUpload && fileUpload.error || uploading"
+            v-if="(fileUpload && fileUpload.error) || uploading"
             :fileId="fileUpload && fileUpload.id"
             @open="openFileDialog"
           />
           <template v-else>
-            <VFlex class="pr-2 text-truncate" shrink style="line-height: unset !important;">
+            <VFlex
+              class="pr-2 text-truncate"
+              shrink
+              style="line-height: unset !important"
+            >
               {{ headerText }}
             </VFlex>
-            <VFlex v-if="showFileSize" class="text-xs-right" grow>
+            <VFlex
+              v-if="showFileSize"
+              class="text-xs-right"
+              grow
+            >
               {{ formatFileSize(fileUpload.file_size) }}
             </VFlex>
           </template>
@@ -27,8 +40,14 @@
         <!-- Thumbnail area -->
         <div class="mt-2">
           <!-- Status card -->
-          <div v-if="loading || hasError" style="border: 2px solid transparent;">
-            <ThumbnailCard ref="thumbnail" data-test="loading">
+          <div
+            v-if="loading || hasError"
+            style="border: 2px solid transparent"
+          >
+            <ThumbnailCard
+              ref="thumbnail"
+              data-test="loading"
+            >
               <p>
                 <VProgressCircular
                   v-if="generating"
@@ -38,7 +57,12 @@
                   data-test="generating"
                   color="greenSuccess"
                 />
-                <FileStatus v-else :fileId="fileUpload.id" large data-test="progress" />
+                <FileStatus
+                  v-else
+                  :fileId="fileUpload.id"
+                  large
+                  data-test="progress"
+                />
               </p>
               <ActionLink
                 v-if="!hasError"
@@ -83,19 +107,31 @@
           </FileDropzone>
 
           <!-- Default image -->
-          <FileDropzone v-else @dropped="handleFiles" @click="openFileDialog">
+          <FileDropzone
+            v-else
+            @dropped="handleFiles"
+            @click="openFileDialog"
+          >
             <ThumbnailCard
               ref="thumbnail"
               data-test="default-image"
               @click="openFileDialog"
             >
-              <Icon icon="image" style="font-size: 25px;" />
+              <Icon
+                icon="image"
+                style="font-size: 25px"
+              />
             </ThumbnailCard>
           </FileDropzone>
         </div>
 
         <!-- Toolbar -->
-        <VLayout v-show="!loading" row align-center data-test="toolbar">
+        <VLayout
+          v-show="!loading"
+          row
+          align-center
+          data-test="toolbar"
+        >
           <!-- Generating option -->
           <ThumbnailGenerator
             v-show="allowGeneration"
@@ -166,7 +202,11 @@
                 :text="$tr('cancel')"
                 @click="cancelPendingFile"
               />
-              <ActionLink :text="$tr('save')" data-test="save" @click="save" />
+              <ActionLink
+                :text="$tr('save')"
+                data-test="save"
+                @click="save"
+              />
             </span>
             <IconButton
               v-else-if="value"
@@ -182,6 +222,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -452,9 +493,10 @@
 
 </script>
 
-<style lang="less" scoped>
 
-  /deep/ canvas {
+<style lang="scss" scoped>
+
+  ::v-deep canvas {
     border: 2px solid var(--v-grey-darken2);
   }
 

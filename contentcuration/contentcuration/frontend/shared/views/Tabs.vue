@@ -2,16 +2,15 @@
 
   import { VTabs } from 'vuetify/lib/components/VTabs';
 
-  /*
-    RTL support on v-tabs is broken on overflow, so pull in
-    fixes from this PR https://github.com/vuetifyjs/vuetify/pull/6812
-  */
-
+  /**
+   * RTL support on v-tabs is broken on overflow, so pull in
+   * fixes from this PR https://github.com/vuetifyjs/vuetify/pull/6812
+   */
   export default {
     name: 'Tabs',
     extends: VTabs,
     props: {
-      /* eslint-disable kolibri/vue-no-unused-properties */
+      /* eslint-disable vue/no-unused-properties */
       color: {
         type: String,
         default: 'transparent',
@@ -24,9 +23,10 @@
         type: String,
         default: 'primary',
       },
-      /* eslint-enable kolibri/vue-no-unused-properties */
+      /* eslint-enable vue/no-unused-properties */
     },
     methods: {
+      /* eslint-disable vue/no-unused-properties */
       /* eslint-disable kolibri/vue-no-unused-methods */
       checkPrevIcon() {
         if (this.$vuetify.rtl)
@@ -67,7 +67,7 @@
           if (this.$vuetify.rtl) {
             return Math.max(
               this.scrollOffset - clientWidth,
-              (this.$refs.container.clientWidth - clientWidth) * -1
+              (this.$refs.container.clientWidth - clientWidth) * -1,
             );
           }
           return Math.max(this.scrollOffset - clientWidth, 0);
@@ -77,7 +77,7 @@
           }
           return Math.min(
             this.scrollOffset + clientWidth,
-            this.$refs.container.clientWidth - clientWidth
+            this.$refs.container.clientWidth - clientWidth,
           );
         }
       },
@@ -103,13 +103,15 @@
           }
         }
       },
+      /* eslint-enable vue/no-unused-properties */
       /* eslint-enable kolibri/vue-no-unused-methods */
     },
   };
 
 </script>
 
-<style lang="less">
+
+<style lang="scss">
 
   /*! rtl:begin:ignore */
   [dir='rtl'] {

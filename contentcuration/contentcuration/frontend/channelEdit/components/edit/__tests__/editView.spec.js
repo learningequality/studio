@@ -13,7 +13,7 @@ const testNodes = [DEFAULT_TOPIC, DEFAULT_VIDEO, DEFAULT_EXERCISE];
 function makeWrapper(props = {}) {
   const wrapper = mount(EditView, {
     store: localStore,
-    attachToDocument: true,
+    attachTo: document.body,
     propsData: props,
   });
   return wrapper;

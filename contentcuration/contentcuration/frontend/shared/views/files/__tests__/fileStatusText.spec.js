@@ -20,7 +20,7 @@ function makeWrapper(fileId) {
   store.state.file.fileUploadsMap[fileId] = fileUploads[fileId];
   return mount(FileStatusText, {
     store,
-    attachToDocument: true,
+    attachTo: document.body,
     propsData: {
       fileId,
     },
@@ -30,24 +30,27 @@ function makeWrapper(fileId) {
 describe('fileStatusText', () => {
   it('should show error text if a file has an error', () => {
     let wrapper = makeWrapper('file-3');
-    expect(wrapper.find('[data-test="error"]').exists()).toBe(true);
-    expect(wrapper.find('[data-test="progress"]').exists()).toBe(false);
+    expect(wrapper.findComponent('[data-test="error"]').exists()).toBe(true);
+    expect(wrapper.findComponent('[data-test="progress"]').exists()).toBe(false);
 
     wrapper = makeWrapper('file-1');
-    expect(wrapper.find('[data-test="error"]').exists()).toBe(false);
+    expect(wrapper.findComponent('[data-test="error"]').exists()).toBe(false);
   });
-  it('should hide upload link in readonly mode', () => {
+
+  it('should hide upload link in readonly mode', async () => {
     const wrapper = makeWrapper('file-2');
-    wrapper.setProps({ readonly: true });
-    expect(wrapper.find('[data-test="upload"]').exists()).toBe(false);
+    await wrapper.setProps({ readonly: true });
+    expect(wrapper.findComponent('[data-test="upload"]').exists()).toBe(false);
   });
+
   it('should indicate if one of the files is uploading', () => {
     const wrapper = makeWrapper('file-2');
-    expect(wrapper.find('[data-test="progress"]').exists()).toBe(true);
+    expect(wrapper.findComponent('[data-test="progress"]').exists()).toBe(true);
   });
+
   it('should show nothing if files are done uploading', () => {
     const wrapper = makeWrapper('file-1');
-    expect(wrapper.find('[data-test="error"]').exists()).toBe(false);
-    expect(wrapper.find('[data-test="progress"]').exists()).toBe(false);
+    expect(wrapper.findComponent('[data-test="error"]').exists()).toBe(false);
+    expect(wrapper.findComponent('[data-test="progress"]').exists()).toBe(false);
   });
 });

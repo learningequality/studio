@@ -1,4 +1,4 @@
-import Vue from 'vue';
+import { set } from 'vue';
 import { DraggableFlags, DraggableIdentity } from '../constants';
 
 /**
@@ -12,7 +12,7 @@ function setIdentity(state, name, obj = null) {
   }
 
   Object.keys(obj).forEach(key => {
-    Vue.set(state[name], key, obj[key]);
+    set(state[name], key, obj[key]);
   });
 }
 

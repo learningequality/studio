@@ -1,7 +1,10 @@
 <template>
 
   <div>
-    <VLayout align-top justify-space-between>
+    <VLayout
+      align-top
+      justify-space-between
+    >
       <VFlex mt-2>
         <div class="caption grey--text mb-2">
           {{ kindLabel }}
@@ -72,7 +75,10 @@
             class="hints-preview" is needed for precise click
             target detection in AssessmentView.vue
           -->
-          <div v-if="hintsCount" class="hints-preview">
+          <div
+            v-if="hintsCount"
+            class="hints-preview"
+          >
             <span
               class="grey--text hints-toggle"
               :class="{ open: areHintsOpen }"
@@ -90,7 +96,10 @@
                 class="hint"
                 flat
               >
-                <VFlex class="hint-number" shrink>
+                <VFlex
+                  class="hint-number"
+                  shrink
+                >
                   {{ hintIdx + 1 }}
                 </VFlex>
                 <VFlex>
@@ -105,6 +114,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -223,7 +233,8 @@
 
 </script>
 
-<style lang="less" scoped>
+
+<style lang="scss" scoped>
 
   .hints-toggle {
     cursor: pointer;
@@ -247,7 +258,7 @@
     /*! rtl:end:ignore */
   }
 
-  /deep/ .v-input--selection-controls {
+  ::v-deep .v-input--selection-controls {
     margin-top: 0;
 
     .accent--text {
@@ -259,7 +270,7 @@
     }
   }
 
-  /deep/ img {
+  ::v-deep img {
     max-width: 100%;
     height: auto;
   }
@@ -268,7 +279,7 @@
     padding: 11px;
   }
 
-  .item-answers-preview /deep/ .checkbox-icon {
+  .item-answers-preview ::v-deep .checkbox-icon {
     top: 8px;
   }
 

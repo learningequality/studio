@@ -66,13 +66,12 @@ describe('channel actions', () => {
   });
 
   describe('loadChannel action', () => {
-    it('should call Channel.getCatalogChannel if user is not logged in', async done => {
+    it('should call Channel.getCatalogChannel if user is not logged in', async () => {
       store.state.session.currentUser.id = undefined;
       const getSpy = jest.spyOn(Channel, 'getCatalogChannel');
       return store.dispatch('channel/loadChannel', id).then(() => {
         expect(getSpy).toHaveBeenCalledWith(id);
         getSpy.mockRestore();
-        done();
       });
     });
     it('should call Channel.get if user is logged in', () => {
@@ -380,7 +379,7 @@ describe('Channel sharing vuex', () => {
         });
       });
     });
-    it('should clear out old invitations', done => {
+    it('should clear out old invitations', async () => {
       const declinedInvitation = {
         id: 'choosy-invitation',
         email: 'choosy-collaborator@test.com',
@@ -389,14 +388,9 @@ describe('Channel sharing vuex', () => {
         user: 'some-other-user',
       };
 
-      Invitation.add(declinedInvitation).then(() => {
-        store.dispatch('channel/loadChannelUsers', channelId).then(() => {
-          expect(Object.keys(store.state.channel.invitationsMap)).not.toContain(
-            'choosy-invitation'
-          );
-          done();
-        });
-      });
+      await Invitation.add(declinedInvitation);
+      await store.dispatch('channel/loadChannelUsers', channelId);
+      expect(Object.keys(store.state.channel.invitationsMap)).not.toContain('choosy-invitation');
     });
   });
 

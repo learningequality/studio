@@ -5,10 +5,7 @@
     <SearchFilterBar />
     <VLayout row>
       <VFlex shrink>
-
-        <SearchFilters
-          :searchResults="nodes"
-        />
+        <SearchFilters :searchResults="nodes" />
       </VFlex>
 
       <!-- Main area with cards -->
@@ -21,14 +18,26 @@
             {{ $tr('failedToLoad') }}
           </p>
         </VContainer>
-        <VContainer v-else class="mx-0 px-1">
-          <LoadingText v-if="loading" />
-          <VLayout v-else row align-center>
+        <VContainer
+          v-else
+          class="mx-0 px-1"
+        >
+          <LoadingText
+            v-if="loading"
+            ref="loading"
+          />
+          <VLayout
+            v-else
+            row
+            align-center
+          >
             <VFlex grow>
               <span class="font-weight-bold subheading">
-                {{ $tr('searchResultsCount', {
-                  count: totalCount,
-                  searchTerm: currentSearchTerm })
+                {{
+                  $tr('searchResultsCount', {
+                    count: totalCount,
+                    searchTerm: currentSearchTerm,
+                  })
                 }}
               </span>
               <ActionLink
@@ -38,7 +47,10 @@
                 @click="handleClickSaveSearch"
               />
             </VFlex>
-            <VFlex v-if="searchIsNotEmpty" style="max-width: 100px;">
+            <VFlex
+              v-if="searchIsNotEmpty"
+              style="max-width: 100px"
+            >
               <span>
                 <VSelect
                   v-model="pageSize"
@@ -50,17 +62,31 @@
               </span>
             </VFlex>
           </VLayout>
-          <div>
-            <VLayout v-for="node in nodes" :key="node.id" row align-center class="py-2">
-              <VFlex class="px-1" shrink>
+          <div v-if="!loading">
+            <VLayout
+              v-for="node in nodes"
+              :key="node.id"
+              row
+              align-center
+              class="py-2"
+            >
+              <VFlex
+                class="px-1"
+                shrink
+              >
                 <Checkbox
                   :key="`checkbox-${node.id}`"
+                  :ref="setFirstCardCheckboxRef"
                   :inputValue="isSelected(node)"
                   class="mt-0 pt-0"
                   @input="toggleSelected(node)"
                 />
               </VFlex>
-              <VFlex shrink grow style="width: 100%;">
+              <VFlex
+                shrink
+                grow
+                style="width: 100%"
+              >
                 <BrowsingCard
                   :node="node"
                   :inSearch="true"
@@ -70,7 +96,10 @@
                 />
               </VFlex>
             </VLayout>
-            <div v-if="pageCount > 1" class="mt-4 text-xs-center">
+            <div
+              v-if="pageCount > 1"
+              class="mt-4 text-xs-center"
+            >
               <Pagination :totalPages="pageCount" />
             </div>
           </div>
@@ -80,6 +109,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -118,9 +148,11 @@
       return {
         loading: false,
         loadFailed: false,
+        hasLoaded: false,
         nodeIds: [],
         pageCount: 0,
         totalCount: 0,
+        firstCardCheckboxRef: null,
       };
     },
     computed: {
@@ -150,7 +182,7 @@
         },
       },
       isSelected() {
-        return function(node) {
+        return function (node) {
           return Boolean(find(this.selected, { id: node.id }));
         };
       },
@@ -191,11 +223,18 @@
       fetch() {
         this.loading = true;
         this.loadFailed = false;
+        this.firstCardCheckboxRef = null;
         this.fetchResultsDebounced();
         this.loadSavedSearches();
+        // Ensure loading spinner is in view after initial load
+        if (this.hasLoaded) {
+          this.$nextTick(() => {
+            this.$refs.loading.$el.scrollIntoView();
+          });
+        }
       },
       fetchResultsDebounced: debounce(
-        function() {
+        function () {
           this.fetchResourceSearchResults({
             ...this.$route.query,
             page_size: this.pageSize,
@@ -208,6 +247,8 @@
               this.nodeIds = page.results.map(n => n.id);
               this.pageCount = page.total_pages;
               this.totalCount = page.count;
+              this.hasLoaded = true;
+              this.$nextTick(() => this.focus());
             })
             .catch(e => {
               this.loadFailed = true;
@@ -215,7 +256,7 @@
             });
         },
         1000,
-        { trailing: true }
+        { trailing: true },
       ),
       handleClickSaveSearch() {
         this.createSearch(this.savedSearchParams).then(() => {
@@ -224,6 +265,19 @@
       },
       toggleSelected(node) {
         this.$emit('change_selected', { nodes: [node], isSelected: !this.isSelected(node) });
+      },
+      setFirstCardCheckboxRef(ref) {
+        if (!this.firstCardCheckboxRef) {
+          this.firstCardCheckboxRef = ref;
+        }
+      },
+      /**
+       * @public
+       */
+      focus() {
+        if (this.firstCardCheckboxRef) {
+          this.firstCardCheckboxRef.focus();
+        }
       },
     },
     $trs: {
@@ -239,4 +293,4 @@
 </script>
 
 
-<style lang="less" scoped></style>
+<style lang="scss" scoped></style>

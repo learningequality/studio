@@ -6,14 +6,23 @@
       width="148"
       :src="require('shared/images/le-logo.svg')"
     >
-    <br>
-    <h1 class="notranslate" dir="auto">
-      {{ $tr("catalogHeader") }}
+    <br >
+    <h1
+      class="notranslate"
+      dir="auto"
+    >
+      {{ $tr('catalogHeader') }}
     </h1>
     <DetailsRow :label="$tr('exported')">
       <template #default>
-        {{ $formatDate(Date.now(), {
-          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}
+        {{
+          $formatDate(Date.now(), {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })
+        }}
       </template>
     </DetailsRow>
     <DetailsRow :label="$tr('formatsHeading')">
@@ -47,16 +56,24 @@
         />
       </template>
     </DetailsRow>
-    <h2 class="notranslate" dir="auto">
-      {{ $tr("numberOfChannels", { num: channelList.length }) }}
+    <h2
+      class="notranslate"
+      dir="auto"
+    >
+      {{ $tr('numberOfChannels', { num: channelList.length }) }}
     </h2>
-    <div v-for="(channel, index) in channelNames" :key="index" class="container">
+    <div
+      v-for="(channel, index) in channelNames"
+      :key="index"
+      class="container"
+    >
       <span class="px-2 text">{{ channel }}</span>
       <span class="px-2 right text">{{ index + 1 }}</span>
     </div>
   </div>
 
 </template>
+
 
 <script>
 
@@ -118,7 +135,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .container {
     min-width: 50%;

@@ -40,7 +40,9 @@ from rest_framework.serializers import DictField
 from rest_framework.serializers import Field
 from rest_framework.serializers import ValidationError
 
-from contentcuration.constants import completion_criteria as completion_criteria_validator
+from contentcuration.constants import (
+    completion_criteria as completion_criteria_validator,
+)
 from contentcuration.db.models.expressions import IsNull
 from contentcuration.db.models.query import RIGHT_JOIN
 from contentcuration.db.models.query import With
@@ -139,10 +141,7 @@ class ContentNodeFilter(RequiredFilterSet):
         return queryset.filter(query)
 
 
-tags_values_cte_fields = {
-    'tag': models.CharField(),
-    'node_id': UUIDField()
-}
+tags_values_cte_fields = {"tag": models.CharField(), "node_id": UUIDField()}
 
 
 def set_tags(tags_by_id):
@@ -155,7 +154,7 @@ def set_tags(tags_by_id):
             tag_tuples.append((tag_name, target_node_id))
 
     # create CTE that holds the tag_tuples data
-    values_cte = WithValues(tags_values_cte_fields, tag_tuples, name='values_cte')
+    values_cte = WithValues(tags_values_cte_fields, tag_tuples, name="values_cte")
 
     # create another CTE which will RIGHT join against the tag table, so we get all of our
     # tag_tuple data back, plus the tag_id if it exists. Ideally we wouldn't normally use a RIGHT
@@ -166,11 +165,11 @@ def set_tags(tags_by_id):
         .annotate(
             tag=values_cte.col.tag,
             node_id=values_cte.col.node_id,
-            tag_id=F('id'),
+            tag_id=F("id"),
         )
-        .values('tag', 'node_id', 'tag_id')
+        .values("tag", "node_id", "tag_id")
     )
-    tags_cte = With(tags_qs, name='tags_cte')
+    tags_cte = With(tags_qs, name="tags_cte")
 
     # the final query, we RIGHT join against the tag relation table so we get the tag_tuple back
     # again, plus the tag_id from the previous CTE, plus annotate a boolean of whether
@@ -180,7 +179,7 @@ def set_tags(tags_by_id):
             CTEQuerySet(model=ContentNode.tags.through),
             contenttag_id=tags_cte.col.tag_id,
             contentnode_id=tags_cte.col.node_id,
-            _join_type=RIGHT_JOIN
+            _join_type=RIGHT_JOIN,
         )
         .with_cte(values_cte)
         .with_cte(tags_cte)
@@ -188,9 +187,9 @@ def set_tags(tags_by_id):
             tag_name=tags_cte.col.tag,
             node_id=tags_cte.col.node_id,
             tag_id=tags_cte.col.tag_id,
-            has_relation=IsNull('contentnode_id', negate=True)
+            has_relation=IsNull("contentnode_id", negate=True),
         )
-        .values('tag_name', 'node_id', 'tag_id', 'has_relation')
+        .values("tag_name", "node_id", "tag_id", "has_relation")
     )
 
     created_tags = {}
@@ -209,7 +208,9 @@ def set_tags(tags_by_id):
             if tag_name in created_tags:
                 tag_id = created_tags[tag_name]
             else:
-                tag, _ = ContentTag.objects.get_or_create(tag_name=tag_name, channel_id=None)
+                tag, _ = ContentTag.objects.get_or_create(
+                    tag_name=tag_name, channel_id=None
+                )
                 tag_id = tag.pk
                 created_tags.update({tag_name: tag_id})
 
@@ -284,11 +285,17 @@ class CompletionCriteriaSerializer(JSONFieldDictSerializer):
 
     def update(self, instance, validated_data):
         validated_data = validate_and_conform_to_schema_threshold_none(validated_data)
-        return super(CompletionCriteriaSerializer, self).update(instance, validated_data)
+        return super(CompletionCriteriaSerializer, self).update(
+            instance, validated_data
+        )
 
 
 class ExtraFieldsOptionsSerializer(JSONFieldDictSerializer):
-    modality = ChoiceField(choices=(("QUIZ", "Quiz"),), allow_null=True, required=False)
+    modality = ChoiceField(
+        choices=(("QUIZ", "Quiz"), ("SURVEY", "Survey")),
+        allow_null=True,
+        required=False,
+    )
     completion_criteria = CompletionCriteriaSerializer(required=False)
 
 
@@ -302,7 +309,11 @@ class InheritedMetadataSerializer(JSONFieldDictSerializer):
 class ExtraFieldsSerializer(JSONFieldDictSerializer):
     randomize = BooleanField()
     options = ExtraFieldsOptionsSerializer(required=False)
-    suggested_duration_type = ChoiceField(choices=[completion_criteria.TIME, completion_criteria.APPROX_TIME], allow_null=True, required=False)
+    suggested_duration_type = ChoiceField(
+        choices=[completion_criteria.TIME, completion_criteria.APPROX_TIME],
+        allow_null=True,
+        required=False,
+    )
     inherited_metadata = InheritedMetadataSerializer(required=False)
 
     def update(self, instance, validated_data):
@@ -334,7 +345,9 @@ class MetadataLabelsField(JSONFieldDictSerializer):
     def get_fields(self):
         fields = {}
         for label_id, label_name in self.choices:
-            field = MetadataLabelBooleanField(required=False, label=label_name, allow_null=True)
+            field = MetadataLabelBooleanField(
+                required=False, label=label_name, allow_null=True
+            )
             fields[label_id] = field
 
         return fields
@@ -356,8 +369,12 @@ class ContentNodeSerializer(BulkModelSerializer):
     # Fields for metadata labels
     grade_levels = MetadataLabelsField(levels.choices, required=False)
     resource_types = MetadataLabelsField(resource_type.choices, required=False)
-    learning_activities = MetadataLabelsField(learning_activities.choices, required=False)
-    accessibility_labels = MetadataLabelsField(accessibility_categories.choices, required=False)
+    learning_activities = MetadataLabelsField(
+        learning_activities.choices, required=False
+    )
+    accessibility_labels = MetadataLabelsField(
+        accessibility_categories.choices, required=False
+    )
     categories = MetadataLabelsField(subjects.choices, required=False)
     learner_needs = MetadataLabelsField(needs.choices, required=False)
 
@@ -419,12 +436,18 @@ class ContentNodeSerializer(BulkModelSerializer):
         return data
 
     def _check_completion_criteria(self, kind, complete, validated_data):
-        completion_criteria = validated_data.get("extra_fields", {}).get("options", {}).get("completion_criteria", {})
+        completion_criteria = (
+            validated_data.get("extra_fields", {})
+            .get("options", {})
+            .get("completion_criteria", {})
+        )
         try:
             if complete:
                 completion_criteria_validator.validate(completion_criteria, kind)
             else:
-                completion_criteria_validator.check_model_for_kind(completion_criteria, kind)
+                completion_criteria_validator.check_model_for_kind(
+                    completion_criteria, kind
+                )
         except DjangoValidationError as e:
             raise ValidationError(e)
 
@@ -442,8 +465,13 @@ class ContentNodeSerializer(BulkModelSerializer):
                     user_id = self.context["request"].user.id
                 Change.create_change(
                     generate_update_event(
-                        instance.id, CONTENTNODE, {"complete": False}, channel_id=instance.get_channel_id()
-                    ), created_by_id=user_id, applied=True
+                        instance.id,
+                        CONTENTNODE,
+                        {"complete": False},
+                        channel_id=instance.get_channel_id(),
+                    ),
+                    created_by_id=user_id,
+                    applied=True,
                 )
 
     def create(self, validated_data):
@@ -451,7 +479,11 @@ class ContentNodeSerializer(BulkModelSerializer):
         if "tags" in validated_data:
             tags = validated_data.pop("tags")
 
-        self._check_completion_criteria(validated_data.get("kind"), validated_data.get("complete", False), validated_data)
+        self._check_completion_criteria(
+            validated_data.get("kind"),
+            validated_data.get("complete", False),
+            validated_data,
+        )
 
         instance = super(ContentNodeSerializer, self).create(validated_data)
 
@@ -473,7 +505,11 @@ class ContentNodeSerializer(BulkModelSerializer):
             tags = validated_data.pop("tags")
             set_tags({instance.id: tags})
 
-        self._check_completion_criteria(validated_data.get("kind", instance.kind_id), validated_data.get("complete", instance.complete), validated_data)
+        self._check_completion_criteria(
+            validated_data.get("kind", instance.kind_id),
+            validated_data.get("complete", instance.complete),
+            validated_data,
+        )
 
         instance = super(ContentNodeSerializer, self).update(instance, validated_data)
 
@@ -482,7 +518,7 @@ class ContentNodeSerializer(BulkModelSerializer):
 
 
 def retrieve_thumbail_src(item):
-    """ Get either the encoding or the url to use as the <img> src attribute """
+    """Get either the encoding or the url to use as the <img> src attribute"""
     try:
         if item.get("thumbnail_encoding"):
             encoding = json.loads(item.get("thumbnail_encoding"))
@@ -669,47 +705,64 @@ def dict_if_none(obj, field_name=None):
 
 class ContentNodePagination(ValuesViewsetCursorPagination):
     """
-    A simplified cursor pagination class for ContentNodeViewSet.
-    Instead of using an opaque cursor, it uses the lft value for filtering.
-    As such, if this pagination scheme is used without applying a filter
-    that will guarantee membership to a specific MPTT tree, such as parent
-    or tree_id, the pagination scheme will not be predictable.
+    A simplified cursor pagination class
+    Instead of using a fixed 'lft' cursor, it dynamically sets the pagination field and operator
+    based on the incoming `ordering` query parameter.
     """
-    cursor_query_param = "lft__gt"
-    ordering = "lft"
+
     page_size_query_param = "max_results"
     max_page_size = 100
 
+    def get_pagination_params(self):
+        # Default ordering is "lft" if not provided.
+        ordering_param = self.request.query_params.get("ordering", "lft")
+        # Remove the leading '-' if present to get the field name.
+        pagination_field = ordering_param.lstrip("-")
+        # Determine operator: if ordering starts with '-', use __lt; otherwise __gt.
+        operator = "__lt" if ordering_param.startswith("-") else "__gt"
+        return pagination_field, operator
+
     def decode_cursor(self, request):
         """
-        Given a request with a cursor, return a `Cursor` instance.
+        Given a request with a cursor parameter, return a `Cursor` instance.
+        The cursor parameter name is dynamically built from the pagination field and operator.
         """
-        # Determine if we have a cursor, and if so then decode it.
-        value = request.query_params.get(self.cursor_query_param)
+        pagination_field, operator = self.get_pagination_params()
+        cursor_param = f"{pagination_field}{operator}"
+        value = request.query_params.get(cursor_param)
         if value is None:
             return None
 
-        try:
-            value = int(value)
-        except ValueError:
-            raise ValidationError("lft must be an integer but an invalid value was given.")
+        if pagination_field == "lft":
+            try:
+                value = int(value)
+            except ValueError:
+                raise ValidationError(
+                    "lft must be an integer but an invalid value was given."
+                )
 
         return Cursor(offset=0, reverse=False, position=value)
 
     def encode_cursor(self, cursor):
         """
-        Given a Cursor instance, return an url with query parameter.
+        Given a Cursor instance, return a URL with the dynamic pagination cursor query parameter.
         """
-        return replace_query_param(self.base_url, self.cursor_query_param, str(cursor.position))
+        pagination_field, operator = self.get_pagination_params()
+        cursor_param = f"{pagination_field}{operator}"
+        return replace_query_param(self.base_url, cursor_param, str(cursor.position))
 
     def get_more(self):
+        """
+        Construct a "more" URL (or query parameters) that includes the pagination cursor
+        built from the dynamic field and operator.
+        """
+        pagination_field, operator = self.get_pagination_params()
+        cursor_param = f"{pagination_field}{operator}"
         position, offset = self._get_more_position_offset()
         if position is None and offset is None:
             return None
         params = self.request.query_params.copy()
-        params.update({
-            self.cursor_query_param: position,
-        })
+        params.update({cursor_param: position})
         return params
 
 
@@ -782,7 +835,9 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         "grade_levels": partial(dict_if_none, field_name="grade_levels"),
         "resource_types": partial(dict_if_none, field_name="resource_types"),
         "learning_activities": partial(dict_if_none, field_name="learning_activities"),
-        "accessibility_labels": partial(dict_if_none, field_name="accessibility_labels"),
+        "accessibility_labels": partial(
+            dict_if_none, field_name="accessibility_labels"
+        ),
         "categories": partial(dict_if_none, field_name="categories"),
         "learner_needs": partial(dict_if_none, field_name="learner_needs"),
         "extra_fields": consolidate_extra_fields,
@@ -852,12 +907,16 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
             # We don't really need more than one queued async calculation task, so we use
             # fetch_or_enqueue to ensure a task is queued, as well as return info about it
             task_args = dict(node_id=node.pk, channel_id=node.channel_id)
-            calculate_resource_size_task.fetch_or_enqueue(self.request.user, **task_args)
+            calculate_resource_size_task.fetch_or_enqueue(
+                self.request.user, **task_args
+            )
 
-        return Response({
-            "size": size,
-            "stale": stale,
-        })
+        return Response(
+            {
+                "size": size,
+                "stale": stale,
+            }
+        )
 
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(total_count=(F("rght") - F("lft") - 1) / 2)
@@ -919,7 +978,8 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         queryset = queryset.annotate(
             resource_count=SQCount(descendant_resources, field="id"),
             coach_count=SQCount(
-                descendant_resources.filter(role_visibility=roles.COACH), field="id",
+                descendant_resources.filter(role_visibility=roles.COACH),
+                field="id",
             ),
             assessment_item_count=SQCount(assessment_items, field="assessment_id"),
             error_count=SQCount(descendant_errors, field="id"),
@@ -1018,7 +1078,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         position=None,
         mods=None,
         excluded_descendants=None,
-        **kwargs
+        **kwargs,
     ):
         target, position = self.validate_targeting_args(target, position)
 
@@ -1037,7 +1097,9 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
             ContentNode.filter_by_pk(pk=source.id), user=self.request.user
         ).exists()
 
-        with create_change_tracker(pk, CONTENTNODE, channel_id, self.request.user, "copy_nodes") as progress_tracker:
+        with create_change_tracker(
+            pk, CONTENTNODE, channel_id, self.request.user, "copy_nodes"
+        ) as progress_tracker:
             new_node = source.copy_to(
                 target,
                 position,
@@ -1052,8 +1114,11 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
                 generate_update_event(
                     pk,
                     CONTENTNODE,
-                    {COPYING_STATUS: COPYING_STATUS_VALUES.SUCCESS, "node_id": new_node.node_id},
-                    channel_id=channel_id
+                    {
+                        COPYING_STATUS: COPYING_STATUS_VALUES.SUCCESS,
+                        "node_id": new_node.node_id,
+                    },
+                    channel_id=channel_id,
                 ),
                 applied=True,
                 created_by_id=self.request.user.id,
@@ -1074,19 +1139,23 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
                     channel_id=change["channel_id"],
                 ),
                 created_by_id=change["created_by_id"],
-                applied=True
+                applied=True,
             )
 
     def update_descendants(self, pk, mods):
-        """ Update a node and all of its descendants with the given mods """
+        """Update a node and all of its descendants with the given mods"""
         root = ContentNode.objects.get(id=pk)
 
         if root.kind_id != content_kinds.TOPIC:
             raise ValidationError("Only topics can have descendants to update")
 
-        descendantsIds = root.get_descendants(include_self=True).values_list("id", flat=True)
+        descendantsIds = root.get_descendants(include_self=True).values_list(
+            "id", flat=True
+        )
 
-        changes = [{"key": descendantId, "mods": mods} for descendantId in descendantsIds]
+        changes = [
+            {"key": descendantId, "mods": mods} for descendantId in descendantsIds
+        ]
 
         # Bulk update
         return self.update_from_changes(changes)
@@ -1101,5 +1170,4 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
                 log_sync_exception(e, user=self.request.user, change=change)
                 change["errors"] = [str(e)]
                 errors.append(change)
-        print("errorsv", errors)
         return errors

@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-named-as-default
 import Dexie from 'dexie';
 import sortBy from 'lodash/sortBy';
 import logging from '../logging';
@@ -13,6 +14,7 @@ const {
   UPDATED,
   MOVED,
   PUBLISHED,
+  PUBLISHED_NEXT,
   SYNCED,
   DEPLOYED,
   UPDATED_DESCENDANTS,
@@ -39,6 +41,7 @@ export function collectChanges(changes) {
         [UPDATED]: [],
         [MOVED]: [],
         [PUBLISHED]: [],
+        [PUBLISHED_NEXT]: [],
         [SYNCED]: [],
         [DEPLOYED]: [],
         [UPDATED_DESCENDANTS]: [],
@@ -183,7 +186,7 @@ class ReturnedChanges extends ChangeDispatcher {
             data.payload.id = key;
             return resource.tableCopy(data);
           });
-        }
+        },
       );
     });
   }
@@ -303,7 +306,7 @@ class ResourceCounts extends ChangeDispatcher {
   async applyCreate(change) {
     await this.resource.updateAncestors(
       { id: change.key, ignoreChanges: true },
-      this._applyDiff.bind(this, change.obj, 1)
+      this._applyDiff.bind(this, change.obj, 1),
     );
   }
 
@@ -332,7 +335,7 @@ class ResourceCounts extends ChangeDispatcher {
   async applyDelete(change) {
     await this.resource.updateAncestors(
       { id: change.key, ignoreChanges: true },
-      this._applyDiff.bind(this, change.oldObj, -1)
+      this._applyDiff.bind(this, change.oldObj, -1),
     );
   }
 
@@ -349,11 +352,11 @@ class ResourceCounts extends ChangeDispatcher {
     const node = await this.table.get(change.key);
     await this.resource.updateAncestors(
       { id: change.oldObj.parent, includeSelf: true, ignoreChanges: true },
-      this._applyDiff.bind(this, node, -1)
+      this._applyDiff.bind(this, node, -1),
     );
     await this.resource.updateAncestors(
       { id: change.parent, includeSelf: true, ignoreChanges: true },
-      this._applyDiff.bind(this, node, 1)
+      this._applyDiff.bind(this, node, 1),
     );
   }
 
@@ -365,7 +368,7 @@ class ResourceCounts extends ChangeDispatcher {
     const node = await this.table.get(change.key);
     await this.resource.updateAncestors(
       { id: change.key, ignoreChanges: true },
-      this._applyDiff.bind(this, node, 1)
+      this._applyDiff.bind(this, node, 1),
     );
   }
 }

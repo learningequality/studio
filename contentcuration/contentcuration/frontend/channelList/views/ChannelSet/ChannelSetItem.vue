@@ -1,46 +1,56 @@
 <template>
 
   <tr :to="channelSetDetailsLink">
-    <td class="notranslate" dir="auto">
+    <td
+      class="notranslate"
+      dir="auto"
+    >
       {{ channelSet.name }}
     </td>
-    <td style="width: 224px;">
-      <CopyToken v-if="channelSet.secret_token" :token="channelSet.secret_token" />
+    <td style="width: 224px">
+      <CopyToken
+        v-if="channelSet.secret_token"
+        :token="channelSet.secret_token"
+      />
       <!-- TODO: Remove this once syncNow is ready for use -->
-      <em v-else class="grey--text">{{ $tr('saving') }}</em>
+      <em
+        v-else
+        class="grey--text"
+      >{{ $tr('saving') }}</em>
     </td>
     <td class="text-xs-right">
       {{ $formatNumber(channelCount) }}
     </td>
     <td class="text-xs-right">
-      <Menu>
+      <BaseMenu>
         <template #activator="{ on }">
-          <VBtn flat block v-on="on">
+          <VBtn
+            flat
+            block
+            v-on="on"
+          >
             {{ $tr('options') }}
-            <Icon
-              icon="dropdown"
-            />
+            <Icon icon="dropdown" />
           </VBtn>
         </template>
         <VList>
-          <VListTile data-test="edit" :to="channelSetDetailsLink">
+          <VListTile
+            data-test="edit"
+            :to="channelSetDetailsLink"
+          >
             <VListTileAction>
-              <Icon
-                icon="edit"
-              />
+              <Icon icon="edit" />
             </VListTileAction>
             <VListTileTitle>{{ $tr('edit') }}</VListTileTitle>
           </VListTile>
           <VListTile @click.prevent="deleteDialog = true">
             <VListTileAction>
-              <Icon
-                icon="trash"
-              />
+              <Icon icon="trash" />
             </VListTileAction>
             <VListTileTitle>{{ $tr('delete') }}</VListTileTitle>
           </VListTile>
         </VList>
-      </Menu>
+      </BaseMenu>
       <MessageDialog
         v-model="deleteDialog"
         :header="$tr('deleteChannelSetTitle')"
@@ -48,13 +58,20 @@
       >
         <template #buttons="{ close }">
           <VSpacer />
-          <VBtn flat color="primary" @click="close">
+          <VBtn
+            flat
+            color="primary"
+            @click="close"
+          >
             {{ $tr('cancel') }}
           </VBtn>
           <VBtn
             color="primary"
             data-test="delete"
-            @click="deleteChannelSet(channelSet); close()"
+            @click="
+              deleteChannelSet(channelSet);
+              close();
+            "
           >
             {{ $tr('deleteChannelSetTitle') }}
           </VBtn>
@@ -64,6 +81,7 @@
   </tr>
 
 </template>
+
 
 <script>
 
@@ -123,7 +141,7 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   td {
     font-size: 12pt !important;

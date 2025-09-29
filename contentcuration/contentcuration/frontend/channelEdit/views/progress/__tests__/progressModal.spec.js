@@ -53,7 +53,7 @@ describe('ProgressModal', () => {
     const store = storeFactory(STORE_CONFIG);
     const wrapper = makeWrapper({ store });
 
-    expect(wrapper.isVueInstance()).toBe(true);
+    expect(wrapper.exists()).toBe(true);
   });
 
   describe('when publishing as a user with publish permissions', () => {

@@ -137,6 +137,9 @@ class ContentNodeAPIBase(object):
                 "learning_activities": expected.learning_activities.split(",")
                 if expected.learning_activities
                 else [],
+                "learner_needs": expected.learner_needs.split(",")
+                if expected.learner_needs
+                else [],
                 "grade_levels": expected.grade_levels.split(",")
                 if expected.grade_levels
                 else [],
@@ -192,9 +195,13 @@ class ContentNodeAPIBase(object):
         nodes = self.root.get_descendants(include_self=True).filter(available=True)
         response = self._get(reverse("publiccontentnode-list"), data={"max_results": 1})
         node_languages = Language.objects.filter(contentnode__in=nodes)
-        self.assertEqual(len(response.data["labels"]["languages"]), node_languages.distinct().count())
+        self.assertEqual(
+            len(response.data["labels"]["languages"]), node_languages.distinct().count()
+        )
         for lang in response.data["labels"]["languages"]:
-            self.assertTrue(node_languages.filter(native_name=lang["lang_name"]).exists())
+            self.assertTrue(
+                node_languages.filter(native_name=lang["lang_name"]).exists()
+            )
 
     def test_contentnode_list_headers(self):
         channel = models.ChannelMetadata.objects.get()
@@ -438,22 +445,16 @@ class ContentNodeAPITestCase(ContentNodeAPIBase, APITestCase):
         self.assertEqual(response.data["lang_name"], None)
 
     def test_channelmetadata_content_available_param_filter_lowercase_true(self):
-        response = self.client.get(
-            reverse("publicchannel-list"), {"available": "true"}
-        )
+        response = self.client.get(reverse("publicchannel-list"), {"available": "true"})
         self.assertEqual(response.data[0]["id"], self.channel_data["id"])
 
     def test_channelmetadata_content_available_param_filter_uppercase_true(self):
-        response = self.client.get(
-            reverse("publicchannel-list"), {"available": True}
-        )
+        response = self.client.get(reverse("publicchannel-list"), {"available": True})
         self.assertEqual(response.data[0]["id"], self.channel_data["id"])
 
     def test_channelmetadata_content_unavailable_param_filter_false(self):
         models.ContentNode.objects.all().update(available=False)
-        response = self.client.get(
-            reverse("publicchannel-list"), {"available": False}
-        )
+        response = self.client.get(reverse("publicchannel-list"), {"available": False})
         self.assertEqual(response.data[0]["id"], self.channel_data["id"])
 
     def test_channelmetadata_content_available_field_true(self):
@@ -495,7 +496,9 @@ class ContentNodeAPITestCase(ContentNodeAPIBase, APITestCase):
             reverse("publicchannel-list"), {"has_exercise": True}
         )
         self.assertEqual(len(with_filter_response.data), 1)
-        self.assertEqual(with_filter_response.data[0]["name"], self.channel_data["name"])
+        self.assertEqual(
+            with_filter_response.data[0]["name"], self.channel_data["name"]
+        )
 
     def test_filtering_coach_content_anon(self):
         response = self.client.get(

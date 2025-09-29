@@ -8,7 +8,10 @@
       {{ details }}
     </template>
     <template #actions>
-      <ActionLink v-bind="backHomeLink" :text="$tr('goToHomePageAction')" />
+      <ActionLink
+        v-bind="backHomeLink"
+        :text="$tr('goToHomePageAction')"
+      />
     </template>
   </AppError>
 
@@ -44,4 +47,4 @@
 </script>
 
 
-<style lang="less" scoped></style>
+<style lang="scss" scoped></style>

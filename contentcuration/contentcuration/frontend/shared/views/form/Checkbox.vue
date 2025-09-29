@@ -1,6 +1,7 @@
 <template>
 
   <KCheckbox
+    ref="checkbox"
     :value="value"
     :label="label"
     :showLabel="showLabel"
@@ -15,6 +16,7 @@
   </KCheckbox>
 
 </template>
+
 
 <script>
 
@@ -143,15 +145,21 @@
       updateInputValue(newValue) {
         this.$emit('input', newValue);
       },
+      /**
+       * @public
+       */
+      focus() {
+        this.$refs.checkbox.focus();
+      },
     },
   };
 
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  /deep/ label.theme--light {
+  ::v-deep label.theme--light {
     padding: 0 8px;
     color: var(--v-text);
   }

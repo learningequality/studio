@@ -2,14 +2,17 @@
 
   <VContainer class="mx-0 px-0">
     <!-- Filters -->
-    <VLayout row wrap>
+    <VLayout
+      row
+      wrap
+    >
       <DropdownWrapper
         component="VFlex"
         sm6
-        md5
-        lg4
-        xl3
-        class="pr-4"
+        md6
+        lg6
+        xl6
+        class="pr-3"
       >
         <template #default="{ attach, menuProps }">
           <VSelect
@@ -23,7 +26,12 @@
           />
         </template>
       </DropdownWrapper>
-      <VFlex sm6 md5 lg4 xl3 class="pr-5">
+      <VFlex
+        sm6
+        md6
+        lg6
+        xl6
+      >
         <LanguageDropdown v-model="languageFilter" />
       </VFlex>
     </VLayout>
@@ -36,11 +44,15 @@
     <div v-else>
       <ChannelInfoCard
         v-for="channel in channels"
+        :ref="setFirstChannelCardRef"
         :key="channel.id"
         :channel="channel"
         class="mb-3"
       />
-      <VLayout justify-center class="mt-4">
+      <VLayout
+        justify-center
+        class="mt-4"
+      >
         <Pagination :totalPages="pageCount" />
       </VLayout>
     </div>
@@ -76,6 +88,7 @@
         channels: [],
         pageCount: 0,
         loading: false,
+        firstChannelCardRef: null,
       };
     },
     computed: {
@@ -120,6 +133,7 @@
       ...mapActions('importFromChannels', ['loadChannels']),
       loadPage() {
         this.loading = true;
+        this.firstChannelCardRef = null;
         this.loadChannels({
           languages: this.languageFilter,
           [this.channelFilter]: true,
@@ -132,6 +146,19 @@
           this.channels = page.results;
           this.loading = false;
         });
+      },
+      setFirstChannelCardRef(ref) {
+        if (!this.firstChannelCardRef) {
+          this.firstChannelCardRef = ref;
+        }
+      },
+      /**
+       * @public
+       */
+      focus() {
+        if (this.firstChannelCardRef) {
+          this.firstChannelCardRef.focus();
+        }
       },
     },
     $trs: {

@@ -20,7 +20,7 @@
  * one at http://mozilla.org/MPL/2.0/.
  */
 
-(function() {
+(function () {
   var jQuery = require('jquery'),
     undefined,
     mqCmdId = 'mathquill-command-id',
@@ -41,7 +41,7 @@
   var __slice = [].slice;
   function variadic(fn) {
     var numFixedArgs = fn.length - 1;
-    return function() {
+    return function () {
       var args = __slice.call(arguments, 0, numFixedArgs);
       var varArg = __slice.call(arguments, numFixedArgs);
       return fn.apply(this, args.concat([varArg]));
@@ -63,8 +63,8 @@
    *   sendMethod(obj2, 3); // => 5
    *   sendMethod(obj2, 4); // => 6
    */
-  var send = variadic(function(method, args) {
-    return variadic(function(obj, moreArgs) {
+  var send = variadic(function (method, args) {
+    return variadic(function (obj, moreArgs) {
       if (method in obj) return obj[method].apply(obj, args.concat(moreArgs));
     });
   });
@@ -95,9 +95,9 @@
    *   // .method() method, so that just fails silently.
    */
   function iterator(generator) {
-    return variadic(function(fn, args) {
+    return variadic(function (fn, args) {
       if (typeof fn !== 'function') fn = send(fn);
-      var yield_ = function(obj) {
+      var yield_ = function (obj) {
         return fn.apply(obj, [obj].concat(args));
       };
       return generator.call(this, yield_);
@@ -110,7 +110,7 @@
    */
   function bind(cons /*, args... */) {
     var args = __slice.call(arguments, 1);
-    return function() {
+    return function () {
       return cons.apply(this, args);
     };
   }
@@ -128,7 +128,7 @@
   function pray(message, cond) {
     if (!cond) throw new Error('prayer failed: ' + message);
   }
-  var P = (function(prototype, ownProperty, undefined) {
+  var P = (function (prototype, ownProperty, undefined) {
     // helper functions that also help minification
     function isObject(o) {
       return typeof o === 'object';
@@ -180,11 +180,11 @@
       // set the constructor property on the prototype, for convenience
       proto.constructor = C;
 
-      C.extend = function(def) {
+      C.extend = function (def) {
         return P(C, def);
       };
 
-      return (C.open = function(def) {
+      return (C.open = function (def) {
         extensions = {};
 
         if (isFunction(def)) {
@@ -268,27 +268,27 @@
    * uses `this.constructor()` everywhere (hence calling `$`), but never ever does
    * `this.constructor.find` or anything like that, always doing `jQuery.find`.
    */
-  var $ = P(jQuery, function(_) {
-    _.insDirOf = function(dir, el) {
+  var $ = P(jQuery, function (_) {
+    _.insDirOf = function (dir, el) {
       return dir === L ? this.insertBefore(el.first()) : this.insertAfter(el.last());
     };
-    _.insAtDirEnd = function(dir, el) {
+    _.insAtDirEnd = function (dir, el) {
       return dir === L ? this.prependTo(el) : this.appendTo(el);
     };
   });
 
-  var Point = P(function(_) {
+  var Point = P(function (_) {
     _.parent = 0;
     _[L] = 0;
     _[R] = 0;
 
-    _.init = function(parent, leftward, rightward) {
+    _.init = function (parent, leftward, rightward) {
       this.parent = parent;
       this[L] = leftward;
       this[R] = rightward;
     };
 
-    this.copy = function(pt) {
+    this.copy = function (pt) {
       return Point(pt.parent, pt[L], pt[R]);
     };
   });
@@ -296,7 +296,7 @@
   /**
    * MathQuill virtual-DOM tree-node abstract base class
    */
-  var Node = P(function(_) {
+  var Node = P(function (_) {
     _[L] = 0;
     _[R] = 0;
     _.parent = 0;
@@ -307,7 +307,7 @@
     }
     this.byId = {};
 
-    _.init = function() {
+    _.init = function () {
       this.id = uniqueNodeId();
       Node.byId[this.id] = this;
 
@@ -316,19 +316,19 @@
       this.ends[R] = 0;
     };
 
-    _.dispose = function() {
+    _.dispose = function () {
       delete Node.byId[this.id];
     };
 
-    _.toString = function() {
+    _.toString = function () {
       return '{{ MathQuill Node #' + this.id + ' }}';
     };
 
     _.jQ = $();
-    _.jQadd = function(jQ) {
+    _.jQadd = function (jQ) {
       return (this.jQ = this.jQ.add(jQ));
     };
-    _.jQize = function(jQ) {
+    _.jQize = function (jQ) {
       // jQuery-ifies this.html() and links up the .jQ of all corresponding Nodes
       var jQ = $(jQ || this.html());
 
@@ -348,7 +348,7 @@
       return jQ;
     };
 
-    _.createDir = function(dir, cursor) {
+    _.createDir = function (dir, cursor) {
       prayDirection(dir);
       var node = this;
       node.jQize();
@@ -356,15 +356,15 @@
       cursor[dir] = node.adopt(cursor.parent, cursor[L], cursor[R]);
       return node;
     };
-    _.createLeftOf = function(el) {
+    _.createLeftOf = function (el) {
       return this.createDir(L, el);
     };
 
-    _.selectChildren = function(leftEnd, rightEnd) {
+    _.selectChildren = function (leftEnd, rightEnd) {
       return Selection(leftEnd, rightEnd);
     };
 
-    _.bubble = iterator(function(yield_) {
+    _.bubble = iterator(function (yield_) {
       for (var ancestor = this; ancestor; ancestor = ancestor.parent) {
         var result = yield_(ancestor);
         if (result === false) break;
@@ -373,7 +373,7 @@
       return this;
     });
 
-    _.postOrder = iterator(function(yield_) {
+    _.postOrder = iterator(function (yield_) {
       (function recurse(descendant) {
         descendant.eachChild(recurse);
         yield_(descendant);
@@ -382,40 +382,40 @@
       return this;
     });
 
-    _.isEmpty = function() {
+    _.isEmpty = function () {
       return this.ends[L] === 0 && this.ends[R] === 0;
     };
 
-    _.children = function() {
+    _.children = function () {
       return Fragment(this.ends[L], this.ends[R]);
     };
 
-    _.eachChild = function() {
+    _.eachChild = function () {
       var children = this.children();
       children.each.apply(children, arguments);
       return this;
     };
 
-    _.foldChildren = function(fold, fn) {
+    _.foldChildren = function (fold, fn) {
       return this.children().fold(fold, fn);
     };
 
-    _.withDirAdopt = function(dir, parent, withDir, oppDir) {
+    _.withDirAdopt = function (dir, parent, withDir, oppDir) {
       Fragment(this, this).withDirAdopt(dir, parent, withDir, oppDir);
       return this;
     };
 
-    _.adopt = function(parent, leftward, rightward) {
+    _.adopt = function (parent, leftward, rightward) {
       Fragment(this, this).adopt(parent, leftward, rightward);
       return this;
     };
 
-    _.disown = function() {
+    _.disown = function () {
       Fragment(this, this).disown();
       return this;
     };
 
-    _.remove = function() {
+    _.remove = function () {
       this.jQ.remove();
       this.postOrder('dispose');
       return this.disown();
@@ -426,24 +426,24 @@
     pray('a parent is always present', parent);
     pray(
       'leftward is properly set up',
-      (function() {
+      (function () {
         // either it's empty and `rightward` is the left end child (possibly empty)
         if (!leftward) return parent.ends[L] === rightward;
 
         // or it's there and its [R] and .parent are properly set up
         return leftward[R] === rightward && leftward.parent === parent;
-      })()
+      })(),
     );
 
     pray(
       'rightward is properly set up',
-      (function() {
+      (function () {
         // either it's empty and `leftward` is the right end child (possibly empty)
         if (!rightward) return parent.ends[R] === leftward;
 
         // or it's there and its [L] and .parent are properly set up
         return rightward[L] === leftward && rightward.parent === parent;
-      })()
+      })(),
     );
   }
 
@@ -459,8 +459,8 @@
    * DocumentFragment, whose contents must be detached from the visible tree
    * and have their 'parent' pointers set to the DocumentFragment).
    */
-  var Fragment = P(function(_) {
-    _.init = function(withDir, oppDir, dir) {
+  var Fragment = P(function (_) {
+    _.init = function (withDir, oppDir, dir) {
       if (dir === undefined) dir = L;
       prayDirection(dir);
 
@@ -484,7 +484,7 @@
       // quadratic time in the number of elements.
       //
       // https://github.com/jquery/jquery/blob/2.1.4/src/traversing.js#L112
-      var accum = this.fold([], function(accum, el) {
+      var accum = this.fold([], function (accum, el) {
         accum.push.apply(accum, el.jQ.get());
         return accum;
       });
@@ -494,10 +494,10 @@
     _.jQ = $();
 
     // like Cursor::withDirInsertAt(dir, parent, withDir, oppDir)
-    _.withDirAdopt = function(dir, parent, withDir, oppDir) {
+    _.withDirAdopt = function (dir, parent, withDir, oppDir) {
       return dir === L ? this.adopt(parent, withDir, oppDir) : this.adopt(parent, oppDir, withDir);
     };
-    _.adopt = function(parent, leftward, rightward) {
+    _.adopt = function (parent, leftward, rightward) {
       prayWellFormed(parent, leftward, rightward);
 
       var self = this;
@@ -523,7 +523,7 @@
 
       self.ends[R][R] = rightward;
 
-      self.each(function(el) {
+      self.each(function (el) {
         el[L] = leftward;
         el.parent = parent;
         if (leftward) leftward[R] = el;
@@ -534,7 +534,7 @@
       return self;
     };
 
-    _.disown = function() {
+    _.disown = function () {
       var self = this;
       var leftEnd = self.ends[L];
 
@@ -564,13 +564,13 @@
       return self;
     };
 
-    _.remove = function() {
+    _.remove = function () {
       this.jQ.remove();
       this.each('postOrder', 'dispose');
       return this.disown();
     };
 
-    _.each = iterator(function(yield_) {
+    _.each = iterator(function (yield_) {
       var self = this;
       var el = self.ends[L];
       if (!el) return self;
@@ -583,8 +583,8 @@
       return self;
     });
 
-    _.fold = function(fold, fn) {
-      this.each(function(el) {
+    _.fold = function (fold, fn) {
+      this.each(function (el) {
         fold = fn.call(this, fold, el);
       });
 
@@ -612,21 +612,21 @@ textbox, but any one HTML document can contain many such textboxes, so any one
 JS environment could actually contain many instances. */
 
   //A fake cursor in the fake textbox that the math is rendered in.
-  var Cursor = P(Point, function(_) {
-    _.init = function(initParent, options) {
+  var Cursor = P(Point, function (_) {
+    _.init = function (initParent, options) {
       this.parent = initParent;
       this.options = options;
 
       var jQ = (this.jQ = this._jQ = $('<span class="mq-cursor">&#8203;</span>'));
       //closured for setInterval
-      this.blink = function() {
+      this.blink = function () {
         jQ.toggleClass('mq-blink');
       };
 
       this.upDownCache = {};
     };
 
-    _.show = function() {
+    _.show = function () {
       this.jQ = this._jQ.removeClass('mq-blink');
       if ('intervalId' in this)
         //already was shown, just restart interval
@@ -643,7 +643,7 @@ JS environment could actually contain many instances. */
       this.intervalId = setInterval(this.blink, 500);
       return this;
     };
-    _.hide = function() {
+    _.hide = function () {
       if ('intervalId' in this) clearInterval(this.intervalId);
       delete this.intervalId;
       this.jQ.detach();
@@ -651,7 +651,7 @@ JS environment could actually contain many instances. */
       return this;
     };
 
-    _.withDirInsertAt = function(dir, parent, withDir, oppDir) {
+    _.withDirInsertAt = function (dir, parent, withDir, oppDir) {
       var oldParent = this.parent;
       this.parent = parent;
       this[dir] = withDir;
@@ -661,31 +661,31 @@ JS environment could actually contain many instances. */
       // FIXME pass cursor to .blur() so text can fix cursor pointers when removing itself
       if (oldParent !== parent && oldParent.blur) oldParent.blur(this);
     };
-    _.insDirOf = function(dir, el) {
+    _.insDirOf = function (dir, el) {
       prayDirection(dir);
       this.jQ.insDirOf(dir, el.jQ);
       this.withDirInsertAt(dir, el.parent, el[dir], el);
       this.parent.jQ.addClass('mq-hasCursor');
       return this;
     };
-    _.insLeftOf = function(el) {
+    _.insLeftOf = function (el) {
       return this.insDirOf(L, el);
     };
-    _.insRightOf = function(el) {
+    _.insRightOf = function (el) {
       return this.insDirOf(R, el);
     };
 
-    _.insAtDirEnd = function(dir, el) {
+    _.insAtDirEnd = function (dir, el) {
       prayDirection(dir);
       this.jQ.insAtDirEnd(dir, el.jQ);
       this.withDirInsertAt(dir, el, 0, el.ends[dir]);
       el.focus();
       return this;
     };
-    _.insAtLeftEnd = function(el) {
+    _.insAtLeftEnd = function (el) {
       return this.insAtDirEnd(L, el);
     };
-    _.insAtRightEnd = function(el) {
+    _.insAtRightEnd = function (el) {
       return this.insAtDirEnd(R, el);
     };
 
@@ -697,7 +697,7 @@ JS environment could actually contain many instances. */
      *   + if not seek a position in the node that is horizontally closest to
      *     the cursor's current position
      */
-    _.jumpUpDown = function(from, to) {
+    _.jumpUpDown = function (from, to) {
       var self = this;
       self.upDownCache[from.id] = Point.copy(self);
       var cached = self.upDownCache[to.id];
@@ -708,7 +708,7 @@ JS environment could actually contain many instances. */
         to.seek(pageX, self);
       }
     };
-    _.offset = function() {
+    _.offset = function () {
       //in Opera 11.62, .getBoundingClientRect() and hence jQuery::offset()
       //returns all 0's on inline elements with negative margin-right (like
       //the cursor) at the end of their parent, so temporarily remove the
@@ -721,20 +721,20 @@ JS environment could actually contain many instances. */
       self.jQ.addClass('mq-cursor');
       return offset;
     };
-    _.unwrapGramp = function() {
+    _.unwrapGramp = function () {
       var gramp = this.parent.parent;
       var greatgramp = gramp.parent;
       var rightward = gramp[R];
       var cursor = this;
 
       var leftward = gramp[L];
-      gramp.disown().eachChild(function(uncle) {
+      gramp.disown().eachChild(function (uncle) {
         if (uncle.isEmpty()) return;
 
         uncle
           .children()
           .adopt(greatgramp, leftward, rightward)
-          .each(function(cousin) {
+          .each(function (cousin) {
             cousin.jQ.insertBefore(gramp.jQ.first());
           });
 
@@ -764,7 +764,7 @@ JS environment could actually contain many instances. */
       if (gramp[L].siblingDeleted) gramp[L].siblingDeleted(cursor.options, R);
       if (gramp[R].siblingDeleted) gramp[R].siblingDeleted(cursor.options, L);
     };
-    _.startSelection = function() {
+    _.startSelection = function () {
       var anticursor = (this.anticursor = Point.copy(this));
       var ancestors = (anticursor.ancestors = {}); // a map from each ancestor of
       // the anticursor, to its child that is also an ancestor; in other words,
@@ -773,10 +773,10 @@ JS environment could actually contain many instances. */
         ancestors[ancestor.parent.id] = ancestor;
       }
     };
-    _.endSelection = function() {
+    _.endSelection = function () {
       delete this.anticursor;
     };
-    _.select = function() {
+    _.select = function () {
       var anticursor = this.anticursor;
       if (this[L] === anticursor[L] && this.parent === anticursor.parent) return false;
 
@@ -842,7 +842,7 @@ JS environment could actually contain many instances. */
       return true;
     };
 
-    _.clearSelection = function() {
+    _.clearSelection = function () {
       if (this.selection) {
         this.selection.clear();
         delete this.selection;
@@ -850,7 +850,7 @@ JS environment could actually contain many instances. */
       }
       return this;
     };
-    _.deleteSelection = function() {
+    _.deleteSelection = function () {
       if (!this.selection) return;
 
       this[L] = this.selection.ends[L][L];
@@ -859,7 +859,7 @@ JS environment could actually contain many instances. */
       this.selectionChanged();
       delete this.selection;
     };
-    _.replaceSelection = function() {
+    _.replaceSelection = function () {
       var seln = this.selection;
       if (seln) {
         this[L] = seln.ends[L][L];
@@ -870,24 +870,24 @@ JS environment could actually contain many instances. */
     };
   });
 
-  var Selection = P(Fragment, function(_, super_) {
-    _.init = function() {
+  var Selection = P(Fragment, function (_, super_) {
+    _.init = function () {
       super_.init.apply(this, arguments);
       this.jQ = this.jQ.wrapAll('<span class="mq-selection"></span>').parent();
       //can't do wrapAll(this.jQ = $(...)) because wrapAll will clone it
     };
-    _.adopt = function() {
+    _.adopt = function () {
       this.jQ.replaceWith((this.jQ = this.jQ.children()));
       return super_.adopt.apply(this, arguments);
     };
-    _.clear = function() {
+    _.clear = function () {
       // using the browser's native .childNodes property so that we
       // don't discard text nodes.
       this.jQ.replaceWith(this.jQ[0].childNodes);
       return this;
     };
-    _.join = function(methodName) {
-      return this.fold('', function(fold, child) {
+    _.join = function (methodName) {
+      return this.fold('', function (fold, child) {
         return fold + child[methodName]();
       });
     };
@@ -900,8 +900,8 @@ JS environment could actually contain many instances. */
    *
    ********************************************/
 
-  var Controller = P(function(_) {
-    _.init = function(root, container, options) {
+  var Controller = P(function (_) {
+    _.init = function (root, container, options) {
       this.id = root.id;
       this.data = {};
 
@@ -915,7 +915,7 @@ JS environment could actually contain many instances. */
       // TODO: stop depending on root.cursor, and rm it
     };
 
-    _.handle = function(name, dir) {
+    _.handle = function (name, dir) {
       var handlers = this.options.handlers;
       if (handlers && handlers.fns[name]) {
         var mq = handlers.APIClasses[this.KIND_OF_MQ](this);
@@ -925,10 +925,10 @@ JS environment could actually contain many instances. */
     };
 
     var notifyees = [];
-    this.onNotify = function(f) {
+    this.onNotify = function (f) {
       notifyees.push(f);
     };
-    _.notify = function() {
+    _.notify = function () {
       for (var i = 0; i < notifyees.length; i += 1) {
         notifyees[i].apply(this.cursor, arguments);
       }
@@ -964,7 +964,7 @@ JS environment could actually contain many instances. */
           '    // now MathQuill.MathField() works like it used to\n' +
           '\n' +
           'See also the "`dev` branch (2014\u20132015) \u2192 v0.10.0 Migration Guide" at\n' +
-          '  https://github.com/mathquill/mathquill/wiki/%60dev%60-branch-(2014%E2%80%932015)-%E2%86%92-v0.10.0-Migration-Guide'
+          '  https://github.com/mathquill/mathquill/wiki/%60dev%60-branch-(2014%E2%80%932015)-%E2%86%92-v0.10.0-Migration-Guide',
       );
   }
   // globally exported API object
@@ -973,10 +973,10 @@ JS environment could actually contain many instances. */
     return MQ1(el);
   }
   MathQuill.prototype = Progenote.p;
-  MathQuill.interfaceVersion = function(v) {
+  MathQuill.interfaceVersion = function (v) {
     // shim for #459-era interface versioning (ended with #495)
     if (v !== 1) throw 'Only interface version 1 supported. You specified: ' + v;
-    insistOnInterVer = function() {
+    insistOnInterVer = function () {
       if (window.console)
         console.warn(
           'You called MathQuill.interfaceVersion(1); to specify the interface ' +
@@ -987,7 +987,7 @@ JS environment could actually contain many instances. */
             '    // now MathQuill.MathField() works like it used to\n' +
             '\n' +
             'See also the "`dev` branch (2014\u20132015) \u2192 v0.10.0 Migration Guide" at\n' +
-            '  https://github.com/mathquill/mathquill/wiki/%60dev%60-branch-(2014%E2%80%932015)-%E2%86%92-v0.10.0-Migration-Guide'
+            '  https://github.com/mathquill/mathquill/wiki/%60dev%60-branch-(2014%E2%80%932015)-%E2%86%92-v0.10.0-Migration-Guide',
         );
     };
     insistOnInterVer();
@@ -999,12 +999,9 @@ JS environment could actually contain many instances. */
     MAX = (getInterface.MAX = 2);
   function getInterface(v) {
     if (!(MIN <= v && v <= MAX))
-      throw 'Only interface versions between ' +
-        MIN +
-        ' and ' +
-        MAX +
-        ' supported. You specified: ' +
-        v;
+      throw (
+        'Only interface versions between ' + MIN + ' and ' + MAX + ' supported. You specified: ' + v
+      );
 
     /**
      * Function that takes an HTML element and, if it's the root HTML element of a
@@ -1018,9 +1015,7 @@ JS environment could actually contain many instances. */
     function MQ(el) {
       if (!el || !el.nodeType) return null; // check that `el` is a HTML element, using the
       // same technique as jQuery: https://github.com/jquery/jquery/blob/679536ee4b7a92ae64a5f58d90e9cc38c001e807/src/core/init.js#L92
-      var blockId = $(el)
-        .children('.mq-root-block')
-        .attr(mqBlockId);
+      var blockId = $(el).children('.mq-root-block').attr(mqBlockId);
       var ctrlr = blockId && Node.byId[blockId].controller;
       return ctrlr ? APIClasses[ctrlr.KIND_OF_MQ](ctrlr) : null;
     }
@@ -1040,25 +1035,25 @@ JS environment could actually contain many instances. */
           currentOptions[name] = processor ? processor(value) : value;
         }
     }
-    MQ.config = function(opts) {
+    MQ.config = function (opts) {
       config(Options.p, opts);
       return this;
     };
-    MQ.registerEmbed = function(name, options) {
+    MQ.registerEmbed = function (name, options) {
       if (!/^[a-z][a-z0-9]*$/i.test(name)) {
         throw 'Embed name must start with letter and be only letters and digits';
       }
       EMBEDS[name] = options;
     };
 
-    var AbstractMathQuill = (APIClasses.AbstractMathQuill = P(Progenote, function(_) {
-      _.init = function(ctrlr) {
+    var AbstractMathQuill = (APIClasses.AbstractMathQuill = P(Progenote, function (_) {
+      _.init = function (ctrlr) {
         this.__controller = ctrlr;
         this.__options = ctrlr.options;
         this.id = ctrlr.id;
         this.data = ctrlr.data;
       };
-      _.__mathquillify = function(classNames) {
+      _.__mathquillify = function (classNames) {
         var ctrlr = this.__controller,
           root = ctrlr.root,
           el = ctrlr.container;
@@ -1066,16 +1061,11 @@ JS environment could actually contain many instances. */
 
         el.attr('data-formula', el.text());
 
-        var contents = el
-          .addClass(classNames)
-          .contents()
-          .detach();
-        root.jQ = $('<span class="mq-root-block"/>')
-          .attr(mqBlockId, root.id)
-          .appendTo(el);
+        var contents = el.addClass(classNames).contents().detach();
+        root.jQ = $('<span class="mq-root-block"/>').attr(mqBlockId, root.id).appendTo(el);
         this.latex(contents.text());
 
-        this.revert = function() {
+        this.revert = function () {
           return el
             .empty()
             .unbind('.mathquill')
@@ -1084,17 +1074,17 @@ JS environment could actually contain many instances. */
             .append(contents);
         };
       };
-      _.config = function(opts) {
+      _.config = function (opts) {
         config(this.__options, opts);
         return this;
       };
-      _.el = function() {
+      _.el = function () {
         return this.__controller.container[0];
       };
-      _.text = function() {
+      _.text = function () {
         return this.__controller.exportText();
       };
-      _.latex = function(latex) {
+      _.latex = function (latex) {
         if (arguments.length > 0) {
           this.__controller.renderLatexMath(latex);
           if (this.__controller.blurred) this.__controller.cursor.hide().parent.blur();
@@ -1102,7 +1092,7 @@ JS environment could actually contain many instances. */
         }
         return this.__controller.exportLatex();
       };
-      _.html = function() {
+      _.html = function () {
         return this.__controller.root.jQ
           .html()
           .replace(/ mathquill-(?:command|block)-id="?\d+"?/g, '')
@@ -1110,36 +1100,36 @@ JS environment could actually contain many instances. */
           .replace(/ mq-hasCursor|mq-hasCursor ?/, '')
           .replace(/ class=(""|(?= |>))/g, '');
       };
-      _.reflow = function() {
+      _.reflow = function () {
         this.__controller.root.postOrder('reflow');
         return this;
       };
     }));
     MQ.prototype = AbstractMathQuill.prototype;
 
-    APIClasses.EditableField = P(AbstractMathQuill, function(_, super_) {
-      _.__mathquillify = function() {
+    APIClasses.EditableField = P(AbstractMathQuill, function (_, super_) {
+      _.__mathquillify = function () {
         super_.__mathquillify.apply(this, arguments);
         this.__controller.editable = true;
         this.__controller.delegateMouseEvents();
         this.__controller.editablesTextareaEvents();
         return this;
       };
-      _.focus = function() {
+      _.focus = function () {
         this.__controller.textarea.focus();
         return this;
       };
-      _.blur = function() {
+      _.blur = function () {
         this.__controller.textarea.blur();
         return this;
       };
-      _.write = function(latex) {
+      _.write = function (latex) {
         this.__controller.writeLatex(latex);
         this.__controller.scrollHoriz();
         if (this.__controller.blurred) this.__controller.cursor.hide().parent.blur();
         return this;
       };
-      _.cmd = function(cmd) {
+      _.cmd = function (cmd) {
         var ctrlr = this.__controller.notify(),
           cursor = ctrlr.cursor;
         if (/^\\[a-z]+$/i.test(cmd)) {
@@ -1155,40 +1145,40 @@ JS environment could actually contain many instances. */
         if (ctrlr.blurred) cursor.hide().parent.blur();
         return this;
       };
-      _.select = function() {
+      _.select = function () {
         var ctrlr = this.__controller;
         ctrlr.notify('move').cursor.insAtRightEnd(ctrlr.root);
         while (ctrlr.cursor[L]) ctrlr.selectLeft();
         return this;
       };
-      _.clearSelection = function() {
+      _.clearSelection = function () {
         this.__controller.cursor.clearSelection();
         return this;
       };
 
-      _.moveToDirEnd = function(dir) {
+      _.moveToDirEnd = function (dir) {
         this.__controller.notify('move').cursor.insAtDirEnd(dir, this.__controller.root);
         return this;
       };
-      _.moveToLeftEnd = function() {
+      _.moveToLeftEnd = function () {
         return this.moveToDirEnd(L);
       };
-      _.moveToRightEnd = function() {
+      _.moveToRightEnd = function () {
         return this.moveToDirEnd(R);
       };
 
-      _.keystroke = function(keys) {
+      _.keystroke = function (keys) {
         var keys = keys.replace(/^\s+|\s+$/g, '').split(/\s+/);
         for (var i = 0; i < keys.length; i += 1) {
           this.__controller.keystroke(keys[i], { preventDefault: noop });
         }
         return this;
       };
-      _.typedText = function(text) {
+      _.typedText = function (text) {
         for (var i = 0; i < text.length; i += 1) this.__controller.typedText(text.charAt(i));
         return this;
       };
-      _.dropEmbedded = function(pageX, pageY, options) {
+      _.dropEmbedded = function (pageX, pageY, options) {
         var clientX = pageX - $(window).scrollLeft();
         var clientY = pageY - $(window).scrollTop();
 
@@ -1197,7 +1187,7 @@ JS environment could actually contain many instances. */
         var cmd = Embed().setOptions(options);
         cmd.createLeftOf(this.__controller.cursor);
       };
-      _.clickAt = function(clientX, clientY, target) {
+      _.clickAt = function (clientX, clientY, target) {
         target = target || document.elementFromPoint(clientX, clientY);
 
         var ctrlr = this.__controller,
@@ -1207,12 +1197,12 @@ JS environment could actually contain many instances. */
         if (ctrlr.blurred) this.focus();
         return this;
       };
-      _.ignoreNextMousedown = function(fn) {
+      _.ignoreNextMousedown = function (fn) {
         this.__controller.cursor.options.ignoreNextMousedown = fn;
         return this;
       };
     });
-    MQ.EditableField = function() {
+    MQ.EditableField = function () {
       throw "wtf don't call me, I'm 'abstract'";
     };
     MQ.EditableField.prototype = APIClasses.EditableField.prototype;
@@ -1223,9 +1213,9 @@ JS environment could actually contain many instances. */
      * different kind (or it's not an HTML element), return null.
      */
     for (var kind in API)
-      (function(kind, defAPIClass) {
+      (function (kind, defAPIClass) {
         var APIClass = (APIClasses[kind] = defAPIClass(APIClasses));
-        MQ[kind] = function(el, opts) {
+        MQ[kind] = function (el, opts) {
           var mq = MQ(el);
           if (mq instanceof APIClass || !el || !el.nodeType) return mq;
           var ctrlr = Controller(APIClass.RootBlock(), $(el), Options());
@@ -1238,7 +1228,7 @@ JS environment could actually contain many instances. */
     return MQ;
   }
 
-  MathQuill.noConflict = function() {
+  MathQuill.noConflict = function () {
     window.MathQuill = origMathQuill;
     return MathQuill;
   };
@@ -1248,18 +1238,18 @@ JS environment could actually contain many instances. */
   function RootBlockMixin(_) {
     var names = 'moveOutOf deleteOutOf selectOutOf upOutOf downOutOf'.split(' ');
     for (var i = 0; i < names.length; i += 1)
-      (function(name) {
-        _[name] = function(dir) {
+      (function (name) {
+        _[name] = function (dir) {
           this.controller.handle(name, dir);
         };
       })(names[i]);
-    _.reflow = function() {
+    _.reflow = function () {
       this.controller.handle('reflow');
       this.controller.handle('edited');
       this.controller.handle('edit');
     };
   }
-  var Parser = P(function(_, super_, Parser) {
+  var Parser = P(function (_, super_, Parser) {
     // The Parser object is a wrapper for a parser function.
     // Externally, you use one to parse a string by calling
     //   var result = SomeParser.parse('Me Me Me! Parse Me!');
@@ -1277,11 +1267,11 @@ JS environment could actually contain many instances. */
       throw 'Parse Error: ' + message + ' at ' + stream;
     }
 
-    _.init = function(body) {
+    _.init = function (body) {
       this._ = body;
     };
 
-    _.parse = function(stream) {
+    _.parse = function (stream) {
       return this.skip(eof)._('' + stream, success, parseError);
 
       function success(stream, result) {
@@ -1290,12 +1280,12 @@ JS environment could actually contain many instances. */
     };
 
     // -*- primitive combinators -*- //
-    _.or = function(alternative) {
+    _.or = function (alternative) {
       pray('or is passed a parser', alternative instanceof Parser);
 
       var self = this;
 
-      return Parser(function(stream, onSuccess, onFailure) {
+      return Parser(function (stream, onSuccess, onFailure) {
         return self._(stream, onSuccess, failure);
 
         function failure(newStream) {
@@ -1304,10 +1294,10 @@ JS environment could actually contain many instances. */
       });
     };
 
-    _.then = function(next) {
+    _.then = function (next) {
       var self = this;
 
-      return Parser(function(stream, onSuccess, onFailure) {
+      return Parser(function (stream, onSuccess, onFailure) {
         return self._(stream, success, onFailure);
 
         function success(newStream, result) {
@@ -1319,10 +1309,10 @@ JS environment could actually contain many instances. */
     };
 
     // -*- optimized iterative combinators -*- //
-    _.many = function() {
+    _.many = function () {
       var self = this;
 
-      return Parser(function(stream, onSuccess, onFailure) {
+      return Parser(function (stream, onSuccess, onFailure) {
         var xs = [];
         while (self._(stream, success, failure));
         return onSuccess(stream, xs);
@@ -1339,11 +1329,11 @@ JS environment could actually contain many instances. */
       });
     };
 
-    _.times = function(min, max) {
+    _.times = function (min, max) {
       if (arguments.length < 2) max = min;
       var self = this;
 
-      return Parser(function(stream, onSuccess, onFailure) {
+      return Parser(function (stream, onSuccess, onFailure) {
         var xs = [];
         var result = true;
         var failure;
@@ -1378,39 +1368,39 @@ JS environment could actually contain many instances. */
     };
 
     // -*- higher-level combinators -*- //
-    _.result = function(res) {
+    _.result = function (res) {
       return this.then(succeed(res));
     };
-    _.atMost = function(n) {
+    _.atMost = function (n) {
       return this.times(0, n);
     };
-    _.atLeast = function(n) {
+    _.atLeast = function (n) {
       var self = this;
-      return self.times(n).then(function(start) {
-        return self.many().map(function(end) {
+      return self.times(n).then(function (start) {
+        return self.many().map(function (end) {
           return start.concat(end);
         });
       });
     };
 
-    _.map = function(fn) {
-      return this.then(function(result) {
+    _.map = function (fn) {
+      return this.then(function (result) {
         return succeed(fn(result));
       });
     };
 
-    _.skip = function(two) {
-      return this.then(function(result) {
+    _.skip = function (two) {
+      return this.then(function (result) {
         return two.result(result);
       });
     };
 
     // -*- primitive parsers -*- //
-    var string = (this.string = function(str) {
+    var string = (this.string = function (str) {
       var len = str.length;
       var expected = "expected '" + str + "'";
 
-      return Parser(function(stream, onSuccess, onFailure) {
+      return Parser(function (stream, onSuccess, onFailure) {
         var head = stream.slice(0, len);
 
         if (head === str) {
@@ -1421,12 +1411,12 @@ JS environment could actually contain many instances. */
       });
     });
 
-    var regex = (this.regex = function(re) {
+    var regex = (this.regex = function (re) {
       pray('regexp parser is anchored', re.toString().charAt(1) === '^');
 
       var expected = 'expected ' + re;
 
-      return Parser(function(stream, onSuccess, onFailure) {
+      return Parser(function (stream, onSuccess, onFailure) {
         var match = re.exec(stream);
 
         if (match) {
@@ -1438,14 +1428,14 @@ JS environment could actually contain many instances. */
       });
     });
 
-    var succeed = (Parser.succeed = function(result) {
-      return Parser(function(stream, onSuccess) {
+    var succeed = (Parser.succeed = function (result) {
+      return Parser(function (stream, onSuccess) {
         return onSuccess(stream, result);
       });
     });
 
-    var fail = (Parser.fail = function(msg) {
-      return Parser(function(stream, _, onFailure) {
+    var fail = (Parser.fail = function (msg) {
+      return Parser(function (stream, _, onFailure) {
         return onFailure(stream, msg);
       });
     });
@@ -1457,17 +1447,17 @@ JS environment could actually contain many instances. */
     var whitespace = (Parser.whitespace = regex(/^\s+/));
     var optWhitespace = (Parser.optWhitespace = regex(/^\s*/));
 
-    var any = (Parser.any = Parser(function(stream, onSuccess, onFailure) {
+    var any = (Parser.any = Parser(function (stream, onSuccess, onFailure) {
       if (!stream) return onFailure(stream, 'expected any character');
 
       return onSuccess(stream.slice(1), stream.charAt(0));
     }));
 
-    var all = (Parser.all = Parser(function(stream, onSuccess, onFailure) {
+    var all = (Parser.all = Parser(function (stream, onSuccess, onFailure) {
       return onSuccess('', stream);
     }));
 
-    var eof = (Parser.eof = Parser(function(stream, onSuccess, onFailure) {
+    var eof = (Parser.eof = Parser(function (stream, onSuccess, onFailure) {
       if (stream) return onFailure(stream, 'expected EOF');
 
       return onSuccess(stream, stream);
@@ -1496,7 +1486,7 @@ JS environment could actually contain many instances. */
    *    + attach event handlers and export methods
    ************************************************/
 
-  var saneKeyboardEvents = (function() {
+  var saneKeyboardEvents = (function () {
     // The following [key values][1] map was compiled from the
     // [DOM3 Events appendix section on key codes][2] and
     // [a widely cited report on cross-browser tests of key codes][3],
@@ -1585,7 +1575,7 @@ JS environment could actually contain many instances. */
         clearTimeout(timeoutId);
         timeoutId = setTimeout(checker);
       }
-      target.bind('keydown keypress input keyup focusout paste', function(e) {
+      target.bind('keydown keypress input keyup focusout paste', function (e) {
         checkTextarea(e);
       });
 
@@ -1626,7 +1616,7 @@ JS environment could actually contain many instances. */
         keypress = null;
 
         if (shouldBeSelected)
-          checkTextareaFor(function(e) {
+          checkTextareaFor(function (e) {
             if (!(e && e.type === 'focusout') && textarea[0].select) {
               textarea[0].select(); // re-select textarea in case it's an unrecognized
             }
@@ -1723,21 +1713,21 @@ JS environment could actually contain many instances. */
    * As you can see, only half-baked so far.
    **********************************************/
 
-  Controller.open(function(_, super_) {
-    _.exportText = function() {
-      return this.root.foldChildren('', function(text, child) {
+  Controller.open(function (_, super_) {
+    _.exportText = function () {
+      return this.root.foldChildren('', function (text, child) {
         return text + child.text();
       });
     };
   });
-  Controller.open(function(_) {
-    _.focusBlurEvents = function() {
+  Controller.open(function (_) {
+    _.focusBlurEvents = function () {
       var ctrlr = this,
         root = ctrlr.root,
         cursor = ctrlr.cursor;
       var blurTimeout;
       ctrlr.textarea
-        .focus(function() {
+        .focus(function () {
           ctrlr.blurred = false;
           clearTimeout(blurTimeout);
           ctrlr.container.addClass('mq-focused');
@@ -1747,9 +1737,9 @@ JS environment could actually contain many instances. */
             ctrlr.selectionChanged(); //re-select textarea contents after tabbing away and back
           } else cursor.show();
         })
-        .blur(function() {
+        .blur(function () {
           ctrlr.blurred = true;
-          blurTimeout = setTimeout(function() {
+          blurTimeout = setTimeout(function () {
             // wait for blur on window; if
             root.postOrder('intentionalBlur'); // none, intentional blur: #264
             cursor.clearSelection().endSelection();
@@ -1794,14 +1784,14 @@ JS environment could actually contain many instances. */
    * interaction with the typist.
    ****************************************/
 
-  Controller.open(function(_) {
-    _.keystroke = function(key, evt) {
+  Controller.open(function (_) {
+    _.keystroke = function (key, evt) {
       this.cursor.parent.keystroke(key, evt, this);
     };
   });
 
-  Node.open(function(_) {
-    _.keystroke = function(key, e, ctrlr) {
+  Node.open(function (_) {
+    _.keystroke = function (key, e, ctrlr) {
       var cursor = ctrlr.cursor;
 
       switch (key) {
@@ -1942,17 +1932,24 @@ JS environment could actually contain many instances. */
       ctrlr.scrollHoriz();
     };
 
-    _.moveOutOf = _.moveTowards = _.deleteOutOf = _.deleteTowards = _.unselectInto = _.selectOutOf = _.selectTowards = function() {
-      // called by Controller::escapeDir, moveDir // called by Controller::moveDir // called by Controller::deleteDir // called by Controller::deleteDir // called by Controller::selectDir // called by Controller::selectDir // called by Controller::selectDir
-      pray('overridden or never called on this node');
-    };
+    _.moveOutOf =
+      _.moveTowards =
+      _.deleteOutOf =
+      _.deleteTowards =
+      _.unselectInto =
+      _.selectOutOf =
+      _.selectTowards =
+        function () {
+          // called by Controller::escapeDir, moveDir // called by Controller::moveDir // called by Controller::deleteDir // called by Controller::deleteDir // called by Controller::selectDir // called by Controller::selectDir // called by Controller::selectDir
+          pray('overridden or never called on this node');
+        };
   });
 
-  Controller.open(function(_) {
-    this.onNotify(function(e) {
+  Controller.open(function (_) {
+    this.onNotify(function (e) {
       if (e === 'move' || e === 'upDown') this.show().clearSelection();
     });
-    _.escapeDir = function(dir, key, e) {
+    _.escapeDir = function (dir, key, e) {
       prayDirection(dir);
       var cursor = this.cursor;
 
@@ -1967,13 +1964,13 @@ JS environment could actually contain many instances. */
       return this.notify('move');
     };
 
-    optionProcessors.leftRightIntoCmdGoes = function(updown) {
+    optionProcessors.leftRightIntoCmdGoes = function (updown) {
       if (updown && updown !== 'up' && updown !== 'down') {
         throw '"up" or "down" required for leftRightIntoCmdGoes option, ' + 'got "' + updown + '"';
       }
       return updown;
     };
-    _.moveDir = function(dir) {
+    _.moveDir = function (dir) {
       prayDirection(dir);
       var cursor = this.cursor,
         updown = cursor.options.leftRightIntoCmdGoes;
@@ -1985,10 +1982,10 @@ JS environment could actually contain many instances. */
 
       return this.notify('move');
     };
-    _.moveLeft = function() {
+    _.moveLeft = function () {
       return this.moveDir(L);
     };
-    _.moveRight = function() {
+    _.moveRight = function () {
       return this.moveDir(R);
     };
 
@@ -2004,10 +2001,10 @@ JS environment could actually contain many instances. */
      *       as close to directly above/below the current position as possible)
      *   + unless it's exactly `true`, stop bubbling
      */
-    _.moveUp = function() {
+    _.moveUp = function () {
       return moveUpDown(this, 'up');
     };
-    _.moveDown = function() {
+    _.moveDown = function () {
       return moveUpDown(this, 'down');
     };
     function moveUpDown(self, dir) {
@@ -2017,7 +2014,7 @@ JS environment could actually contain many instances. */
       if (cursor[R][dirInto]) cursor.insAtLeftEnd(cursor[R][dirInto]);
       else if (cursor[L][dirInto]) cursor.insAtRightEnd(cursor[L][dirInto]);
       else {
-        cursor.parent.bubble(function(ancestor) {
+        cursor.parent.bubble(function (ancestor) {
           var prop = ancestor[dirOutOf];
           if (prop) {
             if (typeof prop === 'function') prop = ancestor[dirOutOf](cursor);
@@ -2028,14 +2025,14 @@ JS environment could actually contain many instances. */
       }
       return self;
     }
-    this.onNotify(function(e) {
+    this.onNotify(function (e) {
       if (e !== 'upDown') this.upDownCache = {};
     });
 
-    this.onNotify(function(e) {
+    this.onNotify(function (e) {
       if (e === 'edit') this.show().deleteSelection();
     });
-    _.deleteDir = function(dir) {
+    _.deleteDir = function (dir) {
       prayDirection(dir);
       var cursor = this.cursor;
 
@@ -2052,7 +2049,7 @@ JS environment could actually contain many instances. */
 
       return this;
     };
-    _.ctrlDeleteDir = function(dir) {
+    _.ctrlDeleteDir = function (dir) {
       prayDirection(dir);
       var cursor = this.cursor;
       if (!cursor[L] || cursor.selection) return ctrlr.deleteDir();
@@ -2067,17 +2064,17 @@ JS environment could actually contain many instances. */
 
       return this;
     };
-    _.backspace = function() {
+    _.backspace = function () {
       return this.deleteDir(L);
     };
-    _.deleteForward = function() {
+    _.deleteForward = function () {
       return this.deleteDir(R);
     };
 
-    this.onNotify(function(e) {
+    this.onNotify(function (e) {
       if (e !== 'select') this.endSelection();
     });
-    _.selectDir = function(dir) {
+    _.selectDir = function (dir) {
       var cursor = this.notify('select').cursor,
         seln = cursor.selection;
       prayDirection(dir);
@@ -2097,15 +2094,15 @@ JS environment could actually contain many instances. */
       cursor.clearSelection();
       cursor.select() || cursor.show();
     };
-    _.selectLeft = function() {
+    _.selectLeft = function () {
       return this.selectDir(L);
     };
-    _.selectRight = function() {
+    _.selectRight = function () {
       return this.selectDir(R);
     };
   });
   // Parser MathBlock
-  var latexMathParser = (function() {
+  var latexMathParser = (function () {
     function commandToBlock(cmd) {
       // can also take in a Fragment
       var block = MathBlock();
@@ -2132,10 +2129,10 @@ JS environment could actually contain many instances. */
 
     // Parsers yielding either MathCommands, or Fragments of MathCommands
     //   (either way, something that can be adopted by a MathBlock)
-    var variable = letter.map(function(c) {
+    var variable = letter.map(function (c) {
       return Letter(c);
     });
-    var symbol = regex(/^[^${}\\_^]/).map(function(c) {
+    var symbol = regex(/^[^${}\\_^]/).map(function (c) {
       return VanillaSymbol(c);
     });
 
@@ -2144,10 +2141,10 @@ JS environment could actually contain many instances. */
         string('\\').then(
           regex(/^[a-z]+/i)
             .or(regex(/^\s+/).result(' '))
-            .or(any)
-        )
+            .or(any),
+        ),
       )
-      .then(function(ctrlSeq) {
+      .then(function (ctrlSeq) {
         var cmdKlass = LatexCmds[ctrlSeq];
 
         if (cmdKlass) {
@@ -2159,25 +2156,22 @@ JS environment could actually contain many instances. */
     var command = controlSequence.or(variable).or(symbol);
     // Parsers yielding MathBlocks
     var mathGroup = string('{')
-      .then(function() {
+      .then(function () {
         return mathSequence;
       })
       .skip(string('}'));
     var mathBlock = optWhitespace.then(mathGroup.or(command.map(commandToBlock)));
-    var mathSequence = mathBlock
-      .many()
-      .map(joinBlocks)
-      .skip(optWhitespace);
+    var mathSequence = mathBlock.many().map(joinBlocks).skip(optWhitespace);
 
     var optMathBlock = string('[')
       .then(
         mathBlock
-          .then(function(block) {
+          .then(function (block) {
             return block.join('latex') !== ']' ? succeed(block) : fail();
           })
           .many()
           .map(joinBlocks)
-          .skip(optWhitespace)
+          .skip(optWhitespace),
       )
       .skip(string(']'));
     var latexMath = mathSequence;
@@ -2187,20 +2181,17 @@ JS environment could actually contain many instances. */
     return latexMath;
   })();
 
-  Controller.open(function(_, super_) {
-    _.exportLatex = function() {
+  Controller.open(function (_, super_) {
+    _.exportLatex = function () {
       return this.root.latex().replace(/(\\[a-z]+) (?![a-z])/gi, '$1');
     };
-    _.writeLatex = function(latex) {
+    _.writeLatex = function (latex) {
       var cursor = this.notify('edit').cursor;
 
       var all = Parser.all;
       var eof = Parser.eof;
 
-      var block = latexMathParser
-        .skip(eof)
-        .or(all.result(false))
-        .parse(latex);
+      var block = latexMathParser.skip(eof).or(all.result(false)).parse(latex);
 
       if (block && !block.isEmpty()) {
         block.children().adopt(cursor.parent, cursor[L], cursor[R]);
@@ -2215,17 +2206,14 @@ JS environment could actually contain many instances. */
 
       return this;
     };
-    _.renderLatexMath = function(latex) {
+    _.renderLatexMath = function (latex) {
       var root = this.root,
         cursor = this.cursor;
 
       var all = Parser.all;
       var eof = Parser.eof;
 
-      var block = latexMathParser
-        .skip(eof)
-        .or(all.result(false))
-        .parse(latex);
+      var block = latexMathParser.skip(eof).or(all.result(false)).parse(latex);
 
       root.eachChild('postOrder', 'dispose');
       root.ends[L] = root.ends[R] = 0;
@@ -2248,14 +2236,11 @@ JS environment could actually contain many instances. */
       delete cursor.selection;
       cursor.insAtRightEnd(root);
     };
-    _.renderLatexText = function(latex) {
+    _.renderLatexText = function (latex) {
       var root = this.root,
         cursor = this.cursor;
 
-      root.jQ
-        .children()
-        .slice(1)
-        .remove();
+      root.jQ.children().slice(1).remove();
       root.eachChild('postOrder', 'dispose');
       root.ends[L] = root.ends[R] = 0;
       delete cursor.selection;
@@ -2273,7 +2258,7 @@ JS environment could actually contain many instances. */
         // have to end.  So we allow for the case that math mode
         // continues to the end of the stream.
         .skip(string('$').or(eof))
-        .map(function(block) {
+        .map(function (block) {
           // HACK FIXME: this shouldn't have to have access to cursor
           var rootMathCommand = RootMathCommand(cursor);
 
@@ -2286,10 +2271,7 @@ JS environment could actually contain many instances. */
       var escapedDollar = string('\\$').result('$');
       var textChar = escapedDollar.or(regex(/^[^$]/)).map(VanillaSymbol);
       var latexText = mathMode.or(textChar).many();
-      var commands = latexText
-        .skip(eof)
-        .or(all.result(false))
-        .parse(latex);
+      var commands = latexText.skip(eof).or(all.result(false)).parse(latex);
 
       if (commands) {
         for (var i = 0; i < commands.length; i += 1) {
@@ -2306,12 +2288,12 @@ JS environment could actually contain many instances. */
    * Deals with mouse events for clicking, drag-to-select
    *******************************************************/
 
-  Controller.open(function(_) {
+  Controller.open(function (_) {
     Options.p.ignoreNextMousedown = noop;
-    _.delegateMouseEvents = function() {
+    _.delegateMouseEvents = function () {
       var ultimateRootjQ = this.root.jQ;
       //drag-to-select event handling
-      this.container.bind('mousedown.mathquill', function(e) {
+      this.container.bind('mousedown.mathquill', function (e) {
         var rootjQ = $(e.target).closest('.mq-root-block');
         var root = Node.byId[rootjQ.attr(mqBlockId) || ultimateRootjQ.attr(mqBlockId)];
         var ctrlr = root.controller,
@@ -2350,9 +2332,7 @@ JS environment could actually contain many instances. */
 
           // delete the mouse handlers now that we're not dragging anymore
           rootjQ.unbind('mousemove', mousemove);
-          $(e.target.ownerDocument)
-            .unbind('mousemove', docmousemove)
-            .unbind('mouseup', mouseup);
+          $(e.target.ownerDocument).unbind('mousemove', docmousemove).unbind('mouseup', mouseup);
         }
 
         if (ctrlr.blurred) {
@@ -2364,17 +2344,15 @@ JS environment could actually contain many instances. */
         ctrlr.seek($(e.target), e.pageX, e.pageY).cursor.startSelection();
 
         rootjQ.mousemove(mousemove);
-        $(e.target.ownerDocument)
-          .mousemove(docmousemove)
-          .mouseup(mouseup);
+        $(e.target.ownerDocument).mousemove(docmousemove).mouseup(mouseup);
         // listen on document not just body to not only hear about mousemove and
         // mouseup on page outside field, but even outside page, except iframes: https://github.com/mathquill/mathquill/commit/8c50028afcffcace655d8ae2049f6e02482346c5#commitcomment-6175800
       });
     };
   });
 
-  Controller.open(function(_) {
-    _.seek = function(target, pageX, pageY) {
+  Controller.open(function (_) {
+    _.seek = function (target, pageX, pageY) {
       var cursor = this.notify('select').cursor;
 
       if (target) {
@@ -2403,8 +2381,8 @@ JS environment could actually contain many instances. */
    * overflow their width
    **********************************************/
 
-  Controller.open(function(_) {
-    _.scrollHoriz = function() {
+  Controller.open(function (_) {
+    _.scrollHoriz = function () {
       var cursor = this.cursor,
         seln = cursor.selection;
       var rootRect = this.root.jQ[0].getBoundingClientRect();
@@ -2439,14 +2417,14 @@ JS environment could actually contain many instances. */
    * (as owned by the Controller)
    ********************************************/
 
-  Controller.open(function(_) {
-    Options.p.substituteTextarea = function() {
+  Controller.open(function (_) {
+    Options.p.substituteTextarea = function () {
       return $(
         '<textarea autocapitalize=off autocomplete=off autocorrect=off ' +
-          'spellcheck=false x-palm-disable-ste-all=true />'
+          'spellcheck=false x-palm-disable-ste-all=true />',
       )[0];
     };
-    _.createTextarea = function() {
+    _.createTextarea = function () {
       var textareaSpan = (this.textareaSpan = $('<span class="mq-textarea"></span>')),
         textarea = this.options.substituteTextarea();
       if (!textarea.nodeType) {
@@ -2455,14 +2433,14 @@ JS environment could actually contain many instances. */
       textarea = this.textarea = $(textarea).appendTo(textareaSpan);
 
       var ctrlr = this;
-      ctrlr.cursor.selectionChanged = function() {
+      ctrlr.cursor.selectionChanged = function () {
         ctrlr.selectionChanged();
       };
-      ctrlr.container.bind('copy', function() {
+      ctrlr.container.bind('copy', function () {
         ctrlr.setTextareaSelection();
       });
     };
-    _.selectionChanged = function() {
+    _.selectionChanged = function () {
       var ctrlr = this;
       forceIERedraw(ctrlr.container[0]);
 
@@ -2470,12 +2448,12 @@ JS environment could actually contain many instances. */
       // and/or calling textarea.select() can have anomalously bad performance:
       // https://github.com/mathquill/mathquill/issues/43#issuecomment-1399080
       if (ctrlr.textareaSelectionTimeout === undefined) {
-        ctrlr.textareaSelectionTimeout = setTimeout(function() {
+        ctrlr.textareaSelectionTimeout = setTimeout(function () {
           ctrlr.setTextareaSelection();
         });
       }
     };
-    _.setTextareaSelection = function() {
+    _.setTextareaSelection = function () {
       this.textareaSelectionTimeout = undefined;
       var latex = '';
       if (this.cursor.selection) {
@@ -2487,7 +2465,7 @@ JS environment could actually contain many instances. */
       }
       this.selectFn(latex);
     };
-    _.staticMathTextareaEvents = function() {
+    _.staticMathTextareaEvents = function () {
       var ctrlr = this,
         root = ctrlr.root,
         cursor = ctrlr.cursor,
@@ -2498,10 +2476,10 @@ JS environment could actually contain many instances. */
       ctrlr.blurred = true;
       textarea
         .bind('cut paste', false)
-        .focus(function() {
+        .focus(function () {
           ctrlr.blurred = false;
         })
-        .blur(function() {
+        .blur(function () {
           if (cursor.selection) cursor.selection.clear();
           setTimeout(detach); //detaching during blur explodes in WebKit
         });
@@ -2510,12 +2488,12 @@ JS environment could actually contain many instances. */
         ctrlr.blurred = true;
       }
 
-      ctrlr.selectFn = function(text) {
+      ctrlr.selectFn = function (text) {
         textarea.val(text);
         if (text) textarea.select();
       };
     };
-    _.editablesTextareaEvents = function() {
+    _.editablesTextareaEvents = function () {
       var ctrlr = this,
         root = ctrlr.root,
         cursor = ctrlr.cursor,
@@ -2523,13 +2501,13 @@ JS environment could actually contain many instances. */
         textareaSpan = ctrlr.textareaSpan;
 
       var keyboardEventsShim = saneKeyboardEvents(textarea, this);
-      this.selectFn = function(text) {
+      this.selectFn = function (text) {
         keyboardEventsShim.select(text);
       };
 
-      this.container.prepend(textareaSpan).on('cut', function(e) {
+      this.container.prepend(textareaSpan).on('cut', function (e) {
         if (cursor.selection) {
-          setTimeout(function() {
+          setTimeout(function () {
             ctrlr.notify('edit'); // deletes selection if present
             cursor.parent.bubble('reflow');
           });
@@ -2538,13 +2516,13 @@ JS environment could actually contain many instances. */
 
       this.focusBlurEvents();
     };
-    _.typedText = function(ch) {
+    _.typedText = function (ch) {
       if (ch === '\n') return this.handle('enter');
       var cursor = this.notify().cursor;
       cursor.parent.write(cursor, ch);
       this.scrollHoriz();
     };
-    _.paste = function(text) {
+    _.paste = function (text) {
       // TODO: document `statelessClipboard` config option in README, after
       // making it work like it should, that is, in both text and math mode
       // (currently only works in math fields, so worse than pointless, it
@@ -2570,8 +2548,8 @@ JS environment could actually contain many instances. */
    * Some math-tree-specific extensions to Node.
    * Both MathBlock's and MathCommand's descend from it.
    */
-  var MathElement = P(Node, function(_, super_) {
-    _.finalizeInsert = function(options, cursor) {
+  var MathElement = P(Node, function (_, super_) {
+    _.finalizeInsert = function (options, cursor) {
       // `cursor` param is only for
       // SupSub::contactWeld, and is deliberately only passed in by writeLatex,
       // see ea7307eb4fac77c149a11ffdf9a831df85247693
@@ -2596,8 +2574,8 @@ JS environment could actually contain many instances. */
    * Commands and operators, like subscripts, exponents, or fractions.
    * Descendant commands are organized into blocks.
    */
-  var MathCommand = P(MathElement, function(_, super_) {
-    _.init = function(ctrlSeq, htmlTemplate, textTemplate) {
+  var MathCommand = P(MathElement, function (_, super_) {
+    _.init = function (ctrlSeq, htmlTemplate, textTemplate) {
       var cmd = this;
       super_.init.call(cmd);
 
@@ -2607,21 +2585,21 @@ JS environment could actually contain many instances. */
     };
 
     // obvious methods
-    _.replaces = function(replacedFragment) {
+    _.replaces = function (replacedFragment) {
       replacedFragment.disown();
       this.replacedFragment = replacedFragment;
     };
-    _.isEmpty = function() {
-      return this.foldChildren(true, function(isEmpty, child) {
+    _.isEmpty = function () {
+      return this.foldChildren(true, function (isEmpty, child) {
         return isEmpty && child.isEmpty();
       });
     };
 
-    _.parser = function() {
+    _.parser = function () {
       var block = latexMathParser.block;
       var self = this;
 
-      return block.times(self.numBlocks()).map(function(blocks) {
+      return block.times(self.numBlocks()).map(function (blocks) {
         self.blocks = blocks;
 
         for (var i = 0; i < blocks.length; i += 1) {
@@ -2633,7 +2611,7 @@ JS environment could actually contain many instances. */
     };
 
     // createLeftOf(cursor) and the methods it calls
-    _.createLeftOf = function(cursor) {
+    _.createLeftOf = function (cursor) {
       var cmd = this;
       var replacedFragment = cmd.replacedFragment;
 
@@ -2646,7 +2624,7 @@ JS environment could actually contain many instances. */
       cmd.finalizeInsert(cursor.options);
       cmd.placeCursor(cursor);
     };
-    _.createBlocks = function() {
+    _.createBlocks = function () {
       var cmd = this,
         numBlocks = cmd.numBlocks(),
         blocks = (cmd.blocks = Array(numBlocks));
@@ -2656,38 +2634,38 @@ JS environment could actually contain many instances. */
         newBlock.adopt(cmd, cmd.ends[R], 0);
       }
     };
-    _.placeCursor = function(cursor) {
+    _.placeCursor = function (cursor) {
       //insert the cursor at the right end of the first empty child, searching
       //left-to-right, or if none empty, the right end child
       cursor.insAtRightEnd(
-        this.foldChildren(this.ends[L], function(leftward, child) {
+        this.foldChildren(this.ends[L], function (leftward, child) {
           return leftward.isEmpty() ? leftward : child;
-        })
+        }),
       );
     };
 
     // editability methods: called by the cursor for editing, cursor movements,
     // and selection of the MathQuill tree, these all take in a direction and
     // the cursor
-    _.moveTowards = function(dir, cursor, updown) {
+    _.moveTowards = function (dir, cursor, updown) {
       var updownInto = updown && this[updown + 'Into'];
       cursor.insAtDirEnd(-dir, updownInto || this.ends[-dir]);
     };
-    _.deleteTowards = function(dir, cursor) {
+    _.deleteTowards = function (dir, cursor) {
       if (this.isEmpty()) cursor[dir] = this.remove()[dir];
       else this.moveTowards(dir, cursor, null);
     };
-    _.selectTowards = function(dir, cursor) {
+    _.selectTowards = function (dir, cursor) {
       cursor[-dir] = this;
       cursor[dir] = this[dir];
     };
-    _.selectChildren = function() {
+    _.selectChildren = function () {
       return Selection(this, this);
     };
-    _.unselectInto = function(dir, cursor) {
+    _.unselectInto = function (dir, cursor) {
       cursor.insAtDirEnd(-dir, cursor.anticursor.ancestors[this.id]);
     };
-    _.seek = function(pageX, cursor) {
+    _.seek = function (pageX, cursor) {
       function getBounds(node) {
         var bounds = {};
         bounds[L] = node.jQ.offset().left;
@@ -2702,7 +2680,7 @@ JS environment could actually contain many instances. */
       if (pageX > cmdBounds[R]) return cursor.insRightOf(cmd);
 
       var leftLeftBound = cmdBounds[L];
-      cmd.eachChild(function(block) {
+      cmd.eachChild(function (block) {
         var blockBounds = getBounds(block);
         if (pageX < blockBounds[L]) {
           // closer to this block's left bound, or the bound left of that?
@@ -2754,11 +2732,11 @@ JS environment could actually contain many instances. */
     Note that &<number> isn't well-formed HTML; if you wanted a literal '&123',
     your HTML template would have to have '&amp;123'.
   */
-    _.numBlocks = function() {
+    _.numBlocks = function () {
       var matches = this.htmlTemplate.match(/&\d+/g);
       return matches ? matches.length : 0;
     };
-    _.html = function() {
+    _.html = function () {
       // Render the entire math subtree rooted at this command, as HTML.
       // Expects .createBlocks() to have been called already, since it uses the
       // .blocks array of child blocks.
@@ -2816,7 +2794,7 @@ JS environment could actually contain many instances. */
           // skip matching top-level close tag and all tag pairs in between
           var nesting = 1;
           do {
-            (i += 1), (token = tokens[i]);
+            ((i += 1), (token = tokens[i]));
             pray('no missing close tags', token);
             // close tags
             if (token.slice(0, 2) === '</') {
@@ -2829,22 +2807,22 @@ JS environment could actually contain many instances. */
           } while (nesting > 0);
         }
       }
-      return tokens.join('').replace(/>&(\d+)/g, function($0, $1) {
+      return tokens.join('').replace(/>&(\d+)/g, function ($0, $1) {
         return ' mathquill-block-id=' + blocks[$1].id + '>' + blocks[$1].join('html');
       });
     };
 
     // methods to export a string representation of the math tree
-    _.latex = function() {
-      return this.foldChildren(this.ctrlSeq, function(latex, child) {
+    _.latex = function () {
+      return this.foldChildren(this.ctrlSeq, function (latex, child) {
         return latex + '{' + (child.latex() || ' ') + '}';
       });
     };
     _.textTemplate = [''];
-    _.text = function() {
+    _.text = function () {
       var cmd = this,
         i = 0;
-      return cmd.foldChildren(cmd.textTemplate[i], function(text, child) {
+      return cmd.foldChildren(cmd.textTemplate[i], function (text, child) {
         i += 1;
         var child_text = child.text();
         if (
@@ -2862,57 +2840,57 @@ JS environment could actually contain many instances. */
   /**
    * Lightweight command without blocks or children.
    */
-  var Symbol = P(MathCommand, function(_, super_) {
-    _.init = function(ctrlSeq, html, text) {
+  var Symbol = P(MathCommand, function (_, super_) {
+    _.init = function (ctrlSeq, html, text) {
       if (!text) text = ctrlSeq && ctrlSeq.length > 1 ? ctrlSeq.slice(1) : ctrlSeq;
 
       super_.init.call(this, ctrlSeq, html, [text]);
     };
 
-    _.parser = function() {
+    _.parser = function () {
       return Parser.succeed(this);
     };
-    _.numBlocks = function() {
+    _.numBlocks = function () {
       return 0;
     };
 
-    _.replaces = function(replacedFragment) {
+    _.replaces = function (replacedFragment) {
       replacedFragment.remove();
     };
     _.createBlocks = noop;
 
-    _.moveTowards = function(dir, cursor) {
+    _.moveTowards = function (dir, cursor) {
       cursor.jQ.insDirOf(dir, this.jQ);
       cursor[-dir] = this;
       cursor[dir] = this[dir];
     };
-    _.deleteTowards = function(dir, cursor) {
+    _.deleteTowards = function (dir, cursor) {
       cursor[dir] = this.remove()[dir];
     };
-    _.seek = function(pageX, cursor) {
+    _.seek = function (pageX, cursor) {
       // insert at whichever side the click was closer to
       if (pageX - this.jQ.offset().left < this.jQ.outerWidth() / 2) cursor.insLeftOf(this);
       else cursor.insRightOf(this);
     };
 
-    _.latex = function() {
+    _.latex = function () {
       return this.ctrlSeq;
     };
-    _.text = function() {
+    _.text = function () {
       return this.textTemplate;
     };
     _.placeCursor = noop;
-    _.isEmpty = function() {
+    _.isEmpty = function () {
       return true;
     };
   });
-  var VanillaSymbol = P(Symbol, function(_, super_) {
-    _.init = function(ch, html) {
+  var VanillaSymbol = P(Symbol, function (_, super_) {
+    _.init = function (ch, html) {
       super_.init.call(this, ch, '<span>' + (html || ch) + '</span>');
     };
   });
-  var BinaryOperator = P(Symbol, function(_, super_) {
-    _.init = function(ctrlSeq, html, text) {
+  var BinaryOperator = P(Symbol, function (_, super_) {
+    _.init = function (ctrlSeq, html, text) {
       super_.init.call(this, ctrlSeq, '<span class="mq-binary-operator">' + html + '</span>', text);
     };
   });
@@ -2922,25 +2900,25 @@ JS environment could actually contain many instances. */
    * symbols and operators that descend (in the Math DOM tree) from
    * ancestor operators.
    */
-  var MathBlock = P(MathElement, function(_, super_) {
-    _.join = function(methodName) {
-      return this.foldChildren('', function(fold, child) {
+  var MathBlock = P(MathElement, function (_, super_) {
+    _.join = function (methodName) {
+      return this.foldChildren('', function (fold, child) {
         return fold + child[methodName]();
       });
     };
-    _.html = function() {
+    _.html = function () {
       return this.join('html');
     };
-    _.latex = function() {
+    _.latex = function () {
       return this.join('latex');
     };
-    _.text = function() {
+    _.text = function () {
       return this.ends[L] === this.ends[R] && this.ends[L] !== 0
         ? this.ends[L].text()
         : this.join('text');
     };
 
-    _.keystroke = function(key, e, ctrlr) {
+    _.keystroke = function (key, e, ctrlr) {
       if (ctrlr.options.spaceBehavesLikeTab && (key === 'Spacebar' || key === 'Shift-Spacebar')) {
         e.preventDefault();
         ctrlr.escapeDir(key === 'Shift-Spacebar' ? L : R, key, e);
@@ -2952,18 +2930,18 @@ JS environment could actually contain many instances. */
     // editability methods: called by the cursor for editing, cursor movements,
     // and selection of the MathQuill tree, these all take in a direction and
     // the cursor
-    _.moveOutOf = function(dir, cursor, updown) {
+    _.moveOutOf = function (dir, cursor, updown) {
       var updownInto = updown && this.parent[updown + 'Into'];
       if (!updownInto && this[dir]) cursor.insAtDirEnd(-dir, this[dir]);
       else cursor.insDirOf(dir, this.parent);
     };
-    _.selectOutOf = function(dir, cursor) {
+    _.selectOutOf = function (dir, cursor) {
       cursor.insDirOf(dir, this.parent);
     };
-    _.deleteOutOf = function(dir, cursor) {
+    _.deleteOutOf = function (dir, cursor) {
       cursor.unwrapGramp();
     };
-    _.seek = function(pageX, cursor) {
+    _.seek = function (pageX, cursor) {
       var node = this.ends[R];
       if (!node || node.jQ.offset().left + node.jQ.outerWidth() < pageX) {
         return cursor.insAtRightEnd(this);
@@ -2972,7 +2950,7 @@ JS environment could actually contain many instances. */
       while (pageX < node.jQ.offset().left) node = node[L];
       return node.seek(pageX, cursor);
     };
-    _.chToCmd = function(ch) {
+    _.chToCmd = function (ch) {
       var cons;
       // exclude f because it gets a dedicated command with more spacing
       if (ch.match(/^[a-eg-zA-Z]$/)) return Letter(ch);
@@ -2980,19 +2958,19 @@ JS environment could actually contain many instances. */
       else if ((cons = CharCmds[ch] || LatexCmds[ch])) return cons(ch);
       else return VanillaSymbol(ch);
     };
-    _.write = function(cursor, ch) {
+    _.write = function (cursor, ch) {
       var cmd = this.chToCmd(ch);
       if (cursor.selection) cmd.replaces(cursor.replaceSelection());
       cmd.createLeftOf(cursor.show());
     };
 
-    _.focus = function() {
+    _.focus = function () {
       this.jQ.addClass('mq-hasCursor');
       this.jQ.removeClass('mq-empty');
 
       return this;
     };
-    _.blur = function() {
+    _.blur = function () {
       this.jQ.removeClass('mq-hasCursor');
       if (this.isEmpty()) this.jQ.addClass('mq-empty');
 
@@ -3000,30 +2978,30 @@ JS environment could actually contain many instances. */
     };
   });
 
-  API.StaticMath = function(APIClasses) {
-    return P(APIClasses.AbstractMathQuill, function(_, super_) {
+  API.StaticMath = function (APIClasses) {
+    return P(APIClasses.AbstractMathQuill, function (_, super_) {
       this.RootBlock = MathBlock;
-      _.__mathquillify = function() {
+      _.__mathquillify = function () {
         super_.__mathquillify.call(this, 'mq-math-mode');
         this.__controller.delegateMouseEvents();
         this.__controller.staticMathTextareaEvents();
         return this;
       };
-      _.init = function() {
+      _.init = function () {
         super_.init.apply(this, arguments);
         this.__controller.root.postOrder(
           'registerInnerField',
           (this.innerFields = []),
-          APIClasses.MathField
+          APIClasses.MathField,
         );
       };
-      _.latex = function() {
+      _.latex = function () {
         var returned = super_.latex.apply(this, arguments);
         if (arguments.length > 0) {
           this.__controller.root.postOrder(
             'registerInnerField',
             (this.innerFields = []),
-            APIClasses.MathField
+            APIClasses.MathField,
           );
         }
         return returned;
@@ -3032,10 +3010,10 @@ JS environment could actually contain many instances. */
   };
 
   var RootMathBlock = P(MathBlock, RootBlockMixin);
-  API.MathField = function(APIClasses) {
-    return P(APIClasses.EditableField, function(_, super_) {
+  API.MathField = function (APIClasses) {
+    return P(APIClasses.EditableField, function (_, super_) {
       this.RootBlock = RootMathBlock;
-      _.__mathquillify = function(opts, interfaceVersion) {
+      _.__mathquillify = function (opts, interfaceVersion) {
         this.config(opts);
         if (interfaceVersion > 1) this.__controller.root.reflow = noop;
         super_.__mathquillify.call(this, 'mq-editable-field mq-math-mode');
@@ -3054,20 +3032,20 @@ JS environment could actually contain many instances. */
    * opposed to hierchical, nested, tree-structured math.
    * Wraps a single HTMLSpanElement.
    */
-  var TextBlock = P(Node, function(_, super_) {
+  var TextBlock = P(Node, function (_, super_) {
     _.ctrlSeq = '\\text';
 
-    _.replaces = function(replacedText) {
+    _.replaces = function (replacedText) {
       if (replacedText instanceof Fragment) this.replacedText = replacedText.remove().jQ.text();
       else if (typeof replacedText === 'string') this.replacedText = replacedText;
     };
 
-    _.jQadd = function(jQ) {
+    _.jQadd = function (jQ) {
       super_.jQadd.call(this, jQ);
       if (this.ends[L]) this.ends[L].jQadd(this.jQ[0].firstChild);
     };
 
-    _.createLeftOf = function(cursor) {
+    _.createLeftOf = function (cursor) {
       var textBlock = this;
       super_.createLeftOf.call(this, cursor);
 
@@ -3082,7 +3060,7 @@ JS environment could actually contain many instances. */
           textBlock.write(cursor, textBlock.replacedText.charAt(i));
     };
 
-    _.parser = function() {
+    _.parser = function () {
       var textBlock = this;
 
       // TODO: correctly parse text mode
@@ -3093,7 +3071,7 @@ JS environment could actually contain many instances. */
         .then(string('{'))
         .then(regex(/^[^}]*/))
         .skip(string('}'))
-        .map(function(text) {
+        .map(function (text) {
           if (text.length === 0) return Fragment();
 
           TextPiece(text).adopt(textBlock, 0, 0);
@@ -3101,20 +3079,20 @@ JS environment could actually contain many instances. */
         });
     };
 
-    _.textContents = function() {
-      return this.foldChildren('', function(text, child) {
+    _.textContents = function () {
+      return this.foldChildren('', function (text, child) {
         return text + child.text;
       });
     };
-    _.text = function() {
+    _.text = function () {
       return '"' + this.textContents() + '"';
     };
-    _.latex = function() {
+    _.latex = function () {
       var contents = this.textContents();
       if (contents.length === 0) return '';
       return '\\text{' + contents + '}';
     };
-    _.html = function() {
+    _.html = function () {
       return (
         '<span class="mq-text-mode" mathquill-command-id=' +
         this.id +
@@ -3127,10 +3105,10 @@ JS environment could actually contain many instances. */
     // editability methods: called by the cursor for editing, cursor movements,
     // and selection of the MathQuill tree, these all take in a direction and
     // the cursor
-    _.moveTowards = function(dir, cursor) {
+    _.moveTowards = function (dir, cursor) {
       cursor.insAtDirEnd(-dir, this);
     };
-    _.moveOutOf = function(dir, cursor) {
+    _.moveOutOf = function (dir, cursor) {
       cursor.insDirOf(dir, this);
     };
     _.unselectInto = _.moveTowards;
@@ -3139,14 +3117,14 @@ JS environment could actually contain many instances. */
     _.selectTowards = MathCommand.prototype.selectTowards;
     _.deleteTowards = MathCommand.prototype.deleteTowards;
 
-    _.selectOutOf = function(dir, cursor) {
+    _.selectOutOf = function (dir, cursor) {
       cursor.insDirOf(dir, this);
     };
-    _.deleteOutOf = function(dir, cursor) {
+    _.deleteOutOf = function (dir, cursor) {
       // backspace and delete at ends of block don't unwrap
       if (this.isEmpty()) cursor.insRightOf(this);
     };
-    _.write = function(cursor, ch) {
+    _.write = function (cursor, ch) {
       cursor.show().deleteSelection();
 
       if (ch !== '$') {
@@ -3169,7 +3147,7 @@ JS environment could actually contain many instances. */
       }
     };
 
-    _.seek = function(pageX, cursor) {
+    _.seek = function (pageX, cursor) {
       cursor.hide();
       var textPc = fuseChildren(this);
 
@@ -3213,7 +3191,7 @@ JS environment could actually contain many instances. */
       }
     };
 
-    _.blur = function(cursor) {
+    _.blur = function (cursor) {
       MathBlock.prototype.blur.call(this);
       if (!cursor) return;
       if (this.textContents() === '') {
@@ -3249,32 +3227,32 @@ JS environment could actually contain many instances. */
    * mirroring the text contents of the DOMTextNode.
    * Text contents must always be nonempty.
    */
-  var TextPiece = P(Node, function(_, super_) {
-    _.init = function(text) {
+  var TextPiece = P(Node, function (_, super_) {
+    _.init = function (text) {
       super_.init.call(this);
       this.text = text;
     };
-    _.jQadd = function(dom) {
+    _.jQadd = function (dom) {
       this.dom = dom;
       this.jQ = $(dom);
     };
-    _.jQize = function() {
+    _.jQize = function () {
       return this.jQadd(document.createTextNode(this.text));
     };
-    _.appendText = function(text) {
+    _.appendText = function (text) {
       this.text += text;
       this.dom.appendData(text);
     };
-    _.prependText = function(text) {
+    _.prependText = function (text) {
       this.text = text + this.text;
       this.dom.insertData(0, text);
     };
-    _.insTextAtDirEnd = function(text, dir) {
+    _.insTextAtDirEnd = function (text, dir) {
       prayDirection(dir);
       if (dir === R) this.appendText(text);
       else this.prependText(text);
     };
-    _.splitRight = function(i) {
+    _.splitRight = function (i) {
       var newPc = TextPiece(this.text.slice(i)).adopt(this.parent, this, this[R]);
       newPc.jQadd(this.dom.splitText(i));
       this.text = this.text.slice(0, i);
@@ -3285,7 +3263,7 @@ JS environment could actually contain many instances. */
       return text.charAt(dir === L ? 0 : -1 + text.length);
     }
 
-    _.moveTowards = function(dir, cursor) {
+    _.moveTowards = function (dir, cursor) {
       prayDirection(dir);
 
       var ch = endChar(-dir, this.text);
@@ -3297,11 +3275,11 @@ JS environment could actually contain many instances. */
       return this.deleteTowards(dir, cursor);
     };
 
-    _.latex = function() {
+    _.latex = function () {
       return this.text;
     };
 
-    _.deleteTowards = function(dir, cursor) {
+    _.deleteTowards = function (dir, cursor) {
       if (this.text.length > 1) {
         if (dir === R) {
           this.dom.deleteData(0, 1);
@@ -3319,7 +3297,7 @@ JS environment could actually contain many instances. */
       }
     };
 
-    _.selectTowards = function(dir, cursor) {
+    _.selectTowards = function (dir, cursor) {
       prayDirection(dir);
       var anticursor = cursor.anticursor;
 
@@ -3346,7 +3324,13 @@ JS environment could actually contain many instances. */
     };
   });
 
-  CharCmds.$ = LatexCmds.text = LatexCmds.textnormal = LatexCmds.textrm = LatexCmds.textup = LatexCmds.textmd = TextBlock;
+  CharCmds.$ =
+    LatexCmds.text =
+    LatexCmds.textnormal =
+    LatexCmds.textrm =
+    LatexCmds.textup =
+    LatexCmds.textmd =
+      TextBlock;
 
   function makeTextBlock(latex, tagName, attrs) {
     return P(TextBlock, {
@@ -3355,53 +3339,54 @@ JS environment could actually contain many instances. */
     });
   }
 
-  LatexCmds.em = LatexCmds.italic = LatexCmds.italics = LatexCmds.emph = LatexCmds.textit = LatexCmds.textsl = makeTextBlock(
-    '\\textit',
-    'i',
-    'class="mq-text-mode"'
-  );
-  LatexCmds.strong = LatexCmds.bold = LatexCmds.textbf = makeTextBlock(
-    '\\textbf',
-    'b',
-    'class="mq-text-mode"'
-  );
+  LatexCmds.em =
+    LatexCmds.italic =
+    LatexCmds.italics =
+    LatexCmds.emph =
+    LatexCmds.textit =
+    LatexCmds.textsl =
+      makeTextBlock('\\textit', 'i', 'class="mq-text-mode"');
+  LatexCmds.strong =
+    LatexCmds.bold =
+    LatexCmds.textbf =
+      makeTextBlock('\\textbf', 'b', 'class="mq-text-mode"');
   LatexCmds.sf = LatexCmds.textsf = makeTextBlock(
     '\\textsf',
     'span',
-    'class="mq-sans-serif mq-text-mode"'
+    'class="mq-sans-serif mq-text-mode"',
   );
   LatexCmds.tt = LatexCmds.texttt = makeTextBlock(
     '\\texttt',
     'span',
-    'class="mq-monospace mq-text-mode"'
+    'class="mq-monospace mq-text-mode"',
   );
   LatexCmds.textsc = makeTextBlock(
     '\\textsc',
     'span',
-    'style="font-variant:small-caps" class="mq-text-mode"'
+    'style="font-variant:small-caps" class="mq-text-mode"',
   );
   LatexCmds.uppercase = makeTextBlock(
     '\\uppercase',
     'span',
-    'style="text-transform:uppercase" class="mq-text-mode"'
+    'style="text-transform:uppercase" class="mq-text-mode"',
   );
   LatexCmds.lowercase = makeTextBlock(
     '\\lowercase',
     'span',
-    'style="text-transform:lowercase" class="mq-text-mode"'
+    'style="text-transform:lowercase" class="mq-text-mode"',
   );
 
-  var RootMathCommand = P(MathCommand, function(_, super_) {
-    _.init = function(cursor) {
+  var RootMathCommand = P(MathCommand, function (_, super_) {
+    _.init = function (cursor) {
       super_.init.call(this, '$');
       this.cursor = cursor;
     };
     _.htmlTemplate = '<span class="mq-math-mode">&0</span>';
-    _.createBlocks = function() {
+    _.createBlocks = function () {
       super_.createBlocks.call(this);
 
       this.ends[L].cursor = this.cursor;
-      this.ends[L].write = function(cursor, ch) {
+      this.ends[L].write = function (cursor, ch) {
         if (ch !== '$') MathBlock.prototype.write.call(this, cursor, ch);
         else if (this.isEmpty()) {
           cursor.insRightOf(this.parent);
@@ -3412,17 +3397,17 @@ JS environment could actually contain many instances. */
         else MathBlock.prototype.write.call(this, cursor, ch);
       };
     };
-    _.latex = function() {
+    _.latex = function () {
       return '$' + this.ends[L].latex() + '$';
     };
   });
 
-  var RootTextBlock = P(RootMathBlock, function(_, super_) {
-    _.keystroke = function(key) {
+  var RootTextBlock = P(RootMathBlock, function (_, super_) {
+    _.keystroke = function (key) {
       if (key === 'Spacebar' || key === 'Shift-Spacebar') return;
       return super_.keystroke.apply(this, arguments);
     };
-    _.write = function(cursor, ch) {
+    _.write = function (cursor, ch) {
       cursor.show().deleteSelection();
       if (ch === '$') RootMathCommand(cursor).createLeftOf(cursor);
       else {
@@ -3433,13 +3418,13 @@ JS environment could actually contain many instances. */
       }
     };
   });
-  API.TextField = function(APIClasses) {
-    return P(APIClasses.EditableField, function(_, super_) {
+  API.TextField = function (APIClasses) {
+    return P(APIClasses.EditableField, function (_, super_) {
       this.RootBlock = RootTextBlock;
-      _.__mathquillify = function() {
+      _.__mathquillify = function () {
         return super_.__mathquillify.call(this, 'mq-editable-field mq-text-mode');
       };
-      _.latex = function(latex) {
+      _.latex = function (latex) {
         if (arguments.length > 0) {
           this.__controller.renderLatexText(latex);
           if (this.__controller.blurred) this.__controller.cursor.hide().parent.blur();
@@ -3453,22 +3438,24 @@ JS environment could actually contain many instances. */
    * Symbols for Advanced Mathematics
    ***********************************/
 
-  LatexCmds.notin = LatexCmds.cong = LatexCmds.equiv = LatexCmds.oplus = LatexCmds.otimes = P(
-    BinaryOperator,
-    function(_, super_) {
-      _.init = function(latex) {
-        super_.init.call(this, '\\' + latex + ' ', '&' + latex + ';');
-      };
-    }
-  );
+  LatexCmds.notin =
+    LatexCmds.cong =
+    LatexCmds.equiv =
+    LatexCmds.oplus =
+    LatexCmds.otimes =
+      P(BinaryOperator, function (_, super_) {
+        _.init = function (latex) {
+          super_.init.call(this, '\\' + latex + ' ', '&' + latex + ';');
+        };
+      });
 
   LatexCmds['\u2260'] = LatexCmds.ne = LatexCmds.neq = bind(BinaryOperator, '\\ne ', '&ne;');
 
-  LatexCmds.ast = LatexCmds.star = LatexCmds.loast = LatexCmds.lowast = bind(
-    BinaryOperator,
-    '\\ast ',
-    '&lowast;'
-  );
+  LatexCmds.ast =
+    LatexCmds.star =
+    LatexCmds.loast =
+    LatexCmds.lowast =
+      bind(BinaryOperator, '\\ast ', '&lowast;');
   //case 'there4 = // a special exception for this one, perhaps?
   LatexCmds.therefor = LatexCmds.therefore = bind(BinaryOperator, '\\therefore ', '&there4;');
 
@@ -3476,104 +3463,122 @@ JS environment could actually contain many instances. */
 
   LatexCmds.prop = LatexCmds.propto = bind(BinaryOperator, '\\propto ', '&prop;');
 
-  LatexCmds['\u2248'] = LatexCmds.asymp = LatexCmds.approx = bind(
-    BinaryOperator,
-    '\\approx ',
-    '&asymp;'
-  );
+  LatexCmds['\u2248'] =
+    LatexCmds.asymp =
+    LatexCmds.approx =
+      bind(BinaryOperator, '\\approx ', '&asymp;');
 
   LatexCmds.isin = LatexCmds['in'] = bind(BinaryOperator, '\\in ', '&isin;');
 
   LatexCmds.ni = LatexCmds.contains = bind(BinaryOperator, '\\ni ', '&ni;');
 
-  LatexCmds.notni = LatexCmds.niton = LatexCmds.notcontains = LatexCmds.doesnotcontain = bind(
-    BinaryOperator,
-    '\\not\\ni ',
-    '&#8716;'
-  );
+  LatexCmds.notni =
+    LatexCmds.niton =
+    LatexCmds.notcontains =
+    LatexCmds.doesnotcontain =
+      bind(BinaryOperator, '\\not\\ni ', '&#8716;');
 
   LatexCmds.sub = LatexCmds.subset = bind(BinaryOperator, '\\subset ', '&sub;');
 
-  LatexCmds.sup = LatexCmds.supset = LatexCmds.superset = bind(
-    BinaryOperator,
-    '\\supset ',
-    '&sup;'
-  );
+  LatexCmds.sup =
+    LatexCmds.supset =
+    LatexCmds.superset =
+      bind(BinaryOperator, '\\supset ', '&sup;');
 
-  LatexCmds.nsub = LatexCmds.notsub = LatexCmds.nsubset = LatexCmds.notsubset = bind(
-    BinaryOperator,
-    '\\not\\subset ',
-    '&#8836;'
-  );
+  LatexCmds.nsub =
+    LatexCmds.notsub =
+    LatexCmds.nsubset =
+    LatexCmds.notsubset =
+      bind(BinaryOperator, '\\not\\subset ', '&#8836;');
 
-  LatexCmds.nsup = LatexCmds.notsup = LatexCmds.nsupset = LatexCmds.notsupset = LatexCmds.nsuperset = LatexCmds.notsuperset = bind(
-    BinaryOperator,
-    '\\not\\supset ',
-    '&#8837;'
-  );
+  LatexCmds.nsup =
+    LatexCmds.notsup =
+    LatexCmds.nsupset =
+    LatexCmds.notsupset =
+    LatexCmds.nsuperset =
+    LatexCmds.notsuperset =
+      bind(BinaryOperator, '\\not\\supset ', '&#8837;');
 
-  LatexCmds.sube = LatexCmds.subeq = LatexCmds.subsete = LatexCmds.subseteq = bind(
-    BinaryOperator,
-    '\\subseteq ',
-    '&sube;'
-  );
+  LatexCmds.sube =
+    LatexCmds.subeq =
+    LatexCmds.subsete =
+    LatexCmds.subseteq =
+      bind(BinaryOperator, '\\subseteq ', '&sube;');
 
-  LatexCmds.supe = LatexCmds.supeq = LatexCmds.supsete = LatexCmds.supseteq = LatexCmds.supersete = LatexCmds.superseteq = bind(
-    BinaryOperator,
-    '\\supseteq ',
-    '&supe;'
-  );
+  LatexCmds.supe =
+    LatexCmds.supeq =
+    LatexCmds.supsete =
+    LatexCmds.supseteq =
+    LatexCmds.supersete =
+    LatexCmds.superseteq =
+      bind(BinaryOperator, '\\supseteq ', '&supe;');
 
-  LatexCmds.nsube = LatexCmds.nsubeq = LatexCmds.notsube = LatexCmds.notsubeq = LatexCmds.nsubsete = LatexCmds.nsubseteq = LatexCmds.notsubsete = LatexCmds.notsubseteq = bind(
-    BinaryOperator,
-    '\\not\\subseteq ',
-    '&#8840;'
-  );
+  LatexCmds.nsube =
+    LatexCmds.nsubeq =
+    LatexCmds.notsube =
+    LatexCmds.notsubeq =
+    LatexCmds.nsubsete =
+    LatexCmds.nsubseteq =
+    LatexCmds.notsubsete =
+    LatexCmds.notsubseteq =
+      bind(BinaryOperator, '\\not\\subseteq ', '&#8840;');
 
-  LatexCmds.nsupe = LatexCmds.nsupeq = LatexCmds.notsupe = LatexCmds.notsupeq = LatexCmds.nsupsete = LatexCmds.nsupseteq = LatexCmds.notsupsete = LatexCmds.notsupseteq = LatexCmds.nsupersete = LatexCmds.nsuperseteq = LatexCmds.notsupersete = LatexCmds.notsuperseteq = bind(
-    BinaryOperator,
-    '\\not\\supseteq ',
-    '&#8841;'
-  );
+  LatexCmds.nsupe =
+    LatexCmds.nsupeq =
+    LatexCmds.notsupe =
+    LatexCmds.notsupeq =
+    LatexCmds.nsupsete =
+    LatexCmds.nsupseteq =
+    LatexCmds.notsupsete =
+    LatexCmds.notsupseteq =
+    LatexCmds.nsupersete =
+    LatexCmds.nsuperseteq =
+    LatexCmds.notsupersete =
+    LatexCmds.notsuperseteq =
+      bind(BinaryOperator, '\\not\\supseteq ', '&#8841;');
 
   //the canonical sets of numbers
-  LatexCmds.N = LatexCmds.naturals = LatexCmds.Naturals = bind(
-    VanillaSymbol,
-    '\\mathbb{N}',
-    '&#8469;'
-  );
+  LatexCmds.N =
+    LatexCmds.naturals =
+    LatexCmds.Naturals =
+      bind(VanillaSymbol, '\\mathbb{N}', '&#8469;');
 
-  LatexCmds.P = LatexCmds.primes = LatexCmds.Primes = LatexCmds.projective = LatexCmds.Projective = LatexCmds.probability = LatexCmds.Probability = bind(
-    VanillaSymbol,
-    '\\mathbb{P}',
-    '&#8473;'
-  );
+  LatexCmds.P =
+    LatexCmds.primes =
+    LatexCmds.Primes =
+    LatexCmds.projective =
+    LatexCmds.Projective =
+    LatexCmds.probability =
+    LatexCmds.Probability =
+      bind(VanillaSymbol, '\\mathbb{P}', '&#8473;');
 
-  LatexCmds.Z = LatexCmds.integers = LatexCmds.Integers = bind(
-    VanillaSymbol,
-    '\\mathbb{Z}',
-    '&#8484;'
-  );
+  LatexCmds.Z =
+    LatexCmds.integers =
+    LatexCmds.Integers =
+      bind(VanillaSymbol, '\\mathbb{Z}', '&#8484;');
 
-  LatexCmds.Q = LatexCmds.rationals = LatexCmds.Rationals = bind(
-    VanillaSymbol,
-    '\\mathbb{Q}',
-    '&#8474;'
-  );
+  LatexCmds.Q =
+    LatexCmds.rationals =
+    LatexCmds.Rationals =
+      bind(VanillaSymbol, '\\mathbb{Q}', '&#8474;');
 
   LatexCmds.R = LatexCmds.reals = LatexCmds.Reals = bind(VanillaSymbol, '\\mathbb{R}', '&#8477;');
 
-  LatexCmds.C = LatexCmds.complex = LatexCmds.Complex = LatexCmds.complexes = LatexCmds.Complexes = LatexCmds.complexplane = LatexCmds.Complexplane = LatexCmds.ComplexPlane = bind(
-    VanillaSymbol,
-    '\\mathbb{C}',
-    '&#8450;'
-  );
+  LatexCmds.C =
+    LatexCmds.complex =
+    LatexCmds.Complex =
+    LatexCmds.complexes =
+    LatexCmds.Complexes =
+    LatexCmds.complexplane =
+    LatexCmds.Complexplane =
+    LatexCmds.ComplexPlane =
+      bind(VanillaSymbol, '\\mathbb{C}', '&#8450;');
 
-  LatexCmds.H = LatexCmds.Hamiltonian = LatexCmds.quaternions = LatexCmds.Quaternions = bind(
-    VanillaSymbol,
-    '\\mathbb{H}',
-    '&#8461;'
-  );
+  LatexCmds.H =
+    LatexCmds.Hamiltonian =
+    LatexCmds.quaternions =
+    LatexCmds.Quaternions =
+      bind(VanillaSymbol, '\\mathbb{H}', '&#8461;');
 
   //spacing
   LatexCmds.quad = LatexCmds.emsp = bind(VanillaSymbol, '\\quad ', '    ');
@@ -3704,11 +3709,10 @@ case '!':
   LatexCmds.nabla = LatexCmds.del = bind(VanillaSymbol, '\\nabla ', '&nabla;');
   LatexCmds.hbar = bind(VanillaSymbol, '\\hbar ', '&#8463;');
 
-  LatexCmds.AA = LatexCmds.Angstrom = LatexCmds.angstrom = bind(
-    VanillaSymbol,
-    '\\text\\AA ',
-    '&#8491;'
-  );
+  LatexCmds.AA =
+    LatexCmds.Angstrom =
+    LatexCmds.angstrom =
+      bind(VanillaSymbol, '\\text\\AA ', '&#8491;');
 
   LatexCmds.ring = LatexCmds.circ = LatexCmds.circle = bind(VanillaSymbol, '\\circ ', '&#8728;');
 
@@ -3718,31 +3722,31 @@ case '!':
 
   LatexCmds.not = LatexCmds['\u00ac'] = LatexCmds.neg = bind(VanillaSymbol, '\\neg ', '&not;'); //bind(Symbol,'\\not ','<span class="not">/</span>');
 
-  LatexCmds[
-    '\u2026'
-  ] = LatexCmds.dots = LatexCmds.ellip = LatexCmds.hellip = LatexCmds.ellipsis = LatexCmds.hellipsis = bind(
-    VanillaSymbol,
-    '\\dots ',
-    '&hellip;'
-  );
+  LatexCmds['\u2026'] =
+    LatexCmds.dots =
+    LatexCmds.ellip =
+    LatexCmds.hellip =
+    LatexCmds.ellipsis =
+    LatexCmds.hellipsis =
+      bind(VanillaSymbol, '\\dots ', '&hellip;');
 
-  LatexCmds.converges = LatexCmds.darr = LatexCmds.dnarr = LatexCmds.dnarrow = LatexCmds.downarrow = bind(
-    VanillaSymbol,
-    '\\downarrow ',
-    '&darr;'
-  );
+  LatexCmds.converges =
+    LatexCmds.darr =
+    LatexCmds.dnarr =
+    LatexCmds.dnarrow =
+    LatexCmds.downarrow =
+      bind(VanillaSymbol, '\\downarrow ', '&darr;');
 
-  LatexCmds.dArr = LatexCmds.dnArr = LatexCmds.dnArrow = LatexCmds.Downarrow = bind(
-    VanillaSymbol,
-    '\\Downarrow ',
-    '&dArr;'
-  );
+  LatexCmds.dArr =
+    LatexCmds.dnArr =
+    LatexCmds.dnArrow =
+    LatexCmds.Downarrow =
+      bind(VanillaSymbol, '\\Downarrow ', '&dArr;');
 
-  LatexCmds.diverges = LatexCmds.uarr = LatexCmds.uparrow = bind(
-    VanillaSymbol,
-    '\\uparrow ',
-    '&uarr;'
-  );
+  LatexCmds.diverges =
+    LatexCmds.uarr =
+    LatexCmds.uparrow =
+      bind(VanillaSymbol, '\\uparrow ', '&uarr;');
 
   LatexCmds.uArr = LatexCmds.Uparrow = bind(VanillaSymbol, '\\Uparrow ', '&uArr;');
 
@@ -3762,48 +3766,51 @@ case '!':
 
   LatexCmds.lArr = LatexCmds.Leftarrow = bind(VanillaSymbol, '\\Leftarrow ', '&lArr;');
 
-  LatexCmds.harr = LatexCmds.lrarr = LatexCmds.leftrightarrow = bind(
-    VanillaSymbol,
-    '\\leftrightarrow ',
-    '&harr;'
-  );
+  LatexCmds.harr =
+    LatexCmds.lrarr =
+    LatexCmds.leftrightarrow =
+      bind(VanillaSymbol, '\\leftrightarrow ', '&harr;');
 
   LatexCmds.iff = bind(BinaryOperator, '\\Leftrightarrow ', '&hArr;');
 
-  LatexCmds.hArr = LatexCmds.lrArr = LatexCmds.Leftrightarrow = bind(
-    VanillaSymbol,
-    '\\Leftrightarrow ',
-    '&hArr;'
-  );
+  LatexCmds.hArr =
+    LatexCmds.lrArr =
+    LatexCmds.Leftrightarrow =
+      bind(VanillaSymbol, '\\Leftrightarrow ', '&hArr;');
 
   LatexCmds.Re = LatexCmds.Real = LatexCmds.real = bind(VanillaSymbol, '\\Re ', '&real;');
 
-  LatexCmds.Im = LatexCmds.imag = LatexCmds.image = LatexCmds.imagin = LatexCmds.imaginary = LatexCmds.Imaginary = bind(
-    VanillaSymbol,
-    '\\Im ',
-    '&image;'
-  );
+  LatexCmds.Im =
+    LatexCmds.imag =
+    LatexCmds.image =
+    LatexCmds.imagin =
+    LatexCmds.imaginary =
+    LatexCmds.Imaginary =
+      bind(VanillaSymbol, '\\Im ', '&image;');
 
   LatexCmds.part = LatexCmds.partial = bind(VanillaSymbol, '\\partial ', '&part;');
 
-  LatexCmds.infty = LatexCmds.infin = LatexCmds.infinity = bind(
-    VanillaSymbol,
-    '\\infty ',
-    '&infin;'
-  );
+  LatexCmds.infty =
+    LatexCmds.infin =
+    LatexCmds.infinity =
+      bind(VanillaSymbol, '\\infty ', '&infin;');
 
-  LatexCmds.alef = LatexCmds.alefsym = LatexCmds.aleph = LatexCmds.alephsym = bind(
-    VanillaSymbol,
-    '\\aleph ',
-    '&alefsym;'
-  );
+  LatexCmds.alef =
+    LatexCmds.alefsym =
+    LatexCmds.aleph =
+    LatexCmds.alephsym =
+      bind(VanillaSymbol, '\\aleph ', '&alefsym;');
 
-  LatexCmds.xist = LatexCmds.xists = LatexCmds.exist = LatexCmds.exists = bind(
-    //LOL
-    VanillaSymbol,
-    '\\exists ',
-    '&exist;'
-  );
+  LatexCmds.xist =
+    LatexCmds.xists =
+    LatexCmds.exist =
+    LatexCmds.exists =
+      bind(
+        //LOL
+        VanillaSymbol,
+        '\\exists ',
+        '&exist;',
+      );
 
   LatexCmds.nexists = LatexCmds.nexist = bind(VanillaSymbol, '\\nexists ', '&#8708;');
 
@@ -3811,19 +3818,22 @@ case '!':
 
   LatexCmds.or = LatexCmds.lor = LatexCmds.vee = bind(VanillaSymbol, '\\vee ', '&or;');
 
-  LatexCmds.o = LatexCmds.O = LatexCmds.empty = LatexCmds.emptyset = LatexCmds.oslash = LatexCmds.Oslash = LatexCmds.nothing = LatexCmds.varnothing = bind(
-    BinaryOperator,
-    '\\varnothing ',
-    '&empty;'
-  );
+  LatexCmds.o =
+    LatexCmds.O =
+    LatexCmds.empty =
+    LatexCmds.emptyset =
+    LatexCmds.oslash =
+    LatexCmds.Oslash =
+    LatexCmds.nothing =
+    LatexCmds.varnothing =
+      bind(BinaryOperator, '\\varnothing ', '&empty;');
 
   LatexCmds.cup = LatexCmds.union = bind(BinaryOperator, '\\cup ', '&cup;');
 
-  LatexCmds.cap = LatexCmds.intersect = LatexCmds.intersection = bind(
-    BinaryOperator,
-    '\\cap ',
-    '&cap;'
-  );
+  LatexCmds.cap =
+    LatexCmds.intersect =
+    LatexCmds.intersection =
+      bind(BinaryOperator, '\\cap ', '&cap;');
 
   // FIXME: the correct LaTeX would be ^\circ but we can't parse that
   LatexCmds.deg = LatexCmds.degree = bind(VanillaSymbol, '\\degree ', '&deg;');
@@ -3834,8 +3844,8 @@ case '!':
    * Symbols for Basic Mathematics
    ********************************/
 
-  var Digit = P(VanillaSymbol, function(_, super_) {
-    _.createLeftOf = function(cursor) {
+  var Digit = P(VanillaSymbol, function (_, super_) {
+    _.createLeftOf = function (cursor) {
       if (
         cursor.options.autoSubscriptNumerals &&
         cursor.parent !== cursor.parent.parent.sub &&
@@ -3851,11 +3861,11 @@ case '!':
     };
   });
 
-  var Variable = P(Symbol, function(_, super_) {
-    _.init = function(ch, html) {
+  var Variable = P(Symbol, function (_, super_) {
+    _.init = function (ch, html) {
       super_.init.call(this, ch, '<var>' + (html || ch) + '</var>');
     };
-    _.text = function() {
+    _.text = function () {
       var text = this.ctrlSeq;
       if (
         this[L] &&
@@ -3871,7 +3881,7 @@ case '!':
   });
 
   Options.p.autoCommands = { _maxLength: 0 };
-  optionProcessors.autoCommands = function(cmds) {
+  optionProcessors.autoCommands = function (cmds) {
     if (!/^[a-z]+(?: [a-z]+)*$/i.test(cmds)) {
       throw '"' + cmds + '" not a space-delimited list of only letters';
     }
@@ -3893,11 +3903,11 @@ case '!':
     return dict;
   };
 
-  var Letter = P(Variable, function(_, super_) {
-    _.init = function(ch) {
+  var Letter = P(Variable, function (_, super_) {
+    _.init = function (ch) {
       return super_.init.call(this, (this.letter = ch));
     };
-    _.createLeftOf = function(cursor) {
+    _.createLeftOf = function (cursor) {
       super_.createLeftOf.apply(this, arguments);
       var autoCmds = cursor.options.autoCommands,
         maxLength = autoCmds._maxLength;
@@ -3909,7 +3919,7 @@ case '!':
           i = 0;
         // FIXME: l.ctrlSeq === l.letter checks if first or last in an operator name
         while (l instanceof Letter && l.ctrlSeq === l.letter && i < maxLength) {
-          (str = l.letter + str), (l = l[L]), (i += 1);
+          ((str = l.letter + str), (l = l[L]), (i += 1));
         }
         // check for an autocommand, going thru substrings longest to shortest
         while (str.length) {
@@ -3923,18 +3933,21 @@ case '!':
         }
       }
     };
-    _.italicize = function(bool) {
+    _.italicize = function (bool) {
       this.isItalic = bool;
       this.jQ.toggleClass('mq-operator-name', !bool);
       return this;
     };
-    _.finalizeTree = _.siblingDeleted = _.siblingCreated = function(opts, dir) {
-      // don't auto-un-italicize if the sibling to my right changed (dir === R or
-      // undefined) and it's now a Letter, it will un-italicize everyone
-      if (dir !== L && this[R] instanceof Letter) return;
-      this.autoUnItalicize(opts);
-    };
-    _.autoUnItalicize = function(opts) {
+    _.finalizeTree =
+      _.siblingDeleted =
+      _.siblingCreated =
+        function (opts, dir) {
+          // don't auto-un-italicize if the sibling to my right changed (dir === R or
+          // undefined) and it's now a Letter, it will un-italicize everyone
+          if (dir !== L && this[R] instanceof Letter) return;
+          this.autoUnItalicize(opts);
+        };
+    _.autoUnItalicize = function (opts) {
       var autoOps = opts.autoOperatorNames;
       if (autoOps._maxLength === 0) return;
       // want longest possible operator names, so join together entire contiguous
@@ -3945,7 +3958,7 @@ case '!':
 
       // removeClass and delete flags from all letters before figuring out
       // which, if any, are part of an operator name
-      Fragment(l[R] || this.parent.ends[L], r[L] || this.parent.ends[R]).each(function(el) {
+      Fragment(l[R] || this.parent.ends[L], r[L] || this.parent.ends[R]).each(function (el) {
         el.italicize(true).jQ.removeClass('mq-first mq-last mq-followed-by-supsub');
         el.ctrlSeq = el.letter;
       });
@@ -3976,9 +3989,15 @@ case '!':
                 var supsub = last[R]; // XXX monkey-patching, but what's the right thing here?
                 // Have operatorname-specific code in SupSub? A CSS-like language to style the
                 // math tree, but which ignores cursor and selection (which CSS can't)?
-                var respace = (supsub.siblingCreated = supsub.siblingDeleted = function() {
-                  supsub.jQ.toggleClass('mq-after-operator-name', !(supsub[R] instanceof Bracket));
-                });
+                var respace =
+                  (supsub.siblingCreated =
+                  supsub.siblingDeleted =
+                    function () {
+                      supsub.jQ.toggleClass(
+                        'mq-after-operator-name',
+                        !(supsub[R] instanceof Bracket),
+                      );
+                    });
                 respace();
               } else {
                 last.jQ.toggleClass('mq-last', !(last[R] instanceof Bracket));
@@ -4006,7 +4025,7 @@ case '!':
   var AutoOpNames = (Options.p.autoOperatorNames = { _maxLength: 9 }); // the set
   // of operator names that MathQuill auto-unitalicizes by default; overridable
   var TwoWordOpNames = { limsup: 1, liminf: 1, projlim: 1, injlim: 1 };
-  (function() {
+  (function () {
     var mostOps = (
       'arg deg det dim exp gcd hom inf ker lg lim ln log max min sup' +
       ' limsup liminf injlim projlim Pr'
@@ -4017,7 +4036,7 @@ case '!':
 
     var builtInTrigs = 'sin cos tan arcsin arccos arctan sinh cosh tanh sec csc cot coth'.split(
       // why coth but not sech and csch, LaTeX?
-      ' '
+      ' ',
     );
     for (var i = 0; i < builtInTrigs.length; i += 1) {
       BuiltInOpNames[builtInTrigs[i]] = 1;
@@ -4025,9 +4044,12 @@ case '!':
 
     var autoTrigs = 'sin cos tan sec cosec csc cotan cot ctg'.split(' ');
     for (var i = 0; i < autoTrigs.length; i += 1) {
-      AutoOpNames[autoTrigs[i]] = AutoOpNames['arc' + autoTrigs[i]] = AutoOpNames[
-        autoTrigs[i] + 'h'
-      ] = AutoOpNames['ar' + autoTrigs[i] + 'h'] = AutoOpNames['arc' + autoTrigs[i] + 'h'] = 1;
+      AutoOpNames[autoTrigs[i]] =
+        AutoOpNames['arc' + autoTrigs[i]] =
+        AutoOpNames[autoTrigs[i] + 'h'] =
+        AutoOpNames['ar' + autoTrigs[i] + 'h'] =
+        AutoOpNames['arc' + autoTrigs[i] + 'h'] =
+          1;
     }
 
     // compat with some of the nonstandard LaTeX exported by MathQuill
@@ -4037,7 +4059,7 @@ case '!':
       AutoOpNames[moreNonstandardOps[i]] = 1;
     }
   })();
-  optionProcessors.autoOperatorNames = function(cmds) {
+  optionProcessors.autoOperatorNames = function (cmds) {
     if (!/^[a-z]+(?: [a-z]+)*$/i.test(cmds)) {
       throw '"' + cmds + '" not a space-delimited list of only letters';
     }
@@ -4055,17 +4077,17 @@ case '!':
     dict._maxLength = maxLength;
     return dict;
   };
-  var OperatorName = P(Symbol, function(_, super_) {
-    _.init = function(fn) {
+  var OperatorName = P(Symbol, function (_, super_) {
+    _.init = function (fn) {
       this.ctrlSeq = fn;
     };
-    _.createLeftOf = function(cursor) {
+    _.createLeftOf = function (cursor) {
       var fn = this.ctrlSeq;
       for (var i = 0; i < fn.length; i += 1) {
         Letter(fn.charAt(i)).createLeftOf(cursor);
       }
     };
-    _.parser = function() {
+    _.parser = function () {
       var fn = this.ctrlSeq;
       var block = MathBlock();
       for (var i = 0; i < fn.length; i += 1) {
@@ -4078,23 +4100,23 @@ case '!':
     if (Object.prototype.hasOwnProperty(AutoOpNames, fn)) {
       LatexCmds[fn] = OperatorName;
     }
-  LatexCmds.operatorname = P(MathCommand, function(_) {
+  LatexCmds.operatorname = P(MathCommand, function (_) {
     _.createLeftOf = noop;
-    _.numBlocks = function() {
+    _.numBlocks = function () {
       return 1;
     };
-    _.parser = function() {
-      return latexMathParser.block.map(function(b) {
+    _.parser = function () {
+      return latexMathParser.block.map(function (b) {
         return b.children();
       });
     };
   });
 
-  LatexCmds.f = P(Letter, function(_, super_) {
-    _.init = function() {
+  LatexCmds.f = P(Letter, function (_, super_) {
+    _.init = function () {
       Symbol.p.init.call(this, (this.letter = 'f'), '<var class="mq-f">f</var>');
     };
-    _.italicize = function(bool) {
+    _.italicize = function (bool) {
       this.jQ.html('f').toggleClass('mq-f', bool);
       return super_.italicize.apply(this, arguments);
     };
@@ -4111,8 +4133,8 @@ case '!':
   LatexCmds.$ = bind(VanillaSymbol, '\\$', '$');
 
   // does not use Symbola font
-  var NonSymbolaSymbol = P(Symbol, function(_, super_) {
-    _.init = function(ch, html) {
+  var NonSymbolaSymbol = P(Symbol, function (_, super_) {
+    _.init = function (ch, html) {
       super_.init.call(this, ch, '<span class="mq-nonSymbola">' + (html || ch) + '</span>');
     };
   });
@@ -4124,14 +4146,29 @@ case '!':
   //the following are all Greek to me, but this helped a lot: http://www.ams.org/STIX/ion/stixsig03.html
 
   //lowercase Greek letter variables
-  LatexCmds.alpha = LatexCmds.beta = LatexCmds.gamma = LatexCmds.delta = LatexCmds.zeta = LatexCmds.eta = LatexCmds.theta = LatexCmds.iota = LatexCmds.kappa = LatexCmds.mu = LatexCmds.nu = LatexCmds.xi = LatexCmds.rho = LatexCmds.sigma = LatexCmds.tau = LatexCmds.chi = LatexCmds.psi = LatexCmds.omega = P(
-    Variable,
-    function(_, super_) {
-      _.init = function(latex) {
-        super_.init.call(this, '\\' + latex + ' ', '&' + latex + ';');
-      };
-    }
-  );
+  LatexCmds.alpha =
+    LatexCmds.beta =
+    LatexCmds.gamma =
+    LatexCmds.delta =
+    LatexCmds.zeta =
+    LatexCmds.eta =
+    LatexCmds.theta =
+    LatexCmds.iota =
+    LatexCmds.kappa =
+    LatexCmds.mu =
+    LatexCmds.nu =
+    LatexCmds.xi =
+    LatexCmds.rho =
+    LatexCmds.sigma =
+    LatexCmds.tau =
+    LatexCmds.chi =
+    LatexCmds.psi =
+    LatexCmds.omega =
+      P(Variable, function (_, super_) {
+        _.init = function (latex) {
+          super_.init.call(this, '\\' + latex + ' ', '&' + latex + ';');
+        };
+      });
 
   //why can't anybody FUCKING agree on these
   LatexCmds.phi = bind(Variable, '\\phi ', '&#981;'); //W3C or Unicode?
@@ -4144,19 +4181,25 @@ case '!':
 
   LatexCmds.piv = LatexCmds.varpi = bind(Variable, '\\varpi ', '&piv;'); //W3C/Unicode and Elsevier and 9573-13 //AMS and LaTeX
 
-  LatexCmds.sigmaf = LatexCmds.sigmav = LatexCmds.varsigma = bind(
-    //W3C/Unicode //Elsevier //LaTeX
-    Variable,
-    '\\varsigma ',
-    '&sigmaf;'
-  );
+  LatexCmds.sigmaf =
+    LatexCmds.sigmav =
+    LatexCmds.varsigma =
+      bind(
+        //W3C/Unicode //Elsevier //LaTeX
+        Variable,
+        '\\varsigma ',
+        '&sigmaf;',
+      );
 
-  LatexCmds.thetav = LatexCmds.vartheta = LatexCmds.thetasym = bind(
-    //Elsevier and 9573-13 //AMS and LaTeX //W3C/Unicode
-    Variable,
-    '\\vartheta ',
-    '&thetasym;'
-  );
+  LatexCmds.thetav =
+    LatexCmds.vartheta =
+    LatexCmds.thetasym =
+      bind(
+        //Elsevier and 9573-13 //AMS and LaTeX //W3C/Unicode
+        Variable,
+        '\\vartheta ',
+        '&thetasym;',
+      );
 
   LatexCmds.upsilon = LatexCmds.upsi = bind(Variable, '\\upsilon ', '&upsilon;'); //AMS and LaTeX and W3C/Unicode //Elsevier and 9573-13
 
@@ -4173,30 +4216,42 @@ case '!':
 
   //uppercase greek letters
 
-  LatexCmds.Upsilon = LatexCmds.Upsi = LatexCmds.upsih = LatexCmds.Upsih = bind(
-    //LaTeX //Elsevier and 9573-13 //W3C/Unicode "upsilon with hook" //'cos it makes sense to me
-    Symbol,
-    '\\Upsilon ',
-    '<var style="font-family: serif">&upsih;</var>'
-  ); //Symbola's 'upsilon with a hook' is a capital Y without hooks :(
+  LatexCmds.Upsilon =
+    LatexCmds.Upsi =
+    LatexCmds.upsih =
+    LatexCmds.Upsih =
+      bind(
+        //LaTeX //Elsevier and 9573-13 //W3C/Unicode "upsilon with hook" //'cos it makes sense to me
+        Symbol,
+        '\\Upsilon ',
+        '<var style="font-family: serif">&upsih;</var>',
+      ); //Symbola's 'upsilon with a hook' is a capital Y without hooks :(
 
   //other symbols with the same LaTeX command and HTML character entity reference
-  LatexCmds.Gamma = LatexCmds.Delta = LatexCmds.Theta = LatexCmds.Lambda = LatexCmds.Xi = LatexCmds.Pi = LatexCmds.Sigma = LatexCmds.Phi = LatexCmds.Psi = LatexCmds.Omega = LatexCmds.forall = P(
-    VanillaSymbol,
-    function(_, super_) {
-      _.init = function(latex) {
-        super_.init.call(this, '\\' + latex + ' ', '&' + latex + ';');
-      };
-    }
-  );
+  LatexCmds.Gamma =
+    LatexCmds.Delta =
+    LatexCmds.Theta =
+    LatexCmds.Lambda =
+    LatexCmds.Xi =
+    LatexCmds.Pi =
+    LatexCmds.Sigma =
+    LatexCmds.Phi =
+    LatexCmds.Psi =
+    LatexCmds.Omega =
+    LatexCmds.forall =
+      P(VanillaSymbol, function (_, super_) {
+        _.init = function (latex) {
+          super_.init.call(this, '\\' + latex + ' ', '&' + latex + ';');
+        };
+      });
 
   // symbols that aren't a single MathCommand, but are instead a whole
   // Fragment. Creates the Fragment from a LaTeX string
-  var LatexFragment = P(MathCommand, function(_) {
-    _.init = function(latex) {
+  var LatexFragment = P(MathCommand, function (_) {
+    _.init = function (latex) {
       this.latex = latex;
     };
-    _.createLeftOf = function(cursor) {
+    _.createLeftOf = function (cursor) {
       var block = latexMathParser.parse(this.latex);
       block.children().adopt(cursor.parent, cursor[L], cursor[R]);
       cursor[L] = block.ends[R];
@@ -4206,7 +4261,7 @@ case '!':
       if (block.ends[L][L].siblingCreated) block.ends[L][L].siblingCreated(cursor.options, R);
       cursor.parent.bubble('reflow');
     };
-    _.parser = function() {
+    _.parser = function () {
       var frag = latexMathParser.parse(this.latex).children();
       return Parser.succeed(frag);
     };
@@ -4243,42 +4298,43 @@ case '!':
   LatexCmds['\u00bd'] = bind(LatexFragment, '\\frac12');
   LatexCmds['\u00be'] = bind(LatexFragment, '\\frac34');
 
-  var PlusMinus = P(BinaryOperator, function(_) {
+  var PlusMinus = P(BinaryOperator, function (_) {
     _.init = VanillaSymbol.prototype.init;
 
-    _.contactWeld = _.siblingCreated = _.siblingDeleted = function(opts, dir) {
-      if (dir === R) return; // ignore if sibling only changed on the right
-      // If the left sibling is a binary operator or a separator (comma, semicolon, colon)
-      // or an open bracket (open parenthesis, open square bracket)
-      // consider the operator to be unary, otherwise binary
-      this.jQ[0].className =
-        !this[L] || this[L] instanceof BinaryOperator || /^[,;:\(\[]$/.test(this[L].ctrlSeq)
-          ? ''
-          : 'mq-binary-operator';
-      return this;
-    };
+    _.contactWeld =
+      _.siblingCreated =
+      _.siblingDeleted =
+        function (opts, dir) {
+          if (dir === R) return; // ignore if sibling only changed on the right
+          // If the left sibling is a binary operator or a separator (comma, semicolon, colon)
+          // or an open bracket (open parenthesis, open square bracket)
+          // consider the operator to be unary, otherwise binary
+          this.jQ[0].className =
+            !this[L] || this[L] instanceof BinaryOperator || /^[,;:\(\[]$/.test(this[L].ctrlSeq)
+              ? ''
+              : 'mq-binary-operator';
+          return this;
+        };
   });
 
   LatexCmds['+'] = bind(PlusMinus, '+', '+');
   //yes, these are different dashes, I think one is an en dash and the other is a hyphen
   LatexCmds['\u2013'] = LatexCmds['-'] = bind(PlusMinus, '-', '&minus;');
-  LatexCmds['\u00b1'] = LatexCmds.pm = LatexCmds.plusmn = LatexCmds.plusminus = bind(
-    PlusMinus,
-    '\\pm ',
-    '&plusmn;'
-  );
+  LatexCmds['\u00b1'] =
+    LatexCmds.pm =
+    LatexCmds.plusmn =
+    LatexCmds.plusminus =
+      bind(PlusMinus, '\\pm ', '&plusmn;');
   LatexCmds.mp = LatexCmds.mnplus = LatexCmds.minusplus = bind(PlusMinus, '\\mp ', '&#8723;');
 
-  CharCmds['*'] = LatexCmds.sdot = LatexCmds.cdot = bind(
-    BinaryOperator,
-    '\\cdot ',
-    '&middot;',
-    '*'
-  );
+  CharCmds['*'] =
+    LatexCmds.sdot =
+    LatexCmds.cdot =
+      bind(BinaryOperator, '\\cdot ', '&middot;', '*');
   //semantically should be &sdot;, but &middot; looks better
 
-  var Inequality = P(BinaryOperator, function(_, super_) {
-    _.init = function(data, strict) {
+  var Inequality = P(BinaryOperator, function (_, super_) {
+    _.init = function (data, strict) {
       this.data = data;
       this.strict = strict;
       var strictness = strict ? 'Strict' : '';
@@ -4286,17 +4342,17 @@ case '!':
         this,
         data['ctrlSeq' + strictness],
         data['html' + strictness],
-        data['text' + strictness]
+        data['text' + strictness],
       );
     };
-    _.swap = function(strict) {
+    _.swap = function (strict) {
       this.strict = strict;
       var strictness = strict ? 'Strict' : '';
       this.ctrlSeq = this.data['ctrlSeq' + strictness];
       this.jQ.html(this.data['html' + strictness]);
       this.textTemplate = [this.data['text' + strictness]];
     };
-    _.deleteTowards = function(dir, cursor) {
+    _.deleteTowards = function (dir, cursor) {
       if (dir === L && !this.strict) {
         this.swap(true);
         this.bubble('reflow');
@@ -4328,11 +4384,11 @@ case '!':
   LatexCmds['\u2264'] = LatexCmds.le = LatexCmds.leq = bind(Inequality, less, false);
   LatexCmds['\u2265'] = LatexCmds.ge = LatexCmds.geq = bind(Inequality, greater, false);
 
-  var Equality = P(BinaryOperator, function(_, super_) {
-    _.init = function() {
+  var Equality = P(BinaryOperator, function (_, super_) {
+    _.init = function () {
       super_.init.call(this, '=', '=');
     };
-    _.createLeftOf = function(cursor) {
+    _.createLeftOf = function (cursor) {
       if (cursor[L] instanceof Inequality && cursor[L].strict) {
         cursor[L].swap(false);
         cursor[L].bubble('reflow');
@@ -4345,12 +4401,11 @@ case '!':
 
   LatexCmds['\u00d7'] = LatexCmds.times = bind(BinaryOperator, '\\times ', '&times;', '[x]');
 
-  LatexCmds['\u00f7'] = LatexCmds.div = LatexCmds.divide = LatexCmds.divides = bind(
-    BinaryOperator,
-    '\\div ',
-    '&divide;',
-    '[/]'
-  );
+  LatexCmds['\u00f7'] =
+    LatexCmds.div =
+    LatexCmds.divide =
+    LatexCmds.divides =
+      bind(BinaryOperator, '\\div ', '&divide;', '[/]');
 
   CharCmds['~'] = LatexCmds.sim = bind(BinaryOperator, '\\sim ', '~', '~');
   /***************************
@@ -4385,15 +4440,15 @@ case '!':
   }
 
   if (transformPropName) {
-    scale = function(jQ, x, y) {
+    scale = function (jQ, x, y) {
       jQ.css(transformPropName, 'scale(' + x + ',' + y + ')');
     };
   } else if ('filter' in div_style) {
     //IE 6, 7, & 8 fallback, see https://github.com/laughinghan/mathquill/wiki/Transforms
-    forceIERedraw = function(el) {
+    forceIERedraw = function (el) {
       el.className = el.className;
     };
-    scale = function(jQ, x, y) {
+    scale = function (jQ, x, y) {
       //NOTE: assumes y > x
       x /= 1 + (y - 1) / 2;
       jQ.css('fontSize', y + 'em');
@@ -4404,26 +4459,26 @@ case '!':
         .children()
         .css(
           'filter',
-          'progid:DXImageTransform.Microsoft' + '.Matrix(M11=' + x + ",SizingMethod='auto expand')"
+          'progid:DXImageTransform.Microsoft' + '.Matrix(M11=' + x + ",SizingMethod='auto expand')",
         );
       function calculateMarginRight() {
         jQ.css('marginRight', ((innerjQ.width() - 1) * (x - 1)) / x + 'px');
       }
       calculateMarginRight();
       var intervalId = setInterval(calculateMarginRight);
-      $(window).load(function() {
+      $(window).load(function () {
         clearTimeout(intervalId);
         calculateMarginRight();
       });
     };
   } else {
-    scale = function(jQ, x, y) {
+    scale = function (jQ, x, y) {
       jQ.css('fontSize', y + 'em');
     };
   }
 
-  var Style = P(MathCommand, function(_, super_) {
-    _.init = function(ctrlSeq, tagName, attrs) {
+  var Style = P(MathCommand, function (_, super_) {
+    _.init = function (ctrlSeq, tagName, attrs) {
       super_.init.call(this, ctrlSeq, '<' + tagName + ' ' + attrs + '>&0</' + tagName + '>');
     };
   });
@@ -4440,19 +4495,19 @@ case '!':
     Style,
     '\\overline',
     'span',
-    'class="mq-non-leaf mq-overline"'
+    'class="mq-non-leaf mq-overline"',
   );
   LatexCmds.overrightarrow = bind(
     Style,
     '\\overrightarrow',
     'span',
-    'class="mq-non-leaf mq-overarrow mq-arrow-right"'
+    'class="mq-non-leaf mq-overarrow mq-arrow-right"',
   );
   LatexCmds.overleftarrow = bind(
     Style,
     '\\overleftarrow',
     'span',
-    'class="mq-non-leaf mq-overarrow mq-arrow-left"'
+    'class="mq-non-leaf mq-overarrow mq-arrow-left"',
   );
 
   // `\textcolor{color}{math}` will apply a color to the given math content, where
@@ -4462,15 +4517,15 @@ case '!':
   // [SitePoint docs]: http://reference.sitepoint.com/css/colorvalues
   // [Mozilla docs]: https://developer.mozilla.org/en-US/docs/CSS/color_value#Values
   // [W3C spec]: http://dev.w3.org/csswg/css3-color/#colorunits
-  var TextColor = (LatexCmds.textcolor = P(MathCommand, function(_, super_) {
-    _.setColor = function(color) {
+  var TextColor = (LatexCmds.textcolor = P(MathCommand, function (_, super_) {
+    _.setColor = function (color) {
       this.color = color;
       this.htmlTemplate = '<span class="mq-textcolor" style="color:' + color + '">&0</span>';
     };
-    _.latex = function() {
+    _.latex = function () {
       return '\\textcolor{' + this.color + '}{' + this.blocks[0].latex() + '}';
     };
-    _.parser = function() {
+    _.parser = function () {
       var self = this;
       var optWhitespace = Parser.optWhitespace;
       var string = Parser.string;
@@ -4480,7 +4535,7 @@ case '!':
         .then(string('{'))
         .then(regex(/^[#\w\s.,()%-]*/))
         .skip(string('}'))
-        .then(function(color) {
+        .then(function (color) {
           self.setColor(color);
           return super_.parser.call(self);
         });
@@ -4491,8 +4546,8 @@ case '!':
   // Usage: \class{classname}{math}
   // Note regex that whitelists valid CSS classname characters:
   // https://github.com/mathquill/mathquill/pull/191#discussion_r4327442
-  var Class = (LatexCmds['class'] = P(MathCommand, function(_, super_) {
-    _.parser = function() {
+  var Class = (LatexCmds['class'] = P(MathCommand, function (_, super_) {
+    _.parser = function () {
       var self = this,
         string = Parser.string,
         regex = Parser.regex;
@@ -4500,20 +4555,20 @@ case '!':
         .then(string('{'))
         .then(regex(/^[-\w\s\\\xA0-\xFF]*/))
         .skip(string('}'))
-        .then(function(cls) {
+        .then(function (cls) {
           self.htmlTemplate = '<span class="mq-class ' + cls + '">&0</span>';
           return super_.parser.call(self);
         });
     };
   }));
 
-  var SupSub = P(MathCommand, function(_, super_) {
+  var SupSub = P(MathCommand, function (_, super_) {
     _.ctrlSeq = '_{...}^{...}';
-    _.createLeftOf = function(cursor) {
+    _.createLeftOf = function (cursor) {
       if (!cursor[L] && cursor.options.supSubsRequireOperand) return;
       return super_.createLeftOf.apply(this, arguments);
     };
-    _.contactWeld = function(cursor) {
+    _.contactWeld = function (cursor) {
       // Look on either side for a SupSub, if one is found compare my
       // .sub, .sup with its .sub, .sup. If I have one that it doesn't,
       // then call .addBlock() on it with my block; if I have one that
@@ -4540,9 +4595,9 @@ case '!':
               if (dir === L) children.adopt(dest, dest.ends[R], 0);
               else children.adopt(dest, 0, dest.ends[L]);
             } else var pt = Point(dest, 0, dest.ends[L]);
-            this.placeCursor = (function(dest, src) {
+            this.placeCursor = (function (dest, src) {
               // TODO: don't monkey-patch
-              return function(cursor) {
+              return function (cursor) {
                 cursor.insAtDirEnd(-dir, dest || src);
               };
             })(dest, src);
@@ -4558,8 +4613,8 @@ case '!':
       }
     };
     Options.p.charsThatBreakOutOfSupSub = '';
-    _.finalizeTree = function() {
-      this.ends[L].write = function(cursor, ch) {
+    _.finalizeTree = function () {
+      this.ends[L].write = function (cursor, ch) {
         if (cursor.options.autoSubscriptNumerals && this === this.parent.sub) {
           if (ch === '_') return;
           var cmd = this.chToCmd(ch);
@@ -4578,12 +4633,12 @@ case '!':
         MathBlock.p.write.apply(this, arguments);
       };
     };
-    _.moveTowards = function(dir, cursor, updown) {
+    _.moveTowards = function (dir, cursor, updown) {
       if (cursor.options.autoSubscriptNumerals && !this.sup) {
         cursor.insDirOf(dir, this);
       } else super_.moveTowards.apply(this, arguments);
     };
-    _.deleteTowards = function(dir, cursor) {
+    _.deleteTowards = function (dir, cursor) {
       if (cursor.options.autoSubscriptNumerals && this.sub) {
         var cmd = this.sub.ends[-dir];
         if (cmd instanceof Symbol) cmd.remove();
@@ -4599,14 +4654,14 @@ case '!':
         }
       } else super_.deleteTowards.apply(this, arguments);
     };
-    _.latex = function() {
+    _.latex = function () {
       function latex(prefix, block) {
         var l = block && block.latex();
         return block ? prefix + (l.length === 1 ? l : '{' + (l || ' ') + '}') : '';
       }
       return latex('_', this.sub) + latex('^', this.sup);
     };
-    _.addBlock = function(block) {
+    _.addBlock = function (block) {
       if (this.supsub === 'sub') {
         this.sup = this.upInto = this.sub.upOutOf = block;
         block.adopt(this, this.sub, 0).downOutOf = this.sub;
@@ -4625,8 +4680,8 @@ case '!':
       }
       // like 'sub sup'.split(' ').forEach(function(supsub) { ... });
       for (var i = 0; i < 2; i += 1)
-        (function(cmd, supsub, oppositeSupsub, updown) {
-          cmd[supsub].deleteOutOf = function(dir, cursor) {
+        (function (cmd, supsub, oppositeSupsub, updown) {
+          cmd[supsub].deleteOutOf = function (dir, cursor) {
             cursor.insDirOf(this[dir] ? -dir : dir, this.parent);
             if (!this.isEmpty()) {
               var end = this.ends[dir];
@@ -4660,7 +4715,7 @@ case '!':
     cursor.insRightOf(cmd);
   }
 
-  LatexCmds.subscript = LatexCmds._ = P(SupSub, function(_, super_) {
+  LatexCmds.subscript = LatexCmds._ = P(SupSub, function (_, super_) {
     _.supsub = 'sub';
     _.htmlTemplate =
       '<span class="mq-supsub mq-non-leaf">' +
@@ -4668,29 +4723,32 @@ case '!':
       '<span style="display:inline-block;width:0">&#8203;</span>' +
       '</span>';
     _.textTemplate = ['_'];
-    _.finalizeTree = function() {
+    _.finalizeTree = function () {
       this.downInto = this.sub = this.ends[L];
       this.sub.upOutOf = insLeftOfMeUnlessAtEnd;
       super_.finalizeTree.call(this);
     };
   });
 
-  LatexCmds.superscript = LatexCmds.supscript = LatexCmds['^'] = P(SupSub, function(_, super_) {
-    _.supsub = 'sup';
-    _.htmlTemplate =
-      '<span class="mq-supsub mq-non-leaf mq-sup-only">' +
-      '<span class="mq-sup">&0</span>' +
-      '</span>';
-    _.textTemplate = ['^'];
-    _.finalizeTree = function() {
-      this.upInto = this.sup = this.ends[R];
-      this.sup.downOutOf = insLeftOfMeUnlessAtEnd;
-      super_.finalizeTree.call(this);
-    };
-  });
+  LatexCmds.superscript =
+    LatexCmds.supscript =
+    LatexCmds['^'] =
+      P(SupSub, function (_, super_) {
+        _.supsub = 'sup';
+        _.htmlTemplate =
+          '<span class="mq-supsub mq-non-leaf mq-sup-only">' +
+          '<span class="mq-sup">&0</span>' +
+          '</span>';
+        _.textTemplate = ['^'];
+        _.finalizeTree = function () {
+          this.upInto = this.sup = this.ends[R];
+          this.sup.downOutOf = insLeftOfMeUnlessAtEnd;
+          super_.finalizeTree.call(this);
+        };
+      });
 
-  var SummationNotation = P(MathCommand, function(_, super_) {
-    _.init = function(ch, html) {
+  var SummationNotation = P(MathCommand, function (_, super_) {
+    _.init = function (ch, html) {
       var htmlTemplate =
         '<span class="mq-large-operator mq-non-leaf">' +
         '<span class="mq-to"><span>&1</span></span>' +
@@ -4701,14 +4759,14 @@ case '!':
         '</span>';
       Symbol.prototype.init.call(this, ch, htmlTemplate);
     };
-    _.createLeftOf = function(cursor) {
+    _.createLeftOf = function (cursor) {
       super_.createLeftOf.apply(this, arguments);
       if (cursor.options.sumStartsWithNEquals) {
         Letter('n').createLeftOf(cursor);
         Equality().createLeftOf(cursor);
       }
     };
-    _.latex = function() {
+    _.latex = function () {
       function simplify(latex) {
         return latex.length === 1 ? latex : '{' + (latex || ' ') + '}';
       }
@@ -4716,7 +4774,7 @@ case '!':
         this.ctrlSeq + '_' + simplify(this.ends[L].latex()) + '^' + simplify(this.ends[R].latex())
       );
     };
-    _.parser = function() {
+    _.parser = function () {
       var string = Parser.string;
       var optWhitespace = Parser.optWhitespace;
       var succeed = Parser.succeed;
@@ -4730,9 +4788,9 @@ case '!':
 
       return optWhitespace
         .then(string('_').or(string('^')))
-        .then(function(supOrSub) {
+        .then(function (supOrSub) {
           var child = blocks[supOrSub === '_' ? 0 : 1];
-          return block.then(function(block) {
+          return block.then(function (block) {
             block.children().adopt(child, child.ends[R], 0);
             return succeed(self);
           });
@@ -4740,7 +4798,7 @@ case '!':
         .many()
         .result(self);
     };
-    _.finalizeTree = function() {
+    _.finalizeTree = function () {
       this.downInto = this.ends[L];
       this.upInto = this.ends[R];
       this.ends[L].upOutOf = this.ends[R];
@@ -4748,117 +4806,123 @@ case '!':
     };
   });
 
-  LatexCmds['\u2211'] = LatexCmds.sum = LatexCmds.summation = bind(
-    SummationNotation,
-    '\\sum ',
-    '&sum;'
-  );
+  LatexCmds['\u2211'] =
+    LatexCmds.sum =
+    LatexCmds.summation =
+      bind(SummationNotation, '\\sum ', '&sum;');
 
-  LatexCmds['\u220f'] = LatexCmds.prod = LatexCmds.product = bind(
-    SummationNotation,
-    '\\prod ',
-    '&prod;'
-  );
+  LatexCmds['\u220f'] =
+    LatexCmds.prod =
+    LatexCmds.product =
+      bind(SummationNotation, '\\prod ', '&prod;');
 
   LatexCmds.coprod = LatexCmds.coproduct = bind(SummationNotation, '\\coprod ', '&#8720;');
 
-  LatexCmds['\u222b'] = LatexCmds['int'] = LatexCmds.integral = P(SummationNotation, function(
-    _,
-    super_
-  ) {
-    _.init = function() {
-      var htmlTemplate =
-        '<span class="mq-int mq-non-leaf">' +
-        '<big>&int;</big>' +
-        '<span class="mq-supsub mq-non-leaf">' +
-        '<span class="mq-sup"><span class="mq-sup-inner">&1</span></span>' +
-        '<span class="mq-sub">&0</span>' +
-        '<span style="display:inline-block;width:0">&#8203</span>' +
-        '</span>' +
-        '</span>';
-      Symbol.prototype.init.call(this, '\\int ', htmlTemplate);
-    };
-    // FIXME: refactor rather than overriding
-    _.createLeftOf = MathCommand.p.createLeftOf;
-  });
+  LatexCmds['\u222b'] =
+    LatexCmds['int'] =
+    LatexCmds.integral =
+      P(SummationNotation, function (_, super_) {
+        _.init = function () {
+          var htmlTemplate =
+            '<span class="mq-int mq-non-leaf">' +
+            '<big>&int;</big>' +
+            '<span class="mq-supsub mq-non-leaf">' +
+            '<span class="mq-sup"><span class="mq-sup-inner">&1</span></span>' +
+            '<span class="mq-sub">&0</span>' +
+            '<span style="display:inline-block;width:0">&#8203</span>' +
+            '</span>' +
+            '</span>';
+          Symbol.prototype.init.call(this, '\\int ', htmlTemplate);
+        };
+        // FIXME: refactor rather than overriding
+        _.createLeftOf = MathCommand.p.createLeftOf;
+      });
 
-  var Fraction = (LatexCmds.frac = LatexCmds.dfrac = LatexCmds.cfrac = LatexCmds.fraction = P(
-    MathCommand,
-    function(_, super_) {
-      _.ctrlSeq = '\\frac';
-      _.htmlTemplate =
-        '<span class="mq-fraction mq-non-leaf">' +
-        '<span class="mq-numerator">&0</span>' +
-        '<span class="mq-denominator">&1</span>' +
-        '<span style="display:inline-block;width:0">&#8203;</span>' +
-        '</span>';
-      _.textTemplate = ['(', ')/(', ')'];
-      _.finalizeTree = function() {
-        this.upInto = this.ends[R].upOutOf = this.ends[L];
-        this.downInto = this.ends[L].downOutOf = this.ends[R];
-      };
-    }
-  ));
+  var Fraction =
+    (LatexCmds.frac =
+    LatexCmds.dfrac =
+    LatexCmds.cfrac =
+    LatexCmds.fraction =
+      P(MathCommand, function (_, super_) {
+        _.ctrlSeq = '\\frac';
+        _.htmlTemplate =
+          '<span class="mq-fraction mq-non-leaf">' +
+          '<span class="mq-numerator">&0</span>' +
+          '<span class="mq-denominator">&1</span>' +
+          '<span style="display:inline-block;width:0">&#8203;</span>' +
+          '</span>';
+        _.textTemplate = ['(', ')/(', ')'];
+        _.finalizeTree = function () {
+          this.upInto = this.ends[R].upOutOf = this.ends[L];
+          this.downInto = this.ends[L].downOutOf = this.ends[R];
+        };
+      }));
 
-  var LiveFraction = (LatexCmds.over = CharCmds['/'] = P(Fraction, function(_, super_) {
-    _.createLeftOf = function(cursor) {
-      if (!this.replacedFragment) {
-        var leftward = cursor[L];
-        while (
-          leftward &&
-          !(
-            leftward instanceof BinaryOperator ||
-            leftward instanceof (LatexCmds.text || noop) ||
-            leftward instanceof SummationNotation ||
-            leftward.ctrlSeq === '\\ ' ||
-            /^[,;:]$/.test(leftward.ctrlSeq)
-          ) //lookbehind for operator
-        )
-          leftward = leftward[L];
+  var LiveFraction =
+    (LatexCmds.over =
+    CharCmds['/'] =
+      P(Fraction, function (_, super_) {
+        _.createLeftOf = function (cursor) {
+          if (!this.replacedFragment) {
+            var leftward = cursor[L];
+            while (
+              leftward &&
+              !(
+                leftward instanceof BinaryOperator ||
+                leftward instanceof (LatexCmds.text || noop) ||
+                leftward instanceof SummationNotation ||
+                leftward.ctrlSeq === '\\ ' ||
+                /^[,;:]$/.test(leftward.ctrlSeq)
+              ) //lookbehind for operator
+            )
+              leftward = leftward[L];
 
-        if (leftward instanceof SummationNotation && leftward[R] instanceof SupSub) {
-          leftward = leftward[R];
-          if (leftward[R] instanceof SupSub && leftward[R].ctrlSeq != leftward.ctrlSeq)
-            leftward = leftward[R];
-        }
+            if (leftward instanceof SummationNotation && leftward[R] instanceof SupSub) {
+              leftward = leftward[R];
+              if (leftward[R] instanceof SupSub && leftward[R].ctrlSeq != leftward.ctrlSeq)
+                leftward = leftward[R];
+            }
 
-        if (leftward !== cursor[L]) {
-          this.replaces(Fragment(leftward[R] || cursor.parent.ends[L], cursor[L]));
-          cursor[L] = leftward;
-        }
-      }
-      super_.createLeftOf.call(this, cursor);
-    };
-  }));
+            if (leftward !== cursor[L]) {
+              this.replaces(Fragment(leftward[R] || cursor.parent.ends[L], cursor[L]));
+              cursor[L] = leftward;
+            }
+          }
+          super_.createLeftOf.call(this, cursor);
+        };
+      }));
 
-  var SquareRoot = (LatexCmds.sqrt = LatexCmds['\u221a'] = P(MathCommand, function(_, super_) {
-    _.ctrlSeq = '\\sqrt';
-    _.htmlTemplate =
-      '<span class="mq-non-leaf">' +
-      '<span class="mq-scaled mq-sqrt-prefix">&radic;</span>' +
-      '<span class="mq-non-leaf mq-sqrt-stem">&0</span>' +
-      '</span>';
-    _.textTemplate = ['sqrt(', ')'];
-    _.parser = function() {
-      return latexMathParser.optBlock
-        .then(function(optBlock) {
-          return latexMathParser.block.map(function(block) {
-            var nthroot = NthRoot();
-            nthroot.blocks = [optBlock, block];
-            optBlock.adopt(nthroot, 0, 0);
-            block.adopt(nthroot, optBlock, 0);
-            return nthroot;
-          });
-        })
-        .or(super_.parser.call(this));
-    };
-    _.reflow = function() {
-      var block = this.ends[R].jQ;
-      scale(block.prev(), 1, block.innerHeight() / +block.css('fontSize').slice(0, -2) - 0.1);
-    };
-  }));
+  var SquareRoot =
+    (LatexCmds.sqrt =
+    LatexCmds['\u221a'] =
+      P(MathCommand, function (_, super_) {
+        _.ctrlSeq = '\\sqrt';
+        _.htmlTemplate =
+          '<span class="mq-non-leaf">' +
+          '<span class="mq-scaled mq-sqrt-prefix">&radic;</span>' +
+          '<span class="mq-non-leaf mq-sqrt-stem">&0</span>' +
+          '</span>';
+        _.textTemplate = ['sqrt(', ')'];
+        _.parser = function () {
+          return latexMathParser.optBlock
+            .then(function (optBlock) {
+              return latexMathParser.block.map(function (block) {
+                var nthroot = NthRoot();
+                nthroot.blocks = [optBlock, block];
+                optBlock.adopt(nthroot, 0, 0);
+                block.adopt(nthroot, optBlock, 0);
+                return nthroot;
+              });
+            })
+            .or(super_.parser.call(this));
+        };
+        _.reflow = function () {
+          var block = this.ends[R].jQ;
+          scale(block.prev(), 1, block.innerHeight() / +block.css('fontSize').slice(0, -2) - 0.1);
+        };
+      }));
 
-  var Vec = (LatexCmds.vec = P(MathCommand, function(_, super_) {
+  var Vec = (LatexCmds.vec = P(MathCommand, function (_, super_) {
     _.ctrlSeq = '\\vec';
     _.htmlTemplate =
       '<span class="mq-non-leaf">' +
@@ -4868,7 +4932,7 @@ case '!':
     _.textTemplate = ['vec(', ')'];
   }));
 
-  var NthRoot = (LatexCmds.nthroot = P(SquareRoot, function(_, super_) {
+  var NthRoot = (LatexCmds.nthroot = P(SquareRoot, function (_, super_) {
     _.htmlTemplate =
       '<sup class="mq-nthroot mq-non-leaf">&0</sup>' +
       '<span class="mq-scaled">' +
@@ -4876,18 +4940,18 @@ case '!':
       '<span class="mq-sqrt-stem mq-non-leaf">&1</span>' +
       '</span>';
     _.textTemplate = ['sqrt[', '](', ')'];
-    _.latex = function() {
+    _.latex = function () {
       return '\\sqrt[' + this.ends[L].latex() + ']{' + this.ends[R].latex() + '}';
     };
   }));
 
   function DelimsMixin(_, super_) {
-    _.jQadd = function() {
+    _.jQadd = function () {
       super_.jQadd.apply(this, arguments);
       this.delimjQs = this.jQ.children(':first').add(this.jQ.children(':last'));
       this.contentjQ = this.jQ.children(':eq(1)');
     };
-    _.reflow = function() {
+    _.reflow = function () {
       var height = this.contentjQ.outerHeight() / parseFloat(this.contentjQ.css('fontSize'));
       scale(this.delimjQs, min(1 + 0.2 * (height - 1), 1.2), 1.2 * height);
     };
@@ -4896,18 +4960,18 @@ case '!':
   // Round/Square/Curly/Angle Brackets (aka Parens/Brackets/Braces)
   //   first typed as one-sided bracket with matching "ghost" bracket at
   //   far end of current block, until you type an opposing one
-  var Bracket = P(P(MathCommand, DelimsMixin), function(_, super_) {
-    _.init = function(side, open, close, ctrlSeq, end) {
+  var Bracket = P(P(MathCommand, DelimsMixin), function (_, super_) {
+    _.init = function (side, open, close, ctrlSeq, end) {
       super_.init.call(this, '\\left' + ctrlSeq, undefined, [open, close]);
       this.side = side;
       this.sides = {};
       this.sides[L] = { ch: open, ctrlSeq: ctrlSeq };
       this.sides[R] = { ch: close, ctrlSeq: end };
     };
-    _.numBlocks = function() {
+    _.numBlocks = function () {
       return 1;
     };
-    _.html = function() {
+    _.html = function () {
       // wait until now so that .side may
       this.htmlTemplate = // be set by createLeftOf or parser
         '<span class="mq-non-leaf">' +
@@ -4925,12 +4989,12 @@ case '!':
         '</span>';
       return super_.html.call(this);
     };
-    _.latex = function() {
+    _.latex = function () {
       return (
         '\\left' + this.sides[L].ctrlSeq + this.ends[L].latex() + '\\right' + this.sides[R].ctrlSeq
       );
     };
-    _.oppBrack = function(opts, node, expectedSide) {
+    _.oppBrack = function (opts, node, expectedSide) {
       // return node iff it's a 1-sided bracket of expected side (if any, may be
       // undefined), and of opposite side from me if I'm not a pipe
       return (
@@ -4944,7 +5008,7 @@ case '!':
         node
       );
     };
-    _.closeOpposing = function(brack) {
+    _.closeOpposing = function (brack) {
       brack.side = 0;
       brack.sides[this.side] = this.sides[this.side]; // copy over my info (may be
       brack.delimjQs
@@ -4952,7 +5016,7 @@ case '!':
         .removeClass('mq-ghost')
         .html(this.sides[this.side].ch);
     };
-    _.createLeftOf = function(cursor) {
+    _.createLeftOf = function (cursor) {
       if (!this.replacedFragment) {
         // unless wrapping seln in brackets,
         // check if next to or inside an opposing one-sided bracket
@@ -4975,7 +5039,7 @@ case '!':
           brack.bubble('reflow');
         }
       } else {
-        (brack = this), (side = brack.side);
+        ((brack = this), (side = brack.side));
         if (brack.replacedFragment) brack.side = 0;
         // wrapping seln, don't be one-sided
         else if (cursor[-side]) {
@@ -4989,14 +5053,11 @@ case '!':
       else cursor.insRightOf(brack);
     };
     _.placeCursor = noop;
-    _.unwrap = function() {
-      this.ends[L].children()
-        .disown()
-        .adopt(this.parent, this, this[R])
-        .jQ.insertAfter(this.jQ);
+    _.unwrap = function () {
+      this.ends[L].children().disown().adopt(this.parent, this, this[R]).jQ.insertAfter(this.jQ);
       this.remove();
     };
-    _.deleteSide = function(side, outward, cursor) {
+    _.deleteSide = function (side, outward, cursor) {
       var parent = this.parent,
         sib = this[side],
         farEnd = parent.ends[side];
@@ -5055,21 +5116,21 @@ case '!':
         else outward ? cursor.insDirOf(side, this) : cursor.insAtDirEnd(side, this.ends[L]);
       }
     };
-    _.deleteTowards = function(dir, cursor) {
+    _.deleteTowards = function (dir, cursor) {
       this.deleteSide(-dir, false, cursor);
     };
-    _.finalizeTree = function() {
-      this.ends[L].deleteOutOf = function(dir, cursor) {
+    _.finalizeTree = function () {
+      this.ends[L].deleteOutOf = function (dir, cursor) {
         this.parent.deleteSide(dir, true, cursor);
       };
       // FIXME HACK: after initial creation/insertion, finalizeTree would only be
       // called if the paren is selected and replaced, e.g. by LiveFraction
-      this.finalizeTree = this.intentionalBlur = function() {
+      this.finalizeTree = this.intentionalBlur = function () {
         this.delimjQs.eq(this.side === L ? 1 : 0).removeClass('mq-ghost');
         this.side = 0;
       };
     };
-    _.siblingCreated = function(opts, dir) {
+    _.siblingCreated = function (opts, dir) {
       // if something typed between ghost and far
       if (dir === -this.side) this.finalizeTree(); // end of its block, solidify
     };
@@ -5105,21 +5166,21 @@ case '!':
   LatexCmds.rangle = bind(Bracket, R, '&lang;', '&rang;', '\\langle ', '\\rangle ');
   CharCmds['|'] = bind(Bracket, L, '|', '|', '|', '|');
 
-  LatexCmds.left = P(MathCommand, function(_) {
-    _.parser = function() {
+  LatexCmds.left = P(MathCommand, function (_) {
+    _.parser = function () {
       var regex = Parser.regex;
       var string = Parser.string;
       var succeed = Parser.succeed;
       var optWhitespace = Parser.optWhitespace;
 
-      return optWhitespace.then(regex(/^(?:[([|]|\\\{)/)).then(function(ctrlSeq) {
+      return optWhitespace.then(regex(/^(?:[([|]|\\\{)/)).then(function (ctrlSeq) {
         // TODO: \langle, \rangle
         var open = ctrlSeq.charAt(0) === '\\' ? ctrlSeq.slice(1) : ctrlSeq;
-        return latexMathParser.then(function(block) {
+        return latexMathParser.then(function (block) {
           return string('\\right')
             .skip(optWhitespace)
             .then(regex(/^(?:[\])|]|\\\})/))
-            .map(function(end) {
+            .map(function (end) {
               var close = end.charAt(0) === '\\' ? end.slice(1) : end;
               var cmd = Bracket(0, open, close, ctrlSeq, end);
               cmd.blocks = [block];
@@ -5131,41 +5192,41 @@ case '!':
     };
   });
 
-  LatexCmds.right = P(MathCommand, function(_) {
-    _.parser = function() {
+  LatexCmds.right = P(MathCommand, function (_) {
+    _.parser = function () {
       return Parser.fail('unmatched \\right');
     };
   });
 
-  var Binomial = (LatexCmds.binom = LatexCmds.binomial = P(P(MathCommand, DelimsMixin), function(
-    _,
-    super_
-  ) {
-    _.ctrlSeq = '\\binom';
-    _.htmlTemplate =
-      '<span class="mq-non-leaf">' +
-      '<span class="mq-paren mq-scaled">(</span>' +
-      '<span class="mq-non-leaf">' +
-      '<span class="mq-array mq-non-leaf">' +
-      '<span>&0</span>' +
-      '<span>&1</span>' +
-      '</span>' +
-      '</span>' +
-      '<span class="mq-paren mq-scaled">)</span>' +
-      '</span>';
-    _.textTemplate = ['choose(', ',', ')'];
-  }));
+  var Binomial =
+    (LatexCmds.binom =
+    LatexCmds.binomial =
+      P(P(MathCommand, DelimsMixin), function (_, super_) {
+        _.ctrlSeq = '\\binom';
+        _.htmlTemplate =
+          '<span class="mq-non-leaf">' +
+          '<span class="mq-paren mq-scaled">(</span>' +
+          '<span class="mq-non-leaf">' +
+          '<span class="mq-array mq-non-leaf">' +
+          '<span>&0</span>' +
+          '<span>&1</span>' +
+          '</span>' +
+          '</span>' +
+          '<span class="mq-paren mq-scaled">)</span>' +
+          '</span>';
+        _.textTemplate = ['choose(', ',', ')'];
+      }));
 
-  var Choose = (LatexCmds.choose = P(Binomial, function(_) {
+  var Choose = (LatexCmds.choose = P(Binomial, function (_) {
     _.createLeftOf = LiveFraction.prototype.createLeftOf;
   }));
 
-  LatexCmds.editable = LatexCmds.MathQuillMathField = P(MathCommand, function(_, super_) {
+  LatexCmds.editable = LatexCmds.MathQuillMathField = P(MathCommand, function (_, super_) {
     // backcompat with before cfd3620 on #233
     _.ctrlSeq = '\\MathQuillMathField';
     _.htmlTemplate =
       '<span class="mq-editable-field">' + '<span class="mq-root-block">&0</span>' + '</span>';
-    _.parser = function() {
+    _.parser = function () {
       var self = this,
         string = Parser.string,
         regex = Parser.regex,
@@ -5173,13 +5234,13 @@ case '!':
       return string('[')
         .then(regex(/^[a-z][a-z0-9]*/i))
         .skip(string(']'))
-        .map(function(name) {
+        .map(function (name) {
           self.name = name;
         })
         .or(succeed())
         .then(super_.parser.call(self));
     };
-    _.finalizeTree = function() {
+    _.finalizeTree = function () {
       var ctrlr = Controller(this.ends[L], this.jQ, Options());
       ctrlr.KIND_OF_MQ = 'MathField';
       ctrlr.editable = true;
@@ -5188,13 +5249,13 @@ case '!':
       ctrlr.cursor.insAtRightEnd(ctrlr.root);
       RootBlockMixin(ctrlr.root);
     };
-    _.registerInnerField = function(innerFields, MathField) {
+    _.registerInnerField = function (innerFields, MathField) {
       innerFields.push((innerFields[this.name] = MathField(this.ends[L].controller)));
     };
-    _.latex = function() {
+    _.latex = function () {
       return this.ends[L].latex();
     };
-    _.text = function() {
+    _.text = function () {
       return this.ends[L].text();
     };
   });
@@ -5206,8 +5267,8 @@ case '!':
   // Create by calling public API method .dropEmbedded(),
   // or by calling the global public API method .registerEmbed()
   // and rendering LaTeX like \embed{registeredName} (see test).
-  var Embed = (LatexCmds.embed = P(Symbol, function(_, super_) {
-    _.setOptions = function(options) {
+  var Embed = (LatexCmds.embed = P(Symbol, function (_, super_) {
+    _.setOptions = function (options) {
       function noop() {
         return '';
       }
@@ -5216,20 +5277,20 @@ case '!':
       this.latex = options.latex || noop;
       return this;
     };
-    _.parser = function() {
+    _.parser = function () {
       var self = this;
-      (string = Parser.string), (regex = Parser.regex), (succeed = Parser.succeed);
+      ((string = Parser.string), (regex = Parser.regex), (succeed = Parser.succeed));
       return string('{')
         .then(regex(/^[a-z][a-z0-9]*/i))
         .skip(string('}'))
-        .then(function(name) {
+        .then(function (name) {
           // the chars allowed in the optional data block are arbitrary other than
           // excluding curly braces and square brackets (which'd be too confusing)
           return string('[')
             .then(regex(/^[-\w\s]*/))
             .skip(string(']'))
             .or(succeed())
-            .map(function(data) {
+            .map(function (data) {
               return self.setOptions(EMBEDS[name](data));
             });
         });
@@ -5239,31 +5300,31 @@ case '!':
    * Input box to type backslash commands
    ***************************************/
 
-  var LatexCommandInput = (CharCmds['\\'] = P(MathCommand, function(_, super_) {
+  var LatexCommandInput = (CharCmds['\\'] = P(MathCommand, function (_, super_) {
     _.ctrlSeq = '\\';
-    _.replaces = function(replacedFragment) {
+    _.replaces = function (replacedFragment) {
       this._replacedFragment = replacedFragment.disown();
-      this.isEmpty = function() {
+      this.isEmpty = function () {
         return false;
       };
     };
     _.htmlTemplate = '<span class="mq-latex-command-input mq-non-leaf">\\<span>&0</span></span>';
     _.textTemplate = ['\\'];
-    _.createBlocks = function() {
+    _.createBlocks = function () {
       super_.createBlocks.call(this);
-      this.ends[L].focus = function() {
+      this.ends[L].focus = function () {
         this.parent.jQ.addClass('mq-hasCursor');
         if (this.isEmpty()) this.parent.jQ.removeClass('mq-empty');
 
         return this;
       };
-      this.ends[L].blur = function() {
+      this.ends[L].blur = function () {
         this.parent.jQ.removeClass('mq-hasCursor');
         if (this.isEmpty()) this.parent.jQ.addClass('mq-empty');
 
         return this;
       };
-      this.ends[L].write = function(cursor, ch) {
+      this.ends[L].write = function (cursor, ch) {
         cursor.show().deleteSelection();
 
         if (ch.match(/[a-z]/i)) VanillaSymbol(ch).createLeftOf(cursor);
@@ -5272,7 +5333,7 @@ case '!':
           if (ch !== '\\' || !this.isEmpty()) this.parent.parent.write(cursor, ch);
         }
       };
-      this.ends[L].keystroke = function(key, e, ctrlr) {
+      this.ends[L].keystroke = function (key, e, ctrlr) {
         if (key === 'Tab' || key === 'Enter' || key === 'Spacebar') {
           this.parent.renderCommand(ctrlr.cursor);
           e.preventDefault();
@@ -5281,7 +5342,7 @@ case '!':
         return super_.keystroke.apply(this, arguments);
       };
     };
-    _.createLeftOf = function(cursor) {
+    _.createLeftOf = function (cursor) {
       super_.createLeftOf.call(this, cursor);
 
       if (this._replacedFragment) {
@@ -5290,19 +5351,19 @@ case '!':
           .addClass('mq-blur')
           .bind(
             'mousedown mousemove', //FIXME: is monkey-patching the mousedown and mousemove handlers the right way to do this?
-            function(e) {
+            function (e) {
               $((e.target = el)).trigger(e);
               return false;
-            }
+            },
           )
           .insertBefore(this.jQ)
           .add(this.jQ);
       }
     };
-    _.latex = function() {
+    _.latex = function () {
       return '\\' + this.ends[L].latex() + ' ';
     };
-    _.renderCommand = function(cursor) {
+    _.renderCommand = function (cursor) {
       this.jQ = this.jQ.last();
       this.remove();
       if (this[R]) {
@@ -5330,9 +5391,9 @@ case '!':
 
   var MQ1 = getInterface(1);
   for (var key in MQ1)
-    (function(key, val) {
+    (function (key, val) {
       if (typeof val === 'function') {
-        MathQuill[key] = function() {
+        MathQuill[key] = function () {
           insistOnInterVer();
           return val.apply(this, arguments);
         };

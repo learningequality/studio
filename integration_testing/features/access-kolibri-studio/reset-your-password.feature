@@ -7,7 +7,7 @@ Feature: Reset your password
 
 	Scenario: Request a link to reset my password
 		When I click the *Forgot your password?* link
-		Then I see a page with option to enter my email address
+		Then I see the *Reset your password* page with option to enter my email address
 		When I type an existing valid email address in the *Email* field
 			And I press the *Submit* button
 		Then I see a message that the instructions are sent
@@ -18,7 +18,7 @@ Feature: Reset your password
 		Given I've requested and received an email with a link to reset my password
 		When I click the link in the email
 		Then I see a page with a *Reset your password* form
-			And I fill in the *New password* field
+		When I fill in the *New password* field
 			And I fill in the *Confirm password* field with the same password
 			And I press the *Submit* button
 		Then I see the following message: Password reset successfully

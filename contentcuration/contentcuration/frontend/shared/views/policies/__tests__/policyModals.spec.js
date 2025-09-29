@@ -46,7 +46,7 @@ describe('policyModals', () => {
       store: { ...store, state: { ...store.state, loggedIn: false } },
     });
 
-    expect(wrapper.isVueInstance()).toBe(true);
+    expect(wrapper.exists()).toBe(true);
     expect(wrapper.is(PolicyModals)).toBe(true);
   });
 

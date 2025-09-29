@@ -13,7 +13,9 @@ def _build_validator():
     """
     cls = validator_for(completion_criteria.SCHEMA)
     validator = cls(completion_criteria.SCHEMA)
-    validator.resolver.store.update(RefResolver.from_schema(mastery_criteria.SCHEMA).store)
+    validator.resolver.store.update(
+        RefResolver.from_schema(mastery_criteria.SCHEMA).store
+    )
     return validator
 
 
@@ -86,10 +88,16 @@ def validate(data, kind=None):
         elif error.absolute_path:
             # if there's a path to a field, we can give a specific error
             json_path = ".".join(error.absolute_path)
-            error_descriptions.append(ValidationError("{} {}".format(json_path, error.message)))
+            error_descriptions.append(
+                ValidationError("{} {}".format(json_path, error.message))
+            )
         else:
             # without a path, likely top-level validation error, e.g. `anyOf` conditions
-            error_descriptions.append(ValidationError("object doesn't satisfy '{}' conditions".format(error.validator)))
+            error_descriptions.append(
+                ValidationError(
+                    "object doesn't satisfy '{}' conditions".format(error.validator)
+                )
+            )
 
     if error_descriptions:
         e = ValidationError("Completion criteria doesn't conform to schema")

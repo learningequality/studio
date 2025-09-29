@@ -7,14 +7,12 @@
       :disabled="notUnique"
       :indeterminate="notUnique"
       :label="$tr('learnersCanMarkComplete')"
-      style="padding-bottom: 16px; font-size: 16px;"
-      @change="(value) => (learnerManaged = value)"
+      style="padding-bottom: 16px; font-size: 16px"
+      @change="value => (learnerManaged = value)"
     />
     <Divider v-if="expanded" />
     <!-- Layout when practice quizzes are enabled -->
-    <VLayout
-      :column="expanded"
-    >
+    <VLayout :column="expanded">
       <!-- "Completion" dropdown menu  -->
       <ExpandableSelect
         ref="completion"
@@ -56,7 +54,10 @@
       />
     </VLayout>
 
-    <VLayout row wrap>
+    <VLayout
+      row
+      wrap
+    >
       <!-- "Duration" dropdown menu  -->
       <ExpandableSelect
         v-if="showDuration || showDisabledDuration"
@@ -95,16 +96,18 @@
         :xs6="!expanded"
         :md6="!expanded"
       >
-        {{ $tr("referenceHint") }}
+        {{ $tr('referenceHint') }}
       </VFlex>
     </VLayout>
   </div>
 
 </template>
 
+
 <script>
 
   import get from 'lodash/get';
+  import { mapGetters } from 'vuex/dist/vuex.common.js';
   import ActivityDuration from './ActivityDuration';
   import MasteryCriteriaGoal from './MasteryCriteriaGoal';
   import MasteryCriteriaMofNFields from './MasteryCriteriaMofNFields';
@@ -119,6 +122,7 @@
     completionCriteriaToDropdownMap,
     defaultCompletionCriteriaModels,
     defaultCompletionCriteriaThresholds,
+    FeatureFlagKeys,
   } from 'shared/constants';
   import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
@@ -172,6 +176,7 @@
       },
     },
     computed: {
+      ...mapGetters(['hasFeatureEnabled']),
       notUnique() {
         return this.value === nonUniqueValue;
       },
@@ -186,8 +191,16 @@
       },
       showMasteryCriteriaGoalDropdown() {
         if (this.kind === ContentKindsNames.EXERCISE) {
-          //this ensures that anytime the completion dropdown is practice quiz
-          return this.value.modality !== ContentModalities.QUIZ;
+          //this ensures that anytime the completion dropdown is practice quiz or
+          // survey we dont show the mastery criteria goal dropdown
+          let showDropDown = true;
+          if (
+            this.value.modality === ContentModalities.QUIZ ||
+            this.value.modality === ContentModalities.SURVEY
+          ) {
+            showDropDown = false;
+          }
+          return showDropDown;
         }
         return false;
       },
@@ -204,9 +217,7 @@
         return !this.showDuration && this.expanded && this.audioVideoResource;
       },
       showReferenceHint() {
-        /*
-            The reference hint should be shown only when "Reference" is selected
-          */
+        // The reference hint should be shown only when "Reference" is selected
         return this.model === CompletionCriteriaModels.REFERENCE;
       },
       completionDropdown: {
@@ -220,11 +231,16 @@
           ) {
             return CompletionDropdownMap.practiceQuiz;
           }
+          if (
+            this.value.modality === ContentModalities.SURVEY &&
+            this.model === CompletionCriteriaModels.MASTERY
+          ) {
+            return CompletionDropdownMap.survey;
+          }
           return completionCriteriaToDropdownMap[this.model];
         },
         set(value) {
           const update = {};
-
           if (value === CompletionDropdownMap.reference) {
             update.model = CompletionCriteriaModels.REFERENCE;
             update.durationType = null;
@@ -256,6 +272,9 @@
           } else if (value === CompletionDropdownMap.goal) {
             update.modality = null;
             update.model = CompletionCriteriaModels.MASTERY;
+          } else if (value === CompletionDropdownMap.survey) {
+            update.modality = ContentModalities.SURVEY;
+            update.threshold = { mastery_model: MasteryModelsNames.DO_ALL };
           }
           this.handleInput(update);
         },
@@ -278,6 +297,9 @@
           return false;
         }
         if (this.value.modality === ContentModalities.QUIZ) {
+          return false;
+        }
+        if (this.value.modality === ContentModalities.SURVEY) {
           return false;
         }
         return get(this, 'threshold.mastery_model') === MasteryModelsNames.M_OF_N;
@@ -344,7 +366,7 @@
             update.durationType = CompletionCriteriaModels.APPROX_TIME;
             update.duration = this.handleMinutesInputFromActivityDuration(
               this.durationValue || 0,
-              dropdownValue
+              dropdownValue,
             );
           } else {
             update.durationType = null;
@@ -358,10 +380,15 @@
       },
       showCorrectCompletionOptions() {
         if (this.kind) {
-          return CompletionOptionsDropdownMap[this.kind].map(model => ({
-            text: this.translateMetadataString(model),
-            value: CompletionDropdownMap[model],
-          }));
+          return CompletionOptionsDropdownMap[this.kind]
+            .map(model => ({
+              text: this.translateMetadataString(model),
+              value: CompletionDropdownMap[model],
+            }))
+            .filter(
+              option =>
+                !(option.value === 'survey' && !this.hasFeatureEnabled(FeatureFlagKeys.survey)),
+            );
         }
         return [];
       },
@@ -455,7 +482,7 @@
         if (duration) {
           data.suggested_duration = this.handleMinutesInputFromActivityDuration(
             duration,
-            this.durationType
+            this.durationType,
           );
         } else if (typeof duration !== 'undefined') {
           delete data.suggested_duration;

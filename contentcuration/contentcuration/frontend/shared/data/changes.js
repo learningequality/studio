@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-named-as-default
 import Dexie from 'dexie';
 import isEmpty from 'lodash/isEmpty';
 import isNull from 'lodash/isNull';
@@ -31,7 +32,7 @@ import { INDEXEDDB_RESOURCES } from 'shared/data/registry';
  * @return {function(...args): Promise<mixed>}
  */
 export function withChangeTracker(callback) {
-  return function(...args) {
+  return function (...args) {
     const tracker = new ChangeTracker();
 
     return tracker
@@ -256,7 +257,7 @@ export class Change {
       const error = new TypeError(
         `${name} is required for a ${this.changeType} but it was ${
           isNull(value) ? 'null' : 'undefined'
-        }`
+        }`,
       );
       logging.error(error, value);
       throw error;
@@ -293,7 +294,7 @@ export class Change {
   setAndValidateObjOrNull(value, name, mapper = obj => obj) {
     if (!isPlainObject(value) && !isNull(value)) {
       const error = new TypeError(
-        `${name} should be an object or null, but ${value} was passed instead`
+        `${name} should be an object or null, but ${value} was passed instead`,
       );
       logging.error(error, value);
       throw error;
@@ -313,7 +314,7 @@ export class Change {
   async saveChange() {
     if (!this.channelOrUserIdSet) {
       throw new ReferenceError(
-        `Attempted to save ${this.changeType} change for ${this.table} before setting channel_id and user_id`
+        `Attempted to save ${this.changeType} change for ${this.table} before setting channel_id and user_id`,
       );
     }
     const rev = await db[CHANGES_TABLE].add(this);
@@ -392,7 +393,7 @@ export class MovedChange extends Change {
     super(fields);
     if (this.table !== TABLE_NAMES.CONTENTNODE) {
       throw TypeError(
-        `${this.changeType} is only supported by ${TABLE_NAMES.CONTENTNODE} table but ${this.table} was passed instead`
+        `${this.changeType} is only supported by ${TABLE_NAMES.CONTENTNODE} table but ${this.table} was passed instead`,
       );
     }
     this.setAndValidateObj(oldObj, 'oldObj', omitIgnoredSubFields);
@@ -409,7 +410,7 @@ export class CopiedChange extends Change {
     super(fields);
     if (this.table !== TABLE_NAMES.CONTENTNODE) {
       throw TypeError(
-        `${this.changeType} is only supported by ${TABLE_NAMES.CONTENTNODE} table but ${this.table} was passed instead`
+        `${this.changeType} is only supported by ${TABLE_NAMES.CONTENTNODE} table but ${this.table} was passed instead`,
       );
     }
     this.setAndValidateIsDefined(from_key, 'from_key');
@@ -428,11 +429,24 @@ export class PublishedChange extends Change {
     super(fields);
     if (this.table !== TABLE_NAMES.CHANNEL) {
       throw TypeError(
-        `${this.changeType} is only supported by ${TABLE_NAMES.CHANNEL} table but ${this.table} was passed instead`
+        `${this.changeType} is only supported by ${TABLE_NAMES.CHANNEL} table but ${this.table} was passed instead`,
       );
     }
     this.setAndValidateIsDefined(version_notes, 'version_notes');
     this.setAndValidateIsDefined(language, 'language');
+    this.setChannelAndUserId({ id: this.key });
+  }
+}
+
+export class PublishedNextChange extends Change {
+  constructor(fields) {
+    fields.type = CHANGE_TYPES.PUBLISHED_NEXT;
+    super(fields);
+    if (this.table !== TABLE_NAMES.CHANNEL) {
+      throw TypeError(
+        `${this.changeType} is only supported by ${TABLE_NAMES.CHANNEL} table but ${this.table} was passed instead`,
+      );
+    }
     this.setChannelAndUserId({ id: this.key });
   }
 }
@@ -443,7 +457,7 @@ export class SyncedChange extends Change {
     super(fields);
     if (this.table !== TABLE_NAMES.CHANNEL) {
       throw TypeError(
-        `${this.changeType} is only supported by ${TABLE_NAMES.CHANNEL} table but ${this.table} was passed instead`
+        `${this.changeType} is only supported by ${TABLE_NAMES.CHANNEL} table but ${this.table} was passed instead`,
       );
     }
     this.setAndValidateBoolean(titles_and_descriptions, 'titles_and_descriptions');
@@ -460,7 +474,7 @@ export class DeployedChange extends Change {
     super(fields);
     if (this.table !== TABLE_NAMES.CHANNEL) {
       throw TypeError(
-        `${this.changeType} is only supported by ${TABLE_NAMES.CHANNEL} table but ${this.table} was passed instead`
+        `${this.changeType} is only supported by ${TABLE_NAMES.CHANNEL} table but ${this.table} was passed instead`,
       );
     }
     this.setChannelAndUserId({ id: this.key });
@@ -477,7 +491,7 @@ export class UpdatedDescendantsChange extends Change {
     super(fields);
     if (this.table !== TABLE_NAMES.CONTENTNODE) {
       throw TypeError(
-        `${this.changeType} is only supported by ${TABLE_NAMES.CONTENTNODE} table but ${this.table} was passed instead`
+        `${this.changeType} is only supported by ${TABLE_NAMES.CONTENTNODE} table but ${this.table} was passed instead`,
       );
     }
     this.validateObj(changes, 'changes');

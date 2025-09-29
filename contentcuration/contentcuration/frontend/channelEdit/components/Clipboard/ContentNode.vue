@@ -17,11 +17,9 @@
               <DraggableItem
                 :draggableMetadata="draggableMetadata"
                 :dropEffect="dropEffectAndAllowed"
-                :style="{ 'cursor': 'default' }"
+                :style="{ cursor: 'default' }"
               >
-                <DraggableHandle
-                  :effectAllowed="dropEffectAndAllowed"
-                >
+                <DraggableHandle :effectAllowed="dropEffectAndAllowed">
                   <VListTile
                     class="content-item py-1"
                     :class="{ hover, selected }"
@@ -38,9 +36,7 @@
                         @input="goNextSelectionState"
                       />
                     </VListTileAction>
-                    <div
-                      class="py-2 thumbnail-col"
-                    >
+                    <div class="py-2 thumbnail-col">
                       <Thumbnail
                         v-bind="thumbnailAttrs"
                         :isEmpty="contentNode.resource_count === 0"
@@ -50,33 +46,46 @@
 
                     <template v-if="contentNode.kind === 'topic'">
                       <VListTileContent class="description-col pl-2 shrink">
-                        <VListTileTitle class="text-truncate" :class="getTitleClass(contentNode)">
+                        <VListTileTitle
+                          class="text-truncate"
+                          :class="getTitleClass(contentNode)"
+                        >
                           {{ getTitle(contentNode) }}
                         </VListTileTitle>
                       </VListTileContent>
-                      <VListTileAction style="min-width: unset;" class="pl-3 pr-1">
+                      <VListTileAction
+                        style="min-width: unset"
+                        class="pl-3 pr-1"
+                      >
                         <div class="badge caption font-weight-bold">
                           {{ contentNodeResourceCount }}
                         </div>
                       </VListTileAction>
                       <!-- Custom placement of dropdown indicator -->
-                      <VListTileAction
-                        class="action-col px-1 v-list__group__header__append-icon"
-                      >
+                      <VListTileAction class="action-col px-1 v-list__group__header__append-icon">
                         <Icon icon="dropdown" />
                       </VListTileAction>
                       <VSpacer />
                     </template>
                     <template v-else>
-                      <VListTileContent class="description-col pa-2" @click="handlePreview">
-                        <VListTileTitle class="text-truncate" :class="getTitleClass(contentNode)">
+                      <VListTileContent
+                        class="description-col pa-2"
+                        @click="handlePreview"
+                      >
+                        <VListTileTitle
+                          class="text-truncate"
+                          :class="getTitleClass(contentNode)"
+                        >
                           {{ getTitle(contentNode) }}
                         </VListTileTitle>
                       </VListTileContent>
                     </template>
 
-                    <VListTileAction class="action-col option-col" :aria-hidden="!hover">
-                      <Menu>
+                    <VListTileAction
+                      class="action-col option-col"
+                      :aria-hidden="!hover"
+                    >
+                      <BaseMenu>
                         <template #activator="{ on }">
                           <VBtn
                             small
@@ -91,12 +100,15 @@
                         </template>
 
                         <ContentNodeOptions :nodeId="nodeId" />
-                      </Menu>
+                      </BaseMenu>
                     </VListTileAction>
                   </VListTile>
                 </DraggableHandle>
               </DraggableItem>
-              <template v-if="contentNode" #menu>
+              <template
+                v-if="contentNode"
+                #menu
+              >
                 <ContentNodeOptions :nodeId="nodeId" />
               </template>
             </ContextMenu>
@@ -111,11 +123,12 @@
         :nodeId="child.id"
         :level="level + 1"
       />
-
     </LazyListGroup>
   </DraggableCollection>
 
 </template>
+
+
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
@@ -244,7 +257,9 @@
   };
 
 </script>
-<style lang="less" scoped>
+
+
+<style lang="scss" scoped>
 
   .content-item,
   .v-list__tile {
@@ -271,11 +286,11 @@
   }
 
   .content-item:hover,
-  /deep/ .content-item > .v-list__tile:hover {
+  ::v-deep .content-item > .v-list__tile:hover {
     background: #eeeeee;
   }
 
-  /deep/ .action-col,
+  ::v-deep .action-col,
   .thumbnail-col {
     flex-shrink: 0;
     min-width: 24px;
@@ -290,22 +305,26 @@
     }
   }
 
-  /deep/ .v-list__tile {
+  ::v-deep .v-list__tile {
     padding-left: 11px;
     cursor: pointer;
   }
 
-  /deep/ .v-list__tile__title {
+  ::v-deep .v-list__tile__title {
     height: auto;
   }
 
-  /deep/ .text-truncate {
+  ::v-deep .text-truncate {
     /* fix clipping of dangling characters */
     line-height: 1.3 !important;
   }
 
-  /deep/ .selectedIndeterminate svg {
+  ::v-deep .selectedIndeterminate svg {
     fill: gray !important;
+  }
+
+  .action-col {
+    padding-top: 16px;
   }
 
 </style>

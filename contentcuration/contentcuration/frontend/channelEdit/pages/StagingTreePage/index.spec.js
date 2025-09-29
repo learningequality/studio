@@ -117,70 +117,75 @@ const initWrapper = ({ getters = GETTERS, actions = ACTIONS, mutations = MUTATIO
 const removeMultipleSpaces = str => str.replace(/\s{2,}/g, ' ');
 
 const getContentNodeListItems = wrapper => {
-  return wrapper.findAll('[data-test="node-list-item"]');
+  return wrapper.findAllComponents('[data-test="node-list-item"]');
 };
 
 const containsChevronRightBtn = wrapper => {
-  return wrapper.contains('[data-test="btn-chevron"]');
+  return wrapper.findComponent('[data-test="btn-chevron"]').exists();
 };
 
 const getChevronRightBtn = wrapper => {
-  return wrapper.find('[data-test="btn-chevron"]');
+  return wrapper.findComponent('[data-test="btn-chevron"]');
 };
 
 const getInfoBtn = wrapper => {
-  return wrapper.find('[data-test="btn-info"]');
+  return wrapper.findComponent('[data-test="btn-info"]');
 };
 
 const containsResourceDetailDrawer = wrapper => {
-  return wrapper.contains('[data-test="resource-detail-drawer"]');
+  return wrapper
+    .findComponent('[data-test="resource-detail-drawer"]')
+    .findComponent({ name: 'ResizableNavigationDrawer' })
+    .exists();
 };
 
 const getBottomBarStatsResourcesCount = wrapper => {
-  return wrapper.find('[data-test="bottom-bar-stats-resources-count"]');
+  return wrapper.findComponent('[data-test="bottom-bar-stats-resources-count"]');
 };
 
 const getBottomBarStatsFileSize = wrapper => {
-  return wrapper.find('[data-test="bottom-bar-stats-file-size"]');
+  return wrapper.findComponent('[data-test="bottom-bar-stats-file-size"]');
 };
 
 const getSummaryDetailsDialog = wrapper => {
-  return wrapper.find('[data-test="summary-details-dialog"]');
+  return wrapper.findComponent('[data-test="summary-details-dialog"]');
 };
 
 const getDisplaySummaryDetailsDialogBtn = wrapper => {
-  return wrapper.find('[data-test="display-summary-details-dialog-btn"]');
+  return wrapper.findComponent('[data-test="display-summary-details-dialog-btn"]');
 };
 
 const getDeployDialog = wrapper => {
-  return wrapper.find('[data-test="deploy-dialog"]');
+  return wrapper.findComponent('[data-test="deploy-dialog"]');
 };
 
 const getDisplayDeployDialogBtn = wrapper => {
-  return wrapper.find('[data-test="display-deploy-dialog-btn"]');
+  return wrapper.findComponent('[data-test="display-deploy-dialog-btn"]');
 };
 
 const getDeployDialogLiveResources = wrapper => {
-  return wrapper.find('[data-test="deploy-dialog-live-resources"]');
+  return wrapper.findComponent('[data-test="deploy-dialog-live-resources"]');
 };
 
 const getDeployDialogStagedResources = wrapper => {
-  return wrapper.find('[data-test="deploy-dialog-staged-resources"]');
+  return wrapper.findComponent('[data-test="deploy-dialog-staged-resources"]');
 };
 
 describe('StagingTreePage', () => {
   it('renders back to viewing link leading to a root tree page in the toolbar', () => {
     const wrapper = initWrapper();
-    const link = wrapper.find({ name: 'ToolBar' }).find('[data-test="root-tree-link"]');
+    const link = wrapper
+      .findComponent({ name: 'ToolBar' })
+      .findComponent('[data-test="root-tree-link"]');
 
     expect(link.attributes().href).toBe(`#/${ROOT_ID}`);
   });
 
-  it('renders no resources found message if a channel has no staging tree', () => {
+  it('renders no resources found message if a channel has no staging tree', async () => {
     const getters = cloneDeep(GETTERS);
     getters.currentChannel.hasStagingTree = () => false;
     const wrapper = initWrapper({ getters });
-    wrapper.setData({ isLoading: false });
+    await wrapper.setData({ isLoading: false });
 
     expect(wrapper.html()).toContain('No resources found');
   });
@@ -188,7 +193,7 @@ describe('StagingTreePage', () => {
   describe('for a channel that has a staging tree', () => {
     let wrapper, mockDeployCurrentChannel;
 
-    beforeEach(() => {
+    beforeEach(async () => {
       jest.clearAllMocks();
 
       const getters = cloneDeep(GETTERS);
@@ -234,7 +239,7 @@ describe('StagingTreePage', () => {
         wrapper.vm.$router.push('/');
       }
 
-      wrapper.setData({ isLoading: false });
+      await wrapper.setData({ isLoading: false });
     });
 
     it("doesn't render no resources found message", () => {
@@ -261,10 +266,10 @@ describe('StagingTreePage', () => {
         expect(containsChevronRightBtn(nonTopicResource)).toBe(false);
       });
 
-      it('redirects to a resource detail page on resource click', () => {
+      it('redirects to a resource detail page on resource click', async () => {
         expect(wrapper.vm.$router.currentRoute.name).toBeUndefined();
 
-        nonTopicResource.trigger('click');
+        await nonTopicResource.trigger('click');
 
         const currentRoute = wrapper.vm.$router.currentRoute;
         expect(currentRoute.name).toBe(RouteNames.STAGING_TREE_VIEW);
@@ -274,10 +279,10 @@ describe('StagingTreePage', () => {
         });
       });
 
-      it('redirects to a resource detail page on resource double click', () => {
+      it('redirects to a resource detail page on resource double click', async () => {
         expect(wrapper.vm.$router.currentRoute.name).toBeUndefined();
 
-        nonTopicResource.trigger('dblclick');
+        await nonTopicResource.trigger('dblclick');
 
         const currentRoute = wrapper.vm.$router.currentRoute;
         expect(currentRoute.name).toBe(RouteNames.STAGING_TREE_VIEW);
@@ -287,10 +292,10 @@ describe('StagingTreePage', () => {
         });
       });
 
-      it('redirects to a resource detail page on list item click', () => {
+      it('redirects to a resource detail page on list item click', async () => {
         expect(wrapper.vm.$router.currentRoute.name).toBeUndefined();
 
-        nonTopicResource.trigger('click');
+        await nonTopicResource.trigger('click');
 
         const currentRoute = wrapper.vm.$router.currentRoute;
         expect(currentRoute.name).toBe(RouteNames.STAGING_TREE_VIEW);
@@ -312,10 +317,10 @@ describe('StagingTreePage', () => {
         expect(containsChevronRightBtn(topic)).toBe(true);
       });
 
-      it('redirects to a topic children page on chevron right click', () => {
+      it('redirects to a topic children page on chevron right click', async () => {
         expect(wrapper.vm.$router.currentRoute.name).toBeUndefined();
 
-        getChevronRightBtn(topic).trigger('click');
+        await getChevronRightBtn(topic).trigger('click');
 
         const currentRoute = wrapper.vm.$router.currentRoute;
         expect(currentRoute.name).toBe(RouteNames.STAGING_TREE_VIEW);
@@ -325,10 +330,10 @@ describe('StagingTreePage', () => {
         });
       });
 
-      it('redirects to a topic children page on topic click', () => {
+      it('redirects to a topic children page on topic click', async () => {
         expect(wrapper.vm.$router.currentRoute.name).toBeUndefined();
 
-        topic.trigger('click');
+        await topic.trigger('click');
 
         const currentRoute = wrapper.vm.$router.currentRoute;
         expect(currentRoute.name).toBe(RouteNames.STAGING_TREE_VIEW);
@@ -338,10 +343,10 @@ describe('StagingTreePage', () => {
         });
       });
 
-      it('redirects to a topic children page on topic double click', () => {
+      it('redirects to a topic children page on topic double click', async () => {
         expect(wrapper.vm.$router.currentRoute.name).toBeUndefined();
 
-        topic.trigger('dblclick');
+        await topic.trigger('dblclick');
 
         const currentRoute = wrapper.vm.$router.currentRoute;
         expect(currentRoute.name).toBe(RouteNames.STAGING_TREE_VIEW);
@@ -351,10 +356,10 @@ describe('StagingTreePage', () => {
         });
       });
 
-      it('redirects to a topic detail page on info button click', () => {
+      it('redirects to a topic detail page on info button click', async () => {
         expect(wrapper.vm.$router.currentRoute.name).toBeUndefined();
 
-        getInfoBtn(topic).trigger('click');
+        await getInfoBtn(topic).trigger('click');
 
         const currentRoute = wrapper.vm.$router.currentRoute;
         expect(currentRoute.name).toBe(RouteNames.STAGING_TREE_VIEW);
@@ -365,13 +370,14 @@ describe('StagingTreePage', () => {
       });
     });
 
-    it("doesn't render resource detail drawer when not on detail page", () => {
-      wrapper.setProps({ detailNodeId: null });
+    it("doesn't render resource detail drawer when not on detail page", async () => {
+      await wrapper.setProps({ detailNodeId: null });
       expect(containsResourceDetailDrawer(wrapper)).toBe(false);
     });
 
-    it('renders resource detail drawer on detail page', () => {
-      wrapper.setProps({ detailNodeId: 'id-document' });
+    it('renders resource detail drawer on detail page', async () => {
+      await wrapper.setProps({ detailNodeId: 'id-document' });
+      await wrapper.vm.$nextTick();
       expect(containsResourceDetailDrawer(wrapper)).toBe(true);
     });
 
@@ -385,23 +391,23 @@ describe('StagingTreePage', () => {
       expect(removeMultipleSpaces(text)).toBe('Total size: 8 MB (+ 8 MB)');
     });
 
-    it('opens summary details dialog when view summary button is clicked', () => {
+    it('opens summary details dialog when view summary button is clicked', async () => {
       expect(getSummaryDetailsDialog(wrapper).exists()).toBe(false);
-      getDisplaySummaryDetailsDialogBtn(wrapper).trigger('click');
+      await getDisplaySummaryDetailsDialogBtn(wrapper).trigger('click');
 
       expect(getSummaryDetailsDialog(wrapper).isVisible()).toBe(true);
     });
 
-    it('opens deploy dialog when deploy button is clicked', () => {
+    it('opens deploy dialog when deploy button is clicked', async () => {
       expect(getDeployDialog(wrapper).exists()).toBe(false);
-      getDisplayDeployDialogBtn(wrapper).trigger('click');
+      await getDisplayDeployDialogBtn(wrapper).trigger('click');
 
       expect(getDeployDialog(wrapper).isVisible()).toBe(true);
     });
 
     describe('when deploy dialog is open', () => {
-      beforeEach(() => {
-        getDisplayDeployDialogBtn(wrapper).trigger('click');
+      beforeEach(async () => {
+        await getDisplayDeployDialogBtn(wrapper).trigger('click');
       });
 
       it('renders live topics and resources counts', () => {
@@ -414,8 +420,9 @@ describe('StagingTreePage', () => {
         expect(removeMultipleSpaces(text)).toBe('Staged resources: 1 folder , 2 resources');
       });
 
-      it('dispatches deploy channel action on deploy channel button click', () => {
+      it('dispatches deploy channel action on deploy channel button click', async () => {
         getDeployDialog(wrapper).vm.$emit('submit');
+        await wrapper.vm.$nextTick();
 
         expect(mockDeployCurrentChannel).toHaveBeenCalledTimes(1);
       });
@@ -424,6 +431,7 @@ describe('StagingTreePage', () => {
         const waitForDeployingSpy = jest.spyOn(Channel, 'waitForDeploying');
 
         await getDeployDialog(wrapper).vm.$emit('submit');
+        await wrapper.vm.$nextTick();
 
         expect(waitForDeployingSpy).toHaveBeenCalledTimes(1);
         expect(wrapper.vm.$router.currentRoute.name).toBe(RouteNames.TREE_VIEW);

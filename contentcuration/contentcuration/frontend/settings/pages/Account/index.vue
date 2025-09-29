@@ -6,34 +6,55 @@
     </h2>
 
     <!-- User Information -->
-    <KFixedGrid numCols="8" gutter="40">
-      <KFixedGridItem span="2" class="row">
+    <KFixedGrid
+      numCols="8"
+      gutter="40"
+    >
+      <KFixedGridItem
+        span="2"
+        class="row"
+      >
         <b>{{ $tr('usernameLabel') }}</b>
       </KFixedGridItem>
-      <KFixedGridItem span="6" class="row">
+      <KFixedGridItem
+        span="6"
+        class="row"
+      >
         {{ user.email }}
       </KFixedGridItem>
-      <KFixedGridItem span="2" class="row">
+      <KFixedGridItem
+        span="2"
+        class="row"
+      >
         <b>{{ $tr('fullNameLabel') }}</b>
       </KFixedGridItem>
-      <KFixedGridItem span="6" class="row">
+      <KFixedGridItem
+        span="6"
+        class="row"
+      >
         <span>
           {{ fullName }}
           <KButton
             class="px-2"
-            data-test="name-form"
+            data-test="edit-name-btn"
             appearance="basic-link"
             :text="$tr('editFullNameAction')"
             @click="showFullNameForm = true"
           />
         </span>
       </KFixedGridItem>
-      <KFixedGridItem span="2" class="row">
+      <KFixedGridItem
+        span="2"
+        class="row"
+      >
         <b>{{ $tr('passwordLabel') }}</b>
       </KFixedGridItem>
-      <KFixedGridItem span="6" class="row">
+      <KFixedGridItem
+        span="6"
+        class="row"
+      >
         <KButton
-          data-test="password-form"
+          data-test="change-password-btn"
           appearance="basic-link"
           :text="$tr('changePasswordAction')"
           @click="showPasswordForm = true"
@@ -82,7 +103,10 @@
     </p>
     <div v-else-if="channelsAsSoleEditor.length > 0">
       <p>{{ $tr('handleChannelsBeforeAccount') }}</p>
-      <p v-for="channel in channelsAsSoleEditor" :key="channel.id">
+      <p
+        v-for="channel in channelsAsSoleEditor"
+        :key="channel.id"
+      >
         <KExternalLink
           appearance="basic-link"
           :text="channel.name"
@@ -102,10 +126,7 @@
           backgroundColor: $themeTokens.error,
           color: $themeTokens.textInverted,
           ':hover': {
-            // Vuetify generates this based on theme colors, but oddly it doesn't make it
-            // available in the theme tokens
-            // TODO: Replace with KDS lighten/darken utilities
-            backgroundColor: 'var(--v-error-darken1)',
+            backgroundColor: $darken1($themeTokens.error),
           },
         }"
         @click="showDeleteConfirmation = true"
@@ -116,11 +137,16 @@
     <FullNameForm v-model="showFullNameForm" />
     <ChangePasswordForm v-model="showPasswordForm" />
     <DeleteAccountForm v-model="showDeleteConfirmation" />
-    <Alert
-      v-model="showExportDataNotice"
-      :header="$tr('exportStartedHeader')"
-      :text="$tr('exportAccountDataModalMessage')"
-    />
+
+    <KModal
+      v-if="showExportDataNotice"
+      :submitText="$tr('exportDataBtn')"
+      :title="$tr('exportStartedHeader')"
+      data-test="export-notice"
+      @submit="showExportDataNotice = false"
+    >
+      {{ $tr('exportAccountDataModalMessage') }}
+    </KModal>
   </div>
 
 </template>
@@ -133,7 +159,6 @@
   import ChangePasswordForm from './ChangePasswordForm';
   import DeleteAccountForm from './DeleteAccountForm';
   import CopyToken from 'shared/views/CopyToken';
-  import Alert from 'shared/views/Alert';
 
   export default {
     name: 'Account',
@@ -141,7 +166,6 @@
       ChangePasswordForm,
       CopyToken,
       FullNameForm,
-      Alert,
       DeleteAccountForm,
     },
     data() {
@@ -214,23 +238,26 @@
       exportAccountDataModalMessage:
         "You'll receive an email with your data when the export is completed",
       exportFailed: 'Unable to export data. Please try again.',
+      exportDataBtn: 'OK',
     },
   };
 
 </script>
 
+
 <style scoped>
 
-.heading {
-  margin-top: 32px;
-}
+  .heading {
+    margin-top: 32px;
+  }
 
-.copy-token {
-  width: 600px;
-  max-width: 75%;
-}
+  .copy-token {
+    width: 600px;
+    max-width: 75%;
+  }
 
-.row {
-  padding: 8px 0;
-}
+  .row {
+    padding: 8px 0;
+  }
+
 </style>

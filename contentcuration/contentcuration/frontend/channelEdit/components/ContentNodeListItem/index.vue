@@ -10,7 +10,7 @@
                 v-if="node"
                 class="content-list-item pa-0"
                 :class="{
-                  'compact': isCompact,
+                  compact: isCompact,
                   hover: hover && !copying,
                   active: (active || hover) && !copying,
                   disabled: copying,
@@ -19,7 +19,11 @@
                 data-test="content-item"
                 @click="handleTileClick"
               >
-                <slot name="actions-start" :hover="hover" class="actions-start-col"></slot>
+                <slot
+                  name="actions-start"
+                  :hover="hover"
+                  class="actions-start-col"
+                ></slot>
                 <div
                   class="mx-2 thumbnail-col"
                   :class="{
@@ -45,23 +49,26 @@
                 >
                   <VListTileTitle data-test="title">
                     <VLayout row>
-                      <VFlex shrink class="text-truncate">
+                      <VFlex
+                        shrink
+                        class="text-truncate"
+                      >
                         <h3
                           v-if="hasTitle(node) || !canEdit || copying || isNew"
                           class="notranslate text-truncate"
-                          :class="[
-                            isCompact ? 'font-weight-regular' : '',
-                            getTitleClass(node),
-                          ]"
+                          :class="[isCompact ? 'font-weight-regular' : '', getTitleClass(node)]"
                           dir="auto"
                         >
                           {{ getTitle(node) }}
                         </h3>
                       </VFlex>
-                      <VFlex v-if="!isTopic && isCoach" class="px-1">
+                      <VFlex
+                        v-if="!isTopic && isCoach"
+                        class="px-1"
+                      >
                         <Icon
                           icon="coachContent"
-                          style="vertical-align: middle;"
+                          style="vertical-align: middle"
                         />
                       </VFlex>
                       <VFlex>
@@ -87,22 +94,25 @@
                     data-test="subtitle"
                     class="metadata"
                   >
-                    <span v-if="subtitle" class="text">{{ subtitle }}</span>
                     <span
-                      v-if="node.categories ? Object.keys(node.categories).length > 0 : null"
+                      v-if="subtitle"
                       class="text"
-                    >
-                      {{ category(node.categories) }}
-                    </span>
+                    >{{ subtitle }}</span>
                     <span v-if="isTopic && node.coach_count">
                       <!-- for each learning activity -->
-                      <VTooltip bottom lazy>
+                      <VTooltip
+                        bottom
+                        lazy
+                      >
                         <template #activator="{ on }">
-                          <div style="display: inline-block;" v-on="on">
+                          <div
+                            style="display: inline-block"
+                            v-on="on"
+                          >
                             <Icon
                               icon="coachContent"
                               class="mx-1"
-                              style="vertical-align: sub;"
+                              style="vertical-align: sub"
                             />
                             <span v-if="isTopic">
                               {{ $formatNumber(node.coach_count) }}
@@ -110,16 +120,16 @@
                           </div>
                         </template>
                         <span>
-                          {{ isTopic ?
-                            $tr('hasCoachTooltip', { value: node.coach_count })
-                            : $tr('coachTooltip')
+                          {{
+                            isTopic
+                              ? $tr('hasCoachTooltip', { value: node.coach_count })
+                              : $tr('coachTooltip')
                           }}
                         </span>
                       </VTooltip>
                     </span>
                   </VListTileSubTitle>
                   <span v-if="!isCompact">
-
                     <ContentNodeLearningActivityIcon
                       v-if="!isTopic"
                       :learningActivities="node.learning_activities"
@@ -139,11 +149,24 @@
                         {{ levels(key) }}
                       </span>
                     </span>
+                    <span v-if="node.categories">
+                      <span
+                        v-for="(key, index) in category(node.categories)"
+                        :key="index"
+                        class="small-chip"
+                        :style="{ backgroundColor: $themeTokens.fineLine }"
+                      >
+                        {{ key }}
+                      </span>
+                    </span>
                   </span>
                 </VListTileContent>
 
                 <VListTileContent class="actions-end-col updated">
-                  <ContentNodeChangedIcon v-if="canEdit && !copying" :node="node" />
+                  <ContentNodeChangedIcon
+                    v-if="canEdit && !copying"
+                    :node="node"
+                  />
                 </VListTileContent>
                 <template v-if="!copying">
                   <VListTileAction class="actions-end-col">
@@ -157,14 +180,17 @@
                       @click="$emit('topicChevronClick')"
                     />
                   </VListTileAction>
-                  <slot name="actions-end" :hover="hover"></slot>
+                  <slot
+                    name="actions-end"
+                    :hover="hover"
+                  ></slot>
                 </template>
                 <template v-else>
                   <div class="copying">
                     <p class="caption pr-3">
                       <span
                         class="grey--text"
-                        :style="{ 'cursor': hasCopyingErrored ? 'default' : 'progress' }"
+                        :style="{ cursor: hasCopyingErrored ? 'default' : 'progress' }"
                       >
                         {{ copyingMessage }}
                       </span>
@@ -178,12 +204,13 @@
                   </div>
                   <div class="disabled-overlay"></div>
                 </template>
-                <slot name="context-menu" v-bind="contextMenuProps"></slot>
+                <slot
+                  name="context-menu"
+                  v-bind="contextMenuProps"
+                ></slot>
               </VListTile>
-
             </template>
           </DraggableHandle>
-
         </template>
       </ContextMenuCloak>
     </template>
@@ -333,7 +360,7 @@
         // is created here (unlike in ResourcePanel), because the values
         // are used to create one or more individual "chips" to display
         // rather than a string of text
-        return ids.map(i => this.translateMetadataString(camelCase(i))).join(', ');
+        return ids.map(i => this.translateMetadataString(camelCase(i)));
       },
       category(options) {
         const ids = Object.keys(options);
@@ -375,10 +402,10 @@
 </script>
 
 
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
-  @thumbnail-width: 16%;
-  @compact-thumbnail-width: ~'20px + 0.5%';
+  $thumbnail-width: 16%;
+  $compact-thumbnail-width: calc(20px + 0.5%);
 
   .content-list-item {
     background: #ffffff;
@@ -427,7 +454,7 @@
     }
   }
 
-  /deep/ .v-list__tile {
+  ::v-deep .v-list__tile {
     display: flex;
     flex: 1 1 auto;
     flex-wrap: nowrap;
@@ -463,25 +490,23 @@
 
   .thumbnail-col {
     flex-shrink: 0;
-    width: @thumbnail-width;
+    width: $thumbnail-width;
     min-width: 70px;
     max-width: 160px;
 
     .compact & {
-      // stylelint-disable
-      width: calc(@compact-thumbnail-width);
-      // stylelint-enable
+      width: $compact-thumbnail-width;
       min-width: 20px;
     }
   }
 
   .description-col {
     flex-shrink: 1 !important;
-    width: calc(100% - @thumbnail-width - 206px);
+    width: calc(100% - #{$thumbnail-width} - 206px);
     word-break: break-word;
 
     .compact & {
-      width: calc(100% - @compact-thumbnail-width - 206px);
+      width: calc(100% - #{$compact-thumbnail-width} - 206px);
     }
   }
 
@@ -491,10 +516,6 @@
     flex: 1 1 auto;
     align-items: flex-start;
     justify-content: center;
-  }
-
-  .metadata > span:not(:last-child)::after {
-    content: ' • ';
   }
 
   .small-chip {

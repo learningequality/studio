@@ -1,15 +1,27 @@
 <template>
 
   <VApp>
-    <VToolbar app dark color="appBarDark">
-      <VBtn v-if="backButton" flat :to="previousPage" exact>
-        <VIconWrapper class="rtl-flip">
-          arrow_back
-        </VIconWrapper>
+    <VToolbar
+      app
+      dark
+      color="appBarDark"
+    >
+      <VBtn
+        v-if="backButton"
+        flat
+        :to="previousPage"
+        exact
+      >
+        <VIconWrapper class="rtl-flip"> arrow_back </VIconWrapper>
         <span class="back-text">{{ appBarText }}</span>
       </VBtn>
       <template v-else>
-        <VBtn icon dark :to="previousPage" exact>
+        <VBtn
+          icon
+          dark
+          :to="previousPage"
+          exact
+        >
           <VIconWrapper>close</VIconWrapper>
         </VBtn>
         <VToolbarTitle>
@@ -17,7 +29,7 @@
         </VToolbarTitle>
       </template>
     </VToolbar>
-    <VContent style="background-color: white;overflow: auto;height: calc(100vh - 64px);">
+    <VContent style="height: calc(100vh - 64px); overflow: auto; background-color: white">
       <div class="content-wrapper">
         <PageContainer class="content">
           <slot></slot>
@@ -59,8 +71,7 @@
 </script>
 
 
-
-<style lang="less" scoped>
+<style lang="scss" scoped>
 
   .back-text {
     display: inline-block;

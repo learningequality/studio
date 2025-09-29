@@ -11,6 +11,7 @@
 
 </template>
 
+
 <script>
 
   export default {
@@ -25,9 +26,10 @@
 
 </script>
 
-<style lang="less" scoped>
 
-  /deep/ .v-list__tile {
+<style lang="scss" scoped>
+
+  ::v-deep .v-list__tile {
     padding-left: 0;
   }
 

@@ -12,7 +12,7 @@ const ContentNode = {
 function makeWrapper(props = {}) {
   return mount(EditListItem, {
     store: localStore,
-    attachToDocument: true,
+    attachTo: document.body,
     propsData: {
       nodeId: 'node-1',
       ...props,

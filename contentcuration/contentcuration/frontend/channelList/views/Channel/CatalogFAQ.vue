@@ -1,6 +1,10 @@
 <template>
 
-  <VContainer fluid class="py-1" :class="$vuetify.breakpoint.xsOnly ? 'px-0' : 'px-4'">
+  <VContainer
+    fluid
+    class="py-1"
+    :class="$vuetify.breakpoint.xsOnly ? 'px-0' : 'px-4'"
+  >
     <h1 class="font-weight-bold mb-2 px-1 title">
       {{ $tr('aboutHeader') }}
     </h1>
@@ -19,13 +23,14 @@
       {{ $tr('descriptionP3') }}
     </p>
 
-
     <!-- ABOUT THIS LIBRARY -->
     <h1 class="font-weight-bold px-1 title">
       {{ $tr('aboutLibraryHeader') }}
     </h1>
-    <VExpansionPanel class="mb-5 mt-2" expand>
-
+    <VExpansionPanel
+      class="mb-5 mt-2"
+      expand
+    >
       <!-- How do you determine what goes into this library? -->
       <VExpansionPanelContent>
         <template #header>
@@ -120,13 +125,15 @@
       </VExpansionPanelContent>
     </VExpansionPanel>
 
-
     <!-- USING THESE RESOURCES -->
     <h1 class="font-weight-bold px-1 title">
       {{ $tr('usingResourcesHeader') }}
     </h1>
-    <VExpansionPanel v-model="aboutPanel" class="mb-5 mt-2" expand>
-
+    <VExpansionPanel
+      v-model="aboutPanel"
+      class="mb-5 mt-2"
+      expand
+    >
       <!-- I found something I'm interested in and would like to start using it.
             What should I do? -->
       <VExpansionPanelContent>
@@ -237,8 +244,10 @@
     <h1 class="font-weight-bold pl-1 title">
       {{ $tr('aboutKolibriHeader') }}
     </h1>
-    <VExpansionPanel class="mb-5 mt-2" expand>
-
+    <VExpansionPanel
+      class="mb-5 mt-2"
+      expand
+    >
       <!-- What is Kolibri? -->
       <VExpansionPanelContent>
         <template #header>
@@ -324,6 +333,7 @@
   </VContainer>
 
 </template>
+
 
 <script>
 
@@ -455,10 +465,12 @@
 
 </script>
 
+
 <style scoped>
+
   /deep/ .action-link {
-    vertical-align: text-bottom;
     font-size: inherit;
+    vertical-align: text-bottom;
   }
 
   p {
@@ -467,11 +479,12 @@
   }
 
   .v-card__text ul {
-    padding: 0px 32px;
+    padding: 0 32px;
   }
 
   /* Don't set text alignment so we can handle RTL */
   .v-expansion-panel {
     text-align: unset;
   }
+
 </style>

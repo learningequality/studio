@@ -29,8 +29,16 @@
               :clipped-right="$isRTL"
               app
             >
-              <VBtn data-test="close" icon dark @click="handleClose()">
-                <Icon icon="clear" :color="$themeTokens.textInverted" />
+              <VBtn
+                data-test="close"
+                icon
+                dark
+                @click="handleClose()"
+              >
+                <Icon
+                  icon="clear"
+                  :color="$themeTokens.textInverted"
+                />
               </VBtn>
               <VToolbarTitle>{{ modalTitle }}</VToolbarTitle>
               <VSpacer />
@@ -48,20 +56,28 @@
               stateless
               clipped
               app
-              style="height: calc(100% - 64px);"
+              style="height: calc(100% - 64px)"
               :minWidth="150"
               :defaultWidth="250"
               :maxWidth="500"
               @scroll="scroll"
             >
-              <FileDropzone fill :disabled="!uploadMode" @dropped="handleFiles">
+              <FileDropzone
+                fill
+                :disabled="!uploadMode"
+                @dropped="handleFiles"
+              >
                 <ToolBar
                   v-if="addTopicsMode || uploadMode"
                   :flat="!listElevated"
                   class="add-wrapper"
                   :color="$themeTokens.textInverted"
                 >
-                  <VBtn v-if="addTopicsMode" color="greyBackground" @click="createTopic">
+                  <VBtn
+                    v-if="addTopicsMode"
+                    color="greyBackground"
+                    @click="createTopic"
+                  >
                     {{ $tr('addTopic') }}
                   </VBtn>
                   <VBtn
@@ -77,7 +93,7 @@
                   <EditList
                     v-model="currentSelectedNodes"
                     :nodeIds="nodeIds"
-                    @input="enableValidation(nodeIds);"
+                    @input="enableValidation(nodeIds)"
                   />
                 </div>
               </FileDropzone>
@@ -85,7 +101,13 @@
 
             <!-- Main editing area -->
             <VContent>
-              <VLayout v-if="loadError" align-center justify-center fill-height class="py-5">
+              <VLayout
+                v-if="loadError"
+                align-center
+                justify-center
+                fill-height
+                class="py-5"
+              >
                 <VFlex class="text-xs-center">
                   <Icon icon="error" />
                   <p>{{ $tr('loadErrorText') }}</p>
@@ -107,31 +129,33 @@
             </VContent>
           </template>
         </Uploader>
-
       </VCard>
       <BottomBar v-if="!loading && !loadError && !showFileUploadDefault">
-        <VLayout row align-center fill-height class="px-2">
-          <VFlex v-if="showStorage" shrink>
-            <FileStorage />
-          </VFlex>
-          <VSpacer />
-          <VFlex v-if="online" shrink>
-            <div class="mt-1 py-3">
-              <SavingIndicator :nodeIds="nodeIds" />
-            </div>
-          </VFlex>
-          <VFlex shrink>
-            <VBtn color="primary" @click="handleClose()">
-              {{ $tr('finishButton') }}
-            </VBtn>
-          </VFlex>
-        </VLayout>
+        <FileStorage
+          v-if="showStorage"
+          class="mx-2"
+        />
+        <VSpacer />
+        <div
+          v-if="online"
+          class="mt-1 py-3"
+        >
+          <SavingIndicator :nodeIds="nodeIds" />
+        </div>
+        <div>
+          <VBtn
+            color="primary"
+            @click="handleClose()"
+          >
+            {{ $tr('finishButton') }}
+          </VBtn>
+        </div>
       </BottomBar>
       <InheritAncestorMetadataModal
         ref="inheritModal"
-        :parent="(createMode && detailNodeIds.length) ? parent : null"
+        :parent="createMode && detailNodeIds.length ? parent : null"
         @inherit="inheritMetadata"
-        @updateActive="active => isInheritModalOpen = active"
+        @updateActive="active => (isInheritModalOpen = active)"
       />
     </VDialog>
 
@@ -142,10 +166,18 @@
       :text="$tr('invalidNodesFoundText')"
     >
       <template #buttons="{ close }">
-        <VBtn flat data-test="saveanyways" color="primary" @click="closeModal(true)">
+        <VBtn
+          flat
+          data-test="saveanyways"
+          color="primary"
+          @click="closeModal(true)"
+        >
           {{ $tr('saveAnywaysButton') }}
         </VBtn>
-        <VBtn color="primary" @click="close">
+        <VBtn
+          color="primary"
+          @click="close"
+        >
           {{ $tr('keepEditingButton') }}
         </VBtn>
       </template>
@@ -158,10 +190,17 @@
       :text="$tr('uploadInProgressText')"
     >
       <template #buttons="{ close }">
-        <VBtn flat @click="close">
+        <VBtn
+          flat
+          @click="close"
+        >
           {{ $tr('dismissDialogButton') }}
         </VBtn>
-        <VBtn data-test="canceluploads" color="primary" @click="closeModal">
+        <VBtn
+          data-test="canceluploads"
+          color="primary"
+          @click="closeModal"
+        >
           {{ $tr('cancelUploadsButton') }}
         </VBtn>
       </template>
@@ -174,10 +213,16 @@
       :text="$tr('saveFailedText')"
     >
       <template #buttons="{ close }">
-        <VBtn flat @click="close">
+        <VBtn
+          flat
+          @click="close"
+        >
           {{ $tr('okButton') }}
         </VBtn>
-        <VBtn color="primary" @click="closeModal">
+        <VBtn
+          color="primary"
+          @click="closeModal"
+        >
           {{ $tr('closeWithoutSavingButton') }}
         </VBtn>
       </template>
@@ -185,6 +230,7 @@
   </div>
 
 </template>
+
 
 <script>
 
@@ -252,7 +298,7 @@
       return {
         loading: false,
         loadError: false,
-        selected: this.nodeIds,
+        selected: (this.detailNodeIds && this.detailNodeIds.split(',')) || [],
         promptInvalid: false,
         promptUploading: false,
         promptFailed: false,
@@ -267,7 +313,9 @@
     computed: {
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
       ...mapGetters('assessmentItem', ['getAssessmentItems']),
+      // eslint-disable-next-line vue/no-unused-properties
       ...mapGetters('currentChannel', ['currentChannel', 'canEdit']),
+      // eslint-disable-next-line vue/no-unused-properties
       ...mapGetters('file', ['contentNodesAreUploading', 'getContentNodeFiles']),
       ...mapState({
         online: state => state.connection.online,
@@ -403,7 +451,7 @@
                       id: nodeId,
                       complete: completeCheck,
                       checkComplete: true,
-                    })
+                    }),
                   );
                 }
               });
@@ -428,6 +476,7 @@
     },
     methods: {
       ...mapActions(['fetchUserStorage']),
+      /* eslint-disable vue/no-unused-properties */
       ...mapActions('contentNode', [
         'loadContentNode',
         'loadContentNodes',
@@ -437,6 +486,7 @@
       ]),
       ...mapActions('file', ['loadFiles', 'updateFile']),
       ...mapActions('assessmentItem', ['loadAssessmentItems', 'updateAssessmentItems']),
+      /* eslint-enable vue/no-unused-properties */
       ...mapMutations('contentNode', { enableValidation: 'ENABLE_VALIDATION_ON_NODES' }),
       closeModal(changed = false) {
         if (!this.uploadMode) {
@@ -480,7 +530,7 @@
           this.enableValidation(this.nodeIds);
           const assessmentItems = this.getAssessmentItems(this.nodeIds);
           assessmentItems.forEach(item =>
-            item.question ? (item[DELAYED_VALIDATION] = false) : ''
+            item.question ? (item[DELAYED_VALIDATION] = false) : '',
           );
           this.updateAssessmentItems(assessmentItems);
 
@@ -552,18 +602,10 @@
         const parentPropDefinedForInheritModal = Boolean(this.$refs.inheritModal?.parent);
         this.newNodeIds = await Promise.all(
           fileUploads.map(async (file, index) => {
-            let title;
-            if (file.metadata.title) {
-              title = file.metadata.title;
-            } else {
-              title = file.original_filename
-                .split('.')
-                .slice(0, -1)
-                .join('.');
-            }
+            const title = file.original_filename.split('.').slice(0, -1).join('.');
             const newNodeId = await this.createNode(
               FormatPresets.has(file.preset) && FormatPresets.get(file.preset).kind_id,
-              { title, ...file.metadata }
+              { title, ...file.metadata },
             );
             if (index === 0) {
               this.selected = [newNodeId];
@@ -573,7 +615,7 @@
               contentnode: newNodeId,
             });
             return newNodeId;
-          })
+          }),
         );
         this.creatingNodes = false;
         if (parentPropDefinedForInheritModal) {
@@ -582,6 +624,9 @@
           this.resetInheritMetadataModal();
         }
       },
+      /**
+       * @public
+       */
       updateTitleForPage() {
         this.updateTabTitle(this.$store.getters.appendChannelName(this.modalTitle));
       },
@@ -648,9 +693,10 @@
 
 </script>
 
-<style lang="less" scoped>
 
-  /deep/ .v-toolbar__extension {
+<style lang="scss" scoped>
+
+  ::v-deep .v-toolbar__extension {
     padding: 0;
 
     .v-toolbar__content {
@@ -666,7 +712,7 @@
     margin-left: 0;
   }
 
-  /deep/ .v-content__wrap {
+  ::v-deep .v-content__wrap {
     max-height: calc(100vh - 128px);
     overflow-y: auto;
   }
@@ -678,6 +724,10 @@
     width: calc(100% + 4px);
     margin: 0 -3px;
     margin-top: -4px !important;
+  }
+
+  ::v-deep .v-dialog__content {
+    z-index: 5 !important;
   }
 
 </style>

@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from django.urls import reverse
 
 from contentcuration import models
@@ -12,7 +10,6 @@ from contentcuration.viewsets.sync.constants import BOOKMARK
 
 
 class SyncTestCase(SyncTestMixin, StudioAPITestCase):
-
     @property
     def bookmark_metadata(self):
         return {
@@ -120,9 +117,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         )
         data2 = self.bookmark_db_metadata
         data2["channel_id"] = self.channel2.id
-        bookmark2 = models.Channel.bookmarked_by.through.objects.create(
-            **data2
-        )
+        bookmark2 = models.Channel.bookmarked_by.through.objects.create(**data2)
 
         self.client.force_authenticate(user=self.user)
         response = self.sync_changes(
@@ -177,7 +172,9 @@ class CRUDTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         bookmark = self.bookmark_metadata
         response = self.client.post(
-            reverse("bookmark-list"), bookmark, format="json",
+            reverse("bookmark-list"),
+            bookmark,
+            format="json",
         )
         self.assertEqual(response.status_code, 405, response.content)
 

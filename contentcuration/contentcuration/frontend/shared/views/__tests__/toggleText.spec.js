@@ -17,14 +17,16 @@ describe('toggleText', () => {
     splitWrapper = makeWrapper(17);
     expect(splitWrapper.vm.overflowText).toBeFalsy();
   });
-  it('clicking the toggle button should collapse/expand text', () => {
+  it('clicking the toggle button should collapse/expand text', async () => {
     const splitWrapper = makeWrapper(5);
     const toggler = splitWrapper.find('.toggler');
     const overflow = splitWrapper.find('[data-test="overflow"]');
     expect(overflow.isVisible()).toBe(false);
     toggler.trigger('click');
+    await splitWrapper.vm.$nextTick();
     expect(overflow.isVisible()).toBe(true);
     toggler.trigger('click');
+    await splitWrapper.vm.$nextTick();
     expect(overflow.isVisible()).toBe(false);
   });
 });

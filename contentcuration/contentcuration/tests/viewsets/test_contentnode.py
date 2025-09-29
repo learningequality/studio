@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import uuid
 
 import mock
@@ -17,7 +15,9 @@ from le_utils.constants import completion_criteria
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import roles
-from le_utils.constants.labels.accessibility_categories import ACCESSIBILITYCATEGORIESLIST
+from le_utils.constants.labels.accessibility_categories import (
+    ACCESSIBILITYCATEGORIESLIST,
+)
 from le_utils.constants.labels.subjects import SUBJECTSLIST
 
 from contentcuration import models
@@ -265,17 +265,27 @@ class ContentNodeFilterTestCase(TestCase):
             self.assertEqual(expected_pk, actual_pk)
 
     def test_filter_ancestors_of(self):
-        target = models.ContentNode.objects.get(node_id="00000000000000000000000000000003")
-        queryset = self.filter.filter_ancestors_of(models.ContentNode.objects.all(), None, target.pk)
+        target = models.ContentNode.objects.get(
+            node_id="00000000000000000000000000000003"
+        )
+        queryset = self.filter.filter_ancestors_of(
+            models.ContentNode.objects.all(), None, target.pk
+        )
 
         self.assertQuerysetPKs(target.get_ancestors(include_self=True), queryset)
 
     def test_filter_ancestors_of__root_node(self):
-        queryset = self.filter.filter_ancestors_of(models.ContentNode.objects.all(), None, self.root.pk)
-        self.assertQuerysetPKs(models.ContentNode.objects.filter(pk=self.root.pk), queryset)
+        queryset = self.filter.filter_ancestors_of(
+            models.ContentNode.objects.all(), None, self.root.pk
+        )
+        self.assertQuerysetPKs(
+            models.ContentNode.objects.filter(pk=self.root.pk), queryset
+        )
 
     def test_filter_ancestors_of__missing_target(self):
-        queryset = self.filter.filter_ancestors_of(models.ContentNode.objects.all(), None, "nonexistant ID")
+        queryset = self.filter.filter_ancestors_of(
+            models.ContentNode.objects.all(), None, "nonexistant ID"
+        )
         self.assertQuerysetPKs(models.ContentNode.objects.none(), queryset)
 
 
@@ -292,7 +302,8 @@ class ContentNodeViewSetTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=user)
         with self.settings(TEST_ENV=False):
             response = self.client.get(
-                self.viewset_url(pk=contentnode.id), format="json",
+                self.viewset_url(pk=contentnode.id),
+                format="json",
             )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(response.data["id"], contentnode.id)
@@ -307,7 +318,8 @@ class ContentNodeViewSetTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=user)
         with self.settings(TEST_ENV=False):
             response = self.client.get(
-                self.viewset_url(pk=contentnode.id), format="json",
+                self.viewset_url(pk=contentnode.id),
+                format="json",
             )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(response.data["id"], contentnode.id)
@@ -321,7 +333,8 @@ class ContentNodeViewSetTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=user)
         with self.settings(TEST_ENV=False):
             response = self.client.get(
-                self.viewset_url(pk=contentnode.id), format="json",
+                self.viewset_url(pk=contentnode.id),
+                format="json",
             )
         self.assertEqual(response.status_code, 404, response.content)
 
@@ -331,7 +344,8 @@ class ContentNodeViewSetTestCase(StudioAPITestCase):
 
         with self.settings(TEST_ENV=False):
             response = self.client.get(
-                self.viewset_url(pk=contentnode.id), format="json",
+                self.viewset_url(pk=contentnode.id),
+                format="json",
             )
         self.assertEqual(response.status_code, 403, response.content)
 
@@ -343,7 +357,8 @@ class ContentNodeViewSetTestCase(StudioAPITestCase):
 
         with self.settings(TEST_ENV=False):
             response = self.client.get(
-                self.viewset_url(pk=contentnode.id), format="json",
+                self.viewset_url(pk=contentnode.id),
+                format="json",
             )
         self.assertEqual(response.status_code, 403, response.content)
 
@@ -362,19 +377,38 @@ class ContentNodeViewSetTestCase(StudioAPITestCase):
                 "m": 3,
                 "n": 6,
                 "mastery_model": exercises.M_OF_N,
-            }
+            },
         )
 
         self.client.force_authenticate(user=user)
         with self.settings(TEST_ENV=False):
             response = self.client.get(
-                self.viewset_url(pk=contentnode.id), format="json",
+                self.viewset_url(pk=contentnode.id),
+                format="json",
             )
         self.assertEqual(response.status_code, 200, response.content)
-        self.assertEqual(response.data["extra_fields"]["options"]["completion_criteria"]["threshold"]["m"], 3)
-        self.assertEqual(response.data["extra_fields"]["options"]["completion_criteria"]["threshold"]["n"], 6)
-        self.assertEqual(response.data["extra_fields"]["options"]["completion_criteria"]["threshold"]["mastery_model"], exercises.M_OF_N)
-        self.assertEqual(response.data["extra_fields"]["options"]["completion_criteria"]["model"], completion_criteria.MASTERY)
+        self.assertEqual(
+            response.data["extra_fields"]["options"]["completion_criteria"][
+                "threshold"
+            ]["m"],
+            3,
+        )
+        self.assertEqual(
+            response.data["extra_fields"]["options"]["completion_criteria"][
+                "threshold"
+            ]["n"],
+            6,
+        )
+        self.assertEqual(
+            response.data["extra_fields"]["options"]["completion_criteria"][
+                "threshold"
+            ]["mastery_model"],
+            exercises.M_OF_N,
+        )
+        self.assertEqual(
+            response.data["extra_fields"]["options"]["completion_criteria"]["model"],
+            completion_criteria.MASTERY,
+        )
 
     def test_consolidate_extra_fields_with_mastrey_model_none(self):
 
@@ -389,24 +423,23 @@ class ContentNodeViewSetTestCase(StudioAPITestCase):
             description="India is the hottest country in the world",
             parent_id=channel.main_tree_id,
             extra_fields={
-
                 "m": None,
                 "n": None,
                 "mastery_model": None,
-            }
+            },
         )
 
         self.client.force_authenticate(user=user)
         with self.settings(TEST_ENV=False):
             response = self.client.get(
-                self.viewset_url(pk=contentnode.id), format="json",
+                self.viewset_url(pk=contentnode.id),
+                format="json",
             )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(response.data["extra_fields"], {})
 
 
 class SyncTestCase(SyncTestMixin, StudioAPITestCase):
-
     def setUp(self):
         super(SyncTestCase, self).setUp()
         self.channel = testdata.channel()
@@ -438,7 +471,14 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.channel.editors.remove(self.user)
         contentnode = self.contentnode_metadata
         response = self.sync_changes(
-            [generate_create_event(contentnode["id"], CONTENTNODE, contentnode, channel_id=self.channel.id)],
+            [
+                generate_create_event(
+                    contentnode["id"],
+                    CONTENTNODE,
+                    contentnode,
+                    channel_id=self.channel.id,
+                )
+            ],
         )
         self.assertEqual(response.status_code, 200, response.content)
         with self.assertRaises(models.ContentNode.DoesNotExist):
@@ -448,7 +488,14 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.channel.editors.add(self.user)
         contentnode = self.contentnode_metadata
         response = self.sync_changes(
-            [generate_create_event(contentnode["id"], CONTENTNODE, contentnode, channel_id=self.channel.id)],
+            [
+                generate_create_event(
+                    contentnode["id"],
+                    CONTENTNODE,
+                    contentnode,
+                    channel_id=self.channel.id,
+                )
+            ],
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -466,7 +513,14 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         contentnode["parent"] = self.channel.main_tree_id
 
         response = self.sync_changes(
-            [generate_create_event(contentnode["id"], CONTENTNODE, contentnode, channel_id=self.channel.id)],
+            [
+                generate_create_event(
+                    contentnode["id"],
+                    CONTENTNODE,
+                    contentnode,
+                    channel_id=self.channel.id,
+                )
+            ],
         )
         self.assertEqual(len(response.data["disallowed"]), 1)
         try:
@@ -480,8 +534,18 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         contentnode2 = self.contentnode_metadata
         response = self.sync_changes(
             [
-                generate_create_event(contentnode1["id"], CONTENTNODE, contentnode1, channel_id=self.channel.id),
-                generate_create_event(contentnode2["id"], CONTENTNODE, contentnode2, channel_id=self.channel.id),
+                generate_create_event(
+                    contentnode1["id"],
+                    CONTENTNODE,
+                    contentnode1,
+                    channel_id=self.channel.id,
+                ),
+                generate_create_event(
+                    contentnode2["id"],
+                    CONTENTNODE,
+                    contentnode2,
+                    channel_id=self.channel.id,
+                ),
             ],
         )
         self.assertEqual(response.status_code, 200, response.content)
@@ -509,10 +573,16 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         response = self.sync_changes(
             [
                 generate_create_event(
-                    contentnode1["id"], CONTENTNODE, contentnode1, channel_id=channel1.id
+                    contentnode1["id"],
+                    CONTENTNODE,
+                    contentnode1,
+                    channel_id=channel1.id,
                 ),
                 generate_create_event(
-                    contentnode2["id"], CONTENTNODE, contentnode2, channel_id=channel2.id
+                    contentnode2["id"],
+                    CONTENTNODE,
+                    contentnode2,
+                    channel_id=channel2.id,
                 ),
             ],
         )
@@ -535,7 +605,14 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         new_title = "This is not the old title"
 
         response = self.sync_changes(
-            [generate_update_event(contentnode.id, CONTENTNODE, {"title": new_title}, channel_id=self.channel.id)],
+            [
+                generate_update_event(
+                    contentnode.id,
+                    CONTENTNODE,
+                    {"title": new_title},
+                    channel_id=self.channel.id,
+                )
+            ],
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(
@@ -547,7 +624,11 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         contentnode2 = models.ContentNode.objects.create(**self.contentnode_db_metadata)
 
         self.sync_changes(
-            [generate_update_event(contentnode.id, CONTENTNODE, {"parent": contentnode2.id})],
+            [
+                generate_update_event(
+                    contentnode.id, CONTENTNODE, {"parent": contentnode2.id}
+                )
+            ],
         )
         self.assertNotEqual(
             models.ContentNode.objects.get(id=contentnode.id).parent_id, contentnode2.id
@@ -561,7 +642,10 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         response = self.sync_changes(
             [
                 generate_update_event(
-                    contentnode.id, CONTENTNODE, {"title": new_title}, channel_id=self.channel.id
+                    contentnode.id,
+                    CONTENTNODE,
+                    {"title": new_title},
+                    channel_id=self.channel.id,
                 )
             ],
         )
@@ -579,7 +663,11 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         new_language = "es"
 
         response = self.sync_changes(
-            [generate_update_descendants_event(root_node.id, {"language": new_language}, channel_id=self.channel.id)],
+            [
+                generate_update_descendants_event(
+                    root_node.id, {"language": new_language}, channel_id=self.channel.id
+                )
+            ],
         )
         self.assertEqual(response.status_code, 200, response.content)
 
@@ -591,11 +679,19 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
     def test_cannot_update_descendants_when_updating_non_topic_node(self):
         root_node = testdata.tree()
-        video_node = root_node.get_descendants().filter(kind_id=content_kinds.VIDEO).first()
+        video_node = (
+            root_node.get_descendants().filter(kind_id=content_kinds.VIDEO).first()
+        )
         new_language = "pt"
 
         response = self.sync_changes(
-            [generate_update_descendants_event(video_node.id, {"language": new_language}, channel_id=self.channel.id)],
+            [
+                generate_update_descendants_event(
+                    video_node.id,
+                    {"language": new_language},
+                    channel_id=self.channel.id,
+                )
+            ],
         )
 
         self.assertEqual(len(response.data["errors"]), 1)
@@ -612,20 +708,33 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         m = 5
         n = 10
         response = self.sync_changes(
-            [generate_update_event(contentnode.id, CONTENTNODE, {
-                "extra_fields.options.completion_criteria.threshold.m": m,
-                "extra_fields.options.completion_criteria.threshold.n": n,
-                "extra_fields.options.completion_criteria.threshold.mastery_model": exercises.M_OF_N,
-                "extra_fields.options.completion_criteria.model": completion_criteria.MASTERY
-            }, channel_id=self.channel.id)],
+            [
+                generate_update_event(
+                    contentnode.id,
+                    CONTENTNODE,
+                    {
+                        "extra_fields.options.completion_criteria.threshold.m": m,
+                        "extra_fields.options.completion_criteria.threshold.n": n,
+                        "extra_fields.options.completion_criteria.threshold.mastery_model": exercises.M_OF_N,
+                        "extra_fields.options.completion_criteria.model": completion_criteria.MASTERY,
+                    },
+                    channel_id=self.channel.id,
+                )
+            ],
         )
 
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(
-            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["m"], m
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"][
+                "completion_criteria"
+            ]["threshold"]["m"],
+            m,
         )
         self.assertEqual(
-            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["n"], n
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"][
+                "completion_criteria"
+            ]["threshold"]["n"],
+            n,
         )
 
     def test_update_contentnode_exercise_mastery_model_partial(self):
@@ -648,14 +757,24 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         # Update m and n fields
         m = 4
         response = self.sync_changes(
-            [generate_update_event(contentnode.id, CONTENTNODE, {
-                "extra_fields.options.completion_criteria.threshold.m": m,
-            }, channel_id=self.channel.id)],
+            [
+                generate_update_event(
+                    contentnode.id,
+                    CONTENTNODE,
+                    {
+                        "extra_fields.options.completion_criteria.threshold.m": m,
+                    },
+                    channel_id=self.channel.id,
+                )
+            ],
         )
 
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(
-            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["m"], m
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"][
+                "completion_criteria"
+            ]["threshold"]["m"],
+            m,
         )
 
     def test_update_contentnode_exercise_mastery_model_old(self):
@@ -672,23 +791,42 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         # Update m and n fields
         m = 4
         response = self.sync_changes(
-            [generate_update_event(contentnode.id, CONTENTNODE, {
-                "extra_fields.options.completion_criteria.threshold.m": m,
-            }, channel_id=self.channel.id)],
+            [
+                generate_update_event(
+                    contentnode.id,
+                    CONTENTNODE,
+                    {
+                        "extra_fields.options.completion_criteria.threshold.m": m,
+                    },
+                    channel_id=self.channel.id,
+                )
+            ],
         )
 
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(
-            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["m"], m
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"][
+                "completion_criteria"
+            ]["threshold"]["m"],
+            m,
         )
         self.assertEqual(
-            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["n"], 10
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"][
+                "completion_criteria"
+            ]["threshold"]["n"],
+            10,
         )
         self.assertEqual(
-            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["threshold"]["mastery_model"], exercises.M_OF_N
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"][
+                "completion_criteria"
+            ]["threshold"]["mastery_model"],
+            exercises.M_OF_N,
         )
         self.assertEqual(
-            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["completion_criteria"]["model"], completion_criteria.MASTERY
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"][
+                "completion_criteria"
+            ]["model"],
+            completion_criteria.MASTERY,
         )
 
     def test_update_contentnode_exercise_incomplete_mastery_model_marked_complete(self):
@@ -697,16 +835,23 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         contentnode = models.ContentNode.objects.create(**metadata)
 
         response = self.sync_changes(
-            [generate_update_event(contentnode.id, CONTENTNODE, {
-                "complete": True,
-            }, channel_id=self.channel.id)],
+            [
+                generate_update_event(
+                    contentnode.id,
+                    CONTENTNODE,
+                    {
+                        "complete": True,
+                    },
+                    channel_id=self.channel.id,
+                )
+            ],
         )
 
         self.assertEqual(response.status_code, 200, response.content)
-        self.assertFalse(
-            models.ContentNode.objects.get(id=contentnode.id).complete
-        )
-        change = models.Change.objects.filter(channel=self.channel, change_type=UPDATED, table=CONTENTNODE).last()
+        self.assertFalse(models.ContentNode.objects.get(id=contentnode.id).complete)
+        change = models.Change.objects.filter(
+            channel=self.channel, change_type=UPDATED, table=CONTENTNODE
+        ).last()
         self.assertFalse(change.kwargs["mods"]["complete"])
 
     def test_update_contentnode_extra_fields(self):
@@ -714,11 +859,19 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         # Update extra_fields.randomize
         randomize = True
         response = self.sync_changes(
-            [generate_update_event(contentnode.id, CONTENTNODE, {"extra_fields.randomize": randomize}, channel_id=self.channel.id)],
+            [
+                generate_update_event(
+                    contentnode.id,
+                    CONTENTNODE,
+                    {"extra_fields.randomize": randomize},
+                    channel_id=self.channel.id,
+                )
+            ],
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(
-            models.ContentNode.objects.get(id=contentnode.id).extra_fields["randomize"], randomize
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["randomize"],
+            randomize,
         )
 
     def test_update_contentnode_add_to_extra_fields_nested(self):
@@ -726,10 +879,22 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         contentnode = models.ContentNode.objects.create(**metadata)
         # Add extra_fields.options.modality
         response = self.sync_changes(
-            [generate_update_event(contentnode.id, CONTENTNODE, {"extra_fields.options.modality": "QUIZ"}, channel_id=self.channel.id)],
+            [
+                generate_update_event(
+                    contentnode.id,
+                    CONTENTNODE,
+                    {"extra_fields.options.modality": "QUIZ"},
+                    channel_id=self.channel.id,
+                )
+            ],
         )
         self.assertEqual(response.status_code, 200, response.content)
-        self.assertEqual(models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["modality"], "QUIZ")
+        self.assertEqual(
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"][
+                "modality"
+            ],
+            "QUIZ",
+        )
 
     def test_update_contentnode_remove_from_extra_fields_nested(self):
         metadata = self.contentnode_db_metadata
@@ -741,11 +906,20 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         contentnode = models.ContentNode.objects.create(**metadata)
         # Remove extra_fields.options.modality
         response = self.sync_changes(
-            [generate_update_event(contentnode.id, CONTENTNODE, {"extra_fields.options.modality": None}, channel_id=self.channel.id)],
+            [
+                generate_update_event(
+                    contentnode.id,
+                    CONTENTNODE,
+                    {"extra_fields.options.modality": None},
+                    channel_id=self.channel.id,
+                )
+            ],
         )
         self.assertEqual(response.status_code, 200, response.content)
         with self.assertRaises(KeyError):
-            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"]["modality"]
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields["options"][
+                "modality"
+            ]
 
     def test_update_contentnode_update_options_completion_criteria(self):
         metadata = self.contentnode_db_metadata
@@ -767,17 +941,22 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
                     CONTENTNODE,
                     {
                         "extra_fields.options.completion_criteria.model": completion_criteria.TIME,
-                        "extra_fields.options.completion_criteria.threshold": 10
+                        "extra_fields.options.completion_criteria.threshold": 10,
                     },
-                    channel_id=self.channel.id
+                    channel_id=self.channel.id,
                 )
             ],
         )
         self.assertEqual(response.status_code, 200, response.content)
         c = models.ContentNode.objects.get(id=contentnode.id)
 
-        self.assertEqual(c.extra_fields["options"]["completion_criteria"]["model"], completion_criteria.TIME)
-        self.assertEqual(c.extra_fields["options"]["completion_criteria"]["threshold"], 10)
+        self.assertEqual(
+            c.extra_fields["options"]["completion_criteria"]["model"],
+            completion_criteria.TIME,
+        )
+        self.assertEqual(
+            c.extra_fields["options"]["completion_criteria"]["threshold"], 10
+        )
 
     def test_update_contentnode_update_options_completion_criteria_threshold_only(self):
         metadata = self.contentnode_db_metadata
@@ -797,18 +976,21 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
                 generate_update_event(
                     contentnode.id,
                     CONTENTNODE,
-                    {
-                        "extra_fields.options.completion_criteria.threshold": 10
-                    },
-                    channel_id=self.channel.id
+                    {"extra_fields.options.completion_criteria.threshold": 10},
+                    channel_id=self.channel.id,
                 )
             ],
         )
         self.assertEqual(response.status_code, 200, response.content)
         c = models.ContentNode.objects.get(id=contentnode.id)
 
-        self.assertEqual(c.extra_fields["options"]["completion_criteria"]["model"], completion_criteria.TIME)
-        self.assertEqual(c.extra_fields["options"]["completion_criteria"]["threshold"], 10)
+        self.assertEqual(
+            c.extra_fields["options"]["completion_criteria"]["model"],
+            completion_criteria.TIME,
+        )
+        self.assertEqual(
+            c.extra_fields["options"]["completion_criteria"]["threshold"], 10
+        )
 
     def test_update_completion_criteria_model_to_determined_by_resource_edge_case(self):
         metadata = self.contentnode_db_metadata
@@ -818,38 +1000,44 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
                 "completion_criteria": {
                     "model": completion_criteria.REFERENCE,
                     "threshold": None,
-                    "learner_managed": False
+                    "learner_managed": False,
                 }
             }
         }
         contentnode = models.ContentNode.objects.create(**metadata)
 
         response = self.sync_changes(
-                [
-                    generate_update_event(
-                        contentnode.id,
-                        CONTENTNODE,
-                        {
-                            "complete": True,
-                            "extra_fields.options.completion_criteria.threshold": 600,
-                            "extra_fields.options.completion_criteria.model": completion_criteria.APPROX_TIME
-                        },
-                        channel_id=self.channel.id
-                    ),
-                    generate_update_event(
-                        contentnode.id,
-                        CONTENTNODE,
-                        {
-                            "extra_fields.options.completion_criteria.model": completion_criteria.DETERMINED_BY_RESOURCE
-                        },
-                        channel_id=self.channel.id
-                    )
-                ],
+            [
+                generate_update_event(
+                    contentnode.id,
+                    CONTENTNODE,
+                    {
+                        "complete": True,
+                        "extra_fields.options.completion_criteria.threshold": 600,
+                        "extra_fields.options.completion_criteria.model": completion_criteria.APPROX_TIME,
+                    },
+                    channel_id=self.channel.id,
+                ),
+                generate_update_event(
+                    contentnode.id,
+                    CONTENTNODE,
+                    {
+                        "extra_fields.options.completion_criteria.model": completion_criteria.DETERMINED_BY_RESOURCE
+                    },
+                    channel_id=self.channel.id,
+                ),
+            ],
         )
         self.assertEqual(len(response.data["errors"]), 0)
         updated_contentnode = models.ContentNode.objects.get(id=contentnode.id)
-        self.assertEqual(updated_contentnode.extra_fields["options"]["completion_criteria"]["model"], completion_criteria.DETERMINED_BY_RESOURCE)
-        self.assertNotIn("threshold", updated_contentnode.extra_fields["options"]["completion_criteria"])
+        self.assertEqual(
+            updated_contentnode.extra_fields["options"]["completion_criteria"]["model"],
+            completion_criteria.DETERMINED_BY_RESOURCE,
+        )
+        self.assertNotIn(
+            "threshold",
+            updated_contentnode.extra_fields["options"]["completion_criteria"],
+        )
 
     def test_update_contentnode_update_options_invalid_completion_criteria(self):
         metadata = self.contentnode_db_metadata
@@ -874,15 +1062,20 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
                         "complete": True,
                         "extra_fields.options.completion_criteria.model": completion_criteria.TIME,
                     },
-                    channel_id=self.channel.id
+                    channel_id=self.channel.id,
                 )
             ],
         )
         self.assertEqual(response.status_code, 200, response.content)
         c = models.ContentNode.objects.get(id=contentnode.id)
 
-        self.assertEqual(c.extra_fields["options"]["completion_criteria"]["model"], completion_criteria.REFERENCE)
-        self.assertEqual(c.extra_fields["options"]["completion_criteria"]["threshold"], None)
+        self.assertEqual(
+            c.extra_fields["options"]["completion_criteria"]["model"],
+            completion_criteria.REFERENCE,
+        )
+        self.assertEqual(
+            c.extra_fields["options"]["completion_criteria"]["threshold"], None
+        )
 
     def test_update_contentnode_add_multiple_metadata_labels(self):
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
@@ -892,44 +1085,90 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
                 generate_update_event(
                     contentnode.id,
                     CONTENTNODE,
-                    {"accessibility_labels.{}".format(ACCESSIBILITYCATEGORIESLIST[0]): True},
-                    channel_id=self.channel.id
+                    {
+                        "accessibility_labels.{}".format(
+                            ACCESSIBILITYCATEGORIESLIST[0]
+                        ): True
+                    },
+                    channel_id=self.channel.id,
                 )
             ],
         )
         self.assertEqual(response.status_code, 200, response.content)
-        self.assertTrue(models.ContentNode.objects.get(id=contentnode.id).accessibility_labels[ACCESSIBILITYCATEGORIESLIST[0]])
+        self.assertTrue(
+            models.ContentNode.objects.get(id=contentnode.id).accessibility_labels[
+                ACCESSIBILITYCATEGORIESLIST[0]
+            ]
+        )
 
         response = self.sync_changes(
             [
                 generate_update_event(
                     contentnode.id,
                     CONTENTNODE,
-                    {"accessibility_labels.{}".format(ACCESSIBILITYCATEGORIESLIST[1]): True},
-                    channel_id=self.channel.id
+                    {
+                        "accessibility_labels.{}".format(
+                            ACCESSIBILITYCATEGORIESLIST[1]
+                        ): True
+                    },
+                    channel_id=self.channel.id,
                 )
             ],
         )
         self.assertEqual(response.status_code, 200, response.content)
-        self.assertTrue(models.ContentNode.objects.get(id=contentnode.id).accessibility_labels[ACCESSIBILITYCATEGORIESLIST[0]])
-        self.assertTrue(models.ContentNode.objects.get(id=contentnode.id).accessibility_labels[ACCESSIBILITYCATEGORIESLIST[1]])
+        self.assertTrue(
+            models.ContentNode.objects.get(id=contentnode.id).accessibility_labels[
+                ACCESSIBILITYCATEGORIESLIST[0]
+            ]
+        )
+        self.assertTrue(
+            models.ContentNode.objects.get(id=contentnode.id).accessibility_labels[
+                ACCESSIBILITYCATEGORIESLIST[1]
+            ]
+        )
 
     def test_update_contentnode_add_multiple_nested_metadata_labels(self):
 
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         # Add metadata label to categories
         response = self.sync_changes(
-            [generate_update_event(contentnode.id, CONTENTNODE, {"categories.{}".format(nested_subjects[0]): True}, channel_id=self.channel.id)],
+            [
+                generate_update_event(
+                    contentnode.id,
+                    CONTENTNODE,
+                    {"categories.{}".format(nested_subjects[0]): True},
+                    channel_id=self.channel.id,
+                )
+            ],
         )
         self.assertEqual(response.status_code, 200, response.content)
-        self.assertTrue(models.ContentNode.objects.get(id=contentnode.id).categories[nested_subjects[0]])
+        self.assertTrue(
+            models.ContentNode.objects.get(id=contentnode.id).categories[
+                nested_subjects[0]
+            ]
+        )
 
         response = self.sync_changes(
-            [generate_update_event(contentnode.id, CONTENTNODE, {"categories.{}".format(nested_subjects[1]): True}, channel_id=self.channel.id)],
+            [
+                generate_update_event(
+                    contentnode.id,
+                    CONTENTNODE,
+                    {"categories.{}".format(nested_subjects[1]): True},
+                    channel_id=self.channel.id,
+                )
+            ],
         )
         self.assertEqual(response.status_code, 200, response.content)
-        self.assertTrue(models.ContentNode.objects.get(id=contentnode.id).categories[nested_subjects[0]])
-        self.assertTrue(models.ContentNode.objects.get(id=contentnode.id).categories[nested_subjects[1]])
+        self.assertTrue(
+            models.ContentNode.objects.get(id=contentnode.id).categories[
+                nested_subjects[0]
+            ]
+        )
+        self.assertTrue(
+            models.ContentNode.objects.get(id=contentnode.id).categories[
+                nested_subjects[1]
+            ]
+        )
 
     def test_update_contentnode_remove_metadata_label(self):
         metadata = self.contentnode_db_metadata
@@ -942,14 +1181,20 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
                 generate_update_event(
                     contentnode.id,
                     CONTENTNODE,
-                    {"accessibility_labels.{}".format(ACCESSIBILITYCATEGORIESLIST[0]): None},
-                    channel_id=self.channel.id
+                    {
+                        "accessibility_labels.{}".format(
+                            ACCESSIBILITYCATEGORIESLIST[0]
+                        ): None
+                    },
+                    channel_id=self.channel.id,
                 )
             ],
         )
         self.assertEqual(response.status_code, 200, response.content)
         with self.assertRaises(KeyError):
-            models.ContentNode.objects.get(id=contentnode.id).accessibility_labels[ACCESSIBILITYCATEGORIESLIST[0]]
+            models.ContentNode.objects.get(id=contentnode.id).accessibility_labels[
+                ACCESSIBILITYCATEGORIESLIST[0]
+            ]
 
     def test_update_contentnode_remove_nested_metadata_label(self):
         metadata = self.contentnode_db_metadata
@@ -958,11 +1203,20 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         # Add metadata label to categories
         response = self.sync_changes(
-            [generate_update_event(contentnode.id, CONTENTNODE, {"categories.{}".format(nested_subjects[0]): None}, channel_id=self.channel.id)],
+            [
+                generate_update_event(
+                    contentnode.id,
+                    CONTENTNODE,
+                    {"categories.{}".format(nested_subjects[0]): None},
+                    channel_id=self.channel.id,
+                )
+            ],
         )
         self.assertEqual(response.status_code, 200, response.content)
         with self.assertRaises(KeyError):
-            models.ContentNode.objects.get(id=contentnode.id).categories[nested_subjects[0]]
+            models.ContentNode.objects.get(id=contentnode.id).categories[
+                nested_subjects[0]
+            ]
 
     def test_update_contentnode_tags(self):
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
@@ -971,7 +1225,10 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         response = self.sync_changes(
             [
                 generate_update_event(
-                    contentnode.id, CONTENTNODE, {"tags.{}".format(tag): True}, channel_id=self.channel.id
+                    contentnode.id,
+                    CONTENTNODE,
+                    {"tags.{}".format(tag): True},
+                    channel_id=self.channel.id,
                 )
             ],
         )
@@ -987,7 +1244,10 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         response = self.sync_changes(
             [
                 generate_update_event(
-                    contentnode.id, CONTENTNODE, {"tags.{}".format(other_tag): True}, channel_id=self.channel.id
+                    contentnode.id,
+                    CONTENTNODE,
+                    {"tags.{}".format(other_tag): True},
+                    channel_id=self.channel.id,
                 )
             ],
         )
@@ -1006,7 +1266,10 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         response = self.sync_changes(
             [
                 generate_update_event(
-                    contentnode.id, CONTENTNODE, {"tags.{}".format(other_tag): None}, channel_id=self.channel.id
+                    contentnode.id,
+                    CONTENTNODE,
+                    {"tags.{}".format(other_tag): None},
+                    channel_id=self.channel.id,
                 )
             ],
         )
@@ -1030,7 +1293,10 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         response = self.sync_changes(
             [
                 generate_update_event(
-                    contentnode.id, CONTENTNODE, {"tags.{}".format(tag): True}, channel_id=self.channel.id
+                    contentnode.id,
+                    CONTENTNODE,
+                    {"tags.{}".format(tag): True},
+                    channel_id=self.channel.id,
                 )
             ],
         )
@@ -1046,22 +1312,39 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         new_suggested_duration = 600
 
         response = self.sync_changes(
-            [generate_update_event(contentnode.id, CONTENTNODE, {"suggested_duration": new_suggested_duration}, channel_id=self.channel.id)],
+            [
+                generate_update_event(
+                    contentnode.id,
+                    CONTENTNODE,
+                    {"suggested_duration": new_suggested_duration},
+                    channel_id=self.channel.id,
+                )
+            ],
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(
-            models.ContentNode.objects.get(id=contentnode.id).suggested_duration, new_suggested_duration
+            models.ContentNode.objects.get(id=contentnode.id).suggested_duration,
+            new_suggested_duration,
         )
 
     def test_update_contentnode_extra_fields_inherited_metadata(self):
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
 
         response = self.sync_changes(
-            [generate_update_event(contentnode.id, CONTENTNODE, {"extra_fields.inherited_metadata.categories": True}, channel_id=self.channel.id)],
+            [
+                generate_update_event(
+                    contentnode.id,
+                    CONTENTNODE,
+                    {"extra_fields.inherited_metadata.categories": True},
+                    channel_id=self.channel.id,
+                )
+            ],
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertTrue(
-            models.ContentNode.objects.get(id=contentnode.id).extra_fields["inherited_metadata"]["categories"]
+            models.ContentNode.objects.get(id=contentnode.id).extra_fields[
+                "inherited_metadata"
+            ]["categories"]
         )
 
     def test_update_contentnode_tags_dont_duplicate(self):
@@ -1073,7 +1356,10 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         response = self.sync_changes(
             [
                 generate_update_event(
-                    contentnode.id, CONTENTNODE, {"tags.{}".format(tag): True}, channel_id=self.channel.id
+                    contentnode.id,
+                    CONTENTNODE,
+                    {"tags.{}".format(tag): True},
+                    channel_id=self.channel.id,
                 )
             ],
         )
@@ -1089,7 +1375,14 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         tag = "howzat!"
 
         response = self.sync_changes(
-            [generate_update_event(contentnode.id, CONTENTNODE, {"tags": [tag]}, channel_id=self.channel.id)],
+            [
+                generate_update_event(
+                    contentnode.id,
+                    CONTENTNODE,
+                    {"tags": [tag]},
+                    channel_id=self.channel.id,
+                )
+            ],
         )
         self.assertEqual(len(response.data["errors"]), 1)
 
@@ -1101,10 +1394,16 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         response = self.sync_changes(
             [
                 generate_update_event(
-                    contentnode1.id, CONTENTNODE, {"title": new_title}, channel_id=self.channel.id
+                    contentnode1.id,
+                    CONTENTNODE,
+                    {"title": new_title},
+                    channel_id=self.channel.id,
                 ),
                 generate_update_event(
-                    contentnode2.id, CONTENTNODE, {"title": new_title}, channel_id=self.channel.id
+                    contentnode2.id,
+                    CONTENTNODE,
+                    {"title": new_title},
+                    channel_id=self.channel.id,
                 ),
             ],
         )
@@ -1129,10 +1428,16 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         response = self.sync_changes(
             [
                 generate_update_event(
-                    contentnode1.id, CONTENTNODE, {"title": new_title}, channel_id=channel1.id
+                    contentnode1.id,
+                    CONTENTNODE,
+                    {"title": new_title},
+                    channel_id=channel1.id,
                 ),
                 generate_update_event(
-                    contentnode2.id, CONTENTNODE, {"title": new_title}, channel_id=channel2.id
+                    contentnode2.id,
+                    CONTENTNODE,
+                    {"title": new_title},
+                    channel_id=channel2.id,
                 ),
             ],
         )
@@ -1152,7 +1457,14 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         new_title = "This is not the old title"
 
         response = self.sync_changes(
-            [generate_update_event(contentnode.id, CONTENTNODE, {"title": new_title}, channel_id=self.channel.id)],
+            [
+                generate_update_event(
+                    contentnode.id,
+                    CONTENTNODE,
+                    {"title": new_title},
+                    channel_id=self.channel.id,
+                )
+            ],
         )
         self.assertEqual(response.status_code, 200, response.content)
         updated_node = models.ContentNode.objects.get(id=contentnode.id)
@@ -1162,7 +1474,11 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
 
         response = self.sync_changes(
-            [generate_delete_event(contentnode.id, CONTENTNODE, channel_id=self.channel.id)],
+            [
+                generate_delete_event(
+                    contentnode.id, CONTENTNODE, channel_id=self.channel.id
+                )
+            ],
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -1176,7 +1492,11 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         contentnode = create_and_get_contentnode(self.channel.main_tree_id)
 
         response = self.sync_changes(
-            [generate_delete_event(contentnode.id, CONTENTNODE, channel_id=self.channel.id)],
+            [
+                generate_delete_event(
+                    contentnode.id, CONTENTNODE, channel_id=self.channel.id
+                )
+            ],
         )
         # Return a 200 here rather than a 404.
         self.assertEqual(response.status_code, 200, response.content)
@@ -1191,8 +1511,12 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
         self.sync_changes(
             [
-                generate_delete_event(contentnode1.id, CONTENTNODE, channel_id=self.channel.id),
-                generate_delete_event(contentnode2.id, CONTENTNODE, channel_id=self.channel.id),
+                generate_delete_event(
+                    contentnode1.id, CONTENTNODE, channel_id=self.channel.id
+                ),
+                generate_delete_event(
+                    contentnode2.id, CONTENTNODE, channel_id=self.channel.id
+                ),
             ],
         )
         try:
@@ -1218,8 +1542,12 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
         response = self.sync_changes(
             [
-                generate_delete_event(contentnode1.id, CONTENTNODE, channel_id=channel1.id),
-                generate_delete_event(contentnode2.id, CONTENTNODE, channel_id=channel2.id),
+                generate_delete_event(
+                    contentnode1.id, CONTENTNODE, channel_id=channel1.id
+                ),
+                generate_delete_event(
+                    contentnode2.id, CONTENTNODE, channel_id=channel2.id
+                ),
             ],
         )
         self.assertEqual(len(response.data["disallowed"]), 1)
@@ -1241,7 +1569,11 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         response = self.sync_changes(
             [
                 generate_copy_event(
-                    new_node_id, CONTENTNODE, contentnode.id, self.channel.main_tree_id, channel_id=self.channel.id
+                    new_node_id,
+                    CONTENTNODE,
+                    contentnode.id,
+                    self.channel.main_tree_id,
+                    channel_id=self.channel.id,
                 )
             ],
         )
@@ -1261,7 +1593,11 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         response = self.sync_changes(
             [
                 generate_copy_event(
-                    new_node_id, CONTENTNODE, contentnode.id, self.channel.main_tree_id, channel_id=self.channel.id
+                    new_node_id,
+                    CONTENTNODE,
+                    contentnode.id,
+                    self.channel.main_tree_id,
+                    channel_id=self.channel.id,
                 ),
                 # Save a published change for the channel, so that the finalization change will be generated
                 # after the publish change, and we can check that it is properly not making the channel appear publishable.
@@ -1280,7 +1616,11 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         response = self.sync_changes(
             [
                 generate_copy_event(
-                    new_node_id, CONTENTNODE, contentnode.id, self.channel.main_tree_id, channel_id=self.channel.id
+                    new_node_id,
+                    CONTENTNODE,
+                    contentnode.id,
+                    self.channel.main_tree_id,
+                    channel_id=self.channel.id,
                 )
             ],
         )
@@ -1300,7 +1640,11 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         response = self.sync_changes(
             [
                 generate_copy_event(
-                    new_node_id, CONTENTNODE, contentnode.id, self.channel.main_tree_id, channel_id=self.channel.id
+                    new_node_id,
+                    CONTENTNODE,
+                    contentnode.id,
+                    self.channel.main_tree_id,
+                    channel_id=self.channel.id,
                 )
             ],
         )
@@ -1319,7 +1663,14 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         """
         contentnode = self.contentnode_metadata
         response = self.sync_changes(
-            [generate_create_event(contentnode["id"], CONTENTNODE, contentnode, channel_id=self.channel.id)],
+            [
+                generate_create_event(
+                    contentnode["id"],
+                    CONTENTNODE,
+                    contentnode,
+                    channel_id=self.channel.id,
+                )
+            ],
         )
         self.assertEqual(response.status_code, 200, response.content)
         try:
@@ -1350,7 +1701,11 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         response = self.sync_changes(
             [
                 generate_copy_event(
-                    new_node_id, CONTENTNODE, contentnode.id, self.channel.main_tree_id, channel_id=self.channel.id
+                    new_node_id,
+                    CONTENTNODE,
+                    contentnode.id,
+                    self.channel.main_tree_id,
+                    channel_id=self.channel.id,
                 )
             ],
         )
@@ -1394,7 +1749,11 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         models.ContentNode.objects.create(**self.contentnode_db_metadata)
 
         response = self.sync_changes(
-            [generate_delete_event(settings.ORPHANAGE_ROOT_ID, CONTENTNODE, channel_id=self.channel.id)],
+            [
+                generate_delete_event(
+                    settings.ORPHANAGE_ROOT_ID, CONTENTNODE, channel_id=self.channel.id
+                )
+            ],
         )
         # We return 200 even when a deletion is not found, but it should
         # still not actually delete it.
@@ -1411,10 +1770,16 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         response = self.sync_changes(
             [
                 generate_create_event(
-                    [contentnode.id, prereq.id], CONTENTNODE_PREREQUISITE, {}, channel_id=self.channel.id
+                    [contentnode.id, prereq.id],
+                    CONTENTNODE_PREREQUISITE,
+                    {},
+                    channel_id=self.channel.id,
                 ),
                 generate_create_event(
-                    [postreq.id, contentnode.id], CONTENTNODE_PREREQUISITE, {}, channel_id=self.channel.id
+                    [postreq.id, contentnode.id],
+                    CONTENTNODE_PREREQUISITE,
+                    {},
+                    channel_id=self.channel.id,
                 ),
             ],
         )
@@ -1427,7 +1792,10 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         response = self.sync_changes(
             [
                 generate_create_event(
-                    [contentnode.id, contentnode.id], CONTENTNODE_PREREQUISITE, {}, channel_id=self.channel.id
+                    [contentnode.id, contentnode.id],
+                    CONTENTNODE_PREREQUISITE,
+                    {},
+                    channel_id=self.channel.id,
                 ),
             ],
         )
@@ -1443,7 +1811,10 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         response = self.sync_changes(
             [
                 generate_create_event(
-                    [prereq.id, contentnode.id], CONTENTNODE_PREREQUISITE, {}, channel_id=self.channel.id
+                    [prereq.id, contentnode.id],
+                    CONTENTNODE_PREREQUISITE,
+                    {},
+                    channel_id=self.channel.id,
                 ),
             ],
         )
@@ -1458,7 +1829,10 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         response = self.sync_changes(
             [
                 generate_create_event(
-                    [contentnode.id, prereq.id], CONTENTNODE_PREREQUISITE, {}, channel_id=self.channel.id
+                    [contentnode.id, prereq.id],
+                    CONTENTNODE_PREREQUISITE,
+                    {},
+                    channel_id=self.channel.id,
                 ),
             ],
         )
@@ -1472,7 +1846,10 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         response = self.sync_changes(
             [
                 generate_create_event(
-                    [contentnode.id, prereq.id], CONTENTNODE_PREREQUISITE, {}, channel_id=self.channel.id
+                    [contentnode.id, prereq.id],
+                    CONTENTNODE_PREREQUISITE,
+                    {},
+                    channel_id=self.channel.id,
                 ),
             ],
         )
@@ -1492,10 +1869,14 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         response = self.sync_changes(
             [
                 generate_delete_event(
-                    [contentnode.id, prereq.id], CONTENTNODE_PREREQUISITE, channel_id=self.channel.id
+                    [contentnode.id, prereq.id],
+                    CONTENTNODE_PREREQUISITE,
+                    channel_id=self.channel.id,
                 ),
                 generate_delete_event(
-                    [postreq.id, contentnode.id], CONTENTNODE_PREREQUISITE, channel_id=self.channel.id
+                    [postreq.id, contentnode.id],
+                    CONTENTNODE_PREREQUISITE,
+                    channel_id=self.channel.id,
                 ),
             ],
         )
@@ -1513,7 +1894,9 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         response = self.sync_changes(
             [
                 generate_delete_event(
-                    [contentnode.id, prereq.id], CONTENTNODE_PREREQUISITE, channel_id=self.channel.id
+                    [contentnode.id, prereq.id],
+                    CONTENTNODE_PREREQUISITE,
+                    channel_id=self.channel.id,
                 ),
             ],
         )
@@ -1522,7 +1905,6 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
 
 class CRUDTestCase(StudioAPITestCase):
-
     def setUp(self):
         super(CRUDTestCase, self).setUp()
         self.channel = testdata.channel()
@@ -1553,14 +1935,17 @@ class CRUDTestCase(StudioAPITestCase):
     def test_fetch_contentnode(self):
         contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
         response = self.client.get(
-            reverse("contentnode-detail", kwargs={"pk": contentnode.id}), format="json",
+            reverse("contentnode-detail", kwargs={"pk": contentnode.id}),
+            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(response.data["id"], contentnode.id)
 
     def test_fetch_contentnode__by_parent(self):
 
-        channel = models.Channel.objects.create(actor_id=self.user.id, name="Test channel")
+        channel = models.Channel.objects.create(
+            actor_id=self.user.id, name="Test channel"
+        )
         channel.editors.add(self.user)
         channel.save()
 
@@ -1569,14 +1954,18 @@ class CRUDTestCase(StudioAPITestCase):
         contentnode = models.ContentNode.objects.create(**metadata)
 
         response = self.client.get(
-            reverse("contentnode-list"), format="json", data={"parent": channel.main_tree_id},
+            reverse("contentnode-list"),
+            format="json",
+            data={"parent": channel.main_tree_id},
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["id"], contentnode.id)
 
     def test_fetch_contentnode__by_node_id_channel_id(self):
-        channel = models.Channel.objects.create(actor_id=self.user.id, name="Test channel")
+        channel = models.Channel.objects.create(
+            actor_id=self.user.id, name="Test channel"
+        )
         channel.editors.add(self.user)
         channel.save()
 
@@ -1634,7 +2023,9 @@ class CRUDTestCase(StudioAPITestCase):
     def test_create_contentnode(self):
         contentnode = self.contentnode_metadata
         response = self.client.post(
-            reverse("contentnode-list"), contentnode, format="json",
+            reverse("contentnode-list"),
+            contentnode,
+            format="json",
         )
         self.assertEqual(response.status_code, 405, response.content)
 
@@ -1675,7 +2066,7 @@ class CRUDTestCase(StudioAPITestCase):
 
         total_size = sum(files_map.values())
 
-        self.assertEqual(response.data.get('size', 0), total_size)
+        self.assertEqual(response.data.get("size", 0), total_size)
 
 
 class AnnotationsTest(StudioAPITestCase):

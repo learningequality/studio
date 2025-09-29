@@ -408,7 +408,7 @@ export default {
           [eventKey('drop')]: this.emitDraggableDrop,
         },
       },
-      this.draggableScopedSlotProps()
+      this.draggableScopedSlotProps(),
     );
   },
 };

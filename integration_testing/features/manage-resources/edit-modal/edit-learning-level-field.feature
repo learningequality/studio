@@ -4,9 +4,9 @@ Feature: Edit *Learning level* field
 	Background:
 		Given I am signed into Studio
 			And I am in an editable channel with all resource types
-		When I right click <resource>
+		When I right click a resource
 			And I click *Edit details*
-		Then I see the *Edit details* modal for the <resource>
+		Then I see the *Edit details* modal for the resource
 			And I see the *Level* dropdown in the *Basic information* section
 
 	Scenario: View learning level options
@@ -16,24 +16,24 @@ Feature: Edit *Learning level* field
 
 	Scenario: Select options
 		Given I see the options for *Level*
-		When I click on the checkbox for <option>
-		Then I see <option> has a determinate checkbox
-			And I see the chip for <option> appear in the textbox
+		When I click on the checkbox for an option
+		Then I see that the option has a determinate checkbox
+			And I see the chip for option appear in the textbox
 			And I see an *X* in the text field
 
 	Scenario: Remove an option
 		Given I see the options for *Level*
-			And <option> is selected
-		When I click the selected checkbox for <option>
-		Then I see that the checkbox for <option> is empty
-			And I do not see the chip in the textbox
+			And an option is selected
+		When I click the selected checkbox for the option
+		Then I see that the checkbox for the option is empty
+			And I don't see the chip in the textbox
 
 	Scenario: Remove an option through chip
 		Given I see the options for *Level*
-			And <option> is selected
+			And an option is selected
 		When I click the *X* in the chip
-		Then I do not see the chip for <option> in the textbox
-			And I do not see <option> selected in the *Level* dropdown
+		Then I do not see the chip for option in the textbox
+			And I don't see the option selected in the *Level* dropdown
 
 	Scenario: Clear all options in the text field
 		Given I see that several options for *Level* are selected
@@ -48,10 +48,10 @@ Feature: Edit *Learning level* field
 			And the height of the *Level* dropdown grows to contain it
 
 	Scenario: See that learning level field is optional
-		Given the *Level* field of <resource> is empty
+		Given the *Level* field of resource is empty
 		When I click *FINISH*
-		Then I see <resource> in the topic tree
+		Then I see resource in the topic tree
 			And I do not see an error icon
-		When I left-click <resource>
-		Then I see the previewer for <resource>
+		When I left-click resource
+		Then I see the previewer for resource
 			And I see the level field is empty

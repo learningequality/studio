@@ -28,6 +28,7 @@
 
 </template>
 
+
 <script>
 
   import { mapActions, mapState } from 'vuex';
@@ -77,7 +78,7 @@
     methods: {
       ...mapActions('settings', ['saveFullName']),
 
-      // eslint-disable-next-line kolibri/vue-no-unused-methods
+      // eslint-disable-next-line kolibri/vue-no-unused-methods, vue/no-unused-properties
       onSubmit(formData) {
         this.saveFullName(formData)
           .then(() => {

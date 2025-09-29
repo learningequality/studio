@@ -2,7 +2,7 @@ from django.apps import AppConfig
 
 
 class ContentConfig(AppConfig):
-    name = 'contentcuration'
+    name = "contentcuration"
 
     def ready(self):
         # Import signals

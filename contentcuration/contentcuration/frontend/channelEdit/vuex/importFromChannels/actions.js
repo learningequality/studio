@@ -4,7 +4,8 @@ import client from 'shared/client';
 import urls from 'shared/urls';
 import { ChannelListTypes } from 'shared/constants';
 
-import { Channel, SavedSearch } from 'shared/data/resources';
+import { Channel, Recommendation, SavedSearch } from 'shared/data/resources';
+import { FeedbackEventTypes, sendRequest } from 'shared/feedbackApiUtils';
 
 export async function fetchResourceSearchResults(context, params) {
   params = { ...params };
@@ -23,7 +24,7 @@ export async function fetchResourceSearchResults(context, params) {
         {
           id__in: privateNodes.map(node => node.id),
         },
-        { root: true }
+        { root: true },
       )
     : Promise.resolve([]);
 
@@ -43,10 +44,10 @@ export async function fetchResourceSearchResults(context, params) {
               rootId: node.root_id,
               parent: node.parent,
             },
-            { root: true }
+            { root: true },
           )
           .catch(() => null);
-      })
+      }),
     ).then(nodes => nodes.filter(Boolean)),
   ]);
 
@@ -110,4 +111,60 @@ export function deleteSearch({ commit }, searchId) {
     commit('REMOVE_SAVEDSEARCH', searchId);
     return searchId;
   });
+}
+
+export function fetchRecommendations(context, params) {
+  return Recommendation.fetchCollection(params);
+}
+
+export function setRecommendationsData(context, data) {
+  context.commit('SET_RECOMMENDATIONS_DATA', data);
+}
+
+export async function captureFeedbackEvent(context, params = {}) {
+  /**
+   * Captures a feedback event based on the provided parameters.
+   *
+   * @param {Object} context - The Vuex context object.
+   * @param {Object} params - Parameters for the feedback event.
+   * @param {string} params.event - The type of event ('flag', 'recommendations', 'interaction').
+   * @param {string} [params.method='post'] - The HTTP method for request ('post', 'put', 'patch').
+   * @param {Object|Array} params.data - The event data. It can be an object or an array of objects.
+   * @param {string} [params.eventId] - The unique ID of an event.
+   * @throws {Error} If the event is invalid or not provided.
+   * @returns {Promise<Object>} A promise that resolves to the response data from the API.
+   */
+  const event = params.event;
+  const method = params.method;
+  const eventId = params.eventId;
+  const rawData = params.data;
+  const isDataArray = Array.isArray(rawData);
+  const isDataObject = rawData && typeof rawData === 'object';
+
+  if (!event || !FeedbackEventTypes[event]) {
+    throw new Error(
+      `Invalid event: '${event}'. Event must be provided and be one of the valid FeedbackEventTypes.`,
+    );
+  }
+
+  const dataObject = item => ({
+    recommendation_event_id: item.recommendation_event_id,
+    contentnode_id: item.contentnode_id,
+    content_id: item.content_id,
+    target_channel_id: item.target_channel_id,
+    user: item.user,
+    content: item.content,
+    context: item.context,
+    feedback_type: item.feedback_type,
+    feedback_reason: item.feedback_reason,
+  });
+  const data = isDataArray ? rawData.map(dataObject) : isDataObject ? dataObject(rawData) : {};
+  try {
+    return await sendRequest(new FeedbackEventTypes[event]({ method, data, eventId }));
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Error capturing feedback event:', error);
+    // Return null if the request fails, to avoid breaking the application
+    return null;
+  }
 }
