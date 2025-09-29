@@ -32,7 +32,7 @@
       </Breadcrumbs>
       <VSpacer />
       <KButton
-    
+        class="add-topic-btn"
         :text="$tr('addTopic')"
         data-test="newtopic"
         @click="showNewTopicModal = true"
@@ -434,5 +434,8 @@
     width: 100%;
     margin-bottom: 10px;
   }
+  .add-topic-btn {
+  flex-shrink: 0;
+}
 
 </style>
