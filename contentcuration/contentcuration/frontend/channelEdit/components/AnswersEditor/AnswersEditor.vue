@@ -192,15 +192,13 @@
       </div>
     </div>
 
-    <VBtn
+    <KButton
       v-if="isEditingAllowed"
-      color="greyBackground"
+      :text="$tr('newAnswerBtnLabel')"
       class="ml-0 mt-3"
       data-test="newAnswerBtn"
       @click="addNewAnswer"
-    >
-      {{ $tr('newAnswerBtnLabel') }}
-    </VBtn>
+    />
   </div>
 
 </template>
