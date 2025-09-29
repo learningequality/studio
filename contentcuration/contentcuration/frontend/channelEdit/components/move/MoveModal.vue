@@ -173,7 +173,6 @@
           @click="moveNodes"
         />
       </KButtonGroup>
-      
     </template>
 
     <NewTopicModal
