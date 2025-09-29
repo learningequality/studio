@@ -257,6 +257,11 @@
       });
 
       const latestSubmissionStatus = computed(() => {
+        // We distinguish here between "not loaded yet" (undefined)
+        // and "loaded and none present" (null). This distinction is
+        // not used in the UI and is mostly intended to convey the
+        // state more accurately to the developer in case of debugging.
+        // UI code should rely on XXXIsLoading and XXXIsFinished instead.
         if (!latestSubmissionIsFinished.value) return undefined;
         if (!latestSubmissionData.value) return null;
 
@@ -334,6 +339,12 @@
         const languageCodes = latestPublishedData.value?.included_languages.filter(
           code => code !== null,
         );
+
+        // We distinguish here between "not loaded yet" (undefined)
+        // and "loaded and none present" (null). This distinction is
+        // not used in the UI and is mostly intended to convey the
+        // state more accurately to the developer in case of debugging.
+        // UI code should rely on XXXIsLoading and XXXIsFinished instead.
         if (!languageCodes) return undefined;
         if (languageCodes.length === 0) return null;
 
@@ -341,6 +352,11 @@
       });
 
       const detectedLicenses = computed(() => {
+        // We distinguish here between "not loaded yet" (undefined)
+        // and "loaded and none present" (null). This distinction is
+        // not used in the UI and is mostly intended to convey the
+        // state more accurately to the developer in case of debugging.
+        // UI code should rely on XXXIsLoading and XXXIsFinished instead.
         if (!latestPublishedData.value?.included_licenses) return undefined;
         if (latestPublishedData.value.included_licenses.length === 0) return null;
 
@@ -354,6 +370,11 @@
       }
 
       const detectedCategories = computed(() => {
+        // We distinguish here between "not loaded yet" (undefined)
+        // and "loaded and none present" (null). This distinction is
+        // not used in the UI and is mostly intended to convey the
+        // state more accurately to the developer in case of debugging.
+        // UI code should rely on XXXIsLoading and XXXIsFinished instead.
         if (!latestPublishedData.value?.included_categories) return undefined;
         if (latestPublishedData.value.included_categories.length === 0) return null;
 
