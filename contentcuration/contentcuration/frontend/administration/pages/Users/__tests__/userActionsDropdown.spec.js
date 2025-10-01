@@ -71,8 +71,8 @@ describe('userActionsDropdown', () => {
     });
 
     it('confirm delete user should call deleteUser', async () => {
-      wrapper.find('[data-test="confirm-delete"]').vm.$emit('confirm');
-      await wrapper.vm.$nextTick();
+      await wrapper.findComponent('[data-test="delete"]').trigger('click');
+      wrapper.findComponent('[data-test="confirm-delete"]').vm.$emit('submit');
       expect(mocks.deleteUser).toHaveBeenCalledWith(userId);
     });
 
@@ -93,8 +93,8 @@ describe('userActionsDropdown', () => {
     });
 
     it('confirm deactivate should call updateUser with is_active = false', async () => {
-      wrapper.findComponent('[data-test="confirm-deactivate"]').vm.$emit('confirm');
-      await wrapper.vm.$nextTick();
+      await wrapper.findComponent('[data-test="deactivate"]').trigger('click');
+      wrapper.findComponent('[data-test="confirm-deactivate"]').vm.$emit('submit');
       expect(mocks.updateUser).toHaveBeenCalledWith({ id: userId, is_active: false });
     });
 
