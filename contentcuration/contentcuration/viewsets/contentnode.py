@@ -431,7 +431,11 @@ class ContentNodeSerializer(BulkModelSerializer):
             )
 
         # Prevent kind from being changed after creation
-        if self.instance is not None and "kind" in data:
+        if (
+            self.instance is not None
+            and "kind" in data
+            and self.instance.kind != data["kind"]
+        ):
             raise ValidationError(
                 {"kind": "Content kind cannot be changed after creation"}
             )
