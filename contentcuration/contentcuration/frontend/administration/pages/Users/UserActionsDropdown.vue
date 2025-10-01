@@ -1,25 +1,33 @@
 <template>
 
   <div>
-    <ConfirmationDialog
-      v-model="deleteDialog"
-      title="Delete user"
-      :text="`Are you sure you want to permanently delete ${user.name}'s account?`"
-      confirmButtonText="Delete"
+    <KModal
+      v-if="deleteDialog"
+      :title="$tr('deleteUserTitle')"
+      :submitText="$tr('deleteAction')"
+      :cancelText="$tr('cancelAction')"
       data-test="confirm-delete"
-      @confirm="deleteHandler"
-    />
-    <ConfirmationDialog
-      v-model="deactivateDialog"
-      title="Deactivate user"
-      :text="
-        `Deactivating ${user.name}'s account will block them from ` +
-          `accessing their account. Are you sure you want to continue?`
-      "
-      confirmButtonText="Deactivate"
+      @submit="deleteHandler"
+      @cancel="deleteDialog = false"
+    >
+      <div class="kmodal-confirmation-content">
+        <p>{{ $tr('deleteUserMessage', { name: user.name }) }}</p>
+      </div>
+    </KModal>
+
+    <KModal
+      v-if="deactivateDialog"
+      :title="$tr('deactivateUserTitle')"
+      :submitText="$tr('deactivateAction')"
+      :cancelText="$tr('cancelAction')"
       data-test="confirm-deactivate"
-      @confirm="deactivateHandler"
-    />
+      @submit="deactivateHandler"
+      @cancel="deactivateDialog = false"
+    >
+      <div class="kmodal-confirmation-content">
+        <p>{{ $tr('deactivateUserMessage', { name: user.name }) }}</p>
+      </div>
+    </KModal>
     <UserPrivilegeModal
       v-model="addAdminPrivilegeDialog"
       header="Add admin privileges"
@@ -106,14 +114,14 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
-  import ConfirmationDialog from '../../components/ConfirmationDialog';
+  
   import EmailUsersDialog from './EmailUsersDialog';
   import UserPrivilegeModal from './UserPrivilegeModal';
 
   export default {
     name: 'UserActionsDropdown',
     components: {
-      ConfirmationDialog,
+    
       EmailUsersDialog,
       UserPrivilegeModal,
     },
@@ -174,9 +182,32 @@
         });
       },
     },
+    $trs: {
+      deleteUserTitle: 'Delete user',
+      deleteAction: 'Delete',
+      deleteUserMessage: "Are you sure you want to permanently delete {name}'s account?",
+      deactivateUserTitle: 'Deactivate user',
+      deactivateAction: 'Deactivate',
+      deactivateUserMessage: "Deactivating {name}'s account will block them from accessing their account. Are you sure you want to continue?",
+      cancelAction: 'Cancel',
+    },
   };
 
 </script>
 
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+
+.kmodal-confirmation-content {
+  color: #212121;
+  white-space: normal;
+  text-align: left;
+}
+
+::v-deep .title {
+  color: #212121;
+  text-align: left;
+  font-weight: bold;
+}
+
+</style>
