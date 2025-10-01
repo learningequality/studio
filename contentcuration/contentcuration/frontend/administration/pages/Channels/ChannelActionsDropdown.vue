@@ -33,7 +33,7 @@
       data-test="confirm-private"
       @submit="makePrivateHandler"
       @cancel="makePrivateDialog = false"
-    > 
+    >
       <p class="kmodal-confirmation-content">{{ $tr('makePrivateMessage', { name: name }) }}</p>
     </KModal>
 
