@@ -74,7 +74,7 @@ describe('channelActionsDropdown', () => {
     });
 
     it('confirm restore channel should call updateChannel with deleted = false', () => {
-      wrapper.findComponent('[data-test="confirm-restore"]').vm.$emit('confirm');
+      wrapper.findComponent('[data-test="confirm-restore"]').vm.$emit('submit');
       expect(mocks.updateChannel).toHaveBeenCalledWith({ id: channelId, deleted: false });
     });
 
@@ -84,7 +84,7 @@ describe('channelActionsDropdown', () => {
     });
 
     it('confirm delete channel should call deleteChannel', () => {
-      wrapper.findComponent('[data-test="confirm-delete"]').vm.$emit('confirm');
+      wrapper.findComponent('[data-test="confirm-delete"]').vm.$emit('submit');
       expect(mocks.deleteChannel).toHaveBeenCalledWith(channelId);
     });
   });
@@ -110,7 +110,7 @@ describe('channelActionsDropdown', () => {
     });
 
     it('confirm make public should call updateChannel with isPublic = true', () => {
-      wrapper.findComponent('[data-test="confirm-public"]').vm.$emit('confirm');
+      wrapper.findComponent('[data-test="confirm-public"]').vm.$emit('submit');
       expect(mocks.updateChannel).toHaveBeenCalledWith({ id: channelId, isPublic: true });
     });
 
@@ -120,7 +120,7 @@ describe('channelActionsDropdown', () => {
     });
 
     it('confirm soft delete button should call updateChannel with deleted = true', () => {
-      wrapper.findComponent('[data-test="confirm-softdelete"]').vm.$emit('confirm');
+      wrapper.findComponent('[data-test="confirm-softdelete"]').vm.$emit('submit');
       expect(mocks.updateChannel).toHaveBeenCalledWith({ id: channelId, deleted: true });
     });
   });
@@ -136,7 +136,7 @@ describe('channelActionsDropdown', () => {
     });
 
     it('confirm make private should call updateChannel with isPublic = false', () => {
-      wrapper.findComponent('[data-test="confirm-private"]').vm.$emit('confirm');
+      wrapper.findComponent('[data-test="confirm-private"]').vm.$emit('submit');
       expect(mocks.updateChannel).toHaveBeenCalledWith({ id: channelId, isPublic: false });
     });
   });
