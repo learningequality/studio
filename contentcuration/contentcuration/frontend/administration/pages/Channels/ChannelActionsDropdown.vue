@@ -251,19 +251,21 @@
       restoreAction: 'Restore',
       cancelAction: 'Cancel',
       restoreChannelMessage: 'Are you sure you want to restore {name} and make it active again?',
-      
+
       makePublicTitle: 'Make channel public',
       makePublicAction: 'Make public',
       makePublicMessage: 'All users will be able to view and import content from {name}.',
-      
+
       makePrivateTitle: 'Make channel private',
       makePrivateAction: 'Make private',
-      makePrivateMessage: 'Only users with view-only or edit permissions will be able to access {name}.',
-      
+      makePrivateMessage:
+        'Only users with view-only or edit permissions will be able to access {name}.',
+
       permanentDeleteTitle: 'Permanently delete channel',
       permanentDeleteAction: 'Delete permanently',
-      permanentDeleteMessage: 'Are you sure you want to permanently delete {name}? This can not be undone.',
-      
+      permanentDeleteMessage:
+        'Are you sure you want to permanently delete {name}? This can not be undone.',
+
       softDeleteTitle: 'Delete channel',
       softDeleteAction: 'Delete',
       softDeleteMessage: 'Are you sure you want to delete {name}?',
@@ -275,16 +277,16 @@
 
 <style lang="scss" scoped>
 
-.kmodal-confirmation-content{
-  color: #212121;
-  white-space: normal;
-  text-align: left;
-}
+  .kmodal-confirmation-content {
+    color: #212121;
+    text-align: left;
+    white-space: normal;
+  }
 
-::v-deep .title {
-  color: #212121;
-  text-align: left;
-  font-weight: bold;
-}
+  ::v-deep .title {
+    font-weight: bold;
+    color: #212121;
+    text-align: left;
+  }
 
 </style>
