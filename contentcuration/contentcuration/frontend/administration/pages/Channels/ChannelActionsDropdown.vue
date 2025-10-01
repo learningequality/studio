@@ -10,9 +10,7 @@
       @submit="restoreHandler"
       @cancel="restoreDialog = false"
     >
-      <div class="kmodal-confirmation-content">
-        <p>{{ $tr('restoreChannelMessage', { name: name }) }}</p>
-      </div>
+      <p class="kmodal-confirmation-content">{{ $tr('restoreChannelMessage', { name: name }) }}</p>
     </KModal>
 
     <KModal
@@ -24,9 +22,7 @@
       @submit="makePublicHandler"
       @cancel="makePublicDialog = false"
     >
-      <div class="kmodal-confirmation-content">
-        <p>{{ $tr('makePublicMessage', { name: name }) }}</p>
-      </div>
+      <p class="kmodal-confirmation-content">{{ $tr('makePublicMessage', { name: name }) }}</p>
     </KModal>
 
     <KModal
@@ -37,10 +33,8 @@
       data-test="confirm-private"
       @submit="makePrivateHandler"
       @cancel="makePrivateDialog = false"
-    >
-      <div class="kmodal-confirmation-content">
-        <p>{{ $tr('makePrivateMessage', { name: name }) }}</p>
-      </div>
+    > 
+      <p class="kmodal-confirmation-content">{{ $tr('makePrivateMessage', { name: name }) }}</p>
     </KModal>
 
     <KModal
@@ -52,9 +46,7 @@
       @submit="deleteHandler"
       @cancel="deleteDialog = false"
     >
-      <div class="kmodal-confirmation-content">
-        <p>{{ $tr('permanentDeleteMessage', { name: name }) }}</p>
-      </div>
+      <p class="kmodal-confirmation-content">{{ $tr('permanentDeleteMessage', { name: name }) }}</p>
     </KModal>
 
     <KModal
@@ -66,9 +58,7 @@
       @submit="softDeleteHandler"
       @cancel="softDeleteDialog = false"
     >
-      <div class="kmodal-confirmation-content">
-        <p>{{ $tr('softDeleteMessage', { name: name }) }}</p>
-      </div>
+      <p class="kmodal-confirmation-content">{{ $tr('softDeleteMessage', { name: name }) }}</p>
     </KModal>
 
     <BaseMenu>
