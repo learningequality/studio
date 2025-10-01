@@ -276,14 +276,15 @@
 <style lang="scss" scoped>
 
 .kmodal-confirmation-content{
-  color: rgba(0, 0, 0, 0.87) !important;
+  color: #212121 !important;
   white-space: normal !important;
   text-align: left !important;
 }
 
 ::v-deep .title {
-  color: rgba(0, 0, 0, 0.87) !important;
+  color: #212121 !important;
   text-align: left !important;
+  font-weight: bold !important;
 }
 
 </style>
