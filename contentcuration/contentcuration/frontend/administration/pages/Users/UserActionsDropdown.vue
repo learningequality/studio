@@ -114,14 +114,13 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
-  
+
   import EmailUsersDialog from './EmailUsersDialog';
   import UserPrivilegeModal from './UserPrivilegeModal';
 
   export default {
     name: 'UserActionsDropdown',
     components: {
-    
       EmailUsersDialog,
       UserPrivilegeModal,
     },
@@ -188,7 +187,8 @@
       deleteUserMessage: "Are you sure you want to permanently delete {name}'s account?",
       deactivateUserTitle: 'Deactivate user',
       deactivateAction: 'Deactivate',
-      deactivateUserMessage: "Deactivating {name}'s account will block them from accessing their account. Are you sure you want to continue?",
+      deactivateUserMessage:
+        "Deactivating {name}'s account will block them from accessing their account. Are you sure you want to continue?",
       cancelAction: 'Cancel',
     },
   };
@@ -198,16 +198,16 @@
 
 <style lang="scss" scoped>
 
-.kmodal-confirmation-content {
-  color: #212121;
-  white-space: normal;
-  text-align: left;
-}
+  .kmodal-confirmation-content {
+    color: #212121;
+    text-align: left;
+    white-space: normal;
+  }
 
-::v-deep .title {
-  color: #212121;
-  text-align: left;
-  font-weight: bold;
-}
+  ::v-deep .title {
+    font-weight: bold;
+    color: #212121;
+    text-align: left;
+  }
 
 </style>
