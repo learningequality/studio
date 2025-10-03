@@ -193,49 +193,49 @@
     </MessageDialog>
 
     <!-- Dialog for catching in-progress file uploads -->
-    <MessageDialog
-      v-model="promptUploading"
-      :header="$tr('uploadInProgressHeader')"
-      :text="$tr('uploadInProgressText')"
+    <KModal
+      v-if="promptUploading"
+      :title="$tr('uploadInProgressHeader')"
+      @cancel="promptUploading = false"
     >
-      <template #buttons="{ close }">
-        <VBtn
-          flat
-          @click="close"
+      <p>{{ $tr('uploadInProgressText') }}</p>
+      <template #actions>
+        <KButton
+          @click="promptUploading = false"
         >
           {{ $tr('dismissDialogButton') }}
-        </VBtn>
-        <VBtn
+        </KButton>
+        <KButton
           data-test="canceluploads"
-          color="primary"
+          :primary="true"
           @click="closeModal"
         >
           {{ $tr('cancelUploadsButton') }}
-        </VBtn>
+        </KButton>
       </template>
-    </MessageDialog>
+    </KModal>
 
     <!-- Alert for failed save -->
-    <MessageDialog
-      v-model="promptFailed"
-      :header="$tr('saveFailedHeader')"
-      :text="$tr('saveFailedText')"
+    <KModal
+      v-if="promptFailed"
+      :title="$tr('saveFailedHeader')"
+      @cancel="promptFailed = false"
     >
-      <template #buttons="{ close }">
-        <VBtn
-          flat
-          @click="close"
+      <p>{{ $tr('saveFailedText') }}</p>
+      <template #actions>
+        <KButton
+          @click="promptFailed = false"
         >
           {{ $tr('okButton') }}
-        </VBtn>
-        <VBtn
-          color="primary"
+        </KButton>
+        <KButton
+          :primary="true"
           @click="closeModal"
         >
           {{ $tr('closeWithoutSavingButton') }}
-        </VBtn>
+        </KButton>
       </template>
-    </MessageDialog>
+    </KModal>
   </div>
 
 </template>
