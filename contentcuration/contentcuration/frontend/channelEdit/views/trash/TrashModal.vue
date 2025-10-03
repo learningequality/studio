@@ -128,22 +128,20 @@
         {{ getSelectedTopicAndResourceCountText(selected) }}
       </span>
       <VSpacer />
-      <VBtn
-        flat
+      <KButton
+        appearance="flat-button"
+        :text="$tr('restoreButton')"
         :disabled="!selected.length"
         data-test="restore"
         @click="moveModalOpen = true"
-      >
-        {{ $tr('restoreButton') }}
-      </VBtn>
-      <VBtn
-        color="primary"
+      />
+      <KButton
+        :primary="true"
+        :text="$tr('deleteButton')"
         :disabled="!selected.length"
         data-test="delete"
         @click="showConfirmationDialog = true"
-      >
-        {{ $tr('deleteButton') }}
-      </VBtn>
+      />
     </template>
     <MessageDialog
       v-model="showConfirmationDialog"
