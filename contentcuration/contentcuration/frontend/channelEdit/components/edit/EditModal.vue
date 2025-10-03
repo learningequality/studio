@@ -73,13 +73,11 @@
                   class="add-wrapper"
                   :color="$themeTokens.textInverted"
                 >
-                  <VBtn
+                  <KButton
                     v-if="addTopicsMode"
-                    color="greyBackground"
+                    :text="$tr('addTopic')"
                     @click="createTopic"
-                  >
-                    {{ $tr('addTopic') }}
-                  </VBtn>
+                  />
                   <KButton
                     v-else-if="uploadMode"
                     :text="$tr('uploadButton')"
