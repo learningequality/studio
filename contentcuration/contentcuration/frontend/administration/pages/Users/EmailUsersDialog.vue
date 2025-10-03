@@ -132,15 +132,19 @@
           </VBtn>
         </VCardActions>
       </VForm>
-      <ConfirmationDialog
-        v-model="showWarning"
-        title="Draft in progress"
-        text="Draft will be lost upon exiting this editor. Are you sure you want to continue?"
-        confirmButtonText="Discard draft"
-        cancelButtonText="Keep open"
+      <KModal
+        v-if="showWarning"
+        :title="$tr('draftWarningTitle')"
+        :submitText="$tr('discardDraftButton')"
+        :cancelText="$tr('keepOpenButton')"
         data-test="confirm"
-        @confirm="close"
-      />
+        @submit="handleConfirm"
+        @cancel="showWarning = false"
+      >
+        <template #default>
+          <p>{{ $tr('draftWarningText') }}</p>
+        </template>
+      </KModal>
     </VCard>
   </VDialog>
 
@@ -150,14 +154,12 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import ConfirmationDialog from '../../components/ConfirmationDialog';
   import ExpandableList from 'shared/views/ExpandableList';
 
   export default {
     name: 'EmailUsersDialog',
     components: {
       ExpandableList,
-      ConfirmationDialog,
     },
     props: {
       value: {
@@ -293,6 +295,13 @@
       remove(id) {
         this.recipients = this.recipients.filter(u => u !== id);
       },
+    },
+    $trs: {
+      draftWarningTitle: 'Draft in progress',
+      draftWarningText:
+        'Draft will be lost upon exiting this editor. Are you sure you want to continue?',
+      discardDraftButton: 'Discard draft',
+      keepOpenButton: 'Keep open',
     },
   };
 
