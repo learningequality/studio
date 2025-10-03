@@ -138,12 +138,10 @@
         :submitText="$tr('discardDraftButton')"
         :cancelText="$tr('keepOpenButton')"
         data-test="confirm"
-        @submit="handleConfirm"
+        @submit="close"
         @cancel="showWarning = false"
       >
-        <template #default>
-          <p>{{ $tr('draftWarningText') }}</p>
-        </template>
+        <p>{{ $tr('draftWarningText') }}</p>
       </KModal>
     </VCard>
   </VDialog>
@@ -266,6 +264,7 @@
         this.show = false;
         this.subject = '';
         this.message = '';
+        this.showWarning = false;
         this.$refs.form.resetValidation();
       },
       emailHandler() {
