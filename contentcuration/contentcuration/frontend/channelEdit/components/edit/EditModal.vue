@@ -200,9 +200,7 @@
     >
       <p>{{ $tr('uploadInProgressText') }}</p>
       <template #actions>
-        <KButton
-          @click="promptUploading = false"
-        >
+        <KButton @click="promptUploading = false">
           {{ $tr('dismissDialogButton') }}
         </KButton>
         <KButton
@@ -223,9 +221,7 @@
     >
       <p>{{ $tr('saveFailedText') }}</p>
       <template #actions>
-        <KButton
-          @click="promptFailed = false"
-        >
+        <KButton @click="promptFailed = false">
           {{ $tr('okButton') }}
         </KButton>
         <KButton
