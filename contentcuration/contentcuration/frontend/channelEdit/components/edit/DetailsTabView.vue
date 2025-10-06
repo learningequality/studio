@@ -694,7 +694,7 @@
       /* FORM FIELDS */
       title: generateGetterSetter('title'),
       description: generateGetterSetter('description'),
-      randomizeOrder: generateExtraFieldsGetterSetter('randomize', true),
+      randomizeOrder: generateExtraFieldsGetterSetter('randomize'),
       author: generateGetterSetter('author'),
       provider: generateGetterSetter('provider'),
       aggregator: generateGetterSetter('aggregator'),
