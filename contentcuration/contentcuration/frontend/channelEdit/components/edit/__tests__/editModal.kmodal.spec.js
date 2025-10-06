@@ -2,7 +2,6 @@
  * Simple integration test to verify KModal dialogs in EditModal work correctly
  * This test focuses only on the two specific dialogs we migrated from MessageDialog to KModal
  */
-
 import { render, screen, fireEvent } from '@testing-library/vue';
 import VueRouter from 'vue-router';
 
