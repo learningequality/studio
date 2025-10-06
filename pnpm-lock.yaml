@@ -39,8 +39,8 @@ importers:
         specifier: ^1.12.2
         version: 1.12.2
       broadcast-channel:
-        specifier: ^5.1.0
-        version: 5.5.1
+        specifier: ^7.1.0
+        version: 7.1.0
       core-js:
         specifier: ^3.44.0
         version: 3.44.0
@@ -995,12 +995,16 @@ packages:
     peerDependencies:
       '@babel/core': ^7.0.0-0
 
-  '@babel/runtime@7.23.2':
-    resolution: {integrity: sha512-mM8eg4yl5D6i3lu2QKPuPH4FArvJ8KhTofbE7jwMUv9KX5mBvwPAqnV3MlyBNqdp9RyRKP6Yck8TrfYrPvX3bg==}
+  '@babel/runtime@7.27.0':
+    resolution: {integrity: sha512-VtPOkrdPHZsKc/clNqyi9WUA8TINkZ4cGk63UUE3u4pmB2k+ZMQRDuIOagv8UVd6j7k0T3+RRIb7beKTebNbcw==}
     engines: {node: '>=6.9.0'}
 
   '@babel/runtime@7.27.6':
     resolution: {integrity: sha512-vbavdySgbTTrmFE+EsiqUTzlOr5bzlnJtUv9PynGCAKvfQqjIXbvFdumPM/GxMDfyuGMJaJAU6TO4zc1Jf1i8Q==}
+    engines: {node: '>=6.9.0'}
+
+  '@babel/runtime@7.28.4':
+    resolution: {integrity: sha512-Q/N6JNWvIvPnLDvjlE1OUBLPQHH6l3CltCEsHIujp45zQUSSh8K+gHnaEX45yAT1nyngnINhvWtzN+Nb9D8RAQ==}
     engines: {node: '>=6.9.0'}
 
   '@babel/template@7.27.2':
@@ -2392,8 +2396,8 @@ packages:
     resolution: {integrity: sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==}
     engines: {node: '>=8'}
 
-  broadcast-channel@5.5.1:
-    resolution: {integrity: sha512-C7LtMmJCIIU07xtJngYE2OxaGTGBsG+wOa0mBSPRpbTF36kqtsXQhpxtCVDTkpe8gpZMn9C6PhH+mZ/js4IabA==}
+  broadcast-channel@7.1.0:
+    resolution: {integrity: sha512-InJljddsYWbEL8LBnopnCg+qMQp9KcowvYWOt4YWrjD5HmxzDYKdVbDS1w/ji5rFZdRD58V5UxJPtBdpEbEJYw==}
 
   browserslist-config-kolibri@0.18.0:
     resolution: {integrity: sha512-d8JCoLUG8XlgfaE/wB7P58ok6ddiGGjChm6dVsL3W2702ibgFjOx+NtFHrLKCpkSuiaR2/gevvaQsIFwkVNNiA==}
@@ -5412,8 +5416,9 @@ packages:
     resolution: {integrity: sha512-gXah6aZrcUxjWg2zR2MwouP2eHlCBzdV4pygudehaKXSGW4v2AsRQUK+lwwXhii6KFZcunEnmSUoYp5CXibxtA==}
     engines: {node: '>= 0.4'}
 
-  oblivious-set@1.1.1:
-    resolution: {integrity: sha512-Oh+8fK09mgGmAshFdH6hSVco6KZmd1tTwNFWj35OvzdmJTMZtAkbn05zar2iG3v6sDs1JLEtOiBGNb6BHwkb2w==}
+  oblivious-set@1.4.0:
+    resolution: {integrity: sha512-szyd0ou0T8nsAqHtprRcP3WidfsN1TnAR5yWXf2mFCEr5ek3LEOkT6EZ/92Xfs74HIdyhG5WkGxIssMU0jBaeg==}
+    engines: {node: '>=16'}
 
   obuf@1.1.2:
     resolution: {integrity: sha512-PX1wu0AmAdPqOL1mWhqmlOd8kOIZQwGZw6rh7uby9fTc5lhaOWFLX3I6R1hrF9k3zUY40e6igsLGkDXK92LJNg==}
@@ -8486,11 +8491,13 @@ snapshots:
       pirates: 4.0.7
       source-map-support: 0.5.21
 
-  '@babel/runtime@7.23.2':
+  '@babel/runtime@7.27.0':
     dependencies:
       regenerator-runtime: 0.14.1
 
   '@babel/runtime@7.27.6': {}
+
+  '@babel/runtime@7.28.4': {}
 
   '@babel/template@7.27.2':
     dependencies:
@@ -10303,10 +10310,10 @@ snapshots:
     dependencies:
       fill-range: 7.1.1
 
-  broadcast-channel@5.5.1:
+  broadcast-channel@7.1.0:
     dependencies:
-      '@babel/runtime': 7.23.2
-      oblivious-set: 1.1.1
+      '@babel/runtime': 7.27.0
+      oblivious-set: 1.4.0
       p-queue: 6.6.2
       unload: 2.4.1
 
@@ -13938,7 +13945,7 @@ snapshots:
       define-properties: 1.2.1
       es-object-atoms: 1.1.1
 
-  oblivious-set@1.1.1: {}
+  oblivious-set@1.4.0: {}
 
   obuf@1.1.2: {}
 
@@ -14592,25 +14599,25 @@ snapshots:
 
   ranges-apply@5.1.0:
     dependencies:
-      '@babel/runtime': 7.27.6
+      '@babel/runtime': 7.28.4
       ranges-merge: 7.1.0
 
   ranges-merge@7.1.0:
     dependencies:
-      '@babel/runtime': 7.27.6
+      '@babel/runtime': 7.28.4
       ranges-push: 5.1.0
       ranges-sort: 4.1.0
 
   ranges-push@5.1.0:
     dependencies:
-      '@babel/runtime': 7.27.6
+      '@babel/runtime': 7.28.4
       ranges-merge: 7.1.0
       string-collapse-leading-whitespace: 5.1.0
       string-trim-spaces-only: 3.1.0
 
   ranges-sort@4.1.0:
     dependencies:
-      '@babel/runtime': 7.27.6
+      '@babel/runtime': 7.28.4
 
   raw-body@2.5.2:
     dependencies:
@@ -15268,13 +15275,13 @@ snapshots:
 
   string-collapse-leading-whitespace@5.1.0:
     dependencies:
-      '@babel/runtime': 7.27.6
+      '@babel/runtime': 7.28.4
 
   string-hash@1.1.3: {}
 
   string-left-right@4.1.0:
     dependencies:
-      '@babel/runtime': 7.27.6
+      '@babel/runtime': 7.28.4
       lodash.clonedeep: 4.5.0
       lodash.isplainobject: 4.0.6
 
@@ -15296,7 +15303,7 @@ snapshots:
 
   string-trim-spaces-only@3.1.0:
     dependencies:
-      '@babel/runtime': 7.27.6
+      '@babel/runtime': 7.28.4
 
   string-width@4.2.3:
     dependencies:
@@ -16363,7 +16370,7 @@ snapshots:
       '@apideck/better-ajv-errors': 0.3.6(ajv@8.17.1)
       '@babel/core': 7.28.3
       '@babel/preset-env': 7.28.3(@babel/core@7.28.3)
-      '@babel/runtime': 7.27.6
+      '@babel/runtime': 7.28.4
       '@rollup/plugin-babel': 5.3.1(@babel/core@7.28.3)(@types/babel__core@7.20.5)(rollup@2.79.2)
       '@rollup/plugin-node-resolve': 15.3.1(rollup@2.79.2)
       '@rollup/plugin-replace': 2.4.2(rollup@2.79.2)
