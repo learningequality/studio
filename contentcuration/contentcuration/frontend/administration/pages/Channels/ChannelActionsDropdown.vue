@@ -10,7 +10,12 @@
       @submit="restoreHandler"
       @cancel="restoreDialog = false"
     >
-      <p class="kmodal-confirmation-content">{{ $tr('restoreChannelMessage', { name: name }) }}</p>
+      <p
+        class="kmodal-confirmation-content"
+        :style="{ color: $themeTokens.text }"
+      >
+        {{ $tr('restoreChannelMessage', { name: name }) }}
+      </p>
     </KModal>
 
     <KModal
@@ -46,7 +51,12 @@
       @submit="deleteHandler"
       @cancel="deleteDialog = false"
     >
-      <p class="kmodal-confirmation-content">{{ $tr('permanentDeleteMessage', { name: name }) }}</p>
+      <p
+        class="kmodal-confirmation-content"
+        :style="{ color: $themeTokens.text }"
+      >
+        {{ $tr('permanentDeleteMessage', { name: name }) }}
+      </p>
     </KModal>
 
     <KModal
@@ -268,7 +278,6 @@
 <style lang="scss" scoped>
 
   .kmodal-confirmation-content {
-    color: #212121;
     text-align: left;
     white-space: normal;
   }
