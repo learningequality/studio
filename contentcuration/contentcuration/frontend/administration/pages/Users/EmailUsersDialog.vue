@@ -116,20 +116,21 @@
         </VCardText>
         <VCardActions data-test="buttons">
           <VSpacer />
-          <VBtn
-            data-test="cancel"
-            flat
-            @click="cancel"
-          >
-            Cancel
-          </VBtn>
-          <VBtn
-            data-test="send"
-            color="primary"
-            type="submit"
-          >
-            Send email
-          </VBtn>
+          <KButtonGroup>
+            <KButton
+              data-test="cancel"
+              appearance="flat-button"
+              :text="$tr('cancelButton')"
+              @click="cancel"
+            />
+            <KButton
+              data-test="send"
+              appearance="raised-button"
+              :primary="true"
+              :text="$tr('sendButton')"
+              type="submit"
+            />
+          </KButtonGroup>
         </VCardActions>
       </VForm>
       <KModal
@@ -301,6 +302,8 @@
         'Draft will be lost upon exiting this editor. Are you sure you want to continue?',
       discardDraftButton: 'Discard draft',
       keepOpenButton: 'Keep open',
+      cancelButton: 'Cancel',
+      sendButton: 'Send email',
     },
   };
 
