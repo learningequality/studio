@@ -154,29 +154,18 @@
         </VContainer>
       </VWindowItem>
     </VWindow>
-    <MessageDialog
-      v-model="showUnsavedDialog"
-      :header="$tr('unsavedChangesHeader')"
-      :text="$tr('unsavedChangesText')"
+    <KModal
+      v-if="showUnsavedDialog"
+      :title="$tr('unsavedChangesHeader')"
+      :submitText="$tr('saveButton')"
+      :cancelText="$tr('closeButton')"
       data-test="dialog-unsaved"
       :data-test-visible="showUnsavedDialog"
+      @submit="save"
+      @cancel="confirmCancel"
     >
-      <template #buttons>
-        <VSpacer />
-        <VBtn
-          flat
-          @click="confirmCancel"
-        >
-          {{ $tr('closeButton') }}
-        </VBtn>
-        <VBtn
-          color="primary"
-          @click="save"
-        >
-          {{ $tr('saveButton') }}
-        </VBtn>
-      </template>
-    </MessageDialog>
+      {{ $tr('unsavedChangesText') }}
+    </KModal>
     <template #bottom>
       <div class="mx-4 subheading">
         {{ $tr('channelSelectedCountText', { channelCount: channels.length }) }}
@@ -215,7 +204,6 @@
   import { ChannelListTypes, ErrorTypes } from 'shared/constants';
   import { constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import CopyToken from 'shared/views/CopyToken';
-  import MessageDialog from 'shared/views/MessageDialog';
   import FullscreenModal from 'shared/views/FullscreenModal';
   import Tabs from 'shared/views/Tabs';
   import LoadingText from 'shared/views/LoadingText';
@@ -225,7 +213,6 @@
     components: {
       CopyToken,
       ChannelSelectionList,
-      MessageDialog,
       ChannelItem,
       FullscreenModal,
       Tabs,
