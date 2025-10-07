@@ -16,8 +16,8 @@
             @click="reloadPage"
           />
           <KButton
-            v-bind="backHomeLink"
             :text="$tr('backToHomeAction')"
+            @click="backToHomeAction"
           />
         </KButtonGroup>
         <div style="margin-top: 1rem">
@@ -69,6 +69,13 @@
     methods: {
       reloadPage() {
         global.location.reload();
+      },
+      backToHomeAction() {
+        this.$router.push(this.backHomeLink).catch(e => {
+          if (e.name === 'NavigationDuplicated') {
+            this.reloadPage();
+          }
+        });
       },
     },
     $trs: {
