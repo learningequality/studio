@@ -4,23 +4,37 @@
  */
 import { render, screen, fireEvent } from '@testing-library/vue';
 import VueRouter from 'vue-router';
+import KModal from 'kolibri-design-system/lib/KModal';
 
 const MockEditModalDialogs = {
+  components: {
+    KModal,
+  },
   template: `
     <div>
-      <div v-if="promptUploading" data-testid="upload-dialog">
-        <h2>{{ uploadInProgressHeader }}</h2>
+      <KModal
+        v-if="promptUploading"
+        data-testid="upload-dialog"
+        :title="uploadInProgressHeader"
+        :cancelText="dismissDialogButton"
+        :submitText="cancelUploadsButton"
+        @cancel="promptUploading = false"
+        @submit="closeModal"
+      >
         <p>{{ uploadInProgressText }}</p>
-        <button @click="promptUploading = false">{{ dismissDialogButton }}</button>
-        <button data-test="canceluploads" @click="closeModal">{{ cancelUploadsButton }}</button>
-      </div>
+      </KModal>
 
-      <div v-if="promptFailed" data-testid="failed-dialog">
-        <h2>{{ saveFailedHeader }}</h2>
+      <KModal
+        v-if="promptFailed"
+        data-testid="failed-dialog"
+        :title="saveFailedHeader"
+        :cancelText="okButton"
+        :submitText="closeWithoutSavingButton"
+        @cancel="promptFailed = false"
+        @submit="closeModal"
+      >
         <p>{{ saveFailedText }}</p>
-        <button @click="promptFailed = false">{{ okButton }}</button>
-        <button @click="closeModal">{{ closeWithoutSavingButton }}</button>
-      </div>
+      </KModal>
     </div>
   `,
   data() {
@@ -76,10 +90,11 @@ describe('EditModal KModal Dialogs', () => {
 
       expect(screen.getByText('Cancel')).toBeInTheDocument();
       expect(screen.getByText('Exit')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Exit' })).toBeInTheDocument();
     });
 
-    it('should close dialog when dismiss button is clicked', async () => {
+    it('should close dialog when cancel button is clicked', async () => {
       render(MockEditModalDialogs, {
         routes: new VueRouter(),
         data() {
@@ -87,14 +102,14 @@ describe('EditModal KModal Dialogs', () => {
         },
       });
 
-      const dismissButton = screen.getByText('Cancel');
-      await fireEvent.click(dismissButton);
+      const cancelButton = screen.getByRole('button', { name: 'Cancel' });
+      await fireEvent.click(cancelButton);
 
       /* After clicking, the dialog should disappear */
       expect(screen.queryByTestId('upload-dialog')).not.toBeInTheDocument();
     });
 
-    it('should call closeModal when cancel uploads button is clicked', async () => {
+    it('should call closeModal when submit button is clicked', async () => {
       const closeModalSpy = jest.fn();
       const TestComponent = {
         ...MockEditModalDialogs,
@@ -110,8 +125,8 @@ describe('EditModal KModal Dialogs', () => {
         },
       });
 
-      const cancelButton = screen.getByRole('button', { name: 'Exit' });
-      await fireEvent.click(cancelButton);
+      const submitButton = screen.getByRole('button', { name: 'Exit' });
+      await fireEvent.click(submitButton);
 
       expect(closeModalSpy).toHaveBeenCalled();
     });
@@ -150,7 +165,7 @@ describe('EditModal KModal Dialogs', () => {
       expect(screen.getByText('Close without saving')).toBeInTheDocument();
     });
 
-    it('should close dialog when OK button is clicked', async () => {
+    it('should close dialog when cancel button is clicked', async () => {
       render(MockEditModalDialogs, {
         routes: new VueRouter(),
         data() {
@@ -158,14 +173,14 @@ describe('EditModal KModal Dialogs', () => {
         },
       });
 
-      const okButton = screen.getByText('OK');
-      await fireEvent.click(okButton);
+      const cancelButton = screen.getByRole('button', { name: 'OK' });
+      await fireEvent.click(cancelButton);
 
       /* After clicking, the dialog should disappear */
       expect(screen.queryByTestId('failed-dialog')).not.toBeInTheDocument();
     });
 
-    it('should call closeModal when close without saving button is clicked', async () => {
+    it('should call closeModal when submit button is clicked', async () => {
       const closeModalSpy = jest.fn();
       const TestComponent = {
         ...MockEditModalDialogs,
@@ -181,8 +196,8 @@ describe('EditModal KModal Dialogs', () => {
         },
       });
 
-      const closeButton = screen.getByText('Close without saving');
-      await fireEvent.click(closeButton);
+      const submitButton = screen.getByRole('button', { name: 'Close without saving' });
+      await fireEvent.click(submitButton);
 
       expect(closeModalSpy).toHaveBeenCalled();
     });
