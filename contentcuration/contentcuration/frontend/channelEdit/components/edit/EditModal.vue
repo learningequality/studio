@@ -196,41 +196,24 @@
     <KModal
       v-if="promptUploading"
       :title="$tr('uploadInProgressHeader')"
+      :cancelText="$tr('dismissDialogButton')"
+      :submitText="$tr('cancelUploadsButton')"
       @cancel="promptUploading = false"
+      @submit="closeModal"
     >
       <p>{{ $tr('uploadInProgressText') }}</p>
-      <template #actions>
-        <KButton @click="promptUploading = false">
-          {{ $tr('dismissDialogButton') }}
-        </KButton>
-        <KButton
-          data-test="canceluploads"
-          :primary="true"
-          @click="closeModal"
-        >
-          {{ $tr('cancelUploadsButton') }}
-        </KButton>
-      </template>
     </KModal>
 
     <!-- Alert for failed save -->
     <KModal
       v-if="promptFailed"
       :title="$tr('saveFailedHeader')"
+      :cancelText="$tr('okButton')"
+      :submitText="$tr('closeWithoutSavingButton')"
       @cancel="promptFailed = false"
+      @submit="closeModal"
     >
       <p>{{ $tr('saveFailedText') }}</p>
-      <template #actions>
-        <KButton @click="promptFailed = false">
-          {{ $tr('okButton') }}
-        </KButton>
-        <KButton
-          :primary="true"
-          @click="closeModal"
-        >
-          {{ $tr('closeWithoutSavingButton') }}
-        </KButton>
-      </template>
     </KModal>
   </div>
 
