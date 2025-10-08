@@ -201,27 +201,30 @@
           f => f.language.id,
         );
       },
+      fileFormat() {
+        return this.file?.file_format || '';
+      },
       isVideo() {
-        return this.file.file_format === 'mp4' || this.file.file_format === 'webm';
+        return this.fileFormat === 'mp4' || this.fileFormat === 'webm';
       },
       isAudio() {
-        return this.file.file_format === 'mp3';
+        return this.fileFormat === 'mp3';
       },
       isHTML() {
-        return this.file.file_format === 'zip';
+        return this.fileFormat === 'zip';
       },
       isPDF() {
-        return this.file.file_format === 'pdf';
+        return this.fileFormat === 'pdf';
       },
       isEpub() {
-        return this.file.file_format === 'epub';
+        return this.fileFormat === 'epub';
       },
       isSupported() {
         return this.isVideo || this.isAudio || this.isHTML || this.isPDF || this.isEpub;
       },
       htmlPath() {
         const entry = get(this.contentNode, ['extra_fields', 'options', 'entry'], 'index.html');
-        return `/zipcontent/${this.file.checksum}.${this.file.file_format}/${entry}`;
+        return `/zipcontent/${this.file.checksum}.${this.fileFormat}/${entry}`;
       },
       src() {
         return this.file && this.file.url;
