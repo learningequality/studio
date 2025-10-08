@@ -215,7 +215,7 @@ python-dateutil==2.9.0.post0
     #   -r requirements.in
     #   botocore
     #   celery
-python-postmark==0.6.1
+python-postmark==0.7.0
     # via -r requirements.in
 pytz==2022.1
     # via
