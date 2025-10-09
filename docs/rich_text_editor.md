@@ -31,3 +31,15 @@ This is a very high level guide, you'll still need to check the docs but make su
 4. If your node needs Markdown support, update the custom serializer and add tests in
     `__tests__/markdownSerializer.spec.js`.
 ---
+## Content Conversion Flow
+As mentioned above, the old content API saved markdown in the database, the following data conversion flow maintains backward compatibility by implementing dual conversion between the strcutured JSON format TipTap uses and markdown.
+
+We support the conversion for:
+- Standard Markdown elements previously handled by the ToastUI editor and its Showdown converter.
+- A specific, legacy format for custom nodes, particularly for Images `(![alt](placeholder/checksum.ext =WxH))` and Math Formulas `$$latex$$`
+
+The formats for the custom nodes are adapted from the old editor's standard syntax conversion.
+We have our own custom markdown serializer for that too! The following graph illustrates the whole flow.
+<img width="900" height="900" alt="image" src="https://github.com/user-attachments/assets/c994951d-1ca0-47fd-b342-e8bbf76caf1a" />
+
+---
