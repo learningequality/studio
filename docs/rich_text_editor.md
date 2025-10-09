@@ -43,3 +43,19 @@ We have our own custom markdown serializer for that too! The following graph ill
 <img width="900" height="900" alt="image" src="https://github.com/user-attachments/assets/c994951d-1ca0-47fd-b342-e8bbf76caf1a" />
 
 ---
+## Mobile View
+As per the figma design, the mobile view is different from the desktop design to a point where it can't just be fixed with just CSS tweaks or media queries. We did some thinking&research and decided to take a Conditional Toolbar Layout approach where We've created different components for different screen sizes.
+
+That means, if you add a new button in the desktop's toolbar, you'll have to add it to the Mobile's toolbar component too, and make sure you keep the functionality extracted in a reusable way so you only repeat the template logic and not the whole javascript!
+
+As per the Figma design, the **mobile view** differs significantly from the desktop layout — more than what simple CSS tweaks or media queries can handle.
+
+We decided to take a **Conditional Toolbar Layout** approach:
+- Different toolbar components are used for desktop and mobile.
+- The logic (commands, editor state, etc.) is shared and reusable.
+- Only the **template structure** differs.
+
+>[!TIP]
+>That means:
+> If you add a new button to the desktop toolbar, you’ll also need to add it to the mobile toolbar component.
+> Keep the functionality extracted and reusable, so you only duplicate the **template**, not the **JavaScript logic**.
