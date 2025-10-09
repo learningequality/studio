@@ -12,3 +12,22 @@ Another point that had an impact on our architectural decisions is that there ar
 - Original figma design [link](https://www.figma.com/design/uw8lx88ZKZU8X7kN9SdLeo/Rich-text-editor---GSOC-2025?node-id=377-422&p=f&t=HIkJ8pF9xudcOnLd-0)
 - Original Tracking issue for creating the editor [link](https://github.com/learningequality/studio/issues/5049)
 - Tiptap basic editor [docs](https://tiptap.dev/docs/editor/getting-started/overview)
+---
+## Custom extensions
+For non-text elements, we create [custom extensions optionally with their node views](https://tiptap.dev/docs/editor/extensions/custom-extensions/node-views/vue).
+We currently have custom extensions for:
+- images
+- formulas
+- syntax highlighted code blocks
+- links
+- `<small />` text nodes
+
+### How to add a custom plugin?
+This is a very high level guide, you'll still need to check the docs but make sure you check all the boxes in this list:
+1. Create a new file in
+    `contentcuration/frontend/shared/views/TipTapEditor/extensions/`
+2. Define your node or mark using TipTap’s `Node.create()` or `Mark.create()`.
+3. Add the new extension to the editor’s extension list in `Editor.vue` or `editorExtensions.js`.
+4. If your node needs Markdown support, update the custom serializer and add tests in
+    `__tests__/markdownSerializer.spec.js`.
+---
