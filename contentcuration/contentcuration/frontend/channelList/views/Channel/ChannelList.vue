@@ -55,6 +55,7 @@
                 v-for="channel in listChannels"
                 :key="channel.id"
                 :channelId="channel.id"
+                :isInChannelList="true"
                 allowEdit
                 fullWidth
               />

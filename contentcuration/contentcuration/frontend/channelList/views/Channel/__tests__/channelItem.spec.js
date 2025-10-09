@@ -24,6 +24,7 @@ function makeWrapper(allowEdit, deleteStub, libraryMode) {
     propsData: {
       channelId: channelId,
       allowEdit: allowEdit,
+      isInChannelList: true,
     },
     computed: {
       libraryMode() {

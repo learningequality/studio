@@ -7,9 +7,9 @@
       :class="{ added }"
       data-test="channel-card"
       tabindex="0"
-      :href="linkToChannelTree ? channelHref : null"
-      :to="linkToChannelTree ? null : channelDetailsLink"
-      @click="goToChannelRoute"
+      :href="isInChannelList && linkToChannelTree ? channelHref : null"
+      :to="isInChannelList ? (linkToChannelTree ? null : channelDetailsLink) : null"
+      @click="handleChannelClick"
     >
       <VLayout
         row
@@ -110,21 +110,22 @@
               :to="channelDetailsLink"
             >
               <KIconButton
+                v-if="detailsIcon"
                 :color="$themeTokens.primary"
-                data-test="details-button"
+                :data-test="detailsIcon.dataTest"
                 class="mr-1"
-                icon="info"
-                :tooltip="$tr('details')"
+                :icon="detailsIcon.icon"
+                :tooltip="detailsIcon.tooltip"
               />
             </KRouterLink>
-
             <KIconButton
-              v-if="!allowEdit && channel.published"
+              v-for="config in filteredIcons"
+              :key="config.key"
               class="mr-1"
-              icon="copy"
-              :tooltip="$tr('copyToken')"
-              data-test="token-button"
-              @click.stop.prevent="tokenDialog = true"
+              :icon="config.icon"
+              :tooltip="config.tooltip"
+              :data-test="config.dataTest"
+              @click.stop.prevent="config.clickHandler"
             />
             <ChannelStar
               v-if="loggedIn"
@@ -132,7 +133,8 @@
               :bookmark="channel.bookmark"
               class="mr-1"
             />
-            <BaseMenu v-if="showOptions">
+
+            <BaseMenu v-if="showKebabMenu">
               <template #activator="{ on }">
                 <VBtn
                   icon
@@ -271,6 +273,10 @@
         type: Boolean,
         default: false,
       },
+      isInChannelList: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -327,13 +333,75 @@
       libraryMode() {
         return window.libraryMode;
       },
-      showOptions() {
-        return (
-          this.allowEdit ||
-          this.channel.source_url ||
-          this.channel.demo_server_url ||
-          (this.channel.published && this.allowEdit)
-        );
+      hasUnpublishedChanges() {
+        return !this.channel.last_published || this.channel.modified > this.channel.last_published;
+      },
+      filteredIcons() {
+        return this.iconConfigs
+          .filter(c => ['copy', 'open-tab-link'].includes(c.key))
+          .filter(c => c.show);
+      },
+      detailsIcon() {
+        return this.iconConfigs.find(c => c.key === 'details' && c.show);
+      },
+      iconConfigs() {
+        return [
+          {
+            key: 'copy',
+            show: !this.allowEdit && this.channel.published,
+            icon: 'copy',
+            tooltip: this.$tr('copyToken'),
+            dataTest: 'token-button',
+            clickHandler: () => {
+              this.tokenDialog = true;
+            },
+          },
+          // show open tab link when
+          // only one of source or demo server url is present
+          // we do not show this icon if we are in channel list
+          {
+            key: 'open-tab-link',
+            show:
+              !this.isInChannelList &&
+              (this.channel.demo_server_url || this.channel.source_url) &&
+              ((this.loggedIn && !this.channel.demo_server_url && this.channel.source_url) ||
+                (this.loggedIn && !this.channel.source_url && this.channel.demo_server_url) ||
+                (!this.loggedIn &&
+                  this.channel.published &&
+                  // this check ensures that we show link to both in kebab menu
+                  !(this.channel.source_url && this.channel.demo_server_url))),
+            icon: 'openNewTab',
+            tooltip: this.channel.demo_server_url
+              ? this.$tr('viewOnKolibri')
+              : this.$tr('goToWebsite'),
+            dataTest: 'view-on-kolibri',
+            clickHandler: () => {
+              this.viewOnKolibri();
+            },
+          },
+          {
+            key: 'details',
+            show:
+              !this.libraryMode &&
+              this.loggedIn &&
+              this.detailsRouteName !== RouteNames.CATALOG_DETAILS,
+            icon: 'info',
+            tooltip: this.$tr('details'),
+            dataTest: 'details-button',
+            to: this.channelDetailsLink,
+          },
+          // show kebab menu when
+          // we are listing channels
+          // or when both source and demo server urls are present and user is logged in
+          {
+            key: 'kebab-menu',
+            show:
+              this.isInChannelList ||
+              (this.loggedIn && this.channel.source_url && this.channel.demo_server_url),
+            icon: 'optionsVertical',
+            dataTest: 'menu',
+          },
+        ];
       },
       linkToChannelTree() {
         return this.loggedIn && !this.libraryMode;
@@ -345,8 +413,9 @@
           return false;
         }
       },
-      hasUnpublishedChanges() {
-        return !this.channel.last_published || this.channel.modified > this.channel.last_published;
+      showKebabMenu() {
+        const kebabConfig = this.iconConfigs.find(config => config.key === 'kebab-menu');
+        return Boolean(kebabConfig && kebabConfig.show);
       },
     },
     mounted() {
@@ -375,15 +444,22 @@
           });
         }
       },
-      goToChannelRoute() {
-        this.linkToChannelTree
-          ? (window.location.href = this.channelHref)
-          : this.$router.push(this.channelDetailsLink).catch(() => {});
+      handleChannelClick() {
+        if (!this.isInChannelList) {
+          this.$emit('show-channel-details', this.channelId);
+        }
       },
       trackTokenCopy() {
         this.$analytics.trackAction('channel_list', 'Copy token', {
           eventLabel: this.channel.primary_token,
         });
+      },
+      viewOnKolibri() {
+        if (this.channel.demo_server_url) {
+          window.open(this.channel.demo_server_url, '_blank');
+        } else if (this.channel.source_url) {
+          window.open(this.channel.source_url, '_blank');
+        }
       },
     },
     $trs: {
@@ -408,6 +484,7 @@
       channelRemovedSnackbar: 'Channel removed',
       channelLanguageNotSetIndicator: 'No language set',
       cancel: 'Cancel',
+      viewOnKolibri: 'View on Kolibri',
     },
   };
 
