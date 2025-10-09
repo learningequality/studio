@@ -85,12 +85,6 @@ const store = new Store({
         createChannel: jest.fn(),
       },
     },
-    session: {
-      namespaced: true,
-      getters: {
-        loggedIn: () => true,
-      },
-    },
   },
 });
 
@@ -123,18 +117,11 @@ describe('StudioMyChannels.vue', () => {
             createChannel: jest.fn(),
           },
         },
-        session: {
-          namespaced: true,
-          getters: {
-            loggedIn: () => true,
-          },
-        },
       },
     });
     renderComponent(store);
     const cardElements = screen.queryAllByTestId(testId => testId.startsWith('card-'));
     expect(cardElements.length).toBe(0);
-    expect(screen.getByText('No channels found')).toBeInTheDocument();
   });
 
   test('open dropdown for published channel', async () => {

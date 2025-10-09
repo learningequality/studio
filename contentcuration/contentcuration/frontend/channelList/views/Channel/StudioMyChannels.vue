@@ -2,11 +2,15 @@
 
   <div
     class="my-channels"
-    :class="{ 'studio-channel': !windowIsSmall }"
+    :class="{
+      'studio-small': windowIsSmall,
+      'studio-medium': windowIsMedium,
+      'studio-large': windowIsLarge,
+    }"
   >
     <div class="my-channels__new-channel">
       <KButton
-        v-if="isEditable && !loading"
+        v-if="!loading"
         primary
         data-test="add-channel"
         :text="$tr('channel')"
@@ -15,7 +19,7 @@
     </div>
     <div class="my-channels__body">
       <p
-        v-if="listChannels && !listChannels.length"
+        v-if="!listChannels.length && !loading"
         class="my-channels__body--no-channels"
       >
         {{ $tr('noChannelsFound') }}
@@ -23,6 +27,13 @@
       <KCardGrid
         layout="1-1-1"
         :loading="loading"
+        :skeletonsConfig="[
+          {
+            breakpoints: [0, 1, 2, 3, 4, 5, 6, 7],
+            orientation: 'vertical',
+            count: 3,
+          },
+        ]"
         class="my-channels__cards"
       >
         <KCard
@@ -39,6 +50,12 @@
           :data-testid="`card-${index}`"
           @click="goToChannelRoute(channel)"
         >
+          <template #thumbnailPlaceholder>
+            <KIcon
+              :style="{ fontSize: '48px' }"
+              icon="image"
+            />
+          </template>
           <template #belowTitle>
             <div class="my-channels__cards--below-title">
               <div class="my-channels__cards--below-title__resource">
@@ -58,13 +75,15 @@
           <template #footer>
             <div class="my-channels__cards--footer">
               <div class="my-channels__cards--footer__left">
-                <span
-                  :style="{ color: $themePalette.grey.v_700 }"
-                > 
+                <span :style="{ color: $themePalette.grey.v_700 }">
                   {{
-                    channel.last_published ? $tr('lastPublished', {
-                      last_published: $formatRelative(channel.last_published, { now: new Date() }),
-                    }) : $tr('unpublishedText')
+                    channel.last_published
+                      ? $tr('lastPublished', {
+                        last_published: $formatRelative(channel.last_published, {
+                          now: new Date(),
+                        }),
+                      })
+                      : $tr('unpublishedText')
                   }}
                 </span>
                 <div>
@@ -89,7 +108,6 @@
               </div>
               <div class="my-channels__cards--footer__right">
                 <KRouterLink
-                  v-if="!libraryMode"
                   :data-testid="`details-button-${index}`"
                   :to="channelDetailsLink(channel)"
                 >
@@ -163,11 +181,6 @@
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import Languages from 'shared/leUtils/Languages';
 
-  function listTypeValidator(value) {
-    // The value must match one of the ListTypes
-    return Object.values(ChannelListTypes).includes(value);
-  }
-
   export default {
     name: 'StudioMyChannels',
     components: {
@@ -175,17 +188,12 @@
       ChannelTokenModal,
     },
     setup() {
-      const { windowIsSmall } = useKResponsiveWindow();
+      const { windowIsSmall, windowIsMedium, windowIsLarge } = useKResponsiveWindow();
       return {
         windowIsSmall,
+        windowIsMedium,
+        windowIsLarge,
       };
-    },
-    props: {
-      listType: {
-        type: String,
-        required: true,
-        validator: listTypeValidator,
-      },
     },
     data() {
       return {
@@ -202,9 +210,6 @@
     computed: {
       ...mapGetters(['loggedIn']),
       ...mapGetters('channel', ['channels']),
-      libraryMode() {
-        return window.libraryMode;
-      },
       listChannels() {
         const channels = this.channels;
         if (!channels) {
@@ -212,19 +217,12 @@
         }
         const sortFields = ['modified'];
         const orderFields = ['desc'];
-        if (this.listType === ChannelListTypes.PUBLIC) {
-          sortFields.unshift('priority');
-          orderFields.unshift('desc');
-        }
         const data = orderBy(
-          this.channels.filter(channel => channel[this.listType] && !channel.deleted),
+          this.channels.filter(channel => channel[ChannelListTypes.EDITABLE] && !channel.deleted),
           sortFields,
           orderFields,
         );
         return data;
-      },
-      isEditable() {
-        return this.listType === ChannelListTypes.EDITABLE;
       },
 
       // channel items properties
@@ -232,21 +230,11 @@
         return this.selectedChannel.edit;
       },
       linkToChannelTree() {
-        return this.loggedIn && !this.libraryMode;
-      },
-    },
-    watch: {
-      listType(newListType) {
-        this.loadData(newListType);
-      },
-      $route(to, from) {
-        if (to.query.page !== from.query.page) {
-          this.loadData(this.listType);
-        }
+        return this.loggedIn;
       },
     },
     created() {
-      this.loadData(this.listType);
+      this.loadData();
     },
     methods: {
       ...mapActions('channel', ['loadChannelList', 'deleteChannel', 'removeViewer']),
@@ -276,9 +264,9 @@
           return false;
         }
       },
-      loadData(listType) {
+      loadData() {
         this.loading = true;
-        this.loadChannelList({ listType })
+        this.loadChannelList({ listType: ChannelListTypes.EDITABLE })
           .then(() => {
             this.loading = false;
           })
@@ -439,20 +427,42 @@
 
 <style lang="scss" scoped>
 
-  .studio-channel {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: calc(100vh - 64px - 48px); /* full height minus bottom bar and top bar */
+  .studio-small {
     .my-channels {
       &__body,
       &__new-channel {
-        width: 50%;
+        width: 100%;
+        max-width: 100%;
+      }
+    }
+  }
+
+  .studio-medium {
+    .my-channels {
+      &__body,
+      &__new-channel {
+        width: 100%;
+        max-width: 83.33%;
+      }
+    }
+  }
+
+  .studio-large {
+    .my-channels {
+      &__body,
+      &__new-channel {
+        width: 100%;
+        max-width: 50%;
       }
     }
   }
 
   .my-channels {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: calc(100vh - 64px - 48px);
+
     &__body {
       &--no-channels {
         padding: 16px 0 0 16px;
@@ -463,6 +473,7 @@
     &__new-channel {
       display: flex;
       justify-content: end;
+      margin-top: 20px;
     }
 
     &__cards {
@@ -516,7 +527,6 @@
         clip: rect(0 0 0 0);
         border: 0;
       }
-
     }
   }
 
