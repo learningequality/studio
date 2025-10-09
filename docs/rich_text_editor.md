@@ -2,11 +2,11 @@
 
 Studio has a Rich text Editor that is currently being used in the exercise editor: (questions / answers / hints)
 
-We use [TipTap](https://tiptap.dev/) that is a headless framework based on ProseMirror. It was built to replace a long lived past TOAST UI (TUI) based editor; that affected some implementation decisions to maintain backward compatibility.
+We use [TipTap](https://tiptap.dev/) that is a headless framework based on ProseMirror. It was built to replace a past long-lived Toast UI (TUI) based editor; that influenced some implementation decisions to maintain backward compatibility.
 
 Currently editor code lives in: https://github.com/learningequality/studio/tree/unstable/contentcuration/contentcuration/frontend/shared/views/TipTapEditor
 
-Another point that had an impact on our architectural decisions is that there are future plans to extract the editor to be part of Kolibri-Design-System to be used in Kolibri too. That meant keeping the editor as decoupled from the rest of the codebase as possible was very important.
+Another point that had an impact on our architectural decisions is that there are future plans to extract the editor to be part of Kolibri-Design-System to be used in Kolibri too. That meant we had to keep the editor as decoupled from the rest of the codebase as much as possible.
 
 ## Useful Links
 - Original figma design [link](https://www.figma.com/design/uw8lx88ZKZU8X7kN9SdLeo/Rich-text-editor---GSOC-2025?node-id=377-422&p=f&t=HIkJ8pF9xudcOnLd-0)
@@ -25,14 +25,13 @@ We currently have custom extensions for:
 ### How to add a custom plugin?
 This is a very high level guide, you'll still need to check the docs but make sure you check all the boxes in this list:
 1. Create a new file in
-    `contentcuration/frontend/shared/views/TipTapEditor/extensions/`
+    `TipTapEditor/extensions/`
 2. Define your node or mark using TipTap’s `Node.create()` or `Mark.create()`.
-3. Add the new extension to the editor’s extension list in `Editor.vue` or `editorExtensions.js`.
-4. If your node needs Markdown support, update the custom serializer and add tests in
-    `__tests__/markdownSerializer.spec.js`.
+3. Add the new extension to the editor’s extension list in `TipTapEditor/composables/useEditor.js`.
+4. If your node needs Markdown support, update the custom serializer in `TipTapEditor/utils/MarkdownSerializer.js` and don't forget to update the tests accordingly!
 ---
 ## Content Conversion Flow
-As mentioned above, the old content API saved markdown in the database, the following data conversion flow maintains backward compatibility by implementing dual conversion between the strcutured JSON format TipTap uses and markdown.
+The old content API saved markdown in the database, the following data conversion flow maintains backward compatibility by implementing dual conversion between the strcutured JSON format TipTap uses and markdown.
 
 We support the conversion for:
 - Standard Markdown elements previously handled by the ToastUI editor and its Showdown converter.
