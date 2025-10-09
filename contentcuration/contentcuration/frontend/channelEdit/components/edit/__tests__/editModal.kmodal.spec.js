@@ -26,7 +26,7 @@ jest.mock('shared/constants', () => ({
     UPLOAD_FILES: 'UPLOAD_FILES',
     ADD_EXERCISE: 'ADD_EXERCISE',
   },
-  TabNames: { 
+  TabNames: {
     DETAILS: 'details',
     PREVIEW: 'preview',
     QUESTIONS: 'questions',
@@ -42,7 +42,7 @@ jest.mock('shared/constants', () => ({
   ValidationErrors: {
     TITLE_REQUIRED: 'TITLE_REQUIRED',
   },
-   AccessibilityCategories: {
+  AccessibilityCategories: {
     CAPTIONS_SUBTITLES: 'captions_subtitles',
     AUDIO_DESCRIPTION: 'audio_description',
     SIGN_LANGUAGE: 'sign_language',
@@ -160,7 +160,7 @@ jest.mock('shared/views/files/FileStorage', () => ({
 
 jest.mock('shared/leUtils/FormatPresets', () => ({
   __esModule: true,
-  default: new Map(), 
+  default: new Map(),
   FormatPresetsList: [],
   FormatPresetsNames: {
     AUDIO: 'audio',
@@ -206,7 +206,6 @@ jest.mock('shared/utils/validation', () => ({
   isNodeComplete: jest.fn().mockReturnValue(true),
 }));
 
-
 // Mocking child components
 
 jest.mock('../EditView', () => ({
@@ -224,7 +223,6 @@ jest.mock('../AccessibilityOptions', () => ({
   template: '<div></div>',
 }));
 
-
 /* Test setup and configuration */
 
 const localVue = createLocalVue();
@@ -233,7 +231,7 @@ localVue.use(VueRouter);
 
 /* Vue prototype properties */
 localVue.prototype.$isRTL = false;
-localVue.prototype.$tr = (msg) => msg;
+localVue.prototype.$tr = msg => msg;
 localVue.prototype.$themeTokens = { textInverted: 'white' };
 localVue.prototype.$analytics = { trackAction: jest.fn() };
 const mockRouter = new VueRouter({
@@ -285,8 +283,8 @@ const baseModules = {
   contentNode: {
     namespaced: true,
     getters: {
-      getContentNode: () => () => ({ 
-        title: 'Test Node', 
+      getContentNode: () => () => ({
+        title: 'Test Node',
         complete: true,
         kind: 'video',
       }),
@@ -334,16 +332,14 @@ const baseModules = {
       online: true,
     },
     getters: {
-      online: (state) => state.online,
+      online: state => state.online,
     },
   },
 };
 
 let store;
 
-
 describe('EditModal KModal Dialogs', () => {
-
   beforeEach(() => {
     store = new Vuex.Store({
       getters: {
@@ -356,7 +352,6 @@ describe('EditModal KModal Dialogs', () => {
 
   /* Upload in progress dialog */
   describe('Upload in progress dialog', () => {
-
     it('should show dialog when promptUploading is true', async () => {
       render(EditModal, {
         localVue,
@@ -378,7 +373,7 @@ describe('EditModal KModal Dialogs', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByRole('heading', { name: /uploadInProgressHeader/i })
+          screen.getByRole('heading', { name: /uploadInProgressHeader/i }),
         ).toBeInTheDocument();
         expect(screen.getByText('uploadInProgressText')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'dismissDialogButton' })).toBeInTheDocument();
@@ -406,7 +401,9 @@ describe('EditModal KModal Dialogs', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: /uploadInProgressHeader/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', { name: /uploadInProgressHeader/i }),
+        ).toBeInTheDocument();
       });
 
       const cancelButton = screen.getByRole('button', { name: 'dismissDialogButton' });
@@ -414,7 +411,7 @@ describe('EditModal KModal Dialogs', () => {
 
       await waitFor(() => {
         expect(
-          screen.queryByRole('heading', { name: /uploadInProgressHeader/i })
+          screen.queryByRole('heading', { name: /uploadInProgressHeader/i }),
         ).not.toBeInTheDocument();
       });
     });
@@ -422,7 +419,6 @@ describe('EditModal KModal Dialogs', () => {
 
   /* Save failed dialog */
   describe('Save failed dialog', () => {
-
     it('should show dialog when promptFailed is true', async () => {
       render(EditModal, {
         localVue,
@@ -446,7 +442,9 @@ describe('EditModal KModal Dialogs', () => {
         expect(screen.getByRole('heading', { name: /saveFailedHeader/i })).toBeInTheDocument();
         expect(screen.getByText('saveFailedText')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: 'okButton' })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'closeWithoutSavingButton' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('button', { name: 'closeWithoutSavingButton' }),
+        ).toBeInTheDocument();
       });
     });
 
@@ -478,7 +476,7 @@ describe('EditModal KModal Dialogs', () => {
 
       await waitFor(() => {
         expect(
-          screen.queryByRole('heading', { name: /saveFailedHeader/i })
+          screen.queryByRole('heading', { name: /saveFailedHeader/i }),
         ).not.toBeInTheDocument();
       });
     });
@@ -511,7 +509,7 @@ describe('EditModal KModal Dialogs', () => {
 
       await waitFor(() => {
         expect(
-          screen.queryByRole('heading', { name: /saveFailedHeader/i })
+          screen.queryByRole('heading', { name: /saveFailedHeader/i }),
         ).not.toBeInTheDocument();
       });
     });
@@ -539,7 +537,9 @@ describe('EditModal KModal Dialogs', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: /uploadInProgressHeader/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', { name: /uploadInProgressHeader/i }),
+        ).toBeInTheDocument();
       });
 
       const exitButton = screen.getByRole('button', { name: 'cancelUploadsButton' });
@@ -547,7 +547,7 @@ describe('EditModal KModal Dialogs', () => {
 
       await waitFor(() => {
         expect(
-          screen.queryByRole('heading', { name: /uploadInProgressHeader/i })
+          screen.queryByRole('heading', { name: /uploadInProgressHeader/i }),
         ).not.toBeInTheDocument();
       });
     });
