@@ -1,47 +1,76 @@
 <template>
 
   <div>
-    <ConfirmationDialog
-      v-model="restoreDialog"
-      title="Restore channel"
-      :text="`Are you sure you want to restore ${name} and make it active again?`"
+    <KModal
+      v-if="restoreDialog"
+      :title="$tr('restoreChannelTitle')"
+      :submitText="$tr('restoreAction')"
+      :cancelText="$tr('cancelAction')"
       data-test="confirm-restore"
-      confirmButtonText="Restore"
-      @confirm="restoreHandler"
-    />
+      @submit="restoreHandler"
+      @cancel="restoreDialog = false"
+    >
+      <p
+        class="kmodal-confirmation-content"
+        :style="{ color: $themeTokens.text }"
+      >
+        {{ $tr('restoreChannelMessage', { name: name }) }}
+      </p>
+    </KModal>
 
-    <ConfirmationDialog
-      v-model="makePublicDialog"
-      title="Make channel public"
-      :text="`All users will be able to view and import content from ${name}.`"
+    <KModal
+      v-if="makePublicDialog"
+      :title="$tr('makePublicTitle')"
+      :submitText="$tr('makePublicAction')"
+      :cancelText="$tr('cancelAction')"
       data-test="confirm-public"
-      confirmButtonText="Make public"
-      @confirm="makePublicHandler"
-    />
-    <ConfirmationDialog
-      v-model="makePrivateDialog"
-      title="Make channel private"
-      :text="`Only users with view-only or edit permissions will be able to access ${name}.`"
+      @submit="makePublicHandler"
+      @cancel="makePublicDialog = false"
+    >
+      <p class="kmodal-confirmation-content">{{ $tr('makePublicMessage', { name: name }) }}</p>
+    </KModal>
+
+    <KModal
+      v-if="makePrivateDialog"
+      :title="$tr('makePrivateTitle')"
+      :submitText="$tr('makePrivateAction')"
+      :cancelText="$tr('cancelAction')"
       data-test="confirm-private"
-      confirmButtonText="Make private"
-      @confirm="makePrivateHandler"
-    />
-    <ConfirmationDialog
-      v-model="deleteDialog"
-      title="Permanently delete channel"
-      :text="`Are you sure you want to permanently delete ${name}?  This can not be undone.`"
+      @submit="makePrivateHandler"
+      @cancel="makePrivateDialog = false"
+    >
+      <p class="kmodal-confirmation-content">{{ $tr('makePrivateMessage', { name: name }) }}</p>
+    </KModal>
+
+    <KModal
+      v-if="deleteDialog"
+      :title="$tr('permanentDeleteTitle')"
+      :submitText="$tr('permanentDeleteAction')"
+      :cancelText="$tr('cancelAction')"
       data-test="confirm-delete"
-      confirmButtonText="Delete permanently"
-      @confirm="deleteHandler"
-    />
-    <ConfirmationDialog
-      v-model="softDeleteDialog"
-      title="Permanently delete channel"
-      :text="`Are you sure you want to delete ${name}?`"
+      @submit="deleteHandler"
+      @cancel="deleteDialog = false"
+    >
+      <p
+        class="kmodal-confirmation-content"
+        :style="{ color: $themeTokens.text }"
+      >
+        {{ $tr('permanentDeleteMessage', { name: name }) }}
+      </p>
+    </KModal>
+
+    <KModal
+      v-if="softDeleteDialog"
+      :title="$tr('softDeleteTitle')"
+      :submitText="$tr('softDeleteAction')"
+      :cancelText="$tr('cancelAction')"
       data-test="confirm-softdelete"
-      confirmButtonText="Delete"
-      @confirm="softDeleteHandler"
-    />
+      @submit="softDeleteHandler"
+      @cancel="softDeleteDialog = false"
+    >
+      <p class="kmodal-confirmation-content">{{ $tr('softDeleteMessage', { name: name }) }}</p>
+    </KModal>
+
     <BaseMenu>
       <template #activator="{ on }">
         <VBtn
@@ -121,15 +150,11 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import ConfirmationDialog from '../../components/ConfirmationDialog';
   import { RouteNames } from '../../constants';
   import { channelExportMixin } from 'shared/views/channel/mixins';
 
   export default {
     name: 'ChannelActionsDropdown',
-    components: {
-      ConfirmationDialog,
-    },
     mixins: [channelExportMixin],
     props: {
       channelId: {
@@ -221,9 +246,46 @@
         });
       },
     },
+    $trs: {
+      restoreChannelTitle: 'Restore channel',
+      restoreAction: 'Restore',
+      cancelAction: 'Cancel',
+      restoreChannelMessage: 'Are you sure you want to restore {name} and make it active again?',
+
+      makePublicTitle: 'Make channel public',
+      makePublicAction: 'Make public',
+      makePublicMessage: 'All users will be able to view and import content from {name}.',
+
+      makePrivateTitle: 'Make channel private',
+      makePrivateAction: 'Make private',
+      makePrivateMessage:
+        'Only users with view-only or edit permissions will be able to access {name}.',
+
+      permanentDeleteTitle: 'Permanently delete channel',
+      permanentDeleteAction: 'Delete permanently',
+      permanentDeleteMessage:
+        'Are you sure you want to permanently delete {name}? This can not be undone.',
+
+      softDeleteTitle: 'Delete channel',
+      softDeleteAction: 'Delete',
+      softDeleteMessage: 'Are you sure you want to delete {name}?',
+    },
   };
 
 </script>
 
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+
+  .kmodal-confirmation-content {
+    text-align: left;
+    white-space: normal;
+  }
+
+  ::v-deep .title {
+    font-weight: bold;
+    color: #212121;
+    text-align: left;
+  }
+
+</style>

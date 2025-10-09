@@ -73,8 +73,9 @@ describe('channelActionsDropdown', () => {
       expect(wrapper.vm.restoreDialog).toBe(true);
     });
 
-    it('confirm restore channel should call updateChannel with deleted = false', () => {
-      wrapper.findComponent('[data-test="confirm-restore"]').vm.$emit('confirm');
+    it('confirm restore channel should call updateChannel with deleted = false', async () => {
+      await wrapper.findComponent('[data-test="restore"]').trigger('click');
+      wrapper.findComponent('[data-test="confirm-restore"]').vm.$emit('submit');
       expect(mocks.updateChannel).toHaveBeenCalledWith({ id: channelId, deleted: false });
     });
 
@@ -83,8 +84,9 @@ describe('channelActionsDropdown', () => {
       expect(wrapper.vm.deleteDialog).toBe(true);
     });
 
-    it('confirm delete channel should call deleteChannel', () => {
-      wrapper.findComponent('[data-test="confirm-delete"]').vm.$emit('confirm');
+    it('confirm delete channel should call deleteChannel', async () => {
+      await wrapper.findComponent('[data-test="delete"]').trigger('click');
+      wrapper.findComponent('[data-test="confirm-delete"]').vm.$emit('submit');
       expect(mocks.deleteChannel).toHaveBeenCalledWith(channelId);
     });
   });
@@ -109,8 +111,9 @@ describe('channelActionsDropdown', () => {
       expect(wrapper.vm.makePublicDialog).toBe(true);
     });
 
-    it('confirm make public should call updateChannel with isPublic = true', () => {
-      wrapper.findComponent('[data-test="confirm-public"]').vm.$emit('confirm');
+    it('confirm make public should call updateChannel with isPublic = true', async () => {
+      await wrapper.findComponent('[data-test="public"]').trigger('click');
+      wrapper.findComponent('[data-test="confirm-public"]').vm.$emit('submit');
       expect(mocks.updateChannel).toHaveBeenCalledWith({ id: channelId, isPublic: true });
     });
 
@@ -119,8 +122,9 @@ describe('channelActionsDropdown', () => {
       expect(wrapper.vm.softDeleteDialog).toBe(true);
     });
 
-    it('confirm soft delete button should call updateChannel with deleted = true', () => {
-      wrapper.findComponent('[data-test="confirm-softdelete"]').vm.$emit('confirm');
+    it('confirm soft delete button should call updateChannel with deleted = true', async () => {
+      await wrapper.findComponent('[data-test="softdelete"]').trigger('click');
+      wrapper.findComponent('[data-test="confirm-softdelete"]').vm.$emit('submit');
       expect(mocks.updateChannel).toHaveBeenCalledWith({ id: channelId, deleted: true });
     });
   });
@@ -135,8 +139,9 @@ describe('channelActionsDropdown', () => {
       expect(wrapper.vm.makePrivateDialog).toBe(true);
     });
 
-    it('confirm make private should call updateChannel with isPublic = false', () => {
-      wrapper.findComponent('[data-test="confirm-private"]').vm.$emit('confirm');
+    it('confirm make private should call updateChannel with isPublic = false', async () => {
+      await wrapper.findComponent('[data-test="private"]').trigger('click');
+      wrapper.findComponent('[data-test="confirm-private"]').vm.$emit('submit');
       expect(mocks.updateChannel).toHaveBeenCalledWith({ id: channelId, isPublic: false });
     });
   });
