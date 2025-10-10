@@ -1,7 +1,7 @@
 <template>
 
   <VContainer
-    class="pt-3 px-2"
+    class="pt-2 px-2"
     fluid
   >
     <VChip

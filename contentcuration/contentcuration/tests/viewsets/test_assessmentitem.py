@@ -407,6 +407,39 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             new_question,
         )
 
+    def test_update_assessmentitem_to_true_false(self):
+
+        assessmentitem = models.AssessmentItem.objects.create(
+            **self.assessmentitem_db_metadata
+        )
+        new_answers = json.dumps(
+            [
+                {"answer": "True", "correct": True, "order": 1},
+                {"answer": "False", "correct": False, "order": 2},
+            ]
+        )
+
+        self.client.force_authenticate(user=self.user)
+        response = self.sync_changes(
+            [
+                generate_update_event(
+                    [assessmentitem.contentnode_id, assessmentitem.assessment_id],
+                    ASSESSMENTITEM,
+                    {"type": "true_false", "answers": new_answers},
+                    channel_id=self.channel.id,
+                )
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(
+            models.AssessmentItem.objects.get(id=assessmentitem.id).answers,
+            new_answers,
+        )
+        self.assertEqual(
+            models.AssessmentItem.objects.get(id=assessmentitem.id).type,
+            "true_false",
+        )
+
     def test_attempt_update_missing_assessmentitem(self):
 
         self.client.force_authenticate(user=self.user)

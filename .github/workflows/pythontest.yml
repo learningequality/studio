@@ -68,7 +68,7 @@ jobs:
                     -e "MINIO_ROOT_USER=development" \
                     -e "MINIO_ROOT_PASSWORD=development" \
                     -e "MINIO_DEFAULT_BUCKETS=content:public" \
-                    bitnami/minio:2024.5.28
+                    bitnamilegacy/minio:2024.5.28
     - name: Set up Python 3.10
       uses: actions/setup-python@v6
       with:
