@@ -177,9 +177,9 @@
 
     <NewTopicModal
       v-if="showNewTopicModal"
-      v-model="showNewTopicModal"
       data-test="newtopicmodal"
       @createTopic="createTopic"
+      @cancelCreateTopic="showNewTopicModal = false"
     />
   </FullscreenModal>
 

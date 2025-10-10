@@ -1,6 +1,7 @@
 <template>
 
   <VCard
+    ref="card"
     hover
     :to="channelRoute"
   >
@@ -104,6 +105,14 @@
           },
           query: this.$route.query,
         };
+      },
+    },
+    methods: {
+      /**
+       * @public
+       */
+      focus() {
+        this.$refs.card.$el.focus();
       },
     },
     $trs: {

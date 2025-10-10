@@ -1,6 +1,7 @@
 <template>
 
   <VCard
+    ref="card"
     hover
     @click="handleClick"
   >
@@ -187,6 +188,12 @@
         } else {
           this.$emit('preview');
         }
+      },
+      /**
+       * @public
+       */
+      focus() {
+        this.$refs.card.$el.focus();
       },
     },
     $trs: {

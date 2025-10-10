@@ -178,7 +178,7 @@
           }),
         );
         /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
-        await this.showSnackbarSimple(commonStrings.$tr('changesSaved'));
+        this.showSnackbarSimple(commonStrings.$tr('changesSaved'));
         this.close(this.changed);
       },
       showSnackbarSimple(message) {

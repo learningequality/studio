@@ -220,6 +220,10 @@ export function createContentNode(context, { parent, kind, ...payload }) {
     ...payload,
   };
 
+  if (kind === ContentKindsNames.EXERCISE) {
+    contentNodeData.extra_fields.randomize = true;
+  }
+
   contentNodeData.complete = isNodeComplete({
     nodeDetails: contentNodeData,
     assessmentItems: [],

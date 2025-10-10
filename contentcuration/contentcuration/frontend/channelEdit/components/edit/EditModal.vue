@@ -129,36 +129,25 @@
         </Uploader>
       </VCard>
       <BottomBar v-if="!loading && !loadError && !showFileUploadDefault">
-        <VLayout
-          row
-          align-center
-          fill-height
-          class="px-2"
+        <FileStorage
+          v-if="showStorage"
+          class="mx-2"
+        />
+        <VSpacer />
+        <div
+          v-if="online"
+          class="mt-1 py-3"
         >
-          <VFlex
-            v-if="showStorage"
-            shrink
+          <SavingIndicator :nodeIds="nodeIds" />
+        </div>
+        <div>
+          <VBtn
+            color="primary"
+            @click="handleClose()"
           >
-            <FileStorage />
-          </VFlex>
-          <VSpacer />
-          <VFlex
-            v-if="online"
-            shrink
-          >
-            <div class="mt-1 py-3">
-              <SavingIndicator :nodeIds="nodeIds" />
-            </div>
-          </VFlex>
-          <VFlex shrink>
-            <VBtn
-              color="primary"
-              @click="handleClose()"
-            >
-              {{ $tr('finishButton') }}
-            </VBtn>
-          </VFlex>
-        </VLayout>
+            {{ $tr('finishButton') }}
+          </VBtn>
+        </div>
       </BottomBar>
       <InheritAncestorMetadataModal
         ref="inheritModal"

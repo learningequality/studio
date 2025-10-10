@@ -36,6 +36,7 @@
         <VFlex shrink>
           <Checkbox
             :key="`checkbox-${node.id}`"
+            :ref="setFirstCardCheckboxRef"
             :inputValue="isSelected(node)"
             :disabled="ancestorIsSelected"
             @input="toggleSelected(node)"
@@ -108,6 +109,7 @@
         loading: false,
         more: null,
         moreLoading: false,
+        firstCardCheckboxRef: null,
       };
     },
     computed: {
@@ -184,6 +186,7 @@
       ...mapActions('contentNode', ['loadChildren', 'loadAncestors', 'loadContentNodes']),
       loadData() {
         this.loading = true;
+        this.firstCardCheckboxRef = null;
         const params = {
           complete: true,
         };
@@ -201,6 +204,8 @@
           this.loadAncestors({ id: this.topicId }),
         ]).then(() => {
           this.loading = false;
+          // scroll to top via focus
+          this.$nextTick(() => this.focus());
         });
       },
       /**
@@ -225,6 +230,19 @@
             this.more = response.more || null;
             this.moreLoading = false;
           });
+        }
+      },
+      setFirstCardCheckboxRef(ref) {
+        if (!this.firstCardCheckboxRef) {
+          this.firstCardCheckboxRef = ref;
+        }
+      },
+      /**
+       * @public
+       */
+      focus() {
+        if (this.firstCardCheckboxRef) {
+          this.firstCardCheckboxRef.focus();
         }
       },
     },

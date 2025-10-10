@@ -1,83 +1,50 @@
 <template>
 
-  <MessageDialog
-    v-model="dialog"
-    :header="$tr('createTopic')"
+  <KModal
+    :title="$tr('createTopic')"
+    :cancelText="$tr('cancel')"
+    :submitText="$tr('create')"
+    data-test="newtopicmodal"
+    @cancel="cancel"
+    @submit="create"
   >
-    <VForm
-      ref="form"
-      lazy-validation
-      @submit.prevent="create"
-    >
-      <VTextField
-        v-model="title"
-        maxlength="200"
-        counter
-        :label="$tr('topicTitle')"
-        box
-        :rules="titleRules"
-        required
-      />
-    </VForm>
-    <template #buttons="{ close }">
-      <VBtn
-        flat
-        data-test="close"
-        @click="close"
-      >
-        {{ $tr('cancel') }}
-      </VBtn>
-      <VBtn
-        color="primary"
-        data-test="create"
-        @click="create"
-      >
-        {{ $tr('create') }}
-      </VBtn>
-    </template>
-  </MessageDialog>
+    <KTextbox
+      ref="title"
+      v-model="title"
+      :label="$tr('topicTitle')"
+      :maxlength="200"
+      :invalid="showErrorText"
+      :invalidText="titleError"
+      :showInvalidText="showErrorText"
+    />
+  </KModal>
 
 </template>
 
 
 <script>
 
-  import MessageDialog from 'shared/views/MessageDialog';
-
   export default {
     name: 'NewTopicModal',
-    components: {
-      MessageDialog,
-    },
-    props: {
-      value: {
-        type: Boolean,
-        default: false,
-      },
-    },
     data() {
       return {
         title: '',
+        titleError: null,
+        showErrorText: false,
       };
-    },
-    computed: {
-      dialog: {
-        get() {
-          return this.value;
-        },
-        set(value) {
-          this.$emit('input', value);
-        },
-      },
-      titleRules() {
-        return [v => !!v || this.$tr('topicTitleRequired')];
-      },
     },
     methods: {
       create() {
-        if (this.$refs.form.validate()) {
+        if (!this.title) {
+          this.titleError = this.$tr('topicTitleRequired');
+          this.showErrorText = true;
+          this.$refs.title.focus();
+        } else {
           this.$emit('createTopic', this.title);
         }
+      },
+      cancel() {
+        this.$emit('cancelCreateTopic');
       },
     },
     $trs: {

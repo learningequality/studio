@@ -45,6 +45,7 @@ class Mn(MathMLTokenElement):
 
 
 class Mo(MathMLTokenElement):
+    accent: Optional[bool] = None
     fence: Optional[bool] = None
     form: Optional[MathMLForm] = None
     largeop: Optional[bool] = None

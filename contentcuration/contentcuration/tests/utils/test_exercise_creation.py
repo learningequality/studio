@@ -728,6 +728,86 @@ class TestPerseusExerciseCreation(StudioTestCase):
         # we are deliberately changing the archive generation algorithm for perseus files.
         self.assertEqual(exercise_file.checksum, "94de065d485e52d56c3032074044e7c3")
 
+    def test_image_key_full_path_regression(self):
+        """Regression test for image key containing full path in Perseus files.
+
+        This test ensures that the 'images' object in Perseus JSON files uses the full path
+        as the key (${IMG_PLACEHOLDER}/images/filename.ext) rather than just the filename.
+
+        Bug: The image key in the 'images' object was being set to just the filename
+        instead of the full path with IMG_PLACEHOLDER prefix.
+        """
+        # Create an image file
+        image_file = fileobj_exercise_image()
+
+        # Create a question with image that has dimensions (to trigger images object generation)
+        image_url = exercises.CONTENT_STORAGE_FORMAT.format(image_file.filename())
+        question_text = f"Identify the shape: ![shape]({image_url} =100x100)"
+        item = self._create_assessment_item(
+            exercises.SINGLE_SELECTION,
+            question_text,
+            [
+                {"answer": "Circle", "correct": True, "order": 1},
+                {"answer": "Square", "correct": False, "order": 2},
+            ],
+        )
+
+        # Associate the image with the assessment item
+        image_file.assessment_item = item
+        image_file.save()
+
+        # Create the exercise data
+        exercise_data = {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": 1,
+            "m": 1,
+            "all_assessment_items": [item.assessment_id],
+            "assessment_mapping": {item.assessment_id: exercises.SINGLE_SELECTION},
+        }
+
+        # Create the Perseus exercise
+        self._create_perseus_zip(exercise_data)
+
+        # Verify that a file was created
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
+
+        # Validate the zip file
+        zip_file, _ = self._validate_perseus_zip(exercise_file)
+
+        # Get the Perseus item JSON content
+        item_json = json.loads(
+            zip_file.read(f"{item.assessment_id}.json").decode("utf-8")
+        )
+
+        # The critical regression check: images object keys should contain full path
+        question_images = item_json["question"]["images"]
+
+        # Should have exactly one image entry
+        self.assertEqual(
+            len(question_images),
+            1,
+            f"Expected 1 image in images object, got {len(question_images)}: {list(question_images.keys())}",
+        )
+
+        # Get the image key from the images object
+        image_key = list(question_images.keys())[0]
+
+        # The key should be the full path, not just the filename
+        expected_full_path = (
+            f"${exercises.IMG_PLACEHOLDER}/images/{image_file.filename()}"
+        )
+        self.assertEqual(
+            image_key,
+            expected_full_path,
+            f"Image key should be '{expected_full_path}' but got: '{image_key}'",
+        )
+
+        # Verify the image has the expected dimensions
+        image_data = question_images[image_key]
+        self.assertEqual(image_data["width"], 100)
+        self.assertEqual(image_data["height"], 100)
+
     def _test_image_resizing_in_field(self, field_type):
         """
         Helper method to test image resizing in different fields (question, answer, hint)
@@ -903,6 +983,15 @@ class TestPerseusExerciseCreation(StudioTestCase):
             image_sizes[1],
             "Different sized images should have different file sizes",
         )
+
+        # Verify that the dimensions have been stripped from the markdown
+        for file_name in unique_image_files:
+            # Because we can't predict the set ordering, just confirm that
+            # neither dimension descriptor is applied.
+            first_file = f"{file_name} =200x150"
+            self.assertNotIn(first_file, content)
+            second_file = f"{file_name} =100x75"
+            self.assertNotIn(second_file, content)
 
     def test_image_resizing_in_question(self):
         """Test image resizing functionality in question content"""
@@ -1428,6 +1517,52 @@ class TestQTIExerciseCreation(StudioTestCase):
             self._normalize_xml(actual_item_xml),
         )
 
+    def test_free_response_question_no_answers(self):
+        assessment_id = "fedcba0987654321fedcba0987654321"
+        item = self._create_assessment_item(
+            exercises.FREE_RESPONSE,
+            "What is the capital of France?",
+            [],
+            assessment_id=assessment_id,
+        )
+
+        exercise_data = {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": 1,
+            "m": 1,
+            "all_assessment_items": [item.assessment_id],
+            "assessment_mapping": {item.assessment_id: exercises.FREE_RESPONSE},
+        }
+
+        self._create_qti_zip(exercise_data)
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+
+        # Check the QTI XML for text entry specifics
+        expected_item_file = "items/K_ty6CYdlQyH-3LoJh2VDIQ.xml"
+        actual_item_xml = zip_file.read(expected_item_file).decode("utf-8")
+
+        # Expected QTI item XML content for text entry
+        expected_item_xml = """<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqtiasi_v3p0 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqti_asiv3p0p1_v1p0.xsd" identifier="K_ty6CYdlQyH-3LoJh2VDIQ" title="Test QTI Exercise 1" adaptive="false" time-dependent="false" language="en-US" tool-name="kolibri" tool-version="0.1">
+    <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string" />
+    <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float" />
+    <qti-item-body>
+        <div>
+            <p>What is the capital of France?</p>
+            <p><qti-text-entry-interaction response-identifier="RESPONSE" expected-length="50" placeholder-text="Enter your answer here" /></p>
+        </div>
+    </qti-item-body>
+    <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct" />
+</qti-assessment-item>"""
+
+        # Compare normalized XML
+        self.assertEqual(
+            self._normalize_xml(expected_item_xml),
+            self._normalize_xml(actual_item_xml),
+        )
+
     def test_free_response_question_with_maths(self):
         assessment_id = "fedcba0987654321fedcba0987654321"
         item = self._create_assessment_item(
@@ -1917,4 +2052,58 @@ class TestQTIExerciseCreation(StudioTestCase):
         self.assertEqual(
             self._normalize_xml(expected_manifest_xml),
             self._normalize_xml(actual_manifest_xml),
+        )
+
+    def test_input_question(self):
+        assessment_id = "fedcba0987654321fedcba0987654321"
+        item = self._create_assessment_item(
+            exercises.INPUT_QUESTION,
+            "What positive integers are less than 3?",
+            [
+                {"answer": 1, "correct": True, "order": 1},
+                {"answer": 2, "correct": True, "order": 2},
+            ],
+            assessment_id=assessment_id,
+        )
+
+        exercise_data = {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": 1,
+            "m": 1,
+            "all_assessment_items": [item.assessment_id],
+            "assessment_mapping": {item.assessment_id: exercises.INPUT_QUESTION},
+        }
+
+        self._create_qti_zip(exercise_data)
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+
+        # Check the QTI XML for text entry specifics
+        expected_item_file = "items/K_ty6CYdlQyH-3LoJh2VDIQ.xml"
+        actual_item_xml = zip_file.read(expected_item_file).decode("utf-8")
+
+        # Expected QTI item XML content for text entry
+        expected_item_xml = """<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqtiasi_v3p0 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqti_asiv3p0p1_v1p0.xsd" identifier="K_ty6CYdlQyH-3LoJh2VDIQ" title="Test QTI Exercise 1" adaptive="false" time-dependent="false" language="en-US" tool-name="kolibri" tool-version="0.1">
+    <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="float">
+        <qti-correct-response>
+            <qti-value>1</qti-value>
+            <qti-value>2</qti-value>
+        </qti-correct-response>
+    </qti-response-declaration>
+    <qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float" />
+    <qti-item-body>
+        <div>
+            <p>What positive integers are less than 3?</p>
+            <p><qti-text-entry-interaction response-identifier="RESPONSE" expected-length="50" placeholder-text="Enter your answer here" /></p>
+        </div>
+    </qti-item-body>
+    <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct" />
+</qti-assessment-item>"""
+
+        # Compare normalized XML
+        self.assertEqual(
+            self._normalize_xml(expected_item_xml),
+            self._normalize_xml(actual_item_xml),
         )

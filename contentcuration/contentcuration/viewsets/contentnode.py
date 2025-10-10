@@ -297,6 +297,7 @@ class ExtraFieldsOptionsSerializer(JSONFieldDictSerializer):
         required=False,
     )
     completion_criteria = CompletionCriteriaSerializer(required=False)
+    entry = CharField(required=False, allow_null=True)
 
 
 class InheritedMetadataSerializer(JSONFieldDictSerializer):
@@ -307,7 +308,7 @@ class InheritedMetadataSerializer(JSONFieldDictSerializer):
 
 
 class ExtraFieldsSerializer(JSONFieldDictSerializer):
-    randomize = BooleanField()
+    randomize = BooleanField(required=False)
     options = ExtraFieldsOptionsSerializer(required=False)
     suggested_duration_type = ChoiceField(
         choices=[completion_criteria.TIME, completion_criteria.APPROX_TIME],
@@ -428,11 +429,38 @@ class ContentNodeSerializer(BulkModelSerializer):
             raise ValidationError(
                 {"parent": "This field should only be changed by a move operation"}
             )
+
+        # Prevent kind from being changed after creation
+        if (
+            self.instance is not None
+            and "kind" in data
+            and self.instance.kind != data["kind"]
+        ):
+            raise ValidationError(
+                {"kind": "Content kind cannot be changed after creation"}
+            )
+
         tags = data.get("tags")
         if tags is not None:
             for tag in tags:
                 if len(tag) > 30:
                     raise ValidationError("tag is greater than 30 characters")
+
+        # Conditional validation for randomize field on exercise creation
+        if self.instance is None:  # Only validate on creation
+            kind = data.get("kind")
+            if kind.kind == content_kinds.EXERCISE:
+                extra_fields = data.get("extra_fields", {})
+                if "randomize" not in extra_fields:
+                    raise ValidationError(
+                        {
+                            "extra_fields": {
+                                "randomize": [
+                                    "This field is required for exercise content."
+                                ]
+                            }
+                        }
+                    )
         return data
 
     def _check_completion_criteria(self, kind, complete, validated_data):

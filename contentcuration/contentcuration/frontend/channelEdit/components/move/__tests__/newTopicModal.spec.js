@@ -18,33 +18,88 @@ describe('newTopicModal', () => {
   beforeEach(() => {
     wrapper = makeWrapper();
   });
-  it('dialog should reflect v-model value', async () => {
-    expect(wrapper.vm.dialog).toBe(true);
-    wrapper.setProps({ value: false });
-    await wrapper.vm.$nextTick();
-    expect(wrapper.vm.dialog).toBe(false);
+
+  it('renders correctly with default data', () => {
+    expect(wrapper.find('[data-test="newtopicmodal"]').exists()).toBe(true);
+    expect(wrapper.vm.title).toBe('');
+    expect(wrapper.vm.showErrorText).toBe(false);
   });
-  it('create button should validate form', async () => {
-    wrapper.find('[data-test="create"]').trigger('click');
-    await wrapper.vm.$nextTick();
-    expect(wrapper.findComponent({ ref: 'form' }).vm.value).toBe(false);
+
+  it('displays modal with required props', () => {
+    const modal = wrapper.findComponent({ name: 'KModal' });
+    expect(modal.props('title')).toBeDefined();
+    expect(modal.props('title').length).toBeGreaterThan(0);
+    expect(modal.props('cancelText')).toBeDefined();
+    expect(modal.props('submitText')).toBeDefined();
+  });
+
+  it('updates title when user types in textbox', async () => {
+    const testInput = 'Test Topic';
+    const textbox = wrapper.findComponent({ name: 'KTextbox' });
+    await textbox.vm.$emit('input', testInput);
+    expect(wrapper.vm.title).toBe(testInput);
+  });
+
+  it('shows error state when creating topic with empty title', async () => {
+    wrapper.setData({ title: '' });
+    await wrapper.vm.create();
+    expect(wrapper.vm.titleError).toBeDefined();
+    expect(wrapper.vm.titleError.length).toBeGreaterThan(0);
+    expect(wrapper.vm.showErrorText).toBe(true);
+  });
+
+  it('emits createTopic event with provided title', async () => {
+    const testTitle = 'Valid Topic Title';
+    wrapper.setData({ title: testTitle });
+    await wrapper.vm.create();
+    expect(wrapper.emitted('createTopic')).toBeTruthy();
+    expect(wrapper.emitted('createTopic')[0]).toEqual([testTitle]);
+  });
+
+  it('does not emit createTopic event when title is empty', async () => {
+    wrapper.setData({ title: '' });
+    await wrapper.vm.create();
     expect(wrapper.emitted('createTopic')).toBeFalsy();
   });
-  it('create button should emit createTopic event if valid', async () => {
-    wrapper.setData({ title: 'test title' });
-    await wrapper.vm.$nextTick();
-    wrapper.findComponent('[data-test="create"]').trigger('click');
-    await wrapper.vm.$nextTick();
-    expect(wrapper.emitted('createTopic')[0][0]).toBe('test title');
+
+  it('emits cancelCreateTopic event when cancel is called', async () => {
+    await wrapper.vm.cancel();
+    expect(wrapper.emitted('cancelCreateTopic')).toBeTruthy();
   });
-  it('close button should emit input event with false value', async () => {
-    wrapper.findComponent('[data-test="close"]').trigger('click');
-    await wrapper.vm.$nextTick();
-    expect(wrapper.emitted('input')[0][0]).toBe(false);
+
+  it('focuses title input when validation fails', async () => {
+    const focusSpy = jest.spyOn(wrapper.vm.$refs.title, 'focus');
+    wrapper.setData({ title: '' });
+    await wrapper.vm.create();
+    expect(focusSpy).toHaveBeenCalled();
   });
-  it('closing modal should clear title', async () => {
-    wrapper.findComponent('[data-test="close"]').trigger('click');
-    await wrapper.vm.$nextTick();
-    expect(wrapper.vm.title).toBe('');
+
+  it('configures textbox with correct constraints', () => {
+    const textbox = wrapper.findComponent({ name: 'KTextbox' });
+    expect(textbox.props('label')).toBeDefined();
+    expect(textbox.props('maxlength')).toBe(200);
+  });
+
+  it('shows invalid state on textbox when error occurs', async () => {
+    const textbox = wrapper.findComponent({ name: 'KTextbox' });
+    wrapper.setData({ title: '' });
+    await wrapper.vm.create();
+    expect(textbox.props('invalid')).toBe(true);
+    expect(textbox.props('showInvalidText')).toBe(true);
+    expect(textbox.props('invalidText')).toBeDefined();
+  });
+
+  it('clears error state when valid title is provided', async () => {
+    // Invalid title
+    wrapper.setData({ title: '' });
+    await wrapper.vm.create();
+    expect(wrapper.vm.showErrorText).toBe(true);
+
+    // Valid title
+    const validTitle = 'Valid Title';
+    wrapper.setData({ title: validTitle });
+    await wrapper.vm.create();
+    expect(wrapper.emitted('createTopic')).toBeTruthy();
+    expect(wrapper.emitted('createTopic')[0]).toEqual([validTitle]);
   });
 });

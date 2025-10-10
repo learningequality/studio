@@ -84,62 +84,47 @@
         data-test="toolbar"
         :appearanceOverrides="{ height: $vuetify.breakpoint.xsOnly ? '72px' : '56px' }"
       >
-        <VLayout
-          row
-          wrap
-          align-center
-        >
-          <VFlex
-            xs12
-            sm4
-            class="pb-1"
+        <div class="mx-2">
+          {{ $tr('channelSelectionCount', { count: selectedCount }) }}
+        </div>
+        <VSpacer />
+        <div>
+          <VBtn
+            flat
+            data-test="cancel"
+            class="ma-0"
+            @click="setSelection(false)"
           >
-            {{ $tr('channelSelectionCount', { count: selectedCount }) }}
-          </VFlex>
-          <VFlex
-            xs12
-            sm8
-          >
-            <VLayout row>
-              <VSpacer />
-              <VBtn
-                flat
-                data-test="cancel"
-                class="ma-0"
-                @click="setSelection(false)"
-              >
-                {{ $tr('cancelButton') }}
-              </VBtn>
-              <BaseMenu top>
-                <template #activator="{ on }">
-                  <VBtn
-                    color="primary"
-                    class="ma-0 mx-2"
-                    v-on="on"
-                  >
-                    {{ $tr('downloadButton') }}
-                    <Icon
-                      class="ml-1"
-                      icon="dropup"
-                      :color="$themeTokens.textInverted"
-                    />
-                  </VBtn>
-                </template>
-                <VList>
-                  <VListTile @click="downloadPDF">
-                    <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
-                  </VListTile>
-                  <VListTile
-                    data-test="download-csv"
-                    @click="downloadCSV"
-                  >
-                    <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
-                  </VListTile>
-                </VList>
-              </BaseMenu>
-            </VLayout>
-          </VFlex>
-        </VLayout>
+            {{ $tr('cancelButton') }}
+          </VBtn>
+        </div>
+        <BaseMenu top>
+          <template #activator="{ on }">
+            <VBtn
+              color="primary"
+              class="ma-0 mx-2"
+              v-on="on"
+            >
+              {{ $tr('downloadButton') }}
+              <Icon
+                class="ml-1"
+                icon="dropup"
+                :color="$themeTokens.textInverted"
+              />
+            </VBtn>
+          </template>
+          <VList>
+            <VListTile @click="downloadPDF">
+              <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
+            </VListTile>
+            <VListTile
+              data-test="download-csv"
+              @click="downloadCSV"
+            >
+              <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
+            </VListTile>
+          </VList>
+        </BaseMenu>
       </BottomBar>
     </VContainer>
   </div>

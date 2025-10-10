@@ -44,6 +44,7 @@
     <div v-else>
       <ChannelInfoCard
         v-for="channel in channels"
+        :ref="setFirstChannelCardRef"
         :key="channel.id"
         :channel="channel"
         class="mb-3"
@@ -87,6 +88,7 @@
         channels: [],
         pageCount: 0,
         loading: false,
+        firstChannelCardRef: null,
       };
     },
     computed: {
@@ -131,6 +133,7 @@
       ...mapActions('importFromChannels', ['loadChannels']),
       loadPage() {
         this.loading = true;
+        this.firstChannelCardRef = null;
         this.loadChannels({
           languages: this.languageFilter,
           [this.channelFilter]: true,
@@ -143,6 +146,19 @@
           this.channels = page.results;
           this.loading = false;
         });
+      },
+      setFirstChannelCardRef(ref) {
+        if (!this.firstChannelCardRef) {
+          this.firstChannelCardRef = ref;
+        }
+      },
+      /**
+       * @public
+       */
+      focus() {
+        if (this.firstChannelCardRef) {
+          this.firstChannelCardRef.focus();
+        }
       },
     },
     $trs: {

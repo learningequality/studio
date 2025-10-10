@@ -1311,6 +1311,30 @@ class NodeCompletionTestCase(StudioTestCase):
         new_obj.mark_complete()
         self.assertTrue(new_obj.complete)
 
+    def test_create_exercise_valid_assessment_item_true_false(self):
+        licenses = list(
+            License.objects.filter(
+                copyright_holder_required=False, is_custom=False
+            ).values_list("pk", flat=True)
+        )
+        channel = testdata.channel()
+        new_obj = ContentNode(
+            title="yes",
+            kind_id=content_kinds.EXERCISE,
+            parent=channel.main_tree,
+            license_id=licenses[0],
+            extra_fields=self.new_extra_fields,
+        )
+        new_obj.save()
+        AssessmentItem.objects.create(
+            contentnode=new_obj,
+            question="True?",
+            answers='[{"answer":"True","correct":true,"order":1},{"answer":"False","correct":false,"order":2}]',
+            type="true_false",
+        )
+        new_obj.mark_complete()
+        self.assertTrue(new_obj.complete)
+
     def test_create_exercise_valid_assessment_items(self):
         licenses = list(
             License.objects.filter(

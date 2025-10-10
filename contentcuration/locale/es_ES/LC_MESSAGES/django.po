@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kolibri-studio\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-08-30 18:12+0000\n"
-"PO-Revision-Date: 2024-09-20 20:08\n"
+"POT-Creation-Date: 2025-09-03 19:45+0000\n"
+"PO-Revision-Date: 2025-09-12 13:59\n"
 "Last-Translator: \n"
 "Language-Team: Spanish\n"
 "Language: es_ES\n"
@@ -14,51 +14,51 @@ msgstr ""
 "X-Crowdin-Project: kolibri-studio\n"
 "X-Crowdin-Project-ID: 286000\n"
 "X-Crowdin-Language: es-ES\n"
-"X-Crowdin-File: /unstable/django.po\n"
-"X-Crowdin-File-ID: 4322\n"
+"X-Crowdin-File: /search-recommendations-closed-beta/django.po\n"
+"X-Crowdin-File-ID: 4886\n"
 
 #: contentcuration/catalog_settings.py:4 contentcuration/sandbox_settings.py:8
-#: contentcuration/settings.py:289
+#: contentcuration/settings.py:271
 msgid "Arabic"
 msgstr "Árabe"
 
-#: contentcuration/middleware/db_readonly.py:24
+#: contentcuration/middleware/db_readonly.py:25
 msgid "The site is currently in read-only mode. Please try again later."
-msgstr "El sitio está actualmente en modo de solo lectura. Por favor, inténtelo más tarde."
+msgstr "La plataforma está actualmente en modo de solo lectura. Por favor, inténtelo más tarde."
 
-#: contentcuration/models.py:295
+#: contentcuration/models.py:342
 msgid "Not enough space. Check your storage under Settings page."
 msgstr "No hay suficiente espacio. Compruebe el almacenamiento disponible en la página de Configuración."
 
-#: contentcuration/models.py:312 contentcuration/models.py:319
+#: contentcuration/models.py:374 contentcuration/models.py:386
 msgid "Out of storage! Request more space under Settings > Storage."
 msgstr "El espacio de almacenamiento es insuficiente. Solicite más espacio en Configuración > Almacenamiento."
 
-#: contentcuration/models.py:1767
+#: contentcuration/models.py:2155
 msgid " (Original)"
 msgstr " (Original)"
 
-#: contentcuration/models.py:2657
+#: contentcuration/models.py:3297
 msgid "Created DateTime"
-msgstr ""
+msgstr "Fecha y hora de creación"
 
-#: contentcuration/models.py:2658
+#: contentcuration/models.py:3299
 msgid "Datetime field when the custom_metadata for task was created in UTC"
-msgstr ""
+msgstr "Campo de fecha cuando el custom_metadata para la tarea fue creado en UTC"
 
-#: contentcuration/settings.py:287
+#: contentcuration/settings.py:269
 msgid "English"
 msgstr "Inglés"
 
-#: contentcuration/settings.py:288
+#: contentcuration/settings.py:270
 msgid "Spanish"
 msgstr "Español"
 
-#: contentcuration/settings.py:290
+#: contentcuration/settings.py:272
 msgid "French"
 msgstr "Francés"
 
-#: contentcuration/settings.py:291
+#: contentcuration/settings.py:273
 msgid "Portuguese"
 msgstr "Portugués"
 
@@ -594,128 +594,128 @@ msgstr "Para usar Kolibri Studio, recomendamos usar Firefox o Chrome."
 msgid "You can also try updating your current browser."
 msgstr "También puedes actualizar tu navegador actual."
 
-#: contentcuration/templatetags/license_tags.py:11
+#: contentcuration/templatetags/license_tags.py:13
 msgid "The Attribution License lets others distribute, remix, tweak, and build upon your work, even commercially, as long as they credit you for the original creation. This is the most accommodating of licenses offered. Recommended for maximum dissemination and use of licensed materials."
 msgstr "La Licencia de Atribución permite a otros distribuir, remezclar, retocar, y crear a partir de tu obra, incluso con fines comerciales, siempre y cuando te den crédito por la creación original. Esta es la más flexible de las licencias ofrecidas. Se recomienda para la máxima difusión y utilización de los materiales licenciados."
 
-#: contentcuration/templatetags/license_tags.py:16
+#: contentcuration/templatetags/license_tags.py:20
 msgid "The Attribution-ShareAlike License lets others remix, tweak, and build upon your work even for commercial purposes, as long as they credit you and license their new creations under the identical terms. This license is often compared to \"copyleft\" free and open source software licenses. All new works based on yours will carry the same license, so any derivatives will also allow commercial use. This is the license used by Wikipedia, and is recommended for materials that would benefit from incorporating content from Wikipedia and similarly licensed projects."
 msgstr "La Licencia de Atribución-CompartirIgual permite a otros remezclar, retocar, y crear a partir de tu obra, incluso con fines comerciales, siempre y cuando te den crédito y licencien sus nuevas creaciones bajo las mismas condiciones. Esta licencia suele ser comparada con las licencias \"copyleft\" de software libre y de código abierto. Todas las nuevas obras basadas en la tuya portarán la misma licencia, así que cualesquiera obras derivadas permitirán también el uso comercial. Esa es la licencia que usa Wikipedia, y se recomienda para materiales que se beneficiarían de la incorporación de contenido de Wikipedia y de proyectos con licencias similares."
 
-#: contentcuration/templatetags/license_tags.py:26
+#: contentcuration/templatetags/license_tags.py:32
 msgid "The Attribution-NoDerivs License allows for redistribution, commercial and non-commercial, as long as it is passed along unchanged and in whole, with credit to you."
 msgstr "La Licencia de Atribución-SinDerivadas permite la redistribución, comercial o no comercial, siempre y cuando la obra circule íntegra y sin cambios, dándote crédito."
 
-#: contentcuration/templatetags/license_tags.py:29
+#: contentcuration/templatetags/license_tags.py:37
 msgid "The Attribution-NonCommercial License lets others remix, tweak, and build upon your work non-commercially, and although their new works must also acknowledge you and be non-commercial, they don't have to license their derivative works on the same terms."
 msgstr "La Licencia de Atribución-NoComercial permite a otros distribuir, remezclar, retocar, y crear a partir de tu obra de manera no comercial y, a pesar de que sus nuevas obras deben siempre mencionarte y mantenerse sin fines comerciales, no están obligados a licenciar sus obras derivadas bajo las mismas condiciones."
 
-#: contentcuration/templatetags/license_tags.py:33
+#: contentcuration/templatetags/license_tags.py:43
 msgid "The Attribution-NonCommercial-ShareAlike License lets others remix, tweak, and build upon your work non-commercially, as long as they credit you and license their new creations under the identical terms."
 msgstr "La Licencia de Atribución-NoComercial-CompartirIgual permite a otros distribuir, remezclar, retocar, y crear a partir de tu obra de modo no comercial, siempre y cuando te den crédito y licencien sus nuevas creaciones bajo las mismas condiciones."
 
-#: contentcuration/templatetags/license_tags.py:37
+#: contentcuration/templatetags/license_tags.py:49
 msgid "The Attribution-NonCommercial-NoDerivs License is the most restrictive of our six main licenses, only allowing others to download your works and share them with others as long as they credit you, but they can't change them in any way or use them commercially."
 msgstr "La Licencia de Atribución-NoComercial-SinDerivadas es la más restrictiva de nuestras seis licencias principales, permitiendo a otros solo descargar tu obra y compartirla con otros siempre y cuando te den crédito, pero no permiten cambiarlas de forma alguna ni usarlas comercialmente."
 
-#: contentcuration/templatetags/license_tags.py:41
+#: contentcuration/templatetags/license_tags.py:55
 msgid "The All Rights Reserved License indicates that the copyright holder reserves, or holds for their own use, all the rights provided by copyright law under one specific copyright treaty."
 msgstr "La Licencia Todos los Derechos Reservados, indica que el titular reserva, o mantiene para uso propio, todos los derechos previstos por la ley de derechos de autor bajo un solo tratado de derechos específico."
 
-#: contentcuration/templatetags/license_tags.py:44
+#: contentcuration/templatetags/license_tags.py:60
 msgid "Public Domain work has been identified as being free of known restrictions under copyright law, including all related and neighboring rights."
 msgstr "Una obra de Dominio Público ha sido identificada como libre de restricciones conocidas en virtud del derecho de autor, incluyendo todos los derechos conexos."
 
-#: contentcuration/templatetags/license_tags.py:47
+#: contentcuration/templatetags/license_tags.py:65
 msgid "Special Permissions is a custom license to use when the current licenses do not apply to the content. The owner of this license is responsible for creating a description of what this license entails."
 msgstr "Permisos Especiales es una licencia personalizada para utilizar cuando las licencias actuales no se aplican al contenido. El titular de esta licencia es responsable de crear una descripción de lo que implica esta licencia."
 
-#: contentcuration/utils/csv_writer.py:45
-#: contentcuration/utils/csv_writer.py:108
+#: contentcuration/utils/csv_writer.py:49
+#: contentcuration/utils/csv_writer.py:140
 msgid "No Channel"
 msgstr "No hay canales"
 
-#: contentcuration/utils/csv_writer.py:46
+#: contentcuration/utils/csv_writer.py:50
 msgid "No resource"
 msgstr "No hay recursos"
 
-#: contentcuration/utils/csv_writer.py:71
+#: contentcuration/utils/csv_writer.py:86
 msgid "Channel"
 msgstr "Canal"
 
-#: contentcuration/utils/csv_writer.py:71
+#: contentcuration/utils/csv_writer.py:87
 msgid "Title"
 msgstr "Título"
 
-#: contentcuration/utils/csv_writer.py:71
+#: contentcuration/utils/csv_writer.py:88
 msgid "Kind"
 msgstr "Tipo"
 
-#: contentcuration/utils/csv_writer.py:71
+#: contentcuration/utils/csv_writer.py:89
 msgid "Filename"
-msgstr "Nombre del fichero"
+msgstr "Nombre del archivo"
 
-#: contentcuration/utils/csv_writer.py:71
+#: contentcuration/utils/csv_writer.py:90
 msgid "File Size"
-msgstr "Tamaño del fichero"
+msgstr "Tamaño del archivo"
 
-#: contentcuration/utils/csv_writer.py:71
+#: contentcuration/utils/csv_writer.py:91
 msgid "URL"
 msgstr "URL"
 
-#: contentcuration/utils/csv_writer.py:71
+#: contentcuration/utils/csv_writer.py:92
 msgid "Description"
 msgstr "Descripción"
 
-#: contentcuration/utils/csv_writer.py:72
+#: contentcuration/utils/csv_writer.py:93
 msgid "Author"
 msgstr "Autor"
 
-#: contentcuration/utils/csv_writer.py:72
+#: contentcuration/utils/csv_writer.py:94
 msgid "Language"
 msgstr "Idioma"
 
-#: contentcuration/utils/csv_writer.py:72
+#: contentcuration/utils/csv_writer.py:95
 msgid "License"
 msgstr "Licencia"
 
-#: contentcuration/utils/csv_writer.py:72
+#: contentcuration/utils/csv_writer.py:96
 msgid "License Description"
 msgstr "Descripción de la licencia"
 
-#: contentcuration/utils/csv_writer.py:72
+#: contentcuration/utils/csv_writer.py:97
 msgid "Copyright Holder"
 msgstr "Titular de derechos de autor"
 
-#: contentcuration/utils/csv_writer.py:108
+#: contentcuration/utils/csv_writer.py:141
 msgid "No Resource"
 msgstr "No hay recursos"
 
-#: contentcuration/utils/csv_writer.py:108
+#: contentcuration/utils/csv_writer.py:143
 msgid "Staged File"
 msgstr "Archivo enviado"
 
-#: contentcuration/utils/incidents.py:7
+#: contentcuration/utils/incidents.py:8
 msgid "There was a problem with a third-party service. This means certain operations might be blocked. We appreciate your patience while these issues are being resolved."
 msgstr "Hubo un problema con un servicio externo. Esto significa que ciertas operaciones podrían ser bloqueadas. Agradecemos su paciencia mientras se resuelven estos problemas."
 
-#: contentcuration/utils/incidents.py:16
+#: contentcuration/utils/incidents.py:18
 msgid "<b>EMERGENCY MAINTENANCE</b> Kolibri Studio is operating on read-only mode for the time being in order for us to resolve some maintenance issues. This means all editing capabilities are disabled at the moment. We're currently working very hard to fix the issue as soon as possible. If you have any questions please contact us at content@learningequality.org. We apologize for any inconvenience caused and appreciate your patience while we resolve these issues."
 msgstr "<b>PARADA de MANTENIMIENTO</b> Kolibri Studio está funcionando en modo de solo lectura para poder resolver algunos problemas de mantenimiento. Esto significa que todas las capacidades de edición están deshabilitadas en este momento. Estamos trabajando intensamente para arreglar el problema tan pronto como sea posible. Si tiene alguna pregunta, por favor contáctenos en content@learningequality.org. Pedimos disculpas por las molestias causadas y agradecemos la paciencia."
 
-#: contentcuration/utils/incidents.py:31
+#: contentcuration/utils/incidents.py:34
 msgid "<b>EMERGENCY MAINTENANCE</b> Kolibri Studio is operating on read-only mode for the time being in order for us to resolve some database issues. This means all editing capabilities are disabled at the moment. We're currently working very hard to fix the issue as soon as possible. If you have any questions please contact us at content@learningequality.org. We apologize for any inconvenience caused and appreciate your patience while we resolve these issues."
 msgstr "<b>PARADA de MANTENIMIENTO</b> Kolibri Studio está funcionando en modo de solo lectura para poder resolver algunos problemas de bases de datos. Esto significa que todas las capacidades de edición están deshabilitadas en este momento. Estamos trabajando intensamente para arreglar el problema tan pronto como sea posible. Si tiene alguna pregunta, por favor contáctenos al content@learningequality.org. Pedimos disculpas por las molestias causadas y agradecemos la paciencia."
 
-#: contentcuration/utils/incidents.py:46
+#: contentcuration/utils/incidents.py:50
 msgid "We are encountering issues with Google Cloud Storage. This means any file uploading and publishing operations are currently unavailable. We appreciate your patience while these issues are being resolved. To check the status of this service, please visit <a target='_blank' href='https://status.cloud.google.com/'>here</a>"
 msgstr "Estamos teniendo problemas con el almacenamiento de Google Cloud. Esto significa que cualquier operación de carga de ficheros y publicación no está disponible actualmente. Agradecemos la paciencia mientras se resuelven estos problemas. Para comprobar el estado de este servicio, <a target='_blank' href='https://status.cloud.google.com/'>visite este enlace</a>"
 
-#: contentcuration/utils/incidents.py:57
+#: contentcuration/utils/incidents.py:62
 msgid "We are encountering issues with a third-party service. This means publishing is currently unavailable. We appreciate your patience while these issues are being resolved."
 msgstr "Hubo un problema con un servicio externo. Esto significa que no es posible publicar canales en este momento. Agradecemos su paciencia mientras estos problemas se resuelven."
 
-#: contentcuration/utils/incidents.py:65
+#: contentcuration/utils/incidents.py:71
 msgid "We are encountering issues with our data center. This means you may encounter networking problems while using Studio. We appreciate your patience while these issues are being resolved. To check the status of this service, please visit <a target='_blank' href='https://status.cloud.google.com/'>here</a>"
 msgstr "Estamos encontrando problemas con nuestro centro de datos. Esto significa que puede encontrar problemas de red mientras utiliza Studio. Agradecemos su paciencia mientras se resuelvenn estos problemas. Para comprobar el estado de este servicio <a target='_blank' href='https://status.cloud.google.com/'>visite este enlace</a>"
 
@@ -723,22 +723,22 @@ msgstr "Estamos encontrando problemas con nuestro centro de datos. Esto signific
 msgid "Kolibri Studio Channel Published"
 msgstr "Canal publicado en Kolibri Studio"
 
-#: contentcuration/views/settings.py:111
+#: contentcuration/views/settings.py:115
 msgid "Kolibri Studio issue report"
 msgstr "Informe de incidencias de Kolibri Studio"
 
-#: contentcuration/views/settings.py:143
+#: contentcuration/views/settings.py:147
 msgid "Kolibri Studio account deleted"
 msgstr "Cuenta de Kolibri Studio eliminada"
 
-#: kolibri_public/views.py:220
+#: kolibri_public/views.py:223
 msgid "Resource"
 msgstr "Recurso"
 
-#: kolibri_public/views_v1.py:65 kolibri_public/views_v1.py:76
-msgid "Api endpoint {} is not available"
-msgstr "API endpoint {} no disponible"
+#: kolibri_public/views_v1.py:79 kolibri_public/views_v1.py:94
+msgid "API version is unavailable"
+msgstr "La versión API no está disponible"
 
-#: kolibri_public/views_v1.py:78
+#: kolibri_public/views_v1.py:97
 msgid "No channel matching {} found"
 msgstr "Ningún canal con {} encontrado"
