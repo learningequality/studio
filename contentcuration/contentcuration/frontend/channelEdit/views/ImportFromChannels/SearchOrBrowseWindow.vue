@@ -13,8 +13,9 @@
             v-if="!isBrowsing"
             class="my-2"
           >
-            <ActionLink
+            <KButton
               :text="$tr('backToBrowseAction')"
+              appearance="basic-link"
               @click="handleBackToBrowse"
             />
           </div>
@@ -44,16 +45,14 @@
                 <Icon icon="search" />
               </template>
               <template #append-outer>
-                <VBtn
+                <KButton
                   class="px-4 search-btn"
-                  color="primary"
+                  primary
                   type="submit"
+                  :text="$tr('searchAction')"
                   :disabled="!searchIsValid"
-                  depressed
-                  large
-                >
-                  {{ $tr('searchAction') }}
-                </VBtn>
+                  appearance="raised-button"
+                />
               </template>
             </VTextField>
           </VForm>
@@ -62,10 +61,11 @@
             v-if="!isBrowsing"
             class="my-2 px-2"
           >
-            <ActionLink
+            <KButton
               class="mb-3"
               :text="$tr('savedSearchesLabel')"
               :disabled="!savedSearchesExist"
+              appearance="basic-link"
               @click="showSavedSearches = true"
             />
           </div>

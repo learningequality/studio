@@ -37,10 +37,11 @@
                   })
                 }}
               </span>
-              <ActionLink
+              <KButton
                 class="mx-2"
                 :disabled="currentSearchSaved"
                 :text="currentSearchSaved ? $tr('searchSavedSnackbar') : $tr('saveSearchAction')"
+                appearance="basic-link"
                 @click="handleClickSaveSearch"
               />
             </VFlex>
