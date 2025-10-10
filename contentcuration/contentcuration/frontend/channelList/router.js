@@ -1,5 +1,6 @@
 import VueRouter from 'vue-router';
 import ChannelList from './views/Channel/ChannelList';
+import StudioMyChannels from './views/Channel/StudioMyChannels.vue';
 import ChannelSetList from './views/ChannelSet/ChannelSetList';
 import ChannelSetModal from './views/ChannelSet/ChannelSetModal';
 import CatalogList from './views/Channel/CatalogList';
@@ -14,7 +15,7 @@ const router = new VueRouter({
     {
       name: RouteNames.CHANNELS_EDITABLE,
       path: '/my-channels',
-      component: ChannelList,
+      component: StudioMyChannels,
       props: { listType: ChannelListTypes.EDITABLE },
     },
 
