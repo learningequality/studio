@@ -391,7 +391,6 @@
         const formData = this.clean();
         if (!this.validate(formData)) {
           this.saving = false;
-          this.$store.dispatch('showSnackbarSimple', this.errorText());
           return;
         }
 
