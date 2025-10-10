@@ -60,13 +60,12 @@
             </VBtn>
           </VLayout>
         </VFadeTransition>
-        <VBtn
+        <KButton
           v-if="!previewIsSelected"
-          color="primary"
+          primary
+          :text="$tr('addButton')"
           @click="selectNode(previewNode)"
-        >
-          {{ $tr('addButton') }}
-        </VBtn>
+        />
       </template>
     </ResourceDrawer>
     <template #bottom>
@@ -74,22 +73,20 @@
         {{ $tr('resourcesSelected', { count: selectedResourcesCount }) }}
       </div>
       <VSpacer />
-      <VBtn
+      <KButton
         v-if="isReview"
+        primary
         :disabled="selected.length === 0"
-        color="primary"
+        :text="$tr('importAction')"
         @click="handleClickImport"
-      >
-        {{ $tr('importAction') }}
-      </VBtn>
-      <VBtn
+      />
+      <KButton
         v-else
-        color="primary"
+        primary
         :disabled="selected.length === 0"
+        :text="$tr('reviewAction')"
         @click="handleClickReview"
-      >
-        {{ $tr('reviewAction') }}
-      </VBtn>
+      />
     </template>
   </FullscreenModal>
 
