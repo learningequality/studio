@@ -73,7 +73,7 @@
 
               <!-- Channel list section -->
               <VCardText v-if="loadingChannels">
-                <LoadingText />
+                <StudioLargeLoader> Loading collections... </StudioLargeLoader>
               </VCardText>
               <div
                 v-else
@@ -207,6 +207,7 @@
   import FullscreenModal from 'shared/views/FullscreenModal';
   import Tabs from 'shared/views/Tabs';
   import LoadingText from 'shared/views/LoadingText';
+  import StudioLargeLoader from 'shared/views/StudioLargeLoader.vue';
 
   export default {
     name: 'ChannelSetModal',
@@ -217,6 +218,7 @@
       FullscreenModal,
       Tabs,
       LoadingText,
+      StudioLargeLoader,
     },
     mixins: [constantsTranslationMixin, routerMixin],
     props: {
