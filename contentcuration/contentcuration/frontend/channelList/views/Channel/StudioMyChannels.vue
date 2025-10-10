@@ -6,6 +6,7 @@
       'studio-small': windowIsSmall,
       'studio-medium': windowIsMedium,
       'studio-large': windowIsLarge,
+      ['windowBreakpoint-' + windowBreakpoint]: windowBreakpoint,
     }"
   >
     <div class="my-channels__new-channel">
@@ -188,11 +189,13 @@
       ChannelTokenModal,
     },
     setup() {
-      const { windowIsSmall, windowIsMedium, windowIsLarge } = useKResponsiveWindow();
+      const { windowIsSmall, windowIsMedium, windowIsLarge, windowBreakpoint } =
+        useKResponsiveWindow();
       return {
         windowIsSmall,
         windowIsMedium,
         windowIsLarge,
+        windowBreakpoint,
       };
     },
     data() {
@@ -432,7 +435,6 @@
       &__body,
       &__new-channel {
         width: 100%;
-        max-width: 100%;
       }
     }
   }
@@ -448,6 +450,36 @@
   }
 
   .studio-large {
+    .my-channels {
+      &__body,
+      &__new-channel {
+        width: 100%;
+        max-width: 50%;
+      }
+    }
+  }
+
+  .windowBreakpoint-3 {
+    .my-channels {
+      &__body,
+      &__new-channel {
+        width: 100%;
+        max-width: 83.33%;
+      }
+    }
+  }
+
+  .windowBreakpoint-4 {
+    .my-channels {
+      &__body,
+      &__new-channel {
+        width: 100%;
+        max-width: 66.66%;
+      }
+    }
+  }
+
+  .windowBreakpoint-5 {
     .my-channels {
       &__body,
       &__new-channel {
