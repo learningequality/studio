@@ -1,63 +1,57 @@
 <template>
 
-  <MessageDialog
-    v-model="dialog"
-    :header="header"
+  <KModal
+    v-if="dialog"
+    :title="title"
     :text="text"
+    :submitText="confirmText"
+    cancelText="Cancel"
+    @submit="confirm"
+    @cancel="close"
   >
-    <VForm
+    <form
       ref="form"
       lazy-validation
       @submit.prevent="confirm"
     >
       <p>Enter your email address to continue</p>
-      <VTextField
+      <KTextbox
         v-model="emailConfirm"
         box
-        maxlength="100"
+        :maxlength="100"
         counter
         required
-        :rules="emailRules"
-        label="Email address"
-        @input="resetValidation"
+        :invalid="errors.emailConfirm"
+        :invalidText="$tr('emailValidationMessage')"
+        :showInvalidText="true"
+        :label="$tr('emailLabel')"
       />
-    </VForm>
-    <template #buttons>
-      <VBtn
-        flat
-        data-test="cancel"
-        @click="close"
-      >
-        Cancel
-      </VBtn>
-      <VBtn
-        color="primary"
-        @click="confirm"
-      >
-        {{ confirmText }}
-      </VBtn>
-    </template>
-  </MessageDialog>
+    </form>
+  </KModal>
 
 </template>
 
 
 <script>
 
-  import { mapState } from 'vuex';
-  import MessageDialog from 'shared/views/MessageDialog';
+  import { generateFormMixin } from 'shared/mixins';
+
+  const formMixin = generateFormMixin({
+    emailConfirm: {
+      required: true,
+      validator: (value, vm) => value === vm.currentEmail,
+    },
+  });
 
   export default {
     name: 'UserPrivilegeModal',
-    components: {
-      MessageDialog,
-    },
+    mixins: [formMixin],
     props: {
       value: {
         type: Boolean,
         default: false,
       },
-      header: {
+      title: {
         type: String,
         required: true,
       },
@@ -80,9 +74,6 @@
       };
     },
     computed: {
-      ...mapState({
-        currentEmail: state => state.session.currentUser.email,
-      }),
       dialog: {
         get() {
           return this.value;
@@ -91,29 +82,47 @@
           this.$emit('input', value);
         },
       },
-      emailRules() {
-        return [
-          v => Boolean(v) || 'Field is required',
-          v => v === this.currentEmail || 'Email does not match your account email',
-        ];
+    },
+    watch: {
+      value(value) {
+        if (value) {
+          this.reset();
+        }
       },
     },
     methods: {
       close() {
         this.emailConfirm = '';
-        this.resetValidation();
+        // Clear errors manually if using generateFormMixin
+        if (this.errors) {
+          Object.keys(this.errors).forEach(key => {
+            this.errors[key] = false;
+          });
+        }
         this.dialog = false;
       },
-      resetValidation() {
-        this.$refs.form.resetValidation();
-      },
       confirm() {
-        if (this.$refs.form.validate()) {
-          return this.confirmAction();
+        if (this.onSubmit) {
+          return this.onSubmit();
         } else {
           return Promise.resolve();
         }
       },
+      // eslint-disable-next-line vue/no-unused-properties
+      onSubmit() {
+        return this.confirmAction()
+          .then(() => {
+            this.dialog = false;
+          })
+          .catch(() => {
+            this.showSnackbar({ text: this.$tr('ErrorMessage') });
+          });
+      },
+    },
+    $trs: {
+      emailLabel: 'Email address',
+      emailValidationMessage: 'Email must match your account email',
+      ErrorMessage: 'Error While updating privileges',
     },
   };
 
