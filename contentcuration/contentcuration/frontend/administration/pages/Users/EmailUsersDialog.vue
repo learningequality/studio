@@ -81,13 +81,15 @@
               </VChip>
             </VFlex>
           </VLayout>
-          <VTextField
+          <KTextbox
             v-model="subject"
             class="mt-4"
-            box
-            label="Subject line"
-            required
-            :rules="requiredRules"
+            :label="'Subject line'"
+            :required="true"
+            :invalid="!subject.trim()"
+            :invalidText="requiredRules(subject)[0]"
+            :showLabel="true"
+            :appearanceOverrides="{ maxWidth: '100%', width: '100%' }"
           />
           <div class="caption grey--text">Add placeholder to message</div>
           <div class="mb-1">
@@ -104,14 +106,17 @@
               {{ placeholder.label }}
             </VBtn>
           </div>
-          <VTextarea
+          <KTextbox
             ref="message"
             v-model="message"
-            box
-            auto-grow
-            label="Email body"
-            required
-            :rules="requiredRules"
+            :label="'Email body'"
+            :required="true"
+            :invalid="!message.trim()"
+            :invalidText="requiredRules(message)[0]"
+            :showLabel="true"
+            :appearanceOverrides="{ maxWidth: '100%', width: '100%' }"
+            type="textarea"
+            :rows="3"
           />
         </VCardText>
         <VCardActions data-test="buttons">
@@ -209,7 +214,10 @@
         return this.getUsers(this.recipients);
       },
       requiredRules() {
-        return [v => Boolean(v.trim()) || 'Field is required'];
+        return value => {
+          const isValid = Boolean(value && value.trim());
+          return isValid ? [] : ['Field is required'];
+        };
       },
       senderEmail() {
         return window.senderEmail;
@@ -266,10 +274,12 @@
         this.subject = '';
         this.message = '';
         this.showWarning = false;
-        this.$refs.form.resetValidation();
       },
       emailHandler() {
-        if (this.$refs.form.validate()) {
+        const isSubjectValid = this.requiredRules(this.subject).length === 0;
+        const isMessageValid = this.requiredRules(this.message).length === 0;
+
+        if (isSubjectValid && isMessageValid) {
           const query = this.initialRecipients
             ? { ids: this.recipients.join(',') }
             : this.usersFilterFetchQueryParams;
