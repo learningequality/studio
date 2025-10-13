@@ -106,22 +106,20 @@
               {{ placeholder.label }}
             </VBtn>
           </div>
-          <KTextbox
-            ref="message"
-            v-model="message"
-            label="Email body"
-            :required="true"
-            :invalid="!message.trim()"
-            :invalidText="requiredRules(message)[0]"
-            :showLabel="true"
-            :appearanceOverrides="{
-              maxWidth: '100%',
-              width: '100%',
-              height: '120px',
-            }"
-            :floatingLabel="false"
-            :textArea="true"
-          />
+          <div class="email-textarea">
+            <KTextbox
+              ref="message"
+              v-model="message"
+              :label="'Email body'"
+              :required="true"
+              :invalid="!message.trim()"
+              :invalidText="requiredRules(message)[0]"
+              :showLabel="true"
+              :appearanceOverrides="{ maxWidth: '100%', width: '100%' }"
+              :floatingLabel="false"
+              :textArea="true"
+            />
+          </div>
         </VCardText>
         <VCardActions data-test="buttons">
           <VSpacer />
@@ -328,6 +326,11 @@
 
   ::v-deep .v-chip__close {
     padding-top: 4px;
+  }
+
+  ::v-deep textarea {
+    height: 120px;
+    min-height: 120px;
   }
 
 </style>
