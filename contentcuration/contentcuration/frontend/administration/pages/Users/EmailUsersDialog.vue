@@ -119,8 +119,8 @@
               width: '100%',
               height: '120px',
             }"
-            type="textarea"
-            :rows="3"
+            :floatingLabel="false"
+            :textArea="true"
           />
         </VCardText>
         <VCardActions data-test="buttons">
