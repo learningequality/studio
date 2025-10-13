@@ -109,12 +109,16 @@
           <KTextbox
             ref="message"
             v-model="message"
-            :label="'Email body'"
+            label="Email body"
             :required="true"
             :invalid="!message.trim()"
             :invalidText="requiredRules(message)[0]"
             :showLabel="true"
-            :appearanceOverrides="{ maxWidth: '100%', width: '100%' }"
+            :appearanceOverrides="{
+              maxWidth: '100%',
+              width: '100%',
+              height: '120px',
+            }"
             type="textarea"
             :rows="3"
           />
