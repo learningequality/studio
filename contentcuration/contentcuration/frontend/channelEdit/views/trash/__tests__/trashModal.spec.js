@@ -134,7 +134,8 @@ describe('trashModal', () => {
 
     it('clicking CLOSE on delete confirmation dialog should close the dialog', async () => {
       await wrapper.setData({ showConfirmationDialog: true });
-      await wrapper.findComponent('[data-test="closeconfirm"]').trigger('click');
+      const modal = wrapper.findComponent({ name: 'KModal' });
+      await modal.vm.$emit('cancel');
       expect(wrapper.vm.showConfirmationDialog).toBe(false);
     });
 
@@ -143,7 +144,8 @@ describe('trashModal', () => {
       const deleteContentNodes = jest.spyOn(wrapper.vm, 'deleteContentNodes');
       deleteContentNodes.mockImplementation(() => Promise.resolve());
       await wrapper.setData({ selected, showConfirmationDialog: true });
-      await wrapper.findComponent('[data-test="deleteconfirm"]').trigger('click');
+      const modal = wrapper.findComponent({ name: 'KModal' });
+      await modal.vm.$emit('submit');
       expect(deleteContentNodes).toHaveBeenCalledWith(selected);
     });
   });

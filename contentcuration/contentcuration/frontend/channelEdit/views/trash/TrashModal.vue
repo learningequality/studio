@@ -145,28 +145,16 @@
         {{ $tr('deleteButton') }}
       </VBtn>
     </template>
-    <MessageDialog
-      v-model="showConfirmationDialog"
-      :header="$tr('deleteConfirmationHeader', counts)"
-      :text="$tr('deleteConfirmationText')"
+    <KModal
+      v-if="showConfirmationDialog"
+      :title="$tr('deleteConfirmationHeader', counts)"
+      :cancelText="$tr('deleteConfirmationCancelButton')"
+      :submitText="$tr('deleteConfirmationDeleteButton')"
+      @cancel="showConfirmationDialog = false"
+      @submit="deleteNodes"
     >
-      <template #buttons="{ close }">
-        <VBtn
-          flat
-          data-test="closeconfirm"
-          @click="close"
-        >
-          {{ $tr('deleteConfirmationCancelButton') }}
-        </VBtn>
-        <VBtn
-          color="primary"
-          data-test="deleteconfirm"
-          @click="deleteNodes"
-        >
-          {{ $tr('deleteConfirmationDeleteButton') }}
-        </VBtn>
-      </template>
-    </MessageDialog>
+      <p>{{ $tr('deleteConfirmationText') }}</p>
+    </KModal>
     <MoveModal
       v-if="moveModalOpen"
       ref="moveModal"
