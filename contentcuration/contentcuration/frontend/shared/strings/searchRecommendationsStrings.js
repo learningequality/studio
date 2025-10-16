@@ -2,12 +2,12 @@ import { createTranslator } from 'shared/i18n';
 
 export const searchRecommendationsStrings = createTranslator('SearchRecommendationsStrings', {
   aboutRecommendationsText: {
-    message: 'About Recommendations',
+    message: 'About recommendations',
     context: 'A title that introduces how the recommendation system works',
   },
   aboutRecommendationsDescription: {
     message:
-      'Our recommendation system learns from the titles and descriptions of what you already have in your channel, and uses that to show you other potentially relevant resources across the Kolibri Library.',
+      'Our recommendation system uses the titles and descriptions of folders that you already have in your channel to show you other potentially relevant resources across the Kolibri Library.',
     context: 'A description that explains how the recommendation system works',
   },
   aboutRecommendationsFeedbackDescription: {
@@ -54,8 +54,7 @@ export const searchRecommendationsStrings = createTranslator('SearchRecommendati
       'A message that explains to the user that an error was encountered while loading recommended resources',
   },
   noDirectMatchesMessage: {
-    message:
-      'No direct matches found, but there are other resources that might be helpful for your curriculum',
+    message: 'No direct matches found, but there are other resources that might be helpful',
     context:
       'A message that explains to the user that there are no direct matches to their search, but there are other resources that might be helpful',
   },
@@ -68,7 +67,7 @@ export const searchRecommendationsStrings = createTranslator('SearchRecommendati
     context: 'A tooltip that explains to the user that they can mark a resource as not relevant',
   },
   feedbackConfirmationMessage: {
-    message: 'Thank you! Your feedback will help us improve your recommendations',
+    message: 'Thank you! Your feedback will help us improve our recommendations.',
     context: 'A message that thanks the user for their feedback on the provided recommendations',
   },
   giveFeedbackText: {
@@ -122,7 +121,7 @@ export const searchRecommendationsStrings = createTranslator('SearchRecommendati
   },
   notSpecificLearningActivityLabel: {
     message:
-      "Not the type of specific learning activity I'm looking for (e.g. reading text-based material, watching a video, interactive questions, etc.)",
+      "Not the type of learning activity I'm looking for (e.g. document instead of video, etc.)",
     context:
       'A label to a feedback option that explains that the resource is not the type of specific learning activity the user is looking for',
   },

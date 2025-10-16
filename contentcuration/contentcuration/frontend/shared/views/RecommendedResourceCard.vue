@@ -1,6 +1,7 @@
 <template>
 
   <KCard
+    ref="card"
     :title="node.title"
     :headingLevel="2"
     thumbnailScaleType="contain"
@@ -40,11 +41,13 @@
           <KIconButton
             icon="openNewTab"
             :tooltip="$tr('goToLocationTooltip')"
+            :aria-label="$tr('goToLocationTooltip')"
             @click.stop="goToLocation"
           />
           <KIconButton
             icon="thumbDown"
             :tooltip="$tr('markNotRelevantTooltip')"
+            :aria-label="$tr('markNotRelevantTooltip')"
             @click.stop="markNotRelevant"
           />
         </KFixedGridItem>
@@ -85,6 +88,11 @@
         required: true,
       },
     },
+    data() {
+      return {
+        ignorePreview: false,
+      };
+    },
     computed: {
       ...mapState('importFromChannels', ['selected']),
       learningActivities() {
@@ -116,13 +124,31 @@
         this.$emit('change_selected', { nodes: [node], isSelected: !this.isSelected(node) });
       },
       onClick() {
-        this.$emit('preview', this.node);
+        if (!this.ignorePreview) {
+          this.$emit('preview', this.node);
+        }
+        this.ignorePreview = false;
       },
       goToLocation() {
         window.open(this.goToLocationUrl, '_blank');
       },
       markNotRelevant() {
         this.$emit('irrelevant', this.node);
+      },
+      /**
+       * @public
+       */
+      focus() {
+        // KCard doesn't have a focus method
+        const cardTitle = this.$refs.card.$el.querySelector('.k-title');
+        if (cardTitle) {
+          // HACK: focusing the title seems to trigger its onEnter handler, when this focus method
+          // is called from keyboard navigation. when KCard handles this behavior internally, this
+          // hack can be removed
+          this.ignorePreview = true;
+          cardTitle.focus();
+          setTimeout(() => (this.ignorePreview = false), 1000);
+        }
       },
     },
     $trs: {

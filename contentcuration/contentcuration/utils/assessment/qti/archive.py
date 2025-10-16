@@ -64,8 +64,6 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
 
     file_format = "zip"
     preset = format_presets.QTI_ZIP
-    # Our markdown parser does not handle width/height in image refs
-    RETAIN_IMAGE_DIMENSIONS = False
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -154,18 +152,24 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
         prompt.append(interaction_element)
         interaction = Div(children=prompt)
 
-        correct_values = [
-            Value(value=answer["answer"])
-            for answer in processed_data["answers"]
-            if answer["correct"]
-        ]
+        correct_values = []
+        values_float = []
+        for answer in processed_data["answers"]:
+            if answer["correct"]:
+                correct_values.append(Value(value=str(answer["answer"])))
+            try:
+                float(answer["answer"])
+                values_float.append(True)
+            except ValueError:
+                values_float.append(False)
+        float_answer = bool(values_float) and all(values_float)
 
         response_declaration = ResponseDeclaration(
             identifier="RESPONSE",
             cardinality=Cardinality.MULTIPLE
-            if processed_data["multiple_select"]
+            if len(correct_values) > 1
             else Cardinality.SINGLE,
-            base_type=BaseType.STRING,
+            base_type=BaseType.FLOAT if float_answer else BaseType.STRING,
             correct_response=CorrectResponse(value=correct_values)
             if correct_values
             else None,

@@ -56,7 +56,7 @@ services:
 
   # this service is for development emulation only
   minio:
-    image: 'bitnami/minio:2024.5.28'
+    image: 'bitnamilegacy/minio:2024.5.28'
     environment:
       - "MINIO_DEFAULT_BUCKETS=content:public"
       - MINIO_ROOT_USER=development

@@ -4,131 +4,142 @@
     :key="fileId"
     :class="{ fullscreen }"
   >
-    <KLogo
-      v-if="loading"
-      altText=""
-      :animate="true"
-      :size="300"
-    />
-    <VCard
-      v-if="!file"
-      flat
-      class="message-card"
-    >
-      <VLayout
-        align-center
-        justify-center
-        fill-height
-      >
-        {{ $tr('noFileText') }}
-      </VLayout>
-    </VCard>
-    <VCard
-      v-else-if="file.uploading || file.error"
-      flat
-      class="message-card"
-    >
-      <VLayout
-        align-center
-        justify-center
-        fill-height
-        data-test="progress"
-      >
-        <FileStatus
-          :fileId="file.id"
-          large
-        />
-      </VLayout>
-    </VCard>
-    <VFlex v-else-if="isVideo">
-      <video
-        controls
-        preload="metadata"
-        controlsList="nodownload"
-        crossOrigin
-        @loadeddata="loading = false"
-      >
-        <source
-          :src="src"
-          :type="file.mimetype"
-        >
-        <track
-          v-for="subtitle in subtitles"
-          :key="subtitle.id"
-          :src="subtitle.url"
-          kind="subtitles"
-          :srclang="subtitle.language.id"
-          :label="subtitle.language.native_name"
-        >
-      </video>
-    </VFlex>
-    <VCard
-      v-else-if="isAudio"
-      flat
-    >
-      <VLayout
-        align-center
-        justify-center
-        fill-height
-      >
-        <audio
-          controls
-          :src="src"
-          :type="file.mimetype"
-          @loadeddata="loading = false"
-        ></audio>
-      </VLayout>
-    </VCard>
-    <iframe
-      v-else-if="isHTML"
-      :src="htmlPath"
-      sandbox="allow-scripts"
-      @load="loading = false"
-    ></iframe>
-    <embed
-      v-else-if="isPDF"
-      :src="src"
-      :type="file.mimetype"
-      @load="loading = false"
-    >
     <div
-      v-else-if="isEpub"
-      class="epub"
+      class="renderer"
+      :aria-busy="isSupported && loading"
     >
-      <EpubRenderer
-        :src="src"
-        @load="loading = false"
-      />
-    </div>
-
-    <VCard
-      v-else
-      class="message-card"
-      flat
-    >
-      <VLayout
-        align-center
-        justify-center
-        fill-height
-        data-test="not-supported"
+      <div
+        v-show="isSupported && loading"
+        class="overlay"
+        :style="{ background: $themePalette.white }"
       >
-        <VTooltip
-          bottom
-          lazy
+        <KLogo
+          altText=""
+          :animate="true"
+          :size="300"
+        />
+      </div>
+
+      <VCard
+        v-if="!file"
+        flat
+        class="message-card"
+      >
+        <VLayout
+          align-center
+          justify-center
+          fill-height
         >
-          <template #activator="{ on }">
-            <VIconWrapper
-              color="grey lighten-2"
-              large
-              v-on="on"
-            >
-              visibility_off
-            </VIconWrapper>
-          </template>
-          <span>{{ $tr('previewNotSupported') }}</span>
-        </VTooltip>
-      </VLayout>
-    </VCard>
+          {{ $tr('noFileText') }}
+        </VLayout>
+      </VCard>
+      <VCard
+        v-else-if="file.uploading || file.error"
+        flat
+        class="message-card"
+      >
+        <VLayout
+          align-center
+          justify-center
+          fill-height
+          data-test="progress"
+        >
+          <FileStatus
+            :fileId="file.id"
+            large
+          />
+        </VLayout>
+      </VCard>
+      <VFlex v-else-if="isVideo">
+        <video
+          controls
+          preload="metadata"
+          controlsList="nodownload"
+          crossOrigin
+          @loadeddata="loading = false"
+        >
+          <source
+            :src="src"
+            :type="file.mimetype"
+          >
+          <track
+            v-for="subtitle in subtitles"
+            :key="subtitle.id"
+            :src="subtitle.url"
+            kind="subtitles"
+            :srclang="subtitle.language.id"
+            :label="subtitle.language.native_name"
+          >
+        </video>
+      </VFlex>
+      <VCard
+        v-else-if="isAudio"
+        flat
+      >
+        <VLayout
+          align-center
+          justify-center
+          fill-height
+        >
+          <audio
+            controls
+            :src="src"
+            :type="file.mimetype"
+            @loadeddata="loading = false"
+          ></audio>
+        </VLayout>
+      </VCard>
+      <iframe
+        v-else-if="isHTML"
+        :src="htmlPath"
+        sandbox="allow-scripts"
+        @load="loading = false"
+      ></iframe>
+      <embed
+        v-else-if="isPDF"
+        :src="src"
+        :type="file.mimetype"
+        @load="loading = false"
+      >
+      <div
+        v-else-if="isEpub"
+        class="epub"
+      >
+        <EpubRenderer
+          :src="src"
+          @load="loading = false"
+        />
+      </div>
+
+      <VCard
+        v-else
+        class="message-card"
+        flat
+      >
+        <VLayout
+          align-center
+          justify-center
+          fill-height
+          data-test="not-supported"
+        >
+          <VTooltip
+            bottom
+            lazy
+          >
+            <template #activator="{ on }">
+              <VIconWrapper
+                color="grey lighten-2"
+                large
+                v-on="on"
+              >
+                visibility_off
+              </VIconWrapper>
+            </template>
+            <span>{{ $tr('previewNotSupported') }}</span>
+          </VTooltip>
+        </VLayout>
+      </VCard>
+    </div>
   </VLayout>
 
 </template>
@@ -190,24 +201,30 @@
           f => f.language.id,
         );
       },
+      fileFormat() {
+        return this.file?.file_format || '';
+      },
       isVideo() {
-        return this.file.file_format === 'mp4' || this.file.file_format === 'webm';
+        return this.fileFormat === 'mp4' || this.fileFormat === 'webm';
       },
       isAudio() {
-        return this.file.file_format === 'mp3';
+        return this.fileFormat === 'mp3';
       },
       isHTML() {
-        return this.file.file_format === 'zip';
+        return this.fileFormat === 'zip';
       },
       isPDF() {
-        return this.file.file_format === 'pdf';
+        return this.fileFormat === 'pdf';
       },
       isEpub() {
-        return this.file.file_format === 'epub';
+        return this.fileFormat === 'epub';
+      },
+      isSupported() {
+        return this.isVideo || this.isAudio || this.isHTML || this.isPDF || this.isEpub;
       },
       htmlPath() {
         const entry = get(this.contentNode, ['extra_fields', 'options', 'entry'], 'index.html');
-        return `/zipcontent/${this.file.checksum}.${this.file.file_format}/${entry}`;
+        return `/zipcontent/${this.file.checksum}.${this.fileFormat}/${entry}`;
       },
       src() {
         return this.file && this.file.url;
@@ -230,6 +247,21 @@
 <style lang="scss" scoped>
 
   $max-height: calc(100vh - 96px);
+
+  .renderer {
+    position: relative;
+    width: 100%;
+  }
+
+  .overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
 
   .v-card,
   video,
