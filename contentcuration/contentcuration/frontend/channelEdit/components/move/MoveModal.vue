@@ -31,13 +31,12 @@
         </template>
       </Breadcrumbs>
       <VSpacer />
-      <VBtn
-        color="grey lighten-4"
+      <KButton
+        class="add-topic-btn"
+        :text="$tr('addTopic')"
         data-test="newtopic"
         @click="showNewTopicModal = true"
-      >
-        {{ $tr('addTopic') }}
-      </VBtn>
+      />
     </ToolBar>
     <!-- list of children content -->
     <LoadingText
@@ -159,22 +158,21 @@
         v-if="moveHereButtonDisabled && moveNodesInProgress"
         :size="20"
       />
-      <VBtn
-        flat
-        exact
-        data-test="cancel"
-        @click="dialog = false"
-      >
-        {{ $tr('cancel') }}
-      </VBtn>
-      <VBtn
-        color="primary"
-        data-test="move"
-        :disabled="moveHereButtonDisabled"
-        @click="moveNodes"
-      >
-        {{ $tr('moveHere') }}
-      </VBtn>
+      <KButtonGroup>
+        <KButton
+          appearance="flat-button"
+          :text="$tr('cancel')"
+          data-test="cancel"
+          @click="dialog = false"
+        />
+        <KButton
+          :primary="true"
+          :text="$tr('moveHere')"
+          :disabled="moveHereButtonDisabled"
+          data-test="move"
+          @click="moveNodes"
+        />
+      </KButtonGroup>
     </template>
 
     <NewTopicModal
@@ -434,6 +432,10 @@
     justify-content: center;
     width: 100%;
     margin-bottom: 10px;
+  }
+
+  .add-topic-btn {
+    flex-shrink: 0;
   }
 
 </style>

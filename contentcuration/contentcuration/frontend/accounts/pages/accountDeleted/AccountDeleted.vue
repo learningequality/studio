@@ -2,13 +2,12 @@
 
   <MessageLayout :header="$tr('accountDeletedTitle')">
     <template #back>
-      <VBtn
-        color="primary"
+      <KRouterLink
         :to="{ name: 'Main' }"
-        large
-      >
-        {{ $tr('backToLogin') }}
-      </VBtn>
+        :text="$tr('backToLogin')"
+        :primary="true"
+        appearance="raised-button"
+      />
     </template>
   </MessageLayout>
 

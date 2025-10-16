@@ -8,6 +8,7 @@
     :tabindex="isAvailable ? 0 : -1"
     :aria-label="title"
     :aria-pressed="isActive ? 'true' : 'false'"
+    @mousedown.prevent
     @click="handleClick"
     @keydown="handleKeydown"
   >
@@ -101,8 +102,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 2rem;
+    height: 2rem;
     cursor: pointer;
     background: transparent;
     border: 0;
@@ -132,8 +133,8 @@
   }
 
   .toolbar-icon {
-    width: 21px;
-    height: 21px;
+    width: 1.7rem;
+    height: 1.7rem;
     opacity: 0.7;
   }
 

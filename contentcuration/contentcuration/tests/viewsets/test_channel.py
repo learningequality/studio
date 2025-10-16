@@ -11,9 +11,15 @@ from mock import patch
 from contentcuration import models
 from contentcuration import models as cc
 from contentcuration.constants import channel_history
+from contentcuration.constants import community_library_submission
+from contentcuration.models import Change
+from contentcuration.models import CommunityLibrarySubmission
 from contentcuration.models import ContentNode
+from contentcuration.models import Country
+from contentcuration.tasks import apply_channel_changes_task
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
+from contentcuration.tests.helpers import reverse_with_query
 from contentcuration.tests.viewsets.base import generate_create_event
 from contentcuration.tests.viewsets.base import generate_delete_event
 from contentcuration.tests.viewsets.base import generate_deploy_channel_event
@@ -24,6 +30,9 @@ from contentcuration.tests.viewsets.base import generate_update_event
 from contentcuration.tests.viewsets.base import SyncTestMixin
 from contentcuration.viewsets.channel import _unpublished_changes_query
 from contentcuration.viewsets.sync.constants import CHANNEL
+from contentcuration.viewsets.sync.utils import (
+    generate_added_to_community_library_event,
+)
 
 
 class SyncTestCase(SyncTestMixin, StudioAPITestCase):
@@ -492,7 +501,7 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
         self.assertEqual(response.status_code, 200)
         modified_channel = models.Channel.objects.get(id=channel.id)
-        self.assertEqual(modified_channel.staging_tree.published, True)
+        self.assertEqual(modified_channel.staging_tree.published, False)
 
     def test_publish_next_with_incomplete_staging_tree(self):
         channel = testdata.channel()
@@ -507,7 +516,9 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         channel.save()
         self.assertEqual(channel.staging_tree.published, False)
 
-        response = self.sync_changes([generate_publish_next_event(channel.id)])
+        response = self.sync_changes(
+            [generate_publish_next_event(channel.id, use_staging_tree=True)]
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(
@@ -516,6 +527,118 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         )
         modified_channel = models.Channel.objects.get(id=channel.id)
         self.assertEqual(modified_channel.staging_tree.published, False)
+
+    def test_sync_added_to_community_library_change(self):
+        # Syncing the change from the frontend should be disallowed
+        self.client.force_authenticate(self.admin_user)
+
+        channel = testdata.channel()
+        channel.version = 1
+        channel.public = True
+        channel.save()
+
+        added_to_community_library_change = generate_added_to_community_library_event(
+            key=channel.id,
+            channel_version=1,
+        )
+        response = self.sync_changes([added_to_community_library_change])
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(len(response.json()["allowed"]), 0, response.content)
+        self.assertEqual(len(response.json()["disallowed"]), 1, response.content)
+
+    @mock.patch("contentcuration.utils.publish.ensure_versioned_database_exists")
+    @mock.patch("contentcuration.viewsets.channel.export_channel_to_kolibri_public")
+    def test_process_added_to_community_library_change(
+        self, mock_export_func, mock_ensure_db_exists
+    ):
+        # Creating the change on the backend should be supported
+        self.client.force_authenticate(self.admin_user)
+
+        editor_user = testdata.user("channel@editor.com")
+
+        channel = testdata.channel()
+        channel.version = 2
+        channel.public = False
+        channel.editors.add(editor_user)
+        channel.save()
+
+        current_live_submission = CommunityLibrarySubmission.objects.create(
+            channel=channel,
+            channel_version=1,
+            author=editor_user,
+            status=community_library_submission.STATUS_LIVE,
+        )
+        new_submission = CommunityLibrarySubmission.objects.create(
+            channel=channel,
+            channel_version=2,
+            author=editor_user,
+            status=community_library_submission.STATUS_APPROVED,
+        )
+
+        categories = {
+            "category1": True,
+            "category2": True,
+        }
+
+        country1 = Country.objects.create(code="C1", name="Country 1")
+        country2 = Country.objects.create(code="C2", name="Country 2")
+        countries = [country1, country2]
+        country_codes = [country.code for country in countries]
+
+        added_to_community_library_change = generate_added_to_community_library_event(
+            key=channel.id,
+            channel_version=2,
+            categories=categories,
+            country_codes=country_codes,
+        )
+        Change.create_change(
+            added_to_community_library_change, created_by_id=self.admin_user.id
+        )
+
+        # This task will run immediately thanks to SyncTestMixin
+        apply_channel_changes_task.fetch_or_enqueue(
+            user=self.admin_user,
+            channel_id=channel.id,
+        )
+
+        # We cannot easily use the assert_called_once_with method here
+        # because we are not checking countries for strict equality,
+        # so we need to check the call arguments manually
+        mock_export_func.assert_called_once()
+
+        (call_args, call_kwargs) = mock_export_func.call_args
+        self.assertEqual(len(call_args), 0)
+        self.assertCountEqual(
+            call_kwargs.keys(),
+            [
+                "channel_id",
+                "channel_version",
+                "categories",
+                "countries",
+                "public",
+            ],
+        )
+        self.assertEqual(call_kwargs["channel_id"], channel.id)
+        self.assertEqual(call_kwargs["channel_version"], 2)
+        self.assertCountEqual(call_kwargs["categories"], categories.keys())
+
+        # The countries argument used when creating the mapper is in fact
+        # not a list, but a QuerySet, but it contains the same elements
+        self.assertCountEqual(call_kwargs["countries"], countries)
+        self.assertEqual(call_kwargs["public"], False)
+
+        # Check that the current submission became the live one
+        current_live_submission.refresh_from_db()
+        new_submission.refresh_from_db()
+        self.assertEqual(
+            current_live_submission.status,
+            community_library_submission.STATUS_APPROVED,
+        )
+        self.assertEqual(
+            new_submission.status,
+            community_library_submission.STATUS_LIVE,
+        )
 
 
 class CRUDTestCase(StudioAPITestCase):
@@ -553,6 +676,168 @@ class CRUDTestCase(StudioAPITestCase):
             format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
+
+    def test_admin_channel_detail__latest_community_library_submission__exists(self):
+        older_submission = testdata.community_library_submission()
+        older_submission.channel.version = 2
+        older_submission.channel_version = 1
+        older_submission.status = community_library_submission.STATUS_LIVE
+        older_submission.channel.save()
+        older_submission.save()
+
+        latest_submission = CommunityLibrarySubmission.objects.create(
+            channel=older_submission.channel,
+            channel_version=2,
+            author=older_submission.author,
+        )
+
+        self.client.force_authenticate(self.admin_user)
+        response = self.client.get(
+            reverse(
+                "admin-channels-detail", kwargs={"pk": older_submission.channel.id}
+            ),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(
+            response.data["latest_community_library_submission_id"],
+            latest_submission.id,
+        )
+        self.assertEqual(
+            response.data["latest_community_library_submission_status"],
+            community_library_submission.STATUS_PENDING,
+        )
+        self.assertTrue(response.data["has_any_live_community_library_submission"])
+
+    def test_admin_channel_detail__latest_community_library_submission__none_exist(
+        self,
+    ):
+        channel = testdata.channel()
+
+        self.client.force_authenticate(self.admin_user)
+        response = self.client.get(
+            reverse("admin-channels-detail", kwargs={"pk": channel.id}),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertIsNone(response.data["latest_community_library_submission_id"])
+        self.assertIsNone(response.data["latest_community_library_submission_status"])
+        self.assertFalse(response.data["has_any_live_community_library_submission"])
+
+    def test_admin_channel_filter__latest_community_library_submission_status__any(
+        self,
+    ):
+        self.client.force_authenticate(user=self.admin_user)
+
+        submission = testdata.community_library_submission()
+
+        response = self.client.get(
+            reverse_with_query(
+                "admin-channels-list",
+                query={
+                    "id__in": submission.channel.id,
+                },
+            ),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(len(response.data), 1)
+
+    def test_admin_channel_filter__latest_community_library_submission_status__multiple(
+        self,
+    ):
+        self.client.force_authenticate(user=self.admin_user)
+
+        submission1 = testdata.community_library_submission()
+        submission1.status = community_library_submission.STATUS_LIVE
+        submission1.save()
+
+        submission2 = testdata.community_library_submission()
+        submission2.status = community_library_submission.STATUS_PENDING
+        submission2.save()
+
+        submission3 = testdata.community_library_submission()
+        submission3.status = community_library_submission.STATUS_APPROVED
+        submission3.save()
+
+        response = self.client.get(
+            reverse_with_query(
+                "admin-channels-list",
+                query=[
+                    (
+                        "latest_community_library_submission_status",
+                        community_library_submission.STATUS_LIVE,
+                    ),
+                    (
+                        "latest_community_library_submission_status",
+                        community_library_submission.STATUS_PENDING,
+                    ),
+                ],
+            ),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertCountEqual(
+            [ch["id"] for ch in response.data],
+            [
+                submission1.channel.id,
+                submission2.channel.id,
+            ],
+        )
+
+    def test_admin_channel_filter__community_library_live(self):
+        self.client.force_authenticate(user=self.admin_user)
+
+        submission1 = testdata.community_library_submission()
+        submission1.channel.version = 2
+        submission1.channel.save()
+        submission1.status = community_library_submission.STATUS_LIVE
+        submission1.channel_version = 1
+        submission1.save()
+
+        CommunityLibrarySubmission.objects.create(
+            channel=submission1.channel,
+            channel_version=2,
+            author=submission1.author,
+            status=community_library_submission.STATUS_PENDING,
+        )
+
+        other_channel_submission = testdata.community_library_submission()
+        other_channel_submission.status = community_library_submission.STATUS_PENDING
+        other_channel_submission.save()
+
+        response = self.client.get(
+            reverse_with_query(
+                "admin-channels-list",
+                query={"community_library_live": True},
+            ),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertCountEqual(
+            [ch["id"] for ch in response.data],
+            [submission1.channel.id],
+        )
+
+    def test_admin_channel_filter__has_community_library_submission(self):
+        self.client.force_authenticate(user=self.admin_user)
+
+        submission = testdata.community_library_submission()
+
+        testdata.channel()  # Another channel without submission
+
+        response = self.client.get(
+            reverse_with_query(
+                "admin-channels-list",
+                query={"has_community_library_submission": True},
+            ),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertCountEqual(
+            [ch["id"] for ch in response.data],
+            [submission.channel.id],
+        )
 
     def test_create_channel(self):
         user = testdata.user()
@@ -940,3 +1225,49 @@ class ChannelLanguageTestCase(StudioAPITestCase):
             reverse(url_path, kwargs={"pk": channel_id}), format="json"
         )
         return response
+
+
+class GetPublishedDataTestCase(StudioAPITestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.editor_user = testdata.user(email="editor@user.com")
+        self.forbidden_user = testdata.user(email="forbidden@user.com")
+
+        self.channel = testdata.channel()
+        self.channel.editors.add(self.editor_user)
+
+        self.channel.published_data = {
+            "key1": "value1",
+            "key2": "value2",
+        }
+        self.channel.save()
+
+    def test_get_published_data__is_editor(self):
+        self.client.force_authenticate(user=self.editor_user)
+
+        response = self.client.get(
+            reverse("channel-published-data", kwargs={"pk": self.channel.id}),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.json(), self.channel.published_data)
+
+    def test_get_published_data__is_admin(self):
+        self.client.force_authenticate(user=self.admin_user)
+
+        response = self.client.get(
+            reverse("channel-published-data", kwargs={"pk": self.channel.id}),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.json(), self.channel.published_data)
+
+    def test_get_published_data__is_forbidden_user(self):
+        self.client.force_authenticate(user=self.forbidden_user)
+
+        response = self.client.get(
+            reverse("channel-published-data", kwargs={"pk": self.channel.id}),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 404, response.content)

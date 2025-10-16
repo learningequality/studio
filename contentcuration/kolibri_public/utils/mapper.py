@@ -3,7 +3,7 @@ from django.db.models.functions import Length
 from kolibri_content import models as kolibri_content_models
 from kolibri_content.base_models import MAX_TAG_LENGTH
 from kolibri_public import models as kolibri_public_models
-from kolibri_public.search import annotate_label_bitmasks
+from kolibri_public.search import annotate_contentnode_label_bitmasks
 from kolibri_public.utils.annotation import set_channel_metadata_fields
 from le_utils.constants import content_kinds
 
@@ -19,9 +19,23 @@ class ChannelMapper(object):
     Foreign Keyed from the root ContentNode.
     """
 
-    def __init__(self, channel, public=True):
+    def __init__(
+        self,
+        channel,
+        public=True,
+        categories=None,
+        countries=None,
+    ):
+        # Note: The argument `channel` is an instance of `kolibri_content.models.ChannelMetadata,`
+        # which belongs to a specific channel version to be exported. Therefore, we do not
+        # need to explicitly pass the channel version as an argument here.
+
+        # Note: The `categories` argument should be a _list_, NOT a _dict_.
+
         self.channel = channel
         self.public = public
+        self.categories = categories
+        self.countries = countries
 
     @property
     def overrides(self):
@@ -54,10 +68,24 @@ class ChannelMapper(object):
             )
             self.mapped_channel.public = self.public
             self.mapped_channel.save_base(raw=True)
-            annotate_label_bitmasks(self.mapped_root.get_descendants(include_self=True))
+
+            annotate_contentnode_label_bitmasks(
+                self.mapped_root.get_descendants(include_self=True)
+            )
             # Rather than set the ancestors fields after mapping, like it is done in Kolibri
             # here we set it during mapping as we are already recursing through the tree.
-            set_channel_metadata_fields(self.mapped_channel.id, public=self.public)
+
+            set_channel_metadata_fields(
+                self.mapped_channel.id,
+                public=self.public,
+                categories=self.categories,
+                countries=self.countries,
+            )
+
+            # Refreshing this is needed, because otherwise the fields set in the
+            # set_channel_metadata_fields function will not be reflected in the
+            # self.mapped_channel object.
+            self.mapped_channel.refresh_from_db()
 
     def _map_model(self, source, Model):
         properties = {}

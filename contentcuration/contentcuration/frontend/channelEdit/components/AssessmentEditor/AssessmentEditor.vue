@@ -27,7 +27,8 @@
           <VCardText>
             <VLayout align-start>
               <VFlex
-                xs1
+                :style="{ 'margin-right': '1.5rem' }"
+                shrink
                 mt-2
               >
                 {{ idx + 1 }}
@@ -45,7 +46,7 @@
 
               <VFlex
                 v-else
-                xs10
+                xs11
               >
                 <AssessmentItemEditor
                   :item="item"
@@ -110,14 +111,12 @@
               v-if="isItemActive(item)"
               justify-end
             >
-              <VBtn
-                color="greyBackground"
-                class="close-item-btn mr-0"
+              <KButton
+                :text="$tr('closeBtnLabel')"
+                class="close-item-btn"
                 data-test="closeBtn"
                 @click="closeActiveItem"
-              >
-                {{ $tr('closeBtnLabel') }}
-              </VBtn>
+              />
             </VLayout>
           </VCardText>
         </VCard>
@@ -128,14 +127,12 @@
       {{ $tr('noQuestionsPlaceholder') }}
     </div>
 
-    <VBtn
-      color="greyBackground"
+    <KButton
+      :text="$tr('newQuestionBtnLabel')"
       class="ml-0 mt-4"
       data-test="newQuestionBtn"
       @click="addItem"
-    >
-      {{ $tr('newQuestionBtnLabel') }}
-    </VBtn>
+    />
   </VContainer>
 
 </template>

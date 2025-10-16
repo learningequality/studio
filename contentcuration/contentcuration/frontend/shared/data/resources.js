@@ -1222,67 +1222,82 @@ export const Channel = new CreateModelResource({
     return this.transaction({ mode: 'rw' }, () => {
       return this.table.update(id, { publishing: true });
     }).then(() => {
-      const change = new PublishedChange({
-        key: id,
-        version_notes,
-        language: currentLanguage,
-        table: this.tableName,
-        source: CLIENTID,
-      });
-      return this.transaction({ mode: 'rw' }, CHANGES_TABLE, TABLE_NAMES.CONTENTNODE, () => {
-        return Promise.all([
-          this._saveAndQueueChange(change),
-          ContentNode.table.where({ channel_id: id }).modify({
-            changed: false,
-            published: true,
-            has_new_descendants: false,
-            has_updated_descendants: false,
-          }),
-        ]);
+      return this.table.get(id).then(channel => {
+        const change = new PublishedChange({
+          key: id,
+          version_notes,
+          language: currentLanguage || channel.language,
+          table: this.tableName,
+          source: CLIENTID,
+        });
+        return this.transaction({ mode: 'rw' }, CHANGES_TABLE, TABLE_NAMES.CONTENTNODE, () => {
+          return Promise.all([
+            this._saveAndQueueChange(change),
+            ContentNode.table.where({ channel_id: id }).modify({
+              changed: false,
+              published: true,
+              has_new_descendants: false,
+              has_updated_descendants: false,
+            }),
+          ]);
+        });
       });
     });
   },
 
-  publishDraft(id) {
-    const change = new PublishedNextChange({
-      key: id,
-      table: this.tableName,
-      source: CLIENTID,
-    });
-    return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
-      return this._saveAndQueueChange(change);
-    }).then(() => change);
+  publishDraft(id, opts = {}) {
+    const { use_staging_tree = false } = opts;
+
+    return this.transaction({ mode: 'rw' }, () => {
+      return this.table.update(id, {
+        publishing: true,
+        publishing_draft: true,
+      });
+    })
+      .then(() => {
+        const change = new PublishedNextChange({
+          key: id,
+          use_staging_tree,
+          table: this.tableName,
+          source: CLIENTID,
+        });
+        return this.transaction({ mode: 'rw' }, CHANGES_TABLE, () => {
+          return this._saveAndQueueChange(change);
+        });
+      })
+      .then(() => {
+        this._monitorDraftCompletion(id);
+        return Promise.resolve();
+      });
   },
 
-  waitForPublishingDraft(publishDraftChange) {
+  _monitorDraftCompletion(channelId) {
     const observable = liveQuery(() => {
-      return db[CHANGES_TABLE].where('rev')
-        .equals(publishDraftChange.rev)
-        .and(change => change.type === publishDraftChange.type)
-        .and(change => change.channel_id === publishDraftChange.channel_id)
+      return this.table.db
+        .table(CHANGES_TABLE)
+        .where('table')
+        .equals(TABLE_NAMES.CHANNEL)
+        .and(change => change.key === channelId && change.type === CHANGE_TYPES.PUBLISHED_NEXT)
         .toArray();
     });
 
-    return new Promise((resolve, reject) => {
-      const subscription = observable.subscribe({
-        next(result) {
-          // Successfully applied change will be removed.
-          if (result.length === 0) {
-            subscription.unsubscribe();
-            resolve();
-          } else {
-            if (result[0].disallowed || result[0].errored) {
-              subscription.unsubscribe();
-              reject('Publish draft failed');
-            }
-          }
-        },
-        error() {
+    const subscription = observable.subscribe({
+      next: async changes => {
+        if (changes.length === 0) {
           subscription.unsubscribe();
-          reject('Live query failed');
-        },
-      });
+          await this.transaction({ mode: 'rw' }, () => {
+            return this.table.update(channelId, {
+              publishing: false,
+              publishing_draft: false,
+            });
+          });
+        }
+      },
     });
+
+    setTimeout(() => {
+      subscription.unsubscribe();
+    }, 300000);
   },
 
   deploy(id) {
@@ -1396,6 +1411,10 @@ export const Channel = new CreateModelResource({
       .get(this.getUrlFunction('languages')(id))
       .then(response => response.data.languages);
     return uniq(compact(localLanguages.concat(remoteLanguages)));
+  },
+  async getPublishedData(id) {
+    const response = await client.get(window.Urls.channel_published_data(id));
+    return response.data;
   },
 });
 
@@ -2375,6 +2394,20 @@ export const Recommendation = new APIResource({
   fetchCollection(params) {
     return client.post(window.Urls.recommendations(), params).then(response => {
       return response.data || [];
+    });
+  },
+});
+
+export const CommunityLibrarySubmission = new APIResource({
+  urlName: 'community_library_submission',
+  fetchCollection(params) {
+    return client.get(this.collectionUrl(), { params }).then(response => {
+      return response.data || [];
+    });
+  },
+  create(params) {
+    return client.post(this.collectionUrl(), params).then(response => {
+      return response.data;
     });
   },
 });

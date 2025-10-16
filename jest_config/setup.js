@@ -14,9 +14,7 @@ import "core-js/stable/structured-clone";
 import 'fake-indexeddb/auto';
 // Polyfill webstreams
 import {ReadableStream, WritableStream, TransformStream, CountQueuingStrategy} from 'web-streams-polyfill';
-import jquery from 'jquery';
 
-window.jQuery = window.$ = jquery;
 window.ReadableStream = global.ReadableStream = ReadableStream;
 window.WritableStream = global.WritableStream = WritableStream;
 window.TransformStream = global.TransformStream = TransformStream;

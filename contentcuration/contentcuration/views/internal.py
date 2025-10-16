@@ -221,9 +221,9 @@ def api_create_channel_endpoint(request):
                 "channel_id": obj.pk,
             }
         )
-    except KeyError:
+    except KeyError as e:
         return HttpResponseBadRequest(
-            "Required attribute missing from data: {}".format(data)
+            "Required attribute missing from data | {}".format(str(e))
         )
     except Exception as e:
         handle_server_error(e, request)
@@ -294,9 +294,9 @@ def api_commit_channel(request):
         )
     except (Channel.DoesNotExist, PermissionDenied):
         return HttpResponseNotFound("No channel matching: {}".format(channel_id))
-    except KeyError:
+    except KeyError as e:
         return HttpResponseBadRequest(
-            "Required attribute missing from data: {}".format(data)
+            "Required attribute missing from data | {}".format(str(e))
         )
     except Exception as e:
         handle_server_error(e, request)
@@ -351,9 +351,9 @@ def api_add_nodes_to_tree(request):
         return HttpResponseNotFound("No content matching: {}".format(parent_id))
     except ValidationError as e:
         return HttpResponseBadRequest(content=str(e))
-    except KeyError:
+    except KeyError as e:
         return HttpResponseBadRequest(
-            "Required attribute missing from data: {}".format(data)
+            "Required attribute missing from data | {}".format(str(e))
         )
     except NodeValidationError as e:
         return HttpResponseBadRequest(str(e))

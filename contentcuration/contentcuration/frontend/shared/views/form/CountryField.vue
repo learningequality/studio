@@ -28,14 +28,9 @@
 
 <script>
 
-  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
+  import countries from '../../utils/countries';
 
-  var countries = require('i18n-iso-countries');
-  countries.registerLocale(require('i18n-iso-countries/langs/en.json'));
-  countries.registerLocale(require('i18n-iso-countries/langs/es.json'));
-  countries.registerLocale(require('i18n-iso-countries/langs/ar.json'));
-  countries.registerLocale(require('i18n-iso-countries/langs/fr.json'));
-  countries.registerLocale(require('i18n-iso-countries/langs/pt.json'));
+  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
   export default {
     name: 'CountryField',
@@ -66,6 +61,10 @@
         required: false,
         default: null,
       },
+      fullWidth: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -79,7 +78,13 @@
         },
         set(value) {
           this.$emit('input', value);
-          setTimeout(this.searchInputClear, 1);
+
+          // If selecting multiple countries, a chip is created for the selected item,
+          // so the input can be cleared. If selecting a single country, the search input
+          // becomes the selected country and should not be cleared to stay visible.
+          if (this.multiple) {
+            setTimeout(this.searchInputClear, 1);
+          }
         },
       },
       options() {
@@ -94,6 +99,9 @@
       },
       rules() {
         return [v => (!this.required || v.length ? true : this.$tr('locationRequiredMessage'))];
+      },
+      autocompleteMaxWidth() {
+        return this.fullWidth ? '100%' : '500px';
       },
     },
     methods: {
@@ -119,7 +127,7 @@
   }
 
   .v-autocomplete {
-    max-width: 500px;
+    max-width: v-bind('autocompleteMaxWidth');
   }
 
 </style>

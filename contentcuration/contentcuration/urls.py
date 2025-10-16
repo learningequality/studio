@@ -13,6 +13,8 @@ Including another URLconf
     1. Add an import:  from blog import urls as blog_urls
     2. Add a URL to urlpatterns:  re_path(r'^blog/', include(blog_urls))
 """
+import uuid
+
 import django_js_reverse.views as django_js_reverse_views
 from django.conf import settings
 from django.conf.urls.i18n import i18n_patterns
@@ -38,6 +40,12 @@ from contentcuration.viewsets.channel import CatalogViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.clipboard import ClipboardViewSet
+from contentcuration.viewsets.community_library_submission import (
+    AdminCommunityLibrarySubmissionViewSet,
+)
+from contentcuration.viewsets.community_library_submission import (
+    CommunityLibrarySubmissionViewSet,
+)
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 from contentcuration.viewsets.feedback import FlagFeedbackEventViewSet
 from contentcuration.viewsets.feedback import RecommendationsEventViewSet
@@ -53,8 +61,11 @@ from contentcuration.viewsets.user import UserViewSet
 
 class StagingPageRedirectView(RedirectView):
     def get_redirect_url(self, *args, **kwargs):
-        channel_id = kwargs["channel_id"]
-        return "/channels/{}/#/staging".format(channel_id)
+        try:
+            channel_id = uuid.UUID(kwargs["channel_id"]).hex
+            return "/channels/{}/#/staging".format(channel_id)
+        except ValueError:
+            return None
 
 
 router = routers.DefaultRouter(trailing_slash=False)
@@ -79,6 +90,16 @@ router.register(
     r"recommendationsinteraction",
     RecommendationsInteractionEventViewSet,
     basename="recommendations-interaction",
+)
+router.register(
+    r"communitylibrary_submission",
+    CommunityLibrarySubmissionViewSet,
+    basename="community-library-submission",
+)
+router.register(
+    r"admin_communitylibrary_submission",
+    AdminCommunityLibrarySubmissionViewSet,
+    basename="admin-community-library-submission",
 )
 
 urlpatterns = [

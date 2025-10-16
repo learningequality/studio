@@ -1,75 +1,53 @@
 <template>
 
   <div>
-    <VListTile @click.stop>
-      <VListTileContent>
-        <VListTileTitle>{{ invitationText }}</VListTileTitle>
-      </VListTileContent>
-
-      <template>
-        <VListTileAction>
-          <VTooltip
-            bottom
-            lazy
-          >
-            <template #activator="{ on }">
-              <VBtn
-                icon
-                data-test="accept"
-                v-on="on"
-                @click="accept"
-              >
-                <Icon icon="done" />
-              </VBtn>
-            </template>
-            <span>{{ $tr('accept') }}</span>
-          </VTooltip>
-        </VListTileAction>
-        <VListTileAction>
-          <VTooltip
-            bottom
-            lazy
-          >
-            <template #activator="{ on }">
-              <VBtn
-                icon
-                data-test="decline"
-                v-on="on"
-                @click="dialog = true"
-              >
-                <Icon
-                  color="red"
-                  icon="clear"
-                />
-              </VBtn>
-            </template>
-            <span>{{ $tr('decline') }}</span>
-          </VTooltip>
-        </VListTileAction>
-      </template>
-    </VListTile>
-    <MessageDialog
-      v-model="dialog"
-      :header="$tr('decliningInvitation')"
-      :text="$tr('decliningInvitationMessage')"
+    <li class="invitation">
+      <div class="invitation__main">
+        <div class="invitation__main--left">
+          {{ invitationText }}
+        </div>
+        <div class="invitation__main--right">
+          <div class="invitation__main--right__btn-one">
+            <KIconButton
+              :tooltip="$tr('accept')"
+              text="Flat button"
+              :primary="true"
+              icon="check"
+              :color="$themePalette.green.v_600"
+              data-test="accept"
+              appearance="flat-button"
+              @click="accept"
+            />
+          </div>
+          <div class="invitation__main--right__btn-two">
+            <KIconButton
+              :tooltip="$tr('decline')"
+              text="Flat button"
+              :primary="true"
+              icon="close"
+              :color="$themePalette.red.v_500"
+              data-test="decline"
+              appearance="flat-button"
+              @click="dialog = true"
+            />
+          </div>
+        </div>
+      </div>
+    </li>
+    <KModal
+      v-if="dialog"
+      size="small"
+      :submitText="$tr('decline')"
+      :cancelText="$tr('cancel')"
+      :title="$tr('decliningInvitation')"
+      data-testid="channel-invitation-modal"
+      @submit="declineAndClose"
+      @cancel="close"
     >
-      <template #buttons="{ close }">
-        <VSpacer />
-        <VBtn
-          flat
-          @click="close"
-        >
-          {{ $tr('cancel') }}
-        </VBtn>
-        <VBtn
-          data-test="decline-close"
-          color="primary"
-          @click="declineAndClose"
-        >
-          {{ $tr('decline') }}
-        </VBtn>
+      <template>
+        {{ $tr('decliningInvitationMessage') }}
       </template>
-    </MessageDialog>
+    </KModal>
   </div>
 
 </template>
@@ -79,13 +57,9 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import { InvitationShareModes } from '../../constants';
-  import MessageDialog from 'shared/views/MessageDialog';
 
   export default {
     name: 'ChannelInvitation',
-    components: {
-      MessageDialog,
-    },
     props: {
       invitationID: {
         type: String,
@@ -134,6 +108,9 @@
           this.$store.dispatch('showSnackbarSimple', this.$tr('declinedSnackbar'));
         });
       },
+      close() {
+        this.dialog = false;
+      },
     },
     $trs: {
       editText: '{sender} has invited you to edit {channel}',
@@ -152,7 +129,7 @@
 </script>
 
 
-<style scoped>
+<style lang="scss" scoped>
 
   /deep/ .v-list__tile {
     height: unset;
@@ -163,6 +140,43 @@
   .v-list__tile__title {
     height: unset;
     white-space: unset;
+  }
+
+  .invitation {
+    padding: 16px 16px 0;
+    font-size: 16px;
+    list-style: none;
+
+    &__main {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      &--right {
+        display: flex;
+        flex-direction: row;
+
+        [dir='ltr'] &__btn-one {
+          margin-right: 15px;
+          margin-left: 0;
+        }
+
+        [dir='rtl'] &__btn-two,
+        &__btn-one {
+          margin-right: 0;
+          margin-left: 15px;
+        }
+      }
+    }
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: end;
+
+    &__close {
+      margin-right: 10px;
+    }
   }
 
 </style>

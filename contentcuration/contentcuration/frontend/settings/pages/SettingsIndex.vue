@@ -18,20 +18,9 @@
       </template>
     </AppBar>
     <StudioOfflineAlert :offset="104" />
-    <VContent>
-      <VContainer
-        fluid
-        class="pa-0"
-        style="height: calc(100vh - 112px); overflow: auto; overflow-x: hidden"
-      >
-        <VContainer
-          class="ml-0 pl-5"
-          :class="offline ? 'pt-5' : 'pt-2'"
-        >
-          <router-view />
-        </VContainer>
-      </VContainer>
-    </VContent>
+    <StudioPage :offline="offline">
+      <router-view />
+    </StudioPage>
     <GlobalSnackbar />
     <PolicyModals />
   </VApp>
@@ -48,10 +37,11 @@
   import { routerMixin } from 'shared/mixins';
   import StudioOfflineAlert from 'shared/views/StudioOfflineAlert';
   import PolicyModals from 'shared/views/policies/PolicyModals';
+  import StudioPage from 'shared/views/StudioPage';
 
   export default {
     name: 'SettingsIndex',
-    components: { GlobalSnackbar, AppBar, StudioOfflineAlert, PolicyModals },
+    components: { GlobalSnackbar, AppBar, StudioOfflineAlert, StudioPage, PolicyModals },
     mixins: [routerMixin],
     computed: {
       ...mapState({

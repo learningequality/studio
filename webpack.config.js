@@ -184,8 +184,5 @@ module.exports = (env = {}) => {
     ],
     stats: 'normal',
   });
-  if (dev) {
-    config.entry.editorDev = './editorDev/index.js';
-  }
   return config;
 };

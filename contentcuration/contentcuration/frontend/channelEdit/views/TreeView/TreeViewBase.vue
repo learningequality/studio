@@ -53,7 +53,7 @@
         </KRouterLink>
       </VToolbarItems>
       <VSpacer />
-      <SavingIndicator v-if="!offline" />
+      <SavingIndicator v-if="!offline && !isDraftPublishing" />
       <OfflineText indicator />
       <ProgressModal />
       <div
@@ -84,6 +84,31 @@
         >
           {{ $tr('apiGenerated') }}
         </span>
+        <BaseMenu>
+          <template #activator="{ on }">
+            <KButton
+              hasDropdown
+              class="share-button"
+              v-on="on"
+            >
+              {{ $tr('shareMenuButton') }}
+            </KButton>
+          </template>
+          <VList>
+            <VListTile @click="showSubmitToCommunityLibrarySidePanel = true">
+              <VListTileTitle>{{ $tr('submitToCommunityLibrary') }}</VListTileTitle>
+            </VListTile>
+            <VListTile
+              :to="shareChannelLink"
+              @click="trackClickEvent('Share channel')"
+            >
+              <VListTileTitle>{{ $tr('inviteCollaborators') }}</VListTileTitle>
+            </VListTile>
+            <VListTile @click="showTokenModal = true">
+              <VListTileTitle>{{ $tr('shareToken') }}</VListTileTitle>
+            </VListTile>
+          </VList>
+        </BaseMenu>
         <VTooltip
           v-if="!loading && canManage"
           bottom
@@ -207,9 +232,14 @@
     />
     <slot></slot>
 
-    <PublishModal
-      v-if="showPublishModal"
-      v-model="showPublishModal"
+    <PublishSidePanel
+      v-if="showPublishSidePanel"
+      @close="showPublishSidePanel = false"
+    />
+    <SubmitToCommunityLibrarySidePanel
+      v-if="showSubmitToCommunityLibrarySidePanel"
+      :channel="currentChannel"
+      @close="showSubmitToCommunityLibrarySidePanel = false"
     />
     <template v-if="isPublished">
       <ChannelTokenModal
@@ -313,10 +343,12 @@
   import Clipboard from '../../components/Clipboard';
   import SyncResourcesModal from '../sync/SyncResourcesModal';
   import ProgressModal from '../progress/ProgressModal';
-  import PublishModal from '../../components/publish/PublishModal';
+
   import QuickEditModal from '../../components/QuickEditModal';
   import SavingIndicator from '../../components/edit/SavingIndicator';
   import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
+  import PublishSidePanel from '../../components/sidePanels/PublishSidePanel';
+  import SubmitToCommunityLibrarySidePanel from '../../components/sidePanels/SubmitToCommunityLibrarySidePanel';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import ToolBar from 'shared/views/ToolBar';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
@@ -335,7 +367,8 @@
       DraggableRegion,
       MainNavigationDrawer,
       ToolBar,
-      PublishModal,
+      PublishSidePanel,
+      SubmitToCommunityLibrarySidePanel,
       ProgressModal,
       ChannelTokenModal,
       SyncResourcesModal,
@@ -357,7 +390,8 @@
     data() {
       return {
         drawer: false,
-        showPublishModal: false,
+        showPublishSidePanel: false,
+        showSubmitToCommunityLibrarySidePanel: false,
         showTokenModal: false,
         showSyncModal: false,
         showClipboard: false,
@@ -389,9 +423,16 @@
       isRicecooker() {
         return Boolean(this.currentChannel.ricecooker_version);
       },
+      isDraftPublishing() {
+        return (
+          this.currentChannel &&
+          this.currentChannel.publishing &&
+          this.currentChannel.publishing_draft
+        );
+      },
       disablePublish() {
         return (
-          this.currentChannel.publishing ||
+          (this.currentChannel.publishing && !this.currentChannel.publishing_draft) ||
           !this.isChanged ||
           !this.currentChannel.language ||
           (this.rootNode && !this.rootNode.resource_count)
@@ -502,7 +543,7 @@
         this.trackClickEvent('Delete channel');
       },
       publishChannel() {
-        this.showPublishModal = true;
+        this.showPublishSidePanel = true;
         this.trackClickEvent('Publish');
       },
       trackClickEvent(eventLabel) {
@@ -526,6 +567,12 @@
       noLanguageSetError: 'Channel language is required',
       incompleteDescendantsText:
         '{count, number, integer} {count, plural, one {resource is incomplete and cannot be published} other {resources are incomplete and cannot be published}}',
+
+      // Share menu section
+      shareMenuButton: 'Share',
+      submitToCommunityLibrary: 'Submit to community library',
+      inviteCollaborators: 'Invite collaborators',
+      shareToken: 'Share token',
 
       // Delete channel section
       deleteChannelButton: 'Delete channel',
@@ -567,6 +614,11 @@
       width: 400px;
       max-width: 400px;
     }
+  }
+
+  .share-button {
+    margin-right: 8px;
+    margin-left: 8px;
   }
 
   .clipboard-fab.dragging-over.in-draggable-universe {

@@ -26,37 +26,54 @@ from le_utils.constants.labels.needs import NEEDSLIST
 from le_utils.constants.labels.subjects import SUBJECTSLIST
 
 
-metadata_lookup = {
+contentnode_metadata_lookup = {
     "learning_activities": LEARNINGACTIVITIESLIST,
     "categories": SUBJECTSLIST,
     "grade_levels": LEVELSLIST,
     "accessibility_labels": ACCESSIBILITYCATEGORIESLIST,
     "learner_needs": NEEDSLIST,
 }
+contentnode_metadata_bitmasks = {}
+contentnode_bitmask_fieldnames = {}
+
+channelmetadata_metadata_lookup = {
+    "categories": SUBJECTSLIST,
+}
+channelmetadata_metadata_bitmasks = {}
+channelmetadata_bitmask_fieldnames = {}
 
 
-metadata_bitmasks = {}
+def _populate_bitmask_data(metadata_lookup, metadata_bitmasks, bitmask_fieldnames):
 
-bitmask_fieldnames = {}
+    for key, labels in metadata_lookup.items():
+        bitmask_lookup = {}
+        i = 0
+        while (chunk := labels[i : i + 64]) :
+            bitmask_field_name = "{}_bitmask_{}".format(key, i)
+            bitmask_fieldnames[bitmask_field_name] = []
+            for j, label in enumerate(chunk):
+                info = {
+                    "bitmask_field_name": bitmask_field_name,
+                    "field_name": key,
+                    "bits": 2 ** j,
+                    "label": label,
+                }
+                bitmask_lookup[label] = info
+                bitmask_fieldnames[bitmask_field_name].append(info)
+            i += 64
+        metadata_bitmasks[key] = bitmask_lookup
 
 
-for key, labels in metadata_lookup.items():
-    bitmask_lookup = {}
-    i = 0
-    while labels[i : i + 64]:
-        bitmask_field_name = "{}_bitmask_{}".format(key, i)
-        bitmask_fieldnames[bitmask_field_name] = []
-        for j, label in enumerate(labels):
-            info = {
-                "bitmask_field_name": bitmask_field_name,
-                "field_name": key,
-                "bits": 2 ** j,
-                "label": label,
-            }
-            bitmask_lookup[label] = info
-            bitmask_fieldnames[bitmask_field_name].append(info)
-        i += 64
-    metadata_bitmasks[key] = bitmask_lookup
+_populate_bitmask_data(
+    contentnode_metadata_lookup,
+    contentnode_metadata_bitmasks,
+    contentnode_bitmask_fieldnames,
+)
+_populate_bitmask_data(
+    channelmetadata_metadata_lookup,
+    channelmetadata_metadata_bitmasks,
+    channelmetadata_bitmask_fieldnames,
+)
 
 
 def _get_available_languages(base_queryset):
@@ -87,7 +104,7 @@ def _get_available_channels(base_queryset):
 # Remove the SQLite Bitwise OR definition as not needed.
 
 
-def get_available_metadata_labels(base_queryset):
+def get_contentnode_available_metadata_labels(base_queryset):
     # Updated to use the kolibri_public ChannelMetadata model
     from kolibri_public.models import ChannelMetadata
 
@@ -101,12 +118,12 @@ def get_available_metadata_labels(base_queryset):
     if cache_key not in cache:
         base_queryset = base_queryset.order_by()
         aggregates = {}
-        for field in bitmask_fieldnames:
+        for field in contentnode_bitmask_fieldnames:
             field_agg = field + "_agg"
             aggregates[field_agg] = BitOr(field)
         output = {}
         agg = base_queryset.aggregate(**aggregates)
-        for field, values in bitmask_fieldnames.items():
+        for field, values in contentnode_bitmask_fieldnames.items():
             bit_value = agg[field + "_agg"]
             for value in values:
                 if value["field_name"] not in output:
@@ -123,10 +140,12 @@ def get_all_contentnode_label_metadata():
     # Updated to use the kolibri_public ContentNode model
     from kolibri_public.models import ContentNode
 
-    return get_available_metadata_labels(ContentNode.objects.filter(available=True))
+    return get_contentnode_available_metadata_labels(
+        ContentNode.objects.filter(available=True)
+    )
 
 
-def annotate_label_bitmasks(queryset):
+def annotate_label_bitmasks(queryset, bitmask_fieldnames):
     update_statements = {}
     for bitmask_fieldname, label_info in bitmask_fieldnames.items():
         update_statements[bitmask_fieldname] = sum(
@@ -142,3 +161,39 @@ def annotate_label_bitmasks(queryset):
             for info in label_info
         )
     queryset.update(**update_statements)
+
+
+def annotate_contentnode_label_bitmasks(queryset):
+    return annotate_label_bitmasks(queryset, contentnode_bitmask_fieldnames)
+
+
+def annotate_channelmetadata_label_bitmasks(queryset):
+    return annotate_label_bitmasks(queryset, channelmetadata_bitmask_fieldnames)
+
+
+def has_all_labels(queryset, metadata_bitmasks, field_name, labels):
+    bitmasks = metadata_bitmasks[field_name]
+    bits = {}
+    for label in labels:
+        if label in bitmasks:
+            bitmask_fieldname = bitmasks[label]["bitmask_field_name"]
+            if bitmask_fieldname not in bits:
+                bits[bitmask_fieldname] = 0
+            bits[bitmask_fieldname] += bitmasks[label]["bits"]
+
+    filters = {}
+    annotations = {}
+    for bitmask_fieldname, bits in bits.items():
+        annotation_fieldname = "{}_{}".format(bitmask_fieldname, "masked")
+        # To get the correct result, i.e. an AND that all the labels are present,
+        # we need to check that the aggregated value is euqal to the bits.
+        # If we wanted an OR (which would check for any being present),
+        # we would have to use GREATER THAN 0 here.
+        filters[annotation_fieldname] = bits
+        # This ensures that the annotated value is the result of the AND operation
+        # so if all the values are present, the result will be the same as the bits
+        # but if any are missing, it will not be equal to the bits, but will only be
+        # 0 if none of the bits are present.
+        annotations[annotation_fieldname] = F(bitmask_fieldname).bitand(bits)
+
+    return queryset.annotate(**annotations).filter(**filters)

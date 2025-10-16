@@ -1,117 +1,119 @@
 <template>
 
-  <Uploader
-    ref="uploader"
-    :presetID="imagePreset"
-  >
-    <template #default="{ handleFiles }">
-      <VLayout>
-        <DropdownWrapper
-          component="VFlex"
-          xs7
-          lg5
-        >
-          <template #default="{ attach, menuProps }">
-            <VSelect
-              :key="kindSelectKey"
-              :items="kindSelectItems"
-              :value="kind"
-              :label="$tr('questionTypeLabel')"
-              data-test="kindSelect"
-              :menu-props="menuProps"
-              :attach="attach"
-              box
-              @input="onKindUpdate"
-            />
-          </template>
-        </DropdownWrapper>
-      </VLayout>
-
-      <VLayout>
-        <VFlex>
-          <ErrorList
-            :errors="questionErrorMessages"
-            data-test="questionErrors"
-          />
-
-          <div class="grey--text mb-1 text--darken-2">
-            {{ $tr('questionLabel') }}
-          </div>
-
-          <transition name="fade">
-            <keep-alive include="MarkdownEditor">
-              <MarkdownEditor
-                v-if="isQuestionOpen"
-                analyticsLabel="Question"
-                :markdown="question"
-                :handleFileUpload="handleFiles"
-                :getFileUpload="getFileUpload"
-                :imagePreset="imagePreset"
-                @update="onQuestionUpdate"
-                @minimize="closeQuestion"
-              />
-
-              <div
-                v-else
-                class="pb-3 pl-2 pr-2 pt-3 question-text"
-                data-test="questionText"
-                @click="openQuestion"
-              >
-                <VLayout
-                  align-start
-                  justify-space-between
-                >
-                  <MarkdownViewer :markdown="question" />
-
-                  <Icon
-                    :color="$themePalette.grey.v_800"
-                    icon="edit"
-                    class="mr-2"
-                  />
-                </VLayout>
-              </div>
-            </keep-alive>
-          </transition>
-        </VFlex>
-      </VLayout>
-
-      <VLayout
-        v-if="kind !== AssessmentItemTypes.FREE_RESPONSE"
-        mt-4
+  <div>
+    <VLayout>
+      <DropdownWrapper
+        component="VFlex"
+        xs7
+        lg5
       >
-        <VFlex>
-          <ErrorList
-            :errors="answersErrorMessages"
-            data-test="answersErrors"
+        <template #default="{ attach, menuProps }">
+          <VSelect
+            :key="kindSelectKey"
+            :items="kindSelectItems"
+            :value="kind"
+            :label="$tr('questionTypeLabel')"
+            data-test="kindSelect"
+            :menu-props="menuProps"
+            :attach="attach"
+            box
+            @input="onKindUpdate"
           />
+        </template>
+      </DropdownWrapper>
+    </VLayout>
 
-          <AnswersEditor
-            :questionKind="kind"
-            :answers="answers"
-            :openAnswerIdx="openAnswerIdx"
-            :handleFileUpload="handleFiles"
-            :getFileUpload="getFileUpload"
-            :imagePreset="imagePreset"
-            @update="onAnswersUpdate"
-            @open="openAnswer"
-            @close="closeAnswer"
-          />
+    <VLayout>
+      <VFlex>
+        <ErrorList
+          :errors="questionErrorMessages"
+          data-test="questionErrors"
+        />
 
-          <HintsEditor
-            class="mt-4"
-            :hints="hints"
-            :openHintIdx="openHintIdx"
-            :handleFileUpload="handleFiles"
-            :getFileUpload="getFileUpload"
-            :imagePreset="imagePreset"
-            @update="onHintsUpdate"
-            @open="openHint"
-            @close="closeHint"
-          />
-        </VFlex>
-      </VLayout>
-    </template>
-  </Uploader>
+        <div class="grey--text mb-1 text--darken-2">
+          {{ $tr('questionLabel') }}
+        </div>
+
+        <transition name="fade">
+          <keep-alive include="TipTapEditor">
+            <!--analyticsLabel="Question"-->
+            <TipTapEditor
+              v-if="isQuestionOpen"
+              v-model="question"
+              mode="edit"
+              :imageProcessor="EditorImageProcessor"
+              @update="onQuestionUpdate"
+              @minimize="closeQuestion"
+            />
+
+            <div
+              v-else
+              class="pb-3 pl-2 pr-2 pt-3 question-text"
+              data-test="questionText"
+              @click="openQuestion"
+            >
+              <VLayout
+                align-start
+                justify-space-between
+              >
+                <VFlex grow>
+                  <TipTapEditor
+                    v-model="question"
+                    mode="view"
+                    tabindex="-1"
+                  />
+                </VFlex>
+
+                <VFlex shrink>
+                  <button
+                    class="v-btn v-btn--flat v-btn--icon v-size--default"
+                    data-test="editQuestionButton"
+                    @click.stop="openQuestion"
+                  >
+                    <Icon
+                      :color="$themePalette.grey.v_800"
+                      icon="edit"
+                      class="mr-2"
+                    />
+                  </button>
+                </VFlex>
+              </VLayout>
+            </div>
+          </keep-alive>
+        </transition>
+      </VFlex>
+    </VLayout>
+
+    <VLayout
+      v-if="kind !== AssessmentItemTypes.FREE_RESPONSE"
+      mt-4
+    >
+      <VFlex>
+        <ErrorList
+          :errors="answersErrorMessages"
+          data-test="answersErrors"
+        />
+
+        <AnswersEditor
+          :questionKind="kind"
+          :answers="answers"
+          :openAnswerIdx="openAnswerIdx"
+          @update="onAnswersUpdate"
+          @open="openAnswer"
+          @close="closeAnswer"
+        />
+
+        <HintsEditor
+          class="mt-4"
+          :hints="hints"
+          :openHintIdx="openHintIdx"
+          @update="onHintsUpdate"
+          @open="openHint"
+          @close="closeHint"
+        />
+      </VFlex>
+    </VLayout>
+  </div>
 
 </template>
 
@@ -125,6 +127,7 @@
   import translator from '../../translator';
   import { updateAnswersToQuestionType, assessmentItemKey } from '../../utils';
   import { AssessmentItemTypeLabels } from '../../constants';
+  import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
   import {
     ContentModalities,
     AssessmentItemTypes,
@@ -132,22 +135,17 @@
     FeatureFlagKeys,
   } from 'shared/constants';
   import ErrorList from 'shared/views/ErrorList/ErrorList';
-  import Uploader from 'shared/views/files/Uploader';
-  import MarkdownEditor from 'shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor';
-  import MarkdownViewer from 'shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer';
-  import { FormatPresetsNames } from 'shared/leUtils/FormatPresets';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
+  import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue';
 
   export default {
     name: 'AssessmentItemEditor',
     components: {
       DropdownWrapper,
       ErrorList,
-      MarkdownEditor,
-      MarkdownViewer,
       AnswersEditor,
       HintsEditor,
-      Uploader,
+      TipTapEditor,
     },
     model: {
       prop: 'item',
@@ -207,10 +205,10 @@
         openAnswerIdx: null,
         kindSelectKey: 0,
         AssessmentItemTypes,
+        EditorImageProcessor,
       };
     },
     computed: {
-      ...mapGetters('file', ['getFileUpload']),
       ...mapGetters(['hasFeatureEnabled']),
       ...mapGetters('contentNode', ['getContentNode']),
       question() {
@@ -219,9 +217,6 @@
         }
 
         return this.item.question;
-      },
-      imagePreset() {
-        return FormatPresetsNames.EXERCISE_IMAGE;
       },
       modality() {
         return this.getContentNode(this.nodeId)?.extra_fields?.options?.modality;

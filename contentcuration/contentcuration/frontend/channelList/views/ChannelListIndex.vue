@@ -63,9 +63,8 @@
       </template>
     </AppBar>
     <VContent>
-      <OfflineText
+      <StudioOfflineAlert
         v-if="!isCatalogPage"
-        toolbar
         :offset="toolbarHeight"
       />
       <VContainer
@@ -88,21 +87,23 @@
               md8
               lg6
             >
-              <VCard
+              <StudioRaisedBox
                 v-if="invitationList.length"
                 v-show="isChannelList"
               >
-                <VList subheader>
-                  <VSubheader>
-                    {{ $tr('invitations', { count: invitationList.length }) }}
-                  </VSubheader>
-                  <ChannelInvitation
-                    v-for="invitation in invitationList"
-                    :key="invitation.id"
-                    :invitationID="invitation.id"
-                  />
-                </VList>
-              </VCard>
+                <template #header>
+                  {{ $tr('invitations', { count: invitationList.length }) }}
+                </template>
+                <template #main>
+                  <ul class="invitation-list">
+                    <ChannelInvitation
+                      v-for="invitation in invitationList"
+                      :key="invitation.id"
+                      :invitationID="invitation.id"
+                    />
+                  </ul>
+                </template>
+              </StudioRaisedBox>
             </VFlex>
           </VLayout>
           <ChannelListAppError
@@ -131,11 +132,12 @@
   } from '../constants';
   import ChannelListAppError from './ChannelListAppError';
   import ChannelInvitation from './Channel/ChannelInvitation';
+  import StudioRaisedBox from 'shared/views/StudioRaisedBox.vue';
   import { ChannelListTypes } from 'shared/constants';
   import { constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import AppBar from 'shared/views/AppBar';
-  import OfflineText from 'shared/views/OfflineText';
+  import StudioOfflineAlert from 'shared/views/StudioOfflineAlert.vue';
   import PolicyModals from 'shared/views/policies/PolicyModals';
 
   const CATALOG_PAGES = [
@@ -161,7 +163,8 @@
       ChannelListAppError,
       GlobalSnackbar,
       PolicyModals,
-      OfflineText,
+      StudioOfflineAlert,
+      StudioRaisedBox,
     },
     mixins: [constantsTranslationMixin, routerMixin],
     computed: {
@@ -335,6 +338,10 @@
 
   .main-container {
     overflow: auto;
+  }
+
+  .invitation-list {
+    padding: 0;
   }
 
 </style>

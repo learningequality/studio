@@ -5,7 +5,7 @@
       {{ $tr('subtitlesHeader') }}
       <HelpTooltip
         :text="$tr('acceptedFormatsTooltip', { extensions })"
-        bottom
+        :style="{ verticalAlign: 'middle' }"
       />
     </h1>
     <SupplementaryList

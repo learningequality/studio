@@ -64,6 +64,8 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
 
     file_format = "zip"
     preset = format_presets.QTI_ZIP
+    # Our markdown parser does not handle width/height in image refs
+    RETAIN_IMAGE_DIMENSIONS = False
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -72,6 +74,13 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
     def get_image_file_path(self) -> str:
         """Get the file path for QTI assessment items."""
         return "items/images"
+
+    def get_image_ref_prefix(self):
+        """
+        Because we put items in a subdirectory, we need to prefix the image paths
+        with the relative path to the images directory.
+        """
+        return "images"
 
     def _create_html_content_from_text(self, text: str) -> FlowContentList:
         """Convert text content to QTI HTML flow content."""

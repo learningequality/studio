@@ -40,6 +40,10 @@ const MESSAGES = {
     message: 'Paste without formatting',
     context: 'Button to paste text without any formatting',
   },
+  clearFormatting: {
+    message: 'Clear formatting',
+    context: 'Button to clear all formatting from the selected text',
+  },
   bulletList: {
     message: 'Bullet list',
     context: 'Button to create a bullet list',
@@ -71,6 +75,10 @@ const MESSAGES = {
   codeBlock: {
     message: 'Code block',
     context: 'Button to insert a block of code',
+  },
+  moreButtonText: {
+    message: 'More',
+    context: 'Label for the "More" dropdown button in the toolbar',
   },
 
   // Format dropdown options
@@ -148,6 +156,14 @@ const MESSAGES = {
     message: 'Clipboard access failed. Try copying again.',
     context: 'Message shown when clipboard access fails during paste operation',
   },
+  TipTapEditorLabel: {
+    message: 'text editor - Press Enter to start editing',
+    context: 'Label for the TipTap editor',
+  },
+  TipTapViewerLabel: {
+    message: 'text editor content',
+    context: 'Label for the TipTap editor in view mode',
+  },
 
   // Image Upload
   editImage: {
@@ -208,7 +224,7 @@ const MESSAGES = {
     context: 'Accessibility label for the button that opens the file picker.',
   },
   supportedFileTypes: {
-    message: 'Supported file types: png, jpg, jpeg, svg, webp',
+    message: 'Supported file types: { extensions }',
     context: 'A list of supported image file formats.',
   },
   removeImage: {
@@ -287,8 +303,16 @@ const MESSAGES = {
     message: 'Special Characters',
     context: 'Title for the menu containing special characters and mathematical symbols.',
   },
+  loadingFormulas: {
+    message: 'Loading math editor',
+    context: 'Text displayed while the math editor is being loaded.',
+  },
 
   // Error Messages
+  errorUploadingImage: {
+    message: 'Error uploading image',
+    context: 'Title for the error modal when an image upload fails.',
+  },
   noFileProvided: {
     message: 'No file provided.',
     context: 'Error message when no file is provided for upload',
@@ -308,6 +332,50 @@ const MESSAGES = {
   failedToProcessImage: {
     message: 'Failed to process the image file.',
     context: 'Error message when image processing fails',
+  },
+  noEnoughStorageSpace: {
+    message: 'Not enough storage space available. File size exceeds remaining storage.',
+    context: 'Error message when there is insufficient storage space for the file',
+  },
+
+  // for MobileFormattingBar
+  collapseFormattingBar: {
+    message: 'Collapse formatting bar',
+    context: 'Button label or tooltip to collapse the formatting toolbar on mobile',
+  },
+  expandFormattingBar: {
+    message: 'Expand formatting bar',
+    context: 'Button label or tooltip to expand the formatting toolbar on mobile',
+  },
+  decreaseFormatSize: {
+    message: 'Decrease format size',
+    context: 'Button label or tooltip to decrease the text format size',
+  },
+  increaseFormatSize: {
+    message: 'Increase format size',
+    context: 'Button label or tooltip to increase the text format size',
+  },
+  formatSize: {
+    message: 'Format size',
+    context: 'Alt text for the format size icon',
+  },
+
+  // for MobileTopBar
+  editorControls: {
+    message: 'Editor controls',
+    context: 'Accessibility label for the editor controls toolbar',
+  },
+  insertContent: {
+    message: 'Insert content',
+    context: 'Button title for inserting content',
+  },
+  insertContentMenu: {
+    message: 'Insert content menu',
+    context: 'Accessibility label for the insert content menu button',
+  },
+  insertContentOption: {
+    message: 'Insert content option',
+    context: 'Accessibility label for the insert content dropdown menu',
   },
 };
 

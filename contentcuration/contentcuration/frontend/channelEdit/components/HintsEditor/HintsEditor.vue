@@ -23,7 +23,48 @@
           :class="hintClasses(hintIdx)"
         >
           <VCardText :class="{ 'pt-0 pb-0': !isHintOpen(hintIdx) }">
-            <VLayout align-top>
+            <!-- Touch device & desktop layout with toolbar above -->
+            <template v-if="isTouchDevice || screenSizeLevel <= 3">
+              <VLayout class="mb-2">
+                <VFlex
+                  xs1
+                  :style="{ 'margin-top': '10px' }"
+                >
+                  {{ hintIdx + 1 }}
+                </VFlex>
+                <VSpacer />
+                <VFlex shrink>
+                  <AssessmentItemToolbar
+                    :iconActionsConfig="toolbarIconActions"
+                    :canMoveUp="!isHintFirst(hintIdx)"
+                    :canMoveDown="!isHintLast(hintIdx)"
+                    class="toolbar"
+                    analyticsLabel="Hint"
+                    @click="onToolbarClick($event, hintIdx)"
+                  />
+                </VFlex>
+              </VLayout>
+              <VLayout>
+                <VFlex xs12>
+                  <keep-alive :max="5">
+                    <!-- analyticsLabel="Hint"-->
+                    <TipTapEditor
+                      v-model="hint.hint"
+                      :mode="isHintOpen(hintIdx) ? 'edit' : 'view'"
+                      :image-processor="EditorImageProcessor"
+                      @update="updateHintText($event, hintIdx)"
+                      @minimize="emitClose"
+                    />
+                  </keep-alive>
+                </VFlex>
+              </VLayout>
+            </template>
+
+            <!-- Desktop layout -->
+            <VLayout
+              v-else
+              align-top
+            >
               <VFlex
                 xs1
                 :style="{ 'margin-top': '10px' }"
@@ -31,23 +72,17 @@
                 {{ hintIdx + 1 }}
               </VFlex>
 
-              <VFlex xs7>
+              <VFlex xs10>
                 <transition name="fade">
                   <keep-alive :max="5">
-                    <MarkdownViewer
-                      v-if="!isHintOpen(hintIdx)"
-                      :markdown="hint.hint"
-                    />
-
-                    <MarkdownEditor
-                      v-else
-                      analyticsLabel="Hint"
-                      :markdown="hint.hint"
-                      :handleFileUpload="handleFileUpload"
-                      :getFileUpload="getFileUpload"
-                      :imagePreset="imagePreset"
+                    <!-- analyticsLabel="Hint"-->
+                    <TipTapEditor
+                      v-model="hint.hint"
+                      :mode="isHintOpen(hintIdx) ? 'edit' : 'view'"
+                      :image-processor="EditorImageProcessor"
                       @update="updateHintText($event, hintIdx)"
                       @minimize="emitClose"
+                      @open-editor="emitOpen(answerIdx)"
                     />
                   </keep-alive>
                 </transition>
@@ -71,14 +106,12 @@
       </div>
     </div>
 
-    <VBtn
-      color="greyBackground"
+    <KButton
+      :text="$tr('newHintBtnLabel')"
       class="ml-0 mt-3"
       data-test="newHintBtn"
       @click="addNewHint"
-    >
-      {{ $tr('newHintBtnLabel') }}
-    </VBtn>
+    />
   </div>
 
 </template>
@@ -86,12 +119,14 @@
 
 <script>
 
+  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
   import { AssessmentItemToolbarActions } from '../../constants';
   import { swapElements } from 'shared/utils/helpers';
+  import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
+  import { isTouchDevice } from 'shared/utils/browserInfo';
 
-  import MarkdownEditor from 'shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor';
-  import MarkdownViewer from 'shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer';
+  import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue';
 
   const updateHintsOrder = hints => {
     return hints.map((hint, idx) => {
@@ -106,8 +141,7 @@
     name: 'HintsEditor',
     components: {
       AssessmentItemToolbar,
-      MarkdownEditor,
-      MarkdownViewer,
+      TipTapEditor,
     },
     model: {
       prop: 'hints',
@@ -122,20 +156,6 @@
         type: Number,
         default: 0,
       },
-      // Inject function to handle file uploads
-      handleFileUpload: {
-        type: Function,
-        default: () => {},
-      },
-      // Inject function to get file upload object
-      getFileUpload: {
-        type: Function,
-        default: () => {},
-      },
-      imagePreset: {
-        type: String,
-        default: null,
-      },
     },
     data() {
       return {
@@ -144,7 +164,15 @@
           AssessmentItemToolbarActions.MOVE_ITEM_DOWN,
           AssessmentItemToolbarActions.DELETE_ITEM,
         ],
+        EditorImageProcessor,
+        isTouchDevice,
       };
+    },
+    computed: {
+      screenSizeLevel() {
+        const { windowBreakpoint } = useKResponsiveWindow();
+        return windowBreakpoint.value ?? 0;
+      },
     },
     methods: {
       emitOpen(hintIdx) {

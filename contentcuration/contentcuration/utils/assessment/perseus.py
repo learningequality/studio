@@ -119,7 +119,7 @@ class PerseusExerciseGenerator(ExerciseArchiveGenerator):
         return "images"
 
     def get_image_ref_prefix(self):
-        return f"${exercises.IMG_PLACEHOLDER}/"
+        return f"${exercises.IMG_PLACEHOLDER}/images"
 
     def handle_before_assessment_items(self):
         exercise_context = {

@@ -14,6 +14,7 @@ export function useDropdowns() {
     formatHeader1$,
     formatHeader2$,
     formatHeader3$,
+    copy$,
     paste$,
     pasteWithoutFormatting$,
   } = getTipTapEditorStrings();
@@ -127,12 +128,23 @@ export function useDropdowns() {
     },
   ]);
 
+  const clipboardOptions = computed(() => [
+    {
+      name: 'copy',
+      title: copy$(),
+      icon: require('../../assets/icon-copy.svg'),
+      handler: useToolbarActions().handleCopy,
+    },
+    ...pasteOptions.value,
+  ]);
+
   return {
     selectedFormat,
     showHeadersDropdown,
     showPasteDropdown,
     formatOptions,
     pasteOptions,
+    clipboardOptions,
     toggleHeadersDropdown,
     togglePasteDropdown,
     selectFormat,

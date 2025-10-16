@@ -1,4 +1,5 @@
 import { ref, watch, onUnmounted } from 'vue';
+import { isTouchDevice } from 'shared/utils/browserInfo';
 
 export function useLinkHandling(editor) {
   const isEditorOpen = ref(false);
@@ -7,18 +8,46 @@ export function useLinkHandling(editor) {
   const editorInitialState = ref({ text: '', href: '' });
   const editorMode = ref('create');
   const savedSelection = ref(null);
+  const isEditorCentered = ref(false);
 
-  const calculatePosition = () => {
+  const calculatePosition = (forceCenter = false) => {
     if (!editor.value) return {};
+    const isRTL = document.dir === 'rtl';
+
+    isEditorCentered.value = false;
+    // Only center the edit modal on mobile, not the bubble menu
+    if (isTouchDevice && forceCenter) {
+      isEditorCentered.value = true;
+      return {
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        zIndex: 1001,
+      };
+    }
+
     const { view } = editor.value;
     const { from } = view.state.selection;
     const coords = view.coordsAtPos(from);
-    return {
-      position: 'fixed',
-      left: `${coords.left}px`,
-      top: `${coords.bottom + 8}px`,
-      zIndex: 1001,
-    };
+
+    // Calculate position based on direction
+    if (isRTL) {
+      const right = window.innerWidth - coords.left;
+      return {
+        position: 'fixed',
+        right: `${right}px`,
+        top: `${coords.bottom + 8}px`,
+        zIndex: 1001,
+      };
+    } else {
+      return {
+        position: 'fixed',
+        left: `${coords.left}px`,
+        top: `${coords.bottom + 8}px`,
+        zIndex: 1001,
+      };
+    }
   };
 
   const openLinkEditor = (mode = 'create') => {
@@ -29,7 +58,6 @@ export function useLinkHandling(editor) {
     const { state } = editor.value;
     const { from, to, empty } = state.selection;
 
-    popoverStyle.value = calculatePosition();
     editorMode.value = mode;
 
     if (mode === 'edit') {
@@ -53,6 +81,7 @@ export function useLinkHandling(editor) {
       };
     }
 
+    popoverStyle.value = calculatePosition(true);
     isEditorOpen.value = true;
   };
 
@@ -64,7 +93,7 @@ export function useLinkHandling(editor) {
 
   const openBubbleMenu = () => {
     if (isEditorOpen.value) return;
-    popoverStyle.value = calculatePosition();
+    popoverStyle.value = calculatePosition(false);
     isBubbleMenuOpen.value = true;
   };
 
@@ -104,6 +133,14 @@ export function useLinkHandling(editor) {
     }
   };
 
+  const handleResize = () => {
+    if (isEditorOpen.value) {
+      popoverStyle.value = calculatePosition(true);
+    } else if (isBubbleMenuOpen.value) {
+      popoverStyle.value = calculatePosition(false);
+    }
+  };
+
   watch([isEditorOpen, isBubbleMenuOpen], ([editorIsOpen, bubbleIsOpen]) => {
     const isOpen = editorIsOpen || bubbleIsOpen;
     const clickHandler = event => {
@@ -114,16 +151,28 @@ export function useLinkHandling(editor) {
         closeAll();
       }
     };
-    const scrollHandler = () => closeAll();
+
+    const scrollHandler = event => {
+      // Don't close on horizontal scroll within input fields
+      const target = event.target;
+      const isInputField = target.tagName === 'INPUT';
+      const isInsideModal = document.querySelector('.link-editor-popover')?.contains(target);
+
+      if (!isInputField || !isInsideModal) {
+        closeAll();
+      }
+    };
 
     if (isOpen) {
       setTimeout(() => {
         document.addEventListener('mousedown', clickHandler, true);
         document.addEventListener('scroll', scrollHandler, true);
+        window.addEventListener('resize', handleResize, true);
       }, 0);
     } else {
       document.removeEventListener('mousedown', clickHandler, true);
       document.removeEventListener('scroll', scrollHandler, true);
+      window.removeEventListener('resize', handleResize, true);
     }
   });
 
@@ -155,6 +204,7 @@ export function useLinkHandling(editor) {
     popoverStyle,
     editorInitialState,
     editorMode,
+    isEditorCentered,
     openLinkEditor,
     closeLinkEditor,
     closeBubbleMenu,

@@ -1,7 +1,7 @@
 import { computed, inject } from 'vue';
 import { getTipTapEditorStrings } from '../TipTapEditorStrings';
 
-export function useToolbarActions() {
+export function useToolbarActions(emit) {
   const editor = inject('editor', null);
 
   const {
@@ -191,16 +191,16 @@ export function useToolbarActions() {
     }
   };
 
-  const handleInsertImage = () => {
-    // placeholder
+  const handleInsertImage = target => {
+    emit('insert-image', target);
   };
 
   const handleInsertLink = () => {
-    // placeholder
+    emit('insert-link');
   };
 
   const handleMath = () => {
-    // TipTap math formula logic may be added here
+    emit('insert-math', event.currentTarget);
   };
 
   const handleCodeBlock = () => {
@@ -239,6 +239,10 @@ export function useToolbarActions() {
     if (editor?.value) {
       editor.value.chain().focus().unsetAllMarks().run();
     }
+  };
+
+  const handleMinimize = () => {
+    emit('minimize');
   };
 
   // Helper function to check if a mark is active
@@ -393,6 +397,13 @@ export function useToolbarActions() {
     },
   ]);
 
+  const minimizeAction = {
+    name: 'minimize',
+    title: 'Minimize Toolbar',
+    icon: require('../../assets/icon-unfold.svg'),
+    handler: handleMinimize,
+  };
+
   return {
     // Individual handlers
     handleUndo,
@@ -422,5 +433,6 @@ export function useToolbarActions() {
     listActions,
     scriptActions,
     insertTools,
+    minimizeAction,
   };
 }

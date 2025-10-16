@@ -131,6 +131,8 @@ if (process.env.NODE_ENV !== 'production') {
 } else if (window.sentryActive) {
   SentryInit({
     Vue,
+    // This is required to continue to collect important user information with error traces.
+    sendDefaultPii: true,
     dsn: window.sentryDSN,
     environment: window.sentryEnvironment,
     release: window.sentryRelease,

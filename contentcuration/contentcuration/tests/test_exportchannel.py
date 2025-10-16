@@ -776,14 +776,77 @@ class ChannelExportPrerequisiteTestCase(StudioTestCase):
 
 
 class ChannelExportPublishedData(StudioTestCase):
-    def test_fill_published_fields(self):
+    def setUp(self):
+        super().setUpBase()
+
+        self.license1 = cc.License.objects.create(
+            id=100,
+            license_name="License 1",
+            license_description="Description 1",
+            license_url="http://example.com/license1",
+        )
+        self.license2 = cc.License.objects.create(
+            id=101,
+            license_name="License 2",
+            license_description="Description 2",
+            license_url="http://example.com/license2",
+        )
+
+        self.category1 = "Category 1"
+        self.category2 = "Category 2"
+
+        self.node1 = self.channel.main_tree.get_root()
+        self.node2 = self.channel.main_tree.get_children().first()
+        self.node3 = self.node2.get_children().first()
+        self.node4 = self.node3.get_next_sibling()
+
+        self.node1.license = self.license1
+        self.node1.categories = {self.category1: True}
+        self.node1.published = True
+        self.node1.save()
+
+        self.node2.license = self.license2
+        self.node2.categories = {self.category2: True}
+        self.node2.published = True
+        self.node2.save()
+
+        self.node3.license = self.license1
+        self.node3.categories = {self.category1: True}
+        self.node3.published = True
+        self.node3.save()
+
+        self.node4.license = None
+        self.node4.categories = None
+        self.node4.published = True
+        self.node4.save()
+
+    def test_fill_published_fields__version_notes(self):
         version_notes = description()
-        channel = cc.Channel.objects.create(actor_id=self.admin_user.id)
-        channel.last_published
-        fill_published_fields(channel, version_notes)
-        self.assertTrue(channel.published_data)
-        self.assertIsNotNone(channel.published_data.get(0))
-        self.assertEqual(channel.published_data[0]["version_notes"], version_notes)
+        self.channel.last_published
+        fill_published_fields(self.channel, version_notes)
+        self.assertTrue(self.channel.published_data)
+        self.assertIsNotNone(self.channel.published_data.get(0))
+        self.assertEqual(self.channel.published_data[0]["version_notes"], version_notes)
+
+    def test_fill_published_fields__included_licenses(self):
+        version_notes = description()
+        fill_published_fields(self.channel, version_notes)
+
+        returned_license_ids = self.channel.published_data[0]["included_licenses"]
+        expected_license_ids = [self.license1.id, self.license2.id]
+
+        self.assertEqual(len(returned_license_ids), len(expected_license_ids))
+        self.assertSetEqual(set(returned_license_ids), set(expected_license_ids))
+
+    def test_fill_published_fields__included_categories(self):
+        version_notes = description()
+        fill_published_fields(self.channel, version_notes)
+
+        expected_categories = [self.category1, self.category2]
+        returned_categories = self.channel.published_data[0]["included_categories"]
+
+        self.assertEqual(len(returned_categories), len(expected_categories))
+        self.assertSetEqual(set(returned_categories), set(expected_categories))
 
 
 class PublishFailCleansUpTaskObjects(StudioTestCase):
@@ -900,12 +963,11 @@ class PublishStagingTreeTestCase(StudioTestCase):
         publish_channel(
             self.admin_user.id,
             self.content_channel.id,
-            version_notes="",
             force=False,
             force_exercises=False,
             send_email=False,
             progress_tracker=None,
-            language="fr",
+            is_draft_version=True,
             use_staging_tree=True,
         )
 
@@ -915,11 +977,9 @@ class PublishStagingTreeTestCase(StudioTestCase):
         with self.assertRaises(NoneContentNodeTreeError):
             self.run_publish_channel()
 
-    def test_staging_tree_published(self):
-        self.assertFalse(self.content_channel.staging_tree.published)
+    def test_staging_tree_not_published_for_draft(self):
         self.run_publish_channel()
-        self.content_channel.refresh_from_db()
-        self.assertTrue(self.content_channel.staging_tree.published)
+        self.assertFalse(self.content_channel.staging_tree.published)
 
     def test_next_version_exported(self):
         self.run_publish_channel()
@@ -949,6 +1009,7 @@ class PublishStagingTreeTestCase(StudioTestCase):
             self.admin_user.id,
             True,
             progress_tracker=None,
+            is_draft_version=True,
             use_staging_tree=True,
         )
         set_active_content_database(self.tempdb)
@@ -965,3 +1026,107 @@ class PublishStagingTreeTestCase(StudioTestCase):
         set_active_content_database(None)
         if os.path.exists(self.tempdb):
             os.remove(self.tempdb)
+
+
+class PublishDraftUsingMainTreeTestCase(StudioTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super(PublishDraftUsingMainTreeTestCase, cls).setUpClass()
+        cls.patch_copy_db = patch("contentcuration.utils.publish.save_export_database")
+        cls.mock_save_export = cls.patch_copy_db.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        super(PublishDraftUsingMainTreeTestCase, cls).tearDownClass()
+        cls.patch_copy_db.stop()
+
+    def setUp(self):
+        super(PublishDraftUsingMainTreeTestCase, self).setUp()
+
+        self.channel_version = 3
+        self.incomplete_video_in_main = "Incomplete video in main tree"
+        self.complete_video_in_main = "Complete video in main tree"
+
+        self.content_channel = channel()
+        self.content_channel.version = self.channel_version
+        self.content_channel.save()
+
+        # Incomplete node in main_tree should be excluded.
+        new_node = create_node(
+            {"kind_id": "video", "title": self.incomplete_video_in_main, "children": []}
+        )
+        new_node.complete = False
+        new_node.parent = self.content_channel.main_tree
+        new_node.published = False
+        new_node.save()
+
+        # Complete node in main_tree should be included.
+        new_node = create_node(
+            {"kind_id": "video", "title": self.complete_video_in_main, "children": []}
+        )
+        new_node.complete = True
+        new_node.parent = self.content_channel.main_tree
+        new_node.published = False
+        new_node.save()
+
+    def run_publish_channel(self):
+        publish_channel(
+            self.admin_user.id,
+            self.content_channel.id,
+            force=False,
+            force_exercises=False,
+            send_email=False,
+            progress_tracker=None,
+            is_draft_version=True,
+            use_staging_tree=False,
+        )
+
+    def test_next_version_exported(self):
+        self.run_publish_channel()
+        self.mock_save_export.assert_called_with(
+            self.content_channel.id,
+            "next",
+            True,
+        )
+
+    def test_main_tree_not_impacted(self):
+        self.assertFalse(self.content_channel.main_tree.published)
+        self.run_publish_channel()
+        self.content_channel.refresh_from_db()
+        self.assertFalse(self.content_channel.main_tree.published)
+
+    def test_channel_version_not_incremented(self):
+        self.assertEqual(self.content_channel.version, self.channel_version)
+        self.run_publish_channel()
+        self.content_channel.refresh_from_db()
+        self.assertEqual(self.content_channel.version, self.channel_version)
+
+    def test_main_tree_used_for_publish(self):
+        set_channel_icon_encoding(self.content_channel)
+        self.tempdb = create_content_database(
+            self.content_channel,
+            True,
+            self.admin_user.id,
+            True,
+            progress_tracker=None,
+            is_draft_version=True,
+            use_staging_tree=False,
+        )
+        set_active_content_database(self.tempdb)
+
+        nodes = kolibri_models.ContentNode.objects.all()
+        self.assertEqual(nodes.filter(title=self.incomplete_video_in_main).count(), 0)
+        self.assertEqual(nodes.filter(title=self.complete_video_in_main).count(), 1)
+
+        cleanup_content_database_connection(self.tempdb)
+        set_active_content_database(None)
+        if os.path.exists(self.tempdb):
+            os.remove(self.tempdb)
+
+    def test_only_next_file_created(self):
+        self.mock_save_export.reset_mock()
+        self.run_publish_channel()
+        self.assertEqual(self.mock_save_export.call_count, 1)
+        call_args = self.mock_save_export.call_args
+        self.assertEqual(call_args[0][1], "next")
+        self.assertEqual(call_args[0][2], True)

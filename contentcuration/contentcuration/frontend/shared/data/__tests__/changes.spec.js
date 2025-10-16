@@ -257,6 +257,7 @@ describe('Change Types', () => {
     const change = new PublishedNextChange({
       key: '1',
       table: TABLE_NAMES.CHANNEL,
+      use_staging_tree: false,
       source: CLIENTID,
     });
     const rev = await change.saveChange();
@@ -264,7 +265,7 @@ describe('Change Types', () => {
     expect(persistedChange).toEqual({
       rev,
       channel_id: change.key,
-      ...pick(change, ['type', 'key', 'table', 'source']),
+      ...pick(change, ['type', 'key', 'table', 'use_staging_tree', 'source']),
     });
   });
 

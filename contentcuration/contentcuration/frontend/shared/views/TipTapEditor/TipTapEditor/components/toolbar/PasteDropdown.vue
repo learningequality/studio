@@ -262,8 +262,8 @@
   }
 
   .toolbar-icon {
-    width: 17px;
-    height: 17px;
+    width: 20px;
+    height: 20px;
     opacity: 0.7;
   }
 
@@ -306,8 +306,8 @@
   }
 
   .dropdown-arrow {
-    width: 12px;
-    height: 12px;
+    width: 15px;
+    height: 15px;
     opacity: 0.9;
   }
 
@@ -340,7 +340,6 @@
       BlinkMacSystemFont,
       'Segoe UI',
       sans-serif;
-    font-size: 14px;
     line-height: 140%;
     color: #000000;
     cursor: pointer;
@@ -359,8 +358,8 @@
   }
 
   .dropdown-item-icon {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     opacity: 0.7;
   }
 

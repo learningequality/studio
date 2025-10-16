@@ -29,7 +29,14 @@
 
       <div class="card-content">
         <div class="symbol-editor">
+          <div
+            v-if="!mathLiveLoaded"
+            class="loading-placeholder"
+          >
+            {{ loadingFormulas$() }}...
+          </div>
           <math-field
+            v-else
             ref="mathfieldEl"
             aria-label="Math formula editor"
           />
@@ -68,10 +75,15 @@
                 @mouseleave="onSymbolMouseLeave"
               >
                 <math-field
+                  v-if="mathLiveLoaded"
                   read-only
                   tabindex="-1"
                   :value="symbol.preview"
                 />
+                <span
+                  v-else
+                  class="symbol-fallback"
+                >{{ symbol.preview }}</span>
               </button>
             </div>
           </div>
@@ -81,7 +93,7 @@
       <footer>
         <button
           class="insert-button"
-          :disabled="isFormulaEmpty"
+          :disabled="isFormulaEmpty || !mathLiveLoaded"
           @click="onSave"
         >
           {{ insert$() }}
@@ -95,8 +107,7 @@
 
 <script>
 
-  import { ref, onMounted, defineComponent, computed } from 'vue';
-  import 'mathlive';
+  import { ref, onMounted, defineComponent, computed, nextTick } from 'vue';
   import { useFocusTrap } from '../../composables/useFocusTrap';
   import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
   import { useMathLiveLocale } from '../../composables/useMathLiveLocale';
@@ -108,14 +119,53 @@
       const rootEl = ref(null);
       const mathfieldEl = ref(null);
       const infoText = ref('');
+      const mathLiveLoaded = ref(false);
 
       useFocusTrap(rootEl);
 
       const currentLatex = ref('');
 
+      // Load MathLive dynamically
+      const loadMathLive = async () => {
+        try {
+          // Dynamic import of mathlive
+          await import(/* webpackChunkName: "mathlive" */ 'mathlive');
+
+          // Configure MathLive after it's loaded
+          if (typeof window !== 'undefined' && window.MathfieldElement) {
+            window.MathfieldElement.soundsDirectory = null;
+            if (window.mathVirtualKeyboard) {
+              window.mathVirtualKeyboard.plonkSound = null;
+              window.mathVirtualKeyboard.keypressSound = null;
+            }
+          }
+
+          mathLiveLoaded.value = true;
+
+          // Initialize the mathfield after MathLive is loaded
+          await initializeMathfield();
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.error('Failed to load MathLive:', error);
+        }
+      };
+
+      const initializeMathfield = async () => {
+        // Wait for next tick to ensure the mathfield element is rendered
+        await nextTick();
+
+        if (mathfieldEl.value) {
+          mathfieldEl.value.mathVirtualKeyboardPolicy = 'manual';
+          mathfieldEl.value.value = props.initialLatex;
+          mathfieldEl.value.focus();
+          mathfieldEl.value.addEventListener('input', updateLatex);
+          currentLatex.value = props.initialLatex;
+        }
+      };
+
       // Watch for changes in the mathfield
       const updateLatex = () => {
-        if (mathfieldEl.value) {
+        if (mathfieldEl.value && mathLiveLoaded.value) {
           currentLatex.value = mathfieldEl.value.getValue('latex');
         }
       };
@@ -125,27 +175,7 @@
       });
 
       onMounted(() => {
-        if (typeof window !== 'undefined' && window.MathfieldElement) {
-          // Disable sounds globally
-          window.MathfieldElement.soundsDirectory = null;
-
-          // Disable virtual keyboard globally
-          if (window.mathVirtualKeyboard) {
-            window.mathVirtualKeyboard.plonkSound = null;
-            window.mathVirtualKeyboard.keypressSound = null;
-          }
-        }
-
-        if (mathfieldEl.value) {
-          // Configure the specific mathfield instance
-          mathfieldEl.value.mathVirtualKeyboardPolicy = 'manual';
-          mathfieldEl.value.value = props.initialLatex;
-          mathfieldEl.value.focus();
-
-          // Listen for input changes
-          mathfieldEl.value.addEventListener('input', updateLatex);
-          currentLatex.value = props.initialLatex;
-        }
+        loadMathLive();
       });
 
       const getSymbol = (symbolsGroupIdx, symbolIdx) => {
@@ -155,7 +185,6 @@
       const getSymbolClasses = (symbolsGroup, symbolsGroupIdx) => {
         const classes = ['symbol'];
 
-        // Get the original titleKey from symbolsData
         const originalGroup = symbolsData[symbolsGroupIdx];
         if (
           originalGroup &&
@@ -177,29 +206,28 @@
       };
 
       const onSymbolClick = (symbolsGroupIdx, symbolIdx) => {
+        if (!mathLiveLoaded.value || !mathfieldEl.value) return;
+
         const symbol = getSymbol(symbolsGroupIdx, symbolIdx);
+        const originalGroup = symbolsData[symbolsGroupIdx];
+        const valueToInsert =
+          originalGroup?.titleKey === 'formulasCategory' && symbol.template
+            ? symbol.template
+            : symbol.preview;
 
-        if (mathfieldEl.value) {
-          // Use template if available (for formulas category), otherwise use preview
-          const originalGroup = symbolsData[symbolsGroupIdx];
-          const valueToInsert =
-            originalGroup?.titleKey === 'formulasCategory' && symbol.template
-              ? symbol.template
-              : symbol.preview;
-
-          mathfieldEl.value.executeCommand(['insert', valueToInsert]);
-          mathfieldEl.value.focus();
-        }
+        mathfieldEl.value.executeCommand(['insert', valueToInsert]);
+        mathfieldEl.value.focus();
       };
 
       const onSave = () => {
-        if (mathfieldEl.value) {
+        if (mathfieldEl.value && mathLiveLoaded.value) {
           const newLatex = mathfieldEl.value.getValue('latex');
           emit('save', newLatex);
         }
       };
 
-      const { formulasMenuTitle$, insert$, closeModal$ } = getTipTapEditorStrings();
+      const { formulasMenuTitle$, insert$, closeModal$, loadingFormulas$ } =
+        getTipTapEditorStrings();
       const formulasStrings = getFormulasStrings();
 
       // Transform symbols data to use translations
@@ -227,6 +255,7 @@
       return {
         rootEl,
         mathfieldEl,
+        mathLiveLoaded,
         symbolGroups,
         infoText,
         getSymbolClasses,
@@ -237,6 +266,7 @@
         formulasMenuTitle$,
         insert$,
         closeModal$,
+        loadingFormulas$,
         isFormulaEmpty,
       };
     },
@@ -257,7 +287,9 @@
 
   .formulas-menu {
     position: relative;
+    width: 90%;
     max-width: 500px;
+    max-height: 90vh;
   }
 
   .card {
@@ -271,7 +303,7 @@
 
   .card-title {
     position: relative;
-    z-index: 500000;
+    z-index: 5;
     padding: 16px 16px 8px;
   }
 
@@ -306,6 +338,20 @@
     text-align: center;
   }
 
+  .loading-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 80px;
+    padding: 8px;
+    font-size: 1.2rem;
+    color: #666666;
+    background-color: #f9f9f9;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+  }
+
   .symbol-editor math-field {
     width: 100%;
     min-height: 80px;
@@ -328,7 +374,7 @@
   }
 
   .symbols-list {
-    height: 320px;
+    height: min(320px, calc(60vh - 180px));
     padding: 8px;
     overflow-y: auto;
   }
@@ -397,6 +443,12 @@
     border: 0;
   }
 
+  .symbol-fallback {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    color: #666666;
+  }
+
   footer {
     display: flex;
     justify-content: flex-end;
@@ -418,6 +470,43 @@
     color: #bdbdbd;
     cursor: not-allowed;
     background: #e0e0e0;
+  }
+
+  @media screen and (max-height: 500px) and (orientation: landscape) {
+    .formulas-menu {
+      width: 95%;
+      max-width: 600px;
+    }
+
+    .symbols-list {
+      height: min(240px, calc(60vh - 120px));
+    }
+
+    .symbol-editor math-field {
+      min-height: 30px;
+      font-size: 1.1rem;
+    }
+
+    .info-bar {
+      min-height: 18px;
+      margin-top: 0;
+      font-size: 0.8rem;
+    }
+
+    .symbol {
+      min-height: 32px;
+      padding: 4px;
+    }
+
+    footer {
+      height: fit-content;
+      padding: 0.3rem;
+    }
+
+    .insert-button {
+      padding: 4px 8px;
+      font-size: 0.9rem;
+    }
   }
 
 </style>

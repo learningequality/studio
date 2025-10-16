@@ -15,18 +15,20 @@
           :value="accessibilityItem.value"
           color="primary"
           :data-test="`checkbox-${accessibilityItem.help}`"
+          :aria-describedby="
+            accessibilityItem.showTooltip ? `tooltip-${accessibilityItem.value}` : undefined
+          "
         >
-          <div class="d-flex">
-            <span class="text-xs-left">{{ accessibilityItem.label }}</span>
-            &nbsp;
+          <span :style="{ display: 'inline-flex', alignItems: 'top' }">
+            <span>{{ accessibilityItem.label }}</span>
             <HelpTooltip
               v-if="accessibilityItem.showTooltip"
               :text="$tr(accessibilityItem.help)"
-              bottom
-              class="px-2"
               :data-test="`tooltip-${accessibilityItem.help}`"
+              :style="{ position: 'relative', top: '-10px' }"
+              :tooltipId="`tooltip-${accessibilityItem.value}`"
             />
-          </div>
+          </span>
         </Checkbox>
       </VFlex>
     </VLayout>
