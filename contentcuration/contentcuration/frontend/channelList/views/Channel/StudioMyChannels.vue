@@ -9,7 +9,7 @@
       ['windowBreakpoint-' + windowBreakpoint]: windowBreakpoint,
     }"
   >
-    <div class="my-channels__new-channel">
+    <div class="new-channel">
       <KButton
         v-if="!loading"
         primary
@@ -18,10 +18,10 @@
         @click="newChannel"
       />
     </div>
-    <div class="my-channels__body">
+    <div class="channels-body">
       <p
         v-if="!listChannels.length && !loading"
-        class="my-channels__body--no-channels"
+        class="no-channels"
       >
         {{ $tr('noChannelsFound') }}
       </p>
@@ -35,7 +35,7 @@
             count: 3,
           },
         ]"
-        class="my-channels__cards"
+        class="cards"
       >
         <KCard
           v-for="(channel, index) in listChannels"
@@ -58,15 +58,15 @@
             />
           </template>
           <template #belowTitle>
-            <div class="my-channels__cards--below-title">
-              <div class="my-channels__cards--below-title__resource">
+            <div class="cards-title">
+              <div class="cards-resource">
                 <span> {{ $tr('resourceCount', { count: channel.count || 0 }) }} </span>
                 <span>
                   {{ language(channel) }}
                 </span>
               </div>
               <div
-                class="my-channels__cards--below-title__desc"
+                class="cards-desc"
                 :style="{ color: $themePalette.black }"
               >
                 {{ channel.description }}
@@ -74,8 +74,8 @@
             </div>
           </template>
           <template #footer>
-            <div class="my-channels__cards--footer">
-              <div class="my-channels__cards--footer__left">
+            <div class="footer">
+              <div class="footer-left">
                 <span :style="{ color: $themePalette.grey.v_700 }">
                   {{
                     channel.last_published
@@ -107,13 +107,11 @@
                   />
                 </div>
               </div>
-              <div class="my-channels__cards--footer__right">
+              <div class="footer-right">
                 <router-link
                   :data-testid="`details-button-${index}`"
                   :to="channelDetailsLink(channel)"
-                  :class="['link', linkComputedClass]"
-                  aria-label="Read more about this resource"
-                  @click.stop
+                  @click.native.stop
                 >
                   <KIconButton
                     :color="$themeTokens.primary"
@@ -137,7 +135,6 @@
                   <template #menu>
                     <KDropdownMenu
                       :hasIcons="true"
-                      :isContextMenu="isContextMenu[index]"
                       :options="dropDownArr"
                       @select="option => selectedItem(option, channel)"
                     />
@@ -207,7 +204,6 @@
         selectedChannel: {
           published: false,
         },
-        isContextMenu: [],
         dropDownArr: [],
       };
     },
@@ -252,8 +248,8 @@
           query: { last: this.$route.name },
         });
       },
-      goToChannelRoute() {
-        this.$router.push(this.channelDetailsLink);
+      goToChannelRoute(channel) {
+        this.$router.push(this.channelDetailsLink(channel));
       },
       loadData() {
         this.loading = true;
@@ -264,7 +260,6 @@
           .catch(() => {
             this.loading = false;
           });
-        this.isContextMenu = new Array(this.listChannels.length).fill(false);
       },
 
       hasUnpublishedChanges(channel) {
@@ -289,9 +284,8 @@
           },
         };
       },
-      openDropDown(channel, index) {
+      openDropDown(channel) {
         this.selectedChannel = channel;
-        this.isContextMenu[index] = !this.isContextMenu[index];
         this.dropDownArr = this.dropDownItems(channel);
       },
       dropDownItems(channel) {
@@ -419,61 +413,49 @@
 <style lang="scss" scoped>
 
   .studio-small {
-    .my-channels {
-      &__body,
-      &__new-channel {
-        width: 100%;
-      }
+    .channels-body,
+    .new-channel {
+      width: 100%;
     }
   }
 
   .studio-medium {
-    .my-channels {
-      &__body,
-      &__new-channel {
-        width: 100%;
-        max-width: 83.33%;
-      }
+    .channels-body,
+    .new-channel {
+      width: 100%;
+      max-width: 83.33%;
     }
   }
 
   .studio-large {
-    .my-channels {
-      &__body,
-      &__new-channel {
-        width: 100%;
-        max-width: 50%;
-      }
+    .channels-body,
+    .new-channel {
+      width: 100%;
+      max-width: 50%;
     }
   }
 
   .windowBreakpoint-3 {
-    .my-channels {
-      &__body,
-      &__new-channel {
-        width: 100%;
-        max-width: 83.33%;
-      }
+    .channels-body,
+    .new-channel {
+      width: 100%;
+      max-width: 83.33%;
     }
   }
 
   .windowBreakpoint-4 {
-    .my-channels {
-      &__body,
-      &__new-channel {
-        width: 100%;
-        max-width: 66.66%;
-      }
+    .channels-body,
+    .new-channel {
+      width: 100%;
+      max-width: 66.66%;
     }
   }
 
   .windowBreakpoint-5 {
-    .my-channels {
-      &__body,
-      &__new-channel {
-        width: 100%;
-        max-width: 50%;
-      }
+    .channels-body,
+    .new-channel {
+      width: 100%;
+      max-width: 50%;
     }
   }
 
@@ -482,71 +464,69 @@
     flex-direction: column;
     align-items: center;
     min-height: calc(100vh - 64px - 48px);
+  }
 
-    &__body {
-      &--no-channels {
-        padding: 16px 0 0 16px;
-        font-size: 24px;
-      }
+  .no-channels {
+    padding: 16px 0 0 16px;
+    font-size: 24px;
+  }
+
+  .new-channel {
+    display: flex;
+    justify-content: end;
+    margin-top: 20px;
+  }
+
+  .cards {
+    margin-top: 16px;
+
+    /* check this below class, this should be coming form KDS */
+    ::v-deep .visuallyhidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      border: 0;
+    }
+  }
+
+  .cards-title {
+    font-size: 14px;
+  }
+
+  .cards-resource {
+    span:first-child::after {
+      margin: 0 8px;
+      content: '•';
+    }
+  }
+
+  .cards-desc {
+    margin-top: 4px;
+  }
+
+  .footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .footer-right,
+  .footer-left {
+    display: flex;
+    align-items: center;
+  }
+
+  .footer-left {
+    span {
+      font-size: 14px;
     }
 
-    &__new-channel {
-      display: flex;
-      justify-content: end;
-      margin-top: 20px;
-    }
-
-    &__cards {
-      margin-top: 16px;
-
-      &--below-title {
-        font-size: 14px;
-
-        &__resource {
-          span:first-child::after {
-            margin: 0 8px;
-            content: '•';
-          }
-        }
-
-        &__desc {
-          margin-top: 4px;
-        }
-      }
-
-      &--footer {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-
-        &__right,
-        &__left {
-          display: flex;
-          align-items: center;
-        }
-
-        &__left {
-          span {
-            font-size: 14px;
-          }
-
-          div {
-            margin-left: 8px;
-          }
-        }
-      }
-
-      /* check this below class, this should be coming form KDS */
-      ::v-deep .visuallyhidden {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        margin: -1px;
-        overflow: hidden;
-        clip: rect(0 0 0 0);
-        border: 0;
-      }
+    div {
+      margin-left: 8px;
     }
   }
 
