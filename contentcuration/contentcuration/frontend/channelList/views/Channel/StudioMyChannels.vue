@@ -108,19 +108,20 @@
                 </div>
               </div>
               <div class="my-channels__cards--footer__right">
-                <KRouterLink
+                <router-link
                   :data-testid="`details-button-${index}`"
                   :to="channelDetailsLink(channel)"
+                  :class="['link', linkComputedClass]"
+                  aria-label="Read more about this resource"
+                  @click.stop
                 >
                   <KIconButton
                     :color="$themeTokens.primary"
                     icon="info"
                     :tooltip="$tr('details')"
-                    @click.stop
                   />
-                </KRouterLink>
+                </router-link>
                 <ChannelStar
-                  v-if="loggedIn"
                   :channelId="channel.id"
                   :data-testid="`bookmark-button-${index}`"
                   :bookmark="channel.bookmark"
@@ -211,7 +212,6 @@
       };
     },
     computed: {
-      ...mapGetters(['loggedIn']),
       ...mapGetters('channel', ['channels']),
       listChannels() {
         const channels = this.channels;
@@ -231,9 +231,6 @@
       // channel items properties
       canEdit() {
         return this.selectedChannel.edit;
-      },
-      linkToChannelTree() {
-        return this.loggedIn;
       },
     },
     created() {
@@ -255,17 +252,8 @@
           query: { last: this.$route.name },
         });
       },
-      goToChannelRoute(channel) {
-        this.linkToChannelTree
-          ? (window.location.href = this.channelHref(channel.id))
-          : this.$router.push(this.channelDetailsLink).catch(() => {});
-      },
-      channelHref(id) {
-        if (this.linkToChannelTree) {
-          return window.Urls.channel(id);
-        } else {
-          return false;
-        }
+      goToChannelRoute() {
+        this.$router.push(this.channelDetailsLink);
       },
       loadData() {
         this.loading = true;
