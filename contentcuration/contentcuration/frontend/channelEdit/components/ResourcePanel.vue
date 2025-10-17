@@ -74,7 +74,8 @@
         slider-color="primary"
       >
         <VTab
-          class="px-2"
+          href="#questions"
+          class="outline-spacing px-2"
           exact
           @change="tab = 'questions'"
         >
@@ -86,7 +87,8 @@
           />
         </VTab>
         <VTab
-          class="px-2"
+          href="#details"
+          class="outline-spacing px-2"
           exact
           @change="tab = 'details'"
         >
@@ -921,6 +923,10 @@
 
     /* stylelint-disable-next-line custom-property-pattern */
     border: 1px solid var(--v-greyBackground-base) !important;
+  }
+
+  .outline-spacing {
+    padding: 4px;
   }
 
 </style>
