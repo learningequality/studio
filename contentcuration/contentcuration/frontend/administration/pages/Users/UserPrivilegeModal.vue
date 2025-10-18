@@ -5,28 +5,49 @@
     :title="title"
     :text="text"
     :submitText="confirmText"
-    cancelText="Cancel"
-    @submit="confirm"
+    :cancelText="$tr('cancelAction')"
+    data-test="user-privilege-modal"
+    @submit="submit"
     @cancel="close"
   >
     <form
       ref="form"
-      lazy-validation
       @submit.prevent="confirm"
     >
-      <p>Enter your email address to continue</p>
+      <p>{{ $tr('confirmEmailPrompt') }}</p>
+
       <KTextbox
         v-model="emailConfirm"
         box
         :maxlength="100"
         counter
-        required
+        :label="$tr('emailLabel')"
         :invalid="errors.emailConfirm"
         :invalidText="$tr('emailValidationMessage')"
         :showInvalidText="true"
-        :label="$tr('emailLabel')"
+        data-test="email-input"
       />
     </form>
+
+    <template #actions>
+      <KButton
+        flat
+        data-test="cancel"
+        type="button"
+        @click="close"
+      >
+        {{ $tr('cancelAction') }}
+      </KButton>
+
+      <KButton
+        data-test="confirm"
+        primary
+        type="button"
+        @click="submit"
+      >
+        {{ confirmText }}
+      </KButton>
+    </template>
   </KModal>
 
 </template>
@@ -34,12 +55,15 @@
 
 <script>
 
+  import { mapState } from 'vuex';
   import { generateFormMixin } from 'shared/mixins';
 
   const formMixin = generateFormMixin({
     emailConfirm: {
       required: true,
-      validator: (value, vm) => value === vm.currentEmail,
+      validator: (value, vm) => {
+        return value === vm.currentEmail;
+      },
     },
   });
 
@@ -68,61 +92,70 @@
         required: true,
       },
     },
-    data() {
-      return {
-        emailConfirm: '',
-      };
-    },
     computed: {
+      ...mapState({
+        // eslint-disable-next-line kolibri/vue-no-unused-vuex-properties, vue/no-unused-properties
+        currentEmail: (state) => state.session.currentUser.email,
+      }),
       dialog: {
         get() {
           return this.value;
         },
-        set(value) {
-          this.$emit('input', value);
+        set(v) {
+          this.$emit('input', v);
         },
       },
     },
     watch: {
-      value(value) {
-        if (value) {
+      value(val) {
+        if (val) {
           this.reset();
         }
       },
     },
     methods: {
       close() {
-        this.emailConfirm = '';
-        // Clear errors manually if using generateFormMixin
-        if (this.errors) {
-          Object.keys(this.errors).forEach(key => {
-            this.errors[key] = false;
-          });
-        }
-        this.dialog = false;
-      },
-      confirm() {
-        if (this.onSubmit) {
-          return this.onSubmit();
+        if (typeof this.reset === 'function') {
+          this.reset();
         } else {
-          return Promise.resolve();
+          this.emailConfirm = '';
+          if (this.errors) {
+            Object.keys(this.errors).forEach(k => (this.errors[k] = false));
+          }
         }
+        this.$emit('input', false);
+      },
+
+      // eslint-disable-next-line vue/no-unused-properties
+      confirm() {
+        if (typeof this.submit === 'function') {
+          return this.submit();
+        }
+        return Promise.resolve();
       },
       // eslint-disable-next-line vue/no-unused-properties
-      onSubmit() {
-        return this.confirmAction()
-          .then(() => {
-            this.dialog = false;
-          })
-          .catch(() => {
-            this.showSnackbar({ text: this.$tr('ErrorMessage') });
-          });
+      onSubmit(formData) {
+        try {
+          const res = this.confirmAction(formData);
+          if (res && typeof res.then === 'function') {
+            return res.then((val) => {
+              this.dialog = false;
+              return val;
+            });
+          }
+          this.dialog = false;
+          return Promise.resolve(res);
+        } catch (err) {
+          return Promise.reject(err);
+        }
       },
     },
+
     $trs: {
       emailLabel: 'Email address',
       emailValidationMessage: 'Email must match your account email',
-      ErrorMessage: 'Error While updating privileges',
+      cancelAction: 'Cancel',
+      confirmEmailPrompt: 'Enter your email address to continue',
     },
   };
 
