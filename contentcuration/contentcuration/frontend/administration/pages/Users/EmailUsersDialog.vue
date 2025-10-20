@@ -14,34 +14,20 @@
         @submit.prevent="emailHandler"
       >
         <VCardText class="pb-4 pt-3">
-          <VLayout
-            align-top
-            row
-            class="mb-2"
-          >
-            <VFlex
-              shrink
-              class="pa-2"
-            >
-              From:
-            </VFlex>
-            <VFlex>
+          <div class="align-top layout-row mb-2">
+            <div class="flex-shrink pa-2">From:</div>
+            <div class="flex-grow">
               <VChip small>
                 {{ senderEmail }}
               </VChip>
-            </VFlex>
-          </VLayout>
-          <VLayout
-            align-top
-            row
-          >
-            <VFlex
-              shrink
-              class="pa-2"
+            </div>
+          </div>
+          <div class="align-top layout-row">
+            <div class="flex-shrink pa-2">To:</div>
+            <div
+              class="flex-grow"
+              data-test="to-line"
             >
-              To:
-            </VFlex>
-            <VFlex data-test="to-line">
               <ExpandableList
                 v-if="initialRecipients"
                 :items="users"
@@ -50,27 +36,28 @@
                 :delimit="false"
               >
                 <template #item="{ item }">
-                  <VTooltip
-                    bottom
-                    lazy
-                  >
-                    <template #activator="{ on }">
-                      <VChip
-                        small
-                        :close="recipients.length > 1"
-                        data-test="remove"
-                        v-on="on"
-                        @input="remove(item.id)"
-                      >
-                        <div style="max-width: 72px">
-                          <div class="text-truncate">
-                            {{ item.name }}
-                          </div>
+                  <div class="chip-tooltip-container">
+                    <KTooltip
+                      :refs="getRefs()"
+                      :reference="`tooltip-${item.id}`"
+                      placement="bottom"
+                    >
+                      <span>{{ item.name }} &lt;{{ item.email }}&gt;</span>
+                    </KTooltip>
+                    <VChip
+                      :ref="`tooltip-${item.id}`"
+                      small
+                      :close="recipients.length > 1"
+                      data-test="remove"
+                      @input="remove(item.id)"
+                    >
+                      <div style="max-width: 72px">
+                        <div class="text-truncate">
+                          {{ item.name }}
                         </div>
-                      </VChip>
-                    </template>
-                    <span>{{ item.name }} &lt;{{ item.email }}&gt;</span>
-                  </VTooltip>
+                      </div>
+                    </VChip>
+                  </div>
                 </template>
               </ExpandableList>
               <VChip
@@ -79,8 +66,8 @@
               >
                 {{ searchString }}
               </VChip>
-            </VFlex>
-          </VLayout>
+            </div>
+          </div>
           <KTextbox
             v-model="subject"
             class="mt-4"
@@ -122,8 +109,8 @@
           </div>
         </VCardText>
         <VCardActions data-test="buttons">
-          <VSpacer />
-          <KButtonGroup>
+          <div class="spacer"></div>
+          <KButtonGroup class="button-group">
             <KButton
               data-test="cancel"
               appearance="flat-button"
@@ -307,6 +294,10 @@
       remove(id) {
         this.recipients = this.recipients.filter(u => u !== id);
       },
+
+      getRefs() {
+        return this.$refs;
+      },
     },
     $trs: {
       draftWarningTitle: 'Draft in progress',
@@ -328,9 +319,52 @@
     padding-top: 4px;
   }
 
-  ::v-deep textarea {
-    height: 120px;
-    min-height: 120px;
+  /* Or if you want them completely inline without any breaks: */
+  .chip-tooltip-container {
+    display: inline;
+    margin: 2px;
+  }
+
+  /* Custom layout styles to replace Vuetify flex system */
+  .layout-row {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .align-top {
+    align-items: flex-start;
+  }
+
+  .flex-shrink {
+    flex: 0 0 auto;
+  }
+
+  .flex-grow {
+    flex: 1 1 auto;
+  }
+
+  .spacer {
+    flex-grow: 1;
+  }
+
+  .mb-2 {
+    margin-bottom: 8px;
+  }
+
+  .mt-4 {
+    margin-top: 16px;
+  }
+
+  .mb-1 {
+    margin-bottom: 4px;
+  }
+
+  .pa-2 {
+    padding: 8px;
+  }
+
+  .button-group {
+    white-space: nowrap;
   }
 
 </style>
