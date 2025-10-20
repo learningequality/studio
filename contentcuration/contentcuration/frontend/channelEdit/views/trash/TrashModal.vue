@@ -130,22 +130,22 @@
           {{ getSelectedTopicAndResourceCountText(selected) }}
         </span>
         <VSpacer />
-        <VBtn
-          flat
-          :disabled="!selected.length"
-          data-test="restore"
-          @click="moveModalOpen = true"
-        >
-          {{ $tr('restoreButton') }}
-        </VBtn>
-        <VBtn
-          color="primary"
-          :disabled="!selected.length"
-          data-test="delete"
-          @click="showConfirmationDialog = true"
-        >
-          {{ $tr('deleteButton') }}
-        </VBtn>
+        <KButtonGroup>
+          <KButton
+            appearance="flat-button"
+            :text="$tr('restoreButton')"
+            :disabled="!selected.length"
+            data-test="restore"
+            @click="moveModalOpen = true"
+          />
+          <KButton
+            :primary="true"
+            :text="$tr('deleteButton')"
+            :disabled="!selected.length"
+            data-test="delete"
+            @click="showConfirmationDialog = true"
+          />
+        </KButtonGroup>
       </template>
       <KModal
         v-if="showConfirmationDialog"
@@ -363,6 +363,10 @@
     display: flex;
     justify-content: center;
     width: 100%;
+  }
+
+  .button-group {
+    white-space: nowrap;
   }
 
 </style>
