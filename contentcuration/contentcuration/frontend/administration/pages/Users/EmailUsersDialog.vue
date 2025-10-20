@@ -18,7 +18,7 @@
     >
       <VCardText class="pb-4 pt-3">
         <StudioBanner
-          v-if="Boolean(errorCount())"
+          v-if="showInvalidText && Boolean(errorCount())"
           error
           class="studio-banner"
         >
@@ -85,7 +85,7 @@
           :label="'Subject line'"
           :required="true"
           :invalid="errors.subject"
-          :showInvalidText="errors.subject"
+          :showInvalidText="showInvalidText && errors.subject"
           :invalidText="$tr('fieldRequiredText')"
           :showLabel="true"
           :appearanceOverrides="getAppearanceOverrides(errors.subject)"
@@ -112,7 +112,7 @@
             :label="'Email body'"
             :required="true"
             :invalid="errors.message"
-            :showInvalidText="errors.message"
+            :showInvalidText="showInvalidText && errors.message"
             :invalidText="$tr('fieldRequiredText')"
             :showLabel="true"
             :appearanceOverrides="getAppearanceOverrides(errors.message)"
@@ -190,6 +190,7 @@
       return {
         showWarning: false,
         recipients: [],
+        showInvalidText: false,
       };
     },
     computed: {
@@ -260,6 +261,7 @@
         this.subject = '';
         this.message = '';
         this.showWarning = false;
+        this.showInvalidText = false;
         this.reset(); // Reset form validation state
       },
       addPlaceholder(placeholder) {
@@ -287,6 +289,7 @@
       // Form mixin methods
       // eslint-disable-next-line kolibri/vue-no-unused-methods, vue/no-unused-properties
       onValidationFailed() {
+        this.showInvalidText = true; // Ensure errors are shown when validation fails
         // Scroll to error banner
         if (this.$refs.form && this.$refs.form.scrollIntoView) {
           this.$refs.form.scrollIntoView({ behavior: 'smooth' });
@@ -295,6 +298,12 @@
 
       // eslint-disable-next-line kolibri/vue-no-unused-methods, vue/no-unused-properties
       onSubmit() {
+        this.showInvalidText = true; // Show errors after first submit attempt
+
+        if (this.errorCount() > 0) {
+          return; // Don't proceed if there are errors
+        }
+
         const query = this.initialRecipients
           ? { ids: this.recipients.join(',') }
           : this.usersFilterFetchQueryParams;
