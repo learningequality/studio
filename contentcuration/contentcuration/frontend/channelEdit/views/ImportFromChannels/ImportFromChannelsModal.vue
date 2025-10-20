@@ -52,12 +52,11 @@
           >
             <VIconWrapper small> check_circle </VIconWrapper>
             <span class="mx-1">{{ $tr('addedText') }}</span>
-            <VBtn
-              color="primary"
+            <KButton
+              primary
+              :text="$tr('removeButton')"
               @click="deselectNode(previewNode)"
-            >
-              {{ $tr('removeButton') }}
-            </VBtn>
+            />
           </VLayout>
         </VFadeTransition>
         <KButton
