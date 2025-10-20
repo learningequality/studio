@@ -2,24 +2,32 @@
 
   <div
     class="studio-chip"
-    :class="chipClasses"
-    :style="chipStyles"
+    :class="{
+      'studio-chip--small': small,
+      'studio-chip--clickable': close || $listeners.click,
+      'studio-chip--active': isActive,
+    }"
+    @click="handleClick"
   >
-    <div
-      class="studio-chip__content"
-      :style="contentStyles"
-    >
-      <slot></slot>
+    <!-- Chip content -->
+    <div class="studio-chip__content">
+      <!-- Chip text/content first -->
+      <div class="studio-chip__text">
+        <slot>
+          {{ text }}
+        </slot>
+      </div>
+
+      <!-- Close button for removable chips after text -->
+      <KIconButton
+        v-if="close"
+        class="studio-chip__close"
+        appearance="flat-button"
+        icon="close"
+        data-test="remove-chip"
+        @click.stop="handleClose"
+      />
     </div>
-    <KButton
-      v-if="closable"
-      class="studio-chip__close"
-      appearance="basic-link"
-      size="small"
-      icon="close"
-      :style="closeButtonStyles"
-      @click="handleClose"
-    />
   </div>
 
 </template>
@@ -31,118 +39,47 @@
     name: 'StudioChip',
     props: {
       /**
-       * Small size variant
+       * Text content of the chip
+       */
+      text: {
+        type: String,
+        default: '',
+      },
+      /**
+       * Whether the chip is small size
        */
       small: {
         type: Boolean,
         default: false,
       },
       /**
-       * Compact size variant (even smaller than small)
+       * Whether to show close button
        */
-      compact: {
-        type: Boolean,
-        default: false,
-      },
-      /**
-       * Show close button
-       */
-      closable: {
-        type: Boolean,
-        default: false,
-      },
-      /**
-       * Chip color variant
-       */
-      color: {
-        type: String,
-        default: 'default',
-        validator: value => ['default', 'primary', 'error', 'success', 'neutral'].includes(value),
-      },
-      /**
-       * Maximum width for content
-       */
-      maxWidth: {
-        type: String,
-        default: null,
-      },
-      /**
-       * Label style (more rectangular)
-       */
-      label: {
+      close: {
         type: Boolean,
         default: false,
       },
     },
-    computed: {
-      chipClasses() {
-        return {
-          'studio-chip--small': this.small,
-          'studio-chip--compact': this.compact,
-          'studio-chip--closable': this.closable,
-          'studio-chip--label': this.label,
-          [`studio-chip--${this.color}`]: true,
-        };
-      },
-      chipStyles() {
-        const baseStyles = {
-          backgroundColor: this.getBackgroundColor(),
-          border: `1px solid ${this.getBorderColor()}`,
-        };
-
-        if (this.maxWidth) {
-          baseStyles.maxWidth = this.maxWidth;
-        }
-
-        return baseStyles;
-      },
-      contentStyles() {
-        return {
-          color: this.getTextColor(),
-        };
-      },
-      closeButtonStyles() {
-        return {
-          color: this.getTextColor(),
-        };
-      },
+    data() {
+      return {
+        isActive: false,
+      };
     },
+
     methods: {
-      getBackgroundColor() {
-        const colorMap = {
-          default: this.$themeTokens.surface,
-          primary: this.$themeBrand.primary.v_50,
-          error: this.$themePalette.red.v_50,
-          success: this.$themePalette.green.v_50,
-          neutral: this.$themePalette.grey.v_50,
-        };
-        return colorMap[this.color] || colorMap.default;
-      },
-      getBorderColor() {
-        const colorMap = {
-          default: this.$themeTokens.fineLine,
-          primary: this.$themeBrand.primary.v_100,
-          error: this.$themePalette.red.v_100,
-          success: this.$themePalette.green.v_100,
-          neutral: this.$themePalette.grey.v_200,
-        };
-        return colorMap[this.color] || colorMap.default;
-      },
-      getTextColor() {
-        const colorMap = {
-          default: this.$themeTokens.text,
-          primary: this.$themeBrand.primary.v_700,
-          error: this.$themeTokens.error,
-          success: this.$themeTokens.success,
-          neutral: this.$themeTokens.text,
-        };
-        return colorMap[this.color] || colorMap.default;
+      handleClick(event) {
+        // Add active state for click feedback
+        this.isActive = true;
+        setTimeout(() => {
+          this.isActive = false;
+        }, 150);
+
+        this.$emit('click', event);
       },
       handleClose() {
-        /**
-         * Emitted when close button is clicked
-         */
+        // Emit both close and input events for compatibility
         this.$emit('close');
+        this.$emit('input'); // This is what the original VChip @input was listening to
       },
     },
   };
@@ -150,58 +87,51 @@
 </script>
 
 
-<style scoped>
+<style lang="scss" scoped>
 
   .studio-chip {
-    box-sizing: border-box;
     display: inline-flex;
     align-items: center;
-    max-width: 100%;
-    padding: 4px 12px;
-    font-size: 14px;
-    font-weight: 400;
-    line-height: 1.5;
+    height: 24px;
+    min-height: 24px;
+    padding: 4px;
+    margin: 2px;
+    user-select: none;
+    background-color: #e0e0e0; /* Gray background like VChip */
     border-radius: 16px;
-    transition: all 0.2s ease-in-out;
-  }
+    transition: all 0.2s ease;
 
-  .studio-chip--small {
-    padding: 2px 8px;
-    font-size: 12px;
-    border-radius: 12px;
-  }
+    /* Small variant - still 24px height */
+    &--small {
+      height: 24px;
+      min-height: 24px;
+      padding: 2px 8px;
+      font-size: 12px;
+      border-radius: 12px;
+    }
 
-  .studio-chip--compact {
-    padding: 2px 10px;
-    font-size: 13px;
-    border-radius: 14px;
-  }
+    &--clickable {
+      cursor: pointer;
 
-  .studio-chip--label {
-    font-weight: 500;
-    border-radius: 4px;
-  }
+      &:hover {
+        background-color: #d6d6d6; /* Slightly darker on hover */
+      }
+    }
 
-  .studio-chip__content {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+    &__content {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      height: 100%;
+    }
 
-  .studio-chip__close {
-    flex-shrink: 0;
-    min-width: auto !important;
-    margin: 0 4px 0 -4px;
-  }
+    &__text {
+      order: 1; /* Ensure text comes first */
+    }
 
-  .studio-chip--small .studio-chip__close {
-    margin: 0 2px 0 -2px;
-  }
-
-  .studio-chip--compact .studio-chip__close {
-    margin: 0 3px 0 -3px;
+    &__close {
+      order: 2;
+    }
   }
 
 </style>
