@@ -7,7 +7,10 @@
       'studio-chip--clickable': close || $listeners.click,
       'studio-chip--active': isActive,
     }"
+    :style="chipStyles"
     @click="handleClick"
+    @mouseenter="isHovered = true"
+    @mouseleave="isHovered = false"
   >
     <!-- Chip content -->
     <div class="studio-chip__content">
@@ -63,7 +66,19 @@
     data() {
       return {
         isActive: false,
+        isHovered: false,
       };
+    },
+    computed: {
+      chipStyles() {
+        const isClickable = this.close || this.$listeners.click;
+        const baseColor = this.$themePalette.grey.v_200;
+        const hoverColor = this.$themePalette.grey.v_300;
+
+        return {
+          backgroundColor: this.isHovered && isClickable ? hoverColor : baseColor,
+        };
+      },
     },
 
     methods: {
@@ -97,7 +112,6 @@
     padding: 4px;
     margin: 2px;
     user-select: none;
-    background-color: #e0e0e0; /* Gray background like VChip */
     border-radius: 16px;
     transition: all 0.2s ease;
 
@@ -112,10 +126,6 @@
 
     &--clickable {
       cursor: pointer;
-
-      &:hover {
-        background-color: #d6d6d6; /* Slightly darker on hover */
-      }
     }
 
     &__content {
@@ -123,14 +133,6 @@
       gap: 6px;
       align-items: center;
       height: 100%;
-    }
-
-    &__text {
-      order: 1; /* Ensure text comes first */
-    }
-
-    &__close {
-      order: 2;
     }
   }
 
