@@ -28,9 +28,10 @@
         <div class="align-top layout-row mb-2">
           <div class="flex-shrink pa-2">From:</div>
           <div class="flex-grow">
-            <VChip small>
-              {{ senderEmail }}
-            </VChip>
+            <StudioChip
+              :text="senderEmail"
+              :small="true"
+            />
           </div>
         </div>
         <div class="align-top layout-row">
@@ -55,9 +56,10 @@
                   >
                     <span>{{ item.name }} &lt;{{ item.email }}&gt;</span>
                   </KTooltip>
-                  <VChip
+                  <StudioChip
                     :ref="`tooltip-${item.id}`"
-                    small
+                    :text="item.name"
+                    :small="true"
                     :close="recipients.length > 1"
                     data-test="remove"
                     @input="remove(item.id)"
@@ -67,16 +69,16 @@
                         {{ item.name }}
                       </div>
                     </div>
-                  </VChip>
+                  </StudioChip>
                 </div>
               </template>
             </ExpandableList>
-            <VChip
+            <StudioChip
               v-else-if="usersFilterFetchQueryParams"
-              small
+              :small="true"
             >
               {{ searchString }}
-            </VChip>
+            </StudioChip>
           </div>
         </div>
         <KTextbox
@@ -146,6 +148,7 @@
   import ExpandableList from 'shared/views/ExpandableList';
   import { generateFormMixin } from 'shared/mixins';
   import StudioBanner from 'shared/views/StudioBanner';
+  import StudioChip from 'shared/views/StudioChip';
 
   const formMixin = generateFormMixin({
     subject: { required: true },
@@ -157,6 +160,7 @@
     components: {
       ExpandableList,
       StudioBanner,
+      StudioChip,
     },
     mixins: [formMixin],
     props: {
