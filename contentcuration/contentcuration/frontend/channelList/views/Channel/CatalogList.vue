@@ -64,6 +64,7 @@
               :channelId="item.id"
               :detailsRouteName="detailsRouteName"
               style="flex-grow: 1; width: 100%"
+              @show-channel-details="handleShowChannelDetails"
             />
           </VLayout>
         </VFlex>
@@ -127,6 +128,22 @@
         </BaseMenu>
       </BottomBar>
     </VContainer>
+    <transition
+      name="backdrop"
+      appear
+    >
+      <div
+        v-if="showSidePanel"
+        class="backdrop"
+        @click="handleCloseSidePanel"
+      ></div>
+    </transition>
+    <ChannelDetailsSidePanel
+      v-if="showSidePanel"
+      v-model="showSidePanel"
+      :channelId="selectedChannelId"
+      @close="handleCloseSidePanel"
+    />
   </div>
 
 </template>
@@ -141,6 +158,7 @@
   import sortBy from 'lodash/sortBy';
   import union from 'lodash/union';
   import { RouteNames } from '../../constants';
+  import ChannelDetailsSidePanel from './ChannelDetailsSidePanel';
   import CatalogFilters from './CatalogFilters';
   import ChannelItem from './ChannelItem';
   import LoadingText from 'shared/views/LoadingText';
@@ -163,6 +181,7 @@
       Checkbox,
       ToolBar,
       OfflineText,
+      ChannelDetailsSidePanel,
     },
     mixins: [channelExportMixin, constantsTranslationMixin],
     data() {
@@ -170,12 +189,8 @@
         loading: true,
         loadError: false,
         selecting: false,
-
-        /**
-         * jayoshih: router guard makes it difficult to track
-         * differences between previous query params and new
-         * query params, so just track it manually
-         */
+        showSidePanel: false,
+        selectedChannelId: null,
         previousQuery: this.$route.query,
 
         /**
@@ -286,6 +301,14 @@
         this.setSelection(false);
         return this.downloadChannelsPDF(params);
       },
+      handleShowChannelDetails(channelId) {
+        this.showSidePanel = true;
+        this.selectedChannelId = channelId;
+      },
+      handleCloseSidePanel() {
+        this.showSidePanel = false;
+        this.selectedChannelId = null;
+      },
     },
     $trs: {
       resultsText: '{count, plural,\n =1 {# result found}\n other {# results found}}',
@@ -309,6 +332,43 @@
   .list-wrapper {
     max-width: 1080px;
     margin: 0 auto;
+  }
+
+  .backdrop {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 9;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    background-attachment: fixed;
+  }
+
+  .backdrop-enter {
+    opacity: 0;
+  }
+
+  .backdrop-enter-to {
+    opacity: 1;
+  }
+
+  .backdrop-enter-active {
+    transition: opacity 0.2s ease-in-out;
+  }
+
+  .backdrop-leave {
+    opacity: 1;
+  }
+
+  .backdrop-leave-to {
+    opacity: 0;
+  }
+
+  .backdrop-leave-active {
+    transition: opacity 0.2s ease-in-out;
   }
 
 </style>

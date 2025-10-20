@@ -1,26 +1,103 @@
 <template>
 
   <div :class="{ printing }">
-    <div style="max-width: 300px">
-      <Thumbnail
-        :src="isChannel ? _details.thumbnail_url : _details.thumbnail_src"
-        :encoding="isChannel ? _details.thumbnail_encoding : null"
-      />
-    </div>
-    <br >
-    <h1
-      class="notranslate"
-      dir="auto"
+    <VLayout
+      row
+      class="details-layout"
     >
-      {{ isChannel ? _details.name : _details.title }}
-    </h1>
-    <p
-      class="notranslate"
-      dir="auto"
-    >
-      {{ _details.description }}
-    </p>
+      <VFlex
+        xs7
+        class="details-content"
+      >
+        <p
+          class="notranslate"
+          dir="auto"
+        >
+          {{ _details.description }}
+        </p>
+      </VFlex>
+      <VFlex
+        xs5
+        class="pa-3"
+      >
+        <Thumbnail
+          :src="isChannel ? _details.thumbnail_url : _details.thumbnail_src"
+          :encoding="isChannel ? _details.thumbnail_encoding : null"
+        />
+      </VFlex>
+    </VLayout>
     <br >
+
+    <!-- Action Buttons -->
+    <VLayout
+      v-if="isChannel"
+      row
+      class="mb-4"
+      style="margin-left: -8px"
+    >
+      <VBtn
+        v-if="!loggedIn && _details.demo_server_url"
+        color="primary"
+        class="mr-2"
+        @click="viewInKolibri"
+      >
+        <Icon
+          class="mr-2"
+          icon="openNewTab"
+          :color="$themeTokens.textInverted"
+        />
+        {{ $tr('viewInKolibri') }}
+      </VBtn>
+      <VBtn
+        v-else-if="_details.source_url"
+        color="primary"
+        class="mr-2"
+        :href="channelHref"
+      >
+        {{ $tr('goToChannel') }}
+      </VBtn>
+      <BaseMenu>
+        <template #activator="{ on }">
+          <VBtn
+            color="primary"
+            v-on="on"
+          >
+            {{ loggedIn ? $tr('options') : $tr('downloadButton') }}
+            <Icon
+              class="ml-1"
+              icon="dropdown"
+              :color="$themeTokens.textInverted"
+            />
+          </VBtn>
+        </template>
+        <VList>
+          <template v-if="loggedIn">
+            <VListTile
+              v-if="_details.source_url"
+              :href="_details.source_url"
+              target="_blank"
+            >
+              <VListTileTitle>{{ $tr('goToWebsite') }}</VListTileTitle>
+            </VListTile>
+            <VListTile
+              v-if="_details.demo_server_url"
+              @click="viewInKolibri"
+            >
+              <VListTileTitle>{{ $tr('viewInKolibri') }}</VListTileTitle>
+            </VListTile>
+          </template>
+          <VListTile @click="$emit('generate-pdf')">
+            <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
+          </VListTile>
+          <VListTile
+            data-test="dl-csv"
+            @click="$emit('generate-csv')"
+          >
+            <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
+          </VListTile>
+        </VList>
+      </BaseMenu>
+    </VLayout>
 
     <template v-if="isChannel">
       <DetailsRow
@@ -357,10 +434,12 @@
 
 <script>
 
+  import { mapGetters } from 'vuex';
   import cloneDeep from 'lodash/cloneDeep';
   import defaultsDeep from 'lodash/defaultsDeep';
   import camelCase from 'lodash/camelCase';
   import orderBy from 'lodash/orderBy';
+  import BaseMenu from '../BaseMenu.vue';
   import { SCALE_TEXT, SCALE, CHANNEL_SIZE_DIVISOR } from './constants';
   import DetailsRow from './DetailsRow';
   import { CategoriesLookup, LevelsLookup } from 'shared/constants';
@@ -419,6 +498,7 @@
       CopyToken,
       DetailsRow,
       Thumbnail,
+      BaseMenu,
     },
     mixins: [
       fileSizeMixin,
@@ -428,10 +508,6 @@
       metadataTranslationMixin,
     ],
     props: {
-      // Object matching that returned by the channel details and
-      // node details API endpoints, see backend for details of the
-      // object structure and keys. get_details method on ContentNode
-      // model as a starting point.`
       details: {
         type: Object,
         required: true,
@@ -446,6 +522,13 @@
       },
     },
     computed: {
+      ...mapGetters(['loggedIn']),
+      channelHref() {
+        if (this.loggedIn && !window.libraryMode) {
+          return window.Urls.channel(this._details.id);
+        }
+        return null;
+      },
       _details() {
         const details = cloneDeep(this.details);
         defaultsDeep(details, DEFAULT_DETAILS);
@@ -552,6 +635,11 @@
       channelUrl(channel) {
         return window.Urls.channel(channel.id);
       },
+      viewInKolibri() {
+        if (this._details.demo_server_url) {
+          window.open(this._details.demo_server_url, '_blank');
+        }
+      },
     },
     $trs: {
       /* eslint-disable kolibri/vue-no-unused-translations */
@@ -590,6 +678,13 @@
       currentVersionHeading: 'Published version',
       primaryLanguageHeading: 'Primary language',
       unpublishedText: 'Unpublished',
+      viewInKolibri: 'View in Kolibri',
+      goToChannel: 'Go to Channel',
+      goToWebsite: 'Go to source website',
+      options: 'Options',
+      downloadButton: 'Download channel summary',
+      downloadPDF: 'Download PDF',
+      downloadCSV: 'Download CSV',
     },
   };
 
@@ -604,6 +699,14 @@
     &.material-icons {
       font-family: 'Material Icons' !important;
     }
+  }
+
+  .details-layout {
+    align-items: center;
+  }
+
+  .details-content {
+    padding-right: 16px;
   }
 
   .v-toolbar__title {
