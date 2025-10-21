@@ -85,31 +85,26 @@ describe('emailUsersDialog', () => {
 
     it('should show warning if subject is not blank', async () => {
       await wrapper.setData({ subject: 'subject' });
-      // Call cancel method directly since KModal event binding might not work in tests
       await wrapper.vm.cancel();
       expect(wrapper.vm.showWarning).toBe(true);
     });
 
     it('should show warning if message is not blank', async () => {
       await wrapper.setData({ message: 'message' });
-      // Call cancel method directly since KModal event binding might not work in tests
       await wrapper.vm.cancel();
       expect(wrapper.vm.showWarning).toBe(true);
     });
 
     it('should not show warning when canceling with no draft content', async () => {
       await wrapper.setData({ subject: '', message: '' });
-      // Call cancel method directly since KModal event binding might not work in tests
       await wrapper.vm.cancel();
       expect(wrapper.vm.showWarning).toBe(false);
     });
 
     it('confirming close should reset fields and close dialog', async () => {
       await wrapper.setData({ subject: 'subject', message: 'message' });
-      // Show warning first
       wrapper.vm.showWarning = true;
       await wrapper.vm.$nextTick();
-      // Use the actual confirm modal with data-test
       await wrapper.findComponent('[data-test="confirm"]').vm.$emit('submit');
       expect(wrapper.vm.subject).toBe('');
       expect(wrapper.vm.message).toBe('');
@@ -126,14 +121,12 @@ describe('emailUsersDialog', () => {
 
     it('should not send if subject is empty', async () => {
       await wrapper.setData({ message: 'message' });
-      // Call submit method directly since form submission might not trigger in tests
       await wrapper.vm.submit();
       expect(sendEmail).not.toHaveBeenCalled();
     });
 
     it('should not send if message is empty', async () => {
       await wrapper.setData({ subject: 'subject' });
-      // Call submit method directly since form submission might not trigger in tests
       await wrapper.vm.submit();
       expect(sendEmail).not.toHaveBeenCalled();
     });
@@ -142,8 +135,6 @@ describe('emailUsersDialog', () => {
   it('clicking placeholder should add it to the message', async () => {
     const message = 'Testing';
     await wrapper.setData({ message });
-
-    // Ensure the ref is properly mocked
     const focusMock = jest.fn();
     wrapper.vm.$refs.message.focus = focusMock;
 
@@ -158,7 +149,6 @@ describe('emailUsersDialog', () => {
 
       const emailData = { subject: 'subject', message: 'message' };
       await wrapper.setData(emailData);
-      // Call onSubmit method directly since it contains the form validation logic
       await wrapper.vm.onSubmit();
       expect(sendEmail).toHaveBeenCalledWith({
         ...emailData,
