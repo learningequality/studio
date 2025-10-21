@@ -376,10 +376,6 @@
     flex: 1 1 auto;
   }
 
-  .spacer {
-    flex-grow: 1;
-  }
-
   .mb-2 {
     margin-bottom: 8px;
   }
@@ -394,10 +390,6 @@
 
   .pa-2 {
     padding: 8px;
-  }
-
-  .button-group {
-    white-space: nowrap;
   }
 
   .studio-banner {
