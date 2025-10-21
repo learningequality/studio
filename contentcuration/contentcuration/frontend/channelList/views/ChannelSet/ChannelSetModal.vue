@@ -92,14 +92,12 @@
                   flat
                 >
                   <ChannelItem :channelId="channelId">
-                    <VBtn
-                      flat
-                      class="ma-0"
-                      color="primary"
+                    <KButton
+                      :text="$tr('removeText')"
+                      appearance="flat-button"
+                      :primary="true"
                       @click="removeChannel(channelId)"
-                    >
-                      {{ $tr('removeText') }}
-                    </VBtn>
+                    />
                   </ChannelItem>
                 </VCard>
               </div>
