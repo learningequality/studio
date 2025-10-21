@@ -104,10 +104,11 @@ class ChannelMetadataFilter(FilterSet):
     has_exercise = BooleanFilter(method="filter_has_exercise", label="Has exercises")
     categories = CharFilter(method=bitmask_contains_and, label="Categories")
     countries = CharInFilter(field_name="countries", label="Countries")
+    public = BooleanFilter(field_name="public", label="Public")
 
     class Meta:
         model = models.ChannelMetadata
-        fields = ("available", "has_exercise", "categories", "countries")
+        fields = ("available", "has_exercise", "categories", "countries", "public")
 
     def filter_has_exercise(self, queryset, name, value):
         queryset = queryset.annotate(
@@ -165,7 +166,12 @@ class ChannelMetadataViewSet(ReadOnlyValuesViewset):
     }
 
     def get_queryset(self):
-        return models.ChannelMetadata.objects.all()
+        queryset = models.ChannelMetadata.objects.all()
+        # By default, only return public channels unless explicitly filtered
+        request = getattr(self, "request", None)
+        if request is not None and "public" not in request.query_params:
+            return queryset.filter(public=True)
+        return queryset
 
     def consolidate(self, items, queryset):
         # Only keep a single item for every channel ID, to get rid of possible
