@@ -19,7 +19,9 @@ class ChannelMetadataViewSetTestCase(StudioAPITestCase):
         country2 = mixer.blend(Country, code="C2")
         country3 = mixer.blend(Country, code="C3")
 
-        channel = mixer.blend(ChannelMetadata, countries=[country1, country2, country3], public=True)
+        channel = mixer.blend(
+            ChannelMetadata, countries=[country1, country2, country3], public=True
+        )
 
         user = testdata.user("any@user.com")
         self.client.force_authenticate(user)
@@ -64,7 +66,7 @@ class ChannelMetadataFilterTestCase(StudioAPITestCase):
                 | self.category_bitmasks[3]
             ),
             countries=["C1", "C3"],
-            public=True, 
+            public=True,
         )
         self.metadata2 = mixer.blend(
             ChannelMetadata,
@@ -74,7 +76,7 @@ class ChannelMetadataFilterTestCase(StudioAPITestCase):
                 | self.category_bitmasks[3]
             ),
             countries=["C1", "C2", "C3"],
-            public=True, 
+            public=True,
         )
         self.metadata3 = mixer.blend(
             ChannelMetadata,
@@ -84,7 +86,7 @@ class ChannelMetadataFilterTestCase(StudioAPITestCase):
                 | self.category_bitmasks[2]
             ),
             countries=["C3"],
-            public=True,  
+            public=True,
         )
 
     def test_filter_by_categories_bitmask__provided(self):
