@@ -68,4 +68,18 @@ describe('StudioChip', () => {
     const chip = screen.getByText('Test Chip').closest('.studio-chip');
     expect(chip).toHaveClass('studio-chip--clickable');
   });
+  test('loses active state when clicking outside', async () => {
+    const user = userEvent.setup();
+    renderComponent();
+
+    const chip = screen.getByText('Test Chip').closest('.studio-chip');
+
+    // Click the chip to activate it
+    await user.click(chip);
+    expect(chip).toHaveClass('studio-chip--active');
+
+    // Click outside the chip to deactivate it
+    await user.click(document.body);
+    expect(chip).not.toHaveClass('studio-chip--active');
+  });
 });
