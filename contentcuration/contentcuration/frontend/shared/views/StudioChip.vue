@@ -103,6 +103,7 @@
     min-height: 24px;
     padding: 4px;
     margin: 2px;
+    white-space: nowrap;
     user-select: none;
     border-radius: 16px;
     transition: all 0.2s ease;
