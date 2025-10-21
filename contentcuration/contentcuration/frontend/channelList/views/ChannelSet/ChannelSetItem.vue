@@ -57,8 +57,8 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import CopyToken from 'shared/views/CopyToken';
   import { RouteNames } from '../../constants';
+  import CopyToken from 'shared/views/CopyToken';
 
   export default {
     name: 'ChannelSetItem',
