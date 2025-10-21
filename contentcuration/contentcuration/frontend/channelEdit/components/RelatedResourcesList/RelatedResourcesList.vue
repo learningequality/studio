@@ -20,7 +20,7 @@
         <VListTileContent>
           <VListTileTitle>
             <KButton
-              :class="getTitleClass(item)"
+              :class="['resourceTitle', getTitleClass(item)]"
               data-test="resourceLink"
               appearance="basic-link"
               @click="onItemClick(item.id)"
@@ -101,3 +101,12 @@
   };
 
 </script>
+
+
+<style scoped>
+
+  .resourceTitle {
+    text-decoration: none !important;
+  }
+
+</style>
