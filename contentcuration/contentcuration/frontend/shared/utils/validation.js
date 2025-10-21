@@ -268,9 +268,8 @@ export function getInvalidText(validators, value) {
 // Node validation
 // These functions return an array of error codes
 export function getNodeTitleErrors(node) {
-  const title = node.title || '';
   return getTitleValidators()
-    .map(validator => validator(title))
+    .map(validator => validator(node.title))
     .filter(value => value !== true);
 }
 

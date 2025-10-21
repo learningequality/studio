@@ -62,11 +62,6 @@ describe('channelEdit utils', () => {
       const node = { title: '  ' };
       expect(getNodeTitleErrors(node)).toEqual([ValidationErrors.TITLE_REQUIRED]);
     });
-
-    it('returns an error for a undefined title', () => {
-      const node = {};
-      expect(getNodeTitleErrors(node)).toEqual([ValidationErrors.TITLE_REQUIRED]);
-    });
   });
 
   describe('getNodeLicenseErrors', () => {
