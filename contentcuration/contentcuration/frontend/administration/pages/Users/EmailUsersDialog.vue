@@ -7,8 +7,6 @@
     :submitText="$tr('sendButton')"
     :cancelText="$tr('cancelButton')"
     data-test="email-dialog"
-    width="600"
-    maxWidth="100vw"
     @submit="submit"
     @cancel="cancel"
   >
