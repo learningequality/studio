@@ -139,12 +139,11 @@
           <SavingIndicator :nodeIds="nodeIds" />
         </div>
         <div>
-          <VBtn
-            color="primary"
+          <KButton
+            :primary="true"
+            :text="$tr('finishButton')"
             @click="handleClose()"
-          >
-            {{ $tr('finishButton') }}
-          </VBtn>
+          />
         </div>
       </BottomBar>
       <InheritAncestorMetadataModal
@@ -156,28 +155,16 @@
     </VDialog>
 
     <!-- Dialog for catching unsaved changes -->
-    <MessageDialog
-      v-model="promptInvalid"
-      :header="$tr('invalidNodesFound', { count: invalidNodes.length })"
-      :text="$tr('invalidNodesFoundText')"
+    <KModal
+      v-if="promptInvalid"
+      :title="$tr('invalidNodesFound', { count: invalidNodes.length })"
+      :submitText="$tr('saveAnywaysButton')"
+      :cancelText="$tr('keepEditingButton')"
+      @submit="closeModal(true)"
+      @cancel="promptInvalid = false"
     >
-      <template #buttons="{ close }">
-        <VBtn
-          flat
-          data-test="saveanyways"
-          color="primary"
-          @click="closeModal(true)"
-        >
-          {{ $tr('saveAnywaysButton') }}
-        </VBtn>
-        <VBtn
-          color="primary"
-          @click="close"
-        >
-          {{ $tr('keepEditingButton') }}
-        </VBtn>
-      </template>
-    </MessageDialog>
+      <p>{{ $tr('invalidNodesFoundText') }}</p>
+    </KModal>
 
     <!-- Dialog for catching in-progress file uploads -->
     <KModal
@@ -219,7 +206,6 @@
   import { ContentKindLearningActivityDefaults } from 'shared/leUtils/ContentKinds';
   import { fileSizeMixin, routerMixin } from 'shared/mixins';
   import FileStorage from 'shared/views/files/FileStorage';
-  import MessageDialog from 'shared/views/MessageDialog';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
   import Uploader from 'shared/views/files/Uploader';
   import LoadingText from 'shared/views/LoadingText';
@@ -244,7 +230,6 @@
       FileStorage,
       FileUploadDefault,
       LoadingText,
-      MessageDialog,
       OfflineText,
       FileDropzone,
       SavingIndicator,
