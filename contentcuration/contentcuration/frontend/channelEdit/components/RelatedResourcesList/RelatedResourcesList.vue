@@ -19,13 +19,14 @@
 
         <VListTileContent>
           <VListTileTitle>
-            <ActionLink
+            <KButton
               :class="getTitleClass(item)"
               data-test="resourceLink"
+              appearance="basic-link"
               @click="onItemClick(item.id)"
             >
               {{ getTitle(item) }}
-            </ActionLink>
+            </KButton>
           </VListTileTitle>
           <VListTileSubTitle :class="getTitleClass({ title: item.parentTitle })">
             {{ getTitle({ title: item.parentTitle }) }}
@@ -33,22 +34,12 @@
         </VListTileContent>
 
         <VListTileAction>
-          <VTooltip
-            bottom
-            lazy
-          >
-            <template #activator="{ on }">
-              <VBtn
-                icon
-                data-test="resourceRemoveBtn"
-                v-on="on"
-                @click="onRemoveClick(item.id)"
-              >
-                <Icon icon="clear" />
-              </VBtn>
-            </template>
-            <span>{{ removeBtnLabel }}</span>
-          </VTooltip>
+          <KIconButton
+            data-test="resourceRemoveBtn"
+            :tooltip="removeBtnLabel"
+            icon="clear"
+            @click="onRemoveClick(item.id)"
+          />
         </VListTileAction>
       </VListTile>
 
@@ -61,17 +52,13 @@
 
 <script>
 
-  import ActionLink from 'shared/views/ActionLink';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
-  import Icon from 'shared/views/Icon';
   import { titleMixin } from 'shared/mixins';
 
   export default {
     name: 'RelatedResourcesList',
     components: {
-      ActionLink,
       ContentNodeIcon,
-      Icon,
     },
     mixins: [titleMixin],
     props: {
