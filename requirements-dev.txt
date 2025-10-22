@@ -85,7 +85,7 @@ pytest==8.4.2
     #   pytest-timeout
 pytest-django==4.11.1
     # via -r requirements-dev.in
-pytest-subtests==0.14.2
+pytest-subtests==0.15.0
     # via -r requirements-dev.in
 pytest-timeout==2.4.0
     # via -r requirements-dev.in
