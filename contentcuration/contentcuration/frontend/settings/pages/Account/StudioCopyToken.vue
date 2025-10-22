@@ -15,13 +15,16 @@
         label="Token"
         :floatingLabel="false"
         :appearanceOverrides="{ maxWidth: 'none !important', width: '100% !important' }"
-      />
-      <KIconButton
-        icon="copy"
-        :text="$tr('copyTokenButton')"
-        class="copy-button"
-        @click="copyToClipboard"
-      />
+      >
+        <template #innerAfter>
+          <KIconButton
+            icon="copy"
+            :text="$tr('copyTokenButton')"
+            class="copy-button"
+            @click="copyToClipboard"
+          />
+        </template>
+      </KTextbox>
     </template>
   </div>
 
