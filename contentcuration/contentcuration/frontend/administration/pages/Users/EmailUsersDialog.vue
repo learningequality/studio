@@ -15,14 +15,6 @@
       @submit.prevent="submit"
     >
       <VCardText class="pb-4 pt-3">
-        <StudioBanner
-          v-if="showInvalidText && Boolean(errorCount())"
-          error
-          class="studio-banner"
-        >
-          {{ errorText() }}
-        </StudioBanner>
-
         <div class="align-top layout-row mb-2">
           <div class="flex-shrink pa-2">From:</div>
           <div class="flex-grow">
@@ -145,7 +137,6 @@
   import { mapActions, mapGetters } from 'vuex';
   import ExpandableList from 'shared/views/ExpandableList';
   import { generateFormMixin } from 'shared/mixins';
-  import StudioBanner from 'shared/views/StudioBanner';
   import StudioChip from 'shared/views/StudioChip';
 
   const formMixin = generateFormMixin({
@@ -157,7 +148,6 @@
     name: 'EmailUsersDialog',
     components: {
       ExpandableList,
-      StudioBanner,
       StudioChip,
     },
     mixins: [formMixin],
@@ -341,10 +331,6 @@
 
 <style lang="scss" scoped>
 
-  ::v-deep .v-chip__close {
-    padding-top: 4px;
-  }
-
   ::v-deep textarea {
     height: 120px;
     min-height: 120px;
@@ -388,11 +374,6 @@
 
   .pa-2 {
     padding: 8px;
-  }
-
-  .studio-banner {
-    margin-top: 8px;
-    margin-bottom: 8px;
   }
 
 </style>
