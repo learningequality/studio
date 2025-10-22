@@ -73,7 +73,7 @@
 
               <!-- Channel list section -->
               <VCardText v-if="loadingChannels">
-                <LoadingText />
+                <StudioLargeLoader />
               </VCardText>
               <div
                 v-else
@@ -206,7 +206,7 @@
   import CopyToken from 'shared/views/CopyToken';
   import FullscreenModal from 'shared/views/FullscreenModal';
   import Tabs from 'shared/views/Tabs';
-  import LoadingText from 'shared/views/LoadingText';
+  import StudioLargeLoader from 'shared/views/StudioLargeLoader';
 
   const formMixin = generateFormMixin({
     name: {
@@ -223,7 +223,7 @@
       ChannelItem,
       FullscreenModal,
       Tabs,
-      LoadingText,
+      StudioLargeLoader,
     },
     mixins: [formMixin, constantsTranslationMixin, routerMixin],
     props: {
