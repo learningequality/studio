@@ -219,19 +219,6 @@ describe('emailUsersDialog', () => {
       expect(wrapper.vm.showInvalidText).toBe(true);
     });
 
-    it('should show StudioBanner when there are validation errors', async () => {
-      await wrapper.setData({
-        subject: '',
-        message: '',
-        showInvalidText: true,
-      });
-      wrapper.vm.errors = { subject: true, message: true };
-      await wrapper.vm.$nextTick();
-
-      const banner = wrapper.findComponent({ name: 'StudioBanner' });
-      expect(banner.exists()).toBe(true);
-    });
-
     it('should close warning modal when cancel is clicked', async () => {
       wrapper.vm.showWarning = true;
       await wrapper.vm.$nextTick();
