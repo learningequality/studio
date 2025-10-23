@@ -41,7 +41,7 @@
         </template>
       </DropdownWrapper>
     </VLayout>
-    <KButtonGroup>
+    <KButtonGroup :style="{ 'white-space': 'nowrap' }">
       <KButton
         v-if="showCancel"
         appearance="flat-button"
@@ -155,12 +155,3 @@
   };
 
 </script>
-
-
-<style lang="scss" scoped>
-
-  .button-group {
-    white-space: nowrap;
-  }
-
-</style>
