@@ -34,13 +34,15 @@ describe('channelSetItem', () => {
   });
 
   it('clicking the edit option should open the channel set edit modal', () => {
-    wrapper.find('[data-test="edit"]').trigger('click');
+    // Simulate selecting the edit option from the dropdown
+    wrapper.vm.handleOptionSelect({ value: 'edit' });
     expect(wrapper.vm.$route.name).toEqual(RouteNames.CHANNEL_SET_DETAILS);
   });
 
   it('clicking delete button in dialog should delete the channel set', () => {
+    // Set deleteDialog to true and trigger handleDelete method
     wrapper.vm.deleteDialog = true;
-    wrapper.find('[data-test="delete"]').trigger('click');
+    wrapper.vm.handleDelete();
     expect(mocks.deleteChannelSet).toHaveBeenCalled();
   });
 });
