@@ -98,7 +98,10 @@ class ChannelMetadataFilterTestCase(StudioAPITestCase):
     def test_filter_by_categories_bitmask__provided(self):
         self.client.force_authenticate(self.user)
 
-        filter_query = {"categories": f"{self.categories[0]},{self.categories[1]}", "public": "false"}
+        filter_query = {
+            "categories": f"{self.categories[0]},{self.categories[1]}",
+            "public": "false",
+        }
 
         response = self.client.get(
             reverse_with_query(

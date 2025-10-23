@@ -104,13 +104,13 @@ class ChannelMetadataFilter(FilterSet):
     Custom FilterSet that uses initial values as defaults.
     This ensures that public=True is applied by default when no public parameter is provided.
     """
-    
+
     def __init__(self, data=None, *args, **kwargs):
         # if filterset is bound, use initial values as defaults
         if data is not None:
             data = data.copy()
             for name, f in self.base_filters.items():
-                initial = f.extra.get('initial')
+                initial = f.extra.get("initial")
                 # filter param is either missing or empty, use initial as default
                 if not data.get(name) and initial:
                     data[name] = initial
