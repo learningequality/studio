@@ -20,13 +20,19 @@ class ChannelMetadataViewSetTestCase(StudioAPITestCase):
         country3 = mixer.blend(Country, code="C3")
 
         channel = mixer.blend(
-            ChannelMetadata, countries=[country1, country2, country3], public=True
+            ChannelMetadata, countries=[country1, country2, country3], public=False
         )
 
         user = testdata.user("any@user.com")
         self.client.force_authenticate(user)
 
-        response = self.client.get(reverse("publicchannel-detail", args=[channel.id]))
+        response = self.client.get(
+            reverse_with_query(
+                "publicchannel-detail",
+                args=[channel.id],
+                query={"public": "false"},
+            ),
+        )
 
         self.assertEqual(response.status_code, 200, response.content)
         self.assertCountEqual(response.data["countries"], ["C1", "C2", "C3"])
@@ -66,7 +72,7 @@ class ChannelMetadataFilterTestCase(StudioAPITestCase):
                 | self.category_bitmasks[3]
             ),
             countries=["C1", "C3"],
-            public=True,
+            public=False,
         )
         self.metadata2 = mixer.blend(
             ChannelMetadata,
@@ -76,7 +82,7 @@ class ChannelMetadataFilterTestCase(StudioAPITestCase):
                 | self.category_bitmasks[3]
             ),
             countries=["C1", "C2", "C3"],
-            public=True,
+            public=False,
         )
         self.metadata3 = mixer.blend(
             ChannelMetadata,
@@ -86,13 +92,13 @@ class ChannelMetadataFilterTestCase(StudioAPITestCase):
                 | self.category_bitmasks[2]
             ),
             countries=["C3"],
-            public=True,
+            public=False,
         )
 
     def test_filter_by_categories_bitmask__provided(self):
         self.client.force_authenticate(self.user)
 
-        filter_query = {"categories": f"{self.categories[0]},{self.categories[1]}"}
+        filter_query = {"categories": f"{self.categories[0]},{self.categories[1]}", "public": "false"}
 
         response = self.client.get(
             reverse_with_query(
@@ -110,7 +116,10 @@ class ChannelMetadataFilterTestCase(StudioAPITestCase):
         self.client.force_authenticate(self.user)
 
         response = self.client.get(
-            reverse("publicchannel-list"),
+            reverse_with_query(
+                "publicchannel-list",
+                query={"public": "false"},
+            ),
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertCountEqual(
@@ -121,7 +130,7 @@ class ChannelMetadataFilterTestCase(StudioAPITestCase):
     def test_filter_by_countries(self):
         self.client.force_authenticate(self.user)
 
-        filter_query = {"countries": "C1,C2"}
+        filter_query = {"countries": "C1,C2", "public": "false"}
 
         response = self.client.get(
             reverse_with_query(
