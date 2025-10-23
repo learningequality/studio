@@ -114,17 +114,31 @@
                 </div>
               </div>
               <div class="footer-right">
-                <router-link
-                  :data-testid="`details-button-${index}`"
-                  :to="channelDetailsLink(channel)"
-                  @click.native.stop
+                <div
+                  :ref="`detailIcon${index}`"
+                  class="details-link"
                 >
-                  <KIconButton
-                    :color="$themeTokens.primary"
-                    icon="info"
-                    :tooltip="$tr('details')"
-                  />
-                </router-link>
+                  <router-link
+                    :data-testid="`details-button-${index}`"
+                    :to="channelDetailsLink(channel)"
+                    @click.native.stop
+                  >
+                    <KIcon
+                      
+                      class="details-icon"
+                      :color="$themeTokens.primary"
+                      icon="info"
+                    />
+                  </router-link>
+                  <KTooltip
+                    :reference="`detailIcon${index}`"
+                    :refs="$refs"
+                    maxWidth="200px"
+                  >
+                    {{$tr('details')}}
+                  </KTooltip>
+                </div>
+                
                 <ChannelStar
                   :channelId="channel.id"
                   :data-testid="`bookmark-button-${index}`"
@@ -562,6 +576,31 @@
   .img-placeholder-wrapper-large {
     width: 24vw;
   }
+
+  .details-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+    a {
+      width: 24px;
+      height: 24px;
+    }
+  }
+
+  .details-icon {
+    width: 100%;
+    height: 100%;
+  }
+
+  
+
 
   .img-placeholder-icon {
     width: 50%;
