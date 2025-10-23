@@ -52,11 +52,21 @@
           @click="goToChannelRoute(channel)"
         >
           <template #thumbnailPlaceholder>
-            <KIcon
-              :color="$themePalette.grey.v_400"
-              :style="{ fontSize: '48px' }"
-              icon="image"
-            />
+            <div
+              class="img-placeholder-wrapper"
+              :class="{
+                'img-placeholder-wrapper-small': windowIsSmall,
+                'img-placeholder-wrapper-medium': windowIsMedium,
+                'img-placeholder-wrapper-large': windowIsLarge,
+              }"
+            >
+              <KIcon
+                :color="$themePalette.grey.v_400"
+                :style="{ fontSize: '48px' }"
+                icon="image"
+              />
+            </div>
+            
           </template>
           <template #belowTitle>
             <div class="cards-below-title">
@@ -92,12 +102,16 @@
                       })
                     }}
                   </KTooltip>
-                  <KIcon
+                  <div
                     v-if="hasUnpublishedChanges(channel)"
-                    :ref="`lastUpdatedTime-${index}`"
-                    :color="$themePalette.green.v_600"
-                    icon="dot"
-                  />
+                    class="last-updated"
+                  >
+                    <KIcon
+                      :ref="`lastUpdatedTime-${index}`"
+                      :color="$themePalette.green.v_600"
+                      icon="dot"
+                    />
+                  </div>
                 </div>
               </div>
               <div class="footer-right">
@@ -516,7 +530,7 @@
   }
 
   .footer-right,
-  .footer-left {
+  .footer-left, .last-updated {
     display: flex;
     align-items: center;
   }
@@ -529,6 +543,26 @@
     div {
       margin-left: 8px;
     }
+  }
+
+  .img-placeholder-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .img-placeholder-wrapper-small {
+    width: 42vw;
+  }
+
+  .img-placeholder-wrapper-medium {
+    width: 33.33vw;
+  }
+
+  .img-placeholder-icon {
+    width: 50%;
+    min-width: 24px;
+    height: 50%;
   }
 
 </style>

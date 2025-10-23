@@ -64,9 +64,6 @@ const router = new VueRouter({
 function renderComponent(store) {
   return render(StudioMyChannels, {
     store,
-    props: {
-      listType: 'edit',
-    },
     routes: router,
   });
 }
