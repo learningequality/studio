@@ -89,7 +89,7 @@ const store = new Store({
 });
 
 describe('StudioMyChannels.vue', () => {
-  test('renders my channels', async () => {
+  it('renders my channels', async () => {
     renderComponent(store);
     const card0 = await screen.findByTestId('card-0');
     const cardElements = screen.queryAllByTestId(testId => testId.startsWith('card-'));
@@ -102,7 +102,7 @@ describe('StudioMyChannels.vue', () => {
     expect(cardElements.length).toBe(3);
   });
 
-  test('check no channel', async () => {
+  it('check no channel', async () => {
     const store = new Store({
       modules: {
         channel: {
@@ -124,7 +124,7 @@ describe('StudioMyChannels.vue', () => {
     expect(cardElements.length).toBe(0);
   });
 
-  test('open dropdown for published channel', async () => {
+  it('open dropdown for published channel', async () => {
     renderComponent(store);
     const dropdownButton = await screen.findByTestId('dropdown-button-0');
     await fireEvent.click(dropdownButton);
@@ -140,7 +140,7 @@ describe('StudioMyChannels.vue', () => {
     expect(listItems.length).toBe(5);
   });
 
-  test('open dropdown for unpulished channel', async () => {
+  it('open dropdown for unpulished channel', async () => {
     renderComponent(store);
     const dropdownButton = await screen.findByTestId('dropdown-button-1');
     await fireEvent.click(dropdownButton);
@@ -155,7 +155,7 @@ describe('StudioMyChannels.vue', () => {
     expect(listItems.length).toBe(4);
   });
 
-  test('opens delete modal and close', async () => {
+  it('opens delete modal and close', async () => {
     renderComponent(store);
     const dropdownButton = await screen.findByTestId('dropdown-button-0');
     await fireEvent.click(dropdownButton);
@@ -169,7 +169,7 @@ describe('StudioMyChannels.vue', () => {
     expect(deleteModal).toBeNull();
   });
 
-  test('open copy modal and close', async () => {
+  it('open copy modal and close', async () => {
     renderComponent(store);
     const dropdownButton = await screen.findByTestId('dropdown-button-0');
     await fireEvent.click(dropdownButton);
@@ -183,7 +183,7 @@ describe('StudioMyChannels.vue', () => {
     expect(copyModal).toBeNull();
   });
 
-  test('detail button takes to details page', async () => {
+  it('detail button takes to details page', async () => {
     renderComponent(store);
     const detailsButton = await screen.findByTestId('details-button-0');
     await fireEvent.click(detailsButton);

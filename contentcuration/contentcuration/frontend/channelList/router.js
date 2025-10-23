@@ -16,9 +16,7 @@ const router = new VueRouter({
       name: RouteNames.CHANNELS_EDITABLE,
       path: '/my-channels',
       component: StudioMyChannels,
-      props: { listType: ChannelListTypes.EDITABLE },
     },
-
     {
       name: RouteNames.CHANNEL_SETS,
       path: '/collections',

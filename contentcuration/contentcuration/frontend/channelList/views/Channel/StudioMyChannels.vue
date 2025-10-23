@@ -3,9 +3,9 @@
   <div
     class="my-channels"
     :class="{
-      'studio-small': windowIsSmall,
-      'studio-medium': windowIsMedium,
-      'studio-large': windowIsLarge,
+      'window-small': windowIsSmall,
+      'window-medium': windowIsMedium,
+      'window-large': windowIsLarge,
       ['windowBreakpoint-' + windowBreakpoint]: windowBreakpoint,
     }"
   >
@@ -412,14 +412,14 @@
 
 <style lang="scss" scoped>
 
-  .studio-small {
+  .window-small {
     .channels-body,
     .new-channel {
       width: 100%;
     }
   }
 
-  .studio-medium {
+  .window-medium {
     .channels-body,
     .new-channel {
       width: 100%;
@@ -427,7 +427,7 @@
     }
   }
 
-  .studio-large {
+  .window-large {
     .channels-body,
     .new-channel {
       width: 100%;
