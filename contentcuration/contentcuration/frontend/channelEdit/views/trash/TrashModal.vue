@@ -178,7 +178,6 @@
   import { RouteNames } from '../../constants';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
   import Checkbox from 'shared/views/form/Checkbox';
-  import MessageDialog from 'shared/views/MessageDialog';
   import LoadingText from 'shared/views/LoadingText';
   import FullscreenModal from 'shared/views/FullscreenModal';
   import { titleMixin, routerMixin } from 'shared/mixins';
@@ -192,7 +191,6 @@
       ContentNodeIcon,
       ResourceDrawer,
       Checkbox,
-      MessageDialog,
       LoadingText,
       FullscreenModal,
       MoveModal,
