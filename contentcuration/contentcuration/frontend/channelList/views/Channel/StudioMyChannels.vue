@@ -66,7 +66,6 @@
                 icon="image"
               />
             </div>
-            
           </template>
           <template #belowTitle>
             <div class="cards-below-title">
@@ -530,7 +529,8 @@
   }
 
   .footer-right,
-  .footer-left, .last-updated {
+  .footer-left,
+  .last-updated {
     display: flex;
     align-items: center;
   }
