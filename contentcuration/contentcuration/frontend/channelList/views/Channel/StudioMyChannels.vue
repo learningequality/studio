@@ -59,7 +59,7 @@
             />
           </template>
           <template #belowTitle>
-            <div class="cards-title">
+            <div class="cards-below-title">
               <div class="cards-resource">
                 <span> {{ $tr('resourceCount', { count: channel.count || 0 }) }} </span>
                 <span>
@@ -68,7 +68,7 @@
               </div>
               <div
                 class="cards-desc"
-                :style="{ color: $themePalette.black }"
+                :style="{ color: $themePalette.text }"
               >
                 {{ channel.description }}
               </div>
@@ -77,15 +77,9 @@
           <template #footer>
             <div class="footer">
               <div class="footer-left">
-                <span :style="{ color: $themePalette.grey.v_700 }">
+                <span :style="{ color: $themeTokens.annotation }">
                   {{
-                    channel.last_published
-                      ? $tr('lastPublished', {
-                        last_published: $formatRelative(channel.last_published, {
-                          now: new Date(),
-                        }),
-                      })
-                      : $tr('unpublishedText')
+                    getPublishStatus(channel)
                   }}
                 </span>
                 <div>
@@ -380,6 +374,15 @@
           ? channel.thumbnail_encoding.base64
           : channel.thumbnail_url;
       },
+      getPublishStatus(channel) {
+        return channel.last_published
+          ? this.$tr('lastPublished', {
+            last_published: this.$formatRelative(channel.last_published, {
+              now: new Date(),
+            }),
+          })
+          : this.$tr('unpublishedText');
+      },
     },
     $trs: {
       channel: 'New channel',
@@ -494,7 +497,7 @@
     }
   }
 
-  .cards-title {
+  .cards-below-title {
     font-size: 14px;
   }
 
@@ -506,7 +509,7 @@
   }
 
   .cards-desc {
-    margin-top: 4px;
+    margin-top: 12px;
   }
 
   .footer {
