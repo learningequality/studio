@@ -121,6 +121,15 @@ class CommunityLibrarySubmissionResolveSerializer(CommunityLibrarySubmissionSeri
                 "Cannot resolve a community library submission that is not pending."
             )
 
+        if (
+            "status" in validated_data 
+            and validated_data["status"] == community_library_submission_constants.STATUS_APPROVED
+            and instance.channel.public
+        ):
+            raise ValidationError(
+                "Cannot approve a community library submission for a channel that has been marked public."
+            )
+
         if "status" not in validated_data or validated_data["status"] not in [
             community_library_submission_constants.STATUS_APPROVED,
             community_library_submission_constants.STATUS_REJECTED,

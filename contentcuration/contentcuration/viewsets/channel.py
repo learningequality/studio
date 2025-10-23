@@ -1111,6 +1111,15 @@ class AdminChannelSerializer(ChannelSerializer):
         list_serializer_class = BulkListSerializer
         nested_writes = True
 
+    def validate_public(self, value):
+        if value and hasattr(self, 'instance') and self.instance:
+            if self.instance.is_community_channel():
+                raise ValidationError(
+                    "This channel has been added to the Community Library and cannot be marked public.",
+                    code="public_community_conflict",
+                )
+        return value
+
 
 class AdminChannelViewSet(ChannelViewSet, RESTUpdateModelMixin, RESTDestroyModelMixin):
     pagination_class = CatalogListPagination

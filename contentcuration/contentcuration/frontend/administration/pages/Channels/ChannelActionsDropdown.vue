@@ -96,6 +96,22 @@
           >
             <VListTileTitle>Make private</VListTileTitle>
           </VListTile>
+          <VTooltip
+            v-else-if="isCommunityChannel"
+            bottom
+            attach="body"
+            lazy
+          >
+            <template #activator="{ on }">
+              <div v-on="on">
+                <VListTile disabled>
+                  <VListTileTitle>Make public</VListTileTitle>
+                </VListTile>
+              </div>
+            </template>
+            <span>This channel has been added to the Community Library and cannot be marked
+              public.</span>
+          </VTooltip>
           <VListTile
             v-else
             data-test="public"
@@ -159,6 +175,10 @@
             keywords: `${this.channel.id}`,
           },
         };
+      },
+      isCommunityChannel() {
+        const status = this.channel.latest_community_library_submission_status;
+        return status === 'APPROVED' || status === 'LIVE';
       },
     },
     methods: {

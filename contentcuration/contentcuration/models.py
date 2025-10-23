@@ -1268,6 +1268,22 @@ class Channel(models.Model):
 
         return self
 
+    def is_community_channel(self):
+        return self.community_library_submissions.filter(
+            status__in=[
+                community_library_submission.STATUS_APPROVED,
+                community_library_submission.STATUS_LIVE,
+            ]
+        ).exists()
+
+    def clean(self):
+        super().clean()
+        if self.public and self.is_community_channel():
+            raise ValidationError(
+                "This channel has been added to the Community Library and cannot be marked public.",
+                code="public_community_conflict",
+            )
+
     def mark_publishing(self, user):
         self.history.create(actor_id=to_pk(user), action=channel_history.PUBLICATION)
         self.main_tree.publishing = True
@@ -2624,6 +2640,12 @@ class CommunityLibrarySubmission(models.Model):
             raise ValidationError(
                 "Channel version must be less than or equal to the current channel version",
                 code="impossibly_high_channel_version",
+            )
+        
+        if self.channel.public:
+            raise ValidationError(
+                "Cannot create a community library submission for a public channel.",
+                code="public_channel_submission",
             )
 
         if self.pk is None:
