@@ -102,7 +102,7 @@ describe('StudioMyChannels.vue', () => {
     expect(cardElements.length).toBe(3);
   });
 
-  it('check no channel', async () => {
+  it(`Shows 'No channel found' when there are no channels`, async () => {
     const store = new Store({
       modules: {
         channel: {
@@ -133,10 +133,7 @@ describe('StudioMyChannels.vue', () => {
     expect(screen.getByText('Go to source website')).toBeInTheDocument();
     expect(screen.getByText('View channel on Kolibri')).toBeInTheDocument();
     expect(screen.getByText('Copy channel token')).toBeInTheDocument();
-    const container = document.querySelector('.ui-focus-container-content');
-    expect(container).not.toBeNull();
-
-    const listItems = container.querySelectorAll('li');
+    const listItems = document.querySelectorAll('.ui-focus-container-content li');
     expect(listItems.length).toBe(5);
   });
 
@@ -148,10 +145,7 @@ describe('StudioMyChannels.vue', () => {
     expect(screen.getByText('Delete channel')).toBeInTheDocument();
     expect(screen.getByText('Go to source website')).toBeInTheDocument();
     expect(screen.getByText('View channel on Kolibri')).toBeInTheDocument();
-    const container = document.querySelector('.ui-focus-container-content');
-    expect(container).not.toBeNull();
-
-    const listItems = container.querySelectorAll('li');
+    const listItems = document.querySelectorAll('.ui-focus-container-content li');
     expect(listItems.length).toBe(4);
   });
 

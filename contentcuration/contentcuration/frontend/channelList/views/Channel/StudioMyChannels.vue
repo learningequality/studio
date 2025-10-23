@@ -124,8 +124,7 @@
                   icon="optionsVertical"
                   appearance="flat-button"
                   :data-testid="`dropdown-button-${index}`"
-                  @click="openDropDown(channel, index)"
-                  @click.stop
+                  @click.stop="openDropDown(channel, index)"
                 >
                   <template #menu>
                     <KDropdownMenu
