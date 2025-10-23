@@ -1,14 +1,14 @@
 <template>
 
   <div>
-    <VBtn
+    <KButton
       v-if="$vuetify.breakpoint.xsOnly"
-      color="primary"
-      flat
+      class="drawer-btn"
+      :text="$tr('searchText')"
+      :primary="true"
+      appearance="flat-button"
       @click.stop="drawer = true"
-    >
-      {{ $tr('searchText') }}
-    </VBtn>
+    />
     <CatalogFilterBar />
     <VNavigationDrawer
       v-model="drawer"
@@ -98,11 +98,13 @@
           v-model="subtitles"
           :label="$tr('subtitlesLabel')"
         />
-        <ActionLink
+        <KRouterLink
+          class="qa-link"
           :to="faqLink"
-          target="_blank"
-          class="mt-4"
           :text="$tr('frequentlyAskedQuestionsLink')"
+          appearance="basic-link"
+          iconAfter="openNewTab"
+          target="_blank"
         />
       </VContainer>
       <VFooter
@@ -118,9 +120,11 @@
             contain
             :src="require('shared/images/le-logo.svg')"
           />
-          <ActionLink
-            :text="$tr('copyright', { year: new Date().getFullYear() })"
+          <KButton
             href="https://learningequality.org/"
+            :text="$tr('copyright', { year: new Date().getFullYear() })"
+            appearance="basic-link"
+            iconAfter="openNewTab"
             target="_blank"
           />
         </div>
@@ -253,6 +257,14 @@
     width: 100%;
     height: calc(100% - 100px);
     overflow: auto;
+  }
+
+  .qa-link {
+    margin-top: 24px;
+  }
+
+  .drawer-btn {
+    margin-top: 10px;
   }
 
 </style>
