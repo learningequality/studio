@@ -124,7 +124,6 @@
                     @click.native.stop
                   >
                     <KIcon
-                      
                       class="details-icon"
                       :color="$themeTokens.primary"
                       icon="info"
@@ -135,10 +134,10 @@
                     :refs="$refs"
                     maxWidth="200px"
                   >
-                    {{$tr('details')}}
+                    {{ $tr('details') }}
                   </KTooltip>
                 </div>
-                
+
                 <ChannelStar
                   :channelId="channel.id"
                   :data-testid="`bookmark-button-${index}`"
@@ -585,9 +584,11 @@
     height: 40px;
     border-radius: 50%;
     transition: background-color 0.2s ease;
+
     &:hover {
       background-color: rgba(0, 0, 0, 0.1);
     }
+
     a {
       width: 24px;
       height: 24px;
@@ -598,9 +599,6 @@
     width: 100%;
     height: 100%;
   }
-
-  
-
 
   .img-placeholder-icon {
     width: 50%;
