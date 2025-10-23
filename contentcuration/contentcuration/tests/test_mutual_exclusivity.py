@@ -2,10 +2,8 @@ from unittest import mock
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase
 
 from contentcuration.constants import community_library_submission as constants
 from contentcuration.models import Channel
