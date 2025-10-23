@@ -100,7 +100,6 @@ class CharInFilter(BaseInFilter, CharFilter):
 
 
 class ChannelMetadataFilter(FilterSet):
-
     def __init__(self, data=None, *args, **kwargs):
         # if filterset is bound, use initial values as defaults
         if data is not None:
