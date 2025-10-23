@@ -100,10 +100,6 @@ class CharInFilter(BaseInFilter, CharFilter):
 
 
 class ChannelMetadataFilter(FilterSet):
-    """
-    Custom FilterSet that uses initial values as defaults.
-    This ensures that public=True is applied by default when no public parameter is provided.
-    """
 
     def __init__(self, data=None, *args, **kwargs):
         # if filterset is bound, use initial values as defaults
@@ -182,8 +178,7 @@ class ChannelMetadataViewSet(ReadOnlyValuesViewset):
     }
 
     def get_queryset(self):
-        queryset = models.ChannelMetadata.objects.all()
-        return queryset
+        return models.ChannelMetadata.objects.all()
 
     def consolidate(self, items, queryset):
         # Only keep a single item for every channel ID, to get rid of possible
