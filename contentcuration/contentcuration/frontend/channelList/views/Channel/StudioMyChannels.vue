@@ -78,9 +78,7 @@
             <div class="footer">
               <div class="footer-left">
                 <span :style="{ color: $themeTokens.annotation }">
-                  {{
-                    getPublishStatus(channel)
-                  }}
+                  {{ getPublishStatus(channel) }}
                 </span>
                 <div>
                   <KTooltip
