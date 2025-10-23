@@ -62,11 +62,10 @@
             >
               <KIcon
                 :color="$themePalette.grey.v_400"
-                :style="{ fontSize: '48px' }"
+                class="img-placeholder-icon"
                 icon="image"
               />
             </div>
-            
           </template>
           <template #belowTitle>
             <div class="cards-below-title">
@@ -530,7 +529,8 @@
   }
 
   .footer-right,
-  .footer-left, .last-updated {
+  .footer-left,
+  .last-updated {
     display: flex;
     align-items: center;
   }
@@ -557,6 +557,10 @@
 
   .img-placeholder-wrapper-medium {
     width: 33.33vw;
+  }
+
+  .img-placeholder-wrapper-large {
+    width: 24vw;
   }
 
   .img-placeholder-icon {
