@@ -44,7 +44,7 @@
           thumbnailDisplay="small"
           :thumbnailSrc="thumbnailSrc(channel)"
           :thumbnailAlign="'left'"
-          :thumbnailScaleType="'fitXY'"
+          :thumbnailScaleType="'contain'"
           :orientation="windowIsSmall ? 'vertical' : 'horizontal'"
           :title="channel.name"
           :titleMaxLines="2"
@@ -53,6 +53,7 @@
         >
           <template #thumbnailPlaceholder>
             <KIcon
+              :color="$themePalette.grey.v_400"
               :style="{ fontSize: '48px' }"
               icon="image"
             />
