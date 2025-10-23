@@ -1,6 +1,5 @@
 from uuid import UUID
 
-from django.urls import reverse
 from kolibri_public.models import ChannelMetadata
 from kolibri_public.tests.utils.mixer import KolibriPublicMixer
 from le_utils.constants.labels.subjects import SUBJECTSLIST
