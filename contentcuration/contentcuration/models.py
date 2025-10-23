@@ -2641,7 +2641,7 @@ class CommunityLibrarySubmission(models.Model):
                 "Channel version must be less than or equal to the current channel version",
                 code="impossibly_high_channel_version",
             )
-        
+
         if self.channel.public:
             raise ValidationError(
                 "Cannot create a community library submission for a public channel.",
