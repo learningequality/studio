@@ -1,9 +1,7 @@
 
 from django.core.exceptions import ValidationError
-from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from rest_framework.test import APITestCase
 from rest_framework import status
 from unittest import mock
 
@@ -48,7 +46,7 @@ class ChannelMutualExclusivityTestCase(StudioTestCase):
 
     def test_community_channel_cannot_be_marked_public(self):
         """Test that a community channel cannot be marked public."""
-        submission = CommunityLibrarySubmission.objects.create(
+        CommunityLibrarySubmission.objects.create(
             channel=self.channel,
             channel_version=1,
             author=self.user,
