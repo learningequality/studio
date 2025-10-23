@@ -122,8 +122,9 @@ class CommunityLibrarySubmissionResolveSerializer(CommunityLibrarySubmissionSeri
             )
 
         if (
-            "status" in validated_data 
-            and validated_data["status"] == community_library_submission_constants.STATUS_APPROVED
+            "status" in validated_data
+            and validated_data["status"]
+            == community_library_submission_constants.STATUS_APPROVED
             and instance.channel.public
         ):
             raise ValidationError(

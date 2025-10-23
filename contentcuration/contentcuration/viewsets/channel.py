@@ -1112,7 +1112,7 @@ class AdminChannelSerializer(ChannelSerializer):
         nested_writes = True
 
     def validate_public(self, value):
-        if value and hasattr(self, 'instance') and self.instance:
+        if value and hasattr(self, "instance") and self.instance:
             if self.instance.is_community_channel():
                 raise ValidationError(
                     "This channel has been added to the Community Library and cannot be marked public.",
