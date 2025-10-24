@@ -41,17 +41,17 @@
         </template>
       </DropdownWrapper>
     </VLayout>
-    <KButtonGroup :style="{ 'white-space': 'nowrap' }">
+    <KButtonGroup>
       <KButton
         v-if="showCancel"
         appearance="flat-button"
-        :text="$tr('cancelButton')"
+        text="Cancel"
         data-test="cancel"
         @click="cancel"
       />
       <KButton
         :primary="true"
-        :text="$tr('saveChangesButton')"
+        text="Save changes"
         type="submit"
         data-test="submit"
       />
@@ -147,10 +147,6 @@
         this.space = this.value / units[this.unit];
         this.$emit('close');
       },
-    },
-    $trs: {
-      cancelButton: 'Cancel',
-      saveChangesButton: 'Save changes',
     },
   };
 
