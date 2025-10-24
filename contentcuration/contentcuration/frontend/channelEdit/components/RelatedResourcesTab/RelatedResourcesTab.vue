@@ -20,7 +20,8 @@
       {{ $tr('previewHelpText') }}
     </p>
     <p class="mb-0 px-4">
-      <ActionLink
+      <KButton
+        appearance="basic-link"
         :text="$tr('showPreviewBtnLabel')"
         @click="showResourcePreview = true"
       />
@@ -71,14 +72,12 @@
           {{ $tr('tooManyPreviousStepsWarning') }}
         </p>
 
-        <VBtn
-          flat
-          color="primary"
-          class="font-weight-bold ml-0"
+        <KButton
+          appearance="flat-button"
+          :text="$tr('addPreviousStepBtnLabel')"
+          :primary="true"
           @click="onAddPreviousStepClick"
-        >
-          {{ $tr('addPreviousStepBtnLabel') }}
-        </VBtn>
+        />
       </VFlex>
 
       <VFlex
@@ -106,14 +105,12 @@
           {{ $tr('tooManyNextStepsWarning') }}
         </p>
 
-        <VBtn
-          flat
-          color="primary"
-          class="font-weight-bold ml-0"
+        <KButton
+          appearance="flat-button"
+          :text="$tr('addNextStepBtnLabel')"
+          :primary="true"
           @click="onAddNextStepClick"
-        >
-          {{ $tr('addNextStepBtnLabel') }}
-        </VBtn>
+        />
       </VFlex>
     </VLayout>
   </div>
