@@ -120,10 +120,9 @@
             contain
             :src="require('shared/images/le-logo.svg')"
           />
-          <KButton
+          <KExternalLink
             href="https://learningequality.org/"
             :text="$tr('copyright', { year: new Date().getFullYear() })"
-            appearance="basic-link"
             iconAfter="openNewTab"
             target="_blank"
           />

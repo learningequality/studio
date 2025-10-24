@@ -104,7 +104,6 @@
           iconAfter="dropup"
         >
           <KDropdownMenu
-            text="Primary"
             :primary="true"
             :options="[
               { label: $tr('downloadPDF'), value: 'pdf' },
