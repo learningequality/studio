@@ -11,6 +11,13 @@ import ChannelSetModal from '../ChannelSetModal';
 import channel from 'shared/vuex/channel';
 import storeFactory from 'shared/vuex/baseStore';
 
+jest.mock('kolibri-design-system/lib/composables/useKShow', () => ({
+  __esModule: true,
+  default: () => ({
+    show: () => false, // skip loading state
+  }),
+}));
+
 const localVue = createLocalVue();
 localVue.use(Vuex);
 localVue.use(VueRouter);

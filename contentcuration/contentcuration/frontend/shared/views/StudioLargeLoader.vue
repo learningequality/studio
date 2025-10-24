@@ -19,6 +19,10 @@
 <style lang="scss" scoped>
 
   .large-loader {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
     padding: 24px;
   }
 

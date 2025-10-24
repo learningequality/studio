@@ -72,9 +72,7 @@
               </p>
 
               <!-- Channel list section -->
-              <VCardText v-if="loadingChannels">
-                <StudioLargeLoader />
-              </VCardText>
+              <StudioLargeLoader v-if="show('collections', loadingChannels, 500)" />
               <div
                 v-else
                 fluid
@@ -197,6 +195,7 @@
 
   import { set } from 'vue';
   import { mapGetters, mapActions } from 'vuex';
+  import useKShow from 'kolibri-design-system/lib/composables/useKShow';
   import difference from 'lodash/difference';
   import { RouteNames } from '../../constants';
   import ChannelItem from './ChannelItem';
@@ -226,6 +225,10 @@
       StudioLargeLoader,
     },
     mixins: [formMixin, constantsTranslationMixin, routerMixin],
+    setup() {
+      const { show } = useKShow();
+      return { show };
+    },
     props: {
       channelSetId: {
         type: String,
