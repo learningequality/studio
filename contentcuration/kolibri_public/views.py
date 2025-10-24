@@ -100,14 +100,26 @@ class CharInFilter(BaseInFilter, CharFilter):
 
 
 class ChannelMetadataFilter(FilterSet):
+    def __init__(self, data=None, *args, **kwargs):
+        # if filterset is bound, use initial values as defaults
+        if data is not None:
+            data = data.copy()
+            for name, f in self.base_filters.items():
+                initial = f.extra.get("initial")
+                # filter param is either missing or empty, use initial as default
+                if not data.get(name) and initial:
+                    data[name] = initial
+        super().__init__(data, *args, **kwargs)
+
     available = BooleanFilter(method="filter_available", label="Available")
     has_exercise = BooleanFilter(method="filter_has_exercise", label="Has exercises")
     categories = CharFilter(method=bitmask_contains_and, label="Categories")
     countries = CharInFilter(field_name="countries", label="Countries")
+    public = BooleanFilter(field_name="public", label="Public", initial=True)
 
     class Meta:
         model = models.ChannelMetadata
-        fields = ("available", "has_exercise", "categories", "countries")
+        fields = ("available", "has_exercise", "categories", "countries", "public")
 
     def filter_has_exercise(self, queryset, name, value):
         queryset = queryset.annotate(
