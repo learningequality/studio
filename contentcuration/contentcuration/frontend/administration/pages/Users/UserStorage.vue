@@ -41,23 +41,21 @@
         </template>
       </DropdownWrapper>
     </VLayout>
-    <VBtn
-      v-if="showCancel"
-      flat
-      class="ma-0 mr-4"
-      data-test="cancel"
-      @click="cancel"
-    >
-      Cancel
-    </VBtn>
-    <VBtn
-      class="ma-0"
-      color="primary"
-      type="submit"
-      data-test="submit"
-    >
-      Save changes
-    </VBtn>
+    <KButtonGroup>
+      <KButton
+        v-if="showCancel"
+        appearance="flat-button"
+        text="Cancel"
+        data-test="cancel"
+        @click="cancel"
+      />
+      <KButton
+        :primary="true"
+        text="Save changes"
+        type="submit"
+        data-test="submit"
+      />
+    </KButtonGroup>
   </VForm>
 
 </template>
