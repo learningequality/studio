@@ -3,26 +3,29 @@
   <div>
     <KModal
       v-if="deleteDialog"
-      :title="$tr('deleteUserTitle')"
-      :submitText="$tr('deleteAction')"
-      :cancelText="$tr('cancelAction')"
+      title="Delete user"
+      submitText="Delete"
+      cancelText="Cancel"
       data-test="confirm-delete"
       @submit="deleteHandler"
       @cancel="deleteDialog = false"
     >
-      <p>{{ $tr('deleteUserMessage', { name: user.name }) }}</p>
+      <p>Are you sure you want to permanently delete {{ user.name }}'s account?</p>
     </KModal>
 
     <KModal
       v-if="deactivateDialog"
-      :title="$tr('deactivateUserTitle')"
-      :submitText="$tr('deactivateAction')"
-      :cancelText="$tr('cancelAction')"
+      title="Deactivate user"
+      submitText="Deactivate"
+      cancelText="Cancel"
       data-test="confirm-deactivate"
       @submit="deactivateHandler"
       @cancel="deactivateDialog = false"
     >
-      <p>{{ $tr('deactivateUserMessage', { name: user.name }) }}</p>
+      <p>
+        Deactivating {{ user.name }}'s account will block them from accessing their account. Are you
+        sure you want to continue?
+      </p>
     </KModal>
     <UserPrivilegeModal
       v-model="addAdminPrivilegeDialog"
@@ -176,16 +179,6 @@
           this.$store.dispatch('showSnackbarSimple', 'Admin privilege added');
         });
       },
-    },
-    $trs: {
-      deleteUserTitle: 'Delete user',
-      deleteAction: 'Delete',
-      deleteUserMessage: "Are you sure you want to permanently delete {name}'s account?",
-      deactivateUserTitle: 'Deactivate user',
-      deactivateAction: 'Deactivate',
-      deactivateUserMessage:
-        "Deactivating {name}'s account will block them from accessing their account. Are you sure you want to continue?",
-      cancelAction: 'Cancel',
     },
   };
 
