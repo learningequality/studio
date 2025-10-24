@@ -123,8 +123,7 @@
           <KExternalLink
             href="https://learningequality.org/"
             :text="$tr('copyright', { year: new Date().getFullYear() })"
-            iconAfter="openNewTab"
-            target="_blank"
+            openInNewTab
           />
         </div>
       </VFooter>
