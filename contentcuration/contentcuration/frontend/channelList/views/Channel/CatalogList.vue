@@ -32,10 +32,11 @@
           <h1 class="mb-2 ml-1 title">
             {{ $tr('resultsText', { count: page.count }) }}
           </h1>
-          <ActionLink
+          <KButton
             v-if="page.count && !selecting"
             :text="$tr('selectChannels')"
             data-test="select"
+            appearance="basic-link"
             @click="setSelection(true)"
           />
           <Checkbox
@@ -89,42 +90,29 @@
         </div>
         <VSpacer />
         <div>
-          <VBtn
-            flat
+          <KButton
+            :text="$tr('cancelButton')"
             data-test="cancel"
-            class="ma-0"
+            appearance="flat-button"
             @click="setSelection(false)"
-          >
-            {{ $tr('cancelButton') }}
-          </VBtn>
+          />
         </div>
-        <BaseMenu top>
-          <template #activator="{ on }">
-            <VBtn
-              color="primary"
-              class="ma-0 mx-2"
-              v-on="on"
-            >
-              {{ $tr('downloadButton') }}
-              <Icon
-                class="ml-1"
-                icon="dropup"
-                :color="$themeTokens.textInverted"
-              />
-            </VBtn>
-          </template>
-          <VList>
-            <VListTile @click="downloadPDF">
-              <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
-            </VListTile>
-            <VListTile
-              data-test="download-csv"
-              @click="downloadCSV"
-            >
-              <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
-            </VListTile>
-          </VList>
-        </BaseMenu>
+        <KButton
+          :text="$tr('downloadButton')"
+          :primary="true"
+          data-test="download-button"
+          iconAfter="dropup"
+        >
+          <KDropdownMenu
+            :primary="true"
+            :options="[
+              { label: $tr('downloadPDF'), value: 'pdf' },
+              { label: $tr('downloadCSV'), value: 'csv' },
+            ]"
+            appearance="raised-button"
+            @select="option => selectDownloadOption(option)"
+          />
+        </KButton>
       </BottomBar>
     </VContainer>
   </div>
@@ -285,6 +273,13 @@
         };
         this.setSelection(false);
         return this.downloadChannelsPDF(params);
+      },
+      selectDownloadOption(option) {
+        if (option.value === 'pdf') {
+          this.downloadPDF();
+        } else if (option.value === 'csv') {
+          this.downloadCSV();
+        }
       },
     },
     $trs: {
