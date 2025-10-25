@@ -90,7 +90,6 @@
       },
       handleClose() {
         this.$emit('close');
-        this.$emit('input');
       },
     },
   };
