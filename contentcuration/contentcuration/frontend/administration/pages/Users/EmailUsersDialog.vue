@@ -406,30 +406,31 @@
 
   .placeholder-buttons-container {
     display: flex;
-    flex-wrap: nowrap; /* Prevent wrapping to new lines */
+    flex-wrap: wrap; /* Allow buttons to wrap to multiple lines */
     gap: 8px;
     width: 100%;
-    overflow-x: auto; /* Add horizontal scroll if needed */
+    padding: 8px;
   }
 
   .placeholder-button {
     display: flex;
-    flex-shrink: 0; /* Prevent buttons from shrinking */
+    flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    width: 100px; /* Fixed width for all buttons */
+    width: 88px; /* Fixed width 88px */
+    height: 28px; /* Fixed height 28px */
     text-transform: none;
   }
 
   .kbutton-small {
-    height: 32px; /* Fixed height for all buttons */
-    min-height: 32px;
-    padding: 0 16px; /* Consistent horizontal padding */
-    font-size: 12px;
+    height: 28px; /* Fixed height 28px */
+    min-height: 28px;
+    padding: 0 8px; /* Adjusted padding for smaller button */
+    font-size: 11px; /* Slightly smaller font for better fit */
   }
 
   .kbutton-round {
-    border-radius: 16px; /* Consistent rounded corners */
+    border-radius: 14px; /* Half of height for perfect rounded corners */
   }
 
   .kbutton-depressed {
