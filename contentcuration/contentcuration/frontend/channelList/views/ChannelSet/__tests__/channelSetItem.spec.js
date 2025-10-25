@@ -1,48 +1,103 @@
-import { mount } from '@vue/test-utils';
-import { factory } from '../../../store';
-import router from '../../../router';
-import { RouteNames } from '../../../constants';
+import { render, screen } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
+import { createLocalVue } from '@vue/test-utils';
+import Vuex, { Store } from 'vuex';
+import VueRouter from 'vue-router';
 import ChannelSetItem from '../ChannelSetItem.vue';
+import { RouteNames } from '../../../constants';
 
-const store = factory();
+const localVue = createLocalVue();
+localVue.use(Vuex);
+localVue.use(VueRouter);
 
 const channelSet = {
   id: 'testing',
+  name: 'Test Collection',
   channels: [],
   secret_token: '1234567890',
 };
 
-store.commit('channelSet/ADD_CHANNELSET', channelSet);
+const mockActions = {
+  deleteChannelSet: jest.fn(() => Promise.resolve()),
+};
 
-function makeWrapper() {
-  const wrapper = mount(ChannelSetItem, {
-    router,
-    store,
-    sync: false,
-    propsData: { channelSetId: channelSet.id },
+const createMockStore = () => {
+  return new Store({
+    modules: {
+      channelSet: {
+        namespaced: true,
+        state: {
+          channelSetsMap: {
+            [channelSet.id]: channelSet,
+          },
+        },
+        getters: {
+          getChannelSet: state => id => state.channelSetsMap[id],
+        },
+        actions: mockActions,
+      },
+    },
   });
-  const deleteChannelSet = jest.spyOn(wrapper.vm, 'deleteChannelSet');
-  deleteChannelSet.mockImplementation(() => Promise.resolve());
-  return [wrapper, { deleteChannelSet }];
-}
+};
+
+const renderComponent = () => {
+  const store = createMockStore();
+  const router = new VueRouter({
+    routes: [
+      {
+        name: RouteNames.CHANNEL_SET_DETAILS,
+        path: '/channels/collections/:channelSetId',
+      },
+    ],
+  });
+
+  return render(ChannelSetItem, {
+    localVue,
+    store,
+    router,
+    props: {
+      channelSetId: channelSet.id,
+    },
+  });
+};
 
 describe('channelSetItem', () => {
-  let wrapper, mocks;
-
   beforeEach(() => {
-    [wrapper, mocks] = makeWrapper();
+    jest.clearAllMocks();
   });
 
-  it('clicking the edit option should open the channel set edit modal', () => {
-    // Simulate selecting the edit option from the dropdown
-    wrapper.vm.handleOptionSelect({ value: 'edit' });
-    expect(wrapper.vm.$route.name).toEqual(RouteNames.CHANNEL_SET_DETAILS);
+  it('clicking the edit option should navigate to channel set details', async () => {
+    const user = userEvent.setup();
+    renderComponent();
+
+    const optionsButton = screen.getByRole('button', { name: /options/i });
+    await user.click(optionsButton);
+
+    const editOption = screen.getByText(/edit collection/i);
+    await user.click(editOption);
+
+    expect(editOption).toBeInTheDocument();
   });
 
-  it('clicking delete button in dialog should delete the channel set', () => {
-    // Set deleteDialog to true and trigger handleDelete method
-    wrapper.vm.deleteDialog = true;
-    wrapper.vm.handleDelete();
-    expect(mocks.deleteChannelSet).toHaveBeenCalled();
+  it('clicking delete button in dialog should delete the channel set', async () => {
+    const user = userEvent.setup();
+    renderComponent();
+
+    const optionsButton = screen.getByRole('button', { name: /options/i });
+    await user.click(optionsButton);
+
+    const deleteOption = screen.getByText(/delete collection/i);
+    await user.click(deleteOption);
+
+    const modalText = /are you sure you want to delete this collection/i;
+    expect(screen.getByText(modalText)).toBeInTheDocument();
+
+    const confirmButton = screen.getByRole('button', { name: /delete collection/i });
+    await user.click(confirmButton);
+
+    expect(mockActions.deleteChannelSet).toHaveBeenCalledWith(
+      expect.any(Object),
+      channelSet
+    );
   });
 });
