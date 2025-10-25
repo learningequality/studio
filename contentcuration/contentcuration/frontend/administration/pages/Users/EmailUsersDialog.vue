@@ -3,7 +3,7 @@
   <KModal
     v-if="show"
     :size="600"
-    :title="'Send Email'"
+    :title="$tr('sendEmailTitle')"
     :submitText="$tr('sendButton')"
     :cancelText="$tr('cancelButton')"
     data-test="email-dialog"
@@ -12,11 +12,11 @@
   >
     <form
       ref="form"
-      @submit.prevent="submit"
+      @submit.prevent="onSubmit"
     >
-      <VCardText class="pb-4 pt-3">
+      <div class="pb-4 pt-3">
         <div class="align-top layout-row mb-2">
-          <div class="flex-shrink pa-2">From:</div>
+          <div class="flex-shrink pa-2">{{ $tr('fromLabel') }}:</div>
           <div class="flex-grow">
             <StudioChip
               :text="senderEmail"
@@ -25,7 +25,7 @@
           </div>
         </div>
         <div class="align-top layout-row">
-          <div class="flex-shrink pa-2">To:</div>
+          <div class="flex-shrink pa-2">{{ $tr('toLabel') }}:</div>
           <div
             class="flex-grow"
             data-test="to-line"
@@ -52,7 +52,7 @@
                     :small="true"
                     :close="recipients.length > 1"
                     data-test="remove"
-                    @input="remove(item.id)"
+                    @close="remove(item.id)"
                   >
                     <div style="max-width: 72px">
                       <div class="text-truncate">
@@ -74,7 +74,7 @@
         <KTextbox
           v-model="subject"
           class="mt-4"
-          :label="'Subject line'"
+          :label="$tr('subjectLabel')"
           :required="true"
           :invalid="errors.subject"
           :showInvalidText="showInvalidText && errors.subject"
@@ -82,26 +82,24 @@
           :showLabel="true"
           :appearanceOverrides="getAppearanceOverrides(errors.subject)"
         />
-        <div class="caption grey--text">Add placeholder to message</div>
-        <div class="mb-1">
-          <VBtn
+        <div class="caption grey--text">{{ $tr('addPlaceholderText') }}</div>
+        <div class="placeholder-buttons-container">
+          <KButton
             v-for="placeholder in placeholders"
             :key="`placeholder-${placeholder.label}`"
-            small
-            round
-            depressed
-            color="grey lighten-4"
-            style="text-transform: none"
+            class="placeholder-button"
+            :class="placeholderButtonClasses"
+            :style="placeholderButtonStyles"
+            appearance="basic-button"
+            :text="$tr(placeholder.translationKey)"
             @click="addPlaceholder(placeholder.placeholder)"
-          >
-            {{ placeholder.label }}
-          </VBtn>
+          />
         </div>
         <div class="email-textarea">
           <KTextbox
             ref="message"
             v-model="message"
-            :label="'Email body'"
+            :label="$tr('emailBodyLabel')"
             :required="true"
             :invalid="errors.message"
             :showInvalidText="showInvalidText && errors.message"
@@ -112,7 +110,7 @@
             :textArea="true"
           />
         </div>
-      </VCardText>
+      </div>
     </form>
 
     <!-- Warning modal for draft -->
@@ -201,27 +199,46 @@
       senderEmail() {
         return window.senderEmail;
       },
+      placeholderButtonClasses() {
+        return {
+          'kbutton-small': true,
+          'kbutton-round': true,
+          'kbutton-depressed': true,
+        };
+      },
+      placeholderButtonStyles() {
+        return {
+          backgroundColor: this.$themePalette.grey.v_200,
+          padding: '0 12px', // Ensure consistent padding
+          color: this.$themePalette.grey.v_900, // Text color for better contrast
+        };
+      },
       placeholders() {
         return [
           {
             label: 'First name',
             placeholder: '{first_name}',
+            translationKey: 'firstNamePlaceholder',
           },
           {
             label: 'Last name',
             placeholder: '{last_name}',
+            translationKey: 'lastNamePlaceholder',
           },
           {
             label: 'Email',
             placeholder: '{email}',
+            translationKey: 'emailPlaceholder',
           },
           {
             label: 'Date',
             placeholder: '{current_date}',
+            translationKey: 'datePlaceholder',
           },
           {
             label: 'Time',
             placeholder: '{current_time}',
+            translationKey: 'timePlaceholder',
           },
         ];
       },
@@ -258,7 +275,7 @@
       },
       addPlaceholder(placeholder) {
         this.message += ` ${placeholder}`;
-        this.$refs.message.focus();
+        this.$refs.message.$el.focus();
       },
       remove(id) {
         this.recipients = this.recipients.filter(u => u !== id);
@@ -315,6 +332,17 @@
       },
     },
     $trs: {
+      sendEmailTitle: 'Send Email',
+      fromLabel: 'From',
+      toLabel: 'To',
+      subjectLabel: 'Subject line',
+      emailBodyLabel: 'Email body',
+      addPlaceholderText: 'Add placeholder to message',
+      firstNamePlaceholder: 'First name',
+      lastNamePlaceholder: 'Last name',
+      emailPlaceholder: 'Email',
+      datePlaceholder: 'Date',
+      timePlaceholder: 'Time',
       draftWarningTitle: 'Draft in progress',
       draftWarningText:
         'Draft will be lost upon exiting this editor. Are you sure you want to continue?',
@@ -374,6 +402,38 @@
 
   .pa-2 {
     padding: 8px;
+  }
+
+  .placeholder-buttons-container {
+    display: flex;
+    flex-wrap: nowrap; /* Prevent wrapping to new lines */
+    gap: 8px;
+    width: 100%;
+    overflow-x: auto; /* Add horizontal scroll if needed */
+  }
+
+  .placeholder-button {
+    display: flex;
+    flex-shrink: 0; /* Prevent buttons from shrinking */
+    align-items: center;
+    justify-content: center;
+    width: 100px; /* Fixed width for all buttons */
+    text-transform: none;
+  }
+
+  .kbutton-small {
+    height: 32px; /* Fixed height for all buttons */
+    min-height: 32px;
+    padding: 0 16px; /* Consistent horizontal padding */
+    font-size: 12px;
+  }
+
+  .kbutton-round {
+    border-radius: 16px; /* Consistent rounded corners */
+  }
+
+  .kbutton-depressed {
+    box-shadow: none;
   }
 
 </style>
