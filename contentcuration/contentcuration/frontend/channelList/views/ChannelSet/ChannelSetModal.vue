@@ -196,15 +196,15 @@
   import { set } from 'vue';
   import { mapGetters, mapActions } from 'vuex';
   import difference from 'lodash/difference';
-  import { RouteNames } from '../../constants';
-  import ChannelItem from './ChannelItem';
-  import ChannelSelectionList from './ChannelSelectionList';
   import { ChannelListTypes, ErrorTypes } from 'shared/constants';
   import { generateFormMixin, constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import CopyToken from 'shared/views/CopyToken';
   import FullscreenModal from 'shared/views/FullscreenModal';
-  import Tabs from 'shared/views/Tabs';
   import LoadingText from 'shared/views/LoadingText';
+  import Tabs from 'shared/views/Tabs';
+  import { RouteNames } from '../../constants';
+  import ChannelItem from './ChannelItem';
+  import ChannelSelectionList from './ChannelSelectionList';
 
   const formMixin = generateFormMixin({
     name: {
