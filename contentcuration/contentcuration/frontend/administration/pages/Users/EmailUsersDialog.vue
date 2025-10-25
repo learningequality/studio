@@ -88,7 +88,6 @@
             v-for="placeholder in placeholders"
             :key="`placeholder-${placeholder.label}`"
             class="placeholder-button"
-            :class="placeholderButtonClasses"
             :style="placeholderButtonStyles"
             appearance="basic-button"
             :text="$tr(placeholder.translationKey)"
@@ -199,18 +198,10 @@
       senderEmail() {
         return window.senderEmail;
       },
-      placeholderButtonClasses() {
-        return {
-          'kbutton-small': true,
-          'kbutton-round': true,
-          'kbutton-depressed': true,
-        };
-      },
       placeholderButtonStyles() {
         return {
-          backgroundColor: this.$themePalette.grey.v_200,
-          padding: '0 12px', // Ensure consistent padding
-          color: this.$themePalette.grey.v_900, // Text color for better contrast
+          backgroundColor: this.$themePalette.grey.v_300,
+          color: this.$themeTokens.text,
         };
       },
       placeholders() {
@@ -406,34 +397,21 @@
 
   .placeholder-buttons-container {
     display: flex;
-    flex-wrap: wrap; /* Allow buttons to wrap to multiple lines */
-    gap: 8px;
+    flex-wrap: wrap;
+    gap: 16px;
     width: 100%;
     padding: 8px;
   }
 
   .placeholder-button {
     display: flex;
-    flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    width: 88px; /* Fixed width 88px */
-    height: 28px; /* Fixed height 28px */
+    width: 88px;
+    height: 28px;
+    font-size: 11px;
     text-transform: none;
-  }
-
-  .kbutton-small {
-    height: 28px; /* Fixed height 28px */
-    min-height: 28px;
-    padding: 0 8px; /* Adjusted padding for smaller button */
-    font-size: 11px; /* Slightly smaller font for better fit */
-  }
-
-  .kbutton-round {
-    border-radius: 14px; /* Half of height for perfect rounded corners */
-  }
-
-  .kbutton-depressed {
+    border-radius: 14px;
     box-shadow: none;
   }
 
