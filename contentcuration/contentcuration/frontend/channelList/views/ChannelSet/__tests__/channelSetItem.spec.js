@@ -95,9 +95,6 @@ describe('channelSetItem', () => {
     const confirmButton = screen.getByRole('button', { name: /delete collection/i });
     await user.click(confirmButton);
 
-    expect(mockActions.deleteChannelSet).toHaveBeenCalledWith(
-      expect.any(Object),
-      channelSet
-    );
+    expect(mockActions.deleteChannelSet).toHaveBeenCalledWith(expect.any(Object), channelSet);
   });
 });
