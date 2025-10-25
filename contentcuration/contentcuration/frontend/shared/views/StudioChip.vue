@@ -22,6 +22,7 @@
         v-if="close"
         class="studio-chip__close"
         appearance="flat-button"
+        :ariaLabel="removeLabel"
         icon="close"
         data-test="remove-chip"
         @click.stop="handleClose"
@@ -65,6 +66,9 @@
         return {
           backgroundColor: this.isActive ? activeColor : baseColor,
         };
+      },
+      removeLabel() {
+        return `Remove ${this.text}`;
       },
     },
     mounted() {
