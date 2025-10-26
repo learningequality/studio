@@ -202,7 +202,6 @@
   import { generateFormMixin, constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import CopyToken from 'shared/views/CopyToken';
   import FullscreenModal from 'shared/views/FullscreenModal';
-  import LoadingText from 'shared/views/LoadingText';
   import StudioLargeLoader from 'shared/views/StudioLargeLoader';
   import Tabs from 'shared/views/Tabs';
 
