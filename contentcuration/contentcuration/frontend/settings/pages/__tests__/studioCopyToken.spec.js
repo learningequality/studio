@@ -61,7 +61,7 @@ describe('StudioCopyToken', () => {
     const { mockStore } = makeWrapper();
     const button = screen.getByRole('button');
     await fireEvent.click(button);
-    expect(mockStore.dispatch).toHaveBeenCalledWith('showSnackbarSimple', 'tokenCopied');
+    expect(mockStore.dispatch).toHaveBeenCalledWith('showSnackbar', { text: 'copiedTokenId' });
   });
 
   it('dispatches snackbar on failed copy', async () => {
@@ -72,19 +72,19 @@ describe('StudioCopyToken', () => {
     const { mockStore } = makeWrapper();
     const button = screen.getByRole('button');
     await fireEvent.click(button);
-    expect(mockStore.dispatch).toHaveBeenCalledWith('showSnackbarSimple', 'tokenCopyFailed');
+    expect(mockStore.dispatch).toHaveBeenCalledWith('showSnackbar', { text: 'copyFailed' });
   });
 
   it('dispatches snackbar if token is empty', async () => {
     const { mockStore } = makeWrapper({ token: '   ' });
     const button = screen.getByRole('button');
     await fireEvent.click(button);
-    expect(mockStore.dispatch).toHaveBeenCalledWith('showSnackbarSimple', 'tokenCopyFailed');
+    expect(mockStore.dispatch).toHaveBeenCalledWith('showSnackbarSimple', 'copyFailed');
   });
 
-  it('renders the copy button in the innerAfter slot', () => {
+  it('renders the copy button', () => {
     const { container } = makeWrapper();
-    const button = container.querySelector('.inner-after .copy-button');
+    const button = container.querySelector('.copy-button');
     expect(button).toBeInTheDocument();
   });
 });

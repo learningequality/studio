@@ -1,25 +1,23 @@
 <template>
 
-  <div class="token-input-wrapper">
+  <div :class="['token-input-wrapper', { 'token-input-wrapper-small': isSmall() }]">
     <KCircularLoader
-      v-if="loading"
-      size="38"
+      v-if="show('loader', loading, 500)"
       class="loader"
     />
     <template v-else>
       <KTextbox
-        ref="tokenInput"
         :value="displayToken"
         readonly
         class="notranslate token-input"
-        label="Token"
+        :label="$tr('token')"
         :floatingLabel="false"
         :appearanceOverrides="{ maxWidth: 'none !important', width: '100% !important' }"
       >
         <template #innerAfter>
           <KIconButton
             icon="copy"
-            :text="$tr('copyTokenButton')"
+            :tooltip="$tr('copyTokenButton')"
             class="copy-button"
             @click="copyToClipboard"
           />
@@ -33,8 +31,17 @@
 
 <script>
 
+  import useKShow from 'kolibri-design-system/lib/composables/useKShow';
+  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
+
   export default {
     name: 'StudioCopyToken',
+    setup() {
+      const { show } = useKShow();
+      const { windowBreakpoint } = useKResponsiveWindow();
+
+      return { show, windowBreakpoint };
+    },
     props: {
       token: { type: String, required: true },
       loading: { type: Boolean, default: false },
@@ -44,34 +51,39 @@
       displayToken() {
         return this.hyphenate ? this.token.slice(0, 5) + '-' + this.token.slice(5) : this.token;
       },
-      successMessage() {
-        return this.$tr('tokenCopied');
+      clipboardAvailable() {
+        return Boolean(navigator.clipboard);
       },
     },
     methods: {
+      isSmall() {
+        return this.windowBreakpoint <= 1;
+      },
       copyToClipboard() {
         if (!this.token.trim()) {
-          this.$store.dispatch('showSnackbarSimple', this.$tr('tokenCopyFailed'));
+          this.$store.dispatch('showSnackbarSimple', this.$tr('copyFailed'));
           return;
         }
-        if (navigator.clipboard) {
+        if (this.clipboardAvailable) {
           navigator.clipboard
             .writeText(this.displayToken)
             .then(() => {
-              this.$store.dispatch('showSnackbarSimple', this.successMessage);
+              const text = this.successText || this.$tr('copiedTokenId');
+              this.$store.dispatch('showSnackbar', { text });
+              this.$analytics.trackEvent('copy_token');
+              this.$emit('copied');
             })
             .catch(() => {
-              this.$store.dispatch('showSnackbarSimple', this.$tr('tokenCopyFailed'));
+              this.$store.dispatch('showSnackbar', { text: this.$tr('copyFailed') });
             });
-        } else {
-          this.$store.dispatch('showSnackbarSimple', this.$tr('tokenCopyFailed'));
         }
       },
     },
     $trs: {
       copyTokenButton: 'Copy token',
-      tokenCopied: 'Token copied!',
-      tokenCopyFailed: 'Failed to copy token.',
+      copiedTokenId: 'Token copied',
+      copyFailed: 'Copy failed',
+      token: 'Token',
     },
   };
 
@@ -97,11 +109,17 @@
   }
 
   .copy-button {
+    margin: 0 0.5rem 0.5rem 0;
     opacity: 0.8;
   }
 
   .copy-button:hover {
     opacity: 1;
+  }
+
+  .token-input-wrapper-small {
+    min-width: 100%;
+    margin-right: 0.5rem;
   }
 
 </style>
