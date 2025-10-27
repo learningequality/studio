@@ -22,13 +22,13 @@
             @click="$emit('input', false)"
           />
         </template>
-        <template #default>
-          <div class="toolbar-title">
-            <slot name="header">
-              <span class="notranslate">{{ title }}</span>
-            </slot>
-          </div>
-        </template>
+
+        <span :style="titleStyle">
+          <slot name="header">
+            <span class="notranslate">{{ title }}</span>
+          </slot>
+        </span>
+
         <template #actions>
           <slot name="action"></slot>
         </template>
@@ -93,6 +93,15 @@
           left: 0,
           right: 0,
           zIndex: 17,
+        };
+      },
+      titleStyle() {
+        return {
+          color: this.dark ? this.$themeTokens.textInverted : this.$themeTokens.text,
+          fontSize: '20px',
+          fontWeight: '500',
+          marginLeft: '16px',
+          marginRight: '16px',
         };
       },
       contentStyle() {
@@ -204,11 +213,6 @@
     .content-container {
       padding: 16px;
     }
-  }
-
-  .toolbar-title {
-    font-size: 20px;
-    font-weight: 500;
   }
 
 </style>
