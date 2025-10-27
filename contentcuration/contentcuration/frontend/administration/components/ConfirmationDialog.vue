@@ -7,7 +7,7 @@
   >
     <div
       v-if="errorText"
-      class="error-text pa-2 ma-3 red lighten-4 red--text"
+      class="error-text lighten-4 ma-3 pa-2 red red--text"
     >
       {{ errorText }}
     </div>
