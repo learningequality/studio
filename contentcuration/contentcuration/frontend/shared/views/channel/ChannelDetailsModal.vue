@@ -1,6 +1,6 @@
 <template>
 
-  <FullscreenModal
+  <StudioImmersiveModal
     v-model="dialog"
     color="appBarDark"
     :dark="true"
@@ -8,50 +8,32 @@
     <template #header>
       <span class="notranslate">{{ channel ? channel.name : '' }}</span>
     </template>
-    <LoadingText
-      v-if="loading"
-      absolute
-    />
-    <VCardText v-else-if="channel">
-      <VLayout class="mb-3">
-        <VSpacer v-if="$vuetify.breakpoint.smAndUp" />
-        <BaseMenu>
-          <template #activator="{ on }">
-            <VBtn
-              color="primary"
-              dark
-              :block="$vuetify.breakpoint.xsOnly"
-              v-on="on"
-            >
-              {{ $tr('downloadButton') }}
-              &nbsp;
-              <Icon
-                icon="dropdown"
-                :color="$themeTokens.textInverted"
-              />
-            </VBtn>
+    <StudioLargeLoader v-if="loading" />
+    <div v-else-if="channel">
+      <div class="download-button-container">
+        <KButton
+          class="download-button"
+          :text="$tr('downloadButton')"
+          :primary="true"
+          hasDropdown
+          data-test="download-button"
+        >
+          <template #menu>
+            <KDropdownMenu
+              :options="downloadOptions"
+              @select="handleDownloadSelect"
+            />
           </template>
-          <VList>
-            <VListTile @click="generatePDF">
-              <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
-            </VListTile>
-            <VListTile
-              data-test="dl-csv"
-              @click="generateCSV"
-            >
-              <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
-            </VListTile>
-          </VList>
-        </BaseMenu>
-      </VLayout>
+        </KButton>
+      </div>
       <DetailsPanel
         v-if="channel && details"
         class="channel-details-wrapper"
         :details="channelWithDetails"
         :loading="loading"
       />
-    </VCardText>
-  </FullscreenModal>
+    </div>
+  </StudioImmersiveModal>
 
 </template>
 
@@ -61,16 +43,16 @@
   import { mapActions, mapGetters } from 'vuex';
   import { channelExportMixin } from './mixins';
   import DetailsPanel from 'shared/views/details/DetailsPanel.vue';
+  import StudioLargeLoader from 'shared/views/StudioLargeLoader';
+  import StudioImmersiveModal from 'shared/views/StudioImmersiveModal';
   import { routerMixin } from 'shared/mixins';
-  import LoadingText from 'shared/views/LoadingText';
-  import FullscreenModal from 'shared/views/FullscreenModal';
 
   export default {
     name: 'ChannelDetailsModal',
     components: {
       DetailsPanel,
-      LoadingText,
-      FullscreenModal,
+      StudioLargeLoader,
+      StudioImmersiveModal,
     },
     mixins: [routerMixin, channelExportMixin],
     props: {
@@ -97,6 +79,12 @@
           return {};
         }
         return { ...this.channel, ...this.details };
+      },
+      downloadOptions() {
+        return [
+          { label: this.$tr('downloadPDF'), value: 'pdf' },
+          { label: this.$tr('downloadCSV'), value: 'csv' },
+        ];
       },
       backLink() {
         return {
@@ -135,6 +123,13 @@
     },
     methods: {
       ...mapActions('channel', ['loadChannel', 'loadChannelDetails']),
+      handleDownloadSelect(option) {
+        if (option.value === 'pdf') {
+          this.generatePDF();
+        } else if (option.value === 'csv') {
+          this.generateCSV();
+        }
+      },
       async generatePDF() {
         this.$analytics.trackEvent('channel_details', 'Download PDF', {
           id: this.channelId,
@@ -187,14 +182,20 @@
 
 <style lang="scss" scoped>
 
-  .v-toolbar__title {
-    font-weight: bold;
+  .download-button-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 24px;
   }
 
-  .draft-header {
-    padding-right: 10px;
-    font-style: italic;
-    color: gray;
+  @media (max-width: 600px) {
+    .download-button-container {
+      justify-content: center;
+    }
+
+    .download-button {
+      width: 100%;
+    }
   }
 
   .channel-details-wrapper {
