@@ -95,25 +95,7 @@
             </KButton>
           </template>
           <VList>
-            <VTooltip
-              v-if="currentChannel.public"
-              bottom
-              attach="body"
-              lazy
-            >
-              <template #activator="{ on }">
-                <div v-on="on">
-                  <VListTile disabled>
-                    <VListTileTitle>{{ $tr('submitToCommunityLibrary') }}</VListTileTitle>
-                  </VListTile>
-                </div>
-              </template>
-              <span>{{ $tr('publicChannelCannotSubmitToCommunityLibrary') }}</span>
-            </VTooltip>
-            <VListTile
-              v-else
-              @click="showSubmitToCommunityLibrarySidePanel = true"
-            >
+            <VListTile @click="showSubmitToCommunityLibrarySidePanel = true">
               <VListTileTitle>{{ $tr('submitToCommunityLibrary') }}</VListTileTitle>
             </VListTile>
             <VListTile
@@ -589,8 +571,6 @@
       // Share menu section
       shareMenuButton: 'Share',
       submitToCommunityLibrary: 'Submit to community library',
-      publicChannelCannotSubmitToCommunityLibrary:
-        'This channel is public and cannot be submitted to the Community Library.',
       inviteCollaborators: 'Invite collaborators',
       shareToken: 'Share token',
 

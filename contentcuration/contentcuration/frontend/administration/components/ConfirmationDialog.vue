@@ -5,6 +5,12 @@
     :header="title"
     :text="text"
   >
+    <div
+      v-if="errorText"
+      class="error-text pa-2 ma-3 red lighten-4 red--text"
+    >
+      {{ errorText }}
+    </div>
     <template #buttons="{ close }">
       <VBtn
         flat
@@ -17,6 +23,7 @@
         color="primary"
         dark
         data-test="confirm"
+        :disabled="disableSubmit"
         @click="$emit('confirm')"
       >
         {{ confirmButtonText }}
@@ -54,6 +61,14 @@
       cancelButtonText: {
         type: String,
         default: 'Cancel',
+      },
+      errorText: {
+        type: String,
+        default: '',
+      },
+      disableSubmit: {
+        type: Boolean,
+        default: false,
       },
     },
     computed: {
