@@ -75,7 +75,7 @@
       >
         <VTab
           href="#questions"
-          class="pa-1 px-2"
+          class="pa-1"
           exact
           @change="tab = 'questions'"
         >
@@ -88,7 +88,7 @@
         </VTab>
         <VTab
           href="#details"
-          class="pa-1 px-2"
+          class="pa-1"
           exact
           @change="tab = 'details'"
         >
@@ -923,10 +923,6 @@
 
     /* stylelint-disable-next-line custom-property-pattern */
     border: 1px solid var(--v-greyBackground-base) !important;
-  }
-
-  .pa-1 {
-    padding: 4px !important;
   }
 
 </style>
