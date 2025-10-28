@@ -134,15 +134,6 @@
       },
     },
     created() {
-      if (
-        this.isEditable &&
-        (!this.$store.state.session ||
-          !this.$store.state.session.currentUser ||
-          !this.$store.state.session.currentUser.id)
-      ) {
-        this.$router.replace({ name: RouteNames.CATALOG_ITEMS });
-        return;
-      }
       this.loadData(this.listType);
     },
     methods: {
