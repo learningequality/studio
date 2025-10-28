@@ -75,7 +75,7 @@
       >
         <VTab
           href="#questions"
-          class="outline-spacing px-2"
+          class="outline-spacing"
           exact
           @change="tab = 'questions'"
         >
@@ -88,7 +88,7 @@
         </VTab>
         <VTab
           href="#details"
-          class="outline-spacing px-2"
+          class="outline-spacing"
           exact
           @change="tab = 'details'"
         >
