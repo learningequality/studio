@@ -24,6 +24,16 @@ function makeWrapper(props = {}) {
 }
 
 describe('StudioCopyToken', () => {
+  let originalClipboard;
+
+  beforeAll(() => {
+    originalClipboard = navigator.clipboard;
+  });
+
+  afterAll(() => {
+    navigator.clipboard = originalClipboard;
+  });
+
   it('displays hyphenated token by default', () => {
     makeWrapper();
     const input = screen.getByDisplayValue('testt-oken');
