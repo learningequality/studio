@@ -75,7 +75,7 @@
       >
         <VTab
           href="#questions"
-          class="outline-spacing"
+          class="pa-1 px-2"
           exact
           @change="tab = 'questions'"
         >
@@ -88,7 +88,7 @@
         </VTab>
         <VTab
           href="#details"
-          class="outline-spacing"
+          class="pa-1 px-2"
           exact
           @change="tab = 'details'"
         >
@@ -925,8 +925,8 @@
     border: 1px solid var(--v-greyBackground-base) !important;
   }
 
-  .outline-spacing {
-    padding: 4px;
+  .pa-1 {
+    padding: 4px !important;
   }
 
 </style>
