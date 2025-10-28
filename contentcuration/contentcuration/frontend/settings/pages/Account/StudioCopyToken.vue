@@ -1,29 +1,30 @@
 <template>
 
-  <div :class="['token-input-wrapper', { 'token-input-wrapper-small': isSmall() }]">
-    <KCircularLoader
+  <div :class="{ 'token-input-wrapper-small': isSmall() }">
+    <div
       v-if="show('loader', loading, 500)"
       class="loader"
-    />
-    <template v-else>
-      <KTextbox
-        :value="displayToken"
-        readonly
-        class="notranslate token-input"
-        :label="$tr('token')"
-        :floatingLabel="false"
-        :appearanceOverrides="{ maxWidth: 'none !important', width: '100% !important' }"
-      >
-        <template #innerAfter>
-          <KIconButton
-            icon="copy"
-            :tooltip="$tr('copyTokenButton')"
-            class="copy-button"
-            @click="copyToClipboard"
-          />
-        </template>
-      </KTextbox>
-    </template>
+    >
+      <KCircularLoader />
+    </div>
+    <KTextbox
+      v-else
+      :value="displayToken"
+      readonly
+      class="notranslate token-input"
+      :label="$tr('token')"
+      :floatingLabel="false"
+      :appearanceOverrides="{ maxWidth: 'none !important', width: '100% !important' }"
+    >
+      <template #innerAfter>
+        <KIconButton
+          icon="copy"
+          :tooltip="$tr('tooltipText')"
+          class="copy-button"
+          @click="copyToClipboard"
+        />
+      </template>
+    </KTextbox>
   </div>
 
 </template>
@@ -43,9 +44,23 @@
       return { show, windowBreakpoint };
     },
     props: {
-      token: { type: String, required: true },
-      loading: { type: Boolean, default: false },
-      hyphenate: { type: Boolean, default: true },
+      token: {
+        type: String,
+        required: true,
+      },
+      hyphenate: {
+        type: Boolean,
+        default: true,
+      },
+      successText: {
+        type: String,
+        required: false,
+        default: null,
+      },
+      loading: {
+        type: Boolean,
+        default: false,
+      },
     },
     computed: {
       displayToken() {
@@ -80,10 +95,10 @@
       },
     },
     $trs: {
-      copyTokenButton: 'Copy token',
       copiedTokenId: 'Token copied',
       copyFailed: 'Copy failed',
       token: 'Token',
+      tooltipText: 'Copy token to import channel into Kolibri',
     },
   };
 
@@ -92,20 +107,11 @@
 
 <style scoped>
 
-  .token-input-wrapper {
-    display: flex;
-    align-items: start;
-    justify-content: center;
-  }
-
   .loader {
-    margin: auto;
-  }
-
-  .token-input {
-    flex: 1;
-    width: 100%;
-    max-width: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 70px;
   }
 
   .copy-button {
