@@ -235,6 +235,10 @@
     },
     watch: {
       $route(route) {
+        if (!this.loggedIn && route.name === RouteNames.CHANNELS_EDITABLE) {
+          this.$router.replace({ name: RouteNames.CATALOG_ITEMS });
+          return;
+        }
         if (this.loggedIn && route.name === RouteNames.CHANNELS_EDITABLE) {
           this.loadInvitationList();
         }
