@@ -21,6 +21,7 @@
           icon="copy"
           :tooltip="$tr('tooltipText')"
           class="copy-button"
+          :disabled="!token.trim()"
           @click="copyToClipboard"
         />
       </template>
@@ -75,10 +76,6 @@
         return this.windowBreakpoint <= 1;
       },
       copyToClipboard() {
-        if (!this.token.trim()) {
-          this.$store.dispatch('showSnackbarSimple', this.$tr('copyFailed'));
-          return;
-        }
         if (this.clipboardAvailable) {
           navigator.clipboard
             .writeText(this.displayToken)

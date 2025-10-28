@@ -85,16 +85,15 @@ describe('StudioCopyToken', () => {
     expect(mockStore.dispatch).toHaveBeenCalledWith('showSnackbar', { text: 'copyFailed' });
   });
 
-  it('dispatches snackbar if token is empty', async () => {
-    const { mockStore } = makeWrapper({ token: '   ' });
-    const button = screen.getByRole('button');
-    await fireEvent.click(button);
-    expect(mockStore.dispatch).toHaveBeenCalledWith('showSnackbarSimple', 'copyFailed');
-  });
-
   it('renders the copy button', () => {
     const { container } = makeWrapper();
     const button = container.querySelector('.copy-button');
     expect(button).toBeInTheDocument();
+  });
+
+  it('disables the copy button if token is empty', () => {
+    const { container } = makeWrapper({ token: '   ' });
+    const button = container.querySelector('.copy-button');
+    expect(button).toBeDisabled();
   });
 });
