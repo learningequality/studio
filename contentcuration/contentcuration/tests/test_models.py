@@ -781,7 +781,7 @@ class CommunityLibrarySubmissionTestCase(
     def test_create_multiple_submissions_same_channel_same_version(
         self, mock_ensure_db_exists_task_fetch_or_enqueue
     ):
-    
+
         channel = testdata.channel()
         author = testdata.user()
         channel.editors.add(author)
