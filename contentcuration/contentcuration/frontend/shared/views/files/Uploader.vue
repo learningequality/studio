@@ -22,38 +22,48 @@
       data-test="upload-dialog"
       @change="handleFiles($event.target.files)"
     >
-    <Alert
-      v-model="showUnsupportedFilesAlert"
-      :header="$tr('unsupportedFilesHeader')"
-      :text="unsupportedFilesText"
-    />
-    <Alert
-      v-model="showTooLargeFilesAlert"
-      :header="$tr('tooLargeFilesHeader')"
-      :text="
-        $tr('maxFileSizeText', {
-          count: tooLargeFiles.length,
-          size: formatFileSize(maxFileSize),
-        })
-      "
-    />
-    <Alert
-      v-model="showStorageExceededAlert"
-      :header="$tr('noStorageHeader')"
-      text=""
+    <KModal
+      v-if="showUnsupportedFilesAlert"
+      :title="$tr('unsupportedFilesHeader')"
+      :submitText="$tr('closeButtonLabel')"
+      @submit="showUnsupportedFilesAlert = false"
+      @cancel="showUnsupportedFilesAlert = false"
     >
-      <template #default>
-        <div class="storage-alert">
-          <p>{{ $tr('uploadSize', { size: formatFileSize(totalUploadSize) }) }}</p>
-          <p>
-            {{ $tr('remainingStorage', { size: formatFileSize(availableSpace) }) }}
-          </p>
-          <div class="storage-usage">
-            <FileStorage />
-          </div>
+      <p>{{ unsupportedFilesText }}</p>
+    </KModal>
+    <KModal
+      v-if="showTooLargeFilesAlert"
+      :title="$tr('tooLargeFilesHeader')"
+      :submitText="$tr('closeButtonLabel')"
+      @submit="showTooLargeFilesAlert = false"
+      @cancel="showTooLargeFilesAlert = false"
+    >
+      <p>
+        {{
+          $tr('maxFileSizeText', {
+            count: tooLargeFiles.length,
+            size: formatFileSize(maxFileSize),
+          })
+        }}
+      </p>
+    </KModal>
+    <KModal
+      v-if="showStorageExceededAlert"
+      :title="$tr('noStorageHeader')"
+      :submitText="$tr('closeButtonLabel')"
+      @submit="showStorageExceededAlert = false"
+      @cancel="showStorageExceededAlert = false"
+    >
+      <div class="storage-alert">
+        <p>{{ $tr('uploadSize', { size: formatFileSize(totalUploadSize) }) }}</p>
+        <p>
+          {{ $tr('remainingStorage', { size: formatFileSize(availableSpace) }) }}
+        </p>
+        <div class="storage-usage">
+          <FileStorage />
         </div>
-      </template>
-    </Alert>
+      </div>
+    </KModal>
   </div>
 
 </template>
@@ -73,13 +83,13 @@
   import FileDropzone from './FileDropzone';
   import { MAX_FILE_SIZE } from 'shared/constants';
   import { fileSizeMixin } from 'shared/mixins';
-  import Alert from 'shared/views/Alert';
+  import KModal from 'kolibri-design-system/lib/KModal';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
 
   export default {
     name: 'Uploader',
     components: {
-      Alert,
+      KModal,
       FileStorage,
       FileDropzone,
     },
@@ -260,6 +270,7 @@
       tooLargeFilesHeader: 'Max file size exceeded',
       maxFileSizeText:
         '{count, plural,\n =1 {# file will not be uploaded.}\n other {# files will not be uploaded.}} File size must be under {size}',
+      closeButtonLabel: 'OK',
     },
   };
 
