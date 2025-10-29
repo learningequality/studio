@@ -23,27 +23,16 @@
       @deleteItem="onDeleteAssessmentItem"
     />
 
-    <MessageDialog
-      v-model="dialog.open"
-      :header="dialog.title"
-      :text="dialog.message"
+    <KModal
+      v-if="dialog.open"
+      :title="dialog.title"
+      :cancelText="$tr('dialogCancelBtnLabel')"
+      :submitText="$tr('dialogChangeBtnLabel')"
+      @cancel="dialog.onCancel"
+      @submit="dialog.onSubmit"
     >
-      <template #buttons>
-        <VBtn
-          flat
-          @click="dialog.onCancel"
-        >
-          {{ dialog.cancelLabel || $tr('dialogCancelBtnLabel') }}
-        </VBtn>
-
-        <VBtn
-          color="primary"
-          @click="dialog.onSubmit"
-        >
-          {{ dialog.submitLabel || $tr('dialogSubmitBtnLabel') }}
-        </VBtn>
-      </template>
-    </MessageDialog>
+      {{ dialog.message }}
+    </KModal>
   </div>
 
 </template>
@@ -54,13 +43,11 @@
   import { mapGetters, mapActions } from 'vuex';
 
   import AssessmentEditor from '../AssessmentEditor/AssessmentEditor';
-  import MessageDialog from 'shared/views/MessageDialog';
 
   export default {
     name: 'AssessmentTab',
     components: {
       AssessmentEditor,
-      MessageDialog,
     },
     props: {
       nodeId: {
@@ -74,8 +61,6 @@
           open: false,
           title: '',
           message: '',
-          cancelLabel: '',
-          submitLabel: '',
           onCancel: () => {},
           onSubmit: () => {},
         },
@@ -134,20 +119,11 @@
       async onDeleteAssessmentItem(item) {
         await this.deleteAssessmentItem(item);
       },
-      openDialog({
-        title = '',
-        message = '',
-        cancelLabel = '',
-        submitLabel = '',
-        onCancel = () => {},
-        onSubmit = () => {},
-      } = {}) {
+      openDialog({ title = '', message = '', onCancel = () => {}, onSubmit = () => {} } = {}) {
         this.dialog = {
           open: true,
           title,
           message,
-          cancelLabel,
-          submitLabel,
           onCancel: () => {
             if (typeof onCancel === 'function') {
               onCancel();
@@ -177,7 +153,7 @@
     $trs: {
       incompleteItemsCountMessage:
         '{invalidItemsCount} incomplete {invalidItemsCount, plural, one {question} other {questions}}',
-      dialogSubmitBtnLabel: 'Submit',
+      dialogChangeBtnLabel: 'Change',
       dialogCancelBtnLabel: 'Cancel',
     },
   };
