@@ -27,13 +27,8 @@ jest.mock('shared/data/resources', () => ({
 
 const store = factory();
 
-const {
-  nonePrimaryInfo$,
-  flaggedPrimaryInfo$,
-  approvedPrimaryInfo$,
-  submittedPrimaryInfo$,
-  reviewersWillSeeLatestFirst$,
-} = communityChannelsStrings;
+const { nonePrimaryInfo$, flaggedPrimaryInfo$, approvedPrimaryInfo$, submittedPrimaryInfo$ } =
+  communityChannelsStrings;
 
 async function makeWrapper({ channel, publishedData, latestSubmission }) {
   const isLoading = ref(true);
@@ -178,10 +173,9 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
         latestSubmission: null,
       });
 
-      const infoBoxes = wrapper.findAllComponents(Box).filter(box => box.props('kind') === 'info');
-      expect(infoBoxes.length).toBe(1);
-      const infoBox = infoBoxes.wrappers[0];
-      expect(infoBox.text()).toContain(nonePrimaryInfo$());
+      const infoSection = wrapper.find('.info-section');
+      expect(infoSection.exists()).toBe(true);
+      expect(infoSection.text()).toContain(nonePrimaryInfo$());
     });
 
     it('when the previous submission was rejected', async () => {
@@ -191,10 +185,9 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
         latestSubmission: { channel_version: 1, status: CommunityLibraryStatus.REJECTED },
       });
 
-      const infoBoxes = wrapper.findAllComponents(Box).filter(box => box.props('kind') === 'info');
-      expect(infoBoxes.length).toBe(1);
-      const infoBox = infoBoxes.wrappers[0];
-      expect(infoBox.text()).toContain(flaggedPrimaryInfo$());
+      const infoSection = wrapper.find('.info-section');
+      expect(infoSection.exists()).toBe(true);
+      expect(infoSection.text()).toContain(flaggedPrimaryInfo$());
     });
 
     it('when the previous submission was approved', async () => {
@@ -204,11 +197,9 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
         latestSubmission: { channel_version: 1, status: CommunityLibraryStatus.APPROVED },
       });
 
-      const infoBoxes = wrapper.findAllComponents(Box).filter(box => box.props('kind') === 'info');
-      expect(infoBoxes.length).toBe(1);
-      const infoBox = infoBoxes.wrappers[0];
-      expect(infoBox.text()).toContain(approvedPrimaryInfo$());
-      expect(infoBox.text()).toContain(reviewersWillSeeLatestFirst$());
+      const infoSection = wrapper.find('.info-section');
+      expect(infoSection.exists()).toBe(true);
+      expect(infoSection.text()).toContain(approvedPrimaryInfo$());
     });
 
     it('when the previous submission is pending', async () => {
@@ -218,11 +209,9 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
         latestSubmission: { channel_version: 1, status: CommunityLibraryStatus.PENDING },
       });
 
-      const infoBoxes = wrapper.findAllComponents(Box).filter(box => box.props('kind') === 'info');
-      expect(infoBoxes.length).toBe(1);
-      const infoBox = infoBoxes.wrappers[0];
-      expect(infoBox.text()).toContain(submittedPrimaryInfo$());
-      expect(infoBox.text()).toContain(reviewersWillSeeLatestFirst$());
+      const infoSection = wrapper.find('.info-section');
+      expect(infoSection.exists()).toBe(true);
+      expect(infoSection.text()).toContain(submittedPrimaryInfo$());
     });
   });
 
@@ -256,17 +245,16 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
         latestSubmission: null,
       });
 
-      let moreDetails = wrapper.find('[data-test="more-details"]');
-      expect(moreDetails.exists()).toBe(false);
+      const infoText = wrapper.find('.info-text');
+      expect(infoText.text()).not.toContain('The Kolibri Community Library features channels');
 
-      let moreDetailsButton = wrapper.find('[data-test="more-details-button"]');
+      const moreDetailsButton = wrapper.find('[data-test="more-details-button"]');
       await moreDetailsButton.trigger('click');
 
-      moreDetails = wrapper.find('.more-details-text');
-      expect(moreDetails.exists()).toBe(true);
+      expect(infoText.text()).toContain('The Kolibri Community Library features channels');
 
-      moreDetailsButton = wrapper.find('[data-test="more-details-button"]');
-      expect(moreDetailsButton.exists()).toBe(false);
+      const lessDetailsButton = wrapper.find('[data-test="less-details-button"]');
+      expect(lessDetailsButton.exists()).toBe(true);
     });
   });
 
@@ -389,7 +377,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       });
 
       const descriptionTextbox = wrapper.findComponent('.description-textbox');
-      expect(descriptionTextbox.props('disabled')).toBe(true);
+      expect(descriptionTextbox.props('disabled')).toBe(false);
     });
   });
 

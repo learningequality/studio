@@ -275,7 +275,7 @@
       }
 
       watch(latestSubmissionIsFinished, newVal => {
-        if (newVal && latestSubmissionData.value) {
+        if (newVal && latestSubmissionData.value?.countries) {
           countries.value = latestSubmissionData.value.countries.map(code =>
             countryCodeToName(code),
           );
