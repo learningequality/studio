@@ -76,14 +76,16 @@ router.register(r"contentnode", ContentNodeViewSet)
 router.register(r"assessmentitem", AssessmentItemViewSet)
 router.register(r"admin-users", AdminUserViewSet, basename="admin-users")
 router.register(r"clipboard", ClipboardViewSet, basename="clipboard")
-router.register(r"flagged", FlagFeedbackEventViewSet, basename="flagged")
+router.register(r"events/flagged", FlagFeedbackEventViewSet, basename="flagged-events")
 router.register(
-    r"recommendations", RecommendationsEventViewSet, basename="recommendations"
+    r"events/recommendations",
+    RecommendationsEventViewSet,
+    basename="recommendations-events",
 )
 router.register(
-    r"recommendationsinteraction",
+    r"events/recommendationsinteraction",
     RecommendationsInteractionEventViewSet,
-    basename="recommendations-interaction",
+    basename="recommendations-interaction-events",
 )
 
 urlpatterns = [

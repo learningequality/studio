@@ -12,9 +12,9 @@ export const FeedbackTypeOptions = {
   flagged: 'FLAGGED',
 };
 
-export const FLAG_FEEDBACK_EVENT_ENDPOINT = 'flagged';
-export const RECOMMENDATION_EVENT_ENDPOINT = 'recommendations';
-export const RECOMMENDATION_INTERACTION_EVENT_ENDPOINT = 'recommendations-interaction';
+export const FLAG_FEEDBACK_EVENT_ENDPOINT = 'flagged-events';
+export const RECOMMENDATION_EVENT_ENDPOINT = 'recommendations-events';
+export const RECOMMENDATION_INTERACTION_EVENT_ENDPOINT = 'recommendations-interaction-events';
 
 /**
  * @typedef {Object} BaseFeedbackParams
