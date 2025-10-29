@@ -146,6 +146,7 @@
       </VBtn>
     </template>
     <KModal
+      data-test="delete-confirmation-dialog"
       v-if="showConfirmationDialog"
       :title="$tr('deleteConfirmationHeader', counts)"
       :cancelText="$tr('deleteConfirmationCancelButton')"
