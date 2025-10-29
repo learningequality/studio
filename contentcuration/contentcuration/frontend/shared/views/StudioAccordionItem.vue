@@ -6,10 +6,7 @@
     }"
   >
     <div class="item-content">
-      <slot
-        name="content"
-      >
-      </slot>
+      <slot name="content"> </slot>
     </div>
   </div>
 

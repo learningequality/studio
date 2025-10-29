@@ -19,11 +19,9 @@
           :layout12="{ span: 12 }"
           @click="openAccordion()"
         >
-          <div
-            class="studio-accordion-header"
-          >
+          <div class="studio-accordion-header">
             <div class="studio-accordion-title">
-              <h3> 
+              <h3>
                 <slot name="left-actions"></slot>
               </h3>
             </div>
@@ -38,20 +36,19 @@
         </KGridItem>
       </KGrid>
     </div>
-    
+
     <KTransition kind="component-vertical-slide-out-in">
       <div v-if="showAccordionItem">
         <slot></slot>
       </div>
     </KTransition>
-   
+
     <div
       v-if="!lastItem"
       :style="{
         borderBottom: `1.5px solid ${$themePalette.grey.v_200}`,
       }"
-    >
-    </div>
+    ></div>
   </div>
 
 </template>
@@ -64,16 +61,16 @@
     props: {
       lastItem: {
         type: Boolean,
-        default: false
+        default: false,
       },
       id: {
         type: String,
-        default: 'studio-accordion'
-      }
+        default: 'studio-accordion',
+      },
     },
     data() {
       return {
-        showAccordionItem: false
+        showAccordionItem: false,
       };
     },
     methods: {
@@ -101,7 +98,8 @@
     text-wrap: stable;
   }
 
-  .fade-enter-active, .fade-leave-active {
+  .fade-enter-active,
+  .fade-leave-active {
     transition: opacity 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
   }
 

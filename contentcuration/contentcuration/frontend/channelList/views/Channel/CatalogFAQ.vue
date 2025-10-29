@@ -26,11 +26,10 @@
     </h2>
 
     <div class="faq-accordion">
-
       <!-- How do you determine what goes into this library? -->
       <StudioAccordion>
         <template #left-actions>
-          {{$tr('selectionQuestion')}}
+          {{ $tr('selectionQuestion') }}
         </template>
 
         <StudioAccordionItem>
@@ -39,13 +38,12 @@
             <p>{{ $tr('selectionAnswerP2') }}</p>
           </template>
         </StudioAccordionItem>
-
       </StudioAccordion>
 
       <!-- How is this library created and maintained? -->
       <StudioAccordion>
         <template #left-actions>
-          {{$tr('maintenanceQuestion')}}
+          {{ $tr('maintenanceQuestion') }}
         </template>
 
         <StudioAccordionItem>
@@ -114,14 +112,12 @@
           </template>
         </StudioAccordionItem>
       </StudioAccordion>
-
     </div>
 
     <h2 class="sub-title">
       {{ $tr('usingResourcesHeader') }}
     </h2>
     <div class="faq-accordion">
-
       <!-- I found something I'm interested in and would like to start using it.
             What should I do? -->
       <StudioAccordion>
@@ -220,14 +216,12 @@
           </template>
         </StudioAccordionItem>
       </StudioAccordion>
-
     </div>
 
     <h2 class="sub-title">
       {{ $tr('aboutKolibriHeader') }}
     </h2>
     <div class="faq-accordion">
-
       <!-- What is Kolibri? -->
       <StudioAccordion>
         <template #left-actions>
@@ -307,7 +301,6 @@
         </StudioAccordionItem>
       </StudioAccordion>
     </div>
-
   </div>
 
 </template>
@@ -324,12 +317,11 @@
     name: 'CatalogFAQ',
     components: {
       StudioAccordionItem,
-      StudioAccordion
+      StudioAccordion,
     },
     mixins: [routerMixin],
     setup() {
-      const { windowIsSmall } =
-        useKResponsiveWindow();
+      const { windowIsSmall } = useKResponsiveWindow();
       return {
         windowIsSmall,
       };
@@ -467,10 +459,11 @@
     padding: 0 24px;
   }
 
-  .main-title, .sub-title {
-    font-weight: 700;
-    font-size: 20px;
+  .main-title,
+  .sub-title {
     margin-bottom: 8px;
+    font-size: 20px;
+    font-weight: 700;
   }
 
   .sub-title {
@@ -479,14 +472,15 @@
   }
 
   .desc {
-    font-size: 16px;
     padding: 0 4px;
+    font-size: 16px;
   }
 
   .faq-accordion {
-    box-shadow: 0 2px 1px -1px rgba(0, 0, 0, 0.2),
-     0 1px 1px 0 rgba(0, 0, 0, 0.14),
-     0 1px 3px 0 rgba(0, 0, 0, 0.12);
+    box-shadow:
+      0 2px 1px -1px rgba(0, 0, 0, 0.2),
+      0 1px 1px 0 rgba(0, 0, 0, 0.14),
+      0 1px 3px 0 rgba(0, 0, 0, 0.12);
   }
 
 </style>

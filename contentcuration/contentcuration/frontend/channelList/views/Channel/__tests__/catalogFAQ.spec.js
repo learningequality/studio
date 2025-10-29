@@ -42,7 +42,7 @@ describe('CatalogFAQ test cases', () => {
 
   it('supports Enter key to toggle accordion', async () => {
     renderComponent();
-    const firstAccordion= document.getElementById('studio-accordion');
+    const firstAccordion = document.getElementById('studio-accordion');
     expect(firstAccordion).toBeInTheDocument();
 
     await fireEvent.keyDown(firstAccordion, { key: 'Enter', code: 'Enter' });
