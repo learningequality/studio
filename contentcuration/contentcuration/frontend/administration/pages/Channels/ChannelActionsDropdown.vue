@@ -14,6 +14,8 @@
       v-model="makePublicDialog"
       title="Make channel public"
       :text="`All users will be able to view and import content from ${name}.`"
+      :error-text="communityChannelErrorMessage"
+      :disable-submit="isCommunityChannel"
       data-test="confirm-public"
       confirmButtonText="Make public"
       @confirm="makePublicHandler"
@@ -124,6 +126,7 @@
   import ConfirmationDialog from '../../components/ConfirmationDialog';
   import { RouteNames } from '../../constants';
   import { channelExportMixin } from 'shared/views/channel/mixins';
+  import { CommunityLibraryStatus } from 'shared/constants';
 
   export default {
     name: 'ChannelActionsDropdown',
@@ -159,6 +162,16 @@
             keywords: `${this.channel.id}`,
           },
         };
+      },
+      isCommunityChannel() {
+        const status = this.channel.latest_community_library_submission_status;
+        return status === CommunityLibraryStatus.APPROVED || status === CommunityLibraryStatus.LIVE;
+      },
+      communityChannelErrorMessage() {
+        if (this.isCommunityChannel) {
+          return 'This channel has been added to the Community Library and cannot be marked public.';
+        }
+        return '';
       },
     },
     methods: {
