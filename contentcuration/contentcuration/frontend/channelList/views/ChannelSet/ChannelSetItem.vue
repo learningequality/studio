@@ -25,13 +25,12 @@
       <KButton
         :text="$tr('options')"
         appearance="flat-button"
-        :iconAfter="'dropdown'"
+        :hasDropdown="true"
       >
         <template #menu>
           <KDropdownMenu
             :options="dropdownOptions"
             :hasIcons="true"
-            position="bottom left"
             :constrainToScrollParent="false"
             @select="handleOptionSelect"
           />

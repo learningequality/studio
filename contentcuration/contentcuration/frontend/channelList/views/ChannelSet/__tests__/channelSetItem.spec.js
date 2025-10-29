@@ -51,7 +51,7 @@ const renderComponent = () => {
     ],
   });
 
-  return render(ChannelSetItem, {
+  const result = render(ChannelSetItem, {
     localVue,
     store,
     router,
@@ -59,6 +59,8 @@ const renderComponent = () => {
       channelSetId: channelSet.id,
     },
   });
+
+  return { ...result, router };
 };
 
 describe('channelSetItem', () => {
@@ -68,7 +70,7 @@ describe('channelSetItem', () => {
 
   it('clicking the edit option should navigate to channel set details', async () => {
     const user = userEvent.setup();
-    renderComponent();
+    const { router } = renderComponent();
 
     const optionsButton = screen.getByRole('button', { name: /options/i });
     await user.click(optionsButton);
@@ -76,7 +78,7 @@ describe('channelSetItem', () => {
     const editOption = screen.getByText(/edit collection/i);
     await user.click(editOption);
 
-    expect(editOption).toBeInTheDocument();
+    expect(router.currentRoute.path).toBe(`/channels/collections/${channelSet.id}`);
   });
 
   it('clicking delete button in dialog should delete the channel set', async () => {
