@@ -1,354 +1,349 @@
 <template>
 
-  <VContainer
-    fluid
-    class="py-1"
-    :class="$vuetify.breakpoint.xsOnly ? 'px-0' : 'px-4'"
-  >
-    <h1 class="font-weight-bold mb-2 px-1 title">
+  <div :class="{ 'catalog-faq': !windowIsSmall }">
+    <h2 class="main-title">
       {{ $tr('aboutHeader') }}
-    </h1>
-    <p class="px-2 subheading">
+    </h2>
+    <p class="desc">
       {{ $tr('descriptionP1') }}
-      <ActionLink
+
+      <KButton
         :text="$tr('channelLink')"
+        appearance="basic-link"
         href="#channel"
-        @click="aboutPanel = 1"
+        @click="openChannelAccordion()"
       />
     </p>
-    <p class="px-2 subheading">
+    <p class="desc">
       {{ $tr('descriptionP2') }}
     </p>
-    <p class="mb-5 px-2 subheading">
+    <p class="desc">
       {{ $tr('descriptionP3') }}
     </p>
 
-    <!-- ABOUT THIS LIBRARY -->
-    <h1 class="font-weight-bold px-1 title">
+    <h2 class="sub-title">
       {{ $tr('aboutLibraryHeader') }}
-    </h1>
-    <VExpansionPanel
-      class="mb-5 mt-2"
-      expand
-    >
+    </h2>
+
+    <div class="faq-accordion">
+
       <!-- How do you determine what goes into this library? -->
-      <VExpansionPanelContent>
-        <template #header>
-          <h2 class="font-weight-bold subheading">
-            {{ $tr('selectionQuestion') }}
-          </h2>
+      <StudioAccordion>
+        <template #left-actions>
+          {{$tr('selectionQuestion')}}
         </template>
-        <VCard>
-          <VCardText>
+
+        <StudioAccordionItem>
+          <template #content>
             <p>{{ $tr('selectionAnswerP1') }}</p>
             <p>{{ $tr('selectionAnswerP2') }}</p>
-          </VCardText>
-        </VCard>
-      </VExpansionPanelContent>
+          </template>
+        </StudioAccordionItem>
+
+      </StudioAccordion>
 
       <!-- How is this library created and maintained? -->
-      <VExpansionPanelContent>
-        <template #header>
-          <h2 class="font-weight-bold subheading">
-            {{ $tr('maintenanceQuestion') }}
-          </h2>
+      <StudioAccordion>
+        <template #left-actions>
+          {{$tr('maintenanceQuestion')}}
         </template>
-        <VCard>
-          <VCardText>
+
+        <StudioAccordionItem>
+          <template #content>
             <p>{{ $tr('maintenanceAnswerP1') }}</p>
             <p>
               {{ $tr('maintenanceAnswerP2') }}
-              <ActionLink
+              <KExternalLink
                 :text="$tr('viewIntegrationGuide')"
-                target="_blank"
+                openInNewTab
                 href="http://learningequality.org/r/integration-guide"
               />
             </p>
-          </VCardText>
-        </VCard>
-      </VExpansionPanelContent>
+          </template>
+        </StudioAccordionItem>
+      </StudioAccordion>
 
       <!-- Have these sources been vetted or endorsed as classroom-safe and ready? -->
-      <VExpansionPanelContent>
-        <template #header>
-          <h2 class="font-weight-bold subheading">
-            {{ $tr('endoresementQuestion') }}
-          </h2>
+      <StudioAccordion>
+        <template #left-actions>
+          {{ $tr('endoresementQuestion') }}
         </template>
-        <VCard>
-          <VCardText>
+
+        <StudioAccordionItem>
+          <template #content>
             <p>{{ $tr('endorsementAnswer') }}</p>
-          </VCardText>
-        </VCard>
-      </VExpansionPanelContent>
+          </template>
+        </StudioAccordionItem>
+      </StudioAccordion>
 
       <!-- Does Learning Equality own these resources? -->
-      <VExpansionPanelContent>
-        <template #header>
-          <h2 class="font-weight-bold subheading">
-            {{ $tr('ownershipQuestion') }}
-          </h2>
+      <StudioAccordion>
+        <template #left-actions>
+          {{ $tr('ownershipQuestion') }}
         </template>
-        <VCard>
-          <VCardText>
+
+        <StudioAccordionItem>
+          <template #content>
             <p>{{ $tr('ownershipAnswer') }}</p>
-          </VCardText>
-        </VCard>
-      </VExpansionPanelContent>
+          </template>
+        </StudioAccordionItem>
+      </StudioAccordion>
 
       <!-- Do you add new materials? -->
-      <VExpansionPanelContent>
-        <template #header>
-          <h2 class="font-weight-bold subheading">
-            {{ $tr('newContentQuestion') }}
-          </h2>
+      <StudioAccordion>
+        <template #left-actions>
+          {{ $tr('newContentQuestion') }}
         </template>
-        <VCard>
-          <VCardText>
+
+        <StudioAccordionItem>
+          <template #content>
             <p>{{ $tr('newContentAnswer') }}</p>
-          </VCardText>
-        </VCard>
-      </VExpansionPanelContent>
+          </template>
+        </StudioAccordionItem>
+      </StudioAccordion>
 
       <!-- How can I add my own materials or recommend others' materials for this library? -->
-      <VExpansionPanelContent>
-        <template #header>
-          <h2 class="font-weight-bold subheading">
-            {{ $tr('customContentQuestion') }}
-          </h2>
+      <StudioAccordion lastItem>
+        <template #left-actions>
+          {{ $tr('customContentQuestion') }}
         </template>
-        <VCard>
-          <VCardText>
-            <p>{{ $tr('customContentAnswer') }}</p>
-          </VCardText>
-        </VCard>
-      </VExpansionPanelContent>
-    </VExpansionPanel>
 
-    <!-- USING THESE RESOURCES -->
-    <h1 class="font-weight-bold px-1 title">
+        <StudioAccordionItem>
+          <template #content>
+            <p>{{ $tr('customContentAnswer') }}</p>
+          </template>
+        </StudioAccordionItem>
+      </StudioAccordion>
+
+    </div>
+
+    <h2 class="sub-title">
       {{ $tr('usingResourcesHeader') }}
-    </h1>
-    <VExpansionPanel
-      v-model="aboutPanel"
-      class="mb-5 mt-2"
-      expand
-    >
+    </h2>
+    <div class="faq-accordion">
+
       <!-- I found something I'm interested in and would like to start using it.
             What should I do? -->
-      <VExpansionPanelContent>
-        <template #header>
-          <h2 class="font-weight-bold subheading">
-            {{ $tr('usingContentQuestion') }}
-          </h2>
+      <StudioAccordion>
+        <template #left-actions>
+          {{ $tr('usingContentQuestion') }}
         </template>
-        <VCard>
-          <VCardText>
+
+        <StudioAccordionItem>
+          <template #content>
             <p>
               {{ $tr('usingContentAnswer') }}
-              <ActionLink
+              <KExternalLink
                 :text="$tr('viewGettingStartedLink')"
-                target="_blank"
+                openInNewTab
                 href="https://learningequality.org/documentation/"
               />
             </p>
-          </VCardText>
-        </VCard>
-      </VExpansionPanelContent>
+          </template>
+        </StudioAccordionItem>
+      </StudioAccordion>
 
       <!-- What is a channel? -->
-      <VExpansionPanelContent id="channel">
-        <template #header>
-          <h2 class="font-weight-bold subheading">
-            {{ $tr('channelQuestion') }}
-          </h2>
+      <StudioAccordion :id="'channel'">
+        <template #left-actions>
+          {{ $tr('channelQuestion') }}
         </template>
-        <VCard>
-          <VCardText>
+
+        <StudioAccordionItem>
+          <template #content>
             <p>{{ $tr('channelAnswer') }}</p>
-          </VCardText>
-        </VCard>
-      </VExpansionPanelContent>
+          </template>
+        </StudioAccordionItem>
+      </StudioAccordion>
 
       <!-- How do I review the contents of the channels themselves? -->
-      <VExpansionPanelContent>
-        <template #header>
-          <h2 class="font-weight-bold subheading">
-            {{ $tr('sampleContentQuestion') }}
-          </h2>
+      <StudioAccordion>
+        <template #left-actions>
+          {{ $tr('sampleContentQuestion') }}
         </template>
-        <VCard>
-          <VCardText>
+
+        <StudioAccordionItem>
+          <template #content>
             <p>{{ $tr('sampleContentAnswer') }}</p>
             <ul>
               <li>{{ $tr('sampleContentAnswerItem1') }}</li>
               <li>{{ $tr('sampleContentAnswerItem2') }}</li>
               <li>
                 {{ $tr('sampleContentAnswerItem3') }}
-                <ActionLink
+                <KExternalLink
                   :text="$tr('downloadKolibriLink')"
-                  target="_blank"
+                  openInNewTab
                   href="https://learningequality.org/download"
                 />
               </li>
             </ul>
-          </VCardText>
-        </VCard>
-      </VExpansionPanelContent>
+          </template>
+        </StudioAccordionItem>
+      </StudioAccordion>
 
       <!-- I want to use some of this resource, but not all of it. What should I do? -->
-      <VExpansionPanelContent>
-        <template #header>
-          <h2 class="font-weight-bold subheading">
-            {{ $tr('partialChannelQuestion') }}
-          </h2>
+      <StudioAccordion>
+        <template #left-actions>
+          {{ $tr('partialChannelQuestion') }}
         </template>
-        <VCard>
-          <VCardText>
+
+        <StudioAccordionItem>
+          <template #content>
             <p>{{ $tr('partialChannelAnswer') }}</p>
-          </VCardText>
-        </VCard>
-      </VExpansionPanelContent>
+          </template>
+        </StudioAccordionItem>
+      </StudioAccordion>
 
       <!-- What is coach content? -->
-      <VExpansionPanelContent>
-        <template #header>
-          <h2 class="font-weight-bold subheading">
-            {{ $tr('coachContentQuestion') }}
-          </h2>
+      <StudioAccordion>
+        <template #left-actions>
+          {{ $tr('coachContentQuestion') }}
         </template>
-        <VCard>
-          <VCardText>
+
+        <StudioAccordionItem>
+          <template #content>
             <p>{{ $tr('coachContentAnswer') }}</p>
-          </VCardText>
-        </VCard>
-      </VExpansionPanelContent>
+          </template>
+        </StudioAccordionItem>
+      </StudioAccordion>
 
       <!-- I found a bug, broken link, or instance of mislabeled information
             within a resource. What should I do? -->
-      <VExpansionPanelContent>
-        <template #header>
-          <h2 class="font-weight-bold subheading">
-            {{ $tr('issueQuestion') }}
-          </h2>
+      <StudioAccordion lastItem>
+        <template #left-actions>
+          {{ $tr('issueQuestion') }}
         </template>
-        <VCard>
-          <VCardText>
-            <p>{{ $tr('issueAnswer') }}</p>
-          </VCardText>
-        </VCard>
-      </VExpansionPanelContent>
-    </VExpansionPanel>
 
-    <!-- ABOUT KOLIBRI -->
-    <h1 class="font-weight-bold pl-1 title">
+        <StudioAccordionItem>
+          <template #content>
+            <p>{{ $tr('issueAnswer') }}</p>
+          </template>
+        </StudioAccordionItem>
+      </StudioAccordion>
+
+    </div>
+
+    <h2 class="sub-title">
       {{ $tr('aboutKolibriHeader') }}
-    </h1>
-    <VExpansionPanel
-      class="mb-5 mt-2"
-      expand
-    >
+    </h2>
+    <div class="faq-accordion">
+
       <!-- What is Kolibri? -->
-      <VExpansionPanelContent>
-        <template #header>
-          <h2 class="font-weight-bold subheading">
-            {{ $tr('KolibriQuestion') }}
-          </h2>
+      <StudioAccordion>
+        <template #left-actions>
+          {{ $tr('KolibriQuestion') }}
         </template>
-        <VCard>
-          <VCardText>
+
+        <StudioAccordionItem>
+          <template #content>
             <p>{{ $tr('KolibriAnswer') }}</p>
             <ul>
               <li>{{ $tr('KolibriAnswerItem1') }}</li>
               <li>{{ $tr('KolibriAnswerItem2') }}</li>
               <li>{{ $tr('KolibriAnswerItem3') }}</li>
             </ul>
-          </VCardText>
-        </VCard>
-      </VExpansionPanelContent>
+          </template>
+        </StudioAccordionItem>
+      </StudioAccordion>
 
       <!-- How can I use Kolibri? -->
-      <VExpansionPanelContent>
-        <template #header>
-          <h2 class="font-weight-bold subheading">
-            {{ $tr('usingKolibriQuestion') }}
-          </h2>
+      <StudioAccordion>
+        <template #left-actions>
+          {{ $tr('usingKolibriQuestion') }}
         </template>
-        <VCard>
-          <VCardText>
+
+        <StudioAccordionItem>
+          <template #content>
             <p>{{ $tr('usingKolibriAnswerP1') }}</p>
             <ul>
               <li>
                 {{ $tr('usingKolibriItem1') }}
-                <ActionLink
-                  target="_blank"
+                <KExternalLink
                   :text="$tr('visitWebsiteLink')"
+                  openInNewTab
                   href="https://learningequality.org/kolibri/"
                 />
               </li>
               <li>
                 {{ $tr('usingKolibriItem2') }}
-                <ActionLink
-                  target="_blank"
+                <KExternalLink
                   :text="$tr('viewDemoLink')"
+                  openInNewTab
                   href="https://kolibri-demo.learningequality.org/en/user/#/signin"
                 />
               </li>
               <li>
                 {{ $tr('usingKolibriItem3') }}
-                <ActionLink
-                  target="_blank"
+                <KExternalLink
                   :text="$tr('downloadLink')"
+                  openInNewTab
                   href="https://learningequality.org/download/"
                 />
               </li>
             </ul>
             <p>
               {{ $tr('usingKolibriAnswerP2') }}
-              <ActionLink
-                target="_blank"
+              <KExternalLink
                 :text="$tr('viewDocsLink')"
+                openInNewTab
                 href="https://learningequality.org/documentation/"
               />
             </p>
-          </VCardText>
-        </VCard>
-      </VExpansionPanelContent>
+          </template>
+        </StudioAccordionItem>
+      </StudioAccordion>
 
       <!-- Who are the makers of Kolibri? -->
-      <VExpansionPanelContent>
-        <template #header>
-          <h2 class="font-weight-bold subheading">
-            {{ $tr('makerQuestion') }}
-          </h2>
+      <StudioAccordion lastItem>
+        <template #left-actions>
+          {{ $tr('makerQuestion') }}
         </template>
-        <VCard>
-          <VCardText>
+
+        <StudioAccordionItem>
+          <template #content>
             <p>{{ $tr('makerAnswerP1') }}</p>
             <p>{{ $tr('makerAnswerP2') }}</p>
-          </VCardText>
-        </VCard>
-      </VExpansionPanelContent>
-    </VExpansionPanel>
-  </VContainer>
+          </template>
+        </StudioAccordionItem>
+      </StudioAccordion>
+    </div>
+
+  </div>
 
 </template>
 
 
 <script>
 
+  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { routerMixin } from 'shared/mixins';
+  import StudioAccordionItem from 'shared/views/StudioAccordionItem.vue';
+  import StudioAccordion from 'shared/views/StudioAccordion.vue';
 
   export default {
     name: 'CatalogFAQ',
+    components: {
+      StudioAccordionItem,
+      StudioAccordion
+    },
     mixins: [routerMixin],
-    data() {
+    setup() {
+      const { windowIsSmall } =
+        useKResponsiveWindow();
       return {
-        aboutPanel: null,
+        windowIsSmall,
       };
     },
     beforeMount() {
       this.updateTabTitle(this.$tr('faqHeader'));
+    },
+    methods: {
+      openChannelAccordion() {
+        const channelAccordion = document.getElementById('channel');
+        if (channelAccordion.ariaExpanded === 'false') {
+          channelAccordion.click();
+        }
+      },
     },
     $trs: {
       faqHeader: 'Frequently asked questions',
@@ -468,23 +463,30 @@
 
 <style scoped>
 
-  /deep/ .action-link {
-    font-size: inherit;
-    vertical-align: text-bottom;
+  .catalog-faq {
+    padding: 0 24px;
   }
 
-  p {
-    font-size: 12pt;
-    word-wrap: break-word;
+  .main-title, .sub-title {
+    font-weight: 700;
+    font-size: 20px;
+    margin-bottom: 8px;
   }
 
-  .v-card__text ul {
-    padding: 0 32px;
+  .sub-title {
+    margin-top: 48px;
+    line-height: 1;
   }
 
-  /* Don't set text alignment so we can handle RTL */
-  .v-expansion-panel {
-    text-align: unset;
+  .desc {
+    font-size: 16px;
+    padding: 0 4px;
+  }
+
+  .faq-accordion {
+    box-shadow: 0 2px 1px -1px rgba(0, 0, 0, 0.2),
+     0 1px 1px 0 rgba(0, 0, 0, 0.14),
+     0 1px 3px 0 rgba(0, 0, 0, 0.12);
   }
 
 </style>
