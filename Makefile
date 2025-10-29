@@ -38,7 +38,7 @@ migrate:
 # 4) Remove the management command from this `deploy-migrate` recipe
 # 5) Repeat!
 deploy-migrate:
-	python contentcuration/manage.py set_file_duration
+	echo "Nothing to do here!"
 
 contentnodegc:
 	python contentcuration/manage.py garbage_collect
