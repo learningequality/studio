@@ -12,73 +12,97 @@
 
       <template #default>
         <div class="content">
-          <Box
-            kind="info"
-            :loading="latestSubmissionIsLoading"
-            class="info-box"
-          >
+          <KTransition kind="component-fade-out-in">
             <div
-              key="box-message"
-              class="box-message"
+              v-if="latestSubmissionIsLoading"
+              class="loader-wrapper"
             >
-              {{ infoBoxPrimaryText }}
-              <div v-if="infoBoxSecondaryText">
-                {{ infoBoxSecondaryText }}
-              </div>
-              <template v-if="latestSubmissionIsFinished && latestSubmissionStatus === null">
-                <div
-                  v-if="showingMoreDetails"
-                  class="more-details-text"
-                >
-                  {{ moreDetails$() }}
-                </div>
-                <KButton
-                  v-if="!showingMoreDetails"
-                  appearance="basic-link"
-                  :text="moreDetailsButton$()"
-                  data-test="more-details-button"
-                  @click="showingMoreDetails = !showingMoreDetails"
-                />
-                <KButton
-                  v-else
-                  appearance="basic-link"
-                  :text="lessDetailsButton$()"
-                  data-test="less-details-button"
-                  @click="showingMoreDetails = !showingMoreDetails"
-                />
-              </template>
+              <KCircularLoader disableDefaultTransition />
             </div>
-            <template #chip>
+            <div
+              v-else-if="latestSubmissionIsFinished"
+              class="info-section"
+            >
+              <div class="info-text">
+                <template v-if="latestSubmissionStatus === null">
+                  <template v-if="showingMoreDetails">
+                    <div>{{ infoBoxPrimaryText }} {{ moreDetails$() }}</div>
+                    <div
+                      class="more-details-link"
+                      data-test="less-details-button"
+                      @click="showingMoreDetails = false"
+                    >
+                      {{ lessDetailsButton$() }}
+                    </div>
+                  </template>
+                  <template v-else>
+                    <div>
+                      {{ infoBoxPrimaryText }}
+                    </div>
+                    <div
+                      class="more-details-link"
+                      data-test="more-details-button"
+                      @click="showingMoreDetails = true"
+                    >
+                      {{ moreDetailsButton$() }}
+                    </div>
+                  </template>
+                </template>
+                <template v-else>
+                  {{ infoBoxPrimaryText }}
+                  <div
+                    v-if="infoBoxSecondaryText"
+                    class="info-secondary-text"
+                  >
+                    {{ infoBoxSecondaryText }}
+                  </div>
+                </template>
+              </div>
               <StatusChip
                 v-if="latestSubmissionStatus"
                 :status="latestSubmissionStatus"
+                class="status-chip"
               />
-            </template>
-          </Box>
+            </div>
+          </KTransition>
           <Box
             v-if="!isPublished"
             kind="warning"
             data-test="not-published-warning"
           >
-            {{ notPublishedWarning$() }}
+            <div class="warning-first-line">
+              {{ notPublishedWarningFirstLine$() }}
+            </div>
+            <div class="warning-second-line">
+              {{ notPublishedWarningSecondLine$() }}
+            </div>
           </Box>
           <Box
             v-else-if="isPublic"
             kind="warning"
             data-test="public-warning"
           >
-            {{ publicWarning$() }}
+            <div class="warning-first-line">
+              {{ publicWarningFirstLine$() }}
+            </div>
+            <div class="warning-second-line">
+              {{ publicWarningSecondLine$() }}
+            </div>
           </Box>
           <Box
             v-else-if="isCurrentVersionAlreadySubmitted"
             kind="warning"
             data-test="already-submitted-warning"
           >
-            {{ alreadySubmittedWarning$() }}
+            <div class="warning-first-line">
+              {{ alreadySubmittedWarningFirstLine$() }}
+            </div>
+            <div class="warning-second-line">
+              {{ alreadySubmittedWarningSecondLine$() }}
+            </div>
           </Box>
-          <div class="channel-title">{{ channel.name }}</div>
-          <div>
-            <div class="field-annotation">{{ languagesDetected$() }}</div>
+          <div class="channel-title">{{ channel.name }} v{{ channel.version }}</div>
+          <div class="metadata-line">
             <LoadingText
               :loading="publishedDataIsLoading"
               :finishedLoading="publishedDataIsFinished"
@@ -87,18 +111,7 @@
               {{ detectedLanguages }}
             </LoadingText>
           </div>
-          <div>
-            <div class="field-annotation">{{ licensesDetected$() }}</div>
-            <LoadingText
-              :loading="publishedDataIsLoading"
-              :finishedLoading="publishedDataIsFinished"
-              :omitted="!detectedLicenses"
-            >
-              {{ detectedLicenses }}
-            </LoadingText>
-          </div>
-          <div>
-            <div class="field-annotation">{{ categoriesDetected$() }}</div>
+          <div class="metadata-line">
             <LoadingText
               :loading="publishedDataIsLoading"
               :finishedLoading="publishedDataIsFinished"
@@ -137,6 +150,18 @@
             style="width: 100%"
             class="description-textbox"
           />
+          <KCheckbox
+            v-if="needsReplacementConfirmation"
+            :checked="replacementConfirmed"
+            :label="confirmReplacementText$()"
+            data-test="replacement-confirmation-checkbox"
+            class="replacement-checkbox"
+            @change="
+              value => {
+                replacementConfirmed = value;
+              }
+            "
+          />
         </div>
       </template>
 
@@ -171,6 +196,7 @@
 
   import camelCase from 'lodash/camelCase';
 
+  import KCheckbox from 'kolibri-design-system/lib/KCheckbox';
   import Box from './Box';
   import LoadingText from './LoadingText';
   import StatusChip from './StatusChip';
@@ -184,7 +210,6 @@
   import SidePanelModal from 'shared/views/SidePanelModal';
   import CountryField from 'shared/views/form/CountryField';
   import LanguagesMap from 'shared/leUtils/Languages';
-  import LicensesMap from 'shared/leUtils/Licenses';
   import { CategoriesLookup, CommunityLibraryStatus } from 'shared/constants';
   import { CommunityLibrarySubmission } from 'shared/data/resources';
 
@@ -196,6 +221,7 @@
       LoadingText,
       StatusChip,
       CountryField,
+      KCheckbox,
     },
     emits: ['close'],
     setup(props, { emit }) {
@@ -210,33 +236,33 @@
         moreDetails$,
         moreDetailsButton$,
         lessDetailsButton$,
-        languagesDetected$,
-        licensesDetected$,
-        categoriesDetected$,
         countryLabel$,
         descriptionLabel$,
         descriptionRequired$,
-        notPublishedWarning$,
-        publicWarning$,
-        alreadySubmittedWarning$,
+        notPublishedWarningFirstLine$,
+        notPublishedWarningSecondLine$,
+        publicWarningFirstLine$,
+        publicWarningSecondLine$,
+        alreadySubmittedWarningFirstLine$,
+        alreadySubmittedWarningSecondLine$,
         submitButton$,
         cancelAction$,
         submittedPrimaryInfo$,
-        reviewersWillSeeLatestFirst$,
         approvedPrimaryInfo$,
         flaggedPrimaryInfo$,
         nonePrimaryInfo$,
         submittedSnackbar$,
         errorSnackbar$,
         submittingSnackbar$,
+        confirmReplacementText$,
       } = communityChannelsStrings;
 
       const annotationColor = computed(() => tokensTheme.annotation);
-      const infoSeparatorColor = computed(() => tokensTheme.fineLine);
 
       const showingMoreDetails = ref(false);
       const countries = ref([]);
       const description = ref('');
+      const replacementConfirmed = ref(false);
 
       const {
         isLoading: latestSubmissionIsLoading,
@@ -281,22 +307,18 @@
           case CommunityLibraryStatus.PENDING:
             return {
               primaryText: submittedPrimaryInfo$(),
-              secondaryText: reviewersWillSeeLatestFirst$(),
             };
           case CommunityLibraryStatus.APPROVED:
             return {
               primaryText: approvedPrimaryInfo$(),
-              secondaryText: reviewersWillSeeLatestFirst$(),
             };
           case CommunityLibraryStatus.REJECTED:
             return {
               primaryText: flaggedPrimaryInfo$(),
-              secondaryText: null,
             };
           case null:
             return {
               primaryText: nonePrimaryInfo$(),
-              secondaryText: null,
             };
           default:
             return undefined;
@@ -313,13 +335,25 @@
         return latestSubmissionData.value.channel_version === props.channel.version;
       });
 
-      const canBeEdited = computed(
-        () => isPublished.value && !isPublic.value && !isCurrentVersionAlreadySubmitted.value,
-      );
+      const canBeEdited = computed(() => {
+        if (!isPublished.value || isPublic.value) return false;
+        return !isCurrentVersionAlreadySubmitted.value || needsReplacementConfirmation.value;
+      });
 
-      const canBeSubmitted = computed(
-        () => canBeEdited.value && publishedDataIsFinished.value && description.value.length >= 1,
-      );
+      const needsReplacementConfirmation = computed(() => {
+        return latestSubmissionStatus.value === CommunityLibraryStatus.PENDING;
+      });
+
+      const canBeSubmitted = computed(() => {
+        const baseCondition =
+          canBeEdited.value && publishedDataIsFinished.value && description.value.length >= 1;
+
+        if (needsReplacementConfirmation.value) {
+          return baseCondition && replacementConfirmed.value;
+        }
+
+        return baseCondition;
+      });
 
       const {
         isLoading: publishedDataIsLoading,
@@ -349,20 +383,6 @@
         if (languageCodes.length === 0) return null;
 
         return languageCodes.map(code => LanguagesMap.get(code).readable_name).join(', ');
-      });
-
-      const detectedLicenses = computed(() => {
-        // We distinguish here between "not loaded yet" (undefined)
-        // and "loaded and none present" (null). This distinction is
-        // not used in the UI and is mostly intended to convey the
-        // state more accurately to the developer in case of debugging.
-        // UI code should rely on XXXIsLoading and XXXIsFinished instead.
-        if (!latestPublishedData.value?.included_licenses) return undefined;
-        if (latestPublishedData.value.included_licenses.length === 0) return null;
-
-        return latestPublishedData.value.included_licenses
-          .map(licenseId => LicensesMap.get(licenseId).license_name)
-          .join(', ');
       });
 
       function categoryIdToName(categoryId) {
@@ -403,6 +423,8 @@
             categories: latestPublishedData.value.included_categories,
           })
             .then(() => {
+              replacementConfirmed.value = false;
+              description.value = '';
               showSnackbar({ text: submittedSnackbar$() });
             })
             .catch(() => {
@@ -424,13 +446,14 @@
 
       return {
         annotationColor,
-        infoSeparatorColor,
         showingMoreDetails,
         countries,
         description,
+        replacementConfirmed,
         latestSubmissionIsLoading,
         latestSubmissionIsFinished,
         latestSubmissionStatus,
+        needsReplacementConfirmation,
         infoBoxPrimaryText,
         infoBoxSecondaryText,
         isPublished,
@@ -441,7 +464,6 @@
         publishedDataIsLoading,
         publishedDataIsFinished,
         detectedLanguages,
-        detectedLicenses,
         detectedCategories,
         onSubmit,
         // Translation functions
@@ -449,17 +471,18 @@
         moreDetails$,
         moreDetailsButton$,
         lessDetailsButton$,
-        languagesDetected$,
-        licensesDetected$,
-        categoriesDetected$,
         countryLabel$,
         descriptionLabel$,
         descriptionRequired$,
-        notPublishedWarning$,
-        publicWarning$,
-        alreadySubmittedWarning$,
+        notPublishedWarningFirstLine$,
+        notPublishedWarningSecondLine$,
+        publicWarningFirstLine$,
+        publicWarningSecondLine$,
+        alreadySubmittedWarningFirstLine$,
+        alreadySubmittedWarningSecondLine$,
         submitButton$,
         cancelAction$,
+        confirmReplacementText$,
       };
     },
     props: {
@@ -476,18 +499,30 @@
 <style scoped lang="scss">
 
   .side-panel-title {
+    padding-left: 16px;
     margin: 0;
     font-size: 20px;
   }
 
+  ::v-deep .side-panel-header {
+    border: 0 !important;
+  }
+
   .channel-title {
+    font-size: 18px;
     font-weight: 600;
+  }
+
+  .metadata-line {
+    font-size: 14px;
+    color: v-bind('annotationColor');
   }
 
   .content {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    margin-top: -24px;
     line-height: 140%;
   }
 
@@ -510,7 +545,6 @@
 
   .more-details-text {
     padding-top: 8px;
-    border-top: 1px solid v-bind('infoSeparatorColor');
   }
 
   .field-annotation {
@@ -536,6 +570,42 @@
 
   .description-textbox ::v-deep .textbox {
     max-width: 100%;
+  }
+
+  .info-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .info-text {
+    font-size: 14px;
+    line-height: 140%;
+  }
+
+  .info-secondary-text {
+    font-size: 14px;
+    line-height: 140%;
+    color: v-bind('annotationColor');
+  }
+
+  .more-details-link {
+    font-size: 14px;
+    color: #4368f5;
+    cursor: pointer;
+  }
+
+  .more-details-link:hover {
+    color: #4368f5;
+  }
+
+  .status-chip {
+    align-self: flex-start;
+    margin-top: 8px;
+  }
+
+  .replacement-checkbox {
+    margin-top: 8px;
   }
 
 </style>

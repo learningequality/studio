@@ -17,7 +17,9 @@
         <div class="box-icon">
           <KIcon :icon="icon" />
         </div>
-        <slot></slot>
+        <div class="box-text">
+          <slot></slot>
+        </div>
         <div
           v-if="$slots.chip"
           class="chip"
@@ -45,27 +47,27 @@
       const boxBackgroundColor = computed(() => {
         switch (props.kind) {
           case 'warning':
-            return paletteTheme.yellow.v_100;
+            return paletteTheme.red.v_100;
           case 'info':
             return paletteTheme.grey.v_100;
           default:
             throw new Error(`Unsupported box kind: ${props.kind}`);
         }
       });
-      const boxTextColor = computed(() => {
+      const boxBorderColor = computed(() => {
         switch (props.kind) {
           case 'warning':
-            return paletteTheme.red.v_500;
+            return paletteTheme.red.v_300;
           case 'info':
-            return tokensTheme.text;
+            return 'transparent';
           default:
-            throw new Error(`Unsupported box kind: ${props.kind}`);
+            return 'transparent';
         }
       });
       const icon = computed(() => {
         switch (props.kind) {
           case 'warning':
-            return 'warningIncomplete';
+            return 'error';
           case 'info':
             return 'infoOutline';
           default:
@@ -73,9 +75,19 @@
         }
       });
 
+      const warningFirstLineColor = computed(() => {
+        return props.kind === 'warning' ? paletteTheme.red.v_600 : tokensTheme.text;
+      });
+
+      const warningSecondLineColor = computed(() => {
+        return props.kind === 'warning' ? paletteTheme.grey.v_800 : tokensTheme.text;
+      });
+
       return {
         boxBackgroundColor,
-        boxTextColor,
+        boxBorderColor,
+        warningFirstLineColor,
+        warningSecondLineColor,
         icon,
       };
     },
@@ -100,20 +112,40 @@
 <style lang="scss" scoped>
 
   .box {
-    padding: 8px;
-    color: v-bind('boxTextColor');
+    padding: 12px 16px;
     background-color: v-bind('boxBackgroundColor');
+    border: 1px solid v-bind('boxBorderColor');
     border-radius: 4px;
   }
 
   .box-content {
     display: flex;
     gap: 8px;
+    align-items: start;
   }
 
   .box-icon {
     width: 20px;
     height: 20px;
+  }
+
+  .box-text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 14px;
+    line-height: 140%;
+  }
+
+  ::v-deep .warning-first-line {
+    font-weight: 600;
+    color: v-bind('warningFirstLineColor');
+  }
+
+  ::v-deep .warning-second-line {
+    font-weight: 400;
+    color: v-bind('warningSecondLineColor');
   }
 
   .chip {

@@ -778,6 +778,60 @@ class CommunityLibrarySubmissionTestCase(
             community_library_submission.STATUS_LIVE,
         )
 
+    def test_create_multiple_submissions_same_channel_same_version(
+        self, mock_ensure_db_exists_task_fetch_or_enqueue
+    ):
+    
+        channel = testdata.channel()
+        author = testdata.user()
+        channel.editors.add(author)
+        channel.version = 1
+        channel.save()
+
+        country = testdata.country()
+
+        submission1 = CommunityLibrarySubmission.objects.create(
+            description="First submission",
+            channel=channel,
+            channel_version=1,
+            author=author,
+            categories=["test_category"],
+            status=community_library_submission.STATUS_PENDING,
+        )
+        submission1.countries.add(country)
+
+        submission2 = CommunityLibrarySubmission.objects.create(
+            description="Second submission",
+            channel=channel,
+            channel_version=1,
+            author=author,
+            categories=["test_category"],
+            status=community_library_submission.STATUS_PENDING,
+        )
+        submission2.countries.add(country)
+
+        submission3 = CommunityLibrarySubmission.objects.create(
+            description="Third submission",
+            channel=channel,
+            channel_version=1,
+            author=author,
+            categories=["test_category"],
+            status=community_library_submission.STATUS_PENDING,
+        )
+        submission3.countries.add(country)
+
+        self.assertEqual(submission1.channel, channel)
+        self.assertEqual(submission1.channel_version, 1)
+        self.assertEqual(submission2.channel, channel)
+        self.assertEqual(submission2.channel_version, 1)
+        self.assertEqual(submission3.channel, channel)
+        self.assertEqual(submission3.channel_version, 1)
+
+        submissions = CommunityLibrarySubmission.objects.filter(
+            channel=channel, channel_version=1
+        )
+        self.assertEqual(submissions.count(), 3)
+
 
 class AssessmentItemTestCase(PermissionQuerysetTestCase):
     @property
