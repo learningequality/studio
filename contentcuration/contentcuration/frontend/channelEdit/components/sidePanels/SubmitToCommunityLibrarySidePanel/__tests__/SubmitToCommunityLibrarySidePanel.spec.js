@@ -23,6 +23,9 @@ jest.mock('shared/data/resources', () => ({
   CommunityLibrarySubmission: {
     create: jest.fn(() => Promise.resolve()),
   },
+  Channel: {
+    fetchModel: jest.fn(),
+  },
 }));
 
 const store = factory();
@@ -267,6 +270,52 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
 
       moreDetailsButton = wrapper.find('[data-test="more-details-button"]');
       expect(moreDetailsButton.exists()).toBe(false);
+    });
+  });
+
+  describe('publishing state', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('disables form and shows loader when channel is publishing', async () => {
+      const channel = { ...publishedNonPublicChannel, publishing: true };
+      const wrapper = await makeWrapper({ channel, publishedData, latestSubmission: null });
+
+      // Loader/message container should exist
+      expect(wrapper.find('.publishing-loader').exists()).toBe(true);
+
+      // Fields and submit are disabled while publishing
+      const descriptionTextbox = wrapper.findComponent('.description-textbox');
+      expect(descriptionTextbox.props('disabled')).toBe(true);
+      const submitButton = wrapper.find('[data-test="submit-button"]');
+      expect(submitButton.attributes('disabled')).toBe('disabled');
+    });
+
+    it('enables form after publishing flips to false (poll-driven)', async () => {
+      const { Channel } = require('shared/data/resources');
+      Channel.fetchModel.mockResolvedValueOnce({
+        id: publishedNonPublicChannel.id,
+        publishing: false,
+        version: 3,
+      });
+
+      const channel = { ...publishedNonPublicChannel, publishing: true };
+      const wrapper = await makeWrapper({ channel, publishedData, latestSubmission: null });
+
+      jest.advanceTimersByTime(2100);
+      await wrapper.vm.$nextTick();
+
+      const descriptionTextbox = wrapper.findComponent('.description-textbox');
+      expect(descriptionTextbox.props('disabled')).toBe(false);
+      
+      await descriptionTextbox.vm.$emit('input', 'Some description');
+      await wrapper.vm.$nextTick();
+      const submitButton = wrapper.find('[data-test="submit-button"]');
+      expect(submitButton.attributes('disabled')).toBeUndefined();
     });
   });
 
