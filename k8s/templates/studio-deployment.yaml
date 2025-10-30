@@ -127,6 +127,7 @@ spec:
         app: {{ template "studio.fullname" . }}-workers
         tier: workers
     spec:
+      terminationGracePeriodSeconds: 30
       containers:
       - name: worker
         image: {{ .Values.studioApp.imageName }}
