@@ -34,7 +34,7 @@ class CRUDTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.user)
         flagged_content = self.flag_feedback_object
         response = self.client.post(
-            reverse("flagged-list"),
+            reverse("flagged-events-list"),
             flagged_content,
             format="json",
         )
@@ -46,7 +46,7 @@ class CRUDTestCase(StudioAPITestCase):
         self.user.save()
         self.client.force_authenticate(user=self.user)
         response = self.client.post(
-            reverse("flagged-list"),
+            reverse("flagged-events-list"),
             flagged_content,
             format="json",
         )
@@ -58,7 +58,7 @@ class CRUDTestCase(StudioAPITestCase):
         self.user.save()
         self.client.force_authenticate(user=self.user)
         response = self.client.post(
-            reverse("flagged-list"),
+            reverse("flagged-events-list"),
             flagged_content,
             format="json",
         )
@@ -67,7 +67,7 @@ class CRUDTestCase(StudioAPITestCase):
     def test_create_flag_event_fails_for_unauthorized_user(self):
         flagged_content = self.flag_feedback_object
         response = self.client.post(
-            reverse("flagged-list"),
+            reverse("flagged-events-list"),
             flagged_content,
             format="json",
         )
@@ -77,7 +77,7 @@ class CRUDTestCase(StudioAPITestCase):
         self.user.is_admin = True
         self.user.save()
         self.client.force_authenticate(self.user)
-        response = self.client.get(reverse("flagged-list"), format="json")
+        response = self.client.get(reverse("flagged-events-list"), format="json")
         self.assertEqual(response.status_code, 200, response.content)
 
     def test_retreive_fails_for_normal_user(self):
@@ -94,18 +94,18 @@ class CRUDTestCase(StudioAPITestCase):
             user=self.user,
         )
         response = self.client.get(
-            reverse("flagged-detail", kwargs={"pk": flag_feedback_object.id}),
+            reverse("flagged-events-detail", kwargs={"pk": flag_feedback_object.id}),
             format="json",
         )
         self.assertEqual(response.status_code, 403, response.content)
 
     def test_list_fails_for_normal_user(self):
         self.client.force_authenticate(user=self.user)
-        response = self.client.get(reverse("flagged-list"), format="json")
+        response = self.client.get(reverse("flagged-events-list"), format="json")
         self.assertEqual(response.status_code, 403, response.content)
 
     def test_list_fails_for_user_dev_feature_enabled(self):
-        response = self.client.get(reverse("flagged-list"), format="json")
+        response = self.client.get(reverse("flagged-events-list"), format="json")
         self.assertEqual(response.status_code, 403, response.content)
 
     def test_destroy_flagged_content_super_admin(self):
@@ -124,7 +124,7 @@ class CRUDTestCase(StudioAPITestCase):
             user=self.user,
         )
         response = self.client.delete(
-            reverse("flagged-detail", kwargs={"pk": flag_feedback_object.id}),
+            reverse("flagged-events-detail", kwargs={"pk": flag_feedback_object.id}),
             format="json",
         )
         self.assertEqual(response.status_code, 204, response.content)
@@ -145,7 +145,7 @@ class CRUDTestCase(StudioAPITestCase):
             user=self.user,
         )
         response = self.client.delete(
-            reverse("flagged-detail", kwargs={"pk": flag_feedback_object.id}),
+            reverse("flagged-events-detail", kwargs={"pk": flag_feedback_object.id}),
             format="json",
         )
         self.assertEqual(response.status_code, 403, response.content)
