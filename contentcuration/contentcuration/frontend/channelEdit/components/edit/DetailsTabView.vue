@@ -499,6 +499,7 @@
   } from 'shared/constants';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
   import { crossComponentTranslator } from 'shared/i18n';
+  import { LanguagesNames } from 'shared/leUtils/Languages';
 
   function getValueFromResults(results) {
     if (results.length === 0) {
@@ -715,7 +716,20 @@
         },
       },
       role: generateGetterSetter('role_visibility'),
-      language: generateGetterSetter('language'),
+      language: {
+        get() {
+          if (this.multipleSelected) {
+            const languages = this.selectedLanguages;
+            return languages.length > 1 ? LanguagesNames.MUL : languages[0] || null;
+          }
+          return this.getValueFromNodes('language');
+        },
+        set(value) {
+          if (value !== LanguagesNames.MUL) {
+            this.update({ language: value });
+          }
+        },
+      },
       accessibility: generateNestedNodesGetterSetter('accessibility_labels'),
       contentLevel: generateNestedNodesGetterSetterObject('grade_levels'),
       resourcesNeeded: generateNestedNodesGetterSetterObject('learner_needs'),
@@ -802,6 +816,18 @@
       },
       oneSelected() {
         return this.nodes.length === 1;
+      },
+      multipleSelected() {
+        return this.nodes.length > 1;
+      },
+      selectedLanguages() {
+        return [
+          ...new Set(
+            this.nodes.map(node => {
+              return this.diffTracker[node.id]?.language ?? node.language;
+            }),
+          ),
+        ];
       },
       languageHint() {
         const topLevel = this.nodes.some(node => node.parent === this.currentChannel.main_tree);
