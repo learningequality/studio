@@ -77,7 +77,7 @@
           <VDivider />
           <p class="mt-4 text-xs-center">
             <KButton
-              href="/channels/#/public"
+              href="/channels/#public"
               :text="$tr('guestModeLink')"
               appearance="basic-link"
             />
