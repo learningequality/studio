@@ -107,6 +107,10 @@ Generate the shared environment variables between studio app and workers
     secretKeyRef:
       key: redis-password
       name: {{ template "studio.fullname" . }}
+- name: REMAP_SIGTERM
+  value: "SIGQUIT"
+- name: CELERY_WORKER_SOFT_SHUTDOWN_TIMEOUT
+  value: "28"
 - name: AWS_S3_ENDPOINT_URL
   value: https://storage.googleapis.com
 - name: RELEASE_COMMIT_SHA
