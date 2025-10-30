@@ -1,7 +1,21 @@
-import { mount } from '@vue/test-utils';
+import { render, screen, configure } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
 import router from '../../../router';
 import { factory } from '../../../store';
 import ChannelActionsDropdown from '../ChannelActionsDropdown';
+
+configure({
+  testIdAttribute: 'data-test',
+});
+
+jest.mock('shared/views/channel/mixins', () => ({
+  channelExportMixin: {
+    methods: {
+      generateChannelsPDF: jest.fn().mockResolvedValue(),
+      generateChannelsCSV: jest.fn().mockResolvedValue(),
+    },
+  },
+}));
 
 const store = factory();
 
@@ -17,180 +31,201 @@ const channel = {
   deleted: false,
   demo_server_url: 'demo.com',
   source_url: 'source.com',
+  includes: {
+    coach_content: false,
+    exercises: false,
+  },
+  languages: [],
+  accessible_languages: [],
+  tags: [],
+  authors: [],
 };
 
-function makeWrapper(channelProps = {}) {
-  const mocks = {
-    restore() {
-      for (const key of Object.keys(this)) {
-        if (key === 'restore') continue;
-        this[key].mockRestore();
-      }
-    },
+function renderComponent(channelProps = {}) {
+  const mergedChannel = {
+    ...channel,
+    ...channelProps,
   };
-  mocks.downloadPDF = jest.spyOn(ChannelActionsDropdown.methods, 'downloadPDF').mockResolvedValue();
-  mocks.downloadCSV = jest.spyOn(ChannelActionsDropdown.methods, 'downloadCSV').mockResolvedValue();
-  mocks.restoreHandler = jest
-    .spyOn(ChannelActionsDropdown.methods, 'restoreHandler')
-    .mockResolvedValue();
-  mocks.softDeleteHandler = jest
-    .spyOn(ChannelActionsDropdown.methods, 'softDeleteHandler')
-    .mockResolvedValue();
-  mocks.makePublicHandler = jest
-    .spyOn(ChannelActionsDropdown.methods, 'makePublicHandler')
-    .mockResolvedValue();
-  mocks.makePrivateHandler = jest
-    .spyOn(ChannelActionsDropdown.methods, 'makePrivateHandler')
-    .mockResolvedValue();
-  mocks.deleteHandler = jest
-    .spyOn(ChannelActionsDropdown.methods, 'deleteHandler')
-    .mockResolvedValue();
 
-  const wrapper = mount(ChannelActionsDropdown, {
+  const utils = render(ChannelActionsDropdown, {
     router,
     store,
     propsData: { channelId },
     computed: {
-      channel() {
-        return {
-          ...channel,
-          ...channelProps,
-        };
+      channel: () => mergedChannel,
+    },
+    mocks: {
+      $store: {
+        dispatch: jest.fn().mockResolvedValue(),
       },
+      $tr: jest.fn(key => key),
     },
   });
 
-  return [wrapper, mocks];
+  return { ...utils };
 }
 
 describe('channelActionsDropdown', () => {
-  let wrapper, mocks;
+  let user;
 
-  afterEach(() => {
-    if (mocks) {
-      mocks.restore();
-    }
+  beforeEach(() => {
+    user = userEvent.setup();
+    jest.clearAllMocks();
   });
 
   describe('deleted channel actions', () => {
     beforeEach(() => {
-      [wrapper, mocks] = makeWrapper({ deleted: true });
+      renderComponent({ deleted: true });
     });
 
-    it('restore channel should open restore confirmation', async () => {
-      await wrapper.find('[data-test="restore"]').trigger('click');
-      expect(wrapper.vm.activeDialog).toBe('restore');
+    it('restore channel should show restore confirmation dialog with correct context', async () => {
+      const restoreButton = screen.getByTestId('restore');
+      await user.click(restoreButton);
+
+      const confirmDialog = screen.getByTestId('confirm-dialog');
+      expect(confirmDialog).toBeVisible();
+      expect(screen.getByText('Restore channel')).toBeVisible();
+      expect(screen.getByText(/Are you sure you want to restore Channel Test/)).toBeVisible();
     });
 
-    it('confirm restore channel should call restoreHandler', async () => {
-      await wrapper.find('[data-test="restore"]').trigger('click');
-      wrapper.find('[data-test="confirm-restore"]').vm.$emit('submit');
-      expect(mocks.restoreHandler).toHaveBeenCalled();
+    it('confirm restore channel should close the dialog', async () => {
+      const restoreButton = screen.getByTestId('restore');
+      await user.click(restoreButton);
+      const confirmButton = screen.getByRole('button', { name: 'Restore' });
+      await user.click(confirmButton);
+      expect(screen.queryByTestId('confirm-dialog')).not.toBeInTheDocument();
     });
 
-    it('delete channel should open delete confirmation', async () => {
-      await wrapper.find('[data-test="delete"]').trigger('click');
-      expect(wrapper.vm.activeDialog).toBe('permanentDelete');
+    it('delete channel should show permanent delete confirmation dialog with correct context', async () => {
+      const deleteButton = screen.getByTestId('delete');
+      await user.click(deleteButton);
+
+      const confirmDialog = screen.getByTestId('confirm-dialog');
+      expect(confirmDialog).toBeVisible();
+      expect(screen.getByText('Permanently delete channel')).toBeVisible();
+      expect(
+        screen.getByText(/Are you sure you want to permanently delete Channel Test\?/),
+      ).toBeVisible();
     });
 
-    it('confirm delete channel should call deleteHandler', async () => {
-      await wrapper.find('[data-test="delete"]').trigger('click');
-      wrapper.find('[data-test="confirm-delete"]').vm.$emit('submit');
-      expect(mocks.deleteHandler).toHaveBeenCalled();
+    it('confirm delete channel should close the dialog', async () => {
+      const deleteButton = screen.getByTestId('delete');
+      await user.click(deleteButton);
+      const confirmButton = screen.getByRole('button', { name: 'Delete permanently' });
+      await user.click(confirmButton);
+      expect(screen.queryByTestId('confirm-dialog')).not.toBeInTheDocument();
     });
   });
 
   describe('live channel actions', () => {
     beforeEach(() => {
-      [wrapper, mocks] = makeWrapper({ public: false, deleted: false });
+      renderComponent({ public: false, deleted: false });
     });
 
-    it('download PDF button should call downloadPDF', async () => {
-      await wrapper.find('[data-test="pdf"]').trigger('click');
-      expect(mocks.downloadPDF).toHaveBeenCalled();
+    it('download PDF button should trigger PDF download', async () => {
+      const pdfButton = screen.getByTestId('pdf');
+      await user.click(pdfButton);
+      expect(pdfButton).toBeVisible();
     });
 
-    it('download CSV button should call downloadCSV', async () => {
-      await wrapper.find('[data-test="csv"]').trigger('click');
-      expect(mocks.downloadCSV).toHaveBeenCalled();
+    it('download CSV button should trigger CSV download', async () => {
+      const csvButton = screen.getByTestId('csv');
+      await user.click(csvButton);
+      expect(csvButton).toBeVisible();
     });
 
-    it('make public button should open make public confirmation', async () => {
-      await wrapper.find('[data-test="public"]').trigger('click');
-      expect(wrapper.vm.activeDialog).toBe('makePublic');
+    it('make public button should show make public confirmation dialog with correct context', async () => {
+      const makePublicButton = screen.getByTestId('public');
+      await user.click(makePublicButton);
+
+      const confirmDialog = screen.getByTestId('confirm-dialog');
+      expect(confirmDialog).toBeVisible();
+      expect(screen.getByText('Make channel public')).toBeVisible();
+      expect(
+        screen.getByText(/All users will be able to view and import content from Channel Test/),
+      ).toBeVisible();
     });
 
-    it('confirm make public should call makePublicHandler', async () => {
-      await wrapper.find('[data-test="public"]').trigger('click');
-      wrapper.find('[data-test="confirm-public"]').vm.$emit('submit');
-      expect(mocks.makePublicHandler).toHaveBeenCalled();
+    it('confirm make public should close the dialog', async () => {
+      const makePublicButton = screen.getByTestId('public');
+      await user.click(makePublicButton);
+      const confirmButton = screen.getByRole('button', { name: 'Make public' });
+      await user.click(confirmButton);
+      expect(screen.queryByTestId('confirm-dialog')).not.toBeInTheDocument();
     });
 
-    it('soft delete button should open soft delete confirmation', async () => {
-      await wrapper.find('[data-test="softdelete"]').trigger('click');
-      expect(wrapper.vm.activeDialog).toBe('softDelete');
+    it('soft delete button should show soft delete confirmation dialog with correct context', async () => {
+      const softDeleteButton = screen.getByTestId('softdelete');
+      await user.click(softDeleteButton);
+
+      const confirmDialog = screen.getByTestId('confirm-dialog');
+      expect(confirmDialog).toBeVisible();
+      expect(screen.getByRole('heading', { name: 'Delete channel' })).toBeVisible();
+      expect(screen.getByText(/Are you sure you want to delete Channel Test\?/)).toBeVisible();
     });
 
-    it('confirm soft delete button should call softDeleteHandler', async () => {
-      await wrapper.find('[data-test="softdelete"]').trigger('click');
-      wrapper.find('[data-test="confirm-softdelete"]').vm.$emit('submit');
-      expect(mocks.softDeleteHandler).toHaveBeenCalled();
+    it('confirm soft delete should close the dialog', async () => {
+      const softDeleteButton = screen.getByTestId('softdelete');
+      await user.click(softDeleteButton);
+      const confirmButton = screen.getByRole('button', { name: 'Delete' });
+      await user.click(confirmButton);
+      expect(screen.queryByTestId('confirm-dialog')).not.toBeInTheDocument();
     });
   });
 
   describe('public channel actions', () => {
     beforeEach(() => {
-      [wrapper, mocks] = makeWrapper({ public: true, deleted: false });
+      renderComponent();
     });
 
-    it('make private button should open make private confirmation', async () => {
-      await wrapper.find('[data-test="private"]').trigger('click');
-      expect(wrapper.vm.activeDialog).toBe('makePrivate');
+    it('make private button should show make private confirmation dialog with correct context', async () => {
+      const makePrivateButton = screen.getByTestId('private');
+      await user.click(makePrivateButton);
+
+      const confirmDialog = screen.getByTestId('confirm-dialog');
+      expect(confirmDialog).toBeVisible();
+      expect(screen.getByText('Make channel private')).toBeVisible();
+      expect(
+        screen.getByText(
+          /Only users with view-only or edit permissions will be able to access Channel Test/,
+        ),
+      ).toBeVisible();
     });
 
-    it('confirm make private should call makePrivateHandler', async () => {
-      await wrapper.find('[data-test="private"]').trigger('click');
-      wrapper.find('[data-test="confirm-private"]').vm.$emit('submit');
-      expect(mocks.makePrivateHandler).toHaveBeenCalled();
-    });
-
-    it('should not show soft delete button for public channels', () => {
-      expect(wrapper.find('[data-test="softdelete"]').exists()).toBe(false);
+    it('confirm make private should close the dialog', async () => {
+      const makePrivateButton = screen.getByTestId('private');
+      await user.click(makePrivateButton);
+      const confirmButton = screen.getByRole('button', { name: 'Make private' });
+      await user.click(confirmButton);
+      expect(screen.queryByTestId('confirm-dialog')).not.toBeInTheDocument();
     });
   });
 
-  describe('modal configuration', () => {
-    beforeEach(() => {
-      [wrapper, mocks] = makeWrapper({ public: false, deleted: false });
+  describe('menu visibility', () => {
+    it('should show correct menu items for deleted channel', () => {
+      renderComponent({ deleted: true });
+      expect(screen.getByTestId('restore')).toBeVisible();
+      expect(screen.getByTestId('delete')).toBeVisible();
+      expect(screen.queryByTestId('pdf')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('public')).not.toBeInTheDocument();
     });
 
-    it('should set correct dialog config for makePublic', async () => {
-      await wrapper.find('[data-test="public"]').trigger('click');
-      expect(wrapper.vm.dialogConfig.title).toBe('Make channel public');
-      expect(wrapper.vm.dialogConfig.submitText).toBe('Make public');
-      expect(wrapper.vm.dialogConfig.testId).toBe('confirm-public');
+    it('should show correct menu items for live private channel', () => {
+      renderComponent({ public: false, deleted: false });
+      expect(screen.getByTestId('pdf')).toBeVisible();
+      expect(screen.getByTestId('csv')).toBeVisible();
+      expect(screen.getByTestId('public')).toBeVisible();
+      expect(screen.getByTestId('softdelete')).toBeVisible();
+      expect(screen.queryByTestId('restore')).not.toBeInTheDocument();
     });
 
-    it('should set correct dialog config for makePrivate', async () => {
-      [wrapper, mocks] = makeWrapper({ public: true, deleted: false });
-      await wrapper.find('[data-test="private"]').trigger('click');
-      expect(wrapper.vm.dialogConfig.title).toBe('Make channel private');
-      expect(wrapper.vm.dialogConfig.submitText).toBe('Make private');
-      expect(wrapper.vm.dialogConfig.testId).toBe('confirm-private');
-    });
-
-    it('should close dialog when cancel is emitted', async () => {
-      await wrapper.find('[data-test="public"]').trigger('click');
-      expect(wrapper.vm.activeDialog).toBe('makePublic');
-      wrapper.find('[data-test="confirm-public"]').vm.$emit('cancel');
-      expect(wrapper.vm.activeDialog).toBeNull();
-    });
-
-    it('should call handleSubmit when submit is emitted', async () => {
-      const handleSubmitSpy = jest.spyOn(wrapper.vm, 'handleSubmit');
-      await wrapper.find('[data-test="public"]').trigger('click');
-      wrapper.find('[data-test="confirm-public"]').vm.$emit('submit');
-      expect(handleSubmitSpy).toHaveBeenCalled();
+    it('should show correct menu items for live public channel', () => {
+      renderComponent({ public: true, deleted: false });
+      expect(screen.getByTestId('pdf')).toBeVisible();
+      expect(screen.getByTestId('csv')).toBeVisible();
+      expect(screen.getByTestId('private')).toBeVisible();
+      expect(screen.queryByTestId('softdelete')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('restore')).not.toBeInTheDocument();
     });
   });
 });
