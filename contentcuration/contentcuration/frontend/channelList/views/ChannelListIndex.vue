@@ -235,12 +235,10 @@
     },
     watch: {
       $route(route) {
-        if (!this.loggedIn && route.name === RouteNames.CHANNELS_EDITABLE) {
-          this.$router.replace({ name: RouteNames.CATALOG_ITEMS });
-          return;
-        }
-        if (this.loggedIn && route.name === RouteNames.CHANNELS_EDITABLE) {
-          this.loadInvitationList();
+        if (route.name === RouteNames.CHANNELS_EDITABLE) {
+          this.loggedIn
+            ? this.loadInvitationList()
+            : this.$router.replace({ name: RouteNames.CATALOG_ITEMS });
         }
         if (this.fullPageError) {
           this.$store.dispatch('errors/clearError');
@@ -254,10 +252,12 @@
     created() {
       if (this.loggedIn) {
         this.loadInvitationList();
-      } else if (!CATALOG_PAGES.includes(this.$route.name)) {
-        this.$router.push({
-          name: RouteNames.CATALOG_ITEMS,
-        });
+      } else {
+        if (this.$route.name === RouteNames.CHANNELS_EDITABLE) {
+          this.$router.replace({ name: RouteNames.CATALOG_ITEMS });
+        } else if (!CATALOG_PAGES.includes(this.$route.name)) {
+          this.$router.push({ name: RouteNames.CATALOG_ITEMS });
+        }
       }
     },
     mounted() {
