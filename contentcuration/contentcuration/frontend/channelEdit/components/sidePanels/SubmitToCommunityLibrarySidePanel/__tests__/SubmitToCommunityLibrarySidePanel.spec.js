@@ -311,7 +311,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
 
       const descriptionTextbox = wrapper.findComponent('.description-textbox');
       expect(descriptionTextbox.props('disabled')).toBe(false);
-      
+
       await descriptionTextbox.vm.$emit('input', 'Some description');
       await wrapper.vm.$nextTick();
       const submitButton = wrapper.find('[data-test="submit-button"]');

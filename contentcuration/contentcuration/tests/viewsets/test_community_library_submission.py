@@ -177,12 +177,16 @@ class CRUDTestCase(StudioAPITestCase):
 
         channel = Channel.objects.get(id=submission_metadata["channel"])
         # Ensure main_tree exists; mark its publishing flag
-        main_tree = channel.main_tree or ContentNode.objects.get(id=channel.main_tree_id)
+        main_tree = channel.main_tree or ContentNode.objects.get(
+            id=channel.main_tree_id
+        )
         main_tree.publishing = True
         main_tree.save()
 
         response = self.client.post(
-            reverse("community-library-submission-list"), submission_metadata, format="json"
+            reverse("community-library-submission-list"),
+            submission_metadata,
+            format="json",
         )
         self.assertEqual(response.status_code, 400, response.content)
 
