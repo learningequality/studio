@@ -188,6 +188,10 @@
     margin-bottom: 24px;
   }
 
+  [dir='rtl'] .download-button-container {
+    justify-content: flex-start;
+  }
+
   @media (max-width: 600px) {
     .download-button-container {
       justify-content: center;

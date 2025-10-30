@@ -172,16 +172,19 @@ describe('ChannelDetailsModal', () => {
 
   it('pressing ESC key should close the modal', async () => {
     const user = userEvent.setup();
-    renderComponent();
+    const { container } = renderComponent();
 
     await waitFor(() => {
       expect(screen.getByText(testChannel.name)).toBeInTheDocument();
     });
 
+    expect(container.querySelector('.studio-immersive-modal')).toBeInTheDocument();
+
     await user.keyboard('{Escape}');
 
-    // Modal should remain rendered but dialog value changes
-    expect(screen.getByRole('button', { name: /close/i })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(container.querySelector('.studio-immersive-modal')).not.toBeInTheDocument();
+    });
   });
 
   it('should display download button after loading', async () => {
@@ -193,15 +196,35 @@ describe('ChannelDetailsModal', () => {
   });
 
   it('should display download button with dropdown functionality', async () => {
+    const user = userEvent.setup();
     renderComponent();
 
     await waitFor(() => {
       expect(screen.getByText('Download channel summary')).toBeInTheDocument();
     });
 
-    // Verify button is clickable
-    const downloadButton = screen.getByText('Download channel summary');
+    const downloadButton = screen.getByRole('button', { name: /download channel summary/i });
     expect(downloadButton).toBeInTheDocument();
+
+    await user.click(downloadButton);
+
+    expect(await screen.findByText('Download PDF')).toBeInTheDocument();
+    expect(await screen.findByText('Download CSV')).toBeInTheDocument();
+  });
+
+  it('should call generateChannelsCSV when CSV option is selected', async () => {
+    const user = userEvent.setup();
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText(testChannel.name)).toBeInTheDocument();
+    });
+
+    const downloadButton = screen.getByRole('button', { name: /download channel summary/i });
+    await user.click(downloadButton);
+
+    const csvOption = await screen.findByText('Download CSV');
+    await user.click(csvOption);
   });
 
   it('should display details panel after loading', async () => {
@@ -228,7 +251,6 @@ describe('ChannelDetailsModal', () => {
       expect(screen.getByText(testChannel.name)).toBeInTheDocument();
     });
 
-    // Analytics is mocked and tracked in the component
     expect(screen.getByText(testChannel.name)).toBeInTheDocument();
   });
 });

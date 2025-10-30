@@ -2,47 +2,40 @@
 
   <div
     v-if="value"
-    class="studio-immersive-modal"
+    class="modal-wrapper"
   >
-    <div
-      class="backdrop"
-      @click="handleBackdropClick"
-    ></div>
-    <div class="modal-wrapper">
-      <KToolbar
-        :textColor="dark ? 'white' : 'black'"
-        :style="toolbarStyle"
-      >
-        <template #icon>
-          <KIconButton
-            icon="close"
-            :ariaLabel="$tr('close')"
-            :color="dark ? $themeTokens.textInverted : $themeTokens.text"
-            data-test="close"
-            @click="$emit('input', false)"
-          />
-        </template>
+    <KToolbar
+      :textColor="dark ? 'white' : 'black'"
+      :style="toolbarStyle"
+    >
+      <template #icon>
+        <KIconButton
+          icon="close"
+          :ariaLabel="$tr('close')"
+          :tooltip="$tr('close')"
+          :color="dark ? $themeTokens.textInverted : $themeTokens.text"
+          data-test="close"
+          @click="$emit('input', false)"
+        />
+      </template>
 
-        <span :style="titleStyle">
-          <slot name="header">
-            <span class="notranslate">{{ title }}</span>
-          </slot>
+      <template #default>
+        <span class="notranslate">
+          <slot name="header">{{ title }}</slot>
         </span>
+      </template>
 
-        <template #actions>
-          <slot name="action"></slot>
-        </template>
-      </KToolbar>
-      <StudioOfflineAlert :offset="64" />
-      <div
-        class="modal-content"
-        :style="contentStyle"
-      >
-        <div class="content-container">
-          <slot></slot>
-        </div>
-      </div>
-    </div>
+      <template #actions>
+        <slot name="action"></slot>
+      </template>
+    </KToolbar>
+    <StudioOfflineAlert :offset="64" />
+    <StudioPage
+      class="modal-content"
+      :offline="offline"
+    >
+      <slot></slot>
+    </StudioPage>
   </div>
 
 </template>
@@ -52,11 +45,13 @@
 
   import { mapState } from 'vuex';
   import StudioOfflineAlert from './StudioOfflineAlert';
+  import StudioPage from './StudioPage';
 
   export default {
     name: 'StudioImmersiveModal',
     components: {
       StudioOfflineAlert,
+      StudioPage,
     },
     props: {
       value: {
@@ -95,24 +90,6 @@
           zIndex: 17,
         };
       },
-      titleStyle() {
-        return {
-          color: this.dark ? this.$themeTokens.textInverted : this.$themeTokens.text,
-          fontSize: '20px',
-          fontWeight: '500',
-          marginLeft: '16px',
-          marginRight: '16px',
-        };
-      },
-      contentStyle() {
-        const topOffset = this.offline ? 112 : 64;
-        return {
-          marginTop: `${topOffset}px`,
-          height: `calc(100vh - ${topOffset}px)`,
-          overflowY: 'auto',
-          backgroundColor: this.$themeTokens.surface,
-        };
-      },
     },
     watch: {
       value(val) {
@@ -124,12 +101,6 @@
         }
       },
     },
-    mounted() {
-      this.hideHTMLScroll(this.value);
-      if (this.value) {
-        document.addEventListener('keydown', this.handleKeyDown);
-      }
-    },
     beforeDestroy() {
       this.hideHTMLScroll(false);
       document.removeEventListener('keydown', this.handleKeyDown);
@@ -139,10 +110,6 @@
         document.querySelector('html').style = hidden
           ? 'overflow-y: hidden !important;'
           : 'overflow-y: auto !important';
-      },
-      handleBackdropClick() {
-        // Don't close on backdrop click (persistent modal)
-        // This matches the behavior of FullscreenModal
       },
       handleKeyDown(event) {
         if (event.key === 'Escape') {
@@ -160,25 +127,6 @@
 
 <style lang="scss" scoped>
 
-  .studio-immersive-modal {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 16;
-  }
-
-  .backdrop {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 16;
-    background-color: rgba(0, 0, 0, 0.5);
-  }
-
   .modal-wrapper {
     position: fixed;
     top: 0;
@@ -195,24 +143,6 @@
     flex: 1;
     width: 100%;
     overflow-y: auto;
-  }
-
-  .content-container {
-    max-width: 1000px;
-    padding: 32px 48px;
-    margin: 0 auto;
-  }
-
-  @media (max-width: 960px) {
-    .content-container {
-      padding: 24px;
-    }
-  }
-
-  @media (max-width: 600px) {
-    .content-container {
-      padding: 16px;
-    }
   }
 
 </style>
