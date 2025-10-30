@@ -34,136 +34,61 @@
             </em>
           </td>
           <td class="text-xs-right">
-            <BaseMenu v-if="item.id !== user.id && (item.pending || viewOnly)">
-              <template #activator="{ on }">
-                <VBtn
-                  flat
-                  v-on="on"
-                >
-                  {{ $tr('optionsDropdown') }}
-                  <Icon
-                    class="ml-1"
-                    icon="dropdown"
-                  />
-                </VBtn>
+            <KButton
+              v-if="item.id !== user.id && (item.pending || viewOnly)"
+              :text="$tr('optionsDropdown')"
+              appearance="flat-button"
+              hasDropdown
+            >
+              <template #menu>
+                <KDropdownMenu
+                  :constrainToScrollParent="false"
+                  :options="getMenuOptions(item)"
+                  @select="onMenuSelect"
+                />
               </template>
-              <VList>
-                <template v-if="item.pending">
-                  <VListTile
-                    data-test="resend"
-                    @click="resendInvitation(item.email)"
-                  >
-                    <VListTileTitle>{{ $tr('resendInvitation') }}</VListTileTitle>
-                  </VListTile>
-                  <VListTile
-                    data-test="delete"
-                    @click="
-                      selected = item;
-                      showDeleteInvitation = true;
-                    "
-                  >
-                    <VListTileTitle>{{ $tr('deleteInvitation') }}</VListTileTitle>
-                  </VListTile>
-                </template>
-                <template v-else>
-                  <VListTile
-                    data-test="makeeditor"
-                    @click="
-                      selected = item;
-                      showMakeEditor = true;
-                    "
-                  >
-                    <VListTileTitle>{{ $tr('makeEditor') }}</VListTileTitle>
-                  </VListTile>
-                  <VListTile
-                    data-test="removeviewer"
-                    @click="
-                      selected = item;
-                      showRemoveViewer = true;
-                    "
-                  >
-                    <VListTileTitle>{{ $tr('removeViewer') }}</VListTileTitle>
-                  </VListTile>
-                </template>
-              </VList>
-            </BaseMenu>
+            </KButton>
           </td>
         </tr>
       </template>
     </VDataTable>
 
-    <!-- Remove viewer confirmation -->
-    <MessageDialog
-      v-model="showRemoveViewer"
-      :header="$tr('removeViewerHeader')"
-      :text="
+    <KModal
+      v-if="showRemoveViewer"
+      :title="$tr('removeViewerHeader')"
+      :cancelText="$tr('cancelButton')"
+      :submitText="$tr('removeViewerConfirm')"
+      @cancel="showRemoveViewer = false"
+      @submit="handleRemoveViewer(selected)"
+    >
+      {{
         $tr('removeViewerText', { first_name: selected.first_name, last_name: selected.last_name })
-      "
-    >
-      <template #buttons="{ close }">
-        <VBtn
-          flat
-          @click="close"
-        >
-          {{ $tr('cancelButton') }}
-        </VBtn>
-        <VBtn
-          color="primary"
-          data-test="confirm-remove"
-          @click="handleRemoveViewer(selected)"
-        >
-          {{ $tr('removeViewerConfirm') }}
-        </VBtn>
-      </template>
-    </MessageDialog>
+      }}
+    </KModal>
 
-    <!-- Delete invitation confirmation -->
-    <MessageDialog
-      v-model="showDeleteInvitation"
-      :header="$tr('deleteInvitationHeader')"
-      :text="$tr('deleteInvitationText', { email: selected.email })"
+    <KModal
+      v-if="showDeleteInvitation"
+      :title="$tr('deleteInvitationHeader')"
+      :cancelText="$tr('cancelButton')"
+      :submitText="$tr('deleteInvitationConfirm')"
+      @cancel="showDeleteInvitation = false"
+      @submit="handleDelete(selected.id)"
     >
-      <template #buttons="{ close }">
-        <VBtn
-          flat
-          @click="close"
-        >
-          {{ $tr('cancelButton') }}
-        </VBtn>
-        <VBtn
-          color="primary"
-          data-test="confirm-delete"
-          @click="handleDelete(selected.id)"
-        >
-          {{ $tr('deleteInvitationConfirm') }}
-        </VBtn>
-      </template>
-    </MessageDialog>
+      {{ $tr('deleteInvitationText', { email: selected.email }) }}
+    </KModal>
 
-    <!-- Make editor confirmation -->
-    <MessageDialog
-      v-model="showMakeEditor"
-      :header="$tr('makeEditorHeader')"
-      :text="
+    <KModal
+      v-if="showMakeEditor"
+      :title="$tr('makeEditorHeader')"
+      :cancelText="$tr('cancelButton')"
+      :submitText="$tr('makeEditorConfirm')"
+      @cancel="showMakeEditor = false"
+      @submit="grantEditAccess(selected.id)"
+    >
+      {{
         $tr('makeEditorText', { first_name: selected.first_name, last_name: selected.last_name })
-      "
-    >
-      <template #buttons="{ close }">
-        <VBtn
-          flat
-          @click="close"
-        >
-          {{ $tr('cancelButton') }}
-        </VBtn>
-        <VBtn
-          color="primary"
-          data-test="confirm-makeeditor"
-          @click="grantEditAccess(selected.id)"
-        >
-          {{ $tr('makeEditorConfirm') }}
-        </VBtn>
-      </template>
-    </MessageDialog>
+      }}
+    </KModal>
   </div>
 
 </template>
@@ -173,13 +98,9 @@
 
   import { mapActions, mapGetters, mapState } from 'vuex';
   import { SharingPermissions } from 'shared/constants';
-  import MessageDialog from 'shared/views/MessageDialog';
 
   export default {
     name: 'ChannelSharingTable',
-    components: {
-      MessageDialog,
-    },
     props: {
       channelId: {
         type: String,
@@ -246,6 +167,40 @@
         'makeEditor',
         'removeViewer',
       ]),
+      getMenuOptions(item) {
+        if (item.pending) {
+          return [
+            { id: 'resend-invitation', label: this.$tr('resendInvitation'), item },
+            { id: 'delete-invitation', label: this.$tr('deleteInvitation'), item },
+          ];
+        } else {
+          return [
+            { id: 'make-editor', label: this.$tr('makeEditor'), item },
+            { id: 'remove-viewer', label: this.$tr('removeViewer'), item },
+          ];
+        }
+      },
+      onMenuSelect(selection) {
+        switch (selection.id) {
+          case 'resend-invitation':
+            this.resendInvitation(selection.item.email);
+            break;
+          case 'delete-invitation':
+            this.selected = selection.item;
+            this.showDeleteInvitation = true;
+            break;
+          case 'make-editor':
+            this.selected = selection.item;
+            this.showMakeEditor = true;
+            break;
+          case 'remove-viewer':
+            this.selected = selection.item;
+            this.showRemoveViewer = true;
+            break;
+          default:
+            break;
+        }
+      },
       getUserText(user) {
         const nameParams = {
           first_name: user.first_name,

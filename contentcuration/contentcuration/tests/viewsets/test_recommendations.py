@@ -186,14 +186,16 @@ class RecommendationsEventViewSetTestCase(StudioAPITestCase):
     def test_create_recommendations_event(self):
         recommendations_event = self.recommendations_event_object
         response = self.client.post(
-            reverse("recommendations-list"),
+            reverse("recommendations-events-list"),
             recommendations_event,
             format="json",
         )
         self.assertEqual(response.status_code, 201, response.content)
 
     def test_list_fails(self):
-        response = self.client.get(reverse("recommendations-list"), format="json")
+        response = self.client.get(
+            reverse("recommendations-events-list"), format="json"
+        )
         self.assertEqual(response.status_code, 405, response.content)
 
     def test_retrieve_fails(self):
@@ -214,7 +216,9 @@ class RecommendationsEventViewSetTestCase(StudioAPITestCase):
             user=self.user,
         )
         response = self.client.get(
-            reverse("recommendations-detail", kwargs={"pk": recommendations_event.id}),
+            reverse(
+                "recommendations-events-detail", kwargs={"pk": recommendations_event.id}
+            ),
             format="json",
         )
         self.assertEqual(response.status_code, 405, response.content)
@@ -242,7 +246,9 @@ class RecommendationsEventViewSetTestCase(StudioAPITestCase):
             "breadcrumbs": "#Title#->Updated",
         }
         response = self.client.put(
-            reverse("recommendations-detail", kwargs={"pk": recommendations_event.id}),
+            reverse(
+                "recommendations-events-detail", kwargs={"pk": recommendations_event.id}
+            ),
             updated_data,
             format="json",
         )
@@ -266,7 +272,9 @@ class RecommendationsEventViewSetTestCase(StudioAPITestCase):
             user=self.user,
         )
         response = self.client.patch(
-            reverse("recommendations-detail", kwargs={"pk": recommendations_event.id}),
+            reverse(
+                "recommendations-events-detail", kwargs={"pk": recommendations_event.id}
+            ),
             {"context": {"model_version": 2}},
             format="json",
         )
@@ -290,7 +298,9 @@ class RecommendationsEventViewSetTestCase(StudioAPITestCase):
             user=self.user,
         )
         response = self.client.delete(
-            reverse("recommendations-detail", kwargs={"pk": recommendations_event.id}),
+            reverse(
+                "recommendations-events-detail", kwargs={"pk": recommendations_event.id}
+            ),
             format="json",
         )
         self.assertEqual(response.status_code, 405, response.content)
@@ -345,7 +355,7 @@ class RecommendationsInteractionEventViewSetTestCase(StudioAPITestCase):
     def test_create_recommendations_interaction(self):
         recommendations_interaction = self.recommendations_interaction_object
         response = self.client.post(
-            reverse("recommendations-interaction-list"),
+            reverse("recommendations-interaction-events-list"),
             recommendations_interaction,
             format="json",
         )
@@ -371,7 +381,7 @@ class RecommendationsInteractionEventViewSetTestCase(StudioAPITestCase):
             },
         ]
         response = self.client.post(
-            reverse("recommendations-interaction-list"),
+            reverse("recommendations-interaction-events-list"),
             recommendations_interactions,
             format="json",
         )
@@ -399,7 +409,7 @@ class RecommendationsInteractionEventViewSetTestCase(StudioAPITestCase):
             },
         ]
         response = self.client.post(
-            reverse("recommendations-interaction-list"),
+            reverse("recommendations-interaction-events-list"),
             recommendations_interactions,
             format="json",
         )
@@ -408,7 +418,7 @@ class RecommendationsInteractionEventViewSetTestCase(StudioAPITestCase):
 
     def test_list_fails(self):
         response = self.client.get(
-            reverse("recommendations-interaction-list"), format="json"
+            reverse("recommendations-interaction-events-list"), format="json"
         )
         self.assertEqual(response.status_code, 405, response.content)
 
@@ -423,7 +433,7 @@ class RecommendationsInteractionEventViewSetTestCase(StudioAPITestCase):
         )
         response = self.client.get(
             reverse(
-                "recommendations-interaction-detail",
+                "recommendations-interaction-events-detail",
                 kwargs={"pk": recommendations_interaction.id},
             ),
             format="json",
@@ -443,7 +453,7 @@ class RecommendationsInteractionEventViewSetTestCase(StudioAPITestCase):
         updated_data["feedback_type"] = "PREVIEWED"
         response = self.client.put(
             reverse(
-                "recommendations-interaction-detail",
+                "recommendations-interaction-events-detail",
                 kwargs={"pk": recommendations_interaction.id},
             ),
             updated_data,
@@ -462,7 +472,7 @@ class RecommendationsInteractionEventViewSetTestCase(StudioAPITestCase):
         )
         response = self.client.patch(
             reverse(
-                "recommendations-interaction-detail",
+                "recommendations-interaction-events-detail",
                 kwargs={"pk": recommendations_interaction.id},
             ),
             {"feedback_type": "IMPORTED"},
@@ -481,7 +491,7 @@ class RecommendationsInteractionEventViewSetTestCase(StudioAPITestCase):
         )
         response = self.client.delete(
             reverse(
-                "recommendations-interaction-detail",
+                "recommendations-interaction-events-detail",
                 kwargs={"pk": recommendations_interaction.id},
             ),
             format="json",

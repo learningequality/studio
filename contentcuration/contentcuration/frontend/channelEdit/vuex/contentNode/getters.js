@@ -7,7 +7,7 @@ import messages from '../../translator';
 import { parseNode } from './utils';
 import { getNodeDetailsErrors, getNodeFilesErrors } from 'shared/utils/validation';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-import { NEW_OBJECT } from 'shared/constants';
+import { NEW_OBJECT, ValidationErrors } from 'shared/constants';
 import { COPYING_STATUS, COPYING_STATUS_VALUES } from 'shared/data/constants';
 
 function sorted(nodes) {
@@ -158,14 +158,22 @@ export function getContentNodeIsValid(state, getters, rootState, rootGetters) {
 
 export function getContentNodeDetailsAreValid(state) {
   return function (contentNodeId) {
-    const contentNode = state.contentNodesMap[contentNodeId];
-    return contentNode && (contentNode[NEW_OBJECT] || !getNodeDetailsErrors(contentNode).length);
+    return !getNodeDetailsErrorsList(state)(contentNodeId).length;
   };
 }
 
 export function getNodeDetailsErrorsList(state) {
   return function (contentNodeId) {
     const contentNode = state.contentNodesMap[contentNodeId];
+
+    if (!contentNode) {
+      return [ValidationErrors.MISSING_NODE];
+    }
+
+    if (contentNode[NEW_OBJECT]) {
+      return [];
+    }
+
     return getNodeDetailsErrors(contentNode);
   };
 }
