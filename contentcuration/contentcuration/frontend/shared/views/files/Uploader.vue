@@ -59,7 +59,7 @@
         <p>
           {{ $tr('remainingStorage', { size: formatFileSize(availableSpace) }) }}
         </p>
-        <div class="storage-usage">
+        <div class="storage-usage" :style="{ color: $themeTokens.annotation }">
           <FileStorage />
         </div>
       </div>
