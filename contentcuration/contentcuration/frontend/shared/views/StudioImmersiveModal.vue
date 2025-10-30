@@ -147,12 +147,12 @@
 
   .toolbar-title {
     display: block;
-    margin-inline-start: 16px;  
-    margin-inline-end: 16px;    
+    max-width: calc(100% - 80px);
+    margin-inline-start: 16px;
+    margin-inline-end: 16px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: calc(100% - 80px);
   }
 
 </style>
