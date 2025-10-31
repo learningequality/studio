@@ -82,7 +82,9 @@
           :showLabel="true"
           :appearanceOverrides="getAppearanceOverrides(errors.subject)"
         />
-        <div :style="{ color: $themeTokens.annotation }">Add placeholder to message</div>
+        <div :style="{ color: $themeTokens.annotation, fontSize: '12px' }">
+          Add placeholder to message
+        </div>
         <div class="placeholder-buttons-container">
           <button
             v-for="placeholder in placeholders"
