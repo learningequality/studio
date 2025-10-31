@@ -6,7 +6,6 @@
       :title="$tr('thumbnailGenerationFailedHeader')"
       :submitText="$tr('closeButtonLabel')"
       @submit="showErrorAlert = false"
-      @cancel="showErrorAlert = false"
     >
       <p>{{ $tr('thumbnailGenerationFailedText') }}</p>
     </KModal>
@@ -25,7 +24,6 @@
   import max from 'lodash/max';
   import epubJS from 'epubjs';
   import PDFJSWorker from '!!file-loader!pdfjs-dist/build/pdf.worker.min.js';
-  import KModal from 'kolibri-design-system/lib/KModal';
   import client from 'shared/client';
   import { ASPECT_RATIO, THUMBNAIL_WIDTH } from 'shared/constants';
   // Based off of solution here: https://github.com/mozilla/pdf.js/issues/7612#issuecomment-576807171

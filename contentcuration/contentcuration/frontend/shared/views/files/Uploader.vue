@@ -27,7 +27,6 @@
       :title="$tr('unsupportedFilesHeader')"
       :submitText="$tr('closeButtonLabel')"
       @submit="showUnsupportedFilesAlert = false"
-      @cancel="showUnsupportedFilesAlert = false"
     >
       <p>{{ unsupportedFilesText }}</p>
     </KModal>
@@ -36,7 +35,6 @@
       :title="$tr('tooLargeFilesHeader')"
       :submitText="$tr('closeButtonLabel')"
       @submit="showTooLargeFilesAlert = false"
-      @cancel="showTooLargeFilesAlert = false"
     >
       <p>
         {{
@@ -52,14 +50,16 @@
       :title="$tr('noStorageHeader')"
       :submitText="$tr('closeButtonLabel')"
       @submit="showStorageExceededAlert = false"
-      @cancel="showStorageExceededAlert = false"
     >
       <div class="storage-alert">
         <p>{{ $tr('uploadSize', { size: formatFileSize(totalUploadSize) }) }}</p>
         <p>
           {{ $tr('remainingStorage', { size: formatFileSize(availableSpace) }) }}
         </p>
-        <div class="storage-usage" :style="{ color: $themeTokens.annotation }">
+        <div
+          class="storage-usage"
+          :style="{ color: $themeTokens.annotation }"
+        >
           <FileStorage />
         </div>
       </div>
@@ -83,7 +83,6 @@
   import FileDropzone from './FileDropzone';
   import { MAX_FILE_SIZE } from 'shared/constants';
   import { fileSizeMixin } from 'shared/mixins';
-  import KModal from 'kolibri-design-system/lib/KModal';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
 
   export default {
@@ -286,7 +285,6 @@
   .storage-usage {
     margin-top: -5px;
     font-size: 10pt;
-    color: gray;
   }
 
 </style>
