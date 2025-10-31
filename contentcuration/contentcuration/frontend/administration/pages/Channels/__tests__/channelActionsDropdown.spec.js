@@ -31,14 +31,6 @@ const channel = {
   deleted: false,
   demo_server_url: 'demo.com',
   source_url: 'source.com',
-  includes: {
-    coach_content: false,
-    exercises: false,
-  },
-  languages: [],
-  accessible_languages: [],
-  tags: [],
-  authors: [],
 };
 
 function renderComponent(channelProps = {}) {
