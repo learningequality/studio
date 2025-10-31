@@ -800,7 +800,7 @@ class CommunityLibrarySubmissionTestCase(
             status=community_library_submission.STATUS_PENDING,
         )
         submission1.countries.add(country)
-        
+
         with transaction.atomic():
             with self.assertRaises(IntegrityError):
                 submission2 = CommunityLibrarySubmission.objects.create(

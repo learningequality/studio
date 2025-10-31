@@ -1,5 +1,6 @@
 # Generated manually to restore unique constraint
-from django.db import migrations, models
+from django.db import migrations
+from django.db import models
 
 
 def remove_duplicate_submissions(apps, schema_editor):
@@ -36,7 +37,10 @@ def reverse_remove_duplicates(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("contentcuration", "0158_remove_unique_constraint_community_library_submission"),
+        (
+            "contentcuration",
+            "0158_remove_unique_constraint_community_library_submission",
+        ),
     ]
 
     # Run each operation in its own transaction to avoid
@@ -44,9 +48,7 @@ class Migration(migrations.Migration):
     atomic = False
 
     operations = [
-        migrations.RunPython(
-            remove_duplicate_submissions, reverse_remove_duplicates
-        ),
+        migrations.RunPython(remove_duplicate_submissions, reverse_remove_duplicates),
         migrations.AddConstraint(
             model_name="communitylibrarysubmission",
             constraint=models.UniqueConstraint(
@@ -55,4 +57,3 @@ class Migration(migrations.Migration):
             ),
         ),
     ]
-
