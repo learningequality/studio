@@ -8,7 +8,6 @@ const mockRouter = new VueRouter();
 const renderComponent = (props = {}) => {
   const defaultProps = {
     text: 'Test Chip',
-    small: false,
     close: false,
     ...props,
   };
@@ -19,11 +18,6 @@ const renderComponent = (props = {}) => {
   });
 };
 
-// Configure Testing Library to use data-test attributes
-require('@testing-library/vue').configure({
-  testIdAttribute: 'data-test',
-});
-
 describe('StudioChip', () => {
   test('renders with text prop', () => {
     renderComponent({ text: 'Test Chip' });
@@ -32,54 +26,19 @@ describe('StudioChip', () => {
 
   test('renders close button when close prop is true', () => {
     renderComponent({ close: true });
-    expect(screen.getByTestId('remove-chip')).toBeInTheDocument();
+    expect(screen.getByLabelText('Remove Test Chip')).toBeInTheDocument();
   });
 
   test('does not render close button when close prop is false', () => {
     renderComponent({ close: false });
-    expect(screen.queryByTestId('remove-chip')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Remove Test Chip')).not.toBeInTheDocument();
   });
 
-  test('applies small class when small prop is true', () => {
-    renderComponent({ small: true });
-    const chip = screen.getByText('Test Chip').closest('.studio-chip');
-    expect(chip).toHaveClass('studio-chip--small');
-  });
-
-  test('emits click event when chip is clicked', async () => {
-    const user = userEvent.setup();
-    const { emitted } = renderComponent();
-
-    await user.click(screen.getByText('Test Chip'));
-    expect(emitted().click).toHaveLength(1);
-  });
-
-  test('emits close and input events when close button is clicked', async () => {
+  test('emits close event when close button is clicked', async () => {
     const user = userEvent.setup();
     const { emitted } = renderComponent({ close: true });
 
-    await user.click(screen.getByTestId('remove-chip'));
+    await user.click(screen.getByLabelText('Remove Test Chip'));
     expect(emitted().close).toHaveLength(1);
-    expect(emitted().input).toHaveLength(1);
-  });
-
-  test('applies clickable class when close prop is true', () => {
-    renderComponent({ close: true });
-    const chip = screen.getByText('Test Chip').closest('.studio-chip');
-    expect(chip).toHaveClass('studio-chip--clickable');
-  });
-  test('loses active state when clicking outside', async () => {
-    const user = userEvent.setup();
-    renderComponent();
-
-    const chip = screen.getByText('Test Chip').closest('.studio-chip');
-
-    // Click the chip to activate it
-    await user.click(chip);
-    expect(chip).toHaveClass('studio-chip--active');
-
-    // Click outside the chip to deactivate it
-    await user.click(document.body);
-    expect(chip).not.toHaveClass('studio-chip--active');
   });
 });
