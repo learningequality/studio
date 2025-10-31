@@ -22,61 +22,31 @@
       {{ $formatNumber(channelCount) }}
     </td>
     <td class="text-xs-right">
-      <BaseMenu>
-        <template #activator="{ on }">
-          <VBtn
-            flat
-            block
-            v-on="on"
-          >
-            {{ $tr('options') }}
-            <Icon icon="dropdown" />
-          </VBtn>
-        </template>
-        <VList>
-          <VListTile
-            data-test="edit"
-            :to="channelSetDetailsLink"
-          >
-            <VListTileAction>
-              <Icon icon="edit" />
-            </VListTileAction>
-            <VListTileTitle>{{ $tr('edit') }}</VListTileTitle>
-          </VListTile>
-          <VListTile @click.prevent="deleteDialog = true">
-            <VListTileAction>
-              <Icon icon="trash" />
-            </VListTileAction>
-            <VListTileTitle>{{ $tr('delete') }}</VListTileTitle>
-          </VListTile>
-        </VList>
-      </BaseMenu>
-      <MessageDialog
-        v-model="deleteDialog"
-        :header="$tr('deleteChannelSetTitle')"
-        :text="$tr('deleteChannelSetText')"
+      <KButton
+        :text="$tr('options')"
+        appearance="flat-button"
+        :hasDropdown="true"
       >
-        <template #buttons="{ close }">
-          <VSpacer />
-          <VBtn
-            flat
-            color="primary"
-            @click="close"
-          >
-            {{ $tr('cancel') }}
-          </VBtn>
-          <VBtn
-            color="primary"
-            data-test="delete"
-            @click="
-              deleteChannelSet(channelSet);
-              close();
-            "
-          >
-            {{ $tr('deleteChannelSetTitle') }}
-          </VBtn>
+        <template #menu>
+          <KDropdownMenu
+            :options="dropdownOptions"
+            :hasIcons="true"
+            :constrainToScrollParent="false"
+            @select="handleOptionSelect"
+          />
         </template>
-      </MessageDialog>
+      </KButton>
+      <KModal
+        v-if="deleteDialog"
+        :title="$tr('deleteChannelSetTitle')"
+        :submitText="$tr('deleteChannelSetTitle')"
+        :cancelText="$tr('cancel')"
+        :appendToOverlay="true"
+        @submit="handleDelete"
+        @cancel="deleteDialog = false"
+      >
+        {{ $tr('deleteChannelSetText') }}
+      </KModal>
     </td>
   </tr>
 
@@ -87,13 +57,11 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import { RouteNames } from '../../constants';
-  import MessageDialog from 'shared/views/MessageDialog';
   import CopyToken from 'shared/views/CopyToken';
 
   export default {
     name: 'ChannelSetItem',
     components: {
-      MessageDialog,
       CopyToken,
     },
     props: {
@@ -123,9 +91,34 @@
           ? this.channelSet.channels.filter(c => c).length
           : 0;
       },
+      dropdownOptions() {
+        return [
+          {
+            label: this.$tr('edit'),
+            value: 'edit',
+            icon: 'edit',
+          },
+          {
+            label: this.$tr('delete'),
+            value: 'delete',
+            icon: 'trash',
+          },
+        ];
+      },
     },
     methods: {
       ...mapActions('channelSet', ['deleteChannelSet']),
+      handleOptionSelect(option) {
+        if (option.value === 'edit') {
+          this.$router.push(this.channelSetDetailsLink);
+        } else if (option.value === 'delete') {
+          this.deleteDialog = true;
+        }
+      },
+      handleDelete() {
+        this.deleteChannelSet(this.channelSet);
+        this.deleteDialog = false;
+      },
     },
     $trs: {
       deleteChannelSetTitle: 'Delete collection',

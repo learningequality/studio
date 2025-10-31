@@ -78,6 +78,7 @@
   import flatMap from 'lodash/flatMap';
   import isFunction from 'lodash/isFunction';
 
+  import KModal from 'kolibri-design-system/lib/KModal';
   import { validateFile } from '../../vuex/file/validation';
   import FileStorage from './FileStorage';
   import FileDropzone from './FileDropzone';

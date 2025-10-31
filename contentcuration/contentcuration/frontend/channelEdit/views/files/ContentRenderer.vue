@@ -1,12 +1,12 @@
 <template>
 
-  <VLayout
-    :key="fileId"
-    :class="{ fullscreen }"
+  <div
+    class="renderer"
+    :aria-busy="isSupported && loading"
   >
-    <div
-      class="renderer"
-      :aria-busy="isSupported && loading"
+    <VLayout
+      :key="fileId"
+      :class="{ fullscreen }"
     >
       <div
         v-show="isSupported && loading"
@@ -139,8 +139,8 @@
           </VTooltip>
         </VLayout>
       </VCard>
-    </div>
-  </VLayout>
+    </VLayout>
+  </div>
 
 </template>
 
