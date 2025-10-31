@@ -84,15 +84,16 @@
         />
         <div class="caption grey--text">{{ $tr('addPlaceholderText') }}</div>
         <div class="placeholder-buttons-container">
-          <KButton
+          <button
             v-for="placeholder in placeholders"
             :key="`placeholder-${placeholder.label}`"
             class="placeholder-button"
             :style="placeholderButtonStyles"
-            appearance="basic-button"
-            :text="$tr(placeholder.translationKey)"
+            type="button"
             @click="addPlaceholder(placeholder.placeholder)"
-          />
+          >
+            {{ $tr(placeholder.translationKey) }}
+          </button>
         </div>
         <div class="email-textarea">
           <KTextbox
@@ -274,15 +275,9 @@
       getRefs() {
         return this.$refs;
       },
-      getAppearanceOverrides(isInvalid) {
+      getAppearanceOverrides() {
         const baseStyles = { maxWidth: '100%', width: '100%' };
-        if (isInvalid) {
-          return {
-            ...baseStyles,
-            focusBorderColor: this.$themeTokens.error,
-            focusBoxShadow: `0 0 0 2px ${this.$themeTokens.error}33`,
-          };
-        }
+
         return baseStyles;
       },
 
@@ -411,8 +406,18 @@
     height: 28px;
     font-size: 11px;
     text-transform: none;
+    cursor: pointer;
     border-radius: 14px;
-    box-shadow: none;
+    transition: all 0.2s ease;
+
+    &:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
   }
 
 </style>
