@@ -778,9 +778,10 @@ class CommunityLibrarySubmissionTestCase(
             community_library_submission.STATUS_LIVE,
         )
 
-    def test_create_multiple_submissions_same_channel_same_version(
+    def test_cannot_create_multiple_submissions_same_channel_same_version(
         self, mock_ensure_db_exists_task_fetch_or_enqueue
     ):
+        from django.db import IntegrityError, transaction
 
         channel = testdata.channel()
         author = testdata.user()
@@ -799,38 +800,71 @@ class CommunityLibrarySubmissionTestCase(
             status=community_library_submission.STATUS_PENDING,
         )
         submission1.countries.add(country)
-
-        submission2 = CommunityLibrarySubmission.objects.create(
-            description="Second submission",
-            channel=channel,
-            channel_version=1,
-            author=author,
-            categories=["test_category"],
-            status=community_library_submission.STATUS_PENDING,
-        )
-        submission2.countries.add(country)
-
-        submission3 = CommunityLibrarySubmission.objects.create(
-            description="Third submission",
-            channel=channel,
-            channel_version=1,
-            author=author,
-            categories=["test_category"],
-            status=community_library_submission.STATUS_PENDING,
-        )
-        submission3.countries.add(country)
-
-        self.assertEqual(submission1.channel, channel)
-        self.assertEqual(submission1.channel_version, 1)
-        self.assertEqual(submission2.channel, channel)
-        self.assertEqual(submission2.channel_version, 1)
-        self.assertEqual(submission3.channel, channel)
-        self.assertEqual(submission3.channel_version, 1)
+        
+        with transaction.atomic():
+            with self.assertRaises(IntegrityError):
+                submission2 = CommunityLibrarySubmission.objects.create(
+                    description="Second submission",
+                    channel=channel,
+                    channel_version=1,
+                    author=author,
+                    categories=["test_category"],
+                    status=community_library_submission.STATUS_PENDING,
+                )
+                submission2.countries.add(country)
 
         submissions = CommunityLibrarySubmission.objects.filter(
             channel=channel, channel_version=1
         )
-        self.assertEqual(submissions.count(), 3)
+        self.assertEqual(submissions.count(), 1)
+        self.assertEqual(submission1.channel, channel)
+        self.assertEqual(submission1.channel_version, 1)
+
+    def test_can_create_submission_for_new_version_when_previous_pending(
+        self, mock_ensure_db_exists_task_fetch_or_enqueue
+    ):
+        channel = testdata.channel()
+        author = testdata.user()
+        channel.editors.add(author)
+        channel.version = 1
+        channel.save()
+
+        country = testdata.country()
+
+        submission_v1 = CommunityLibrarySubmission.objects.create(
+            description="Pending submission for version 1",
+            channel=channel,
+            channel_version=1,
+            author=author,
+            categories=["test_category"],
+            status=community_library_submission.STATUS_PENDING,
+        )
+        submission_v1.countries.add(country)
+
+        channel.version = 2
+        channel.save()
+
+        submission_v2 = CommunityLibrarySubmission.objects.create(
+            description="New submission for version 2",
+            channel=channel,
+            channel_version=2,
+            author=author,
+            categories=["test_category"],
+            status=community_library_submission.STATUS_PENDING,
+        )
+        submission_v2.countries.add(country)
+
+        submissions_v1 = CommunityLibrarySubmission.objects.filter(
+            channel=channel, channel_version=1
+        )
+        submissions_v2 = CommunityLibrarySubmission.objects.filter(
+            channel=channel, channel_version=2
+        )
+
+        self.assertEqual(submissions_v1.count(), 1)
+        self.assertEqual(submissions_v2.count(), 1)
+        self.assertEqual(submission_v1.channel_version, 1)
+        self.assertEqual(submission_v2.channel_version, 2)
 
 
 class AssessmentItemTestCase(PermissionQuerysetTestCase):

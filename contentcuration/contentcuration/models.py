@@ -2674,6 +2674,12 @@ class CommunityLibrarySubmission(models.Model):
         return queryset.filter(author=user, channel__editors=user)
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["channel", "channel_version"],
+                name="unique_channel_with_channel_version",
+            ),
+        ]
         indexes = [
             # Useful for cursor pagination
             models.Index(fields=["-date_created"], name="submission_date_created_idx"),

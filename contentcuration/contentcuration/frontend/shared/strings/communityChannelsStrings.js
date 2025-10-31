@@ -43,6 +43,10 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: "You're publishing: Version {version}",
     context: 'Information about the version being published',
   },
+  channelVersion: {
+    message: '{name} v{version}',
+    context: 'Formatted channel title that includes the channel name and its version;',
+  },
   incompleteResourcesWarning: {
     message:
       '{count, number} {count, plural, one {incomplete resource} other {incomplete resources}}',
@@ -125,36 +129,36 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     context:
       'Detailed description of the Community Library shown in the "Submit to Community Library" panel',
   },
-  notPublishedWarningFirstLine: {
+  notPublishedWarningTitle: {
     message: "This channel isn't published to Kolibri Studio yet",
     context:
-      'First line of warning shown in the "Submit to Community Library" panel when the channel is not published',
+      'Title of warning shown in the "Submit to Community Library" panel when the channel is not published',
   },
-  notPublishedWarningSecondLine: {
+  notPublishedWarningDescription: {
     message: 'Publish to Studio first, then submit to the Community Library.',
     context:
-      'Second line of warning shown in the "Submit to Community Library" panel when the channel is not published',
+      'Description of warning shown in the "Submit to Community Library" panel when the channel is not published',
   },
-  publicWarningFirstLine: {
+  publicWarningTitle: {
     message: 'This channel is currently public in the Content Library.',
     context:
-      'First line of warning shown in the "Submit to Community Library" panel when the channel is public',
+      'Title of warning shown in the "Submit to Community Library" panel when the channel is public',
   },
-  publicWarningSecondLine: {
+  publicWarningDescription: {
     message: 'It is not possible to submit public channels to the Community Library.',
     context:
-      'Second line of warning shown in the "Submit to Community Library" panel when the channel is public',
+      'Description of warning shown in the "Submit to Community Library" panel when the channel is public',
   },
-  alreadySubmittedWarningFirstLine: {
+  alreadySubmittedWarningTitle: {
     message: 'This version of the channel has already been submitted to the Community Library.',
     context:
-      'First line of warning shown in the "Submit to Community Library" panel when the current version is already submitted',
+      'Title of warning shown in the "Submit to Community Library" panel when the current version is already submitted',
   },
-  alreadySubmittedWarningSecondLine: {
+  alreadySubmittedWarningDescription: {
     message:
       'Please wait for review or make changes and publish a new version before submitting again.',
     context:
-      'Second line of warning shown in the "Submit to Community Library" panel when the current version is already submitted',
+      'Description of warning shown in the "Submit to Community Library" panel when the current version is already submitted',
   },
   descriptionLabel: {
     message: "Describe what's new in this submission",

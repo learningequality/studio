@@ -26,36 +26,31 @@
               <div class="info-text">
                 <template v-if="latestSubmissionStatus === null">
                   <template v-if="showingMoreDetails">
-                    <div>{{ infoBoxPrimaryText }} {{ moreDetails$() }}</div>
-                    <div
-                      class="more-details-link"
+                    <div>{{ infoText }}</div>
+                    <div>{{ moreDetails$() }}</div>
+                    <KButton
+                      appearance="basic-link"
                       data-test="less-details-button"
                       @click="showingMoreDetails = false"
                     >
                       {{ lessDetailsButton$() }}
-                    </div>
+                    </KButton>
                   </template>
                   <template v-else>
                     <div>
-                      {{ infoBoxPrimaryText }}
+                      {{ infoText }}
                     </div>
-                    <div
-                      class="more-details-link"
+                    <KButton
+                      appearance="basic-link"
                       data-test="more-details-button"
                       @click="showingMoreDetails = true"
                     >
                       {{ moreDetailsButton$() }}
-                    </div>
+                    </KButton>
                   </template>
                 </template>
                 <template v-else>
-                  {{ infoBoxPrimaryText }}
-                  <div
-                    v-if="infoBoxSecondaryText"
-                    class="info-secondary-text"
-                  >
-                    {{ infoBoxSecondaryText }}
-                  </div>
+                  {{ infoText }}
                 </template>
               </div>
               <StatusChip
@@ -70,38 +65,45 @@
             kind="warning"
             data-test="not-published-warning"
           >
-            <div class="warning-first-line">
-              {{ notPublishedWarningFirstLine$() }}
-            </div>
-            <div class="warning-second-line">
-              {{ notPublishedWarningSecondLine$() }}
-            </div>
+            <template #title>
+              {{ notPublishedWarningTitle$() }}
+            </template>
+            <template #description>
+              {{ notPublishedWarningDescription$() }}
+            </template>
           </Box>
           <Box
             v-else-if="isPublic"
             kind="warning"
             data-test="public-warning"
           >
-            <div class="warning-first-line">
-              {{ publicWarningFirstLine$() }}
-            </div>
-            <div class="warning-second-line">
-              {{ publicWarningSecondLine$() }}
-            </div>
+            <template #title>
+              {{ publicWarningTitle$() }}
+            </template>
+            <template #description>
+              {{ publicWarningDescription$() }}
+            </template>
           </Box>
           <Box
             v-else-if="isCurrentVersionAlreadySubmitted"
             kind="warning"
             data-test="already-submitted-warning"
           >
-            <div class="warning-first-line">
-              {{ alreadySubmittedWarningFirstLine$() }}
-            </div>
-            <div class="warning-second-line">
-              {{ alreadySubmittedWarningSecondLine$() }}
-            </div>
+            <template #title>
+              {{ alreadySubmittedWarningTitle$() }}
+            </template>
+            <template #description>
+              {{ alreadySubmittedWarningDescription$() }}
+            </template>
           </Box>
-          <div class="channel-title">{{ channel.name }} v{{ channel.version }}</div>
+          <div class="channel-title">
+            {{
+              channelVersion$({
+                name: currentChannel?.name || '',
+                version: currentChannel?.version || 0,
+              })
+            }}
+          </div>
           <div class="metadata-line">
             <LoadingText
               :loading="publishedDataIsLoading"
@@ -192,7 +194,7 @@
 <script>
 
   import { computed, getCurrentInstance, ref, watch } from 'vue';
-  import { themeTokens } from 'kolibri-design-system/lib/styles/theme';
+  import { themeTokens, themePalette } from 'kolibri-design-system/lib/styles/theme';
 
   import camelCase from 'lodash/camelCase';
 
@@ -206,12 +208,12 @@
   import { translateMetadataString } from 'shared/utils/metadataStringsTranslation';
   import countriesUtil from 'shared/utils/countries';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
+  import { Channel, CommunityLibrarySubmission } from 'shared/data/resources';
 
   import SidePanelModal from 'shared/views/SidePanelModal';
   import CountryField from 'shared/views/form/CountryField';
   import LanguagesMap from 'shared/leUtils/Languages';
   import { CategoriesLookup, CommunityLibraryStatus } from 'shared/constants';
-  import { CommunityLibrarySubmission } from 'shared/data/resources';
 
   export default {
     name: 'SubmitToCommunityLibrarySidePanel',
@@ -226,9 +228,13 @@
     emits: ['close'],
     setup(props, { emit }) {
       const tokensTheme = themeTokens();
+      const paletteTheme = themePalette();
 
       const { proxy } = getCurrentInstance();
       const store = proxy.$store;
+
+      // Get currentChannel from store reactively - this will update when store changes
+      const currentChannel = computed(() => store.getters['currentChannel/currentChannel']);
 
       // Destructure translation functions from communityChannelsStrings
       const {
@@ -239,18 +245,19 @@
         countryLabel$,
         descriptionLabel$,
         descriptionRequired$,
-        notPublishedWarningFirstLine$,
-        notPublishedWarningSecondLine$,
-        publicWarningFirstLine$,
-        publicWarningSecondLine$,
-        alreadySubmittedWarningFirstLine$,
-        alreadySubmittedWarningSecondLine$,
+        notPublishedWarningTitle$,
+        notPublishedWarningDescription$,
+        publicWarningTitle$,
+        publicWarningDescription$,
+        alreadySubmittedWarningTitle$,
+        alreadySubmittedWarningDescription$,
         submitButton$,
         cancelAction$,
         submittedPrimaryInfo$,
         approvedPrimaryInfo$,
         flaggedPrimaryInfo$,
         nonePrimaryInfo$,
+        channelVersion$,
         submittedSnackbar$,
         errorSnackbar$,
         submittingSnackbar$,
@@ -258,6 +265,7 @@
       } = communityChannelsStrings;
 
       const annotationColor = computed(() => tokensTheme.annotation);
+      const infoTextColor = computed(() => paletteTheme.grey.v_700);
 
       const showingMoreDetails = ref(false);
       const countries = ref([]);
@@ -325,23 +333,31 @@
         }
       });
 
-      const infoBoxPrimaryText = computed(() => infoConfig.value?.primaryText);
-      const infoBoxSecondaryText = computed(() => infoConfig.value?.secondaryText);
+      const infoText = computed(() => infoConfig.value?.primaryText);
 
-      const isPublished = computed(() => props.channel.published);
-      const isPublic = computed(() => props.channel.public);
+      const isPublished = computed(() => currentChannel.value?.published);
+      const isPublic = computed(() => currentChannel.value?.public);
       const isCurrentVersionAlreadySubmitted = computed(() => {
         if (!latestSubmissionData.value) return false;
-        return latestSubmissionData.value.channel_version === props.channel.version;
+        return latestSubmissionData.value.channel_version === currentChannel.value?.version;
       });
 
       const canBeEdited = computed(() => {
-        if (!isPublished.value || isPublic.value) return false;
-        return !isCurrentVersionAlreadySubmitted.value || needsReplacementConfirmation.value;
+        if (isCurrentVersionAlreadySubmitted.value) {
+          return false;
+        }
+        return isPublished.value && !isPublic.value;
       });
 
       const needsReplacementConfirmation = computed(() => {
-        return latestSubmissionStatus.value === CommunityLibraryStatus.PENDING;
+        if (isPublic.value) {
+          return false;
+        }
+        // Only show checkbox if there's a pending submission AND the version has changed
+        return (
+          latestSubmissionStatus.value === CommunityLibraryStatus.PENDING &&
+          !isCurrentVersionAlreadySubmitted.value
+        );
       });
 
       const canBeSubmitted = computed(() => {
@@ -361,10 +377,21 @@
         data: publishedData,
       } = usePublishedData(props.channel.id);
 
+      // Watch for when publishing completes and reload channel from backend
+      watch(
+        () => currentChannel.value?.publishing,
+        async (isPublishing, wasPublishing) => {
+          if (wasPublishing === true && isPublishing === false && props.channel.id) {
+            await Channel.fetchModel(props.channel.id);
+            await store.dispatch('channel/loadChannel', props.channel.id);
+          }
+        },
+      );
+
       const latestPublishedData = computed(() => {
         if (!publishedData.value) return undefined;
 
-        return publishedData.value[props.channel.version];
+        return publishedData.value[currentChannel.value?.version];
       });
 
       const detectedLanguages = computed(() => {
@@ -423,8 +450,6 @@
             categories: latestPublishedData.value.included_categories,
           })
             .then(() => {
-              replacementConfirmed.value = false;
-              description.value = '';
               showSnackbar({ text: submittedSnackbar$() });
             })
             .catch(() => {
@@ -445,7 +470,9 @@
       }
 
       return {
+        currentChannel,
         annotationColor,
+        infoTextColor,
         showingMoreDetails,
         countries,
         description,
@@ -454,8 +481,7 @@
         latestSubmissionIsFinished,
         latestSubmissionStatus,
         needsReplacementConfirmation,
-        infoBoxPrimaryText,
-        infoBoxSecondaryText,
+        infoText,
         isPublished,
         isPublic,
         isCurrentVersionAlreadySubmitted,
@@ -474,12 +500,13 @@
         countryLabel$,
         descriptionLabel$,
         descriptionRequired$,
-        notPublishedWarningFirstLine$,
-        notPublishedWarningSecondLine$,
-        publicWarningFirstLine$,
-        publicWarningSecondLine$,
-        alreadySubmittedWarningFirstLine$,
-        alreadySubmittedWarningSecondLine$,
+        channelVersion$,
+        notPublishedWarningTitle$,
+        notPublishedWarningDescription$,
+        publicWarningTitle$,
+        publicWarningDescription$,
+        alreadySubmittedWarningTitle$,
+        alreadySubmittedWarningDescription$,
         submitButton$,
         cancelAction$,
         confirmReplacementText$,
@@ -581,22 +608,7 @@
   .info-text {
     font-size: 14px;
     line-height: 140%;
-  }
-
-  .info-secondary-text {
-    font-size: 14px;
-    line-height: 140%;
-    color: v-bind('annotationColor');
-  }
-
-  .more-details-link {
-    font-size: 14px;
-    color: #4368f5;
-    cursor: pointer;
-  }
-
-  .more-details-link:hover {
-    color: #4368f5;
+    color: v-bind('infoTextColor');
   }
 
   .status-chip {

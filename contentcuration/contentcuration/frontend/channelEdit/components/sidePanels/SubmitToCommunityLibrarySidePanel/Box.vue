@@ -15,9 +15,24 @@
         class="box-content"
       >
         <div class="box-icon">
-          <KIcon :icon="icon" />
+          <KIcon
+            :icon="icon"
+            :style="{ fontSize: '18px' }"
+          />
         </div>
         <div class="box-text">
+          <div
+            v-if="$slots.title || title"
+            class="box-title"
+          >
+            <slot name="title">{{ title }}</slot>
+          </div>
+          <div
+            v-if="$slots.description || description"
+            class="box-description"
+          >
+            <slot name="description">{{ description }}</slot>
+          </div>
           <slot></slot>
         </div>
         <div
@@ -75,19 +90,19 @@
         }
       });
 
-      const warningFirstLineColor = computed(() => {
+      const titleColor = computed(() => {
         return props.kind === 'warning' ? paletteTheme.red.v_600 : tokensTheme.text;
       });
 
-      const warningSecondLineColor = computed(() => {
+      const descriptionColor = computed(() => {
         return props.kind === 'warning' ? paletteTheme.grey.v_800 : tokensTheme.text;
       });
 
       return {
         boxBackgroundColor,
         boxBorderColor,
-        warningFirstLineColor,
-        warningSecondLineColor,
+        titleColor,
+        descriptionColor,
         icon,
       };
     },
@@ -103,6 +118,16 @@
         required: false,
         default: false,
       },
+      title: {
+        type: String,
+        required: false,
+        default: '',
+      },
+      description: {
+        type: String,
+        required: false,
+        default: '',
+      },
     },
   };
 
@@ -112,7 +137,7 @@
 <style lang="scss" scoped>
 
   .box {
-    padding: 12px 16px;
+    padding: 10px;
     background-color: v-bind('boxBackgroundColor');
     border: 1px solid v-bind('boxBorderColor');
     border-radius: 4px;
@@ -125,8 +150,14 @@
   }
 
   .box-icon {
-    width: 20px;
-    height: 20px;
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+    line-height: 1;
   }
 
   .box-text {
@@ -138,14 +169,14 @@
     line-height: 140%;
   }
 
-  ::v-deep .warning-first-line {
+  .box-title {
     font-weight: 600;
-    color: v-bind('warningFirstLineColor');
+    color: v-bind('titleColor');
   }
 
-  ::v-deep .warning-second-line {
+  .box-description {
     font-weight: 400;
-    color: v-bind('warningSecondLineColor');
+    color: v-bind('descriptionColor');
   }
 
   .chip {
