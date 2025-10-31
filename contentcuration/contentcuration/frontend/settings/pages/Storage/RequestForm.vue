@@ -523,11 +523,6 @@
     font-size: 14px;
   }
 
-  /* fixes unintended margin caused by KDS styles */
-  .license-link ::v-deep span {
-    margin-left: 0 !important;
-  }
-
   .license-description {
     margin-bottom: 8px;
     line-height: 1.5;
