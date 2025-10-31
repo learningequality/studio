@@ -18,10 +18,7 @@
         <div class="form-row form-row-margin">
           <div class="form-label">From:</div>
           <div class="form-content">
-            <StudioChip
-              :text="senderEmail"
-              :small="true"
-            />
+            <StudioChip :text="senderEmail" />
           </div>
         </div>
         <div class="form-row">
@@ -49,7 +46,6 @@
                   <StudioChip
                     :ref="`tooltip-${item.id}`"
                     :text="item.name"
-                    :small="true"
                     :close="recipients.length > 1"
                     data-test="remove"
                     @close="remove(item.id)"
@@ -63,10 +59,7 @@
                 </div>
               </template>
             </ExpandableList>
-            <StudioChip
-              v-else-if="usersFilterFetchQueryParams"
-              :small="true"
-            >
+            <StudioChip v-else-if="usersFilterFetchQueryParams">
               {{ searchString }}
             </StudioChip>
           </div>
