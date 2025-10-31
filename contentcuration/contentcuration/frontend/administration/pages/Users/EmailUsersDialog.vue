@@ -108,7 +108,6 @@
             invalidText="Field is required"
             :showLabel="true"
             :appearanceOverrides="getAppearanceOverrides(errors.message)"
-            :floatingLabel="false"
             :textArea="true"
           />
         </div>
