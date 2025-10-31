@@ -181,8 +181,6 @@
         showWarning: false,
         recipients: [],
         showInvalidText: false,
-        subject: '',
-        message: '',
       };
     },
     computed: {
