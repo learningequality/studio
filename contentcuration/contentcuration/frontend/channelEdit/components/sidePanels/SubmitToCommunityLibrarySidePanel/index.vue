@@ -12,9 +12,16 @@
 
       <template #default>
         <div class="content">
+          <div
+            v-if="isPublishing"
+            class="publishing-loader"
+          >
+            <KCircularLoader disableDefaultTransition />
+            <div class="publishing-text">{{ publishingMessage$() }}</div>
+          </div>
           <Box
             kind="info"
-            :loading="latestSubmissionIsLoading"
+            :loading="latestSubmissionIsLoading || isPublishing"
             class="info-box"
           >
             <div
@@ -25,7 +32,11 @@
               <div v-if="infoBoxSecondaryText">
                 {{ infoBoxSecondaryText }}
               </div>
-              <template v-if="latestSubmissionIsFinished && latestSubmissionStatus === null">
+              <template
+                v-if="
+                  latestSubmissionIsFinished && latestSubmissionStatus === null && !isPublishing
+                "
+              >
                 <div
                   v-if="showingMoreDetails"
                   class="more-details-text"
@@ -50,7 +61,7 @@
             </div>
             <template #chip>
               <StatusChip
-                v-if="latestSubmissionStatus"
+                v-if="latestSubmissionStatus && !isPublishing"
                 :status="latestSubmissionStatus"
               />
             </template>
@@ -110,13 +121,13 @@
           <div class="country-area">
             <KTransition kind="component-fade-out-in">
               <div
-                v-if="latestSubmissionIsLoading"
+                v-if="latestSubmissionIsLoading || isPublishing"
                 class="loader-wrapper"
               >
                 <KCircularLoader disableDefaultTransition />
               </div>
               <CountryField
-                v-else-if="latestSubmissionIsFinished"
+                v-else-if="latestSubmissionIsFinished && !isPublishing"
                 v-model="countries"
                 class="country-field"
                 :disabled="!canBeEdited"
@@ -186,7 +197,7 @@
   import LanguagesMap from 'shared/leUtils/Languages';
   import LicensesMap from 'shared/leUtils/Licenses';
   import { CategoriesLookup, CommunityLibraryStatus } from 'shared/constants';
-  import { CommunityLibrarySubmission } from 'shared/data/resources';
+  import { CommunityLibrarySubmission, Channel } from 'shared/data/resources';
 
   export default {
     name: 'SubmitToCommunityLibrarySidePanel',
@@ -229,6 +240,7 @@
         submittedSnackbar$,
         errorSnackbar$,
         submittingSnackbar$,
+        publishingMessage$,
       } = communityChannelsStrings;
 
       const annotationColor = computed(() => tokensTheme.annotation);
@@ -237,6 +249,26 @@
       const showingMoreDetails = ref(false);
       const countries = ref([]);
       const description = ref('');
+      const isPublishing = ref(Boolean(props.channel.publishing));
+      const currentChannelVersion = ref(props.channel.version);
+
+      let publishPollId = null;
+      function startPublishPolling() {
+        if (publishPollId || !isPublishing.value) return;
+        publishPollId = setInterval(() => {
+          Channel.fetchModel(props.channel.id).then(ch => {
+            if (ch) {
+              isPublishing.value = Boolean(ch.publishing);
+              if (!isPublishing.value) {
+                currentChannelVersion.value = ch.version;
+                clearInterval(publishPollId);
+                publishPollId = null;
+              }
+            }
+          });
+        }, 2000);
+      }
+      if (isPublishing.value) startPublishPolling();
 
       const {
         isLoading: latestSubmissionIsLoading,
@@ -310,16 +342,22 @@
       const isPublic = computed(() => props.channel.public);
       const isCurrentVersionAlreadySubmitted = computed(() => {
         if (!latestSubmissionData.value) return false;
-        return latestSubmissionData.value.channel_version === props.channel.version;
+        return latestSubmissionData.value.channel_version === currentChannelVersion.value;
       });
 
-      const canBeEdited = computed(
-        () => isPublished.value && !isPublic.value && !isCurrentVersionAlreadySubmitted.value,
-      );
+      const canBeEdited = computed(() => {
+        if (isPublishing.value) return false;
+        return isPublished.value && !isPublic.value && !isCurrentVersionAlreadySubmitted.value;
+      });
 
-      const canBeSubmitted = computed(
-        () => canBeEdited.value && publishedDataIsFinished.value && description.value.length >= 1,
-      );
+      const canBeSubmitted = computed(() => {
+        return (
+          canBeEdited.value &&
+          !isPublishing.value &&
+          publishedDataIsFinished.value &&
+          description.value.length >= 1
+        );
+      });
 
       const {
         isLoading: publishedDataIsLoading,
@@ -330,7 +368,7 @@
       const latestPublishedData = computed(() => {
         if (!publishedData.value) return undefined;
 
-        return publishedData.value[props.channel.version];
+        return publishedData.value[currentChannelVersion.value];
       });
 
       const detectedLanguages = computed(() => {
@@ -388,6 +426,10 @@
       }
 
       function onSubmit() {
+        if (isPublishing.value) {
+          showSnackbar({ text: submittingSnackbar$() });
+          return;
+        }
         // It should be possible to undo a submission within a short time window
         // in case the user made a mistake and wants to change something.
         // To avoid having to deal with undoing logic, we simply show a "submitting"
@@ -460,6 +502,8 @@
         alreadySubmittedWarning$,
         submitButton$,
         cancelAction$,
+        isPublishing,
+        publishingMessage$,
       };
     },
     props: {
@@ -536,6 +580,23 @@
 
   .description-textbox ::v-deep .textbox {
     max-width: 100%;
+  }
+
+  .publishing-loader {
+    position: static;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: max-content;
+    margin: 0 auto;
+  }
+
+  .publishing-text {
+    font-size: 14px;
+  }
+
+  .publishing-loader > *:first-child {
+    margin-right: 2px;
   }
 
 </style>
