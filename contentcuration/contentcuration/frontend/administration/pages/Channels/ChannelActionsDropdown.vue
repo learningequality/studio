@@ -7,13 +7,18 @@
       :submitText="dialogConfig.submitText"
       cancelText="Cancel"
       data-test="confirm-dialog"
-      :hasError="true"
-      :errorMessage="dialogConfig.errorMessage"
       :submitDisabled="dialogConfig.submitDisabled"
       @submit="handleSubmit"
       @cancel="activeDialog = null"
     >
       <p>{{ dialogConfig.message }}</p>
+      <div
+        v-if="dialogConfig.errorMessage"
+        class="error-message"
+        :style="errorMessageStyles"
+      >
+        {{ dialogConfig.errorMessage }}
+      </div>
     </KModal>
 
     <BaseMenu>
@@ -134,14 +139,11 @@
             submitText: 'Restore',
             message: `Are you sure you want to restore ${this.name} and make it active again?`,
             handler: this.restoreHandler,
-            errorMessage: '',
-            submitDisabled: false,
           },
           makePublic: {
             title: 'Make channel public',
             submitText: 'Make public',
             message: `All users will be able to view and import content from ${this.name}.`,
-
             handler: this.makePublicHandler,
             errorMessage: this.communityChannelErrorMessage,
             submitDisabled: this.isCommunityChannel,
@@ -150,26 +152,19 @@
             title: 'Make channel private',
             submitText: 'Make private',
             message: `Only users with view-only or edit permissions will be able to access ${this.name}.`,
-
             handler: this.makePrivateHandler,
-            errorMessage: '',
-            submitDisabled: false,
           },
           permanentDelete: {
             title: 'Permanently delete channel',
             submitText: 'Delete permanently',
             message: `Are you sure you want to permanently delete ${this.name}? This can not be undone.`,
             handler: this.deleteHandler,
-            errorMessage: '',
-            submitDisabled: false,
           },
           softDelete: {
             title: 'Delete channel',
             submitText: 'Delete',
             message: `Are you sure you want to delete ${this.name}?`,
             handler: this.softDeleteHandler,
-            errorMessage: '',
-            submitDisabled: false,
           },
         };
         return configs[this.activeDialog] || {};
@@ -183,6 +178,14 @@
           return 'This channel has been added to the Community Library and cannot be marked public.';
         }
         return '';
+      },
+      errorMessageStyles() {
+        if (!this.dialogConfig.errorMessage) return {};
+
+        return {
+          color: this.$themeTokens.error,
+          backgroundColor: this.$themePalette.red.v_200,
+        };
       },
     },
     methods: {
@@ -254,4 +257,13 @@
 </script>
 
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+
+  .error-message {
+    padding: 8px 12px;
+    margin-top: 8px;
+    font-size: 14px;
+    border-radius: 4px;
+  }
+
+</style>
