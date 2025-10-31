@@ -59,7 +59,10 @@
         <p>
           {{ $tr('remainingStorage', { size: formatFileSize(availableSpace) }) }}
         </p>
-        <div class="storage-usage" :style="{ color: $themeTokens.annotation }">
+        <div
+          class="storage-usage"
+          :style="{ color: $themeTokens.annotation }"
+        >
           <FileStorage />
         </div>
       </div>
@@ -78,12 +81,12 @@
   import flatMap from 'lodash/flatMap';
   import isFunction from 'lodash/isFunction';
 
+  import KModal from 'kolibri-design-system/lib/KModal';
   import { validateFile } from '../../vuex/file/validation';
   import FileStorage from './FileStorage';
   import FileDropzone from './FileDropzone';
   import { MAX_FILE_SIZE } from 'shared/constants';
   import { fileSizeMixin } from 'shared/mixins';
-  import KModal from 'kolibri-design-system/lib/KModal';
   import { FormatPresetsList } from 'shared/leUtils/FormatPresets';
 
   export default {
