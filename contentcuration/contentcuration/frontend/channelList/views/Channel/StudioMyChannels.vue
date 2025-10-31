@@ -52,20 +52,11 @@
           @click="goToChannelRoute(channel)"
         >
           <template #thumbnailPlaceholder>
-            <div
-              class="img-placeholder-wrapper"
-              :class="{
-                'img-placeholder-wrapper-small': windowIsSmall,
-                'img-placeholder-wrapper-medium': windowIsMedium,
-                'img-placeholder-wrapper-large': windowIsLarge,
-              }"
-            >
-              <KIcon
-                :color="$themePalette.grey.v_400"
-                class="img-placeholder-icon"
-                icon="image"
-              />
-            </div>
+            <KIcon
+              :color="$themePalette.grey.v_400"
+              class="img-placeholder-icon"
+              icon="image"
+            />
           </template>
           <template #belowTitle>
             <div class="cards-below-title">
@@ -556,24 +547,6 @@
     div {
       margin-left: 8px;
     }
-  }
-
-  .img-placeholder-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .img-placeholder-wrapper-small {
-    width: 42vw;
-  }
-
-  .img-placeholder-wrapper-medium {
-    width: 33.33vw;
-  }
-
-  .img-placeholder-wrapper-large {
-    width: 24vw;
   }
 
   .details-link {
