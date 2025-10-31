@@ -26,8 +26,8 @@
     <KModal
       v-if="dialog.open"
       :title="dialog.title"
-      :cancelText="$tr('dialogCancelBtnLabel')"
-      :submitText="$tr('dialogChangeBtnLabel')"
+      :cancelText="dialog.cancelLabel || $tr('dialogCancelBtnLabel')"
+      :submitText="dialog.submitLabel || $tr('dialogSubmitBtnLabel')"
       @cancel="dialog.onCancel"
       @submit="dialog.onSubmit"
     >
@@ -61,6 +61,8 @@
           open: false,
           title: '',
           message: '',
+          cancelLabel: '',
+          submitLabel: '',
           onCancel: () => {},
           onSubmit: () => {},
         },
@@ -119,11 +121,20 @@
       async onDeleteAssessmentItem(item) {
         await this.deleteAssessmentItem(item);
       },
-      openDialog({ title = '', message = '', onCancel = () => {}, onSubmit = () => {} } = {}) {
+      openDialog({
+        title = '',
+        message = '',
+        cancelLabel = '',
+        submitLabel = '',
+        onCancel = () => {},
+        onSubmit = () => {},
+      } = {}) {
         this.dialog = {
           open: true,
           title,
           message,
+          cancelLabel,
+          submitLabel,
           onCancel: () => {
             if (typeof onCancel === 'function') {
               onCancel();
@@ -153,7 +164,7 @@
     $trs: {
       incompleteItemsCountMessage:
         '{invalidItemsCount} incomplete {invalidItemsCount, plural, one {question} other {questions}}',
-      dialogChangeBtnLabel: 'Change',
+      dialogSubmitBtnLabel: 'Submit',
       dialogCancelBtnLabel: 'Cancel',
     },
   };
