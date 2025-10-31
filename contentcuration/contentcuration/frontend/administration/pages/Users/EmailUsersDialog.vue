@@ -14,20 +14,20 @@
       ref="form"
       @submit.prevent="onSubmit"
     >
-      <div class="pb-4 pt-3">
-        <div class="align-top layout-row mb-2">
-          <div class="flex-shrink pa-2">From:</div>
-          <div class="flex-grow">
+      <div class="form-container">
+        <div class="form-row form-row-margin">
+          <div class="form-label">From:</div>
+          <div class="form-content">
             <StudioChip
               :text="senderEmail"
               :small="true"
             />
           </div>
         </div>
-        <div class="align-top layout-row">
-          <div class="flex-shrink pa-2">To:</div>
+        <div class="form-row">
+          <div class="form-label">To:</div>
           <div
-            class="flex-grow"
+            class="form-content"
             data-test="to-line"
           >
             <ExpandableList
@@ -38,7 +38,7 @@
               :delimit="false"
             >
               <template #item="{ item }">
-                <div class="chip-tooltip-container">
+                <div class="chip-container">
                   <KTooltip
                     :refs="getRefs()"
                     :reference="`tooltip-${item.id}`"
@@ -73,7 +73,7 @@
         </div>
         <KTextbox
           v-model="subject"
-          class="mt-4"
+          class="subject-field"
           label="Subject line"
           :required="true"
           :invalid="errors.subject"
@@ -82,7 +82,7 @@
           :showLabel="true"
           :appearanceOverrides="getAppearanceOverrides(errors.subject)"
         />
-        <div class="caption grey--text">Add placeholder to message</div>
+        <div :style="{ color: $themeTokens.annotation }">Add placeholder to message</div>
         <div class="placeholder-buttons-container">
           <button
             v-for="placeholder in placeholders"
@@ -324,44 +324,42 @@
     min-height: 120px;
   }
 
-  /* Or if you want them completely inline without any breaks: */
-  .chip-tooltip-container {
+  .chip-container {
     display: inline;
     margin: 2px;
   }
 
-  /* Custom layout styles to replace Vuetify flex system */
-  .layout-row {
-    display: flex;
-    flex-direction: row;
+  .form-container {
+    padding-top: 12px;
+    padding-bottom: 16px;
   }
 
-  .align-top {
+  .form-row {
+    display: flex;
+    flex-direction: row;
     align-items: flex-start;
   }
 
-  .flex-shrink {
-    flex: 0 0 auto;
-  }
-
-  .flex-grow {
-    flex: 1 1 auto;
-  }
-
-  .mb-2 {
+  .form-row-margin {
     margin-bottom: 8px;
   }
 
-  .mt-4 {
+  .form-label {
+    flex: 0 0 auto;
+    padding: 8px;
+  }
+
+  .form-content {
+    flex: 1 1 auto;
+  }
+
+  .subject-field {
     margin-top: 16px;
   }
 
-  .mb-1 {
-    margin-bottom: 4px;
-  }
-
-  .pa-2 {
-    padding: 8px;
+  .caption-text {
+    font-size: 0.875rem;
+    color: var(--v-grey-darken1);
   }
 
   .placeholder-buttons-container {
@@ -390,7 +388,7 @@
     }
 
     &:active {
-      transform: translateY(0);
+      transform: translateY(2px);
     }
   }
 
