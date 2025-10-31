@@ -7,6 +7,7 @@
       :submitText="dialogConfig.submitText"
       cancelText="Cancel"
       data-test="confirm-dialog"
+      :hasError="true"
       :errorMessage="dialogConfig.errorMessage"
       :submitDisabled="dialogConfig.submitDisabled"
       @submit="handleSubmit"
