@@ -42,18 +42,11 @@
         default: false,
       },
     },
-    data() {
-      return {
-        isActive: false,
-      };
-    },
     computed: {
       chipStyles() {
         const baseColor = this.$themePalette.grey.v_200;
-        const activeColor = this.$themePalette.grey.v_300;
-
         return {
-          backgroundColor: this.isActive ? activeColor : baseColor,
+          backgroundColor: baseColor,
         };
       },
       removeLabel() {
