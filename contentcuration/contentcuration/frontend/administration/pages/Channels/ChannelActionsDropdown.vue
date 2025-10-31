@@ -184,7 +184,7 @@
 
         return {
           color: this.$themeTokens.error,
-          backgroundColor: this.$themePalette.red.v_200,
+          backgroundColor: this.$themePalette.red.v_100,
         };
       },
     },
