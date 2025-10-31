@@ -1,12 +1,8 @@
-import { render, screen, configure } from '@testing-library/vue';
+import { render, screen } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import router from '../../../router';
 import { factory } from '../../../store';
 import ChannelActionsDropdown from '../ChannelActionsDropdown';
-
-configure({
-  testIdAttribute: 'data-test',
-});
 
 jest.mock('shared/views/channel/mixins', () => ({
   channelExportMixin: {
@@ -71,28 +67,28 @@ describe('channelActionsDropdown', () => {
     });
 
     it('restore channel should show restore confirmation dialog with correct context', async () => {
-      const restoreButton = screen.getByTestId('restore');
+      const restoreButton = screen.getByText('Restore');
       await user.click(restoreButton);
 
-      const confirmDialog = screen.getByTestId('confirm-dialog');
+      const confirmDialog = screen.getByRole('dialog');
       expect(confirmDialog).toBeVisible();
       expect(screen.getByText('Restore channel')).toBeVisible();
       expect(screen.getByText(/Are you sure you want to restore Channel Test/)).toBeVisible();
     });
 
     it('confirm restore channel should close the dialog', async () => {
-      const restoreButton = screen.getByTestId('restore');
+      const restoreButton = screen.getByText('Restore');
       await user.click(restoreButton);
       const confirmButton = screen.getByRole('button', { name: 'Restore' });
       await user.click(confirmButton);
-      expect(screen.queryByTestId('confirm-dialog')).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
     it('delete channel should show permanent delete confirmation dialog with correct context', async () => {
-      const deleteButton = screen.getByTestId('delete');
+      const deleteButton = screen.getByText('Delete permanently');
       await user.click(deleteButton);
 
-      const confirmDialog = screen.getByTestId('confirm-dialog');
+      const confirmDialog = screen.getByRole('dialog');
       expect(confirmDialog).toBeVisible();
       expect(screen.getByText('Permanently delete channel')).toBeVisible();
       expect(
@@ -101,11 +97,11 @@ describe('channelActionsDropdown', () => {
     });
 
     it('confirm delete channel should close the dialog', async () => {
-      const deleteButton = screen.getByTestId('delete');
+      const deleteButton = screen.getByText('Delete permanently');
       await user.click(deleteButton);
       const confirmButton = screen.getByRole('button', { name: 'Delete permanently' });
       await user.click(confirmButton);
-      expect(screen.queryByTestId('confirm-dialog')).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
 
@@ -115,22 +111,22 @@ describe('channelActionsDropdown', () => {
     });
 
     it('download PDF button should trigger PDF download', async () => {
-      const pdfButton = screen.getByTestId('pdf');
+      const pdfButton = screen.getByText('Download PDF');
       await user.click(pdfButton);
       expect(pdfButton).toBeVisible();
     });
 
     it('download CSV button should trigger CSV download', async () => {
-      const csvButton = screen.getByTestId('csv');
+      const csvButton = screen.getByText('Download CSV');
       await user.click(csvButton);
       expect(csvButton).toBeVisible();
     });
 
     it('make public button should show make public confirmation dialog with correct context', async () => {
-      const makePublicButton = screen.getByTestId('public');
+      const makePublicButton = screen.getByText('Make public');
       await user.click(makePublicButton);
 
-      const confirmDialog = screen.getByTestId('confirm-dialog');
+      const confirmDialog = screen.getByRole('dialog');
       expect(confirmDialog).toBeVisible();
       expect(screen.getByText('Make channel public')).toBeVisible();
       expect(
@@ -139,29 +135,29 @@ describe('channelActionsDropdown', () => {
     });
 
     it('confirm make public should close the dialog', async () => {
-      const makePublicButton = screen.getByTestId('public');
+      const makePublicButton = screen.getByText('Make public');
       await user.click(makePublicButton);
       const confirmButton = screen.getByRole('button', { name: 'Make public' });
       await user.click(confirmButton);
-      expect(screen.queryByTestId('confirm-dialog')).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
     it('soft delete button should show soft delete confirmation dialog with correct context', async () => {
-      const softDeleteButton = screen.getByTestId('softdelete');
+      const softDeleteButton = screen.getByText('Delete channel');
       await user.click(softDeleteButton);
 
-      const confirmDialog = screen.getByTestId('confirm-dialog');
+      const confirmDialog = screen.getByRole('dialog');
       expect(confirmDialog).toBeVisible();
       expect(screen.getByRole('heading', { name: 'Delete channel' })).toBeVisible();
       expect(screen.getByText(/Are you sure you want to delete Channel Test\?/)).toBeVisible();
     });
 
     it('confirm soft delete should close the dialog', async () => {
-      const softDeleteButton = screen.getByTestId('softdelete');
+      const softDeleteButton = screen.getByText('Delete channel');
       await user.click(softDeleteButton);
       const confirmButton = screen.getByRole('button', { name: 'Delete' });
       await user.click(confirmButton);
-      expect(screen.queryByTestId('confirm-dialog')).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
 
@@ -171,10 +167,10 @@ describe('channelActionsDropdown', () => {
     });
 
     it('make private button should show make private confirmation dialog with correct context', async () => {
-      const makePrivateButton = screen.getByTestId('private');
+      const makePrivateButton = screen.getByText('Make private');
       await user.click(makePrivateButton);
 
-      const confirmDialog = screen.getByTestId('confirm-dialog');
+      const confirmDialog = screen.getByRole('dialog');
       expect(confirmDialog).toBeVisible();
       expect(screen.getByText('Make channel private')).toBeVisible();
       expect(
@@ -185,39 +181,39 @@ describe('channelActionsDropdown', () => {
     });
 
     it('confirm make private should close the dialog', async () => {
-      const makePrivateButton = screen.getByTestId('private');
+      const makePrivateButton = screen.getByText('Make private');
       await user.click(makePrivateButton);
       const confirmButton = screen.getByRole('button', { name: 'Make private' });
       await user.click(confirmButton);
-      expect(screen.queryByTestId('confirm-dialog')).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
 
   describe('menu visibility', () => {
     it('should show correct menu items for deleted channel', () => {
       renderComponent({ deleted: true });
-      expect(screen.getByTestId('restore')).toBeVisible();
-      expect(screen.getByTestId('delete')).toBeVisible();
-      expect(screen.queryByTestId('pdf')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('public')).not.toBeInTheDocument();
+      expect(screen.getByText('Restore')).toBeVisible();
+      expect(screen.getByText('Delete permanently')).toBeVisible();
+      expect(screen.queryByText('Download PDF')).not.toBeInTheDocument();
+      expect(screen.queryByText('Make public')).not.toBeInTheDocument();
     });
 
     it('should show correct menu items for live private channel', () => {
       renderComponent({ public: false, deleted: false });
-      expect(screen.getByTestId('pdf')).toBeVisible();
-      expect(screen.getByTestId('csv')).toBeVisible();
-      expect(screen.getByTestId('public')).toBeVisible();
-      expect(screen.getByTestId('softdelete')).toBeVisible();
-      expect(screen.queryByTestId('restore')).not.toBeInTheDocument();
+      expect(screen.getByText('Download PDF')).toBeVisible();
+      expect(screen.getByText('Download CSV')).toBeVisible();
+      expect(screen.getByText('Make public')).toBeVisible();
+      expect(screen.getByText('Delete channel')).toBeVisible();
+      expect(screen.queryByText('Restore')).not.toBeInTheDocument();
     });
 
     it('should show correct menu items for live public channel', () => {
       renderComponent({ public: true, deleted: false });
-      expect(screen.getByTestId('pdf')).toBeVisible();
-      expect(screen.getByTestId('csv')).toBeVisible();
-      expect(screen.getByTestId('private')).toBeVisible();
-      expect(screen.queryByTestId('softdelete')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('restore')).not.toBeInTheDocument();
+      expect(screen.getByText('Download PDF')).toBeVisible();
+      expect(screen.getByText('Download CSV')).toBeVisible();
+      expect(screen.getByText('Make private')).toBeVisible();
+      expect(screen.queryByText('Delete channel')).not.toBeInTheDocument();
+      expect(screen.queryByText('Restore')).not.toBeInTheDocument();
     });
   });
 });
