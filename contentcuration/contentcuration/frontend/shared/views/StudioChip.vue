@@ -5,11 +5,8 @@
     class="studio-chip"
     :class="{
       'studio-chip--small': small,
-      'studio-chip--clickable': close || $listeners.click,
-      'studio-chip--active': isActive,
     }"
     :style="chipStyles"
-    @click="handleClick"
   >
     <div class="studio-chip__content">
       <div class="studio-chip__text">
@@ -18,6 +15,7 @@
         </slot>
       </div>
 
+      <!-- KIconButton is suitable for the close button -->
       <KIconButton
         v-if="close"
         class="studio-chip__close"
@@ -42,12 +40,10 @@
         type: String,
         default: '',
       },
-
       small: {
         type: Boolean,
         default: false,
       },
-
       close: {
         type: Boolean,
         default: false,
@@ -71,23 +67,7 @@
         return `Remove ${this.text}`;
       },
     },
-    mounted() {
-      document.addEventListener('click', this.handleClickOutside);
-    },
-    beforeDestroy() {
-      document.removeEventListener('click', this.handleClickOutside);
-    },
     methods: {
-      handleClick(event) {
-        event.stopPropagation();
-        this.isActive = true;
-        this.$emit('click', event);
-      },
-      handleClickOutside(event) {
-        if (this.$refs.chip && !this.$refs.chip.contains(event.target)) {
-          this.isActive = false;
-        }
-      },
       handleClose() {
         this.$emit('close');
       },
@@ -118,10 +98,6 @@
       padding: 2px 8px;
       font-size: 12px;
       border-radius: 12px;
-    }
-
-    &--clickable {
-      cursor: pointer;
     }
 
     &__content {
