@@ -99,8 +99,8 @@
           <div class="channel-title">
             {{
               channelVersion$({
-                name: currentChannel?.name || '',
-                version: currentChannel?.version || 0,
+                name: currentChannel ? currentChannel.name : '',
+                version: currentChannel ? currentChannel.version : 0,
               })
             }}
           </div>
@@ -158,11 +158,7 @@
             :label="confirmReplacementText$()"
             data-test="replacement-confirmation-checkbox"
             class="replacement-checkbox"
-            @change="
-              value => {
-                replacementConfirmed = value;
-              }
-            "
+            @change="onReplacementChange"
           />
         </div>
       </template>
@@ -434,6 +430,10 @@
         return store.dispatch('showSnackbar', params);
       }
 
+      function onReplacementChange(value) {
+        replacementConfirmed.value = value;
+      }
+
       function onSubmit() {
         // It should be possible to undo a submission within a short time window
         // in case the user made a mistake and wants to change something.
@@ -477,6 +477,7 @@
         countries,
         description,
         replacementConfirmed,
+        onReplacementChange,
         latestSubmissionIsLoading,
         latestSubmissionIsFinished,
         latestSubmissionStatus,
