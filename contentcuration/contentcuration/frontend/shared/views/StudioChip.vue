@@ -14,7 +14,6 @@
         </slot>
       </div>
 
-      <!-- KIconButton is suitable for the close button -->
       <KIconButton
         v-if="close"
         class="studio-chip__close"
