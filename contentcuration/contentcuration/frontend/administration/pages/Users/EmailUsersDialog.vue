@@ -3,9 +3,9 @@
   <KModal
     v-if="show"
     :size="600"
-    :title="$tr('sendEmailTitle')"
-    :submitText="$tr('sendButton')"
-    :cancelText="$tr('cancelButton')"
+    title="Send Email"
+    submitText="Send email"
+    cancelText="Cancel"
     data-test="email-dialog"
     @submit="submit"
     @cancel="cancel"
@@ -16,7 +16,7 @@
     >
       <div class="pb-4 pt-3">
         <div class="align-top layout-row mb-2">
-          <div class="flex-shrink pa-2">{{ $tr('fromLabel') }}:</div>
+          <div class="flex-shrink pa-2">From:</div>
           <div class="flex-grow">
             <StudioChip
               :text="senderEmail"
@@ -25,7 +25,7 @@
           </div>
         </div>
         <div class="align-top layout-row">
-          <div class="flex-shrink pa-2">{{ $tr('toLabel') }}:</div>
+          <div class="flex-shrink pa-2">To:</div>
           <div
             class="flex-grow"
             data-test="to-line"
@@ -74,15 +74,15 @@
         <KTextbox
           v-model="subject"
           class="mt-4"
-          :label="$tr('subjectLabel')"
+          label="Subject line"
           :required="true"
           :invalid="errors.subject"
           :showInvalidText="showInvalidText && errors.subject"
-          :invalidText="$tr('fieldRequiredText')"
+          invalidText="Field is required"
           :showLabel="true"
           :appearanceOverrides="getAppearanceOverrides(errors.subject)"
         />
-        <div class="caption grey--text">{{ $tr('addPlaceholderText') }}</div>
+        <div class="caption grey--text">Add placeholder to message</div>
         <div class="placeholder-buttons-container">
           <button
             v-for="placeholder in placeholders"
@@ -92,18 +92,18 @@
             type="button"
             @click="addPlaceholder(placeholder.placeholder)"
           >
-            {{ $tr(placeholder.translationKey) }}
+            {{ placeholder.label }}
           </button>
         </div>
         <div class="email-textarea">
           <KTextbox
             ref="message"
             v-model="message"
-            :label="$tr('emailBodyLabel')"
+            label="Email body"
             :required="true"
             :invalid="errors.message"
             :showInvalidText="showInvalidText && errors.message"
-            :invalidText="$tr('fieldRequiredText')"
+            invalidText="Field is required"
             :showLabel="true"
             :appearanceOverrides="getAppearanceOverrides(errors.message)"
             :floatingLabel="false"
@@ -116,14 +116,14 @@
     <!-- Warning modal for draft -->
     <KModal
       v-if="showWarning"
-      :title="$tr('draftWarningTitle')"
-      :submitText="$tr('discardDraftButton')"
-      :cancelText="$tr('keepOpenButton')"
+      title="Draft in progress"
+      submitText="Discard draft"
+      cancelText="Keep open"
       data-test="confirm"
       @submit="close"
       @cancel="showWarning = false"
     >
-      <p>{{ $tr('draftWarningText') }}</p>
+      <p>Draft will be lost upon exiting this editor. Are you sure you want to continue?</p>
     </KModal>
   </KModal>
 
@@ -181,6 +181,8 @@
         showWarning: false,
         recipients: [],
         showInvalidText: false,
+        subject: '',
+        message: '',
       };
     },
     computed: {
@@ -210,27 +212,22 @@
           {
             label: 'First name',
             placeholder: '{first_name}',
-            translationKey: 'firstNamePlaceholder',
           },
           {
             label: 'Last name',
             placeholder: '{last_name}',
-            translationKey: 'lastNamePlaceholder',
           },
           {
             label: 'Email',
             placeholder: '{email}',
-            translationKey: 'emailPlaceholder',
           },
           {
             label: 'Date',
             placeholder: '{current_date}',
-            translationKey: 'datePlaceholder',
           },
           {
             label: 'Time',
             placeholder: '{current_time}',
-            translationKey: 'timePlaceholder',
           },
         ];
       },
@@ -316,27 +313,6 @@
             this.$store.dispatch('showSnackbarSimple', 'Email failed to send');
           });
       },
-    },
-    $trs: {
-      sendEmailTitle: 'Send Email',
-      fromLabel: 'From',
-      toLabel: 'To',
-      subjectLabel: 'Subject line',
-      emailBodyLabel: 'Email body',
-      addPlaceholderText: 'Add placeholder to message',
-      firstNamePlaceholder: 'First name',
-      lastNamePlaceholder: 'Last name',
-      emailPlaceholder: 'Email',
-      datePlaceholder: 'Date',
-      timePlaceholder: 'Time',
-      draftWarningTitle: 'Draft in progress',
-      draftWarningText:
-        'Draft will be lost upon exiting this editor. Are you sure you want to continue?',
-      discardDraftButton: 'Discard draft',
-      keepOpenButton: 'Keep open',
-      cancelButton: 'Cancel',
-      sendButton: 'Send email',
-      fieldRequiredText: 'Field is required',
     },
   };
 
