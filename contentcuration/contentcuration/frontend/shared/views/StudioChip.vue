@@ -4,6 +4,8 @@
     ref="chip"
     class="studio-chip"
     :style="chipStyles"
+    @mouseenter="isHovered = true"
+    @mouseleave="isHovered = false"
   >
     <div class="studio-chip__content">
       <div class="studio-chip__text">
@@ -42,11 +44,18 @@
         default: false,
       },
     },
+    data() {
+      return {
+        isHovered: false,
+      };
+    },
     computed: {
       chipStyles() {
         const baseColor = this.$themePalette.grey.v_200;
+        const hoverColor = this.$themePalette.grey.v_300;
+
         return {
-          backgroundColor: baseColor,
+          backgroundColor: this.isHovered ? hoverColor : baseColor,
         };
       },
       removeLabel() {
@@ -74,6 +83,7 @@
     margin: 2px;
     font-size: 12px;
     white-space: nowrap;
+    cursor: default;
     user-select: none;
     border-radius: 12px;
     transition: all 0.2s ease;
