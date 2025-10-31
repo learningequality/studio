@@ -27,7 +27,7 @@
         <div class="form-row">
           <div class="form-label">To:</div>
           <div
-            class="form-content"
+            style="flex-grow: 1"
             data-test="to-line"
           >
             <ExpandableList
@@ -73,7 +73,7 @@
         </div>
         <KTextbox
           v-model="subject"
-          class="subject-field"
+          class="mt-4"
           label="Subject line"
           :required="true"
           :invalid="errors.subject"
@@ -351,15 +351,6 @@
 
   .form-content {
     flex: 1 1 auto;
-  }
-
-  .subject-field {
-    margin-top: 16px;
-  }
-
-  .caption-text {
-    font-size: 0.875rem;
-    color: var(--v-grey-darken1);
   }
 
   .placeholder-buttons-container {
