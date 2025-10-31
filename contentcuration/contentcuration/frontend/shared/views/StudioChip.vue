@@ -3,9 +3,6 @@
   <div
     ref="chip"
     class="studio-chip"
-    :class="{
-      'studio-chip--small': small,
-    }"
     :style="chipStyles"
   >
     <div class="studio-chip__content">
@@ -39,10 +36,6 @@
       text: {
         type: String,
         default: '',
-      },
-      small: {
-        type: Boolean,
-        default: false,
       },
       close: {
         type: Boolean,
@@ -84,21 +77,13 @@
     align-items: center;
     height: 24px;
     min-height: 24px;
-    padding: 4px;
+    padding: 2px 8px;
     margin: 2px;
+    font-size: 12px;
     white-space: nowrap;
     user-select: none;
-    border-radius: 16px;
+    border-radius: 12px;
     transition: all 0.2s ease;
-
-    /* Small variant - still 24px height */
-    &--small {
-      height: 24px;
-      min-height: 24px;
-      padding: 2px 8px;
-      font-size: 12px;
-      border-radius: 12px;
-    }
 
     &__content {
       display: flex;
