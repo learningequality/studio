@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/vue';
+import { render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { createLocalVue } from '@vue/test-utils';
 import Vuex from 'vuex';
@@ -65,6 +65,9 @@ const renderComponent = (props = {}) => {
     store,
     props: defaultProps,
     routes: new VueRouter(),
+    stubs: {
+      transition: true,
+    },
   });
 };
 
@@ -84,9 +87,14 @@ describe('EmailUsersDialog', () => {
     expect(screen.getByText('sender@example.com')).toBeInTheDocument();
   });
 
-  it('displays individual user chips when initialRecipients are provided', () => {
+  it('displays individual user chips when initialRecipients are provided', async () => {
     renderComponent({ initialRecipients: [userId, userId2] });
-    expect(screen.getByText('Testy User')).toBeInTheDocument();
+
+    // Use waitFor to handle async rendering
+    await waitFor(() => {
+      expect(screen.getByText('Testy User')).toBeInTheDocument();
+    });
+
     expect(screen.getByText('Testier User')).toBeInTheDocument();
   });
 
@@ -122,7 +130,8 @@ describe('EmailUsersDialog', () => {
 
       await user.click(screen.getByText('Send email'));
 
-      expect(screen.getByText('Field is required')).toBeInTheDocument();
+      const errorMessages = screen.getAllByText('Field is required');
+      expect(errorMessages.length).toBeGreaterThan(0);
       expect(mockActions.sendEmail).not.toHaveBeenCalled();
     });
 
@@ -130,7 +139,8 @@ describe('EmailUsersDialog', () => {
       const user = userEvent.setup();
       renderComponent({ initialRecipients: [userId] });
 
-      await user.type(screen.getByLabelText('Email body'), 'Test Message');
+      const messageInput = screen.getByLabelText(/email body/i);
+      await user.type(messageInput, 'Test Message');
       await user.click(screen.getByText('Send email'));
 
       expect(mockActions.sendEmail).not.toHaveBeenCalled();
@@ -140,7 +150,8 @@ describe('EmailUsersDialog', () => {
       const user = userEvent.setup();
       renderComponent({ initialRecipients: [userId] });
 
-      await user.type(screen.getByLabelText('Subject line'), 'Test Subject');
+      const subjectInput = screen.getByLabelText(/subject line/i);
+      await user.type(subjectInput, 'Test Subject');
       await user.click(screen.getByText('Send email'));
 
       expect(mockActions.sendEmail).not.toHaveBeenCalled();
@@ -152,7 +163,7 @@ describe('EmailUsersDialog', () => {
       const user = userEvent.setup();
       renderComponent({ initialRecipients: [userId] });
 
-      const messageInput = screen.getByLabelText('Email body');
+      const messageInput = screen.getByLabelText(/email body/i);
       await user.type(messageInput, 'Hello ');
       await user.click(screen.getByText('First name'));
 
@@ -165,8 +176,13 @@ describe('EmailUsersDialog', () => {
       const user = userEvent.setup();
       renderComponent({ initialRecipients: [userId, userId2] });
 
-      await user.type(screen.getByLabelText('Subject line'), 'Test Subject');
-      await user.type(screen.getByLabelText('Email body'), 'Test Message');
+      // Wait for recipients to be loaded
+      await waitFor(() => {
+        expect(screen.getByText('Testy User')).toBeInTheDocument();
+      });
+
+      await user.type(screen.getByLabelText(/subject line/i), 'Test Subject');
+      await user.type(screen.getByLabelText(/email body/i), 'Test Message');
       await user.click(screen.getByText('Send email'));
 
       expect(mockActions.sendEmail).toHaveBeenCalledWith(expect.any(Object), {
@@ -182,10 +198,20 @@ describe('EmailUsersDialog', () => {
       const user = userEvent.setup();
       renderComponent({ initialRecipients: [userId, userId2] });
 
+      // Wait for chips to render
+      await waitFor(() => {
+        expect(screen.getByText('Testy User')).toBeInTheDocument();
+      });
+
+      // Use getAllByTestId with the correct test ID
       const removeButtons = screen.getAllByTestId('remove');
       await user.click(removeButtons[0]);
 
-      expect(screen.queryByText('Testy User')).not.toBeInTheDocument();
+      // Wait for the removal to take effect
+      await waitFor(() => {
+        expect(screen.queryByText('Testy User')).not.toBeInTheDocument();
+      });
+
       expect(screen.getByText('Testier User')).toBeInTheDocument();
     });
   });
@@ -201,8 +227,8 @@ describe('EmailUsersDialog', () => {
         },
       });
 
-      await user.type(screen.getByLabelText('Subject line'), 'Bulk Email Subject');
-      await user.type(screen.getByLabelText('Email body'), 'Bulk Email Message');
+      await user.type(screen.getByLabelText(/subject line/i), 'Bulk Email Subject');
+      await user.type(screen.getByLabelText(/email body/i), 'Bulk Email Message');
       await user.click(screen.getByText('Send email'));
 
       expect(mockActions.sendEmail).toHaveBeenCalledWith(expect.any(Object), {
@@ -222,7 +248,7 @@ describe('EmailUsersDialog', () => {
       const user = userEvent.setup();
       renderComponent({ initialRecipients: [userId] });
 
-      await user.type(screen.getByLabelText('Subject line'), 'Draft Subject');
+      await user.type(screen.getByLabelText(/subject line/i), 'Draft Subject');
       await user.click(screen.getByText('Cancel'));
 
       expect(screen.getByText('Draft in progress')).toBeInTheDocument();
@@ -244,25 +270,26 @@ describe('EmailUsersDialog', () => {
 
     it('closes dialog when confirming discard in warning modal', async () => {
       const user = userEvent.setup();
-      renderComponent({ initialRecipients: [userId] });
+      const { emitted } = renderComponent({ initialRecipients: [userId] });
 
-      await user.type(screen.getByLabelText('Subject line'), 'Draft Subject');
+      await user.type(screen.getByLabelText(/subject line/i), 'Draft Subject');
       await user.click(screen.getByText('Cancel'));
 
-      const discardButton = screen.getByRole('button', { name: 'Discard draft' });
+      const discardButton = screen.getByRole('button', { name: /discard draft/i });
       await user.click(discardButton);
 
-      expect(screen.queryByText('Send Email')).not.toBeInTheDocument();
+      expect(emitted().input).toBeTruthy();
+      expect(emitted().input[0]).toEqual([false]);
     });
 
     it('keeps dialog open when canceling warning modal', async () => {
       const user = userEvent.setup();
       renderComponent({ initialRecipients: [userId] });
 
-      await user.type(screen.getByLabelText('Subject line'), 'Draft Subject');
+      await user.type(screen.getByLabelText(/subject line/i), 'Draft Subject');
       await user.click(screen.getByText('Cancel'));
 
-      const keepOpenButton = screen.getByRole('button', { name: 'Keep open' });
+      const keepOpenButton = screen.getByRole('button', { name: /keep open/i });
       await user.click(keepOpenButton);
 
       expect(screen.getByText('Send Email')).toBeInTheDocument();
@@ -275,8 +302,8 @@ describe('EmailUsersDialog', () => {
       const user = userEvent.setup();
       renderComponent({ initialRecipients: [userId] });
 
-      await user.type(screen.getByLabelText('Subject line'), 'Test Subject');
-      await user.type(screen.getByLabelText('Email body'), 'Test Message');
+      await user.type(screen.getByLabelText(/subject line/i), 'Test Subject');
+      await user.type(screen.getByLabelText(/email body/i), 'Test Message');
       await user.click(screen.getByText('Send email'));
 
       expect(mockActions.showSnackbarSimple).toHaveBeenCalledWith(expect.any(Object), 'Email sent');
@@ -287,8 +314,8 @@ describe('EmailUsersDialog', () => {
       const user = userEvent.setup();
       renderComponent({ initialRecipients: [userId] });
 
-      await user.type(screen.getByLabelText('Subject line'), 'Test Subject');
-      await user.type(screen.getByLabelText('Email body'), 'Test Message');
+      await user.type(screen.getByLabelText(/subject line/i), 'Test Subject');
+      await user.type(screen.getByLabelText(/email body/i), 'Test Message');
       await user.click(screen.getByText('Send email'));
 
       expect(mockActions.showSnackbarSimple).toHaveBeenCalledWith(
