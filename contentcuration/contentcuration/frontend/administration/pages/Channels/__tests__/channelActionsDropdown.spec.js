@@ -35,6 +35,7 @@ const mockActions = {
   updateChannel: jest.fn(() => Promise.resolve()),
   deleteChannel: jest.fn(() => Promise.resolve()),
   getAdminChannelListDetails: jest.fn(() => Promise.resolve([channel])),
+  showSnackbarSimple: jest.fn(() => Promise.resolve()),
 };
 
 const createMockStore = (channelProps = {}) => {
@@ -59,6 +60,9 @@ const createMockStore = (channelProps = {}) => {
           getAdminChannelListDetails: mockActions.getAdminChannelListDetails,
         },
       },
+    },
+    actions: {
+      showSnackbarSimple: mockActions.showSnackbarSimple,
     },
   });
 };
