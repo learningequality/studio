@@ -73,7 +73,6 @@ const createMockRouter = () => {
       {
         name: 'USERS',
         path: '/users',
-        component: { template: '<div>Users Page</div>' },
       },
     ],
   });
