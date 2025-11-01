@@ -50,10 +50,8 @@
                     data-test="remove"
                     @close="remove(item.id)"
                   >
-                    <div style="max-width: 72px">
-                      <div class="text-truncate">
-                        {{ item.name }}
-                      </div>
+                    <div class="text-truncate">
+                      {{ item.name }}
                     </div>
                   </StudioChip>
                 </div>
@@ -343,6 +341,15 @@
 
   .form-content {
     flex: 1 1 auto;
+  }
+
+  .text-truncate {
+    display: inline-block;
+    max-width: 62px;
+    margin-top: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .placeholder-buttons-container {
