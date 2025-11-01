@@ -67,17 +67,29 @@ const createMockStore = (channelProps = {}) => {
   });
 };
 
+const createMockRouter = () => {
+  return new VueRouter({
+    routes: [
+      {
+        name: 'USERS',
+        path: '/users',
+        component: { template: '<div>Users Page</div>' },
+      },
+    ],
+  });
+};
+
 const renderComponent = (props = {}) => {
   const store = createMockStore(props.channelProps);
+  const router = createMockRouter();
 
   return render(ChannelActionsDropdown, {
     localVue,
     store,
     props: { channelId },
-    routes: new VueRouter(),
+    routes: router,
   });
 };
-
 describe('channelActionsDropdown', () => {
   beforeEach(() => {
     jest.clearAllMocks();
