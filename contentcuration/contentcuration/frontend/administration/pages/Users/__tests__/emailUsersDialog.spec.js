@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/vue';
+import { render, screen } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { createLocalVue } from '@vue/test-utils';
 import Vuex from 'vuex';
@@ -65,9 +65,6 @@ const renderComponent = (props = {}) => {
     store,
     props: defaultProps,
     routes: new VueRouter(),
-    stubs: {
-      transition: true,
-    },
   });
 };
 
@@ -87,14 +84,11 @@ describe('EmailUsersDialog', () => {
     expect(screen.getByText('sender@example.com')).toBeInTheDocument();
   });
 
-  it('displays individual user chips when initialRecipients are provided', async () => {
+  it('displays individual user chips when initialRecipients are provided', () => {
     renderComponent({ initialRecipients: [userId, userId2] });
 
-    // Use waitFor to handle async rendering
-    await waitFor(() => {
-      expect(screen.getByText('Testy User')).toBeInTheDocument();
-    });
-
+    // Should work immediately now with proper data initialization
+    expect(screen.getByText('Testy User')).toBeInTheDocument();
     expect(screen.getByText('Testier User')).toBeInTheDocument();
   });
 
@@ -176,10 +170,9 @@ describe('EmailUsersDialog', () => {
       const user = userEvent.setup();
       renderComponent({ initialRecipients: [userId, userId2] });
 
-      // Wait for recipients to be loaded
-      await waitFor(() => {
-        expect(screen.getByText('Testy User')).toBeInTheDocument();
-      });
+      // No need to wait - users should be immediately available
+      expect(screen.getByText('Testy User')).toBeInTheDocument();
+      expect(screen.getByText('Testier User')).toBeInTheDocument();
 
       await user.type(screen.getByLabelText(/subject line/i), 'Test Subject');
       await user.type(screen.getByLabelText(/email body/i), 'Test Message');
@@ -198,20 +191,13 @@ describe('EmailUsersDialog', () => {
       const user = userEvent.setup();
       renderComponent({ initialRecipients: [userId, userId2] });
 
-      // Wait for chips to render
-      await waitFor(() => {
-        expect(screen.getByText('Testy User')).toBeInTheDocument();
-      });
+      expect(screen.getByText('Testy User')).toBeInTheDocument();
+      expect(screen.getByText('Testier User')).toBeInTheDocument();
 
-      // Use getAllByTestId with the correct test ID
-      const removeButtons = screen.getAllByTestId('remove');
-      await user.click(removeButtons[0]);
+      const removeButton = screen.getByRole('button', { name: 'Remove Testy User' });
+      await user.click(removeButton);
 
-      // Wait for the removal to take effect
-      await waitFor(() => {
-        expect(screen.queryByText('Testy User')).not.toBeInTheDocument();
-      });
-
+      expect(screen.queryByText('Testy User')).not.toBeInTheDocument();
       expect(screen.getByText('Testier User')).toBeInTheDocument();
     });
   });
