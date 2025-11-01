@@ -30,11 +30,12 @@ jest.mock('shared/views/channel/mixins', () => ({
     },
   },
 }));
+const { generateChannelsPDF, generateChannelsCSV } = require('shared/views/channel/mixins')
+  .channelExportMixin.methods;
 
 const mockActions = {
   updateChannel: jest.fn(() => Promise.resolve()),
   deleteChannel: jest.fn(() => Promise.resolve()),
-  getAdminChannelListDetails: jest.fn(() => Promise.resolve([channel])),
   showSnackbarSimple: jest.fn(() => Promise.resolve()),
 };
 
@@ -57,7 +58,6 @@ const createMockStore = (channelProps = {}) => {
         actions: {
           updateChannel: mockActions.updateChannel,
           deleteChannel: mockActions.deleteChannel,
-          getAdminChannelListDetails: mockActions.getAdminChannelListDetails,
         },
       },
     },
@@ -252,6 +252,26 @@ describe('channelActionsDropdown', () => {
       await user.click(confirmButton);
 
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('download functionality', () => {
+    it('should call generateChannelsPDF and show snackbar when Download PDF is clicked', async () => {
+      const user = userEvent.setup();
+      renderComponent({ channelProps: { public: false, deleted: false } });
+
+      await user.click(screen.getByText('Download PDF'));
+
+      expect(generateChannelsPDF).toHaveBeenCalled();
+    });
+
+    it('should call generateChannelsCSV and show snackbar when Download CSV is clicked', async () => {
+      const user = userEvent.setup();
+      renderComponent({ channelProps: { public: false, deleted: false } });
+
+      await user.click(screen.getByText('Download CSV'));
+
+      expect(generateChannelsCSV).toHaveBeenCalled();
     });
   });
 
