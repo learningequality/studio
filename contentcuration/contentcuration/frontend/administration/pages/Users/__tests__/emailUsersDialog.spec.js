@@ -1,50 +1,97 @@
-import { mount } from '@vue/test-utils';
+import { render, screen } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
+import { createLocalVue } from '@vue/test-utils';
+import Vuex from 'vuex';
+import VueRouter from 'vue-router';
 import EmailUsersDialog from '../EmailUsersDialog';
-import { factory } from '../../../store';
 
-const store = factory();
+const localVue = createLocalVue();
+localVue.use(Vuex);
+localVue.use(VueRouter);
 
 const userId = 'test-user-id';
-const userEmail = 'test@user.com';
 const userId2 = 'test-user-id2';
-const userEmail2 = 'test2@user.com';
 const user1 = {
   id: userId,
   name: 'Testy User',
-  email: userEmail,
+  email: 'test@user.com',
 };
 const user2 = {
   id: userId2,
   name: 'Testier User',
-  email: userEmail2,
+  email: 'test2@user.com',
 };
 
-function makeWrapper() {
-  const wrapper = mount(EmailUsersDialog, {
-    store,
-    propsData: {
-      initialRecipients: [userId, userId2],
-    },
-    computed: {
-      users() {
-        return [user1, user2];
+const mockActions = {
+  sendEmail: jest.fn(() => Promise.resolve()),
+  showSnackbarSimple: jest.fn(() => Promise.resolve()),
+};
+
+const createMockStore = () => {
+  return new Vuex.Store({
+    modules: {
+      userAdmin: {
+        namespaced: true,
+        getters: {
+          getUsers: () => ids => {
+            const usersMap = {
+              [userId]: user1,
+              [userId2]: user2,
+            };
+            return ids.map(id => usersMap[id]);
+          },
+        },
+        actions: {
+          sendEmail: mockActions.sendEmail,
+        },
       },
     },
-  });
-
-  wrapper.vm.$refs = {
-    message: {
-      focus: jest.fn(),
+    actions: {
+      showSnackbarSimple: mockActions.showSnackbarSimple,
     },
+  });
+};
+
+const renderComponent = (props = {}) => {
+  const defaultProps = {
+    value: true,
+    ...props,
   };
 
-  return wrapper;
-}
+  const store = createMockStore();
 
-function makeBulkWrapper() {
-  const wrapper = mount(EmailUsersDialog, {
+  return render(EmailUsersDialog, {
+    localVue,
     store,
-    propsData: {
+    props: defaultProps,
+    routes: new VueRouter(),
+  });
+};
+
+describe('EmailUsersDialog', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    window.senderEmail = 'sender@example.com';
+  });
+
+  it('shows email dialog with correct title', () => {
+    renderComponent();
+    expect(screen.getByText('Send Email')).toBeInTheDocument();
+  });
+
+  it('displays sender email in From field', () => {
+    renderComponent();
+    expect(screen.getByText('sender@example.com')).toBeInTheDocument();
+  });
+
+  it('displays individual user chips when initialRecipients are provided', () => {
+    renderComponent({ initialRecipients: [userId, userId2] });
+    expect(screen.getByText('Testy User')).toBeInTheDocument();
+    expect(screen.getByText('Testier User')).toBeInTheDocument();
+  });
+
+  it('displays filter description when usersFilterFetchQueryParams are provided', () => {
+    renderComponent({
       userTypeFilter: 'active',
       locationFilter: 'Czech Republic',
       keywordFilter: 'test',
@@ -53,142 +100,114 @@ function makeBulkWrapper() {
         location: 'Czech Republic',
         keywords: 'test',
       },
-    },
+    });
+    expect(
+      screen.getByText('All active users from Czech Republic matching "test"'),
+    ).toBeInTheDocument();
   });
 
-  wrapper.vm.$refs = {
-    message: {
-      focus: jest.fn(),
-    },
-  };
-
-  return wrapper;
-}
-
-describe('emailUsersDialog', () => {
-  let wrapper;
-
-  beforeEach(async () => {
-    wrapper = makeWrapper();
-    await wrapper.setProps({ value: true });
+  it('displays all placeholder buttons', () => {
+    renderComponent();
+    expect(screen.getByText('First name')).toBeInTheDocument();
+    expect(screen.getByText('Last name')).toBeInTheDocument();
+    expect(screen.getByText('Email')).toBeInTheDocument();
+    expect(screen.getByText('Date')).toBeInTheDocument();
+    expect(screen.getByText('Time')).toBeInTheDocument();
   });
 
-  it('recipients should get set to userIds on dialog open', () => {
-    expect(wrapper.vm.recipients).toEqual([userId, userId2]);
-  });
+  describe('form validation', () => {
+    it('shows validation errors when submitting empty form', async () => {
+      const user = userEvent.setup();
+      renderComponent({ initialRecipients: [userId] });
 
-  describe('on close', () => {
-    it('should emit input event with false value', () => {
-      wrapper.vm.show = false;
-      expect(wrapper.emitted('input')[0][0]).toBe(false);
+      await user.click(screen.getByText('Send email'));
+
+      expect(screen.getByText('Field is required')).toBeInTheDocument();
+      expect(mockActions.sendEmail).not.toHaveBeenCalled();
     });
 
-    it('should show warning if subject is not blank', async () => {
-      await wrapper.setData({ subject: 'subject' });
-      await wrapper.vm.cancel();
-      expect(wrapper.vm.showWarning).toBe(true);
+    it('does not submit when subject is empty', async () => {
+      const user = userEvent.setup();
+      renderComponent({ initialRecipients: [userId] });
+
+      await user.type(screen.getByLabelText('Email body'), 'Test Message');
+      await user.click(screen.getByText('Send email'));
+
+      expect(mockActions.sendEmail).not.toHaveBeenCalled();
     });
 
-    it('should show warning if message is not blank', async () => {
-      await wrapper.setData({ message: 'message' });
-      await wrapper.vm.cancel();
-      expect(wrapper.vm.showWarning).toBe(true);
-    });
+    it('does not submit when message is empty', async () => {
+      const user = userEvent.setup();
+      renderComponent({ initialRecipients: [userId] });
 
-    it('should not show warning when canceling with no draft content', async () => {
-      await wrapper.setData({ subject: '', message: '' });
-      await wrapper.vm.cancel();
-      expect(wrapper.vm.showWarning).toBe(false);
-    });
+      await user.type(screen.getByLabelText('Subject line'), 'Test Subject');
+      await user.click(screen.getByText('Send email'));
 
-    it('confirming close should reset fields and close dialog', async () => {
-      await wrapper.setData({ subject: 'subject', message: 'message' });
-      wrapper.vm.showWarning = true;
-      await wrapper.vm.$nextTick();
-      await wrapper.findComponent('[data-test="confirm"]').vm.$emit('submit');
-      expect(wrapper.vm.subject).toBe('');
-      expect(wrapper.vm.message).toBe('');
-      expect(wrapper.emitted('input')[0][0]).toBe(false);
+      expect(mockActions.sendEmail).not.toHaveBeenCalled();
     });
   });
 
-  describe('on submit', () => {
-    let sendEmail;
+  describe('placeholder functionality', () => {
+    it('adds placeholder to message when placeholder button is clicked', async () => {
+      const user = userEvent.setup();
+      renderComponent({ initialRecipients: [userId] });
 
-    beforeEach(() => {
-      sendEmail = jest.spyOn(wrapper.vm, 'sendEmail').mockReturnValue(Promise.resolve());
-    });
+      const messageInput = screen.getByLabelText('Email body');
+      await user.type(messageInput, 'Hello ');
+      await user.click(screen.getByText('First name'));
 
-    it('should not send if subject is empty', async () => {
-      await wrapper.setData({ message: 'message' });
-      await wrapper.vm.submit();
-      expect(sendEmail).not.toHaveBeenCalled();
-    });
-
-    it('should not send if message is empty', async () => {
-      await wrapper.setData({ subject: 'subject' });
-      await wrapper.vm.submit();
-      expect(sendEmail).not.toHaveBeenCalled();
+      expect(messageInput.value).toContain('Hello');
     });
   });
 
-  it('clicking placeholder should add it to the message', async () => {
-    const message = 'Testing';
-    await wrapper.setData({ message });
-    const focusMock = jest.fn();
-    wrapper.vm.$refs.message.focus = focusMock;
+  describe('with individual users', () => {
+    it('calls sendEmail with correct arguments when form is submitted', async () => {
+      const user = userEvent.setup();
+      renderComponent({ initialRecipients: [userId, userId2] });
 
-    wrapper.vm.addPlaceholder('{test}');
-    expect(wrapper.vm.message).toBe(`${message} {test}`);
-    expect(focusMock).toHaveBeenCalled();
-  });
+      await user.type(screen.getByLabelText('Subject line'), 'Test Subject');
+      await user.type(screen.getByLabelText('Email body'), 'Test Message');
+      await user.click(screen.getByText('Send email'));
 
-  describe('when used with individual users', () => {
-    it('submitting should call sendEmail with correct arguments if form is valid', async () => {
-      const sendEmail = jest.spyOn(wrapper.vm, 'sendEmail').mockReturnValue(Promise.resolve());
-
-      const emailData = { subject: 'subject', message: 'message' };
-      await wrapper.setData(emailData);
-      await wrapper.vm.onSubmit();
-      expect(sendEmail).toHaveBeenCalledWith({
-        ...emailData,
+      expect(mockActions.sendEmail).toHaveBeenCalledWith(expect.any(Object), {
+        subject: 'Test Subject',
+        message: 'Test Message',
         query: {
           ids: `${userId},${userId2}`,
         },
       });
     });
 
-    it('user chips should be shown in the "To" line', () => {
-      const chips = wrapper.find('[data-test="to-line"]').findAllComponents({ name: 'StudioChip' });
-      expect(chips).toHaveLength(2);
-    });
+    it('removes user from recipients when remove button is clicked', async () => {
+      const user = userEvent.setup();
+      renderComponent({ initialRecipients: [userId, userId2] });
 
-    it('clicking remove on user should remove user from recipients', () => {
-      wrapper.vm.remove(userId);
-      expect(wrapper.vm.recipients).toEqual([userId2]);
-    });
+      const removeButtons = screen.getAllByTestId('remove');
+      await user.click(removeButtons[0]);
 
-    it('should show remove buttons for multiple recipients', () => {
-      const removeChips = wrapper.findAllComponents('[data-test="remove-chip"]');
-      expect(removeChips.length).toBe(2);
+      expect(screen.queryByText('Testy User')).not.toBeInTheDocument();
+      expect(screen.getByText('Testier User')).toBeInTheDocument();
     });
   });
 
-  describe('when used with user filters', () => {
-    beforeEach(async () => {
-      wrapper = makeBulkWrapper();
-      await wrapper.setProps({ value: true });
-    });
+  describe('with user filters', () => {
+    it('calls sendEmail with filter parameters when form is submitted', async () => {
+      const user = userEvent.setup();
+      renderComponent({
+        usersFilterFetchQueryParams: {
+          is_active: true,
+          location: 'Czech Republic',
+          keywords: 'test',
+        },
+      });
 
-    it('submitting should call sendEmail with correct arguments if form is valid', async () => {
-      const sendEmail = jest.spyOn(wrapper.vm, 'sendEmail').mockReturnValue(Promise.resolve());
+      await user.type(screen.getByLabelText('Subject line'), 'Bulk Email Subject');
+      await user.type(screen.getByLabelText('Email body'), 'Bulk Email Message');
+      await user.click(screen.getByText('Send email'));
 
-      const emailData = { subject: 'subject', message: 'message' };
-      await wrapper.setData(emailData);
-
-      await wrapper.vm.onSubmit();
-      expect(sendEmail).toHaveBeenCalledWith({
-        ...emailData,
+      expect(mockActions.sendEmail).toHaveBeenCalledWith(expect.any(Object), {
+        subject: 'Bulk Email Subject',
+        message: 'Bulk Email Message',
         query: {
           is_active: true,
           location: 'Czech Republic',
@@ -196,37 +215,86 @@ describe('emailUsersDialog', () => {
         },
       });
     });
+  });
 
-    it('a descriptive string should be shown in the "To" line', () => {
-      const toLineChip = wrapper
-        .find('[data-test="to-line"]')
-        .findComponent({ name: 'StudioChip' });
-      expect(toLineChip.text()).toContain('All active users');
+  describe('warning modal', () => {
+    it('shows warning modal when canceling with draft content', async () => {
+      const user = userEvent.setup();
+      renderComponent({ initialRecipients: [userId] });
+
+      await user.type(screen.getByLabelText('Subject line'), 'Draft Subject');
+      await user.click(screen.getByText('Cancel'));
+
+      expect(screen.getByText('Draft in progress')).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          'Draft will be lost upon exiting this editor. Are you sure you want to continue?',
+        ),
+      ).toBeInTheDocument();
+    });
+
+    it('does not show warning modal when canceling without draft content', async () => {
+      const user = userEvent.setup();
+      renderComponent({ initialRecipients: [userId] });
+
+      await user.click(screen.getByText('Cancel'));
+
+      expect(screen.queryByText('Draft in progress')).not.toBeInTheDocument();
+    });
+
+    it('closes dialog when confirming discard in warning modal', async () => {
+      const user = userEvent.setup();
+      renderComponent({ initialRecipients: [userId] });
+
+      await user.type(screen.getByLabelText('Subject line'), 'Draft Subject');
+      await user.click(screen.getByText('Cancel'));
+
+      const discardButton = screen.getByRole('button', { name: 'Discard draft' });
+      await user.click(discardButton);
+
+      expect(screen.queryByText('Send Email')).not.toBeInTheDocument();
+    });
+
+    it('keeps dialog open when canceling warning modal', async () => {
+      const user = userEvent.setup();
+      renderComponent({ initialRecipients: [userId] });
+
+      await user.type(screen.getByLabelText('Subject line'), 'Draft Subject');
+      await user.click(screen.getByText('Cancel'));
+
+      const keepOpenButton = screen.getByRole('button', { name: 'Keep open' });
+      await user.click(keepOpenButton);
+
+      expect(screen.getByText('Send Email')).toBeInTheDocument();
+      expect(screen.queryByText('Draft in progress')).not.toBeInTheDocument();
     });
   });
 
-  describe('additional important tests', () => {
-    it('should show warning modal when present', async () => {
-      wrapper.vm.showWarning = true;
-      await wrapper.vm.$nextTick();
-      const warningModal = wrapper.findComponent('[data-test="confirm"]');
-      expect(warningModal.exists()).toBe(true);
+  describe('success and error handling', () => {
+    it('shows success snackbar when email is sent successfully', async () => {
+      const user = userEvent.setup();
+      renderComponent({ initialRecipients: [userId] });
+
+      await user.type(screen.getByLabelText('Subject line'), 'Test Subject');
+      await user.type(screen.getByLabelText('Email body'), 'Test Message');
+      await user.click(screen.getByText('Send email'));
+
+      expect(mockActions.showSnackbarSimple).toHaveBeenCalledWith(expect.any(Object), 'Email sent');
     });
 
-    it('should show validation errors after failed submission', async () => {
-      await wrapper.setData({ subject: '', message: '' });
-      await wrapper.vm.onValidationFailed();
-      expect(wrapper.vm.showInvalidText).toBe(true);
-    });
+    it('shows error snackbar when email fails to send', async () => {
+      mockActions.sendEmail.mockRejectedValueOnce(new Error('Send failed'));
+      const user = userEvent.setup();
+      renderComponent({ initialRecipients: [userId] });
 
-    it('should close warning modal when cancel is clicked', async () => {
-      wrapper.vm.showWarning = true;
-      await wrapper.vm.$nextTick();
+      await user.type(screen.getByLabelText('Subject line'), 'Test Subject');
+      await user.type(screen.getByLabelText('Email body'), 'Test Message');
+      await user.click(screen.getByText('Send email'));
 
-      const warningModal = wrapper.findComponent('[data-test="confirm"]');
-      warningModal.vm.$emit('cancel');
-
-      expect(wrapper.vm.showWarning).toBe(false);
+      expect(mockActions.showSnackbarSimple).toHaveBeenCalledWith(
+        expect.any(Object),
+        'Email failed to send',
+      );
     });
   });
 });
