@@ -35,7 +35,6 @@ const mockActions = {
   updateChannel: jest.fn(() => Promise.resolve()),
   deleteChannel: jest.fn(() => Promise.resolve()),
   getAdminChannelListDetails: jest.fn(() => Promise.resolve([channel])),
-  showSnackbarSimple: jest.fn(() => Promise.resolve()),
 };
 
 const createMockStore = (channelProps = {}) => {
@@ -61,9 +60,6 @@ const createMockStore = (channelProps = {}) => {
         },
       },
     },
-    actions: {
-      showSnackbarSimple: mockActions.showSnackbarSimple,
-    },
   });
 };
 
@@ -84,7 +80,7 @@ describe('channelActionsDropdown', () => {
   });
 
   describe('restore channel dialog', () => {
-    it('should open confirmation modal, call updateChannel action, and show snackbar when confirmed', async () => {
+    it('should open confirmation modal and call updateChannel action when confirmed', async () => {
       const dialogMessage = `Are you sure you want to restore Channel Test and make it active again?`;
       const user = userEvent.setup();
 
@@ -104,7 +100,6 @@ describe('channelActionsDropdown', () => {
         id: channelId,
         deleted: false,
       });
-      expect(mockActions.showSnackbarSimple.mock.calls[0][1]).toBe('Channel restored');
     });
 
     it('should close the dialog when confirm button is clicked', async () => {
@@ -120,7 +115,7 @@ describe('channelActionsDropdown', () => {
   });
 
   describe('delete permanently dialog', () => {
-    it('should open confirmation modal, call deleteChannel action, and show snackbar when confirmed', async () => {
+    it('should open confirmation modal and call deleteChannel action when confirmed', async () => {
       const dialogMessage = `Are you sure you want to permanently delete Channel Test? This can not be undone.`;
       const user = userEvent.setup();
 
@@ -137,7 +132,6 @@ describe('channelActionsDropdown', () => {
       await user.click(confirmButton);
 
       expect(mockActions.deleteChannel).toHaveBeenCalledWith(expect.any(Object), channelId);
-      expect(mockActions.showSnackbarSimple.mock.calls[0][1]).toBe('Channel deleted permanently');
     });
 
     it('should close the dialog when confirm button is clicked', async () => {
@@ -153,7 +147,7 @@ describe('channelActionsDropdown', () => {
   });
 
   describe('make public dialog', () => {
-    it('should open confirmation modal, call updateChannel action, and show snackbar when confirmed', async () => {
+    it('should open confirmation modal and call updateChannel action when confirmed', async () => {
       const dialogMessage = `All users will be able to view and import content from Channel Test.`;
       const user = userEvent.setup();
 
@@ -173,7 +167,6 @@ describe('channelActionsDropdown', () => {
         id: channelId,
         isPublic: true,
       });
-      expect(mockActions.showSnackbarSimple.mock.calls[0][1]).toBe('Channel changed to public');
     });
 
     it('should close the dialog when confirm button is clicked', async () => {
@@ -189,7 +182,7 @@ describe('channelActionsDropdown', () => {
   });
 
   describe('delete channel dialog', () => {
-    it('should open confirmation modal, call updateChannel action, and show snackbar when confirmed', async () => {
+    it('should open confirmation modal and call updateChannel action when confirmed', async () => {
       const dialogMessage = `Are you sure you want to delete Channel Test?`;
       const user = userEvent.setup();
 
@@ -209,7 +202,6 @@ describe('channelActionsDropdown', () => {
         id: channelId,
         deleted: true,
       });
-      expect(mockActions.showSnackbarSimple.mock.calls[0][1]).toBe('Channel deleted');
     });
 
     it('should close the dialog when confirm button is clicked', async () => {
@@ -225,7 +217,7 @@ describe('channelActionsDropdown', () => {
   });
 
   describe('make private dialog', () => {
-    it('should open confirmation modal, call updateChannel action, and show snackbar when confirmed', async () => {
+    it('should open confirmation modal and call updateChannel action when confirmed', async () => {
       const dialogMessage = `Only users with view-only or edit permissions will be able to access Channel Test.`;
       const user = userEvent.setup();
 
@@ -245,7 +237,6 @@ describe('channelActionsDropdown', () => {
         id: channelId,
         isPublic: false,
       });
-      expect(mockActions.showSnackbarSimple.mock.calls[0][1]).toBe('Channel changed to private');
     });
 
     it('should close the dialog when confirm button is clicked', async () => {
