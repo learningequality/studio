@@ -1,173 +1,170 @@
 <template>
 
-  <div>
-    <FullscreenModal
-      v-if="!moveModalOpen"
-      v-model="dialog"
-      :header="$tr('trashModalTitle')"
+  <FullscreenModal
+    v-model="dialog"
+    :header="$tr('trashModalTitle')"
+  >
+    <LoadingText
+      v-if="loading"
+      data-test="loading"
+    />
+    <VContainer
+      v-else-if="!items.length"
+      fluid
+      data-test="empty"
     >
-      <LoadingText
-        v-if="loading"
-        data-test="loading"
-      />
+      <h1 class="font-weight-bold headline mt-4 pt-4 text-xs-center">
+        {{ $tr('trashEmptyText') }}
+      </h1>
+      <p class="mt-3 subheading text-xs-center">
+        {{ $tr('trashEmptySubtext') }}
+      </p>
+    </VContainer>
+    <VContent v-else>
       <VContainer
-        v-else-if="!items.length"
         fluid
-        data-test="empty"
+        class="pa-4"
+        data-test="list"
+        style="max-height: calc(100vh - 128px); overflow-y: auto"
       >
-        <h1 class="font-weight-bold headline mt-4 pt-4 text-xs-center">
-          {{ $tr('trashEmptyText') }}
-        </h1>
-        <p class="mt-3 subheading text-xs-center">
-          {{ $tr('trashEmptySubtext') }}
-        </p>
-      </VContainer>
-      <VContent v-else>
-        <VContainer
-          fluid
-          class="pa-4"
-          data-test="list"
-          style="max-height: calc(100vh - 128px); overflow-y: auto"
+        <VCard
+          style="width: 100%; max-width: 900px; margin: 0 auto"
+          flat
+          class="pa-2"
         >
-          <VCard
-            style="width: 100%; max-width: 900px; margin: 0 auto"
-            flat
-            class="pa-2"
+          <VDataTable
+            :headers="headers"
+            :items="items"
+            hide-actions
+            must-sort
           >
-            <VDataTable
-              :headers="headers"
-              :items="items"
-              hide-actions
-              must-sort
-            >
-              <template #headerCell="props">
-                <VLayout
-                  v-if="props.header.selectAll"
-                  row
-                  align-center
-                >
-                  <VFlex shrink>
-                    <Checkbox
-                      :inputValue="selected.length === items.length"
-                      :indeterminate="!!selected.length && selected.length !== items.length"
-                      data-test="selectall"
-                      @input="toggleSelectAll"
-                    />
-                  </VFlex>
-                  <VFlex>
-                    {{ props.header.text }}
-                  </VFlex>
-                </VLayout>
-                <span v-else>
-                  {{ props.header.text }}
-                </span>
-              </template>
-              <template #items="{ item }">
-                <tr
-                  :key="item.id"
-                  :style="{ backgroundColor: getItemBackground(item.id) }"
-                >
-                  <td>
-                    <VLayout
-                      row
-                      align-center
-                    >
-                      <VFlex shrink>
-                        <Checkbox
-                          v-model="selected"
-                          :value="item.id"
-                          data-test="checkbox"
-                        />
-                      </VFlex>
-                      <VFlex
-                        shrink
-                        class="mx-3"
-                      >
-                        <ContentNodeIcon :kind="item.kind" />
-                      </VFlex>
-                      <VFlex
-                        :class="getTitleClass(item)"
-                        grow
-                      >
-                        <ActionLink
-                          :text="getTitle(item)"
-                          data-test="item"
-                          @click="previewNodeId = item.id"
-                        />
-                      </VFlex>
-                    </VLayout>
-                  </td>
-                  <td class="text-xs-right">
-                    {{ $formatRelative(item.modified, { now: new Date() }) }}
-                  </td>
-                </tr>
-              </template>
-            </VDataTable>
-            <div class="show-more-button-container">
-              <KButton
-                v-if="more"
-                :disabled="moreLoading"
-                @click="loadMore"
+            <template #headerCell="props">
+              <VLayout
+                v-if="props.header.selectAll"
+                row
+                align-center
               >
-                {{ showMoreLabel }}
-              </KButton>
-            </div>
-          </VCard>
-        </VContainer>
-        <ResourceDrawer
-          style="margin-top: 64px"
-          :nodeId="previewNodeId"
-          :channelId="currentChannel.id"
-          app
-          @close="previewNodeId = null"
-        />
-      </VContent>
-      <template #bottom>
-        <span
-          v-if="selected.length"
-          class="mr-4 subheading"
-        >
-          {{ getSelectedTopicAndResourceCountText(selected) }}
-        </span>
-        <VSpacer />
-        <KButtonGroup>
-          <KButton
-            appearance="flat-button"
-            :text="$tr('restoreButton')"
-            :disabled="!selected.length"
-            data-test="restore"
-            @click="moveModalOpen = true"
-          />
-          <KButton
-            :primary="true"
-            :text="$tr('deleteButton')"
-            :disabled="!selected.length"
-            data-test="delete"
-            @click="showConfirmationDialog = true"
-          />
-        </KButtonGroup>
-      </template>
-      <KModal
-        v-if="showConfirmationDialog"
-        :title="$tr('deleteConfirmationHeader', counts)"
-        :cancelText="$tr('deleteConfirmationCancelButton')"
-        :submitText="$tr('deleteConfirmationDeleteButton')"
-        data-test="deleteconfirm"
-        @cancel="showConfirmationDialog = false"
-        @submit="deleteNodes"
+                <VFlex shrink>
+                  <Checkbox
+                    :inputValue="selected.length === items.length"
+                    :indeterminate="!!selected.length && selected.length !== items.length"
+                    data-test="selectall"
+                    @input="toggleSelectAll"
+                  />
+                </VFlex>
+                <VFlex>
+                  {{ props.header.text }}
+                </VFlex>
+              </VLayout>
+              <span v-else>
+                {{ props.header.text }}
+              </span>
+            </template>
+            <template #items="{ item }">
+              <tr
+                :key="item.id"
+                :style="{ backgroundColor: getItemBackground(item.id) }"
+              >
+                <td>
+                  <VLayout
+                    row
+                    align-center
+                  >
+                    <VFlex shrink>
+                      <Checkbox
+                        v-model="selected"
+                        :value="item.id"
+                        data-test="checkbox"
+                      />
+                    </VFlex>
+                    <VFlex
+                      shrink
+                      class="mx-3"
+                    >
+                      <ContentNodeIcon :kind="item.kind" />
+                    </VFlex>
+                    <VFlex
+                      :class="getTitleClass(item)"
+                      grow
+                    >
+                      <ActionLink
+                        :text="getTitle(item)"
+                        data-test="item"
+                        @click="previewNodeId = item.id"
+                      />
+                    </VFlex>
+                  </VLayout>
+                </td>
+                <td class="text-xs-right">
+                  {{ $formatRelative(item.modified, { now: new Date() }) }}
+                </td>
+              </tr>
+            </template>
+          </VDataTable>
+          <div class="show-more-button-container">
+            <KButton
+              v-if="more"
+              :disabled="moreLoading"
+              @click="loadMore"
+            >
+              {{ showMoreLabel }}
+            </KButton>
+          </div>
+        </VCard>
+      </VContainer>
+      <ResourceDrawer
+        style="margin-top: 64px"
+        :nodeId="previewNodeId"
+        :channelId="currentChannel.id"
+        app
+        @close="previewNodeId = null"
+      />
+    </VContent>
+    <template #bottom>
+      <span
+        v-if="selected.length"
+        class="mr-4 subheading"
       >
-        <p>{{ $tr('deleteConfirmationText') }}</p>
-      </KModal>
-    </FullscreenModal>
+        {{ getSelectedTopicAndResourceCountText(selected) }}
+      </span>
+      <VSpacer />
+      <KButtonGroup>
+        <KButton
+          appearance="flat-button"
+          :text="$tr('restoreButton')"
+          :disabled="!selected.length"
+          data-test="restore"
+          @click="moveModalOpen = true"
+        />
+        <KButton
+          :primary="true"
+          :text="$tr('deleteButton')"
+          :disabled="!selected.length"
+          data-test="delete"
+          @click="showConfirmationDialog = true"
+        />
+      </KButtonGroup>
+    </template>
+    <KModal
+      data-test="delete-confirmation-dialog"
+      v-if="showConfirmationDialog"
+      :title="$tr('deleteConfirmationHeader', counts)"
+      :cancelText="$tr('deleteConfirmationCancelButton')"
+      :submitText="$tr('deleteConfirmationDeleteButton')"
+      @cancel="showConfirmationDialog = false"
+      @submit="deleteNodes"
+    >
+      <p>{{ $tr('deleteConfirmationText') }}</p>
+    </KModal>
     <MoveModal
-      v-else
+      v-if="moveModalOpen"
       ref="moveModal"
       v-model="moveModalOpen"
       :moveNodeIds="selected"
       :movingFromTrash="true"
       @target="moveNodes"
     />
-  </div>
+  </FullscreenModal>
 
 </template>
 
@@ -363,10 +360,6 @@
     display: flex;
     justify-content: center;
     width: 100%;
-  }
-
-  .button-group {
-    white-space: nowrap;
   }
 
 </style>
