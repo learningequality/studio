@@ -173,7 +173,7 @@
     data() {
       return {
         showWarning: false,
-        recipients: [],
+        recipients: this.initialRecipients || [],
         showInvalidText: false,
       };
     },
