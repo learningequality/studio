@@ -13,8 +13,13 @@
       }}
     </div>
 
+    <!-- Set minHeight to prevent from content shifting after loaded -->
+    <StudioLargeLoader
+      v-if="show('storageUse', !storageUseByKind, 500)"
+      :style="{ minHeight: '370px' }"
+    />
     <KFixedGrid
-      v-if="storageUseByKind !== null"
+      v-else
       numCols="8"
       gutter="10"
     >
@@ -47,39 +52,56 @@
         </KFixedGridItem>
       </template>
     </KFixedGrid>
-    <div
-      v-else
-      class="circular-loader"
-    >
-      <KCircularLoader size="70" />
+
+    <div class="storage-request">
+      <h2 ref="requestheader">
+        {{ $tr('requestMoreSpaceHeading') }}
+      </h2>
+
+      <p>
+        {{ $tr('requestMoreSpaceMessage') }}
+      </p>
+
+      <h3>
+        {{ $tr('beforeRequestingHeading') }}
+      </h3>
+
+      <ul>
+        <li>
+          <span>{{ $tr('beforeRequestingMessage') + ' ' }}</span>
+          <KExternalLink
+            :text="$tr('learnMoreAboutImportingContentFromChannels')"
+            href="https://kolibri-studio.readthedocs.io/en/latest/add_content.html#import-content-from-other-channels"
+            openInNewTab
+          />
+        </li>
+        <li>
+          <span>{{ $tr('videoFiles') + ' ' }}</span>
+          <KExternalLink
+            :text="$tr('learnMoreAboutVideoCompression')"
+            href="https://ricecooker.readthedocs.io/en/latest/video_compression.html#handbrake-for-mp4"
+            openInNewTab
+          />
+        </li>
+        <li>
+          {{ $tr('largerStorageRequestPricing') }}
+        </li>
+      </ul>
+
+      <KButton
+        appearance="basic-link"
+        :text="toggleText"
+        data-test="toggle-link"
+        @click="toggleRequestForm"
+      />
+      <KTransition kind="component-vertical-slide-out-in">
+        <RequestForm
+          v-show="showRequestForm"
+          ref="requestform"
+          @submitted="showRequestForm = false"
+        />
+      </KTransition>
     </div>
-
-    <h2 ref="requestheader">
-      {{ $tr('requestMoreSpaceHeading') }}
-    </h2>
-
-    <p>
-      <span>{{ $tr('requestMoreSpaceMessage') + ' ' }}</span>
-
-      <KExternalLink
-        :text="$tr('learnMoreAboutImportingContentFromChannels')"
-        href="https://kolibri-studio.readthedocs.io/en/latest/add_content.html#import-content-from-other-channels"
-        openInNewTab
-      />
-    </p>
-
-    <KButton
-      appearance="basic-link"
-      :text="toggleText"
-      data-test="toggle-link"
-      @click="toggleRequestForm"
-    />
-    <KTransition kind="component-vertical-slide-out-in">
-      <RequestForm
-        v-show="showRequestForm"
-        @submitted="showRequestForm = false"
-      />
-    </KTransition>
   </div>
 
 </template>
@@ -88,15 +110,24 @@
 <script>
 
   import { mapGetters } from 'vuex';
+  import useKShow from 'kolibri-design-system/lib/composables/useKShow';
   import RequestForm from './RequestForm';
   import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
   import { ContentKindsList, ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import theme from 'shared/vuetify/theme';
+  import StudioLargeLoader from 'shared/views/StudioLargeLoader';
 
   export default {
     name: 'Storage',
-    components: { RequestForm },
+    components: {
+      RequestForm,
+      StudioLargeLoader,
+    },
     mixins: [fileSizeMixin, constantsTranslationMixin],
+    setup() {
+      const { show } = useKShow();
+      return { show };
+    },
     data() {
       return {
         showRequestForm: false,
@@ -134,12 +165,11 @@
         this.showRequestForm = !this.showRequestForm;
         if (this.showRequestForm) {
           this.$nextTick(() => {
-            if (window.scroll) {
-              window.scroll({
-                top: this.$refs.requestheader.offsetTop - 24,
-                behavior: 'smooth',
-              });
-            }
+            this.$nextTick(() => {
+              // Wait for the form to be visible
+              // then scroll to the top of the form
+              this.$refs.requestform.$el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
           });
         }
       },
@@ -149,9 +179,18 @@
       storagePercentageUsed: '{qty}% storage used',
       requestMoreSpaceHeading: 'Request more space',
       requestMoreSpaceMessage:
-        'Please use this form to request additional uploading storage for your Kolibri Studio account. The resources you import from our public library to your channels do not count towards your storage limit.',
+        'Please use this form to request additional uploading storage for your Kolibri Studio account.',
+      beforeRequestingHeading:
+        'Before requesting additional storage space, please note the following:',
+      beforeRequestingMessage:
+        'The resources you import from our Kolibri Library to your channels do not count towards your storage limit.',
       learnMoreAboutImportingContentFromChannels:
-        'Learn more about how to import resources from other channels',
+        'Learn more about how to import resources from other channels.',
+      videoFiles:
+        'Video files should be compressed to maximize storage space and ensure smooth offline distribution and playback. Once compressed, the total storage required may be less than what you originally estimated.',
+      learnMoreAboutVideoCompression: 'Learn more about how to compress video resources.',
+      largerStorageRequestPricing:
+        'For larger storage requests, there will be associated costs to help Learning Equality cover hosting, maintenance, and administrative expenses. We are happy to discuss possible rates based on your needs.',
       showFormAction: 'Open form',
       hideFormAction: 'Close form',
     },
@@ -183,6 +222,19 @@
 
   .circular-loader {
     padding: 24px;
+  }
+
+  .storage-request {
+    max-width: 800px;
+
+    ul {
+      margin-left: 20px;
+      list-style-type: disc;
+    }
+
+    li {
+      margin: 8px 0;
+    }
   }
 
 </style>

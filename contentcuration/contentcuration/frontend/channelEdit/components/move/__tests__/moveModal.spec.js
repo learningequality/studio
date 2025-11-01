@@ -50,6 +50,10 @@ function makeWrapper(selected) {
       Breadcrumbs: true,
       ResourceDrawer: true,
       OfflineText: true,
+      NewTopicModal: {
+        name: 'NewTopicModal',
+        template: '<div data-test="newtopicmodal"></div>',
+      },
     },
   });
 }

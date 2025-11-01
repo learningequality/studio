@@ -15,6 +15,7 @@ function makeWrapper(computed = {}) {
   loadCatalog.mockImplementation(() => Promise.resolve());
 
   const downloadCSV = jest.spyOn(CatalogList.methods, 'downloadCSV');
+  const downloadPDF = jest.spyOn(CatalogList.methods, 'downloadPDF');
 
   const wrapper = mount(CatalogList, {
     router,
@@ -32,7 +33,7 @@ function makeWrapper(computed = {}) {
       CatalogFilters: true,
     },
   });
-  return [wrapper, { loadCatalog, downloadCSV }];
+  return [wrapper, { loadCatalog, downloadCSV, downloadPDF }];
 }
 
 describe('catalogFilterBar', () => {
@@ -165,8 +166,18 @@ describe('catalogFilterBar', () => {
 
       it('clicking download CSV should call downloadCSV', async () => {
         mocks.downloadCSV.mockImplementationOnce(() => Promise.resolve());
-        await wrapper.findComponent('[data-test="download-csv"]').trigger('click');
+        await wrapper.findComponent('[data-test="download-button"]').trigger('click');
+        const menuOptions = wrapper.findAll('.ui-menu-option-content');
+        await menuOptions.at(1).trigger('click');
         expect(mocks.downloadCSV).toHaveBeenCalled();
+      });
+
+      it('clicking download PDF should call downloadPDF', async () => {
+        mocks.downloadPDF.mockImplementationOnce(() => Promise.resolve());
+        await wrapper.findComponent('[data-test="download-button"]').trigger('click');
+        const menuOptions = wrapper.findAll('.ui-menu-option-content');
+        await menuOptions.at(0).trigger('click');
+        expect(mocks.downloadPDF).toHaveBeenCalled();
       });
 
       it('downloadCSV should call downloadChannelsCSV with current parameters', async () => {

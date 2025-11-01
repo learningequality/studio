@@ -16,6 +16,7 @@
       @scroll="$emit('scroll', $event)"
     >
       <div
+        ref="rootEl"
         class="pa-4"
         style="margin-bottom: 64px"
       >
@@ -43,14 +44,25 @@
 
 <script>
 
+  import { ref } from 'vue';
   import ResourcePanel from './ResourcePanel';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
+  import { useFocusTrap } from 'shared/views/TipTapEditor/TipTapEditor/composables/useFocusTrap';
 
   export default {
     name: 'ResourceDrawer',
     components: {
       ResizableNavigationDrawer,
       ResourcePanel,
+    },
+    setup() {
+      const rootEl = ref(null);
+
+      useFocusTrap(rootEl);
+
+      return {
+        rootEl,
+      };
     },
     props: {
       // key for sessionStorage to store width data at

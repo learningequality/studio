@@ -178,7 +178,7 @@ packaging==25.0
     #   google-cloud-error-reporting
     #   google-cloud-kms
     #   gunicorn
-pillow==11.3.0
+pillow==12.0.0
     # via -r requirements.in
 prometheus-client==0.10.1
     # via django-prometheus
@@ -194,7 +194,7 @@ protobuf==4.25.8
     #   google-api-core
     #   googleapis-common-protos
     #   proto-plus
-psycopg2-binary==2.9.10
+psycopg2-binary==2.9.11
     # via -r requirements.in
 pyasn1==0.4.8
     # via
@@ -204,9 +204,9 @@ pyasn1-modules==0.2.8
     # via google-auth
 pycountry==24.6.1
     # via -r requirements.in
-pydantic==2.11.9
+pydantic==2.12.3
     # via -r requirements.in
-pydantic-core==2.33.2
+pydantic-core==2.41.4
     # via pydantic
 pyparsing==2.4.7
     # via httplib2
@@ -215,7 +215,7 @@ python-dateutil==2.9.0.post0
     #   -r requirements.in
     #   botocore
     #   celery
-python-postmark==0.6.1
+python-postmark==0.7.0
     # via -r requirements.in
 pytz==2022.1
     # via
@@ -243,7 +243,7 @@ rsa==4.7.2
     # via google-auth
 s3transfer==0.4.2
     # via boto3
-sentry-sdk==2.38.0
+sentry-sdk==2.42.0
     # via -r requirements.in
 six==1.16.0
     # via
@@ -256,13 +256,13 @@ six==1.16.0
     #   python-dateutil
 sqlparse==0.4.1
     # via django
-typing-extensions==4.13.0
+typing-extensions==4.15.0
     # via
     #   pydantic
     #   pydantic-core
     #   referencing
     #   typing-inspection
-typing-inspection==0.4.1
+typing-inspection==0.4.2
     # via pydantic
 tzdata==2025.2
     # via kombu

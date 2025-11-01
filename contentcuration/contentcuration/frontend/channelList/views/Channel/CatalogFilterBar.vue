@@ -11,10 +11,11 @@
       >
         {{ filter.text }}
       </VChip>
-      <ActionLink
+      <KButton
         v-if="currentFilters.length"
-        class="mx-2"
+        class="clear-link"
         :text="$tr('clearAll')"
+        appearance="basic-link"
         data-test="clear"
         @click="clearFilters"
       />
@@ -138,6 +139,10 @@
     &:hover {
       background-color: var(--v-grey-lighten4);
     }
+  }
+
+  .clear-link {
+    margin: 0 8px;
   }
 
 </style>
