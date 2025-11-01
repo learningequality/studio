@@ -1,19 +1,14 @@
 import { render, screen } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
-import router from '../../../router';
-import { factory } from '../../../store';
+import { createLocalVue } from '@vue/test-utils';
+import Vuex from 'vuex';
+import VueRouter from 'vue-router';
 import ChannelActionsDropdown from '../ChannelActionsDropdown';
+import { RouteNames } from '../../../constants';
 
-jest.mock('shared/views/channel/mixins', () => ({
-  channelExportMixin: {
-    methods: {
-      generateChannelsPDF: jest.fn().mockResolvedValue(),
-      generateChannelsCSV: jest.fn().mockResolvedValue(),
-    },
-  },
-}));
-
-const store = factory();
+const localVue = createLocalVue();
+localVue.use(Vuex);
+localVue.use(VueRouter);
 
 const channelId = '11111111111111111111111111111111';
 const channel = {
@@ -29,169 +24,190 @@ const channel = {
   source_url: 'source.com',
 };
 
-function renderComponent(channelProps = {}) {
-  const mergedChannel = {
-    ...channel,
-    ...channelProps,
-  };
-
-  const utils = render(ChannelActionsDropdown, {
-    router,
-    store,
-    propsData: { channelId },
-    computed: {
-      channel: () => mergedChannel,
+jest.mock('shared/views/channel/mixins', () => ({
+  channelExportMixin: {
+    methods: {
+      generateChannelsPDF: jest.fn().mockResolvedValue(),
+      generateChannelsCSV: jest.fn().mockResolvedValue(),
     },
-    mocks: {
-      $store: {
-        dispatch: jest.fn().mockResolvedValue(),
+  },
+}));
+
+const mockActions = {
+  updateChannel: jest.fn(() => Promise.resolve()),
+  deleteChannel: jest.fn(() => Promise.resolve()),
+  getAdminChannelListDetails: jest.fn(() => Promise.resolve([channel])),
+  showSnackbarSimple: jest.fn(() => Promise.resolve()),
+};
+
+const createMockStore = (channelProps = {}) => {
+  const mergedChannel = { ...channel, ...channelProps };
+
+  return new Vuex.Store({
+    modules: {
+      channel: {
+        namespaced: true,
+        state: {
+          channelsMap: { [channelId]: mergedChannel },
+        },
+        getters: {
+          getChannel: state => id => state.channelsMap[id],
+        },
       },
+      channelAdmin: {
+        namespaced: true,
+        actions: {
+          updateChannel: mockActions.updateChannel,
+          deleteChannel: mockActions.deleteChannel,
+          getAdminChannelListDetails: mockActions.getAdminChannelListDetails,
+        },
+      },
+    },
+    actions: {
+      showSnackbarSimple: mockActions.showSnackbarSimple,
+    },
+  });
+};
+
+const renderComponent = (props = {}) => {
+  const store = createMockStore(props.channelProps);
+
+  const router = new VueRouter({
+    routes: [
+      {
+        name: RouteNames.USERS,
+        path: '/users',
+        component: { template: '<div>Users Page</div>' },
+      },
+    ],
+  });
+
+  return render(ChannelActionsDropdown, {
+    localVue,
+    store,
+    router,
+    props: { channelId },
+    mocks: {
       $tr: jest.fn(key => key),
     },
   });
-
-  return { ...utils };
-}
+};
 
 describe('channelActionsDropdown', () => {
-  let user;
-
   beforeEach(() => {
-    user = userEvent.setup();
     jest.clearAllMocks();
   });
 
-  describe('deleted channel actions', () => {
-    beforeEach(() => {
-      renderComponent({ deleted: true });
-    });
+  describe('clicking restore menu option', () => {
+    it('should open confirmation modal and restore channel on confirm', async () => {
+      const dialogMessage = `Are you sure you want to restore Channel Test and make it active again?`;
+      const user = userEvent.setup();
 
-    it('restore channel should show restore confirmation dialog with correct context', async () => {
-      const restoreButton = screen.getByText('Restore');
-      await user.click(restoreButton);
+      renderComponent({ channelProps: { deleted: true } });
 
-      const confirmDialog = screen.getByRole('dialog');
-      expect(confirmDialog).toBeVisible();
-      expect(screen.getByText('Restore channel')).toBeVisible();
-      expect(screen.getByText(/Are you sure you want to restore Channel Test/)).toBeVisible();
-    });
+      expect(screen.queryByText(dialogMessage)).not.toBeInTheDocument();
 
-    it('confirm restore channel should close the dialog', async () => {
-      const restoreButton = screen.getByText('Restore');
-      await user.click(restoreButton);
+      await user.click(screen.getByText('Restore'));
+
+      expect(screen.getByText(dialogMessage)).toBeInTheDocument();
       const confirmButton = screen.getByRole('button', { name: 'Restore' });
       await user.click(confirmButton);
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+      expect(mockActions.updateChannel).toHaveBeenCalledWith(expect.any(Object), {
+        id: channelId,
+        deleted: false,
+      });
     });
+  });
 
-    it('delete channel should show permanent delete confirmation dialog with correct context', async () => {
-      const deleteButton = screen.getByText('Delete permanently');
-      await user.click(deleteButton);
+  describe('clicking delete permanently menu option', () => {
+    it('should open confirmation modal and delete channel on confirm', async () => {
+      const dialogMessage = `Are you sure you want to permanently delete Channel Test? This can not be undone.`;
+      const user = userEvent.setup();
 
-      const confirmDialog = screen.getByRole('dialog');
-      expect(confirmDialog).toBeVisible();
-      expect(screen.getByText('Permanently delete channel')).toBeVisible();
-      expect(
-        screen.getByText(/Are you sure you want to permanently delete Channel Test\?/),
-      ).toBeVisible();
-    });
+      renderComponent({ channelProps: { deleted: true } });
 
-    it('confirm delete channel should close the dialog', async () => {
-      const deleteButton = screen.getByText('Delete permanently');
-      await user.click(deleteButton);
+      expect(screen.queryByText(dialogMessage)).not.toBeInTheDocument();
+
+      await user.click(screen.getByText('Delete permanently'));
+
+      expect(screen.getByText(dialogMessage)).toBeInTheDocument();
       const confirmButton = screen.getByRole('button', { name: 'Delete permanently' });
       await user.click(confirmButton);
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+      expect(mockActions.deleteChannel).toHaveBeenCalledWith(expect.any(Object), channelId);
     });
   });
 
-  describe('live channel actions', () => {
-    beforeEach(() => {
-      renderComponent({ public: false, deleted: false });
-    });
+  describe('clicking make public menu option', () => {
+    it('should open confirmation modal and make channel public on confirm', async () => {
+      const dialogMessage = `All users will be able to view and import content from Channel Test.`;
+      const user = userEvent.setup();
 
-    it('download PDF button should trigger PDF download', async () => {
-      const pdfButton = screen.getByText('Download PDF');
-      await user.click(pdfButton);
-      expect(pdfButton).toBeVisible();
-    });
+      renderComponent({ channelProps: { public: false, deleted: false } });
 
-    it('download CSV button should trigger CSV download', async () => {
-      const csvButton = screen.getByText('Download CSV');
-      await user.click(csvButton);
-      expect(csvButton).toBeVisible();
-    });
+      expect(screen.queryByText(dialogMessage)).not.toBeInTheDocument();
 
-    it('make public button should show make public confirmation dialog with correct context', async () => {
-      const makePublicButton = screen.getByText('Make public');
-      await user.click(makePublicButton);
+      await user.click(screen.getByText('Make public'));
 
-      const confirmDialog = screen.getByRole('dialog');
-      expect(confirmDialog).toBeVisible();
-      expect(screen.getByText('Make channel public')).toBeVisible();
-      expect(
-        screen.getByText(/All users will be able to view and import content from Channel Test/),
-      ).toBeVisible();
-    });
-
-    it('confirm make public should close the dialog', async () => {
-      const makePublicButton = screen.getByText('Make public');
-      await user.click(makePublicButton);
+      expect(screen.getByText(dialogMessage)).toBeInTheDocument();
       const confirmButton = screen.getByRole('button', { name: 'Make public' });
       await user.click(confirmButton);
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    });
 
-    it('soft delete button should show soft delete confirmation dialog with correct context', async () => {
-      const softDeleteButton = screen.getByText('Delete channel');
-      await user.click(softDeleteButton);
-
-      const confirmDialog = screen.getByRole('dialog');
-      expect(confirmDialog).toBeVisible();
-      expect(screen.getByRole('heading', { name: 'Delete channel' })).toBeVisible();
-      expect(screen.getByText(/Are you sure you want to delete Channel Test\?/)).toBeVisible();
-    });
-
-    it('confirm soft delete should close the dialog', async () => {
-      const softDeleteButton = screen.getByText('Delete channel');
-      await user.click(softDeleteButton);
-      const confirmButton = screen.getByRole('button', { name: 'Delete' });
-      await user.click(confirmButton);
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(mockActions.updateChannel).toHaveBeenCalledWith(expect.any(Object), {
+        id: channelId,
+        isPublic: true,
+      });
     });
   });
 
-  describe('public channel actions', () => {
-    beforeEach(() => {
+  describe('clicking delete channel menu option', () => {
+    it('should open confirmation modal and soft delete channel on confirm', async () => {
+      const dialogMessage = `Are you sure you want to delete Channel Test?`;
+      const user = userEvent.setup();
+
+      renderComponent({ channelProps: { public: false, deleted: false } });
+
+      expect(screen.queryByText(dialogMessage)).not.toBeInTheDocument();
+
+      await user.click(screen.getByText('Delete channel'));
+
+      expect(screen.getByText(dialogMessage)).toBeInTheDocument();
+      const confirmButton = screen.getByRole('button', { name: 'Delete' });
+      await user.click(confirmButton);
+
+      expect(mockActions.updateChannel).toHaveBeenCalledWith(expect.any(Object), {
+        id: channelId,
+        deleted: true,
+      });
+    });
+  });
+
+  describe('clicking make private menu option', () => {
+    it('should open confirmation modal and make channel private on confirm', async () => {
+      const dialogMessage = `Only users with view-only or edit permissions will be able to access Channel Test.`;
+      const user = userEvent.setup();
+
       renderComponent();
-    });
 
-    it('make private button should show make private confirmation dialog with correct context', async () => {
-      const makePrivateButton = screen.getByText('Make private');
-      await user.click(makePrivateButton);
+      expect(screen.queryByText(dialogMessage)).not.toBeInTheDocument();
 
-      const confirmDialog = screen.getByRole('dialog');
-      expect(confirmDialog).toBeVisible();
-      expect(screen.getByText('Make channel private')).toBeVisible();
-      expect(
-        screen.getByText(
-          /Only users with view-only or edit permissions will be able to access Channel Test/,
-        ),
-      ).toBeVisible();
-    });
+      await user.click(screen.getByText('Make private'));
 
-    it('confirm make private should close the dialog', async () => {
-      const makePrivateButton = screen.getByText('Make private');
-      await user.click(makePrivateButton);
+      expect(screen.getByText(dialogMessage)).toBeInTheDocument();
       const confirmButton = screen.getByRole('button', { name: 'Make private' });
       await user.click(confirmButton);
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+      expect(mockActions.updateChannel).toHaveBeenCalledWith(expect.any(Object), {
+        id: channelId,
+        isPublic: false,
+      });
     });
   });
 
   describe('menu visibility', () => {
     it('should show correct menu items for deleted channel', () => {
-      renderComponent({ deleted: true });
+      renderComponent({ channelProps: { deleted: true } });
       expect(screen.getByText('Restore')).toBeVisible();
       expect(screen.getByText('Delete permanently')).toBeVisible();
       expect(screen.queryByText('Download PDF')).not.toBeInTheDocument();
@@ -199,7 +215,7 @@ describe('channelActionsDropdown', () => {
     });
 
     it('should show correct menu items for live private channel', () => {
-      renderComponent({ public: false, deleted: false });
+      renderComponent({ channelProps: { public: false, deleted: false } });
       expect(screen.getByText('Download PDF')).toBeVisible();
       expect(screen.getByText('Download CSV')).toBeVisible();
       expect(screen.getByText('Make public')).toBeVisible();
@@ -208,7 +224,7 @@ describe('channelActionsDropdown', () => {
     });
 
     it('should show correct menu items for live public channel', () => {
-      renderComponent({ public: true, deleted: false });
+      renderComponent({ channelProps: { public: true, deleted: false } });
       expect(screen.getByText('Download PDF')).toBeVisible();
       expect(screen.getByText('Download CSV')).toBeVisible();
       expect(screen.getByText('Make private')).toBeVisible();
