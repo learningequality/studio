@@ -273,19 +273,17 @@
       // Form mixin methods
       // eslint-disable-next-line kolibri/vue-no-unused-methods, vue/no-unused-properties
       onValidationFailed() {
-        this.showInvalidText = true; // Ensure errors are shown when validation fails
-        // Scroll to error banner
+        this.showInvalidText = true;
         if (this.$refs.form && this.$refs.form.scrollIntoView) {
           this.$refs.form.scrollIntoView({ behavior: 'smooth' });
         }
       },
 
-      // eslint-disable-next-line kolibri/vue-no-unused-methods, vue/no-unused-properties
       onSubmit() {
-        this.showInvalidText = true; // Show errors after first submit attempt
+        this.showInvalidText = true;
 
         if (this.errorCount() > 0) {
-          return; // Don't proceed if there are errors
+          return;
         }
 
         const query = this.initialRecipients
