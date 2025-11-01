@@ -67,30 +67,25 @@ const renderComponent = (props = {}) => {
     routes: new VueRouter(),
   });
 };
-
 describe('EmailUsersDialog', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     window.senderEmail = 'sender@example.com';
   });
 
-  it('shows email dialog with correct title', () => {
+  it('renders email dialog with correct title and sender', () => {
     renderComponent();
     expect(screen.getByText('Send Email')).toBeInTheDocument();
-  });
-
-  it('displays sender email in From field', () => {
-    renderComponent();
     expect(screen.getByText('sender@example.com')).toBeInTheDocument();
   });
 
-  it('displays individual user chips when initialRecipients are provided', () => {
+  it('shows user chips when initialRecipients are provided', () => {
     renderComponent({ initialRecipients: [userId, userId2] });
     expect(screen.getByText('Testy User')).toBeInTheDocument();
     expect(screen.getByText('Testier User')).toBeInTheDocument();
   });
 
-  it('displays filter description when usersFilterFetchQueryParams are provided', () => {
+  it('shows filter description when usersFilterFetchQueryParams exist', () => {
     renderComponent({
       userTypeFilter: 'active',
       locationFilter: 'Czech Republic',
@@ -106,13 +101,11 @@ describe('EmailUsersDialog', () => {
     ).toBeInTheDocument();
   });
 
-  it('displays all placeholder buttons', () => {
+  it('shows placeholder buttons', () => {
     renderComponent();
-    expect(screen.getByText('First name')).toBeInTheDocument();
-    expect(screen.getByText('Last name')).toBeInTheDocument();
-    expect(screen.getByText('Email')).toBeInTheDocument();
-    expect(screen.getByText('Date')).toBeInTheDocument();
-    expect(screen.getByText('Time')).toBeInTheDocument();
+    ['First name', 'Last name', 'Email', 'Date', 'Time'].forEach(text =>
+      expect(screen.getByText(text)).toBeInTheDocument(),
+    );
   });
 
   describe('form validation', () => {
@@ -122,36 +115,30 @@ describe('EmailUsersDialog', () => {
 
       await user.click(screen.getByText('Send email'));
 
-      const errorMessages = screen.getAllByText('Field is required');
-      expect(errorMessages.length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Field is required').length).toBeGreaterThan(0);
       expect(mockActions.sendEmail).not.toHaveBeenCalled();
     });
 
-    it('does not submit when subject is empty', async () => {
+    it('does not submit with missing subject or message', async () => {
       const user = userEvent.setup();
       renderComponent({ initialRecipients: [userId] });
 
       const messageInput = screen.getByLabelText(/email body/i);
+      const subjectInput = screen.getByLabelText(/subject line/i);
+
       await user.type(messageInput, 'Test Message');
       await user.click(screen.getByText('Send email'));
-
       expect(mockActions.sendEmail).not.toHaveBeenCalled();
-    });
 
-    it('does not submit when message is empty', async () => {
-      const user = userEvent.setup();
-      renderComponent({ initialRecipients: [userId] });
-
-      const subjectInput = screen.getByLabelText(/subject line/i);
+      await user.clear(messageInput);
       await user.type(subjectInput, 'Test Subject');
       await user.click(screen.getByText('Send email'));
-
       expect(mockActions.sendEmail).not.toHaveBeenCalled();
     });
   });
 
-  describe('placeholder functionality', () => {
-    it('adds placeholder to message when placeholder button is clicked', async () => {
+  describe('placeholders', () => {
+    it('adds placeholder text to message when clicked', async () => {
       const user = userEvent.setup();
       renderComponent({ initialRecipients: [userId] });
 
@@ -163,13 +150,10 @@ describe('EmailUsersDialog', () => {
     });
   });
 
-  describe('with individual users', () => {
-    it('calls sendEmail with correct arguments when form is submitted', async () => {
+  describe('recipients handling', () => {
+    it('submits with correct arguments for individual users', async () => {
       const user = userEvent.setup();
       renderComponent({ initialRecipients: [userId, userId2] });
-
-      expect(screen.getByText('Testy User')).toBeInTheDocument();
-      expect(screen.getByText('Testier User')).toBeInTheDocument();
 
       await user.type(screen.getByLabelText(/subject line/i), 'Test Subject');
       await user.type(screen.getByLabelText(/email body/i), 'Test Message');
@@ -178,18 +162,13 @@ describe('EmailUsersDialog', () => {
       expect(mockActions.sendEmail).toHaveBeenCalledWith(expect.any(Object), {
         subject: 'Test Subject',
         message: 'Test Message',
-        query: {
-          ids: `${userId},${userId2}`,
-        },
+        query: { ids: `${userId},${userId2}` },
       });
     });
 
-    it('removes user from recipients when remove button is clicked', async () => {
+    it('removes a recipient when the remove button is clicked', async () => {
       const user = userEvent.setup();
       renderComponent({ initialRecipients: [userId, userId2] });
-
-      expect(screen.getByText('Testy User')).toBeInTheDocument();
-      expect(screen.getByText('Testier User')).toBeInTheDocument();
 
       const removeButton = screen.getByRole('button', { name: 'Remove Testy User' });
       await user.click(removeButton);
@@ -199,8 +178,8 @@ describe('EmailUsersDialog', () => {
     });
   });
 
-  describe('with user filters', () => {
-    it('calls sendEmail with filter parameters when form is submitted', async () => {
+  describe('filtered users', () => {
+    it('calls sendEmail with filter parameters', async () => {
       const user = userEvent.setup();
       renderComponent({
         usersFilterFetchQueryParams: {
@@ -226,8 +205,8 @@ describe('EmailUsersDialog', () => {
     });
   });
 
-  describe('warning modal', () => {
-    it('shows warning modal when canceling with draft content', async () => {
+  describe('draft warning modal', () => {
+    it('shows modal when canceling with draft content', async () => {
       const user = userEvent.setup();
       renderComponent({ initialRecipients: [userId] });
 
@@ -242,7 +221,7 @@ describe('EmailUsersDialog', () => {
       ).toBeInTheDocument();
     });
 
-    it('does not show warning modal when canceling without draft content', async () => {
+    it('does not show modal when no draft content', async () => {
       const user = userEvent.setup();
       renderComponent({ initialRecipients: [userId] });
 
@@ -251,37 +230,32 @@ describe('EmailUsersDialog', () => {
       expect(screen.queryByText('Draft in progress')).not.toBeInTheDocument();
     });
 
-    it('closes dialog when confirming discard in warning modal', async () => {
+    it('closes dialog when confirming discard', async () => {
       const user = userEvent.setup();
       const { emitted } = renderComponent({ initialRecipients: [userId] });
 
       await user.type(screen.getByLabelText(/subject line/i), 'Draft Subject');
       await user.click(screen.getByText('Cancel'));
+      await user.click(screen.getByRole('button', { name: /discard draft/i }));
 
-      const discardButton = screen.getByRole('button', { name: /discard draft/i });
-      await user.click(discardButton);
-
-      expect(emitted().input).toBeTruthy();
-      expect(emitted().input[0]).toEqual([false]);
+      expect(emitted().input?.[0]).toEqual([false]);
     });
 
-    it('keeps dialog open when canceling warning modal', async () => {
+    it('keeps dialog open when canceling discard', async () => {
       const user = userEvent.setup();
       renderComponent({ initialRecipients: [userId] });
 
       await user.type(screen.getByLabelText(/subject line/i), 'Draft Subject');
       await user.click(screen.getByText('Cancel'));
-
-      const keepOpenButton = screen.getByRole('button', { name: /keep open/i });
-      await user.click(keepOpenButton);
+      await user.click(screen.getByRole('button', { name: /keep open/i }));
 
       expect(screen.getByText('Send Email')).toBeInTheDocument();
       expect(screen.queryByText('Draft in progress')).not.toBeInTheDocument();
     });
   });
 
-  describe('success and error handling', () => {
-    it('shows success snackbar when email is sent successfully', async () => {
+  describe('success & error handling', () => {
+    it('shows success snackbar when email sends successfully', async () => {
       const user = userEvent.setup();
       renderComponent({ initialRecipients: [userId] });
 
@@ -292,7 +266,7 @@ describe('EmailUsersDialog', () => {
       expect(mockActions.showSnackbarSimple).toHaveBeenCalledWith(expect.any(Object), 'Email sent');
     });
 
-    it('shows error snackbar when email fails to send', async () => {
+    it('shows error snackbar when sending fails', async () => {
       mockActions.sendEmail.mockRejectedValueOnce(new Error('Send failed'));
       const user = userEvent.setup();
       renderComponent({ initialRecipients: [userId] });
