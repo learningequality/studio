@@ -86,8 +86,6 @@ describe('EmailUsersDialog', () => {
 
   it('displays individual user chips when initialRecipients are provided', () => {
     renderComponent({ initialRecipients: [userId, userId2] });
-
-    // Should work immediately now with proper data initialization
     expect(screen.getByText('Testy User')).toBeInTheDocument();
     expect(screen.getByText('Testier User')).toBeInTheDocument();
   });
@@ -170,7 +168,6 @@ describe('EmailUsersDialog', () => {
       const user = userEvent.setup();
       renderComponent({ initialRecipients: [userId, userId2] });
 
-      // No need to wait - users should be immediately available
       expect(screen.getByText('Testy User')).toBeInTheDocument();
       expect(screen.getByText('Testier User')).toBeInTheDocument();
 
