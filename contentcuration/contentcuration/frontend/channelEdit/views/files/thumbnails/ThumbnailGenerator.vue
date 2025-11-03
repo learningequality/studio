@@ -34,9 +34,7 @@
 
   export default {
     name: 'ThumbnailGenerator',
-    components: {
-      KModal,
-    },
+    components: {},
     props: {
       filePath: {
         type: String,

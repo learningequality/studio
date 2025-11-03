@@ -87,7 +87,6 @@
   export default {
     name: 'Uploader',
     components: {
-      KModal,
       FileStorage,
       FileDropzone,
     },
