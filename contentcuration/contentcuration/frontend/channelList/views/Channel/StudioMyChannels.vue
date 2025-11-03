@@ -258,7 +258,7 @@
         });
       },
       goToChannelRoute(channel) {
-        this.$router.push(this.channelDetailsLink(channel));
+        window.location.href = window.Urls.channel(channel.id);
       },
       loadData() {
         this.loading = true;
