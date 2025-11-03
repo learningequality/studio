@@ -58,8 +58,6 @@
         :rows="tableRows"
         :dataLoading="loading"
         :emptyMessage="$tr('noChannelSetsFound')"
-        sortable
-        @changeSort="changeSortHandler"
       >
         <template #cell="{ content, colIndex }">
           <!-- Column 0: Collection Name -->
