@@ -6,7 +6,7 @@
   >
     <KToolbar
       :textColor="dark ? 'white' : 'black'"
-      :style="toolbarStyle"
+      :style="{ backgroundColor: toolbarBackgroundColor }"
     >
       <template #icon>
         <KIconButton
@@ -20,7 +20,7 @@
       </template>
 
       <template #default>
-        <span class="notranslate toolbar-title">
+        <span class="notranslate">
           <slot name="header">{{ title }}</slot>
         </span>
       </template>
@@ -29,10 +29,12 @@
         <slot name="action"></slot>
       </template>
     </KToolbar>
+    
     <StudioOfflineAlert :offset="64" />
+    
     <StudioPage
-      class="modal-content"
       :offline="offline"
+      :marginTop="contentMarginTop"
     >
       <slot></slot>
     </StudioPage>
@@ -76,19 +78,13 @@
       ...mapState({
         offline: state => !state.connection.online,
       }),
-      toolbarStyle() {
-        const backgroundColor =
-          this.color === 'appBarDark'
-            ? this.$themePalette.grey.v_900
-            : this.$themeTokens[this.color] || this.color;
-        return {
-          backgroundColor,
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 17,
-        };
+      toolbarBackgroundColor() {
+        return this.color === 'appBarDark'
+          ? this.$themePalette.grey.v_900
+          : this.$themeTokens[this.color] || this.color;
+      },
+      contentMarginTop() {
+        return this.offline ? 112 : 64;
       },
     },
     watch: {
@@ -134,25 +130,8 @@
     bottom: 0;
     left: 0;
     z-index: 17;
-    display: flex;
-    flex-direction: column;
     background-color: white;
-  }
-
-  .modal-content {
-    flex: 1;
-    width: 100%;
     overflow-y: auto;
-  }
-
-  .toolbar-title {
-    display: block;
-    margin-inline-start: 16px;  
-    margin-inline-end: 16px;    
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: calc(100% - 80px);
   }
 
 </style>
