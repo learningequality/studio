@@ -32,7 +32,6 @@
         paddingRight: `${paddingX.value}px`,
         paddingTop: `${paddingTop.value}px`,
         maxWidth: windowIsLarge.value ? '1000px' : '100%',
-        margin: '0 auto',
       }));
 
       const outerStyle = computed(() => {
