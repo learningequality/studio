@@ -280,7 +280,7 @@
               <KExternalLink
                 :text="$tr('viewDocsLink')"
                 openInNewTab
-                href="https://learningequality.org/documentation/"
+                href="https://kolibri.readthedocs.io"
               />
             </p>
           </template>
