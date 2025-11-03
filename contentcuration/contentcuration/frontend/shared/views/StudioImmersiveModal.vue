@@ -29,9 +29,9 @@
         <slot name="action"></slot>
       </template>
     </KToolbar>
-    
+
     <StudioOfflineAlert :offset="64" />
-    
+
     <StudioPage
       :offline="offline"
       :marginTop="contentMarginTop"
@@ -130,16 +130,16 @@
     bottom: 0;
     left: 0;
     z-index: 17;
-    background-color: white;
     overflow-y: auto;
+    background-color: white;
   }
 
   .toolbar-title {
     display: block;
-    margin-inline-start: 16px;  
-    margin-inline-end: 16px;    
-    white-space: nowrap;
     max-width: calc(100% - 80px);
+    margin-inline-start: 16px;
+    margin-inline-end: 16px;
+    white-space: nowrap;
   }
 
 </style>

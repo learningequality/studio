@@ -1,6 +1,6 @@
 <template>
 
-  <main 
+  <main
     class="studio-page-outer"
     :style="outerStyle"
   >
@@ -46,7 +46,7 @@
     },
     props: {
       offline: { type: Boolean, default: false },
-      marginTop: { type: Number, default: null },  
+      marginTop: { type: Number, default: null },
     },
   };
 
