@@ -20,7 +20,7 @@
       </template>
 
       <template #default>
-        <span class="notranslate">
+        <span class="notranslate toolbar-title">
           <slot name="header">{{ title }}</slot>
         </span>
       </template>
@@ -132,6 +132,14 @@
     z-index: 17;
     background-color: white;
     overflow-y: auto;
+  }
+
+  .toolbar-title {
+    display: block;
+    margin-inline-start: 16px;  
+    margin-inline-end: 16px;    
+    white-space: nowrap;
+    max-width: calc(100% - 80px);
   }
 
 </style>
