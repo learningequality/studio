@@ -43,7 +43,7 @@
     />
     <EmailUsersDialog
       v-model="emailDialog"
-      :query="{ ids: [userId] }"
+      :initialRecipients="[userId]"
     />
     <BaseMenu>
       <template #activator="{ on }">
