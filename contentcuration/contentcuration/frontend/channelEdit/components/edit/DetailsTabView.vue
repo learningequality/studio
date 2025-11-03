@@ -718,14 +718,11 @@
       role: generateGetterSetter('role_visibility'),
       language: {
         get() {
-          if (this.multipleSelected) {
-            const languages = this.selectedLanguages;
-            return languages.length > 1 ? LanguagesNames.MUL : languages[0] || null;
-          }
-          return this.getValueFromNodes('language');
+          const value = this.getValueFromNodes('language');
+          return value === nonUniqueValue ? LanguagesNames.MUL : value;
         },
         set(value) {
-          if (value !== LanguagesNames.MUL) {
+          if (!(value === LanguagesNames.MUL && this.language === LanguagesNames.MUL)) {
             this.update({ language: value });
           }
         },
@@ -816,18 +813,6 @@
       },
       oneSelected() {
         return this.nodes.length === 1;
-      },
-      multipleSelected() {
-        return this.nodes.length > 1;
-      },
-      selectedLanguages() {
-        return [
-          ...new Set(
-            this.nodes.map(node => {
-              return this.diffTracker[node.id]?.language ?? node.language;
-            }),
-          ),
-        ];
       },
       languageHint() {
         const topLevel = this.nodes.some(node => node.parent === this.currentChannel.main_tree);
