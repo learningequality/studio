@@ -1,6 +1,6 @@
 import VueRouter from 'vue-router';
 import ChannelList from './views/Channel/ChannelList';
-import ChannelSetList from './views/ChannelSet/ChannelSetList';
+import StudioCollectionsTable from './views/ChannelSet/StudioCollectionsTable.vue';
 import ChannelSetModal from './views/ChannelSet/ChannelSetModal';
 import CatalogList from './views/Channel/CatalogList';
 import { RouteNames } from './constants';
@@ -21,7 +21,7 @@ const router = new VueRouter({
     {
       name: RouteNames.CHANNEL_SETS,
       path: '/collections',
-      component: ChannelSetList,
+      component: StudioCollectionsTable,
     },
     {
       name: RouteNames.NEW_CHANNEL_SET,
