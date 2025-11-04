@@ -43,12 +43,7 @@
     </div>
 
     <div class="table-container">
-      <template v-if="loading">
-        <StudioLargeLoader />
-      </template>
-
       <KTable
-        v-else
         class="collections-table"
         :stickyColumns="stickyColumns"
         caption=""
@@ -145,13 +140,10 @@
   import { RouteNames } from '../../constants';
   import StudioCopyToken from '../../../settings/pages/Account/StudioCopyToken';
 
-  import StudioLargeLoader from 'shared/views/StudioLargeLoader';
-
   export default {
     name: 'StudioCollectionsTable',
     components: {
       StudioCopyToken,
-      StudioLargeLoader,
     },
     data() {
       return {
@@ -292,7 +284,6 @@
       addChannelSetTitle: 'New collection',
       noChannelSetsFound:
         'You can package together multiple channels to create a collection. The entire collection can then be imported to Kolibri at once by using a collection token.',
-
       title: 'Collection name',
       token: 'Token ID',
       channelNumber: 'Number of channels',
