@@ -321,52 +321,6 @@
     margin: 0;
   }
 
-  .table-container {
-    width: 100%;
-  }
-
-  .collections-table {
-    position: relative;
-  }
-
-  .collection-name-cell {
-    display: flex;
-    align-items: flex-start;
-  }
-
-  .collection-info {
-    flex: 1;
-  }
-
-  .collection-title {
-    margin: 0;
-    font-weight: 600;
-    line-height: 1.4;
-  }
-
-  .tokens-cell {
-    align-items: center;
-    min-height: 40px;
-  }
-
-  .token-item {
-    margin-right: 8px;
-  }
-
-  .saving-text {
-    font-style: italic;
-  }
-
-  .channel-count {
-    text-align: right;
-  }
-
-  .actions-cell {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
   .info-content {
     line-height: 1.5;
   }
