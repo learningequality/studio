@@ -47,13 +47,6 @@
         <LoadingText />
       </template>
 
-      <p
-        v-else-if="!channelSets.length"
-        class="no-collections-message"
-      >
-        {{ $tr('noChannelSetsFound') }}
-      </p>
-
       <KTable
         v-else
         class="collections-table"
@@ -342,11 +335,6 @@
 
   .collections-table {
     position: relative;
-  }
-
-  .no-collections-message {
-    margin: 40px 0;
-    text-align: center;
   }
 
   .collection-name-cell {
