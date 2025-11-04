@@ -44,7 +44,7 @@
 
     <div class="table-container">
       <template v-if="loading">
-        <LoadingText />
+        <StudioLargeLoader />
       </template>
 
       <KTable
@@ -144,13 +144,14 @@
   import { mapActions, mapGetters } from 'vuex';
   import { RouteNames } from '../../constants';
   import StudioCopyToken from '../../../settings/pages/Account/StudioCopyToken';
-  import LoadingText from 'shared/views/LoadingText';
+
+  import StudioLargeLoader from 'shared/views/StudioLargeLoader';
 
   export default {
     name: 'StudioCollectionsTable',
     components: {
       StudioCopyToken,
-      LoadingText,
+      StudioLargeLoader,
     },
     data() {
       return {
