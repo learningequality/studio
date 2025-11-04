@@ -1,6 +1,6 @@
 import VueRouter from 'vue-router';
 import ChannelList from './views/Channel/ChannelList';
-import StudioCollectionsTable from './views/ChannelSet/StudioCollectionsTable.vue';
+import StudioCollectionsTable from './views/ChannelSet/StudioCollectionsTable';
 import ChannelSetModal from './views/ChannelSet/ChannelSetModal';
 import CatalogList from './views/Channel/CatalogList';
 import { RouteNames } from './constants';
