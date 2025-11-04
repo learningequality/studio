@@ -146,8 +146,8 @@
       </KButtonGroup>
     </template>
     <KModal
-      data-test="delete-confirmation-dialog"
       v-if="showConfirmationDialog"
+      data-test="deleteconfirm"
       :title="$tr('deleteConfirmationHeader', counts)"
       :cancelText="$tr('deleteConfirmationCancelButton')"
       :submitText="$tr('deleteConfirmationDeleteButton')"
