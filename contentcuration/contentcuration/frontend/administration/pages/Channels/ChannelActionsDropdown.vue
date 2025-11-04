@@ -12,13 +12,12 @@
       @cancel="activeDialog = null"
     >
       <p>{{ dialogConfig.message }}</p>
-      <div
+      <StudioBanner
         v-if="dialogConfig.errorMessage"
-        class="error-message"
-        :style="errorMessageStyles"
+        error
       >
         {{ dialogConfig.errorMessage }}
-      </div>
+      </StudioBanner>
     </KModal>
 
     <BaseMenu>
@@ -103,9 +102,13 @@
   import { RouteNames } from '../../constants';
   import { channelExportMixin } from 'shared/views/channel/mixins';
   import { CommunityLibraryStatus } from 'shared/constants';
+  import StudioBanner from 'shared/views/StudioBanner';
 
   export default {
     name: 'ChannelActionsDropdown',
+    components: {
+      StudioBanner,
+    },
     mixins: [channelExportMixin],
     props: {
       channelId: {
@@ -179,14 +182,6 @@
         }
         return '';
       },
-      errorMessageStyles() {
-        if (!this.dialogConfig.errorMessage) return {};
-
-        return {
-          color: this.$themeTokens.error,
-          backgroundColor: this.$themePalette.red.v_100,
-        };
-      },
     },
     methods: {
       ...mapActions('channelAdmin', [
@@ -257,13 +252,4 @@
 </script>
 
 
-<style lang="scss" scoped>
-
-  .error-message {
-    padding: 8px 12px;
-    margin-top: 8px;
-    font-size: 14px;
-    border-radius: 4px;
-  }
-
-</style>
+<style lang="scss" scoped></style>
