@@ -87,6 +87,7 @@
             />
             <em
               v-else
+              :style="{ color: $themeTokens.annotation }"
               class="saving-text"
             >
               {{ $tr('saving') }}
@@ -389,7 +390,6 @@
 
   .saving-text {
     font-style: italic;
-    color: var(--grey-500);
   }
 
   .channel-count {
