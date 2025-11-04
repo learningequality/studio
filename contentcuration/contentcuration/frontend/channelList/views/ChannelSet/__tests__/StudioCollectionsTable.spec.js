@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { createLocalVue } from '@vue/test-utils';
 import Vuex, { Store } from 'vuex';
+import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
 import StudioCollectionsTable from '../StudioCollectionsTable.vue';
 import { RouteNames } from '../../../constants';
@@ -80,7 +81,7 @@ const renderComponent = async (options = {}) => {
     ...options,
   });
 
-  await new Promise(resolve => setTimeout(resolve, 0));
+  await nextTick();
 
   return { ...result, router };
 };

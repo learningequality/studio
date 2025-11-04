@@ -58,7 +58,7 @@
         v-else
         class="collections-table"
         :stickyColumns="stickyColumns"
-        caption
+        caption=""
         :headers="tableHeaders"
         :rows="tableRows"
         :dataLoading="loading"
@@ -175,21 +175,21 @@
           {
             label: this.$tr('title'),
             dataType: 'string',
-            minWidth: '300px',
+            minWidth: '200px',
             width: '40%',
             columnId: 'name',
           },
           {
             label: this.$tr('token'),
             dataType: 'string',
-            minWidth: '224px',
+            minWidth: '200px',
             width: '30%',
             columnId: 'tokens',
           },
           {
             label: this.$tr('channelNumber'),
             dataType: 'number',
-            minWidth: '120px',
+            minWidth: '100px',
             width: '15%',
             columnId: 'channel_count',
             align: 'right',
@@ -210,9 +210,8 @@
         }
 
         return this.channelSets.map(collection => {
-          // Use getChannelSet to get proper format with channels as array
           const channelSet = this.getChannelSet(collection.id);
-          const channelCount = channelSet && channelSet.channels ? channelSet.channels.length : 0;
+          const channelCount = channelSet?.channels?.length || 0;
 
           return [
             collection.name || '',
@@ -257,41 +256,25 @@
             params: { channelSetId: collectionId },
           });
         } else if (option.value === 'delete') {
-          // Use the Vuex getter to get the proper channelSet object
-          const channelSet = this.getChannelSet(collectionId);
-          if (channelSet) {
-            this.collectionToDelete = channelSet;
-            this.deleteDialog = true;
-          } else {
-            // Fallback: try to find in the channelSets array
-            const collection = this.channelSets.find(c => c.id === collectionId);
-            if (collection) {
-              this.collectionToDelete = collection;
-              this.deleteDialog = true;
-            }
-          }
+          this.collectionToDelete =
+            this.getChannelSet(collectionId) ||
+            this.channelSets.find(c => c.id === collectionId) ||
+            null;
+          if (this.collectionToDelete) this.deleteDialog = true;
         }
       },
 
       confirmDelete() {
         if (this.collectionToDelete) {
-          const collectionName = this.collectionToDelete.name || 'Collection';
-
           this.deleteChannelSet(this.collectionToDelete)
             .then(() => {
+              this.loadChannelSetList();
               this.deleteDialog = false;
               this.collectionToDelete = null;
-              this.$store.dispatch('showSnackbar', {
-                text: this.$tr('deleteSuccess', { name: collectionName }),
-              });
             })
             .catch(() => {
               this.deleteDialog = false;
               this.collectionToDelete = null;
-              this.$store.dispatch('showSnackbar', {
-                text: this.$tr('deleteError', { name: collectionName }),
-                autoDismiss: false,
-              });
             });
         }
       },
@@ -326,8 +309,6 @@
       edit: 'Edit collection',
       delete: 'Delete collection',
       saving: 'Saving',
-      deleteSuccess: "'{name}' deleted successfully",
-      deleteError: "Failed to delete '{name}'. Please try again.",
     },
   };
 
