@@ -11,6 +11,13 @@ import ChannelSetModal from '../ChannelSetModal';
 import channel from 'shared/vuex/channel';
 import storeFactory from 'shared/vuex/baseStore';
 
+jest.mock('kolibri-design-system/lib/composables/useKShow', () => ({
+  __esModule: true,
+  default: () => ({
+    show: () => false, // skip loading state
+  }),
+}));
+
 const localVue = createLocalVue();
 localVue.use(Vuex);
 localVue.use(VueRouter);
@@ -219,7 +226,7 @@ describe('ChannelSetModal', () => {
       it('should prompt user if there are unsaved changes', async () => {
         expect(getUnsavedDialog(wrapper).exists()).toBeFalsy();
 
-        await getCollectionNameInput(wrapper).setValue('My collection');
+        await wrapper.setData({ name: 'My collection' });
         await getCloseButton(wrapper).trigger('click');
 
         expect(getUnsavedDialog(wrapper).exists()).toBeTruthy();
@@ -228,7 +235,7 @@ describe('ChannelSetModal', () => {
 
     describe('clicking save button', () => {
       it("shouldn't update a channel set when a collection name is missing", async () => {
-        await getCollectionNameInput(wrapper).setValue('');
+        await wrapper.setData({ name: '' });
         await getSaveButton(wrapper).trigger('click');
         await flushPromises();
 
@@ -236,7 +243,7 @@ describe('ChannelSetModal', () => {
       });
 
       it("shouldn't update a channel set when a collection name is made of empty characters", async () => {
-        await getCollectionNameInput(wrapper).setValue(' ');
+        await wrapper.setData({ name: ' ' });
         await getSaveButton(wrapper).trigger('click');
         await flushPromises();
 
@@ -244,7 +251,7 @@ describe('ChannelSetModal', () => {
       });
 
       it('should update a channel set when a collection name is valid', async () => {
-        await getCollectionNameInput(wrapper).setValue('My collection');
+        await wrapper.setData({ name: 'My collection' });
         await getSaveButton(wrapper).trigger('click');
         await flushPromises();
 

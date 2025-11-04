@@ -115,8 +115,6 @@
       v-model="publicChannels"
       :label="$tr('selectAllThatApplyPlaceholder')"
       :items="publicChannelOptions"
-      :item-value="channelName"
-      item-text="name"
       notranslate
       :box="false"
     />
@@ -371,7 +369,11 @@
         ];
       },
       publicChannelOptions() {
-        return sortBy(this.channels, c => c.name.toLowerCase()).filter(c => !c.public);
+        const options = sortBy(this.channels, c => c.name.toLowerCase()).filter(c => !c.public);
+        return options.map(option => ({
+          text: option.name,
+          value: this.channelName(option),
+        }));
       },
     },
     methods: {
@@ -519,11 +521,6 @@
 
   .license-link {
     font-size: 14px;
-  }
-
-  /* fixes unintended margin caused by KDS styles */
-  .license-link ::v-deep span {
-    margin-left: 0 !important;
   }
 
   .license-description {

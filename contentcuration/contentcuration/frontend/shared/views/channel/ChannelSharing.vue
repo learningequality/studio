@@ -59,13 +59,13 @@
           </template>
         </DropdownWrapper>
       </VLayout>
-      <VBtn
-        color="primary"
+      <KButton
         type="submit"
         :disabled="sharing"
+        primary
       >
         {{ $tr('inviteButton') }}
-      </VBtn>
+      </KButton>
     </VForm>
 
     <ChannelSharingTable

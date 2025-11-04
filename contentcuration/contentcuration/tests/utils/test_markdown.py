@@ -166,6 +166,21 @@ class TexMathTestMixin:
 
         self._assert_conversion(markdown_text, expected)
 
+    def test_mo_accented(self):
+        """Regression test for missed experimental property on mo tags"""
+
+        markdown_text = "$$a_b+\\overrightarrow{abc}+\\overleftarrow{abc}\\div\\surd\\overline{abc}$$"
+        expected = (
+            '<math display="block">'
+            "<semantics><mrow><msub><mi>a</mi><mi>b</mi></msub><mo>+</mo><mover><mrow><mi>a</mi><mi>b</mi><mi>c</mi></mrow><mo>→</mo></mover><mo>+</mo>"
+            '<mover><mrow><mi>a</mi><mi>b</mi><mi>c</mi></mrow><mo>←</mo></mover><mi>÷</mi><mo stretchy="false">√</mo><mover><mrow><mi>a</mi><mi>b</mi>'
+            '<mi>c</mi></mrow><mo accent="true">―</mo></mover></mrow>'
+            '<annotation encoding="application/x-tex">a_b+\\overrightarrow{abc}+\\overleftarrow{abc}\\div\\surd\\overline{abc}</annotation></semantics>'
+            "</math>"
+        )
+
+        self._assert_conversion(markdown_text, expected)
+
 
 class TestTexMathPlugin(TexMathTestMixin, unittest.TestCase):
     """Test direct markdown conversion: markdown → HTML+MathML"""

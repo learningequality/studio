@@ -22,7 +22,10 @@
           v-else
           class="mx-0 px-1"
         >
-          <LoadingText v-if="loading" />
+          <LoadingText
+            v-if="loading"
+            ref="loading"
+          />
           <VLayout
             v-else
             row
@@ -37,10 +40,11 @@
                   })
                 }}
               </span>
-              <ActionLink
+              <KButton
                 class="mx-2"
                 :disabled="currentSearchSaved"
                 :text="currentSearchSaved ? $tr('searchSavedSnackbar') : $tr('saveSearchAction')"
+                appearance="basic-link"
                 @click="handleClickSaveSearch"
               />
             </VFlex>
@@ -59,7 +63,7 @@
               </span>
             </VFlex>
           </VLayout>
-          <div>
+          <div v-if="!loading">
             <VLayout
               v-for="node in nodes"
               :key="node.id"
@@ -73,6 +77,7 @@
               >
                 <Checkbox
                   :key="`checkbox-${node.id}`"
+                  :ref="setFirstCardCheckboxRef"
                   :inputValue="isSelected(node)"
                   class="mt-0 pt-0"
                   @input="toggleSelected(node)"
@@ -144,9 +149,11 @@
       return {
         loading: false,
         loadFailed: false,
+        hasLoaded: false,
         nodeIds: [],
         pageCount: 0,
         totalCount: 0,
+        firstCardCheckboxRef: null,
       };
     },
     computed: {
@@ -217,8 +224,15 @@
       fetch() {
         this.loading = true;
         this.loadFailed = false;
+        this.firstCardCheckboxRef = null;
         this.fetchResultsDebounced();
         this.loadSavedSearches();
+        // Ensure loading spinner is in view after initial load
+        if (this.hasLoaded) {
+          this.$nextTick(() => {
+            this.$refs.loading.$el.scrollIntoView();
+          });
+        }
       },
       fetchResultsDebounced: debounce(
         function () {
@@ -234,6 +248,8 @@
               this.nodeIds = page.results.map(n => n.id);
               this.pageCount = page.total_pages;
               this.totalCount = page.count;
+              this.hasLoaded = true;
+              this.$nextTick(() => this.focus());
             })
             .catch(e => {
               this.loadFailed = true;
@@ -250,6 +266,19 @@
       },
       toggleSelected(node) {
         this.$emit('change_selected', { nodes: [node], isSelected: !this.isSelected(node) });
+      },
+      setFirstCardCheckboxRef(ref) {
+        if (!this.firstCardCheckboxRef) {
+          this.firstCardCheckboxRef = ref;
+        }
+      },
+      /**
+       * @public
+       */
+      focus() {
+        if (this.firstCardCheckboxRef) {
+          this.firstCardCheckboxRef.focus();
+        }
       },
     },
     $trs: {

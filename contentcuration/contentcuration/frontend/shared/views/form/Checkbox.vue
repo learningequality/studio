@@ -1,6 +1,7 @@
 <template>
 
   <KCheckbox
+    ref="checkbox"
     :value="value"
     :label="label"
     :showLabel="showLabel"
@@ -143,6 +144,12 @@
       },
       updateInputValue(newValue) {
         this.$emit('input', newValue);
+      },
+      /**
+       * @public
+       */
+      focus() {
+        this.$refs.checkbox.focus();
       },
     },
   };
