@@ -20,7 +20,12 @@
           <div class="info-content">
             <p>{{ $tr('channelSetsDescriptionText') }}</p>
             <p>{{ $tr('channelSetsInstructionsText') }}</p>
-            <p class="disclaimer">{{ $tr('channelSetsDisclaimer') }}</p>
+            <p
+              class="disclaimer"
+              :style="{ color: $themeTokens.error }"
+            >
+              {{ $tr('channelSetsDisclaimer') }}
+            </p>
           </div>
         </KModal>
       </div>
@@ -379,7 +384,6 @@
   }
 
   .tokens-cell {
-    display: flex;
     align-items: center;
     min-height: 40px;
   }
@@ -409,11 +413,6 @@
 
   .info-content p {
     margin-bottom: 16px;
-  }
-
-  .disclaimer {
-    font-weight: 500;
-    color: var(--red-500);
   }
 
 </style>
