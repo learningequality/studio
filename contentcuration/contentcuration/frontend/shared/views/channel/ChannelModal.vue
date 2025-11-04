@@ -98,14 +98,14 @@
 
               <ContentDefaults v-model="contentDefaults" />
 
-              <VBtn
+              <KButton
                 class="mt-5"
-                color="primary"
+                primary
                 type="submit"
                 :disabled="isDisable"
               >
                 {{ isNew ? $tr('createButton') : $tr('saveChangesButton') }}
-              </VBtn>
+              </KButton>
             </VForm>
           </VContainer>
         </VTabItem>
@@ -126,26 +126,16 @@
       </VTabsItems>
     </VCardText>
 
-    <MessageDialog
-      v-model="showUnsavedDialog"
-      :header="$tr('unsavedChangesHeader')"
-      :text="$tr('unsavedChangesText')"
+    <KModal
+      v-if="showUnsavedDialog"
+      :title="$tr('unsavedChangesHeader')"
+      :cancelText="$tr('keepEditingButton')"
+      :submitText="$tr('closeButton')"
+      @cancel="showUnsavedDialog = false"
+      @submit="confirmCancel"
     >
-      <template #buttons="{ close }">
-        <VBtn
-          flat
-          @click="confirmCancel"
-        >
-          {{ $tr('closeButton') }}
-        </VBtn>
-        <VBtn
-          color="primary"
-          @click="close"
-        >
-          {{ $tr('keepEditingButton') }}
-        </VBtn>
-      </template>
-    </MessageDialog>
+      <p>{{ $tr('unsavedChangesText') }}</p>
+    </KModal>
   </FullscreenModal>
 
 </template>
