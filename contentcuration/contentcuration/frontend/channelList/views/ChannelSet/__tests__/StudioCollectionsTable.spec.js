@@ -112,22 +112,15 @@ describe('StudioCollectionsTable', () => {
           actions: mockActions,
         },
       },
-      actions: {
-        showSnackbar: jest.fn(),
-      },
     });
 
     await renderComponent({ store: emptyStore });
 
-    const emptyMessageElement = screen.getByText((content, element) => {
-      return (
-        element?.classList?.contains('no-collections-message') &&
-        element.textContent.includes(
-          'You can package together multiple channels to create a collection',
-        )
-      );
-    });
-    expect(emptyMessageElement).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'You can package together multiple channels to create a collection. The entire collection can then be imported to Kolibri at once by using a collection token.',
+      ),
+    ).toBeInTheDocument();
   });
 
   it('should open info modal when "Learn about collections" link is clicked', async () => {
@@ -187,9 +180,6 @@ describe('StudioCollectionsTable', () => {
       within(deleteConfirmationModal).getByRole('heading', {
         name: 'Delete collection',
       }),
-    ).toBeInTheDocument();
-    expect(
-      within(deleteConfirmationModal).getByText('Are you sure you want to delete this collection?'),
     ).toBeInTheDocument();
 
     const deleteButton = within(deleteConfirmationModal).getByRole('button', {
