@@ -89,6 +89,7 @@
               v-if="content"
               :token="content"
               class="token-item"
+              :loading="!content"
             />
             <em
               v-else
@@ -378,7 +379,6 @@
 
   .collection-title {
     margin: 0;
-    font-size: 14px;
     font-weight: 600;
     line-height: 1.4;
   }
@@ -397,7 +397,6 @@
   }
 
   .channel-count {
-    font-size: 14px;
     text-align: right;
   }
 
