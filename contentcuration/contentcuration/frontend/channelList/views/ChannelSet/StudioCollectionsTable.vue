@@ -358,7 +358,6 @@
 
   .no-collections-message {
     margin: 40px 0;
-    color: var(--grey-600);
     text-align: center;
   }
 
@@ -415,23 +414,6 @@
   .disclaimer {
     font-weight: 500;
     color: var(--red-500);
-  }
-
-  /* Responsive design */
-  @media (max-width: 768px) {
-    .table-header {
-      flex-direction: column;
-      align-items: stretch;
-    }
-
-    .header-left,
-    .header-right {
-      justify-content: center;
-    }
-
-    .collection-title {
-      font-size: 13px;
-    }
   }
 
 </style>
