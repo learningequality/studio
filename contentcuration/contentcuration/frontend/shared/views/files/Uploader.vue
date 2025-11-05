@@ -26,7 +26,10 @@
       v-if="showUnsupportedFilesAlert"
       :title="$tr('unsupportedFilesHeader')"
       :submitText="$tr('closeButtonLabel')"
-      @submit="showUnsupportedFilesAlert = false"
+      @submit="
+        showUnsupportedFilesAlert = false;
+        resetFileInput();
+      "
     >
       <p>{{ unsupportedFilesText }}</p>
     </KModal>
@@ -34,7 +37,10 @@
       v-if="showTooLargeFilesAlert"
       :title="$tr('tooLargeFilesHeader')"
       :submitText="$tr('closeButtonLabel')"
-      @submit="showTooLargeFilesAlert = false"
+      @submit="
+        showTooLargeFilesAlert = false;
+        resetFileInput();
+      "
     >
       <p>
         {{
@@ -49,7 +55,10 @@
       v-if="showStorageExceededAlert"
       :title="$tr('noStorageHeader')"
       :submitText="$tr('closeButtonLabel')"
-      @submit="showStorageExceededAlert = false"
+      @submit="
+        showStorageExceededAlert = false;
+        resetFileInput();
+      "
     >
       <div class="storage-alert">
         <p>{{ $tr('uploadSize', { size: formatFileSize(totalUploadSize) }) }}</p>
@@ -254,6 +263,9 @@
           // Filter out any null values here
           return fileUploads.filter(Boolean);
         });
+      },
+      resetFileInput() {
+        this.$refs.fileUpload.value = '';
       },
     },
     $trs: {
