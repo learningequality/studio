@@ -224,7 +224,7 @@ describe('catalogList', () => {
         });
       });
 
-      it('should show select all checkbox', async () => {
+      it('should show select all checkbox when in selection mode', async () => {
         const user = userEvent.setup();
         makeWrapper();
         
