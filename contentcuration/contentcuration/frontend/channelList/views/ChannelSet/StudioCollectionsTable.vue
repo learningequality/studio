@@ -164,14 +164,14 @@
             label: this.$tr('title'),
             dataType: 'string',
             minWidth: '200px',
-            width: '45%',
+            width: '55%',
             columnId: 'name',
           },
           {
             label: this.$tr('token'),
             dataType: 'string',
             minWidth: '200px',
-            width: '30%',
+            width: '20%',
             columnId: 'tokens',
           },
           {
