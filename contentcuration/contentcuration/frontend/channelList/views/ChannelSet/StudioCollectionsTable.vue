@@ -1,6 +1,6 @@
 <template>
 
-  <KPageContainer>
+  <KPageContainer class="page-container">
     <div class="table-header">
       <div class="header-left">
         <KButton
@@ -50,6 +50,8 @@
         :headers="tableHeaders"
         :rows="tableRows"
         :dataLoading="loading"
+        sortable
+        disableBuiltinSorting
         :emptyMessage="$tr('noChannelSetsFound')"
       >
         <template #cell="{ content, colIndex }">
@@ -302,6 +304,11 @@
 
 <style scoped>
 
+  .page-container {
+    width: 100%;
+    max-width: 1440px;
+  }
+
   .table-header {
     display: flex;
     flex-wrap: wrap;
@@ -315,14 +322,6 @@
   .header-right {
     display: flex;
     align-items: center;
-  }
-
-  .info-link {
-    margin: 0;
-  }
-
-  .info-content {
-    line-height: 1.5;
   }
 
   .info-content p {
