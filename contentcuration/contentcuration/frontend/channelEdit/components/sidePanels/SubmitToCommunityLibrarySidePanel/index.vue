@@ -194,7 +194,6 @@
 
   import camelCase from 'lodash/camelCase';
 
-  import KCheckbox from 'kolibri-design-system/lib/KCheckbox';
   import Box from './Box';
   import LoadingText from './LoadingText';
   import StatusChip from './StatusChip';
@@ -219,7 +218,6 @@
       LoadingText,
       StatusChip,
       CountryField,
-      KCheckbox,
     },
     emits: ['close'],
     setup(props, { emit }) {
@@ -608,7 +606,6 @@
 
   .info-text {
     font-size: 14px;
-    line-height: 140%;
     color: v-bind('infoTextColor');
   }
 
