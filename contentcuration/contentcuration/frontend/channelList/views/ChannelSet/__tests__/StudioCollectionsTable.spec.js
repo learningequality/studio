@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/vue';
+import { render, screen, within, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { createLocalVue } from '@vue/test-utils';
 import Vuex, { Store } from 'vuex';
@@ -45,7 +45,7 @@ const createMockStore = () => {
       },
     },
     actions: {
-      showSnackbar: jest.fn(),
+      showSnackbarSimple: jest.fn(),
     },
   });
 };
@@ -79,6 +79,9 @@ const renderComponent = async (options = {}) => {
     store,
     router,
     ...options,
+  });
+  await waitFor(() => {
+    expect(mockActions.loadChannelSetList).toHaveBeenCalled();
   });
 
   await nextTick();
