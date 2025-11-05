@@ -148,7 +148,6 @@
   import ChannelThumbnail from './ChannelThumbnail';
   import ChannelSharing from './ChannelSharing';
   import { ErrorTypes } from 'shared/constants';
-  import MessageDialog from 'shared/views/MessageDialog';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import ContentDefaults from 'shared/views/form/ContentDefaults';
   import FullscreenModal from 'shared/views/FullscreenModal';
@@ -164,7 +163,6 @@
       ContentDefaults,
       ChannelThumbnail,
       ChannelSharing,
-      MessageDialog,
       FullscreenModal,
       Banner,
       Tabs,
