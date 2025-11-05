@@ -259,10 +259,12 @@
               this.loadChannelSetList();
               this.deleteDialog = false;
               this.collectionToDelete = null;
+              this.$store.dispatch('showSnackbarSimple', this.$tr('collectionDeleted'));
             })
             .catch(() => {
               this.deleteDialog = false;
               this.collectionToDelete = null;
+              this.$store.dispatch('showSnackbarSimple', this.$tr('deleteError'));
             });
         }
       },
@@ -296,6 +298,8 @@
       edit: 'Edit collection',
       delete: 'Delete collection',
       saving: 'Saving',
+      collectionDeleted: 'Collection  deleted',
+      deleteError: 'Error deleting collection',
     },
   };
 
