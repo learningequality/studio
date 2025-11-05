@@ -164,7 +164,7 @@
             label: this.$tr('title'),
             dataType: 'string',
             minWidth: '200px',
-            width: '40%',
+            width: '45%',
             columnId: 'name',
           },
           {
@@ -180,14 +180,12 @@
             minWidth: '100px',
             width: '15%',
             columnId: 'channel_count',
-            align: 'right',
           },
           {
             label: '',
             dataType: 'undefined',
-            width: '15%',
+            width: '10%',
             columnId: 'actions',
-            align: 'center',
           },
         ];
       },
@@ -331,6 +329,11 @@
 
   .info-content p {
     margin-bottom: 16px;
+  }
+
+  .actions-cell {
+    display: flex;
+    justify-content: flex-end;
   }
 
 </style>
