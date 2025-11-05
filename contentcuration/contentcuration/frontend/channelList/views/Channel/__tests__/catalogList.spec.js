@@ -1,4 +1,4 @@
- import { render, screen, waitFor } from '@testing-library/vue';
+import { render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { createLocalVue } from '@vue/test-utils';
 import Vuex, { Store } from 'vuex';
@@ -9,7 +9,7 @@ import { RouteNames } from '../../../constants';
 const localVue = createLocalVue();
 localVue.use(Vuex);
 localVue.use(VueRouter);
- 
+
 const mockChannels = [
   {
     id: 'channel-1',
@@ -29,7 +29,7 @@ const results = ['channel-1', 'channel-2'];
 
 function makeWrapper() {
   const mockSearchCatalog = jest.fn(() => Promise.resolve());
-  
+
   const store = new Store({
     state: {
       connection: {
@@ -108,8 +108,8 @@ function makeWrapper() {
         props: ['value', 'label', 'indeterminate'],
         template: `
           <label>
-            <input 
-              type="checkbox" 
+            <input
+              type="checkbox"
               :checked="value"
               :data-test="label ? 'select-all' : 'checkbox'"
               @change="$emit('input', $event.target.checked)"
@@ -132,7 +132,9 @@ function makeWrapper() {
           downloadPDF: 'Download PDF',
           downloadCSV: 'Download CSV',
           downloadingMessage: 'Download started',
-          channelSelectionCount: params ? `${params.count} channel${params.count !== 1 ? 's' : ''} selected` : '',
+          channelSelectionCount: params
+            ? `${params.count} channel${params.count !== 1 ? 's' : ''} selected`
+            : '',
         };
         return translations[key] || key;
       },
@@ -157,14 +159,14 @@ describe('catalogList', () => {
   describe('on query change', () => {
     it('should call searchCatalog when query changes', async () => {
       const { router, mockSearchCatalog } = makeWrapper();
-      
+
       await waitFor(() => screen.getByText('2 results found'));
-      
+
       const initialCalls = mockSearchCatalog.mock.calls.length;
-      
-      await router.push({ 
+
+      await router.push({
         name: RouteNames.CATALOG_ITEMS,
-        query: { keywords: 'search catalog test' } 
+        query: { keywords: 'search catalog test' },
       });
 
       await waitFor(() => {
@@ -178,7 +180,7 @@ describe('catalogList', () => {
       it('checkboxes and toolbar should be hidden if selecting is false', async () => {
         makeWrapper();
         await waitFor(() => screen.getByText('2 results found'));
-        
+
         expect(screen.queryByTestId('checkbox')).not.toBeInTheDocument();
         expect(screen.queryByTestId('toolbar')).not.toBeInTheDocument();
       });
@@ -186,10 +188,10 @@ describe('catalogList', () => {
       it('should activate when select button is clicked', async () => {
         const user = userEvent.setup();
         makeWrapper();
-        
+
         await waitFor(() => screen.getByText('Download a summary of selected channels'));
         await user.click(screen.getByText('Download a summary of selected channels'));
-        
+
         await waitFor(() => {
           expect(screen.getByText('Select all')).toBeInTheDocument();
         });
@@ -198,13 +200,13 @@ describe('catalogList', () => {
       it('clicking cancel should exit selection mode', async () => {
         const user = userEvent.setup();
         makeWrapper();
-        
+
         await waitFor(() => screen.getByText('Download a summary of selected channels'));
         await user.click(screen.getByText('Download a summary of selected channels'));
-        
+
         await waitFor(() => screen.getByText('Cancel'));
         await user.click(screen.getByText('Cancel'));
-        
+
         await waitFor(() => {
           expect(screen.queryByTestId('toolbar')).not.toBeInTheDocument();
         });
@@ -215,10 +217,10 @@ describe('catalogList', () => {
       it('should show all channels selected by default when entering selection mode', async () => {
         const user = userEvent.setup();
         makeWrapper();
-        
+
         await waitFor(() => screen.getByText('Download a summary of selected channels'));
         await user.click(screen.getByText('Download a summary of selected channels'));
-        
+
         await waitFor(() => {
           expect(screen.getByText('2 channels selected')).toBeInTheDocument();
         });
@@ -227,10 +229,10 @@ describe('catalogList', () => {
       it('should show select all checkbox when in selection mode', async () => {
         const user = userEvent.setup();
         makeWrapper();
-        
+
         await waitFor(() => screen.getByText('Download a summary of selected channels'));
         await user.click(screen.getByText('Download a summary of selected channels'));
-        
+
         await waitFor(() => {
           const selectAllCheckbox = screen.getByText('Select all');
           expect(selectAllCheckbox).toBeInTheDocument();
@@ -242,10 +244,10 @@ describe('catalogList', () => {
       it('clicking download button should show Download text', async () => {
         const user = userEvent.setup();
         makeWrapper();
-        
+
         await waitFor(() => screen.getByText('Download a summary of selected channels'));
         await user.click(screen.getByText('Download a summary of selected channels'));
-        
+
         await waitFor(() => {
           expect(screen.getByText('Download')).toBeInTheDocument();
         });
@@ -254,10 +256,10 @@ describe('catalogList', () => {
       it('should show both download options (CSV and PDF) available', async () => {
         const user = userEvent.setup();
         makeWrapper();
-        
+
         await waitFor(() => screen.getByText('Download a summary of selected channels'));
         await user.click(screen.getByText('Download a summary of selected channels'));
-        
+
         await waitFor(() => {
           expect(screen.getByText('Download')).toBeInTheDocument();
           // The dropdown menu contains both PDF and CSV options when clicked
