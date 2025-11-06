@@ -1632,7 +1632,10 @@ class AuditedSpecialPermissionsLicenseTestCase(StudioTestCase):
     def test_audited_special_permissions_license_get_or_create(self):
         """Test get_or_create functionality"""
         description = "Test description for get_or_create"
-        audited_license, created = AuditedSpecialPermissionsLicense.objects.get_or_create(
+        (
+            audited_license,
+            created,
+        ) = AuditedSpecialPermissionsLicense.objects.get_or_create(
             description=description, defaults={"distributable": False}
         )
 
@@ -1640,7 +1643,10 @@ class AuditedSpecialPermissionsLicenseTestCase(StudioTestCase):
         self.assertEqual(audited_license.description, description)
         self.assertFalse(audited_license.distributable)
 
-        audited_license2, created2 = AuditedSpecialPermissionsLicense.objects.get_or_create(
+        (
+            audited_license2,
+            created2,
+        ) = AuditedSpecialPermissionsLicense.objects.get_or_create(
             description=description, defaults={"distributable": False}
         )
 

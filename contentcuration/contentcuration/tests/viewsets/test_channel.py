@@ -1283,7 +1283,11 @@ class GetPublishedDataTestCase(StudioAPITestCase):
         self.assertEqual(response.status_code, 200, response.content)
 
         response_data = response.json()
-        channels = response_data if isinstance(response_data, list) else response_data["results"]
+        channels = (
+            response_data
+            if isinstance(response_data, list)
+            else response_data["results"]
+        )
         channel = next((c for c in channels if c["id"] == self.channel.id), None)
         self.assertIsNotNone(channel)
         self.assertIn("published_data", channel)
@@ -1381,6 +1385,8 @@ class AuditLicensesActionTestCase(StudioAPITestCase):
         self.assertEqual(response.status_code, 400, response.content)
         response_data = response.json()
         error_message = (
-            response_data["detail"] if isinstance(response_data, dict) else response_data[0]
+            response_data["detail"]
+            if isinstance(response_data, dict)
+            else response_data[0]
         )
         self.assertIn("must be published", str(error_message))

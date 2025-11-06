@@ -12,6 +12,10 @@ from django.core.files.storage import default_storage as storage
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.utils.translation import override
+from kolibri_content.models import ContentNode as KolibriContentNode
+from kolibri_public.utils.export_channel_to_kolibri_public import (
+    using_temp_migrated_content_database,
+)
 from le_utils.constants import content_kinds
 from contentcuration.celery import app
 from contentcuration.models import AuditedSpecialPermissionsLicense
@@ -27,10 +31,6 @@ from contentcuration.utils.publish import ensure_versioned_database_exists
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.utils import generate_update_event
 from contentcuration.viewsets.user import AdminUserFilter
-from kolibri_content.models import ContentNode as KolibriContentNode
-from kolibri_public.utils.export_channel_to_kolibri_public import (
-    using_temp_migrated_content_database,
-)
 
 
 logger = get_task_logger(__name__)
@@ -162,7 +162,7 @@ def sendcustomemails_task(subject, message, query):
         text = message.format(
             current_date=time.strftime("%A, %B %d"),
             current_time=time.strftime("%H:%M %Z"),
-            **recipient.__dict__
+            **recipient.__dict__,
         )
         text = render_to_string("registration/custom_email.txt", {"message": text})
         recipient.email_user(
@@ -214,7 +214,9 @@ def _calculate_included_licenses(channel, published_data_version, channel_versio
             .exclude(kind_id=content_kinds.TOPIC)
         )
         license_ids = list(
-            published_nodes.exclude(license=None).values_list("license", flat=True).distinct()
+            published_nodes.exclude(license=None)
+            .values_list("license", flat=True)
+            .distinct()
         )
         included_licenses = sorted(set(license_ids))
         published_data_version["included_licenses"] = included_licenses
@@ -228,7 +230,9 @@ def _check_invalid_licenses(included_licenses):
     """Check for invalid licenses (All Rights Reserved)."""
     invalid_license_ids = []
     try:
-        all_rights_reserved_license = License.objects.get(license_name="All Rights Reserved")
+        all_rights_reserved_license = License.objects.get(
+            license_name="All Rights Reserved"
+        )
         if all_rights_reserved_license.id in included_licenses:
             invalid_license_ids = [all_rights_reserved_license.id]
     except License.DoesNotExist:
@@ -238,7 +242,10 @@ def _check_invalid_licenses(included_licenses):
         all_rights_reserved_license = License.objects.filter(
             license_name="All Rights Reserved"
         ).first()
-        if all_rights_reserved_license and all_rights_reserved_license.id in included_licenses:
+        if (
+            all_rights_reserved_license
+            and all_rights_reserved_license.id in included_licenses
+        ):
             invalid_license_ids = [all_rights_reserved_license.id]
     return invalid_license_ids
 
@@ -246,7 +253,9 @@ def _check_invalid_licenses(included_licenses):
 def _process_special_permissions_licenses(channel_id, included_licenses):
     """Process special permissions licenses and return audited license IDs."""
     try:
-        special_permissions_license = License.objects.get(license_name="Special Permissions")
+        special_permissions_license = License.objects.get(
+            license_name="Special Permissions"
+        )
     except License.DoesNotExist:
         logger.warning("License 'Special Permissions' not found in database")
         return []
