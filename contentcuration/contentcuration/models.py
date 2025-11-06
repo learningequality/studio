@@ -2721,7 +2721,9 @@ class AuditedSpecialPermissionsLicense(models.Model):
     distributable = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.description[:100] if len(self.description) > 100 else self.description
+        return (
+            self.description[:100] if len(self.description) > 100 else self.description
+        )
 
     class Meta:
         indexes = [

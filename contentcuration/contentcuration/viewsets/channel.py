@@ -56,10 +56,10 @@ from contentcuration.models import File
 from contentcuration.models import generate_storage_url
 from contentcuration.models import SecretToken
 from contentcuration.models import User
+from contentcuration.tasks import audit_channel_licenses_task
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.utils.pagination import CachedListPagination
 from contentcuration.utils.pagination import ValuesViewsetPageNumberPagination
-from contentcuration.tasks import audit_channel_licenses_task
 from contentcuration.utils.publish import ChannelIncompleteError
 from contentcuration.utils.publish import publish_channel
 from contentcuration.utils.sync import sync_channel

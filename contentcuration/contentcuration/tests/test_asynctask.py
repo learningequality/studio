@@ -306,7 +306,7 @@ class AuditChannelLicensesTaskTestCase(EagerTasksTestMixin, StudioTestCase):
         node1.save()
         node1.published = True
         node1.save()
-        
+
         node2 = testdata.node({"kind_id": "video", "title": "Video Node 2"})
         node2.parent = self.channel.main_tree
         node2.license = license2
@@ -334,13 +334,13 @@ class AuditChannelLicensesTaskTestCase(EagerTasksTestMixin, StudioTestCase):
         )
 
     @patch("contentcuration.tasks.storage.exists")
-    def test_audit_licenses_task__with_all_rights_reserved(
-        self, mock_storage_exists
-    ):
+    def test_audit_licenses_task__with_all_rights_reserved(self, mock_storage_exists):
         """Test audit task when channel has All Rights Reserved license"""
         from contentcuration.tasks import audit_channel_licenses_task
 
-        all_rights_license, _ = cc.License.objects.get_or_create(license_name="All Rights Reserved")
+        all_rights_license, _ = cc.License.objects.get_or_create(
+            license_name="All Rights Reserved"
+        )
         node = testdata.node({"kind_id": "video", "title": "Video Node"})
         node.parent = self.channel.main_tree
         node.license = all_rights_license
@@ -392,16 +392,16 @@ class AuditChannelLicensesTaskTestCase(EagerTasksTestMixin, StudioTestCase):
             "Custom permission 1",
             "Custom permission 2",
         ]
-        
+
         mock_exclude2 = mock.Mock()
         mock_exclude2.exclude.return_value.values_list.return_value = mock_values_list
-        
+
         mock_exclude1 = mock.Mock()
         mock_exclude1.exclude.return_value = mock_exclude2
-        
+
         mock_filter = mock.Mock()
         mock_filter.exclude.return_value = mock_exclude1
-        
+
         mock_kolibri_node.objects.filter.return_value = mock_filter
 
         audit_channel_licenses_task.apply(
@@ -412,7 +412,9 @@ class AuditChannelLicensesTaskTestCase(EagerTasksTestMixin, StudioTestCase):
         version_str = str(self.channel.version)
         published_data_version = self.channel.published_data[version_str]
 
-        special_perms = published_data_version.get("community_library_special_permissions")
+        special_perms = published_data_version.get(
+            "community_library_special_permissions"
+        )
         self.assertIsNotNone(special_perms)
         self.assertEqual(len(special_perms), 2)
 
@@ -434,7 +436,7 @@ class AuditChannelLicensesTaskTestCase(EagerTasksTestMixin, StudioTestCase):
         if self.channel.editors.filter(pk=non_editor.id).exists():
             self.channel.editors.remove(non_editor)
         self.channel.save()
-        
+
         initial_published_data = copy.deepcopy(self.channel.published_data)
 
         audit_channel_licenses_task.apply(
@@ -446,7 +448,7 @@ class AuditChannelLicensesTaskTestCase(EagerTasksTestMixin, StudioTestCase):
         self.assertEqual(
             initial_published_data,
             final_published_data,
-            "Published data should not be modified when user is not an editor"
+            "Published data should not be modified when user is not an editor",
         )
 
     def test_audit_licenses_task__channel_not_published(self):

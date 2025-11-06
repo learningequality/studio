@@ -13,7 +13,10 @@ from django.core.files.storage import default_storage as storage
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.utils.translation import override
-
+from kolibri_content.models import ContentNode as KolibriContentNode
+from kolibri_public.utils.export_channel_to_kolibri_public import (
+    using_temp_migrated_content_database,
+)
 from le_utils.constants import content_kinds
 
 from contentcuration.celery import app
@@ -30,10 +33,6 @@ from contentcuration.utils.publish import ensure_versioned_database_exists
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.utils import generate_update_event
 from contentcuration.viewsets.user import AdminUserFilter
-from kolibri_content.models import ContentNode as KolibriContentNode
-from kolibri_public.utils.export_channel_to_kolibri_public import (
-    using_temp_migrated_content_database,
-)
 
 
 logger = get_task_logger(__name__)
@@ -165,7 +164,7 @@ def sendcustomemails_task(subject, message, query):
         text = message.format(
             current_date=time.strftime("%A, %B %d"),
             current_time=time.strftime("%H:%M %Z"),
-            **recipient.__dict__
+            **recipient.__dict__,
         )
         text = render_to_string("registration/custom_email.txt", {"message": text})
         recipient.email_user(
@@ -235,7 +234,9 @@ def audit_channel_licenses_task(self, channel_id, user_id):
             .exclude(kind_id=content_kinds.TOPIC)
         )
         license_ids = list(
-            published_nodes.exclude(license=None).values_list("license", flat=True).distinct()
+            published_nodes.exclude(license=None)
+            .values_list("license", flat=True)
+            .distinct()
         )
         included_licenses = sorted(set(license_ids))
         published_data_version["included_licenses"] = included_licenses
@@ -246,7 +247,9 @@ def audit_channel_licenses_task(self, channel_id, user_id):
     # Check for invalid licenses (All Rights Reserved)
     invalid_license_ids = []
     try:
-        all_rights_reserved_license = License.objects.get(license_name="All Rights Reserved")
+        all_rights_reserved_license = License.objects.get(
+            license_name="All Rights Reserved"
+        )
         if all_rights_reserved_license.id in included_licenses:
             invalid_license_ids = [all_rights_reserved_license.id]
     except License.DoesNotExist:
@@ -256,17 +259,24 @@ def audit_channel_licenses_task(self, channel_id, user_id):
         all_rights_reserved_license = License.objects.filter(
             license_name="All Rights Reserved"
         ).first()
-        if all_rights_reserved_license and all_rights_reserved_license.id in included_licenses:
+        if (
+            all_rights_reserved_license
+            and all_rights_reserved_license.id in included_licenses
+        ):
             invalid_license_ids = [all_rights_reserved_license.id]
 
     # Check for special permissions licenses
     special_permissions_license_ids = []
     try:
-        special_permissions_license = License.objects.get(license_name="Special Permissions")
+        special_permissions_license = License.objects.get(
+            license_name="Special Permissions"
+        )
         if special_permissions_license.id in included_licenses:
             # Download unversioned database and query for special permissions license descriptions
             unversioned_db_filename = f"{channel_id}.sqlite3"
-            unversioned_db_storage_path = os.path.join(settings.DB_ROOT, unversioned_db_filename)
+            unversioned_db_storage_path = os.path.join(
+                settings.DB_ROOT, unversioned_db_filename
+            )
 
             if not storage.exists(unversioned_db_storage_path):
                 logger.error(
@@ -308,7 +318,10 @@ def audit_channel_licenses_task(self, channel_id, user_id):
                 # Get or create AuditedSpecialPermissionsLicense for each description
                 audited_license_ids = []
                 for description in license_descriptions:
-                    audited_license, created = AuditedSpecialPermissionsLicense.objects.get_or_create(
+                    (
+                        audited_license,
+                        created,
+                    ) = AuditedSpecialPermissionsLicense.objects.get_or_create(
                         description=description, defaults={"distributable": False}
                     )
                     audited_license_ids.append(audited_license.id)
@@ -326,10 +339,15 @@ def audit_channel_licenses_task(self, channel_id, user_id):
         special_permissions_license = License.objects.filter(
             license_name="Special Permissions"
         ).first()
-        if special_permissions_license and special_permissions_license.id in included_licenses:
+        if (
+            special_permissions_license
+            and special_permissions_license.id in included_licenses
+        ):
             # Same logic as above for querying content database
             unversioned_db_filename = f"{channel_id}.sqlite3"
-            unversioned_db_storage_path = os.path.join(settings.DB_ROOT, unversioned_db_filename)
+            unversioned_db_storage_path = os.path.join(
+                settings.DB_ROOT, unversioned_db_filename
+            )
 
             if storage.exists(unversioned_db_storage_path):
                 with using_temp_migrated_content_database(unversioned_db_storage_path):
@@ -346,10 +364,11 @@ def audit_channel_licenses_task(self, channel_id, user_id):
 
                     audited_license_ids = []
                     for description in license_descriptions:
-                        audited_license, created = (
-                            AuditedSpecialPermissionsLicense.objects.get_or_create(
-                                description=description, defaults={"distributable": False}
-                            )
+                        (
+                            audited_license,
+                            created,
+                        ) = AuditedSpecialPermissionsLicense.objects.get_or_create(
+                            description=description, defaults={"distributable": False}
                         )
                         audited_license_ids.append(audited_license.id)
                         if created:
