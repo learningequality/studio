@@ -2,12 +2,7 @@
 
   <div
     class="my-channels"
-    :class="{
-      'window-small': windowIsSmall,
-      'window-medium': windowIsMedium,
-      'window-large': windowIsLarge,
-      ['windowBreakpoint-' + windowBreakpoint]: windowBreakpoint,
-    }"
+    :class="windowClasses"
   >
     <div class="new-channel">
       <KButton
@@ -237,6 +232,15 @@
       canEdit() {
         return this.selectedChannel.edit;
       },
+
+      windowClasses() {
+        return {
+          'window-small': this.windowIsSmall,
+          'window-medium': this.windowIsMedium,
+          'window-large': this.windowIsLarge,
+          [`windowBreakpoint-${this.windowBreakpoint}`]: this.windowBreakpoint,
+        };
+      },
     },
     created() {
       this.loadData();
@@ -440,7 +444,6 @@
   .window-medium {
     .channels-body,
     .new-channel {
-      width: 100%;
       max-width: 83.33%;
     }
   }
@@ -448,7 +451,6 @@
   .window-large {
     .channels-body,
     .new-channel {
-      width: 100%;
       max-width: 50%;
     }
   }
@@ -456,7 +458,6 @@
   .windowBreakpoint-3 {
     .channels-body,
     .new-channel {
-      width: 100%;
       max-width: 83.33%;
     }
   }
@@ -464,7 +465,6 @@
   .windowBreakpoint-4 {
     .channels-body,
     .new-channel {
-      width: 100%;
       max-width: 66.66%;
     }
   }
@@ -472,16 +472,16 @@
   .windowBreakpoint-5 {
     .channels-body,
     .new-channel {
-      width: 100%;
       max-width: 50%;
     }
   }
 
   .my-channels {
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-height: calc(100vh - 64px - 48px);
+    min-height: calc(100% - 64px - 48px);
   }
 
   .no-channels {
@@ -490,6 +490,7 @@
   }
 
   .new-channel {
+    width: 100%;
     display: flex;
     justify-content: end;
     margin-top: 20px;
