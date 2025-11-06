@@ -477,10 +477,10 @@
   }
 
   .my-channels {
-    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 100%;
     min-height: calc(100% - 64px - 48px);
   }
 
@@ -490,9 +490,9 @@
   }
 
   .new-channel {
-    width: 100%;
     display: flex;
     justify-content: end;
+    width: 100%;
     margin-top: 20px;
   }
 
