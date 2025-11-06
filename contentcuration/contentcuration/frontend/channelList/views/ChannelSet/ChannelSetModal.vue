@@ -90,14 +90,12 @@
                   flat
                 >
                   <ChannelItem :channelId="channelId">
-                    <VBtn
-                      flat
-                      class="ma-0"
-                      color="primary"
+                    <KButton
+                      :text="$tr('removeText')"
+                      appearance="flat-button"
+                      :primary="true"
                       @click="removeChannel(channelId)"
-                    >
-                      {{ $tr('removeText') }}
-                    </VBtn>
+                    />
                   </ChannelItem>
                 </VCard>
               </div>
@@ -204,8 +202,8 @@
   import { generateFormMixin, constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import CopyToken from 'shared/views/CopyToken';
   import FullscreenModal from 'shared/views/FullscreenModal';
-  import Tabs from 'shared/views/Tabs';
   import StudioLargeLoader from 'shared/views/StudioLargeLoader';
+  import Tabs from 'shared/views/Tabs';
 
   const formMixin = generateFormMixin({
     name: {

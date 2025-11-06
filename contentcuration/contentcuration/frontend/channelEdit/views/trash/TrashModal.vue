@@ -365,8 +365,4 @@
     width: 100%;
   }
 
-  .button-group {
-    white-space: nowrap;
-  }
-
 </style>

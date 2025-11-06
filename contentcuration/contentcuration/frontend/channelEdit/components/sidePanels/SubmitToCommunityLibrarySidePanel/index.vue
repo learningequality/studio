@@ -19,140 +19,164 @@
             <KCircularLoader disableDefaultTransition />
             <div class="publishing-text">{{ publishingMessage$() }}</div>
           </div>
-          <Box
-            kind="info"
-            :loading="latestSubmissionIsLoading || isPublishing"
-            class="info-box"
-          >
-            <div
-              key="box-message"
-              class="box-message"
-            >
-              {{ infoBoxPrimaryText }}
-              <div v-if="infoBoxSecondaryText">
-                {{ infoBoxSecondaryText }}
-              </div>
-              <template
-                v-if="
-                  latestSubmissionIsFinished && latestSubmissionStatus === null && !isPublishing
-                "
-              >
-                <div
-                  v-if="showingMoreDetails"
-                  class="more-details-text"
-                >
-                  {{ moreDetails$() }}
-                </div>
-                <KButton
-                  v-if="!showingMoreDetails"
-                  appearance="basic-link"
-                  :text="moreDetailsButton$()"
-                  data-test="more-details-button"
-                  @click="showingMoreDetails = !showingMoreDetails"
-                />
-                <KButton
-                  v-else
-                  appearance="basic-link"
-                  :text="lessDetailsButton$()"
-                  data-test="less-details-button"
-                  @click="showingMoreDetails = !showingMoreDetails"
-                />
-              </template>
-            </div>
-            <template #chip>
-              <StatusChip
-                v-if="latestSubmissionStatus && !isPublishing"
-                :status="latestSubmissionStatus"
-              />
-            </template>
-          </Box>
-          <Box
-            v-if="!isPublished"
-            kind="warning"
-            data-test="not-published-warning"
-          >
-            {{ notPublishedWarning$() }}
-          </Box>
-          <Box
-            v-else-if="isPublic"
-            kind="warning"
-            data-test="public-warning"
-          >
-            {{ publicWarning$() }}
-          </Box>
-          <Box
-            v-else-if="isCurrentVersionAlreadySubmitted"
-            kind="warning"
-            data-test="already-submitted-warning"
-          >
-            {{ alreadySubmittedWarning$() }}
-          </Box>
-          <div class="channel-title">{{ channel.name }}</div>
-          <div>
-            <div class="field-annotation">{{ languagesDetected$() }}</div>
-            <LoadingText
-              :loading="publishedDataIsLoading"
-              :finishedLoading="publishedDataIsFinished"
-              :omitted="!detectedLanguages"
-            >
-              {{ detectedLanguages }}
-            </LoadingText>
-          </div>
-          <div>
-            <div class="field-annotation">{{ licensesDetected$() }}</div>
-            <LoadingText
-              :loading="publishedDataIsLoading"
-              :finishedLoading="publishedDataIsFinished"
-              :omitted="!detectedLicenses"
-            >
-              {{ detectedLicenses }}
-            </LoadingText>
-          </div>
-          <div>
-            <div class="field-annotation">{{ categoriesDetected$() }}</div>
-            <LoadingText
-              :loading="publishedDataIsLoading"
-              :finishedLoading="publishedDataIsFinished"
-              :omitted="!detectedCategories"
-            >
-              {{ detectedCategories }}
-            </LoadingText>
-          </div>
-          <div class="country-area">
+          <template v-else>
             <KTransition kind="component-fade-out-in">
               <div
-                v-if="latestSubmissionIsLoading || isPublishing"
+                v-if="latestSubmissionIsLoading"
                 class="loader-wrapper"
               >
                 <KCircularLoader disableDefaultTransition />
               </div>
-              <CountryField
-                v-else-if="latestSubmissionIsFinished && !isPublishing"
-                v-model="countries"
-                class="country-field"
-                :disabled="!canBeEdited"
-                :label="countryLabel$()"
-                fullWidth
-                :hide-details="true"
-              />
+              <div
+                v-else-if="latestSubmissionIsFinished"
+                class="info-section"
+              >
+                <div class="info-text">
+                  <template v-if="latestSubmissionStatus === null">
+                    <template v-if="showingMoreDetails">
+                      <div>{{ infoText }}</div>
+                      <div>{{ moreDetails$() }}</div>
+                      <KButton
+                        appearance="basic-link"
+                        data-test="less-details-button"
+                        @click="showingMoreDetails = false"
+                      >
+                        {{ lessDetailsButton$() }}
+                      </KButton>
+                    </template>
+                    <template v-else>
+                      <div>
+                        {{ infoText }}
+                      </div>
+                      <KButton
+                        appearance="basic-link"
+                        data-test="more-details-button"
+                        @click="showingMoreDetails = true"
+                      >
+                        {{ moreDetailsButton$() }}
+                      </KButton>
+                    </template>
+                  </template>
+                  <template v-else>
+                    {{ infoText }}
+                  </template>
+                </div>
+                <StatusChip
+                  v-if="latestSubmissionStatus"
+                  :status="latestSubmissionStatus"
+                  class="status-chip"
+                />
+              </div>
             </KTransition>
-          </div>
-          <KTextbox
-            v-model="description"
-            :disabled="!canBeEdited"
-            :invalid="description.length < 1"
-            :invalidText="descriptionRequired$()"
-            textArea
-            :label="descriptionLabel$()"
-            :maxlength="250"
-            style="width: 100%"
-            class="description-textbox"
-          />
+            <Box
+              v-if="!isPublished"
+              kind="warning"
+              data-test="not-published-warning"
+            >
+              <template #title>
+                {{ notPublishedWarningTitle$() }}
+              </template>
+              <template #description>
+                {{ notPublishedWarningDescription$() }}
+              </template>
+            </Box>
+            <Box
+              v-else-if="isPublic"
+              kind="warning"
+              data-test="public-warning"
+            >
+              <template #title>
+                {{ publicWarningTitle$() }}
+              </template>
+              <template #description>
+                {{ publicWarningDescription$() }}
+              </template>
+            </Box>
+            <Box
+              v-else-if="isCurrentVersionAlreadySubmitted"
+              kind="warning"
+              data-test="already-submitted-warning"
+            >
+              <template #title>
+                {{ alreadySubmittedWarningTitle$() }}
+              </template>
+              <template #description>
+                {{ alreadySubmittedWarningDescription$() }}
+              </template>
+            </Box>
+            <div class="channel-title">
+              {{
+                channelVersion$({
+                  name: currentChannel ? currentChannel.name : '',
+                  version: currentChannel ? currentChannel.version : 0,
+                })
+              }}
+            </div>
+            <div class="metadata-line">
+              <LoadingText
+                :loading="publishedDataIsLoading"
+                :finishedLoading="publishedDataIsFinished"
+                :omitted="!detectedLanguages"
+              >
+                {{ detectedLanguages }}
+              </LoadingText>
+            </div>
+            <div class="metadata-line">
+              <LoadingText
+                :loading="publishedDataIsLoading"
+                :finishedLoading="publishedDataIsFinished"
+                :omitted="!detectedCategories"
+              >
+                {{ detectedCategories }}
+              </LoadingText>
+            </div>
+            <div class="country-area">
+              <KTransition kind="component-fade-out-in">
+                <div
+                  v-if="latestSubmissionIsLoading"
+                  class="loader-wrapper"
+                >
+                  <KCircularLoader disableDefaultTransition />
+                </div>
+                <CountryField
+                  v-else-if="latestSubmissionIsFinished"
+                  v-model="countries"
+                  class="country-field"
+                  :disabled="!canBeEdited"
+                  :label="countryLabel$()"
+                  fullWidth
+                  :hide-details="true"
+                />
+              </KTransition>
+            </div>
+            <KTextbox
+              v-model="description"
+              :disabled="!canBeEdited"
+              :invalid="description.length < 1"
+              :invalidText="descriptionRequired$()"
+              textArea
+              :label="descriptionLabel$()"
+              :maxlength="250"
+              style="width: 100%"
+              class="description-textbox"
+            />
+            <KCheckbox
+              v-if="needsReplacementConfirmation"
+              :checked="replacementConfirmed"
+              :label="confirmReplacementText$()"
+              data-test="replacement-confirmation-checkbox"
+              class="replacement-checkbox"
+              @change="onReplacementChange"
+            />
+          </template>
         </div>
       </template>
 
       <template #bottomNavigation>
-        <div class="footer">
+        <div
+          v-if="!isPublishing"
+          class="footer"
+        >
           <KButton
             data-test="cancel-button"
             @click="$emit('close')"
@@ -177,8 +201,9 @@
 
 <script>
 
-  import { computed, getCurrentInstance, ref, watch } from 'vue';
-  import { themeTokens } from 'kolibri-design-system/lib/styles/theme';
+  import { computed, getCurrentInstance, onUnmounted, ref, watch } from 'vue';
+  import { themeTokens, themePalette } from 'kolibri-design-system/lib/styles/theme';
+  import { liveQuery } from 'dexie';
 
   import camelCase from 'lodash/camelCase';
 
@@ -191,13 +216,12 @@
   import { translateMetadataString } from 'shared/utils/metadataStringsTranslation';
   import countriesUtil from 'shared/utils/countries';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
+  import { Channel, CommunityLibrarySubmission } from 'shared/data/resources';
 
   import SidePanelModal from 'shared/views/SidePanelModal';
   import CountryField from 'shared/views/form/CountryField';
   import LanguagesMap from 'shared/leUtils/Languages';
-  import LicensesMap from 'shared/leUtils/Licenses';
   import { CategoriesLookup, CommunityLibraryStatus } from 'shared/constants';
-  import { CommunityLibrarySubmission, Channel } from 'shared/data/resources';
 
   export default {
     name: 'SubmitToCommunityLibrarySidePanel',
@@ -211,9 +235,13 @@
     emits: ['close'],
     setup(props, { emit }) {
       const tokensTheme = themeTokens();
+      const paletteTheme = themePalette();
 
       const { proxy } = getCurrentInstance();
       const store = proxy.$store;
+
+      // Get currentChannel from store reactively - this will update when store changes
+      const currentChannel = computed(() => store.getters['currentChannel/currentChannel']);
 
       // Destructure translation functions from communityChannelsStrings
       const {
@@ -221,54 +249,98 @@
         moreDetails$,
         moreDetailsButton$,
         lessDetailsButton$,
-        languagesDetected$,
-        licensesDetected$,
-        categoriesDetected$,
         countryLabel$,
         descriptionLabel$,
         descriptionRequired$,
-        notPublishedWarning$,
-        publicWarning$,
-        alreadySubmittedWarning$,
+        notPublishedWarningTitle$,
+        notPublishedWarningDescription$,
+        publicWarningTitle$,
+        publicWarningDescription$,
+        alreadySubmittedWarningTitle$,
+        alreadySubmittedWarningDescription$,
         submitButton$,
         cancelAction$,
         submittedPrimaryInfo$,
-        reviewersWillSeeLatestFirst$,
         approvedPrimaryInfo$,
         flaggedPrimaryInfo$,
         nonePrimaryInfo$,
+        channelVersion$,
         submittedSnackbar$,
         errorSnackbar$,
         submittingSnackbar$,
         publishingMessage$,
+        confirmReplacementText$,
       } = communityChannelsStrings;
 
       const annotationColor = computed(() => tokensTheme.annotation);
-      const infoSeparatorColor = computed(() => tokensTheme.fineLine);
+      const infoTextColor = computed(() => paletteTheme.grey.v_700);
 
       const showingMoreDetails = ref(false);
       const countries = ref([]);
       const description = ref('');
       const isPublishing = ref(Boolean(props.channel.publishing));
       const currentChannelVersion = ref(props.channel.version);
+      const replacementConfirmed = ref(false);
 
-      let publishPollId = null;
-      function startPublishPolling() {
-        if (publishPollId || !isPublishing.value) return;
-        publishPollId = setInterval(() => {
-          Channel.fetchModel(props.channel.id).then(ch => {
-            if (ch) {
-              isPublishing.value = Boolean(ch.publishing);
-              if (!isPublishing.value) {
-                currentChannelVersion.value = ch.version;
-                clearInterval(publishPollId);
-                publishPollId = null;
-              }
+      // Monitor publishing completion using liveQuery to watch channel's publishing property
+      let publishSubscription = null;
+      let publishTimeout = null;
+
+      function startPublishMonitoring() {
+        if (publishSubscription || !isPublishing.value) return;
+
+        if (!Channel.table || !Channel.table.get) return;
+
+        const observable = liveQuery(() => {
+          return Channel.table.get(props.channel.id);
+        });
+
+        publishSubscription = observable.subscribe({
+          next: async channel => {
+            if (channel && !channel.publishing) {
+              stopPublishMonitoring();
+              isPublishing.value = false;
+              currentChannelVersion.value = channel.version;
+              await store.dispatch('channel/loadChannel', props.channel.id);
             }
-          });
-        }, 2000);
+          },
+        });
+
+        publishTimeout = setTimeout(() => {
+          stopPublishMonitoring();
+        }, 300000);
       }
-      if (isPublishing.value) startPublishPolling();
+
+      function stopPublishMonitoring() {
+        if (publishSubscription) {
+          publishSubscription.unsubscribe();
+          publishSubscription = null;
+        }
+        if (publishTimeout) {
+          clearTimeout(publishTimeout);
+          publishTimeout = null;
+        }
+      }
+
+      if (isPublishing.value) {
+        startPublishMonitoring();
+      }
+
+      watch(
+        () => currentChannel.value?.publishing,
+        (newPublishing, oldPublishing) => {
+          isPublishing.value = Boolean(newPublishing);
+          if (newPublishing && !oldPublishing) {
+            startPublishMonitoring();
+          } else if (!newPublishing && oldPublishing) {
+            stopPublishMonitoring();
+          }
+        },
+      );
+
+      onUnmounted(() => {
+        stopPublishMonitoring();
+      });
 
       const {
         isLoading: latestSubmissionIsLoading,
@@ -281,7 +353,7 @@
       }
 
       watch(latestSubmissionIsFinished, newVal => {
-        if (newVal && latestSubmissionData.value) {
+        if (newVal && latestSubmissionData.value?.countries) {
           countries.value = latestSubmissionData.value.countries.map(code =>
             countryCodeToName(code),
           );
@@ -313,33 +385,28 @@
           case CommunityLibraryStatus.PENDING:
             return {
               primaryText: submittedPrimaryInfo$(),
-              secondaryText: reviewersWillSeeLatestFirst$(),
             };
           case CommunityLibraryStatus.APPROVED:
             return {
               primaryText: approvedPrimaryInfo$(),
-              secondaryText: reviewersWillSeeLatestFirst$(),
             };
           case CommunityLibraryStatus.REJECTED:
             return {
               primaryText: flaggedPrimaryInfo$(),
-              secondaryText: null,
             };
           case null:
             return {
               primaryText: nonePrimaryInfo$(),
-              secondaryText: null,
             };
           default:
             return undefined;
         }
       });
 
-      const infoBoxPrimaryText = computed(() => infoConfig.value?.primaryText);
-      const infoBoxSecondaryText = computed(() => infoConfig.value?.secondaryText);
+      const infoText = computed(() => infoConfig.value?.primaryText);
 
-      const isPublished = computed(() => props.channel.published);
-      const isPublic = computed(() => props.channel.public);
+      const isPublished = computed(() => currentChannel.value?.published);
+      const isPublic = computed(() => currentChannel.value?.public);
       const isCurrentVersionAlreadySubmitted = computed(() => {
         if (!latestSubmissionData.value) return false;
         return latestSubmissionData.value.channel_version === currentChannelVersion.value;
@@ -347,16 +414,33 @@
 
       const canBeEdited = computed(() => {
         if (isPublishing.value) return false;
-        return isPublished.value && !isPublic.value && !isCurrentVersionAlreadySubmitted.value;
+        if (isCurrentVersionAlreadySubmitted.value) {
+          return false;
+        }
+        return isPublished.value && !isPublic.value;
+      });
+
+      const needsReplacementConfirmation = computed(() => {
+        if (isPublic.value) {
+          return false;
+        }
+        // Only show checkbox if there's a pending submission AND the version has changed
+        return (
+          latestSubmissionStatus.value === CommunityLibraryStatus.PENDING &&
+          !isCurrentVersionAlreadySubmitted.value
+        );
       });
 
       const canBeSubmitted = computed(() => {
-        return (
-          canBeEdited.value &&
-          !isPublishing.value &&
-          publishedDataIsFinished.value &&
-          description.value.length >= 1
-        );
+        if (isPublishing.value) return false;
+        const baseCondition =
+          canBeEdited.value && publishedDataIsFinished.value && description.value.length >= 1;
+
+        if (needsReplacementConfirmation.value) {
+          return baseCondition && replacementConfirmed.value;
+        }
+
+        return baseCondition;
       });
 
       const {
@@ -364,6 +448,20 @@
         isFinished: publishedDataIsFinished,
         data: publishedData,
       } = usePublishedData(props.channel.id);
+
+      // Watch for when publishing completes and reload channel from backend
+      watch(
+        () => currentChannel.value?.publishing,
+        async (isPublishing, wasPublishing) => {
+          if (wasPublishing === true && isPublishing === false && props.channel.id) {
+            const ch = await Channel.fetchModel(props.channel.id);
+            if (ch) {
+              currentChannelVersion.value = ch.version;
+            }
+            await store.dispatch('channel/loadChannel', props.channel.id);
+          }
+        },
+      );
 
       const latestPublishedData = computed(() => {
         if (!publishedData.value) return undefined;
@@ -389,20 +487,6 @@
         return languageCodes.map(code => LanguagesMap.get(code).readable_name).join(', ');
       });
 
-      const detectedLicenses = computed(() => {
-        // We distinguish here between "not loaded yet" (undefined)
-        // and "loaded and none present" (null). This distinction is
-        // not used in the UI and is mostly intended to convey the
-        // state more accurately to the developer in case of debugging.
-        // UI code should rely on XXXIsLoading and XXXIsFinished instead.
-        if (!latestPublishedData.value?.included_licenses) return undefined;
-        if (latestPublishedData.value.included_licenses.length === 0) return null;
-
-        return latestPublishedData.value.included_licenses
-          .map(licenseId => LicensesMap.get(licenseId).license_name)
-          .join(', ');
-      });
-
       function categoryIdToName(categoryId) {
         return translateMetadataString(camelCase(CategoriesLookup[categoryId]));
       }
@@ -423,6 +507,10 @@
 
       function showSnackbar(params) {
         return store.dispatch('showSnackbar', params);
+      }
+
+      function onReplacementChange(value) {
+        replacementConfirmed.value = value;
       }
 
       function onSubmit() {
@@ -465,16 +553,19 @@
       }
 
       return {
+        currentChannel,
         annotationColor,
-        infoSeparatorColor,
+        infoTextColor,
         showingMoreDetails,
         countries,
         description,
+        replacementConfirmed,
+        onReplacementChange,
         latestSubmissionIsLoading,
         latestSubmissionIsFinished,
         latestSubmissionStatus,
-        infoBoxPrimaryText,
-        infoBoxSecondaryText,
+        needsReplacementConfirmation,
+        infoText,
         isPublished,
         isPublic,
         isCurrentVersionAlreadySubmitted,
@@ -483,7 +574,6 @@
         publishedDataIsLoading,
         publishedDataIsFinished,
         detectedLanguages,
-        detectedLicenses,
         detectedCategories,
         onSubmit,
         // Translation functions
@@ -491,19 +581,21 @@
         moreDetails$,
         moreDetailsButton$,
         lessDetailsButton$,
-        languagesDetected$,
-        licensesDetected$,
-        categoriesDetected$,
         countryLabel$,
         descriptionLabel$,
         descriptionRequired$,
-        notPublishedWarning$,
-        publicWarning$,
-        alreadySubmittedWarning$,
+        channelVersion$,
+        notPublishedWarningTitle$,
+        notPublishedWarningDescription$,
+        publicWarningTitle$,
+        publicWarningDescription$,
+        alreadySubmittedWarningTitle$,
+        alreadySubmittedWarningDescription$,
         submitButton$,
         cancelAction$,
         isPublishing,
         publishingMessage$,
+        confirmReplacementText$,
       };
     },
     props: {
@@ -520,18 +612,30 @@
 <style scoped lang="scss">
 
   .side-panel-title {
+    padding-left: 16px;
     margin: 0;
     font-size: 20px;
   }
 
+  ::v-deep .side-panel-header {
+    border: 0 !important;
+  }
+
   .channel-title {
+    font-size: 18px;
     font-weight: 600;
+  }
+
+  .metadata-line {
+    font-size: 14px;
+    color: v-bind('annotationColor');
   }
 
   .content {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    margin-top: -24px;
     line-height: 140%;
   }
 
@@ -554,7 +658,6 @@
 
   .more-details-text {
     padding-top: 8px;
-    border-top: 1px solid v-bind('infoSeparatorColor');
   }
 
   .field-annotation {
@@ -583,20 +686,38 @@
   }
 
   .publishing-loader {
-    position: static;
     display: flex;
+    flex-direction: column;
+    gap: 16px;
     align-items: center;
     justify-content: center;
-    width: max-content;
-    margin: 0 auto;
+    width: 100%;
+    padding: 48px 0;
   }
 
   .publishing-text {
     font-size: 14px;
+    color: v-bind('infoTextColor');
   }
 
-  .publishing-loader > *:first-child {
-    margin-right: 2px;
+  .info-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .info-text {
+    font-size: 14px;
+    color: v-bind('infoTextColor');
+  }
+
+  .status-chip {
+    align-self: flex-start;
+    margin-top: 8px;
+  }
+
+  .replacement-checkbox {
+    margin-top: 8px;
   }
 
 </style>
