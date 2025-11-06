@@ -252,12 +252,8 @@
     created() {
       if (this.loggedIn) {
         this.loadInvitationList();
-      } else {
-        if (this.$route.name === RouteNames.CHANNELS_EDITABLE) {
-          this.$router.replace({ name: RouteNames.CATALOG_ITEMS });
-        } else if (!CATALOG_PAGES.includes(this.$route.name)) {
-          this.$router.push({ name: RouteNames.CATALOG_ITEMS });
-        }
+      } else if (!CATALOG_PAGES.includes(this.$route.name)) {
+        this.$router.replace({ name: RouteNames.CATALOG_ITEMS });
       }
     },
     mounted() {
