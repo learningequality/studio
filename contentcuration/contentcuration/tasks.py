@@ -6,6 +6,7 @@ the tasks.
 import logging
 import os
 import time
+
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.core.files.storage import default_storage as storage
@@ -17,6 +18,7 @@ from kolibri_public.utils.export_channel_to_kolibri_public import (
     using_temp_migrated_content_database,
 )
 from le_utils.constants import content_kinds
+
 from contentcuration.celery import app
 from contentcuration.models import AuditedSpecialPermissionsLicense
 from contentcuration.models import Change
@@ -265,11 +267,16 @@ def _process_special_permissions_licenses(channel_id, included_licenses):
             license_name="Special Permissions"
         ).first()
 
-    if not special_permissions_license or special_permissions_license.id not in included_licenses:
+    if (
+        not special_permissions_license
+        or special_permissions_license.id not in included_licenses
+    ):
         return []
 
     unversioned_db_filename = f"{channel_id}.sqlite3"
-    unversioned_db_storage_path = os.path.join(settings.DB_ROOT, unversioned_db_filename)
+    unversioned_db_storage_path = os.path.join(
+        settings.DB_ROOT, unversioned_db_filename
+    )
 
     if not storage.exists(unversioned_db_storage_path):
         logger.error(
@@ -291,7 +298,10 @@ def _process_special_permissions_licenses(channel_id, included_licenses):
 
         audited_license_ids = []
         for description in license_descriptions:
-            audited_license, created = AuditedSpecialPermissionsLicense.objects.get_or_create(
+            (
+                audited_license,
+                created,
+            ) = AuditedSpecialPermissionsLicense.objects.get_or_create(
                 description=description, defaults={"distributable": False}
             )
             audited_license_ids.append(audited_license.id)
@@ -303,7 +313,13 @@ def _process_special_permissions_licenses(channel_id, included_licenses):
         return audited_license_ids
 
 
-def _save_audit_results(channel, published_data_version, invalid_license_ids, special_permissions_license_ids, user_id):
+def _save_audit_results(
+    channel,
+    published_data_version,
+    invalid_license_ids,
+    special_permissions_license_ids,
+    user_id,
+):
     """Save audit results to published_data and create change event."""
     published_data_version["community_library_invalid_licenses"] = (
         invalid_license_ids if invalid_license_ids else None
@@ -349,17 +365,27 @@ def audit_channel_licenses_task(self, channel_id, user_id):
 
     published_data_version = channel.published_data[version_str]
 
-    included_licenses = _calculate_included_licenses(channel, published_data_version, channel_version)
+    included_licenses = _calculate_included_licenses(
+        channel, published_data_version, channel_version
+    )
     invalid_license_ids = _check_invalid_licenses(included_licenses)
-    special_permissions_license_ids = _process_special_permissions_licenses(channel_id, included_licenses)
+    special_permissions_license_ids = _process_special_permissions_licenses(
+        channel_id, included_licenses
+    )
 
     if special_permissions_license_ids is None:
         # Database not found, save partial results
-        _save_audit_results(channel, published_data_version, invalid_license_ids, None, user_id)
+        _save_audit_results(
+            channel, published_data_version, invalid_license_ids, None, user_id
+        )
         return
 
     _save_audit_results(
-        channel, published_data_version, invalid_license_ids, special_permissions_license_ids, user_id
+        channel,
+        published_data_version,
+        invalid_license_ids,
+        special_permissions_license_ids,
+        user_id,
     )
 
     logger.info(
