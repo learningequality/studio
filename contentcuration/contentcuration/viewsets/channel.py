@@ -59,6 +59,7 @@ from contentcuration.models import User
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.utils.pagination import CachedListPagination
 from contentcuration.utils.pagination import ValuesViewsetPageNumberPagination
+from contentcuration.tasks import audit_channel_licenses_task
 from contentcuration.utils.publish import ChannelIncompleteError
 from contentcuration.utils.publish import publish_channel
 from contentcuration.utils.sync import sync_channel
@@ -394,6 +395,7 @@ base_channel_values = (
     "staging_tree__id",
     "source_url",
     "demo_server_url",
+    "published_data",
 )
 
 channel_field_map = {
@@ -898,6 +900,39 @@ class ChannelViewSet(ValuesViewset):
         channel = self.get_edit_object()
 
         return Response(channel.published_data)
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="audit_licenses",
+        url_name="audit-licenses",
+    )
+    def audit_licenses(self, request, pk=None) -> Response:
+        """
+        Trigger license audit for a channel's community library submission.
+        This will check for invalid licenses (All Rights Reserved) and special
+        permissions licenses, and update the channel's published_data with audit results.
+
+        :param request: The request object
+        :param pk: The ID of the channel
+        :return: Response with task_id if task was enqueued
+        :rtype: Response
+        """
+        channel = self.get_edit_object()
+
+        if not channel.main_tree.published:
+            raise ValidationError("Channel must be published to audit licenses")
+
+        async_result = audit_channel_licenses_task.fetch_or_enqueue(
+            request.user, channel_id=channel.id, user_id=request.user.id
+        )
+
+        return Response(
+            {
+                "task_id": async_result.task_id,
+                "status": "enqueued",
+            }
+        )
 
     def _channel_exists(self, channel_id) -> bool:
         """

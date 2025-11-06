@@ -2,6 +2,7 @@ import threading
 import time
 import uuid
 
+import mock
 import pytest
 from celery import states
 from celery.result import allow_join_result
@@ -9,9 +10,13 @@ from celery.utils.log import get_task_logger
 from django.core.management import call_command
 from django.test import TransactionTestCase
 from django_celery_results.models import TaskResult
+from mock import patch
 
 from . import testdata
+from .base import StudioTestCase
 from .helpers import clear_tasks
+from .helpers import EagerTasksTestMixin
+from contentcuration import models as cc
 from contentcuration.celery import app
 
 logger = get_task_logger(__name__)
@@ -273,3 +278,192 @@ class AsyncTaskTestCase(TransactionTestCase):
             TaskResult.objects.get(task_id=async_result.task_id, status=states.REVOKED)
         except TaskResult.DoesNotExist:
             self.fail("Missing revoked task result")
+
+
+class AuditChannelLicensesTaskTestCase(EagerTasksTestMixin, StudioTestCase):
+    """Tests for the audit_channel_licenses_task"""
+
+    def setUp(self):
+        super().setUp()
+        self.setUpBase()
+        self.channel.main_tree.published = True
+        self.channel.main_tree.save()
+        self.channel.version = 1
+        self.channel.save()
+
+    @patch("contentcuration.tasks.storage.exists")
+    def test_audit_licenses_task__no_invalid_or_special_permissions(
+        self, mock_storage_exists
+    ):
+        """Test audit task when channel has no invalid or special permissions licenses"""
+        from contentcuration.tasks import audit_channel_licenses_task
+
+        license1, _ = cc.License.objects.get_or_create(license_name="CC BY")
+        license2, _ = cc.License.objects.get_or_create(license_name="CC BY-SA")
+        node1 = testdata.node({"kind_id": "video", "title": "Video Node"})
+        node1.parent = self.channel.main_tree
+        node1.license = license1
+        node1.save()
+        node1.published = True
+        node1.save()
+        
+        node2 = testdata.node({"kind_id": "video", "title": "Video Node 2"})
+        node2.parent = self.channel.main_tree
+        node2.license = license2
+        node2.save()
+        node2.published = True
+        node2.save()
+
+        mock_storage_exists.return_value = False
+
+        audit_channel_licenses_task.apply(
+            kwargs={"channel_id": self.channel.id, "user_id": self.user.id}
+        )
+
+        self.channel.refresh_from_db()
+        version_str = str(self.channel.version)
+        self.assertIn(version_str, self.channel.published_data)
+        published_data_version = self.channel.published_data[version_str]
+
+        self.assertIn("included_licenses", published_data_version)
+        self.assertIsNone(
+            published_data_version.get("community_library_invalid_licenses")
+        )
+        self.assertIsNone(
+            published_data_version.get("community_library_special_permissions")
+        )
+
+    @patch("contentcuration.tasks.storage.exists")
+    def test_audit_licenses_task__with_all_rights_reserved(
+        self, mock_storage_exists
+    ):
+        """Test audit task when channel has All Rights Reserved license"""
+        from contentcuration.tasks import audit_channel_licenses_task
+
+        all_rights_license, _ = cc.License.objects.get_or_create(license_name="All Rights Reserved")
+        node = testdata.node({"kind_id": "video", "title": "Video Node"})
+        node.parent = self.channel.main_tree
+        node.license = all_rights_license
+        node.save()
+        node.published = True
+        node.save()
+
+        mock_storage_exists.return_value = False
+
+        audit_channel_licenses_task.apply(
+            kwargs={"channel_id": self.channel.id, "user_id": self.user.id}
+        )
+
+        self.channel.refresh_from_db()
+        version_str = str(self.channel.version)
+        published_data_version = self.channel.published_data[version_str]
+
+        self.assertEqual(
+            published_data_version.get("community_library_invalid_licenses"),
+            [all_rights_license.id],
+        )
+
+    @patch("contentcuration.tasks.KolibriContentNode")
+    @patch("contentcuration.tasks.using_temp_migrated_content_database")
+    @patch("contentcuration.tasks.storage.exists")
+    def test_audit_licenses_task__with_special_permissions(
+        self, mock_storage_exists, mock_using_db, mock_kolibri_node
+    ):
+        """Test audit task when channel has Special Permissions licenses"""
+        from contentcuration.tasks import audit_channel_licenses_task
+
+        special_perms_license, _ = cc.License.objects.get_or_create(
+            license_name="Special Permissions"
+        )
+        node = testdata.node({"kind_id": "video", "title": "Video Node"})
+        node.parent = self.channel.main_tree
+        node.license = special_perms_license
+        node.save()
+        node.published = True
+        node.save()
+
+        mock_storage_exists.return_value = True
+
+        mock_context = mock.MagicMock()
+        mock_using_db.return_value.__enter__ = mock.Mock(return_value=mock_context)
+        mock_using_db.return_value.__exit__ = mock.Mock(return_value=None)
+        mock_values_list = mock.Mock()
+        mock_values_list.distinct.return_value = [
+            "Custom permission 1",
+            "Custom permission 2",
+        ]
+        
+        mock_exclude2 = mock.Mock()
+        mock_exclude2.exclude.return_value.values_list.return_value = mock_values_list
+        
+        mock_exclude1 = mock.Mock()
+        mock_exclude1.exclude.return_value = mock_exclude2
+        
+        mock_filter = mock.Mock()
+        mock_filter.exclude.return_value = mock_exclude1
+        
+        mock_kolibri_node.objects.filter.return_value = mock_filter
+
+        audit_channel_licenses_task.apply(
+            kwargs={"channel_id": self.channel.id, "user_id": self.user.id}
+        )
+
+        self.channel.refresh_from_db()
+        version_str = str(self.channel.version)
+        published_data_version = self.channel.published_data[version_str]
+
+        special_perms = published_data_version.get("community_library_special_permissions")
+        self.assertIsNotNone(special_perms)
+        self.assertEqual(len(special_perms), 2)
+
+        from contentcuration.models import AuditedSpecialPermissionsLicense
+
+        audited_licenses = AuditedSpecialPermissionsLicense.objects.filter(
+            description__in=["Custom permission 1", "Custom permission 2"]
+        )
+        self.assertEqual(audited_licenses.count(), 2)
+
+    def test_audit_licenses_task__user_not_editor(self):
+        """Test audit task fails when user is not an editor"""
+        from contentcuration.tasks import audit_channel_licenses_task
+        import copy
+
+        non_editor = testdata.user()
+        non_editor.is_admin = False
+        non_editor.save()
+        if self.channel.editors.filter(pk=non_editor.id).exists():
+            self.channel.editors.remove(non_editor)
+        self.channel.save()
+        
+        initial_published_data = copy.deepcopy(self.channel.published_data)
+
+        audit_channel_licenses_task.apply(
+            kwargs={"channel_id": self.channel.id, "user_id": non_editor.id}
+        )
+
+        self.channel.refresh_from_db()
+        final_published_data = copy.deepcopy(self.channel.published_data)
+        self.assertEqual(
+            initial_published_data,
+            final_published_data,
+            "Published data should not be modified when user is not an editor"
+        )
+
+    def test_audit_licenses_task__channel_not_published(self):
+        """Test audit task fails when channel is not published"""
+        from contentcuration.tasks import audit_channel_licenses_task
+
+        self.channel.main_tree.published = False
+        self.channel.main_tree.save()
+
+        audit_channel_licenses_task.apply(
+            kwargs={"channel_id": self.channel.id, "user_id": self.user.id}
+        )
+
+        self.channel.refresh_from_db()
+        version_str = str(self.channel.version)
+        if version_str in self.channel.published_data:
+            self.assertNotIn(
+                "community_library_invalid_licenses",
+                self.channel.published_data[version_str],
+            )
