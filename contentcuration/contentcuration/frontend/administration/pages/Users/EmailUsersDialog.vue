@@ -82,6 +82,11 @@
             :key="`placeholder-${placeholder.label}`"
             class="placeholder-button"
             :style="placeholderButtonStyles"
+            :class="
+              $computedClass({
+                ':hover': { backgroundColor: $themePalette.grey.v_300 },
+              })
+            "
             type="button"
             @click="addPlaceholder(placeholder.placeholder)"
           >
@@ -193,7 +198,7 @@
       },
       placeholderButtonStyles() {
         return {
-          backgroundColor: this.$themePalette.grey.v_300,
+          backgroundColor: this.$themePalette.grey.v_200,
           color: this.$themeTokens.text,
         };
       },
@@ -371,15 +376,6 @@
     cursor: pointer;
     border-radius: 14px;
     transition: all 0.2s ease;
-
-    &:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
-    }
-
-    &:active {
-      transform: translateY(2px);
-    }
   }
 
 </style>
