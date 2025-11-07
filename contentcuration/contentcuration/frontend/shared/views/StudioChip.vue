@@ -13,20 +13,9 @@
 
 <script>
 
-  /**
-   * StudioChip displays small rounded badges/tags for metadata like levels, categories, and tags.
-   * This component replaces Vuetify's VChip with a KDS-inspired design.
-   *
-   * Usage:
-   * <StudioChip>My Tag</StudioChip>
-   * <StudioChip :notranslate="true">User Generated Content</StudioChip>
-   */
   export default {
     name: 'StudioChip',
     props: {
-      /**
-       * Whether the chip content should not be translated by browser translation
-       */
       notranslate: {
         type: Boolean,
         default: false,
