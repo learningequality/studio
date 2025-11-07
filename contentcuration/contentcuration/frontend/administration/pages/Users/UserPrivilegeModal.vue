@@ -3,13 +3,14 @@
   <KModal
     v-if="dialog"
     :title="title"
-    :text="text"
     :submitText="confirmText"
     :cancelText="$tr('cancelAction')"
     data-test="user-privilege-modal"
     @submit="submit"
     @cancel="close"
   >
+    <p>{{ text }}</p>
+    
     <form
       ref="form"
       @submit.prevent="confirm"
@@ -34,6 +35,7 @@
         flat
         data-test="cancel"
         type="button"
+        class="mr-2"
         @click="close"
       >
         {{ $tr('cancelAction') }}
