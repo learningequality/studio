@@ -210,7 +210,7 @@ class ConcurrencyTestCase(TransactionTestCase):
                 for (node_id, target_id) in zip(
                     root_children_ids, first_child_node_children_ids
                 )
-            )
+            ),
         )
 
         for result in results:
@@ -236,7 +236,7 @@ class ConcurrencyTestCase(TransactionTestCase):
             *(
                 (create_contentnode, {"parent_id": node_id})
                 for node_id in first_child_node_children_ids
-            )
+            ),
         )
 
         for result in results:
@@ -1902,6 +1902,132 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         )
         self.assertEqual(len(response.data["disallowed"]), 1)
         self.assertTrue(contentnode.prerequisite.filter(id=prereq.id).exists())
+
+    def test_create_html5_contentnode_with_entry_validation(self):
+        """
+        Regression test for HTML5 nodes validation failure when entry value is set in extra_fields.
+
+        This test verifies that newly created HTML5 content nodes with an "entry" value
+        in extra_fields.options.entry can be successfully validated and created.
+        """
+        contentnode_data = self.contentnode_metadata
+        contentnode_data["kind"] = content_kinds.HTML5
+        contentnode_data["extra_fields"] = {"options": {"entry": "index.html"}}
+
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    contentnode_data["id"],
+                    CONTENTNODE,
+                    contentnode_data,
+                    channel_id=self.channel.id,
+                )
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(
+            len(response.data.get("errors", [])),
+            0,
+            f"Expected no validation errors, but got: {response.data.get('errors', [])}",
+        )
+
+        try:
+            new_node = models.ContentNode.objects.get(id=contentnode_data["id"])
+        except models.ContentNode.DoesNotExist:
+            self.fail("HTML5 ContentNode with entry value was not created")
+
+        self.assertEqual(new_node.parent_id, self.channel.main_tree_id)
+        self.assertEqual(new_node.kind_id, content_kinds.HTML5)
+        self.assertEqual(new_node.extra_fields["options"]["entry"], "index.html")
+
+    def test_create_exercise_contentnode_requires_randomize(self):
+        """
+        Test that exercise content nodes require the randomize field in extra_fields.
+        """
+        contentnode_data = self.contentnode_metadata
+        contentnode_data["kind"] = content_kinds.EXERCISE
+        # Deliberately omit randomize field
+        contentnode_data["extra_fields"] = {"options": {}}
+
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    contentnode_data["id"],
+                    CONTENTNODE,
+                    contentnode_data,
+                    channel_id=self.channel.id,
+                )
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(len(response.data.get("errors", [])), 1)
+
+        error = response.data["errors"][0]
+
+        self.assertIn("randomize", error["errors"]["extra_fields"])
+        self.assertEqual(
+            error["errors"]["extra_fields"]["randomize"][0],
+            "This field is required for exercise content.",
+        )
+
+    def test_create_exercise_contentnode_with_randomize_succeeds(self):
+        """
+        Test that exercise content nodes with randomize field are created successfully.
+        """
+        contentnode_data = self.contentnode_metadata
+        contentnode_data["kind"] = content_kinds.EXERCISE
+        contentnode_data["extra_fields"] = {"randomize": True, "options": {}}
+
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    contentnode_data["id"],
+                    CONTENTNODE,
+                    contentnode_data,
+                    channel_id=self.channel.id,
+                )
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(len(response.data.get("errors", [])), 0)
+
+        try:
+            new_node = models.ContentNode.objects.get(id=contentnode_data["id"])
+        except models.ContentNode.DoesNotExist:
+            self.fail("Exercise ContentNode with randomize field was not created")
+
+        self.assertEqual(new_node.kind_id, content_kinds.EXERCISE)
+        self.assertTrue(new_node.extra_fields["randomize"])
+
+    def test_cannot_update_contentnode_kind(self):
+        """
+        Test that content node kind cannot be changed after creation.
+        """
+        contentnode = models.ContentNode.objects.create(**self.contentnode_db_metadata)
+        original_kind = contentnode.kind_id
+
+        response = self.sync_changes(
+            [
+                generate_update_event(
+                    contentnode.id,
+                    CONTENTNODE,
+                    {"kind": content_kinds.HTML5},
+                    channel_id=self.channel.id,
+                )
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(len(response.data.get("errors", [])), 1)
+
+        error = response.data["errors"][0]
+        self.assertIn("kind", error["errors"])
+        self.assertEqual(
+            error["errors"]["kind"][0], "Content kind cannot be changed after creation"
+        )
+
+        # Verify kind was not changed
+        contentnode.refresh_from_db()
+        self.assertEqual(contentnode.kind_id, original_kind)
 
 
 class CRUDTestCase(StudioAPITestCase):

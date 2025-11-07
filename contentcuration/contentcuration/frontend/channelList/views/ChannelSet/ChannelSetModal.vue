@@ -38,17 +38,17 @@
               lg10
               xl8
             >
-              <VForm ref="channelsetform">
-                <VTextField
+              <form>
+                <KTextbox
                   v-model="name"
-                  :rules="nameRules"
                   :label="$tr('titleLabel')"
                   maxlength="200"
-                  counter
-                  box
+                  :invalid="errors.name"
+                  :invalidText="$tr('titleRequiredText')"
+                  showInvalidText
                   data-test="input-name"
                 />
-              </VForm>
+              </form>
 
               <div v-if="channelSet.secret_token">
                 <p>{{ $tr('tokenPrompt') }}</p>
@@ -72,9 +72,7 @@
               </p>
 
               <!-- Channel list section -->
-              <VCardText v-if="loadingChannels">
-                <LoadingText />
-              </VCardText>
+              <StudioLargeLoader v-if="show('collections', loadingChannels, 500)" />
               <div
                 v-else
                 fluid
@@ -92,14 +90,12 @@
                   flat
                 >
                   <ChannelItem :channelId="channelId">
-                    <VBtn
-                      flat
-                      class="ma-0"
-                      color="primary"
+                    <KButton
+                      :text="$tr('removeText')"
+                      appearance="flat-button"
+                      :primary="true"
                       @click="removeChannel(channelId)"
-                    >
-                      {{ $tr('removeText') }}
-                    </VBtn>
+                    />
                   </ChannelItem>
                 </VCard>
               </div>
@@ -197,16 +193,24 @@
 
   import { set } from 'vue';
   import { mapGetters, mapActions } from 'vuex';
+  import useKShow from 'kolibri-design-system/lib/composables/useKShow';
   import difference from 'lodash/difference';
   import { RouteNames } from '../../constants';
   import ChannelItem from './ChannelItem';
   import ChannelSelectionList from './ChannelSelectionList';
   import { ChannelListTypes, ErrorTypes } from 'shared/constants';
-  import { constantsTranslationMixin, routerMixin } from 'shared/mixins';
+  import { generateFormMixin, constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import CopyToken from 'shared/views/CopyToken';
   import FullscreenModal from 'shared/views/FullscreenModal';
+  import StudioLargeLoader from 'shared/views/StudioLargeLoader';
   import Tabs from 'shared/views/Tabs';
-  import LoadingText from 'shared/views/LoadingText';
+
+  const formMixin = generateFormMixin({
+    name: {
+      required: true,
+      validator: v => v && v.trim().length > 0,
+    },
+  });
 
   export default {
     name: 'ChannelSetModal',
@@ -216,9 +220,13 @@
       ChannelItem,
       FullscreenModal,
       Tabs,
-      LoadingText,
+      StudioLargeLoader,
     },
-    mixins: [constantsTranslationMixin, routerMixin],
+    mixins: [formMixin, constantsTranslationMixin, routerMixin],
+    setup() {
+      const { show } = useKShow();
+      return { show };
+    },
     props: {
       channelSetId: {
         type: String,
@@ -241,9 +249,6 @@
       ...mapGetters('channelSet', ['getChannelSet']),
       isNew() {
         return this.$route.path === '/collections/new';
-      },
-      nameRules() {
-        return [name => (name && name.trim().length ? true : this.$tr('titleRequiredText'))];
       },
       name: {
         get() {
@@ -371,44 +376,48 @@
         this.saving = true;
         this.showUnsavedDialog = false;
 
-        if (this.$refs.channelsetform.validate()) {
-          let promise;
+        const formData = this.clean();
+        if (!this.validate(formData)) {
+          this.saving = false;
+          return;
+        }
 
-          if (this.isNew) {
-            const channelSetData = { ...this.diffTracker };
-            promise = this.commitChannelSet(channelSetData)
-              .then(newCollection => {
-                if (!newCollection || !newCollection.id) {
-                  this.saving = false;
-                  return;
-                }
+        let promise;
 
-                const newCollectionId = newCollection.id;
-
-                this.$router.replace({
-                  name: 'CHANNEL_SET_DETAILS',
-                  params: { channelSetId: newCollectionId },
-                });
-
-                return newCollection;
-              })
-              .catch(() => {
+        if (this.isNew) {
+          const channelSetData = { ...this.diffTracker, ...formData };
+          promise = this.commitChannelSet(channelSetData)
+            .then(newCollection => {
+              if (!newCollection || !newCollection.id) {
                 this.saving = false;
-              });
-          } else {
-            promise = this.saveChannels().then(() => {
-              return this.updateChannelSet({ id: this.channelSetId, ...this.diffTracker });
-            });
-          }
+                return;
+              }
 
-          promise
-            .then(() => {
-              this.close();
+              const newCollectionId = newCollection.id;
+
+              this.$router.replace({
+                name: 'CHANNEL_SET_DETAILS',
+                params: { channelSetId: newCollectionId },
+              });
+
+              return newCollection;
             })
-            .finally(() => {
+            .catch(() => {
               this.saving = false;
             });
+        } else {
+          promise = this.saveChannels().then(() => {
+            return this.updateChannelSet({ id: this.channelSetId, ...this.diffTracker });
+          });
         }
+
+        promise
+          .then(() => {
+            this.close();
+          })
+          .finally(() => {
+            this.saving = false;
+          });
       },
 
       cancelChanges() {

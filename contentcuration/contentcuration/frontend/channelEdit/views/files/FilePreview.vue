@@ -26,13 +26,13 @@
       >
         {{ $tr('fullscreenModeText') }}
         <VSpacer />
-        <VBtn
+        <KButton
           data-test="closefullscreen"
-          flat
+          appearance="flat-button"
+          :primary="false"
+          :text="$tr('exitFullscreen')"
           @click="fullscreen = false"
-        >
-          {{ $tr('exitFullscreen') }}
-        </VBtn>
+        />
       </VToolbar>
       <ContentRenderer
         :nodeId="nodeId"
@@ -43,9 +43,11 @@
         v-if="!fullscreen"
         class="mt-2"
       >
-        <ActionLink
+        <KButton
           v-if="showFullscreenOption"
           data-test="openfullscreen"
+          appearance="basic-link"
+          :primary="true"
           :text="$tr('viewFullscreen')"
           @click="fullscreen = true"
         />

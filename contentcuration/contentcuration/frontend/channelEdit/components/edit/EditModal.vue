@@ -73,13 +73,11 @@
                   class="add-wrapper"
                   :color="$themeTokens.textInverted"
                 >
-                  <VBtn
+                  <KButton
                     v-if="addTopicsMode"
-                    color="greyBackground"
+                    :text="$tr('addTopic')"
                     @click="createTopic"
-                  >
-                    {{ $tr('addTopic') }}
-                  </VBtn>
+                  />
                   <KButton
                     v-else-if="uploadMode"
                     :text="$tr('uploadButton')"
@@ -129,36 +127,24 @@
         </Uploader>
       </VCard>
       <BottomBar v-if="!loading && !loadError && !showFileUploadDefault">
-        <VLayout
-          row
-          align-center
-          fill-height
-          class="px-2"
+        <FileStorage
+          v-if="showStorage"
+          class="mx-2"
+        />
+        <VSpacer />
+        <div
+          v-if="online"
+          class="mt-1 py-3"
         >
-          <VFlex
-            v-if="showStorage"
-            shrink
-          >
-            <FileStorage />
-          </VFlex>
-          <VSpacer />
-          <VFlex
-            v-if="online"
-            shrink
-          >
-            <div class="mt-1 py-3">
-              <SavingIndicator :nodeIds="nodeIds" />
-            </div>
-          </VFlex>
-          <VFlex shrink>
-            <VBtn
-              color="primary"
-              @click="handleClose()"
-            >
-              {{ $tr('finishButton') }}
-            </VBtn>
-          </VFlex>
-        </VLayout>
+          <SavingIndicator :nodeIds="nodeIds" />
+        </div>
+        <div>
+          <KButton
+            :primary="true"
+            :text="$tr('finishButton')"
+            @click="handleClose()"
+          />
+        </div>
       </BottomBar>
       <InheritAncestorMetadataModal
         ref="inheritModal"
@@ -169,73 +155,40 @@
     </VDialog>
 
     <!-- Dialog for catching unsaved changes -->
-    <MessageDialog
-      v-model="promptInvalid"
-      :header="$tr('invalidNodesFound', { count: invalidNodes.length })"
-      :text="$tr('invalidNodesFoundText')"
+    <KModal
+      v-if="promptInvalid"
+      :title="$tr('invalidNodesFound', { count: invalidNodes.length })"
+      :submitText="$tr('saveAnywaysButton')"
+      :cancelText="$tr('keepEditingButton')"
+      @submit="closeModal(true)"
+      @cancel="promptInvalid = false"
     >
-      <template #buttons="{ close }">
-        <VBtn
-          flat
-          data-test="saveanyways"
-          color="primary"
-          @click="closeModal(true)"
-        >
-          {{ $tr('saveAnywaysButton') }}
-        </VBtn>
-        <VBtn
-          color="primary"
-          @click="close"
-        >
-          {{ $tr('keepEditingButton') }}
-        </VBtn>
-      </template>
-    </MessageDialog>
+      <p>{{ $tr('invalidNodesFoundText') }}</p>
+    </KModal>
 
     <!-- Dialog for catching in-progress file uploads -->
-    <MessageDialog
-      v-model="promptUploading"
-      :header="$tr('uploadInProgressHeader')"
-      :text="$tr('uploadInProgressText')"
+    <KModal
+      v-if="promptUploading"
+      :title="$tr('uploadInProgressHeader')"
+      :cancelText="$tr('dismissDialogButton')"
+      :submitText="$tr('cancelUploadsButton')"
+      @cancel="promptUploading = false"
+      @submit="closeModal"
     >
-      <template #buttons="{ close }">
-        <VBtn
-          flat
-          @click="close"
-        >
-          {{ $tr('dismissDialogButton') }}
-        </VBtn>
-        <VBtn
-          data-test="canceluploads"
-          color="primary"
-          @click="closeModal"
-        >
-          {{ $tr('cancelUploadsButton') }}
-        </VBtn>
-      </template>
-    </MessageDialog>
+      <p>{{ $tr('uploadInProgressText') }}</p>
+    </KModal>
 
     <!-- Alert for failed save -->
-    <MessageDialog
-      v-model="promptFailed"
-      :header="$tr('saveFailedHeader')"
-      :text="$tr('saveFailedText')"
+    <KModal
+      v-if="promptFailed"
+      :title="$tr('saveFailedHeader')"
+      :cancelText="$tr('okButton')"
+      :submitText="$tr('closeWithoutSavingButton')"
+      @cancel="promptFailed = false"
+      @submit="closeModal"
     >
-      <template #buttons="{ close }">
-        <VBtn
-          flat
-          @click="close"
-        >
-          {{ $tr('okButton') }}
-        </VBtn>
-        <VBtn
-          color="primary"
-          @click="closeModal"
-        >
-          {{ $tr('closeWithoutSavingButton') }}
-        </VBtn>
-      </template>
-    </MessageDialog>
+      <p>{{ $tr('saveFailedText') }}</p>
+    </KModal>
   </div>
 
 </template>
@@ -253,7 +206,6 @@
   import { ContentKindLearningActivityDefaults } from 'shared/leUtils/ContentKinds';
   import { fileSizeMixin, routerMixin } from 'shared/mixins';
   import FileStorage from 'shared/views/files/FileStorage';
-  import MessageDialog from 'shared/views/MessageDialog';
   import ResizableNavigationDrawer from 'shared/views/ResizableNavigationDrawer';
   import Uploader from 'shared/views/files/Uploader';
   import LoadingText from 'shared/views/LoadingText';
@@ -278,7 +230,6 @@
       FileStorage,
       FileUploadDefault,
       LoadingText,
-      MessageDialog,
       OfflineText,
       FileDropzone,
       SavingIndicator,

@@ -1,25 +1,32 @@
 <template>
 
   <div>
-    <ConfirmationDialog
-      v-model="deleteDialog"
+    <KModal
+      v-if="deleteDialog"
       title="Delete user"
-      :text="`Are you sure you want to permanently delete ${user.name}'s account?`"
-      confirmButtonText="Delete"
+      submitText="Delete"
+      cancelText="Cancel"
       data-test="confirm-delete"
-      @confirm="deleteHandler"
-    />
-    <ConfirmationDialog
-      v-model="deactivateDialog"
+      @submit="deleteHandler"
+      @cancel="deleteDialog = false"
+    >
+      <p>Are you sure you want to permanently delete {{ user.name }}'s account?</p>
+    </KModal>
+
+    <KModal
+      v-if="deactivateDialog"
       title="Deactivate user"
-      :text="
-        `Deactivating ${user.name}'s account will block them from ` +
-          `accessing their account. Are you sure you want to continue?`
-      "
-      confirmButtonText="Deactivate"
+      submitText="Deactivate"
+      cancelText="Cancel"
       data-test="confirm-deactivate"
-      @confirm="deactivateHandler"
-    />
+      @submit="deactivateHandler"
+      @cancel="deactivateDialog = false"
+    >
+      <p>
+        Deactivating {{ user.name }}'s account will block them from accessing their account. Are you
+        sure you want to continue?
+      </p>
+    </KModal>
     <UserPrivilegeModal
       v-model="addAdminPrivilegeDialog"
       title="Add admin privileges"
@@ -106,14 +113,13 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
-  import ConfirmationDialog from '../../components/ConfirmationDialog';
+
   import EmailUsersDialog from './EmailUsersDialog';
   import UserPrivilegeModal from './UserPrivilegeModal';
 
   export default {
     name: 'UserActionsDropdown',
     components: {
-      ConfirmationDialog,
       EmailUsersDialog,
       UserPrivilegeModal,
     },

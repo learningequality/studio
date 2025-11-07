@@ -33,6 +33,7 @@
     left: 0;
     z-index: 3;
     display: flex;
+    align-items: center;
     width: 100%;
     height: 64px;
     background-color: #ffffff;

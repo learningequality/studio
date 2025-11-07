@@ -52,44 +52,40 @@
           >
             <VIconWrapper small> check_circle </VIconWrapper>
             <span class="mx-1">{{ $tr('addedText') }}</span>
-            <VBtn
-              color="primary"
+            <KButton
+              primary
+              :text="$tr('removeButton')"
               @click="deselectNode(previewNode)"
-            >
-              {{ $tr('removeButton') }}
-            </VBtn>
+            />
           </VLayout>
         </VFadeTransition>
-        <VBtn
+        <KButton
           v-if="!previewIsSelected"
-          color="primary"
+          primary
+          :text="$tr('addButton')"
           @click="selectNode(previewNode)"
-        >
-          {{ $tr('addButton') }}
-        </VBtn>
+        />
       </template>
     </ResourceDrawer>
     <template #bottom>
-      <div class="mx-4 subheading">
+      <div class="mx-2 subheading">
         {{ $tr('resourcesSelected', { count: selectedResourcesCount }) }}
       </div>
       <VSpacer />
-      <VBtn
+      <KButton
         v-if="isReview"
+        primary
         :disabled="selected.length === 0"
-        color="primary"
+        :text="$tr('importAction')"
         @click="handleClickImport"
-      >
-        {{ $tr('importAction') }}
-      </VBtn>
-      <VBtn
+      />
+      <KButton
         v-else
-        color="primary"
+        primary
         :disabled="selected.length === 0"
+        :text="$tr('reviewAction')"
         @click="handleClickReview"
-      >
-        {{ $tr('reviewAction') }}
-      </VBtn>
+      />
     </template>
   </FullscreenModal>
 
@@ -131,7 +127,6 @@
     data() {
       return {
         previewNode: null,
-        showSnackbar: true,
       };
     },
     provide: {
@@ -190,13 +185,6 @@
         return this.selected.some(node => node.id === this.previewNode.id);
       },
     },
-    watch: {
-      selectedResourcesCount(newVal, oldVal) {
-        if (this.showSnackbar) {
-          this.showResourcesSnackbar(newVal, oldVal);
-        }
-      },
-    },
     beforeRouteUpdate(to, from, next) {
       this.$store.dispatch('clearSnackbar');
       next();
@@ -213,18 +201,6 @@
       }),
       handlePreview(previewNode) {
         this.previewNode = previewNode;
-      },
-      showResourcesSnackbar(newLength, oldLength) {
-        const latestDelta = newLength - oldLength;
-        const textFromDelta = delta => {
-          const params = { count: Math.abs(delta) };
-          return delta >= 0
-            ? this.$tr('resourcesAddedSnackbar', params)
-            : this.$tr('resourcesRemovedSnackbar', params);
-        };
-        this.$store.dispatch('showSnackbar', {
-          text: textFromDelta(latestDelta),
-        });
       },
       handleClickReview() {
         this.$router.push({
@@ -246,8 +222,6 @@
         }).then(nodes => {
           this.handleRecommendationInteractionEvent();
 
-          // When exiting, do not show snackbar when clearing selections
-          this.showSnackbar = false;
           this.$store.commit('importFromChannels/CLEAR_NODES');
           this.$router.push({
             name: RouteNames.TREE_VIEW,
@@ -292,10 +266,6 @@
       },
     },
     $trs: {
-      resourcesAddedSnackbar:
-        '{count, number} {count, plural, one {resource selected} other {resources selected}}',
-      resourcesRemovedSnackbar:
-        '{count, number} {count, plural, one {resource removed} other {resources removed}}',
       importTitle: 'Import from other channels',
       reviewTitle: 'Resource selection',
       resourcesSelected:

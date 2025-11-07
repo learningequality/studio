@@ -13,8 +13,9 @@
             v-if="!isBrowsing"
             class="my-2"
           >
-            <ActionLink
+            <KButton
               :text="$tr('backToBrowseAction')"
+              appearance="basic-link"
               @click="handleBackToBrowse"
             />
           </div>
@@ -44,34 +45,42 @@
                 <Icon icon="search" />
               </template>
               <template #append-outer>
-                <VBtn
+                <KButton
                   class="px-4 search-btn"
-                  color="primary"
+                  primary
                   type="submit"
+                  :text="$tr('searchAction')"
                   :disabled="!searchIsValid"
-                  depressed
-                  large
-                >
-                  {{ $tr('searchAction') }}
-                </VBtn>
+                  appearance="raised-button"
+                />
               </template>
             </VTextField>
           </VForm>
 
           <div
             v-if="!isBrowsing"
-            class="my-2 px-2"
+            class="my-2"
           >
-            <ActionLink
+            <KButton
               class="mb-3"
               :text="$tr('savedSearchesLabel')"
               :disabled="!savedSearchesExist"
+              appearance="basic-link"
               @click="showSavedSearches = true"
             />
+            <ActionLink
+              v-if="shouldShowRecommendations"
+              :class="{ 'keyboard-visibility': true, 'mx-3': !isBrowsing }"
+              :text="$tr('jumpToRecommendations')"
+              :style="keyboardVisibilityStyle"
+              @click="handleJumpToRecommendations"
+            />
           </div>
+
           <!-- Search or Topics Browsing -->
           <ChannelList
-            v-if="isBrowsing && !$route.params.channelId"
+            v-if="isBrowsing && !browseChannelId"
+            ref="channelList"
             @update-language="updateLanguageQuery"
           />
           <ContentTreeList
@@ -86,11 +95,20 @@
           />
           <SearchResultsList
             v-else
+            ref="searchResultList"
             :selected.sync="selected"
             @preview="preview($event)"
             @change_selected="handleChangeSelected"
             @copy_to_clipboard="handleCopyToClipboard"
           />
+          <div style="text-align: center">
+            <ActionLink
+              :text="$tr('jumpToTop')"
+              class="keyboard-visibility"
+              :style="keyboardVisibilityStyle"
+              @click="handleJumpToSearch"
+            />
+          </div>
         </KGridItem>
 
         <!-- Recommended resources panel >= 400px -->
@@ -105,8 +123,14 @@
           </h3>
           <div class="my-3 px-2">
             <ActionLink
+              class="mr-3"
               :text="aboutRecommendationsText$()"
               @click="handleAboutRecommendations"
+            />
+            <ActionLink
+              :text="isBrowsing ? $tr('jumpToSearch') : $tr('jumpToSearchResults')"
+              :style="keyboardVisibilityStyle"
+              @click="handleJumpToSearch"
             />
           </div>
 
@@ -115,6 +139,7 @@
               <RecommendedResourceCard
                 v-for="recommendation in displayedRecommendations"
                 :key="recommendation.id"
+                :ref="setFirstRecommendationRef"
                 :node="recommendation"
                 @change_selected="handleChangeSelected"
                 @preview="
@@ -161,6 +186,13 @@
               />
             </div>
           </div>
+          <div class="px-2">
+            <ActionLink
+              :text="$tr('jumpToTop')"
+              :style="keyboardVisibilityStyle"
+              @click="handleJumpToRecommendations"
+            />
+          </div>
         </KGridItem>
       </KGrid>
       <SavedSearchesModal v-model="showSavedSearches" />
@@ -190,7 +222,7 @@
         <p
           v-if="showFeedbackErrorMessage"
           class="feedback-form-error"
-          :style="{ color: $themeTokens.error, backgroundColor: $themePalette.red.v_100 }"
+          :style="{ color: $themeTokens.error, backgroundColor: $themePalette.pink.v_100 }"
         >
           <KLabeledIcon
             icon="error"
@@ -361,6 +393,7 @@
         importedNodeIds: [],
         rejectedNode: null,
         showFeedbackErrorMessage: false,
+        firstRecommendationRef: null,
       };
     },
     computed: {
@@ -371,6 +404,9 @@
       ...mapState('importFromChannels', ['selected']),
       isBrowsing() {
         return this.$route.name === RouteNames.IMPORT_FROM_CHANNELS_BROWSE;
+      },
+      browseChannelId() {
+        return this.$route.params.channelId;
       },
       backToBrowseRoute() {
         const query = {
@@ -390,8 +426,17 @@
           this.searchTerm.trim() !== this.$route.params.searchTerm
         );
       },
+      keyboardVisibilityStyle() {
+        return {
+          opacity: this.$inputModality === 'keyboard' ? '1' : '0',
+        };
+      },
       shouldShowRecommendations() {
         if (!this.isAIFeatureEnabled) {
+          return false;
+        }
+
+        if (this.embedTopicRequest === null) {
           return false;
         }
 
@@ -451,7 +496,8 @@
       },
       browseWindowStyle() {
         return {
-          maxWidth: this.shouldShowRecommendations ? '1200px' : '800px',
+          maxWidth: '1200px',
+          width: '100%',
         };
       },
       recommendationsSectionTitle() {
@@ -472,6 +518,14 @@
         });
       },
       embedTopicRequest() {
+        // Ensure destination folder is loaded, and it and its ancestors have titles
+        if (
+          !this.importDestinationFolder ||
+          !this.importDestinationFolder.title ||
+          this.topicAncestors.some(n => !n.title)
+        ) {
+          return null;
+        }
         return {
           topics: [
             {
@@ -574,6 +628,18 @@
         return this.isAnyFeedbackReasonSelected && this.isOtherFeedbackValid;
       },
     },
+    watch: {
+      isBrowsing(before, after) {
+        if (before !== after) {
+          this.$nextTick(() => this.handleJumpToSearch());
+        }
+      },
+      browseChannelId(before, after) {
+        if (before !== after) {
+          this.$nextTick(() => this.handleJumpToSearch());
+        }
+      },
+    },
     beforeRouteEnter(to, from, next) {
       next(vm => {
         vm.searchTerm = to.params.searchTerm || '';
@@ -612,6 +678,27 @@
       }),
       handleBackToBrowse() {
         this.$router.push(this.backToBrowseRoute);
+      },
+      handleJumpToRecommendations() {
+        if (this.firstRecommendationRef) {
+          this.firstRecommendationRef.focus();
+        }
+      },
+      handleJumpToSearch() {
+        if (this.isBrowsing) {
+          if (this.browseChannelId) {
+            this.$refs.contentTreeList.focus();
+          } else {
+            this.$refs.channelList.focus();
+          }
+        } else {
+          this.$refs.searchResultList.focus();
+        }
+      },
+      setFirstRecommendationRef(ref) {
+        if (!this.firstRecommendationRef) {
+          this.firstRecommendationRef = ref;
+        }
       },
       updateLanguageQuery(language) {
         this.languageFromChannelList = language;
@@ -685,6 +772,7 @@
       },
       closeGiveFeedbackModal() {
         this.showFeedbackModal = false;
+        this.clearGiveFeedbackForm();
       },
       handleViewMoreRecommendations() {
         if (!this.recommendationsLoadingError) {
@@ -712,6 +800,8 @@
         }
       },
       async loadRecommendations(belowThreshold) {
+        this.firstRecommendationRef = null;
+
         if (this.shouldShowRecommendations) {
           this.recommendationsLoading = true;
           this.recommendationsLoadingError = false;
@@ -882,10 +972,11 @@
             this.showSnackbar({ text: this.feedbackFailedMessage$() });
           }
           this.showFeedbackModal = false;
+          this.clearGiveFeedbackForm();
         } else {
           this.showOtherFeedbackInvalidText = !this.isOtherFeedbackValid;
+          this.showFeedbackErrorMessage = !this.isAnyFeedbackReasonSelected;
         }
-        this.showFeedbackErrorMessage = !this.isAnyFeedbackReasonSelected;
       },
       formatRecommendationInteractionEventData(feedbackType, nodes) {
         const data = nodes.map(node => ({
@@ -912,12 +1003,22 @@
           );
         }
       },
+      clearGiveFeedbackForm() {
+        this.feedbackReason = [];
+        this.otherFeedback = '';
+        this.showOtherFeedbackInvalidText = false;
+        this.showFeedbackErrorMessage = false;
+      },
     },
     $trs: {
       backToBrowseAction: 'Back to browse',
       searchLabel: 'Search for resources…',
       searchAction: 'Search',
       savedSearchesLabel: 'View saved searches',
+      jumpToRecommendations: 'Jump to recommendations',
+      jumpToSearch: 'Jump to search',
+      jumpToSearchResults: 'Jump to search results',
+      jumpToTop: 'Jump to top',
 
       // Copy strings
       // undo: 'Undo',
@@ -964,6 +1065,14 @@
     padding: 16px;
     margin: 16px 0;
     border-radius: 4px;
+  }
+
+  .keyboard-visibility {
+    cursor: default;
+
+    &:focus {
+      opacity: 1 !important;
+    }
   }
 
 </style>

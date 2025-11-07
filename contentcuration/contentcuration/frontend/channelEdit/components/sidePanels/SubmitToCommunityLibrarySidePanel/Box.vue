@@ -15,9 +15,26 @@
         class="box-content"
       >
         <div class="box-icon">
-          <KIcon :icon="icon" />
+          <KIcon
+            :icon="icon"
+            :style="{ fontSize: '18px' }"
+          />
         </div>
-        <slot></slot>
+        <div class="box-text">
+          <div
+            v-if="$slots.title || title"
+            class="box-title"
+          >
+            <slot name="title">{{ title }}</slot>
+          </div>
+          <div
+            v-if="$slots.description || description"
+            class="box-description"
+          >
+            <slot name="description">{{ description }}</slot>
+          </div>
+          <slot></slot>
+        </div>
         <div
           v-if="$slots.chip"
           class="chip"
@@ -45,27 +62,27 @@
       const boxBackgroundColor = computed(() => {
         switch (props.kind) {
           case 'warning':
-            return paletteTheme.yellow.v_100;
+            return paletteTheme.red.v_100;
           case 'info':
             return paletteTheme.grey.v_100;
           default:
             throw new Error(`Unsupported box kind: ${props.kind}`);
         }
       });
-      const boxTextColor = computed(() => {
+      const boxBorderColor = computed(() => {
         switch (props.kind) {
           case 'warning':
-            return paletteTheme.red.v_500;
+            return paletteTheme.red.v_300;
           case 'info':
-            return tokensTheme.text;
+            return 'transparent';
           default:
-            throw new Error(`Unsupported box kind: ${props.kind}`);
+            return 'transparent';
         }
       });
       const icon = computed(() => {
         switch (props.kind) {
           case 'warning':
-            return 'warningIncomplete';
+            return 'error';
           case 'info':
             return 'infoOutline';
           default:
@@ -73,9 +90,19 @@
         }
       });
 
+      const titleColor = computed(() => {
+        return props.kind === 'warning' ? paletteTheme.red.v_600 : tokensTheme.text;
+      });
+
+      const descriptionColor = computed(() => {
+        return props.kind === 'warning' ? paletteTheme.grey.v_800 : tokensTheme.text;
+      });
+
       return {
         boxBackgroundColor,
-        boxTextColor,
+        boxBorderColor,
+        titleColor,
+        descriptionColor,
         icon,
       };
     },
@@ -91,6 +118,16 @@
         required: false,
         default: false,
       },
+      title: {
+        type: String,
+        required: false,
+        default: '',
+      },
+      description: {
+        type: String,
+        required: false,
+        default: '',
+      },
     },
   };
 
@@ -100,20 +137,46 @@
 <style lang="scss" scoped>
 
   .box {
-    padding: 8px;
-    color: v-bind('boxTextColor');
+    padding: 10px;
     background-color: v-bind('boxBackgroundColor');
+    border: 1px solid v-bind('boxBorderColor');
     border-radius: 4px;
   }
 
   .box-content {
     display: flex;
     gap: 8px;
+    align-items: start;
   }
 
   .box-icon {
-    width: 20px;
-    height: 20px;
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .box-text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 14px;
+    line-height: 140%;
+  }
+
+  .box-title {
+    font-weight: 600;
+    color: v-bind('titleColor');
+  }
+
+  .box-description {
+    font-weight: 400;
+    color: v-bind('descriptionColor');
   }
 
   .chip {

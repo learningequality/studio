@@ -13,6 +13,22 @@ import ChannelDetailsModal from 'shared/views/channel/ChannelDetailsModal';
 import ChannelModal from 'shared/views/channel/ChannelModal';
 import { RouteNames as ChannelRouteNames } from 'frontend/channelList/constants';
 
+const importBeforeEnter = function (to, from, next) {
+  const promises = [
+    // search recommendations require ancestors to be loaded
+    store.dispatch('contentNode/loadAncestors', { id: to.params.destNodeId }),
+  ];
+
+  if (!store.getters['currentChannel/currentChannel']) {
+    // ensure the current channel is loaded, in case of hard refresh on this route.
+    // alternatively, the page could be reactive to this getter's value, although that doesn't
+    // seem to work properly
+    promises.push(store.dispatch('currentChannel/loadChannel'));
+  }
+
+  return Promise.all(promises).then(() => next());
+};
+
 const router = new VueRouter({
   routes: [
     {
@@ -38,27 +54,14 @@ const router = new VueRouter({
       path: '/import/:destNodeId/browse/:channelId?/:nodeId?',
       component: SearchOrBrowseWindow,
       props: true,
-      beforeEnter: (to, from, next) => {
-        const promises = [
-          // search recommendations require ancestors to be loaded
-          store.dispatch('contentNode/loadAncestors', { id: to.params.destNodeId }),
-        ];
-
-        if (!store.getters['currentChannel/currentChannel']) {
-          // ensure the current channel is loaded, in case of hard refresh on this route.
-          // alternatively, the page could be reactive to this getter's value, although that doesn't
-          // seem to work properly
-          promises.push(store.dispatch('currentChannel/loadChannel'));
-        }
-
-        return Promise.all(promises).then(() => next());
-      },
+      beforeEnter: importBeforeEnter,
     },
     {
       name: RouteNames.IMPORT_FROM_CHANNELS_SEARCH,
       path: '/import/:destNodeId/search/:searchTerm',
       component: SearchOrBrowseWindow,
       props: true,
+      beforeEnter: importBeforeEnter,
     },
     {
       name: RouteNames.IMPORT_FROM_CHANNELS_REVIEW,

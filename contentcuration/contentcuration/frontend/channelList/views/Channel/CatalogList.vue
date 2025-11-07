@@ -32,10 +32,11 @@
           <h1 class="mb-2 ml-1 title">
             {{ $tr('resultsText', { count: page.count }) }}
           </h1>
-          <ActionLink
+          <KButton
             v-if="page.count && !selecting"
             :text="$tr('selectChannels')"
             data-test="select"
+            appearance="basic-link"
             @click="setSelection(true)"
           />
           <Checkbox
@@ -84,62 +85,34 @@
         data-test="toolbar"
         :appearanceOverrides="{ height: $vuetify.breakpoint.xsOnly ? '72px' : '56px' }"
       >
-        <VLayout
-          row
-          wrap
-          align-center
+        <div class="mx-2">
+          {{ $tr('channelSelectionCount', { count: selectedCount }) }}
+        </div>
+        <VSpacer />
+        <div>
+          <KButton
+            :text="$tr('cancelButton')"
+            data-test="cancel"
+            appearance="flat-button"
+            @click="setSelection(false)"
+          />
+        </div>
+        <KButton
+          :text="$tr('downloadButton')"
+          :primary="true"
+          data-test="download-button"
+          iconAfter="dropup"
         >
-          <VFlex
-            xs12
-            sm4
-            class="pb-1"
-          >
-            {{ $tr('channelSelectionCount', { count: selectedCount }) }}
-          </VFlex>
-          <VFlex
-            xs12
-            sm8
-          >
-            <VLayout row>
-              <VSpacer />
-              <VBtn
-                flat
-                data-test="cancel"
-                class="ma-0"
-                @click="setSelection(false)"
-              >
-                {{ $tr('cancelButton') }}
-              </VBtn>
-              <BaseMenu top>
-                <template #activator="{ on }">
-                  <VBtn
-                    color="primary"
-                    class="ma-0 mx-2"
-                    v-on="on"
-                  >
-                    {{ $tr('downloadButton') }}
-                    <Icon
-                      class="ml-1"
-                      icon="dropup"
-                      :color="$themeTokens.textInverted"
-                    />
-                  </VBtn>
-                </template>
-                <VList>
-                  <VListTile @click="downloadPDF">
-                    <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
-                  </VListTile>
-                  <VListTile
-                    data-test="download-csv"
-                    @click="downloadCSV"
-                  >
-                    <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
-                  </VListTile>
-                </VList>
-              </BaseMenu>
-            </VLayout>
-          </VFlex>
-        </VLayout>
+          <KDropdownMenu
+            :primary="true"
+            :options="[
+              { label: $tr('downloadPDF'), value: 'pdf' },
+              { label: $tr('downloadCSV'), value: 'csv' },
+            ]"
+            appearance="raised-button"
+            @select="option => selectDownloadOption(option)"
+          />
+        </KButton>
       </BottomBar>
     </VContainer>
   </div>
@@ -300,6 +273,13 @@
         };
         this.setSelection(false);
         return this.downloadChannelsPDF(params);
+      },
+      selectDownloadOption(option) {
+        if (option.value === 'pdf') {
+          this.downloadPDF();
+        } else if (option.value === 'csv') {
+          this.downloadCSV();
+        }
       },
     },
     $trs: {
