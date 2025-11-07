@@ -1,10 +1,10 @@
 <template>
 
-  <div
-    class="my-channels"
-    :class="windowClasses"
-  >
-    <div class="new-channel">
+  <div class="my-channels">
+    <div
+      class="new-channel"
+      :style="{ maxWidth: maxWidthStyle }"
+    >
       <KButton
         v-if="!loading"
         primary
@@ -13,7 +13,10 @@
         @click="newChannel"
       />
     </div>
-    <div class="channels-body">
+    <div
+      class="channels-body"
+      :style="{ maxWidth: maxWidthStyle }"
+    >
       <p
         v-if="!listChannels.length && !loading"
         class="no-channels"
@@ -233,13 +236,15 @@
         return this.selectedChannel.edit;
       },
 
-      windowClasses() {
-        return {
-          'window-small': this.windowIsSmall,
-          'window-medium': this.windowIsMedium,
-          'window-large': this.windowIsLarge,
-          [`windowBreakpoint-${this.windowBreakpoint}`]: this.windowBreakpoint,
-        };
+      maxWidthStyle() {
+        if (this.windowBreakpoint >= 5) return '50%';
+        if (this.windowBreakpoint === 4) return '66.66%';
+        if (this.windowBreakpoint === 3) return '83.33%';
+
+        if (this.windowIsLarge) return '50%';
+        if (this.windowIsMedium) return '83.33%';
+
+        return '100%';
       },
     },
     created() {
@@ -434,53 +439,11 @@
 
 <style lang="scss" scoped>
 
-  .window-small {
-    .channels-body,
-    .new-channel {
-      width: 100%;
-    }
-  }
-
-  .window-medium {
-    .channels-body,
-    .new-channel {
-      max-width: 83.33%;
-    }
-  }
-
-  .window-large {
-    .channels-body,
-    .new-channel {
-      max-width: 50%;
-    }
-  }
-
-  .windowBreakpoint-3 {
-    .channels-body,
-    .new-channel {
-      max-width: 83.33%;
-    }
-  }
-
-  .windowBreakpoint-4 {
-    .channels-body,
-    .new-channel {
-      max-width: 66.66%;
-    }
-  }
-
-  .windowBreakpoint-5 {
-    .channels-body,
-    .new-channel {
-      max-width: 50%;
-    }
-  }
-
   .my-channels {
-    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 100%;
     min-height: calc(100% - 64px - 48px);
   }
 
@@ -490,9 +453,9 @@
   }
 
   .new-channel {
-    width: 100%;
     display: flex;
     justify-content: end;
+    width: 100%;
     margin-top: 20px;
   }
 
