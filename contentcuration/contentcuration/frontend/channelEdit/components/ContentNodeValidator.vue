@@ -75,13 +75,16 @@
           : '';
       },
       error() {
-        if (this.node.total_count && this.node.error_count >= this.node.total_count) {
+        if (!this.node.complete) {
+          return this.$tr('incompleteText');
+        } else if (this.node.total_count && this.node.error_count >= this.node.total_count) {
           return this.$tr('allIncompleteDescendantsText', { count: this.node.error_count });
         }
         return '';
       },
     },
     $trs: {
+      incompleteText: 'Incomplete',
       missingTitle: 'Missing title',
       incompleteDescendantsText:
         '{count, number, integer} {count, plural, one {resource is incomplete} other {resources are incomplete}}',
