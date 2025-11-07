@@ -96,14 +96,6 @@ describe('channelActionsDropdown', () => {
   });
 
   describe('menu visibility', () => {
-    it('should show correct menu items for deleted channel', () => {
-      renderComponent({ channelProps: { deleted: true } });
-      expect(screen.getByText('Restore')).toBeVisible();
-      expect(screen.getByText('Delete permanently')).toBeVisible();
-      expect(screen.queryByText('Download PDF')).not.toBeInTheDocument();
-      expect(screen.queryByText('Make public')).not.toBeInTheDocument();
-    });
-
     it('should show correct menu items for live private channel', () => {
       renderComponent({ channelProps: { public: false, deleted: false } });
       expect(screen.getByText('Download PDF')).toBeVisible();
@@ -120,6 +112,14 @@ describe('channelActionsDropdown', () => {
       expect(screen.getByText('Make private')).toBeVisible();
       expect(screen.queryByText('Delete channel')).not.toBeInTheDocument();
       expect(screen.queryByText('Restore')).not.toBeInTheDocument();
+    });
+
+    it('should show correct menu items for deleted channel', () => {
+      renderComponent({ channelProps: { deleted: true } });
+      expect(screen.getByText('Restore')).toBeVisible();
+      expect(screen.getByText('Delete permanently')).toBeVisible();
+      expect(screen.queryByText('Download PDF')).not.toBeInTheDocument();
+      expect(screen.queryByText('Make public')).not.toBeInTheDocument();
     });
   });
 
