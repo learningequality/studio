@@ -304,7 +304,7 @@
 </script>
 
 
-<style scoped>
+<style lang="scss" scoped>
 
   .page-container {
     width: 100%;
