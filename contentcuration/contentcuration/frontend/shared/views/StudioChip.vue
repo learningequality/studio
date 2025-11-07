@@ -15,12 +15,6 @@
       <button
         v-if="close"
         class="studio-chip__close"
-        :style="closeButtonStyles"
-        :class="
-          $computedClass({
-            ':hover': { backgroundColor: $themePalette.grey.v_700 },
-          })
-        "
         :aria-label="removeLabel"
         data-test="remove-chip"
         @click.stop="handleClose"
@@ -28,6 +22,11 @@
         <KIcon
           icon="delete"
           class="studio-chip__icon"
+          :class="
+            $computedClass({
+              ':hover': { color: 'black' },
+            })
+          "
           :color="iconColor"
         />
       </button>
@@ -58,13 +57,9 @@
           backgroundColor: baseColor,
         };
       },
-      closeButtonStyles() {
-        return {
-          backgroundColor: this.$themePalette.grey.v_300,
-        };
-      },
       iconColor() {
-        return 'grey';
+        const baseColor = 'grey';
+        return baseColor;
       },
       removeLabel() {
         return `Remove ${this.text}`;
@@ -106,6 +101,7 @@
     &__text {
       display: flex;
       align-items: center;
+      margin-bottom: 2px;
     }
   }
 
@@ -121,7 +117,6 @@
     margin-left: 2px;
     cursor: pointer;
     border-radius: 50%;
-    transition: background-color 0.2s ease;
   }
 
   .studio-chip__icon {
@@ -129,6 +124,7 @@
     top: 50%;
     left: 50%;
     font-size: 18px;
+    transition: color 0.2s ease;
     transform: translate(-50%, -50%);
   }
 
