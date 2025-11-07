@@ -76,9 +76,9 @@
       },
       dismissButtonStyles() {
         return {
-            color: this.$themeTokens.primary,
-            backgroundColor: this.$themePalette.grey.v_100,
-            '--hover-bg-color': this.$themePalette.grey.v_200,
+          color: this.$themeTokens.primary,
+          backgroundColor: this.$themePalette.grey.v_100,
+          '--hover-bg-color': this.$themePalette.grey.v_200,
         };
       },
     },
@@ -98,22 +98,23 @@
 
 
 <style lang="scss">
-  [data-test="resubmit-modal"],
-  [data-test="resubmit-modal"] > *,
-  [data-test="resubmit-modal"] [role="dialog"],
-  [data-test="resubmit-modal"] .KModal,
-  [data-test="resubmit-modal"] .modal {
+
+  [data-test='resubmit-modal'],
+  [data-test='resubmit-modal'] > *,
+  [data-test='resubmit-modal'] [role='dialog'],
+  [data-test='resubmit-modal'] .KModal,
+  [data-test='resubmit-modal'] .modal {
     width: 500px !important;
     max-width: 500px !important;
     max-height: 284px !important;
   }
 
-  [data-test="resubmit-modal"] h1,
-  [data-test="resubmit-modal"] h2,
-  [data-test="resubmit-modal"] h3,
-  [data-test="resubmit-modal"] h4,
-  [data-test="resubmit-modal"] .modal-title,
-  [data-test="resubmit-modal"] [class*="title"] {
+  [data-test='resubmit-modal'] h1,
+  [data-test='resubmit-modal'] h2,
+  [data-test='resubmit-modal'] h3,
+  [data-test='resubmit-modal'] h4,
+  [data-test='resubmit-modal'] .modal-title,
+  [data-test='resubmit-modal'] [class*='title'] {
     width: 452px;
     height: 52px;
     font-family: 'Noto Sans', sans-serif;
@@ -145,10 +146,10 @@
 
   .resubmit-modal-actions {
     display: flex;
+    gap: 10px;
     justify-content: flex-end;
     width: 452px;
     min-height: 40px;
-    gap: 10px;
     padding-top: 16px;
   }
 
@@ -159,4 +160,5 @@
   .resubmit-modal-resubmit-btn {
     height: 40px;
   }
+
 </style>
