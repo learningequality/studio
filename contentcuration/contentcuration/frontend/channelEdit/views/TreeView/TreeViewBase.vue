@@ -235,11 +235,19 @@
     <PublishSidePanel
       v-if="showPublishSidePanel"
       @close="showPublishSidePanel = false"
+      @published="handleChannelPublished"
     />
     <SubmitToCommunityLibrarySidePanel
       v-if="showSubmitToCommunityLibrarySidePanel"
       :channel="currentChannel"
       @close="showSubmitToCommunityLibrarySidePanel = false"
+    />
+    <ResubmitChannelModal
+      v-if="resubmitModalChannel || currentChannel"
+      v-model="showResubmitModal"
+      :channel="resubmitModalChannel || currentChannel"
+      @resubmit="handleResubmit"
+      @dismiss="handleDismissResubmit"
     />
     <template v-if="isPublished">
       <ChannelTokenModal
@@ -349,6 +357,8 @@
   import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
   import PublishSidePanel from '../../components/sidePanels/PublishSidePanel';
   import SubmitToCommunityLibrarySidePanel from '../../components/sidePanels/SubmitToCommunityLibrarySidePanel';
+  import ResubmitChannelModal from '../../components/modals/ResubmitChannelModal';
+  import { Channel, CommunityLibrarySubmission } from 'shared/data/resources';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import ToolBar from 'shared/views/ToolBar';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
@@ -369,6 +379,7 @@
       ToolBar,
       PublishSidePanel,
       SubmitToCommunityLibrarySidePanel,
+      ResubmitChannelModal,
       ProgressModal,
       ChannelTokenModal,
       SyncResourcesModal,
@@ -392,11 +403,13 @@
         drawer: false,
         showPublishSidePanel: false,
         showSubmitToCommunityLibrarySidePanel: false,
+        showResubmitModal: false,
         showTokenModal: false,
         showSyncModal: false,
         showClipboard: false,
         showDeleteModal: false,
         syncing: false,
+        resubmitModalChannel: null,
       };
     },
     computed: {
@@ -545,6 +558,40 @@
       publishChannel() {
         this.showPublishSidePanel = true;
         this.trackClickEvent('Publish');
+      },
+      handleResubmit() {
+        this.showResubmitModal = false;
+        this.showSubmitToCommunityLibrarySidePanel = true;
+      },
+      handleDismissResubmit() {
+        this.showResubmitModal = false;
+        this.resubmitModalChannel = null;
+      },
+      async handleChannelPublished({ channelId }) {
+        if (!channelId || !this.currentChannel || this.currentChannel.id !== channelId) {
+          return;
+        }
+
+        const response = await CommunityLibrarySubmission.fetchCollection({
+          channel: channelId,
+          max_results: 1,
+        });
+
+        let submissions = [];
+        if (Array.isArray(response)) {
+          submissions = response;
+        } else if (response && response.results && Array.isArray(response.results)) {
+          submissions = response.results;
+        }
+
+        if (submissions.length > 0) {
+          const latestSubmission = submissions[0];
+          this.resubmitModalChannel = {
+            ...this.currentChannel,
+            version: latestSubmission.channel_version,
+          };
+          this.showResubmitModal = true;
+        }
       },
       trackClickEvent(eventLabel) {
         this.$analytics.trackClick('channel_editor_toolbar', eventLabel);
