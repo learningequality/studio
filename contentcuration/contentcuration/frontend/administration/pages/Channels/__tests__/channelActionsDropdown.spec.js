@@ -130,6 +130,7 @@ describe('channelActionsDropdown', () => {
     beforeEach(async () => {
       user = userEvent.setup();
       renderComponent({ channelProps: { deleted: true } });
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       expect(screen.queryByText(dialogMessage)).not.toBeInTheDocument();
       await user.click(screen.getByText('Restore'));
     });
@@ -163,6 +164,7 @@ describe('channelActionsDropdown', () => {
     beforeEach(async () => {
       user = userEvent.setup();
       renderComponent({ channelProps: { deleted: true } });
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       expect(screen.queryByText(dialogMessage)).not.toBeInTheDocument();
       await user.click(screen.getByText('Delete permanently'));
     });
@@ -193,6 +195,7 @@ describe('channelActionsDropdown', () => {
     beforeEach(async () => {
       user = userEvent.setup();
       renderComponent({ channelProps: { public: false, deleted: false } });
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       expect(screen.queryByText(dialogMessage)).not.toBeInTheDocument();
       await user.click(screen.getByText('Make public'));
     });
@@ -226,6 +229,7 @@ describe('channelActionsDropdown', () => {
     beforeEach(async () => {
       user = userEvent.setup();
       renderComponent({ channelProps: { public: false, deleted: false } });
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       expect(screen.queryByText(dialogMessage)).not.toBeInTheDocument();
       await user.click(screen.getByText('Delete channel'));
     });
@@ -260,6 +264,7 @@ describe('channelActionsDropdown', () => {
       user = userEvent.setup();
       renderComponent();
       expect(screen.queryByText(dialogMessage)).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       await user.click(screen.getByText('Make private'));
     });
 
