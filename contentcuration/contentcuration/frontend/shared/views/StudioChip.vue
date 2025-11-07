@@ -42,8 +42,8 @@
     display: inline-block;
     padding: 4px 8px;
     margin: 2px 4px 2px 0;
-    font-weight: bold;
     font-size: 12px;
+    font-weight: bold;
     line-height: 16px;
     color: var(--v-text-base, #000000);
     background-color: var(--v-grey-lighten3, #e0e0e0);

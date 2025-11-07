@@ -61,8 +61,9 @@ describe('StudioDetailsRow', () => {
     });
 
     expect(screen.getByTestId('help-tooltip')).toBeInTheDocument();
-    expect(screen.getByText('Resources for coaches are only visible to coaches in Kolibri'))
-      .toBeInTheDocument();
+    expect(
+      screen.getByText('Resources for coaches are only visible to coaches in Kolibri'),
+    ).toBeInTheDocument();
   });
 
   it('does not display HelpTooltip when definition is not provided', () => {

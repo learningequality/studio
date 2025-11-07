@@ -95,8 +95,8 @@
   }
 
   .label-text {
-    font-weight: bold;
     font-size: 14px;
+    font-weight: bold;
     line-height: 20px;
     color: var(--v-darkGrey-base, #424242);
     vertical-align: middle;
