@@ -71,7 +71,7 @@
           :showInvalidText="showInvalidText && errors.subject"
           invalidText="Field is required"
           :showLabel="true"
-          :appearanceOverrides="getAppearanceOverrides(errors.subject)"
+          :appearanceOverrides="getAppearanceOverrides()"
         />
         <div :style="{ color: $themeTokens.annotation, fontSize: '12px' }">
           Add placeholder to message
@@ -98,7 +98,7 @@
             :showInvalidText="showInvalidText && errors.message"
             invalidText="Field is required"
             :showLabel="true"
-            :appearanceOverrides="getAppearanceOverrides(errors.message)"
+            :appearanceOverrides="getAppearanceOverrides()"
             :textArea="true"
           />
         </div>
@@ -365,8 +365,8 @@
     align-items: center;
     justify-content: center;
     width: 88px;
-    height: 28px;
-    font-size: 11px;
+    height: 30px;
+    font-size: 13px;
     text-transform: none;
     cursor: pointer;
     border-radius: 14px;
