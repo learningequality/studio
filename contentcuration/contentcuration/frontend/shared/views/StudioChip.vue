@@ -3,6 +3,7 @@
   <span
     class="studio-chip"
     :class="{ notranslate }"
+    :style="chipStyle"
   >
     <slot></slot>
   </span>
@@ -31,6 +32,14 @@
         default: false,
       },
     },
+    computed: {
+      chipStyle() {
+        return {
+          color: this.$themeTokens.text,
+          backgroundColor: this.$themePalette.grey.v_200,
+        };
+      },
+    },
   };
 
 </script>
@@ -45,8 +54,6 @@
     font-size: 12px;
     font-weight: bold;
     line-height: 16px;
-    color: var(--v-text-base, #000000);
-    background-color: var(--v-grey-lighten3, #e0e0e0);
     border-radius: 10px;
   }
 
