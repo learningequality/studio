@@ -353,10 +353,10 @@ describe('channelEdit utils', () => {
   describe('isNodeComplete', () => {
     describe('for all kinds of nodes', () => {
       it('throws a reference error if node details are not defined', () => {
-        expect(() => isNodeComplete({ nodeDetails: undefined })).toThrowError(
+        expect(() => isNodeComplete({ nodeDetails: undefined })).toThrow(
           new ReferenceError('node details must be defined'),
         );
-        expect(() => isNodeComplete({ nodeDetails: null })).toThrowError(
+        expect(() => isNodeComplete({ nodeDetails: null })).toThrow(
           new ReferenceError('node details must be defined'),
         );
       });
@@ -417,10 +417,10 @@ describe('channelEdit utils', () => {
 
       it('throws a reference error if assessment items are not defined', () => {
         const error = new ReferenceError('assessment items must be defined for exercises');
-        expect(() => isNodeComplete({ nodeDetails, assessmentItems: undefined })).toThrowError(
+        expect(() => isNodeComplete({ nodeDetails, assessmentItems: undefined })).toThrow(
           error,
         );
-        expect(() => isNodeComplete({ nodeDetails, assessmentItems: null })).toThrowError(error);
+        expect(() => isNodeComplete({ nodeDetails, assessmentItems: null })).toThrow(error);
       });
 
       it('returns false if node details are not valid', () => {
@@ -528,8 +528,8 @@ describe('channelEdit utils', () => {
         const error = new ReferenceError(
           'files must be defined for a node other than topic or exercise',
         );
-        expect(() => isNodeComplete({ nodeDetails, files: undefined })).toThrowError(error);
-        expect(() => isNodeComplete({ nodeDetails, files: null })).toThrowError(error);
+        expect(() => isNodeComplete({ nodeDetails, files: undefined })).toThrow(error);
+        expect(() => isNodeComplete({ nodeDetails, files: null })).toThrow(error);
       });
 
       it('returns false if node details are not valid', () => {
