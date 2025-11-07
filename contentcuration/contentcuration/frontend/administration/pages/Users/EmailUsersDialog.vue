@@ -350,7 +350,7 @@
 
   .text-truncate {
     display: inline-block;
-    max-width: 70px;
+    max-width: 68px;
     margin-top: 6px;
     overflow: hidden;
     text-overflow: ellipsis;

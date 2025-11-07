@@ -12,19 +12,15 @@
         </slot>
       </div>
 
-      <button
+      <KIconButton
         v-if="close"
         class="studio-chip__close"
         :aria-label="removeLabel"
+        icon="delete"
+        :color="$themePalette.grey.v_400"
         data-test="remove-chip"
         @click.stop="handleClose"
-      >
-        <KIcon
-          icon="delete"
-          class="studio-chip__icon"
-          :color="$themePalette.grey.v_400"
-        />
-      </button>
+      />
     </div>
   </div>
 
@@ -71,10 +67,10 @@
   .studio-chip {
     display: inline-flex;
     align-items: center;
-    height: 24px;
-    min-height: 24px;
+    height: 26px;
+    min-height: 26px;
     padding: 2px 8px;
-    margin: 2px 4px;
+    margin: 2px;
     font-size: 13px;
     white-space: nowrap;
     cursor: default;
@@ -97,26 +93,11 @@
   }
 
   .studio-chip__close {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     width: 16px;
     height: 16px;
+    min-height: 16px;
     padding: 0;
     margin-top: 2px;
-    margin-left: 2px;
-    cursor: pointer;
-    border-radius: 50%;
-  }
-
-  .studio-chip__icon {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    font-size: 18px;
-    transition: color 0.2s ease;
-    transform: translate(-50%, -50%);
   }
 
 </style>
