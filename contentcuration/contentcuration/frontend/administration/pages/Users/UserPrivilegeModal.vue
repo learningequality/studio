@@ -10,7 +10,7 @@
     @cancel="close"
   >
     <p>{{ text }}</p>
-    
+
     <form
       ref="form"
       @submit.prevent="confirm"
