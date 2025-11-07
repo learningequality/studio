@@ -98,7 +98,7 @@
     font-weight: bold;
     font-size: 14px;
     line-height: 20px;
-    color: var(--v-darkGrey-base, #424242);
+    color: var(--v-grey-darken3);
     vertical-align: middle;
   }
 

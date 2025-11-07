@@ -612,6 +612,7 @@
   .printing {
     font-family: 'Noto Sans', helvetica !important;
 
+    /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
     :global(.material-icons) {
       font-family: 'Material Icons' !important;
     }
@@ -627,7 +628,7 @@
     justify-content: center;
     width: 100%;
     height: 100%;
-    background-color: var(--v-greyBackground-base, #f5f5f5);
+    background-color: var(--v-grey-lighten4);
   }
 
   .resource-list {
@@ -719,7 +720,7 @@
     font-weight: bold;
     font-size: 14px;
     line-height: 20px;
-    color: var(--v-darkGrey-base, #424242);
+    color: var(--v-grey-darken3);
   }
 
   .sample-nodes {
