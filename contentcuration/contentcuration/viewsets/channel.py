@@ -573,6 +573,7 @@ class ChannelViewSet(ValuesViewset):
                             {
                                 "published": True,
                                 "publishing": False,
+                                "version": channel.version,
                                 "primary_token": channel.get_human_token().token,
                                 "last_published": channel.last_published,
                                 "unpublished_changes": _unpublished_changes_query(

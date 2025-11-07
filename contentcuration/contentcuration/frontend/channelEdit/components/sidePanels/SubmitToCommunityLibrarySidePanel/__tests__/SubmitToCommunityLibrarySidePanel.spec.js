@@ -37,6 +37,8 @@ const { nonePrimaryInfo$, flaggedPrimaryInfo$, approvedPrimaryInfo$, submittedPr
 async function makeWrapper({ channel, publishedData, latestSubmission }) {
   const isLoading = ref(true);
   const isFinished = ref(false);
+  const fetchPublishedData = jest.fn(() => Promise.resolve());
+  const fetchLatestSubmission = jest.fn(() => Promise.resolve());
 
   store.state.currentChannel.currentChannelId = channel.id;
   store.commit('channel/ADD_CHANNEL', channel);
@@ -45,12 +47,14 @@ async function makeWrapper({ channel, publishedData, latestSubmission }) {
     isLoading,
     isFinished,
     data: computed(() => publishedData),
+    fetchData: fetchPublishedData,
   });
 
   useLatestCommunityLibrarySubmission.mockReturnValue({
     isLoading,
     isFinished,
     data: computed(() => latestSubmission),
+    fetchData: fetchLatestSubmission,
   });
 
   const wrapper = mount(SubmitToCommunityLibrarySidePanel, {
@@ -299,9 +303,22 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       });
 
       const channel = { ...publishedNonPublicChannel, publishing: true };
-      const wrapper = await makeWrapper({ channel, publishedData, latestSubmission: null });
+      const publishedDataWithVersion3 = {
+        ...publishedData,
+        3: {
+          included_languages: ['en', null],
+          included_licenses: [1],
+          included_categories: [Categories.SCHOOL],
+        },
+      };
+      const wrapper = await makeWrapper({
+        channel,
+        publishedData: publishedDataWithVersion3,
+        latestSubmission: null,
+      });
 
       const updatedChannel = { ...channel, publishing: false, version: 3 };
+      await wrapper.setProps({ channel: updatedChannel });
       store.commit('channel/ADD_CHANNEL', updatedChannel);
 
       await wrapper.vm.$nextTick();

@@ -107,8 +107,8 @@
             <div class="channel-title">
               {{
                 channelVersion$({
-                  name: currentChannel ? currentChannel.name : '',
-                  version: currentChannel ? currentChannel.version : 0,
+                  name: channel ? channel.name : '',
+                  version: displayedVersion,
                 })
               }}
             </div>
@@ -201,9 +201,8 @@
 
 <script>
 
-  import { computed, getCurrentInstance, onUnmounted, ref, watch } from 'vue';
+  import { computed, getCurrentInstance, onMounted, ref, watch } from 'vue';
   import { themeTokens, themePalette } from 'kolibri-design-system/lib/styles/theme';
-  import { liveQuery } from 'dexie';
 
   import camelCase from 'lodash/camelCase';
 
@@ -216,7 +215,7 @@
   import { translateMetadataString } from 'shared/utils/metadataStringsTranslation';
   import countriesUtil from 'shared/utils/countries';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
-  import { Channel, CommunityLibrarySubmission } from 'shared/data/resources';
+  import { CommunityLibrarySubmission } from 'shared/data/resources';
 
   import SidePanelModal from 'shared/views/SidePanelModal';
   import CountryField from 'shared/views/form/CountryField';
@@ -239,9 +238,6 @@
 
       const { proxy } = getCurrentInstance();
       const store = proxy.$store;
-
-      // Get currentChannel from store reactively - this will update when store changes
-      const currentChannel = computed(() => store.getters['currentChannel/currentChannel']);
 
       // Destructure translation functions from communityChannelsStrings
       const {
@@ -278,74 +274,15 @@
       const showingMoreDetails = ref(false);
       const countries = ref([]);
       const description = ref('');
-      const isPublishing = ref(Boolean(props.channel.publishing));
-      const currentChannelVersion = ref(props.channel.version);
+      const isPublishing = computed(() => props.channel?.publishing === true);
+      const currentChannelVersion = computed(() => props.channel?.version);
       const replacementConfirmed = ref(false);
-
-      // Monitor publishing completion using liveQuery to watch channel's publishing property
-      let publishSubscription = null;
-      let publishTimeout = null;
-
-      function startPublishMonitoring() {
-        if (publishSubscription || !isPublishing.value) return;
-
-        if (!Channel.table || !Channel.table.get) return;
-
-        const observable = liveQuery(() => {
-          return Channel.table.get(props.channel.id);
-        });
-
-        publishSubscription = observable.subscribe({
-          next: async channel => {
-            if (channel && !channel.publishing) {
-              stopPublishMonitoring();
-              isPublishing.value = false;
-              currentChannelVersion.value = channel.version;
-              await store.dispatch('channel/loadChannel', props.channel.id);
-            }
-          },
-        });
-
-        publishTimeout = setTimeout(() => {
-          stopPublishMonitoring();
-        }, 300000);
-      }
-
-      function stopPublishMonitoring() {
-        if (publishSubscription) {
-          publishSubscription.unsubscribe();
-          publishSubscription = null;
-        }
-        if (publishTimeout) {
-          clearTimeout(publishTimeout);
-          publishTimeout = null;
-        }
-      }
-
-      if (isPublishing.value) {
-        startPublishMonitoring();
-      }
-
-      watch(
-        () => currentChannel.value?.publishing,
-        (newPublishing, oldPublishing) => {
-          isPublishing.value = Boolean(newPublishing);
-          if (newPublishing && !oldPublishing) {
-            startPublishMonitoring();
-          } else if (!newPublishing && oldPublishing) {
-            stopPublishMonitoring();
-          }
-        },
-      );
-
-      onUnmounted(() => {
-        stopPublishMonitoring();
-      });
 
       const {
         isLoading: latestSubmissionIsLoading,
         isFinished: latestSubmissionIsFinished,
         data: latestSubmissionData,
+        fetchData: fetchLatestSubmission,
       } = useLatestCommunityLibrarySubmission(props.channel.id);
 
       function countryCodeToName(code) {
@@ -405,8 +342,8 @@
 
       const infoText = computed(() => infoConfig.value?.primaryText);
 
-      const isPublished = computed(() => currentChannel.value?.published);
-      const isPublic = computed(() => currentChannel.value?.public);
+      const isPublished = computed(() => props.channel?.published);
+      const isPublic = computed(() => props.channel?.public);
       const isCurrentVersionAlreadySubmitted = computed(() => {
         if (!latestSubmissionData.value) return false;
         return latestSubmissionData.value.channel_version === currentChannelVersion.value;
@@ -447,26 +384,45 @@
         isLoading: publishedDataIsLoading,
         isFinished: publishedDataIsFinished,
         data: publishedData,
+        fetchData: fetchPublishedData,
       } = usePublishedData(props.channel.id);
 
-      // Watch for when publishing completes and reload channel from backend
-      watch(
-        () => currentChannel.value?.publishing,
-        async (isPublishing, wasPublishing) => {
-          if (wasPublishing === true && isPublishing === false && props.channel.id) {
-            const ch = await Channel.fetchModel(props.channel.id);
-            if (ch) {
-              currentChannelVersion.value = ch.version;
-            }
-            await store.dispatch('channel/loadChannel', props.channel.id);
-          }
-        },
-      );
+      // Use the latest version available from either channel or publishedData
+      const displayedVersion = computed(() => {
+        const channelVersion = currentChannelVersion.value || 0;
+        if (publishedData.value && Object.keys(publishedData.value).length > 0) {
+          const publishedVersions = Object.keys(publishedData.value).map(v => parseInt(v, 10));
+          const maxPublishedVersion = Math.max(...publishedVersions);
+          return Math.max(channelVersion, maxPublishedVersion);
+        }
+        return channelVersion;
+      });
 
       const latestPublishedData = computed(() => {
-        if (!publishedData.value) return undefined;
+        if (!publishedData.value || !displayedVersion.value) return undefined;
+        return publishedData.value[displayedVersion.value];
+      });
 
-        return publishedData.value[currentChannelVersion.value];
+      // Watch for when publishing completes - fetch publishedData to get the new version's data
+      watch(isPublishing, async (newIsPublishing, oldIsPublishing) => {
+        if (oldIsPublishing === true && newIsPublishing === false) {
+          await fetchPublishedData();
+        }
+      });
+
+      // Watch for version changes and refetch publishedData
+      watch(currentChannelVersion, (newVersion, oldVersion) => {
+        if (newVersion && newVersion !== oldVersion) {
+          fetchPublishedData();
+        }
+      });
+
+      onMounted(async () => {
+        await fetchLatestSubmission();
+
+        if (!isPublishing.value) {
+          await fetchPublishedData();
+        }
       });
 
       const detectedLanguages = computed(() => {
@@ -514,10 +470,6 @@
       }
 
       function onSubmit() {
-        if (isPublishing.value) {
-          showSnackbar({ text: submittingSnackbar$() });
-          return;
-        }
         // It should be possible to undo a submission within a short time window
         // in case the user made a mistake and wants to change something.
         // To avoid having to deal with undoing logic, we simply show a "submitting"
@@ -553,7 +505,6 @@
       }
 
       return {
-        currentChannel,
         annotationColor,
         infoTextColor,
         showingMoreDetails,
@@ -570,6 +521,7 @@
         isPublic,
         isCurrentVersionAlreadySubmitted,
         canBeEdited,
+        displayedVersion,
         canBeSubmitted,
         publishedDataIsLoading,
         publishedDataIsFinished,
