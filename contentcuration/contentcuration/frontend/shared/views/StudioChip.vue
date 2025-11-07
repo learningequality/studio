@@ -12,24 +12,16 @@
         </slot>
       </div>
 
-      <button
+      <KIconButton
         v-if="close"
         class="studio-chip__close"
         :aria-label="removeLabel"
+        icon="delete"
+        color="#999999"
+        appearance="flat-button"
         data-test="remove-chip"
         @click.stop="handleClose"
-      >
-        <KIcon
-          icon="delete"
-          class="studio-chip__icon"
-          :class="
-            $computedClass({
-              ':hover': { color: 'black' },
-            })
-          "
-          :color="iconColor"
-        />
-      </button>
+      />
     </div>
   </div>
 
@@ -56,10 +48,6 @@
         return {
           backgroundColor: baseColor,
         };
-      },
-      iconColor() {
-        const baseColor = 'grey';
-        return baseColor;
       },
       removeLabel() {
         return `Remove ${this.text}`;
@@ -106,26 +94,11 @@
   }
 
   .studio-chip__close {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     width: 16px;
     height: 16px;
+    min-height: 16px;
     padding: 0;
     margin-top: 2px;
-    margin-left: 2px;
-    cursor: pointer;
-    border-radius: 50%;
-  }
-
-  .studio-chip__icon {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    font-size: 18px;
-    transition: color 0.2s ease;
-    transform: translate(-50%, -50%);
   }
 
 </style>
