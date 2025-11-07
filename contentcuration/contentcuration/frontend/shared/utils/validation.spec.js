@@ -417,9 +417,7 @@ describe('channelEdit utils', () => {
 
       it('throws a reference error if assessment items are not defined', () => {
         const error = new ReferenceError('assessment items must be defined for exercises');
-        expect(() => isNodeComplete({ nodeDetails, assessmentItems: undefined })).toThrow(
-          error,
-        );
+        expect(() => isNodeComplete({ nodeDetails, assessmentItems: undefined })).toThrow(error);
         expect(() => isNodeComplete({ nodeDetails, assessmentItems: null })).toThrow(error);
       });
 
