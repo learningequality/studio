@@ -1,11 +1,14 @@
 <template>
 
   <div>
-    <Alert
-      v-model="showErrorAlert"
-      :header="$tr('thumbnailGenerationFailedHeader')"
-      :text="$tr('thumbnailGenerationFailedText')"
-    />
+    <KModal
+      v-if="showErrorAlert"
+      :title="$tr('thumbnailGenerationFailedHeader')"
+      :submitText="$tr('closeButtonLabel')"
+      @submit="showErrorAlert = false"
+    >
+      <p>{{ $tr('thumbnailGenerationFailedText') }}</p>
+    </KModal>
     <slot :generate="generate"></slot>
   </div>
 
@@ -22,7 +25,6 @@
   import epubJS from 'epubjs';
   import PDFJSWorker from '!!file-loader!pdfjs-dist/build/pdf.worker.min.js';
   import client from 'shared/client';
-  import Alert from 'shared/views/Alert';
   import { ASPECT_RATIO, THUMBNAIL_WIDTH } from 'shared/constants';
   // Based off of solution here: https://github.com/mozilla/pdf.js/issues/7612#issuecomment-576807171
   const pdfJSLib = require('pdfjs-dist');
@@ -32,9 +34,7 @@
 
   export default {
     name: 'ThumbnailGenerator',
-    components: {
-      Alert,
-    },
+    components: {},
     props: {
       filePath: {
         type: String,
@@ -241,6 +241,7 @@
       thumbnailGenerationFailedHeader: 'Unable to generate thumbnail',
       thumbnailGenerationFailedText: 'There was a problem generating a thumbnail',
       generatedDefaultFilename: 'Generated thumbnail',
+      closeButtonLabel: 'OK',
     },
   };
 
