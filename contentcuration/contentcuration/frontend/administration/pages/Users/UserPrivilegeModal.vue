@@ -97,7 +97,7 @@
     computed: {
       ...mapState({
         // eslint-disable-next-line kolibri/vue-no-unused-vuex-properties, vue/no-unused-properties
-        currentEmail: (state) => state.session.currentUser.email,
+        currentEmail: state => state.session.currentUser.email,
       }),
       dialog: {
         get() {
@@ -140,7 +140,7 @@
         try {
           const res = this.confirmAction(formData);
           if (res && typeof res.then === 'function') {
-            return res.then((val) => {
+            return res.then(val => {
               this.dialog = false;
               return val;
             });
