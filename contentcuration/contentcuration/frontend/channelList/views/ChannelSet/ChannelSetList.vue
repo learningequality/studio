@@ -4,50 +4,34 @@
     class="list-items"
     fluid
   >
-    <VLayout
-      row
-      wrap
-      align-end
-      justify-center
-    >
-      <VFlex>
-        <KButton
-          :text="$tr('aboutChannelSetsLink')"
-          class="link-btn"
-          appearance="basic-link"
-          @click="infoDialog = true"
-        />
-        <KModal
-          v-if="infoDialog"
-          :cancelText="$tr('cancelButtonLabel')"
-          :title="$tr('aboutChannelSets')"
-          @cancel="infoDialog = false"
-        >
-          <div>
-            <p>
-              {{ $tr('channelSetsDescriptionText') }}
-            </p>
-            <p>
-              {{ $tr('channelSetsInstructionsText') }}
-            </p>
-            <p :class="$computedClass(channelSetsDisclamerStyle)">
-              {{ $tr('channelSetsDisclaimer') }}
-            </p>
-          </div>
-        </KModal>
-      </VFlex>
-      <VSpacer />
-      <VFlex class="text-xs-right">
-        <KButton
-          v-if="!loading"
-          appearance="raised-button"
-          primary
-          data-test="add-channelset"
-          :text="$tr('addChannelSetTitle')"
-          @click="newChannelSet"
-        />
-      </VFlex>
-    </VLayout>
+<VLayout
+  row
+  wrap
+  align-center
+  justify-space-between
+  class="pb-2"
+>
+  <VFlex class="text-xs-left">
+    <KButton
+      v-if="!loading && channelSets && channelSets.length"
+      :text="$tr('aboutChannelSetsLink')"
+      class="link-btn"
+      appearance="basic-link"
+      @click="infoDialog = true"
+    />
+  </VFlex>
+  <VFlex class="text-xs-right" shrink="0">
+    <KButton
+      v-if="!loading"
+      appearance="raised-button"
+      primary
+      data-test="add-channelset"
+      :text="$tr('addChannelSetTitle')"
+      @click="newChannelSet"
+    />
+  </VFlex>
+</VLayout>
+
     <VLayout
       row
       justify-center
@@ -57,13 +41,58 @@
         <template v-if="loading">
           <LoadingText />
         </template>
-        <p
+        <template
           v-else-if="channelSets && !channelSets.length"
-          class="mb-0 text-xs-center"
         >
-          {{ $tr('noChannelSetsFound') }}
-        </p>
+          <div class="text-xs-center mt-4 p-2">
+          <p class="mb-0">
+            {{ $tr('noChannelSetsFound') }}
+          </p>
+          <KButton
+            :text="$tr('aboutChannelSetsLink')"
+            class="link-btn"
+            appearance="basic-link"
+            @click="infoDialog = true"
+          />
+          <KModal
+            v-if="infoDialog"
+            :cancelText="$tr('cancelButtonLabel')"
+            :title="$tr('aboutChannelSets')"
+            @cancel="infoDialog = false"
+          >
+            <div>
+              <p>
+                {{ $tr('channelSetsDescriptionText') }}
+              </p>
+              <p>
+                {{ $tr('channelSetsInstructionsText') }}
+              </p>
+              <p :class="$computedClass(channelSetsDisclamerStyle)">
+                {{ $tr('channelSetsDisclaimer') }}
+              </p>
+            </div>
+          </KModal>
+        </div>
+      </template>
         <template v-else>
+          <KModal
+            v-if="infoDialog"
+            :cancelText="$tr('cancelButtonLabel')"
+            :title="$tr('aboutChannelSets')"
+            @cancel="infoDialog = false"
+          >
+            <div>
+              <p>
+                {{ $tr('channelSetsDescriptionText') }}
+              </p>
+              <p>
+                {{ $tr('channelSetsInstructionsText') }}
+              </p>
+              <p :class="$computedClass(channelSetsDisclamerStyle)">
+                {{ $tr('channelSetsDisclaimer') }}
+              </p>
+            </div>
+          </KModal>
           <VDataTable
             :headers="headers"
             :items="sortedChannelSets"
@@ -139,7 +168,7 @@
         'You can package together multiple channels to create a collection. The entire collection can then be imported to Kolibri at once by using a collection token.',
       addChannelSetTitle: 'New collection',
       aboutChannelSets: 'About collections',
-      aboutChannelSetsLink: 'Learn about collections',
+      aboutChannelSetsLink: 'Learn more about collections',
       channelSetsDescriptionText:
         'A collection contains multiple Kolibri Studio channels that can be imported at one time to Kolibri with a single collection token.',
       channelSetsInstructionsText:
