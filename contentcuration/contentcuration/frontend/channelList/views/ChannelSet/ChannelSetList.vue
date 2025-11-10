@@ -4,33 +4,36 @@
     class="list-items"
     fluid
   >
-<VLayout
-  row
-  wrap
-  align-center
-  justify-space-between
-  class="pb-2"
->
-  <VFlex class="text-xs-left">
-    <KButton
-      v-if="!loading && channelSets && channelSets.length"
-      :text="$tr('aboutChannelSetsLink')"
-      class="link-btn"
-      appearance="basic-link"
-      @click="infoDialog = true"
-    />
-  </VFlex>
-  <VFlex class="text-xs-right" shrink="0">
-    <KButton
-      v-if="!loading"
-      appearance="raised-button"
-      primary
-      data-test="add-channelset"
-      :text="$tr('addChannelSetTitle')"
-      @click="newChannelSet"
-    />
-  </VFlex>
-</VLayout>
+    <VLayout
+      row
+      wrap
+      align-center
+      justify-space-between
+      class="pb-2"
+    >
+      <VFlex class="text-xs-left">
+        <KButton
+          v-if="!loading && channelSets && channelSets.length"
+          :text="$tr('aboutChannelSetsLink')"
+          class="link-btn"
+          appearance="basic-link"
+          @click="infoDialog = true"
+        />
+      </VFlex>
+      <VFlex
+        class="text-xs-right"
+        shrink="0"
+      >
+        <KButton
+          v-if="!loading"
+          appearance="raised-button"
+          primary
+          data-test="add-channelset"
+          :text="$tr('addChannelSetTitle')"
+          @click="newChannelSet"
+        />
+      </VFlex>
+    </VLayout>
 
     <VLayout
       row
@@ -41,39 +44,37 @@
         <template v-if="loading">
           <LoadingText />
         </template>
-        <template
-          v-else-if="channelSets && !channelSets.length"
-        >
-          <div class="text-xs-center mt-4 p-2">
-          <p class="mb-0">
-            {{ $tr('noChannelSetsFound') }}
-          </p>
-          <KButton
-            :text="$tr('aboutChannelSetsLink')"
-            class="link-btn"
-            appearance="basic-link"
-            @click="infoDialog = true"
-          />
-          <KModal
-            v-if="infoDialog"
-            :cancelText="$tr('cancelButtonLabel')"
-            :title="$tr('aboutChannelSets')"
-            @cancel="infoDialog = false"
-          >
-            <div>
-              <p>
-                {{ $tr('channelSetsDescriptionText') }}
-              </p>
-              <p>
-                {{ $tr('channelSetsInstructionsText') }}
-              </p>
-              <p :class="$computedClass(channelSetsDisclamerStyle)">
-                {{ $tr('channelSetsDisclaimer') }}
-              </p>
-            </div>
-          </KModal>
-        </div>
-      </template>
+        <template v-else-if="channelSets && !channelSets.length">
+          <div class="mt-4 p-2 text-xs-center">
+            <p class="mb-0">
+              {{ $tr('noChannelSetsFound') }}
+            </p>
+            <KButton
+              :text="$tr('aboutChannelSetsLink')"
+              class="link-btn"
+              appearance="basic-link"
+              @click="infoDialog = true"
+            />
+            <KModal
+              v-if="infoDialog"
+              :cancelText="$tr('cancelButtonLabel')"
+              :title="$tr('aboutChannelSets')"
+              @cancel="infoDialog = false"
+            >
+              <div>
+                <p>
+                  {{ $tr('channelSetsDescriptionText') }}
+                </p>
+                <p>
+                  {{ $tr('channelSetsInstructionsText') }}
+                </p>
+                <p :class="$computedClass(channelSetsDisclamerStyle)">
+                  {{ $tr('channelSetsDisclaimer') }}
+                </p>
+              </div>
+            </KModal>
+          </div>
+        </template>
         <template v-else>
           <KModal
             v-if="infoDialog"
