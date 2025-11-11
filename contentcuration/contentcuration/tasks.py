@@ -1,10 +1,12 @@
 import logging
 import time
+
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.utils.translation import override
+
 from contentcuration.celery import app
 from contentcuration.models import Change
 from contentcuration.models import ContentNode
