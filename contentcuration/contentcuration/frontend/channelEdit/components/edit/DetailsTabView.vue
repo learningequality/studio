@@ -499,6 +499,7 @@
   } from 'shared/constants';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
   import { crossComponentTranslator } from 'shared/i18n';
+  import { LanguagesNames } from 'shared/leUtils/Languages';
 
   function getValueFromResults(results) {
     if (results.length === 0) {
@@ -715,7 +716,17 @@
         },
       },
       role: generateGetterSetter('role_visibility'),
-      language: generateGetterSetter('language'),
+      language: {
+        get() {
+          const value = this.getValueFromNodes('language');
+          return value === nonUniqueValue ? LanguagesNames.MUL : value;
+        },
+        set(value) {
+          if (!(value === LanguagesNames.MUL && this.language === LanguagesNames.MUL)) {
+            this.update({ language: value });
+          }
+        },
+      },
       accessibility: generateNestedNodesGetterSetter('accessibility_labels'),
       contentLevel: generateNestedNodesGetterSetterObject('grade_levels'),
       resourcesNeeded: generateNestedNodesGetterSetterObject('learner_needs'),
