@@ -11,12 +11,12 @@ from contentcuration.celery import app
 from contentcuration.models import Change
 from contentcuration.models import ContentNode
 from contentcuration.models import User
+from contentcuration.utils.audit_channel_licenses import audit_channel_licenses
 from contentcuration.utils.csv_writer import write_user_csv
 from contentcuration.utils.nodes import calculate_resource_size
 from contentcuration.utils.nodes import generate_diff
 from contentcuration.utils.publish import ensure_versioned_database_exists
 from contentcuration.viewsets.user import AdminUserFilter
-from contentcuration.utils.audit_channel_licenses import audit_channel_licenses
 
 
 logger = get_task_logger(__name__)

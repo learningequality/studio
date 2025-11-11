@@ -52,34 +52,40 @@ def get_channel_and_user(channel_id, user_id):
     else:
         return None, None
 
-def _process_content_database(channel_id, channel_version):
-    """
-    Process the content database to calculate included_licenses and special permissions.
-    Both operations are performed within the same database context to avoid downloading
-    the database twice.
-    """
+
+def _process_content_database(channel_id, channel_version, published_data_version=None):
+    included_licenses = None
+    if published_data_version:
+        included_licenses = published_data_version.get("included_licenses")
+    
     db_path = _get_content_database_path(channel_id, channel_version)
     if not db_path:
-        return [], None
+        if included_licenses is None:
+            included_licenses = []
+        if published_data_version:
+            published_data_version["included_licenses"] = included_licenses
+        return included_licenses, None
 
     with using_temp_migrated_content_database(db_path):
-        # Calculate included_licenses from the content database
-        license_names = list(
-            KolibriContentNode.objects.exclude(kind=content_kinds.TOPIC)
-            .exclude(license_name__isnull=True)
-            .exclude(license_name="")
-            .values_list("license_name", flat=True)
-            .distinct()
-        )
+        if included_licenses is None:
+            license_names = list(
+                KolibriContentNode.objects.exclude(kind=content_kinds.TOPIC)
+                .exclude(license_name__isnull=True)
+                .exclude(license_name="")
+                .values_list("license_name", flat=True)
+                .distinct()
+            )
 
-        license_ids = []
-        for license_name in license_names:
-            studio_license = License.objects.get(license_name=license_name)
-            license_ids.append(studio_license.id)
+            license_ids = []
+            for license_name in license_names:
+                studio_license = License.objects.get(license_name=license_name)
+                license_ids.append(studio_license.id)
 
-        included_licenses = sorted(set(license_ids))
+            included_licenses = sorted(set(license_ids))
+            
+            if published_data_version:
+                published_data_version["included_licenses"] = included_licenses
 
-        # Process special permissions licenses within the same database context
         special_permissions_license = License.objects.get(
             license_name=licenses.SPECIAL_PERMISSIONS
         )
@@ -142,6 +148,7 @@ def check_invalid_licenses(included_licenses):
 
     return invalid_license_ids
 
+
 def save_audit_results(
     channel,
     published_data_version,
@@ -170,6 +177,7 @@ def save_audit_results(
         created_by_id=user_id,
     )
 
+
 def audit_channel_licenses(channel_id, user_id):
     user, channel = get_channel_and_user(channel_id, user_id)
     if not user or not channel:
@@ -184,7 +192,7 @@ def audit_channel_licenses(channel_id, user_id):
     published_data_version = channel.published_data[version_str]
 
     included_licenses, special_permissions_license_ids = _process_content_database(
-        channel_id, channel_version
+        channel_id, channel_version, published_data_version=published_data_version
     )
     
     published_data_version["included_licenses"] = included_licenses
