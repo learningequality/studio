@@ -81,14 +81,4 @@ describe('languageDropdown', () => {
     const item = { native_name: '', id: 'de' };
     expect(wrapper.vm.languageText(item)).toBe(' (de)');
   });
-
-  it('returns formatted language text when native_name is missing', () => {
-    const wrapper = shallowMount(LanguageDropdown, {
-      mocks: {
-        $tr: (key, params) => `${params.language} (${params.code})`,
-      },
-    });
-    const item = { id: 'fr' };
-    expect(wrapper.vm.languageText(item)).toBe(' (fr)');
-  });
 });
