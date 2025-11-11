@@ -62,8 +62,6 @@ def _process_content_database(channel_id, channel_version, published_data_versio
     if not db_path:
         if included_licenses is None:
             included_licenses = []
-        if published_data_version:
-            published_data_version["included_licenses"] = included_licenses
         return included_licenses, None
 
     with using_temp_migrated_content_database(db_path):
@@ -82,9 +80,6 @@ def _process_content_database(channel_id, channel_version, published_data_versio
                 license_ids.append(studio_license.id)
 
             included_licenses = sorted(set(license_ids))
-            
-            if published_data_version:
-                published_data_version["included_licenses"] = included_licenses
 
         special_permissions_license = License.objects.get(
             license_name=licenses.SPECIAL_PERMISSIONS
