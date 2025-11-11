@@ -353,8 +353,6 @@ class AuditChannelLicensesTaskTestCase(EagerTasksTestMixin, StudioTestCase):
         mock_using_db.return_value.__enter__ = mock.Mock(return_value=mock_context)
         mock_using_db.return_value.__exit__ = mock.Mock(return_value=None)
 
-        # Mock the queryset chain for license_names query
-        # The content database should return "All Rights Reserved" as a license name
         mock_license_names_distinct = [licenses.ALL_RIGHTS_RESERVED]
         mock_license_names_values_list = mock.Mock()
         mock_license_names_values_list.distinct.return_value = mock_license_names_distinct
@@ -408,8 +406,6 @@ class AuditChannelLicensesTaskTestCase(EagerTasksTestMixin, StudioTestCase):
         mock_using_db.return_value.__enter__ = mock.Mock(return_value=mock_context)
         mock_using_db.return_value.__exit__ = mock.Mock(return_value=None)
 
-        # Mock the queryset chain for license_names query (first query - gets all license names)
-        # Query: KolibriContentNode.objects.exclude(kind=TOPIC).exclude(license_name__isnull=True).exclude(license_name="").values_list("license_name", flat=True).distinct()
         mock_license_names_distinct = [licenses.SPECIAL_PERMISSIONS]
         mock_license_names_values_list = mock.Mock()
         mock_license_names_values_list.distinct.return_value = mock_license_names_distinct
@@ -421,9 +417,6 @@ class AuditChannelLicensesTaskTestCase(EagerTasksTestMixin, StudioTestCase):
         mock_license_names_exclude1.exclude.return_value = mock_license_names_exclude2
         mock_license_names_base = mock.Mock()
         mock_license_names_base.exclude.return_value = mock_license_names_exclude1
-
-        # Mock the queryset chain for special_perms_nodes query (second query - gets special permissions descriptions)
-        # Query: KolibriContentNode.objects.filter(license_name=SPECIAL_PERMISSIONS).exclude(kind=TOPIC).exclude(license_description__isnull=True).exclude(license_description="").values_list("license_description", flat=True).distinct()
         mock_special_perms_distinct = ["Custom permission 1", "Custom permission 2"]
         mock_special_perms_values_list = mock.Mock()
         mock_special_perms_values_list.distinct.return_value = mock_special_perms_distinct
@@ -438,8 +431,12 @@ class AuditChannelLicensesTaskTestCase(EagerTasksTestMixin, StudioTestCase):
 
         # Set up the mock to return different querysets based on the method called
         mock_kolibri_node.objects = mock.Mock()
-        mock_kolibri_node.objects.exclude = mock.Mock(return_value=mock_license_names_exclude1)
-        mock_kolibri_node.objects.filter = mock.Mock(return_value=mock_special_perms_filter)
+        mock_kolibri_node.objects.exclude = mock.Mock(
+            return_value=mock_license_names_exclude1
+        )
+        mock_kolibri_node.objects.filter = mock.Mock(
+            return_value=mock_special_perms_filter
+        )
 
         audit_channel_licenses_task.apply(
             kwargs={"channel_id": self.channel.id, "user_id": self.user.id}
