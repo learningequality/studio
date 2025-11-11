@@ -57,7 +57,7 @@ def _process_content_database(channel_id, channel_version, published_data_versio
     included_licenses = None
     if published_data_version:
         included_licenses = published_data_version.get("included_licenses")
-    
+
     db_path = _get_content_database_path(channel_id, channel_version)
     if not db_path:
         if included_licenses is None:
@@ -189,9 +189,9 @@ def audit_channel_licenses(channel_id, user_id):
     included_licenses, special_permissions_license_ids = _process_content_database(
         channel_id, channel_version, published_data_version=published_data_version
     )
-    
+
     published_data_version["included_licenses"] = included_licenses
-    
+
     invalid_license_ids = check_invalid_licenses(included_licenses)
 
     if special_permissions_license_ids is None:
