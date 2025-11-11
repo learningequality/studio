@@ -52,6 +52,7 @@ def get_channel_and_user(channel_id, user_id):
     else:
         return None, None
 
+
 def _process_content_database(channel_id, channel_version, included_licenses=None):
     """Process the content database to calculate included_licenses and special permissions."""
     db_path = _get_content_database_path(channel_id, channel_version)
@@ -126,13 +127,12 @@ def _process_content_database(channel_id, channel_version, included_licenses=Non
 
         return included_licenses, special_permissions_license_ids
 
+
 def calculate_included_licenses(channel_id, channel_version, published_data_version):
     """Calculate and cache included_licenses from the content database if not already present."""
     included_licenses = published_data_version.get("included_licenses")
     if not included_licenses:
-        included_licenses, _ = _process_content_database(
-            channel_id, channel_version
-        )
+        included_licenses, _ = _process_content_database(channel_id, channel_version)
         published_data_version["included_licenses"] = included_licenses
 
     return included_licenses
@@ -148,6 +148,7 @@ def check_invalid_licenses(included_licenses):
         invalid_license_ids = [all_rights_reserved_license.id]
 
     return invalid_license_ids
+
 
 def save_audit_results(
     channel,
@@ -177,6 +178,7 @@ def save_audit_results(
         created_by_id=user_id,
     )
 
+
 def audit_channel_licenses(channel_id, user_id):
     user, channel = get_channel_and_user(channel_id, user_id)
     if not user or not channel:
@@ -191,7 +193,7 @@ def audit_channel_licenses(channel_id, user_id):
     published_data_version = channel.published_data[version_str]
 
     included_licenses = published_data_version.get("included_licenses")
-    
+
     if included_licenses:
         invalid_license_ids = check_invalid_licenses(included_licenses)
         _, special_permissions_license_ids = _process_content_database(
