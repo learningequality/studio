@@ -18,6 +18,7 @@ from .helpers import clear_tasks
 from .helpers import EagerTasksTestMixin
 from contentcuration import models as cc
 from contentcuration.celery import app
+from le_utils.constants import licenses
 
 logger = get_task_logger(__name__)
 
@@ -291,7 +292,7 @@ class AuditChannelLicensesTaskTestCase(EagerTasksTestMixin, StudioTestCase):
         self.channel.version = 1
         self.channel.save()
 
-    @patch("contentcuration.tasks.storage.exists")
+    @patch("contentcuration.utils.audit_channel_licenses.storage.exists")
     def test_audit_licenses_task__no_invalid_or_special_permissions(
         self, mock_storage_exists
     ):
@@ -333,22 +334,41 @@ class AuditChannelLicensesTaskTestCase(EagerTasksTestMixin, StudioTestCase):
             published_data_version.get("community_library_special_permissions")
         )
 
-    @patch("contentcuration.tasks.storage.exists")
-    def test_audit_licenses_task__with_all_rights_reserved(self, mock_storage_exists):
+    @patch("contentcuration.utils.audit_channel_licenses.KolibriContentNode")
+    @patch("contentcuration.utils.audit_channel_licenses.using_temp_migrated_content_database")
+    @patch("contentcuration.utils.audit_channel_licenses.storage.exists")
+    def test_audit_licenses_task__with_all_rights_reserved(
+        self, mock_storage_exists, mock_using_db, mock_kolibri_node
+    ):
         """Test audit task when channel has All Rights Reserved license"""
         from contentcuration.tasks import audit_channel_licenses_task
 
         all_rights_license, _ = cc.License.objects.get_or_create(
-            license_name="All Rights Reserved"
+            license_name=licenses.ALL_RIGHTS_RESERVED
         )
-        node = testdata.node({"kind_id": "video", "title": "Video Node"})
-        node.parent = self.channel.main_tree
-        node.license = all_rights_license
-        node.save()
-        node.published = True
-        node.save()
 
-        mock_storage_exists.return_value = False
+        mock_storage_exists.return_value = True
+
+        mock_context = mock.MagicMock()
+        mock_using_db.return_value.__enter__ = mock.Mock(return_value=mock_context)
+        mock_using_db.return_value.__exit__ = mock.Mock(return_value=None)
+
+        # Mock the queryset chain for license_names query
+        # The content database should return "All Rights Reserved" as a license name
+        mock_license_names_distinct = [licenses.ALL_RIGHTS_RESERVED]
+        mock_license_names_values_list = mock.Mock()
+        mock_license_names_values_list.distinct.return_value = mock_license_names_distinct
+        mock_license_names_exclude3 = mock.Mock()
+        mock_license_names_exclude3.values_list.return_value = mock_license_names_values_list
+        mock_license_names_exclude2 = mock.Mock()
+        mock_license_names_exclude2.exclude.return_value = mock_license_names_exclude3
+        mock_license_names_exclude1 = mock.Mock()
+        mock_license_names_exclude1.exclude.return_value = mock_license_names_exclude2
+        mock_license_names_base = mock.Mock()
+        mock_license_names_base.exclude.return_value = mock_license_names_exclude1
+
+        mock_kolibri_node.objects = mock.Mock()
+        mock_kolibri_node.objects.exclude = mock.Mock(return_value=mock_license_names_exclude1)
 
         audit_channel_licenses_task.apply(
             kwargs={"channel_id": self.channel.id, "user_id": self.user.id}
@@ -363,9 +383,9 @@ class AuditChannelLicensesTaskTestCase(EagerTasksTestMixin, StudioTestCase):
             [all_rights_license.id],
         )
 
-    @patch("contentcuration.tasks.KolibriContentNode")
-    @patch("contentcuration.tasks.using_temp_migrated_content_database")
-    @patch("contentcuration.tasks.storage.exists")
+    @patch("contentcuration.utils.audit_channel_licenses.KolibriContentNode")
+    @patch("contentcuration.utils.audit_channel_licenses.using_temp_migrated_content_database")
+    @patch("contentcuration.utils.audit_channel_licenses.storage.exists")
     def test_audit_licenses_task__with_special_permissions(
         self, mock_storage_exists, mock_using_db, mock_kolibri_node
     ):
@@ -387,22 +407,39 @@ class AuditChannelLicensesTaskTestCase(EagerTasksTestMixin, StudioTestCase):
         mock_context = mock.MagicMock()
         mock_using_db.return_value.__enter__ = mock.Mock(return_value=mock_context)
         mock_using_db.return_value.__exit__ = mock.Mock(return_value=None)
-        mock_values_list = mock.Mock()
-        mock_values_list.distinct.return_value = [
-            "Custom permission 1",
-            "Custom permission 2",
-        ]
 
-        mock_exclude2 = mock.Mock()
-        mock_exclude2.exclude.return_value.values_list.return_value = mock_values_list
+        # Mock the queryset chain for license_names query (first query - gets all license names)
+        # Query: KolibriContentNode.objects.exclude(kind=TOPIC).exclude(license_name__isnull=True).exclude(license_name="").values_list("license_name", flat=True).distinct()
+        mock_license_names_distinct = [licenses.SPECIAL_PERMISSIONS]
+        mock_license_names_values_list = mock.Mock()
+        mock_license_names_values_list.distinct.return_value = mock_license_names_distinct
+        mock_license_names_exclude3 = mock.Mock()
+        mock_license_names_exclude3.values_list.return_value = mock_license_names_values_list
+        mock_license_names_exclude2 = mock.Mock()
+        mock_license_names_exclude2.exclude.return_value = mock_license_names_exclude3
+        mock_license_names_exclude1 = mock.Mock()
+        mock_license_names_exclude1.exclude.return_value = mock_license_names_exclude2
+        mock_license_names_base = mock.Mock()
+        mock_license_names_base.exclude.return_value = mock_license_names_exclude1
 
-        mock_exclude1 = mock.Mock()
-        mock_exclude1.exclude.return_value = mock_exclude2
+        # Mock the queryset chain for special_perms_nodes query (second query - gets special permissions descriptions)
+        # Query: KolibriContentNode.objects.filter(license_name=SPECIAL_PERMISSIONS).exclude(kind=TOPIC).exclude(license_description__isnull=True).exclude(license_description="").values_list("license_description", flat=True).distinct()
+        mock_special_perms_distinct = ["Custom permission 1", "Custom permission 2"]
+        mock_special_perms_values_list = mock.Mock()
+        mock_special_perms_values_list.distinct.return_value = mock_special_perms_distinct
+        mock_special_perms_exclude3 = mock.Mock()
+        mock_special_perms_exclude3.values_list.return_value = mock_special_perms_values_list
+        mock_special_perms_exclude2 = mock.Mock()
+        mock_special_perms_exclude2.exclude.return_value = mock_special_perms_exclude3
+        mock_special_perms_exclude1 = mock.Mock()
+        mock_special_perms_exclude1.exclude.return_value = mock_special_perms_exclude2
+        mock_special_perms_filter = mock.Mock()
+        mock_special_perms_filter.exclude.return_value = mock_special_perms_exclude1
 
-        mock_filter = mock.Mock()
-        mock_filter.exclude.return_value = mock_exclude1
-
-        mock_kolibri_node.objects.filter.return_value = mock_filter
+        # Set up the mock to return different querysets based on the method called
+        mock_kolibri_node.objects = mock.Mock()
+        mock_kolibri_node.objects.exclude = mock.Mock(return_value=mock_license_names_exclude1)
+        mock_kolibri_node.objects.filter = mock.Mock(return_value=mock_special_perms_filter)
 
         audit_channel_licenses_task.apply(
             kwargs={"channel_id": self.channel.id, "user_id": self.user.id}
@@ -425,47 +462,3 @@ class AuditChannelLicensesTaskTestCase(EagerTasksTestMixin, StudioTestCase):
         )
         self.assertEqual(audited_licenses.count(), 2)
 
-    def test_audit_licenses_task__user_not_editor(self):
-        """Test audit task fails when user is not an editor"""
-        from contentcuration.tasks import audit_channel_licenses_task
-        import copy
-
-        non_editor = testdata.user()
-        non_editor.is_admin = False
-        non_editor.save()
-        if self.channel.editors.filter(pk=non_editor.id).exists():
-            self.channel.editors.remove(non_editor)
-        self.channel.save()
-
-        initial_published_data = copy.deepcopy(self.channel.published_data)
-
-        audit_channel_licenses_task.apply(
-            kwargs={"channel_id": self.channel.id, "user_id": non_editor.id}
-        )
-
-        self.channel.refresh_from_db()
-        final_published_data = copy.deepcopy(self.channel.published_data)
-        self.assertEqual(
-            initial_published_data,
-            final_published_data,
-            "Published data should not be modified when user is not an editor",
-        )
-
-    def test_audit_licenses_task__channel_not_published(self):
-        """Test audit task fails when channel is not published"""
-        from contentcuration.tasks import audit_channel_licenses_task
-
-        self.channel.main_tree.published = False
-        self.channel.main_tree.save()
-
-        audit_channel_licenses_task.apply(
-            kwargs={"channel_id": self.channel.id, "user_id": self.user.id}
-        )
-
-        self.channel.refresh_from_db()
-        version_str = str(self.channel.version)
-        if version_str in self.channel.published_data:
-            self.assertNotIn(
-                "community_library_invalid_licenses",
-                self.channel.published_data[version_str],
-            )

@@ -1316,25 +1316,23 @@ class AuditLicensesActionTestCase(StudioAPITestCase):
 
         self.client.force_authenticate(user=self.editor_user)
 
-        with patch("contentcuration.tasks.storage.exists", return_value=False):
-            with patch.object(
-                audit_channel_licenses_task, "fetch_or_enqueue"
-            ) as mock_enqueue:
-                mock_async_result = Mock()
-                mock_async_result.task_id = "test-task-id-123"
-                mock_enqueue.return_value = mock_async_result
+        with patch.object(
+            audit_channel_licenses_task, "fetch_or_enqueue"
+        ) as mock_enqueue:
+            mock_async_result = Mock()
+            mock_async_result.task_id = "test-task-id-123"
+            mock_enqueue.return_value = mock_async_result
 
-                response = self.client.post(
-                    reverse("channel-audit-licenses", kwargs={"pk": self.channel.id}),
-                    format="json",
-                )
+            response = self.client.post(
+                reverse("channel-audit-licenses", kwargs={"pk": self.channel.id}),
+                format="json",
+            )
 
-                self.assertEqual(response.status_code, 200, response.content)
-                data = response.json()
-                self.assertIn("task_id", data)
-                self.assertEqual(data["task_id"], "test-task-id-123")
-                self.assertEqual(data["status"], "enqueued")
-                mock_enqueue.assert_called_once()
+            self.assertEqual(response.status_code, 200, response.content)
+            data = response.json()
+            self.assertIn("task_id", data)
+            self.assertEqual(data["task_id"], "test-task-id-123")
+            mock_enqueue.assert_called_once()
 
     def test_audit_licenses__is_admin(self):
         """Test that an admin can trigger license audit"""
@@ -1342,22 +1340,21 @@ class AuditLicensesActionTestCase(StudioAPITestCase):
 
         self.client.force_authenticate(user=self.admin_user)
 
-        with patch("contentcuration.tasks.storage.exists", return_value=False):
-            with patch.object(
-                audit_channel_licenses_task, "fetch_or_enqueue"
-            ) as mock_enqueue:
-                mock_async_result = Mock()
-                mock_async_result.task_id = "test-task-id-456"
-                mock_enqueue.return_value = mock_async_result
+        with patch.object(
+            audit_channel_licenses_task, "fetch_or_enqueue"
+        ) as mock_enqueue:
+            mock_async_result = Mock()
+            mock_async_result.task_id = "test-task-id-456"
+            mock_enqueue.return_value = mock_async_result
 
-                response = self.client.post(
-                    reverse("channel-audit-licenses", kwargs={"pk": self.channel.id}),
-                    format="json",
-                )
+            response = self.client.post(
+                reverse("channel-audit-licenses", kwargs={"pk": self.channel.id}),
+                format="json",
+            )
 
-                self.assertEqual(response.status_code, 200, response.content)
-                data = response.json()
-                self.assertIn("task_id", data)
+            self.assertEqual(response.status_code, 200, response.content)
+            data = response.json()
+            self.assertIn("task_id", data)
 
     def test_audit_licenses__is_forbidden_user(self):
         """Test that a non-editor cannot trigger license audit"""

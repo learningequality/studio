@@ -927,12 +927,7 @@ class ChannelViewSet(ValuesViewset):
             request.user, channel_id=channel.id, user_id=request.user.id
         )
 
-        return Response(
-            {
-                "task_id": async_result.task_id,
-                "status": "enqueued",
-            }
-        )
+        return Response({"task_id": async_result.task_id})
 
     def _channel_exists(self, channel_id) -> bool:
         """
