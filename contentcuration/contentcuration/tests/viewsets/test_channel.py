@@ -836,17 +836,23 @@ class CRUDTestCase(StudioAPITestCase):
         channel_without_submission.editors.add(user)
 
         self.client.force_authenticate(user=user)
-        
+
         response = self.client.get(
-            reverse("channel-has-community-library-submission", kwargs={"pk": channel_with_submission.id}),
-            format="json"
+            reverse(
+                "channel-has-community-library-submission",
+                kwargs={"pk": channel_with_submission.id},
+            ),
+            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertTrue(response.data["has_community_library_submission"])
-        
+
         response = self.client.get(
-            reverse("channel-has-community-library-submission", kwargs={"pk": channel_without_submission.id}),
-            format="json"
+            reverse(
+                "channel-has-community-library-submission",
+                kwargs={"pk": channel_without_submission.id},
+            ),
+            format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertFalse(response.data["has_community_library_submission"])

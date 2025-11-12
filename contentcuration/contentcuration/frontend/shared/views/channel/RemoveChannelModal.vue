@@ -12,7 +12,7 @@
   >
     <div
       v-if="loading"
-      class="text-center py-4"
+      class="py-4 text-center"
     >
       <VProgressCircular
         indeterminate
@@ -41,21 +41,6 @@
 
   export default defineComponent({
     name: 'RemoveChannelModal',
-    props: {
-      value: {
-        type: Boolean,
-        default: false,
-      },
-      channelId: {
-        type: String,
-        required: true,
-      },
-      canEdit: {
-        type: Boolean,
-        default: false,
-      },
-    },
-    emits: ['input', 'delete'],
     setup(props, { emit }) {
       const { proxy } = getCurrentInstance();
       const loading = ref(false);
@@ -70,7 +55,7 @@
         },
       });
 
-      watch(dialog, (newValue) => {
+      watch(dialog, newValue => {
         if (newValue && props.canEdit) {
           fetchCommunityLibrarySubmissionStatus();
         } else {
@@ -85,7 +70,8 @@
           const detailUrl = window.Urls.channel_detail(props.channelId);
           const url = `${detailUrl.replace(/\/$/, '')}/has_community_library_submission`;
           const response = await client.get(url);
-          hasCommunityLibrarySubmission.value = response.data?.has_community_library_submission ?? false;
+          hasCommunityLibrarySubmission.value =
+            response.data?.has_community_library_submission ?? false;
         } catch (error) {
           hasCommunityLibrarySubmission.value = false;
         } finally {
@@ -101,7 +87,7 @@
         dialog.value = false;
       }
 
-      const $tr = (messageId) => {
+      const $tr = messageId => {
         return proxy.$tr(messageId);
       };
 
@@ -115,6 +101,21 @@
         $tr,
       };
     },
+    props: {
+      value: {
+        type: Boolean,
+        default: false,
+      },
+      channelId: {
+        type: String,
+        required: true,
+      },
+      canEdit: {
+        type: Boolean,
+        default: false,
+      },
+    },
+    emits: ['input', 'delete'],
     $trs: {
       deleteTitle: 'Delete this channel',
       removeTitle: 'Remove from channel list',
@@ -133,4 +134,3 @@
 
 
 <style lang="scss" scoped></style>
-
