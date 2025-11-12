@@ -67,11 +67,9 @@ from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import create_change_tracker
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.viewsets.base import RequiredFilterSet
-from contentcuration.viewsets.base import RequiredFiltersFilterBackend
 from contentcuration.viewsets.base import RESTDestroyModelMixin
 from contentcuration.viewsets.base import RESTUpdateModelMixin
 from contentcuration.viewsets.base import ValuesViewset
-from contentcuration.viewsets.base import ValuesViewsetOrderingFilter
 from contentcuration.viewsets.common import ContentDefaultsSerializer
 from contentcuration.viewsets.common import JSONFieldDictSerializer
 from contentcuration.viewsets.common import SQCount

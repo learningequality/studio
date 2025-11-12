@@ -828,7 +828,7 @@ class CRUDTestCase(StudioAPITestCase):
         channel_with_submission.save()
         submission = testdata.community_library_submission()
         submission.channel = channel_with_submission
-        submission.author = user 
+        submission.author = user
         submission.channel_version = channel_with_submission.version
         submission.save()
 
