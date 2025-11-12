@@ -224,6 +224,13 @@
       @submit="handleDelete"
       @cancel="deleteDialog = false"
     >
+      <div
+        v-if="canEdit && channel.has_community_library_submission"
+        class="mb-3"
+        data-test="cl-warning"
+      >
+        {{ $tr('deleteChannelWithCLWarning') }}
+      </div>
       {{ canEdit ? $tr('deletePrompt') : $tr('removePrompt') }}
     </KModal>
     <!-- Copy dialog -->
@@ -404,6 +411,8 @@
       deletePrompt: 'This channel will be permanently deleted. This cannot be undone.',
       removePrompt:
         'You have view-only access to this channel. Confirm that you want to remove it from your list of channels.',
+      deleteChannelWithCLWarning:
+        'This channel has been shared with the Community Library. Deleting it here will not remove it from the Community Library — it may still be approved or remain available there.',
       channelDeletedSnackbar: 'Channel deleted',
       channelRemovedSnackbar: 'Channel removed',
       channelLanguageNotSetIndicator: 'No language set',

@@ -258,6 +258,13 @@
       v-model="showDeleteModal"
       :header="$tr('deleteTitle')"
     >
+      <div
+        v-if="currentChannel && currentChannel.has_community_library_submission"
+        class="mb-3"
+        data-test="cl-warning"
+      >
+        {{ $tr('deleteChannelWithCLWarning') }}
+      </div>
       {{ $tr('deletePrompt') }}
       <template #buttons="{ close }">
         <VSpacer />
@@ -578,6 +585,8 @@
       deleteChannelButton: 'Delete channel',
       deleteTitle: 'Delete this channel',
       deletePrompt: 'This channel will be permanently deleted. This cannot be undone.',
+      deleteChannelWithCLWarning:
+        'This channel has been shared with the Community Library. Deleting it here will not remove it from the Community Library — it may still be approved or remain available there.',
       cancel: 'Cancel',
       channelDeletedSnackbar: 'Channel deleted',
     },
