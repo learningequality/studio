@@ -84,7 +84,7 @@
         >
           {{ $tr('apiGenerated') }}
         </span>
-        <BaseMenu>
+        <BaseMenu v-if="canShareChannel">
           <template #activator="{ on }">
             <KButton
               hasDropdown
@@ -95,16 +95,23 @@
             </KButton>
           </template>
           <VList>
-            <VListTile @click="showSubmitToCommunityLibrarySidePanel = true">
+            <VListTile
+              v-if="canSubmitToCommunityLibrary"
+              @click="showSubmitToCommunityLibrarySidePanel = true"
+            >
               <VListTileTitle>{{ $tr('submitToCommunityLibrary') }}</VListTileTitle>
             </VListTile>
             <VListTile
+              v-if="canManage"
               :to="shareChannelLink"
               @click="trackClickEvent('Share channel')"
             >
               <VListTileTitle>{{ $tr('inviteCollaborators') }}</VListTileTitle>
             </VListTile>
-            <VListTile @click="showTokenModal = true">
+            <VListTile
+              v-if="isPublished"
+              @click="showTokenModal = true"
+            >
               <VListTileTitle>{{ $tr('shareToken') }}</VListTileTitle>
             </VListTile>
           </VList>
@@ -453,6 +460,15 @@
         return (
           !this.loading && (this.$vuetify.breakpoint.xsOnly || this.canManage || this.isPublished)
         );
+      },
+      canShareChannel() {
+        return this.canManage || this.isPublished;
+      },
+      canSubmitToCommunityLibrary() {
+        if (!this.currentChannel) {
+          return false;
+        }
+        return this.canManage && this.isPublished && !this.currentChannel.public;
       },
       viewChannelDetailsLink() {
         return {
