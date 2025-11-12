@@ -2708,6 +2708,29 @@ class CommunityLibrarySubmission(models.Model):
         ]
 
 
+class AuditedSpecialPermissionsLicense(models.Model):
+    """
+    Stores special permission license descriptions that have been audited
+    for community library submissions. When a channel contains resources with
+    "Special Permissions" licenses, their license descriptions are stored here
+    for admin review.
+    """
+
+    id = UUIDField(primary_key=True, default=uuid.uuid4)
+    description = models.TextField(unique=True, db_index=True)
+    distributable = models.BooleanField(default=False)
+
+    def __str__(self):
+        return (
+            self.description[:100] if len(self.description) > 100 else self.description
+        )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["description"], name="audited_special_perms_desc_idx"),
+        ]
+
+
 ASSESSMENT_ID_INDEX_NAME = "assessment_id_idx"
 
 
