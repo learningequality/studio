@@ -142,18 +142,6 @@ const initWrapper = ({
         template:
           '<div><slot name="activator" :on="{}" /><div class="menu-content"><slot /></div></div>',
       },
-      KButton: {
-        template: '<button class="share-button"><slot /></button>',
-      },
-      VList: {
-        template: '<div class="v-list"><slot /></div>',
-      },
-      VListTile: {
-        template: '<div class="v-list-tile"><slot /></div>',
-      },
-      VListTileTitle: {
-        template: '<div class="v-list-tile-title"><slot /></div>',
-      },
     },
   });
 };
@@ -175,7 +163,7 @@ const getShareMenuItems = wrapper => {
     const baseMenu = allBaseMenus.at(i);
     const shareButton = baseMenu.find('.share-button');
     if (shareButton.exists()) {
-      return baseMenu.findAll('.v-list-tile');
+      return baseMenu.findAll('.v-list__tile');
     }
   }
   return { length: 0, wrappers: [] };
