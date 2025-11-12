@@ -82,7 +82,7 @@
     "lowlight": "^3.3.0",
     "marked": "^16.1.1",
     "material-icons": "0.3.1",
-    "mathlive": "^0.105.3",
+    "mathlive": "^0.108.1",
     "mutex-js": "^1.1.5",
     "node-vibrant": "^4.0.3",
     "pako": "^2.1.0",
