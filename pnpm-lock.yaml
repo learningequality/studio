@@ -331,8 +331,8 @@ importers:
         specifier: ^0.64.0
         version: 0.64.0
       stylus-loader:
-        specifier: ^8.1.0
-        version: 8.1.1(stylus@0.64.0)(webpack@5.99.9)
+        specifier: ^8.1.2
+        version: 8.1.2(stylus@0.64.0)(webpack@5.99.9)
       vue-jest:
         specifier: ^3.0.7
         version: 3.0.7(babel-core@7.0.0-bridge.0(@babel/core@7.28.5))(vue-template-compiler@2.7.16)(vue@2.7.16)
@@ -6884,8 +6884,8 @@ packages:
     engines: {node: ^14.13.1 || >=16.0.0}
     hasBin: true
 
-  stylus-loader@8.1.1:
-    resolution: {integrity: sha512-Ohe29p3gwJiu1kxq16P80g1qq0FxGtwQevKctLE4su8KUq+Ea06Q6lp7SpcJjaKNrWIuEZQGvESUPt8JpukKVw==}
+  stylus-loader@8.1.2:
+    resolution: {integrity: sha512-zr4ae9vIDs4zslsMtsCAoN3CLkhtUEikwNwL+AyGGtwlo+oRaX2su/6MVy/TbaSND/WIGx5hSTK23G58T8zVyQ==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
       '@rspack/core': 0.x || 1.x
@@ -15584,7 +15584,7 @@ snapshots:
       - supports-color
       - typescript
 
-  stylus-loader@8.1.1(stylus@0.64.0)(webpack@5.99.9):
+  stylus-loader@8.1.2(stylus@0.64.0)(webpack@5.99.9):
     dependencies:
       fast-glob: 3.3.3
       normalize-path: 3.0.0
