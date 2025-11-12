@@ -208,4 +208,28 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'I understand this will replace my earlier submission on the review queue',
     context: 'Checkbox text shown when there is a pending submission to confirm replacement',
   },
+  resubmitModalTitle: {
+    message: 'Resubmit channel for Community library review?',
+    context:
+      'Title of the modal shown after publishing a channel that already has Community Library submissions',
+  },
+  resubmitModalBodyFirst: {
+    message: '{channelName} v{version} is also published to the Community Library.',
+    context:
+      'First sentence of the body text of the modal shown after publishing a channel that already has Community Library submissions',
+  },
+  resubmitModalBodySecond: {
+    message:
+      'Would you like to resubmit this version with your changes for community library review?',
+    context:
+      'Second sentence of the body text of the modal shown after publishing a channel that already has Community Library submissions',
+  },
+  resubmitButton: {
+    message: 'RESUBMIT',
+    context: 'Button in the resubmit modal to open the submit to Community Library side panel',
+  },
+  dismissButton: {
+    message: 'DISMISS',
+    context: 'Button in the resubmit modal to dismiss the modal',
+  },
 });

@@ -328,6 +328,8 @@
               });
             }
 
+            emit('published', { channelId: currentChannel.value.id });
+
             await Channel.publish(currentChannel.value.id, version_notes.value);
 
             emit('close');
@@ -402,7 +404,7 @@
       };
     },
 
-    emits: ['close'],
+    emits: ['close', 'published'],
   };
 
 </script>
