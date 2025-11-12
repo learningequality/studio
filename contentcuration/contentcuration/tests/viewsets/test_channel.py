@@ -819,73 +819,8 @@ class CRUDTestCase(StudioAPITestCase):
             [submission1.channel.id],
         )
 
-    def test_admin_channel_filter__has_community_library_submission(self):
-        self.client.force_authenticate(user=self.admin_user)
-
-        submission = testdata.community_library_submission()
-
-        testdata.channel()  # Another channel without submission
-
-        response = self.client.get(
-            reverse_with_query(
-                "admin-channels-list",
-                query={"has_community_library_submission": True},
-            ),
-            format="json",
-        )
-        self.assertEqual(response.status_code, 200, response.content)
-        self.assertCountEqual(
-            [ch["id"] for ch in response.data],
-            [submission.channel.id],
-        )
-
-    def test_admin_channel_filter__community_library_includes_soft_deleted(self):
-        """Test that filtering by CommunityLibrary includes soft-deleted channels"""
-        self.client.force_authenticate(user=self.admin_user)
-
-        user = testdata.user()
-        channel_with_submission = testdata.channel()
-        channel_with_submission.editors.add(user)
-        channel_with_submission.version = 1
-        channel_with_submission.save()
-        submission = testdata.community_library_submission()
-        submission.channel = channel_with_submission
-        submission.author = user
-        submission.channel_version = 1
-        submission.save()
-
-        channel_with_submission.deleted = True
-        channel_with_submission.save(actor_id=self.admin_user.id)
-
-        channel_not_deleted = testdata.channel()
-        channel_not_deleted.editors.add(user)
-        channel_not_deleted.version = 1
-        channel_not_deleted.save()
-        submission2 = testdata.community_library_submission()
-        submission2.channel = channel_not_deleted
-        submission2.author = user
-        submission2.channel_version = 1
-        submission2.save()
-
-        response = self.client.get(
-            reverse_with_query(
-                "admin-channels-list",
-                query={"has_community_library_submission": True},
-            ),
-            format="json",
-        )
-        self.assertEqual(response.status_code, 200, response.content)
-        channel_ids = [ch["id"] for ch in response.data]
-        self.assertIn(channel_with_submission.id, channel_ids)
-        self.assertIn(channel_not_deleted.id, channel_ids)
-        deleted_channel_data = next(
-            (ch for ch in response.data if ch["id"] == channel_with_submission.id), None
-        )
-        self.assertIsNotNone(deleted_channel_data)
-        self.assertTrue(deleted_channel_data["deleted"])
-
-    def test_channel_list__has_community_library_submission_field(self):
-        """Test that has_community_library_submission field is included in channel list response"""
+    def test_has_community_library_submission_endpoint(self):
+        """Test the on-demand has_community_library_submission endpoint"""
         user = testdata.user()
         channel_with_submission = testdata.channel()
         channel_with_submission.editors.add(user)
@@ -901,24 +836,20 @@ class CRUDTestCase(StudioAPITestCase):
         channel_without_submission.editors.add(user)
 
         self.client.force_authenticate(user=user)
+        
         response = self.client.get(
-            reverse("channel-list"), data={"edit": True}, format="json"
+            reverse("channel-has-community-library-submission", kwargs={"pk": channel_with_submission.id}),
+            format="json"
         )
         self.assertEqual(response.status_code, 200, response.content)
-
-        channel_with_submission_data = next(
-            (ch for ch in response.data if ch["id"] == channel_with_submission.id),
-            None,
+        self.assertTrue(response.data["has_community_library_submission"])
+        
+        response = self.client.get(
+            reverse("channel-has-community-library-submission", kwargs={"pk": channel_without_submission.id}),
+            format="json"
         )
-        channel_without_submission_data = next(
-            (ch for ch in response.data if ch["id"] == channel_without_submission.id),
-            None,
-        )
-
-        self.assertIsNotNone(channel_with_submission_data)
-        self.assertIsNotNone(channel_without_submission_data)
-        self.assertTrue(channel_with_submission_data["has_community_library_submission"])
-        self.assertFalse(channel_without_submission_data["has_community_library_submission"])
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertFalse(response.data["has_community_library_submission"])
 
     def test_create_channel(self):
         user = testdata.user()

@@ -254,36 +254,14 @@
       @syncing="syncInProgress"
     />
     <QuickEditModal />
-    <MessageDialog
+    <RemoveChannelModal
+      v-if="currentChannel"
       v-model="showDeleteModal"
-      :header="$tr('deleteTitle')"
-    >
-      <div
-        v-if="currentChannel && currentChannel.has_community_library_submission"
-        class="mb-3"
-        data-test="cl-warning"
-      >
-        {{ $tr('deleteChannelWithCLWarning') }}
-      </div>
-      {{ $tr('deletePrompt') }}
-      <template #buttons="{ close }">
-        <VSpacer />
-        <VBtn
-          color="primary"
-          flat
-          @click="close"
-        >
-          {{ $tr('cancel') }}
-        </VBtn>
-        <VBtn
-          color="primary"
-          data-test="delete"
-          @click="handleDelete"
-        >
-          {{ $tr('deleteChannelButton') }}
-        </VBtn>
-      </template>
-    </MessageDialog>
+      :channel-id="currentChannel.id"
+      :can-edit="canEdit"
+      data-test="delete-modal"
+      @delete="handleDelete"
+    />
     <VSpeedDial
       v-if="showClipboardSpeedDial"
       v-model="showClipboard"
@@ -359,9 +337,9 @@
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import ToolBar from 'shared/views/ToolBar';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
+  import RemoveChannelModal from 'shared/views/channel/RemoveChannelModal';
   import OfflineText from 'shared/views/OfflineText';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
-  import MessageDialog from 'shared/views/MessageDialog';
   import { RouteNames as ChannelRouteNames } from 'frontend/channelList/constants';
   import { titleMixin } from 'shared/mixins';
   import DraggableRegion from 'shared/views/draggable/DraggableRegion';
@@ -378,12 +356,12 @@
       SubmitToCommunityLibrarySidePanel,
       ProgressModal,
       ChannelTokenModal,
+      RemoveChannelModal,
       SyncResourcesModal,
       Clipboard,
       OfflineText,
       ContentNodeIcon,
       DraggablePlaceholder,
-      MessageDialog,
       SavingIndicator,
       QuickEditModal,
     },
@@ -581,13 +559,6 @@
       inviteCollaborators: 'Invite collaborators',
       shareToken: 'Share token',
 
-      // Delete channel section
-      deleteChannelButton: 'Delete channel',
-      deleteTitle: 'Delete this channel',
-      deletePrompt: 'This channel will be permanently deleted. This cannot be undone.',
-      deleteChannelWithCLWarning:
-        'This channel has been shared with the Community Library. Deleting it here will not remove it from the Community Library — it may still be approved or remain available there.',
-      cancel: 'Cancel',
       channelDeletedSnackbar: 'Channel deleted',
     },
   };

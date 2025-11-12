@@ -8,13 +8,6 @@ export function loadChannels({ commit }, params) {
     ...params,
     page_size: params.page_size || 25,
   };
-  
-  const isCommunityLibraryFilter = 
-    params.has_community_library_submission === true || 
-    params.has_community_library_submission === 'true';
-  if (!isCommunityLibraryFilter) {
-    extendedParams.deleted = Boolean(params.deleted) && params.deleted.toString() === 'true';
-  }
 
   const paramsSerializer = {
     indexes: null, // Handle arrays by providing the same query param multiple times

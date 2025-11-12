@@ -67,9 +67,11 @@ from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import create_change_tracker
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.viewsets.base import RequiredFilterSet
+from contentcuration.viewsets.base import RequiredFiltersFilterBackend
 from contentcuration.viewsets.base import RESTDestroyModelMixin
 from contentcuration.viewsets.base import RESTUpdateModelMixin
 from contentcuration.viewsets.base import ValuesViewset
+from contentcuration.viewsets.base import ValuesViewsetOrderingFilter
 from contentcuration.viewsets.common import ContentDefaultsSerializer
 from contentcuration.viewsets.common import JSONFieldDictSerializer
 from contentcuration.viewsets.common import SQCount
@@ -446,7 +448,7 @@ class ChannelViewSet(ValuesViewset):
     ordering = "-modified"
 
     field_map = channel_field_map
-    values = base_channel_values + ("edit", "view", "unpublished_changes", "has_community_library_submission")
+    values = base_channel_values + ("edit", "view", "unpublished_changes")
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -521,13 +523,6 @@ class ChannelViewSet(ValuesViewset):
 
         queryset = queryset.annotate(
             unpublished_changes=Exists(_unpublished_changes_query(OuterRef("id")))
-        )
-
-        # check if channel has any Community Library submissions
-        queryset = queryset.annotate(
-            has_community_library_submission=Exists(
-                CommunityLibrarySubmission.objects.filter(channel_id=OuterRef("id"))
-            )
         )
 
         return queryset
@@ -906,6 +901,19 @@ class ChannelViewSet(ValuesViewset):
 
         return Response(channel.published_data)
 
+    @action(
+        detail=True,
+        methods=["get"],
+        url_path="has_community_library_submission",
+        url_name="has-community-library-submission",
+    )
+    def has_community_library_submission(self, request, pk=None) -> Response:
+        channel = self.get_object()
+        has_submission = CommunityLibrarySubmission.objects.filter(
+            channel_id=channel.id
+        ).exists()
+        return Response({"has_community_library_submission": has_submission})
+
     def _channel_exists(self, channel_id) -> bool:
         """
         Check if a channel exists.
@@ -1066,12 +1074,6 @@ class AdminChannelFilter(BaseChannelFilter):
     has_community_library_submission = BooleanFilter(
         method="filter_has_community_library_submission",
     )
-
-    def filter_deleted(self, queryset, name, value):
-        has_cl_filter = self.request.query_params.get("has_community_library_submission")
-        if has_cl_filter and has_cl_filter.lower() == "true":
-            return queryset
-        return queryset.filter(deleted=value)
 
     def filter_keywords(self, queryset, name, value):
         keywords = value.split(" ")
