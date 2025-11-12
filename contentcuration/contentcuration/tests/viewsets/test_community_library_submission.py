@@ -166,6 +166,30 @@ class CRUDTestCase(StudioAPITestCase):
         # The explicitly set channel version should be ignored by the serializer
         self.assertEqual(created_submission.channel_version, 1)
 
+    def test_create_submission__publishing_channel(self):
+        self.client.force_authenticate(user=self.editor_user)
+
+        submission_metadata = self.new_submission_metadata
+
+        # Mark the channel referenced by the metadata as publishing
+        from contentcuration.models import Channel
+        from contentcuration.models import ContentNode
+
+        channel = Channel.objects.get(id=submission_metadata["channel"])
+        # Ensure main_tree exists; mark its publishing flag
+        main_tree = channel.main_tree or ContentNode.objects.get(
+            id=channel.main_tree_id
+        )
+        main_tree.publishing = True
+        main_tree.save()
+
+        response = self.client.post(
+            reverse("community-library-submission-list"),
+            submission_metadata,
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+
     def test_list_submissions__is_editor(self):
         self.client.force_authenticate(user=self.editor_user)
         response = self.client.get(

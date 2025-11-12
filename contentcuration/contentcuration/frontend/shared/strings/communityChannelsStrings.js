@@ -90,6 +90,11 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Submit to Community Library',
     context: 'The title of the "Submit to Community Library" panel',
   },
+  publishingMessage: {
+    message: 'Channel is being published',
+    context:
+      'Shown in the Submit to Community Library side panel when the channel is currently publishing',
+  },
   submittedPrimaryInfo: {
     message:
       'A previous version is still pending review. Reviewers will see the latest submission first.',
