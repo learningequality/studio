@@ -397,7 +397,8 @@
       channelDeletedSnackbar: 'Channel deleted',
       channelRemovedSnackbar: 'Channel removed',
       channelLanguageNotSetIndicator: 'No language set',
-      cancel: 'Cancel',
+      deleteChannel: 'Delete channel',
+      removeChannel: 'Remove channel',
     },
   };
 

@@ -109,7 +109,6 @@
         loading,
         hasCommunityLibrarySubmission,
         dialog,
-        fetchCommunityLibrarySubmissionStatus,
         handleSubmit,
         close,
         $tr,
