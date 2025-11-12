@@ -410,13 +410,6 @@
         }
       });
 
-      // Watch for version changes and refetch publishedData
-      watch(currentChannelVersion, (newVersion, oldVersion) => {
-        if (newVersion && newVersion !== oldVersion) {
-          fetchPublishedData();
-        }
-      });
-
       onMounted(async () => {
         await fetchLatestSubmission();
 
