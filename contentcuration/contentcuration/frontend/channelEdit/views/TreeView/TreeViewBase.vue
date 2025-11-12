@@ -468,11 +468,7 @@
         if (!this.currentChannel) {
           return false;
         }
-        return (
-          this.canManage &&
-          this.isPublished &&
-          !this.currentChannel.public
-        );
+        return this.canManage && this.isPublished && !this.currentChannel.public;
       },
       viewChannelDetailsLink() {
         return {

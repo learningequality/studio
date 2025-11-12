@@ -5,9 +5,9 @@ import VueRouter from 'vue-router';
 import cloneDeep from 'lodash/cloneDeep';
 
 import TreeViewBase from '../TreeViewBase';
+import { RouteNames } from '../../../constants';
 import storeFactory from 'shared/vuex/baseStore';
 import DraggablePlugin from 'shared/vuex/draggablePlugin';
-import { RouteNames } from '../../../constants';
 import { RouteNames as ChannelRouteNames } from 'frontend/channelList/constants';
 
 const localVue = createLocalVue();
@@ -140,7 +140,8 @@ const initWrapper = ({
       QuickEditModal: true,
       BaseMenu: {
         name: 'BaseMenu',
-        template: '<div><slot name="activator" :on="{}" /><div class="menu-content"><slot /></div></div>',
+        template:
+          '<div><slot name="activator" :on="{}" /><div class="menu-content"><slot /></div></div>',
       },
       KButton: {
         template: '<button class="share-button"><slot /></button>',
@@ -319,7 +320,7 @@ describe('TreeViewBase', () => {
       const wrapper = initWrapper({ getters });
       const menuItems = getShareMenuItems(wrapper);
       const submitItem = menuItems.wrappers.find(item =>
-        item.text().includes('Submit to community library')
+        item.text().includes('Submit to community library'),
       );
       expect(submitItem).toBeDefined();
     });
@@ -333,7 +334,7 @@ describe('TreeViewBase', () => {
       const wrapper = initWrapper({ getters });
       const menuItems = getShareMenuItems(wrapper);
       const submitItem = menuItems.wrappers.find(item =>
-        item.text().includes('Submit to community library')
+        item.text().includes('Submit to community library'),
       );
       expect(submitItem).toBeUndefined();
     });
@@ -347,7 +348,7 @@ describe('TreeViewBase', () => {
       const wrapper = initWrapper({ getters });
       const menuItems = getShareMenuItems(wrapper);
       const submitItem = menuItems.wrappers.find(item =>
-        item.text().includes('Submit to community library')
+        item.text().includes('Submit to community library'),
       );
       expect(submitItem).toBeUndefined();
     });
@@ -360,7 +361,7 @@ describe('TreeViewBase', () => {
       const wrapper = initWrapper({ getters });
       const menuItems = getShareMenuItems(wrapper);
       const inviteItem = menuItems.wrappers.find(item =>
-        item.text().includes('Invite collaborators')
+        item.text().includes('Invite collaborators'),
       );
       expect(inviteItem).toBeDefined();
     });
@@ -373,7 +374,7 @@ describe('TreeViewBase', () => {
       const wrapper = initWrapper({ getters });
       const menuItems = getShareMenuItems(wrapper);
       const inviteItem = menuItems.wrappers.find(item =>
-        item.text().includes('Invite collaborators')
+        item.text().includes('Invite collaborators'),
       );
       expect(inviteItem).toBeUndefined();
     });
@@ -410,13 +411,12 @@ describe('TreeViewBase', () => {
       const menuItems = getShareMenuItems(wrapper);
       expect(menuItems.length).toBe(3);
       expect(
-        menuItems.wrappers.some(item => item.text().includes('Submit to community library'))
+        menuItems.wrappers.some(item => item.text().includes('Submit to community library')),
       ).toBe(true);
       expect(menuItems.wrappers.some(item => item.text().includes('Invite collaborators'))).toBe(
-        true
+        true,
       );
       expect(menuItems.wrappers.some(item => item.text().includes('Share token'))).toBe(true);
     });
   });
 });
-
