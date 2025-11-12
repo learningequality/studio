@@ -893,7 +893,7 @@ class CRUDTestCase(StudioAPITestCase):
         channel_with_submission.save()
         submission = testdata.community_library_submission()
         submission.channel = channel_with_submission
-        submission.author = user 
+        submission.author = user
         submission.channel_version = channel_with_submission.version
         submission.save()
 
@@ -917,8 +917,12 @@ class CRUDTestCase(StudioAPITestCase):
 
         self.assertIsNotNone(channel_with_submission_data)
         self.assertIsNotNone(channel_without_submission_data)
-        self.assertTrue(channel_with_submission_data["has_community_library_submission"])
-        self.assertFalse(channel_without_submission_data["has_community_library_submission"])
+        self.assertTrue(
+            channel_with_submission_data["has_community_library_submission"]
+        )
+        self.assertFalse(
+            channel_without_submission_data["has_community_library_submission"]
+        )
 
     def test_create_channel(self):
         user = testdata.user()

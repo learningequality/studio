@@ -446,7 +446,12 @@ class ChannelViewSet(ValuesViewset):
     ordering = "-modified"
 
     field_map = channel_field_map
-    values = base_channel_values + ("edit", "view", "unpublished_changes", "has_community_library_submission")
+    values = base_channel_values + (
+        "edit",
+        "view",
+        "unpublished_changes",
+        "has_community_library_submission",
+    )
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -1068,7 +1073,9 @@ class AdminChannelFilter(BaseChannelFilter):
     )
 
     def filter_deleted(self, queryset, name, value):
-        has_cl_filter = self.request.query_params.get("has_community_library_submission")
+        has_cl_filter = self.request.query_params.get(
+            "has_community_library_submission"
+        )
         if has_cl_filter and has_cl_filter.lower() == "true":
             return queryset
         return queryset.filter(deleted=value)
