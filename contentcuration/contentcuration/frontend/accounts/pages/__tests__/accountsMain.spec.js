@@ -1,115 +1,162 @@
-import { mount } from '@vue/test-utils';
-import router from '../../router';
+import Vue from 'vue';
+import Vuex from 'vuex';
+import VueRouter from 'vue-router';
+import { render, screen, waitFor } from '@testing-library/vue';
+import { configure } from '@testing-library/dom';
+import userEvent from '@testing-library/user-event';
 import AccountsMain from '../AccountsMain.vue';
 
-async function makeWrapper() {
-  const wrapper = mount(AccountsMain, {
-    router,
-    stubs: ['GlobalSnackbar', 'PolicyModals'],
-    mocks: {
-      $store: {
-        state: {
-          connection: {
-            online: true,
-          },
-        },
-      },
+Vue.use(Vuex);
+Vue.use(VueRouter);
+
+configure({ testIdAttribute: 'data-test' });
+
+const loginMock = jest.fn();
+
+const makeRouter = (query = {}) => {
+  const router = new VueRouter({
+    mode: 'abstract',
+    routes: [
+      { path: '/signin', name: 'SignIn', component: AccountsMain },
+      { path: '/forgot', name: 'ForgotPassword', component: { render: h => h('div') } },
+      { path: '/create', name: 'Create', component: { render: h => h('div') } },
+      { path: '/account-not-activated', name: 'AccountNotActivated', component: { render: h => h('div') } },
+    ],
+  });
+  router.replace({ path: '/signin', query });
+  return router;
+};
+
+const makeStore = (overrides = {}) =>
+  new Vuex.Store({
+    state: { connection: { online: true }, ...(overrides.state || {}) },
+    actions: {
+      login: loginMock,
+      ...(overrides.actions || {}),
     },
-  });
-  await wrapper.setData({
-    username: 'test@test.com',
-    password: 'pass',
+    getters: { ...(overrides.getters || {}) },
   });
 
-  const login = jest.spyOn(wrapper.vm, 'login');
-  login.mockImplementation(() => Promise.resolve());
-  return [wrapper, login];
-}
+const renderComponent = ({ query, store } = {}) => {
+  const router = makeRouter(query);
+  const vuex = makeStore(store);
 
-function makeFailedPromise(statusCode) {
-  return () => {
-    return new Promise((resolve, reject) => {
-      reject({
-        response: {
-          status: statusCode || 500,
-        },
-      });
+  delete window.location;
+  const nextSearch = query?.next ? `?next=${query.next}` : '';
+  Object.defineProperty(window, 'location', {
+    value: {
+      href: `http://test.local/signin${nextSearch}`,
+      search: nextSearch,
+      assign: jest.fn(),
+      replace: jest.fn(),
+      reload: jest.fn(),
+    },
+    writable: true,
+  });
+
+  const utils = render(AccountsMain, {
+    routes: router,
+    store: vuex,
+    stubs: ['GlobalSnackbar', 'PolicyModals'],
+  });
+  return { router, ...utils };
+};
+
+const origLocation = window.location;
+beforeEach(() => {
+  jest.clearAllMocks();
+  loginMock.mockReset();
+});
+afterAll(() => {
+  window.location = origLocation;
+});
+
+describe('AccountsMain (VTL)', () => {
+  test('renders sign-in form', () => {
+    renderComponent({});
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
+  });
+
+  test('submitting empty form blocks login and shows validation', async () => {
+    loginMock.mockResolvedValue();
+    renderComponent({});
+    await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
+    expect(loginMock).not.toHaveBeenCalled();
+    const msgs = await screen.findAllByText(/this field is required/i);
+    expect(msgs.length).toBeGreaterThanOrEqual(1);
+  });
+
+  test('valid credentials call login', async () => {
+    loginMock.mockResolvedValue();
+    renderComponent({});
+    await userEvent.type(screen.getByLabelText(/email/i), 'test@test.com');
+    await userEvent.type(screen.getByLabelText(/password/i), 'password123');
+    await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
+    await waitFor(() => expect(loginMock).toHaveBeenCalled());
+  });
+
+  test('with ?next= shows banner and redirects after successful login', async () => {
+    loginMock.mockResolvedValue();
+    const nextUrl = '/test-next/';
+    const { router } = renderComponent({ query: { next: nextUrl } });
+
+    expect(screen.getByTestId('loginToProceed')).toBeInTheDocument();
+
+    await userEvent.type(screen.getByLabelText(/email/i), 'test@test.com');
+    await userEvent.type(screen.getByLabelText(/password/i), 'password123');
+    await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
+
+    await waitFor(() => {
+      expect(window.location.assign).toHaveBeenCalledWith(nextUrl);
     });
-  };
-}
-
-describe('main', () => {
-  let wrapper, login, loginToProceed;
-
-  beforeEach(async () => {
-    [wrapper, login] = await makeWrapper();
-    await wrapper.vm.$nextTick();
-    loginToProceed = wrapper.findAllComponents('[data-test="loginToProceed"]').at(0);
+    expect(router.currentRoute.name).toBe('SignIn');
   });
 
-  afterEach(() => {
-    if (wrapper) {
-      wrapper.destroy();
-    }
+  test('generic failure does not navigate', async () => {
+    loginMock.mockRejectedValue({ response: { status: 500 } });
+    const { router } = renderComponent({});
+    await userEvent.type(screen.getByLabelText(/email/i), 'test@test.com');
+    await userEvent.type(screen.getByLabelText(/password/i), 'password123');
+    await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
+
+    await waitFor(() => expect(loginMock).toHaveBeenCalled());
+    expect(router.currentRoute.name).toBe('SignIn');
   });
 
-  it('should trigger submit method when form is submitted', async () => {
-    expect(loginToProceed.isVisible()).toBe(false);
-    const submit = jest.spyOn(wrapper.vm, 'submit');
-    submit.mockImplementation(() => {});
-    await wrapper.findComponent({ ref: 'form' }).trigger('submit');
-    expect(submit).toHaveBeenCalled();
+  test('405 failure navigates to AccountNotActivated', async () => {
+    const store = {
+      actions: { login: jest.fn().mockRejectedValue({ response: { status: 405 } }) },
+    };
+    const { router } = renderComponent({ store });
+    await userEvent.type(screen.getByLabelText(/email/i), 'test@test.com');
+    await userEvent.type(screen.getByLabelText(/password/i), 'password123');
+    await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
+
+    await waitFor(() => expect(router.currentRoute.name).toBe('AccountNotActivated'));
   });
 
-  it('should call login with username and password provided', () => {
-    expect(loginToProceed.isVisible()).toBe(false);
-    wrapper.vm.submit();
-    expect(login).toHaveBeenCalled();
-  });
+  test('calls login with exact payload', async () => {
+    loginMock.mockResolvedValue();
+    const nextUrl = '/test-next/';
+    renderComponent({ query: { next: nextUrl } });
 
-  it('should fail if username is not provided', async () => {
-    expect(loginToProceed.isVisible()).toBe(false);
-    await wrapper.setData({ username: ' ' });
-    wrapper.vm.submit();
-    expect(login).not.toHaveBeenCalled();
-  });
+    await userEvent.type(screen.getByLabelText(/email/i), 'test@test.com');
+    await userEvent.type(screen.getByLabelText(/password/i), 'password123');
+    await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
 
-  it('should fail if password is not provided', async () => {
-    expect(loginToProceed.isVisible()).toBe(false);
-    await wrapper.setData({ password: '' });
-    wrapper.vm.submit();
-    expect(login).not.toHaveBeenCalled();
-  });
+    await waitFor(() => expect(loginMock).toHaveBeenCalled());
 
-  it('should set loginFailed if login fails', async () => {
-    expect(loginToProceed.isVisible()).toBe(false);
-    jest.spyOn(wrapper.vm, 'login').mockImplementation(makeFailedPromise());
-    await wrapper.vm.submit();
-    expect(wrapper.vm.loginFailed).toBe(true);
-  });
+    const [, payload] = loginMock.mock.calls[0];
 
-  it('should say account has not been activated if login returns 405', async () => {
-    expect(loginToProceed.isVisible()).toBe(false);
-    jest.spyOn(wrapper.vm, 'login').mockImplementation(makeFailedPromise());
-    await wrapper.vm.submit();
-    expect(wrapper.vm.loginFailed).toBe(true);
-  });
+    expect(payload).toMatchObject({ password: 'password123' });
 
-  it('should navigate to next url if next query param is set', async () => {
-    const testUrl = '/testnext/';
-    const location = new URL(`http://studio.time/?next=${testUrl}`);
+    const idMatches =
+      (payload.email && payload.email === 'test@test.com') ||
+      (payload.username && payload.username === 'test@test.com');
+    expect(idMatches).toBe(true);
 
-    delete window.location;
-    window.location = location;
-    window.location.assign = jest.fn();
-
-    wrapper.destroy();
-    [wrapper, login] = await makeWrapper();
-    await wrapper.vm.$nextTick();
-    loginToProceed = wrapper.findAll('[data-test="loginToProceed"]').at(0);
-    expect(loginToProceed.isVisible()).toBe(true);
-
-    await wrapper.vm.submit();
-    expect(window.location.assign.mock.calls[0][0]).toBe(testUrl);
+    expect(payload.next).toBe(undefined);
   });
 });
