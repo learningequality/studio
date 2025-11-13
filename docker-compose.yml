@@ -14,6 +14,8 @@ x-studio-environment:
     CELERY_BROKER_ENDPOINT: redis
     CELERY_RESULT_BACKEND_ENDPOINT: redis
     CELERY_REDIS_PASSWORD: ""
+    REMAP_SIGTERM: "SIGQUIT"
+    CELERY_WORKER_SOFT_SHUTDOWN_TIMEOUT: "28"
     PROBER_STUDIO_BASE_URL: http://studio-app:8080/{path}
 
 x-studio-worker:
