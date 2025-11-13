@@ -1063,10 +1063,6 @@ class CatalogViewSet(ReadOnlyValuesViewset):
 
 
 class AdminChannelFilter(BaseChannelFilter):
-    # Make filters optional for admin viewset
-    def __init__(self, *args, **kwargs):
-        kwargs["required"] = False
-        super().__init__(*args, **kwargs)
 
     latest_community_library_submission_status = CharFilter(
         method="filter_latest_community_library_submission_status"
