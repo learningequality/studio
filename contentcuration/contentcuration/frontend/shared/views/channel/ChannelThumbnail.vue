@@ -16,7 +16,7 @@
           >
             <VCard
               ref="thumbnail"
-              class="thumbnail"
+              class="thumbnail-wrapper"
               data-test="loading"
             >
               <VLayout
@@ -355,7 +355,7 @@
     border: 2px solid var(--v-grey-darken2);
   }
 
-  .thumbnail {
+  .thumbnail-wrapper {
     padding: 28% 0;
     /* stylelint-disable-next-line custom-property-pattern */
     border-color: var(--v-greyBorder-base) !important;
