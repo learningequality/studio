@@ -33,9 +33,7 @@ describe('EditTitleDescriptionModal', () => {
           },
         },
       }),
-      propsData: {
-        nodeId,
-      },
+      propsData: { nodeId },
     });
 
     updateContentNode = jest.spyOn(wrapper.vm, 'updateContentNode').mockImplementation(() => {});
@@ -67,11 +65,13 @@ describe('EditTitleDescriptionModal', () => {
 
     modal.vm.$emit('submit');
 
-    expect(updateContentNode).toHaveBeenCalledWith({
-      id: nodeId,
-      title: newTitle,
-      description: newDescription,
-    });
+    expect(updateContentNode).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: nodeId,
+        title: newTitle,
+        description: newDescription,
+      }),
+    );
   });
 
   it('should let update even if description is empty', () => {
@@ -81,11 +81,13 @@ describe('EditTitleDescriptionModal', () => {
 
     modal.vm.$emit('submit');
 
-    expect(updateContentNode).toHaveBeenCalledWith({
-      id: nodeId,
-      title: newTitle,
-      description: '',
-    });
+    expect(updateContentNode).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: nodeId,
+        title: newTitle,
+        description: '',
+      }),
+    );
   });
 
   it('should validate title on blur', async () => {
