@@ -1,134 +1,45 @@
 <template>
 
-  <div>
+  <div class="catalog-filters-wrapper">
+    <!-- Mobile: Filter button that opens SidePanelModal -->
     <KButton
-      v-if="$vuetify.breakpoint.xsOnly"
-      class="drawer-btn"
+      v-if="isMobile"
+      class="filter-button-mobile"
       :text="$tr('searchText')"
       appearance="raised-button"
-      @click.stop="drawer = true"
+      @click="openSidePanel"
     />
-    <CatalogFilterBar />
-    <VNavigationDrawer
-      v-model="drawer"
-      :permanent="$vuetify.breakpoint.smAndUp"
-      app
-      disable-route-watcher
-      :clipped="$vuetify.breakpoint.smAndUp"
-      :right="isRTL"
+
+    <!-- Desktop/Tablet: Permanent side panel as page section -->
+    <aside
+      v-if="!isMobile"
+      class="filter-panel-desktop"
+      :class="{ 'filter-panel-rtl': isRTL }"
     >
-      <VContainer class="filters pa-3">
-        <VToolbar
-          v-if="$vuetify.breakpoint.xsOnly"
-          color="transparent"
-          flat
-          dense
-        >
-          <VSpacer />
-          <VBtn
-            icon
-            flat
-            style="text-align: right"
-            @click="drawer = false"
-          >
-            <Icon icon="clear" />
-          </VBtn>
-        </VToolbar>
+      <CatalogFilterPanelContent />
+    </aside>
 
-        <!-- Keyword search -->
-        <KTextbox
-          v-model="keywordInput"
-          :label="$tr('searchLabel')"
-          :clearable="true"
-          data-test="keywords"
-          @input="setKeywords"
-        />
+    <!-- Main content area that includes CatalogFilterBar and the list -->
+    <div
+      class="main-content-area"
+      :class="{ 'with-sidebar': !isMobile }"
+    >
+      <CatalogFilterBar />
+      <slot></slot>
+    </div>
 
-        <!-- Language -->
-        <LanguageFilter
-          v-model="languages"
-          :menu-props="menuProps"
-        />
-
-        <!-- License (attach to self to keep in notranslate class) -->
-        <MultiSelect
-          v-if="!libraryMode"
-          v-model="licenses"
-          :items="licenseOptions"
-          :label="$tr('licenseLabel')"
-        />
-
-        <!-- Formats (attach to self to keep in notranslate class) -->
-        <MultiSelect
-          v-model="kinds"
-          :items="kindOptions"
-          :label="$tr('formatLabel')"
-        />
-
-        <!-- Starred -->
-        <Checkbox
-          v-if="loggedIn"
-          v-model="bookmark"
-          :label="$tr('starredLabel')"
-        />
-
-        <!-- Includes -->
-        <div class="subheading">
-          {{ $tr('includesLabel') }}
-        </div>
-
-        <div :style="{ display: 'flex', alignItems: 'center' }">
-          <Checkbox
-            v-model="coach"
-            aria-describedby="tooltip-coach"
-            :label="$tr('coachLabel')"
-          />
-          <HelpTooltip
-            :text="$tr('coachDescription')"
-            maxWidth="250px"
-            tooltipId="tooltip-coach"
-          />
-        </div>
-
-        <Checkbox
-          v-model="subtitles"
-          :label="$tr('subtitlesLabel')"
-        />
-        <KRouterLink
-          class="qa-link"
-          :to="faqLink"
-          :text="$tr('frequentlyAskedQuestionsLink')"
-          appearance="basic-link"
-          iconAfter="openNewTab"
-          target="_blank"
-        />
-      </VContainer>
-      <VFooter
-        class="pb-3 pt-2 px-4"
-        color="transparent"
-        height="100"
-      >
-        <div>
-          <KImg
-            :src="require('shared/images/le-logo.svg')"
-            altText="Learning Equality logo"
-            :aspectRatio="'3:2'"
-            scaleType="contain"
-            :appearanceOverrides="{
-              width: '90px',
-              height: '60px',
-              marginBottom: '8px',
-              marginRight: '8px',
-            }"
-          />
-          <KExternalLink
-            href="https://learningequality.org/"
-            :text="$tr('copyright', { year: new Date().getFullYear() })"
-            openInNewTab
-          />
-        </div>
-      </VFooter>
-    </VNavigationDrawer>
+    <!-- Mobile: SidePanelModal for filters (full width) -->
+    <SidePanelModal
+      v-if="isMobile && showMobilePanel"
+      alignment="left"
+      fullscreen
+      @closePanel="closeSidePanel"
+    >
+      <CatalogFilterPanelContent
+        :show-close-button="true"
+        @close="closeSidePanel"
+      />
+    </SidePanelModal>
   </div>
 
 </template>
@@ -136,99 +47,45 @@
 
 <script>
 
-  import { mapGetters } from 'vuex';
-  import debounce from 'lodash/debounce';
-  import { RouteNames } from '../../constants';
+  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import CatalogFilterBar from './CatalogFilterBar';
-  import { catalogFilterMixin } from './mixins';
-  import LanguageFilter from './components/LanguageFilter';
-  import MultiSelect from 'shared/views/form/MultiSelect';
-  import { constantsTranslationMixin } from 'shared/mixins';
-  import Checkbox from 'shared/views/form/Checkbox';
-  import HelpTooltip from 'shared/views/HelpTooltip';
-  import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-
-  const excludedKinds = new Set([ContentKindsNames.TOPIC, ContentKindsNames.H5P]);
+  import CatalogFilterPanelContent from './CatalogFilterPanelContent';
+  import SidePanelModal from 'shared/views/SidePanelModal';
 
   export default {
     name: 'CatalogFilters',
     components: {
-      LanguageFilter,
-      Checkbox,
-      HelpTooltip,
-      MultiSelect,
       CatalogFilterBar,
+      CatalogFilterPanelContent,
+      SidePanelModal,
     },
-    mixins: [constantsTranslationMixin, catalogFilterMixin],
+    setup() {
+      const { windowIsSmall } = useKResponsiveWindow();
+
+      return {
+        isMobile: windowIsSmall,
+      };
+    },
     data() {
       return {
-        drawer: false,
-        keywordInput: '',
+        showMobilePanel: false,
       };
     },
     computed: {
-      ...mapGetters(['loggedIn']),
       isRTL() {
         return window.isRTL;
       },
-      libraryMode() {
-        return window.libraryMode;
-      },
-      faqLink() {
-        return { name: RouteNames.CATALOG_FAQ };
-      },
-      menuProps() {
-        return { offsetY: true, maxHeight: 270 };
-      },
-      kindOptions() {
-        return (window.publicKinds || [])
-          .map(kind => {
-            if (!excludedKinds.has(kind)) {
-              return {
-                value: kind,
-                text: this.translateConstant(kind),
-              };
-            }
-          })
-          .filter(Boolean);
-      },
-      licenseOptions() {
-        return (window.publicLicenses || []).map(id => {
-          return {
-            value: Number(id),
-            text: this.translateLicense(Number(id)),
-          };
-        });
-      },
-      setKeywords() {
-        return debounce(this.updateKeywords, 500);
-      },
-    },
-    watch: {
-      keywords() {
-        this.keywordInput = this.keywords;
-      },
-    },
-    beforeMount() {
-      this.keywordInput = this.$route.query.keywords;
     },
     methods: {
-      updateKeywords() {
-        this.keywords = this.keywordInput;
+      openSidePanel() {
+        this.showMobilePanel = true;
+      },
+      closeSidePanel() {
+        this.showMobilePanel = false;
       },
     },
     $trs: {
-      searchLabel: 'Keywords',
-      coachLabel: 'Resources for coaches',
-      subtitlesLabel: 'Captions or subtitles',
-      starredLabel: 'Starred',
-      licenseLabel: 'Licenses',
-      formatLabel: 'Formats',
-      includesLabel: 'Display only channels with',
       searchText: 'Search',
-      coachDescription: 'Resources for coaches are only visible to coaches in Kolibri',
-      frequentlyAskedQuestionsLink: 'Frequently asked questions',
-      copyright: '© {year} Learning Equality',
     },
   };
 
@@ -237,33 +94,64 @@
 
 <style lang="scss" scoped>
 
-  .v-input--checkbox {
-    margin: 0;
+  .catalog-filters-wrapper {
+    display: flex;
+    min-height: 100vh;
   }
 
-  ::v-deep .v-messages {
-    display: none;
+  .filter-button-mobile {
+    margin: 16px;
   }
 
-  .subheading {
-    margin-top: 20px;
-    margin-bottom: 5px;
-    font-weight: bold;
-    color: gray;
+  .filter-panel-desktop {
+    position: fixed;
+    left: 0;
+    z-index: 7;
+    width: 335px;
+    overflow-y: auto;
+
+    &.filter-panel-rtl {
+      right: 0;
+      left: auto;
+      border-left: 1px solid #e0e0e0;
+    }
   }
 
-  .filters {
-    width: 100%;
-    height: calc(100% - 100px);
-    overflow: auto;
+  .main-content-area {
+    min-height: calc(100vh - 64px);
+
+    &.with-sidebar {
+      margin-left: 335px; /* Channels start from 335px from left */
+    }
   }
 
-  .qa-link {
-    margin-top: 24px;
+  // RTL support
+  [dir='rtl'] .main-content-area.with-sidebar {
+    margin-right: 346px;
+    margin-left: 0;
   }
 
-  .drawer-btn {
-    margin-top: 10px;
+  // Mobile layout
+  @media (max-width: 600px) {
+    .catalog-filters-wrapper {
+      flex-direction: column;
+    }
+
+    .main-content-area.with-sidebar {
+      margin-right: 0;
+      margin-left: 0;
+    }
+
+    .filter-panel-desktop {
+      display: none;
+    }
+
+    .filter-button-mobile {
+      align-self: flex-start;
+      width: auto; /* Ensure button doesn't stretch on mobile either */
+    }
   }
+
+  // Mobile full-width modal is handled by SidePanelModal with fullscreen prop
 
 </style>
