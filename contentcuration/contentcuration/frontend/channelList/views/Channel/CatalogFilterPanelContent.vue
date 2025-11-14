@@ -10,6 +10,7 @@
         :label="$tr('searchLabel')"
         :clearable="true"
         data-test="keywords"
+        :appearanceOverrides="{ maxWidth: '100%' }"
         @input="setKeywords"
       />
 
