@@ -118,6 +118,7 @@
   }
 
   .main-content-area {
+    flex: 1;
     min-height: calc(100vh - 64px);
 
     &.with-sidebar {
