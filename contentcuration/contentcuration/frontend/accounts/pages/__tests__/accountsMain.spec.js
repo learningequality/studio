@@ -20,7 +20,11 @@ const makeRouter = (query = {}) => {
       { path: '/signin', name: 'SignIn', component: AccountsMain },
       { path: '/forgot', name: 'ForgotPassword', component: { render: h => h('div') } },
       { path: '/create', name: 'Create', component: { render: h => h('div') } },
-      { path: '/account-not-activated', name: 'AccountNotActivated', component: { render: h => h('div') } },
+      {
+        path: '/account-not-activated',
+        name: 'AccountNotActivated',
+        component: { render: h => h('div') },
+      },
     ],
   });
   router.replace({ path: '/signin', query });
