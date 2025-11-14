@@ -109,12 +109,17 @@
         height="100"
       >
         <div>
-          <VImg
-            height="60"
-            width="90"
-            class="mb-1 mr-2"
-            contain
+          <KImg
             :src="require('shared/images/le-logo.svg')"
+            altText="Learning Equality logo"
+            :aspectRatio="'3:2'"
+            scaleType="contain"
+            :appearanceOverrides="{
+              width: '90px',
+              height: '60px',
+              marginBottom: '8px',
+              marginRight: '8px',
+            }"
           />
           <KExternalLink
             href="https://learningequality.org/"
