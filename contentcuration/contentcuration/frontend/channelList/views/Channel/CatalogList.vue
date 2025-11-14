@@ -1,7 +1,7 @@
 <template>
 
-  <div>
-    <CatalogFilters />
+  <CatalogFilters>
+    <!-- Offline banner -->
     <VSlideYTransition>
       <ToolBar
         v-show="offline"
@@ -12,9 +12,10 @@
         <OfflineText />
       </ToolBar>
     </VSlideYTransition>
+
     <VContainer
       fluid
-      :class="$vuetify.breakpoint.xsOnly ? 'pa-0' : 'pa-4'"
+      :class="isMobile ? 'pa-0' : 'pa-4'"
       :style="`margin-top: ${offline ? 48 : 0}`"
     >
       <LoadingText v-if="loading" />
@@ -83,7 +84,7 @@
       <BottomBar
         v-if="selecting"
         data-test="toolbar"
-        :appearanceOverrides="{ height: $vuetify.breakpoint.xsOnly ? '72px' : '56px' }"
+        :appearanceOverrides="{ height: isMobile ? '72px' : '56px' }"
       >
         <div class="mx-2">
           {{ $tr('channelSelectionCount', { count: selectedCount }) }}
@@ -115,7 +116,7 @@
         </KButton>
       </BottomBar>
     </VContainer>
-  </div>
+  </CatalogFilters>
 
 </template>
 
@@ -128,6 +129,7 @@
   import isEqual from 'lodash/isEqual';
   import sortBy from 'lodash/sortBy';
   import union from 'lodash/union';
+  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { RouteNames } from '../../constants';
   import CatalogFilters from './CatalogFilters';
   import ChannelItem from './ChannelItem';
@@ -153,24 +155,19 @@
       OfflineText,
     },
     mixins: [channelExportMixin, constantsTranslationMixin],
+    setup() {
+      const { windowIsSmall } = useKResponsiveWindow();
+
+      return {
+        isMobile: windowIsSmall,
+      };
+    },
     data() {
       return {
         loading: true,
         loadError: false,
         selecting: false,
-
-        /**
-         * jayoshih: router guard makes it difficult to track
-         * differences between previous query params and new
-         * query params, so just track it manually
-         */
         previousQuery: this.$route.query,
-
-        /**
-         * jayoshih: using excluded logic here instead of selected
-         * to account for selections across pages (some channels
-         * not in current page)
-         */
         excluded: [],
       };
     },
@@ -194,8 +191,8 @@
         },
         set(selected) {
           this.excluded = union(
-            this.excluded.filter(id => !selected.includes(id)), // Remove selected items
-            difference(this.page.results, selected), // Add non-selected items
+            this.excluded.filter(id => !selected.includes(id)),
+            difference(this.page.results, selected),
           );
         },
       },
@@ -206,8 +203,6 @@
         return RouteNames.CATALOG_DETAILS;
       },
       channels() {
-        // Sort again by the same ordering used on the backend - name.
-        // Have to do this because of how we are getting the object data via getChannels.
         return sortBy(this.getChannels(this.page.results), 'name');
       },
       selectedCount() {
@@ -220,7 +215,6 @@
           this.loading = true;
           this.debouncedSearch();
 
-          // Reset selection mode if a filter is changed (ignore page)
           const ignoreDefaults = { page: 0 };
           const toQuery = { ...to.query, ...ignoreDefaults };
           const fromQuery = { ...this.previousQuery, ...ignoreDefaults };
@@ -288,7 +282,7 @@
       cancelButton: 'Cancel',
       downloadButton: 'Download',
       downloadCSV: 'Download CSV',
-      downloadPDF: 'Download PDF', // Kevin demanded NO DOTS!!!
+      downloadPDF: 'Download PDF',
       downloadingMessage: 'Download started',
       channelSelectionCount:
         '{count, plural,\n =1 {# channel selected}\n other {# channels selected}}',
@@ -301,9 +295,41 @@
 
 <style lang="scss" scoped>
 
+  .catalog-page-wrapper {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  .catalog-main-content {
+    flex: 1;
+    min-height: calc(100vh - 64px);
+
+    &.with-sidebar {
+      margin-left: 346px; // Width of the side panel
+    }
+  }
+
+  // RTL support
+  [dir='rtl'] .catalog-main-content.with-sidebar {
+    margin-right: 346px;
+    margin-left: 0;
+  }
+
   .list-wrapper {
     max-width: 1080px;
     margin: 0 auto;
+  }
+
+  // Mobile layout
+  @media (max-width: 600px) {
+    .catalog-page-wrapper {
+      flex-direction: column;
+    }
+
+    .catalog-main-content.with-sidebar {
+      margin-right: 0;
+      margin-left: 0;
+    }
   }
 
 </style>
