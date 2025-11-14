@@ -128,7 +128,7 @@
 
   // RTL support
   [dir='rtl'] .main-content-area.with-sidebar {
-    margin-right: 346px;
+    margin-right: 335px;
     margin-left: 0;
   }
 
@@ -145,6 +145,7 @@
 
     .filter-panel-desktop {
       display: none;
+      height: calc(100vh - 64px);
     }
 
     .filter-button-mobile {
