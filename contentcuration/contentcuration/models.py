@@ -76,6 +76,8 @@ from contentcuration.db.models.functions import ArrayRemove
 from contentcuration.db.models.functions import Unnest
 from contentcuration.db.models.manager import CustomContentNodeTreeManager
 from contentcuration.db.models.manager import CustomManager
+from contentcuration.fields import TransitionUUIDPrimaryKey
+from contentcuration.fields import TransitionUUIDForeignKey
 from contentcuration.utils.cache import delete_public_channel_cache_keys
 from contentcuration.utils.parser import load_json_string
 from contentcuration.viewsets.sync.constants import ALL_CHANGES
@@ -1416,12 +1418,13 @@ class UserHistory(models.Model):
 class ChannelSet(models.Model):
     # NOTE: this is referred to as "channel collections" on the front-end, but we need to call it
     # something else as there is already a ChannelCollection model on the front-end
-    id = UUIDField(primary_key=True, default=uuid.uuid4)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     name = models.CharField(max_length=200, blank=True)
     description = models.CharField(max_length=400, blank=True)
     public = models.BooleanField(default=False, db_index=True)
     editors = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
+        through='ChannelSetEditors',
         related_name="channel_sets",
         verbose_name="editors",
         help_text="Users with edit rights",
@@ -1476,6 +1479,26 @@ class ChannelSet(models.Model):
 
         if self.secret_token:
             self.secret_token.delete()
+
+
+class ChannelSetEditors(models.Model):
+    """
+    Explicit through model for ChannelSet.editors M2M relationship.
+    Created for UUID migration - now using native UUID ForeignKey.
+    """
+    channelset = models.ForeignKey(
+        ChannelSet,
+        on_delete=models.CASCADE,
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        db_column='user_id',
+    )
+
+    class Meta:
+        db_table = 'contentcuration_channelset_editors'
+        unique_together = ['channelset', 'user']
 
 
 class ContentTag(models.Model):
