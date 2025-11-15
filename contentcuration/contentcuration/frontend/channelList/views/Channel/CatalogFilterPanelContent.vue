@@ -241,7 +241,7 @@
 
   .panel-footer {
     padding: 16px;
-    text-align: center;
+    text-align: start;
   }
 
 </style>
