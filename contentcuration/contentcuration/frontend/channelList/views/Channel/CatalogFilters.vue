@@ -108,6 +108,7 @@
     left: 0;
     z-index: 7;
     width: 335px;
+    height: 100vh; /* Make desktop panel full height */
     overflow-y: auto;
 
     &.filter-panel-rtl {
@@ -145,15 +146,12 @@
 
     .filter-panel-desktop {
       display: none;
-      height: calc(100vh - 64px);
     }
 
     .filter-button-mobile {
       align-self: flex-start;
-      width: auto; /* Ensure button doesn't stretch on mobile either */
+      width: auto;
     }
   }
-
-  // Mobile full-width modal is handled by SidePanelModal with fullscreen prop
 
 </style>
