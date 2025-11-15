@@ -200,7 +200,7 @@
   .filter-panel-content {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    height: calc(100vh - 100px);
   }
 
   .mobile-header {
@@ -217,6 +217,7 @@
 
   .filters-container {
     flex: 1;
+    min-height: 0;
     padding: 16px;
     overflow-y: auto;
   }
