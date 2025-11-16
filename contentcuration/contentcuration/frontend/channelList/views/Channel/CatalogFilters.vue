@@ -104,7 +104,6 @@
   }
 
   .filter-panel-desktop {
-    position: fixed;
     left: 0;
     z-index: 7;
     width: 335px;
@@ -120,19 +119,7 @@
   .main-content-area {
     flex: 1;
     min-height: calc(100vh - 64px);
-
-    &.with-sidebar {
-      margin-left: 335px; /* Channels start from 335px from left */
-    }
   }
-
-  // RTL support
-  [dir='rtl'] .main-content-area.with-sidebar {
-    margin-right: 335px;
-    margin-left: 0;
-  }
-
-  // Mobile layout
   @media (max-width: 600px) {
     .catalog-filters-wrapper {
       flex-direction: column;
