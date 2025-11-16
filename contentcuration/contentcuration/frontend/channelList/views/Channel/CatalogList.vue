@@ -315,15 +315,5 @@
   }
 
   // Mobile layout
-  @media (max-width: 600px) {
-    .catalog-page-wrapper {
-      flex-direction: column;
-    }
-
-    .catalog-main-content.with-sidebar {
-      margin-right: 0;
-      margin-left: 0;
-    }
-  }
 
 </style>
