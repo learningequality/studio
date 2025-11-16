@@ -1,7 +1,6 @@
 <template>
 
   <CatalogFilters>
-    <!-- Offline banner -->
     <VSlideYTransition>
       <ToolBar
         v-show="offline"
@@ -12,7 +11,6 @@
         <OfflineText />
       </ToolBar>
     </VSlideYTransition>
-
     <VContainer
       fluid
       class="pb-4 pl-4 pr-4"
@@ -167,7 +165,19 @@
         loading: true,
         loadError: false,
         selecting: false,
+
+        /**
+         * jayoshih: router guard makes it difficult to track
+         * differences between previous query params and new
+         * query params, so just track it manually
+         */
         previousQuery: this.$route.query,
+
+        /**
+         * jayoshih: using excluded logic here instead of selected
+         * to account for selections across pages (some channels
+         * not in current page)
+         */
         excluded: [],
       };
     },
@@ -191,8 +201,8 @@
         },
         set(selected) {
           this.excluded = union(
-            this.excluded.filter(id => !selected.includes(id)),
-            difference(this.page.results, selected),
+            this.excluded.filter(id => !selected.includes(id)), // Remove selected items
+            difference(this.page.results, selected), // Add non-selected items
           );
         },
       },
@@ -203,6 +213,8 @@
         return RouteNames.CATALOG_DETAILS;
       },
       channels() {
+        // Sort again by the same ordering used on the backend - name.
+        // Have to do this because of how we are getting the object data via getChannels.
         return sortBy(this.getChannels(this.page.results), 'name');
       },
       selectedCount() {
@@ -215,6 +227,7 @@
           this.loading = true;
           this.debouncedSearch();
 
+          // Reset selection mode if a filter is changed (ignore page)
           const ignoreDefaults = { page: 0 };
           const toQuery = { ...to.query, ...ignoreDefaults };
           const fromQuery = { ...this.previousQuery, ...ignoreDefaults };
@@ -282,7 +295,7 @@
       cancelButton: 'Cancel',
       downloadButton: 'Download',
       downloadCSV: 'Download CSV',
-      downloadPDF: 'Download PDF',
+      downloadPDF: 'Download PDF', // Kevin demanded NO DOTS!!!
       downloadingMessage: 'Download started',
       channelSelectionCount:
         '{count, plural,\n =1 {# channel selected}\n other {# channels selected}}',
