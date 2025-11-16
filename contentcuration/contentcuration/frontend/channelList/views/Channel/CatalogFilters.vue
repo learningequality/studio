@@ -35,10 +35,7 @@
       fullscreen
       @closePanel="closeSidePanel"
     >
-      <CatalogFilterPanelContent
-        :show-close-button="true"
-        @close="closeSidePanel"
-      />
+      <CatalogFilterPanelContent />
     </SidePanelModal>
   </div>
 
