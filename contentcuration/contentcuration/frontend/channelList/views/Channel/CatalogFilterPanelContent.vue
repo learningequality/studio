@@ -203,19 +203,7 @@
   .filter-panel-content {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 120px);
-  }
-
-  .mobile-header {
-    display: flex;
-    align-items: center;
-    padding: 16px;
-
-    .mobile-title {
-      margin: 0 0 0 16px;
-      font-size: 1.25rem;
-      font-weight: 500;
-    }
+    height: calc(100vh - 96px);
   }
 
   .filters-container {

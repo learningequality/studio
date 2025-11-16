@@ -100,7 +100,8 @@
   }
 
   .filter-panel-desktop {
-    top: 64px;
+    position: fixed;
+    top: 100px;
     left: 0;
     width: 335px;
     overflow-y: auto;
@@ -108,6 +109,12 @@
 
   .main-content-area {
     flex: 1;
+    width: 100%;
+    min-height: 100vh;
+
+    &.with-sidebar {
+      margin-left: 335px;
+    }
   }
   @media (max-width: 600px) {
     .catalog-filters-wrapper {
