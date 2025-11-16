@@ -96,7 +96,6 @@
 
   .catalog-filters-wrapper {
     display: flex;
-    min-height: 100vh;
   }
 
   .filter-button-mobile {
@@ -107,18 +106,11 @@
     left: 0;
     z-index: 7;
     width: 335px;
-    height: 100vh; /* Make desktop panel full height */
     overflow-y: auto;
-
-    &.filter-panel-rtl {
-      right: 0;
-      left: auto;
-    }
   }
 
   .main-content-area {
     flex: 1;
-    min-height: calc(100vh - 64px);
   }
   @media (max-width: 600px) {
     .catalog-filters-wrapper {

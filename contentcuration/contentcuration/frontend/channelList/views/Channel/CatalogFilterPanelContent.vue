@@ -200,7 +200,7 @@
   .filter-panel-content {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 100px);
+    height: calc(100vh - 120px);
   }
 
   .mobile-header {

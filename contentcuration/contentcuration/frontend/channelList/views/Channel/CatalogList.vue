@@ -303,17 +303,11 @@
   .catalog-main-content {
     flex: 1;
     min-height: calc(100vh - 64px);
-
-    &.with-sidebar {
-      margin-left: 346px; // Width of the side panel
-    }
   }
 
   .list-wrapper {
     max-width: 1080px;
     margin: 0 auto;
   }
-
-  // Mobile layout
 
 </style>
