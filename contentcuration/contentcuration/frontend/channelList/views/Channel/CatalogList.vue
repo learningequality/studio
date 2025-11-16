@@ -309,12 +309,6 @@
     }
   }
 
-  // RTL support
-  [dir='rtl'] .catalog-main-content.with-sidebar {
-    margin-right: 346px;
-    margin-left: 0;
-  }
-
   .list-wrapper {
     max-width: 1080px;
     margin: 0 auto;
