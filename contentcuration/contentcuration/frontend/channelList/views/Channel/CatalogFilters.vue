@@ -100,8 +100,8 @@
   }
 
   .filter-panel-desktop {
+    top: 64px;
     left: 0;
-    z-index: 7;
     width: 335px;
     overflow-y: auto;
   }
