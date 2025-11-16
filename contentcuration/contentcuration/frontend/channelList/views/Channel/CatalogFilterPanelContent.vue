@@ -43,7 +43,10 @@
       />
 
       <!-- Includes -->
-      <div class="subheading">
+      <div
+        class="subheading"
+        :style="{ color: $themeTokens.annotation }"
+      >
         {{ $tr('includesLabel') }}
       </div>
 
@@ -232,7 +235,6 @@
     margin-top: 20px;
     margin-bottom: 5px;
     font-weight: bold;
-    color: gray;
   }
 
   .qa-link {
