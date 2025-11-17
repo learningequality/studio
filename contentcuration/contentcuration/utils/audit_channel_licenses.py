@@ -24,15 +24,20 @@ from contentcuration.viewsets.sync.utils import generate_update_event
 logger = logging.getLogger(__name__)
 
 
+def get_content_db_path(channel_id, version=None):
+    
+    if version is not None:
+        return os.path.join(settings.DB_ROOT, f"{channel_id}-{version}.sqlite3")
+    return os.path.join(settings.DB_ROOT, f"{channel_id}.sqlite3")
+
+
 def _get_content_database_path(channel_id, channel_version):
     """
     Get the path to the content database for a channel version.
     Returns the versioned database path if it exists, otherwise the unversioned path.
     """
-    versioned_db_path = os.path.join(
-        settings.DB_ROOT, f"{channel_id}-{channel_version}.sqlite3"
-    )
-    unversioned_db_path = os.path.join(settings.DB_ROOT, f"{channel_id}.sqlite3")
+    versioned_db_path = get_content_db_path(channel_id, channel_version)
+    unversioned_db_path = get_content_db_path(channel_id)
 
     if storage.exists(versioned_db_path):
         return versioned_db_path
@@ -60,9 +65,10 @@ def _process_content_database(channel_id, channel_version, published_data_versio
     
     db_path = _get_content_database_path(channel_id, channel_version)
     if not db_path:
-        if included_licenses is None:
-            included_licenses = []
-        return included_licenses, None
+        raise FileNotFoundError(
+            f"Content database not found for channel {channel_id} version {channel_version}. "
+            "This indicates missing or corrupted channel data."
+        )
 
     with using_temp_migrated_content_database(db_path):
         if included_licenses is None:
@@ -74,10 +80,11 @@ def _process_content_database(channel_id, channel_version, published_data_versio
                 .distinct()
             )
 
-            license_ids = []
-            for license_name in license_names:
-                studio_license = License.objects.get(license_name=license_name)
-                license_ids.append(studio_license.id)
+            license_ids = list(
+                License.objects.filter(license_name__in=license_names).values_list(
+                    "id", flat=True
+                )
+            )
 
             included_licenses = sorted(set(license_ids))
 
@@ -144,7 +151,7 @@ def check_invalid_licenses(included_licenses):
     return invalid_license_ids
 
 
-def save_audit_results(
+def _save_audit_results(
     channel,
     published_data_version,
     invalid_license_ids,
@@ -194,13 +201,7 @@ def audit_channel_licenses(channel_id, user_id):
     
     invalid_license_ids = check_invalid_licenses(included_licenses)
 
-    if special_permissions_license_ids is None:
-        save_audit_results(
-            channel, published_data_version, invalid_license_ids, None, user_id
-        )
-        return
-
-    save_audit_results(
+    _save_audit_results(
         channel,
         published_data_version,
         invalid_license_ids,

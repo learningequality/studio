@@ -48,6 +48,7 @@ from contentcuration.utils.assessment.qti.archive import QTIExerciseGenerator
 from contentcuration.utils.assessment.qti.imsmanifest import (
     get_assessment_ids_from_manifest,
 )
+from contentcuration.utils.audit_channel_licenses import get_content_db_path
 from contentcuration.utils.cache import delete_public_channel_cache_keys
 from contentcuration.utils.files import create_thumbnail_from_base64
 from contentcuration.utils.files import get_thumbnail_encoding
@@ -854,12 +855,12 @@ def save_export_database(channel_id, version, is_draft_version=False):
     logging.debug("Saving export database")
     current_export_db_location = get_active_content_database()
     target_paths = [
-        os.path.join(settings.DB_ROOT, "{}-{}.sqlite3".format(channel_id, version))
+        get_content_db_path(channel_id, version)
     ]
     # Only create non-version path if not is_draft_version
     if not is_draft_version:
         target_paths.append(
-            os.path.join(settings.DB_ROOT, "{id}.sqlite3".format(id=channel_id))
+            get_content_db_path(channel_id)
         )
 
     for target_export_db_location in target_paths:
@@ -1102,13 +1103,8 @@ def ensure_versioned_database_exists(channel_id, channel_version):
     if channel_version == 0:
         raise ValueError("An unpublished channel cannot have a versioned database.")
 
-    unversioned_db_storage_path = os.path.join(
-        settings.DB_ROOT, "{id}.sqlite3".format(id=channel_id)
-    )
-    versioned_db_storage_path = os.path.join(
-        settings.DB_ROOT,
-        "{id}-{version}.sqlite3".format(id=channel_id, version=channel_version),
-    )
+    unversioned_db_storage_path = get_content_db_path(channel_id)
+    versioned_db_storage_path = get_content_db_path(channel_id, channel_version)
 
     if not storage.exists(versioned_db_storage_path):
         if not storage.exists(unversioned_db_storage_path):

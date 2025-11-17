@@ -1,3 +1,9 @@
+"""
+All task functions decorated with `app.task` transform the function to an instance of
+`contentcuration.utils.celery.tasks.CeleryTask`. See the methods of that class for enqueuing and fetching results of
+the tasks.
+"""
+
 import logging
 import time
 

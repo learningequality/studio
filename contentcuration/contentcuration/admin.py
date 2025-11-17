@@ -1,12 +1,10 @@
 from django.contrib import admin
 
 from contentcuration.models import AssessmentItem
-from contentcuration.models import AuditedSpecialPermissionsLicense
 from contentcuration.models import License
 from contentcuration.models import User
 
 admin.site.register(AssessmentItem)
-admin.site.register(AuditedSpecialPermissionsLicense)
 admin.site.register(License)
 
 
