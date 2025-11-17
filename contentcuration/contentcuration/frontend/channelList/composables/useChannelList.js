@@ -77,33 +77,6 @@ export function useChannelList(options = {}) {
     window.location.href = window.Urls.channel(channelId);
   };
 
-  const channelDetailsLink = channel => {
-    return {
-      name: RouteNames.CHANNEL_DETAILS,
-      query: {
-        ...route.query,
-        last: route.name,
-      },
-      params: {
-        channelId: channel.id,
-      },
-    };
-  };
-
-  const channelEditLink = channel => {
-    return {
-      name: RouteNames.CHANNEL_EDIT,
-      query: {
-        ...route.query,
-        last: route.name,
-      },
-      params: {
-        channelId: channel.id,
-        tab: 'edit',
-      },
-    };
-  };
-
   onMounted(() => {
     loadData();
   });
@@ -119,7 +92,5 @@ export function useChannelList(options = {}) {
     loadData,
     newChannel,
     goToChannel,
-    channelDetailsLink,
-    channelEditLink,
   };
 }
