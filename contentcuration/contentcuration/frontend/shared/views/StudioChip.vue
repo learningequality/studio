@@ -87,7 +87,7 @@
     align-items: center;
     height: 26px;
     min-height: 26px;
-    padding: 2px 8px;
+    padding: 2px 4px 2px 8px;
     margin: 5px;
     font-size: 13px;
     white-space: nowrap;
