@@ -23,6 +23,12 @@
         <KIcon
           icon="delete"
           :color="$themePalette.grey.v_400"
+          class="close-icon default-icon"
+        />
+        <KIcon
+          icon="delete"
+          :color="$themePalette.grey.v_900"
+          class="close-icon hover-icon"
         />
       </button>
     </div>
@@ -61,9 +67,6 @@
             ...this.$coreOutline,
             outlineOffset: 0,
           },
-          ':hover': {
-            backgroundColor: this.$themePalette.grey.v_300,
-          },
         });
       },
     },
@@ -95,7 +98,7 @@
 
   .content {
     display: flex;
-    gap: 4px; /* Reduced gap to remove extra space */
+    gap: 4px;
     align-items: center;
     height: 100%;
   }
@@ -106,20 +109,37 @@
   }
 
   .close-button {
-    display: flex;
+    position: relative;
     align-items: center;
     justify-content: center;
-    width: 16px;
-    height: 16px;
     min-height: 16px;
     padding: 0;
     margin: 0;
     cursor: pointer;
-    border-radius: 50%;
-    transition: all 0.2s ease;
+  }
 
-    &:hover {
-      transform: scale(1.1);
+  .close-icon {
+    font-size: 16px;
+  }
+
+  .default-icon {
+    opacity: 1;
+  }
+
+  .hover-icon {
+    position: absolute;
+    top: 2px;
+    left: 0;
+    opacity: 0;
+  }
+
+  .close-button:hover {
+    .default-icon {
+      opacity: 0;
+    }
+
+    .hover-icon {
+      opacity: 1;
     }
   }
 
