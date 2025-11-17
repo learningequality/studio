@@ -820,25 +820,43 @@ class CRUDTestCase(StudioAPITestCase):
             [submission1.channel.id],
         )
 
-    def test_admin_channel_filter__has_community_library_submission(self):
-        self.client.force_authenticate(user=self.admin_user)
-
+    def test_has_community_library_submission_endpoint(self):
+        """Test the on-demand has_community_library_submission endpoint"""
+        user = testdata.user()
+        channel_with_submission = testdata.channel()
+        channel_with_submission.editors.add(user)
+        channel_with_submission.version = 1
+        channel_with_submission.save()
         submission = testdata.community_library_submission()
+        submission.channel = channel_with_submission
+        submission.author = user
+        submission.channel_version = channel_with_submission.version
+        submission.save()
 
-        testdata.channel()  # Another channel without submission
+        channel_without_submission = testdata.channel()
+        channel_without_submission.editors.add(user)
+
+        self.client.force_authenticate(user=user)
 
         response = self.client.get(
-            reverse_with_query(
-                "admin-channels-list",
-                query={"has_community_library_submission": True},
+            reverse(
+                "channel-has-community-library-submission",
+                kwargs={"pk": channel_with_submission.id},
             ),
             format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
-        self.assertCountEqual(
-            [ch["id"] for ch in response.data],
-            [submission.channel.id],
+        self.assertTrue(response.data["has_community_library_submission"])
+
+        response = self.client.get(
+            reverse(
+                "channel-has-community-library-submission",
+                kwargs={"pk": channel_without_submission.id},
+            ),
+            format="json",
         )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertFalse(response.data["has_community_library_submission"])
 
     def test_create_channel(self):
         user = testdata.user()

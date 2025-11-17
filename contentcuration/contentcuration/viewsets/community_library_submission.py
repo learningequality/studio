@@ -54,6 +54,12 @@ class CommunityLibrarySubmissionSerializer(BulkModelSerializer):
         channel = validated_data["channel"]
         user = self.context["request"].user
 
+        # Prevent creating submissions while a publish is in progress
+        if getattr(getattr(channel, "main_tree", None), "publishing", False):
+            raise ValidationError(
+                "Cannot create a community library submission while the channel is being published."
+            )
+
         if channel.version == 0:
             # The channel is not published
             raise ValidationError(

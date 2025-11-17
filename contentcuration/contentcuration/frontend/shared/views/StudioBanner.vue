@@ -3,7 +3,10 @@
   <div
     class="banner"
     data-testid="studio-banner"
-    :style="{ backgroundColor: error ? $themePalette.red.v_100 : '' }"
+    :style="{
+      backgroundColor: error ? $themePalette.red.v_100 : '',
+      color: error ? $themeTokens.error : '',
+    }"
   >
     <slot>
       {{ text }}

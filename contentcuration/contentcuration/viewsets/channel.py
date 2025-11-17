@@ -575,6 +575,7 @@ class ChannelViewSet(ValuesViewset):
                             {
                                 "published": True,
                                 "publishing": False,
+                                "version": channel.version,
                                 "primary_token": channel.get_human_token().token,
                                 "last_published": channel.last_published,
                                 "unpublished_changes": _unpublished_changes_query(
@@ -929,6 +930,19 @@ class ChannelViewSet(ValuesViewset):
 
         return Response({"task_id": async_result.task_id})
 
+    @action(
+        detail=True,
+        methods=["get"],
+        url_path="has_community_library_submission",
+        url_name="has-community-library-submission",
+    )
+    def has_community_library_submission(self, request, pk=None) -> Response:
+        channel = self.get_object()
+        has_submission = CommunityLibrarySubmission.objects.filter(
+            channel_id=channel.id
+        ).exists()
+        return Response({"has_community_library_submission": has_submission})
+
     def _channel_exists(self, channel_id) -> bool:
         """
         Check if a channel exists.
@@ -1080,6 +1094,7 @@ class CatalogViewSet(ReadOnlyValuesViewset):
 
 
 class AdminChannelFilter(BaseChannelFilter):
+
     latest_community_library_submission_status = CharFilter(
         method="filter_latest_community_library_submission_status"
     )
