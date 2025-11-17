@@ -11,15 +11,20 @@
         </slot>
       </div>
 
-      <KIconButton
+      <button
         v-if="close"
         class="close-button"
+        :class="closeButtonClass"
         :aria-label="removeLabel"
-        icon="delete"
-        :color="$themePalette.grey.v_400"
+        type="button"
         data-test="remove-chip"
         @click.stop="handleClose"
-      />
+      >
+        <KIcon
+          icon="delete"
+          :color="$themePalette.grey.v_400"
+        />
+      </button>
     </div>
   </div>
 
@@ -50,6 +55,17 @@
       removeLabel() {
         return `Remove ${this.text}`;
       },
+      closeButtonClass() {
+        return this.$computedClass({
+          ':focus': {
+            ...this.$coreOutline,
+            outlineOffset: 0,
+          },
+          ':hover': {
+            backgroundColor: this.$themePalette.grey.v_300,
+          },
+        });
+      },
     },
     methods: {
       handleClose() {
@@ -79,7 +95,7 @@
 
   .content {
     display: flex;
-    gap: 6px;
+    gap: 4px; /* Reduced gap to remove extra space */
     align-items: center;
     height: 100%;
   }
@@ -90,11 +106,21 @@
   }
 
   .close-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 16px;
     height: 16px;
     min-height: 16px;
     padding: 0;
-    margin-top: 2px;
+    margin: 0;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+
+    &:hover {
+      transform: scale(1.1);
+    }
   }
 
 </style>
