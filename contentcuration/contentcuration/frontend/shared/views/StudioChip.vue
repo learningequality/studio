@@ -114,8 +114,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     padding: 0;
     margin: 0;
     cursor: pointer;
@@ -123,7 +123,7 @@
   }
 
   .close-icon {
-    font-size: 16px;
+    font-size: 18px;
   }
 
   .default-icon {
@@ -134,7 +134,6 @@
   .hover-icon {
     position: absolute;
     top: 1px;
-    left: 1px;
     opacity: 0;
   }
 
