@@ -900,6 +900,19 @@ class ChannelViewSet(ValuesViewset):
 
         return Response(channel.published_data)
 
+    @action(
+        detail=True,
+        methods=["get"],
+        url_path="has_community_library_submission",
+        url_name="has-community-library-submission",
+    )
+    def has_community_library_submission(self, request, pk=None) -> Response:
+        channel = self.get_object()
+        has_submission = CommunityLibrarySubmission.objects.filter(
+            channel_id=channel.id
+        ).exists()
+        return Response({"has_community_library_submission": has_submission})
+
     def _channel_exists(self, channel_id) -> bool:
         """
         Check if a channel exists.
@@ -1051,6 +1064,7 @@ class CatalogViewSet(ReadOnlyValuesViewset):
 
 
 class AdminChannelFilter(BaseChannelFilter):
+
     latest_community_library_submission_status = CharFilter(
         method="filter_latest_community_library_submission_status"
     )
