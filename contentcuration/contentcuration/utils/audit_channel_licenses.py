@@ -18,9 +18,9 @@ from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import License
 from contentcuration.models import User
+from contentcuration.utils.publish import get_content_db_path
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.utils import generate_update_event
-from contentcuration.utils.publish import get_content_db_path
 
 logger = logging.getLogger(__name__)
 
