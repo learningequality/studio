@@ -47,7 +47,7 @@
 
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import CatalogFilterBar from './CatalogFilterBar';
-  import CatalogFilterPanelContent from './CatalogFilterPanelContent';
+  import CatalogFilterPanelContent from './components/CatalogFilterPanelContent.vue';
   import SidePanelModal from 'shared/views/SidePanelModal';
 
   export default {
