@@ -68,7 +68,7 @@
           label="Subject line"
           :required="true"
           :invalid="errors.subject"
-          :showInvalidText="showInvalidText && errors.subject"
+          :showInvalidText="true"
           invalidText="Field is required"
           :showLabel="true"
           :appearanceOverrides="getAppearanceOverrides()"

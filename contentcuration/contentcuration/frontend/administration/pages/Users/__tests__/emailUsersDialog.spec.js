@@ -67,6 +67,7 @@ const renderComponent = (props = {}) => {
     routes: new VueRouter(),
   });
 };
+
 describe('EmailUsersDialog', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -75,7 +76,7 @@ describe('EmailUsersDialog', () => {
 
   it('renders email dialog with correct title and sender', () => {
     renderComponent();
-    expect(screen.getByText('Send Email')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Send email' })).toBeInTheDocument();
     expect(screen.getByText('sender@example.com')).toBeInTheDocument();
   });
 
@@ -104,7 +105,7 @@ describe('EmailUsersDialog', () => {
   it('shows placeholder buttons', () => {
     renderComponent();
     ['First name', 'Last name', 'Email', 'Date', 'Time'].forEach(text =>
-      expect(screen.getByText(text)).toBeInTheDocument(),
+      expect(screen.getByRole('button', { name: text })).toBeInTheDocument(),
     );
   });
 
@@ -113,7 +114,7 @@ describe('EmailUsersDialog', () => {
       const user = userEvent.setup();
       renderComponent({ initialRecipients: [userId] });
 
-      await user.click(screen.getByText('Send email'));
+      await user.click(screen.getByRole('button', { name: 'Send email' }));
 
       expect(screen.getAllByText('Field is required').length).toBeGreaterThan(0);
       expect(mockActions.sendEmail).not.toHaveBeenCalled();
@@ -127,12 +128,12 @@ describe('EmailUsersDialog', () => {
       const subjectInput = screen.getByLabelText(/subject line/i);
 
       await user.type(messageInput, 'Test Message');
-      await user.click(screen.getByText('Send email'));
+      await user.click(screen.getByRole('button', { name: 'Send email' }));
       expect(mockActions.sendEmail).not.toHaveBeenCalled();
 
       await user.clear(messageInput);
       await user.type(subjectInput, 'Test Subject');
-      await user.click(screen.getByText('Send email'));
+      await user.click(screen.getByRole('button', { name: 'Send email' }));
       expect(mockActions.sendEmail).not.toHaveBeenCalled();
     });
   });
@@ -144,7 +145,7 @@ describe('EmailUsersDialog', () => {
 
       const messageInput = screen.getByLabelText(/email body/i);
       await user.type(messageInput, 'Hello ');
-      await user.click(screen.getByText('First name'));
+      await user.click(screen.getByRole('button', { name: 'First name' }));
 
       expect(messageInput.value).toContain('Hello');
     });
@@ -157,7 +158,7 @@ describe('EmailUsersDialog', () => {
 
       await user.type(screen.getByLabelText(/subject line/i), 'Test Subject');
       await user.type(screen.getByLabelText(/email body/i), 'Test Message');
-      await user.click(screen.getByText('Send email'));
+      await user.click(screen.getByRole('button', { name: 'Send email' }));
 
       expect(mockActions.sendEmail).toHaveBeenCalledWith(expect.any(Object), {
         subject: 'Test Subject',
@@ -191,7 +192,7 @@ describe('EmailUsersDialog', () => {
 
       await user.type(screen.getByLabelText(/subject line/i), 'Bulk Email Subject');
       await user.type(screen.getByLabelText(/email body/i), 'Bulk Email Message');
-      await user.click(screen.getByText('Send email'));
+      await user.click(screen.getByRole('button', { name: 'Send email' }));
 
       expect(mockActions.sendEmail).toHaveBeenCalledWith(expect.any(Object), {
         subject: 'Bulk Email Subject',
@@ -211,7 +212,7 @@ describe('EmailUsersDialog', () => {
       renderComponent({ initialRecipients: [userId] });
 
       await user.type(screen.getByLabelText(/subject line/i), 'Draft Subject');
-      await user.click(screen.getByText('Cancel'));
+      await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
       expect(screen.getByText('Draft in progress')).toBeInTheDocument();
       expect(
@@ -225,7 +226,7 @@ describe('EmailUsersDialog', () => {
       const user = userEvent.setup();
       renderComponent({ initialRecipients: [userId] });
 
-      await user.click(screen.getByText('Cancel'));
+      await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
       expect(screen.queryByText('Draft in progress')).not.toBeInTheDocument();
     });
@@ -235,7 +236,7 @@ describe('EmailUsersDialog', () => {
       const { emitted } = renderComponent({ initialRecipients: [userId] });
 
       await user.type(screen.getByLabelText(/subject line/i), 'Draft Subject');
-      await user.click(screen.getByText('Cancel'));
+      await user.click(screen.getByRole('button', { name: 'Cancel' }));
       await user.click(screen.getByRole('button', { name: /discard draft/i }));
 
       expect(emitted().input?.[0]).toEqual([false]);
@@ -246,10 +247,10 @@ describe('EmailUsersDialog', () => {
       renderComponent({ initialRecipients: [userId] });
 
       await user.type(screen.getByLabelText(/subject line/i), 'Draft Subject');
-      await user.click(screen.getByText('Cancel'));
+      await user.click(screen.getByRole('button', { name: 'Cancel' }));
       await user.click(screen.getByRole('button', { name: /keep open/i }));
 
-      expect(screen.getByText('Send Email')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Send email' })).toBeInTheDocument();
       expect(screen.queryByText('Draft in progress')).not.toBeInTheDocument();
     });
   });
@@ -261,7 +262,7 @@ describe('EmailUsersDialog', () => {
 
       await user.type(screen.getByLabelText(/subject line/i), 'Test Subject');
       await user.type(screen.getByLabelText(/email body/i), 'Test Message');
-      await user.click(screen.getByText('Send email'));
+      await user.click(screen.getByRole('button', { name: 'Send email' }));
 
       expect(mockActions.showSnackbarSimple).toHaveBeenCalledWith(expect.any(Object), 'Email sent');
     });
@@ -273,7 +274,7 @@ describe('EmailUsersDialog', () => {
 
       await user.type(screen.getByLabelText(/subject line/i), 'Test Subject');
       await user.type(screen.getByLabelText(/email body/i), 'Test Message');
-      await user.click(screen.getByText('Send email'));
+      await user.click(screen.getByRole('button', { name: 'Send email' }));
 
       expect(mockActions.showSnackbarSimple).toHaveBeenCalledWith(
         expect.any(Object),
