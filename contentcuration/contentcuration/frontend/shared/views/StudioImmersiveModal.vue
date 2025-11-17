@@ -87,30 +87,24 @@
         return this.offline ? 112 : 64;
       },
     },
-    watch: {
-      value(val) {
-        this.hideHTMLScroll(!!val);
-        if (val) {
-          document.addEventListener('keydown', this.handleKeyDown);
-        } else {
-          document.removeEventListener('keydown', this.handleKeyDown);
+    mounted() {
+      this.hideHTMLScroll(true);
+      const handleKeyDown = event => {
+        if (event.key === 'Escape') {
+          this.$emit('input', false);
         }
-      },
-    },
-    beforeDestroy() {
-      this.hideHTMLScroll(false);
-      document.removeEventListener('keydown', this.handleKeyDown);
+      };
+      document.addEventListener('keydown', handleKeyDown);
+      this.$once('hook:beforeDestroy', () => {
+        this.hideHTMLScroll(false);
+        document.removeEventListener('keydown', handleKeyDown);
+      });
     },
     methods: {
       hideHTMLScroll(hidden) {
         document.querySelector('html').style = hidden
           ? 'overflow-y: hidden !important;'
           : 'overflow-y: auto !important';
-      },
-      handleKeyDown(event) {
-        if (event.key === 'Escape') {
-          this.$emit('input', false);
-        }
       },
     },
     $trs: {
