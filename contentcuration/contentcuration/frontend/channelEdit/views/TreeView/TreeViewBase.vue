@@ -360,7 +360,6 @@
   import PublishSidePanel from '../../components/sidePanels/PublishSidePanel';
   import SubmitToCommunityLibrarySidePanel from '../../components/sidePanels/SubmitToCommunityLibrarySidePanel';
   import ResubmitChannelModal from '../../components/modals/ResubmitChannelModal';
-  import { Channel } from 'shared/data/resources';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import ToolBar from 'shared/views/ToolBar';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
