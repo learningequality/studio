@@ -137,10 +137,16 @@
           </KButton>
           <KButton
             primary
-            :disabled="submitting || !isFormValid"
+            :disabled="submitting || checkingResubmit || !isFormValid"
             @click="submit"
           >
-            {{ submitText }}
+            <span
+              v-if="checkingResubmit"
+              class="loader-wrapper"
+            >
+              <KCircularLoader :size="16" />
+            </span>
+            <span v-else>{{ submitText }}</span>
           </KButton>
         </div>
       </template>
@@ -154,7 +160,7 @@
 
   import { ref, computed, getCurrentInstance, onMounted } from 'vue';
   import SidePanelModal from 'shared/views/SidePanelModal';
-  import { Channel } from 'shared/data/resources';
+  import { Channel, CommunityLibrarySubmission } from 'shared/data/resources';
   import { forceServerSync } from 'shared/data/serverSync';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
   import { LanguagesList } from 'shared/leUtils/Languages';
@@ -173,6 +179,7 @@
       const mode = ref(PublishModes.LIVE);
       const version_notes = ref('');
       const submitting = ref(false);
+      const checkingResubmit = ref(false);
       const language = ref({});
       const showLanguageInvalidText = ref(false);
       const showVersionNotesInvalidText = ref(false); // lazy validation
@@ -328,15 +335,41 @@
               });
             }
 
+            await Channel.publish(currentChannel.value.id, version_notes.value);
+
             emit('published', { channelId: currentChannel.value.id });
 
-            await Channel.publish(currentChannel.value.id, version_notes.value);
+            if (mode.value === PublishModes.LIVE) {
+              checkingResubmit.value = true;
+              try {
+                const response = await CommunityLibrarySubmission.fetchCollection({
+                  channel: currentChannel.value.id,
+                  max_results: 1, 
+                });
+
+                const submissions = response?.results || [];
+
+                if (submissions.length > 0) {
+                  const latestSubmission = submissions[0];
+                  emit('showResubmitCommunityLibraryModal', {
+                    channel: currentChannel.value ? { ...currentChannel.value } : null,
+                    latestSubmissionVersion: latestSubmission?.channel_version ?? null,
+                  });
+                }
+              } catch (error) {
+                store.dispatch('shared/handleAxiosError', error);
+              } finally {
+                checkingResubmit.value = false;
+                submitting.value = false;
+              }
+            } else {
+              submitting.value = false;
+            }
 
             emit('close');
           }
         } catch (error) {
           store.dispatch('shared/handleAxiosError', error);
-        } finally {
           submitting.value = false;
         }
       };
@@ -371,6 +404,7 @@
         mode,
         version_notes,
         submitting,
+        checkingResubmit,
         language,
         showLanguageInvalidText,
         showVersionNotesInvalidText,
@@ -404,7 +438,7 @@
       };
     },
 
-    emits: ['close', 'published'],
+    emits: ['close', 'published', 'showResubmitCommunityLibraryModal'],
   };
 
 </script>
