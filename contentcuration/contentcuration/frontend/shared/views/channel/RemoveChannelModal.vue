@@ -1,7 +1,6 @@
 <template>
 
   <KModal
-    v-if="dialog"
     :title="canEdit ? $tr('deleteTitle') : $tr('removeTitle')"
     :submitText="canEdit ? $tr('deleteChannel') : $tr('removeBtn')"
     :cancelText="$tr('cancel')"
@@ -14,10 +13,7 @@
       v-if="loading"
       class="py-4 text-center"
     >
-      <VProgressCircular
-        indeterminate
-        size="24"
-      />
+      <KCircularLoader :size="24" />
     </div>
     <template v-else>
       <div
@@ -36,39 +32,20 @@
 
 <script>
 
-  import { defineComponent, ref, computed, watch, getCurrentInstance } from 'vue';
+  import { ref, onMounted } from 'vue';
   import client from 'shared/client';
+  import { Channel } from 'shared/data/resources';
 
-  export default defineComponent({
+  export default {
     name: 'RemoveChannelModal',
     setup(props, { emit }) {
-      const { proxy } = getCurrentInstance();
       const loading = ref(false);
       const hasCommunityLibrarySubmission = ref(false);
-
-      const dialog = computed({
-        get() {
-          return props.value;
-        },
-        set(value) {
-          emit('input', value);
-        },
-      });
-
-      watch(dialog, newValue => {
-        if (newValue && props.canEdit) {
-          fetchCommunityLibrarySubmissionStatus();
-        } else {
-          hasCommunityLibrarySubmission.value = false;
-          loading.value = false;
-        }
-      });
 
       async function fetchCommunityLibrarySubmissionStatus() {
         loading.value = true;
         try {
-          const detailUrl = window.Urls.channel_detail(props.channelId);
-          const url = `${detailUrl.replace(/\/$/, '')}/has_community_library_submission`;
+          const url = Channel.getUrlFunction('has_community_library_submission')(props.channelId);
           const response = await client.get(url);
           hasCommunityLibrarySubmission.value =
             response.data?.has_community_library_submission ?? false;
@@ -79,32 +56,28 @@
         }
       }
 
+      onMounted(() => {
+        if (props.canEdit) {
+          fetchCommunityLibrarySubmissionStatus();
+        }
+      });
+
       function handleSubmit() {
         emit('delete');
       }
 
       function close() {
-        dialog.value = false;
+        emit('close');
       }
-
-      const $tr = messageId => {
-        return proxy.$tr(messageId);
-      };
 
       return {
         loading,
         hasCommunityLibrarySubmission,
-        dialog,
         handleSubmit,
         close,
-        $tr,
       };
     },
     props: {
-      value: {
-        type: Boolean,
-        default: false,
-      },
       channelId: {
         type: String,
         required: true,
@@ -114,7 +87,7 @@
         default: false,
       },
     },
-    emits: ['input', 'delete'],
+    emits: ['delete', 'close'],
     $trs: {
       deleteTitle: 'Delete this channel',
       removeTitle: 'Remove from channel list',
@@ -127,7 +100,7 @@
       deleteChannelWithCLWarning:
         'This channel has been shared with the Community Library. Deleting it here will not remove it from the Community Library — it may still be approved or remain available there.',
     },
-  });
+  };
 
 </script>
 

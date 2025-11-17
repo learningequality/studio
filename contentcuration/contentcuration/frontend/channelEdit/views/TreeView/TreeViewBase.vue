@@ -255,12 +255,12 @@
     />
     <QuickEditModal />
     <RemoveChannelModal
-      v-if="currentChannel"
-      v-model="showDeleteModal"
+      v-if="showDeleteModal && currentChannel"
       :channel-id="currentChannel.id"
       :can-edit="canEdit"
       data-test="delete-modal"
       @delete="handleDelete"
+      @close="showDeleteModal = false"
     />
     <VSpeedDial
       v-if="showClipboardSpeedDial"

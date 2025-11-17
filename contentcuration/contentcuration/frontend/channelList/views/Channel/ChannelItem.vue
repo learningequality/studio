@@ -216,11 +216,12 @@
     </VCard>
     <!-- Delete dialog -->
     <RemoveChannelModal
-      v-model="deleteDialog"
+      v-if="deleteDialog"
       :channel-id="channelId"
       :can-edit="canEdit"
       data-test="delete-modal"
       @delete="handleDelete"
+      @close="deleteDialog = false"
     />
     <!-- Copy dialog -->
     <ChannelTokenModal
