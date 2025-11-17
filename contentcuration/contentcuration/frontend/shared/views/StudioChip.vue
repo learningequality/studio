@@ -1,12 +1,11 @@
 <template>
 
   <div
-    ref="chip"
     class="studio-chip"
     :style="chipStyles"
   >
-    <div class="studio-chip__content">
-      <div class="studio-chip__text">
+    <div class="content">
+      <div class="text">
         <slot>
           {{ text }}
         </slot>
@@ -14,7 +13,7 @@
 
       <KIconButton
         v-if="close"
-        class="studio-chip__close"
+        class="close-button"
         :aria-label="removeLabel"
         icon="delete"
         :color="$themePalette.grey.v_400"
@@ -77,22 +76,22 @@
     user-select: none;
     border-radius: 12px;
     transition: all 0.2s ease;
-
-    &__content {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      height: 100%;
-    }
-
-    &__text {
-      display: flex;
-      align-items: center;
-      margin-bottom: 2px;
-    }
   }
 
-  .studio-chip__close {
+  .content {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    height: 100%;
+  }
+
+  .text {
+    display: flex;
+    align-items: center;
+    margin-bottom: 2px;
+  }
+
+  .close-button {
     width: 16px;
     height: 16px;
     min-height: 16px;
