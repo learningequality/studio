@@ -2,6 +2,7 @@
 
   <div
     class="studio-chip"
+    :class="{ 'has-close-button': close }"
     :style="chipStyles"
   >
     <div class="content">
@@ -87,7 +88,7 @@
     align-items: center;
     height: 26px;
     min-height: 26px;
-    padding: 2px 4px 2px 12px;
+    padding: 2px 12px;
     margin: 5px;
     font-size: 13px;
     white-space: nowrap;
@@ -145,6 +146,10 @@
     .hover-icon {
       opacity: 1;
     }
+  }
+
+  .studio-chip.has-close-button {
+    padding: 2px 6px 2px 12px;
   }
 
 </style>
