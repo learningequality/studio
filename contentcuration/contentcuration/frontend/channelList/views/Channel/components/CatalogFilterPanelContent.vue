@@ -107,9 +107,9 @@
 
   import { mapGetters } from 'vuex';
   import debounce from 'lodash/debounce';
-  import { RouteNames } from '../../constants';
-  import { catalogFilterMixin } from './mixins';
-  import LanguageFilter from './components/LanguageFilter';
+  import { RouteNames } from '../../../constants';
+  import { catalogFilterMixin } from '../mixins';
+  import LanguageFilter from './LanguageFilter.vue';
   import MultiSelect from 'shared/views/form/MultiSelect';
   import { constantsTranslationMixin } from 'shared/mixins';
   import Checkbox from 'shared/views/form/Checkbox';

@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils';
 import { factory } from '../../../store';
 import router from '../../../router';
 import CatalogFilters from '../CatalogFilters';
-import CatalogFilterPanelContent from '../CatalogFilterPanelContent';
+import CatalogFilterPanelContent from '../components/CatalogFilterPanelContent.vue';
 
 const store = factory();
 
