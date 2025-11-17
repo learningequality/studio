@@ -2,18 +2,6 @@
 
   <div class="studio-channels">
     <div
-      class="new-channel"
-      :style="{ maxWidth: maxWidthStyle }"
-    >
-      <KButton
-        v-if="!loading"
-        primary
-        data-test="add-channel"
-        :text="$tr('channel')"
-        @click="newChannel"
-      />
-    </div>
-    <div
       class="channels-body"
       :style="{ maxWidth: maxWidthStyle }"
     >
@@ -55,14 +43,14 @@
   import { ChannelListTypes } from 'shared/constants';
 
   export default {
-    name: 'StudioMyChannels',
+    name: 'StudioStarredChannels',
     components: {
       StudioChannelCard,
     },
     setup() {
-      // Use the channel list composable
-      const { loading, listChannels, newChannel, maxWidthStyle } = useChannelList({
-        listType: ChannelListTypes.EDITABLE,
+      // Use the channel list composable with STARRED type
+      const { loading, listChannels, maxWidthStyle } = useChannelList({
+        listType: ChannelListTypes.STARRED,
         sortFields: ['modified'],
         orderFields: ['desc'],
       });
@@ -70,12 +58,10 @@
       return {
         loading,
         listChannels,
-        newChannel,
         maxWidthStyle,
       };
     },
     $trs: {
-      channel: 'New channel',
       noChannelsFound: 'No channels found',
     },
   };
