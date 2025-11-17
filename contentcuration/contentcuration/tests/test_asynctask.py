@@ -292,15 +292,20 @@ class AuditChannelLicensesTaskTestCase(EagerTasksTestMixin, StudioTestCase):
         self.channel.version = 1
         self.channel.save()
 
+    @patch("contentcuration.utils.audit_channel_licenses.KolibriContentNode")
+    @patch(
+        "contentcuration.utils.audit_channel_licenses.using_temp_migrated_content_database"
+    )
     @patch("contentcuration.utils.audit_channel_licenses.storage.exists")
     def test_audit_licenses_task__no_invalid_or_special_permissions(
-        self, mock_storage_exists
+        self, mock_storage_exists, mock_using_db, mock_kolibri_node
     ):
         """Test audit task when channel has no invalid or special permissions licenses"""
         from contentcuration.tasks import audit_channel_licenses_task
 
         license1, _ = cc.License.objects.get_or_create(license_name="CC BY")
         license2, _ = cc.License.objects.get_or_create(license_name="CC BY-SA")
+        cc.License.objects.get_or_create(license_name=licenses.SPECIAL_PERMISSIONS)
         node1 = testdata.node({"kind_id": "video", "title": "Video Node"})
         node1.parent = self.channel.main_tree
         node1.license = license1
@@ -315,7 +320,31 @@ class AuditChannelLicensesTaskTestCase(EagerTasksTestMixin, StudioTestCase):
         node2.published = True
         node2.save()
 
-        mock_storage_exists.return_value = False
+        mock_storage_exists.return_value = True
+
+        mock_context = mock.MagicMock()
+        mock_using_db.return_value.__enter__ = mock.Mock(return_value=mock_context)
+        mock_using_db.return_value.__exit__ = mock.Mock(return_value=None)
+
+        # Mock KolibriContentNode to return license names from the nodes we created
+        mock_license_names_distinct = ["CC BY", "CC BY-SA"]
+        mock_license_names_values_list = mock.Mock()
+        mock_license_names_values_list.distinct.return_value = (
+            mock_license_names_distinct
+        )
+        mock_license_names_exclude3 = mock.Mock()
+        mock_license_names_exclude3.values_list.return_value = (
+            mock_license_names_values_list
+        )
+        mock_license_names_exclude2 = mock.Mock()
+        mock_license_names_exclude2.exclude.return_value = mock_license_names_exclude3
+        mock_license_names_exclude1 = mock.Mock()
+        mock_license_names_exclude1.exclude.return_value = mock_license_names_exclude2
+
+        mock_kolibri_node.objects = mock.Mock()
+        mock_kolibri_node.objects.exclude = mock.Mock(
+            return_value=mock_license_names_exclude1
+        )
 
         audit_channel_licenses_task.apply(
             kwargs={"channel_id": self.channel.id, "user_id": self.user.id}
