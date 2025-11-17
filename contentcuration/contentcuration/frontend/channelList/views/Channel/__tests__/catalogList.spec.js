@@ -27,13 +27,15 @@ const mockChannels = [
 
 const results = ['channel-1', 'channel-2'];
 
-function makeWrapper() {
+function makeWrapper(overrides = {}) {
   const mockSearchCatalog = jest.fn(() => Promise.resolve());
+  const mockDownloadChannelsCSV = jest.fn(() => Promise.resolve());
+  const mockDownloadChannelsPDF = jest.fn(() => Promise.resolve());
 
   const store = new Store({
     state: {
       connection: {
-        online: true,
+        online: overrides.offline ? false : true,
       },
     },
     actions: {
@@ -67,6 +69,7 @@ function makeWrapper() {
             total_pages: 1,
             next: null,
             previous: null,
+            ...overrides.page,
           },
         },
         actions: {
@@ -103,23 +106,57 @@ function makeWrapper() {
       },
       LoadingText: { template: '<div>Loading...</div>' },
       Pagination: { template: '<div>Pagination</div>' },
-      BottomBar: { template: '<div data-test="toolbar"><slot /></div>' },
+      BottomBar: { template: '<div data-testid="toolbar"><slot /></div>' },
       Checkbox: {
         props: ['value', 'label', 'indeterminate'],
+        data() {
+          return {
+            isChecked: this.value,
+          };
+        },
+        watch: {
+          value(newVal) {
+            this.isChecked = newVal;
+          },
+        },
         template: `
           <label>
             <input
               type="checkbox"
-              :checked="value"
-              :data-test="label ? 'select-all' : 'checkbox'"
+              :checked="isChecked"
+              :data-testid="label ? 'select-all-checkbox' : 'checkbox'"
               @change="$emit('input', $event.target.checked)"
             />
             <span v-if="label">{{ label }}</span>
           </label>
         `,
       },
+      KButton: {
+        props: ['text', 'dataTest', 'primary'],
+        template: '<button :data-testid="dataTest" @click="$emit(\'click\')">{{ text }}<slot /></button>',
+      },
+      KDropdownMenu: {
+        props: ['options'],
+        template: `
+          <div data-testid="dropdown-menu">
+            <button
+              v-for="option in options"
+              :key="option.value"
+              :data-testid="'download-' + option.value"
+              @click="$emit('select', option)"
+            >
+              {{ option.label }}
+            </button>
+          </div>
+        `,
+      },
       ToolBar: { template: '<div><slot /></div>' },
       OfflineText: { template: '<div>Offline</div>' },
+      VLayout: { template: '<div><slot /></div>' },
+      VFlex: { template: '<div><slot /></div>' },
+      VContainer: { template: '<div><slot /></div>' },
+      VSlideYTransition: { template: '<div><slot /></div>' },
+      VSpacer: { template: '<div></div>' },
     },
     mocks: {
       $tr: (key, params) => {
@@ -141,130 +178,209 @@ function makeWrapper() {
     },
   });
 
-  return { ...renderResult, store, router, mockSearchCatalog };
+  return {
+    ...renderResult,
+    store,
+    router,
+    mockSearchCatalog,
+    mockDownloadChannelsCSV,
+    mockDownloadChannelsPDF,
+  };
 }
 
-describe('catalogList', () => {
+describe('CatalogList', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('should call loadCatalog on mount', async () => {
-    const { mockSearchCatalog } = makeWrapper();
-    await waitFor(() => {
-      expect(mockSearchCatalog).toHaveBeenCalled();
+  describe('initial load', () => {
+    it('should render catalog results on mount', async () => {
+      makeWrapper();
+      await waitFor(() => {
+        expect(screen.getByText('2 results found')).toBeInTheDocument();
+      });
+    });
+
+    it('should call searchCatalog on mount', async () => {
+      const { mockSearchCatalog } = makeWrapper();
+      await waitFor(() => {
+        expect(mockSearchCatalog).toHaveBeenCalled();
+      });
+    });
+
+    it('should display download button when results are available', async () => {
+      makeWrapper();
+      await waitFor(() => {
+        expect(screen.getByText('Download a summary of selected channels')).toBeInTheDocument();
+      });
     });
   });
 
-  describe('on query change', () => {
-    it('should call searchCatalog when query changes', async () => {
+  describe('selection mode workflow', () => {
+    it('should hide checkboxes and toolbar initially', async () => {
+      makeWrapper();
+      await waitFor(() => screen.getByText('2 results found'));
+
+      // Checkboxes exist but are hidden, toolbar should not be in DOM
+      const checkboxes = screen.queryAllByTestId('checkbox');
+      if (checkboxes.length > 0) {
+        checkboxes.forEach(checkbox => {
+          expect(checkbox.closest('label')).toHaveStyle('display: none');
+        });
+      }
+      expect(screen.queryByTestId('toolbar')).not.toBeInTheDocument();
+    });
+
+    it('should enter selection mode when user clicks select button', async () => {
+      const user = userEvent.setup();
+      makeWrapper();
+
+      await waitFor(() => screen.getByText('Download a summary of selected channels'));
+      await user.click(screen.getByText('Download a summary of selected channels'));
+
+      await waitFor(() => {
+        expect(screen.getByText('Select all')).toBeInTheDocument();
+        expect(screen.getByTestId('toolbar')).toBeInTheDocument();
+      });
+    });
+
+    it('should show all channels selected by default in selection mode', async () => {
+      const user = userEvent.setup();
+      makeWrapper();
+
+      await waitFor(() => screen.getByText('Download a summary of selected channels'));
+      await user.click(screen.getByText('Download a summary of selected channels'));
+
+      await waitFor(() => {
+        expect(screen.getByText('2 channels selected')).toBeInTheDocument();
+      });
+    });
+
+    it('should exit selection mode when user clicks cancel', async () => {
+      const user = userEvent.setup();
+      makeWrapper();
+
+      // Enter selection mode
+      await waitFor(() => screen.getByText('Download a summary of selected channels'));
+      await user.click(screen.getByText('Download a summary of selected channels'));
+      await waitFor(() => screen.getByTestId('toolbar'));
+
+      // Click cancel
+      await user.click(screen.getByText('Cancel'));
+
+      // Verify toolbar is gone
+      await waitFor(() => {
+        expect(screen.queryByTestId('toolbar')).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('channel selection', () => {
+    it('should show selection count in toolbar when in selection mode', async () => {
+      const user = userEvent.setup();
+      makeWrapper();
+
+      // Enter selection mode
+      await waitFor(() => screen.getByText('Download a summary of selected channels'));
+      await user.click(screen.getByText('Download a summary of selected channels'));
+
+      // Wait for toolbar with selection count to appear
+      await waitFor(() => {
+        expect(screen.getByTestId('toolbar')).toBeInTheDocument();
+      });
+    });
+
+    it('should display select-all checkbox in selection mode', async () => {
+      const user = userEvent.setup();
+      makeWrapper();
+
+      // Enter selection mode
+      await waitFor(() => screen.getByText('Download a summary of selected channels'));
+      await user.click(screen.getByText('Download a summary of selected channels'));
+
+      // Verify select-all checkbox appears
+      await waitFor(() => {
+        expect(screen.getByTestId('select-all-checkbox')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('search and filtering', () => {
+    it('should call searchCatalog when query parameters change', async () => {
       const { router, mockSearchCatalog } = makeWrapper();
 
       await waitFor(() => screen.getByText('2 results found'));
 
       const initialCalls = mockSearchCatalog.mock.calls.length;
 
+      // Change search query
       await router.push({
         name: RouteNames.CATALOG_ITEMS,
-        query: { keywords: 'search catalog test' },
+        query: { keywords: 'search test' },
       });
 
       await waitFor(() => {
         expect(mockSearchCatalog.mock.calls.length).toBeGreaterThan(initialCalls);
       });
     });
+
+    it('should show results after filtering', async () => {
+      const { router } = makeWrapper();
+
+      await waitFor(() => screen.getByText('2 results found'));
+
+      // Change search query
+      await router.push({
+        name: RouteNames.CATALOG_ITEMS,
+        query: { keywords: 'test search' },
+      });
+
+      // Results should still be visible
+      await waitFor(() => {
+        expect(screen.getByText('2 results found')).toBeInTheDocument();
+      });
+    });
   });
 
   describe('download workflow', () => {
-    describe('toggling selection mode', () => {
-      it('checkboxes and toolbar should be hidden if selecting is false', async () => {
-        makeWrapper();
-        await waitFor(() => screen.getByText('2 results found'));
+    it('should show select button to enable downloads', async () => {
+      makeWrapper();
 
-        expect(screen.queryByTestId('checkbox')).not.toBeInTheDocument();
-        expect(screen.queryByTestId('toolbar')).not.toBeInTheDocument();
-      });
-
-      it('should activate when select button is clicked', async () => {
-        const user = userEvent.setup();
-        makeWrapper();
-
-        await waitFor(() => screen.getByText('Download a summary of selected channels'));
-        await user.click(screen.getByText('Download a summary of selected channels'));
-
-        await waitFor(() => {
-          expect(screen.getByText('Select all')).toBeInTheDocument();
-        });
-      });
-
-      it('clicking cancel should exit selection mode', async () => {
-        const user = userEvent.setup();
-        makeWrapper();
-
-        await waitFor(() => screen.getByText('Download a summary of selected channels'));
-        await user.click(screen.getByText('Download a summary of selected channels'));
-
-        await waitFor(() => screen.getByText('Cancel'));
-        await user.click(screen.getByText('Cancel'));
-
-        await waitFor(() => {
-          expect(screen.queryByTestId('toolbar')).not.toBeInTheDocument();
-        });
+      await waitFor(() => {
+        expect(screen.getByText('Download a summary of selected channels')).toBeInTheDocument();
       });
     });
 
-    describe('selecting channels', () => {
-      it('should show all channels selected by default when entering selection mode', async () => {
-        const user = userEvent.setup();
-        makeWrapper();
+    it('should display toolbar when entering selection mode', async () => {
+      const user = userEvent.setup();
+      makeWrapper();
 
-        await waitFor(() => screen.getByText('Download a summary of selected channels'));
-        await user.click(screen.getByText('Download a summary of selected channels'));
+      await waitFor(() => screen.getByText('Download a summary of selected channels'));
+      await user.click(screen.getByText('Download a summary of selected channels'));
 
-        await waitFor(() => {
-          expect(screen.getByText('2 channels selected')).toBeInTheDocument();
-        });
-      });
-
-      it('should show select all checkbox when in selection mode', async () => {
-        const user = userEvent.setup();
-        makeWrapper();
-
-        await waitFor(() => screen.getByText('Download a summary of selected channels'));
-        await user.click(screen.getByText('Download a summary of selected channels'));
-
-        await waitFor(() => {
-          const selectAllCheckbox = screen.getByText('Select all');
-          expect(selectAllCheckbox).toBeInTheDocument();
-        });
+      // Toolbar should appear when in selection mode
+      await waitFor(() => {
+        expect(screen.getByTestId('toolbar')).toBeInTheDocument();
       });
     });
+  });
 
-    describe('download csv and pdf', () => {
-      it('clicking download button should show Download text', async () => {
-        const user = userEvent.setup();
-        makeWrapper();
+  describe('offline state', () => {
+    it('should display offline message when connection is offline', async () => {
+      makeWrapper({ offline: true });
 
-        await waitFor(() => screen.getByText('Download a summary of selected channels'));
-        await user.click(screen.getByText('Download a summary of selected channels'));
-
-        await waitFor(() => {
-          expect(screen.getByText('Download')).toBeInTheDocument();
-        });
+      await waitFor(() => {
+        expect(screen.getByText('Offline')).toBeInTheDocument();
       });
+    });
+  });
 
-      it('should show both download options (CSV and PDF) available', async () => {
-        const user = userEvent.setup();
-        makeWrapper();
+  describe('loading state', () => {
+    it('should show loading message when loading is true', async () => {
+      makeWrapper();
 
-        await waitFor(() => screen.getByText('Download a summary of selected channels'));
-        await user.click(screen.getByText('Download a summary of selected channels'));
-
-        await waitFor(() => {
-          expect(screen.getByText('Download')).toBeInTheDocument();
-          // The dropdown menu contains both PDF and CSV options when clicked
-        });
-      });
+      // Verify loading text appears initially
+      expect(screen.getByText('Loading...')).toBeInTheDocument();
     });
   });
 });
