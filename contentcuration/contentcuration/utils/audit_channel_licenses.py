@@ -2,9 +2,7 @@
 Utility functions for auditing channel licenses for community library submission.
 """
 import logging
-import os
 
-from django.conf import settings
 from django.core.files.storage import default_storage as storage
 from kolibri_content.models import ContentNode as KolibriContentNode
 from kolibri_public.utils.export_channel_to_kolibri_public import (
