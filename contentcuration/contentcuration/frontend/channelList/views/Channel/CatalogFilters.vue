@@ -6,7 +6,8 @@
       v-if="isMobile"
       class="filter-button-mobile"
       :text="$tr('searchText')"
-      appearance="raised-button"
+      primary
+      appearance="flat-button"
       @click="openSidePanel"
     />
 
