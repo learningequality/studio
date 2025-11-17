@@ -3,7 +3,7 @@
   <KModal
     v-if="show"
     :size="600"
-    title="Send Email"
+    title="Send email"
     submitText="Send email"
     cancelText="Cancel"
     data-test="email-dialog"
