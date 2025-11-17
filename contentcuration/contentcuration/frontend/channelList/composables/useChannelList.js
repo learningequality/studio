@@ -11,11 +11,10 @@ import { RouteNames } from '../constants';
  * @param {string} options.listType - Type of channel list (from ChannelListTypes)
  * @param {Array<string>} options.sortFields - Fields to sort by (default: ['modified'])
  * @param {Array<string>} options.orderFields - Sort order (default: ['desc'])
- * @param {Function} options.filterFn - Additional filter function for channels
  * @returns {Object} Channel list state and methods
  */
 export function useChannelList(options = {}) {
-  const { listType, sortFields = ['modified'], orderFields = ['desc'], filterFn = null } = options;
+  const { listType, sortFields = ['modified'], orderFields = ['desc'] } = options;
 
   const instance = getCurrentInstance();
   const store = instance.proxy.$store;
@@ -34,11 +33,7 @@ export function useChannelList(options = {}) {
       return [];
     }
 
-    let filtered = channels.value.filter(channel => channel[listType] && !channel.deleted);
-
-    if (filterFn && typeof filterFn === 'function') {
-      filtered = filtered.filter(filterFn);
-    }
+    const filtered = channels.value.filter(channel => channel[listType] && !channel.deleted);
 
     return orderBy(filtered, sortFields, orderFields);
   });
@@ -56,7 +51,6 @@ export function useChannelList(options = {}) {
     return '100%';
   });
 
-  // Methods
   const loadData = async () => {
     loading.value = true;
     try {
