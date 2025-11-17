@@ -854,14 +854,10 @@ def mark_all_nodes_as_published(tree):
 def save_export_database(channel_id, version, is_draft_version=False):
     logging.debug("Saving export database")
     current_export_db_location = get_active_content_database()
-    target_paths = [
-        get_content_db_path(channel_id, version)
-    ]
+    target_paths = [get_content_db_path(channel_id, version)]
     # Only create non-version path if not is_draft_version
     if not is_draft_version:
-        target_paths.append(
-            get_content_db_path(channel_id)
-        )
+        target_paths.append(get_content_db_path(channel_id))
 
     for target_export_db_location in target_paths:
         with open(current_export_db_location, "rb") as currentf:

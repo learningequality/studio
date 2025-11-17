@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_content_db_path(channel_id, version=None):
-    
+
     if version is not None:
         return os.path.join(settings.DB_ROOT, f"{channel_id}-{version}.sqlite3")
     return os.path.join(settings.DB_ROOT, f"{channel_id}.sqlite3")
