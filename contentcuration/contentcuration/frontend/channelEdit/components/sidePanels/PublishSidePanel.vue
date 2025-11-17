@@ -344,7 +344,7 @@
               try {
                 const response = await CommunityLibrarySubmission.fetchCollection({
                   channel: currentChannel.value.id,
-                  max_results: 1, 
+                  max_results: 1,
                 });
 
                 const submissions = response?.results || [];
