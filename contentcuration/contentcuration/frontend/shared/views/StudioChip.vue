@@ -110,12 +110,15 @@
 
   .close-button {
     position: relative;
+    display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 16px;
+    width: 20px;
+    height: 20px;
     padding: 0;
     margin: 0;
     cursor: pointer;
+    border-radius: 50%;
   }
 
   .close-icon {
@@ -123,13 +126,14 @@
   }
 
   .default-icon {
+    top: 0;
     opacity: 1;
   }
 
   .hover-icon {
     position: absolute;
-    top: 2px;
-    left: 0;
+    top: 1px;
+    left: 1px;
     opacity: 0;
   }
 
