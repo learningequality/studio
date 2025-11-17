@@ -26,19 +26,19 @@ describe('StudioChip', () => {
 
   test('renders close button when close prop is true', () => {
     renderComponent({ close: true });
-    expect(screen.getByLabelText('Remove Test Chip')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove Test Chip' })).toBeInTheDocument();
   });
 
   test('does not render close button when close prop is false', () => {
     renderComponent({ close: false });
-    expect(screen.queryByLabelText('Remove Test Chip')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Remove Test Chip' })).not.toBeInTheDocument();
   });
 
   test('emits close event when close button is clicked', async () => {
     const user = userEvent.setup();
     const { emitted } = renderComponent({ close: true });
 
-    await user.click(screen.getByLabelText('Remove Test Chip'));
+    await user.click(screen.getByRole('button', { name: 'Remove Test Chip' }));
     expect(emitted().close).toHaveLength(1);
   });
 });
