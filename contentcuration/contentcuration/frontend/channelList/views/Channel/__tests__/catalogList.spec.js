@@ -133,7 +133,8 @@ function makeWrapper(overrides = {}) {
       },
       KButton: {
         props: ['text', 'dataTest', 'primary'],
-        template: '<button :data-testid="dataTest" @click="$emit(\'click\')">{{ text }}<slot /></button>',
+        template:
+          '<button :data-testid="dataTest" @click="$emit(\'click\')">{{ text }}<slot /></button>',
       },
       KDropdownMenu: {
         props: ['options'],
