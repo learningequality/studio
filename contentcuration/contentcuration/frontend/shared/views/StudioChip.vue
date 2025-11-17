@@ -69,10 +69,9 @@
     height: 26px;
     min-height: 26px;
     padding: 2px 8px;
-    margin: 2px;
+    margin: 5px;
     font-size: 13px;
     white-space: nowrap;
-    cursor: default;
     user-select: none;
     border-radius: 12px;
     transition: all 0.2s ease;
@@ -88,7 +87,6 @@
   .text {
     display: flex;
     align-items: center;
-    margin-bottom: 2px;
   }
 
   .close-button {
