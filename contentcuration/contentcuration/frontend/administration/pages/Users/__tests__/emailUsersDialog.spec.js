@@ -144,10 +144,10 @@ describe('EmailUsersDialog', () => {
       renderComponent({ initialRecipients: [userId] });
 
       const messageInput = screen.getByLabelText(/email body/i);
-      await user.type(messageInput, 'Hello ');
+      await user.type(messageInput, 'Hello');
       await user.click(screen.getByRole('button', { name: 'First name' }));
 
-      expect(messageInput.value).toContain('Hello');
+      expect(messageInput.value).toBe('Hello {first_name}');
     });
   });
 
