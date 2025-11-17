@@ -48,7 +48,6 @@ from contentcuration.utils.assessment.qti.archive import QTIExerciseGenerator
 from contentcuration.utils.assessment.qti.imsmanifest import (
     get_assessment_ids_from_manifest,
 )
-from contentcuration.utils.audit_channel_licenses import get_content_db_path
 from contentcuration.utils.cache import delete_public_channel_cache_keys
 from contentcuration.utils.files import create_thumbnail_from_base64
 from contentcuration.utils.files import get_thumbnail_encoding
@@ -849,6 +848,12 @@ def mark_all_nodes_as_published(tree):
     tree.get_family().update(changed=False, published=True)
 
     logging.info("Marked all nodes as published.")
+
+
+def get_content_db_path(channel_id, version=None):
+    if version is not None:
+        return os.path.join(settings.DB_ROOT, f"{channel_id}-{version}.sqlite3")
+    return os.path.join(settings.DB_ROOT, f"{channel_id}.sqlite3")
 
 
 def save_export_database(channel_id, version, is_draft_version=False):

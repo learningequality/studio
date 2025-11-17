@@ -20,15 +20,9 @@ from contentcuration.models import License
 from contentcuration.models import User
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.utils import generate_update_event
+from contentcuration.utils.publish import get_content_db_path
 
 logger = logging.getLogger(__name__)
-
-
-def get_content_db_path(channel_id, version=None):
-
-    if version is not None:
-        return os.path.join(settings.DB_ROOT, f"{channel_id}-{version}.sqlite3")
-    return os.path.join(settings.DB_ROOT, f"{channel_id}.sqlite3")
 
 
 def _get_content_database_path(channel_id, channel_version):
