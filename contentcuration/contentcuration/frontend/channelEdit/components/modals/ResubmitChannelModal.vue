@@ -24,17 +24,17 @@
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 
   const props = defineProps({
-    value: {
-      type: Boolean,
-      default: false,
-    },
-    channel: {
-      type: Object,
-      required: true,
-      validator(value) {
-        return value && typeof value.name === 'string' && typeof value.version === 'number';
+      value: {
+        type: Boolean,
+        default: false,
       },
-    },
+      channel: {
+        type: Object,
+        required: true,
+        validator(value) {
+          return value && typeof value.name === 'string' && typeof value.version === 'number';
+        },
+      },
     latestSubmissionVersion: {
       type: Number,
       default: null,
@@ -46,7 +46,7 @@
   const title = computed(() => communityChannelsStrings.resubmitModalTitle$());
 
   const publishedVersion = computed(() => {
-    return props.latestSubmissionVersion;
+    return props.latestSubmissionVersion != null ? props.latestSubmissionVersion : props.channel.version;
   });
 
   const description = computed(() =>
