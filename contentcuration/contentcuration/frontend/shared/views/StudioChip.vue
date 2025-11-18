@@ -121,7 +121,7 @@
   }
 
   .studio-chip.has-close-button {
-    padding: 2px 6px 2px 12px;
+    padding: 3px 6px 2px 12px;
   }
 
   .close-icon {
