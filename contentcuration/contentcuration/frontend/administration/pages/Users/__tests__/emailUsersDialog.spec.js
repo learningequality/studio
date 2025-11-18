@@ -231,7 +231,7 @@ describe('EmailUsersDialog', () => {
       expect(screen.queryByText('Draft in progress')).not.toBeInTheDocument();
     });
 
-    it('closes dialog when confirming discard', async () => {
+    it('emits input event with false value when discard confirmed', async () => {
       const user = userEvent.setup();
       const { emitted } = renderComponent({ initialRecipients: [userId] });
 
