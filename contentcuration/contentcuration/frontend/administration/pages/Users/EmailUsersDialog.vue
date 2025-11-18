@@ -100,7 +100,7 @@
             label="Email body"
             :required="true"
             :invalid="errors.message"
-            :showInvalidText="showInvalidText && errors.message"
+            :showInvalidText="true"
             invalidText="Field is required"
             :showLabel="true"
             :appearanceOverrides="getAppearanceOverrides()"
@@ -177,7 +177,6 @@
       return {
         showWarning: false,
         recipients: this.initialRecipients || [],
-        showInvalidText: false,
       };
     },
     computed: {
@@ -254,7 +253,6 @@
         this.subject = '';
         this.message = '';
         this.showWarning = false;
-        this.showInvalidText = false;
         this.reset(); // Reset form validation state
       },
       addPlaceholder(placeholder) {
@@ -272,19 +270,7 @@
 
         return baseStyles;
       },
-
-      // Form mixin methods
-      // eslint-disable-next-line kolibri/vue-no-unused-methods, vue/no-unused-properties
-      onValidationFailed() {
-        this.showInvalidText = true;
-        if (this.$refs.form && this.$refs.form.scrollIntoView) {
-          this.$refs.form.scrollIntoView({ behavior: 'smooth' });
-        }
-      },
-
       onSubmit() {
-        this.showInvalidText = true;
-
         if (this.errorCount() > 0) {
           return;
         }
