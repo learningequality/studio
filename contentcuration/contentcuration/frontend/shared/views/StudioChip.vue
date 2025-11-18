@@ -26,7 +26,7 @@
           filledIcon="delete"
           :outlineColor="$themePalette.grey.v_400"
           :filledColor="$themePalette.grey.v_900"
-          class="icon"
+          class="close-icon"
         />
       </button>
     </div>
@@ -124,7 +124,7 @@
     padding: 2px 6px 2px 12px;
   }
 
-  .icon {
+  .close-icon {
     width: 24px;
     height: 24px;
     font-size: 18px;
