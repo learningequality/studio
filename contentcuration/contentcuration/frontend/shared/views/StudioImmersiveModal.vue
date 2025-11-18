@@ -3,17 +3,18 @@
   <div
     v-if="value"
     class="modal-wrapper"
+    :style="{ backgroundColor: $themeTokens.surface }"
   >
     <KToolbar
-      :textColor="dark ? 'white' : 'black'"
-      :style="{ backgroundColor: toolbarBackgroundColor }"
+      textColor="white"
+      :style="{ backgroundColor: $themePalette.grey.v_900 }"
     >
       <template #icon>
         <KIconButton
           icon="close"
           :ariaLabel="$tr('close')"
           :tooltip="$tr('close')"
-          :color="dark ? $themeTokens.textInverted : $themeTokens.text"
+          color="white"
           data-test="close"
           @click="$emit('input', false)"
         />
@@ -34,7 +35,7 @@
 
     <StudioPage
       :offline="offline"
-      :marginTop="contentMarginTop"
+      :marginTop="0"
     >
       <slot></slot>
     </StudioPage>
@@ -65,30 +66,14 @@
         required: false,
         default: '',
       },
-      color: {
-        type: String,
-        default: 'appBarDark',
-      },
-      dark: {
-        type: Boolean,
-        default: true,
-      },
     },
     computed: {
       ...mapState({
         offline: state => !state.connection.online,
       }),
-      toolbarBackgroundColor() {
-        return this.color === 'appBarDark'
-          ? this.$themePalette.grey.v_900
-          : this.$themeTokens[this.color] || this.color;
-      },
-      contentMarginTop() {
-        return this.offline ? 112 : 64;
-      },
     },
     mounted() {
-      this.hideHTMLScroll(true);
+      document.documentElement.classList.add('modal-open');
       const handleKeyDown = event => {
         if (event.key === 'Escape') {
           this.$emit('input', false);
@@ -96,16 +81,9 @@
       };
       document.addEventListener('keydown', handleKeyDown);
       this.$once('hook:beforeDestroy', () => {
-        this.hideHTMLScroll(false);
+        document.documentElement.classList.remove('modal-open');
         document.removeEventListener('keydown', handleKeyDown);
       });
-    },
-    methods: {
-      hideHTMLScroll(hidden) {
-        document.querySelector('html').style = hidden
-          ? 'overflow-y: hidden !important;'
-          : 'overflow-y: auto !important';
-      },
     },
     $trs: {
       close: 'Close',
@@ -123,17 +101,24 @@
     right: 0;
     bottom: 0;
     left: 0;
-    z-index: 17;
-    overflow-y: auto;
-    background-color: white;
+    z-index: 16;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 
   .toolbar-title {
-    display: block;
-    max-width: calc(100% - 80px);
     margin-inline-start: 16px;
     margin-inline-end: 16px;
-    white-space: nowrap;
+  }
+
+</style>
+
+
+<style lang="scss">
+
+  html.modal-open {
+    overflow-y: hidden !important;
   }
 
 </style>

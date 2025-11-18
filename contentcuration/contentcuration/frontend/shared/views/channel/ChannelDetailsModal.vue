@@ -1,22 +1,22 @@
 <template>
 
-  <StudioImmersiveModal
-    v-model="dialog"
-    color="appBarDark"
-    :dark="true"
-  >
+  <StudioImmersiveModal v-model="dialog">
     <template #header>
       <span class="notranslate">{{ channel ? channel.name : '' }}</span>
     </template>
-    <StudioLargeLoader v-if="loading" />
+    <StudioLargeLoader v-if="show('channelDetails', loading, 500)" />
     <div v-else-if="channel">
-      <div class="download-button-container">
+      <div
+        class="download-button-container"
+        :style="downloadButtonContainerStyle"
+      >
         <KButton
           class="download-button"
           :text="$tr('downloadButton')"
           :primary="true"
           hasDropdown
           data-test="download-button"
+          :style="downloadButtonStyle"
         >
           <template #menu>
             <KDropdownMenu
@@ -41,6 +41,9 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
+  import { computed } from 'vue';
+  import useKShow from 'kolibri-design-system/lib/composables/useKShow';
+  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { channelExportMixin } from './mixins';
   import DetailsPanel from 'shared/views/details/DetailsPanel.vue';
   import StudioLargeLoader from 'shared/views/StudioLargeLoader';
@@ -55,6 +58,24 @@
       StudioImmersiveModal,
     },
     mixins: [routerMixin, channelExportMixin],
+    setup() {
+      const { show } = useKShow();
+      const { windowIsSmall } = useKResponsiveWindow();
+
+      const downloadButtonContainerStyle = computed(() => ({
+        justifyContent: windowIsSmall.value ? 'center' : 'flex-end',
+      }));
+
+      const downloadButtonStyle = computed(() => ({
+        width: windowIsSmall.value ? '100%' : 'auto',
+      }));
+
+      return {
+        show,
+        downloadButtonContainerStyle,
+        downloadButtonStyle,
+      };
+    },
     props: {
       channelId: {
         type: String,
@@ -189,17 +210,7 @@
   }
 
   [dir='rtl'] .download-button-container {
-    justify-content: flex-start;
-  }
-
-  @media (max-width: 600px) {
-    .download-button-container {
-      justify-content: center;
-    }
-
-    .download-button {
-      width: 100%;
-    }
+    justify-content: flex-end;
   }
 
   .channel-details-wrapper {

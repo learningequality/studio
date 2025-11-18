@@ -35,10 +35,9 @@
       }));
 
       const outerStyle = computed(() => {
-        const marginTop = props.marginTop !== null ? props.marginTop : 104;
         return {
-          marginTop: `${marginTop}px`,
-          height: `calc(100vh - ${marginTop}px)`,
+          marginTop: `${props.marginTop}px`,
+          height: `calc(100vh - ${props.marginTop}px)`,
         };
       });
 
@@ -46,7 +45,7 @@
     },
     props: {
       offline: { type: Boolean, default: false },
-      marginTop: { type: Number, default: null },
+      marginTop: { type: Number, default: 104 },
     },
   };
 
@@ -64,7 +63,7 @@
 
   .studio-page-inner {
     width: 100%;
-    margin-left: 0;
+    margin: 0 auto;
   }
 
 </style>

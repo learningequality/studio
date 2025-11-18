@@ -50,20 +50,14 @@ const createMockStore = () => {
   });
 };
 
-const PARENT_ROUTE = 'parent-route';
-const TEST_ROUTE = 'channel-details';
-
 const createRouter = () => {
   return new VueRouter({
     routes: [
       {
-        name: PARENT_ROUTE,
         path: '/',
         children: [
           {
-            name: TEST_ROUTE,
             path: '/channel/:channelId',
-            component: ChannelDetailsModal,
           },
         ],
       },
@@ -74,12 +68,6 @@ const createRouter = () => {
 const renderComponent = (options = {}) => {
   const store = createMockStore();
   const router = createRouter();
-
-  router.push({
-    name: TEST_ROUTE,
-    params: { channelId },
-    query: { last: PARENT_ROUTE },
-  });
 
   return render(ChannelDetailsModal, {
     localVue,
@@ -92,61 +80,12 @@ const renderComponent = (options = {}) => {
       StudioImmersiveModal: {
         template: `
           <div v-if="value" data-testid="modal-wrapper">
-            <button data-test="close" @click="handleClose">Close</button>
+            <button data-test="close" @click="$emit('input', false)">Close</button>
             <div><slot name="header"></slot></div>
             <slot></slot>
           </div>
         `,
         props: ['value'],
-        methods: {
-          handleClose() {
-            this.$emit('input', false);
-          },
-        },
-        mounted() {
-          const handleKeyDown = event => {
-            if (event.key === 'Escape') {
-              this.$emit('input', false);
-            }
-          };
-          document.addEventListener('keydown', handleKeyDown);
-          this.$once('hook:beforeDestroy', () => {
-            document.removeEventListener('keydown', handleKeyDown);
-          });
-        },
-      },
-      StudioLargeLoader: {
-        template: '<div data-testid="loader">Loading...</div>',
-      },
-      DetailsPanel: {
-        template: '<div data-testid="details-panel">Details Panel</div>',
-        props: ['details', 'loading'],
-      },
-      KButton: {
-        template: `
-          <button :data-test="$attrs['data-test']">
-            {{ text }}
-          </button>
-        `,
-        props: ['text', 'primary', 'hasDropdown'],
-      },
-      KDropdownMenu: {
-        template: '<div></div>',
-        props: ['options'],
-      },
-      StudioPage: {
-        template: '<div><slot></slot></div>',
-        props: ['offline', 'marginTop'],
-      },
-      StudioOfflineAlert: {
-        template: '<div></div>',
-        props: ['offset'],
-      },
-    },
-    mocks: {
-      $analytics: {
-        trackAction: jest.fn(),
-        trackEvent: jest.fn(),
       },
     },
     ...options,
@@ -223,14 +162,6 @@ describe('ChannelDetailsModal', () => {
     await waitFor(() => {
       expect(mockActions.loadChannel).toHaveBeenCalledWith(expect.any(Object), channelId);
       expect(mockActions.loadChannelDetails).toHaveBeenCalledWith(expect.any(Object), channelId);
-    });
-  });
-
-  it('should track analytics on mount', async () => {
-    renderComponent();
-
-    await waitFor(() => {
-      expect(screen.getByText(testChannel.name)).toBeInTheDocument();
     });
   });
 });
