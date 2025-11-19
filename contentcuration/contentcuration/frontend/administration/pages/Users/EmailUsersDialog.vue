@@ -85,6 +85,7 @@
             :class="
               $computedClass({
                 ':hover': { backgroundColor: $themePalette.grey.v_300 },
+                ':focus': { ...$coreOutline, outlineOffset: 0 },
               })
             "
             type="button"
