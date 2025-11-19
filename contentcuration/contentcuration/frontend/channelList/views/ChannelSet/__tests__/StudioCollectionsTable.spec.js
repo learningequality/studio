@@ -134,7 +134,7 @@ describe('StudioCollectionsTable', () => {
     const infoLink = screen.getByText('Learn about collections');
     await user.click(infoLink);
 
-    expect(screen.getByText('About collections')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'About collections' })).toBeInTheDocument();
 
     const modal = screen.getByRole('dialog');
     expect(
@@ -158,7 +158,7 @@ describe('StudioCollectionsTable', () => {
     const user = userEvent.setup();
     const { router } = await renderComponent();
 
-    const optionsButtons = screen.getAllByLabelText(/options/i);
+    const optionsButtons = screen.getAllByRole('button', { name: /options/i });
     await user.click(optionsButtons[0]);
 
     const editOption = screen.getByText('Edit collection');
@@ -172,7 +172,7 @@ describe('StudioCollectionsTable', () => {
     const user = userEvent.setup();
     await renderComponent();
 
-    const optionsButtons = screen.getAllByLabelText(/options/i);
+    const optionsButtons = screen.getAllByRole('button', { name: /options/i });
     await user.click(optionsButtons[0]);
 
     const deleteOption = screen.getByText('Delete collection');
