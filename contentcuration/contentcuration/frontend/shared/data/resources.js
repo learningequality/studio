@@ -116,7 +116,7 @@ export function formatUUID4(uuid) {
 
 function mix(...mixins) {
   // Inherit from the last class to allow constructor inheritance
-  class Mix extends mixins.slice(-1)[0] {}
+  class Mix extends mixins.slice(-1)[0] { }
 
   // Programmatically add all the methods and accessors
   // of the mixins to class Mix.
@@ -581,10 +581,10 @@ class IndexedDBResource {
         results: results.slice(0, maxResults),
         more: hasMore
           ? {
-              ...params,
-              // Dynamically set the pagination cursor based on the pagination field and operator.
-              [`${paginationField}__${operator}`]: results[maxResults - 1][paginationField],
-            }
+            ...params,
+            // Dynamically set the pagination cursor based on the pagination field and operator.
+            [`${paginationField}__${operator}`]: results[maxResults - 1][paginationField],
+          }
           : null,
       };
     }
@@ -1415,6 +1415,11 @@ export const Channel = new CreateModelResource({
   async getPublishedData(id) {
     const response = await client.get(window.Urls.channel_published_data(id));
     return response.data;
+  },
+  auditLicenses(id) {
+    return client.post(window.Urls.channel_audit_licenses(id)).then(response => {
+      return response.data;
+    });
   },
 });
 
@@ -2408,6 +2413,15 @@ export const CommunityLibrarySubmission = new APIResource({
   create(params) {
     return client.post(this.collectionUrl(), params).then(response => {
       return response.data;
+    });
+  },
+});
+
+export const AuditedSpecialPermissionsLicense = new APIResource({
+  urlName: 'audited_special_permissions_license',
+  fetchCollection(params) {
+    return client.get(this.collectionUrl(), { params }).then(response => {
+      return response.data || [];
     });
   },
 });
