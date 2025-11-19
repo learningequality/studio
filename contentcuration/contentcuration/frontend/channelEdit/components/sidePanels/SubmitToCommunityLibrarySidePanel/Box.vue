@@ -17,6 +17,7 @@
         <div class="box-icon">
           <KIcon
             :icon="icon"
+            :color="iconColor"
             :style="{ fontSize: '18px' }"
           />
         </div>
@@ -63,6 +64,8 @@
         switch (props.kind) {
           case 'warning':
             return paletteTheme.red.v_100;
+          case 'success':
+            return paletteTheme.green.v_100;
           case 'info':
             return paletteTheme.grey.v_100;
           default:
@@ -73,6 +76,8 @@
         switch (props.kind) {
           case 'warning':
             return paletteTheme.red.v_300;
+          case 'success':
+            return paletteTheme.green.v_300;
           case 'info':
             return 'transparent';
           default:
@@ -83,6 +88,8 @@
         switch (props.kind) {
           case 'warning':
             return 'error';
+          case 'success':
+            return 'circleCheckmark';
           case 'info':
             return 'infoOutline';
           default:
@@ -91,11 +98,19 @@
       });
 
       const titleColor = computed(() => {
-        return props.kind === 'warning' ? paletteTheme.red.v_600 : tokensTheme.text;
+        if (props.kind === 'warning') return paletteTheme.red.v_600;
+        if (props.kind === 'success') return paletteTheme.green.v_600;
+        return tokensTheme.text;
       });
 
       const descriptionColor = computed(() => {
         return props.kind === 'warning' ? paletteTheme.grey.v_800 : tokensTheme.text;
+      });
+
+      const iconColor = computed(() => {
+        if (props.kind === 'warning') return paletteTheme.red.v_600;
+        if (props.kind === 'success') return paletteTheme.green.v_600;
+        return tokensTheme.text;
       });
 
       return {
@@ -104,6 +119,7 @@
         titleColor,
         descriptionColor,
         icon,
+        iconColor,
       };
     },
     props: {
@@ -111,7 +127,7 @@
         type: String,
         required: false,
         default: 'info',
-        validator: value => ['warning', 'info'].includes(value),
+        validator: value => ['warning', 'success', 'info'].includes(value),
       },
       loading: {
         type: Boolean,
