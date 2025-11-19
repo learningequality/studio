@@ -336,5 +336,10 @@
     display: flex;
     justify-content: flex-end;
   }
+  @media (max-width: 500px) {
+    .table-header {
+      justify-content: center;
+    }
+  }
 
 </style>
