@@ -13,7 +13,6 @@
     </VSlideYTransition>
     <VContainer
       fluid
-      class="pb-4 pl-4 pr-4"
       :style="`margin-top: ${offline ? 48 : 0}`"
     >
       <LoadingText v-if="loading" />
