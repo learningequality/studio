@@ -330,22 +330,24 @@
 
             await Channel.publish(currentChannel.value.id, version_notes.value);
 
-            emit('published', { channelId: currentChannel.value.id });
-
             if (mode.value === PublishModes.LIVE) {
-              const response = await CommunityLibrarySubmission.fetchCollection({
-                channel: currentChannel.value.id,
-                max_results: 1,
-              });
-
-              const submissions = response?.results || [];
-
-              if (submissions.length > 0) {
-                const latestSubmission = submissions[0];
-                emit('showResubmitCommunityLibraryModal', {
-                  channel: { ...currentChannel.value },
-                  latestSubmissionVersion: latestSubmission.channel_version,
+              try {
+                const response = await CommunityLibrarySubmission.fetchCollection({
+                  channel: currentChannel.value.id,
+                  max_results: 1,
                 });
+
+                const submissions = response?.results || [];
+
+                if (submissions.length > 0) {
+                  const latestSubmission = submissions[0];
+                  emit('showResubmitCommunityLibraryModal', {
+                    channel: { ...currentChannel.value },
+                    latestSubmissionVersion: latestSubmission.channel_version,
+                  });
+                }
+              } catch (error) {
+                logging.error(error);
               }
             }
 
@@ -421,7 +423,7 @@
       };
     },
 
-    emits: ['close', 'published', 'showResubmitCommunityLibraryModal'],
+    emits: ['close', 'showResubmitCommunityLibraryModal'],
   };
 
 </script>

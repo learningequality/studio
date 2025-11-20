@@ -235,20 +235,19 @@
     <PublishSidePanel
       v-if="showPublishSidePanel"
       @close="showPublishSidePanel = false"
-      @published="handleChannelPublished"
-      @showResubmitCommunityLibraryModal="handleShowResubmitModal"
+      @showResubmitCommunityLibraryModal="handleShowResubmitToCommunityLibraryModal"
     />
     <SubmitToCommunityLibrarySidePanel
       v-if="showSubmitToCommunityLibrarySidePanel"
       :channel="currentChannel"
       @close="showSubmitToCommunityLibrarySidePanel = false"
     />
-    <ResubmitChannelModal
-      v-if="resubmitModalData"
-      :channel="resubmitModalData.channel"
-      :latestSubmissionVersion="resubmitModalData.latestSubmissionVersion"
-      @resubmit="handleResubmit"
-      @close="handleDismissResubmit"
+    <ResubmitToCommunityLibraryModal
+      v-if="resubmitToCommunityLibraryModalData"
+      :channel="resubmitToCommunityLibraryModalData.channel"
+      :latestSubmissionVersion="resubmitToCommunityLibraryModalData.latestSubmissionVersion"
+      @resubmit="handleResubmitToCommunityLibrary"
+      @close="handleDismissResubmitToCommunityLibrary"
     />
     <template v-if="isPublished">
       <ChannelTokenModal
@@ -358,7 +357,7 @@
   import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
   import PublishSidePanel from '../../components/sidePanels/PublishSidePanel';
   import SubmitToCommunityLibrarySidePanel from '../../components/sidePanels/SubmitToCommunityLibrarySidePanel';
-  import ResubmitChannelModal from '../../components/modals/ResubmitChannelModal';
+  import ResubmitToCommunityLibraryModal from '../../components/modals/ResubmitToCommunityLibraryModal';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import ToolBar from 'shared/views/ToolBar';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
@@ -379,7 +378,7 @@
       ToolBar,
       PublishSidePanel,
       SubmitToCommunityLibrarySidePanel,
-      ResubmitChannelModal,
+      ResubmitToCommunityLibraryModal,
       ProgressModal,
       ChannelTokenModal,
       SyncResourcesModal,
@@ -408,7 +407,7 @@
         showClipboard: false,
         showDeleteModal: false,
         syncing: false,
-        resubmitModalData: null,
+        resubmitToCommunityLibraryModalData: null,
       };
     },
     computed: {
@@ -558,18 +557,17 @@
         this.showPublishSidePanel = true;
         this.trackClickEvent('Publish');
       },
-      handleResubmit() {
+      handleResubmitToCommunityLibrary() {
         this.showSubmitToCommunityLibrarySidePanel = true;
       },
-      handleDismissResubmit() {
-        this.resubmitModalData = null;
+      handleDismissResubmitToCommunityLibrary() {
+        this.resubmitToCommunityLibraryModalData = null;
       },
-      handleShowResubmitModal(resubmitData) {
+      handleShowResubmitToCommunityLibraryModal(resubmitData) {
         if (resubmitData?.latestSubmissionVersion == null) {
-          this.showPublishSidePanel = false;
           return;
         }
-        this.resubmitModalData = resubmitData;
+        this.resubmitToCommunityLibraryModalData = resubmitData;
       },
       trackClickEvent(eventLabel) {
         this.$analytics.trackClick('channel_editor_toolbar', eventLabel);
