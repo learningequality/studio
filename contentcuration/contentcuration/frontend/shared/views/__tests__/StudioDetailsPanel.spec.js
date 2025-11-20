@@ -153,8 +153,9 @@ describe('StudioDetailsPanel', () => {
       // When levels array is populated, the levelsHeading row should be rendered
       expect(wrapper.container).toHaveTextContent('levelsHeading');
       // Levels are rendered through the component, verify the section exists
-      const levelRows = Array.from(wrapper.container.querySelectorAll('*'))
-        .filter(el => el.textContent?.includes('levelsHeading'));
+      const levelRows = Array.from(wrapper.container.querySelectorAll('*')).filter(el =>
+        el.textContent?.includes('levelsHeading'),
+      );
       expect(levelRows.length).toBeGreaterThan(0);
     });
 
@@ -162,8 +163,9 @@ describe('StudioDetailsPanel', () => {
       // When categories array is populated, the categoriesHeading row should be rendered
       expect(wrapper.container).toHaveTextContent('categoriesHeading');
       // Categories are rendered through the component, verify the section exists
-      const categoryRows = Array.from(wrapper.container.querySelectorAll('*'))
-        .filter(el => el.textContent?.includes('categoriesHeading'));
+      const categoryRows = Array.from(wrapper.container.querySelectorAll('*')).filter(el =>
+        el.textContent?.includes('categoriesHeading'),
+      );
       expect(categoryRows.length).toBeGreaterThan(0);
     });
 
@@ -256,8 +258,9 @@ describe('StudioDetailsPanel', () => {
     it('should not show primary language when not set', () => {
       // Language row should not appear if language is not set
       const container = wrapper.container;
-      const languageRows = Array.from(container.querySelectorAll('*'))
-        .filter(el => el.textContent?.includes('primaryLanguageHeading'));
+      const languageRows = Array.from(container.querySelectorAll('*')).filter(el =>
+        el.textContent?.includes('primaryLanguageHeading'),
+      );
       expect(languageRows.length).toBe(0);
     });
 
