@@ -1,4 +1,5 @@
 <template>
+
   <div data-test="special-permissions-list">
     <div class="header-section">
       <div class="title">
@@ -52,40 +53,22 @@
       </div>
     </template>
   </div>
+
 </template>
 
+
 <script>
+
   import { computed, watch } from 'vue';
   import { themePalette } from 'kolibri-design-system/lib/styles/theme';
   import { useSpecialPermissions } from './composables/useSpecialPermissions';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 
-  const {
-    specialPermissionsDetected$,
-    confirmDistributionRights$,
-  } = communityChannelsStrings;
+  const { specialPermissionsDetected$, confirmDistributionRights$ } = communityChannelsStrings;
 
   export default {
     name: 'SpecialPermissionsList',
-    components: {
-    },
-    props: {
-      permissionIds: {
-        type: Array,
-        required: false,
-        default: () => [],
-      },
-      modelValue: {
-        type: Array,
-        required: false,
-        default: () => [],
-      },
-    },
-    emits: ['update:modelValue', 'update:allChecked'],
-    model: {
-      prop: 'modelValue',
-      event: 'update:modelValue',
-    },
+    components: {},
     setup(props, { emit }) {
       const paletteTheme = themePalette();
       const permissionIdsRef = computed(() => {
@@ -121,9 +104,13 @@
         return permissions.value.every(p => props.modelValue.includes(p.id));
       });
 
-      watch(allChecked, (val) => {
-        emit('update:allChecked', val);
-      }, { immediate: true });
+      watch(
+        allChecked,
+        val => {
+          emit('update:allChecked', val);
+        },
+        { immediate: true },
+      );
 
       return {
         currentPagePermissions,
@@ -140,17 +127,37 @@
         paletteTheme,
       };
     },
+    model: {
+      prop: 'modelValue',
+      event: 'update:modelValue',
+    },
+    props: {
+      permissionIds: {
+        type: Array,
+        required: false,
+        default: () => [],
+      },
+      modelValue: {
+        type: Array,
+        required: false,
+        default: () => [],
+      },
+    },
+    emits: ['update:modelValue', 'update:allChecked'],
   };
+
 </script>
 
+
 <style scoped lang="scss">
+
   .header-section {
     margin-bottom: 8px;
   }
 
   .title {
-    font-weight: bold;
     margin-bottom: 4px;
+    font-weight: bold;
   }
 
   .description {
@@ -177,8 +184,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-top: 8px;
     padding-top: 8px;
+    margin-top: 8px;
   }
 
   .page-indicator {
@@ -196,5 +203,5 @@
     justify-content: center;
     padding: 20px;
   }
-</style>
 
+</style>

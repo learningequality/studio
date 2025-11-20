@@ -32,4 +32,3 @@ export function useLicenseNames(licenseIds) {
     error,
   };
 }
-

@@ -116,7 +116,7 @@ export function formatUUID4(uuid) {
 
 function mix(...mixins) {
   // Inherit from the last class to allow constructor inheritance
-  class Mix extends mixins.slice(-1)[0] { }
+  class Mix extends mixins.slice(-1)[0] {}
 
   // Programmatically add all the methods and accessors
   // of the mixins to class Mix.
@@ -581,10 +581,10 @@ class IndexedDBResource {
         results: results.slice(0, maxResults),
         more: hasMore
           ? {
-            ...params,
-            // Dynamically set the pagination cursor based on the pagination field and operator.
-            [`${paginationField}__${operator}`]: results[maxResults - 1][paginationField],
-          }
+              ...params,
+              // Dynamically set the pagination cursor based on the pagination field and operator.
+              [`${paginationField}__${operator}`]: results[maxResults - 1][paginationField],
+            }
           : null,
       };
     }

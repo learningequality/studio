@@ -150,9 +150,14 @@
               :included-licenses="includedLicenses"
             />
             <SpecialPermissionsList
-              v-if="licenseAuditIsFinished && specialPermissions && specialPermissions.length > 0 && !isPublishing"
-              :permission-ids="specialPermissions"
+              v-if="
+                licenseAuditIsFinished &&
+                  specialPermissions &&
+                  specialPermissions.length > 0 &&
+                  !isPublishing
+              "
               v-model="checkedSpecialPermissions"
+              :permission-ids="specialPermissions"
               @update:allChecked="allSpecialPermissionsChecked = $event"
             />
             <div class="country-area">
@@ -238,6 +243,8 @@
   import { useLicenseAudit } from './composables/useLicenseAudit';
   import { usePublishedData } from './composables/usePublishedData';
 
+  import LicenseStatus from './LicenseStatus.vue';
+  import SpecialPermissionsList from './SpecialPermissionsList.vue';
   import { translateMetadataString } from 'shared/utils/metadataStringsTranslation';
   import countriesUtil from 'shared/utils/countries';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
@@ -247,8 +254,6 @@
   import CountryField from 'shared/views/form/CountryField';
   import LanguagesMap from 'shared/leUtils/Languages';
   import { CategoriesLookup, CommunityLibraryStatus } from 'shared/constants';
-  import LicenseStatus from './LicenseStatus.vue';
-  import SpecialPermissionsList from './SpecialPermissionsList.vue';
 
   export default {
     name: 'SubmitToCommunityLibrarySidePanel',
@@ -430,13 +435,17 @@
 
       const allSpecialPermissionsChecked = ref(true);
 
-      watch(specialPermissions, (newVal) => {
-        if (newVal && newVal.length > 0) {
-          allSpecialPermissionsChecked.value = false;
-        } else {
-          allSpecialPermissionsChecked.value = true;
-        }
-      }, { immediate: true });
+      watch(
+        specialPermissions,
+        newVal => {
+          if (newVal && newVal.length > 0) {
+            allSpecialPermissionsChecked.value = false;
+          } else {
+            allSpecialPermissionsChecked.value = true;
+          }
+        },
+        { immediate: true },
+      );
 
       const hasInvalidLicenses = computed(() => {
         return invalidLicenses.value && invalidLicenses.value.length > 0;
@@ -446,7 +455,7 @@
         if (isPublishing.value) return false;
         if (hasInvalidLicenses.value) return false;
         if (!licenseAuditIsFinished.value) return false;
-        
+
         const baseCondition =
           canBeEdited.value && publishedDataIsFinished.value && description.value.length >= 1;
 
@@ -726,22 +735,22 @@
 
   .audit-text-wrapper {
     display: flex;
+    flex: 1;
     flex-direction: column;
     gap: 4px;
-    flex: 1;
   }
 
   .audit-text-primary {
     font-size: 14px;
-    color: v-bind('infoTextColor');
     line-height: 140%;
+    color: v-bind('infoTextColor');
   }
 
   .audit-text-secondary {
     font-size: 14px;
+    line-height: 140%;
     color: v-bind('infoTextColor');
     opacity: 0.7;
-    line-height: 140%;
   }
 
   .info-section {
