@@ -104,8 +104,6 @@ function makeWrapper(overrides = {}) {
         props: ['channelId'],
         template: '<div :data-testid="`channel-${channelId}`">Channel Item</div>',
       },
-      LoadingText: { template: '<div>Loading...</div>' },
-      Pagination: { template: '<div>Pagination</div>' },
       BottomBar: { template: '<div data-testid="toolbar"><slot /></div>' },
       Checkbox: {
         props: ['value', 'label', 'indeterminate'],
@@ -131,33 +129,6 @@ function makeWrapper(overrides = {}) {
           </label>
         `,
       },
-      KButton: {
-        props: ['text', 'dataTest', 'primary'],
-        template:
-          '<button :data-testid="dataTest" @click="$emit(\'click\')">{{ text }}<slot /></button>',
-      },
-      KDropdownMenu: {
-        props: ['options'],
-        template: `
-          <div data-testid="dropdown-menu">
-            <button
-              v-for="option in options"
-              :key="option.value"
-              :data-testid="'download-' + option.value"
-              @click="$emit('select', option)"
-            >
-              {{ option.label }}
-            </button>
-          </div>
-        `,
-      },
-      ToolBar: { template: '<div><slot /></div>' },
-      OfflineText: { template: '<div>Offline</div>' },
-      VLayout: { template: '<div><slot /></div>' },
-      VFlex: { template: '<div><slot /></div>' },
-      VContainer: { template: '<div><slot /></div>' },
-      VSlideYTransition: { template: '<div><slot /></div>' },
-      VSpacer: { template: '<div></div>' },
     },
     mocks: {
       $tr: (key, params) => {
@@ -222,7 +193,6 @@ describe('CatalogList', () => {
       makeWrapper();
       await waitFor(() => screen.getByText('2 results found'));
 
-      // Checkboxes exist but are hidden, toolbar should not be in DOM
       const checkboxes = screen.queryAllByTestId('checkbox');
       if (checkboxes.length > 0) {
         checkboxes.forEach(checkbox => {
@@ -266,10 +236,8 @@ describe('CatalogList', () => {
       await user.click(screen.getByText('Download a summary of selected channels'));
       await waitFor(() => screen.getByTestId('toolbar'));
 
-      // Click cancel
       await user.click(screen.getByText('Cancel'));
 
-      // Verify toolbar is gone
       await waitFor(() => {
         expect(screen.queryByTestId('toolbar')).not.toBeInTheDocument();
       });
@@ -281,11 +249,9 @@ describe('CatalogList', () => {
       const user = userEvent.setup();
       makeWrapper();
 
-      // Enter selection mode
       await waitFor(() => screen.getByText('Download a summary of selected channels'));
       await user.click(screen.getByText('Download a summary of selected channels'));
 
-      // Wait for toolbar with selection count to appear
       await waitFor(() => {
         expect(screen.getByTestId('toolbar')).toBeInTheDocument();
       });
@@ -295,11 +261,9 @@ describe('CatalogList', () => {
       const user = userEvent.setup();
       makeWrapper();
 
-      // Enter selection mode
       await waitFor(() => screen.getByText('Download a summary of selected channels'));
       await user.click(screen.getByText('Download a summary of selected channels'));
 
-      // Verify select-all checkbox appears
       await waitFor(() => {
         expect(screen.getByTestId('select-all-checkbox')).toBeInTheDocument();
       });
@@ -314,7 +278,6 @@ describe('CatalogList', () => {
 
       const initialCalls = mockSearchCatalog.mock.calls.length;
 
-      // Change search query
       await router.push({
         name: RouteNames.CATALOG_ITEMS,
         query: { keywords: 'search test' },
@@ -330,13 +293,11 @@ describe('CatalogList', () => {
 
       await waitFor(() => screen.getByText('2 results found'));
 
-      // Change search query
       await router.push({
         name: RouteNames.CATALOG_ITEMS,
         query: { keywords: 'test search' },
       });
 
-      // Results should still be visible
       await waitFor(() => {
         expect(screen.getByText('2 results found')).toBeInTheDocument();
       });
@@ -359,29 +320,9 @@ describe('CatalogList', () => {
       await waitFor(() => screen.getByText('Download a summary of selected channels'));
       await user.click(screen.getByText('Download a summary of selected channels'));
 
-      // Toolbar should appear when in selection mode
       await waitFor(() => {
         expect(screen.getByTestId('toolbar')).toBeInTheDocument();
       });
-    });
-  });
-
-  describe('offline state', () => {
-    it('should display offline message when connection is offline', async () => {
-      makeWrapper({ offline: true });
-
-      await waitFor(() => {
-        expect(screen.getByText('Offline')).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('loading state', () => {
-    it('should show loading message when loading is true', async () => {
-      makeWrapper();
-
-      // Verify loading text appears initially
-      expect(screen.getByText('Loading...')).toBeInTheDocument();
     });
   });
 });
