@@ -244,12 +244,11 @@
       @close="showSubmitToCommunityLibrarySidePanel = false"
     />
     <ResubmitChannelModal
-      v-if="resubmitModalChannel || currentChannel"
-      v-model="showResubmitModal"
-      :channel="resubmitModalChannel || currentChannel"
-      :latestSubmissionVersion="resubmitModalSubmissionVersion"
+      v-if="resubmitModalData"
+      :channel="resubmitModalData.channel"
+      :latestSubmissionVersion="resubmitModalData.latestSubmissionVersion"
       @resubmit="handleResubmit"
-      @dismiss="handleDismissResubmit"
+      @close="handleDismissResubmit"
     />
     <template v-if="isPublished">
       <ChannelTokenModal
@@ -404,14 +403,12 @@
         drawer: false,
         showPublishSidePanel: false,
         showSubmitToCommunityLibrarySidePanel: false,
-        showResubmitModal: false,
         showTokenModal: false,
         showSyncModal: false,
         showClipboard: false,
         showDeleteModal: false,
         syncing: false,
-        resubmitModalChannel: null,
-        resubmitModalSubmissionVersion: null,
+        resubmitModalData: null,
       };
     },
     computed: {
@@ -562,18 +559,17 @@
         this.trackClickEvent('Publish');
       },
       handleResubmit() {
-        this.showResubmitModal = false;
         this.showSubmitToCommunityLibrarySidePanel = true;
       },
       handleDismissResubmit() {
-        this.showResubmitModal = false;
-        this.resubmitModalChannel = null;
-        this.resubmitModalSubmissionVersion = null;
+        this.resubmitModalData = null;
       },
-      handleShowResubmitModal({ channel, latestSubmissionVersion }) {
-        this.resubmitModalChannel = channel;
-        this.resubmitModalSubmissionVersion = latestSubmissionVersion || null;
-        this.showResubmitModal = true;
+      handleShowResubmitModal(resubmitData) {
+        if (resubmitData?.latestSubmissionVersion == null) {
+          this.showPublishSidePanel = false;
+          return;
+        }
+        this.resubmitModalData = resubmitData;
       },
       trackClickEvent(eventLabel) {
         this.$analytics.trackClick('channel_editor_toolbar', eventLabel);

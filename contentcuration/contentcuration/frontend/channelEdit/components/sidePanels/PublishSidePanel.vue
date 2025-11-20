@@ -137,16 +137,10 @@
           </KButton>
           <KButton
             primary
-            :disabled="submitting || checkingResubmit || !isFormValid"
+            :disabled="submitting || !isFormValid"
             @click="submit"
           >
-            <span
-              v-if="checkingResubmit"
-              class="loader-wrapper"
-            >
-              <KCircularLoader :size="16" />
-            </span>
-            <span v-else>{{ submitText }}</span>
+            {{ submitText }}
           </KButton>
         </div>
       </template>
@@ -179,7 +173,6 @@
       const mode = ref(PublishModes.LIVE);
       const version_notes = ref('');
       const submitting = ref(false);
-      const checkingResubmit = ref(false);
       const language = ref({});
       const showLanguageInvalidText = ref(false);
       const showVersionNotesInvalidText = ref(false); // lazy validation
@@ -340,36 +333,27 @@
             emit('published', { channelId: currentChannel.value.id });
 
             if (mode.value === PublishModes.LIVE) {
-              checkingResubmit.value = true;
-              try {
-                const response = await CommunityLibrarySubmission.fetchCollection({
-                  channel: currentChannel.value.id,
-                  max_results: 1,
+              const response = await CommunityLibrarySubmission.fetchCollection({
+                channel: currentChannel.value.id,
+                max_results: 1,
+              });
+
+              const submissions = response?.results || [];
+
+              if (submissions.length > 0) {
+                const latestSubmission = submissions[0];
+                emit('showResubmitCommunityLibraryModal', {
+                  channel: { ...currentChannel.value },
+                  latestSubmissionVersion: latestSubmission.channel_version,
                 });
-
-                const submissions = response?.results || [];
-
-                if (submissions.length > 0) {
-                  const latestSubmission = submissions[0];
-                  emit('showResubmitCommunityLibraryModal', {
-                    channel: currentChannel.value ? { ...currentChannel.value } : null,
-                    latestSubmissionVersion: latestSubmission?.channel_version ?? null,
-                  });
-                }
-              } catch (error) {
-                store.dispatch('shared/handleAxiosError', error);
-              } finally {
-                checkingResubmit.value = false;
-                submitting.value = false;
               }
-            } else {
-              submitting.value = false;
             }
 
             emit('close');
           }
         } catch (error) {
           store.dispatch('shared/handleAxiosError', error);
+        } finally {
           submitting.value = false;
         }
       };
@@ -404,7 +388,6 @@
         mode,
         version_notes,
         submitting,
-        checkingResubmit,
         language,
         showLanguageInvalidText,
         showVersionNotesInvalidText,

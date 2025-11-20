@@ -224,12 +224,12 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     context:
       'Second sentence of the body text of the modal shown after publishing a channel that already has Community Library submissions',
   },
-  resubmitButton: {
-    message: 'RESUBMIT',
-    context: 'Button in the resubmit modal to open the submit to Community Library side panel',
+  resubmitAction: {
+    message: 'Resubmit',
+    context: 'Action in the resubmit modal to open the submit to Community Library side panel',
   },
-  dismissButton: {
-    message: 'DISMISS',
-    context: 'Button in the resubmit modal to dismiss the modal',
+  dismissAction: {
+    message: 'Dismiss',
+    context: 'Action in the resubmit modal to dismiss the modal',
   },
 });

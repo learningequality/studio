@@ -1,7 +1,6 @@
 <template>
 
   <KModal
-    v-if="value"
     :title="title"
     :submitText="resubmitButtonText"
     :cancelText="dismissButtonText"
@@ -24,10 +23,6 @@
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 
   const props = defineProps({
-    value: {
-      type: Boolean,
-      default: false,
-    },
     channel: {
       type: Object,
       required: true,
@@ -37,11 +32,11 @@
     },
     latestSubmissionVersion: {
       type: Number,
-      default: null,
+      required: true,
     },
   });
 
-  const emit = defineEmits(['dismiss', 'resubmit', 'input']);
+  const emit = defineEmits(['close', 'resubmit']);
 
   const title = computed(() => communityChannelsStrings.resubmitModalTitle$());
 
@@ -60,18 +55,17 @@
 
   const question = computed(() => communityChannelsStrings.resubmitModalBodySecond$());
 
-  const dismissButtonText = computed(() => communityChannelsStrings.dismissButton$());
+  const dismissButtonText = computed(() => communityChannelsStrings.dismissAction$());
 
-  const resubmitButtonText = computed(() => communityChannelsStrings.resubmitButton$());
+  const resubmitButtonText = computed(() => communityChannelsStrings.resubmitAction$());
 
   function handleDismiss() {
-    emit('dismiss');
-    emit('input', false);
+    emit('close');
   }
 
   function handleResubmit() {
     emit('resubmit');
-    emit('input', false);
+    emit('close');
   }
 
 </script>
