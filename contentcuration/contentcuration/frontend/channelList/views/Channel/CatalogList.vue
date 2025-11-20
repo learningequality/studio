@@ -1,7 +1,6 @@
 <template>
 
-  <div>
-    <CatalogFilters />
+  <CatalogFilters>
     <VSlideYTransition>
       <ToolBar
         v-show="offline"
@@ -14,7 +13,6 @@
     </VSlideYTransition>
     <VContainer
       fluid
-      :class="$vuetify.breakpoint.xsOnly ? 'pa-0' : 'pa-4'"
       :style="`margin-top: ${offline ? 48 : 0}`"
     >
       <LoadingText v-if="loading" />
@@ -83,7 +81,7 @@
       <BottomBar
         v-if="selecting"
         data-test="toolbar"
-        :appearanceOverrides="{ height: $vuetify.breakpoint.xsOnly ? '72px' : '56px' }"
+        :appearanceOverrides="{ height: isMobile ? '72px' : '56px' }"
       >
         <div class="mx-2">
           {{ $tr('channelSelectionCount', { count: selectedCount }) }}
@@ -115,7 +113,7 @@
         </KButton>
       </BottomBar>
     </VContainer>
-  </div>
+  </CatalogFilters>
 
 </template>
 
@@ -128,6 +126,7 @@
   import isEqual from 'lodash/isEqual';
   import sortBy from 'lodash/sortBy';
   import union from 'lodash/union';
+  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { RouteNames } from '../../constants';
   import CatalogFilters from './CatalogFilters';
   import ChannelItem from './ChannelItem';
@@ -153,6 +152,13 @@
       OfflineText,
     },
     mixins: [channelExportMixin, constantsTranslationMixin],
+    setup() {
+      const { windowIsSmall } = useKResponsiveWindow();
+
+      return {
+        isMobile: windowIsSmall,
+      };
+    },
     data() {
       return {
         loading: true,
@@ -300,6 +306,16 @@
 
 
 <style lang="scss" scoped>
+
+  .catalog-page-wrapper {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  .catalog-main-content {
+    flex: 1;
+    min-height: calc(100vh - 64px);
+  }
 
   .list-wrapper {
     max-width: 1080px;
