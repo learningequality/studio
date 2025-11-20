@@ -158,6 +158,7 @@
   import { forceServerSync } from 'shared/data/serverSync';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
   import { LanguagesList } from 'shared/leUtils/Languages';
+  import logging from 'shared/logging';
 
   export default {
     name: 'PublishSidePanel',
