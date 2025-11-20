@@ -76,18 +76,6 @@ const renderComponent = (options = {}) => {
     props: {
       channelId,
     },
-    stubs: {
-      StudioImmersiveModal: {
-        template: `
-          <div v-if="value" data-testid="modal-wrapper">
-            <button data-test="close" @click="$emit('input', false)">Close</button>
-            <div><slot name="header"></slot></div>
-            <slot></slot>
-          </div>
-        `,
-        props: ['value'],
-      },
-    },
     ...options,
   });
 };
@@ -117,7 +105,7 @@ describe('ChannelDetailsModal', () => {
       expect(screen.getByText(testChannel.name)).toBeInTheDocument();
     });
 
-    const closeButton = screen.getByRole('button', { name: /close/i });
+    const closeButton = screen.getByLabelText('Close');
     await user.click(closeButton);
 
     await waitFor(() => {

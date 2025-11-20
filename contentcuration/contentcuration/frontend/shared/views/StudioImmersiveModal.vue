@@ -3,6 +3,7 @@
   <div
     v-if="value"
     class="modal-wrapper"
+    data-testid="modal-wrapper"
     :style="{ backgroundColor: $themeTokens.surface }"
   >
     <KToolbar
