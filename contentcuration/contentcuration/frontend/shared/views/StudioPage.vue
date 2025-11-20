@@ -1,6 +1,9 @@
 <template>
 
-  <main class="studio-page-outer">
+  <main
+    class="studio-page-outer"
+    :style="outerStyle"
+  >
     <div
       class="studio-page-inner"
       :style="innerStyle"
@@ -31,10 +34,18 @@
         maxWidth: windowIsLarge.value ? '1000px' : '100%',
       }));
 
-      return { innerStyle };
+      const outerStyle = computed(() => {
+        return {
+          marginTop: `${props.marginTop}px`,
+          height: `calc(100vh - ${props.marginTop}px)`,
+        };
+      });
+
+      return { innerStyle, outerStyle };
     },
     props: {
       offline: { type: Boolean, default: false },
+      marginTop: { type: Number, default: 104 },
     },
   };
 
@@ -45,8 +56,6 @@
 
   .studio-page-outer {
     width: 100%;
-    height: calc(100vh - 104px);
-    margin-top: 104px;
     margin-bottom: 16px;
     overflow-x: hidden;
     overflow-y: auto;
@@ -54,7 +63,7 @@
 
   .studio-page-inner {
     width: 100%;
-    margin-left: 0;
+    margin: 0 auto;
   }
 
 </style>

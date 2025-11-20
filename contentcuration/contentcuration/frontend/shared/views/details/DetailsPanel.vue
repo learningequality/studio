@@ -1,6 +1,9 @@
 <template>
 
-  <div :class="{ printing }">
+  <div
+    :class="{ printing }"
+    data-testid="details-panel"
+  >
     <div style="max-width: 300px">
       <Thumbnail
         :src="isChannel ? _details.thumbnail_url : _details.thumbnail_src"
