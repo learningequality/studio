@@ -24,7 +24,7 @@
         </template>
       </KImg>
     </div>
-    <br>
+    <br >
     <h1
       class="notranslate"
       dir="auto"
@@ -37,7 +37,7 @@
     >
       {{ _details.description }}
     </p>
-    <br>
+    <br >
 
     <template v-if="isChannel">
       <StudioDetailsRow
@@ -686,8 +686,8 @@
 
   .channel-name {
     padding: 0 16px;
-    font-weight: bold;
     font-size: 16px;
+    font-weight: bold;
   }
 
   .channel-link {
@@ -717,8 +717,8 @@
     display: block;
     margin-top: 24px;
     margin-bottom: 8px;
-    font-weight: bold;
     font-size: 14px;
+    font-weight: bold;
     line-height: 20px;
     color: var(--v-grey-darken3);
   }
@@ -727,8 +727,8 @@
     display: grid;
     grid-template-columns: 1fr;
     gap: 16px;
-    margin: 16px 0;
     padding-top: 4px;
+    margin: 16px 0;
 
     @media (min-width: 600px) {
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -743,9 +743,9 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+    overflow: hidden;
     border: 1px solid var(--v-grey-lighten3, #e0e0e0);
     border-radius: 4px;
-    overflow: hidden;
 
     > div:last-child {
       padding: 12px;

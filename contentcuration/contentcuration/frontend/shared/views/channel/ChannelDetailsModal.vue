@@ -59,8 +59,8 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import { routerMixin } from 'shared/mixins';
   import { channelExportMixin } from './mixins';
+  import { routerMixin } from 'shared/mixins';
   import FullscreenModal from 'shared/views/FullscreenModal';
   import LoadingText from 'shared/views/LoadingText';
   import StudioDetailsPanel from 'shared/views/details/StudioDetailsPanel.vue';
