@@ -74,7 +74,8 @@
         slider-color="primary"
       >
         <VTab
-          class="px-2"
+          href="#questions"
+          class="pa-1"
           exact
           @change="tab = 'questions'"
         >
@@ -86,7 +87,8 @@
           />
         </VTab>
         <VTab
-          class="px-2"
+          href="#details"
+          class="pa-1"
           exact
           @change="tab = 'details'"
         >
