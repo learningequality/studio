@@ -8,6 +8,7 @@ import StatusChip from '../StatusChip.vue';
 
 import { usePublishedData } from '../composables/usePublishedData';
 import { useLatestCommunityLibrarySubmission } from '../composables/useLatestCommunityLibrarySubmission';
+import { useLicenseAudit } from '../composables/useLicenseAudit';
 import { Categories, CommunityLibraryStatus } from 'shared/constants';
 import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 import { CommunityLibrarySubmission } from 'shared/data/resources';
@@ -18,6 +19,9 @@ jest.mock('../composables/usePublishedData', () => ({
 }));
 jest.mock('../composables/useLatestCommunityLibrarySubmission', () => ({
   useLatestCommunityLibrarySubmission: jest.fn(),
+}));
+jest.mock('../composables/useLicenseAudit', () => ({
+  useLicenseAudit: jest.fn(),
 }));
 jest.mock('shared/data/resources', () => ({
   CommunityLibrarySubmission: {
@@ -55,6 +59,15 @@ async function makeWrapper({ channel, publishedData, latestSubmission }) {
     isFinished,
     data: computed(() => latestSubmission),
     fetchData: fetchLatestSubmission,
+  });
+
+  useLicenseAudit.mockReturnValue({
+    isLoading: ref(false),
+    isFinished: ref(true),
+    invalidLicenses: ref([]),
+    specialPermissions: ref([]),
+    includedLicenses: ref([]),
+    checkAndTriggerAudit: jest.fn(),
   });
 
   const wrapper = mount(SubmitToCommunityLibrarySidePanel, {
