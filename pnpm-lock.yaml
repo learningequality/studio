@@ -81,8 +81,8 @@ importers:
         specifier: ^0.2.12
         version: 0.2.12
       kolibri-design-system:
-        specifier: 5.4.1
-        version: 5.4.1
+        specifier: https://github.com/MisRob/kolibri-design-system#868060dc647fa556e743715ce4c1a1b77ab453e9
+        version: https://codeload.github.com/MisRob/kolibri-design-system/tar.gz/868060dc647fa556e743715ce4c1a1b77ab453e9
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -4880,8 +4880,9 @@ packages:
   kolibri-design-system@5.0.1:
     resolution: {integrity: sha512-oz5gEFUj7NYZbrqr89gPjSfRFVuuilSqILA4bbWqLWwkI9ay/uVMdsh8cY2Xajhtzccjwqa1c/NxUETr5kMfHQ==}
 
-  kolibri-design-system@5.4.1:
-    resolution: {integrity: sha512-XTSTDqhNz1BDKXLq99rK87hdy7vHlhhXBGm7OEjTJQUvlmcpJgR0lrGZhX7KusyNcInmonNQtU/p7059u9ISfA==}
+  kolibri-design-system@https://codeload.github.com/MisRob/kolibri-design-system/tar.gz/868060dc647fa556e743715ce4c1a1b77ab453e9:
+    resolution: {tarball: https://codeload.github.com/MisRob/kolibri-design-system/tar.gz/868060dc647fa556e743715ce4c1a1b77ab453e9}
+    version: 5.4.2
 
   kolibri-format@1.0.1:
     resolution: {integrity: sha512-yGQpsJkBAzmRueAq6MG1UOuDl9pbhEtMWNxq9ObG5pPVkG8uhWJAS1L71GCuNAeaV1XG2IWo2565Ov4yXnudeA==}
@@ -13163,7 +13164,7 @@ snapshots:
       vue2-teleport: 1.1.4
       xstate: 4.38.3
 
-  kolibri-design-system@5.4.1:
+  kolibri-design-system@https://codeload.github.com/MisRob/kolibri-design-system/tar.gz/868060dc647fa556e743715ce4c1a1b77ab453e9:
     dependencies:
       aphrodite: https://codeload.github.com/learningequality/aphrodite/tar.gz/fdc8d7be8912a5cf17f74ff10f124013c52c3e32
       autosize: 3.0.21
