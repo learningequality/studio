@@ -275,10 +275,11 @@ describe('EditBooleanMapModal', () => {
       expect(wrapper.find('[data-test="update-descendants-checkbox"]').exists()).toBeFalsy();
     });
 
-    test('should call updateContentNode on success submit if the user does not check the update descendants checkbox', async () => {
+    test('should call updateContentNode on success submit if the user uncheck the update descendants checkbox', async () => {
       nodes['node1'].kind = ContentKindsNames.TOPIC;
 
       const wrapper = makeWrapper({ nodeIds: ['node1'], isDescendantsUpdatable: true });
+      wrapper.find('[data-test="update-descendants-checkbox"]').element.click();
       await wrapper.vm.handleSave();
 
       expect(contentNodeActions.updateContentNode).toHaveBeenCalledWith(expect.anything(), {
@@ -287,11 +288,10 @@ describe('EditBooleanMapModal', () => {
       });
     });
 
-    test('should call updateContentNodeDescendants on success submit if the user checks the descendants checkbox', async () => {
+    test('should call updateContentNodeDescendants on success submit if the user does not uncheck the update descendants checkbox', async () => {
       nodes['node1'].kind = ContentKindsNames.TOPIC;
 
       const wrapper = makeWrapper({ nodeIds: ['node1'], isDescendantsUpdatable: true });
-      wrapper.find('[data-test="update-descendants-checkbox"]').element.click();
       await wrapper.vm.handleSave();
 
       expect(contentNodeActions.updateContentNodeDescendants).toHaveBeenCalledWith(
