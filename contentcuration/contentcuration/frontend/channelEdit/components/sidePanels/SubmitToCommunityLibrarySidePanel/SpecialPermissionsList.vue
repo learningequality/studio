@@ -116,7 +116,6 @@
         currentPagePermissions,
         isLoading,
         checkedIds: computed(() => props.modelValue),
-        allChecked,
         currentPage,
         totalPages,
         togglePermission,
