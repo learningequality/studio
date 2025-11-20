@@ -242,11 +242,19 @@
     <PublishSidePanel
       v-if="showPublishSidePanel"
       @close="showPublishSidePanel = false"
+      @showResubmitCommunityLibraryModal="handleShowResubmitToCommunityLibraryModal"
     />
     <SubmitToCommunityLibrarySidePanel
       v-if="showSubmitToCommunityLibrarySidePanel"
       :channel="currentChannel"
       @close="showSubmitToCommunityLibrarySidePanel = false"
+    />
+    <ResubmitToCommunityLibraryModal
+      v-if="resubmitToCommunityLibraryModalData"
+      :channel="resubmitToCommunityLibraryModalData.channel"
+      :latestSubmissionVersion="resubmitToCommunityLibraryModalData.latestSubmissionVersion"
+      @resubmit="handleResubmitToCommunityLibrary"
+      @close="handleDismissResubmitToCommunityLibrary"
     />
     <template v-if="isPublished">
       <ChannelTokenModal
@@ -341,6 +349,7 @@
   import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
   import PublishSidePanel from '../../components/sidePanels/PublishSidePanel';
   import SubmitToCommunityLibrarySidePanel from '../../components/sidePanels/SubmitToCommunityLibrarySidePanel';
+  import ResubmitToCommunityLibraryModal from '../../components/modals/ResubmitToCommunityLibraryModal';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import ToolBar from 'shared/views/ToolBar';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
@@ -361,6 +370,7 @@
       ToolBar,
       PublishSidePanel,
       SubmitToCommunityLibrarySidePanel,
+      ResubmitToCommunityLibraryModal,
       ProgressModal,
       ChannelTokenModal,
       RemoveChannelModal,
@@ -389,6 +399,7 @@
         showClipboard: false,
         showDeleteModal: false,
         syncing: false,
+        resubmitToCommunityLibraryModalData: null,
       };
     },
     computed: {
@@ -546,6 +557,18 @@
       publishChannel() {
         this.showPublishSidePanel = true;
         this.trackClickEvent('Publish');
+      },
+      handleResubmitToCommunityLibrary() {
+        this.showSubmitToCommunityLibrarySidePanel = true;
+      },
+      handleDismissResubmitToCommunityLibrary() {
+        this.resubmitToCommunityLibraryModalData = null;
+      },
+      handleShowResubmitToCommunityLibraryModal(resubmitData) {
+        if (resubmitData?.latestSubmissionVersion == null) {
+          return;
+        }
+        this.resubmitToCommunityLibraryModalData = resubmitData;
       },
       trackClickEvent(eventLabel) {
         this.$analytics.trackClick('channel_editor_toolbar', eventLabel);
