@@ -150,9 +150,7 @@ describe('StudioDetailsPanel', () => {
     });
 
     it('should render educational levels when present', () => {
-      // When levels array is populated, the levelsHeading row should be rendered
       expect(wrapper.container).toHaveTextContent('levelsHeading');
-      // Levels are rendered through the component, verify the section exists
       const levelRows = Array.from(wrapper.container.querySelectorAll('*')).filter(el =>
         el.textContent?.includes('levelsHeading'),
       );
@@ -160,9 +158,7 @@ describe('StudioDetailsPanel', () => {
     });
 
     it('should render categories when present', () => {
-      // When categories array is populated, the categoriesHeading row should be rendered
       expect(wrapper.container).toHaveTextContent('categoriesHeading');
-      // Categories are rendered through the component, verify the section exists
       const categoryRows = Array.from(wrapper.container.querySelectorAll('*')).filter(el =>
         el.textContent?.includes('categoriesHeading'),
       );
@@ -242,8 +238,6 @@ describe('StudioDetailsPanel', () => {
     });
 
     it('should show placeholder icon when thumbnail is missing', () => {
-      // Verify that the component renders without crashing
-      // and that a placeholder is shown instead of an image
       expect(wrapper.container).toBeInTheDocument();
     });
 
@@ -256,7 +250,6 @@ describe('StudioDetailsPanel', () => {
     });
 
     it('should not show primary language when not set', () => {
-      // Language row should not appear if language is not set
       const container = wrapper.container;
       const languageRows = Array.from(container.querySelectorAll('*')).filter(el =>
         el.textContent?.includes('primaryLanguageHeading'),
@@ -269,7 +262,6 @@ describe('StudioDetailsPanel', () => {
     });
 
     it('should not display token row when token is not present', () => {
-      // Token row should not appear if primary_token is null
       expect(wrapper.container).not.toHaveTextContent('test-token');
     });
   });
@@ -324,18 +316,13 @@ describe('StudioDetailsPanel', () => {
     it('should render fields that have data and show placeholder for missing fields', () => {
       expect(wrapper.container).toHaveTextContent('Partial Channel');
       expect(wrapper.container).toHaveTextContent('Some description');
-      // Categories section is rendered when data present
       expect(wrapper.container).toHaveTextContent('categoriesHeading');
-      // Levels should show placeholder since array is empty
       expect(wrapper.container).toHaveTextContent('---');
     });
 
     it('should render both data-present and data-absent states', () => {
-      // Has categories (heading should be present)
       expect(wrapper.container).toHaveTextContent('categoriesHeading');
-      // Missing levels
       expect(wrapper.container).toHaveTextContent('levelsHeading');
-      // Placeholder text for missing data
       expect(wrapper.container).toHaveTextContent('---');
     });
   });
