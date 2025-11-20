@@ -1,9 +1,9 @@
 import { computed, onUnmounted, ref, unref } from 'vue';
-import { Channel } from 'shared/data/resources';
 import { usePublishedData } from './usePublishedData';
+import { Channel } from 'shared/data/resources';
 
-const POLLING_INTERVAL_MS = 2000; 
-const MAX_POLLING_DURATION_MS = 5 * 60 * 1000; 
+const POLLING_INTERVAL_MS = 2000;
+const MAX_POLLING_DURATION_MS = 5 * 60 * 1000;
 
 export function useLicenseAudit(channelId, channelVersion) {
   const {
@@ -157,4 +157,3 @@ export function useLicenseAudit(channelId, channelVersion) {
     fetchPublishedData,
   };
 }
-

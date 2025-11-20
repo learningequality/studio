@@ -253,8 +253,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   },
   allLicensesCompatible: {
     message: 'All licenses are compatible with Community Library.',
-    context:
-      'Message shown after listing compatible licenses when license check passes',
+    context: 'Message shown after listing compatible licenses when license check passes',
   },
   incompatibleLicensesDetected: {
     message: 'Incompatible license(s) detected',
@@ -262,13 +261,11 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   },
   channelCannotBeDistributed: {
     message: 'this channel cannot be distributed via Kolibri.',
-    context:
-      'Message explaining that channels with incompatible licenses cannot be distributed',
+    context: 'Message explaining that channels with incompatible licenses cannot be distributed',
   },
   fixLicensingBeforeSubmission: {
     message: 'Please fix licensing before submitting a new version.',
-    context:
-      'Call to action message when incompatible licenses are detected',
+    context: 'Call to action message when incompatible licenses are detected',
   },
   specialPermissionsDetected: {
     message: 'Special Permissions license(s) detected',

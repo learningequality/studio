@@ -4,8 +4,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
 from rest_framework.permissions import IsAuthenticated
 
-from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.models import AuditedSpecialPermissionsLicense
+from contentcuration.viewsets.base import ReadOnlyValuesViewset
 
 
 class AuditedSpecialPermissionsLicenseFilter(FilterSet):
@@ -18,7 +18,7 @@ class AuditedSpecialPermissionsLicenseFilter(FilterSet):
     distributable = BooleanFilter()
 
     def filter_by_ids(self, queryset, name, value):
-        
+
         try:
             id_list = [uuid.strip() for uuid in value.split(",")[:50]]
             return queryset.filter(id__in=id_list)
@@ -54,4 +54,3 @@ class AuditedSpecialPermissionsLicenseViewSet(ReadOnlyValuesViewset):
     def get_queryset(self):
 
         return AuditedSpecialPermissionsLicense.objects.all()
-

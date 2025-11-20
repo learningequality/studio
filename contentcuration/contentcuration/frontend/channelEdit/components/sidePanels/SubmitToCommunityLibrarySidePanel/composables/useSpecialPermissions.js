@@ -29,8 +29,6 @@ export function useSpecialPermissions(permissionIds) {
       return;
     }
 
-
-
     isLoading.value = true;
     error.value = null;
 
@@ -63,7 +61,6 @@ export function useSpecialPermissions(permissionIds) {
       });
       permissions.value = flattenedPermissions;
     } catch (err) {
-
       error.value = err;
       permissions.value = [];
     } finally {
@@ -112,4 +109,3 @@ export function useSpecialPermissions(permissionIds) {
     previousPage,
   };
 }
-

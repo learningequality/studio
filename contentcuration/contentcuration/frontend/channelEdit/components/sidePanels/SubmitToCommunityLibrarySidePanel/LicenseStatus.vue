@@ -1,4 +1,5 @@
 <template>
+
   <Box
     :kind="boxKind"
     :loading="isLoading"
@@ -11,9 +12,12 @@
       {{ descriptionText }}
     </template>
   </Box>
+
 </template>
 
+
 <script>
+
   import { computed } from 'vue';
   import Box from './Box.vue';
   import { useLicenseNames } from './composables/useLicenseNames';
@@ -32,18 +36,6 @@
     components: {
       Box,
     },
-    props: {
-      invalidLicenses: {
-        type: Array,
-        required: false,
-        default: null,
-      },
-      includedLicenses: {
-        type: Array,
-        required: false,
-        default: null,
-      },
-    },
     setup(props) {
       const invalidLicenseIds = computed(() => {
         if (!props.invalidLicenses || props.invalidLicenses.length === 0) {
@@ -59,15 +51,11 @@
         return props.includedLicenses;
       });
 
-      const {
-        formattedLicenseNames: invalidLicenseNames,
-        isLoading: isLoadingInvalid,
-      } = useLicenseNames(invalidLicenseIds);
+      const { formattedLicenseNames: invalidLicenseNames, isLoading: isLoadingInvalid } =
+        useLicenseNames(invalidLicenseIds);
 
-      const {
-        formattedLicenseNames: includedLicenseNames,
-        isLoading: isLoadingIncluded,
-      } = useLicenseNames(includedLicenseIds);
+      const { formattedLicenseNames: includedLicenseNames, isLoading: isLoadingIncluded } =
+        useLicenseNames(includedLicenseIds);
 
       const isLoading = computed(() => isLoadingInvalid.value || isLoadingIncluded.value);
 
@@ -88,9 +76,7 @@
 
       const descriptionText = computed(() => {
         if (hasInvalidLicenses.value) {
-          const licenseText = invalidLicenseNames.value
-            ? `"${invalidLicenseNames.value}" - `
-            : '';
+          const licenseText = invalidLicenseNames.value ? `"${invalidLicenseNames.value}" - ` : '';
           return `${licenseText}${channelCannotBeDistributed$()} ${fixLicensingBeforeSubmission$()}`;
         }
 
@@ -106,6 +92,18 @@
         isLoading,
       };
     },
+    props: {
+      invalidLicenses: {
+        type: Array,
+        required: false,
+        default: null,
+      },
+      includedLicenses: {
+        type: Array,
+        required: false,
+        default: null,
+      },
+    },
   };
-</script>
 
+</script>
