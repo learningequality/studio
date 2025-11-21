@@ -7,37 +7,24 @@
     <VLayout
       row
       wrap
-      align-end
-      justify-center
+      align-center
+      justify-space-between
+      class="pb-2"
     >
-      <VFlex>
+      <VFlex class="text-xs-left">
         <KButton
+          v-if="!loading && channelSets && channelSets.length"
           :text="$tr('aboutChannelSetsLink')"
           class="link-btn"
           appearance="basic-link"
           @click="infoDialog = true"
         />
-        <KModal
-          v-if="infoDialog"
-          :cancelText="$tr('cancelButtonLabel')"
-          :title="$tr('aboutChannelSets')"
-          @cancel="infoDialog = false"
-        >
-          <div>
-            <p>
-              {{ $tr('channelSetsDescriptionText') }}
-            </p>
-            <p>
-              {{ $tr('channelSetsInstructionsText') }}
-            </p>
-            <p :class="$computedClass(channelSetsDisclamerStyle)">
-              {{ $tr('channelSetsDisclaimer') }}
-            </p>
-          </div>
-        </KModal>
       </VFlex>
-      <VSpacer />
-      <VFlex class="text-xs-right">
+
+      <VFlex
+        class="text-xs-right"
+        shrink="0"
+      >
         <KButton
           v-if="!loading"
           appearance="raised-button"
@@ -48,6 +35,7 @@
         />
       </VFlex>
     </VLayout>
+
     <VLayout
       row
       justify-center
@@ -57,12 +45,19 @@
         <template v-if="loading">
           <LoadingText />
         </template>
-        <p
-          v-else-if="channelSets && !channelSets.length"
-          class="mb-0 text-xs-center"
-        >
-          {{ $tr('noChannelSetsFound') }}
-        </p>
+
+        <template v-else-if="channelSets && !channelSets.length">
+          <div class="mt-4 p-2 text-xs-center">
+            <p class="mb-0">{{ $tr('noChannelSetsFound') }}</p>
+            <KButton
+              :text="$tr('aboutChannelSetsLink')"
+              class="link-btn"
+              appearance="basic-link"
+              @click="infoDialog = true"
+            />
+          </div>
+        </template>
+
         <template v-else>
           <VDataTable
             :headers="headers"
@@ -76,6 +71,21 @@
         </template>
       </VFlex>
     </VLayout>
+
+    <KModal
+      v-if="infoDialog"
+      :cancelText="$tr('cancelButtonLabel')"
+      :title="$tr('aboutChannelSets')"
+      @cancel="infoDialog = false"
+    >
+      <div>
+        <p>{{ $tr('channelSetsDescriptionText') }}</p>
+        <p>{{ $tr('channelSetsInstructionsText') }}</p>
+        <p :class="$computedClass(channelSetsDisclamerStyle)">
+          {{ $tr('channelSetsDisclaimer') }}
+        </p>
+      </div>
+    </KModal>
   </VContainer>
 
 </template>
@@ -91,15 +101,9 @@
 
   export default {
     name: 'ChannelSetList',
-    components: {
-      ChannelSetItem,
-      LoadingText,
-    },
+    components: { ChannelSetItem, LoadingText },
     data() {
-      return {
-        loading: true,
-        infoDialog: false,
-      };
+      return { loading: true, infoDialog: false };
     },
     computed: {
       ...mapGetters('channelSet', ['channelSets']),
@@ -112,25 +116,23 @@
         ];
       },
       channelSetsDisclamerStyle() {
-        return {
-          color: this.$themePalette.red.v_500,
-        };
+        return { color: this.$themePalette.red.v_500 };
       },
       sortedChannelSets() {
-        return sortBy(this.channelSets, s => s.name.toLowerCase()) || [];
+        return sortBy(this.channelSets || [], s => (s.name || '').toLowerCase());
       },
     },
-    mounted() {
-      this.loadChannelSetList().then(() => {
+    async mounted() {
+      try {
+        await this.loadChannelSetList();
+      } finally {
         this.loading = false;
-      });
+      }
     },
     methods: {
       ...mapActions('channelSet', ['loadChannelSetList']),
       newChannelSet() {
-        this.$router.push({
-          name: RouteNames.NEW_CHANNEL_SET,
-        });
+        this.$router.push({ name: RouteNames.NEW_CHANNEL_SET });
       },
     },
     $trs: {
@@ -139,7 +141,7 @@
         'You can package together multiple channels to create a collection. The entire collection can then be imported to Kolibri at once by using a collection token.',
       addChannelSetTitle: 'New collection',
       aboutChannelSets: 'About collections',
-      aboutChannelSetsLink: 'Learn about collections',
+      aboutChannelSetsLink: 'Learn more about collections',
       channelSetsDescriptionText:
         'A collection contains multiple Kolibri Studio channels that can be imported at one time to Kolibri with a single collection token.',
       channelSetsInstructionsText:
