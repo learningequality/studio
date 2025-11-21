@@ -44,7 +44,7 @@
           </VList>
         </BaseMenu>
       </VLayout>
-      <DetailsPanel
+      <StudioDetailsPanel
         v-if="channel && details"
         class="channel-details-wrapper"
         :details="channelWithDetails"
@@ -60,15 +60,15 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import { channelExportMixin } from './mixins';
-  import DetailsPanel from 'shared/views/details/DetailsPanel.vue';
   import { routerMixin } from 'shared/mixins';
-  import LoadingText from 'shared/views/LoadingText';
   import FullscreenModal from 'shared/views/FullscreenModal';
+  import LoadingText from 'shared/views/LoadingText';
+  import StudioDetailsPanel from 'shared/views/details/StudioDetailsPanel.vue';
 
   export default {
     name: 'ChannelDetailsModal',
     components: {
-      DetailsPanel,
+      StudioDetailsPanel,
       LoadingText,
       FullscreenModal,
     },

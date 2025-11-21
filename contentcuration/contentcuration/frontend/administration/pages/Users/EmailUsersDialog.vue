@@ -131,9 +131,9 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
+  import StudioChip from 'shared/views/StudioChip';
   import ExpandableList from 'shared/views/ExpandableList';
   import { generateFormMixin } from 'shared/mixins';
-  import StudioChip from 'shared/views/StudioChip';
 
   const formMixin = generateFormMixin({
     subject: { required: true },
