@@ -9,13 +9,23 @@
     </template>
     <template #actions>
       <KRouterLink
-        v-bind="backHomeLink"
+        v-if="backHomeLink.to"
+        :to="backHomeLink.to"
         appearance="raised-button"
         :primary="true"
         style="margin-top: 1rem"
       >
         {{ $tr('backToHomeAction') }}
       </KRouterLink>
+      <KExternalLink
+        v-else
+        :href="backHomeLink.href"
+        appearance="raised-button"
+        :primary="true"
+        style="margin-top: 1rem"
+      >
+        {{ $tr('backToHomeAction') }}
+      </KExternalLink>
     </template>
   </StudioAppError>
 
