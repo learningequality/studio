@@ -12,6 +12,7 @@ from contentcuration.viewsets.base import ReadOnlyValuesViewset
 class UUIDInFilter(BaseInFilter, UUIDFilter):
     pass
 
+
 class AuditedSpecialPermissionsLicenseFilter(FilterSet):
     """
     Filter for AuditedSpecialPermissionsLicense viewset.

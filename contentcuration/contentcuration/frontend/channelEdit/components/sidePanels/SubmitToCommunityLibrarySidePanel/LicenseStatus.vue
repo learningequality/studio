@@ -38,7 +38,7 @@
     },
     setup(props) {
       const invalidLicenseNames = computed(() => formatLicenseNames(props.invalidLicenses));
-      
+
       const includedLicenseNames = computed(() => {
         if (!props.includedLicenses) return '';
 

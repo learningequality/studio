@@ -65,12 +65,8 @@
   import { useSpecialPermissions } from './composables/useSpecialPermissions';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 
-  const {
-    specialPermissionsDetected$,
-    confirmDistributionRights$,
-    previousPage$,
-    nextPage$,
-  } = communityChannelsStrings;
+  const { specialPermissionsDetected$, confirmDistributionRights$, previousPage$, nextPage$ } =
+    communityChannelsStrings;
 
   export default {
     name: 'SpecialPermissionsList',
