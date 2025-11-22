@@ -1,4 +1,4 @@
-import { computed, ref, unref, watchEffect } from 'vue';
+import { computed, ref, unref, watch } from 'vue';
 import { AuditedSpecialPermissionsLicense } from 'shared/data/resources';
 
 const ITEMS_PER_PAGE = 5;
@@ -9,18 +9,14 @@ export function useSpecialPermissions(permissionIds) {
   const error = ref(null);
   const currentPage = ref(1);
 
-  const nonDistributablePermissions = computed(() => {
-    return permissions.value.filter(p => !p.distributable);
-  });
-
   const totalPages = computed(() => {
-    return Math.ceil(nonDistributablePermissions.value.length / ITEMS_PER_PAGE);
+    return Math.ceil(permissions.value.length / ITEMS_PER_PAGE);
   });
 
   const currentPagePermissions = computed(() => {
     const start = (currentPage.value - 1) * ITEMS_PER_PAGE;
     const end = start + ITEMS_PER_PAGE;
-    return nonDistributablePermissions.value.slice(start, end);
+    return permissions.value.slice(start, end);
   });
 
   async function fetchPermissions(ids) {
@@ -88,18 +84,20 @@ export function useSpecialPermissions(permissionIds) {
     return Array.isArray(ids) ? ids : [ids];
   });
 
-  watchEffect(() => {
-    const ids = resolvedPermissionIds.value;
-
-    if (ids.length === 0) {
-      permissions.value = [];
-      return;
-    }
-    fetchPermissions(ids);
-  });
+  watch(
+    resolvedPermissionIds,
+    ids => {
+      if (ids.length === 0) {
+        permissions.value = [];
+        return;
+      }
+      fetchPermissions(ids);
+    },
+    { immediate: true },
+  );
 
   return {
-    permissions: nonDistributablePermissions,
+    permissions,
     currentPagePermissions,
     isLoading,
     error,

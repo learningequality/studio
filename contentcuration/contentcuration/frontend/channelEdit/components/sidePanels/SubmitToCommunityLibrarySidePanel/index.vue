@@ -231,7 +231,7 @@
 
 <script>
 
-  import { computed, getCurrentInstance, onMounted, ref, watch } from 'vue';
+  import { computed, getCurrentInstance, onMounted, ref, toRef, watch } from 'vue';
   import { themeTokens, themePalette } from 'kolibri-design-system/lib/styles/theme';
 
   import camelCase from 'lodash/camelCase';
@@ -431,27 +431,16 @@
         specialPermissions,
         includedLicenses,
         checkAndTriggerAudit: checkAndTriggerLicenseAudit,
-      } = useLicenseAudit(props.channel.id, currentChannelVersion);
+      } = useLicenseAudit(toRef(props, 'channel'), currentChannelVersion);
 
       const allSpecialPermissionsChecked = ref(true);
-
-      watch(
-        specialPermissions,
-        newVal => {
-          if (newVal && newVal.length > 0) {
-            allSpecialPermissionsChecked.value = false;
-          } else {
-            allSpecialPermissionsChecked.value = true;
-          }
-        },
-        { immediate: true },
-      );
 
       const hasInvalidLicenses = computed(() => {
         return invalidLicenses.value && invalidLicenses.value.length > 0;
       });
 
       const canBeSubmitted = computed(() => {
+        if (!allSpecialPermissionsChecked.value) return false;
         if (isPublishing.value) return false;
         if (hasInvalidLicenses.value) return false;
         if (!licenseAuditIsFinished.value) return false;
@@ -460,10 +449,10 @@
           canBeEdited.value && publishedDataIsFinished.value && description.value.length >= 1;
 
         if (needsReplacementConfirmation.value) {
-          return baseCondition && replacementConfirmed.value && allSpecialPermissionsChecked.value;
+          return baseCondition && replacementConfirmed.value;
         }
 
-        return baseCondition && allSpecialPermissionsChecked.value;
+        return baseCondition;
       });
 
       const latestPublishedData = computed(() => {

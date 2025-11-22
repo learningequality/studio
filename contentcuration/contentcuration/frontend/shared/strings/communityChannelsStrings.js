@@ -276,4 +276,12 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     context:
       'Message asking user to confirm they have distribution rights for special permissions content',
   },
+  previousPage: {
+    message: 'Previous',
+    context: 'Button text to navigate to the previous page in pagination',
+  },
+  nextPage: {
+    message: 'Next',
+    context: 'Button text to navigate to the next page in pagination',
+  },
 });

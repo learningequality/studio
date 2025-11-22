@@ -22,7 +22,7 @@
         <KCheckbox
           v-for="permission in currentPagePermissions"
           :key="permission.id"
-          :checked="checkedIds.includes(permission.id)"
+          :checked="value.includes(permission.id)"
           :label="permission.description"
           class="permission-checkbox"
           @change="togglePermission(permission.id)"
@@ -35,20 +35,22 @@
       >
         <KButton
           :disabled="currentPage === 1"
-          appearance="basic-link"
+          appearance="flat-button"
           class="nav-button"
+          icon="chevronLeft"
           @click="previousPage"
         >
-          &lt; Previous
+          {{ previousPage$() }}
         </KButton>
         <span class="page-indicator">{{ currentPage }} of {{ totalPages }}</span>
         <KButton
           :disabled="currentPage === totalPages"
-          appearance="basic-link"
+          appearance="flat-button"
           class="nav-button"
+          iconAfter="chevronRight"
           @click="nextPage"
         >
-          Next &gt;
+          {{ nextPage$() }}
         </KButton>
       </div>
     </template>
@@ -59,22 +61,22 @@
 
 <script>
 
-  import { computed, watch } from 'vue';
-  import { themePalette } from 'kolibri-design-system/lib/styles/theme';
+  import { computed, watch, toRef } from 'vue';
   import { useSpecialPermissions } from './composables/useSpecialPermissions';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 
-  const { specialPermissionsDetected$, confirmDistributionRights$ } = communityChannelsStrings;
+  const {
+    specialPermissionsDetected$,
+    confirmDistributionRights$,
+    previousPage$,
+    nextPage$,
+  } = communityChannelsStrings;
 
   export default {
     name: 'SpecialPermissionsList',
     components: {},
     setup(props, { emit }) {
-      const paletteTheme = themePalette();
-      const permissionIdsRef = computed(() => {
-        const ids = props.permissionIds || [];
-        return ids;
-      });
+      const permissionIdsRef = toRef(props, 'permissionIds');
 
       const {
         permissions,
@@ -87,21 +89,18 @@
       } = useSpecialPermissions(permissionIdsRef);
 
       function togglePermission(permissionId) {
-        const currentChecked = [...props.modelValue];
+        const currentChecked = [...props.value];
         const index = currentChecked.indexOf(permissionId);
         if (index === -1) {
           currentChecked.push(permissionId);
         } else {
           currentChecked.splice(index, 1);
         }
-        emit('update:modelValue', currentChecked);
+        emit('input', currentChecked);
       }
 
       const allChecked = computed(() => {
-        if (!permissions.value || permissions.value.length === 0) {
-          return true;
-        }
-        return permissions.value.every(p => props.modelValue.includes(p.id));
+        return permissions.value.every(p => props.value.includes(p.id));
       });
 
       watch(
@@ -115,7 +114,6 @@
       return {
         currentPagePermissions,
         isLoading,
-        checkedIds: computed(() => props.modelValue),
         currentPage,
         totalPages,
         togglePermission,
@@ -123,12 +121,9 @@
         previousPage,
         specialPermissionsDetected$,
         confirmDistributionRights$,
-        paletteTheme,
+        previousPage$,
+        nextPage$,
       };
-    },
-    model: {
-      prop: 'modelValue',
-      event: 'update:modelValue',
     },
     props: {
       permissionIds: {
@@ -136,13 +131,13 @@
         required: false,
         default: () => [],
       },
-      modelValue: {
+      value: {
         type: Array,
         required: false,
         default: () => [],
       },
     },
-    emits: ['update:modelValue', 'update:allChecked'],
+    emits: ['input', 'update:allChecked'],
   };
 
 </script>
@@ -169,8 +164,8 @@
     flex-direction: column;
     gap: 12px;
     padding: 16px;
-    background-color: v-bind('paletteTheme.grey.v_100');
-    border: 1px solid v-bind('paletteTheme.grey.v_200');
+    background-color: v-bind('$themePalette.grey.v_100');
+    border: 1px solid v-bind('$themePalette.grey.v_200');
     border-radius: 4px;
   }
 
@@ -190,11 +185,6 @@
   .page-indicator {
     font-size: 14px;
     color: v-bind('$themeTokens.text');
-  }
-
-  .nav-button {
-    color: v-bind('paletteTheme.grey.v_700') !important;
-    text-decoration: none;
   }
 
   .loader-wrapper {

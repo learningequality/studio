@@ -2,7 +2,6 @@
 
   <Box
     :kind="boxKind"
-    :loading="isLoading"
     data-test="license-status"
   >
     <template #title>
@@ -20,7 +19,8 @@
 
   import { computed } from 'vue';
   import Box from './Box.vue';
-  import { useLicenseNames } from './composables/useLicenseNames';
+  import { formatLicenseNames } from './composables/useLicenseNames';
+  import { findLicense } from 'shared/utils/helpers';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 
   const {
@@ -37,30 +37,22 @@
       Box,
     },
     setup(props) {
-      const invalidLicenseIds = computed(() => {
-        if (!props.invalidLicenses || props.invalidLicenses.length === 0) {
-          return [];
-        }
-        return props.invalidLicenses;
+      const invalidLicenseNames = computed(() => formatLicenseNames(props.invalidLicenses));
+      
+      const includedLicenseNames = computed(() => {
+        if (!props.includedLicenses) return '';
+
+        return props.includedLicenses
+          .map(id => {
+            const license = findLicense(id);
+            return license.license_name;
+          })
+          .filter(name => name !== 'Special Permissions')
+          .join(', ');
       });
-
-      const includedLicenseIds = computed(() => {
-        if (!props.includedLicenses || props.includedLicenses.length === 0) {
-          return [];
-        }
-        return props.includedLicenses;
-      });
-
-      const { formattedLicenseNames: invalidLicenseNames, isLoading: isLoadingInvalid } =
-        useLicenseNames(invalidLicenseIds);
-
-      const { formattedLicenseNames: includedLicenseNames, isLoading: isLoadingIncluded } =
-        useLicenseNames(includedLicenseIds);
-
-      const isLoading = computed(() => isLoadingInvalid.value || isLoadingIncluded.value);
 
       const hasInvalidLicenses = computed(() => {
-        return invalidLicenseIds.value.length > 0;
+        return props.invalidLicenses && props.invalidLicenses.length > 0;
       });
 
       const boxKind = computed(() => {
@@ -76,32 +68,28 @@
 
       const descriptionText = computed(() => {
         if (hasInvalidLicenses.value) {
-          const licenseText = invalidLicenseNames.value ? `"${invalidLicenseNames.value}" - ` : '';
-          return `${licenseText}${channelCannotBeDistributed$()} ${fixLicensingBeforeSubmission$()}`;
+          return `"${invalidLicenseNames.value}" - ${channelCannotBeDistributed$()} ${fixLicensingBeforeSubmission$()}`;
         }
 
-        const licenseText = includedLicenseNames.value || '';
-        const suffix = allLicensesCompatible$();
-        return licenseText ? `${licenseText} - ${suffix}` : suffix;
+        return `${includedLicenseNames.value} - ${allLicensesCompatible$()}`;
       });
 
       return {
         boxKind,
         titleText,
         descriptionText,
-        isLoading,
       };
     },
     props: {
       invalidLicenses: {
         type: Array,
         required: false,
-        default: null,
+        default: () => [],
       },
       includedLicenses: {
         type: Array,
         required: false,
-        default: null,
+        default: () => [],
       },
     },
   };

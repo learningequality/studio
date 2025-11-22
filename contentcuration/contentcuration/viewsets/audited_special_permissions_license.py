@@ -1,12 +1,16 @@
+from django_filters.rest_framework import BaseInFilter
 from django_filters.rest_framework import BooleanFilter
-from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
+from django_filters.rest_framework import UUIDFilter
 from rest_framework.permissions import IsAuthenticated
 
 from contentcuration.models import AuditedSpecialPermissionsLicense
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
 
+
+class UUIDInFilter(BaseInFilter, UUIDFilter):
+    pass
 
 class AuditedSpecialPermissionsLicenseFilter(FilterSet):
     """
@@ -14,16 +18,8 @@ class AuditedSpecialPermissionsLicenseFilter(FilterSet):
     Supports filtering by IDs and distributable status.
     """
 
-    by_ids = CharFilter(method="filter_by_ids")
+    by_ids = UUIDInFilter(field_name="id")
     distributable = BooleanFilter()
-
-    def filter_by_ids(self, queryset, name, value):
-
-        try:
-            id_list = [uuid.strip() for uuid in value.split(",")[:50]]
-            return queryset.filter(id__in=id_list)
-        except (ValueError, AttributeError):
-            return queryset.none()
 
     class Meta:
         model = None

@@ -12,4 +12,3 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "contentcuration.settings")
 # of setting it as an attribute on our custom Celery class
 app = CeleryApp("contentcuration", task_cls=CeleryTask)
 app.config_from_object(settings.CELERY)
-app.autodiscover_tasks(["contentcuration"])

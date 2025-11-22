@@ -1,26 +1,31 @@
-import { computed, onUnmounted, ref, unref } from 'vue';
-import { usePublishedData } from './usePublishedData';
+import { computed, ref, unref, watch } from 'vue';
 import { Channel } from 'shared/data/resources';
 
-const POLLING_INTERVAL_MS = 2000;
-const MAX_POLLING_DURATION_MS = 5 * 60 * 1000;
-
-export function useLicenseAudit(channelId, channelVersion) {
-  const {
-    isLoading: publishedDataIsLoading,
-    isFinished: publishedDataIsFinished,
-    data: publishedData,
-    fetchData: fetchPublishedData,
-  } = usePublishedData(channelId);
-
+export function useLicenseAudit(channelRef, channelVersionRef) {
   const isAuditing = ref(false);
   const auditTaskId = ref(null);
-  const pollingInterval = ref(null);
-  const pollingStartTime = ref(null);
   const auditError = ref(null);
+  const publishedData = ref(null);
+
+  // Watch for changes to the channel's published_data
+  // This will automatically update when the backend audit completes
+  watch(
+    () => unref(channelRef)?.published_data,
+    newPublishedData => {
+      if (newPublishedData) {
+        publishedData.value = newPublishedData;
+        // If we were auditing and now have data, we're done
+        if (isAuditing.value) {
+          isAuditing.value = false;
+          auditError.value = null;
+        }
+      }
+    },
+    { immediate: true, deep: true },
+  );
 
   const currentVersionData = computed(() => {
-    const version = unref(channelVersion);
+    const version = unref(channelVersionRef);
     if (!publishedData.value || version == null) {
       return undefined;
     }
@@ -58,51 +63,9 @@ export function useLicenseAudit(channelId, channelVersion) {
     return versionData.included_licenses;
   });
 
-  const isAuditInProgress = computed(() => {
-    if (isAuditComplete.value) return false;
-    return isAuditing.value || pollingInterval.value !== null;
-  });
-
   const isAuditComplete = computed(() => {
-    return publishedDataIsFinished.value && hasAuditData.value;
+    return publishedData.value !== null && hasAuditData.value;
   });
-
-  function stopPolling() {
-    if (pollingInterval.value) {
-      clearInterval(pollingInterval.value);
-      pollingInterval.value = null;
-    }
-    pollingStartTime.value = null;
-  }
-
-  function startPolling() {
-    if (pollingInterval.value) return;
-
-    pollingStartTime.value = Date.now();
-
-    pollingInterval.value = setInterval(async () => {
-      if (Date.now() - pollingStartTime.value > MAX_POLLING_DURATION_MS) {
-        stopPolling();
-        auditError.value = new Error('Audit timeout: Maximum polling duration exceeded');
-        isAuditing.value = false;
-        return;
-      }
-
-      try {
-        await fetchPublishedData();
-
-        if (hasAuditData.value) {
-          stopPolling();
-          isAuditing.value = false;
-          auditError.value = null;
-        }
-      } catch (error) {
-        stopPolling();
-        isAuditing.value = false;
-        auditError.value = error;
-      }
-    }, POLLING_INTERVAL_MS);
-  }
 
   async function triggerAudit() {
     if (isAuditing.value) return;
@@ -111,10 +74,16 @@ export function useLicenseAudit(channelId, channelVersion) {
       isAuditing.value = true;
       auditError.value = null;
 
+      const channelId = unref(channelRef)?.id;
+      if (!channelId) {
+        throw new Error('Channel ID is required to trigger audit');
+      }
+
       const response = await Channel.auditLicenses(channelId);
       auditTaskId.value = response.task_id;
 
-      startPolling();
+      // No need to poll - the channel's published_data will update automatically
+      // when the backend audit completes
     } catch (error) {
       isAuditing.value = false;
       auditError.value = error;
@@ -122,8 +91,22 @@ export function useLicenseAudit(channelId, channelVersion) {
     }
   }
 
+  async function fetchPublishedData() {
+    const channelId = unref(channelRef)?.id;
+    if (!channelId) return;
+
+    try {
+      const data = await Channel.getPublishedData(channelId);
+      publishedData.value = data;
+    } catch (error) {
+      auditError.value = error;
+      throw error;
+    }
+  }
+
   async function checkAndTriggerAudit() {
-    if (!publishedDataIsFinished.value) {
+    // Fetch published data if we don't have it yet
+    if (!publishedData.value) {
       await fetchPublishedData();
     }
 
@@ -134,17 +117,13 @@ export function useLicenseAudit(channelId, channelVersion) {
     await triggerAudit();
   }
 
-  onUnmounted(() => {
-    stopPolling();
-  });
-
   return {
     isLoading: computed(() => {
       if (isAuditComplete.value || auditError.value) return false;
-      return publishedDataIsLoading.value || isAuditInProgress.value;
+      return isAuditing.value;
     }),
     isFinished: computed(() => isAuditComplete.value),
-    isAuditing: isAuditInProgress,
+    isAuditing,
     invalidLicenses,
     specialPermissions,
     includedLicenses,
