@@ -7,14 +7,11 @@ export function useLicenseAudit(channelRef, channelVersionRef) {
   const auditError = ref(null);
   const publishedData = ref(null);
 
-  // Watch for changes to the channel's published_data
-  // This will automatically update when the backend audit completes
   watch(
     () => unref(channelRef)?.published_data,
     newPublishedData => {
       if (newPublishedData) {
         publishedData.value = newPublishedData;
-        // If we were auditing and now have data, we're done
         if (isAuditing.value) {
           isAuditing.value = false;
           auditError.value = null;
@@ -81,9 +78,6 @@ export function useLicenseAudit(channelRef, channelVersionRef) {
 
       const response = await Channel.auditLicenses(channelId);
       auditTaskId.value = response.task_id;
-
-      // No need to poll - the channel's published_data will update automatically
-      // when the backend audit completes
     } catch (error) {
       isAuditing.value = false;
       auditError.value = error;
@@ -105,7 +99,6 @@ export function useLicenseAudit(channelRef, channelVersionRef) {
   }
 
   async function checkAndTriggerAudit() {
-    // Fetch published data if we don't have it yet
     if (!publishedData.value) {
       await fetchPublishedData();
     }

@@ -259,6 +259,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   nextPage: {
     message: 'Next',
     context: 'Button text to navigate to the next page in pagination',
+  },
   resubmitModalTitle: {
     message: 'Resubmit channel for Community library review?',
     context:
