@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import Vuex from 'vuex';
+import Vuex, { Store } from 'vuex';
 import VueRouter from 'vue-router';
 import { render, screen, waitFor } from '@testing-library/vue';
 import { configure } from '@testing-library/dom';
@@ -11,6 +11,7 @@ Vue.use(VueRouter);
 
 configure({ testIdAttribute: 'data-test' });
 
+// ---- Mocks and helpers ---------------------------------------------------
 const loginMock = jest.fn();
 
 const makeRouter = (query = {}) => {
@@ -20,7 +21,11 @@ const makeRouter = (query = {}) => {
       { path: '/signin', name: 'SignIn', component: AccountsMain },
       { path: '/forgot', name: 'ForgotPassword', component: { render: h => h('div') } },
       { path: '/create', name: 'Create', component: { render: h => h('div') } },
-      { path: '/account-not-activated', name: 'AccountNotActivated', component: { render: h => h('div') } },
+      {
+        path: '/account-not-activated',
+        name: 'AccountNotActivated',
+        component: { render: h => h('div') },
+      },
     ],
   });
   router.replace({ path: '/signin', query });
@@ -28,7 +33,7 @@ const makeRouter = (query = {}) => {
 };
 
 const makeStore = (overrides = {}) =>
-  new Vuex.Store({
+  new Store({
     state: { connection: { online: true }, ...(overrides.state || {}) },
     actions: {
       login: loginMock,
@@ -62,6 +67,7 @@ const renderComponent = ({ query, store } = {}) => {
   return { router, ...utils };
 };
 
+// ---- Window location stub (for next= redirect) ---------------------------
 const origLocation = window.location;
 beforeEach(() => {
   jest.clearAllMocks();
@@ -71,15 +77,16 @@ afterAll(() => {
   window.location = origLocation;
 });
 
-describe('AccountsMain (VTL)', () => {
-  test('renders sign-in form', () => {
+// ---- Tests ---------------------------------------------------------------
+describe('AccountsMain', () => {
+  it('renders sign-in form', () => {
     renderComponent({});
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
   });
 
-  test('submitting empty form blocks login and shows validation', async () => {
+  it('submitting empty form blocks login and shows validation', async () => {
     loginMock.mockResolvedValue();
     renderComponent({});
     await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
@@ -88,7 +95,7 @@ describe('AccountsMain (VTL)', () => {
     expect(msgs.length).toBeGreaterThanOrEqual(1);
   });
 
-  test('valid credentials call login', async () => {
+  it('valid credentials call login', async () => {
     loginMock.mockResolvedValue();
     renderComponent({});
     await userEvent.type(screen.getByLabelText(/email/i), 'test@test.com');
@@ -97,7 +104,7 @@ describe('AccountsMain (VTL)', () => {
     await waitFor(() => expect(loginMock).toHaveBeenCalled());
   });
 
-  test('with ?next= shows banner and redirects after successful login', async () => {
+  it('with ?next= shows banner and redirects after successful login', async () => {
     loginMock.mockResolvedValue();
     const nextUrl = '/test-next/';
     const { router } = renderComponent({ query: { next: nextUrl } });
@@ -114,7 +121,7 @@ describe('AccountsMain (VTL)', () => {
     expect(router.currentRoute.name).toBe('SignIn');
   });
 
-  test('generic failure does not navigate', async () => {
+  it('generic failure does not navigate', async () => {
     loginMock.mockRejectedValue({ response: { status: 500 } });
     const { router } = renderComponent({});
     await userEvent.type(screen.getByLabelText(/email/i), 'test@test.com');
@@ -125,7 +132,7 @@ describe('AccountsMain (VTL)', () => {
     expect(router.currentRoute.name).toBe('SignIn');
   });
 
-  test('405 failure navigates to AccountNotActivated', async () => {
+  it('405 failure navigates to AccountNotActivated', async () => {
     const store = {
       actions: { login: jest.fn().mockRejectedValue({ response: { status: 405 } }) },
     };
@@ -137,7 +144,7 @@ describe('AccountsMain (VTL)', () => {
     await waitFor(() => expect(router.currentRoute.name).toBe('AccountNotActivated'));
   });
 
-  test('calls login with exact payload', async () => {
+  it('calls login with exact payload', async () => {
     loginMock.mockResolvedValue();
     const nextUrl = '/test-next/';
     renderComponent({ query: { next: nextUrl } });
