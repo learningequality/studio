@@ -850,17 +850,19 @@ def mark_all_nodes_as_published(tree):
     logging.info("Marked all nodes as published.")
 
 
+def get_content_db_path(channel_id, version=None):
+    if version is not None:
+        return os.path.join(settings.DB_ROOT, f"{channel_id}-{version}.sqlite3")
+    return os.path.join(settings.DB_ROOT, f"{channel_id}.sqlite3")
+
+
 def save_export_database(channel_id, version, is_draft_version=False):
     logging.debug("Saving export database")
     current_export_db_location = get_active_content_database()
-    target_paths = [
-        os.path.join(settings.DB_ROOT, "{}-{}.sqlite3".format(channel_id, version))
-    ]
+    target_paths = [get_content_db_path(channel_id, version)]
     # Only create non-version path if not is_draft_version
     if not is_draft_version:
-        target_paths.append(
-            os.path.join(settings.DB_ROOT, "{id}.sqlite3".format(id=channel_id))
-        )
+        target_paths.append(get_content_db_path(channel_id))
 
     for target_export_db_location in target_paths:
         with open(current_export_db_location, "rb") as currentf:
@@ -1102,13 +1104,8 @@ def ensure_versioned_database_exists(channel_id, channel_version):
     if channel_version == 0:
         raise ValueError("An unpublished channel cannot have a versioned database.")
 
-    unversioned_db_storage_path = os.path.join(
-        settings.DB_ROOT, "{id}.sqlite3".format(id=channel_id)
-    )
-    versioned_db_storage_path = os.path.join(
-        settings.DB_ROOT,
-        "{id}-{version}.sqlite3".format(id=channel_id, version=channel_version),
-    )
+    unversioned_db_storage_path = get_content_db_path(channel_id)
+    versioned_db_storage_path = get_content_db_path(channel_id, channel_version)
 
     if not storage.exists(versioned_db_storage_path):
         if not storage.exists(unversioned_db_storage_path):

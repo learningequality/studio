@@ -130,6 +130,36 @@
                 {{ detectedCategories }}
               </LoadingText>
             </div>
+            <div
+              v-if="licenseAuditIsLoading && !isPublishing"
+              class="license-audit-loader"
+            >
+              <KCircularLoader disableDefaultTransition />
+              <div class="audit-text-wrapper">
+                <div class="audit-text-primary">
+                  {{ checkingChannelCompatibility$() }}
+                </div>
+                <div class="audit-text-secondary">
+                  {{ checkingChannelCompatibilitySecondary$() }}
+                </div>
+              </div>
+            </div>
+            <LicenseStatus
+              v-if="licenseAuditIsFinished && !isPublishing"
+              :invalid-licenses="invalidLicenses"
+              :included-licenses="includedLicenses"
+            />
+            <SpecialPermissionsList
+              v-if="
+                licenseAuditIsFinished &&
+                  specialPermissions &&
+                  specialPermissions.length > 0 &&
+                  !isPublishing
+              "
+              v-model="checkedSpecialPermissions"
+              :permission-ids="specialPermissions"
+              @update:allChecked="allSpecialPermissionsChecked = $event"
+            />
             <div class="country-area">
               <KTransition kind="component-fade-out-in">
                 <div
@@ -201,7 +231,7 @@
 
 <script>
 
-  import { computed, getCurrentInstance, onMounted, ref, watch } from 'vue';
+  import { computed, getCurrentInstance, onMounted, ref, toRef, watch } from 'vue';
   import { themeTokens, themePalette } from 'kolibri-design-system/lib/styles/theme';
 
   import camelCase from 'lodash/camelCase';
@@ -210,8 +240,11 @@
   import LoadingText from './LoadingText';
   import StatusChip from './StatusChip';
   import { useLatestCommunityLibrarySubmission } from './composables/useLatestCommunityLibrarySubmission';
+  import { useLicenseAudit } from './composables/useLicenseAudit';
   import { usePublishedData } from './composables/usePublishedData';
 
+  import LicenseStatus from './LicenseStatus.vue';
+  import SpecialPermissionsList from './SpecialPermissionsList.vue';
   import { translateMetadataString } from 'shared/utils/metadataStringsTranslation';
   import countriesUtil from 'shared/utils/countries';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
@@ -230,6 +263,8 @@
       LoadingText,
       StatusChip,
       CountryField,
+      LicenseStatus,
+      SpecialPermissionsList,
     },
     emits: ['close'],
     setup(props, { emit }) {
@@ -266,6 +301,8 @@
         submittingSnackbar$,
         publishingMessage$,
         confirmReplacementText$,
+        checkingChannelCompatibility$,
+        checkingChannelCompatibilitySecondary$,
       } = communityChannelsStrings;
 
       const annotationColor = computed(() => tokensTheme.annotation);
@@ -277,6 +314,7 @@
       const isPublishing = computed(() => props.channel?.publishing === true);
       const currentChannelVersion = computed(() => props.channel?.version);
       const replacementConfirmed = ref(false);
+      const checkedSpecialPermissions = ref([]);
 
       const {
         isLoading: latestSubmissionIsLoading,
@@ -368,18 +406,6 @@
         );
       });
 
-      const canBeSubmitted = computed(() => {
-        if (isPublishing.value) return false;
-        const baseCondition =
-          canBeEdited.value && publishedDataIsFinished.value && description.value.length >= 1;
-
-        if (needsReplacementConfirmation.value) {
-          return baseCondition && replacementConfirmed.value;
-        }
-
-        return baseCondition;
-      });
-
       const {
         isLoading: publishedDataIsLoading,
         isFinished: publishedDataIsFinished,
@@ -398,6 +424,37 @@
         return channelVersion;
       });
 
+      const {
+        isLoading: licenseAuditIsLoading,
+        isFinished: licenseAuditIsFinished,
+        invalidLicenses,
+        specialPermissions,
+        includedLicenses,
+        checkAndTriggerAudit: checkAndTriggerLicenseAudit,
+      } = useLicenseAudit(toRef(props, 'channel'), currentChannelVersion);
+
+      const allSpecialPermissionsChecked = ref(true);
+
+      const hasInvalidLicenses = computed(() => {
+        return invalidLicenses.value && invalidLicenses.value.length > 0;
+      });
+
+      const canBeSubmitted = computed(() => {
+        if (!allSpecialPermissionsChecked.value) return false;
+        if (isPublishing.value) return false;
+        if (hasInvalidLicenses.value) return false;
+        if (!licenseAuditIsFinished.value) return false;
+
+        const baseCondition =
+          canBeEdited.value && publishedDataIsFinished.value && description.value.length >= 1;
+
+        if (needsReplacementConfirmation.value) {
+          return baseCondition && replacementConfirmed.value;
+        }
+
+        return baseCondition;
+      });
+
       const latestPublishedData = computed(() => {
         if (!publishedData.value || !displayedVersion.value) return undefined;
         return publishedData.value[displayedVersion.value];
@@ -407,6 +464,7 @@
       watch(isPublishing, async (newIsPublishing, oldIsPublishing) => {
         if (oldIsPublishing === true && newIsPublishing === false) {
           await fetchPublishedData();
+          await checkAndTriggerLicenseAudit();
         }
       });
 
@@ -415,6 +473,7 @@
 
         if (!isPublishing.value) {
           await fetchPublishedData();
+          await checkAndTriggerLicenseAudit();
         }
       });
 
@@ -520,6 +579,11 @@
         publishedDataIsFinished,
         detectedLanguages,
         detectedCategories,
+        licenseAuditIsLoading,
+        licenseAuditIsFinished,
+        invalidLicenses,
+        specialPermissions,
+        includedLicenses,
         onSubmit,
         // Translation functions
         submitToCommunityLibrary$,
@@ -541,6 +605,10 @@
         isPublishing,
         publishingMessage$,
         confirmReplacementText$,
+        checkingChannelCompatibility$,
+        checkingChannelCompatibilitySecondary$,
+        checkedSpecialPermissions,
+        allSpecialPermissionsChecked,
       };
     },
     props: {
@@ -643,6 +711,35 @@
   .publishing-text {
     font-size: 14px;
     color: v-bind('infoTextColor');
+  }
+
+  .license-audit-loader {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    align-items: flex-start;
+    width: 100%;
+    padding: 16px 0;
+  }
+
+  .audit-text-wrapper {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .audit-text-primary {
+    font-size: 14px;
+    line-height: 140%;
+    color: v-bind('infoTextColor');
+  }
+
+  .audit-text-secondary {
+    font-size: 14px;
+    line-height: 140%;
+    color: v-bind('infoTextColor');
+    opacity: 0.7;
   }
 
   .info-section {
