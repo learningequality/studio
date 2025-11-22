@@ -11,14 +11,14 @@
         :text="`Email ${$formatNumber(count)} ${count === 1 ? 'user' : 'users'}`"
         @click="showMassEmailDialog = true"
       />
-      <EmailUsersDialog
-        v-model="showMassEmailDialog"
-        :userTypeFilter="userTypeFilter"
-        :locationFilter="locationFilter"
-        :keywordFilter="keywordInput"
-        :usersFilterFetchQueryParams="filterFetchQueryParams"
-      />
     </h1>
+    <EmailUsersDialog
+      v-model="showMassEmailDialog"
+      :userTypeFilter="userTypeFilter"
+      :locationFilter="locationFilter"
+      :keywordFilter="keywordInput"
+      :usersFilterFetchQueryParams="filterFetchQueryParams"
+    />
     <VLayout
       wrap
       class="mb-2"

@@ -259,5 +259,28 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   nextPage: {
     message: 'Next',
     context: 'Button text to navigate to the next page in pagination',
+  resubmitModalTitle: {
+    message: 'Resubmit channel for Community library review?',
+    context:
+      'Title of the modal shown after publishing a channel that already has Community Library submissions',
+  },
+  resubmitModalBodyFirst: {
+    message: '{channelName} v{version} is also published to the Community Library.',
+    context:
+      'First sentence of the body text of the modal shown after publishing a channel that already has Community Library submissions',
+  },
+  resubmitModalBodySecond: {
+    message:
+      'Would you like to resubmit this version with your changes for community library review?',
+    context:
+      'Second sentence of the body text of the modal shown after publishing a channel that already has Community Library submissions',
+  },
+  resubmitAction: {
+    message: 'Resubmit',
+    context: 'Action in the resubmit modal to open the submit to Community Library side panel',
+  },
+  dismissAction: {
+    message: 'Dismiss',
+    context: 'Action in the resubmit modal to dismiss the modal',
   },
 });

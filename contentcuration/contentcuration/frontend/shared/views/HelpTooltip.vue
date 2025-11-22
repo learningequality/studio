@@ -8,6 +8,8 @@
       outlineIcon="infoOutline"
       filledIcon="info"
       :aria-label="text"
+      :outlineColor="$themePalette.blue.v_500"
+      :filledColor="$themePalette.blue.v_500"
     />
     <KTooltip
       class="tooltip"
