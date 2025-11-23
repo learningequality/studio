@@ -2594,11 +2594,12 @@ class CommunityLibrarySubmission(models.Model):
     )
     categories = models.JSONField(blank=True, null=True)
     date_created = models.DateTimeField(auto_now_add=True)
-    date_resolved = models.DateTimeField(blank=True, null=True)
+    date_updated = models.DateTimeField(blank=True, null=True, db_index=True)
     status = models.CharField(
         max_length=20,
         choices=community_library_submission.status_choices,
         default=community_library_submission.STATUS_PENDING,
+        db_index=True,
     )
     resolved_by = models.ForeignKey(
         User,
@@ -2704,7 +2705,7 @@ class CommunityLibrarySubmission(models.Model):
         ]
         indexes = [
             # Useful for cursor pagination
-            models.Index(fields=["-date_created"], name="submission_date_created_idx"),
+            models.Index(fields=["-date_updated"], name="submission_date_updated_idx"),
         ]
 
 

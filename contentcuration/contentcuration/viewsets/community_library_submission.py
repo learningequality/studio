@@ -1,6 +1,10 @@
 from django.utils import timezone
+import django_filters
+from django_filters import DateTimeFilter
+from django_filters import MultipleChoiceFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
+from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.response import Response
@@ -26,6 +30,22 @@ from contentcuration.viewsets.sync.utils import (
     generate_added_to_community_library_event,
 )
 from contentcuration.viewsets.user import IsAdminUser
+
+
+class CommunityLibrarySubmissionFilterSet(django_filters.FilterSet):
+    """
+    FilterSet for CommunityLibrarySubmission to support notifications page filtering.
+    """
+    date_updated__lte = DateTimeFilter(field_name='date_updated', lookup_expr='lte')
+    date_updated__gte = DateTimeFilter(field_name='date_updated', lookup_expr='gte')
+    status__in = MultipleChoiceFilter(
+        field_name='status',
+        choices=community_library_submission_constants.status_choices,
+    )
+
+    class Meta:
+        model = CommunityLibrarySubmission
+        fields = ['channel', 'date_updated__lte', 'date_updated__gte', 'status__in']
 
 
 class CommunityLibrarySubmissionSerializer(BulkModelSerializer):
@@ -163,13 +183,21 @@ class CommunityLibrarySubmissionResolveSerializer(CommunityLibrarySubmissionSeri
 
 
 class CommunityLibrarySubmissionPagination(ValuesViewsetCursorPagination):
-    ordering = "-date_created"
+    ordering = "-date_updated"
     page_size_query_param = "max_results"
     max_page_size = 100
 
 
 def get_author_name(item):
     return "{} {}".format(item["author__first_name"], item["author__last_name"])
+
+
+def get_resolved_by_name(item):
+    if item.get("resolved_by__first_name") and item.get("resolved_by__last_name"):
+        return "{} {}".format(
+            item["resolved_by__first_name"], item["resolved_by__last_name"]
+        )
+    return None
 
 
 class CommunityLibrarySubmissionViewSetMixin:
@@ -191,14 +219,19 @@ class CommunityLibrarySubmissionViewSetMixin:
         "status",
         "resolution_reason",
         "feedback_notes",
-        "date_resolved",
+        "date_updated",
+        "resolved_by_id",
+        "resolved_by__first_name",
+        "resolved_by__last_name",
     )
     field_map = {
         "author_name": get_author_name,
+        "resolved_by_name": get_resolved_by_name,
     }
-    queryset = CommunityLibrarySubmission.objects.all().order_by("-date_created")
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ["channel"]
+    queryset = CommunityLibrarySubmission.objects.all().order_by("-date_updated")
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_class = CommunityLibrarySubmissionFilterSet
+    search_fields = ["channel__name"]
     pagination_class = CommunityLibrarySubmissionPagination
 
     def consolidate(self, items, queryset):
@@ -227,12 +260,6 @@ class CommunityLibrarySubmissionViewSet(
     serializer_class = CommunityLibrarySubmissionSerializer
 
 
-def get_resolved_by_name(item):
-    return "{} {}".format(
-        item["resolved_by__first_name"], item["resolved_by__last_name"]
-    )
-
-
 class AdminCommunityLibrarySubmissionViewSet(
     CommunityLibrarySubmissionViewSetMixin,
     ReadOnlyValuesViewset,
@@ -240,17 +267,9 @@ class AdminCommunityLibrarySubmissionViewSet(
     permission_classes = [IsAdminUser]
 
     values = CommunityLibrarySubmissionViewSetMixin.values + (
-        "resolved_by_id",
-        "resolved_by__first_name",
-        "resolved_by__last_name",
         "internal_notes",
     )
     field_map = CommunityLibrarySubmissionViewSetMixin.field_map.copy()
-    field_map.update(
-        {
-            "resolved_by_name": get_resolved_by_name,
-        }
-    )
 
     def _mark_previous_pending_submissions_as_superseded(self, submission):
         CommunityLibrarySubmission.objects.filter(
@@ -288,9 +307,9 @@ class AdminCommunityLibrarySubmissionViewSet(
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
-        date_resolved = timezone.now()
+        date_updated = timezone.now()
         submission = serializer.save(
-            date_resolved=date_resolved,
+            date_updated=date_updated,
             resolved_by=request.user,
         )
 
