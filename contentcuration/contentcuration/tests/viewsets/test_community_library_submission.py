@@ -1064,7 +1064,9 @@ class FilteringAndSearchTestCase(StudioAPITestCase):
         response = self.client.get(
             reverse_with_query(
                 "community-library-submission-list",
-                query={"status__in": community_library_submission_constants.STATUS_APPROVED},
+                query={
+                    "status__in": community_library_submission_constants.STATUS_APPROVED
+                },
             )
         )
         self.assertEqual(response.status_code, 200, response.content)
@@ -1089,12 +1091,8 @@ class FilteringAndSearchTestCase(StudioAPITestCase):
         results = response.data
         self.assertEqual(len(results), 2)
         statuses = [r["status"] for r in results]
-        self.assertIn(
-            community_library_submission_constants.STATUS_APPROVED, statuses
-        )
-        self.assertIn(
-            community_library_submission_constants.STATUS_REJECTED, statuses
-        )
+        self.assertIn(community_library_submission_constants.STATUS_APPROVED, statuses)
+        self.assertIn(community_library_submission_constants.STATUS_REJECTED, statuses)
         self.assertNotIn(
             community_library_submission_constants.STATUS_PENDING, statuses
         )

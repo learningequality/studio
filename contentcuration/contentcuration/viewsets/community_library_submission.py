@@ -1,5 +1,5 @@
-from django.utils import timezone
 import django_filters
+from django.utils import timezone
 from django_filters import DateTimeFilter
 from django_filters import MultipleChoiceFilter
 from django_filters.rest_framework import DjangoFilterBackend
@@ -36,16 +36,17 @@ class CommunityLibrarySubmissionFilterSet(django_filters.FilterSet):
     """
     FilterSet for CommunityLibrarySubmission to support notifications page filtering.
     """
-    date_updated__lte = DateTimeFilter(field_name='date_updated', lookup_expr='lte')
-    date_updated__gte = DateTimeFilter(field_name='date_updated', lookup_expr='gte')
+
+    date_updated__lte = DateTimeFilter(field_name="date_updated", lookup_expr="lte")
+    date_updated__gte = DateTimeFilter(field_name="date_updated", lookup_expr="gte")
     status__in = MultipleChoiceFilter(
-        field_name='status',
+        field_name="status",
         choices=community_library_submission_constants.status_choices,
     )
 
     class Meta:
         model = CommunityLibrarySubmission
-        fields = ['channel', 'date_updated__lte', 'date_updated__gte', 'status__in']
+        fields = ["channel", "date_updated__lte", "date_updated__gte", "status__in"]
 
 
 class CommunityLibrarySubmissionSerializer(BulkModelSerializer):
@@ -266,9 +267,7 @@ class AdminCommunityLibrarySubmissionViewSet(
 ):
     permission_classes = [IsAdminUser]
 
-    values = CommunityLibrarySubmissionViewSetMixin.values + (
-        "internal_notes",
-    )
+    values = CommunityLibrarySubmissionViewSetMixin.values + ("internal_notes",)
     field_map = CommunityLibrarySubmissionViewSetMixin.field_map.copy()
 
     def _mark_previous_pending_submissions_as_superseded(self, submission):
