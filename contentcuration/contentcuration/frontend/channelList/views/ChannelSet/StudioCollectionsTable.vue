@@ -5,12 +5,9 @@
       <div class="header-left">
         <KButton
           appearance="basic-link"
-          class="info-link"
+          :text="$tr('aboutChannelSetsLink')"
           @click="infoDialog = true"
-        >
-          {{ $tr('aboutChannelSetsLink') }}
-        </KButton>
-
+        />
         <KModal
           v-if="infoDialog"
           :title="$tr('aboutChannelSets')"
