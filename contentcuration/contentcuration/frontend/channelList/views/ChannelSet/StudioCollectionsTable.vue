@@ -17,10 +17,7 @@
           <div class="info-content">
             <p>{{ $tr('channelSetsDescriptionText') }}</p>
             <p>{{ $tr('channelSetsInstructionsText') }}</p>
-            <p
-              class="disclaimer"
-              :style="{ color: $themeTokens.error }"
-            >
+            <p :style="{ color: $themeTokens.error }">
               {{ $tr('channelSetsDisclaimer') }}
             </p>
           </div>
@@ -39,9 +36,8 @@
       </div>
     </div>
 
-    <div class="table-container">
+    <div>
       <KTable
-        class="collections-table"
         :stickyColumns="stickyColumns"
         caption=""
         :headers="tableHeaders"
@@ -53,45 +49,31 @@
       >
         <template #cell="{ content, colIndex }">
           <!-- Column 0: Collection Name -->
-          <div
-            v-if="colIndex === 0"
-            class="collection-name-cell"
-          >
-            <div class="collection-info">
-              <h3
-                class="collection-title notranslate"
-                dir="auto"
-              >
+          <div v-if="colIndex === 0">
+            <div>
+              <h3 dir="auto">
                 {{ content }}
               </h3>
             </div>
           </div>
 
           <!-- Column 1: Tokens -->
-          <div
-            v-else-if="colIndex === 1"
-            class="tokens-cell"
-          >
+          <div v-else-if="colIndex === 1">
             <StudioCopyToken
               v-if="content"
               :token="content"
-              class="token-item"
               :loading="!content"
             />
             <em
               v-else
               :style="{ color: $themeTokens.annotation }"
-              class="saving-text"
             >
               {{ $tr('saving') }}
             </em>
           </div>
 
           <!-- Column 2: Channel Count -->
-          <div
-            v-else-if="colIndex === 2"
-            class="channel-count"
-          >
+          <div v-else-if="colIndex === 2">
             {{ $formatNumber(content) }}
           </div>
 
