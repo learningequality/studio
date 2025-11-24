@@ -14,7 +14,7 @@
           :cancelText="$tr('cancelButtonLabel')"
           @cancel="infoDialog = false"
         >
-          <div class="info-content">
+          <div>
             <p>{{ $tr('channelSetsDescriptionText') }}</p>
             <p>{{ $tr('channelSetsInstructionsText') }}</p>
             <p :style="{ color: $themeTokens.error }">
@@ -305,10 +305,6 @@
   .header-right {
     display: flex;
     align-items: center;
-  }
-
-  .info-content p {
-    margin-bottom: 16px;
   }
 
   .actions-cell {
