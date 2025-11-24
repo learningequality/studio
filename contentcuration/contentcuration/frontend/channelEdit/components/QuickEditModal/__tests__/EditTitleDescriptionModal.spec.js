@@ -65,13 +65,12 @@ describe('EditTitleDescriptionModal', () => {
 
     modal.vm.$emit('submit');
 
-    expect(updateContentNode).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: nodeId,
-        title: newTitle,
-        description: newDescription,
-      }),
-    );
+    expect(updateContentNode).toHaveBeenCalledWith({
+      id: nodeId,
+      title: newTitle,
+      description: newDescription ?? '',
+      checkComplete: true,
+    });
   });
 
   it('should let update even if description is empty', () => {
@@ -80,14 +79,12 @@ describe('EditTitleDescriptionModal', () => {
     descriptionInput.vm.$emit('input', '');
 
     modal.vm.$emit('submit');
-
-    expect(updateContentNode).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: nodeId,
-        title: newTitle,
-        description: '',
-      }),
-    );
+    expect(updateContentNode).toHaveBeenCalledWith({
+      id: nodeId,
+      title: newTitle,
+      description: '',
+      checkComplete: true,
+    });
   });
 
   it('should validate title on blur', async () => {
