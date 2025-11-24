@@ -42,7 +42,7 @@
       :rows="tableRows"
       :dataLoading="loading"
       sortable
-      disableBuiltinSorting
+      :defaultSort="{ columnId: 'name', direction: 'asc' }"
       :emptyMessage="$tr('noChannelSetsFound')"
     >
       <template #cell="{ content, colIndex }">
