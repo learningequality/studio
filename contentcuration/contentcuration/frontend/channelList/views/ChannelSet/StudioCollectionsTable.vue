@@ -29,75 +29,72 @@
           v-if="!loading"
           appearance="raised-button"
           primary
-          data-test="add-channelset"
           :text="$tr('addChannelSetTitle')"
           @click="newChannelSet"
         />
       </div>
     </div>
 
-    <div>
-      <KTable
-        :stickyColumns="stickyColumns"
-        caption=""
-        :headers="tableHeaders"
-        :rows="tableRows"
-        :dataLoading="loading"
-        sortable
-        disableBuiltinSorting
-        :emptyMessage="$tr('noChannelSetsFound')"
-      >
-        <template #cell="{ content, colIndex }">
-          <!-- Column 0: Collection Name -->
-          <div v-if="colIndex === 0">
-            <div>
-              <h3 dir="auto">
-                {{ content }}
-              </h3>
-            </div>
+    <KTable
+      :stickyColumns="stickyColumns"
+      caption=""
+      :headers="tableHeaders"
+      :rows="tableRows"
+      :dataLoading="loading"
+      sortable
+      disableBuiltinSorting
+      :emptyMessage="$tr('noChannelSetsFound')"
+    >
+      <template #cell="{ content, colIndex }">
+        <!-- Column 0: Collection Name -->
+        <div v-if="colIndex === 0">
+          <div>
+            <h3 dir="auto">
+              {{ content }}
+            </h3>
           </div>
+        </div>
 
-          <!-- Column 1: Tokens -->
-          <div v-else-if="colIndex === 1">
-            <StudioCopyToken
-              v-if="content"
-              :token="content"
-              :loading="!content"
-            />
-            <em
-              v-else
-              :style="{ color: $themeTokens.annotation }"
-            >
-              {{ $tr('saving') }}
-            </em>
-          </div>
-
-          <!-- Column 2: Channel Count -->
-          <div v-else-if="colIndex === 2">
-            {{ $formatNumber(content) }}
-          </div>
-
-          <!-- Column 3: Actions -->
-          <div
-            v-else-if="colIndex === 3"
-            class="actions-cell"
+        <!-- Column 1: Tokens -->
+        <div v-else-if="colIndex === 1">
+          <StudioCopyToken
+            v-if="content"
+            :token="content"
+            :loading="!content"
+          />
+          <em
+            v-else
+            :style="{ color: $themeTokens.annotation }"
           >
-            <KIconButton
-              icon="optionsVertical"
-              :aria-label="$tr('options')"
-            >
-              <template #menu>
-                <KDropdownMenu
-                  :options="dropdownOptions"
-                  :hasIcons="true"
-                  @select="option => handleOptionSelect(option, content)"
-                />
-              </template>
-            </KIconButton>
-          </div>
-        </template>
-      </KTable>
-    </div>
+            {{ $tr('saving') }}
+          </em>
+        </div>
+
+        <!-- Column 2: Channel Count -->
+        <div v-else-if="colIndex === 2">
+          {{ $formatNumber(content) }}
+        </div>
+
+        <!-- Column 3: Actions -->
+        <div
+          v-else-if="colIndex === 3"
+          class="actions-cell"
+        >
+          <KIconButton
+            icon="optionsVertical"
+            :aria-label="$tr('options')"
+          >
+            <template #menu>
+              <KDropdownMenu
+                :options="dropdownOptions"
+                :hasIcons="true"
+                @select="option => handleOptionSelect(option, content)"
+              />
+            </template>
+          </KIconButton>
+        </div>
+      </template>
+    </KTable>
 
     <!-- Delete Confirmation Modal -->
     <KModal
