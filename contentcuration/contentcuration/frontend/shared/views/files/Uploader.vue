@@ -26,10 +26,7 @@
       v-if="showUnsupportedFilesAlert"
       :title="$tr('unsupportedFilesHeader')"
       :submitText="$tr('closeButtonLabel')"
-      @submit="
-        showUnsupportedFilesAlert = false;
-        resetFileInput();
-      "
+      @submit="showUnsupportedFilesAlert = false"
     >
       <p>{{ unsupportedFilesText }}</p>
     </KModal>
@@ -37,10 +34,7 @@
       v-if="showTooLargeFilesAlert"
       :title="$tr('tooLargeFilesHeader')"
       :submitText="$tr('closeButtonLabel')"
-      @submit="
-        showTooLargeFilesAlert = false;
-        resetFileInput();
-      "
+      @submit="showTooLargeFilesAlert = false"
     >
       <p>
         {{
@@ -55,10 +49,7 @@
       v-if="showStorageExceededAlert"
       :title="$tr('noStorageHeader')"
       :submitText="$tr('closeButtonLabel')"
-      @submit="
-        showStorageExceededAlert = false;
-        resetFileInput();
-      "
+      @submit="showStorageExceededAlert = false"
     >
       <div class="storage-alert">
         <p>{{ $tr('uploadSize', { size: formatFileSize(totalUploadSize) }) }}</p>
@@ -217,36 +208,40 @@
         this.$emit('upload');
 
         if (!this.readonly) {
-          files = this.allowMultiple ? files : [files[0]];
-          files = await this.validateFiles(files);
+          try {
+            files = this.allowMultiple ? files : [files[0]];
+            files = await this.validateFiles(files);
 
-          // Show errors if relevant
-          if (this.totalUploadSize > this.availableSpace) {
-            this.showStorageExceededAlert = true;
-            return;
-          } else if (this.unsupportedFiles.length) {
-            this.showUnsupportedFilesAlert = true;
-          } else if (this.tooLargeFiles.length) {
-            this.showTooLargeFilesAlert = true;
-          }
-          return this.handleUploads(files).then(fileUploads => {
-            const objects = fileUploads.map(f => f.fileObject).filter(f => !f.error);
-            if (fileUploads.length) {
-              for (const fileUpload of fileUploads) {
-                fileUpload.uploadPromise
-                  .then(fileObject => {
-                    if (isFunction(this.uploadCompleteHandler)) {
-                      this.uploadCompleteHandler(this.getFileUpload(fileObject.id));
-                    }
-                  })
-                  .catch(() => {});
-              }
-              if (isFunction(this.uploadingHandler)) {
-                this.uploadingHandler(this.allowMultiple ? objects : objects[0]);
-              }
+            // Show errors if relevant
+            if (this.totalUploadSize > this.availableSpace) {
+              this.showStorageExceededAlert = true;
+              return;
+            } else if (this.unsupportedFiles.length) {
+              this.showUnsupportedFilesAlert = true;
+            } else if (this.tooLargeFiles.length) {
+              this.showTooLargeFilesAlert = true;
             }
-            return objects;
-          });
+            return this.handleUploads(files).then(fileUploads => {
+              const objects = fileUploads.map(f => f.fileObject).filter(f => !f.error);
+              if (fileUploads.length) {
+                for (const fileUpload of fileUploads) {
+                  fileUpload.uploadPromise
+                    .then(fileObject => {
+                      if (isFunction(this.uploadCompleteHandler)) {
+                        this.uploadCompleteHandler(this.getFileUpload(fileObject.id));
+                      }
+                    })
+                    .catch(() => {});
+                }
+                if (isFunction(this.uploadingHandler)) {
+                  this.uploadingHandler(this.allowMultiple ? objects : objects[0]);
+                }
+              }
+              return objects;
+            });
+          } finally {
+            this.resetFileInput();
+          }
         }
       },
       handleUploads(files) {
