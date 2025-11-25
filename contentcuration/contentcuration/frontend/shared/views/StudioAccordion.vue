@@ -1,13 +1,7 @@
 <template>
 
   <div class="studio-accordion">
-    <div
-      :id="id"
-      tabindex="0"
-      :aria-expanded="showAccordionItem.toString()"
-      @click="openAccordion"
-      @keydown.enter="openAccordion"
-    >
+    <div>
       <KGrid
         :style="{
           backgroundColor: $themeTokens.surface,
@@ -17,22 +11,26 @@
           :layout4="{ span: 4 }"
           :layout8="{ span: 8 }"
           :layout12="{ span: 12 }"
-          @click="openAccordion()"
         >
-          <div class="studio-accordion-header">
-            <div class="studio-accordion-title">
-              <h3>
+          <h3>
+            <button
+              :id="id"
+              type="button"
+              :aria-expanded="showAccordionItem.toString()"
+              :aria-controls="id"
+              class="studio-accordion-header"
+              @click="openAccordion"
+            >
+              <span class="studio-accordion-title">
                 <slot name="left-actions"></slot>
-              </h3>
-            </div>
-            <div>
+              </span>
               <KIcon
                 :icon="showAccordionItem ? 'chevronUp' : 'chevronDown'"
                 :color="$themePalette.grey.v_400"
                 class="accordion-icon"
               />
-            </div>
-          </div>
+            </button>
+          </h3>
         </KGridItem>
       </KGrid>
     </div>
@@ -42,7 +40,6 @@
         <slot></slot>
       </div>
     </KTransition>
-
     <div
       v-if="!lastItem"
       :style="{
@@ -89,6 +86,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    width: 100%;
     padding: 10px 24px;
     cursor: pointer;
   }
@@ -105,6 +103,7 @@
 
   .accordion-icon {
     font-size: 24px;
+    text-align: right;
   }
 
 </style>

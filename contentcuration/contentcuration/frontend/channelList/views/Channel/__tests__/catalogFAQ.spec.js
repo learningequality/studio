@@ -9,18 +9,6 @@ const router = new VueRouter({
 const renderComponent = (props = {}) => {
   return render(CatalogFAQ, {
     props,
-    // mocks: {
-    //   $tr: key => key, // Mock translation function
-    //   $themeTokens: {
-    //     surface: '#ffffff',
-    //   },
-    //   $themePalette: {
-    //     grey: {
-    //       v_400: '#9e9e9e',
-    //       v_200: '#eeeeee',
-    //     },
-    //   },
-    // },
     routes: router,
   });
 };
@@ -40,12 +28,12 @@ describe('CatalogFAQ test cases', () => {
     expect(accordions.length).toBe(15);
   });
 
-  it('supports Enter key to toggle accordion', async () => {
+  it('expands accordion to show content when user clicks button', async () => {
     renderComponent();
     const firstAccordion = document.getElementById('studio-accordion');
     expect(firstAccordion).toBeInTheDocument();
 
-    await fireEvent.keyDown(firstAccordion, { key: 'Enter', code: 'Enter' });
+    await fireEvent.click(firstAccordion);
 
     const accordionContent = document.querySelector('.item-content');
     expect(accordionContent).toBeInTheDocument();
