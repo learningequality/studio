@@ -33,9 +33,7 @@ describe('EditTitleDescriptionModal', () => {
           },
         },
       }),
-      propsData: {
-        nodeId,
-      },
+      propsData: { nodeId },
     });
 
     updateContentNode = jest.spyOn(wrapper.vm, 'updateContentNode').mockImplementation(() => {});
@@ -70,7 +68,8 @@ describe('EditTitleDescriptionModal', () => {
     expect(updateContentNode).toHaveBeenCalledWith({
       id: nodeId,
       title: newTitle,
-      description: newDescription,
+      description: newDescription ?? '',
+      checkComplete: true,
     });
   });
 
@@ -80,11 +79,11 @@ describe('EditTitleDescriptionModal', () => {
     descriptionInput.vm.$emit('input', '');
 
     modal.vm.$emit('submit');
-
     expect(updateContentNode).toHaveBeenCalledWith({
       id: nodeId,
       title: newTitle,
       description: '',
+      checkComplete: true,
     });
   });
 
