@@ -38,6 +38,9 @@ function makeWrapper(overrides = {}) {
         online: overrides.offline ? false : true,
       },
     },
+    getters: {
+      loggedIn: () => true,
+    },
     actions: {
       showSnackbar: jest.fn(),
     },
@@ -54,6 +57,7 @@ function makeWrapper(overrides = {}) {
           getChannels: state => ids => {
             return ids.map(id => state.channelsMap[id]).filter(Boolean);
           },
+          getChannel: state => id => state.channelsMap[id],
         },
         actions: {
           getChannelListDetails: jest.fn(() => Promise.resolve(mockChannels)),
@@ -100,35 +104,6 @@ function makeWrapper(overrides = {}) {
     router,
     stubs: {
       CatalogFilters: true,
-      ChannelItem: {
-        props: ['channelId'],
-        template: '<div :data-testid="`channel-${channelId}`">Channel Item</div>',
-      },
-      BottomBar: { template: '<div data-testid="toolbar"><slot /></div>' },
-      Checkbox: {
-        props: ['value', 'label', 'indeterminate'],
-        data() {
-          return {
-            isChecked: this.value,
-          };
-        },
-        watch: {
-          value(newVal) {
-            this.isChecked = newVal;
-          },
-        },
-        template: `
-          <label>
-            <input
-              type="checkbox"
-              :checked="isChecked"
-              :data-testid="label ? 'select-all-checkbox' : 'checkbox'"
-              @change="$emit('input', $event.target.checked)"
-            />
-            <span v-if="label">{{ label }}</span>
-          </label>
-        `,
-      },
     },
     mocks: {
       $tr: (key, params) => {
@@ -193,13 +168,9 @@ describe('CatalogList', () => {
       makeWrapper();
       await waitFor(() => screen.getByText('2 results found'));
 
-      const checkboxes = screen.queryAllByTestId('checkbox');
-      if (checkboxes.length > 0) {
-        checkboxes.forEach(checkbox => {
-          expect(checkbox.closest('label')).toHaveStyle('display: none');
-        });
-      }
-      expect(screen.queryByTestId('toolbar')).not.toBeInTheDocument();
+      // Toolbar should not be visible initially (appears only in selection mode)
+      expect(screen.queryByText('Select all')).not.toBeInTheDocument();
+      expect(screen.queryByText('Cancel')).not.toBeInTheDocument();
     });
 
     it('should enter selection mode when user clicks select button', async () => {
@@ -211,7 +182,7 @@ describe('CatalogList', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Select all')).toBeInTheDocument();
-        expect(screen.getByTestId('toolbar')).toBeInTheDocument();
+        expect(screen.getByText('Cancel')).toBeInTheDocument();
       });
     });
 
@@ -234,12 +205,13 @@ describe('CatalogList', () => {
       // Enter selection mode
       await waitFor(() => screen.getByText('Download a summary of selected channels'));
       await user.click(screen.getByText('Download a summary of selected channels'));
-      await waitFor(() => screen.getByTestId('toolbar'));
+      await waitFor(() => screen.getByText('Cancel'));
 
       await user.click(screen.getByText('Cancel'));
 
       await waitFor(() => {
-        expect(screen.queryByTestId('toolbar')).not.toBeInTheDocument();
+        expect(screen.queryByText('Cancel')).not.toBeInTheDocument();
+        expect(screen.queryByText('Select all')).not.toBeInTheDocument();
       });
     });
   });
@@ -253,7 +225,8 @@ describe('CatalogList', () => {
       await user.click(screen.getByText('Download a summary of selected channels'));
 
       await waitFor(() => {
-        expect(screen.getByTestId('toolbar')).toBeInTheDocument();
+        expect(screen.getByText('Select all')).toBeInTheDocument();
+        expect(screen.getByText('2 channels selected')).toBeInTheDocument();
       });
     });
 
@@ -265,7 +238,7 @@ describe('CatalogList', () => {
       await user.click(screen.getByText('Download a summary of selected channels'));
 
       await waitFor(() => {
-        expect(screen.getByTestId('select-all-checkbox')).toBeInTheDocument();
+        expect(screen.getByText('Select all')).toBeInTheDocument();
       });
     });
   });
@@ -321,7 +294,8 @@ describe('CatalogList', () => {
       await user.click(screen.getByText('Download a summary of selected channels'));
 
       await waitFor(() => {
-        expect(screen.getByTestId('toolbar')).toBeInTheDocument();
+        expect(screen.getByText('Select all')).toBeInTheDocument();
+        expect(screen.getByText('Cancel')).toBeInTheDocument();
       });
     });
   });
