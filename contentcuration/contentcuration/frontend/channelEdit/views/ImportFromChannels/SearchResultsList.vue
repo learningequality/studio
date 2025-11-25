@@ -3,13 +3,22 @@
   <div>
     <!-- Filters -->
     <SearchFilterBar />
-    <VLayout row>
-      <VFlex shrink>
-        <SearchFilters :searchResults="nodes" />
-      </VFlex>
-
-      <!-- Main area with cards -->
-      <VFlex class="pl-4">
+    <KGrid>
+      <KGridItem
+        :layout4="{ span: 4 }"
+        :layout8="{ span: 3 }"
+        :layout12="{ span: 5 }"
+      >
+        <SearchFilters
+          style="width: 100%"
+          :searchResults="nodes"
+        />
+      </KGridItem>
+      <KGridItem
+        :layout4="{ span: 4 }"
+        :layout8="{ span: 5 }"
+        :layout12="{ span: 7 }"
+      >
         <VContainer v-if="loadFailed">
           <p class="text-xs-center">
             <Icon icon="error" />
@@ -105,8 +114,8 @@
             </div>
           </div>
         </VContainer>
-      </VFlex>
-    </VLayout>
+      </KGridItem>
+    </KGrid>
   </div>
 
 </template>
