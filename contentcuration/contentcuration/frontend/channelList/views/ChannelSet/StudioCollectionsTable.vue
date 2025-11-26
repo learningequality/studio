@@ -4,6 +4,7 @@
     <div class="table-header">
       <div class="header-left">
         <KButton
+          v-if="tableRows.length > 0"
           appearance="basic-link"
           :text="$tr('aboutChannelSetsLink')"
           @click="infoDialog = true"
@@ -270,7 +271,7 @@
       },
     },
     $trs: {
-      aboutChannelSetsLink: 'Learn about collections',
+      aboutChannelSetsLink: 'Learn more about collections',
       aboutChannelSets: 'About collections',
       channelSetsDescriptionText:
         'A collection contains multiple Kolibri Studio channels that can be imported at one time to Kolibri with a single collection token.',
