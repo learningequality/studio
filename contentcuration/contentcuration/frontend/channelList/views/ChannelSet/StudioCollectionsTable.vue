@@ -2,7 +2,7 @@
 
   <KPageContainer class="page-container">
     <div
-      :class="{ 'table-header-mobile': isSmall() }"
+      :class="{ 'table-header-mobile': isMobile() }"
       :style="{
         marginTop: windowIsSmall ? '24px' : '32px',
       }"
@@ -104,7 +104,23 @@
           v-else-if="colIndex === 3"
           class="actions-cell"
         >
+          <KButton
+            v-if="!isSmallScreen()"
+            :text="$tr('options')"
+            appearance="flat-button"
+            :hasDropdown="true"
+          >
+            <template #menu>
+              <KDropdownMenu
+                :options="dropdownOptions"
+                :hasIcons="true"
+                @select="option => handleOptionSelect(option, content)"
+              />
+            </template>
+          </KButton>
+
           <KIconButton
+            v-else
             icon="optionsVertical"
             :aria-label="$tr('options')"
           >
@@ -247,8 +263,12 @@
     methods: {
       ...mapActions('channelSet', ['loadChannelSetList', 'deleteChannelSet']),
 
-      isSmall() {
+      isMobile() {
         return this.windowBreakpoint <= 0;
+      },
+
+      isSmallScreen() {
+        return this.windowBreakpoint <= 1;
       },
 
       handleOptionSelect(option, collectionId) {
