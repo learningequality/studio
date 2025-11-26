@@ -74,7 +74,10 @@
         <!-- Column 0: Collection Name -->
         <div v-if="colIndex === 0">
           <div>
-            <h3 dir="auto">
+            <h3
+              dir="auto"
+              class="collection-name"
+            >
               {{ content }}
             </h3>
           </div>
@@ -339,6 +342,13 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 16px;
+  }
+
+  .collection-name {
+    display: inline-block;
+    font-size: 12px;
+    white-space: nowrap;
+    border-radius: 2px;
   }
 
   .header-bottom {
