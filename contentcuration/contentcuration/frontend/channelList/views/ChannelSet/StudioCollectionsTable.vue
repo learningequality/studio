@@ -76,7 +76,6 @@
           <StudioCopyToken
             v-if="content"
             :token="content"
-            :loading="!content"
           />
           <em
             v-else
