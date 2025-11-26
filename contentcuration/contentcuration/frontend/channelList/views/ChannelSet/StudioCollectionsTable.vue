@@ -4,31 +4,12 @@
     <div
       class="table-header"
       :class="{ 'table-header-mobile': isSmall() }"
+      :style="{
+        marginTop: windowIsSmall ? '8px' : '16px',
+      }"
     >
-      <div class="header-left">
-        <KButton
-          v-if="tableRows.length > 0"
-          appearance="basic-link"
-          :text="$tr('aboutChannelSetsLink')"
-          @click="infoDialog = true"
-        />
-        <KModal
-          v-if="infoDialog"
-          :title="$tr('aboutChannelSets')"
-          :cancelText="$tr('cancelButtonLabel')"
-          @cancel="infoDialog = false"
-        >
-          <div>
-            <p>{{ $tr('channelSetsDescriptionText') }}</p>
-            <p>{{ $tr('channelSetsInstructionsText') }}</p>
-            <p :style="{ color: $themeTokens.error }">
-              {{ $tr('channelSetsDisclaimer') }}
-            </p>
-          </div>
-        </KModal>
-      </div>
-
-      <div class="header-right">
+      <div class="header-top">
+        <h1 class="page-title">{{ $tr('pageTitle') }}</h1>
         <KButton
           v-if="!loading"
           appearance="raised-button"
@@ -36,6 +17,31 @@
           :text="$tr('addChannelSetTitle')"
           @click="newChannelSet"
         />
+      </div>
+
+      <div class="header-bottom">
+        <div class="header-left">
+          <KButton
+            v-if="tableRows.length > 0"
+            appearance="basic-link"
+            :text="$tr('aboutChannelSetsLink')"
+            @click="infoDialog = true"
+          />
+          <KModal
+            v-if="infoDialog"
+            :title="$tr('aboutChannelSets')"
+            :cancelText="$tr('cancelButtonLabel')"
+            @cancel="infoDialog = false"
+          >
+            <div>
+              <p>{{ $tr('channelSetsDescriptionText') }}</p>
+              <p>{{ $tr('channelSetsInstructionsText') }}</p>
+              <p :style="{ color: $themeTokens.error }">
+                {{ $tr('channelSetsDisclaimer') }}
+              </p>
+            </div>
+          </KModal>
+        </div>
       </div>
     </div>
 
@@ -145,11 +151,12 @@
     },
     setup() {
       const { show } = useKShow();
-      const { windowBreakpoint } = useKResponsiveWindow();
+      const { windowBreakpoint, windowIsSmall } = useKResponsiveWindow();
 
       return {
         show,
         windowBreakpoint,
+        windowIsSmall,
       };
     },
     data() {
@@ -283,6 +290,7 @@
       },
     },
     $trs: {
+      pageTitle: 'Collections',
       aboutChannelSetsLink: 'Learn more about collections',
       aboutChannelSets: 'About collections',
       channelSetsDescriptionText:
@@ -323,18 +331,28 @@
   }
 
   .table-header {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    align-items: center;
-    justify-content: space-between;
     margin-bottom: 24px;
   }
 
-  .header-left,
-  .header-right {
+  .header-top {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .header-bottom {
+    display: flex;
+    align-items: center;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+  }
+
+  .page-title {
+    margin: 0;
   }
 
   .actions-cell {
@@ -343,7 +361,15 @@
   }
 
   .table-header-mobile {
-    justify-content: center;
+    .header-top {
+      flex-direction: column;
+      gap: 12px;
+      text-align: center;
+    }
+
+    .header-bottom {
+      justify-content: center;
+    }
   }
 
 </style>
