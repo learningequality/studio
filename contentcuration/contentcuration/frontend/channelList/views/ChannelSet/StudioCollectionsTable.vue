@@ -340,6 +340,7 @@
   .collection-name {
     display: inline-block;
     font-size: 100%;
+    font-weight: 500;
     border-radius: 2px;
   }
 
