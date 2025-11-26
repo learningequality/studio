@@ -44,7 +44,7 @@
       v-else-if="tableRows.length === 0"
       class="empty-state"
     >
-      <p>{{ $tr('noChannelSetsFound') }}</p>
+      <p class="mb-0">{{ $tr('noChannelSetsFound') }}</p>
       <KButton
         appearance="basic-link"
         :text="$tr('aboutChannelSetsLink')"
