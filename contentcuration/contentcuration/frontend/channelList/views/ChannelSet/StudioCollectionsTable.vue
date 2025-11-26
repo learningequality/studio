@@ -35,7 +35,7 @@
       </div>
     </div>
 
-    <div v-if="show('table-loader', loading, 500)">
+    <div v-if="show('loader', loading, 500)">
       <KCircularLoader />
     </div>
 
@@ -44,6 +44,11 @@
       class="empty-state"
     >
       <p>{{ $tr('noChannelSetsFound') }}</p>
+      <KButton
+        appearance="basic-link"
+        :text="$tr('aboutChannelSetsLink')"
+        @click="infoDialog = true"
+      />
     </div>
 
     <KTable
