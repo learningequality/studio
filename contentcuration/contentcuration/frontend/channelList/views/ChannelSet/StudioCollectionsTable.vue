@@ -35,15 +35,25 @@
       </div>
     </div>
 
+    <div v-if="show('table-loader', loading, 500)">
+      <KCircularLoader />
+    </div>
+
+    <div
+      v-else-if="tableRows.length === 0"
+      class="empty-state"
+    >
+      <p>{{ $tr('noChannelSetsFound') }}</p>
+    </div>
+
     <KTable
+      v-else
       :stickyColumns="stickyColumns"
       caption=""
       :headers="tableHeaders"
       :rows="tableRows"
-      :dataLoading="loading"
       sortable
       :defaultSort="{ columnId: 'name', direction: 'asc' }"
-      :emptyMessage="$tr('noChannelSetsFound')"
     >
       <template #cell="{ content, colIndex }">
         <!-- Column 0: Collection Name -->
@@ -115,6 +125,7 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
+  import useKShow from 'kolibri-design-system/lib/composables/useKShow';
   import { RouteNames } from '../../constants';
   import StudioCopyToken from '../../../settings/pages/Account/StudioCopyToken';
 
@@ -122,6 +133,10 @@
     name: 'StudioCollectionsTable',
     components: {
       StudioCopyToken,
+    },
+    setup() {
+      const { show } = useKShow();
+      return { show };
     },
     data() {
       return {
