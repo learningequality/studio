@@ -61,7 +61,7 @@
     <KTable
       v-else
       :stickyColumns="stickyColumns"
-      caption=""
+      :caption="$tr('tableCaption')"
       :headers="tableHeaders"
       :rows="tableRows"
       sortable
@@ -291,6 +291,7 @@
     },
     $trs: {
       pageTitle: 'Collections',
+      tableCaption: 'List of collections',
       aboutChannelSetsLink: 'Learn more about collections',
       aboutChannelSets: 'About collections',
       channelSetsDescriptionText:
@@ -339,7 +340,7 @@
 
   .collection-name {
     display: inline-block;
-    font-size: 100%;
+    font-size: 16px;
     font-weight: 500;
     border-radius: 2px;
   }
