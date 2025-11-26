@@ -1,7 +1,10 @@
 <template>
 
   <KPageContainer class="page-container">
-    <div class="table-header">
+    <div
+      class="table-header"
+      :class="{ 'table-header-mobile': isSmall() }"
+    >
       <div class="header-left">
         <KButton
           v-if="tableRows.length > 0"
@@ -131,6 +134,7 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import useKShow from 'kolibri-design-system/lib/composables/useKShow';
+  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { RouteNames } from '../../constants';
   import StudioCopyToken from '../../../settings/pages/Account/StudioCopyToken';
 
@@ -141,7 +145,12 @@
     },
     setup() {
       const { show } = useKShow();
-      return { show };
+      const { windowBreakpoint } = useKResponsiveWindow();
+
+      return {
+        show,
+        windowBreakpoint,
+      };
     },
     data() {
       return {
@@ -230,6 +239,10 @@
     },
     methods: {
       ...mapActions('channelSet', ['loadChannelSetList', 'deleteChannelSet']),
+
+      isSmall() {
+        return this.windowBreakpoint <= 0;
+      },
 
       handleOptionSelect(option, collectionId) {
         if (option.value === 'edit') {
@@ -328,10 +341,9 @@
     display: flex;
     justify-content: flex-end;
   }
-  @media (max-width: 500px) {
-    .table-header {
-      justify-content: center;
-    }
+
+  .table-header-mobile {
+    justify-content: center;
   }
 
 </style>
