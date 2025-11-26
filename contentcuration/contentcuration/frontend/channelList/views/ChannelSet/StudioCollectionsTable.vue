@@ -2,10 +2,9 @@
 
   <KPageContainer class="page-container">
     <div
-      class="table-header"
       :class="{ 'table-header-mobile': isSmall() }"
       :style="{
-        marginTop: windowIsSmall ? '8px' : '16px',
+        marginTop: windowIsSmall ? '24px' : '32px',
       }"
     >
       <div class="header-top">
@@ -20,28 +19,26 @@
       </div>
 
       <div class="header-bottom">
-        <div class="header-left">
-          <KButton
-            v-if="tableRows.length > 0"
-            appearance="basic-link"
-            :text="$tr('aboutChannelSetsLink')"
-            @click="infoDialog = true"
-          />
-          <KModal
-            v-if="infoDialog"
-            :title="$tr('aboutChannelSets')"
-            :cancelText="$tr('cancelButtonLabel')"
-            @cancel="infoDialog = false"
-          >
-            <div>
-              <p>{{ $tr('channelSetsDescriptionText') }}</p>
-              <p>{{ $tr('channelSetsInstructionsText') }}</p>
-              <p :style="{ color: $themeTokens.error }">
-                {{ $tr('channelSetsDisclaimer') }}
-              </p>
-            </div>
-          </KModal>
-        </div>
+        <KButton
+          v-if="tableRows.length > 0"
+          appearance="basic-link"
+          :text="$tr('aboutChannelSetsLink')"
+          @click="infoDialog = true"
+        />
+        <KModal
+          v-if="infoDialog"
+          :title="$tr('aboutChannelSets')"
+          :cancelText="$tr('cancelButtonLabel')"
+          @cancel="infoDialog = false"
+        >
+          <div>
+            <p>{{ $tr('channelSetsDescriptionText') }}</p>
+            <p>{{ $tr('channelSetsInstructionsText') }}</p>
+            <p :style="{ color: $themeTokens.error }">
+              {{ $tr('channelSetsDisclaimer') }}
+            </p>
+          </div>
+        </KModal>
       </div>
     </div>
 
@@ -333,10 +330,6 @@
     text-align: center;
   }
 
-  .table-header {
-    margin-bottom: 24px;
-  }
-
   .header-top {
     display: flex;
     align-items: center;
@@ -346,19 +339,14 @@
 
   .collection-name {
     display: inline-block;
-    font-size: 12px;
-    white-space: nowrap;
+    font-size: 100%;
     border-radius: 2px;
   }
 
   .header-bottom {
     display: flex;
     align-items: center;
-  }
-
-  .header-left {
-    display: flex;
-    align-items: center;
+    margin-bottom: 8px;
   }
 
   .page-title {
