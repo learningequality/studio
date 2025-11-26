@@ -2,7 +2,6 @@ import { render, screen, within, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { createLocalVue } from '@vue/test-utils';
 import Vuex, { Store } from 'vuex';
-import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
 import StudioCollectionsTable from '../StudioCollectionsTable.vue';
 import { RouteNames } from '../../../constants';
@@ -84,7 +83,9 @@ const renderComponent = async (options = {}) => {
     expect(mockActions.loadChannelSetList).toHaveBeenCalled();
   });
 
-  await nextTick();
+  await waitFor(() => {
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+  });
 
   return { ...result, router };
 };
@@ -97,10 +98,20 @@ describe('StudioCollectionsTable', () => {
   it('should display channel sets in table when data is loaded', async () => {
     await renderComponent();
 
-    expect(screen.getByText('Test Collection 1')).toBeInTheDocument();
-    expect(screen.getByText('Test Collection 2')).toBeInTheDocument();
-    expect(screen.getByText('2')).toBeInTheDocument();
-    expect(screen.getByText('1')).toBeInTheDocument();
+    const table = screen.getByRole('grid');
+    const rows = within(table).getAllByRole('row').slice(1);
+
+    expect(rows).toHaveLength(2);
+
+    const row1Cells = within(rows[0]).getAllByRole('gridcell');
+    expect(row1Cells[0]).toHaveTextContent('Test Collection 1');
+    expect(row1Cells[1]).toHaveTextContent('Token');
+    expect(row1Cells[2]).toHaveTextContent('2');
+
+    const row2Cells = within(rows[1]).getAllByRole('gridcell');
+    expect(row2Cells[0]).toHaveTextContent('Test Collection 2');
+    expect(row2Cells[1]).toHaveTextContent('Saving');
+    expect(row2Cells[2]).toHaveTextContent('1');
   });
 
   it('should display empty message when no collections are present', async () => {
@@ -125,13 +136,14 @@ describe('StudioCollectionsTable', () => {
         'You can package together multiple channels to create a collection. The entire collection can then be imported to Kolibri at once by using a collection token.',
       ),
     ).toBeInTheDocument();
+    expect(screen.getByText('Learn more about collections')).toBeInTheDocument();
   });
 
   it('should open info modal when "Learn about collections" link is clicked', async () => {
     const user = userEvent.setup();
     await renderComponent();
 
-    const infoLink = screen.getByText('Learn about collections');
+    const infoLink = screen.getByText('Learn more about collections');
     await user.click(infoLink);
 
     expect(screen.getByRole('heading', { name: 'About collections' })).toBeInTheDocument();
@@ -158,6 +170,10 @@ describe('StudioCollectionsTable', () => {
     const user = userEvent.setup();
     const { router } = await renderComponent();
 
+    await waitFor(() => {
+      expect(screen.getByText('Test Collection 1')).toBeInTheDocument();
+    });
+
     const optionsButtons = screen.getAllByRole('button', { name: /options/i });
     await user.click(optionsButtons[0]);
 
@@ -171,6 +187,10 @@ describe('StudioCollectionsTable', () => {
   it('should call delete action when delete is confirmed', async () => {
     const user = userEvent.setup();
     await renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText('Test Collection 1')).toBeInTheDocument();
+    });
 
     const optionsButtons = screen.getAllByRole('button', { name: /options/i });
     await user.click(optionsButtons[0]);
