@@ -8,21 +8,20 @@
   >
     <KToolbar
       textColor="white"
-      :style="{ backgroundColor: $themePalette.grey.v_900 }"
+      :style="{ backgroundColor: $themeTokens.appBarDark }"
     >
       <template #icon>
         <KIconButton
           icon="close"
           :ariaLabel="$tr('close')"
-          :tooltip="$tr('close')"
-          color="white"
+          :color="$themeTokens.textInverted"
           data-test="close"
           @click="$emit('input', false)"
         />
       </template>
 
       <template #default>
-        <span class="notranslate toolbar-title">
+        <span class="toolbar-title">
           <slot name="header">{{ title }}</slot>
         </span>
       </template>
@@ -32,11 +31,12 @@
       </template>
     </KToolbar>
 
-    <StudioOfflineAlert :offset="64" />
+    <StudioOfflineAlert :offset="46" />
 
     <StudioPage
       :offline="offline"
       :marginTop="0"
+      :centered="true"
     >
       <slot></slot>
     </StudioPage>
@@ -105,21 +105,11 @@
     z-index: 16;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
   }
 
   .toolbar-title {
     margin-inline-start: 16px;
     margin-inline-end: 16px;
-  }
-
-</style>
-
-
-<style lang="scss">
-
-  html.modal-open {
-    overflow-y: hidden !important;
   }
 
 </style>

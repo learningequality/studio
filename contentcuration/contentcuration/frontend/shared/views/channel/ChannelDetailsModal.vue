@@ -11,11 +11,9 @@
         :style="downloadButtonContainerStyle"
       >
         <KButton
-          class="download-button"
           :text="$tr('downloadButton')"
           :primary="true"
           hasDropdown
-          data-test="download-button"
           :style="downloadButtonStyle"
         >
           <template #menu>
@@ -86,7 +84,6 @@
       return {
         dialog: true,
         loading: true,
-        loadError: false,
         details: null,
       };
     },
@@ -187,7 +184,6 @@
           .catch(error => {
             this.$store.dispatch('errors/handleAxiosError', error);
             this.loading = false;
-            this.loadError = true;
           });
       },
     },
@@ -206,11 +202,8 @@
   .download-button-container {
     display: flex;
     justify-content: flex-end;
+    margin-top: 32px;
     margin-bottom: 24px;
-  }
-
-  [dir='rtl'] .download-button-container {
-    justify-content: flex-end;
   }
 
   .channel-details-wrapper {

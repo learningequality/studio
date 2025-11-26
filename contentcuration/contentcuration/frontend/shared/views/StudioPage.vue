@@ -32,6 +32,7 @@
         paddingRight: `${paddingX.value}px`,
         paddingTop: `${paddingTop.value}px`,
         maxWidth: windowIsLarge.value ? '1000px' : '100%',
+        margin: props.centered ? '0 auto' : '0',
       }));
 
       const outerStyle = computed(() => {
@@ -46,6 +47,7 @@
     props: {
       offline: { type: Boolean, default: false },
       marginTop: { type: Number, default: 104 },
+      centered: { type: Boolean, default: false },
     },
   };
 
@@ -57,13 +59,11 @@
   .studio-page-outer {
     width: 100%;
     margin-bottom: 16px;
-    overflow-x: hidden;
     overflow-y: auto;
   }
 
   .studio-page-inner {
     width: 100%;
-    margin: 0 auto;
   }
 
 </style>

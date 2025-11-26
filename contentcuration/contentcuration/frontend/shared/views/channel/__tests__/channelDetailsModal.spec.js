@@ -105,7 +105,7 @@ describe('ChannelDetailsModal', () => {
       expect(screen.getByText(testChannel.name)).toBeInTheDocument();
     });
 
-    const closeButton = screen.getByLabelText('Close');
+    const closeButton = screen.getByRole('button', { name: /close/i });
     await user.click(closeButton);
 
     await waitFor(() => {
@@ -144,12 +144,14 @@ describe('ChannelDetailsModal', () => {
     });
   });
 
-  it('should call loadChannel and loadChannelDetails on mount', async () => {
+  it('should call loadChannel and loadChannelDetails on mount with correct channel ID', async () => {
     renderComponent();
 
     await waitFor(() => {
       expect(mockActions.loadChannel).toHaveBeenCalledWith(expect.any(Object), channelId);
+      expect(mockActions.loadChannel).toHaveBeenCalledTimes(1);
       expect(mockActions.loadChannelDetails).toHaveBeenCalledWith(expect.any(Object), channelId);
+      expect(mockActions.loadChannelDetails).toHaveBeenCalledTimes(1);
     });
   });
 });
