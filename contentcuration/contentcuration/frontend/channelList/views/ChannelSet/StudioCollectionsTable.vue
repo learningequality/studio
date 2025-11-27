@@ -46,10 +46,7 @@
       <KCircularLoader />
     </div>
 
-    <div
-      v-else-if="tableRows.length === 0"
-      class="empty-state"
-    >
+    <div v-else-if="tableRows.length === 0">
       <p class="mb-0">{{ $tr('noChannelSetsFound') }}</p>
       <KButton
         appearance="basic-link"
@@ -348,7 +345,6 @@
     width: 100%;
     max-width: 1440px;
     margin: 0 auto;
-    text-align: center;
   }
 
   .header-top {
@@ -390,6 +386,10 @@
     .header-bottom {
       justify-content: center;
     }
+  }
+
+  .page-container .k-table-wrapper {
+    overflow: hidden;
   }
 
 </style>
