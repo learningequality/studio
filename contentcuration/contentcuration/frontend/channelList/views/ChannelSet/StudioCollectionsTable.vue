@@ -268,7 +268,7 @@
       },
 
       isSmallScreen() {
-        return this.windowBreakpoint <= 1;
+        return this.windowBreakpoint <= 2;
       },
 
       handleOptionSelect(option, collectionId) {

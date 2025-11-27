@@ -1,6 +1,9 @@
 <template>
 
-  <div :class="{ 'token-input-wrapper-small': isSmall() }">
+  <div
+    :class="{ 'token-input-wrapper-small': isSmall() }"
+    class="token-wrapper"
+  >
     <div
       v-if="show('loader', loading, 500)"
       class="loader"
@@ -123,6 +126,10 @@
   .token-input-wrapper-small {
     min-width: 100%;
     margin-right: 0.5rem;
+  }
+
+  .token-wrapper {
+    margin-bottom: -32px;
   }
 
 </style>
