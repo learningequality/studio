@@ -20,7 +20,7 @@
         v-else
         grid
         wrap
-        class="list-wrapper py-4"
+        class="list-wrapper"
       >
         <!-- Results bar -->
         <VFlex
