@@ -94,9 +94,13 @@
 
   .catalog-filters-wrapper {
     display: flex;
+    flex-direction: column;
+    width: 100%;
+    overflow-x: hidden;
   }
 
   .filter-button-mobile {
+    align-self: flex-start;
     margin: 16px;
   }
 
@@ -110,30 +114,11 @@
 
   .main-content-area {
     flex: 1;
-    width: 100%;
     min-height: 100vh;
 
     &.with-sidebar {
+      width: calc(100% - 335px);
       margin-left: 335px;
-    }
-  }
-  @media (max-width: 600px) {
-    .catalog-filters-wrapper {
-      flex-direction: column;
-    }
-
-    .main-content-area.with-sidebar {
-      margin-right: 0;
-      margin-left: 0;
-    }
-
-    .filter-panel-desktop {
-      display: none;
-    }
-
-    .filter-button-mobile {
-      align-self: flex-start;
-      width: auto;
     }
   }
 
