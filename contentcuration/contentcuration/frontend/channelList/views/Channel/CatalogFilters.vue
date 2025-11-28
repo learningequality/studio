@@ -5,9 +5,9 @@
     <KButton
       v-if="isMobile"
       class="filter-button-mobile"
-      :text="$tr('searchText')"
-      primary
-      appearance="flat-button"
+      :text="$tr('filterText')"
+      appearance="raised-button"
+      icon="filter"
       @click="openSidePanel"
     />
 
@@ -83,7 +83,7 @@
       },
     },
     $trs: {
-      searchText: 'Search',
+      filterText: 'Filter',
     },
   };
 
