@@ -504,6 +504,13 @@ class AdminViewSetTestCase(StudioAPITestCase):
         )
         self.mock_datetime = self.datetime_patcher.start()
 
+        # Mock django.utils.timezone.now for auto_now field updates
+        self.django_timezone_patcher = mock.patch(
+            "django.utils.timezone.now",
+            return_value=self.resolved_time,
+        )
+        self.django_timezone_patcher.start()
+
         # Mock to allow creating submissions without having to set up content databases
         self.ensure_db_exists_patcher = mock.patch(
             "contentcuration.utils.publish.ensure_versioned_database_exists"
@@ -551,8 +558,10 @@ class AdminViewSetTestCase(StudioAPITestCase):
             "internal_notes": self.internal_notes,
         }
 
+
     def tearDown(self):
         self.datetime_patcher.stop()
+        self.django_timezone_patcher.stop()
         self.ensure_db_exists_patcher.stop()
         super().tearDown()
 
@@ -564,7 +573,6 @@ class AdminViewSetTestCase(StudioAPITestCase):
         )
         self.submission.feedback_notes = self.feedback_notes
         self.submission.internal_notes = self.internal_notes
-        self.submission.date_updated = self.resolved_time
         self.submission.save()
 
     def _refresh_submissions_from_db(self):
@@ -951,55 +959,55 @@ class FilteringAndSearchTestCase(StudioAPITestCase):
         self.math_advanced_channel.editors.add(self.editor_user)
         self.math_advanced_channel.save()
 
-        self.old_pending_submission = CommunityLibrarySubmission.objects.create(
-            channel=self.math_channel,
-            author=self.editor_user,
-            channel_version=1,
-            status=community_library_submission_constants.STATUS_PENDING,
-            date_created=datetime.datetime(2023, 1, 1, tzinfo=pytz.utc),
-        )
-        self.old_pending_submission.date_updated = datetime.datetime(
-            2023, 1, 1, tzinfo=pytz.utc
-        )
-        self.old_pending_submission.save()
+        with mock.patch(
+            "django.utils.timezone.now",
+            return_value=datetime.datetime(2023, 1, 1, tzinfo=pytz.utc),
+        ):
+            self.old_pending_submission = CommunityLibrarySubmission.objects.create(
+                channel=self.math_channel,
+                author=self.editor_user,
+                channel_version=1,
+                status=community_library_submission_constants.STATUS_PENDING,
+                date_created=datetime.datetime(2023, 1, 1, tzinfo=pytz.utc),
+            )
 
-        self.recent_approved_submission = CommunityLibrarySubmission.objects.create(
-            channel=self.science_channel,
-            author=self.editor_user,
-            channel_version=1,
-            status=community_library_submission_constants.STATUS_APPROVED,
-            date_created=datetime.datetime(2024, 6, 1, tzinfo=pytz.utc),
-            resolved_by=self.admin_user,
-        )
-        self.recent_approved_submission.date_updated = datetime.datetime(
-            2024, 6, 15, tzinfo=pytz.utc
-        )
-        self.recent_approved_submission.save()
+        with mock.patch(
+            "django.utils.timezone.now",
+            return_value=datetime.datetime(2024, 6, 15, tzinfo=pytz.utc),
+        ):
+            self.recent_approved_submission = CommunityLibrarySubmission.objects.create(
+                channel=self.science_channel,
+                author=self.editor_user,
+                channel_version=1,
+                status=community_library_submission_constants.STATUS_APPROVED,
+                date_created=datetime.datetime(2024, 6, 1, tzinfo=pytz.utc),
+                resolved_by=self.admin_user,
+            )
 
-        self.recent_rejected_submission = CommunityLibrarySubmission.objects.create(
-            channel=self.history_channel,
-            author=self.editor_user,
-            channel_version=1,
-            status=community_library_submission_constants.STATUS_REJECTED,
-            date_created=datetime.datetime(2024, 7, 1, tzinfo=pytz.utc),
-            resolved_by=self.admin_user,
-        )
-        self.recent_rejected_submission.date_updated = datetime.datetime(
-            2024, 7, 10, tzinfo=pytz.utc
-        )
-        self.recent_rejected_submission.save()
+        with mock.patch(
+            "django.utils.timezone.now",
+            return_value=datetime.datetime(2024, 7, 10, tzinfo=pytz.utc),
+        ):
+            self.recent_rejected_submission = CommunityLibrarySubmission.objects.create(
+                channel=self.history_channel,
+                author=self.editor_user,
+                channel_version=1,
+                status=community_library_submission_constants.STATUS_REJECTED,
+                date_created=datetime.datetime(2024, 7, 1, tzinfo=pytz.utc),
+                resolved_by=self.admin_user,
+            )
 
-        self.very_recent_pending_submission = CommunityLibrarySubmission.objects.create(
-            channel=self.math_advanced_channel,
-            author=self.editor_user,
-            channel_version=1,
-            status=community_library_submission_constants.STATUS_PENDING,
-            date_created=datetime.datetime(2024, 12, 1, tzinfo=pytz.utc),
-        )
-        self.very_recent_pending_submission.date_updated = datetime.datetime(
-            2024, 12, 1, tzinfo=pytz.utc
-        )
-        self.very_recent_pending_submission.save()
+        with mock.patch(
+            "django.utils.timezone.now",
+            return_value=datetime.datetime(2024, 12, 1, tzinfo=pytz.utc),
+        ):
+            self.very_recent_pending_submission = CommunityLibrarySubmission.objects.create(
+                channel=self.math_advanced_channel,
+                author=self.editor_user,
+                channel_version=1,
+                status=community_library_submission_constants.STATUS_PENDING,
+                date_created=datetime.datetime(2024, 12, 1, tzinfo=pytz.utc),
+            )
 
     def tearDown(self):
         self.ensure_db_exists_patcher.stop()
@@ -1084,7 +1092,7 @@ class FilteringAndSearchTestCase(StudioAPITestCase):
         self.client.force_authenticate(user=self.editor_user)
         url = reverse("community-library-submission-list")
         response = self.client.get(
-            f"{url}?status__in={community_library_submission_constants.STATUS_APPROVED}&status__in={community_library_submission_constants.STATUS_REJECTED}"
+            f"{url}?status__in={community_library_submission_constants.STATUS_APPROVED},{community_library_submission_constants.STATUS_REJECTED}"
         )
         self.assertEqual(response.status_code, 200, response.content)
 

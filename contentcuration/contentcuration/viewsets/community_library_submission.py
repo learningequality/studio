@@ -1,8 +1,9 @@
-import django_filters
 from django.utils import timezone
-from django_filters import DateTimeFilter
-from django_filters import MultipleChoiceFilter
+from django_filters import BaseInFilter
+from django_filters import ChoiceFilter
+from django_filters.rest_framework import DateTimeFilter
 from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import FilterSet
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated
@@ -32,14 +33,21 @@ from contentcuration.viewsets.sync.utils import (
 from contentcuration.viewsets.user import IsAdminUser
 
 
-class CommunityLibrarySubmissionFilterSet(django_filters.FilterSet):
+class ChoiceInFilter(BaseInFilter, ChoiceFilter):
+    """
+    Allows passing multiple statuses in a single query param like status="STATUS_A,STATUS_B"
+    """
+    pass
+
+
+class CommunityLibrarySubmissionFilterSet(FilterSet):
     """
     FilterSet for CommunityLibrarySubmission to support notifications page filtering.
     """
 
     date_updated__lte = DateTimeFilter(field_name="date_updated", lookup_expr="lte")
     date_updated__gte = DateTimeFilter(field_name="date_updated", lookup_expr="gte")
-    status__in = MultipleChoiceFilter(
+    status__in = ChoiceInFilter(
         field_name="status",
         choices=community_library_submission_constants.status_choices,
     )
@@ -194,10 +202,10 @@ def get_author_name(item):
 
 
 def get_resolved_by_name(item):
-    if item.get("resolved_by__first_name") and item.get("resolved_by__last_name"):
+    if item.get("resolved_by__first_name") or item.get("resolved_by__last_name"):
         return "{} {}".format(
-            item["resolved_by__first_name"], item["resolved_by__last_name"]
-        )
+            item.get("resolved_by__first_name", ""), item.get("resolved_by__last_name", "")
+        ).strip()
     return None
 
 
@@ -211,6 +219,7 @@ class CommunityLibrarySubmissionViewSetMixin:
         "id",
         "description",
         "channel_id",
+        "channel__name",
         "channel_version",
         "author_id",
         "author__first_name",
@@ -228,6 +237,7 @@ class CommunityLibrarySubmissionViewSetMixin:
     field_map = {
         "author_name": get_author_name,
         "resolved_by_name": get_resolved_by_name,
+        "channel_name": lambda item: item.get("channel__name"),
     }
     queryset = CommunityLibrarySubmission.objects.all().order_by("-date_updated")
     filter_backends = [DjangoFilterBackend, SearchFilter]
@@ -306,9 +316,7 @@ class AdminCommunityLibrarySubmissionViewSet(
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
-        date_updated = timezone.now()
         submission = serializer.save(
-            date_updated=date_updated,
             resolved_by=request.user,
         )
 

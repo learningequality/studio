@@ -2594,7 +2594,7 @@ class CommunityLibrarySubmission(models.Model):
     )
     categories = models.JSONField(blank=True, null=True)
     date_created = models.DateTimeField(auto_now_add=True)
-    date_updated = models.DateTimeField(blank=True, null=True, db_index=True)
+    date_updated = models.DateTimeField(auto_now=True, db_index=True)
     status = models.CharField(
         max_length=20,
         choices=community_library_submission.status_choices,
@@ -2702,10 +2702,6 @@ class CommunityLibrarySubmission(models.Model):
                 fields=["channel", "channel_version"],
                 name="unique_channel_with_channel_version",
             ),
-        ]
-        indexes = [
-            # Useful for cursor pagination
-            models.Index(fields=["-date_updated"], name="submission_date_updated_idx"),
         ]
 
 
