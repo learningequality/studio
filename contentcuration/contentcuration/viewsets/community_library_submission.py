@@ -37,6 +37,7 @@ class ChoiceInFilter(BaseInFilter, ChoiceFilter):
     """
     Allows passing multiple statuses in a single query param like status="STATUS_A,STATUS_B"
     """
+
     pass
 
 
@@ -204,7 +205,8 @@ def get_author_name(item):
 def get_resolved_by_name(item):
     if item.get("resolved_by__first_name") or item.get("resolved_by__last_name"):
         return "{} {}".format(
-            item.get("resolved_by__first_name", ""), item.get("resolved_by__last_name", "")
+            item.get("resolved_by__first_name", ""),
+            item.get("resolved_by__last_name", ""),
         ).strip()
     return None
 

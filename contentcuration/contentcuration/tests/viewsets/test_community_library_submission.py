@@ -558,7 +558,6 @@ class AdminViewSetTestCase(StudioAPITestCase):
             "internal_notes": self.internal_notes,
         }
 
-
     def tearDown(self):
         self.datetime_patcher.stop()
         self.django_timezone_patcher.stop()
@@ -1001,12 +1000,14 @@ class FilteringAndSearchTestCase(StudioAPITestCase):
             "django.utils.timezone.now",
             return_value=datetime.datetime(2024, 12, 1, tzinfo=pytz.utc),
         ):
-            self.very_recent_pending_submission = CommunityLibrarySubmission.objects.create(
-                channel=self.math_advanced_channel,
-                author=self.editor_user,
-                channel_version=1,
-                status=community_library_submission_constants.STATUS_PENDING,
-                date_created=datetime.datetime(2024, 12, 1, tzinfo=pytz.utc),
+            self.very_recent_pending_submission = (
+                CommunityLibrarySubmission.objects.create(
+                    channel=self.math_advanced_channel,
+                    author=self.editor_user,
+                    channel_version=1,
+                    status=community_library_submission_constants.STATUS_PENDING,
+                    date_created=datetime.datetime(2024, 12, 1, tzinfo=pytz.utc),
+                )
             )
 
     def tearDown(self):
