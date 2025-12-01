@@ -8,7 +8,6 @@ class Migration(migrations.Migration):
     dependencies = [
         ("contentcuration", "0158_add_audited_special_permissions_license"),
     ]
-    
 
     operations = [
         migrations.RemoveIndex(
