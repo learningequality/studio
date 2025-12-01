@@ -20,11 +20,11 @@ export function formatLicenseNames(licenseIds, options = {}) {
     .map(id => {
       const license = findLicense(id);
       const licenseName = license?.license_name;
-      
+
       if (!licenseName || excludes.includes(licenseName)) {
         return null;
       }
-      
+
       return constantStrings.$tr(licenseName);
     })
     .filter(name => name !== null && name !== undefined && name !== '')
