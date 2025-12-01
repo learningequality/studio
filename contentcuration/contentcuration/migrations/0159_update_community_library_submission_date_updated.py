@@ -6,7 +6,7 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("contentcuration", "0157_merge_20251015_0333"),
+        ("contentcuration", "0158_add_audited_special_permissions_license"),
     ]
 
     operations = [
