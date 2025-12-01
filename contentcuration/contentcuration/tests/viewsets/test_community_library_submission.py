@@ -498,11 +498,13 @@ class AdminViewSetTestCase(StudioAPITestCase):
         super().setUp()
 
         self.resolved_time = datetime.datetime(2023, 10, 1, tzinfo=pytz.utc)
-        self.datetime_patcher = mock.patch(
-            "contentcuration.viewsets.community_library_submission.timezone.now",
+
+        # Mock django.utils.timezone.now for auto_now field updates
+        self.django_timezone_patcher = mock.patch(
+            "django.utils.timezone.now",
             return_value=self.resolved_time,
         )
-        self.mock_datetime = self.datetime_patcher.start()
+        self.django_timezone_patcher.start()
 
         # Mock to allow creating submissions without having to set up content databases
         self.ensure_db_exists_patcher = mock.patch(
@@ -552,7 +554,7 @@ class AdminViewSetTestCase(StudioAPITestCase):
         }
 
     def tearDown(self):
-        self.datetime_patcher.stop()
+        self.django_timezone_patcher.stop()
         self.ensure_db_exists_patcher.stop()
         super().tearDown()
 
@@ -564,7 +566,6 @@ class AdminViewSetTestCase(StudioAPITestCase):
         )
         self.submission.feedback_notes = self.feedback_notes
         self.submission.internal_notes = self.internal_notes
-        self.submission.date_resolved = self.resolved_time
         self.submission.save()
 
     def _refresh_submissions_from_db(self):
@@ -721,7 +722,7 @@ class AdminViewSetTestCase(StudioAPITestCase):
         self.assertEqual(resolved_submission.feedback_notes, self.feedback_notes)
         self.assertEqual(resolved_submission.internal_notes, self.internal_notes)
         self.assertEqual(resolved_submission.resolved_by, self.admin_user)
-        self.assertEqual(resolved_submission.date_resolved, self.resolved_time)
+        self.assertEqual(resolved_submission.date_updated, self.resolved_time)
 
         self.assertTrue(
             Change.objects.filter(
@@ -763,7 +764,7 @@ class AdminViewSetTestCase(StudioAPITestCase):
         self.assertEqual(resolved_submission.feedback_notes, self.feedback_notes)
         self.assertEqual(resolved_submission.internal_notes, self.internal_notes)
         self.assertEqual(resolved_submission.resolved_by, self.admin_user)
-        self.assertEqual(resolved_submission.date_resolved, self.resolved_time)
+        self.assertEqual(resolved_submission.date_updated, self.resolved_time)
 
         self.assertFalse(
             Change.objects.filter(
@@ -905,3 +906,321 @@ class AdminViewSetTestCase(StudioAPITestCase):
             self.submission_for_other_channel.status,
             community_library_submission_constants.STATUS_PENDING,
         )
+
+
+class FilteringAndSearchTestCase(StudioAPITestCase):
+    """
+    Test cases for the new filtering and search functionality added for the notifications page.
+    Tests date_updated filters, status__in filter, and channel name search.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.editor_user = testdata.user(email="editor@user.com")
+        self.admin_user = testdata.user(email="admin@user.com")
+        self.admin_user.is_admin = True
+        self.admin_user.first_name = "Admin"
+        self.admin_user.last_name = "User"
+        self.admin_user.save()
+
+        self.ensure_db_exists_patcher = mock.patch(
+            "contentcuration.utils.publish.ensure_versioned_database_exists"
+        )
+        self.ensure_db_exists_patcher.start()
+
+        self.math_channel = testdata.channel(name="Math Basics")
+        self.math_channel.public = False
+        self.math_channel.version = 1
+        self.math_channel.editors.add(self.editor_user)
+        self.math_channel.save()
+
+        self.science_channel = testdata.channel(name="Science Fundamentals")
+        self.science_channel.public = False
+        self.science_channel.version = 1
+        self.science_channel.editors.add(self.editor_user)
+        self.science_channel.save()
+
+        self.history_channel = testdata.channel(name="World History")
+        self.history_channel.public = False
+        self.history_channel.version = 1
+        self.history_channel.editors.add(self.editor_user)
+        self.history_channel.save()
+
+        self.math_advanced_channel = testdata.channel(name="Advanced Math")
+        self.math_advanced_channel.public = False
+        self.math_advanced_channel.version = 1
+        self.math_advanced_channel.editors.add(self.editor_user)
+        self.math_advanced_channel.save()
+
+        with mock.patch(
+            "django.utils.timezone.now",
+            return_value=datetime.datetime(2023, 1, 1, tzinfo=pytz.utc),
+        ):
+            self.old_pending_submission = CommunityLibrarySubmission.objects.create(
+                channel=self.math_channel,
+                author=self.editor_user,
+                channel_version=1,
+                status=community_library_submission_constants.STATUS_PENDING,
+                date_created=datetime.datetime(2023, 1, 1, tzinfo=pytz.utc),
+            )
+
+        with mock.patch(
+            "django.utils.timezone.now",
+            return_value=datetime.datetime(2024, 6, 15, tzinfo=pytz.utc),
+        ):
+            self.recent_approved_submission = CommunityLibrarySubmission.objects.create(
+                channel=self.science_channel,
+                author=self.editor_user,
+                channel_version=1,
+                status=community_library_submission_constants.STATUS_APPROVED,
+                date_created=datetime.datetime(2024, 6, 1, tzinfo=pytz.utc),
+                resolved_by=self.admin_user,
+            )
+
+        with mock.patch(
+            "django.utils.timezone.now",
+            return_value=datetime.datetime(2024, 7, 10, tzinfo=pytz.utc),
+        ):
+            self.recent_rejected_submission = CommunityLibrarySubmission.objects.create(
+                channel=self.history_channel,
+                author=self.editor_user,
+                channel_version=1,
+                status=community_library_submission_constants.STATUS_REJECTED,
+                date_created=datetime.datetime(2024, 7, 1, tzinfo=pytz.utc),
+                resolved_by=self.admin_user,
+            )
+
+        with mock.patch(
+            "django.utils.timezone.now",
+            return_value=datetime.datetime(2024, 12, 1, tzinfo=pytz.utc),
+        ):
+            self.very_recent_pending_submission = (
+                CommunityLibrarySubmission.objects.create(
+                    channel=self.math_advanced_channel,
+                    author=self.editor_user,
+                    channel_version=1,
+                    status=community_library_submission_constants.STATUS_PENDING,
+                    date_created=datetime.datetime(2024, 12, 1, tzinfo=pytz.utc),
+                )
+            )
+
+    def tearDown(self):
+        self.ensure_db_exists_patcher.stop()
+        super().tearDown()
+
+    def test_filter_by_date_updated_gte(self):
+        """Test filtering submissions updated on or after a specific date"""
+        self.client.force_authenticate(user=self.editor_user)
+        response = self.client.get(
+            reverse_with_query(
+                "community-library-submission-list",
+                query={"date_updated__gte": "2024-06-01"},
+            )
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        results = response.data
+        self.assertEqual(len(results), 3)
+        submission_ids = [r["id"] for r in results]
+        self.assertNotIn(self.old_pending_submission.id, submission_ids)
+
+    def test_filter_by_date_updated_lte(self):
+        """Test filtering submissions updated on or before a specific date"""
+        self.client.force_authenticate(user=self.editor_user)
+        response = self.client.get(
+            reverse_with_query(
+                "community-library-submission-list",
+                query={"date_updated__lte": "2024-06-30"},
+            )
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        results = response.data
+        self.assertEqual(len(results), 2)
+        submission_ids = [r["id"] for r in results]
+        self.assertIn(self.old_pending_submission.id, submission_ids)
+        self.assertIn(self.recent_approved_submission.id, submission_ids)
+
+    def test_filter_by_date_updated_range(self):
+        """Test filtering submissions within a date range"""
+        self.client.force_authenticate(user=self.editor_user)
+        response = self.client.get(
+            reverse_with_query(
+                "community-library-submission-list",
+                query={
+                    "date_updated__gte": "2024-06-01",
+                    "date_updated__lte": "2024-07-31",
+                },
+            )
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        results = response.data
+        self.assertEqual(len(results), 2)
+        submission_ids = [r["id"] for r in results]
+        self.assertIn(self.recent_approved_submission.id, submission_ids)
+        self.assertIn(self.recent_rejected_submission.id, submission_ids)
+
+    def test_filter_by_status_in_single(self):
+        """Test filtering by a single status"""
+        self.client.force_authenticate(user=self.editor_user)
+        response = self.client.get(
+            reverse_with_query(
+                "community-library-submission-list",
+                query={
+                    "status__in": community_library_submission_constants.STATUS_APPROVED
+                },
+            )
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        results = response.data
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["id"], self.recent_approved_submission.id)
+        self.assertEqual(
+            results[0]["status"],
+            community_library_submission_constants.STATUS_APPROVED,
+        )
+
+    def test_filter_by_status_in_multiple(self):
+        """Test filtering by multiple statuses"""
+        self.client.force_authenticate(user=self.editor_user)
+        url = reverse("community-library-submission-list")
+        response = self.client.get(
+            f"{url}?status__in={community_library_submission_constants.STATUS_APPROVED},{community_library_submission_constants.STATUS_REJECTED}"
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        results = response.data
+        self.assertEqual(len(results), 2)
+        statuses = [r["status"] for r in results]
+        self.assertIn(community_library_submission_constants.STATUS_APPROVED, statuses)
+        self.assertIn(community_library_submission_constants.STATUS_REJECTED, statuses)
+        self.assertNotIn(
+            community_library_submission_constants.STATUS_PENDING, statuses
+        )
+
+    def test_search_by_channel_name(self):
+        """Test searching submissions by channel name"""
+        self.client.force_authenticate(user=self.editor_user)
+        response = self.client.get(
+            reverse_with_query(
+                "community-library-submission-list",
+                query={"search": "Math"},
+            )
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        results = response.data
+        self.assertEqual(len(results), 2)
+        channel_ids = [r["channel_id"] for r in results]
+        self.assertIn(self.math_channel.id, channel_ids)
+        self.assertIn(self.math_advanced_channel.id, channel_ids)
+
+    def test_search_by_channel_name_partial(self):
+        """Test searching with partial channel name"""
+        self.client.force_authenticate(user=self.editor_user)
+        response = self.client.get(
+            reverse_with_query(
+                "community-library-submission-list",
+                query={"search": "Science"},
+            )
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        results = response.data
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["channel_id"], self.science_channel.id)
+
+    def test_combined_filters(self):
+        """Test combining multiple filters together"""
+        self.client.force_authenticate(user=self.editor_user)
+        response = self.client.get(
+            reverse_with_query(
+                "community-library-submission-list",
+                query={
+                    "date_updated__gte": "2024-01-01",
+                    "status__in": community_library_submission_constants.STATUS_PENDING,
+                    "search": "Math",
+                },
+            )
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        results = response.data
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["id"], self.very_recent_pending_submission.id)
+        self.assertEqual(
+            results[0]["status"],
+            community_library_submission_constants.STATUS_PENDING,
+        )
+        self.assertEqual(results[0]["channel_id"], self.math_advanced_channel.id)
+
+    def test_resolved_by_name_visible_to_editor(self):
+        """Test that editors can now see who resolved their submissions"""
+        self.client.force_authenticate(user=self.editor_user)
+        response = self.client.get(
+            reverse(
+                "community-library-submission-detail",
+                args=[self.recent_approved_submission.id],
+            ),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        result = response.data
+        self.assertIn("resolved_by_id", result)
+        self.assertIn("resolved_by_name", result)
+        self.assertEqual(result["resolved_by_id"], self.admin_user.id)
+        self.assertEqual(
+            result["resolved_by_name"],
+            f"{self.admin_user.first_name} {self.admin_user.last_name}",
+        )
+
+    def test_resolved_by_name_null_for_unresolved(self):
+        """Test that resolved_by_name is None for unresolved submissions"""
+        self.client.force_authenticate(user=self.editor_user)
+        response = self.client.get(
+            reverse(
+                "community-library-submission-detail",
+                args=[self.old_pending_submission.id],
+            ),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        result = response.data
+        self.assertIsNone(result.get("resolved_by_id"))
+        self.assertIsNone(result.get("resolved_by_name"))
+
+    def test_pagination_ordering_by_date_updated(self):
+        """Test that results are ordered by -date_updated (most recent first)"""
+        self.client.force_authenticate(user=self.editor_user)
+        response = self.client.get(
+            reverse("community-library-submission-list"),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        results = response.data
+        self.assertEqual(len(results), 4)
+        self.assertEqual(results[0]["id"], self.very_recent_pending_submission.id)
+        self.assertEqual(results[3]["id"], self.old_pending_submission.id)
+
+    def test_admin_can_use_filters(self):
+        """Test that admin users can also use the new filters"""
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.get(
+            reverse_with_query(
+                "admin-community-library-submission-list",
+                query={
+                    "date_updated__gte": "2024-06-01",
+                    "status__in": community_library_submission_constants.STATUS_APPROVED,
+                },
+            )
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        results = response.data
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["id"], self.recent_approved_submission.id)
