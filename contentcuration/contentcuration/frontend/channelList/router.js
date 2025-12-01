@@ -1,7 +1,7 @@
 import VueRouter from 'vue-router';
-import ChannelList from './views/Channel/ChannelList';
 import StudioMyChannels from './views/Channel/StudioMyChannels.vue';
 import StudioStarredChannels from './views/Channel/StudioStarredChannels.vue';
+import StudioViewOnlyChannels from './views/Channel/StudioViewOnlyChannels.vue';
 import ChannelSetList from './views/ChannelSet/ChannelSetList';
 import ChannelSetModal from './views/ChannelSet/ChannelSetModal';
 import CatalogList from './views/Channel/CatalogList';
@@ -9,7 +9,6 @@ import { RouteNames } from './constants';
 import CatalogFAQ from './views/Channel/CatalogFAQ';
 import ChannelModal from 'shared/views/channel/ChannelModal';
 import ChannelDetailsModal from 'shared/views/channel/ChannelDetailsModal';
-import { ChannelListTypes } from 'shared/constants';
 
 const router = new VueRouter({
   routes: [
@@ -43,8 +42,7 @@ const router = new VueRouter({
     {
       name: RouteNames.CHANNELS_VIEW_ONLY,
       path: '/view-only',
-      component: ChannelList,
-      props: { listType: ChannelListTypes.VIEW_ONLY },
+      component: StudioViewOnlyChannels,
     },
     {
       name: RouteNames.CHANNEL_DETAILS,

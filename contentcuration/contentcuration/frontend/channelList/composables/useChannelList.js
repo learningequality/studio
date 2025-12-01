@@ -1,8 +1,6 @@
 import { ref, computed, onMounted, getCurrentInstance } from 'vue';
-import { useRouter, useRoute } from 'vue-router/composables';
 import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
 import orderBy from 'lodash/orderBy';
-import { RouteNames } from '../constants';
 
 /**
  * Composable for channel list functionality
@@ -18,9 +16,6 @@ export function useChannelList(options = {}) {
 
   const instance = getCurrentInstance();
   const store = instance.proxy.$store;
-
-  const router = useRouter();
-  const route = useRoute();
 
   const { windowIsMedium, windowIsLarge, windowBreakpoint } = useKResponsiveWindow();
 
