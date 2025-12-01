@@ -36,10 +36,9 @@
         class="cards"
       >
         <StudioChannelCard
-          v-for="(channel, index) in listChannels"
+          v-for="channel in listChannels"
           :key="channel.id"
           :channel="channel"
-          :index="index"
         />
       </KCardGrid>
     </div>
@@ -51,6 +50,7 @@
 <script>
 
   import { useChannelList } from '../../composables/useChannelList';
+  import { RouteNames } from '../../constants';
   import StudioChannelCard from './components/StudioChannelCard';
   import { ChannelListTypes } from 'shared/constants';
 
@@ -61,7 +61,7 @@
     },
     setup() {
       // Use the channel list composable
-      const { loading, listChannels, newChannel, maxWidthStyle } = useChannelList({
+      const { loading, listChannels, maxWidthStyle } = useChannelList({
         listType: ChannelListTypes.EDITABLE,
         sortFields: ['modified'],
         orderFields: ['desc'],
@@ -70,9 +70,17 @@
       return {
         loading,
         listChannels,
-        newChannel,
         maxWidthStyle,
       };
+    },
+    methods: {
+      newChannel() {
+        this.$analytics.trackClick('channel_list', 'Create channel');
+        this.$router.push({
+          name: RouteNames.NEW_CHANNEL,
+          query: { last: this.$route.name },
+        });
+      },
     },
     $trs: {
       channel: 'New channel',
@@ -86,5 +94,12 @@
 <style lang="scss" scoped>
 
   @import './styles/StudioChannels';
+
+  .new-channel {
+    display: flex;
+    justify-content: end;
+    width: 100%;
+    margin-top: 20px;
+  }
 
 </style>

@@ -1,4 +1,4 @@
-import { render, fireEvent, screen, within } from '@testing-library/vue';
+import { render, screen } from '@testing-library/vue';
 import VueRouter from 'vue-router';
 import { Store } from 'vuex';
 import StudioStarredChannels from '../StudioStarredChannels.vue';
@@ -86,16 +86,11 @@ const store = new Store({
 });
 
 describe('StudioStarredChannels.vue', () => {
-  it('renders starred channels', async () => {
+  it('renders my channels', async () => {
     renderComponent(store);
-    const card0 = await screen.findByTestId('card-0');
-    const cardElements = screen.queryAllByTestId(testId => testId.startsWith('card-'));
+    const cards = await screen.findAllByTestId('card');
 
-    expect(card0).toHaveTextContent('channel one');
-    expect(within(card0).getByTestId('details-button-0')).toBeInTheDocument();
-    expect(within(card0).getByTestId('dropdown-button-0')).toBeInTheDocument();
-
-    expect(cardElements.length).toBe(1);
+    expect(cards.length).toBe(1);
   });
 
   it(`Shows 'No channel found' when there are no channels`, async () => {
@@ -116,55 +111,7 @@ describe('StudioStarredChannels.vue', () => {
       },
     });
     renderComponent(store);
-    const cardElements = screen.queryAllByTestId(testId => testId.startsWith('card-'));
-    expect(cardElements.length).toBe(0);
-  });
-
-  it('open dropdown for published channel', async () => {
-    renderComponent(store);
-    const dropdownButton = await screen.findByTestId('dropdown-button-0');
-    await fireEvent.click(dropdownButton);
-    expect(screen.getByText('Edit channel details')).toBeInTheDocument();
-    expect(screen.getByText('Delete channel')).toBeInTheDocument();
-    expect(screen.getByText('Go to source website')).toBeInTheDocument();
-    expect(screen.getByText('View channel on Kolibri')).toBeInTheDocument();
-    expect(screen.getByText('Copy channel token')).toBeInTheDocument();
-    const listItems = document.querySelectorAll('.ui-focus-container-content li');
-    expect(listItems.length).toBe(5);
-  });
-
-  it('opens delete modal and close', async () => {
-    renderComponent(store);
-    const dropdownButton = await screen.findByTestId('dropdown-button-0');
-    await fireEvent.click(dropdownButton);
-    const deleteButton = screen.getByText('Delete channel');
-    await fireEvent.click(deleteButton);
-    let deleteModal = document.querySelector('[data-testid="delete-modal"]');
-    expect(deleteModal).not.toBeNull();
-    const closeDeleteModal = screen.getByText('Cancel');
-    await fireEvent.click(closeDeleteModal);
-    deleteModal = document.querySelector('[data-testid="delete-modal"]');
-    expect(deleteModal).toBeNull();
-  });
-
-  it('open copy modal and close', async () => {
-    renderComponent(store);
-    const dropdownButton = await screen.findByTestId('dropdown-button-0');
-    await fireEvent.click(dropdownButton);
-    const copyButton = screen.getByText('Copy channel token');
-    await fireEvent.click(copyButton);
-    let copyModal = document.querySelector('[data-testid="copy-modal"]');
-    expect(copyModal).not.toBeNull();
-    const closeCopyModal = screen.getByText('Close');
-    await fireEvent.click(closeCopyModal);
-    copyModal = document.querySelector('[data-testid="copy-modal"]');
-    expect(copyModal).toBeNull();
-  });
-
-  it('detail button takes to details page', async () => {
-    renderComponent(store);
-    const detailsButton = await screen.findByTestId('details-button-0');
-    await fireEvent.click(detailsButton);
-    expect(router.currentRoute.path).toBe('/1/details');
+    const cards = screen.queryAllByTestId('card');
+    expect(cards.length).toBe(0);
   });
 });

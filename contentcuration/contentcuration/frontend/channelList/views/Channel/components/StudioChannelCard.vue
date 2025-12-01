@@ -1,141 +1,139 @@
 <template>
 
-  <div class="channel-card">
-    <KCard
-      :key="channel.id"
-      :headingLevel="2"
-      thumbnailDisplay="small"
-      :thumbnailSrc="thumbnailSrc(channel)"
-      :thumbnailAlign="'left'"
-      :thumbnailScaleType="'contain'"
-      :orientation="windowIsSmall ? 'vertical' : 'horizontal'"
-      :title="channel.name"
-      :titleMaxLines="2"
-      :data-testid="`card-${index}`"
-      @click="goToChannelRoute(channel)"
-    >
-      <template #thumbnailPlaceholder>
-        <KIcon
-          :color="$themePalette.grey.v_400"
-          class="img-placeholder-icon"
-          icon="image"
-        />
-      </template>
-      <template #belowTitle>
-        <div class="cards-below-title">
-          <div class="cards-resource">
-            <span> {{ $tr('resourceCount', { count: channel.count || 0 }) }} </span>
-            <span>
-              {{ language(channel) }}
-            </span>
-          </div>
-          <div
-            class="cards-desc"
-            :style="{ color: $themePalette.text }"
-          >
-            {{ channel.description }}
-          </div>
+  <KCard
+    :key="channel.id"
+    class="channel"
+    :headingLevel="2"
+    thumbnailDisplay="small"
+    :thumbnailSrc="thumbnailSrc"
+    :thumbnailAlign="'left'"
+    :thumbnailScaleType="'contain'"
+    :orientation="windowIsSmall ? 'vertical' : 'horizontal'"
+    :title="channel.name"
+    :titleMaxLines="2"
+    data-testid="card"
+    @click="goToChannelRoute()"
+  >
+    <template #thumbnailPlaceholder>
+      <KIcon
+        :color="$themePalette.grey.v_400"
+        class="img-placeholder-icon"
+        icon="image"
+      />
+    </template>
+    <template #belowTitle>
+      <div class="below-title">
+        <div class="resource">
+          <span> {{ $tr('resourceCount', { count: channel.count || 0 }) }} </span>
+          <span>
+            {{ language }}
+          </span>
         </div>
-      </template>
-      <template #footer>
-        <div class="footer">
-          <div class="footer-left">
-            <span :style="{ color: $themeTokens.annotation }">
-              {{ getPublishStatus(channel) }}
-            </span>
-            <div>
-              <KTooltip
-                :reference="`lastUpdatedTime-${index}`"
-                placement="bottom"
-                :refs="$refs"
-              >
-                {{
-                  $tr('lastUpdated', {
-                    updated: $formatRelative(channel.modified, { now: new Date() }),
-                  })
-                }}
-              </KTooltip>
-              <div
-                v-if="hasUnpublishedChanges(channel)"
-                class="last-updated"
-              >
-                <KIcon
-                  :ref="`lastUpdatedTime-${index}`"
-                  :color="$themePalette.green.v_600"
-                  icon="dot"
-                />
-              </div>
-            </div>
-          </div>
-          <div class="footer-right">
+        <div
+          class="desc"
+          :style="{ color: $themePalette.text }"
+        >
+          {{ channel.description }}
+        </div>
+      </div>
+    </template>
+    <template #footer>
+      <div class="footer">
+        <div class="footer-left">
+          <span :style="{ color: $themeTokens.annotation }">
+            {{ getPublishStatus }}
+          </span>
+          <div>
+            <KTooltip
+              :reference="`lastUpdatedTime`"
+              placement="bottom"
+              :refs="$refs"
+            >
+              {{
+                $tr('lastUpdated', {
+                  updated: $formatRelative(channel.modified, { now: new Date() }),
+                })
+              }}
+            </KTooltip>
             <div
-              :ref="`detailIcon${index}`"
-              class="details-link"
+              v-if="hasUnpublishedChanges"
+              class="last-updated"
             >
-              <router-link
-                :data-testid="`details-button-${index}`"
-                :to="channelDetailsLink(channel)"
-                @click.native.stop
-              >
-                <KIcon
-                  class="details-icon"
-                  :color="$themeTokens.primary"
-                  icon="info"
-                />
-              </router-link>
-              <KTooltip
-                :reference="`detailIcon${index}`"
-                :refs="$refs"
-                maxWidth="200px"
-              >
-                {{ $tr('details') }}
-              </KTooltip>
+              <KIcon
+                :ref="`lastUpdatedTime`"
+                :color="$themePalette.green.v_600"
+                icon="dot"
+              />
             </div>
-
-            <ChannelStar
-              :channelId="channel.id"
-              :data-testid="`bookmark-button-${index}`"
-              :bookmark="channel.bookmark"
-            />
-            <KIconButton
-              size="small"
-              icon="optionsVertical"
-              appearance="flat-button"
-              :data-testid="`dropdown-button-${index}`"
-              @click.stop="openDropDown(channel, index)"
-            >
-              <template #menu>
-                <KDropdownMenu
-                  :hasIcons="true"
-                  :options="dropDownArr"
-                  @select="option => selectedItem(option, channel)"
-                />
-              </template>
-            </KIconButton>
           </div>
         </div>
-      </template>
-    </KCard>
+        <div class="footer-right">
+          <div ref="detailIcon">
+            <router-link
+              data-testid="details-button"
+              :to="channelDetailsLink"
+              :class="['details-link', linkComputedClass]"
+              @click.native.stop
+            >
+              <KIcon
+                class="details-icon"
+                :color="$themeTokens.primary"
+                icon="info"
+              />
+            </router-link>
+            <KTooltip
+              reference="detailIcon"
+              :refs="$refs"
+              maxWidth="200px"
+            >
+              {{ $tr('details') }}
+            </KTooltip>
+          </div>
 
-    <KModal
-      v-if="deleteDialog"
-      :title="canEdit ? $tr('deleteTitle') : $tr('removeTitle')"
-      :submitText="canEdit ? $tr('deleteChannel') : $tr('removeBtn')"
-      :cancelText="$tr('cancel')"
-      data-testid="delete-modal"
-      @submit="handleDelete"
-      @cancel="deleteDialog = false"
-    >
-      {{ canEdit ? $tr('deletePrompt') : $tr('removePrompt') }}
-    </KModal>
-    <ChannelTokenModal
-      v-if="selectedChannel && selectedChannel.published"
-      v-model="tokenDialog"
-      data-testid="copy-modal"
-      :channel="selectedChannel"
-      @copied="trackTokenCopy"
-    />
-  </div>
+          <ChannelStar
+            :channelId="channel.id"
+            data-testid="bookmark-button"
+            :bookmark="channel.bookmark"
+          />
+          <KIconButton
+            size="small"
+            icon="optionsVertical"
+            appearance="flat-button"
+            data-testid="dropdown-button"
+            @click.stop="openDropDown"
+          >
+            <template #menu>
+              <KDropdownMenu
+                :hasIcons="true"
+                :options="dropDownArr"
+                @select="option => selectedItem(option)"
+              />
+            </template>
+          </KIconButton>
+        </div>
+      </div>
+      <KModal
+        v-if="deleteDialog"
+        :title="canEdit ? $tr('deleteTitle') : $tr('removeTitle')"
+        :submitText="canEdit ? $tr('deleteChannel') : $tr('removeBtn')"
+        :cancelText="$tr('cancel')"
+        data-testid="delete-modal"
+        appendToOverlay
+        @submit="handleDelete"
+        @cancel="deleteDialog = false"
+      >
+        {{ canEdit ? $tr('deletePrompt') : $tr('removePrompt') }}
+      </KModal>
+      <ChannelTokenModal
+        v-if="channel && channel.published"
+        v-model="tokenDialog"
+        appendToOverlay
+        data-testid="copy-modal"
+        :channel="channel"
+        @copied="trackTokenCopy"
+      />
+    </template>
+  </KCard>
 
 </template>
 
@@ -166,40 +164,41 @@
         type: Object,
         required: true,
       },
-      index: {
-        type: Number,
-        required: true,
-      },
     },
     data() {
       return {
         tokenDialog: false,
         deleteDialog: false,
-        selectedChannel: {
-          published: false,
-        },
         dropDownArr: [],
       };
     },
     computed: {
-      // channel items properties
+      linkComputedClass() {
+        return this.$computedClass({
+          ':hover': {
+            backgroundColor: 'rgba(0,0,0,.1)',
+          },
+          ':focus': { ...this.$coreOutline, outlineOffset: 0 },
+        });
+      },
       canEdit() {
-        return this.selectedChannel.edit;
+        return this.channel.edit;
       },
-    },
-    methods: {
-      ...mapActions('channel', ['deleteChannel', 'removeViewer']),
-      language(channel) {
-        const lang = Languages.get(channel.language);
-        if (lang) {
-          return lang.native_name;
-        }
-        return this.$tr('channelLanguageNotSetIndicator');
+      thumbnailSrc() {
+        return this.channel.thumbnail_encoding && this.channel.thumbnail_encoding.base64
+          ? this.channel.thumbnail_encoding.base64
+          : this.channel.thumbnail_url;
       },
-      goToChannelRoute(channel) {
-        window.location.href = window.Urls.channel(channel.id);
+      getPublishStatus() {
+        return this.channel.last_published
+          ? this.$tr('lastPublished', {
+            last_published: this.$formatRelative(this.channel.last_published, {
+              now: new Date(),
+            }),
+          })
+          : this.$tr('unpublishedText');
       },
-      channelDetailsLink(channel) {
+      channelDetailsLink() {
         return {
           name: RouteNames.CHANNEL_DETAILS,
           query: {
@@ -209,16 +208,30 @@
             last: this.$route.name,
           },
           params: {
-            channelId: channel.id,
+            channelId: this.channel.id,
           },
         };
       },
-      openDropDown(channel) {
-        this.selectedChannel = channel;
-        this.dropDownArr = this.dropDownItems(channel);
+      language() {
+        const lang = Languages.get(this.channel.language);
+        if (lang) {
+          return lang.native_name;
+        }
+        return this.$tr('channelLanguageNotSetIndicator');
       },
-      dropDownItems(channel) {
-        this.selectedChannel = channel;
+      hasUnpublishedChanges() {
+        return !this.channel.last_published || this.channel.modified > this.channel.last_published;
+      },
+    },
+    methods: {
+      ...mapActions('channel', ['deleteChannel', 'removeViewer']),
+      goToChannelRoute() {
+        window.location.href = window.Urls.channel(this.channel.id);
+      },
+      openDropDown() {
+        this.dropDownArr = this.dropDownItems();
+      },
+      dropDownItems() {
         let options = [
           {
             label: this.$tr('editChannel'),
@@ -246,33 +259,32 @@
             value: 'delete',
           },
         ];
-        if (!channel.published) {
+        if (!this.channel.published) {
           options = options.filter(item => item.value !== 'copy');
         }
-        if (channel.source_url === '') {
+        if (this.channel.source_url === '') {
           options = options.filter(item => item.value !== 'source-url');
         }
-        if (channel.demo_server_url === '') {
+        if (this.channel.demo_server_url === '') {
           options = options.filter(item => item.value !== 'demo-url');
         }
         return options;
       },
-      selectedItem(option, channel) {
+      selectedItem(option) {
         const value = option.value;
-        this.selectedChannel = channel;
         if (value === 'edit') {
-          this.channelEditLink(channel);
+          this.channelEditLink();
         } else if (value === 'copy') {
           this.tokenDialog = true;
         } else if (value === 'delete') {
           this.deleteDialog = true;
         } else if (value === 'source-url') {
-          window.open(channel.source_url, '_blank');
+          window.open(this.channel.source_url, '_blank');
         } else if (value === 'demo-url') {
-          window.open(channel.demo_server_url, '_blank');
+          window.open(this.channel.demo_server_url, '_blank');
         }
       },
-      channelEditLink(channel) {
+      channelEditLink() {
         this.$router.push({
           name: RouteNames.CHANNEL_EDIT,
           query: {
@@ -282,7 +294,7 @@
             last: this.$route.name,
           },
           params: {
-            channelId: channel.id,
+            channelId: this.channel.id,
             tab: 'edit',
           },
         });
@@ -290,14 +302,12 @@
       handleDelete() {
         if (!this.canEdit) {
           const currentUserId = this.$store.state.session.currentUser.id;
-          this.removeViewer({ channelId: this.selectedChannel.id, userId: currentUserId }).then(
-            () => {
-              this.deleteDialog = false;
-              this.$store.dispatch('showSnackbarSimple', this.$tr('channelRemovedSnackbar'));
-            },
-          );
+          this.removeViewer({ channelId: this.channel.id, userId: currentUserId }).then(() => {
+            this.deleteDialog = false;
+            this.$store.dispatch('showSnackbarSimple', this.$tr('channelRemovedSnackbar'));
+          });
         } else {
-          this.deleteChannel(this.selectedChannel.id).then(() => {
+          this.deleteChannel(this.channel.id).then(() => {
             this.deleteDialog = false;
             this.$store.dispatch('showSnackbarSimple', this.$tr('channelDeletedSnackbar'));
           });
@@ -305,25 +315,8 @@
       },
       trackTokenCopy() {
         this.$analytics.trackAction('channel_list', 'Copy token', {
-          eventLabel: this.selectedChannel.primary_token,
+          eventLabel: this.channel.primary_token,
         });
-      },
-      thumbnailSrc(channel) {
-        return channel.thumbnail_encoding && channel.thumbnail_encoding.base64
-          ? channel.thumbnail_encoding.base64
-          : channel.thumbnail_url;
-      },
-      hasUnpublishedChanges(channel) {
-        return !channel.last_published || channel.modified > channel.last_published;
-      },
-      getPublishStatus(channel) {
-        return channel.last_published
-          ? this.$tr('lastPublished', {
-            last_published: this.$formatRelative(channel.last_published, {
-              now: new Date(),
-            }),
-          })
-          : this.$tr('unpublishedText');
       },
     },
     $trs: {
@@ -356,42 +349,32 @@
 
 <style lang="scss" scoped>
 
-  .channel-card {
+  .channel {
     width: 100%;
   }
 
-  .cards-below-title {
+  .below-title {
     font-size: 14px;
   }
 
-  .cards-resource {
+  .resource {
     span:first-child::after {
       margin: 0 8px;
       content: '•';
     }
   }
 
-  .cards-desc {
+  .desc {
     margin-top: 12px;
   }
 
   .details-link {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    transition: background-color 0.2s ease;
-
-    &:hover {
-      background-color: rgba(0, 0, 0, 0.1);
-    }
-
-    a {
-      width: 24px;
-      height: 24px;
-    }
   }
 
   .footer {
@@ -418,8 +401,8 @@
   }
 
   .details-icon {
-    width: 100%;
-    height: 100%;
+    width: 24px;
+    height: 24px;
   }
 
   .img-placeholder-icon {

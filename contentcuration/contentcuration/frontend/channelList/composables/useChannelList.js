@@ -62,21 +62,6 @@ export function useChannelList(options = {}) {
     }
   };
 
-  const newChannel = () => {
-    if (window.$analytics) {
-      window.$analytics.trackClick('channel_list', 'Create channel');
-    }
-
-    router.push({
-      name: RouteNames.NEW_CHANNEL,
-      query: { last: route.name },
-    });
-  };
-
-  const goToChannel = channelId => {
-    window.location.href = window.Urls.channel(channelId);
-  };
-
   onMounted(() => {
     loadData();
   });
@@ -90,7 +75,5 @@ export function useChannelList(options = {}) {
     maxWidthStyle,
 
     loadData,
-    newChannel,
-    goToChannel,
   };
 }

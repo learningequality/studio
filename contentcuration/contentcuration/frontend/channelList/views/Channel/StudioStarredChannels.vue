@@ -24,10 +24,9 @@
         class="cards"
       >
         <StudioChannelCard
-          v-for="(channel, index) in listChannels"
+          v-for="channel in listChannels"
           :key="channel.id"
           :channel="channel"
-          :index="index"
         />
       </KCardGrid>
     </div>
@@ -48,7 +47,6 @@
       StudioChannelCard,
     },
     setup() {
-      // Use the channel list composable with STARRED type
       const { loading, listChannels, maxWidthStyle } = useChannelList({
         listType: ChannelListTypes.STARRED,
         sortFields: ['modified'],
