@@ -24,4 +24,20 @@ class Migration(migrations.Migration):
             name="date_updated",
             field=models.DateTimeField(auto_now=True, db_index=True),
         ),
+        migrations.AlterField(
+            model_name="communitylibrarysubmission",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("PENDING", "Pending"),
+                    ("APPROVED", "Approved"),
+                    ("REJECTED", "Rejected"),
+                    ("SUPERSEDED", "Superseded"),
+                    ("LIVE", "Live"),
+                ],
+                db_index=True,
+                default="PENDING",
+                max_length=20,
+            ),
+        ),
     ]
