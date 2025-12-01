@@ -16,7 +16,11 @@ const createRouter = () => {
       { path: '/', name: 'Main', component: { template: '<div />' } },
       { path: '/forgot-password', name: 'ForgotPassword', component: { template: '<div />' } },
       { path: '/create', name: 'Create', component: { template: '<div />' } },
-      { path: '/account-not-active', name: 'AccountNotActivated', component: { template: '<div />' } },
+      {
+        path: '/account-not-active',
+        name: 'AccountNotActivated',
+        component: { template: '<div />' },
+      },
     ],
   });
 };
