@@ -553,7 +553,6 @@ class AdminViewSetTestCase(StudioAPITestCase):
             "internal_notes": self.internal_notes,
         }
 
-
     def tearDown(self):
         self.django_timezone_patcher.stop()
         self.ensure_db_exists_patcher.stop()
