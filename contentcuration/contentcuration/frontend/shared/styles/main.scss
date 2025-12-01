@@ -8,6 +8,11 @@
 html {
   overflow-y: auto !important;
 
+  // Prevent body scrolling when StudioImmersiveModal is open
+  &.modal-open {
+    overflow-y: hidden !important;
+  }
+
   .title,
   .headline,
   .display,
