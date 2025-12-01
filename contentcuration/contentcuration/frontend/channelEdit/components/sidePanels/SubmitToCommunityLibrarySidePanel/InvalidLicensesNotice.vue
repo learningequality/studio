@@ -27,17 +27,9 @@
     components: {
       Box,
     },
-    props: {
-      invalidLicenses: {
-        type: Array,
-        required: true,
-      },
-    },
     setup(props) {
-      const {
-        incompatibleLicensesDetected$,
-        incompatibleLicensesDescription$,
-      } = communityChannelsStrings;
+      const { incompatibleLicensesDetected$, incompatibleLicensesDescription$ } =
+        communityChannelsStrings;
       const invalidLicenseNames = computed(() => formatLicenseNames(props.invalidLicenses));
 
       const descriptionText = computed(() => {
@@ -51,7 +43,12 @@
         descriptionText,
       };
     },
+    props: {
+      invalidLicenses: {
+        type: Array,
+        required: true,
+      },
+    },
   };
 
 </script>
-

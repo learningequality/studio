@@ -27,18 +27,8 @@
     components: {
       Box,
     },
-    props: {
-      licenses: {
-        type: Array,
-        required: false,
-        default: () => [],
-      },
-    },
     setup(props) {
-      const {
-        licenseCheckPassed$,
-        compatibleLicensesDescription$,
-      } = communityChannelsStrings;
+      const { licenseCheckPassed$, compatibleLicensesDescription$ } = communityChannelsStrings;
       const includedLicenseNames = computed(() => {
         return formatLicenseNames(props.licenses, {
           excludes: ['Special Permissions'],
@@ -56,7 +46,13 @@
         descriptionText,
       };
     },
+    props: {
+      licenses: {
+        type: Array,
+        required: false,
+        default: () => [],
+      },
+    },
   };
 
 </script>
-

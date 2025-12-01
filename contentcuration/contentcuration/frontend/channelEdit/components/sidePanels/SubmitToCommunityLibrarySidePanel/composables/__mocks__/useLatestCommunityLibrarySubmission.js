@@ -14,7 +14,8 @@ function useLatestCommunityLibrarySubmissionMock(overrides = {}) {
   };
 }
 
-const useLatestCommunityLibrarySubmission = jest.fn(() => useLatestCommunityLibrarySubmissionMock());
+const useLatestCommunityLibrarySubmission = jest.fn(() =>
+  useLatestCommunityLibrarySubmissionMock(),
+);
 
 module.exports = { useLatestCommunityLibrarySubmission, useLatestCommunityLibrarySubmissionMock };
-

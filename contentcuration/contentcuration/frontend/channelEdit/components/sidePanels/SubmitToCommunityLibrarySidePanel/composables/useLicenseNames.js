@@ -19,12 +19,12 @@ export function formatLicenseNames(licenseIds, options = {}) {
     .map(id => {
       const license = findLicense(id);
       const licenseName = license?.license_name;
-      
+
       // Exclude licenses specified in the excludes option
       if (!licenseName || excludes.includes(licenseName)) {
         return null;
       }
-      
+
       // Translate the license name
       return constantStrings.$tr(licenseName);
     })

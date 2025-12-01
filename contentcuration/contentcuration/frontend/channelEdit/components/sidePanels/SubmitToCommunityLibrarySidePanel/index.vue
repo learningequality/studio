@@ -145,11 +145,17 @@
               </div>
             </div>
             <InvalidLicensesNotice
-              v-if="licenseAuditIsFinished && !isPublishing && invalidLicenses && invalidLicenses.length"
+              v-if="
+                licenseAuditIsFinished && !isPublishing && invalidLicenses && invalidLicenses.length
+              "
               :invalid-licenses="invalidLicenses"
             />
             <CompatibleLicensesNotice
-              v-if="licenseAuditIsFinished && !isPublishing && (!invalidLicenses || !invalidLicenses.length)"
+              v-if="
+                licenseAuditIsFinished &&
+                  !isPublishing &&
+                  (!invalidLicenses || !invalidLicenses.length)
+              "
               :licenses="includedLicenses"
             />
             <SpecialPermissionsList

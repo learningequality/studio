@@ -25,4 +25,3 @@ function useLicenseAuditMock(overrides = {}) {
 const useLicenseAudit = jest.fn(() => useLicenseAuditMock());
 
 module.exports = { useLicenseAudit, useLicenseAuditMock };
-

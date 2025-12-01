@@ -17,4 +17,3 @@ function usePublishedDataMock(overrides = {}) {
 const usePublishedData = jest.fn(() => usePublishedDataMock());
 
 module.exports = { usePublishedData, usePublishedDataMock };
-
