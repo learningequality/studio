@@ -6,37 +6,18 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("contentcuration", "0158_add_audited_special_permissions_license"),
+        ("contentcuration", "0157_merge_20251015_0333"),
     ]
 
     operations = [
-        migrations.RemoveIndex(
+        migrations.RenameField(
             model_name="communitylibrarysubmission",
-            name="submission_date_created_idx",
-        ),
-        migrations.RemoveField(
-            model_name="communitylibrarysubmission",
-            name="date_resolved",
-        ),
-        migrations.AddField(
-            model_name="communitylibrarysubmission",
-            name="date_updated",
-            field=models.DateTimeField(auto_now=True, db_index=True),
+            old_name="date_resolved",
+            new_name="date_updated",
         ),
         migrations.AlterField(
             model_name="communitylibrarysubmission",
-            name="status",
-            field=models.CharField(
-                choices=[
-                    ("PENDING", "Pending"),
-                    ("APPROVED", "Approved"),
-                    ("REJECTED", "Rejected"),
-                    ("SUPERSEDED", "Superseded"),
-                    ("LIVE", "Live"),
-                ],
-                db_index=True,
-                default="PENDING",
-                max_length=20,
-            ),
+            name="date_updated",
+            field=models.DateTimeField(auto_now=True, db_index=True),
         ),
     ]

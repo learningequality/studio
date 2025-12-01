@@ -498,11 +498,6 @@ class AdminViewSetTestCase(StudioAPITestCase):
         super().setUp()
 
         self.resolved_time = datetime.datetime(2023, 10, 1, tzinfo=pytz.utc)
-        self.datetime_patcher = mock.patch(
-            "contentcuration.viewsets.community_library_submission.timezone.now",
-            return_value=self.resolved_time,
-        )
-        self.mock_datetime = self.datetime_patcher.start()
 
         # Mock django.utils.timezone.now for auto_now field updates
         self.django_timezone_patcher = mock.patch(
@@ -558,8 +553,8 @@ class AdminViewSetTestCase(StudioAPITestCase):
             "internal_notes": self.internal_notes,
         }
 
+
     def tearDown(self):
-        self.datetime_patcher.stop()
         self.django_timezone_patcher.stop()
         self.ensure_db_exists_patcher.stop()
         super().tearDown()
