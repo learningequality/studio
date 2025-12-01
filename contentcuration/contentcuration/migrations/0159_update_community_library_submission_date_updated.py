@@ -10,6 +10,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RemoveIndex(
+            model_name="communitylibrarysubmission",
+            name="submission_date_created_idx",
+        ),
         migrations.RenameField(
             model_name="communitylibrarysubmission",
             old_name="date_resolved",
