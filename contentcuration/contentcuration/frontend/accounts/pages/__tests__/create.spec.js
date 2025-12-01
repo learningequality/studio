@@ -179,4 +179,19 @@ describe('create', () => {
       expect(wrapper.vm.registrationFailed).toBe(true);
     });
   });
+  describe('double-submit prevention', () => {
+    it('should prevent multiple API calls on rapid clicks', async () => {
+      const [wrapper, mocks] = await makeWrapper();
+
+      // Click submit multiple times
+      const p1 = wrapper.vm.submit();
+      const p2 = wrapper.vm.submit();
+      const p3 = wrapper.vm.submit();
+
+      await Promise.all([p1, p2, p3]);
+
+      // Only 1 API call should be made
+      expect(mocks.register).toHaveBeenCalledTimes(1);
+    });
+  });
 });
