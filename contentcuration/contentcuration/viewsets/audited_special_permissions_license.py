@@ -1,16 +1,11 @@
-from django_filters.rest_framework import BaseInFilter
 from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters.rest_framework import FilterSet
-from django_filters.rest_framework import UUIDFilter
 from rest_framework.permissions import IsAuthenticated
 
 from contentcuration.models import AuditedSpecialPermissionsLicense
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
-
-
-class UUIDInFilter(BaseInFilter, UUIDFilter):
-    pass
+from contentcuration.viewsets.common import UUIDInFilter
 
 
 class AuditedSpecialPermissionsLicenseFilter(FilterSet):

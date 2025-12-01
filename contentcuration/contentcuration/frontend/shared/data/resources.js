@@ -1416,10 +1416,9 @@ export const Channel = new CreateModelResource({
     const response = await client.get(window.Urls.channel_published_data(id));
     return response.data;
   },
-  auditLicenses(id) {
-    return client.post(window.Urls.channel_audit_licenses(id)).then(response => {
-      return response.data;
-    });
+  async auditLicenses(id) {
+    const response = await client.post(window.Urls.channel_audit_licenses(id));
+    return response.data;
   },
 });
 
@@ -2419,9 +2418,8 @@ export const CommunityLibrarySubmission = new APIResource({
 
 export const AuditedSpecialPermissionsLicense = new APIResource({
   urlName: 'audited_special_permissions_license',
-  fetchCollection(params) {
-    return client.get(this.collectionUrl(), { params }).then(response => {
-      return response.data || [];
-    });
+  async fetchCollection(params) {
+    const response = await client.get(this.collectionUrl(), { params });
+    return response.data || [];
   },
 });

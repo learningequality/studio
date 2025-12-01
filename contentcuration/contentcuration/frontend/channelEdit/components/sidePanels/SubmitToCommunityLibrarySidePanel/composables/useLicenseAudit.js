@@ -26,8 +26,7 @@ export function useLicenseAudit(channelRef, channelVersionRef) {
     if (!publishedData.value || version == null) {
       return undefined;
     }
-    const versionStr = String(version);
-    return publishedData.value[versionStr] || publishedData.value[Number(versionStr)];
+    return publishedData.value[version];
   });
 
   const hasAuditData = computed(() => {

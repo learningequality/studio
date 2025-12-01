@@ -40,9 +40,11 @@
           icon="chevronLeft"
           @click="previousPage"
         >
-          {{ previousPage$() }}
+          {{ previousPageAction$() }}
         </KButton>
-        <span class="page-indicator">{{ currentPage }} of {{ totalPages }}</span>
+        <span class="page-indicator">
+          {{ pageIndicator$({ currentPage, totalPages }) }}
+        </span>
         <KButton
           :disabled="currentPage === totalPages"
           appearance="flat-button"
@@ -50,7 +52,7 @@
           iconAfter="chevronRight"
           @click="nextPage"
         >
-          {{ nextPage$() }}
+          {{ nextPageAction$() }}
         </KButton>
       </div>
     </template>
@@ -61,18 +63,21 @@
 
 <script>
 
-  import { computed, watch, toRef } from 'vue';
+  import { computed, watch } from 'vue';
   import { useSpecialPermissions } from './composables/useSpecialPermissions';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
-
-  const { specialPermissionsDetected$, confirmDistributionRights$, previousPage$, nextPage$ } =
-    communityChannelsStrings;
 
   export default {
     name: 'SpecialPermissionsList',
     components: {},
     setup(props, { emit }) {
-      const permissionIdsRef = toRef(props, 'permissionIds');
+      const {
+        specialPermissionsDetected$,
+        confirmDistributionRights$,
+        previousPageAction$,
+        nextPageAction$,
+        pageIndicator$,
+      } = communityChannelsStrings;
 
       const {
         permissions,
@@ -82,7 +87,7 @@
         totalPages,
         nextPage,
         previousPage,
-      } = useSpecialPermissions(permissionIdsRef);
+      } = useSpecialPermissions(props.permissionIds);
 
       function togglePermission(permissionId) {
         const currentChecked = [...props.value];
@@ -117,8 +122,9 @@
         previousPage,
         specialPermissionsDetected$,
         confirmDistributionRights$,
-        previousPage$,
-        nextPage$,
+        previousPageAction$,
+        nextPageAction$,
+        pageIndicator$,
       };
     },
     props: {

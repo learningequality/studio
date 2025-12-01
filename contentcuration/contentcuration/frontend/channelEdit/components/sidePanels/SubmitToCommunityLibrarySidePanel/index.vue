@@ -144,20 +144,18 @@
                 </div>
               </div>
             </div>
-            <LicenseStatus
-              v-if="licenseAuditIsFinished && !isPublishing"
+            <InvalidLicensesNotice
+              v-if="licenseAuditIsFinished && !isPublishing && invalidLicenses && invalidLicenses.length"
               :invalid-licenses="invalidLicenses"
-              :included-licenses="includedLicenses"
+            />
+            <CompatibleLicensesNotice
+              v-if="licenseAuditIsFinished && !isPublishing && (!invalidLicenses || !invalidLicenses.length)"
+              :licenses="includedLicenses"
             />
             <SpecialPermissionsList
-              v-if="
-                licenseAuditIsFinished &&
-                  specialPermissions &&
-                  specialPermissions.length > 0 &&
-                  !isPublishing
-              "
+              v-if="licenseAuditIsFinished && specialPermissions && specialPermissions.length > 0"
               v-model="checkedSpecialPermissions"
-              :permission-ids="specialPermissions"
+              :permissionIds="specialPermissions"
               @update:allChecked="allSpecialPermissionsChecked = $event"
             />
             <div class="country-area">
@@ -231,7 +229,7 @@
 
 <script>
 
-  import { computed, getCurrentInstance, onMounted, ref, toRef, watch } from 'vue';
+  import { computed, getCurrentInstance, onMounted, ref, watch } from 'vue';
   import { themeTokens, themePalette } from 'kolibri-design-system/lib/styles/theme';
 
   import camelCase from 'lodash/camelCase';
@@ -243,7 +241,8 @@
   import { useLicenseAudit } from './composables/useLicenseAudit';
   import { usePublishedData } from './composables/usePublishedData';
 
-  import LicenseStatus from './LicenseStatus.vue';
+  import InvalidLicensesNotice from './InvalidLicensesNotice.vue';
+  import CompatibleLicensesNotice from './CompatibleLicensesNotice.vue';
   import SpecialPermissionsList from './SpecialPermissionsList.vue';
   import { translateMetadataString } from 'shared/utils/metadataStringsTranslation';
   import countriesUtil from 'shared/utils/countries';
@@ -263,7 +262,8 @@
       LoadingText,
       StatusChip,
       CountryField,
-      LicenseStatus,
+      InvalidLicensesNotice,
+      CompatibleLicensesNotice,
       SpecialPermissionsList,
     },
     emits: ['close'],
@@ -431,7 +431,7 @@
         specialPermissions,
         includedLicenses,
         checkAndTriggerAudit: checkAndTriggerLicenseAudit,
-      } = useLicenseAudit(toRef(props, 'channel'), currentChannelVersion);
+      } = useLicenseAudit(props.channel, currentChannelVersion);
 
       const allSpecialPermissionsChecked = ref(true);
 
@@ -440,19 +440,21 @@
       });
 
       const canBeSubmitted = computed(() => {
-        if (!allSpecialPermissionsChecked.value) return false;
-        if (isPublishing.value) return false;
-        if (hasInvalidLicenses.value) return false;
-        if (!licenseAuditIsFinished.value) return false;
-
-        const baseCondition =
-          canBeEdited.value && publishedDataIsFinished.value && description.value.length >= 1;
+        const conditions = [
+          allSpecialPermissionsChecked.value,
+          !isPublishing.value,
+          !hasInvalidLicenses.value,
+          licenseAuditIsFinished.value,
+          canBeEdited.value,
+          publishedDataIsFinished.value,
+          description.value.length >= 1,
+        ];
 
         if (needsReplacementConfirmation.value) {
-          return baseCondition && replacementConfirmed.value;
+          conditions.push(replacementConfirmed.value);
         }
 
-        return baseCondition;
+        return conditions.every(condition => condition);
       });
 
       const latestPublishedData = computed(() => {

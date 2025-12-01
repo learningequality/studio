@@ -3,6 +3,26 @@ import { AuditedSpecialPermissionsLicense } from 'shared/data/resources';
 
 const ITEMS_PER_PAGE = 5;
 
+/**
+ * Composable that fetches and paginates audited special-permissions licenses
+ * for a given set of permission IDs.
+ *
+ * @param {Array<string|number>|import('vue').Ref<Array<string|number>>} permissionIds
+ *   A list (or ref to a list) of special-permissions license IDs to fetch.
+ *
+ * @returns {{
+ *   permissions: import('vue').Ref<Array<Object>>,
+ *   currentPagePermissions: import('vue').ComputedRef<Array<Object>>,
+ *   isLoading: import('vue').Ref<boolean>,
+ *   error: import('vue').Ref<Error|null>,
+ *   currentPage: import('vue').Ref<number>,
+ *   totalPages: import('vue').ComputedRef<number>,
+ *   nextPage: () => void,
+ *   previousPage: () => void,
+ * }}
+ *   Reactive state for the fetched, flattened permissions and pagination
+ *   helpers used by `SpecialPermissionsList.vue`.
+ */
 export function useSpecialPermissions(permissionIds) {
   const permissions = ref([]);
   const isLoading = ref(false);
@@ -81,16 +101,12 @@ export function useSpecialPermissions(permissionIds) {
     if (!ids || ids.length === 0) {
       return [];
     }
-    return Array.isArray(ids) ? ids : [ids];
+    return ids;
   });
 
   watch(
     resolvedPermissionIds,
     ids => {
-      if (ids.length === 0) {
-        permissions.value = [];
-        return;
-      }
       fetchPermissions(ids);
     },
     { immediate: true },

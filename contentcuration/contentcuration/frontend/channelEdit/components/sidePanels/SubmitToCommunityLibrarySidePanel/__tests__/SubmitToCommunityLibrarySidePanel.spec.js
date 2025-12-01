@@ -14,15 +14,9 @@ import { communityChannelsStrings } from 'shared/strings/communityChannelsString
 import { CommunityLibrarySubmission } from 'shared/data/resources';
 import CountryField from 'shared/views/form/CountryField.vue';
 
-jest.mock('../composables/usePublishedData', () => ({
-  usePublishedData: jest.fn(),
-}));
-jest.mock('../composables/useLatestCommunityLibrarySubmission', () => ({
-  useLatestCommunityLibrarySubmission: jest.fn(),
-}));
-jest.mock('../composables/useLicenseAudit', () => ({
-  useLicenseAudit: jest.fn(),
-}));
+jest.mock('../composables/usePublishedData');
+jest.mock('../composables/useLatestCommunityLibrarySubmission');
+jest.mock('../composables/useLicenseAudit');
 jest.mock('shared/data/resources', () => ({
   CommunityLibrarySubmission: {
     create: jest.fn(() => Promise.resolve()),

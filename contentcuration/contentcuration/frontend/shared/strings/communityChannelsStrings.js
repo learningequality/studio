@@ -267,6 +267,17 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Please fix licensing before submitting a new version.',
     context: 'Call to action message when incompatible licenses are detected',
   },
+  incompatibleLicensesDescription: {
+    message:
+      '"{licenseNames}" - this channel cannot be distributed via Kolibri. Please fix licensing before submitting a new version.',
+    context:
+      'Description shown when incompatible licenses are detected, includes the license names and explanation',
+  },
+  compatibleLicensesDescription: {
+    message: '{licenseNames} - All licenses are compatible with Community Library.',
+    context:
+      'Description shown when all licenses are compatible, includes the license names and confirmation message',
+  },
   specialPermissionsDetected: {
     message: 'Special Permissions license(s) detected',
     context: 'Title shown when special permissions licenses are detected in the channel',
@@ -276,13 +287,16 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     context:
       'Message asking user to confirm they have distribution rights for special permissions content',
   },
-  previousPage: {
+  previousPageAction: {
     message: 'Previous',
     context: 'Button text to navigate to the previous page in pagination',
   },
-  nextPage: {
+  nextPageAction: {
     message: 'Next',
     context: 'Button text to navigate to the next page in pagination',
-
+  },
+  pageIndicator: {
+    message: '{currentPage} of {totalPages}',
+    context: 'Page indicator showing current page and total pages (e.g., "1 of 5")',
   },
 });
