@@ -29,8 +29,6 @@ const results = ['channel-1', 'channel-2'];
 
 function makeWrapper(overrides = {}) {
   const mockSearchCatalog = jest.fn(() => Promise.resolve());
-  const mockDownloadChannelsCSV = jest.fn(() => Promise.resolve());
-  const mockDownloadChannelsPDF = jest.fn(() => Promise.resolve());
 
   const store = new Store({
     state: {
@@ -130,8 +128,6 @@ function makeWrapper(overrides = {}) {
     store,
     router,
     mockSearchCatalog,
-    mockDownloadChannelsCSV,
-    mockDownloadChannelsPDF,
   };
 }
 
@@ -173,7 +169,7 @@ describe('CatalogList', () => {
       expect(screen.queryByText('Cancel')).not.toBeInTheDocument();
     });
 
-    it('should enter selection mode when user clicks select button', async () => {
+    it('should enter selection mode and show toolbar with selection count when user clicks select button', async () => {
       const user = userEvent.setup();
       makeWrapper();
 
@@ -183,17 +179,6 @@ describe('CatalogList', () => {
       await waitFor(() => {
         expect(screen.getByText('Select all')).toBeInTheDocument();
         expect(screen.getByText('Cancel')).toBeInTheDocument();
-      });
-    });
-
-    it('should show all channels selected by default in selection mode', async () => {
-      const user = userEvent.setup();
-      makeWrapper();
-
-      await waitFor(() => screen.getByText('Download a summary of selected channels'));
-      await user.click(screen.getByText('Download a summary of selected channels'));
-
-      await waitFor(() => {
         expect(screen.getByText('2 channels selected')).toBeInTheDocument();
       });
     });
@@ -217,7 +202,7 @@ describe('CatalogList', () => {
   });
 
   describe('channel selection', () => {
-    it('should show selection count in toolbar when in selection mode', async () => {
+    it('should display select-all checkbox and selection count in selection mode', async () => {
       const user = userEvent.setup();
       makeWrapper();
 
@@ -227,18 +212,6 @@ describe('CatalogList', () => {
       await waitFor(() => {
         expect(screen.getByText('Select all')).toBeInTheDocument();
         expect(screen.getByText('2 channels selected')).toBeInTheDocument();
-      });
-    });
-
-    it('should display select-all checkbox in selection mode', async () => {
-      const user = userEvent.setup();
-      makeWrapper();
-
-      await waitFor(() => screen.getByText('Download a summary of selected channels'));
-      await user.click(screen.getByText('Download a summary of selected channels'));
-
-      await waitFor(() => {
-        expect(screen.getByText('Select all')).toBeInTheDocument();
       });
     });
   });
@@ -283,19 +256,6 @@ describe('CatalogList', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Download a summary of selected channels')).toBeInTheDocument();
-      });
-    });
-
-    it('should display toolbar when entering selection mode', async () => {
-      const user = userEvent.setup();
-      makeWrapper();
-
-      await waitFor(() => screen.getByText('Download a summary of selected channels'));
-      await user.click(screen.getByText('Download a summary of selected channels'));
-
-      await waitFor(() => {
-        expect(screen.getByText('Select all')).toBeInTheDocument();
-        expect(screen.getByText('Cancel')).toBeInTheDocument();
       });
     });
   });
