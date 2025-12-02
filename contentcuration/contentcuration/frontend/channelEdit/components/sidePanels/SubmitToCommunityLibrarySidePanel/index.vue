@@ -112,26 +112,34 @@
                 })
               }}
             </div>
-            <div class="metadata-line">
-              <LoadingText
-                :loading="publishedDataIsLoading"
-                :finishedLoading="publishedDataIsFinished"
-                :omitted="!detectedLanguages"
+            <div class="metadata-section">
+              <div
+                v-if="detectedLanguages"
+                class="metadata-line"
               >
-                {{ detectedLanguages }}
-              </LoadingText>
-            </div>
-            <div class="metadata-line">
-              <LoadingText
-                :loading="publishedDataIsLoading"
-                :finishedLoading="publishedDataIsFinished"
-                :omitted="!detectedCategories"
+                <LoadingText
+                  :loading="publishedDataIsLoading"
+                  :finishedLoading="publishedDataIsFinished"
+                  :omitted="!detectedLanguages"
+                >
+                  {{ detectedLanguages }}
+                </LoadingText>
+              </div>
+              <div
+                v-if="detectedCategories"
+                class="metadata-line"
               >
-                {{ detectedCategories }}
-              </LoadingText>
+                <LoadingText
+                  :loading="publishedDataIsLoading"
+                  :finishedLoading="publishedDataIsFinished"
+                  :omitted="!detectedCategories"
+                >
+                  {{ detectedCategories }}
+                </LoadingText>
+              </div>
             </div>
             <div
-              v-if="licenseAuditIsLoading && !isPublishing"
+              v-if="licenseAuditIsLoading"
               class="license-audit-loader"
             >
               <KCircularLoader disableDefaultTransition />
@@ -145,21 +153,15 @@
               </div>
             </div>
             <InvalidLicensesNotice
-              v-if="
-                licenseAuditIsFinished && !isPublishing && invalidLicenses && invalidLicenses.length
-              "
+              v-if="licenseAuditIsFinished && invalidLicenses.length"
               :invalid-licenses="invalidLicenses"
             />
             <CompatibleLicensesNotice
-              v-if="
-                licenseAuditIsFinished &&
-                  !isPublishing &&
-                  (!invalidLicenses || !invalidLicenses.length)
-              "
+              v-else-if="licenseAuditIsFinished"
               :licenses="includedLicenses"
             />
             <SpecialPermissionsList
-              v-if="licenseAuditIsFinished && specialPermissions && specialPermissions.length > 0"
+              v-if="licenseAuditIsFinished && specialPermissions.length > 0"
               v-model="checkedSpecialPermissions"
               :permissionIds="specialPermissions"
               @update:allChecked="allSpecialPermissionsChecked = $event"
@@ -247,9 +249,9 @@
   import { useLicenseAudit } from './composables/useLicenseAudit';
   import { usePublishedData } from './composables/usePublishedData';
 
-  import InvalidLicensesNotice from './InvalidLicensesNotice.vue';
-  import CompatibleLicensesNotice from './CompatibleLicensesNotice.vue';
-  import SpecialPermissionsList from './SpecialPermissionsList.vue';
+  import InvalidLicensesNotice from './licenseCheck/InvalidLicensesNotice.vue';
+  import CompatibleLicensesNotice from './licenseCheck/CompatibleLicensesNotice.vue';
+  import SpecialPermissionsList from './licenseCheck/SpecialPermissionsList.vue';
   import { translateMetadataString } from 'shared/utils/metadataStringsTranslation';
   import countriesUtil from 'shared/utils/countries';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
@@ -645,6 +647,12 @@
   .channel-title {
     font-size: 18px;
     font-weight: 600;
+  }
+
+  .metadata-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 
   .metadata-line {

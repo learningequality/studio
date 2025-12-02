@@ -43,20 +43,17 @@ export function useLicenseAudit(channelRef, channelVersionRef) {
 
   const invalidLicenses = computed(() => {
     const versionData = currentVersionData.value;
-    if (!versionData) return undefined;
-    return versionData.community_library_invalid_licenses;
+    return versionData?.community_library_invalid_licenses || [];
   });
 
   const specialPermissions = computed(() => {
     const versionData = currentVersionData.value;
-    if (!versionData) return undefined;
-    return versionData.community_library_special_permissions;
+    return versionData?.community_library_special_permissions || [];
   });
 
   const includedLicenses = computed(() => {
     const versionData = currentVersionData.value;
-    if (!versionData) return undefined;
-    return versionData.included_licenses;
+    return versionData?.included_licenses || [];
   });
 
   const isAuditComplete = computed(() => {

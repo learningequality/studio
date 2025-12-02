@@ -1,4 +1,4 @@
-const { computed, ref } = require('vue');
+import { computed, ref } from 'vue';
 
 const MOCK_DEFAULTS = {
   isLoading: computed(() => false),
@@ -15,13 +15,11 @@ const MOCK_DEFAULTS = {
   fetchPublishedData: jest.fn(),
 };
 
-function useLicenseAuditMock(overrides = {}) {
+export function useLicenseAuditMock(overrides = {}) {
   return {
     ...MOCK_DEFAULTS,
     ...overrides,
   };
 }
 
-const useLicenseAudit = jest.fn(() => useLicenseAuditMock());
-
-module.exports = { useLicenseAudit, useLicenseAuditMock };
+export const useLicenseAudit = jest.fn(() => useLicenseAuditMock());

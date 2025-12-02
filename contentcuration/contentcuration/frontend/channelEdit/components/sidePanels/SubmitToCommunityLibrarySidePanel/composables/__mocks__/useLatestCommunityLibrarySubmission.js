@@ -1,4 +1,4 @@
-const { computed, ref } = require('vue');
+import { computed, ref } from 'vue';
 
 const MOCK_DEFAULTS = {
   isLoading: ref(true),
@@ -7,15 +7,13 @@ const MOCK_DEFAULTS = {
   fetchData: jest.fn(() => Promise.resolve()),
 };
 
-function useLatestCommunityLibrarySubmissionMock(overrides = {}) {
+export function useLatestCommunityLibrarySubmissionMock(overrides = {}) {
   return {
     ...MOCK_DEFAULTS,
     ...overrides,
   };
 }
 
-const useLatestCommunityLibrarySubmission = jest.fn(() =>
+export const useLatestCommunityLibrarySubmission = jest.fn(() =>
   useLatestCommunityLibrarySubmissionMock(),
 );
-
-module.exports = { useLatestCommunityLibrarySubmission, useLatestCommunityLibrarySubmissionMock };

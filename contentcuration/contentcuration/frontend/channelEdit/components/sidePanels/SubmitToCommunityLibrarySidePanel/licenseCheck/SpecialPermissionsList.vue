@@ -2,7 +2,7 @@
 
   <div data-test="special-permissions-list">
     <div class="header-section">
-      <div class="title">
+      <div class="header-title">
         {{ specialPermissionsDetected$() }}
       </div>
       <div class="description">
@@ -64,7 +64,7 @@
 <script>
 
   import { computed, watch } from 'vue';
-  import { useSpecialPermissions } from './composables/useSpecialPermissions';
+  import { useSpecialPermissions } from '../composables/useSpecialPermissions';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 
   export default {
@@ -151,7 +151,7 @@
     margin-bottom: 8px;
   }
 
-  .title {
+  .header-title {
     margin-bottom: 4px;
     font-weight: bold;
   }
@@ -159,13 +159,14 @@
   .description {
     margin-bottom: 12px;
     font-size: 14px;
+    color: v-bind('$themePalette.grey.v_700');
   }
 
   .permissions-box {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 16px;
+    gap: 6px;
+    padding: 12px;
     background-color: v-bind('$themePalette.grey.v_100');
     border: 1px solid v-bind('$themePalette.grey.v_200');
     border-radius: 4px;
@@ -180,7 +181,6 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-top: 8px;
     margin-top: 8px;
   }
 

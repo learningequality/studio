@@ -1,7 +1,7 @@
 import { computed, ref, unref, watch } from 'vue';
 import { AuditedSpecialPermissionsLicense } from 'shared/data/resources';
 
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 3;
 
 /**
  * Composable that fetches and paginates audited special-permissions licenses
@@ -54,28 +54,11 @@ export function useSpecialPermissions(permissionIds) {
         distributable: false,
       });
 
-      const flattenedPermissions = [];
-      response.forEach(permission => {
-        const sentences = permission.description
-          .split('.')
-          .map(s => s.trim())
-          .filter(s => s.length > 0);
-
-        sentences.forEach((sentence, index) => {
-          let text = sentence;
-          if (!text.endsWith('.')) {
-            text += '.';
-          }
-
-          flattenedPermissions.push({
-            id: `${permission.id}-${index}`,
-            originalId: permission.id,
-            description: text,
-            distributable: permission.distributable,
-          });
-        });
-      });
-      permissions.value = flattenedPermissions;
+      permissions.value = response.map(permission => ({
+        id: permission.id,
+        description: permission.description,
+        distributable: permission.distributable,
+      }));
     } catch (err) {
       error.value = err;
       permissions.value = [];

@@ -55,15 +55,6 @@ async function makeWrapper({ channel, publishedData, latestSubmission }) {
     fetchData: fetchLatestSubmission,
   });
 
-  useLicenseAudit.mockReturnValue({
-    isLoading: ref(false),
-    isFinished: ref(true),
-    invalidLicenses: ref([]),
-    specialPermissions: ref([]),
-    includedLicenses: ref([]),
-    checkAndTriggerAudit: jest.fn(),
-  });
-
   const wrapper = mount(SubmitToCommunityLibrarySidePanel, {
     store,
     propsData: {

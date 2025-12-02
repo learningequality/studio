@@ -18,8 +18,8 @@
 <script>
 
   import { computed } from 'vue';
-  import Box from './Box.vue';
-  import { formatLicenseNames } from './composables/useLicenseNames';
+  import Box from '../Box.vue';
+  import { formatLicenseNames } from 'shared/utils/helpers';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 
   export default {

@@ -1,4 +1,4 @@
-const { computed, ref } = require('vue');
+import { computed, ref } from 'vue';
 
 const MOCK_DEFAULTS = {
   isLoading: ref(true),
@@ -7,13 +7,11 @@ const MOCK_DEFAULTS = {
   fetchData: jest.fn(() => Promise.resolve()),
 };
 
-function usePublishedDataMock(overrides = {}) {
+export function usePublishedDataMock(overrides = {}) {
   return {
     ...MOCK_DEFAULTS,
     ...overrides,
   };
 }
 
-const usePublishedData = jest.fn(() => usePublishedDataMock());
-
-module.exports = { usePublishedData, usePublishedDataMock };
+export const usePublishedData = jest.fn(() => usePublishedDataMock());
