@@ -8,7 +8,6 @@ import StatusChip from '../StatusChip.vue';
 
 import { usePublishedData } from '../composables/usePublishedData';
 import { useLatestCommunityLibrarySubmission } from '../composables/useLatestCommunityLibrarySubmission';
-import { useLicenseAudit } from '../composables/useLicenseAudit';
 import { Categories, CommunityLibraryStatus } from 'shared/constants';
 import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 import { CommunityLibrarySubmission } from 'shared/data/resources';
