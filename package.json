@@ -101,7 +101,7 @@
     "vue-router": "3.6.5",
     "vuetify": "^1.5.24",
     "vuex": "^3.0.1",
-    "workbox-core": "^7.3.0",
+    "workbox-core": "^7.4.0",
     "workbox-precaching": "^7.3.0",
     "workbox-routing": "^7.3.0",
     "workbox-strategies": "^7.3.0",

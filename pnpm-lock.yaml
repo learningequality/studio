@@ -153,8 +153,8 @@ importers:
         specifier: ^3.0.1
         version: 3.6.2(vue@2.7.16)
       workbox-core:
-        specifier: ^7.3.0
-        version: 7.3.0
+        specifier: ^7.4.0
+        version: 7.4.0
       workbox-precaching:
         specifier: ^7.3.0
         version: 7.3.0
@@ -7617,6 +7617,9 @@ packages:
 
   workbox-core@7.3.0:
     resolution: {integrity: sha512-Z+mYrErfh4t3zi7NVTvOuACB0A/jA3bgxUN3PwtAVHvfEsZxV9Iju580VEETug3zYJRc0Dmii/aixI/Uxj8fmw==}
+
+  workbox-core@7.4.0:
+    resolution: {integrity: sha512-6BMfd8tYEnN4baG4emG9U0hdXM4gGuDU3ectXuVHnj71vwxTFI7WOpQJC4siTOlVtGqCUtj0ZQNsrvi6kZZTAQ==}
 
   workbox-expiration@7.3.0:
     resolution: {integrity: sha512-lpnSSLp2BM+K6bgFCWc5bS1LR5pAwDWbcKt1iL87/eTSJRdLdAwGQznZE+1czLgn/X05YChsrEegTNxjM067vQ==}
@@ -16484,6 +16487,8 @@ snapshots:
       workbox-core: 7.3.0
 
   workbox-core@7.3.0: {}
+
+  workbox-core@7.4.0: {}
 
   workbox-expiration@7.3.0:
     dependencies:
