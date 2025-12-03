@@ -1,4 +1,3 @@
-from contentcuration.models import Channel
 from contentcuration.models import ChannelVersion
 from contentcuration.models import SecretToken
 from contentcuration.tests import testdata

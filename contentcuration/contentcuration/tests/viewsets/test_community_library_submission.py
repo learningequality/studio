@@ -1252,6 +1252,7 @@ class CommunityLibrarySubmissionChannelVersionTestCase(StudioAPITestCase):
             description="Test submission",
         )
 
+        self.assertIsNotNone(submission)
         self.assertEqual(
             ChannelVersion.objects.filter(channel=self.channel).count(),
             initial_count + 1,
@@ -1269,6 +1270,7 @@ class CommunityLibrarySubmissionChannelVersionTestCase(StudioAPITestCase):
             description="Test submission",
         )
 
+        self.assertIsNotNone(submission)
         channel_version = ChannelVersion.objects.get(channel=self.channel, version=5)
 
         self.assertIsNotNone(channel_version.secret_token)
@@ -1293,6 +1295,8 @@ class CommunityLibrarySubmissionChannelVersionTestCase(StudioAPITestCase):
             description="Version 6 submission",
         )
 
+        self.assertIsNotNone(submission1)
+        self.assertIsNotNone(submission2)
         v5 = ChannelVersion.objects.get(channel=self.channel, version=5)
         v6 = ChannelVersion.objects.get(channel=self.channel, version=6)
 

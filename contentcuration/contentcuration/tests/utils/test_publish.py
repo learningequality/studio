@@ -157,6 +157,9 @@ class IncrementChannelVersionTestCase(StudioTestCase):
 
         self.assertEqual(self.channel.channel_versions.count(), 4)
 
+        # Verify all versions were created
+        self.assertIsNotNone(v1)
+        self.assertIsNotNone(v2)
         self.assertEqual(self.channel.version_info, v3)
         self.assertEqual(self.channel.version_info.version, 4)
 

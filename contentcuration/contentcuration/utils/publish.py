@@ -35,6 +35,7 @@ from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
+from le_utils.constants import licenses
 from le_utils.constants import roles
 from search.models import ChannelFullTextSearch
 from search.models import ContentNodeFullTextSearch
