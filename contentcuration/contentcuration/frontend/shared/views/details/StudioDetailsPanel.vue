@@ -1,6 +1,9 @@
 <template>
 
-  <div :class="{ printing }">
+  <div
+    :class="{ printing }"
+    data-testid="details-panel"
+  >
     <div class="thumbnail-container">
       <KImg
         v-if="isChannel ? _details.thumbnail_url : _details.thumbnail_src"
