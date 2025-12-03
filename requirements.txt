@@ -156,16 +156,12 @@ jsonschema-specifications==2024.10.1
     # via jsonschema
 kombu==5.5.2
     # via celery
-langcodes==3.5.0
+langcodes==3.5.1
     # via -r requirements.in
-language-data==1.3.0
-    # via langcodes
 latex2mathml==3.78.0
     # via -r requirements.in
 le-utils==0.2.12
     # via -r requirements.in
-marisa-trie==1.2.1
-    # via language-data
 markdown-it-py==4.0.0
     # via -r requirements.in
 mdurl==0.1.2
