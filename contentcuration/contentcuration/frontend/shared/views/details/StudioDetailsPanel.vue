@@ -15,10 +15,14 @@
         aspectRatio="16:9"
       >
         <template #placeholder>
-          <div class="placeholder-content">
+          <div
+            class="placeholder-content"
+            data-testid="placeholder-content"
+            :style="{ backgroundColor: $themePalette.grey.v_200 }"
+          >
             <KIcon
               icon="image"
-              :style="{ fill: '#999999', width: '48px', height: '48px' }"
+              :style="{ fill: $themePalette.grey.v_400, width: '48px', height: '48px' }"
             />
           </div>
         </template>
@@ -174,9 +178,8 @@
             v-for="tag in sortedTags"
             v-else-if="!printing"
             :key="tag.tag_name"
-            :notranslate="true"
           >
-            {{ tag.tag_name }}
+            <span class="notranslate">{{ tag.tag_name }}</span>
           </StudioChip>
           <span v-else>
             {{ tagPrintable }}
@@ -351,10 +354,13 @@
             aspectRatio="16:9"
           >
             <template #placeholder>
-              <div class="placeholder-content">
+              <div
+                class="placeholder-content"
+                :style="{ backgroundColor: $themePalette.grey.v_200 }"
+              >
                 <KIcon
                   icon="image"
-                  :style="{ fill: '#999999', width: '32px', height: '32px' }"
+                  :style="{ fill: $themePalette.grey.v_400, width: '32px', height: '32px' }"
                 />
               </div>
             </template>
@@ -628,7 +634,6 @@
     justify-content: center;
     width: 100%;
     height: 100%;
-    background-color: var(--v-grey-lighten4);
   }
 
   .resource-list {
@@ -681,7 +686,7 @@
   .source-thumbnail {
     flex-shrink: 0;
     width: 150px;
-    border: 1px solid var(--v-grey-lighten3, #e0e0e0);
+    border: 1px solid #e0e0e0;
   }
 
   .channel-name {
@@ -693,7 +698,7 @@
   .channel-link {
     margin: 0 8px;
     font-weight: bold;
-    color: var(--v-primary-base, #1976d2);
+    color: #1976d2;
     text-decoration: none;
 
     span {
@@ -720,7 +725,7 @@
     font-size: 14px;
     font-weight: bold;
     line-height: 20px;
-    color: var(--v-grey-darken3);
+    color: #424242;
   }
 
   .sample-nodes {
@@ -744,7 +749,7 @@
     flex-direction: column;
     height: 100%;
     overflow: hidden;
-    border: 1px solid var(--v-grey-lighten3, #e0e0e0);
+    border: 1px solid #e0e0e0;
     border-radius: 4px;
 
     > div:last-child {
