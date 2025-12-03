@@ -1,0 +1,57 @@
+from contentcuration.models import Channel, ChannelVersion, SecretToken
+from contentcuration.tests.base import StudioTestCase
+from contentcuration.tests import testdata
+
+class ChannelVersionTestCase(StudioTestCase):
+    def setUp(self):
+        super(ChannelVersionTestCase, self).setUp()
+        self.channel = testdata.channel()
+        self.channel.version = 10
+        self.channel.save()
+        self.user = testdata.user()
+        self.channel.editors.add(self.user)
+
+    def test_create_channel_version(self):
+        """Test creating a ChannelVersion."""
+        cv = ChannelVersion.objects.create(
+            channel=self.channel,
+            version=1,
+        )
+        self.assertEqual(cv.channel, self.channel)
+        self.assertEqual(cv.version, 1)
+        self.assertIsNone(cv.secret_token)
+
+    def test_new_token_creates_token(self):
+        """Test new_token creates a token."""
+        cv = ChannelVersion.objects.create(
+            channel=self.channel,
+            version=1,
+        )
+        token = cv.new_token()
+        self.assertIsInstance(token, SecretToken)
+        self.assertFalse(token.is_primary)
+        self.assertEqual(cv.secret_token, token)
+
+    def test_new_token_is_idempotent(self):
+        """Test new_token returns existing token if present."""
+        cv = ChannelVersion.objects.create(
+            channel=self.channel,
+            version=1,
+        )
+        token1 = cv.new_token()
+        token2 = cv.new_token()
+        self.assertEqual(token1, token2)
+        self.assertEqual(cv.secret_token, token1)
+
+    def test_unique_constraint(self):
+        """Test unique constraint on channel and version."""
+        ChannelVersion.objects.create(
+            channel=self.channel,
+            version=1,
+        )
+        from django.db.utils import IntegrityError
+        with self.assertRaises(IntegrityError):
+            ChannelVersion.objects.create(
+                channel=self.channel,
+                version=1,
+            )

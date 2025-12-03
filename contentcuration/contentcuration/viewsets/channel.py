@@ -884,23 +884,45 @@ class ChannelViewSet(ValuesViewset):
     @action(
         detail=True,
         methods=["get"],
-        url_path="published_data",
-        url_name="published-data",
+        url_path="version_detail",
+        url_name="version-detail",
     )
-    def get_published_data(self, request, pk=None) -> Response:
+    def get_version_detail(self, request, pk=None) -> Response:
         """
-        Get the published data for a channel.
+        Get the version detail for a channel.
 
         :param request: The request object
         :param pk: The ID of the channel
-        :return: Response with the published data of the channel
+        :return: Response with the version detail of the channel
         :rtype: Response
         """
         # Allow exactly users with permission to edit the channel to
-        # access the published data.
+        # access the version detail.
         channel = self.get_edit_object()
 
-        return Response(channel.published_data)
+        if not channel.version_info:
+            return Response({})
+        
+        version_data = {
+            "id": str(channel.version_info.id),
+            "version": channel.version_info.version,
+            "resource_count": channel.version_info.resource_count,
+            "kind_count": channel.version_info.kind_count,
+            "size": channel.version_info.size,
+            "date_published": channel.version_info.date_published.strftime(
+                settings.DATE_TIME_FORMAT
+            ) if channel.version_info.date_published else None,
+            "version_notes": channel.version_info.version_notes,
+            "included_languages": channel.version_info.included_languages,
+            "included_licenses": channel.version_info.included_licenses,
+            "included_categories": channel.version_info.included_categories,
+            "non_distributable_licenses_included": channel.version_info.non_distributable_licenses_included,
+            "special_permissions_included": list(
+                channel.version_info.special_permissions_included.values_list('id', flat=True)
+            ),
+        }
+
+        return Response(version_data)
 
     @action(
         detail=True,

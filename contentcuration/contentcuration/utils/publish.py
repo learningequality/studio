@@ -210,9 +210,31 @@ def create_kolibri_license_object(ccnode):
     )
 
 
-def increment_channel_version(channel):
-    channel.version += 1
-    channel.save()
+def increment_channel_version(channel, is_draft_version=False):
+
+    if not is_draft_version:
+        channel.version += 1
+        channel.save()
+    
+    if is_draft_version:
+        channel_version = ccmodels.ChannelVersion.objects.create(
+            channel=channel,
+            version=None
+        )
+    else:
+        channel_version, created = ccmodels.ChannelVersion.objects.get_or_create(
+            channel=channel,
+            version=channel.version
+        )
+    
+    if not is_draft_version:
+        channel.version_info = channel_version
+        channel.save()
+     
+    if is_draft_version:
+        channel_version.new_token()
+    
+    return channel_version
 
 
 def assign_license_to_contentcuration_nodes(channel, license):
@@ -945,6 +967,81 @@ def fill_published_fields(channel, version_notes):
             }
         }
     )
+    
+    # Calculate non-distributable licenses (All Rights Reserved)
+    all_rights_reserved_id = ccmodels.License.objects.filter(
+        license_name=licenses.ALL_RIGHTS_RESERVED
+    ).values_list('id', flat=True).first()
+    
+    non_distributable_licenses = (
+        [all_rights_reserved_id] if all_rights_reserved_id and all_rights_reserved_id in license_list else []
+    )
+    
+    # records for each unique description so reviewers can approve/reject them individually.
+    # This allows centralized tracking of custom licenses across all channels.
+    special_permissions_id = ccmodels.License.objects.filter(
+        license_name=licenses.SPECIAL_PERMISSIONS
+    ).values_list('id', flat=True).first()
+    
+    special_permissions_ids = []
+    if special_permissions_id and special_permissions_id in license_list:
+        special_perms_descriptions = list(
+            published_nodes.filter(license_id=special_permissions_id)
+            .exclude(license_description__isnull=True)
+            .exclude(license_description="")
+            .values_list("license_description", flat=True)
+            .distinct()
+        )
+        
+        if special_perms_descriptions:
+            existing_licenses = ccmodels.AuditedSpecialPermissionsLicense.objects.filter(
+                description__in=special_perms_descriptions
+            )
+            existing_descriptions = set(
+                existing_licenses.values_list("description", flat=True)
+            )
+            
+            new_licenses = [
+                ccmodels.AuditedSpecialPermissionsLicense(
+                    description=description, distributable=False
+                )
+                for description in special_perms_descriptions
+                if description not in existing_descriptions
+            ]
+            
+            if new_licenses:
+                ccmodels.AuditedSpecialPermissionsLicense.objects.bulk_create(
+                    new_licenses, ignore_conflicts=True
+                )
+            
+            special_permissions_ids = list(
+                ccmodels.AuditedSpecialPermissionsLicense.objects.filter(
+                    description__in=special_perms_descriptions
+                ).values_list("id", flat=True)
+            )
+    
+    if channel.version_info:
+        channel.version_info.resource_count = channel.total_resource_count
+        channel.version_info.kind_count = kind_counts
+        channel.version_info.size = int(channel.published_size)
+        channel.version_info.date_published = channel.last_published
+        channel.version_info.version_notes = version_notes
+        channel.version_info.included_languages = language_list
+        channel.version_info.included_licenses = license_list
+        channel.version_info.included_categories = category_list
+        channel.version_info.non_distributable_licenses_included = non_distributable_licenses
+        channel.version_info.save()
+        
+        if special_permissions_ids:
+            channel.version_info.special_permissions_included.set(
+                ccmodels.AuditedSpecialPermissionsLicense.objects.filter(
+                    id__in=special_permissions_ids
+                )
+            )
+        else:
+            channel.version_info.special_permissions_included.clear()
+    
+    
     channel.save()
 
 
@@ -1047,8 +1144,8 @@ def publish_channel(  # noqa: C901
             use_staging_tree=use_staging_tree,
         )
         add_tokens_to_channel(channel)
+        increment_channel_version(channel, is_draft_version=is_draft_version)
         if not is_draft_version:
-            increment_channel_version(channel)
             sync_contentnode_and_channel_tsvectors(channel_id=channel.id)
             mark_all_nodes_as_published(base_tree)
             fill_published_fields(channel, version_notes)
