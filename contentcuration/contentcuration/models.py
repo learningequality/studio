@@ -11,6 +11,7 @@ from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
+from django.contrib.postgres.fields import ArrayField
 from django.contrib.sessions.models import Session
 from django.core.cache import cache
 from django.core.exceptions import MultipleObjectsReturned
@@ -55,8 +56,8 @@ from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from le_utils.constants import languages
 from le_utils.constants import licenses
-from le_utils.constants.labels import subjects
 from le_utils.constants import roles
+from le_utils.constants.labels import subjects
 from model_utils import FieldTracker
 from mptt.models import MPTTModel
 from mptt.models import raise_if_unsaved
@@ -73,7 +74,6 @@ from contentcuration.constants import completion_criteria
 from contentcuration.constants import feedback
 from contentcuration.constants import user_history
 from contentcuration.constants.contentnode import kind_activity_map
-from django.contrib.postgres.fields import ArrayField
 from contentcuration.db.models.expressions import Array
 from contentcuration.db.models.functions import ArrayRemove
 from contentcuration.db.models.functions import Unnest
@@ -1202,7 +1202,9 @@ class Channel(models.Model):
         ):
             delete_public_channel_cache_keys()
 
-        if self.version and (not self.version_info or self.version_info.version != self.version):
+        if self.version and (
+            not self.version_info or self.version_info.version != self.version
+        ):
             self.version_info, _ = ChannelVersion.objects.get_or_create(
                 channel=self, version=self.version
             )
@@ -1362,19 +1364,17 @@ class Channel(models.Model):
         index_together = [["deleted", "public"]]
 
 
-
-
 def validate_kind_count_item(value):
-    
+
     if not isinstance(value, dict):
         raise ValidationError("Each kind_count item must be a dictionary")
-    
+
     if "count" not in value or "kind" not in value:
         raise ValidationError("Each kind_count item must have 'count' and 'kind' keys")
-    
+
     if not isinstance(value["count"], int) or value["count"] < 0:
         raise ValidationError("'count' must be a non-negative integer")
-    
+
     if not isinstance(value["kind"], str) or not value["kind"]:
         raise ValidationError("'kind' must be a non-empty string")
 
@@ -1393,49 +1393,44 @@ class ChannelVersion(models.Model):
     Stores version-specific information for a channel. This allows retrieving
     specific channel versions using secret tokens.
     """
+
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     channel = models.ForeignKey(
-        Channel,
-        on_delete=models.CASCADE,
-        related_name="channel_versions"
+        Channel, on_delete=models.CASCADE, related_name="channel_versions"
     )
     version = models.PositiveIntegerField(null=True, blank=True)
     secret_token = models.ForeignKey(
-        SecretToken,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
+        SecretToken, on_delete=models.SET_NULL, null=True, blank=True
     )
     version_notes = models.TextField(null=True, blank=True)
     size = models.PositiveIntegerField(null=True, blank=True)
     date_published = models.DateTimeField(null=True, blank=True)
     resource_count = models.PositiveIntegerField(null=True, blank=True)
     kind_count = ArrayField(
-        JSONField(),
-        validators=[validate_kind_count_item],
-        null=True,
-        blank=True
+        JSONField(), validators=[validate_kind_count_item], null=True, blank=True
     )
     included_licenses = ArrayField(
         models.IntegerField(choices=[(lic[0], lic[1]) for lic in licenses.LICENSELIST]),
         null=True,
-        blank=True
+        blank=True,
     )
     included_categories = ArrayField(
-        models.CharField(max_length=100, choices=[(subj, subj) for subj in subjects.SUBJECTSLIST]),
+        models.CharField(
+            max_length=100, choices=[(subj, subj) for subj in subjects.SUBJECTSLIST]
+        ),
         null=True,
-        blank=True
+        blank=True,
     )
     included_languages = ArrayField(
         models.CharField(max_length=100),
         validators=[validate_language_code],
         null=True,
-        blank=True
+        blank=True,
     )
     non_distributable_licenses_included = ArrayField(
         models.IntegerField(choices=[(lic[0], lic[1]) for lic in licenses.LICENSELIST]),
         null=True,
-        blank=True
+        blank=True,
     )
     special_permissions_included = models.ManyToManyField(
         "AuditedSpecialPermissionsLicense",
@@ -1454,8 +1449,7 @@ class ChannelVersion(models.Model):
     def new_token(self):
         if not self.secret_token:
             self.secret_token = SecretToken.objects.create(
-                token=SecretToken.generate_new_token(),
-                is_primary=False
+                token=SecretToken.generate_new_token(), is_primary=False
             )
             self.save()
         return self.secret_token
@@ -2774,8 +2768,7 @@ class CommunityLibrarySubmission(models.Model):
             )
             # Create a ChannelVersion and token for this submission
             channel_version, _ = ChannelVersion.objects.get_or_create(
-                channel=self.channel,
-                version=self.channel_version
+                channel=self.channel, version=self.channel_version
             )
             channel_version.new_token()
 
@@ -3477,7 +3470,7 @@ class Change(models.Model):
         table=None,
         rev=None,
         unpublishable=False,
-        **data
+        **data,
     ):
         change_type = data.pop("type")
         if table is None or table not in ALL_TABLES:

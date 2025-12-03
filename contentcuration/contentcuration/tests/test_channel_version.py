@@ -1,6 +1,9 @@
-from contentcuration.models import Channel, ChannelVersion, SecretToken
-from contentcuration.tests.base import StudioTestCase
+from contentcuration.models import Channel
+from contentcuration.models import ChannelVersion
+from contentcuration.models import SecretToken
 from contentcuration.tests import testdata
+from contentcuration.tests.base import StudioTestCase
+
 
 class ChannelVersionTestCase(StudioTestCase):
     def setUp(self):
@@ -50,6 +53,7 @@ class ChannelVersionTestCase(StudioTestCase):
             version=1,
         )
         from django.db.utils import IntegrityError
+
         with self.assertRaises(IntegrityError):
             ChannelVersion.objects.create(
                 channel=self.channel,

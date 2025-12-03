@@ -8,11 +8,14 @@ from contentcuration.constants import (
     community_library_submission as community_library_submission_constants,
 )
 from contentcuration.models import Change
+from contentcuration.models import Channel
+from contentcuration.models import ChannelVersion
+from contentcuration.models import CommunityLibrarySubmission
+from contentcuration.models import User
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.tests.helpers import reverse_with_query
 from contentcuration.viewsets.sync.constants import ADDED_TO_COMMUNITY_LIBRARY
-from contentcuration.models import Channel, ChannelVersion, CommunityLibrarySubmission, User
 
 
 class CRUDTestCase(StudioAPITestCase):
@@ -1241,23 +1244,20 @@ class CommunityLibrarySubmissionChannelVersionTestCase(StudioAPITestCase):
     def test_submission_creates_channel_version(self):
         """Test that creating a submission creates a ChannelVersion."""
         initial_count = ChannelVersion.objects.filter(channel=self.channel).count()
-        
+
         submission = CommunityLibrarySubmission.objects.create(
             channel=self.channel,
             channel_version=5,
             author=self.user,
             description="Test submission",
         )
-        
+
         self.assertEqual(
             ChannelVersion.objects.filter(channel=self.channel).count(),
-            initial_count + 1
+            initial_count + 1,
         )
-        
-        channel_version = ChannelVersion.objects.get(
-            channel=self.channel,
-            version=5
-        )
+
+        channel_version = ChannelVersion.objects.get(channel=self.channel, version=5)
         self.assertIsNotNone(channel_version)
 
     def test_submission_creates_token(self):
@@ -1268,39 +1268,34 @@ class CommunityLibrarySubmissionChannelVersionTestCase(StudioAPITestCase):
             author=self.user,
             description="Test submission",
         )
-        
-        channel_version = ChannelVersion.objects.get(
-            channel=self.channel,
-            version=5
-        )
-        
+
+        channel_version = ChannelVersion.objects.get(channel=self.channel, version=5)
+
         self.assertIsNotNone(channel_version.secret_token)
         self.assertFalse(channel_version.secret_token.is_primary)
-
-
 
     def test_submissions_different_versions(self):
         """Test that submissions for different versions create different tokens."""
         self.channel.version = 6
         self.channel.save()
-        
+
         submission1 = CommunityLibrarySubmission.objects.create(
             channel=self.channel,
             channel_version=5,
             author=self.user,
             description="Version 5 submission",
         )
-        
+
         submission2 = CommunityLibrarySubmission.objects.create(
             channel=self.channel,
             channel_version=6,
             author=self.user,
             description="Version 6 submission",
         )
-        
+
         v5 = ChannelVersion.objects.get(channel=self.channel, version=5)
         v6 = ChannelVersion.objects.get(channel=self.channel, version=6)
-        
+
         self.assertIsNotNone(v5.secret_token)
         self.assertIsNotNone(v6.secret_token)
         self.assertNotEqual(v5.secret_token, v6.secret_token)

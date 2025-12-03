@@ -902,7 +902,7 @@ class ChannelViewSet(ValuesViewset):
 
         if not channel.version_info:
             return Response({})
-        
+
         version_data = {
             "id": str(channel.version_info.id),
             "version": channel.version_info.version,
@@ -911,14 +911,18 @@ class ChannelViewSet(ValuesViewset):
             "size": channel.version_info.size,
             "date_published": channel.version_info.date_published.strftime(
                 settings.DATE_TIME_FORMAT
-            ) if channel.version_info.date_published else None,
+            )
+            if channel.version_info.date_published
+            else None,
             "version_notes": channel.version_info.version_notes,
             "included_languages": channel.version_info.included_languages,
             "included_licenses": channel.version_info.included_licenses,
             "included_categories": channel.version_info.included_categories,
             "non_distributable_licenses_included": channel.version_info.non_distributable_licenses_included,
             "special_permissions_included": list(
-                channel.version_info.special_permissions_included.values_list('id', flat=True)
+                channel.version_info.special_permissions_included.values_list(
+                    "id", flat=True
+                )
             ),
         }
 
