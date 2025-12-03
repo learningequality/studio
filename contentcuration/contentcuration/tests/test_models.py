@@ -15,6 +15,7 @@ from contentcuration.constants import channel_history
 from contentcuration.constants import community_library_submission
 from contentcuration.constants import user_history
 from contentcuration.models import AssessmentItem
+from contentcuration.models import AuditedSpecialPermissionsLicense
 from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import ChannelHistory
@@ -1602,3 +1603,67 @@ class FeedbackModelTests(StudioTestCase):
         )
         self.assertEqual(len(recommendations_event.content), 1)
         self.assertEqual(recommendations_event.content[0]["score"], 4)
+
+
+class AuditedSpecialPermissionsLicenseTestCase(StudioTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = testdata.user()
+
+    def test_create_audited_special_permissions_license(self):
+        """Test creating an AuditedSpecialPermissionsLicense instance"""
+        description = "This is all rights reserved, but can be distributed for Kolibri"
+        audited_license = AuditedSpecialPermissionsLicense.objects.create(
+            description=description
+        )
+
+        self.assertIsNotNone(audited_license.id)
+        self.assertEqual(audited_license.description, description)
+        self.assertFalse(audited_license.distributable)
+
+    def test_audited_special_permissions_license_unique_description(self):
+        """Test that description field is unique"""
+        description = "Unique description"
+        AuditedSpecialPermissionsLicense.objects.create(description=description)
+
+        with self.assertRaises(IntegrityError):
+            AuditedSpecialPermissionsLicense.objects.create(description=description)
+
+    def test_audited_special_permissions_license_get_or_create(self):
+        """Test get_or_create functionality"""
+        description = "Test description for get_or_create"
+        (
+            audited_license,
+            created,
+        ) = AuditedSpecialPermissionsLicense.objects.get_or_create(
+            description=description, defaults={"distributable": False}
+        )
+
+        self.assertTrue(created)
+        self.assertEqual(audited_license.description, description)
+        self.assertFalse(audited_license.distributable)
+
+        (
+            audited_license2,
+            created2,
+        ) = AuditedSpecialPermissionsLicense.objects.get_or_create(
+            description=description, defaults={"distributable": False}
+        )
+
+        self.assertFalse(created2)
+        self.assertEqual(audited_license.id, audited_license2.id)
+
+    def test_audited_special_permissions_license_str(self):
+        """Test __str__ method"""
+        short_description = "Short description"
+        audited_license = AuditedSpecialPermissionsLicense.objects.create(
+            description=short_description
+        )
+        self.assertEqual(str(audited_license), short_description)
+
+        long_description = "A" * 150
+        audited_license2 = AuditedSpecialPermissionsLicense.objects.create(
+            description=long_description
+        )
+        self.assertEqual(len(str(audited_license2)), 100)
+        self.assertEqual(str(audited_license2), "A" * 100)

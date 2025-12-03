@@ -154,10 +154,11 @@
 
   import { ref, computed, getCurrentInstance, onMounted } from 'vue';
   import SidePanelModal from 'shared/views/SidePanelModal';
-  import { Channel } from 'shared/data/resources';
+  import { Channel, CommunityLibrarySubmission } from 'shared/data/resources';
   import { forceServerSync } from 'shared/data/serverSync';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
   import { LanguagesList } from 'shared/leUtils/Languages';
+  import logging from 'shared/logging';
 
   export default {
     name: 'PublishSidePanel',
@@ -330,6 +331,27 @@
 
             await Channel.publish(currentChannel.value.id, version_notes.value);
 
+            if (mode.value === PublishModes.LIVE) {
+              try {
+                const response = await CommunityLibrarySubmission.fetchCollection({
+                  channel: currentChannel.value.id,
+                  max_results: 1,
+                });
+
+                const submissions = response?.results || [];
+
+                if (submissions.length > 0) {
+                  const latestSubmission = submissions[0];
+                  emit('showResubmitCommunityLibraryModal', {
+                    channel: { ...currentChannel.value },
+                    latestSubmissionVersion: latestSubmission.channel_version,
+                  });
+                }
+              } catch (error) {
+                logging.error(error);
+              }
+            }
+
             emit('close');
           }
         } catch (error) {
@@ -402,7 +424,7 @@
       };
     },
 
-    emits: ['close'],
+    emits: ['close', 'showResubmitCommunityLibraryModal'],
   };
 
 </script>

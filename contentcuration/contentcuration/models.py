@@ -2594,11 +2594,12 @@ class CommunityLibrarySubmission(models.Model):
     )
     categories = models.JSONField(blank=True, null=True)
     date_created = models.DateTimeField(auto_now_add=True)
-    date_resolved = models.DateTimeField(blank=True, null=True)
+    date_updated = models.DateTimeField(auto_now=True, db_index=True)
     status = models.CharField(
         max_length=20,
         choices=community_library_submission.status_choices,
         default=community_library_submission.STATUS_PENDING,
+        db_index=True,
     )
     resolved_by = models.ForeignKey(
         User,
@@ -2702,9 +2703,28 @@ class CommunityLibrarySubmission(models.Model):
                 name="unique_channel_with_channel_version",
             ),
         ]
+
+
+class AuditedSpecialPermissionsLicense(models.Model):
+    """
+    Stores special permission license descriptions that have been audited
+    for community library submissions. When a channel contains resources with
+    "Special Permissions" licenses, their license descriptions are stored here
+    for admin review.
+    """
+
+    id = UUIDField(primary_key=True, default=uuid.uuid4)
+    description = models.TextField(unique=True, db_index=True)
+    distributable = models.BooleanField(default=False)
+
+    def __str__(self):
+        return (
+            self.description[:100] if len(self.description) > 100 else self.description
+        )
+
+    class Meta:
         indexes = [
-            # Useful for cursor pagination
-            models.Index(fields=["-date_created"], name="submission_date_created_idx"),
+            models.Index(fields=["description"], name="audited_special_perms_desc_idx"),
         ]
 
 

@@ -1,6 +1,9 @@
 <template>
 
-  <div class="large-loader">
+  <div
+    class="large-loader"
+    data-testid="loader"
+  >
     <KCircularLoader :size="70" />
   </div>
 
