@@ -253,7 +253,7 @@
             <span
               v-for="license in _details.licenses"
               :key="license"
-              ref="licenseChip"
+              :ref="`licenseChip-${license}`"
               class="license-chip-wrapper"
             >
               <StudioChip>
