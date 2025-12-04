@@ -1,5 +1,6 @@
 import { computed, inject } from 'vue';
 import { getTipTapEditorStrings } from '../TipTapEditorStrings';
+import { sanitizePastedHTML } from '../utils/markdown';
 
 export function useToolbarActions(emit) {
   const editor = inject('editor', null);
@@ -135,35 +136,50 @@ export function useToolbarActions(emit) {
   };
 
   const handlePaste = async () => {
-    if (editor.value) {
-      try {
-        // Try HTML first
-        const clipboardData = await navigator.clipboard.read();
-        const htmlType = clipboardData[0].types.find(type => type === 'text/html');
+    if (!editor.value) return;
 
-        if (htmlType) {
-          const htmlBlob = await clipboardData[0].getType('text/html');
-          const html = await htmlBlob.text();
-          editor.value.chain().focus().insertContent(html).run();
-        } else {
-          // Fall back to plain text
-          handlePasteNoFormat();
+    try {
+      if (navigator.clipboard?.read) {
+        const items = await navigator.clipboard.read();
+
+        for (const item of items) {
+          if (item.types.includes('text/html')) {
+            const htmlBlob = await item.getType('text/html');
+            const html = await htmlBlob.text();
+            const cleaned = sanitizePastedHTML(html);
+
+            editor.value.chain().focus().insertContent(cleaned).run();
+            return;
+          }
+          if (item.types.includes('text/plain')) {
+            const textBlob = await item.getType('text/plain');
+            const text = await textBlob.text();
+
+            editor.value.chain().focus().insertContent(text).run();
+            return;
+          }
         }
-      } catch (err) {
-        editor.value.chain().focus().insertContent(clipboardAccessFailed$()).run();
+        return handlePasteNoFormat();
       }
+      return handlePasteNoFormat();
+    } catch (err) {
+      editor.value.chain().focus().insertContent(clipboardAccessFailed$()).run();
     }
   };
 
   const handlePasteNoFormat = async () => {
-    if (editor.value) {
-      try {
-        // Read plain text from clipboard
-        const text = await navigator.clipboard.readText();
-        editor.value.chain().focus().insertContent(text).run();
-      } catch (err) {
-        editor.value.chain().focus().insertContent(clipboardAccessFailed$()).run();
-      }
+    if (!editor.value) return;
+
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text) return;
+
+      // Note: Genereted this regex with the help of LLM.
+      const normalized = text.replace(/\r\n/g, '\n');
+
+      editor.value.chain().focus().insertContent(normalized).run();
+    } catch (err) {
+      editor.value.chain().focus().insertContent(clipboardAccessFailed$()).run();
     }
   };
 

@@ -51,6 +51,67 @@ export const paramsToMathMd = ({ latex }) => {
   return `$$${latex || ''}$$`;
 };
 
+export function sanitizePastedHTML(html) {
+  if (!html) return '';
+  // This code ine 55 to 66 is geneted with the help of LLM with the prompt
+  // "Create a function that sanitizes HTML pasted from Microsoft
+  // Word by removing Word-specific tags, styles, and classes while preserving other formatting."
+  let cleaned = html;
+  cleaned = cleaned.replace(/<!--\[if.*?endif\]-->/gis, '');
+  cleaned = cleaned.replace(/<\/?(w|m|o|v):[^>]*>/gis, '');
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(cleaned, 'text/html');
+  doc.querySelectorAll('*').forEach(el => {
+    if (el.hasAttribute('style')) {
+      const style = el.getAttribute('style') || '';
+      const filtered = style
+        .split(';')
+        .map(s => s.trim())
+        .filter(s => s && !s.toLowerCase().startsWith('mso-'))
+        .join('; ');
+      if (filtered) {
+        el.setAttribute('style', filtered);
+      } else {
+        el.removeAttribute('style');
+      }
+    }
+    if (el.hasAttribute('class')) {
+      const cls = el
+        .getAttribute('class')
+        .split(/\s+/)
+        .filter(c => c && !/^Mso/i.test(c))
+        .join(' ');
+      if (cls) {
+        el.setAttribute('class', cls);
+      } else {
+        el.removeAttribute('class');
+      }
+    }
+  });
+  const strikeElements = doc.querySelectorAll('s, strike, del');
+  strikeElements.forEach(el => {
+    const nestedLists = el.querySelectorAll('ul, ol');
+    if (nestedLists.length > 0) {
+      nestedLists.forEach(list => {
+        el.parentNode.insertBefore(list, el.nextSibling);
+      });
+    }
+  });
+  const lists = doc.querySelectorAll('ul, ol');
+  lists.forEach(list => {
+    const items = list.querySelectorAll(':scope > li');
+    items.forEach(item => {
+      const nestedLists = Array.from(item.children).filter(
+        child => child.tagName === 'UL' || child.tagName === 'OL',
+      );
+      nestedLists.forEach(nestedList => {
+        item.appendChild(nestedList);
+      });
+    });
+  });
+  return doc.body.innerHTML;
+}
+
 /**
  * Pre-processes a raw Markdown string to convert custom syntax into HTML tags
  * that Tiptap's extensions can understand. This is our custom "loader".
@@ -86,7 +147,9 @@ export function preprocessMarkdown(markdown) {
     if (!params) return match;
     return `<span data-latex="${params.latex}"></span>`;
   });
+  let html = marked(processedMarkdown);
 
-  // Use marked.js to parse the rest of the markdown
-  return marked(processedMarkdown);
+  html = sanitizePastedHTML(html);
+
+  return html;
 }
