@@ -982,7 +982,6 @@ def fill_published_fields(channel, version_notes):
         .first()
     )
 
-
     if special_permissions_id and special_permissions_id in license_list:
         special_perms_descriptions = list(
             published_nodes.filter(license_id=special_permissions_id)
