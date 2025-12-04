@@ -1,12 +1,12 @@
 import hashlib
 import json
-import jsonschema
 import logging
 import os
 import urllib.parse
 import uuid
 from datetime import datetime
 
+import jsonschema
 import pytz
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser
@@ -1370,9 +1370,9 @@ KIND_COUNT_ITEM_SCHEMA = {
     "required": ["count", "kind"],
     "properties": {
         "count": {"type": "integer", "minimum": 0},
-        "kind": {"type": "string", "minLength": 1}
+        "kind": {"type": "string", "minLength": 1},
     },
-    "additionalProperties": False
+    "additionalProperties": False,
 }
 
 
@@ -1402,7 +1402,6 @@ def get_categories_choices():
     return [(subj, subj) for subj in subjects.SUBJECTSLIST]
 
 
-
 class ChannelVersion(models.Model):
     """
     Stores version-specific information for a channel. This allows retrieving
@@ -1430,9 +1429,7 @@ class ChannelVersion(models.Model):
         blank=True,
     )
     included_categories = ArrayField(
-        models.CharField(
-            max_length=100, choices=get_categories_choices()
-        ),
+        models.CharField(max_length=100, choices=get_categories_choices()),
         null=True,
         blank=True,
     )

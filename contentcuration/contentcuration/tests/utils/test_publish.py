@@ -1,7 +1,7 @@
 import os
 import tempfile
-from unittest import mock
 import uuid
+from unittest import mock
 
 from django.conf import settings
 
@@ -11,9 +11,9 @@ from contentcuration.tests.base import StudioTestCase
 from contentcuration.tests.utils.restricted_filesystemstorage import (
     RestrictedFileSystemStorage,
 )
+from contentcuration.utils.publish import create_draft_channel_version
 from contentcuration.utils.publish import ensure_versioned_database_exists
 from contentcuration.utils.publish import increment_channel_version
-from contentcuration.utils.publish import create_draft_channel_version
 
 
 class EnsureVersionedDatabaseTestCase(StudioTestCase):

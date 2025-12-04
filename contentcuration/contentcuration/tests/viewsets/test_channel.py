@@ -1267,9 +1267,9 @@ class GetPublishedDataTestCase(StudioAPITestCase):
     def test_get_version_detail__is_editor(self):
         """Test that editors can get version detail with populated versionInfo."""
         from contentcuration.models import ChannelVersion
-        
+
         self.client.force_authenticate(user=self.editor_user)
-        
+
         # Create a ChannelVersion and set it as version_info
         channel_version = ChannelVersion.objects.create(
             channel=self.channel,
@@ -1286,7 +1286,7 @@ class GetPublishedDataTestCase(StudioAPITestCase):
         )
         self.assertEqual(response.status_code, 200, response.content)
         data = response.json()
-        
+
         # Assert against the most recent ChannelVersion
         self.assertEqual(data["version"], 1)
         self.assertEqual(data["resource_count"], 100)
@@ -1295,9 +1295,9 @@ class GetPublishedDataTestCase(StudioAPITestCase):
     def test_get_version_detail__is_admin(self):
         """Test that admins can get version detail with populated versionInfo."""
         from contentcuration.models import ChannelVersion
-        
+
         self.client.force_authenticate(user=self.admin_user)
-        
+
         # Create a ChannelVersion and set it as version_info
         channel_version = ChannelVersion.objects.create(
             channel=self.channel,
@@ -1314,7 +1314,7 @@ class GetPublishedDataTestCase(StudioAPITestCase):
         )
         self.assertEqual(response.status_code, 200, response.content)
         data = response.json()
-        
+
         # Assert against the most recent ChannelVersion
         self.assertEqual(data["version"], 2)
         self.assertEqual(data["resource_count"], 200)

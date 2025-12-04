@@ -218,7 +218,7 @@ def increment_channel_version(channel):
 
 
 def create_draft_channel_version(channel):
-    
+
     channel_version, created = ccmodels.ChannelVersion.objects.get_or_create(
         channel=channel,
         version=None,

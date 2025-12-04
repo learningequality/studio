@@ -26,7 +26,7 @@ def validate_kind_count_item(value):
 def validate_language_code(value):
     """Validator for language codes in included_languages array."""
     from le_utils.constants import languages
-    
+
     valid_language_codes = [lang[0] for lang in languages.LANGUAGELIST]
     if value not in valid_language_codes:
         raise ValidationError(f"'{value}' is not a valid language code")
