@@ -399,8 +399,7 @@
       });
 
       const latestPublishedData = computed(() => {
-        if (!publishedData.value || !displayedVersion.value) return undefined;
-        return publishedData.value[displayedVersion.value];
+        return publishedData.value;
       });
 
       // Watch for when publishing completes - fetch publishedData to get the new version's data

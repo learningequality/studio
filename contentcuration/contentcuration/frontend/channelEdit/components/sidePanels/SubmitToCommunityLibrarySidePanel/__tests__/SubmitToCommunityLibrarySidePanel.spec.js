@@ -101,16 +101,10 @@ const nonPublishedChannel = {
 };
 
 const publishedData = {
-  2: {
-    included_languages: ['en', null],
-    included_licenses: [1],
-    included_categories: [Categories.SCHOOL],
-  },
-  1: {
-    included_languages: ['en', null],
-    included_licenses: [1],
-    included_categories: [Categories.SCHOOL],
-  },
+  version: 2,
+  included_languages: ['en', null],
+  included_licenses: [1],
+  included_categories: [Categories.SCHOOL],
 };
 
 const submittedLatestSubmission = { channel_version: 2, status: CommunityLibraryStatus.PENDING };
@@ -152,7 +146,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
     it('when channel is not published', async () => {
       const wrapper = await makeWrapper({
         channel: nonPublishedChannel,
-        publishedData: {},
+        publishedData: null,
         latestSubmission: null,
       });
 
@@ -304,12 +298,10 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
 
       const channel = { ...publishedNonPublicChannel, publishing: true };
       const publishedDataWithVersion3 = {
-        ...publishedData,
-        3: {
-          included_languages: ['en', null],
-          included_licenses: [1],
-          included_categories: [Categories.SCHOOL],
-        },
+        version: 3,
+        included_languages: ['en', null],
+        included_licenses: [1],
+        included_categories: [Categories.SCHOOL],
       };
       const wrapper = await makeWrapper({
         channel,
@@ -437,7 +429,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
     it('when channel is not published', async () => {
       const wrapper = await makeWrapper({
         channel: nonPublishedChannel,
-        publishedData: {},
+        publishedData: null,
         latestSubmission: null,
       });
 
@@ -473,7 +465,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       it('when channel is not published', async () => {
         const wrapper = await makeWrapper({
           channel: nonPublishedChannel,
-          publishedData: {},
+          publishedData: null,
           latestSubmission: null,
         });
 
