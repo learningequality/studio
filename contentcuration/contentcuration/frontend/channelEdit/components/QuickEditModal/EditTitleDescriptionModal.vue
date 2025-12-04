@@ -98,6 +98,7 @@
           id: nodeId,
           title: title.trim(),
           description: description.trim(),
+          checkComplete: true,
         });
         /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
         this.$store.dispatch('showSnackbarSimple', commonStrings.$tr('changesSaved'));
