@@ -1253,10 +1253,12 @@ class GetPublishedDataTestCase(StudioAPITestCase):
         super().setUp()
 
         self.editor_user = testdata.user(email="editor@user.com")
+        self.admin_user = testdata.user(email="admin@user.com")
         self.forbidden_user = testdata.user(email="forbidden@user.com")
 
         self.channel = testdata.channel()
         self.channel.editors.add(self.editor_user)
+        self.channel.editors.add(self.admin_user)
 
         self.channel.published_data = {
             "key1": "value1",
@@ -1270,13 +1272,22 @@ class GetPublishedDataTestCase(StudioAPITestCase):
 
         self.client.force_authenticate(user=self.editor_user)
 
-        # Create a ChannelVersion and set it as version_info
-        channel_version = ChannelVersion.objects.create(
+        self.channel.version = 1
+        self.channel.save()
+
+        channel_version, created = ChannelVersion.objects.get_or_create(
             channel=self.channel,
             version=1,
-            resource_count=100,
-            size=1024000,
+            defaults={
+                "resource_count": 100,
+                "size": 1024000,
+            }
         )
+        if not created:
+            channel_version.resource_count = 100
+            channel_version.size = 1024000
+            channel_version.save()
+        
         self.channel.version_info = channel_version
         self.channel.save()
 
@@ -1287,7 +1298,6 @@ class GetPublishedDataTestCase(StudioAPITestCase):
         self.assertEqual(response.status_code, 200, response.content)
         data = response.json()
 
-        # Assert against the most recent ChannelVersion
         self.assertEqual(data["version"], 1)
         self.assertEqual(data["resource_count"], 100)
         self.assertEqual(data["size"], 1024000)
@@ -1298,13 +1308,22 @@ class GetPublishedDataTestCase(StudioAPITestCase):
 
         self.client.force_authenticate(user=self.admin_user)
 
-        # Create a ChannelVersion and set it as version_info
-        channel_version = ChannelVersion.objects.create(
+        self.channel.version = 2
+        self.channel.save()
+
+        channel_version, created = ChannelVersion.objects.get_or_create(
             channel=self.channel,
             version=2,
-            resource_count=200,
-            size=2048000,
+            defaults={
+                "resource_count": 200,
+                "size": 2048000,
+            }
         )
+        if not created:
+            channel_version.resource_count = 200
+            channel_version.size = 2048000
+            channel_version.save()
+        
         self.channel.version_info = channel_version
         self.channel.save()
 
