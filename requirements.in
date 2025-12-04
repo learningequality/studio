@@ -35,6 +35,6 @@ django-celery-results
 packaging>=21.0
 pycountry
 langcodes==3.5.1
-pydantic==2.12.4
+pydantic==2.12.5
 latex2mathml==3.78.0
 markdown-it-py==4.0.0

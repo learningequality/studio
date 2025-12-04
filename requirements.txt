@@ -200,7 +200,7 @@ pyasn1-modules==0.2.8
     # via google-auth
 pycountry==24.6.1
     # via -r requirements.in
-pydantic==2.12.4
+pydantic==2.12.5
     # via -r requirements.in
 pydantic-core==2.41.5
     # via pydantic
