@@ -147,9 +147,6 @@ export function preprocessMarkdown(markdown) {
     if (!params) return match;
     return `<span data-latex="${params.latex}"></span>`;
   });
-  let html = marked(processedMarkdown);
 
-  html = sanitizePastedHTML(html);
-
-  return html;
+  return marked(processedMarkdown);
 }
