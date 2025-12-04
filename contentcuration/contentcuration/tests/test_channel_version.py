@@ -58,3 +58,14 @@ class ChannelVersionTestCase(StudioTestCase):
                 channel=self.channel,
                 version=1,
             )
+
+    def test_version_cannot_exceed_channel_version(self):
+        """Test that we can't create versions greater than channel.version."""
+        from django.core.exceptions import ValidationError
+
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=11,
+        )
+        with self.assertRaises(ValidationError):
+            cv.save()

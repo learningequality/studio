@@ -1264,29 +1264,64 @@ class GetPublishedDataTestCase(StudioAPITestCase):
         }
         self.channel.save()
 
-    def test_get_published_data__is_editor(self):
+    def test_get_version_detail__is_editor(self):
+        """Test that editors can get version detail with populated versionInfo."""
+        from contentcuration.models import ChannelVersion
+        
         self.client.force_authenticate(user=self.editor_user)
+        
+        # Create a ChannelVersion and set it as version_info
+        channel_version = ChannelVersion.objects.create(
+            channel=self.channel,
+            version=1,
+            resource_count=100,
+            size=1024000,
+        )
+        self.channel.version_info = channel_version
+        self.channel.save()
 
         response = self.client.get(
             reverse("channel-version-detail", kwargs={"pk": self.channel.id}),
             format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
-        # version-detail returns empty dict when no version_info exists
-        self.assertEqual(response.json(), {})
+        data = response.json()
+        
+        # Assert against the most recent ChannelVersion
+        self.assertEqual(data["version"], 1)
+        self.assertEqual(data["resource_count"], 100)
+        self.assertEqual(data["size"], 1024000)
 
-    def test_get_published_data__is_admin(self):
+    def test_get_version_detail__is_admin(self):
+        """Test that admins can get version detail with populated versionInfo."""
+        from contentcuration.models import ChannelVersion
+        
         self.client.force_authenticate(user=self.admin_user)
+        
+        # Create a ChannelVersion and set it as version_info
+        channel_version = ChannelVersion.objects.create(
+            channel=self.channel,
+            version=2,
+            resource_count=200,
+            size=2048000,
+        )
+        self.channel.version_info = channel_version
+        self.channel.save()
 
         response = self.client.get(
             reverse("channel-version-detail", kwargs={"pk": self.channel.id}),
             format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
-        # version-detail returns empty dict when no version_info exists
-        self.assertEqual(response.json(), {})
+        data = response.json()
+        
+        # Assert against the most recent ChannelVersion
+        self.assertEqual(data["version"], 2)
+        self.assertEqual(data["resource_count"], 200)
+        self.assertEqual(data["size"], 2048000)
 
-    def test_get_published_data__is_forbidden_user(self):
+    def test_get_version_detail__is_forbidden_user(self):
+        """Test that forbidden users cannot access version detail."""
         self.client.force_authenticate(user=self.forbidden_user)
 
         response = self.client.get(

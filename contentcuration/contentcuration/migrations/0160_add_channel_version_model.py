@@ -3,10 +3,33 @@ import uuid
 
 import django.contrib.postgres.fields
 import django.db.models.deletion
+from django.core.exceptions import ValidationError
 from django.db import migrations
 from django.db import models
 
-import contentcuration.models
+
+def validate_kind_count_item(value):
+    """Validator for kind_count array items."""
+    if not isinstance(value, dict):
+        raise ValidationError("Each kind_count item must be a dictionary")
+
+    if "count" not in value or "kind" not in value:
+        raise ValidationError("Each kind_count item must have 'count' and 'kind' keys")
+
+    if not isinstance(value["count"], int) or value["count"] < 0:
+        raise ValidationError("'count' must be a non-negative integer")
+
+    if not isinstance(value["kind"], str) or not value["kind"]:
+        raise ValidationError("'kind' must be a non-empty string")
+
+
+def validate_language_code(value):
+    """Validator for language codes in included_languages array."""
+    from le_utils.constants import languages
+    
+    valid_language_codes = [lang[0] for lang in languages.LANGUAGELIST]
+    if value not in valid_language_codes:
+        raise ValidationError(f"'{value}' is not a valid language code")
 
 
 class Migration(migrations.Migration):
@@ -21,9 +44,8 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    contentcuration.models.UUIDField(
+                    models.UUIDField(
                         default=uuid.uuid4,
-                        max_length=32,
                         primary_key=True,
                         serialize=False,
                     ),
@@ -40,7 +62,7 @@ class Migration(migrations.Migration):
                         blank=True,
                         null=True,
                         size=None,
-                        validators=[contentcuration.models.validate_kind_count_item],
+                        validators=[validate_kind_count_item],
                     ),
                 ),
                 (
@@ -226,7 +248,7 @@ class Migration(migrations.Migration):
                         blank=True,
                         null=True,
                         size=None,
-                        validators=[contentcuration.models.validate_language_code],
+                        validators=[validate_language_code],
                     ),
                 ),
                 (
@@ -287,7 +309,7 @@ class Migration(migrations.Migration):
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
-                related_name="channel_version_info",
+                related_name="+",
                 to="contentcuration.channelversion",
             ),
         ),

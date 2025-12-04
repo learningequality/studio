@@ -49,6 +49,7 @@ from contentcuration.constants import (
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Change
 from contentcuration.models import Channel
+from contentcuration.models import ChannelVersion
 from contentcuration.models import CommunityLibrarySubmission
 from contentcuration.models import ContentNode
 from contentcuration.models import Country
@@ -896,35 +897,42 @@ class ChannelViewSet(ValuesViewset):
         :return: Response with the version detail of the channel
         :rtype: Response
         """
-        # Allow exactly users with permission to edit the channel to
-        # access the version detail.
         channel = self.get_edit_object()
 
         if not channel.version_info:
             return Response({})
 
-        version_data = {
-            "id": str(channel.version_info.id),
-            "version": channel.version_info.version,
-            "resource_count": channel.version_info.resource_count,
-            "kind_count": channel.version_info.kind_count,
-            "size": channel.version_info.size,
-            "date_published": channel.version_info.date_published.strftime(
+        version_data = ChannelVersion.objects.filter(
+            id=channel.version_info.id
+        ).values(
+            "id",
+            "version",
+            "resource_count",
+            "kind_count",
+            "size",
+            "date_published",
+            "version_notes",
+            "included_languages",
+            "included_licenses",
+            "included_categories",
+            "non_distributable_licenses_included",
+        ).first()
+
+        if not version_data:
+            return Response({})
+
+        version_data["id"] = str(version_data["id"])
+
+        if version_data["date_published"]:
+            version_data["date_published"] = version_data["date_published"].strftime(
                 settings.DATE_TIME_FORMAT
             )
-            if channel.version_info.date_published
-            else None,
-            "version_notes": channel.version_info.version_notes,
-            "included_languages": channel.version_info.included_languages,
-            "included_licenses": channel.version_info.included_licenses,
-            "included_categories": channel.version_info.included_categories,
-            "non_distributable_licenses_included": channel.version_info.non_distributable_licenses_included,
-            "special_permissions_included": list(
-                channel.version_info.special_permissions_included.values_list(
-                    "id", flat=True
-                )
-            ),
-        }
+
+        version_data["special_permissions_included"] = list(
+            channel.version_info.special_permissions_included.values_list(
+                "id", flat=True
+            )
+        )
 
         return Response(version_data)
 

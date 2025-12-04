@@ -211,26 +211,20 @@ def create_kolibri_license_object(ccnode):
     )
 
 
-def increment_channel_version(channel, is_draft_version=False):
+def increment_channel_version(channel):
 
-    if not is_draft_version:
-        channel.version += 1
-        channel.save()
+    channel.version += 1
+    channel.save()
 
-    if is_draft_version:
-        channel_version = ccmodels.ChannelVersion.objects.create(
-            channel=channel, version=None
-        )
-    else:
-        channel_version, created = ccmodels.ChannelVersion.objects.get_or_create(
-            channel=channel, version=channel.version
-        )
 
-    if not is_draft_version:
-        channel.version_info = channel_version
-        channel.save()
+def create_draft_channel_version(channel):
+    
+    channel_version, created = ccmodels.ChannelVersion.objects.get_or_create(
+        channel=channel,
+        version=None,
+    )
 
-    if is_draft_version:
+    if created:
         channel_version.new_token()
 
     return channel_version
@@ -999,32 +993,15 @@ def fill_published_fields(channel, version_notes):
         )
 
         if special_perms_descriptions:
-            existing_licenses = (
-                ccmodels.AuditedSpecialPermissionsLicense.objects.filter(
-                    description__in=special_perms_descriptions
-                )
-            )
-            existing_descriptions = set(
-                existing_licenses.values_list("description", flat=True)
-            )
-
             new_licenses = [
                 ccmodels.AuditedSpecialPermissionsLicense(
                     description=description, distributable=False
                 )
                 for description in special_perms_descriptions
-                if description not in existing_descriptions
             ]
 
-            if new_licenses:
-                ccmodels.AuditedSpecialPermissionsLicense.objects.bulk_create(
-                    new_licenses, ignore_conflicts=True
-                )
-
-            special_permissions_ids = list(
-                ccmodels.AuditedSpecialPermissionsLicense.objects.filter(
-                    description__in=special_perms_descriptions
-                ).values_list("id", flat=True)
+            ccmodels.AuditedSpecialPermissionsLicense.objects.bulk_create(
+                new_licenses, ignore_conflicts=True
             )
 
     if channel.version_info:
@@ -1041,10 +1018,10 @@ def fill_published_fields(channel, version_notes):
         )
         channel.version_info.save()
 
-        if special_permissions_ids:
+        if special_perms_descriptions:
             channel.version_info.special_permissions_included.set(
                 ccmodels.AuditedSpecialPermissionsLicense.objects.filter(
-                    id__in=special_permissions_ids
+                    description__in=special_perms_descriptions
                 )
             )
         else:
@@ -1152,7 +1129,10 @@ def publish_channel(  # noqa: C901
             use_staging_tree=use_staging_tree,
         )
         add_tokens_to_channel(channel)
-        increment_channel_version(channel, is_draft_version=is_draft_version)
+        if is_draft_version:
+            create_draft_channel_version(channel)
+        else:
+            increment_channel_version(channel)
         if not is_draft_version:
             sync_contentnode_and_channel_tsvectors(channel_id=channel.id)
             mark_all_nodes_as_published(base_tree)

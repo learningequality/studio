@@ -1,5 +1,6 @@
 import hashlib
 import json
+import jsonschema
 import logging
 import os
 import urllib.parse
@@ -980,7 +981,7 @@ class Channel(models.Model):
     )
     version_info = models.OneToOneField(
         "ChannelVersion",
-        related_name="channel_version_info",
+        related_name="+",
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
@@ -1364,19 +1365,22 @@ class Channel(models.Model):
         index_together = [["deleted", "public"]]
 
 
+KIND_COUNT_ITEM_SCHEMA = {
+    "type": "object",
+    "required": ["count", "kind"],
+    "properties": {
+        "count": {"type": "integer", "minimum": 0},
+        "kind": {"type": "string", "minLength": 1}
+    },
+    "additionalProperties": False
+}
+
+
 def validate_kind_count_item(value):
-
-    if not isinstance(value, dict):
-        raise ValidationError("Each kind_count item must be a dictionary")
-
-    if "count" not in value or "kind" not in value:
-        raise ValidationError("Each kind_count item must have 'count' and 'kind' keys")
-
-    if not isinstance(value["count"], int) or value["count"] < 0:
-        raise ValidationError("'count' must be a non-negative integer")
-
-    if not isinstance(value["kind"], str) or not value["kind"]:
-        raise ValidationError("'kind' must be a non-empty string")
+    try:
+        jsonschema.validate(instance=value, schema=KIND_COUNT_ITEM_SCHEMA)
+    except jsonschema.ValidationError as e:
+        raise ValidationError(str(e))
 
 
 def validate_language_code(value):
@@ -1386,6 +1390,17 @@ def validate_language_code(value):
     valid_language_codes = [lang[0] for lang in languages.LANGUAGELIST]
     if value not in valid_language_codes:
         raise ValidationError(f"'{value}' is not a valid language code")
+
+
+def get_license_choices():
+    """Helper function to get license choices for ArrayField."""
+    return [(lic[0], lic[1]) for lic in licenses.LICENSELIST]
+
+
+def get_categories_choices():
+    """Helper function to get category choices for ArrayField."""
+    return [(subj, subj) for subj in subjects.SUBJECTSLIST]
+
 
 
 class ChannelVersion(models.Model):
@@ -1410,13 +1425,13 @@ class ChannelVersion(models.Model):
         JSONField(), validators=[validate_kind_count_item], null=True, blank=True
     )
     included_licenses = ArrayField(
-        models.IntegerField(choices=[(lic[0], lic[1]) for lic in licenses.LICENSELIST]),
+        models.IntegerField(choices=get_license_choices()),
         null=True,
         blank=True,
     )
     included_categories = ArrayField(
         models.CharField(
-            max_length=100, choices=[(subj, subj) for subj in subjects.SUBJECTSLIST]
+            max_length=100, choices=get_categories_choices()
         ),
         null=True,
         blank=True,
@@ -1428,7 +1443,7 @@ class ChannelVersion(models.Model):
         blank=True,
     )
     non_distributable_licenses_included = ArrayField(
-        models.IntegerField(choices=[(lic[0], lic[1]) for lic in licenses.LICENSELIST]),
+        models.IntegerField(choices=get_license_choices()),
         null=True,
         blank=True,
     )
