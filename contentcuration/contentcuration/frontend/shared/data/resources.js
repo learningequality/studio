@@ -1687,6 +1687,10 @@ export const ContentNode = new TreeResource({
   async tableMove({ node, parent, payload }) {
     // Do direct table writes here rather than using add/update methods to avoid
     // creating unnecessary additional change events.
+    payload = {
+      ...payload,
+      modified: new Date().toISOString(),
+    };
     const updated = await this.table.update(node.id, payload);
     // Update didn't succeed, this node probably doesn't exist, do a put instead,
     // but need to add in other parent info.
