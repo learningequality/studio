@@ -390,14 +390,17 @@
       // Use the latest version available from either channel or publishedData
       const displayedVersion = computed(() => {
         const channelVersion = currentChannelVersion.value || 0;
-        if (publishedData.value && publishedData.value.version) {
-          return Math.max(channelVersion, publishedData.value.version);
+        if (publishedData.value && Object.keys(publishedData.value).length > 0) {
+          const publishedVersions = Object.keys(publishedData.value).map(v => parseInt(v, 10));
+          const maxPublishedVersion = Math.max(...publishedVersions);
+          return Math.max(channelVersion, maxPublishedVersion);
         }
         return channelVersion;
       });
 
       const latestPublishedData = computed(() => {
-        return publishedData.value;
+        if (!publishedData.value || !displayedVersion.value) return undefined;
+        return publishedData.value[displayedVersion.value];
       });
 
       // Watch for when publishing completes - fetch publishedData to get the new version's data
