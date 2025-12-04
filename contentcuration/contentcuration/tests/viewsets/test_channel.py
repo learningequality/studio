@@ -1281,13 +1281,13 @@ class GetPublishedDataTestCase(StudioAPITestCase):
             defaults={
                 "resource_count": 100,
                 "size": 1024000,
-            }
+            },
         )
         if not created:
             channel_version.resource_count = 100
             channel_version.size = 1024000
             channel_version.save()
-        
+
         self.channel.version_info = channel_version
         self.channel.save()
 
@@ -1317,13 +1317,13 @@ class GetPublishedDataTestCase(StudioAPITestCase):
             defaults={
                 "resource_count": 200,
                 "size": 2048000,
-            }
+            },
         )
         if not created:
             channel_version.resource_count = 200
             channel_version.size = 2048000
             channel_version.save()
-        
+
         self.channel.version_info = channel_version
         self.channel.save()
 
