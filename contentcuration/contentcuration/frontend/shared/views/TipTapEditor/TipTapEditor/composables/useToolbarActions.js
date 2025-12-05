@@ -159,9 +159,7 @@ export function useToolbarActions(emit) {
             return;
           }
         }
-        return handlePasteNoFormat();
       }
-      return handlePasteNoFormat();
     } catch (err) {
       editor.value.chain().focus().insertContent(clipboardAccessFailed$()).run();
     }
