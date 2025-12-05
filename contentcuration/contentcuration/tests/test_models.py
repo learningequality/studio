@@ -5,6 +5,7 @@ import pytest
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.core.management import call_command
 from django.db.models import Q
 from django.db.utils import IntegrityError
 from django.utils import timezone
@@ -12,8 +13,6 @@ from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
 from le_utils.constants import languages
 from le_utils.constants.labels import subjects
-from django.core.management import call_command
-from contentcuration.models import License
 
 from contentcuration.constants import channel_history
 from contentcuration.constants import community_library_submission
@@ -24,6 +23,7 @@ from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import ChannelHistory
 from contentcuration.models import ChannelSet
+from contentcuration.models import ChannelVersion
 from contentcuration.models import CommunityLibrarySubmission
 from contentcuration.models import ContentNode
 from contentcuration.models import CONTENTNODE_TREE_ID_CACHE_KEY
@@ -32,10 +32,10 @@ from contentcuration.models import FILE_DURATION_CONSTRAINT
 from contentcuration.models import FlagFeedbackEvent
 from contentcuration.models import generate_object_storage_name
 from contentcuration.models import Invitation
+from contentcuration.models import License
 from contentcuration.models import object_storage_name
 from contentcuration.models import RecommendationsEvent
 from contentcuration.models import RecommendationsInteractionEvent
-from contentcuration.models import ChannelVersion
 from contentcuration.models import User
 from contentcuration.models import UserHistory
 from contentcuration.tests import testdata
@@ -1694,7 +1694,7 @@ class ChannelVersionValidationTestCase(StudioTestCase):
         cv.full_clean()
         cv.save()
         self.assertEqual(cv.kind_count, valid_kind_count)
-        
+
         valid_kind_count_multi = [
             {"kind_id": "video", "count": 5},
             {"kind_id": "exercise", "count": 10},
@@ -1710,7 +1710,7 @@ class ChannelVersionValidationTestCase(StudioTestCase):
 
     def test_kind_count_invalid_schema_missing_required_fields(self):
         """Test that kind_count rejects items missing required fields."""
-        invalid_kind_count = [{"kind_id": "video"}] 
+        invalid_kind_count = [{"kind_id": "video"}]
         cv = ChannelVersion(
             channel=self.channel,
             version=1,
@@ -1743,8 +1743,8 @@ class ChannelVersionValidationTestCase(StudioTestCase):
 
     def test_included_languages_valid_codes(self):
         """Test that included_languages accepts valid language codes."""
-        valid_language_code = 'en'
-        
+        valid_language_code = "en"
+
         cv = ChannelVersion(
             channel=self.channel,
             version=1,
@@ -1773,7 +1773,9 @@ class ChannelVersionValidationTestCase(StudioTestCase):
 
         call_command("loadconstants")
         valid_license = License.objects.first()
-        self.assertIsNotNone(valid_license, "No licenses found. Ensure loadconstants has been run.")
+        self.assertIsNotNone(
+            valid_license, "No licenses found. Ensure loadconstants has been run."
+        )
         cv = ChannelVersion(
             channel=self.channel,
             version=1,
@@ -1822,7 +1824,9 @@ class ChannelVersionValidationTestCase(StudioTestCase):
 
         call_command("loadconstants")
         valid_license = License.objects.first()
-        self.assertIsNotNone(valid_license, "No licenses found. Ensure loadconstants has been run.")
+        self.assertIsNotNone(
+            valid_license, "No licenses found. Ensure loadconstants has been run."
+        )
         cv = ChannelVersion(
             channel=self.channel,
             version=1,
@@ -1830,9 +1834,7 @@ class ChannelVersionValidationTestCase(StudioTestCase):
         )
         cv.full_clean()
         cv.save()
-        self.assertEqual(
-            cv.non_distributable_licenses_included, [valid_license.id]
-        )
+        self.assertEqual(cv.non_distributable_licenses_included, [valid_license.id])
 
     def test_non_distributable_licenses_included_invalid_choice(self):
         """Test that non_distributable_licenses_included rejects invalid license IDs."""
@@ -1860,8 +1862,10 @@ class ChannelVersionValidationTestCase(StudioTestCase):
         """Test that version cannot be greater than channel version."""
         cv = ChannelVersion(
             channel=self.channel,
-            version=11, 
+            version=11,
         )
         with self.assertRaises(ValidationError) as context:
             cv.save()
-        self.assertIn("Version cannot be greater than channel version", str(context.exception))
+        self.assertIn(
+            "Version cannot be greater than channel version", str(context.exception)
+        )

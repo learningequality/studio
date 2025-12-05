@@ -50,8 +50,8 @@ from contentcuration.constants import (
     community_library_submission as community_library_submission_constants,
 )
 from contentcuration.decorators import cache_no_user_data
-from contentcuration.models import Change
 from contentcuration.models import AuditedSpecialPermissionsLicense
+from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import ChannelVersion
 from contentcuration.models import CommunityLibrarySubmission

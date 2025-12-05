@@ -1378,7 +1378,7 @@ KIND_COUNT_ITEM_SCHEMA = {
 
 def validate_kind_count_item(value):
     """
-    Validator for kind_count items. 
+    Validator for kind_count items.
     """
     for item in value:
         try:

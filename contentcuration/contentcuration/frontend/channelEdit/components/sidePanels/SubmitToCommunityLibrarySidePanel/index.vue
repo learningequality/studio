@@ -490,9 +490,7 @@
       const detectedLanguages = computed(() => {
         // We need to filter out null values due to a backend bug
         // causing null values to sometimes be included in the list
-        const languageCodes = versionDetail.value?.included_languages.filter(
-          code => code !== null,
-        );
+        const languageCodes = versionDetail.value?.included_languages.filter(code => code !== null);
 
         // We distinguish here between "not loaded yet" (undefined)
         // and "loaded and none present" (null). This distinction is

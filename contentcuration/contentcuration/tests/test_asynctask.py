@@ -359,9 +359,7 @@ class AuditChannelLicensesTaskTestCase(EagerTasksTestMixin, StudioTestCase):
         self.assertIsNone(
             published_data_version.get("non_distributable_licenses_included")
         )
-        self.assertIsNone(
-            published_data_version.get("special_permissions_included")
-        )
+        self.assertIsNone(published_data_version.get("special_permissions_included"))
 
     @patch("contentcuration.utils.audit_channel_licenses.KolibriContentNode")
     @patch(
@@ -493,9 +491,7 @@ class AuditChannelLicensesTaskTestCase(EagerTasksTestMixin, StudioTestCase):
         version_str = str(self.channel.version)
         published_data_version = self.channel.published_data[version_str]
 
-        special_perms = published_data_version.get(
-            "special_permissions_included"
-        )
+        special_perms = published_data_version.get("special_permissions_included")
         self.assertIsNotNone(special_perms)
         self.assertEqual(len(special_perms), 2)
 

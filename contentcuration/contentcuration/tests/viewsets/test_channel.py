@@ -1494,7 +1494,10 @@ class GetVersionDetailEndpointTestCase(StudioAPITestCase):
                 ],
                 "included_languages": ["en", "es"],
                 "included_licenses": [1, 2],
-                "included_categories": [subjects.SUBJECTSLIST[0], subjects.SUBJECTSLIST[1]],
+                "included_categories": [
+                    subjects.SUBJECTSLIST[0],
+                    subjects.SUBJECTSLIST[1],
+                ],
             },
         )
 
