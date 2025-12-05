@@ -79,7 +79,7 @@ jobs:
         with:
           skip_after_successful_duplicate: false
           github_token: ${{ github.token }}
-          paths: '["docker/prod/nginx/*", ".github/workflows/containerbuild.yml"]'
+          paths: '["docker/Dockerfile.nginx.prod", "nginx/*", ".github/workflows/containerbuild.yml"]'
 
   build_nginx:
     name: nginx - test build of nginx Docker image
@@ -100,6 +100,6 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         context: ./
-        file: ./docker/prod/nginx/Dockerfile
+        file: ./docker/Dockerfile.nginx.prod
         platforms: linux/amd64
         push: false

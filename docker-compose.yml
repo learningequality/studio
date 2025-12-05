@@ -35,7 +35,7 @@ services:
     platform: linux/amd64
     build:
       context: .
-      dockerfile: docker/prod/nginx/Dockerfile
+      dockerfile: docker/Dockerfile.nginx.prod
     ports:
       - "8081:8080"
     depends_on:
