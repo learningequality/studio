@@ -1,7 +1,7 @@
 FROM nginx:1.25
 
 # Build from inside the directory by overriding this.
-ARG SRC_DIR=docker/prod/nginx
+ARG SRC_DIR=docker/nginx
 
 RUN rm /etc/nginx/conf.d/*      # if there's stuff here, nginx won't read sites-enabled
 COPY ${SRC_DIR}/nginx.conf /etc/nginx/nginx.conf
