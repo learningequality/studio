@@ -218,12 +218,10 @@ def increment_channel_version(channel):
     new_version_info, created = ccmodels.ChannelVersion.objects.get_or_create(
         channel=channel, version=channel.version
     )
-    
+
     ccmodels.Channel.objects.filter(pk=channel.pk).update(
-        version=channel.version,
-        version_info=new_version_info
+        version=channel.version, version_info=new_version_info
     )
-    
 
 
 def create_draft_channel_version(channel):
