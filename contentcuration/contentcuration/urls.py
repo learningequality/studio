@@ -36,6 +36,7 @@ from contentcuration.views import pwa
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
 from contentcuration.viewsets.bookmark import BookmarkViewSet
 from contentcuration.viewsets.channel import AdminChannelViewSet
+from contentcuration.viewsets.channel import AuditedSpecialPermissionsLicenseViewSet
 from contentcuration.viewsets.channel import CatalogViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
@@ -69,6 +70,11 @@ class StagingPageRedirectView(RedirectView):
 
 
 router = routers.DefaultRouter(trailing_slash=False)
+router.register(
+    r"audited_special_permissions_license",
+    AuditedSpecialPermissionsLicenseViewSet,
+    basename="audited-special-permissions-license",
+)
 router.register(r"bookmark", BookmarkViewSet, basename="bookmark")
 router.register(r"channel", ChannelViewSet)
 router.register(r"channelset", ChannelSetViewSet)

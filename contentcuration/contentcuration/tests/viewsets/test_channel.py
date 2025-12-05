@@ -6,6 +6,7 @@ from django.db.models import OuterRef
 from django.urls import reverse
 from kolibri_public.models import ContentNode as PublicContentNode
 from le_utils.constants import content_kinds
+from le_utils.constants.labels import subjects
 from mock import Mock
 from mock import patch
 
@@ -13,6 +14,7 @@ from contentcuration import models
 from contentcuration import models as cc
 from contentcuration.constants import channel_history
 from contentcuration.constants import community_library_submission
+from contentcuration.models import AuditedSpecialPermissionsLicense
 from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import ChannelVersion
@@ -1487,12 +1489,12 @@ class GetVersionDetailEndpointTestCase(StudioAPITestCase):
                 "size": 5000,
                 "resource_count": 25,
                 "kind_count": [
-                    {"count": 10, "kind": "video"},
-                    {"count": 15, "kind": "document"},
+                    {"count": 10, "kind_id": "video"},
+                    {"count": 15, "kind_id": "document"},
                 ],
                 "included_languages": ["en", "es"],
                 "included_licenses": [1, 2],
-                "included_categories": ["math", "science"],
+                "included_categories": [subjects.SUBJECTSLIST[0], subjects.SUBJECTSLIST[1]],
             },
         )
 
@@ -1528,3 +1530,68 @@ class GetVersionDetailEndpointTestCase(StudioAPITestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {})
+
+    def test_get_version_detail_returns_all_fields(self):
+        """Test that get_version_detail returns all expected fields."""
+        url = reverse("channel-version-detail", kwargs={"pk": self.channel.id})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+
+        expected_fields = [
+            "id",
+            "version",
+            "resource_count",
+            "kind_count",
+            "size",
+            "date_published",
+            "version_notes",
+            "included_languages",
+            "included_licenses",
+            "included_categories",
+            "non_distributable_licenses_included",
+        ]
+        for field in expected_fields:
+            self.assertIn(field, data, f"Field '{field}' should be in response")
+
+    def test_get_version_detail_excludes_special_permissions_included(self):
+        """Test that special_permissions_included is not in the response."""
+        special_license = AuditedSpecialPermissionsLicense.objects.create(
+            description="Test special permissions license"
+        )
+        self.channel_version.special_permissions_included.add(special_license)
+
+        url = reverse("channel-version-detail", kwargs={"pk": self.channel.id})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+
+        self.assertNotIn(
+            "special_permissions_included",
+            data,
+            "special_permissions_included should not be in the response. "
+            "Use /api/audited_special_permissions_license/?channel_version=<uuid> instead.",
+        )
+
+    def test_get_version_detail_with_special_permissions_licenses(self):
+        """Test that get_version_detail works correctly even when special permissions licenses exist."""
+        license1 = AuditedSpecialPermissionsLicense.objects.create(
+            description="First special permissions license"
+        )
+        license2 = AuditedSpecialPermissionsLicense.objects.create(
+            description="Second special permissions license"
+        )
+
+        self.channel_version.special_permissions_included.add(license1, license2)
+
+        url = reverse("channel-version-detail", kwargs={"pk": self.channel.id})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+
+        self.assertNotIn("special_permissions_included", data)
+        self.assertEqual(data["version"], 3)
+        self.assertEqual(data["resource_count"], 25)

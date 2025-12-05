@@ -151,10 +151,10 @@ def _save_audit_results(
     user_id,
 ):
     """Save audit results to published_data and create change event."""
-    published_data_version["community_library_invalid_licenses"] = (
+    published_data_version["non_distributable_licenses_included"] = (
         invalid_license_ids if invalid_license_ids else None
     )
-    published_data_version["community_library_special_permissions"] = (
+    published_data_version["special_permissions_included"] = (
         special_permissions_license_ids if special_permissions_license_ids else None
     )
 

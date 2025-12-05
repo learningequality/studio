@@ -214,15 +214,8 @@ def create_kolibri_license_object(ccnode):
 def increment_channel_version(channel):
 
     channel.version += 1
-
-    new_version_info, created = ccmodels.ChannelVersion.objects.get_or_create(
-        channel=channel, version=channel.version
-    )
+    channel.save()
     
-    ccmodels.Channel.objects.filter(pk=channel.pk).update(
-        version=channel.version,
-        version_info=new_version_info
-    )
     
 
 
@@ -926,7 +919,9 @@ def fill_published_fields(channel, version_notes):
     node_languages = published_nodes.exclude(language=None).values_list(
         "language", flat=True
     )
-    file_languages = published_nodes.values_list("files__language", flat=True)
+    file_languages = published_nodes.exclude(files__language=None).values_list(
+        "files__language", flat=True
+    )
     language_list = list(set(chain(node_languages, file_languages)))
 
     for lang in language_list:
@@ -991,6 +986,7 @@ def fill_published_fields(channel, version_notes):
         .first()
     )
 
+    special_perms_descriptions = None
     if special_permissions_id and special_permissions_id in license_list:
         special_perms_descriptions = list(
             published_nodes.filter(license_id=special_permissions_id)

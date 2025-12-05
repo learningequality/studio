@@ -383,23 +383,19 @@
       const {
         isLoading: publishedDataIsLoading,
         isFinished: publishedDataIsFinished,
-        data: publishedData,
+        data: versionDetail,
         fetchData: fetchPublishedData,
       } = usePublishedData(props.channel.id);
 
-      // Use the latest version available from either channel or publishedData
+      // Use the latest version available from either channel or versionDetail
       const displayedVersion = computed(() => {
         const channelVersion = currentChannelVersion.value || 0;
-        if (publishedData.value && Object.keys(publishedData.value).length > 0) {
-          const publishedVersions = Object.keys(publishedData.value).map(v => parseInt(v, 10));
+        if (versionDetail.value && Object.keys(versionDetail.value).length > 0) {
+          const publishedVersions = Object.keys(versionDetail.value).map(v => parseInt(v, 10));
           const maxPublishedVersion = Math.max(...publishedVersions);
           return Math.max(channelVersion, maxPublishedVersion);
         }
         return channelVersion;
-      });
-
-      const latestPublishedData = computed(() => {
-        return publishedData.value;
       });
 
       // Watch for when publishing completes - fetch publishedData to get the new version's data
@@ -420,7 +416,7 @@
       const detectedLanguages = computed(() => {
         // We need to filter out null values due to a backend bug
         // causing null values to sometimes be included in the list
-        const languageCodes = latestPublishedData.value?.included_languages.filter(
+        const languageCodes = versionDetail.value?.included_languages.filter(
           code => code !== null,
         );
 
@@ -445,10 +441,10 @@
         // not used in the UI and is mostly intended to convey the
         // state more accurately to the developer in case of debugging.
         // UI code should rely on XXXIsLoading and XXXIsFinished instead.
-        if (!latestPublishedData.value?.included_categories) return undefined;
-        if (latestPublishedData.value.included_categories.length === 0) return null;
+        if (!versionDetail.value?.included_categories) return undefined;
+        if (versionDetail.value.included_categories.length === 0) return null;
 
-        return latestPublishedData.value.included_categories
+        return versionDetail.value.included_categories
           .map(categoryId => categoryIdToName(categoryId))
           .join(', ');
       });
@@ -474,7 +470,7 @@
             description: description.value,
             channel: props.channel.id,
             countries: countries.value.map(country => countriesUtil.getAlpha2Code(country, 'en')),
-            categories: latestPublishedData.value.included_categories,
+            categories: versionDetail.value.included_categories,
           })
             .then(() => {
               showSnackbar({ text: submittedSnackbar$() });

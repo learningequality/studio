@@ -22,6 +22,9 @@ from django.views.decorators.cache import cache_page
 from django_cte import With
 from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
+from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import FilterSet
+from django_filters.rest_framework import UUIDFilter
 from kolibri_public.utils.export_channel_to_kolibri_public import (
     export_channel_to_kolibri_public,
 )
@@ -48,6 +51,7 @@ from contentcuration.constants import (
 )
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Change
+from contentcuration.models import AuditedSpecialPermissionsLicense
 from contentcuration.models import Channel
 from contentcuration.models import ChannelVersion
 from contentcuration.models import CommunityLibrarySubmission
@@ -923,19 +927,6 @@ class ChannelViewSet(ValuesViewset):
         if not version_data:
             return Response({})
 
-        version_data["id"] = str(version_data["id"])
-
-        if version_data["date_published"]:
-            version_data["date_published"] = version_data["date_published"].strftime(
-                settings.DATE_TIME_FORMAT
-            )
-
-        version_data["special_permissions_included"] = list(
-            channel.version_info.special_permissions_included.values_list(
-                "id", flat=True
-            )
-        )
-
         return Response(version_data)
 
     @action(
@@ -1339,3 +1330,36 @@ class SettingsChannelSerializer(BulkModelSerializer):
         model = Channel
         fields = ("id", "name", "editor_count", "public")
         read_only_fields = ("id", "name", "editor_count", "public")
+
+
+class AuditedSpecialPermissionsLicenseFilter(FilterSet):
+    """Filter for AuditedSpecialPermissionsLicense by channelVersion."""
+
+    channel_version = UUIDFilter(
+        field_name="channel_versions__id",
+        help_text="Filter by ChannelVersion ID",
+    )
+
+    class Meta:
+        model = AuditedSpecialPermissionsLicense
+        fields = ["channel_version"]
+
+
+class AuditedSpecialPermissionsLicenseViewSet(ReadOnlyValuesViewset):
+    """
+    ViewSet for retrieving AuditedSpecialPermissionsLicense objects.
+    Supports filtering by channelVersion to get licenses for a specific channel version.
+    """
+
+    queryset = AuditedSpecialPermissionsLicense.objects.all()
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = AuditedSpecialPermissionsLicenseFilter
+
+    values = ("id", "description", "distributable")
+
+    field_map = {
+        "id": "id",
+        "description": "description",
+        "distributable": "distributable",
+    }

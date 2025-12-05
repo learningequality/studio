@@ -1367,29 +1367,35 @@ class Channel(models.Model):
 
 KIND_COUNT_ITEM_SCHEMA = {
     "type": "object",
-    "required": ["count", "kind"],
+    "required": ["count", "kind_id"],
     "properties": {
         "count": {"type": "integer", "minimum": 0},
-        "kind": {"type": "string", "minLength": 1},
+        "kind_id": {"type": "string", "minLength": 1},
     },
     "additionalProperties": False,
 }
 
 
 def validate_kind_count_item(value):
-    try:
-        jsonschema.validate(instance=value, schema=KIND_COUNT_ITEM_SCHEMA)
-    except jsonschema.ValidationError as e:
-        raise ValidationError(str(e))
+    """
+    Validator for kind_count items. 
+    """
+    for item in value:
+        try:
+            jsonschema.validate(instance=item, schema=KIND_COUNT_ITEM_SCHEMA)
+        except jsonschema.ValidationError as e:
+            raise ValidationError(f"Invalid kind_count item: {str(e)}")
 
 
 def validate_language_code(value):
     """
     Validator for language codes in included_languages array.
     """
-    valid_language_codes = [lang[0] for lang in languages.LANGUAGELIST]
-    if value not in valid_language_codes:
-        raise ValidationError(f"'{value}' is not a valid language code")
+    valid_language_codes = [lang.code for lang in languages.LANGUAGELIST]
+    for code in value:
+        if code not in valid_language_codes:
+            raise ValidationError(f"'{code}' is not a valid language code")
+    return
 
 
 def get_license_choices():
@@ -1456,6 +1462,7 @@ class ChannelVersion(models.Model):
     def save(self, *args, **kwargs):
         if self.version is not None and self.version > self.channel.version:
             raise ValidationError("Version cannot be greater than channel version")
+        self.full_clean()
         super(ChannelVersion, self).save(*args, **kwargs)
 
     def new_token(self):
