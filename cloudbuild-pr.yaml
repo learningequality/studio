@@ -20,7 +20,7 @@ steps:
   waitFor: ['-']              # don't wait for previous steps
   args: [
     'build',
-    '-f', 'k8s/images/nginx/Dockerfile',
+    '-f', 'docker/prod/nginx/Dockerfile',
     '--cache-from', 'gcr.io/$PROJECT_ID/learningequality-studio-nginx:latest',
     '-t', 'gcr.io/$PROJECT_ID/learningequality-studio-nginx:$COMMIT_SHA',
     '-t', 'gcr.io/$PROJECT_ID/learningequality-studio-nginx:latest',

@@ -12,7 +12,7 @@ steps:
   - >
     docker build
     --build_arg COMMIT_SHA=$COMMIT_SHA
-    -f k8s/images/app/Dockerfile
+    -f docker/prod/app/Dockerfile
     --cache-from gcr.io/$PROJECT_ID/learningequality-studio-app:latest
     -t gcr.io/$PROJECT_ID/learningequality-studio-app:$COMMIT_SHA
     -t gcr.io/$PROJECT_ID/learningequality-studio-app:latest
@@ -23,7 +23,7 @@ steps:
   waitFor: ['-']              # don't wait for previous steps
   args: [
     'build',
-    '-f', 'k8s/images/nginx/Dockerfile',
+    '-f', 'docker/prod/nginx/Dockerfile',
     '--cache-from', 'gcr.io/$PROJECT_ID/learningequality-studio-nginx:latest',
     '-t', 'gcr.io/$PROJECT_ID/learningequality-studio-nginx:$COMMIT_SHA',
     '-t', 'gcr.io/$PROJECT_ID/learningequality-studio-nginx:latest',
@@ -40,7 +40,7 @@ steps:
   waitFor: ['pull-prober-image-cache']              # don't wait for previous steps
   args: [
     'build',
-    '-f', 'k8s/images/prober/Dockerfile',
+    '-f', 'docker/prod/prober/Dockerfile',
     '--cache-from', 'gcr.io/$PROJECT_ID/learningequality-studio-prober:latest',
     '-t', 'gcr.io/$PROJECT_ID/learningequality-studio-prober:$COMMIT_SHA',
     '-t', 'gcr.io/$PROJECT_ID/learningequality-studio-prober:latest',

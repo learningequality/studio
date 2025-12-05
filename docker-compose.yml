@@ -35,7 +35,7 @@ services:
     platform: linux/amd64
     build:
       context: .
-      dockerfile: k8s/images/nginx/Dockerfile
+      dockerfile: docker/prod/nginx/Dockerfile
     ports:
       - "8081:8080"
     depends_on:
