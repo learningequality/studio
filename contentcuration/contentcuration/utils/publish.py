@@ -214,7 +214,16 @@ def create_kolibri_license_object(ccnode):
 def increment_channel_version(channel):
 
     channel.version += 1
-    ccmodels.Channel.objects.filter(pk=channel.pk).update(version=channel.version)
+
+    new_version_info, created = ccmodels.ChannelVersion.objects.get_or_create(
+        channel=channel, version=channel.version
+    )
+    
+    ccmodels.Channel.objects.filter(pk=channel.pk).update(
+        version=channel.version,
+        version_info=new_version_info
+    )
+    
 
 
 def create_draft_channel_version(channel):
@@ -1026,13 +1035,7 @@ def fill_published_fields(channel, version_notes):
         else:
             channel.version_info.special_permissions_included.clear()
 
-    ccmodels.Channel.objects.filter(pk=channel.pk).update(
-        last_published=channel.last_published,
-        total_resource_count=channel.total_resource_count,
-        published_kind_count=channel.published_kind_count,
-        published_size=channel.published_size,
-        published_data=channel.published_data,
-    )
+    channel.save()
 
 
 def sync_contentnode_and_channel_tsvectors(channel_id):
