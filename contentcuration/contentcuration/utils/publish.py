@@ -215,8 +215,6 @@ def increment_channel_version(channel):
 
     channel.version += 1
     channel.save()
-    
-    
 
 
 def create_draft_channel_version(channel):
