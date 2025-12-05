@@ -34,6 +34,9 @@ import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
 from contentcuration.views import pwa
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
+from contentcuration.viewsets.audited_special_permissions_license import (
+    AuditedSpecialPermissionsLicenseViewSet,
+)
 from contentcuration.viewsets.bookmark import BookmarkViewSet
 from contentcuration.viewsets.channel import AdminChannelViewSet
 from contentcuration.viewsets.channel import AuditedSpecialPermissionsLicenseViewSet
@@ -108,6 +111,11 @@ router.register(
     r"admin_communitylibrary_submission",
     AdminCommunityLibrarySubmissionViewSet,
     basename="admin-community-library-submission",
+)
+router.register(
+    r"audited-special-permissions-license",
+    AuditedSpecialPermissionsLicenseViewSet,
+    basename="audited-special-permissions-license",
 )
 
 urlpatterns = [

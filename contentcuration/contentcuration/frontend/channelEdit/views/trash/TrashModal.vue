@@ -281,19 +281,24 @@
         'moveContentNodes',
         'loadContentNodes',
         'loadAncestors',
+        'removeContentNodes',
       ]),
       loadNodes() {
         this.loading = true;
+        this.more = null;
+        this.moreLoading = false;
         if (!this.trashId) {
           this.loading = false;
           return;
         }
-        this.loadChildren({ parent: this.trashId, ordering: '-modified' }).then(
-          childrenResponse => {
-            this.loading = false;
-            this.more = childrenResponse.more || null;
-          },
-        );
+        this.removeContentNodes({ parentId: this.trashId }).then(() => {
+          this.loadChildren({ parent: this.trashId, ordering: '-modified' }).then(
+            childrenResponse => {
+              this.loading = false;
+              this.more = childrenResponse.more || null;
+            },
+          );
+        });
       },
       moveNodes(target) {
         return this.moveContentNodes({

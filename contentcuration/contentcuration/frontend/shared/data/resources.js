@@ -1416,6 +1416,10 @@ export const Channel = new CreateModelResource({
     const response = await client.get(window.Urls.channel_version_detail(id));
     return response.data;
   },
+  async auditLicenses(id) {
+    const response = await client.post(window.Urls.channel_audit_licenses(id));
+    return response.data;
+  },
 });
 
 function getChannelFromChannelScope() {
@@ -1706,6 +1710,10 @@ export const ContentNode = new TreeResource({
   async tableMove({ node, parent, payload }) {
     // Do direct table writes here rather than using add/update methods to avoid
     // creating unnecessary additional change events.
+    payload = {
+      ...payload,
+      modified: new Date().toISOString(),
+    };
     const updated = await this.table.update(node.id, payload);
     // Update didn't succeed, this node probably doesn't exist, do a put instead,
     // but need to add in other parent info.
@@ -2409,5 +2417,13 @@ export const CommunityLibrarySubmission = new APIResource({
     return client.post(this.collectionUrl(), params).then(response => {
       return response.data;
     });
+  },
+});
+
+export const AuditedSpecialPermissionsLicense = new APIResource({
+  urlName: 'audited_special_permissions_license',
+  async fetchCollection(params) {
+    const response = await client.get(this.collectionUrl(), { params });
+    return response.data || [];
   },
 });
