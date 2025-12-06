@@ -5,7 +5,6 @@ from unittest import mock
 
 from django.conf import settings
 
-
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioTestCase
 from contentcuration.tests.utils.restricted_filesystemstorage import (
