@@ -11,7 +11,6 @@ from django.db.utils import IntegrityError
 from django.utils import timezone
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
-from le_utils.constants import languages
 from le_utils.constants.labels import subjects
 
 from contentcuration.constants import channel_history
