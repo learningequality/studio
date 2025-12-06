@@ -1,7 +1,8 @@
+from django.core.exceptions import ValidationError
+
 from contentcuration.models import ChannelVersion
 from contentcuration.models import SecretToken
 from contentcuration.tests import testdata
-from django.core.exceptions import ValidationError
 from contentcuration.tests.base import StudioTestCase
 
 
