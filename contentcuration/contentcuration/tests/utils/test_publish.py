@@ -104,11 +104,7 @@ class IncrementChannelVersionTestCase(StudioTestCase):
     def setUp(self):
         super().setUp()
         self.channel = testdata.channel()
-        self.channel.version = 1
-        self.channel.save()
-
-        ChannelVersion.objects.filter(channel=self.channel).delete()
-        self.channel.version_info = None
+        self.channel.version = 0
         self.channel.save()
 
     def test_increment_published_version(self):
@@ -155,12 +151,12 @@ class IncrementChannelVersionTestCase(StudioTestCase):
 
         self.channel.refresh_from_db()
 
-        self.assertEqual(self.channel.version, 4)
+        self.assertEqual(self.channel.version, 3)
 
-        self.assertEqual(self.channel.channel_versions.count(), 4)
+        self.assertEqual(self.channel.channel_versions.count(), 3)
 
         self.assertIsNotNone(self.channel.version_info)
-        self.assertEqual(self.channel.version_info.version, 4)
+        self.assertEqual(self.channel.version_info.version, 3)
 
     def test_mixed_draft_and_published_versions(self):
         """Test creating mix of draft and published versions."""
@@ -170,14 +166,14 @@ class IncrementChannelVersionTestCase(StudioTestCase):
 
         self.channel.refresh_from_db()
 
-        self.assertEqual(self.channel.version, 2)
+        self.assertEqual(self.channel.version, 1)
 
-        self.assertEqual(self.channel.channel_versions.count(), 3)
+        self.assertEqual(self.channel.channel_versions.count(), 2)
         self.assertEqual(uuid.UUID(str(draft1.id)), uuid.UUID(str(draft2.id)))
 
         self.assertIsNotNone(draft1.secret_token)
         self.assertIsNotNone(draft2.secret_token)
 
         self.assertIsNotNone(self.channel.version_info)
-        self.assertEqual(self.channel.version_info.version, 2)
+        self.assertEqual(self.channel.version_info.version, 1)
         self.assertIsNone(self.channel.version_info.secret_token)

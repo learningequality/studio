@@ -163,7 +163,8 @@
             <SpecialPermissionsList
               v-if="licenseAuditIsFinished && specialPermissions.length > 0"
               v-model="checkedSpecialPermissions"
-              :permissionIds="specialPermissions"
+              :channel-version-id="versionDetail && versionDetail.id"
+              :permission-ids="specialPermissions"
               @update:allChecked="allSpecialPermissionsChecked = $event"
             />
             <div class="country-area">
@@ -424,10 +425,8 @@
       // Use the latest version available from either channel or versionDetail
       const displayedVersion = computed(() => {
         const channelVersion = currentChannelVersion.value || 0;
-        if (versionDetail.value && Object.keys(versionDetail.value).length > 0) {
-          const publishedVersions = Object.keys(versionDetail.value).map(v => parseInt(v, 10));
-          const maxPublishedVersion = Math.max(...publishedVersions);
-          return Math.max(channelVersion, maxPublishedVersion);
+        if (versionDetail.value && versionDetail.value.version) {
+          return Math.max(channelVersion, versionDetail.value.version);
         }
         return channelVersion;
       });
@@ -439,6 +438,7 @@
         specialPermissions,
         includedLicenses,
         checkAndTriggerAudit: checkAndTriggerLicenseAudit,
+        currentVersionData,
       } = useLicenseAudit(props.channel, currentChannelVersion);
 
       const allSpecialPermissionsChecked = ref(true);
@@ -465,11 +465,6 @@
         return conditions.every(condition => condition);
       });
 
-      const latestPublishedData = computed(() => {
-        if (!publishedData.value || !displayedVersion.value) return undefined;
-        return publishedData.value[displayedVersion.value];
-      });
-
       // Watch for when publishing completes - fetch publishedData to get the new version's data
       watch(isPublishing, async (newIsPublishing, oldIsPublishing) => {
         if (oldIsPublishing === true && newIsPublishing === false) {
@@ -483,14 +478,15 @@
 
         if (!isPublishing.value) {
           await fetchPublishedData();
+          console.log('versionDetail:', versionDetail.value);
           await checkAndTriggerLicenseAudit();
+          console.log('specialPermissions:', specialPermissions.value);
+          console.log('currentVersionData:', currentVersionData.value);
         }
       });
 
       const detectedLanguages = computed(() => {
-        // We need to filter out null values due to a backend bug
-        // causing null values to sometimes be included in the list
-        const languageCodes = versionDetail.value?.included_languages.filter(code => code !== null);
+        const languageCodes = versionDetail.value?.included_languages;
 
         // We distinguish here between "not loaded yet" (undefined)
         // and "loaded and none present" (null). This distinction is
