@@ -1,6 +1,7 @@
 from contentcuration.models import ChannelVersion
 from contentcuration.models import SecretToken
 from contentcuration.tests import testdata
+from django.core.exceptions import ValidationError
 from contentcuration.tests.base import StudioTestCase
 
 
@@ -51,9 +52,8 @@ class ChannelVersionTestCase(StudioTestCase):
             channel=self.channel,
             version=1,
         )
-        from django.db.utils import IntegrityError
 
-        with self.assertRaises(IntegrityError):
+        with self.assertRaises(ValidationError):
             ChannelVersion.objects.create(
                 channel=self.channel,
                 version=1,

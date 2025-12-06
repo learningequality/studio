@@ -438,7 +438,6 @@
         specialPermissions,
         includedLicenses,
         checkAndTriggerAudit: checkAndTriggerLicenseAudit,
-        currentVersionData,
       } = useLicenseAudit(props.channel, currentChannelVersion);
 
       const allSpecialPermissionsChecked = ref(true);
@@ -478,10 +477,7 @@
 
         if (!isPublishing.value) {
           await fetchPublishedData();
-          console.log('versionDetail:', versionDetail.value);
           await checkAndTriggerLicenseAudit();
-          console.log('specialPermissions:', specialPermissions.value);
-          console.log('currentVersionData:', currentVersionData.value);
         }
       });
 
@@ -496,7 +492,7 @@
         if (!languageCodes) return undefined;
         if (languageCodes.length === 0) return null;
 
-        return languageCodes.map(code => LanguagesMap.get(code).readable_name).join(', ');
+        return languageCodes.map(code => LanguagesMap.get(code)?.readable_name || code).join(', ');
       });
 
       function categoryIdToName(categoryId) {
