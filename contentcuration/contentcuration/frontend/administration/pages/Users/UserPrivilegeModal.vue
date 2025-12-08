@@ -103,8 +103,8 @@
         get() {
           return this.value;
         },
-        set(v) {
-          this.$emit('input', v);
+        set(value) { // CHANGED 'v' to 'value'
+          this.$emit('input', value);
         },
       },
     },
@@ -119,12 +119,7 @@
       close() {
         if (typeof this.reset === 'function') {
           this.reset();
-        } else {
-          this.emailConfirm = '';
-          if (this.errors) {
-            Object.keys(this.errors).forEach(k => (this.errors[k] = false));
-          }
-        }
+        } 
         this.$emit('input', false);
       },
 
