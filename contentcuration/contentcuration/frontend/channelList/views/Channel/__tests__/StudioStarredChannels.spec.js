@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/vue';
 import VueRouter from 'vue-router';
 import { Store } from 'vuex';
-import StudioMyChannels from '../StudioMyChannels.vue';
+import StudioStarredChannels from '../StudioStarredChannels.vue';
 
 const mockChannels = [
   {
@@ -62,7 +62,7 @@ const router = new VueRouter({
 });
 
 function renderComponent(store) {
-  return render(StudioMyChannels, {
+  return render(StudioStarredChannels, {
     store,
     routes: router,
   });
@@ -85,11 +85,12 @@ const store = new Store({
   },
 });
 
-describe('StudioMyChannels.vue', () => {
+describe('StudioStarredChannels.vue', () => {
   it('renders my channels', async () => {
     renderComponent(store);
     const cards = await screen.findAllByTestId('card');
-    expect(cards.length).toBe(3);
+
+    expect(cards.length).toBe(1);
   });
 
   it(`Shows 'No channel found' when there are no channels`, async () => {

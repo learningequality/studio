@@ -4,6 +4,7 @@
     v-if="dialog"
     :title="$tr('copyTitle')"
     :cancelText="$tr('close')"
+    :appendToOverlay="appendToOverlay"
     @cancel="dialog = false"
   >
     <p>{{ $tr('copyTokenInstructions') }}</p>
@@ -27,6 +28,10 @@
     },
     props: {
       value: {
+        type: Boolean,
+        default: false,
+      },
+      appendToOverlay: {
         type: Boolean,
         default: false,
       },
