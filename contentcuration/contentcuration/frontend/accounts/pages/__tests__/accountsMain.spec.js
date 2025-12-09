@@ -33,6 +33,7 @@ function makeWrapper({ loginMock = jest.fn(), online = true, nextParam = null } 
     ...originalLocation,
     search: nextParam ? `?next=${nextParam}` : '',
     assign: jest.fn(),
+    toString: jest.fn(),
   };
 
   return {
