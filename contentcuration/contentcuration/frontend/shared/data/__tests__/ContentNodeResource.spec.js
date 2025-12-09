@@ -605,7 +605,6 @@ describe('ContentNode methods', () => {
         node.id,
         expect.objectContaining({ ...payload, modified: expect.any(String) }),
       );
-      expect(table.update).toHaveBeenCalledWith(node.id, payload);
       expect(table.put).not.toHaveBeenCalled();
       expect(table.update).toHaveBeenCalledWith(node.parent, { changed: true });
     });
