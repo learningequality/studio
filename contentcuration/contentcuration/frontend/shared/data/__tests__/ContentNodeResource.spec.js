@@ -580,7 +580,7 @@ describe('ContentNode methods', () => {
       const [updateId, updatePayload] = table.update.mock.calls[0];
       expect(updateId).toBe(node.id);
       expect(updatePayload).toBe(result);
-      expect(table.put).not.toBeCalled();
+      expect(table.put).not.toHaveBeenCalled();
       expect(table.update).not.toHaveBeenCalledWith(node.parent, { changed: true });
     });
 
