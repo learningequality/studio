@@ -103,7 +103,8 @@
         get() {
           return this.value;
         },
-        set(value) { // CHANGED 'v' to 'value'
+        set(value) {
+          // CHANGED 'v' to 'value'
           this.$emit('input', value);
         },
       },
@@ -119,7 +120,7 @@
       close() {
         if (typeof this.reset === 'function') {
           this.reset();
-        } 
+        }
         this.$emit('input', false);
       },
 
