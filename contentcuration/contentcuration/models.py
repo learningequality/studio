@@ -349,20 +349,20 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def check_channel_space(self, channel):
         tree_cte = With(self.get_user_active_trees().distinct(), name="trees")
-        files_cte = With(
-            tree_cte.join(
-                self.files.get_queryset(), contentnode__tree_id=tree_cte.col.tree_id
-            )
-            .values("checksum")
-            .distinct(),
-            name="files",
+        channel_files_qs = tree_cte.join(
+            self.files.get_queryset(), contentnode__tree_id=tree_cte.col.tree_id
         )
+        channel_files_qs = self._filter_storage_billable_files(channel_files_qs)
+        files_cte = With(channel_files_qs.values("checksum").distinct(), name="files")
 
-        staging_tree_files = (
+        staging_tree_files = self._filter_storage_billable_files(
             self.files.filter(contentnode__tree_id=channel.staging_tree.tree_id)
-            .with_cte(tree_cte)
-            .with_cte(files_cte)
-            .exclude(Exists(files_cte.queryset().filter(checksum=OuterRef("checksum"))))
+        )
+        staging_tree_files = staging_tree_files.with_cte(tree_cte).with_cte(files_cte)
+        staging_tree_files = (
+            staging_tree_files.exclude(
+                Exists(files_cte.queryset().filter(checksum=OuterRef("checksum")))
+            )
             .values("checksum")
             .distinct()
         )
@@ -412,11 +412,22 @@ class User(AbstractBaseUser, PermissionsMixin):
     def get_user_active_files(self):
         cte = With(self.get_user_active_trees().distinct())
 
-        return (
-            cte.join(self.files.get_queryset(), contentnode__tree_id=cte.col.tree_id)
-            .with_cte(cte)
-            .values("checksum")
-            .distinct()
+        files_qs = cte.join(
+            self.files.get_queryset(), contentnode__tree_id=cte.col.tree_id
+        ).with_cte(cte)
+
+        files_qs = self._filter_storage_billable_files(files_qs)
+
+        return files_qs.values("checksum").distinct()
+
+    def _filter_storage_billable_files(self, queryset):
+        """
+        Perseus exports would not be included in storage calculations.
+        """
+        if queryset is None:
+            return queryset
+        return queryset.exclude(file_format_id__isnull=True).exclude(
+            file_format_id=file_formats.PERSEUS
         )
 
     def get_space_used(self, active_files=None):
