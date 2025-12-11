@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/vue';
+import { render, screen, waitFor, within } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import VueRouter from 'vue-router';
 import AccountsMain from '../AccountsMain.vue';
@@ -28,31 +28,43 @@ const createRouter = () => {
 function makeWrapper({ loginMock = jest.fn(), online = true, nextParam = null } = {}) {
   const router = createRouter();
 
-  delete window.location;
-  window.location = {
-    ...originalLocation,
-    search: nextParam ? `?next=${nextParam}` : '',
-    assign: jest.fn(),
-    toString: jest.fn(),
+  // Mock window.location.search using JSDOM's history API
+  const searchString = nextParam ? `?next=${nextParam}` : '';
+  window.history.pushState({}, '', `/${searchString}`);
+
+  // Create a spy for navigate before rendering
+  const navigateSpy = jest.fn();
+  const OriginalAccountsMain = AccountsMain;
+
+  // Patch the component to use our spy
+  const PatchedAccountsMain = {
+    ...OriginalAccountsMain,
+    methods: {
+      ...OriginalAccountsMain.methods,
+      navigate: navigateSpy,
+    },
   };
 
-  return {
-    ...render(AccountsMain, {
-      routes: router,
-      stubs: ['PolicyModals'],
-      mocks: {
-        $store: {
-          state: {
-            connection: {
-              online,
-            },
+  const wrapper = render(PatchedAccountsMain, {
+    routes: router,
+    stubs: ['PolicyModals'],
+    mocks: {
+      $store: {
+        state: {
+          connection: {
+            online,
           },
-          dispatch: loginMock,
         },
+        dispatch: loginMock,
       },
-    }),
+    },
+  });
+
+  return {
+    ...wrapper,
     router,
     loginMock,
+    navigateSpy,
   };
 }
 
@@ -61,11 +73,12 @@ describe('AccountsMain', () => {
 
   beforeEach(() => {
     user = userEvent.setup();
-    jest.clearAllMocks();
   });
 
   afterEach(() => {
-    window.location = originalLocation;
+    // Reset history
+    window.history.pushState({}, '', '/');
+    jest.restoreAllMocks();
   });
 
   it('should render sign-in form with email, password fields and sign in button', () => {
@@ -105,7 +118,7 @@ describe('AccountsMain', () => {
 
   it('should redirect to channels page after successful login', async () => {
     const loginMock = jest.fn().mockResolvedValue();
-    makeWrapper({ loginMock });
+    const { navigateSpy } = makeWrapper({ loginMock });
 
     await user.type(screen.getByLabelText(/email/i), 'test@test.com');
     await user.type(screen.getByLabelText(/password/i), 'testpassword');
@@ -113,7 +126,7 @@ describe('AccountsMain', () => {
 
     // User is redirected to channels page
     await waitFor(() => {
-      expect(window.location.assign).toHaveBeenCalledWith('/channels/');
+      expect(navigateSpy).toHaveBeenCalledWith('/channels/');
     });
   });
 
@@ -126,7 +139,7 @@ describe('AccountsMain', () => {
   it('should redirect to next URL when provided after successful login', async () => {
     const loginMock = jest.fn().mockResolvedValue();
     const nextUrl = '/protected-page/';
-    makeWrapper({ loginMock, nextParam: nextUrl });
+    const { navigateSpy } = makeWrapper({ loginMock, nextParam: nextUrl });
 
     await user.type(screen.getByLabelText(/email/i), 'test@test.com');
     await user.type(screen.getByLabelText(/password/i), 'testpassword');
@@ -134,7 +147,7 @@ describe('AccountsMain', () => {
 
     // User is redirected to next URL
     await waitFor(() => {
-      expect(window.location.assign).toHaveBeenCalledWith(nextUrl);
+      expect(navigateSpy).toHaveBeenCalledWith(nextUrl);
     });
   });
 
