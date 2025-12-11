@@ -77,7 +77,7 @@
     "jspdf": "https://github.com/parallax/jsPDF.git#b7a1d8239c596292ce86dafa77f05987bcfa2e6e",
     "jszip": "^3.10.1",
     "kolibri-constants": "^0.2.12",
-    "kolibri-design-system": "5.4.1",
+    "kolibri-design-system": "5.5.0",
     "lodash": "^4.17.21",
     "lowlight": "^3.3.0",
     "marked": "^16.1.1",
