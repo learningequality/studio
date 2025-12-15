@@ -313,11 +313,13 @@
   .catalog-page-wrapper {
     display: flex;
     flex-direction: row;
-    min-height: 100vh;
   }
 
   .catalog-sidebar {
+    position: sticky;
+    top: 0;
     flex-shrink: 0;
+    align-self: flex-start;
     width: 300px;
     overflow-y: auto;
   }
@@ -325,7 +327,6 @@
   .catalog-main-content {
     flex: 1;
     min-width: 0;
-    overflow-y: auto;
   }
 
   .list-wrapper {
@@ -338,6 +339,7 @@
   }
 
   .catalog-sidebar--small {
+    position: static;
     width: 100%;
     max-height: 300px;
   }

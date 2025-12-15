@@ -83,6 +83,7 @@
 
   .catalog-filters-wrapper {
     width: 100%;
+    height: 100%;
   }
 
   .filter-button-mobile {
@@ -92,7 +93,6 @@
   .filter-panel-desktop {
     width: 100%;
     height: 100%;
-    overflow-y: auto;
   }
 
   .filter-panel-rtl {
