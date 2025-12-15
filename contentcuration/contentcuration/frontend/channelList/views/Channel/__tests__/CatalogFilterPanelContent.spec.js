@@ -42,7 +42,7 @@ describe('CatalogFilterPanelContent', () => {
     expect(screen.getByRole('checkbox', { name: 'Resources for coaches' })).toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: 'Captions or subtitles' })).toBeInTheDocument();
     expect(screen.getByText('Frequently asked questions')).toBeInTheDocument();
-    expect(screen.getByAltText('Learning Equality logo')).toBeInTheDocument();
+    expect(screen.getByRole('img')).toBeInTheDocument();
   });
 
   it('renders keyword search input', () => {

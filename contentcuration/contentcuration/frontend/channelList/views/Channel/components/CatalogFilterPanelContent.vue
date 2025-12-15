@@ -2,6 +2,7 @@
 
   <div class="filter-panel-content">
     <div class="filters-container">
+      <!-- Keyword search -->
       <KTextbox
         v-model="keywordInput"
         :label="$tr('searchLabel')"
@@ -11,8 +12,10 @@
         @input="setKeywords"
       />
 
+      <!-- Language -->
       <LanguageFilter v-model="languages" />
 
+      <!-- License (attach to self to keep in notranslate class) -->
       <MultiSelect
         v-if="!libraryMode"
         v-model="licenses"
@@ -20,18 +23,21 @@
         :label="$tr('licenseLabel')"
       />
 
+      <!-- Formats (attach to self to keep in notranslate class) -->
       <MultiSelect
         v-model="kinds"
         :items="kindOptions"
         :label="$tr('formatLabel')"
       />
 
+      <!-- Starred -->
       <Checkbox
         v-if="loggedIn"
         v-model="bookmark"
         :label="$tr('starredLabel')"
       />
 
+      <!-- Includes -->
       <div
         class="subheading"
         :style="{ color: $themeTokens.annotation }"
