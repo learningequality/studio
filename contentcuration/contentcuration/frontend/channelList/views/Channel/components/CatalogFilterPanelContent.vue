@@ -69,15 +69,13 @@
 
     <div class="panel-footer">
       <KImg
+        isDecorative
         :src="require('shared/images/le-logo.svg')"
-        altText="Learning Equality logo"
-        :aspectRatio="'3:2'"
-        scaleType="contain"
-        :appearanceOverrides="{
+        backgroundColor="transparent"
+        scaleType="fitXY"
+        :style="{
           width: '90px',
           height: '60px',
-          marginBottom: '8px',
-          marginRight: '8px',
         }"
       />
       <KExternalLink
@@ -188,7 +186,7 @@
   .filter-panel-content {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 96px);
+    height: calc(100vh - 114px);
   }
 
   .filters-container {
@@ -216,7 +214,7 @@
   }
 
   .panel-footer {
-    padding: 24px;
+    padding: 16px 24px;
     text-align: start;
   }
 
