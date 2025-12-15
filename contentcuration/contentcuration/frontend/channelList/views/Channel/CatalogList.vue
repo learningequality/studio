@@ -1,119 +1,127 @@
 <template>
 
-  <CatalogFilters>
-    <VSlideYTransition>
-      <ToolBar
-        v-show="offline"
-        dense
-        clipped-left
-        absolute
-      >
-        <OfflineText />
-      </ToolBar>
-    </VSlideYTransition>
-    <VContainer
-      fluid
-      :style="`margin-top: ${offline ? 48 : 0}`"
-    >
-      <LoadingText v-if="loading" />
-      <VLayout
-        v-else
-        grid
-        wrap
-        class="list-wrapper"
-      >
-        <!-- Results bar -->
-        <VFlex
-          xs12
-          class="mb-2"
+  <div class="catalog-page-wrapper">
+    <!-- Sidebar with fixed width -->
+    <aside class="catalog-sidebar">
+      <CatalogFilters />
+    </aside>
+
+    <!-- Main content takes remaining space -->
+    <main class="catalog-main-content">
+      <VSlideYTransition>
+        <ToolBar
+          v-show="offline"
+          dense
+          clipped-left
+          absolute
         >
-          <h1 class="mb-2 ml-1 title">
-            {{ $tr('resultsText', { count: page.count }) }}
-          </h1>
-          <KButton
-            v-if="page.count && !selecting"
-            :text="$tr('selectChannels')"
-            data-test="select"
-            appearance="basic-link"
-            @click="setSelection(true)"
-          />
-          <Checkbox
-            v-else-if="selecting"
-            v-model="selectAll"
-            class="mb-4 mx-2"
-            :label="$tr('selectAll')"
-            data-test="select-all"
-            :indeterminate="selected.length > 0 && selected.length < channels.length"
-          />
-        </VFlex>
-        <VFlex xs12>
-          <VLayout
-            v-for="item in channels"
-            :key="item.id"
-            align-center
+          <OfflineText />
+        </ToolBar>
+      </VSlideYTransition>
+      <VContainer
+        fluid
+        :style="`margin-top: ${offline ? 48 : 0}`"
+      >
+        <LoadingText v-if="loading" />
+        <VLayout
+          v-else
+          grid
+          wrap
+          class="list-wrapper"
+        >
+          <!-- Results bar -->
+          <VFlex
+            xs12
+            class="mb-2"
           >
+            <h1 class="mb-2 ml-1 title">
+              {{ $tr('resultsText', { count: page.count }) }}
+            </h1>
+            <KButton
+              v-if="page.count && !selecting"
+              :text="$tr('selectChannels')"
+              data-test="select"
+              appearance="basic-link"
+              @click="setSelection(true)"
+            />
             <Checkbox
-              v-show="selecting"
-              v-model="selected"
-              class="mx-2"
-              :value="item.id"
-              data-test="checkbox"
+              v-else-if="selecting"
+              v-model="selectAll"
+              class="mb-4 mx-2"
+              :label="$tr('selectAll')"
+              data-test="select-all"
+              :indeterminate="selected.length > 0 && selected.length < channels.length"
             />
-            <ChannelItem
-              :channelId="item.id"
-              :detailsRouteName="detailsRouteName"
-              style="flex-grow: 1; width: 100%"
-            />
-          </VLayout>
-        </VFlex>
-        <VFlex
-          xs12
-          style="padding-bottom: 72px"
+          </VFlex>
+          <VFlex xs12>
+            <VLayout
+              v-for="item in channels"
+              :key="item.id"
+              align-center
+            >
+              <Checkbox
+                v-show="selecting"
+                v-model="selected"
+                class="mx-2"
+                :value="item.id"
+                data-test="checkbox"
+              />
+              <ChannelItem
+                :channelId="item.id"
+                :detailsRouteName="detailsRouteName"
+                style="flex-grow: 1; width: 100%"
+              />
+            </VLayout>
+          </VFlex>
+          <VFlex
+            xs12
+            style="padding-bottom: 72px"
+          >
+            <VLayout justify-center>
+              <Pagination
+                :pageNumber="page.page_number"
+                :totalPages="page.total_pages"
+              />
+            </VLayout>
+          </VFlex>
+        </VLayout>
+        <BottomBar
+          v-if="selecting"
+          data-test="toolbar"
+          :appearanceOverrides="{ height: isMobile ? '72px' : '56px' }"
         >
-          <VLayout justify-center>
-            <Pagination
-              :pageNumber="page.page_number"
-              :totalPages="page.total_pages"
+          <div class="mx-2">
+            {{ $tr('channelSelectionCount', { count: selectedCount }) }}
+          </div>
+          <VSpacer />
+          <div>
+            <KButton
+              :text="$tr('cancelButton')"
+              data-test="cancel"
+              appearance="flat-button"
+              @click="setSelection(false)"
             />
-          </VLayout>
-        </VFlex>
-      </VLayout>
-      <BottomBar
-        v-if="selecting"
-        data-test="toolbar"
-        :appearanceOverrides="{ height: isMobile ? '72px' : '56px' }"
-      >
-        <div class="mx-2">
-          {{ $tr('channelSelectionCount', { count: selectedCount }) }}
-        </div>
-        <VSpacer />
-        <div>
+          </div>
           <KButton
-            :text="$tr('cancelButton')"
-            data-test="cancel"
-            appearance="flat-button"
-            @click="setSelection(false)"
-          />
-        </div>
-        <KButton
-          :text="$tr('downloadButton')"
-          :primary="true"
-          data-test="download-button"
-          iconAfter="dropup"
-        >
-          <KDropdownMenu
+            :text="$tr('downloadButton')"
             :primary="true"
-            :options="[
-              { label: $tr('downloadPDF'), value: 'pdf' },
-              { label: $tr('downloadCSV'), value: 'csv' },
-            ]"
-            appearance="raised-button"
-            @select="option => selectDownloadOption(option)"
-          />
-        </KButton>
-      </BottomBar>
-    </VContainer>
-  </CatalogFilters>
+            data-test="download-button"
+            iconAfter="dropup"
+          >
+            <KDropdownMenu
+              :primary="true"
+              :options="[
+                { label: $tr('downloadPDF'), value: 'pdf' },
+                { label: $tr('downloadCSV'), value: 'csv' },
+              ]"
+              appearance="raised-button"
+              @select="option => selectDownloadOption(option)"
+            />
+          </KButton>
+        </BottomBar>
+      </VContainer>
+    </main>
+  </div>
 
 </template>
 
@@ -294,7 +302,7 @@
       cancelButton: 'Cancel',
       downloadButton: 'Download',
       downloadCSV: 'Download CSV',
-      downloadPDF: 'Download PDF', // Kevin demanded NO DOTS!!!
+      downloadPDF: 'Download PDF',
       downloadingMessage: 'Download started',
       channelSelectionCount:
         '{count, plural,\n =1 {# channel selected}\n other {# channels selected}}',
@@ -309,17 +317,37 @@
 
   .catalog-page-wrapper {
     display: flex;
+    flex-direction: row;
     min-height: 100vh;
   }
 
+  .catalog-sidebar {
+    flex-shrink: 0; // Prevent sidebar from shrinking
+    width: 300px;
+    overflow-y: auto; // Allow sidebar to scroll independently if needed
+  }
+
   .catalog-main-content {
-    flex: 1;
-    min-height: calc(100vh - 64px);
+    flex: 1; // Takes remaining space
+    min-width: 0; // Prevents flex item from overflowing
+    overflow-y: auto; // Allow main content to scroll
   }
 
   .list-wrapper {
     max-width: 1080px;
     margin: 0 auto;
+  }
+
+  // Optional: Responsive behavior for mobile
+  @media (max-width: 960px) {
+    .catalog-page-wrapper {
+      flex-direction: column;
+    }
+
+    .catalog-sidebar {
+      width: 100%;
+      max-height: 300px; // Limit height on mobile
+    }
   }
 
 </style>
