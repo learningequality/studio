@@ -11,10 +11,7 @@
         @input="setKeywords"
       />
 
-      <LanguageFilter
-        v-model="languages"
-        :menu-props="menuProps"
-      />
+      <LanguageFilter v-model="languages" />
 
       <MultiSelect
         v-if="!libraryMode"
@@ -132,9 +129,6 @@
       faqLink() {
         return { name: RouteNames.CATALOG_FAQ };
       },
-      menuProps() {
-        return { offsetY: true, maxHeight: 270 };
-      },
       kindOptions() {
         return (window.publicKinds || [])
           .map(kind => {
@@ -222,7 +216,7 @@
   }
 
   .panel-footer {
-    padding: 16px;
+    padding: 24px;
     text-align: start;
   }
 
