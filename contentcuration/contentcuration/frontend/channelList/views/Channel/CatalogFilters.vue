@@ -15,7 +15,6 @@
     <aside
       v-if="!windowIsSmall"
       class="filter-panel-desktop"
-      :class="{ 'filter-panel-rtl': isRTL }"
     >
       <CatalogFilterPanelContent />
     </aside>
@@ -58,11 +57,6 @@
         showMobilePanel: false,
       };
     },
-    computed: {
-      isRTL() {
-        return window.isRTL;
-      },
-    },
     methods: {
       openSidePanel() {
         this.showMobilePanel = true;
@@ -93,10 +87,6 @@
   .filter-panel-desktop {
     width: 100%;
     height: 100%;
-  }
-
-  .filter-panel-rtl {
-    direction: rtl;
   }
 
 </style>
