@@ -19,7 +19,6 @@
     <SidePanelModal
       v-if="windowIsSmall && showSidePanel"
       alignment="left"
-      fullscreen
       @closePanel="closeSidePanel"
     >
       <CatalogFilterPanelContent />
