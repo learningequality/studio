@@ -1,8 +1,14 @@
 <template>
 
-  <div class="catalog-page-wrapper">
+  <div
+    class="catalog-page-wrapper"
+    :class="{ 'catalog-page-wrapper--small': windowIsSmall }"
+  >
     <!-- Sidebar with fixed width -->
-    <aside class="catalog-sidebar">
+    <aside
+      class="catalog-sidebar"
+      :class="{ 'catalog-sidebar--small': windowIsSmall }"
+    >
       <CatalogFilters />
     </aside>
 
@@ -164,6 +170,7 @@
       const { windowIsSmall } = useKResponsiveWindow();
 
       return {
+        windowIsSmall,
         isMobile: windowIsSmall,
       };
     },
@@ -172,19 +179,7 @@
         loading: true,
         loadError: false,
         selecting: false,
-
-        /**
-         * jayoshih: router guard makes it difficult to track
-         * differences between previous query params and new
-         * query params, so just track it manually
-         */
         previousQuery: this.$route.query,
-
-        /**
-         * jayoshih: using excluded logic here instead of selected
-         * to account for selections across pages (some channels
-         * not in current page)
-         */
         excluded: [],
       };
     },
@@ -208,8 +203,8 @@
         },
         set(selected) {
           this.excluded = union(
-            this.excluded.filter(id => !selected.includes(id)), // Remove selected items
-            difference(this.page.results, selected), // Add non-selected items
+            this.excluded.filter(id => !selected.includes(id)),
+            difference(this.page.results, selected),
           );
         },
       },
@@ -220,8 +215,6 @@
         return RouteNames.CATALOG_DETAILS;
       },
       channels() {
-        // Sort again by the same ordering used on the backend - name.
-        // Have to do this because of how we are getting the object data via getChannels.
         return sortBy(this.getChannels(this.page.results), 'name');
       },
       selectedCount() {
@@ -234,7 +227,6 @@
           this.loading = true;
           this.debouncedSearch();
 
-          // Reset selection mode if a filter is changed (ignore page)
           const ignoreDefaults = { page: 0 };
           const toQuery = { ...to.query, ...ignoreDefaults };
           const fromQuery = { ...this.previousQuery, ...ignoreDefaults };
@@ -322,15 +314,15 @@
   }
 
   .catalog-sidebar {
-    flex-shrink: 0; // Prevent sidebar from shrinking
+    flex-shrink: 0;
     width: 300px;
-    overflow-y: auto; // Allow sidebar to scroll independently if needed
+    overflow-y: auto;
   }
 
   .catalog-main-content {
-    flex: 1; // Takes remaining space
-    min-width: 0; // Prevents flex item from overflowing
-    overflow-y: auto; // Allow main content to scroll
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
   }
 
   .list-wrapper {
@@ -338,16 +330,13 @@
     margin: 0 auto;
   }
 
-  // Optional: Responsive behavior for mobile
-  @media (max-width: 960px) {
-    .catalog-page-wrapper {
-      flex-direction: column;
-    }
+  .catalog-page-wrapper--small {
+    flex-direction: column;
+  }
 
-    .catalog-sidebar {
-      width: 100%;
-      max-height: 300px; // Limit height on mobile
-    }
+  .catalog-sidebar--small {
+    width: 100%;
+    max-height: 300px;
   }
 
 </style>
