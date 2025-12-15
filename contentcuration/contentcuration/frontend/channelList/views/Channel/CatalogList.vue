@@ -28,6 +28,7 @@
         fluid
         :style="`margin-top: ${offline ? 48 : 0}`"
       >
+        <CatalogFilterBar />
         <LoadingText v-if="loading" />
         <VLayout
           v-else
@@ -143,6 +144,7 @@
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { RouteNames } from '../../constants';
   import CatalogFilters from './CatalogFilters';
+  import CatalogFilterBar from './CatalogFilterBar';
   import ChannelItem from './ChannelItem';
   import LoadingText from 'shared/views/LoadingText';
   import Pagination from 'shared/views/Pagination';
@@ -159,6 +161,7 @@
       ChannelItem,
       LoadingText,
       CatalogFilters,
+      CatalogFilterBar,
       Pagination,
       BottomBar,
       Checkbox,

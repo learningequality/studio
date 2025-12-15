@@ -3,7 +3,7 @@
   <div class="catalog-filters-wrapper">
     <!-- Mobile: Filter button that opens SidePanelModal -->
     <KButton
-      v-if="isMobile"
+      v-if="windowIsSmall"
       class="filter-button-mobile"
       :text="$tr('filterText')"
       appearance="raised-button"
@@ -11,27 +11,18 @@
       @click="openSidePanel"
     />
 
-    <!-- Desktop/Tablet: Permanent side panel as page section -->
+    <!-- Desktop/Tablet: Permanent side panel -->
     <aside
-      v-if="!isMobile"
+      v-if="!windowIsSmall"
       class="filter-panel-desktop"
       :class="{ 'filter-panel-rtl': isRTL }"
     >
       <CatalogFilterPanelContent />
     </aside>
 
-    <!-- Main content area that includes CatalogFilterBar and the list -->
-    <div
-      class="main-content-area"
-      :class="{ 'with-sidebar': !isMobile }"
-    >
-      <CatalogFilterBar />
-      <slot></slot>
-    </div>
-
     <!-- Mobile: SidePanelModal for filters (full width) -->
     <SidePanelModal
-      v-if="isMobile && showMobilePanel"
+      v-if="windowIsSmall && showMobilePanel"
       alignment="left"
       fullscreen
       @closePanel="closeSidePanel"
@@ -46,14 +37,12 @@
 <script>
 
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
-  import CatalogFilterBar from './CatalogFilterBar';
   import CatalogFilterPanelContent from './components/CatalogFilterPanelContent.vue';
   import SidePanelModal from 'shared/views/SidePanelModal';
 
   export default {
     name: 'CatalogFilters',
     components: {
-      CatalogFilterBar,
       CatalogFilterPanelContent,
       SidePanelModal,
     },
@@ -61,7 +50,7 @@
       const { windowIsSmall } = useKResponsiveWindow();
 
       return {
-        isMobile: windowIsSmall,
+        windowIsSmall,
       };
     },
     data() {
@@ -93,33 +82,21 @@
 <style lang="scss" scoped>
 
   .catalog-filters-wrapper {
-    display: flex;
-    flex-direction: column;
     width: 100%;
-    overflow-x: hidden;
   }
 
   .filter-button-mobile {
-    align-self: flex-start;
     margin: 16px;
   }
 
   .filter-panel-desktop {
-    position: fixed;
-    top: 100px;
-    left: 0;
-    width: 335px;
+    width: 100%;
+    height: 100%;
     overflow-y: auto;
   }
 
-  .main-content-area {
-    flex: 1;
-    min-height: 100vh;
-
-    &.with-sidebar {
-      width: calc(100% - 335px);
-      margin-left: 335px;
-    }
+  .filter-panel-rtl {
+    direction: rtl;
   }
 
 </style>
