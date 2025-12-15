@@ -210,12 +210,12 @@
   }
 
   .metadata {
-    color: var(--v-grey-base);
+    color: var(--v-grey-darken2);
     font-size: 14px;
 
     span:not(:last-child)::after {
       margin: 0 4px;
-      color: grey;
+      color: var(--v-grey-base);
       content: '•';
     }
   }
