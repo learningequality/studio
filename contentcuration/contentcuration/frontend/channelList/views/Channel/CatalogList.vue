@@ -312,17 +312,18 @@
   }
 
   .catalog-sidebar {
-    position: sticky;
-    top: 0;
-    flex-shrink: 0;
-    align-self: flex-start;
+    position: fixed;
+    top: 106px;
+    bottom: 0;
+    left: 0;
     width: 300px;
-    overflow-y: auto;
+    overflow: hidden;
   }
 
   .catalog-main-content {
     flex: 1;
     min-width: 0;
+    margin-left: 300px;
   }
 
   .list-wrapper {
@@ -336,7 +337,15 @@
 
   .catalog-sidebar--small {
     position: static;
+    bottom: auto;
+    left: auto;
     width: 100%;
+    height: auto;
+    margin-left: 0;
+  }
+
+  .catalog-page-wrapper--small .catalog-main-content {
+    margin-left: 0;
   }
 
 </style>

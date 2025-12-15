@@ -186,14 +186,14 @@
   .filter-panel-content {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 106px);
+    height: 100%;
   }
 
   .filters-container {
     flex: 1;
-    min-height: 0;
+    width: 100%;
     padding: 16px;
-    overflow-y: auto;
+    overflow: auto;
   }
 
   .checkbox-with-tooltip {
