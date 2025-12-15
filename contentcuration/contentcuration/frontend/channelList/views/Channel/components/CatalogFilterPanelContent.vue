@@ -1,10 +1,7 @@
 <template>
 
   <div class="filter-panel-content">
-    <!-- Close button for mobile modal -->
-
     <div class="filters-container">
-      <!-- Keyword search -->
       <KTextbox
         v-model="keywordInput"
         :label="$tr('searchLabel')"
@@ -14,13 +11,11 @@
         @input="setKeywords"
       />
 
-      <!-- Language -->
       <LanguageFilter
         v-model="languages"
         :menu-props="menuProps"
       />
 
-      <!-- License -->
       <MultiSelect
         v-if="!libraryMode"
         v-model="licenses"
@@ -28,21 +23,18 @@
         :label="$tr('licenseLabel')"
       />
 
-      <!-- Formats -->
       <MultiSelect
         v-model="kinds"
         :items="kindOptions"
         :label="$tr('formatLabel')"
       />
 
-      <!-- Starred -->
       <Checkbox
         v-if="loggedIn"
         v-model="bookmark"
         :label="$tr('starredLabel')"
       />
 
-      <!-- Includes -->
       <div
         class="subheading"
         :style="{ color: $themeTokens.annotation }"
@@ -78,7 +70,6 @@
       />
     </div>
 
-    <!-- Footer with logo -->
     <div class="panel-footer">
       <KImg
         :src="require('shared/images/le-logo.svg')"

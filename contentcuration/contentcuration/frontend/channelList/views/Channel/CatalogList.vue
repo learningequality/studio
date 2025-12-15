@@ -4,15 +4,12 @@
     class="catalog-page-wrapper"
     :class="{ 'catalog-page-wrapper--small': windowIsSmall }"
   >
-    <!-- Sidebar with fixed width -->
     <aside
       class="catalog-sidebar"
       :class="{ 'catalog-sidebar--small': windowIsSmall }"
     >
       <CatalogFilters />
     </aside>
-
-    <!-- Main content takes remaining space -->
     <main class="catalog-main-content">
       <VSlideYTransition>
         <ToolBar
@@ -95,7 +92,7 @@
         <BottomBar
           v-if="selecting"
           data-test="toolbar"
-          :appearanceOverrides="{ height: isMobile ? '72px' : '56px' }"
+          :appearanceOverrides="{ height: windowIsSmall ? '72px' : '56px' }"
         >
           <div class="mx-2">
             {{ $tr('channelSelectionCount', { count: selectedCount }) }}
@@ -174,7 +171,6 @@
 
       return {
         windowIsSmall,
-        isMobile: windowIsSmall,
       };
     },
     data() {
