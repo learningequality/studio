@@ -337,7 +337,6 @@
   .catalog-sidebar--small {
     position: static;
     width: 100%;
-    max-height: 300px;
   }
 
 </style>

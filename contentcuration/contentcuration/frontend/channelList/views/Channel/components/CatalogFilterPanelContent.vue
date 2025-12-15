@@ -186,7 +186,7 @@
   .filter-panel-content {
     display: flex;
     flex-direction: column;
-    height: calc(100% - 106px);
+    height: calc(100vh - 106px);
   }
 
   .filters-container {
