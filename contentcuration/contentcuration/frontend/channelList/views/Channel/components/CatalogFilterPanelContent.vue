@@ -214,8 +214,8 @@
   }
 
   .panel-footer {
+    height: 100px;
     padding: 16px 24px;
-    text-align: start;
   }
 
 </style>
