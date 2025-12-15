@@ -13,72 +13,58 @@
       />
       <p
         v-else-if="savedSearches.length === 0"
-        class="grey--text pa-2"
+        class="empty-state"
       >
         {{ $tr('noSavedSearches') }}
       </p>
-      <VList v-else>
-        <template v-for="(search, index) in savedSearches">
-          <VListTile
-            :key="index"
-            class="py-2"
-          >
-            <VListTileContent>
-              <VListTileTitle>
-                <ActionLink
-                  class="font-weight-bold"
-                  :to="searchResultsRoute(search)"
-                  :text="search.name"
-                  @click="dialog = false"
-                />
-              </VListTileTitle>
-              <VListTileSubTitle class="metadata">
-                <span>
-                  {{ $formatRelative(search.created, { now: new Date() }) }}
-                </span>
-                <span>
-                  {{ $tr('filterCount', { count: searchFilterCount(search) }) }}
-                </span>
-              </VListTileSubTitle>
-            </VListTileContent>
+      <ul v-else class="saved-searches-list">
+        <li
+          v-for="(search, index) in savedSearches"
+          :key="search.id"
+          class="search-item"
+        >
+          <div class="search-content">
+            <div class="search-title">
+              <KRouterLink
+                :to="searchResultsRoute(search)"
+                @click="dialog = false"
+                class="saved-search-link notranslate"
+              >
+                {{ search.name }}
+              </KRouterLink>
+            </div>
+            <div class="metadata">
+              <span>
+                {{ $formatRelative(search.created, { now: new Date() }) }}
+              </span>
+              <span>
+                {{ $tr('filterCount', { count: searchFilterCount(search) }) }}
+              </span>
+            </div>
+          </div>
 
-            <VListTileAction>
-              <IconButton
-                icon="clear"
-                color="grey"
-                :text="$tr('deleteAction')"
-                @click="handleClickDelete(search.id)"
-              />
-            </VListTileAction>
-          </VListTile>
-          <VDivider
-            v-if="index < savedSearches.length - 1"
-            :key="index + 'divider'"
-          />
-        </template>
-      </VList>
+          <div class="search-actions">
+            <IconButton
+              icon="clear"
+              color="grey"
+              :text="$tr('deleteAction')"
+              @click="handleClickDelete(search.id)"
+            />
+          </div>
+        </li>
+      </ul>
     </KModal>
 
-    <MessageDialog
-      v-model="showDelete"
-      :header="$tr('deleteSearchTitle')"
-      :text="$tr('deleteConfirmation')"
+    <KModal
+      v-if="showDelete"
+      :title="$tr('deleteSearchTitle')"
+      :cancelText="$tr('cancelAction')"
+      :submitText="$tr('deleteAction')"
+      @cancel="handleCancel"
+      @submit="handleDeleteConfirm"
     >
-      <template #buttons>
-        <VBtn
-          flat
-          @click="handleCancel"
-        >
-          {{ $tr('cancelAction') }}
-        </VBtn>
-        <VBtn
-          color="primary"
-          @click="handleDeleteConfirm"
-        >
-          {{ $tr('deleteAction') }}
-        </VBtn>
-      </template>
-    </MessageDialog>
+      <p>{{ $tr('deleteConfirmation') }}</p>
+    </KModal>
   </div>
 
 </template>
@@ -87,14 +73,12 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import MessageDialog from 'shared/views/MessageDialog';
   import IconButton from 'shared/views/IconButton';
 
   export default {
     name: 'SavedSearchesModal',
     inject: ['RouteNames'],
     components: {
-      MessageDialog,
       IconButton,
     },
     props: {
@@ -189,14 +173,56 @@
 
 <style scoped lang="scss">
 
+  .empty-state {
+    padding: 8px;
+    color: var(--v-grey-base);
+  }
+
+  .saved-searches-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .search-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  .search-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .search-title {
+    margin-bottom: 4px;
+  }
+
+  .saved-search-link {
+    font-weight: 600;
+  }
+
   .metadata {
-    color: var(--v-grey-darken2);
+    color: var(--v-grey-base);
+    font-size: 14px;
 
     span:not(:last-child)::after {
       margin: 0 4px;
-      color: var(--v-grey-base);
+      color: grey;
       content: '•';
     }
+  }
+
+  .search-actions {
+    margin-left: 16px;
+    flex-shrink: 0;
   }
 
 </style>
