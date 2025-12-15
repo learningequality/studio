@@ -1,27 +1,23 @@
 <template>
 
   <div class="catalog-filters-wrapper">
-    <!-- Mobile: Filter button that opens SidePanelModal -->
     <KButton
       v-if="windowIsSmall"
-      class="filter-button-mobile"
+      class="filter-button"
       :text="$tr('filterText')"
       appearance="raised-button"
       icon="filter"
       @click="openSidePanel"
     />
-
-    <!-- Desktop/Tablet: Permanent side panel -->
     <aside
       v-if="!windowIsSmall"
-      class="filter-panel-desktop"
+      class="filter-panel"
+      :style="asideStyles"
     >
       <CatalogFilterPanelContent />
     </aside>
-
-    <!-- Mobile: SidePanelModal for filters (full width) -->
     <SidePanelModal
-      v-if="windowIsSmall && showMobilePanel"
+      v-if="windowIsSmall && showSidePanel"
       alignment="left"
       fullscreen
       @closePanel="closeSidePanel"
@@ -54,15 +50,23 @@
     },
     data() {
       return {
-        showMobilePanel: false,
+        showSidePanel: false,
       };
+    },
+    computed: {
+      asideStyles() {
+        return {
+          backgroundColor: this.$themeTokens.surface,
+          border: this.$themeTokens.fineLine,
+        };
+      },
     },
     methods: {
       openSidePanel() {
-        this.showMobilePanel = true;
+        this.showSidePanel = true;
       },
       closeSidePanel() {
-        this.showMobilePanel = false;
+        this.showSidePanel = false;
       },
     },
     $trs: {
@@ -80,11 +84,11 @@
     height: 100%;
   }
 
-  .filter-button-mobile {
+  .filter-button {
     margin: 16px;
   }
 
-  .filter-panel-desktop {
+  .filter-panel {
     width: 100%;
     height: 100%;
   }
