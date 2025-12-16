@@ -57,10 +57,12 @@
           @click="showNotificationsModal"
         >
           <VListTileAction>
-            <KIconButton
-              :disabled="true"
-              icon="cloud"
-            />
+            <WithNotificationIndicator>
+              <KIconButton
+                :disabled="true"
+                icon="cloud"
+              />
+            </WithNotificationIndicator>
           </VListTileAction>
           <VListTileContent class="subheading">
             <VListTileTitle>{{ notificationsLabel$() }}</VListTileTitle>
@@ -158,6 +160,7 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
+  import WithNotificationIndicator from './WithNotificationIndicator.vue';
   import LanguageSwitcherModal from 'shared/languageSwitcher/LanguageSwitcherModal';
   import { Modals } from 'shared/constants';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
@@ -168,6 +171,7 @@
     components: {
       LanguageSwitcherModal,
       NotificationsModal,
+      WithNotificationIndicator,
     },
     setup() {
       const { notificationsLabel$ } = communityChannelsStrings;

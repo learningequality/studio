@@ -40,11 +40,13 @@
                 style="text-transform: none"
                 v-on="on"
               >
-                <KIconButton
-                  :disabled="true"
-                  icon="person"
-                  color="black"
-                />
+                <WithNotificationIndicator>
+                  <KIconButton
+                    :disabled="true"
+                    icon="person"
+                    color="black"
+                  />
+                </WithNotificationIndicator>
                 <span class="mx-2 subheading">{{ user.first_name }}</span>
                 <KIconButton
                   :disabled="true"
@@ -68,10 +70,12 @@
               </VListTile>
               <VListTile @click="showNotificationsModal">
                 <VListTileAction>
-                  <KIconButton
-                    :disabled="true"
-                    icon="cloud"
-                  />
+                  <WithNotificationIndicator>
+                    <KIconButton
+                      :disabled="true"
+                      icon="cloud"
+                    />
+                  </WithNotificationIndicator>
                 </VListTileAction>
                 <VListTileTitle v-text="notificationsLabel$()" />
               </VListTile>
@@ -172,6 +176,7 @@
 <script>
 
   import { mapActions, mapState, mapGetters } from 'vuex';
+  import WithNotificationIndicator from './WithNotificationIndicator.vue';
   import Tabs from 'shared/views/Tabs';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import LanguageSwitcherModal from 'shared/languageSwitcher/LanguageSwitcherModal';
@@ -184,6 +189,7 @@
       LanguageSwitcherModal,
       MainNavigationDrawer,
       Tabs,
+      WithNotificationIndicator,
     },
     setup() {
       const { notificationsLabel$ } = communityChannelsStrings;
