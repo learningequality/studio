@@ -42,7 +42,7 @@ describe('useFilter', () => {
     };
     wrapper.vm.$router.push({ query: { testFilter: 'b', otherParam: 'value' } });
 
-    wrapper.vm.filter = 'a';
+    wrapper.vm.filter = { key: 'a', value: 'a', label: 'A' };
     expect(wrapper.vm.$route.query).toEqual({ testFilter: 'a', otherParam: 'value' });
   });
 
@@ -53,7 +53,7 @@ describe('useFilter', () => {
         b: { label: 'B', params: { b: '3', c: '4' } },
       };
       wrapper.vm.$router.push({ query: { testFilter: 'a', otherParam: 'value' } });
-      expect(wrapper.vm.filter).toBe('a');
+      expect(wrapper.vm.filter.value).toBe('a');
     });
 
     it('when filter params are not provided', () => {
@@ -62,7 +62,7 @@ describe('useFilter', () => {
         b: { label: 'B', params: { b: '3', c: '4' } },
       };
       wrapper.vm.$router.push({ query: { otherParam: 'value' } });
-      expect(wrapper.vm.filter).toBe(undefined);
+      expect(wrapper.vm.filter.value).toBe(undefined);
     });
   });
 
@@ -71,7 +71,7 @@ describe('useFilter', () => {
       a: { label: 'A', params: { a: '1', b: '2' } },
       b: { label: 'B', params: { b: '3', c: '4' } },
     };
-    wrapper.vm.filter = 'a';
+    wrapper.vm.filter = { key: 'a', value: 'a', label: 'A' };
     expect(wrapper.vm.fetchQueryParams).toEqual({ a: '1', b: '2' });
   });
 
@@ -81,8 +81,8 @@ describe('useFilter', () => {
       b: { label: 'B', params: { b: '3', c: '4' } },
     };
     expect(wrapper.vm.options).toEqual([
-      { key: 'a', label: 'A' },
-      { key: 'b', label: 'B' },
+      { key: 'a', value: 'a', label: 'A' },
+      { key: 'b', value: 'b', label: 'B' },
     ]);
   });
 });
