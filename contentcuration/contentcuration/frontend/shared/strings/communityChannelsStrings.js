@@ -293,4 +293,46 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: '{currentPage} of {totalPages}',
     context: 'Page indicator showing current page and total pages (e.g., "1 of 5")',
   },
+
+  // Notifications modal strings
+  notificationsLabel: {
+    message: 'Notifications',
+    context: 'Label for the notifications modal',
+  },
+  unreadNotificationsLabel: {
+    message: 'Unread',
+    context: 'Label for the unread notifications tab in the notifications modal',
+  },
+  allNotificationsLabel: {
+    message: 'All Notifications',
+    context: 'Label for the all notifications tab in the notifications modal',
+  },
+  searchNotificationsLabel: {
+    message: 'Search notifications',
+    context: 'Placeholder text for the search notifications input field',
+  },
+  filterByDateLabel: {
+    message: 'Filter by date',
+    context: 'Label for the filter by date dropdown in the notifications modal',
+  },
+  todayLabel: {
+    message: 'Today',
+    context: 'Option label for filtering notifications from today',
+  },
+  thisWeekLabel: {
+    message: 'This week',
+    context: 'Option label for filtering notifications from this week',
+  },
+  thisMonthLabel: {
+    message: 'This month',
+    context: 'Option label for filtering notifications from this month',
+  },
+  thisYearLabel: {
+    message: 'This year',
+    context: 'Option label for filtering notifications from this year',
+  },
+  filterByStatusLabel: {
+    message: 'Filter by status',
+    context: 'Label for the filter by status dropdown in the notifications modal',
+  },
 });

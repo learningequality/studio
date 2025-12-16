@@ -155,6 +155,8 @@
       :style="{ color: $themeTokens.text }"
       @cancel="showLanguageModal = false"
     />
+
+    <NotificationsModal />
   </div>
 
 </template>
@@ -166,6 +168,7 @@
   import Tabs from 'shared/views/Tabs';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import LanguageSwitcherModal from 'shared/languageSwitcher/LanguageSwitcherModal';
+  import NotificationsModal from 'shared/views/NotificationsModal';
 
   export default {
     name: 'AppBar',
@@ -173,6 +176,7 @@
       LanguageSwitcherModal,
       MainNavigationDrawer,
       Tabs,
+      NotificationsModal,
     },
     props: {
       title: {
