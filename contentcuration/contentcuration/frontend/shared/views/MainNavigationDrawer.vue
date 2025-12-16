@@ -53,6 +53,20 @@
           </VListTileContent>
         </VListTile>
         <VListTile
+          :tabindex="handleclickTab"
+          @click="showNotificationsModal"
+        >
+          <VListTileAction>
+            <KIconButton
+              :disabled="true"
+              icon="cloud"
+            />
+          </VListTileAction>
+          <VListTileContent class="subheading">
+            <VListTileTitle>{{ notificationsLabel$() }}</VListTileTitle>
+          </VListTileContent>
+        </VListTile>
+        <VListTile
           :href="settingsLink"
           :tabindex="handleclickTab"
           @click="trackClick('Settings')"
@@ -134,6 +148,8 @@
       :style="{ color: $themeTokens.text }"
       @cancel="showLanguageModal = false"
     />
+
+    <NotificationsModal />
   </div>
 
 </template>
@@ -143,11 +159,21 @@
 
   import { mapActions, mapState } from 'vuex';
   import LanguageSwitcherModal from 'shared/languageSwitcher/LanguageSwitcherModal';
+  import { Modals } from 'shared/constants';
+  import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
+  import NotificationsModal from 'shared/views/NotificationsModal/index.vue';
 
   export default {
     name: 'MainNavigationDrawer',
     components: {
       LanguageSwitcherModal,
+      NotificationsModal,
+    },
+    setup() {
+      const { notificationsLabel$ } = communityChannelsStrings;
+      return {
+        notificationsLabel$,
+      };
     },
     props: {
       value: {
@@ -204,6 +230,15 @@
       openLanguageModal() {
         this.drawer = false;
         this.showLanguageModal = true;
+      },
+      showNotificationsModal() {
+        this.$router.push({
+          query: {
+            ...this.$route.query,
+            modal: Modals.NOTIFICATIONS,
+          },
+        });
+        this.trackClick('Notifications');
       },
     },
     $trs: {
