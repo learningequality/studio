@@ -1,9 +1,6 @@
 <template>
 
-  <FullscreenModal
-    :value="isModalOpen"
-    @input="isModalOpen = false"
-  >
+  <FullscreenModal :value="isModalOpen">
     <template #close>
       <div class="back-action">
         <KIconButton
@@ -20,6 +17,7 @@
     </template>
     <template #default>
       <div
+        v-if="isModalOpen"
         class="notifications-page-container"
         :style="containerStyles"
       >
@@ -27,7 +25,6 @@
         <ToolBar color="white">
           <Tabs
             v-model="selectedTab"
-            slider-color="primary"
             height="64px"
             :showArrows="false"
           >
@@ -75,6 +72,7 @@
 <script setup>
 
   import { computed, ref, watch } from 'vue';
+  import { useRoute, useRouter } from 'vue-router/composables';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
 
   import FullscreenModal from '../FullscreenModal.vue';
@@ -85,13 +83,47 @@
   import ToolBar from 'shared/views/ToolBar';
   import { commonStrings } from 'shared/strings/commonStrings';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
+  import { Modals } from 'shared/constants';
 
   const NotificationsTab = {
     UNREAD: 0,
     ALL: 1,
   };
 
-  const isModalOpen = ref(true);
+  const router = useRouter();
+  const route = useRoute();
+
+  const previousQuery = ref(null);
+  const isModalOpen = computed({
+    get() {
+      const modalParam = route.query.modal;
+      return modalParam === Modals.NOTIFICATIONS;
+    },
+    set(value) {
+      if (!value) {
+        router.push({
+          query: {
+            ...(previousQuery.value || {}),
+            modal: undefined,
+          },
+        });
+      }
+    },
+  });
+
+  watch(
+    isModalOpen,
+    (newVal, oldVal) => {
+      if (newVal && !oldVal) {
+        // Store previous query params to restore when closing modal
+        previousQuery.value = { ...route.query };
+      } else if (!newVal && oldVal) {
+        previousQuery.value = null;
+      }
+    },
+    { immediate: true },
+  );
+
   const selectedTab = ref(NotificationsTab.UNREAD);
   const queryParams = ref({});
 
@@ -135,8 +167,10 @@
     return Object.keys(queryParams.value).length > 0;
   });
 
-  watch(queryParams, () => {
-    fetchData();
+  watch(queryParams, newValue => {
+    if (newValue) {
+      fetchData();
+    }
   });
 
 </script>

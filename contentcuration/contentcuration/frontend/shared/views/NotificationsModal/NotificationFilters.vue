@@ -41,6 +41,7 @@
 <script setup>
 
   import { computed, watch } from 'vue';
+  import isEqual from 'lodash/isEqual';
   import { useFilter } from 'shared/composables/useFilter';
   import { useKeywordSearch } from 'shared/composables/useKeywordSearch';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
@@ -155,7 +156,7 @@
     keywordInput,
     setKeywords,
     fetchQueryParams: keywordSearchFetchQueryParams,
-  } = useKeywordSearch();
+  } = useKeywordSearch({ name: 'notification_keywords' });
 
   const notificationsQueryParams = computed(() => {
     return {
@@ -167,7 +168,10 @@
 
   watch(
     notificationsQueryParams,
-    newParams => {
+    (newParams, oldParams) => {
+      if (isEqual(newParams, oldParams)) {
+        return;
+      }
       // Emit an event with the updated query params
       emit('update:queryParams', newParams);
     },
