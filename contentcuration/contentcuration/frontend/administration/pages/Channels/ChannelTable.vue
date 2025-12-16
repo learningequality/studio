@@ -224,26 +224,54 @@
       });
 
       const {
-        filter: channelTypeFilter,
+        filter: _channelTypeFilter,
         options: channelTypeOptions,
         fetchQueryParams: channelTypeFetchQueryParams,
       } = useFilter({
         name: 'channelType',
         filterMap: channelTypeFilterMap,
       });
+      // Temporal wrapper, must be removed after migrating to KSelect
+      const channelTypeFilter = computed({
+        get: () => _channelTypeFilter.value.value || undefined,
+        set: value => {
+          _channelTypeFilter.value =
+            channelTypeOptions.value.find(option => option.value === value) || {};
+        },
+      });
 
       const {
-        filter: channelStatusFilter,
+        filter: _channelStatusFilter,
         options: channelStatusOptions,
         fetchQueryParams: channelStatusFetchQueryParams,
       } = useFilter({
         name: 'channelStatus',
         filterMap: statusFilterMap,
       });
+      // Temporal wrapper, must be removed after migrating to KSelect
+      const channelStatusFilter = computed({
+        get: () => _channelStatusFilter.value.value || undefined,
+        set: value => {
+          _channelStatusFilter.value =
+            channelStatusOptions.value.find(option => option.value === value) || {};
+        },
+      });
 
-      const { filter: languageFilter, fetchQueryParams: languageFetchQueryParams } = useFilter({
+      const {
+        filter: _languageFilter,
+        options: languageOptions,
+        fetchQueryParams: languageFetchQueryParams,
+      } = useFilter({
         name: 'language',
         filterMap: languageFilterMap,
+      });
+      // Temporal wrapper, must be removed after migrating to KSelect
+      const languageFilter = computed({
+        get: () => _languageFilter.value.value || undefined,
+        set: value => {
+          _languageFilter.value =
+            languageOptions.value.find(option => option.value === value) || {};
+        },
       });
 
       const {
