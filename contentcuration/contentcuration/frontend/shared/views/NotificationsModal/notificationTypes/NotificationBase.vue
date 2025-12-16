@@ -46,6 +46,10 @@
 <style scoped lang="scss">
 
   .notification-item {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px;
     border-bottom: 1px solid v-bind('$themeTokens.fineLine');
   }
 
@@ -53,15 +57,12 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 12px;
   }
 
   .notification-footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 12px;
-    margin-top: 16px;
   }
 
   .notification-content {

@@ -8,7 +8,16 @@
       {{ submissionCreationNotification$() }}
     </template>
     <template #footer>
-      <StatusChip :status="CommunityLibraryStatus.PENDING" />
+      <div class="chips">
+        <CommunityLibraryChip />
+        <StatusChip :status="CommunityLibraryStatus.PENDING" />
+      </div>
+    </template>
+    <template #action>
+      <KButton
+        :text="viewMoreAction$()"
+        appearance="basic-link"
+      />
     </template>
   </NotificationBase>
 
@@ -21,6 +30,7 @@
   import NotificationBase from './NotificationBase.vue';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
   import StatusChip from 'shared/views/communityLibrary/CommunityLibraryStatusChip.vue';
+  import CommunityLibraryChip from 'shared/views/communityLibrary/CommunityLibraryChip.vue';
   import { CommunityLibraryStatus } from 'shared/constants';
 
   const props = defineProps({
@@ -30,7 +40,8 @@
     },
   });
 
-  const { channelVersion$, submissionCreationNotification$ } = communityChannelsStrings;
+  const { channelVersion$, submissionCreationNotification$, viewMoreAction$ } =
+    communityChannelsStrings;
 
   const title = computed(() =>
     channelVersion$({
@@ -40,3 +51,13 @@
   );
 
 </script>
+
+
+<style scoped>
+
+  .chips {
+    display: flex;
+    gap: 8px;
+  }
+
+</style>

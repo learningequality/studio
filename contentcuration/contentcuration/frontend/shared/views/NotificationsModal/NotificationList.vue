@@ -1,22 +1,48 @@
 <template>
 
-  <div>
-    <div class="notifications-list-header">
-      <strong> {{ newLabel$() }} </strong>
-      <KButton
-        primary
-        :text="clearAllAction$()"
-        appearance="flat-button"
-      />
+  <div class="notifications-list-wrapper">
+    <KCircularLoader v-if="isLoading" />
+    <div
+      v-else-if="notifications.length === 0"
+      class="empty-notifications-message"
+    >
+      {{ hasFiltersApplied ? emptyNotificationsWithFiltersNotice$() : emptyNotificationsNotice$() }}
     </div>
-    <ul v-if="!isLoading">
-      <component
-        :is="NotificationTypeToComponent[notification.type]"
-        v-for="(notification, index) in notifications"
-        :key="index"
-        :notification="notification"
-      />
-    </ul>
+    <div v-else>
+      <div class="notifications-list-header">
+        <strong> {{ newLabel$() }} </strong>
+        <KButton
+          v-if="!hasFiltersApplied"
+          primary
+          :text="clearAllAction$()"
+          :appearanceOverrides="{
+            textTransform: 'none',
+          }"
+          appearance="flat-button"
+        />
+      </div>
+      <div>
+        <ul>
+          <component
+            :is="NotificationTypeToComponent[notification.type]"
+            v-for="(notification, index) in notifications"
+            :key="index"
+            :notification="notification"
+          />
+        </ul>
+        <div
+          v-if="hasMore"
+          class="load-more"
+        >
+          <KButton
+            :text="showOlderAction$()"
+            appearance="basic-link"
+            :disabled="isLoadingMore"
+            @click="$emit('fetchMore')"
+          />
+        </div>
+      </div>
+    </div>
   </div>
 
 </template>
@@ -39,6 +65,18 @@
       type: Boolean,
       default: false,
     },
+    isLoadingMore: {
+      type: Boolean,
+      default: false,
+    },
+    hasMore: {
+      type: Boolean,
+      default: false,
+    },
+    hasFiltersApplied: {
+      type: Boolean,
+      default: false,
+    },
   });
 
   const NotificationTypeToComponent = {
@@ -46,12 +84,28 @@
     [NotificationType.COMMUNITY_LIBRARY_SUBMISSION_REJECTED]: CommunityLibrarySubmissionRejection,
     [NotificationType.COMMUNITY_LIBRARY_SUBMISSION_CREATED]: CommunityLibrarySubmissionCreation,
   };
-  const { newLabel$, clearAllAction$ } = communityChannelsStrings;
+  const {
+    newLabel$,
+    clearAllAction$,
+    showOlderAction$,
+    emptyNotificationsNotice$,
+    emptyNotificationsWithFiltersNotice$,
+  } = communityChannelsStrings;
 
 </script>
 
 
 <style scoped lang="scss">
+
+  .notifications-list-wrapper {
+    margin-top: 8px;
+
+    ul {
+      padding: 0;
+      margin: 0;
+      list-style-type: none;
+    }
+  }
 
   .notifications-list-header {
     display: flex;
@@ -59,6 +113,12 @@
     justify-content: space-between;
     padding: 0 8px;
     border-bottom: 1px solid v-bind('$themeTokens.fineLine');
+  }
+
+  .load-more {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
   }
 
 </style>

@@ -33,12 +33,14 @@
           >
             <VTab
               class="px-3"
+              :disabled="isLoading || isLoadingMore"
               @click="selectedTab = NotificationsTab.UNREAD"
             >
               {{ unreadNotificationsLabel$() }}
             </VTab>
             <VTab
               class="px-3"
+              :disabled="isLoading || isLoadingMore"
               @click="selectedTab = NotificationsTab.ALL"
             >
               {{ allNotificationsLabel$() }}
@@ -58,6 +60,7 @@
             :notifications="notifications"
             :isLoading="isLoading"
             :isLoadingMore="isLoadingMore"
+            :hasFiltersApplied="hasFiltersApplied"
             @fetchData="fetchData"
             @fetchMore="fetchMore"
           />
@@ -127,6 +130,10 @@
     fetchData,
     fetchMore,
   } = useCommunityLibraryUpdates({ queryParams });
+
+  const hasFiltersApplied = computed(() => {
+    return Object.keys(queryParams.value).length > 0;
+  });
 
   watch(queryParams, () => {
     fetchData();
