@@ -56,7 +56,7 @@
       asideStyles() {
         return {
           backgroundColor: this.$themeTokens.surface,
-          border: `2px solid ${this.$themeTokens.fineLine}`,
+          borderRight: `2px solid ${this.$themeTokens.fineLine}`,
         };
       },
     },
