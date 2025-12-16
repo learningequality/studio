@@ -1,4 +1,4 @@
-import { useFetch } from '../../../../composables/useFetch';
+import { useFetch } from 'shared/composables/useFetch';
 import { CommunityLibrarySubmission } from 'shared/data/resources';
 
 export function useLatestCommunityLibrarySubmission(channelId) {
