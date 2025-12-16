@@ -100,7 +100,10 @@ export function useTable({ fetchFunc, filterFetchQueryParams }) {
 
   watch(
     allFetchQueryParams,
-    () => {
+    (newValue, oldValue) => {
+      if (isEqual(newValue, oldValue)) {
+        return;
+      }
       // Use nextTick to ensure that pagination can be updated before fetching
       nextTick().then(() => {
         loadItems();
