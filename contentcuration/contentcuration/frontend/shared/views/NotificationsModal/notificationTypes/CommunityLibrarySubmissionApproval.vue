@@ -8,10 +8,22 @@
       v-if="notification.feedback_notes"
       #default
     >
-      {{ notification.feedback_notes }}
+      <KTextTruncator
+        :text="notification.feedback_notes"
+        :maxLines="1"
+      />
     </template>
     <template #footer>
-      <StatusChip :status="CommunityLibraryStatus.APPROVED" />
+      <div class="chips">
+        <CommunityLibraryChip />
+        <StatusChip :status="CommunityLibraryStatus.APPROVED" />
+      </div>
+    </template>
+    <template #action>
+      <KButton
+        :text="viewMoreAction$()"
+        appearance="basic-link"
+      />
     </template>
   </NotificationBase>
 
@@ -24,6 +36,7 @@
   import NotificationBase from './NotificationBase.vue';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
   import StatusChip from 'shared/views/communityLibrary/CommunityLibraryStatusChip.vue';
+  import CommunityLibraryChip from 'shared/views/communityLibrary/CommunityLibraryChip.vue';
   import { CommunityLibraryStatus } from 'shared/constants';
 
   const props = defineProps({
@@ -33,7 +46,7 @@
     },
   });
 
-  const { channelVersion$ } = communityChannelsStrings;
+  const { channelVersion$, viewMoreAction$ } = communityChannelsStrings;
 
   const title = computed(() =>
     channelVersion$({
@@ -43,3 +56,13 @@
   );
 
 </script>
+
+
+<style scoped>
+
+  .chips {
+    display: flex;
+    gap: 8px;
+  }
+
+</style>
