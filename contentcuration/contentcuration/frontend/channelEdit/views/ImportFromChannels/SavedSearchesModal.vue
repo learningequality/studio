@@ -17,7 +17,10 @@
       >
         {{ $tr('noSavedSearches') }}
       </p>
-      <ul v-else class="saved-searches-list">
+      <ul
+        v-else
+        class="saved-searches-list"
+      >
         <li
           v-for="(search, index) in savedSearches"
           :key="search.id"
@@ -27,8 +30,8 @@
             <div class="search-title">
               <KRouterLink
                 :to="searchResultsRoute(search)"
+                class="notranslate saved-search-link"
                 @click="dialog = false"
-                class="saved-search-link notranslate"
               >
                 {{ search.name }}
               </KRouterLink>
@@ -179,8 +182,8 @@
   }
 
   .saved-searches-list {
-    margin: 0;
     padding: 0;
+    margin: 0;
     list-style: none;
   }
 
@@ -210,8 +213,8 @@
   }
 
   .metadata {
-    color: var(--v-grey-darken2);
     font-size: 14px;
+    color: var(--v-grey-darken2);
 
     span:not(:last-child)::after {
       margin: 0 4px;
@@ -221,8 +224,8 @@
   }
 
   .search-actions {
-    margin-left: 16px;
     flex-shrink: 0;
+    margin-left: 16px;
   }
 
 </style>
