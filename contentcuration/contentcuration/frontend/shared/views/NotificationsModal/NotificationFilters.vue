@@ -4,6 +4,7 @@
     <KTextbox
       v-model="keywordInput"
       clearable
+      :disabled="disabled"
       class="notifications-keyword-search"
       :label="searchNotificationsLabel$()"
       :clearLabel="commonStrings.clearAction$()"
@@ -21,12 +22,14 @@
     <KSelect
       v-model="dateFilter"
       clearable
+      :disabled="disabled"
       :label="filterByDateLabel$()"
       :options="dateOptions"
     />
     <KSelect
       v-model="communityLibraryStatusFilter"
       clearable
+      :disabled="disabled"
       :label="filterByStatusLabel$()"
       :options="communityLibraryStatusOptions"
     />
@@ -44,6 +47,12 @@
   import { commonStrings } from 'shared/strings/commonStrings';
   import { CommunityLibraryStatus } from 'shared/constants';
 
+  defineProps({
+    disabled: {
+      type: Boolean,
+      default: false,
+    },
+  });
   const emit = defineEmits(['update:queryParams']);
 
   const {
@@ -107,11 +116,16 @@
   const CommunityLibraryStatusFilterMap = {
     pending: {
       label: pendingStatus$(),
-      params: { status__in: CommunityLibraryStatus.PENDING },
+      params: {
+        // Not taking into account SUPERSEDED, because those are not pending of any action
+        status__in: CommunityLibraryStatus.PENDING,
+      },
     },
     approved: {
       label: approvedStatus$(),
-      params: { status__in: CommunityLibraryStatus.APPROVED },
+      params: {
+        status__in: [CommunityLibraryStatus.APPROVED, CommunityLibraryStatus.LIVE].join(','),
+      },
     },
     flagged: {
       label: flaggedStatus$(),

@@ -335,4 +335,25 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Filter by status',
     context: 'Label for the filter by status dropdown in the notifications modal',
   },
+  newLabel: {
+    message: 'New',
+    context: 'Label indicating the section for new notifications',
+  },
+  clearAllAction: {
+    message: 'Clear all',
+    context: 'Action button to clear all notifications',
+  },
+  viewMoreAction: {
+    message: 'View more',
+    context: 'Action button to view more about a given element',
+  },
+  submissionCreationNotification: {
+    message: 'Your submission to the Community Library was successful and is now under review.',
+    context:
+      'Notification message shown to the user when their submission to the Community Library is successful',
+  },
+  flaggedNotification: {
+    message: '{ author } flagged { channelversion }',
+    context: 'Notification message shown when a user flags a channel version for review',
+  },
 });
