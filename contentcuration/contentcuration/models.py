@@ -41,6 +41,7 @@ from django.db.models import UUIDField as DjangoUUIDField
 from django.db.models import Value
 from django.db.models.expressions import ExpressionList
 from django.db.models.expressions import RawSQL
+from django.db.models.functions import Greatest
 from django.db.models.functions import Lower
 from django.db.models.indexes import IndexExpression
 from django.db.models.query_utils import DeferredAttribute
@@ -86,6 +87,8 @@ from contentcuration.viewsets.sync.constants import ALL_CHANGES
 from contentcuration.viewsets.sync.constants import ALL_TABLES
 from contentcuration.viewsets.sync.constants import PUBLISHABLE_CHANGE_TABLES
 from contentcuration.viewsets.sync.constants import PUBLISHED
+from contentcuration.viewsets.sync.constants import SESSION
+from contentcuration.viewsets.sync.utils import generate_update_event
 
 EDIT_ACCESS = "edit"
 VIEW_ACCESS = "view"
@@ -233,6 +236,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     feature_flags = JSONField(default=dict, null=True)
 
     deleted = models.BooleanField(default=False, db_index=True)
+
+    newest_notification_date = models.DateTimeField(null=True, blank=True)
+    last_read_notification_date = models.DateTimeField(null=True, blank=True)
 
     _field_updates = FieldTracker(
         fields=[
@@ -607,6 +613,13 @@ class User(AbstractBaseUser, PermissionsMixin):
             .first()
         ) or 0
 
+    def mark_notifications_read(self, timestamp):
+        # Greatest between last read and timestamp
+        self.last_read_notification_date = Greatest(
+            F("last_read_notification_date"), Value(timestamp)
+        )
+        self.save(update_fields=["last_read_notification_date"])
+
     class Meta:
         verbose_name = "User"
         verbose_name_plural = "Users"
@@ -676,6 +689,27 @@ class User(AbstractBaseUser, PermissionsMixin):
         if deleted is not None:
             user_qs = user_qs.filter(deleted=deleted)
         return user_qs.filter(**filters).order_by("-is_active", "-id").first()
+
+    @classmethod
+    def notify_users(cls, users_queryset, date):
+        users_queryset.update(
+            newest_notification_date=Greatest(
+                F("newest_notification_date"), Value(date)
+            )
+        )
+
+        Change.create_changes(
+            [
+                generate_update_event(
+                    "CURRENT_USER",
+                    SESSION,
+                    {"newest_notification_date": user.newest_notification_date},
+                    user_id=user.pk,
+                )
+                for user in users_queryset
+            ],
+            applied=True,
+        )
 
 
 class UUIDField(models.CharField):
@@ -2884,12 +2918,16 @@ class CommunityLibrarySubmission(models.Model):
                 code="public_channel_submission",
             )
 
-        if self.pk is None:
+        is_adding = self._state.adding
+        if is_adding:
             # Create a ChannelVersion and token for this submission
             channel_version, _ = ChannelVersion.objects.get_or_create(
                 channel=self.channel, version=self.channel_version
             )
             channel_version.new_token()
+
+            # Notify channel editors of new submission
+            self.notify_update_to_channel_editors()
 
         super().save(*args, **kwargs)
 
@@ -2907,6 +2945,13 @@ class CommunityLibrarySubmission(models.Model):
 
         self.status = community_library_submission.STATUS_LIVE
         self.save()
+
+    def notify_update_to_channel_editors(self):
+        """
+        Notify channel editors that a submission has been updated.
+        """
+        editors = self.channel.editors.all()
+        User.notify_users(editors, date=self.date_updated)
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):
