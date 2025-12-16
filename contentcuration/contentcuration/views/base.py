@@ -76,6 +76,8 @@ user_fields = (
     "clipboard_tree_id",
     "policies",
     "feature_flags",
+    "newest_notification_date",
+    "last_read_notification_date",
 )
 
 
@@ -83,7 +85,13 @@ def current_user_for_context(user):
     if not user or user.is_anonymous:
         return json_for_parse_from_data(None)
 
-    user_data = {field: getattr(user, field) for field in user_fields}
+    user_data = {}
+    for field in user_fields:
+        value = getattr(user, field)
+        # Convert datetime objects to ISO format strings for JSON serialization
+        if hasattr(value, "isoformat"):
+            value = value.isoformat() if value else None
+        user_data[field] = value
 
     user_data["user_rev"] = user.get_server_rev()
 
