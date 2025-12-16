@@ -171,11 +171,7 @@ dcbuild:
 	$(DOCKER_COMPOSE) build
 
 dcup: .docker/minio .docker/postgres
-	# run all services except for cloudprober
-	$(DOCKER_COMPOSE) up studio-app celery-worker
-
-dcup-cloudprober: .docker/minio .docker/postgres
-	# run all services including cloudprober
+	# run all services
 	$(DOCKER_COMPOSE) up
 
 dcdown:
