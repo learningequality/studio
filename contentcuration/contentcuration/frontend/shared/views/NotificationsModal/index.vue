@@ -49,7 +49,18 @@
           class="notifications-page-content"
           :style="contentWrapperStyles"
         >
-          <NotificationFilters />
+          <NotificationFilters
+            :disabled="isLoading || isLoadingMore"
+            @update:queryParams="queryParams = $event"
+          />
+          <NotificationList
+            :hasMore="hasMore"
+            :notifications="notifications"
+            :isLoading="isLoading"
+            :isLoadingMore="isLoadingMore"
+            @fetchData="fetchData"
+            @fetchMore="fetchMore"
+          />
         </div>
       </div>
     </template>
@@ -60,11 +71,13 @@
 
 <script setup>
 
-  import { computed, ref } from 'vue';
+  import { computed, ref, watch } from 'vue';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
 
   import FullscreenModal from '../FullscreenModal.vue';
   import NotificationFilters from './NotificationFilters.vue';
+  import NotificationList from './NotificationList.vue';
+  import useCommunityLibraryUpdates from './composables/useCommunityLibraryUpdates';
   import Tabs from 'shared/views/Tabs';
   import ToolBar from 'shared/views/ToolBar';
   import { commonStrings } from 'shared/strings/commonStrings';
@@ -77,6 +90,8 @@
 
   const isModalOpen = ref(true);
   const selectedTab = ref(NotificationsTab.UNREAD);
+  const queryParams = ref({});
+
   const { notificationsLabel$, unreadNotificationsLabel$, allNotificationsLabel$ } =
     communityChannelsStrings;
 
@@ -102,6 +117,19 @@
     return {
       padding: '0 48px',
     };
+  });
+
+  const {
+    hasMore,
+    submissionsUpdates: notifications,
+    isLoading,
+    isLoadingMore,
+    fetchData,
+    fetchMore,
+  } = useCommunityLibraryUpdates({ queryParams });
+
+  watch(queryParams, () => {
+    fetchData();
   });
 
 </script>
