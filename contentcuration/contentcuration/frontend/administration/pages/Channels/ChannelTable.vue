@@ -16,7 +16,7 @@
       >
         <VSelect
           v-model="channelTypeFilter"
-          :items="channelTypeFilters"
+          :items="channelTypeOptions"
           item-text="label"
           item-value="key"
           label="Channel Type"
@@ -34,7 +34,7 @@
       >
         <VSelect
           v-model="channelStatusFilter"
-          :items="channelStatusFilters"
+          :items="channelStatusOptions"
           item-text="label"
           item-value="key"
           label="Channel Status"
@@ -146,9 +146,9 @@
   import transform from 'lodash/transform';
   import { RouteNames, rowsPerPageItems } from '../../constants';
   import { useTable } from '../../composables/useTable';
-  import { useKeywordSearch } from '../../composables/useKeywordSearch';
-  import { useFilter } from '../../composables/useFilter';
   import ChannelItem from './ChannelItem';
+  import { useKeywordSearch } from 'shared/composables/useKeywordSearch';
+  import { useFilter } from 'shared/composables/useFilter';
   import { channelExportMixin } from 'shared/views/channel/mixins';
   import { routerMixin } from 'shared/mixins';
   import Checkbox from 'shared/views/form/Checkbox';
@@ -225,7 +225,7 @@
 
       const {
         filter: channelTypeFilter,
-        filters: channelTypeFilters,
+        options: channelTypeOptions,
         fetchQueryParams: channelTypeFetchQueryParams,
       } = useFilter({
         name: 'channelType',
@@ -234,7 +234,7 @@
 
       const {
         filter: channelStatusFilter,
-        filters: channelStatusFilters,
+        options: channelStatusOptions,
         fetchQueryParams: channelStatusFetchQueryParams,
       } = useFilter({
         name: 'channelStatus',
@@ -254,8 +254,8 @@
       } = useKeywordSearch();
 
       watch(channelTypeFilter, () => {
-        const filters = channelStatusFilters.value;
-        channelStatusFilter.value = filters.length ? filters[0].key : null;
+        const options = channelStatusOptions.value;
+        channelStatusFilter.value = options.length ? options[0].key : null;
       });
 
       const filterFetchQueryParams = computed(() => {
@@ -278,9 +278,9 @@
 
       return {
         channelTypeFilter,
-        channelTypeFilters,
+        channelTypeOptions,
         channelStatusFilter,
-        channelStatusFilters,
+        channelStatusOptions,
         languageFilter,
         languageDropdown,
         keywordInput,
