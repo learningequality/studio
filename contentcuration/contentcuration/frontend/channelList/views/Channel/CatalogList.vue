@@ -21,11 +21,11 @@
           <OfflineText />
         </ToolBar>
       </VSlideYTransition>
+      <CatalogFilterBar />
       <VContainer
         fluid
         :style="`margin-top: ${offline ? 48 : 0}`"
       >
-        <CatalogFilterBar />
         <LoadingText v-if="loading" />
         <VLayout
           v-else
