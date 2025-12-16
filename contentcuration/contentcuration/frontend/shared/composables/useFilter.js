@@ -7,7 +7,7 @@ import { useQueryParams } from './useQueryParams';
  * @property {import('vue').ComputedRef<string|undefined>} filter Reactive settable filter value.
  * @property {import('vue').ComputedRef<
  *   Array<{key: string, label: string}>
- * >} filters List of available filters.
+ * >} options List of available options.
  * @property {import('vue').ComputedRef<Object>} fetchQueryParams
  * Reactive fetch query parameters based on the selected filter.
  */
@@ -48,9 +48,9 @@ export function useFilter({ name, filterMap }) {
     },
   });
 
-  const filters = computed(() => {
+  const options = computed(() => {
     return Object.entries(unref(filterMap)).map(([key, value]) => {
-      return { key, label: value.label };
+      return { key, value: key, label: value.label };
     });
   });
 
@@ -60,7 +60,7 @@ export function useFilter({ name, filterMap }) {
 
   return {
     filter,
-    filters,
+    options,
     fetchQueryParams,
   };
 }
