@@ -66,6 +66,15 @@
                 </VListTileAction>
                 <VListTileTitle v-text="$tr('administration')" />
               </VListTile>
+              <VListTile @click="showNotificationsModal">
+                <VListTileAction>
+                  <KIconButton
+                    :disabled="true"
+                    icon="cloud"
+                  />
+                </VListTileAction>
+                <VListTileTitle v-text="notificationsLabel$()" />
+              </VListTile>
               <VListTile :href="settingsLink">
                 <VListTileAction>
                   <KIconButton
@@ -155,8 +164,6 @@
       :style="{ color: $themeTokens.text }"
       @cancel="showLanguageModal = false"
     />
-
-    <NotificationsModal />
   </div>
 
 </template>
@@ -168,7 +175,8 @@
   import Tabs from 'shared/views/Tabs';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import LanguageSwitcherModal from 'shared/languageSwitcher/LanguageSwitcherModal';
-  import NotificationsModal from 'shared/views/NotificationsModal';
+  import { Modals } from 'shared/constants';
+  import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 
   export default {
     name: 'AppBar',
@@ -176,7 +184,12 @@
       LanguageSwitcherModal,
       MainNavigationDrawer,
       Tabs,
-      NotificationsModal,
+    },
+    setup() {
+      const { notificationsLabel$ } = communityChannelsStrings;
+      return {
+        notificationsLabel$,
+      };
     },
     props: {
       title: {
@@ -208,6 +221,14 @@
     },
     methods: {
       ...mapActions(['logout']),
+      showNotificationsModal() {
+        this.$router.push({
+          query: {
+            ...this.$route.query,
+            modal: Modals.NOTIFICATIONS,
+          },
+        });
+      },
     },
     $trs: {
       title: 'Kolibri Studio',
