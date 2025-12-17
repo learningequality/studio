@@ -54,7 +54,7 @@
       default: false,
     },
   });
-  const emit = defineEmits(['update:queryParams']);
+  const emit = defineEmits(['update:filters']);
 
   const {
     searchNotificationsLabel$,
@@ -158,7 +158,7 @@
     fetchQueryParams: keywordSearchFetchQueryParams,
   } = useKeywordSearch({ name: 'notification_keywords' });
 
-  const notificationsQueryParams = computed(() => {
+  const notificationsFilters = computed(() => {
     return {
       ...dateFetchQueryParams.value,
       ...communityLibraryStatusFetchQueryParams.value,
@@ -167,13 +167,13 @@
   });
 
   watch(
-    notificationsQueryParams,
-    (newParams, oldParams) => {
-      if (isEqual(newParams, oldParams)) {
+    notificationsFilters,
+    (newFilters, oldFilters) => {
+      if (isEqual(newFilters, oldFilters)) {
         return;
       }
       // Emit an event with the updated query params
-      emit('update:queryParams', newParams);
+      emit('update:filters', newFilters);
     },
     { immediate: true },
   );

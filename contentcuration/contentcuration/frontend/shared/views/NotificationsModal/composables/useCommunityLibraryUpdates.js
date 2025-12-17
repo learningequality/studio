@@ -89,6 +89,16 @@ export default function useCommunityLibraryUpdates({ queryParams } = {}) {
     return updates;
   };
 
+  const getNewerDate = (date1, date2) => {
+    if (!date1) {
+      return date2;
+    }
+    if (!date2) {
+      return date1;
+    }
+    return new Date(date1) > new Date(date2) ? date1 : date2;
+  };
+
   const fetchSubmissionsUpdates = async () => {
     let params;
     isLoadingMore.value = Boolean(moreObject.value);
@@ -98,7 +108,7 @@ export default function useCommunityLibraryUpdates({ queryParams } = {}) {
       const _params = unref(queryParams);
       params = pickBy({
         date_updated__lte: _params?.date_updated__lte,
-        date_updated__gte: _params?.date_updated__gte,
+        date_updated__gte: getNewerDate(_params?.date_updated__gte, _params?.lastRead),
         status__in: _params?.status__in,
         search: _params?.keywords,
         max_results: MAX_RESULTS_PER_PAGE,

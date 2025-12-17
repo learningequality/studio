@@ -345,6 +345,54 @@ describe('useCommunityLibraryUpdates', () => {
       });
     });
 
+    it('should take the newest date between date_updated__lte and lastRead - 1', async () => {
+      const GTE_DATE__OLDER = '2026-01-01T00:00:00Z';
+      const LAST_READ__NEWER = '2026-01-02T00:00:00Z';
+
+      const queryParams = ref({
+        date_updated__gte: GTE_DATE__OLDER,
+        lastRead: LAST_READ__NEWER,
+      });
+
+      mockFetchCollection.mockResolvedValue({
+        results: [],
+        more: null,
+      });
+
+      const { fetchData } = useCommunityLibraryUpdates({ queryParams });
+
+      await fetchData();
+
+      expect(mockFetchCollection).toHaveBeenCalledWith({
+        date_updated__gte: LAST_READ__NEWER,
+        max_results: 10,
+      });
+    });
+
+    it('should take the newest date between date_updated__lte and lastRead - 2', async () => {
+      const GTE_DATE__NEWER = '2026-01-02T00:00:00Z';
+      const LAST_READ__OLDER = '2026-01-01T00:00:00Z';
+
+      const queryParams = ref({
+        date_updated__gte: GTE_DATE__NEWER,
+        lastRead: LAST_READ__OLDER,
+      });
+
+      mockFetchCollection.mockResolvedValue({
+        results: [],
+        more: null,
+      });
+
+      const { fetchData } = useCommunityLibraryUpdates({ queryParams });
+
+      await fetchData();
+
+      expect(mockFetchCollection).toHaveBeenCalledWith({
+        date_updated__gte: GTE_DATE__NEWER,
+        max_results: 10,
+      });
+    });
+
     it('should omit undefined query parameters', async () => {
       const queryParams = ref({
         keywords: undefined,
