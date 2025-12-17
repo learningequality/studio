@@ -239,7 +239,7 @@
   const containerStyles = computed(() => {
     if (windowIsSmall.value) {
       return {
-        padding: '16px',
+        padding: '16px 8px',
       };
     }
     return {
