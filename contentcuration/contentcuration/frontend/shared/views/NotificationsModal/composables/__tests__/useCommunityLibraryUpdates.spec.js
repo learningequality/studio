@@ -4,6 +4,8 @@ import { CommunityLibraryStatus, NotificationType } from 'shared/constants';
 
 import { CommunityLibrarySubmission } from 'shared/data/resources';
 
+jest.mock('shared/composables/useSnackbar');
+
 jest.mock('shared/data/resources', () => ({
   CommunityLibrarySubmission: {
     fetchCollection: jest.fn(),
