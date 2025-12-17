@@ -3,6 +3,8 @@ import pickBy from 'lodash/pickBy';
 import { useFetch } from 'shared/composables/useFetch';
 import { CommunityLibrarySubmission } from 'shared/data/resources';
 import { CommunityLibraryStatus, NotificationType } from 'shared/constants';
+import { commonStrings } from 'shared/strings/commonStrings';
+import useSnackbar from 'shared/composables/useSnackbar';
 
 const MAX_RESULTS_PER_PAGE = 10;
 
@@ -14,10 +16,46 @@ const statusToNotificationType = {
   [CommunityLibraryStatus.LIVE]: NotificationType.COMMUNITY_LIBRARY_SUBMISSION_APPROVED,
 };
 
+/**
+ * A Vue composable that manages community library submission updates and notifications.
+ *
+ * This composable handles the logic of fetching and transforming community library
+ * submissions into notification updates. It deals with the fact that a single submission
+ * can generate up to two notifications (creation + status updates) and provides pagination
+ * support with "load more" functionality.
+ *
+ * @param {Object} options - Configuration options for the composable
+ * @param {|Object} options.queryParams - Reactive or static query parameters object
+ * @param {string} [options.queryParams.date_updated__lte] - Filter for submissions updated
+ *                                                           on or before this date (ISO string)
+ * @param {string} [options.queryParams.date_updated__gte] - Filter for submissions updated on or
+ *                                                           after this date (ISO string)
+ * @param {string} [options.queryParams.lastRead] - Timestamp of when notifications were last read,
+ *                                                  if lastRead is more recent than
+ *                                                  date_updated__gte, it will be used instead
+ * @param {string} [options.queryParams.status__in] - Comma-separated list of submission statuses to
+ *                                                    filter by (e.g., "PENDING,APPROVED")
+ * @param {string} [options.queryParams.keywords] - Search keywords to filter submissions
+ *                                                  by channel name
+ *
+ *
+ * @typedef {Object} UseCommunityLibraryUpdatesObject
+ * @property {import('vue').ComputedRef<Array>} returns.submissionsUpdates - Array of transformed
+ *                                             submission updates/notifications
+ * @property {import('vue').ComputedRef<boolean>} returns.isLoading - True when loading initial data
+ * @property {import('vue').ComputedRef<boolean>} returns.isLoadingMore True when loading more data
+ * @property {import('vue').ComputedRef<boolean>} returns.hasMore - True when more pages are
+ *                                               available to load
+ * @property {Function} returns.fetchData - Function to fetch fresh data (resets pagination)
+ * @property {Function} returns.fetchMore - Function to fetch the next page of data
+ *
+ *
+ * @returns {UseCommunityLibraryUpdatesObject} The composable return object
+ */
 export default function useCommunityLibraryUpdates({ queryParams } = {}) {
   const moreObject = ref(null);
   const isLoadingMore = ref(false);
-
+  const { createSnackbar } = useSnackbar();
   /**
    * Community Library Submissions are objects that may represent two types of updates:
    * 1. Creation of a new submission (status: PENDING or SUPERSEDED)
@@ -114,17 +152,25 @@ export default function useCommunityLibraryUpdates({ queryParams } = {}) {
         max_results: MAX_RESULTS_PER_PAGE,
       });
     }
-    const response = await CommunityLibrarySubmission.fetchCollection(params);
+    try {
+      const response = await CommunityLibrarySubmission.fetchCollection(params);
 
-    // Transforming submissions into updates before concatenation for
-    // performance reasons
-    response.results = getSubmissionsUpdates(response.results);
-    if (isLoadingMore.value) {
-      response.results = [...submissionsUpdates.value, ...response.results];
+      // Transforming submissions into updates before concatenation with existing updates
+      // for performance reasons
+      response.results = getSubmissionsUpdates(response.results);
+      if (isLoadingMore.value) {
+        response.results = [...submissionsUpdates.value, ...response.results];
+      }
+      moreObject.value = response.more;
+      isLoadingMore.value = false;
+      return response.results;
+    } catch (error) {
+      const returnedResults = isLoadingMore.value ? submissionsUpdates.value : [];
+      isLoadingMore.value = false;
+      createSnackbar(commonStrings.genericErrorMessage$());
+      // Do not manage any error state in the useFetch composable, just return the current results
+      return returnedResults;
     }
-    moreObject.value = response.more;
-    isLoadingMore.value = false;
-    return response.results;
   };
 
   const {
