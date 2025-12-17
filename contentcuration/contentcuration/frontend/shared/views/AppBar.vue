@@ -73,7 +73,7 @@
                   <WithNotificationIndicator>
                     <KIconButton
                       :disabled="true"
-                      icon="cloud"
+                      icon="bell"
                     />
                   </WithNotificationIndicator>
                 </VListTileAction>

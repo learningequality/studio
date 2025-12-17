@@ -31,7 +31,7 @@
 
   .notification-indicator {
     position: absolute;
-    top: 6px;
+    top: 8px;
     right: 9px;
     width: 11px;
     height: 11px;
