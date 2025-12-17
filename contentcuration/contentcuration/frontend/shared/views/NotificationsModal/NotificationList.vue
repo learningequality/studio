@@ -12,13 +12,14 @@
       <div class="notifications-list-header">
         <strong> {{ newLabel$() }} </strong>
         <KButton
-          v-if="!hasFiltersApplied"
+          v-if="showClearAll"
           primary
           :text="clearAllAction$()"
           :appearanceOverrides="{
             textTransform: 'none',
           }"
           appearance="flat-button"
+          @click="$emit('notificationsRead')"
         />
       </div>
       <div>
@@ -74,6 +75,10 @@
       default: false,
     },
     hasFiltersApplied: {
+      type: Boolean,
+      default: false,
+    },
+    showClearAll: {
       type: Boolean,
       default: false,
     },
