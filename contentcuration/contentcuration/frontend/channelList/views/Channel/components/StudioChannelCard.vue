@@ -262,6 +262,9 @@
         if (!this.channel.published) {
           options = options.filter(item => item.value !== 'copy');
         }
+        if (!this.channel.edit) {
+          options = options.filter(item => item.value !== 'edit');
+        }
         if (this.channel.source_url === '') {
           options = options.filter(item => item.value !== 'source-url');
         }
