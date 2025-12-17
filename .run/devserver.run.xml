@@ -13,7 +13,7 @@
     <option name="ADD_SOURCE_ROOTS" value="false" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
     <option name="SCRIPT_NAME" value="contentcuration/manage.py" />
-    <option name="PARAMETERS" value="runserver --settings=contentcuration.dev_settings 0.0.0.0:8080" />
+    <option name="PARAMETERS" value="runserver --settings=contentcuration.dev_settings 0.0.0.0:8081" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />
