@@ -172,9 +172,9 @@
       if (isEqual(newFilters, oldFilters)) {
         return;
       }
-      // Emit an event with the updated query params
       emit('update:filters', newFilters);
     },
+    // Immediate to emit initial filters values on mount
     { immediate: true },
   );
 

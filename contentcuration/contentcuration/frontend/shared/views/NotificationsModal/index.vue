@@ -94,6 +94,7 @@
   import { Modals } from 'shared/constants';
   import useStore from 'shared/composables/useStore';
   import { User } from 'shared/data/resources';
+  import useSnackbar from 'shared/composables/useSnackbar';
 
   const NotificationsTab = {
     UNREAD: 0,
@@ -103,6 +104,7 @@
   const router = useRouter();
   const route = useRoute();
   const store = useStore();
+  const { createSnackbar } = useSnackbar();
 
   const previousQuery = ref(null);
   const isSaving = ref(false);
@@ -169,18 +171,23 @@
 
   const handleNotificationsRead = async () => {
     isSaving.value = true;
-    const [newestNotification] = notifications.value;
-    if (newestNotification) {
-      // Add 1 second to avoid precisision issues
-      const timestamp = new Date(newestNotification.date);
-      timestamp.setSeconds(timestamp.getSeconds() + 1);
-      await User.markNotificationsRead(timestamp.toISOString());
+    try {
+      const [newestNotification] = notifications.value;
+      if (newestNotification) {
+        // Add 1 second to avoid precisision issues
+        const timestamp = new Date(newestNotification.date);
+        timestamp.setSeconds(timestamp.getSeconds() + 1);
+        await User.markNotificationsRead(timestamp.toISOString());
 
-      // Refresh the notifications list after notifications read timestamp is updated
-      // in the vuex store
-      await waitForLastReadUpdate();
+        // Refresh the notifications list after notifications read timestamp is updated
+        // in the vuex store so that the lastRead filter gets updated and the list refetched
+        await waitForLastReadUpdate();
+      }
+    } catch (error) {
+      createSnackbar(commonStrings.genericErrorMessage$());
+    } finally {
+      isSaving.value = false;
     }
-    isSaving.value = false;
   };
 
   const isBusy = computed(() => {
@@ -197,6 +204,8 @@
   const queryParams = computed(() => {
     if (!filters.value || !isModalOpen.value) {
       // Filters not set yet or modal is closed
+      // Adding `filters` and `isModalOpen` as dependencies to re-trigger the `fetchData` watcher
+      // when modal is opened or filters are applied for the first time
       return null;
     }
     return {

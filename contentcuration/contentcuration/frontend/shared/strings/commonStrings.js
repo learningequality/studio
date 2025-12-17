@@ -14,4 +14,8 @@ export const commonStrings = createTranslator('CommonStrings', {
     message: 'Close',
     context: 'A label for an action that closes a dialog or window',
   },
+  genericErrorMessage: {
+    message: 'Sorry! Something went wrong, please try again.',
+    context: 'Default error message for operation errors.',
+  },
 });
