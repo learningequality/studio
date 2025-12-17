@@ -84,11 +84,21 @@
     },
   });
 
+  defineEmits(['notificationsRead', 'fetchMore']);
+
+  /**
+   * Each notification type should have a corresponding component renderer.
+   * This mapping defines which component to use for each notification type.
+   *
+   * Each notification renderer component should reuse the `NotificationBase` component
+   * and accept a `notification` prop.
+   */
   const NotificationTypeToComponent = {
     [NotificationType.COMMUNITY_LIBRARY_SUBMISSION_APPROVED]: CommunityLibrarySubmissionApproval,
     [NotificationType.COMMUNITY_LIBRARY_SUBMISSION_REJECTED]: CommunityLibrarySubmissionRejection,
     [NotificationType.COMMUNITY_LIBRARY_SUBMISSION_CREATED]: CommunityLibrarySubmissionCreation,
   };
+
   const {
     newLabel$,
     clearAllAction$,
