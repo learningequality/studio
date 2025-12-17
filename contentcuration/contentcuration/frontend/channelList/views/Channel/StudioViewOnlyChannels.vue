@@ -42,7 +42,7 @@
   import { ChannelListTypes } from 'shared/constants';
 
   export default {
-    name: 'StudioStarredChannels',
+    name: 'StudioViewOnlyChannels',
     components: {
       StudioChannelCard,
     },
