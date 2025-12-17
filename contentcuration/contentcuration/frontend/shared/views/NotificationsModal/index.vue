@@ -30,14 +30,14 @@
           >
             <VTab
               class="px-3"
-              :disabled="isLoading || isLoadingMore"
+              :disabled="isBusy"
               @click="selectedTab = NotificationsTab.UNREAD"
             >
               {{ unreadNotificationsLabel$() }}
             </VTab>
             <VTab
               class="px-3"
-              :disabled="isLoading || isLoadingMore"
+              :disabled="isBusy"
               @click="selectedTab = NotificationsTab.ALL"
             >
               {{ allNotificationsLabel$() }}
@@ -49,16 +49,23 @@
           :style="contentWrapperStyles"
         >
           <NotificationFilters
-            :disabled="isLoading || isLoadingMore"
-            @update:queryParams="queryParams = $event"
+            :disabled="isBusy"
+            :lastReadFilter="lastReadFilter"
+            @update:filters="filters = $event"
           />
+          <!--
+            Only show Clear all if no filters are applied, because we can just mark a
+            latest read timestamp and cannot selectively clear notifications when filters
+            are applied
+          -->
           <NotificationList
             :hasMore="hasMore"
             :notifications="notifications"
             :isLoading="isLoading"
             :isLoadingMore="isLoadingMore"
             :hasFiltersApplied="hasFiltersApplied"
-            @fetchData="fetchData"
+            :showClearAll="!hasFiltersApplied && selectedTab === NotificationsTab.UNREAD"
+            @notificationsRead="handleNotificationsRead"
             @fetchMore="fetchMore"
           />
         </div>
@@ -72,6 +79,7 @@
 <script setup>
 
   import { computed, ref, watch } from 'vue';
+  import isEqual from 'lodash/isEqual';
   import { useRoute, useRouter } from 'vue-router/composables';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
 
@@ -84,6 +92,8 @@
   import { commonStrings } from 'shared/strings/commonStrings';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
   import { Modals } from 'shared/constants';
+  import useStore from 'shared/composables/useStore';
+  import { User } from 'shared/data/resources';
 
   const NotificationsTab = {
     UNREAD: 0,
@@ -92,8 +102,11 @@
 
   const router = useRouter();
   const route = useRoute();
+  const store = useStore();
 
   const previousQuery = ref(null);
+  const isSaving = ref(false);
+
   const isModalOpen = computed({
     get() {
       const modalParam = route.query.modal;
@@ -125,10 +138,92 @@
   );
 
   const selectedTab = ref(NotificationsTab.UNREAD);
-  const queryParams = ref({});
+  const filters = ref(null);
 
   const { notificationsLabel$, unreadNotificationsLabel$, allNotificationsLabel$ } =
     communityChannelsStrings;
+
+  const lastReadNotificationDate = computed(() => {
+    return store.state.session.currentUser?.last_read_notification_date;
+  });
+
+  const waitForLastReadUpdate = async () => {
+    return new Promise(resolve => {
+      let timeoutId = null;
+
+      const unwatch = watch(lastReadNotificationDate, (newValue, oldValue) => {
+        if (newValue !== oldValue) {
+          clearTimeout(timeoutId);
+          unwatch();
+          resolve();
+        }
+      });
+
+      // Set timeout for 5 seconds
+      timeoutId = setTimeout(() => {
+        unwatch();
+        resolve();
+      }, 5000);
+    });
+  };
+
+  const handleNotificationsRead = async () => {
+    isSaving.value = true;
+    const [newestNotification] = notifications.value;
+    if (newestNotification) {
+      // Add 1 second to avoid precisision issues
+      const timestamp = new Date(newestNotification.date);
+      timestamp.setSeconds(timestamp.getSeconds() + 1);
+      await User.markNotificationsRead(timestamp.toISOString());
+
+      // Refresh the notifications list after notifications read timestamp is updated
+      // in the vuex store
+      await waitForLastReadUpdate();
+    }
+    isSaving.value = false;
+  };
+
+  const isBusy = computed(() => {
+    return isSaving.value || isLoading.value || isLoadingMore.value;
+  });
+
+  const lastReadFilter = computed(() => {
+    if (selectedTab.value !== NotificationsTab.UNREAD) {
+      return null;
+    }
+    return lastReadNotificationDate.value;
+  });
+
+  const queryParams = computed(() => {
+    if (!filters.value || !isModalOpen.value) {
+      // Filters not set yet or modal is closed
+      return null;
+    }
+    return {
+      ...filters.value,
+      lastRead: lastReadFilter.value,
+    };
+  });
+
+  const {
+    hasMore,
+    submissionsUpdates: notifications,
+    isLoading,
+    isLoadingMore,
+    fetchData,
+    fetchMore,
+  } = useCommunityLibraryUpdates({ queryParams });
+
+  watch(queryParams, (newValue, oldValue) => {
+    if (isEqual(newValue, oldValue) || newValue === null) {
+      return;
+    }
+    fetchData();
+  });
+
+  const hasFiltersApplied = computed(() => {
+    return Object.keys(filters.value || {}).length > 0;
+  });
 
   const { windowIsSmall } = useKResponsiveWindow();
 
@@ -154,25 +249,6 @@
     };
   });
 
-  const {
-    hasMore,
-    submissionsUpdates: notifications,
-    isLoading,
-    isLoadingMore,
-    fetchData,
-    fetchMore,
-  } = useCommunityLibraryUpdates({ queryParams });
-
-  const hasFiltersApplied = computed(() => {
-    return Object.keys(queryParams.value).length > 0;
-  });
-
-  watch(queryParams, newValue => {
-    if (newValue) {
-      fetchData();
-    }
-  });
-
 </script>
 
 
@@ -187,7 +263,6 @@
 
   .notifications-page-container {
     max-width: 1000px;
-    padding: 24px;
     margin: 0 auto;
   }
 
