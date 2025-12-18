@@ -223,9 +223,10 @@
         const isCheffedChannel = Boolean(currentChannel.value.ricecooker_version);
         const isPrivateChannel = currentChannel.value.public === false;
         const isFirstPublish = currentChannel.value.version === 0;
-        const channelLanguageExists = currentChannel.value.language;
 
-        return ((isCheffedChannel || isPrivateChannel) && isFirstPublish) || !channelLanguageExists;
+        return (
+          ((isCheffedChannel || isPrivateChannel) && isFirstPublish) || !channelLanguageExists.value
+        );
       });
 
       const languages = computed(() => {
@@ -355,7 +356,7 @@
             emit('close');
           }
         } catch (error) {
-          store.dispatch('shared/handleAxiosError', error);
+          store.dispatch('errors/handleAxiosError', error);
         } finally {
           submitting.value = false;
         }
