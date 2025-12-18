@@ -1,6 +1,6 @@
 import { render, fireEvent, screen } from '@testing-library/vue';
 import VueRouter from 'vue-router';
-import StudioCopyToken from '../Account/StudioCopyToken.vue';
+import StudioCopyToken from '../index.vue';
 
 function makeWrapper(props = {}) {
   const mockStore = {
