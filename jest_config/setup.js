@@ -96,3 +96,8 @@ Object.defineProperty(window, 'scrollTo', { value: () => {}, writable: true });
 resetJestGlobal();
 
 setupSchema();
+
+// Use of setImmediate by fake-indexeddb makes tests fail with inactive or premature transaction
+// commit errors. This has something to do with microtasks, but since our code works correctly
+// in the browser, this seems specific to node.js and how fake-indexeddb works.
+global.setImmediate = global.setImmediate || ((fn, ...args) => global.setTimeout(fn, 0, ...args));
