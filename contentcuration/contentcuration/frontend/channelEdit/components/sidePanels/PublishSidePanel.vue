@@ -8,7 +8,7 @@
       @closePanel="onClose"
     >
       <template #header>
-        <h1 class="side-panel-title">{{ getPanelTitle() }}</h1>
+        <h1 class="side-panel-title">{{ publishChannel$() }}</h1>
       </template>
 
       <template #default>
@@ -49,28 +49,29 @@
                   <div class="form-section">
                     <KTextbox
                       v-model="version_notes"
+                      showInvalidText
                       :label="versionDescriptionLabel$()"
-                      :invalid="version_notes.length === 0"
-                      :invalidText="'Version notes are required'"
-                      :showInvalidText="showVersionNotesInvalidText"
+                      :invalid="isVersionNotesBlurred && !isVersionNotesValid"
+                      :invalidText="versionNotesRequiredMessage$()"
                       textArea
                       :maxlength="250"
                       :appearanceOverrides="{ maxWidth: 'none' }"
-                      @blur="onVersionNotesBlur"
+                      @blur="isVersionNotesBlurred = true"
                     />
                   </div>
                   <!-- Language selector -->
+                  <KCircularLoader v-if="isChannelLanguageLoading" />
                   <div
-                    v-if="showLanguageDropdown"
+                    v-else-if="showLanguageDropdown"
                     class="form-section"
                   >
                     <KSelect
-                      v-model="language"
+                      v-model="newChannelLanguage"
                       :label="languageLabel$()"
-                      :invalid="showLanguageInvalidText"
+                      :invalid="isLanguageSelectBlurred && !isNewLanguageValid"
                       :invalidText="languageRequiredMessage$()"
-                      :options="languages"
-                      @change="onLanguageChange"
+                      :options="languageOptions"
+                      @blur="isLanguageSelectBlurred = true"
                     />
                   </div>
                 </div>
@@ -152,7 +153,7 @@
 
 <script>
 
-  import { ref, computed, getCurrentInstance, onMounted } from 'vue';
+  import { ref, computed, getCurrentInstance } from 'vue';
   import SidePanelModal from 'shared/views/SidePanelModal';
   import { Channel, CommunityLibrarySubmission } from 'shared/data/resources';
   import { forceServerSync } from 'shared/data/serverSync';
@@ -173,12 +174,14 @@
 
       const mode = ref(PublishModes.LIVE);
       const version_notes = ref('');
+      const newChannelLanguage = ref({});
+      const languageOptions = ref(null);
+
+      const isChannelLanguageLoading = ref(false);
       const submitting = ref(false);
-      const language = ref({});
-      const showLanguageInvalidText = ref(false);
-      const showVersionNotesInvalidText = ref(false); // lazy validation
-      const channelLanguages = ref([]);
-      const channelLanguageExists = ref(true);
+      const isVersionNotesBlurred = ref(false);
+      const isLanguageSelectBlurred = ref(false);
+      const isCurrentChannelLanguageValid = ref(false);
 
       const instance = getCurrentInstance();
       const store = instance.proxy.$store;
@@ -205,6 +208,7 @@
         cancelAction$,
         languageLabel$,
         languageRequiredMessage$,
+        versionNotesRequiredMessage$,
       } = communityChannelsStrings;
 
       const currentChannel = computed(() => store.getters['currentChannel/currentChannel']);
@@ -224,24 +228,16 @@
         const isPrivateChannel = currentChannel.value.public === false;
         const isFirstPublish = currentChannel.value.version === 0;
 
-        return (
-          ((isCheffedChannel || isPrivateChannel) && isFirstPublish) || !channelLanguageExists.value
-        );
+        if (isFirstPublish) {
+          return isCheffedChannel || isPrivateChannel;
+        }
+        return !isCurrentChannelLanguageValid.value;
       });
 
-      const languages = computed(() => {
-        if (!currentChannel.value) return [];
-        return filterLanguages(l => channelLanguages.value.includes(l.id));
-      });
-
-      const defaultLanguage = computed(() => {
-        if (!currentChannel.value?.language) return {};
-        const channelLang = filterLanguages(l => l.id === currentChannel.value.language)[0];
-        return languages.value.some(lang => lang.value === channelLang?.value) ? channelLang : {};
-      });
-
-      const isLanguageValid = computed(() => {
-        return Object.keys(language.value).length > 0;
+      const isNewLanguageValid = computed(() => {
+        // If language selector is not shown do not prevent submission
+        if (!showLanguageDropdown.value) return true;
+        return Object.keys(newChannelLanguage.value).length > 0;
       });
 
       const isVersionNotesValid = computed(() => {
@@ -251,9 +247,7 @@
       // Validate the version and language for live mode
       const isFormValid = computed(() => {
         if (mode.value === PublishModes.LIVE) {
-          const versionNotesValid = isVersionNotesValid.value;
-          const languageValid = showLanguageDropdown.value ? isLanguageValid.value : true;
-          return versionNotesValid && languageValid;
+          return isVersionNotesValid.value && isNewLanguageValid.value;
         }
         return true;
       });
@@ -262,48 +256,92 @@
         return mode.value === PublishModes.DRAFT ? saveDraft$() : publishAction$();
       });
 
-      const filterLanguages = filterFn => {
-        return LanguagesList.filter(filterFn).map(l => ({
+      const getLanguagesOptions = languages => {
+        return mapLanguagesOptions(LanguagesList.filter(lang => languages.includes(lang.id)));
+      };
+      const mapLanguagesOptions = languages => {
+        return languages.map(l => ({
           value: l.id,
           label: l.native_name,
         }));
       };
 
-      // Validate the selected language when it changes
-      const validateSelectedLanguage = () => {
-        if (Object.keys(language.value).length > 0 && languages.value.length > 0) {
-          const isValidLanguage = languages.value.some(lang => lang.value === language.value.value);
-          if (!isValidLanguage) {
-            language.value = {};
+      /**
+       * Makes sure that the channel.language is consistent with the channel resources languages
+       * If not, show the language selector for the user to select a valid language for the channel
+       */
+      const _auditChannelLanguage = async () => {
+        if (!currentChannel.value) {
+          return;
+        }
+
+        const currentChannelLanguage = currentChannel.value.language;
+        // If the current `channel.language` exists among its resources languages,
+        // the channel language is valid
+        isCurrentChannelLanguageValid.value = await channelLanguageExistsInResources();
+        const channelLanguageOption = getLanguagesOptions([currentChannelLanguage])[0];
+
+        if (!isCurrentChannelLanguageValid.value || !channelLanguageOption) {
+          // If not valid, or it doesn't exist in our LanguagesList, load resources languages
+          const resourcesLanguages = await getLanguagesInChannelResources();
+          if (resourcesLanguages.length > 0) {
+            languageOptions.value = getLanguagesOptions(resourcesLanguages);
+            return;
           }
         }
+
+        // if not found in LanguagesList and no resources languages found, set the whole
+        // LanguagesList as options
+        if (!channelLanguageOption) {
+          languageOptions.value = mapLanguagesOptions(LanguagesList);
+          return;
+        }
+        // In any other case, just set the channel language as the only option
+        languageOptions.value = [channelLanguageOption];
+        newChannelLanguage.value = channelLanguageOption;
       };
 
-      onMounted(async () => {
-        if (currentChannel.value) {
-          const exists = await channelLanguageExistsInResources();
-          channelLanguageExists.value = exists;
+      const auditChannelLanguage = async () => {
+        isChannelLanguageLoading.value = true;
+        await _auditChannelLanguage();
+        isChannelLanguageLoading.value = false;
+      };
 
-          if (!exists) {
-            const languages = await getLanguagesInChannelResources();
-            channelLanguages.value = languages.length ? languages : [currentChannel.value.language];
-            language.value = defaultLanguage.value;
-            validateSelectedLanguage();
-          } else {
-            channelLanguages.value = [currentChannel.value.language];
-            language.value = defaultLanguage.value;
-            validateSelectedLanguage();
-          }
-        }
-      });
+      auditChannelLanguage();
 
       const onClose = () => {
         if (!submitting.value) emit('close');
       };
 
+      const checkResubmitToCommunityLibrary = async () => {
+        if (mode.value !== PublishModes.LIVE) {
+          return;
+        }
+
+        try {
+          const response = await CommunityLibrarySubmission.fetchCollection({
+            channel: currentChannel.value.id,
+            max_results: 1,
+          });
+
+          const submissions = response?.results || [];
+
+          if (submissions.length > 0) {
+            const latestSubmission = submissions[0];
+            emit('showResubmitCommunityLibraryModal', {
+              channel: { ...currentChannel.value },
+              latestSubmissionVersion: latestSubmission.channel_version,
+            });
+          }
+        } catch (error) {
+          // Log the error but do not block the publish flow
+          logging.error(error);
+        }
+      };
+
       const submit = async () => {
-        // Validate form before submission
-        if (!validate()) {
+        // Should not get here if the form is invalid, but just in case
+        if (!isFormValid.value) {
           return;
         }
 
@@ -319,39 +357,18 @@
             await Channel.publishDraft(currentChannel.value.id, { use_staging_tree: false });
             emit('close');
           } else {
-            if (
-              language.value &&
-              language.value.value &&
-              language.value.value !== currentChannel.value?.language
-            ) {
+            // `newChannelLanguage.value` is a KSelect option { value, label }, so we need to
+            // extract its `value` to get the language code
+            if (newChannelLanguage.value.value !== currentChannel.value.language) {
               await store.dispatch('channel/updateChannel', {
                 id: currentChannel.value.id,
-                language: language.value.value,
+                language: newChannelLanguage.value.value,
               });
             }
 
             await Channel.publish(currentChannel.value.id, version_notes.value);
 
-            if (mode.value === PublishModes.LIVE) {
-              try {
-                const response = await CommunityLibrarySubmission.fetchCollection({
-                  channel: currentChannel.value.id,
-                  max_results: 1,
-                });
-
-                const submissions = response?.results || [];
-
-                if (submissions.length > 0) {
-                  const latestSubmission = submissions[0];
-                  emit('showResubmitCommunityLibraryModal', {
-                    channel: { ...currentChannel.value },
-                    latestSubmissionVersion: latestSubmission.channel_version,
-                  });
-                }
-              } catch (error) {
-                logging.error(error);
-              }
-            }
+            await checkResubmitToCommunityLibrary();
 
             emit('close');
           }
@@ -362,49 +379,28 @@
         }
       };
 
-      const getPanelTitle = () => {
-        return publishChannel$();
-      };
-
-      const onLanguageChange = () => {
-        showLanguageInvalidText.value = !isLanguageValid.value;
-        validateSelectedLanguage(); // Ensure language is always valid
-      };
-
-      const onVersionNotesBlur = () => {
-        showVersionNotesInvalidText.value = !isVersionNotesValid.value;
-      };
-
-      const validate = () => {
-        if (mode.value === PublishModes.DRAFT) {
-          // For draft mode, no validation is required
-          return true;
-        } else {
-          // For live mode, validate version notes and language
-          showVersionNotesInvalidText.value = !isVersionNotesValid.value;
-          showLanguageInvalidText.value = !isLanguageValid.value;
-          return !showVersionNotesInvalidText.value && !showLanguageInvalidText.value;
-        }
-      };
-
       return {
+        isChannelLanguageLoading,
         PublishModes,
         mode,
         version_notes,
         submitting,
-        language,
-        showLanguageInvalidText,
-        showVersionNotesInvalidText,
+        languageOptions,
+        newChannelLanguage,
+        isVersionNotesBlurred,
+        isLanguageSelectBlurred,
 
         currentChannel,
         incompleteResourcesCount,
         showLanguageDropdown,
-        languages,
         isFormValid,
+        isNewLanguageValid,
+        isVersionNotesValid,
         submitText,
 
         modeLive$,
         modeDraft$,
+        publishChannel$,
         versionNotesLabel$,
         modeLiveDescription$,
         modeDraftDescription$,
@@ -416,12 +412,10 @@
         cancelAction$,
         languageLabel$,
         languageRequiredMessage$,
+        versionNotesRequiredMessage$,
 
         onClose,
         submit,
-        getPanelTitle,
-        onLanguageChange,
-        onVersionNotesBlur,
       };
     },
 
