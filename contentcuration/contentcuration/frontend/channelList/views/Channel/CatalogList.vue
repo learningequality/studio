@@ -309,19 +309,18 @@
   .catalog-page-wrapper {
     display: flex;
     flex-direction: row;
+    height: 100%;
   }
 
   .catalog-sidebar {
-    position: sticky;
-    top: 0;
-    flex-shrink: 0;
-    align-self: flex-start;
     width: 300px;
   }
 
   .catalog-main-content {
     flex: 1;
     min-width: 0;
+    height: 100%;
+    overflow: auto;
   }
 
   .list-wrapper {
@@ -331,10 +330,14 @@
 
   .catalog-page-wrapper--small {
     flex-direction: column;
+
+    .catalog-main-content {
+      // Let parent component to manage overflow in small mode
+      overflow: visible;
+    }
   }
 
   .catalog-sidebar--small {
-    position: static;
     width: 100%;
   }
 

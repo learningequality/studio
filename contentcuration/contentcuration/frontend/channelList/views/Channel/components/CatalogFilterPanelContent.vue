@@ -192,7 +192,7 @@
   .filter-panel-content {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 112px);
+    height: 100%;
   }
 
   .filters-container {
