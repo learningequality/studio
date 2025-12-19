@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/vue';
 import VueRouter from 'vue-router';
 import { Store } from 'vuex';
-import StudioCatalogList from '../StudioCatalogList';
+import CatalogList from '../CatalogList';
 import { RouteNames } from '../../../constants';
 
 const mockChannels = [
@@ -115,7 +115,7 @@ function renderComponent(customStore = null) {
       },
     });
 
-  return render(StudioCatalogList, {
+  return render(CatalogList, {
     store,
     routes: router,
     stubs: {
@@ -130,7 +130,7 @@ function renderComponent(customStore = null) {
   });
 }
 
-describe('StudioCatalogList', () => {
+describe('CatalogList', () => {
   it('renders catalog channels', async () => {
     renderComponent();
     const cards = await screen.findAllByTestId('card');
