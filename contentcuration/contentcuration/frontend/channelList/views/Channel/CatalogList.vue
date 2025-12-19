@@ -47,32 +47,34 @@
               appearance="basic-link"
               @click="setSelection(true)"
             />
-            <Checkbox
+            <KCheckbox
               v-else-if="selecting"
               v-model="selectAll"
-              class="mb-4 mx-2"
+              :indeterminate="isIndeterminate"
               :label="$tr('selectAll')"
-              :indeterminate="selected.length > 0 && selected.length < channels.length"
+              class="mb-4 mx-2"
             />
           </VFlex>
           <VFlex xs12>
-            <VLayout
-              v-for="item in channels"
-              :key="item.id"
-              align-center
+            <KCardGrid
+              layout="1-1-1"
+              :skeletonsConfig="[
+                {
+                  breakpoints: [0, 1, 2, 3, 4, 5, 6, 7],
+                  orientation: 'vertical',
+                  count: 3,
+                },
+              ]"
             >
-              <Checkbox
-                v-show="selecting"
-                v-model="selected"
-                class="mx-2"
-                :value="item.id"
+              <StudioChannelCard
+                v-for="channel in channels"
+                :key="channel.id"
+                :channel="channel"
+                :selectable="selecting"
+                :selected="isChannelSelected(channel.id)"
+                @toggle-selection="handleSelectionToggle"
               />
-              <ChannelItem
-                :channelId="item.id"
-                :detailsRouteName="detailsRouteName"
-                style="flex-grow: 1; width: 100%"
-              />
-            </VLayout>
+            </KCardGrid>
           </VFlex>
           <VFlex
             xs12
@@ -135,27 +137,25 @@
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { RouteNames } from '../../constants';
   import CatalogFilters from './CatalogFilters';
-  import CatalogFilterBar from './CatalogFilterBar';
-  import ChannelItem from './ChannelItem';
   import LoadingText from 'shared/views/LoadingText';
   import Pagination from 'shared/views/Pagination';
   import BottomBar from 'shared/views/BottomBar';
-  import Checkbox from 'shared/views/form/Checkbox';
   import ToolBar from 'shared/views/ToolBar';
   import OfflineText from 'shared/views/OfflineText';
   import { constantsTranslationMixin } from 'shared/mixins';
   import { channelExportMixin } from 'shared/views/channel/mixins';
+  import CatalogFilterBar from './CatalogFilterBar';
+  import StudioChannelCard from './components/StudioChannelCard';
 
   export default {
     name: 'CatalogList',
     components: {
-      ChannelItem,
+      StudioChannelCard,
       LoadingText,
       CatalogFilters,
       CatalogFilterBar,
       Pagination,
       BottomBar,
-      Checkbox,
       ToolBar,
       OfflineText,
     },
@@ -216,9 +216,6 @@
       debouncedSearch() {
         return debounce(this.loadCatalog, 1000);
       },
-      detailsRouteName() {
-        return RouteNames.CATALOG_DETAILS;
-      },
       channels() {
         // Sort again by the same ordering used on the backend - name.
         // Have to do this because of how we are getting the object data via getChannels.
@@ -226,6 +223,9 @@
       },
       selectedCount() {
         return this.page.count - this.excluded.length;
+      },
+      isIndeterminate() {
+        return this.selected.length > 0 && this.selected.length < this.channels.length;
       },
     },
     watch: {
@@ -250,6 +250,17 @@
     },
     methods: {
       ...mapActions('channelList', ['searchCatalog']),
+      isChannelSelected(channelId) {
+        return this.selected.includes(channelId);
+      },
+      handleSelectionToggle(channelId) {
+        const currentlySelected = this.selected;
+        if (currentlySelected.includes(channelId)) {
+          this.selected = currentlySelected.filter(id => id !== channelId);
+        } else {
+          this.selected = [...currentlySelected, channelId];
+        }
+      },
       loadCatalog() {
         this.loading = true;
         const params = {
