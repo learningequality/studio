@@ -349,25 +349,57 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def check_channel_space(self, channel):
         tree_cte = With(self.get_user_active_trees().distinct(), name="trees")
-        channel_files_qs = tree_cte.join(
-            self.files.get_queryset(), contentnode__tree_id=tree_cte.col.tree_id
-        )
-        channel_files_qs = self._filter_storage_billable_files(channel_files_qs)
-        files_cte = With(channel_files_qs.values("checksum").distinct(), name="files")
 
-        staging_tree_files = self._filter_storage_billable_files(
+        user_files_cte = With(
+            self.files.get_queryset()
+            .values("checksum", "contentnode_id", "file_format_id")
+            .distinct(),
+            name="user_files",
+        )
+
+        editable_files_qs = (
+            user_files_cte.queryset()
+            .with_cte(tree_cte)
+            .with_cte(user_files_cte)
+            .filter(
+                Exists(
+                    tree_cte.join(
+                        ContentNode.objects.all(), tree_id=tree_cte.col.tree_id
+                    )
+                    .with_cte(tree_cte)
+                    .filter(id=OuterRef("contentnode_id"))
+                )
+            )
+        )
+
+        editable_files_qs = self._filter_storage_billable_files(editable_files_qs)
+
+        existing_checksums_cte = With(
+            editable_files_qs.values("checksum").distinct(), name="existing_checksums"
+        )
+
+        staging_files_qs = self._filter_storage_billable_files(
             self.files.filter(contentnode__tree_id=channel.staging_tree.tree_id)
         )
-        staging_tree_files = staging_tree_files.with_cte(tree_cte).with_cte(files_cte)
-        staging_tree_files = (
-            staging_tree_files.exclude(
-                Exists(files_cte.queryset().filter(checksum=OuterRef("checksum")))
+
+        staging_files_qs = (
+            staging_files_qs.with_cte(tree_cte)
+            .with_cte(user_files_cte)
+            .with_cte(existing_checksums_cte)
+            .exclude(
+                Exists(
+                    existing_checksums_cte.queryset().filter(
+                        checksum=OuterRef("checksum")
+                    )
+                )
             )
-            .values("checksum")
-            .distinct()
         )
+
         staged_size = float(
-            staging_tree_files.aggregate(used=Sum("file_size"))["used"] or 0
+            staging_files_qs.values("checksum")
+            .distinct()
+            .aggregate(used=Sum("file_size"))["used"]
+            or 0
         )
 
         if self.get_available_space() < staged_size:
@@ -410,13 +442,31 @@ class User(AbstractBaseUser, PermissionsMixin):
         )
 
     def get_user_active_files(self):
-        cte = With(self.get_user_active_trees().distinct())
 
-        files_qs = cte.join(
-            self.files.get_queryset(), contentnode__tree_id=cte.col.tree_id
-        ).with_cte(cte)
+        tree_cte = With(self.get_user_active_trees().distinct(), name="trees")
 
-        files_qs = self._filter_storage_billable_files(files_qs)
+        user_files_cte = With(
+            self.files.get_queryset()
+            .values("checksum", "contentnode_id", "file_format_id")
+            .distinct(),
+            name="user_files",
+        )
+        file_qs = (
+            user_files_cte.queryset()
+            .with_cte(tree_cte)
+            .with_cte(user_files_cte)
+            .filter(
+                Exists(
+                    tree_cte.join(
+                        ContentNode.objects.all(), tree_id=tree_cte.col.tree_id
+                    )
+                    .with_cte(tree_cte)
+                    .filter(id=OuterRef("contentnode_id"))
+                )
+            )
+        )
+
+        files_qs = self._filter_storage_billable_files(file_qs)
 
         return files_qs.values("checksum").distinct()
 
