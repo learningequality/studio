@@ -1,120 +1,130 @@
 <template>
 
-  <div>
-    <CatalogFilters />
-    <VSlideYTransition>
-      <ToolBar
-        v-show="offline"
-        dense
-        clipped-left
-        absolute
-      >
-        <OfflineText />
-      </ToolBar>
-    </VSlideYTransition>
-    <VContainer
-      fluid
-      :class="$vuetify.breakpoint.xsOnly ? 'pa-0' : 'pa-4'"
-      :style="`margin-top: ${offline ? 48 : 0}`"
+  <div
+    class="catalog-page-wrapper"
+    :class="{ 'catalog-page-wrapper--small': windowIsSmall }"
+  >
+    <aside
+      class="catalog-sidebar"
+      :class="{ 'catalog-sidebar--small': windowIsSmall }"
     >
-      <LoadingText v-if="loading" />
-      <VLayout
-        v-else
-        grid
-        wrap
-        class="list-wrapper py-4"
-      >
-        <!-- Results bar -->
-        <VFlex
-          xs12
-          class="mb-2"
+      <CatalogFilters />
+    </aside>
+    <div class="catalog-main-content">
+      <VSlideYTransition>
+        <ToolBar
+          v-show="offline"
+          dense
+          clipped-left
+          absolute
         >
-          <h1 class="mb-2 ml-1 title">
-            {{ $tr('resultsText', { count: page.count }) }}
-          </h1>
-          <KButton
-            v-if="page.count && !selecting"
-            :text="$tr('selectChannels')"
-            data-test="select"
-            appearance="basic-link"
-            @click="setSelection(true)"
-          />
-          <Checkbox
-            v-else-if="selecting"
-            v-model="selectAll"
-            class="mb-4 mx-2"
-            :label="$tr('selectAll')"
-            data-test="select-all"
-            :indeterminate="selected.length > 0 && selected.length < channels.length"
-          />
-        </VFlex>
-        <VFlex xs12>
-          <VLayout
-            v-for="item in channels"
-            :key="item.id"
-            align-center
+          <OfflineText />
+        </ToolBar>
+      </VSlideYTransition>
+      <CatalogFilterBar />
+      <VContainer
+        fluid
+        :style="`margin-top: ${offline ? 48 : 0}`"
+      >
+        <LoadingText v-if="loading" />
+        <VLayout
+          v-else
+          grid
+          wrap
+          class="list-wrapper"
+        >
+          <!-- Results bar -->
+          <VFlex
+            xs12
+            class="mb-2"
           >
+            <h1 class="mb-2 ml-1 title">
+              {{ $tr('resultsText', { count: page.count }) }}
+            </h1>
+            <KButton
+              v-if="page.count && !selecting"
+              :text="$tr('selectChannels')"
+              data-test="select"
+              appearance="basic-link"
+              @click="setSelection(true)"
+            />
             <Checkbox
-              v-show="selecting"
-              v-model="selected"
-              class="mx-2"
-              :value="item.id"
-              data-test="checkbox"
+              v-else-if="selecting"
+              v-model="selectAll"
+              class="mb-4 mx-2"
+              :label="$tr('selectAll')"
+              data-test="select-all"
+              :indeterminate="selected.length > 0 && selected.length < channels.length"
             />
-            <ChannelItem
-              :channelId="item.id"
-              :detailsRouteName="detailsRouteName"
-              style="flex-grow: 1; width: 100%"
-            />
-          </VLayout>
-        </VFlex>
-        <VFlex
-          xs12
-          style="padding-bottom: 72px"
+          </VFlex>
+          <VFlex xs12>
+            <VLayout
+              v-for="item in channels"
+              :key="item.id"
+              align-center
+            >
+              <Checkbox
+                v-show="selecting"
+                v-model="selected"
+                class="mx-2"
+                :value="item.id"
+                data-test="checkbox"
+              />
+              <ChannelItem
+                :channelId="item.id"
+                :detailsRouteName="detailsRouteName"
+                style="flex-grow: 1; width: 100%"
+              />
+            </VLayout>
+          </VFlex>
+          <VFlex
+            xs12
+            style="padding-bottom: 72px"
+          >
+            <VLayout justify-center>
+              <Pagination
+                :pageNumber="page.page_number"
+                :totalPages="page.total_pages"
+              />
+            </VLayout>
+          </VFlex>
+        </VLayout>
+        <BottomBar
+          v-if="selecting"
+          data-test="toolbar"
+          :appearanceOverrides="{ height: windowIsSmall ? '72px' : '56px' }"
         >
-          <VLayout justify-center>
-            <Pagination
-              :pageNumber="page.page_number"
-              :totalPages="page.total_pages"
+          <div class="mx-2">
+            {{ $tr('channelSelectionCount', { count: selectedCount }) }}
+          </div>
+          <VSpacer />
+          <div>
+            <KButton
+              :text="$tr('cancelButton')"
+              data-test="cancel"
+              appearance="flat-button"
+              @click="setSelection(false)"
             />
-          </VLayout>
-        </VFlex>
-      </VLayout>
-      <BottomBar
-        v-if="selecting"
-        data-test="toolbar"
-        :appearanceOverrides="{ height: $vuetify.breakpoint.xsOnly ? '72px' : '56px' }"
-      >
-        <div class="mx-2">
-          {{ $tr('channelSelectionCount', { count: selectedCount }) }}
-        </div>
-        <VSpacer />
-        <div>
+          </div>
           <KButton
-            :text="$tr('cancelButton')"
-            data-test="cancel"
-            appearance="flat-button"
-            @click="setSelection(false)"
-          />
-        </div>
-        <KButton
-          :text="$tr('downloadButton')"
-          :primary="true"
-          data-test="download-button"
-          iconAfter="dropup"
-        >
-          <KDropdownMenu
+            :text="$tr('downloadButton')"
             :primary="true"
-            :options="[
-              { label: $tr('downloadPDF'), value: 'pdf' },
-              { label: $tr('downloadCSV'), value: 'csv' },
-            ]"
-            appearance="raised-button"
-            @select="option => selectDownloadOption(option)"
-          />
-        </KButton>
-      </BottomBar>
-    </VContainer>
+            data-test="download-button"
+            iconAfter="dropup"
+          >
+            <KDropdownMenu
+              :primary="true"
+              :options="[
+                { label: $tr('downloadPDF'), value: 'pdf' },
+                { label: $tr('downloadCSV'), value: 'csv' },
+              ]"
+              appearance="raised-button"
+              @select="option => selectDownloadOption(option)"
+            />
+          </KButton>
+        </BottomBar>
+      </VContainer>
+    </div>
   </div>
 
 </template>
@@ -128,8 +138,10 @@
   import isEqual from 'lodash/isEqual';
   import sortBy from 'lodash/sortBy';
   import union from 'lodash/union';
+  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { RouteNames } from '../../constants';
   import CatalogFilters from './CatalogFilters';
+  import CatalogFilterBar from './CatalogFilterBar';
   import ChannelItem from './ChannelItem';
   import LoadingText from 'shared/views/LoadingText';
   import Pagination from 'shared/views/Pagination';
@@ -146,6 +158,7 @@
       ChannelItem,
       LoadingText,
       CatalogFilters,
+      CatalogFilterBar,
       Pagination,
       BottomBar,
       Checkbox,
@@ -153,6 +166,13 @@
       OfflineText,
     },
     mixins: [channelExportMixin, constantsTranslationMixin],
+    setup() {
+      const { windowIsSmall } = useKResponsiveWindow();
+
+      return {
+        windowIsSmall,
+      };
+    },
     data() {
       return {
         loading: true,
@@ -301,9 +321,39 @@
 
 <style lang="scss" scoped>
 
+  .catalog-page-wrapper {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+  }
+
+  .catalog-sidebar {
+    width: 300px;
+  }
+
+  .catalog-main-content {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    overflow: auto;
+  }
+
   .list-wrapper {
     max-width: 1080px;
     margin: 0 auto;
+  }
+
+  .catalog-page-wrapper--small {
+    flex-direction: column;
+
+    .catalog-main-content {
+      // Let parent component to manage overflow in small mode
+      overflow: visible;
+    }
+  }
+
+  .catalog-sidebar--small {
+    width: 100%;
   }
 
 </style>

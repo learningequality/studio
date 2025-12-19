@@ -74,6 +74,7 @@
       >
         <VContainer
           fluid
+          class="h-100"
           :class="isCatalogPage ? 'pa-0' : 'pa-4'"
         >
           <VLayout
@@ -342,6 +343,10 @@
 
   .invitation-list {
     padding: 0;
+  }
+
+  .h-100 {
+    height: 100%;
   }
 
 </style>
