@@ -23,6 +23,8 @@
           <h1 class="results-title">
             {{ $tr('resultsText', { count: page.count }) }}
           </h1>
+        </div>
+        <div class="selection-controls">
           <KButton
             v-if="page.count && !selecting"
             :text="$tr('selectChannels')"
@@ -306,16 +308,18 @@
   }
 
   .results-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
+    margin-bottom: 8px;
   }
 
   .results-title {
-    margin: 0 0 8px 4px;
+    margin: 0 0 0 4px;
     font-size: 24px;
     font-weight: bold;
+  }
+
+  .selection-controls {
+    margin-bottom: 16px;
+    margin-left: 8px;
   }
 
   .pagination-wrapper {
