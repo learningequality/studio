@@ -10,7 +10,7 @@
     >
       <CatalogFilters />
     </aside>
-    <main class="catalog-main-content">
+    <div class="catalog-main-content">
       <VSlideYTransition>
         <ToolBar
           v-show="offline"
@@ -124,7 +124,7 @@
           </KButton>
         </BottomBar>
       </VContainer>
-    </main>
+    </div>
   </div>
 
 </template>

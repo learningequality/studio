@@ -4,20 +4,20 @@
     <KButton
       v-if="windowIsSmall"
       class="filter-button"
-      :text="$tr('filterText')"
+      :text="$tr('filterLabel')"
       appearance="raised-button"
       icon="filter"
       @click="openSidePanel"
     />
-    <aside
+    <div
       v-if="!windowIsSmall"
       class="filter-panel"
       :style="asideStyles"
     >
       <CatalogFilterPanelContent />
-    </aside>
+    </div>
     <SidePanelModal
-      v-if="windowIsSmall && showSidePanel"
+      v-if="windowIsSmall && showCatalogFiltersSidePanel"
       alignment="left"
       @closePanel="closeSidePanel"
     >
@@ -49,7 +49,7 @@
     },
     data() {
       return {
-        showSidePanel: false,
+        showCatalogFiltersSidePanel: false,
       };
     },
     computed: {
@@ -62,14 +62,14 @@
     },
     methods: {
       openSidePanel() {
-        this.showSidePanel = true;
+        this.showCatalogFiltersSidePanel = true;
       },
       closeSidePanel() {
-        this.showSidePanel = false;
+        this.showCatalogFiltersSidePanel = false;
       },
     },
     $trs: {
-      filterText: 'Filter',
+      filterLabel: 'Filter',
     },
   };
 
