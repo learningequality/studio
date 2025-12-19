@@ -30,11 +30,13 @@
 
 <script>
 
+  import { ref, computed, defineComponent } from 'vue';
+  import { themeTokens } from 'kolibri-design-system/lib/styles/theme';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import CatalogFilterPanelContent from './components/CatalogFilterPanelContent.vue';
   import SidePanelModal from 'shared/views/SidePanelModal';
 
-  export default {
+  export default defineComponent({
     name: 'CatalogFilters',
     components: {
       CatalogFilterPanelContent,
@@ -42,36 +44,35 @@
     },
     setup() {
       const { windowIsSmall } = useKResponsiveWindow();
+      const tokensTheme = themeTokens();
+
+      const showCatalogFiltersSidePanel = ref(false);
+
+      const asideStyles = computed(() => ({
+        backgroundColor: tokensTheme.surface,
+        borderRight: `2px solid ${tokensTheme.fineLine}`,
+      }));
+
+      const openSidePanel = () => {
+        showCatalogFiltersSidePanel.value = true;
+      };
+
+      const closeSidePanel = () => {
+        showCatalogFiltersSidePanel.value = false;
+      };
 
       return {
         windowIsSmall,
+        showCatalogFiltersSidePanel,
+        asideStyles,
+        openSidePanel,
+        closeSidePanel,
       };
-    },
-    data() {
-      return {
-        showCatalogFiltersSidePanel: false,
-      };
-    },
-    computed: {
-      asideStyles() {
-        return {
-          backgroundColor: this.$themeTokens.surface,
-          borderRight: `2px solid ${this.$themeTokens.fineLine}`,
-        };
-      },
-    },
-    methods: {
-      openSidePanel() {
-        this.showCatalogFiltersSidePanel = true;
-      },
-      closeSidePanel() {
-        this.showCatalogFiltersSidePanel = false;
-      },
     },
     $trs: {
       filterLabel: 'Filter',
     },
-  };
+  });
 
 </script>
 
