@@ -14,6 +14,17 @@
     data-testid="card"
     @click="goToChannelRoute()"
   >
+    <template
+      v-if="selectable"
+      #select
+    >
+      <KCheckbox
+        :checked="selected"
+        :ariaLabel="$tr('selectChannel', { name: channel.name })"
+        data-test="checkbox"
+        @change="$emit('toggle-selection', channel.id)"
+      />
+    </template>
     <template #thumbnailPlaceholder>
       <KIcon
         :color="$themePalette.grey.v_400"
@@ -163,6 +174,14 @@
       channel: {
         type: Object,
         required: true,
+      },
+      selectable: {
+        type: Boolean,
+        default: false,
+      },
+      selected: {
+        type: Boolean,
+        default: false,
       },
     },
     data() {
@@ -328,6 +347,7 @@
       lastPublished: 'Published {last_published}',
       lastUpdated: 'Updated {updated}',
       details: 'Details',
+      selectChannel: 'Select {name}',
       viewContent: 'View channel on Kolibri',
       goToWebsite: 'Go to source website',
       editChannel: 'Edit channel details',
