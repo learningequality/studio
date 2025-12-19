@@ -69,9 +69,13 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Language',
     context: 'Label for the language selection dropdown',
   },
+  versionNotesRequiredMessage: {
+    message: 'Version notes are required',
+    context: 'Error message when version notes are required but not provided',
+  },
   languageRequiredMessage: {
     message: 'Language is required',
-    context: 'Error message when language selection is required',
+    context: 'Error message when language selection is required but not provided',
   },
   pendingStatus: {
     message: 'Submitted',
