@@ -6,11 +6,13 @@ import urllib.parse
 import uuid
 from datetime import datetime
 
+import jsonschema
 import pytz
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
+from django.contrib.postgres.fields import ArrayField
 from django.contrib.sessions.models import Session
 from django.core.cache import cache
 from django.core.exceptions import MultipleObjectsReturned
@@ -54,7 +56,9 @@ from le_utils.constants import exercises
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from le_utils.constants import languages
+from le_utils.constants import licenses
 from le_utils.constants import roles
+from le_utils.constants.labels import subjects
 from model_utils import FieldTracker
 from mptt.models import MPTTModel
 from mptt.models import raise_if_unsaved
@@ -975,6 +979,13 @@ class Channel(models.Model):
         verbose_name="languages",
         blank=True,
     )
+    version_info = models.OneToOneField(
+        "ChannelVersion",
+        related_name="+",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
 
     _field_updates = FieldTracker(
         fields=[
@@ -1192,6 +1203,13 @@ class Channel(models.Model):
         ):
             delete_public_channel_cache_keys()
 
+        if self.version and (
+            not self.version_info or self.version_info.version != self.version
+        ):
+            self.version_info, _ = ChannelVersion.objects.get_or_create(
+                channel=self, version=self.version
+            )
+
     def save(self, *args, **kwargs):
         self._actor_id = kwargs.pop("actor_id", None)
         creating = self._state.adding
@@ -1345,6 +1363,115 @@ class Channel(models.Model):
             models.Index(fields=["name"], name=CHANNEL_NAME_INDEX_NAME),
         ]
         index_together = [["deleted", "public"]]
+
+
+KIND_COUNT_ITEM_SCHEMA = {
+    "type": "object",
+    "required": ["count", "kind_id"],
+    "properties": {
+        "count": {"type": "integer", "minimum": 0},
+        "kind_id": {"type": "string", "minLength": 1},
+    },
+    "additionalProperties": False,
+}
+
+
+def validate_kind_count_item(value):
+    """
+    Validator for kind_count items.
+    """
+    for item in value:
+        try:
+            jsonschema.validate(instance=item, schema=KIND_COUNT_ITEM_SCHEMA)
+        except jsonschema.ValidationError as e:
+            raise ValidationError(f"Invalid kind_count item: {str(e)}")
+
+
+def validate_language_code(value):
+    """
+    Validator for language codes in included_languages array.
+    """
+    valid_language_codes = [lang.code for lang in languages.LANGUAGELIST]
+    for code in value:
+        if code not in valid_language_codes:
+            raise ValidationError(f"'{code}' is not a valid language code")
+    return
+
+
+def get_license_choices():
+    """Helper function to get license choices for ArrayField."""
+    return [(lic[0], lic[1]) for lic in licenses.LICENSELIST]
+
+
+def get_categories_choices():
+    """Helper function to get category choices for ArrayField."""
+    return [(subj, subj) for subj in subjects.SUBJECTSLIST]
+
+
+class ChannelVersion(models.Model):
+    """
+    Stores version-specific information for a channel. This allows retrieving
+    specific channel versions using secret tokens.
+    """
+
+    id = UUIDField(primary_key=True, default=uuid.uuid4)
+    channel = models.ForeignKey(
+        Channel, on_delete=models.CASCADE, related_name="channel_versions"
+    )
+    version = models.PositiveIntegerField(null=True, blank=True)
+    secret_token = models.ForeignKey(
+        SecretToken, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    version_notes = models.TextField(null=True, blank=True)
+    size = models.PositiveIntegerField(null=True, blank=True)
+    date_published = models.DateTimeField(null=True, blank=True)
+    resource_count = models.PositiveIntegerField(null=True, blank=True)
+    kind_count = ArrayField(
+        JSONField(), validators=[validate_kind_count_item], null=True, blank=True
+    )
+    included_licenses = ArrayField(
+        models.IntegerField(choices=get_license_choices()),
+        null=True,
+        blank=True,
+    )
+    included_categories = ArrayField(
+        models.CharField(max_length=100, choices=get_categories_choices()),
+        null=True,
+        blank=True,
+    )
+    included_languages = ArrayField(
+        models.CharField(max_length=100),
+        validators=[validate_language_code],
+        null=True,
+        blank=True,
+    )
+    non_distributable_licenses_included = ArrayField(
+        models.IntegerField(choices=get_license_choices()),
+        null=True,
+        blank=True,
+    )
+    special_permissions_included = models.ManyToManyField(
+        "AuditedSpecialPermissionsLicense",
+        related_name="channel_versions",
+        blank=True,
+    )
+
+    class Meta:
+        unique_together = ("channel", "version")
+
+    def save(self, *args, **kwargs):
+        if self.version is not None and self.version > self.channel.version:
+            raise ValidationError("Version cannot be greater than channel version")
+        self.full_clean()
+        super(ChannelVersion, self).save(*args, **kwargs)
+
+    def new_token(self):
+        if not self.secret_token:
+            self.secret_token = SecretToken.objects.create(
+                token=SecretToken.generate_new_token(), is_primary=False
+            )
+            self.save()
+        return self.secret_token
 
 
 CHANNEL_HISTORY_CHANNEL_INDEX_NAME = "idx_channel_history_channel_id"
@@ -2658,6 +2785,11 @@ class CommunityLibrarySubmission(models.Model):
                 channel_id=self.channel.id,
                 channel_version=self.channel.version,
             )
+            # Create a ChannelVersion and token for this submission
+            channel_version, _ = ChannelVersion.objects.get_or_create(
+                channel=self.channel, version=self.channel_version
+            )
+            channel_version.new_token()
 
         super().save(*args, **kwargs)
 
@@ -3357,7 +3489,7 @@ class Change(models.Model):
         table=None,
         rev=None,
         unpublishable=False,
-        **data
+        **data,
     ):
         change_type = data.pop("type")
         if table is None or table not in ALL_TABLES:

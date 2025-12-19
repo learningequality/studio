@@ -36,19 +36,19 @@ export function useLicenseAudit(channelRef, channelVersionRef) {
     }
 
     return (
-      'community_library_invalid_licenses' in versionData &&
-      'community_library_special_permissions' in versionData
+      'non_distributable_licenses_included' in versionData &&
+      'special_permissions_included' in versionData
     );
   });
 
   const invalidLicenses = computed(() => {
     const versionData = currentVersionData.value;
-    return versionData?.community_library_invalid_licenses || [];
+    return versionData?.non_distributable_licenses_included || [];
   });
 
   const specialPermissions = computed(() => {
     const versionData = currentVersionData.value;
-    return versionData?.community_library_special_permissions || [];
+    return versionData?.special_permissions_included || [];
   });
 
   const includedLicenses = computed(() => {
@@ -123,5 +123,6 @@ export function useLicenseAudit(channelRef, channelVersionRef) {
     checkAndTriggerAudit,
     triggerAudit,
     fetchPublishedData,
+    currentVersionData,
   };
 }

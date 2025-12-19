@@ -49,6 +49,7 @@ from contentcuration.constants import (
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Change
 from contentcuration.models import Channel
+from contentcuration.models import ChannelVersion
 from contentcuration.models import CommunityLibrarySubmission
 from contentcuration.models import ContentNode
 from contentcuration.models import Country
@@ -884,23 +885,45 @@ class ChannelViewSet(ValuesViewset):
     @action(
         detail=True,
         methods=["get"],
-        url_path="published_data",
-        url_name="published-data",
+        url_path="version_detail",
+        url_name="version-detail",
     )
-    def get_published_data(self, request, pk=None) -> Response:
+    def get_version_detail(self, request, pk=None) -> Response:
         """
-        Get the published data for a channel.
+        Get the version detail for a channel.
 
         :param request: The request object
         :param pk: The ID of the channel
-        :return: Response with the published data of the channel
+        :return: Response with the version detail of the channel
         :rtype: Response
         """
-        # Allow exactly users with permission to edit the channel to
-        # access the published data.
         channel = self.get_edit_object()
 
-        return Response(channel.published_data)
+        if not channel.version_info:
+            return Response({})
+
+        version_data = (
+            ChannelVersion.objects.filter(id=channel.version_info.id)
+            .values(
+                "id",
+                "version",
+                "resource_count",
+                "kind_count",
+                "size",
+                "date_published",
+                "version_notes",
+                "included_languages",
+                "included_licenses",
+                "included_categories",
+                "non_distributable_licenses_included",
+            )
+            .first()
+        )
+
+        if not version_data:
+            return Response({})
+
+        return Response(version_data)
 
     @action(
         detail=True,
