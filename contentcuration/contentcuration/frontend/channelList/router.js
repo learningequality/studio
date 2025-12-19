@@ -4,7 +4,7 @@ import StudioStarredChannels from './views/Channel/StudioStarredChannels.vue';
 import StudioViewOnlyChannels from './views/Channel/StudioViewOnlyChannels.vue';
 import StudioCollectionsTable from './views/ChannelSet/StudioCollectionsTable';
 import ChannelSetModal from './views/ChannelSet/ChannelSetModal';
-import CatalogList from './views/Channel/CatalogList';
+import StudioCatalogList from './views/Channel/StudioCatalogList';
 import { RouteNames } from './constants';
 import CatalogFAQ from './views/Channel/CatalogFAQ';
 import ChannelModal from 'shared/views/channel/ChannelModal';
@@ -66,7 +66,7 @@ const router = new VueRouter({
     {
       name: RouteNames.CATALOG_ITEMS,
       path: '/public',
-      component: CatalogList,
+      component: StudioCatalogList,
     },
     {
       name: RouteNames.CATALOG_DETAILS,
