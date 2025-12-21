@@ -16,7 +16,6 @@
             <KButton
               :id="id"
               :text="$slots['left-actions'][0]['text']"
-              :primary="false"
               appearance="flat-button"
               :aria-expanded="showAccordionItem.toString()"
               :aria-controls="id"
