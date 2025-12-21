@@ -30,7 +30,7 @@ describe('CatalogFAQ test cases', () => {
 
   it('expands accordion to show content when user clicks button', async () => {
     renderComponent();
-    const firstAccordion = document.getElementById('studio-accordion');
+    const firstAccordion = document.getElementById('selection-question');
     expect(firstAccordion).toBeInTheDocument();
 
     await fireEvent.click(firstAccordion);

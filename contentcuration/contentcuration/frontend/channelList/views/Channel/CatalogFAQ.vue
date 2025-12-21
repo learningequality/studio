@@ -10,7 +10,7 @@
       <KButton
         :text="$tr('channelLink')"
         appearance="basic-link"
-        href="#channel"
+        href="#channel-question"
         @click="openChannelAccordion()"
       />
     </p>
@@ -27,7 +27,7 @@
 
     <div class="faq-accordion">
       <!-- How do you determine what goes into this library? -->
-      <StudioAccordion>
+      <StudioAccordion id="selection-question">
         <template #left-actions>
           {{ $tr('selectionQuestion') }}
         </template>
@@ -41,7 +41,7 @@
       </StudioAccordion>
 
       <!-- How is this library created and maintained? -->
-      <StudioAccordion>
+      <StudioAccordion id="maintenance-question">
         <template #left-actions>
           {{ $tr('maintenanceQuestion') }}
         </template>
@@ -62,7 +62,7 @@
       </StudioAccordion>
 
       <!-- Have these sources been vetted or endorsed as classroom-safe and ready? -->
-      <StudioAccordion>
+      <StudioAccordion id="endoresement-question">
         <template #left-actions>
           {{ $tr('endoresementQuestion') }}
         </template>
@@ -75,7 +75,7 @@
       </StudioAccordion>
 
       <!-- Does Learning Equality own these resources? -->
-      <StudioAccordion>
+      <StudioAccordion id="ownership-question">
         <template #left-actions>
           {{ $tr('ownershipQuestion') }}
         </template>
@@ -88,7 +88,7 @@
       </StudioAccordion>
 
       <!-- Do you add new materials? -->
-      <StudioAccordion>
+      <StudioAccordion id="new-content-question">
         <template #left-actions>
           {{ $tr('newContentQuestion') }}
         </template>
@@ -101,7 +101,10 @@
       </StudioAccordion>
 
       <!-- How can I add my own materials or recommend others' materials for this library? -->
-      <StudioAccordion lastItem>
+      <StudioAccordion
+        id="custom-content-question"
+        lastItem
+      >
         <template #left-actions>
           {{ $tr('customContentQuestion') }}
         </template>
@@ -120,7 +123,7 @@
     <div class="faq-accordion">
       <!-- I found something I'm interested in and would like to start using it.
             What should I do? -->
-      <StudioAccordion>
+      <StudioAccordion id="using-content-question">
         <template #left-actions>
           {{ $tr('usingContentQuestion') }}
         </template>
@@ -140,7 +143,7 @@
       </StudioAccordion>
 
       <!-- What is a channel? -->
-      <StudioAccordion :id="'channel'">
+      <StudioAccordion id="channel-question">
         <template #left-actions>
           {{ $tr('channelQuestion') }}
         </template>
@@ -153,7 +156,7 @@
       </StudioAccordion>
 
       <!-- How do I review the contents of the channels themselves? -->
-      <StudioAccordion>
+      <StudioAccordion id="sample-content-question">
         <template #left-actions>
           {{ $tr('sampleContentQuestion') }}
         </template>
@@ -178,7 +181,7 @@
       </StudioAccordion>
 
       <!-- I want to use some of this resource, but not all of it. What should I do? -->
-      <StudioAccordion>
+      <StudioAccordion id="partial-channel-question">
         <template #left-actions>
           {{ $tr('partialChannelQuestion') }}
         </template>
@@ -191,7 +194,7 @@
       </StudioAccordion>
 
       <!-- What is coach content? -->
-      <StudioAccordion>
+      <StudioAccordion id="coach-content-question">
         <template #left-actions>
           {{ $tr('coachContentQuestion') }}
         </template>
@@ -205,7 +208,10 @@
 
       <!-- I found a bug, broken link, or instance of mislabeled information
             within a resource. What should I do? -->
-      <StudioAccordion lastItem>
+      <StudioAccordion
+        id="issue-question"
+        lastItem
+      >
         <template #left-actions>
           {{ $tr('issueQuestion') }}
         </template>
@@ -223,7 +229,7 @@
     </h2>
     <div class="faq-accordion">
       <!-- What is Kolibri? -->
-      <StudioAccordion>
+      <StudioAccordion id="kolibri-question">
         <template #left-actions>
           {{ $tr('KolibriQuestion') }}
         </template>
@@ -241,7 +247,7 @@
       </StudioAccordion>
 
       <!-- How can I use Kolibri? -->
-      <StudioAccordion>
+      <StudioAccordion id="using-kolibri-question">
         <template #left-actions>
           {{ $tr('usingKolibriQuestion') }}
         </template>
@@ -288,7 +294,10 @@
       </StudioAccordion>
 
       <!-- Who are the makers of Kolibri? -->
-      <StudioAccordion lastItem>
+      <StudioAccordion
+        id="maker-question"
+        lastItem
+      >
         <template #left-actions>
           {{ $tr('makerQuestion') }}
         </template>
@@ -331,9 +340,12 @@
     },
     methods: {
       openChannelAccordion() {
-        const channelAccordion = document.getElementById('channel');
-        if (channelAccordion.ariaExpanded === 'false') {
-          channelAccordion.click();
+        const channelAccordion = document.getElementById('channel-question');
+        if (channelAccordion) {
+          const button = document.getElementById('channel-question');
+          if (button && button.getAttribute('aria-expanded') === 'false') {
+            button.click();
+          }
         }
       },
     },

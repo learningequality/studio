@@ -12,31 +12,37 @@
           :layout8="{ span: 8 }"
           :layout12="{ span: 12 }"
         >
-          <h3>
-            <button
+          <h3 class="studio-accordion-header">
+            <KButton
               :id="id"
-              type="button"
+              :text="$slots['left-actions'][0]['text']"
+              :primary="false"
+              appearance="flat-button"
               :aria-expanded="showAccordionItem.toString()"
               :aria-controls="id"
-              class="studio-accordion-header"
+              :appearanceOverrides="appearanceOverrides"
               @click="openAccordion"
             >
-              <span class="studio-accordion-title">
-                <slot name="left-actions"></slot>
-              </span>
-              <KIcon
-                :icon="showAccordionItem ? 'chevronUp' : 'chevronDown'"
-                :color="$themePalette.grey.v_400"
-                class="accordion-icon"
-              />
-            </button>
+              <template #iconAfter>
+                <KIcon
+                  :icon="showAccordionItem ? 'chevronUp' : 'chevronDown'"
+                  :color="$themePalette.grey.v_400"
+                  class="accordion-icon"
+                />
+              </template>
+            </KButton>
           </h3>
         </KGridItem>
       </KGrid>
     </div>
 
     <KTransition kind="component-vertical-slide-out-in">
-      <div v-if="showAccordionItem">
+      <div
+        v-if="showAccordionItem"
+        :id="`${id}-content`"
+        role="region"
+        :aria-labelledby="id"
+      >
         <slot></slot>
       </div>
     </KTransition>
@@ -70,6 +76,22 @@
         showAccordionItem: false,
       };
     },
+    computed: {
+      appearanceOverrides() {
+        return {
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '10px 24px',
+          textAlign: 'left',
+          cursor: 'pointer',
+          textTransform: 'none',
+          textWrap: 'stable',
+          lineHeight: '18px',
+        };
+      },
+    },
     methods: {
       openAccordion() {
         this.showAccordionItem = !this.showAccordionItem;
@@ -83,12 +105,9 @@
 <style lang="scss" scoped>
 
   .studio-accordion-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    padding: 10px 24px;
-    cursor: pointer;
+    ::v-deep .link-text {
+      width: 100%;
+    }
   }
 
   .studio-accordion-title {
@@ -102,6 +121,7 @@
   }
 
   .accordion-icon {
+    flex-shrink: 0;
     font-size: 24px;
     text-align: right;
   }
