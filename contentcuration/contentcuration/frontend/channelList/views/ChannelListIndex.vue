@@ -36,7 +36,7 @@
           v-for="listType in lists"
           :key="listType.id"
           :to="getChannelLink(listType)"
-          :badge-value="invitationsByListCounts[listType]"
+          :badgeValue="invitationsByListCounts[listType]"
           @click="trackTabClick(listType)"
         >
           {{ translateConstant(listType) }}
@@ -100,7 +100,8 @@
   import { ChannelListTypes } from 'shared/constants';
   import { constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
-
+  import StudioNavigation from 'shared/views/StudioNavigation';
+  import StudioNavigationTab from 'shared/views/StudioNavigationTab';
   import StudioOfflineAlert from 'shared/views/StudioOfflineAlert.vue';
   import PolicyModals from 'shared/views/policies/PolicyModals';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
@@ -123,6 +124,9 @@
   export default {
     name: 'ChannelListIndex',
     components: {
+      StudioNavigation,
+      StudioNavigationTab,
+      ChannelInvitation,
       ChannelListAppError,
       GlobalSnackbar,
       PolicyModals,
