@@ -27,41 +27,36 @@
         {{ isFAQPage ? $tr('frequentlyAskedQuestions') : $tr('libraryTitle') }}
       </VToolbarTitle>
     </VToolbar>
-    <AppBar v-else>
-      <template
-        v-if="loggedIn"
+    <StudioNavigation v-else>
+      <template 
+        v-if="loggedIn" 
         #tabs
       >
-        <VTab
+        <StudioNavigationTab
           v-for="listType in lists"
           :key="listType.id"
           :to="getChannelLink(listType)"
+          :badge-value="invitationsByListCounts[listType]"
           @click="trackTabClick(listType)"
         >
-          <VBadge
-            :value="invitationsByListCounts[listType]"
-            color="black"
-          >
-            <template #badge>
-              <span>{{ $formatNumber(invitationsByListCounts[listType]) }}</span>
-            </template>
-            <span>{{ translateConstant(listType) }}</span>
-          </VBadge>
-        </VTab>
-        <VTab
+          {{ translateConstant(listType) }}
+        </StudioNavigationTab>
+        
+        <StudioNavigationTab
           :to="catalogLink"
           @click="publicTabClick"
         >
           {{ $tr('catalog') }}
-        </VTab>
-        <VTab
+        </StudioNavigationTab>
+        
+        <StudioNavigationTab
           :to="channelSetLink"
           @click="channelSetsTabClick"
         >
           {{ $tr('channelSets') }}
-        </VTab>
+        </StudioNavigationTab>
       </template>
-    </AppBar>
+    </StudioNavigation>
     <VContent>
       <StudioOfflineAlert
         v-if="!isCatalogPage"
