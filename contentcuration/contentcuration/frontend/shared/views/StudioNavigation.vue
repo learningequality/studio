@@ -130,7 +130,7 @@
     <SidePanelModal
       v-if="loggedIn && sidePanelOpen"
       alignment="left"
-      :style="{ '--side-panel-width': '300px' }"
+      sidePanelWidth="300px"
       :aria-label="$tr('navigationMenu')"
       closeButtonIconType="clear"
       immersive
@@ -605,13 +605,6 @@
     align-items: center;
     min-height: 48px;
     padding: 0 16px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-
-    &::-webkit-scrollbar {
-      display: none;
-    }
 
     /* Focus within styling for keyboard navigation */
     &:focus-within {
@@ -619,14 +612,12 @@
     }
   }
 
+  /* Side panel styles */
   .side-panel-header {
     display: flex;
     align-items: center;
     min-height: 60px;
     padding: 0 16px;
-    width: 300px;
-    max-width: 300px;
-    min-width: 300px;
   }
 
   .side-panel-title {
@@ -639,17 +630,12 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    width: 300px;
-    max-width: 300px;
-    min-width: 300px;
   }
 
   .side-panel-nav {
     flex: 1;
     padding: 16px 0;
-    width: 300px;
-    max-width: 300px;
-    min-width: 300px;
+    width: 100%;
   }
 
   .side-panel-nav-item {
@@ -695,6 +681,33 @@
       &:hover {
         text-decoration: underline;
       }
+    }
+  }
+
+  /* Mobile styles */
+  @media (max-width: 767px) {
+    .studio-navigation__title {
+      margin-left: 12px;
+      font-size: 18px;
+    }
+
+    .studio-navigation__tabs-container {
+      padding: 0 12px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+    }
+
+    .studio-navigation__user-name {
+      display: none;
+    }
+
+    .studio-navigation__actions {
+      gap: 8px;
     }
   }
 
