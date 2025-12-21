@@ -29,17 +29,16 @@
         />
 
         <!-- Logo link for non-logged in users -->
-        <KRouterLink
+        <KExternalLink
           v-else
-          :to="homeLink"
-          exact
+          :href="homeLink"
           class="studio-navigation__logo-link"
         >
           <KLogo
             altText="Kolibri Logo with background"
             :size="36"
           />
-        </KRouterLink>
+        </KExternalLink>
       </template>
 
       <template #brand>
@@ -131,7 +130,7 @@
     <SidePanelModal
       v-if="loggedIn && sidePanelOpen"
       alignment="left"
-      sidePanelWidth="300px"
+      :style="{ '--side-panel-width': '300px' }"
       :aria-label="$tr('navigationMenu')"
       closeButtonIconType="clear"
       immersive
@@ -148,8 +147,8 @@
       <template #default>
         <div class="side-panel-content">
           <nav class="side-panel-nav">
-            <KRouterLink
-              :to="channelsLink"
+            <KExternalLink
+              :href="channelsLink"
               class="side-panel-nav-item subheading"
               appearance="flat-button"
               :appearanceOverrides="navItemAppearance"
@@ -160,11 +159,11 @@
                 icon="home"
               />
               <span class="side-panel-nav-text">{{ $tr('channelsLink') }}</span>
-            </KRouterLink>
+            </KExternalLink>
 
-            <KRouterLink
+            <KExternalLink
               v-if="user?.is_admin"
-              :to="administrationLink"
+              :href="administrationLink"
               class="side-panel-nav-item subheading"
               appearance="flat-button"
               :appearanceOverrides="navItemAppearance"
@@ -175,10 +174,10 @@
                 icon="people"
               />
               <span class="side-panel-nav-text">{{ $tr('administrationLink') }}</span>
-            </KRouterLink>
+            </KExternalLink>
 
-            <KRouterLink
-              :to="settingsLink"
+            <KExternalLink
+              :href="settingsLink"
               class="side-panel-nav-item subheading"
               appearance="flat-button"
               :appearanceOverrides="navItemAppearance"
@@ -192,7 +191,7 @@
                 icon="settings"
               />
               <span class="side-panel-nav-text">{{ $tr('settingsLink') }}</span>
-            </KRouterLink>
+            </KExternalLink>
 
             <KButton
               appearance="flat-button"
@@ -304,7 +303,6 @@
       return {
         sidePanelOpen: false,
         showLanguageModal: false,
-        isMobile: window.innerWidth < 768,
       };
     },
     computed: {
@@ -390,7 +388,6 @@
       },
     },
     mounted() {
-      window.addEventListener('resize', this.handleResize);
       this.updateTabIndices();
     },
     updated() {
@@ -399,14 +396,8 @@
         this.updateTabIndices();
       });
     },
-    beforeUnmount() {
-      window.removeEventListener('resize', this.handleResize);
-    },
     methods: {
       ...mapActions(['logout']),
-      handleResize() {
-        this.isMobile = window.innerWidth < 768;
-      },
       toggleSidePanel() {
         this.sidePanelOpen = !this.sidePanelOpen;
       },
@@ -614,6 +605,13 @@
     align-items: center;
     min-height: 48px;
     padding: 0 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
 
     /* Focus within styling for keyboard navigation */
     &:focus-within {
@@ -621,12 +619,14 @@
     }
   }
 
-  /* Side panel styles */
   .side-panel-header {
     display: flex;
     align-items: center;
     min-height: 60px;
     padding: 0 16px;
+    width: 300px;
+    max-width: 300px;
+    min-width: 300px;
   }
 
   .side-panel-title {
@@ -639,12 +639,17 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+    width: 300px;
+    max-width: 300px;
+    min-width: 300px;
   }
 
   .side-panel-nav {
     flex: 1;
     padding: 16px 0;
-    width: 100%;
+    width: 300px;
+    max-width: 300px;
+    min-width: 300px;
   }
 
   .side-panel-nav-item {
@@ -690,33 +695,6 @@
       &:hover {
         text-decoration: underline;
       }
-    }
-  }
-
-  /* Mobile styles */
-  @media (max-width: 767px) {
-    .studio-navigation__title {
-      margin-left: 12px;
-      font-size: 18px;
-    }
-
-    .studio-navigation__tabs-container {
-      padding: 0 12px;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-
-      &::-webkit-scrollbar {
-        display: none;
-      }
-    }
-
-    .studio-navigation__user-name {
-      display: none;
-    }
-
-    .studio-navigation__actions {
-      gap: 8px;
     }
   }
 
