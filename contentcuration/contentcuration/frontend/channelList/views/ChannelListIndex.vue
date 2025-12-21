@@ -28,27 +28,25 @@
       </VToolbarTitle>
     </VToolbar>
     <StudioNavigation v-else>
-      <template 
-        v-if="loggedIn" 
+      <template
+        v-if="loggedIn"
         #tabs
       >
         <StudioNavigationTab
           v-for="listType in lists"
           :key="listType.id"
           :to="getChannelLink(listType)"
-          :badge-value="invitationsByListCounts[listType]"
+          :badgeValue="invitationsByListCounts[listType]"
           @click="trackTabClick(listType)"
         >
           {{ translateConstant(listType) }}
         </StudioNavigationTab>
-        
         <StudioNavigationTab
           :to="catalogLink"
           @click="publicTabClick"
         >
           {{ $tr('catalog') }}
         </StudioNavigationTab>
-        
         <StudioNavigationTab
           :to="channelSetLink"
           @click="channelSetsTabClick"
@@ -132,7 +130,8 @@
   import { ChannelListTypes } from 'shared/constants';
   import { constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
-  import AppBar from 'shared/views/AppBar';
+  import StudioNavigation from 'shared/views/StudioNavigation';
+  import StudioNavigationTab from 'shared/views/StudioNavigationTab';
   import StudioOfflineAlert from 'shared/views/StudioOfflineAlert.vue';
   import PolicyModals from 'shared/views/policies/PolicyModals';
 
@@ -154,7 +153,8 @@
   export default {
     name: 'ChannelListIndex',
     components: {
-      AppBar,
+      StudioNavigation,
+      StudioNavigationTab,
       ChannelInvitation,
       ChannelListAppError,
       GlobalSnackbar,
