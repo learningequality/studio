@@ -12,14 +12,16 @@
 
     <KToolbar
       type="clear"
-      :style="{ backgroundColor: $themeTokens.appBar }"
+      :style="{
+        backgroundColor: $themeTokens.appBar,
+        height: '56px',
+      }"
       :raised="false"
-      :removeNavIcon="true"
     >
       <template #icon>
         <!-- Menu button for logged in users -->
         <KIconButton
-          v-if="loggedIn && showMenuButton"
+          v-if="loggedIn"
           icon="menu"
           :color="$themeTokens.text"
           :ariaLabel="$tr('openMenu')"
@@ -53,73 +55,57 @@
           class="studio-navigation__actions"
         >
           <template v-if="loggedIn">
-            <KDropdownMenu
-              ref="userDropdownMenu"
-              :items="userMenuItems"
-              alignment="right"
-              @select="handleUserMenuSelect"
+            <KButton
+              appearance="flat-button"
+              style="text-transform: none"
+              :ariaLabel="$tr('userMenuLabel')"
             >
-              <template #default="{ toggle, isOpen }">
-                <KButton
-                  appearance="flat"
-                  style="text-transform: none"
-                  :ariaLabel="$tr('userMenuLabel')"
-                  :ariaExpanded="isOpen"
-                  @click="toggle"
-                >
-                  <KIcon
-                    icon="person"
-                    :color="$themeTokens.text"
-                    size="small"
-                  />
-                  <span class="studio-navigation__user-name">
-                    {{ user.first_name }}
-                  </span>
-                  <KIcon
-                    icon="dropdown"
-                    :color="$themeTokens.text"
-                    size="small"
-                    :class="{
-                      'studio-navigation__dropdown-icon': true,
-                      'studio-navigation__dropdown-icon--open': isOpen,
-                    }"
-                  />
-                </KButton>
-              </template>
-            </KDropdownMenu>
+              <KIconButton
+                :disabled="true"
+                icon="person"
+                color="black"
+              />
+              <span class="mx-2 subheading">
+                {{ user.first_name }}
+              </span>
+              <KIconButton
+                :disabled="true"
+                icon="dropdown"
+                color="black"
+              />
+
+              <KDropdownMenu
+                :options="userMenuItems"
+                :hasIcons="true"
+                @select="handleUserMenuSelect"
+              />
+            </KButton>
           </template>
 
           <template v-else>
-            <KDropdownMenu
-              :items="guestMenuItems"
-              alignment="right"
-              @select="handleGuestMenuSelect"
+            <KButton
+              appearance="flat-button"
+              style="text-transform: none"
+              :ariaLabel="$tr('guestMenuLabel')"
+              class="guest-menu-button"
             >
-              <template #default="{ toggle, isOpen }">
-                <KButton
-                  appearance="flat"
-                  style="text-transform: none"
-                  :ariaLabel="$tr('guestMenuLabel')"
-                  :ariaExpanded="isOpen"
-                  @click="toggle"
-                >
-                  <KIcon
-                    icon="person"
-                    :color="$themeTokens.text"
-                    size="small"
-                  />
-                  <KIcon
-                    icon="dropdown"
-                    :color="$themeTokens.text"
-                    size="small"
-                    :class="{
-                      'studio-navigation__dropdown-icon': true,
-                      'studio-navigation__dropdown-icon--open': isOpen,
-                    }"
-                  />
-                </KButton>
-              </template>
-            </KDropdownMenu>
+              <KIconButton
+                :disabled="true"
+                icon="person"
+                color="black"
+              />
+              <KIconButton
+                :disabled="true"
+                icon="dropdown"
+                color="black"
+              />
+
+              <KDropdownMenu
+                :options="guestMenuItems"
+                :hasIcons="true"
+                @select="handleGuestMenuSelect"
+              />
+            </KButton>
           </template>
         </div>
       </template>
@@ -130,9 +116,6 @@
       v-if="hasTabs"
       class="studio-navigation__tabs-extension"
       :aria-label="$tr('mainNavigationLabel')"
-      :style="{
-        backgroundColor: $themeTokens.appBar,
-      }"
     >
       <div
         ref="tabsContainer"
@@ -148,7 +131,10 @@
     <SidePanelModal
       v-if="loggedIn && sidePanelOpen"
       alignment="left"
+      sidePanelWidth="300px"
       :aria-label="$tr('navigationMenu')"
+      closeButtonIconType="clear"
+      immersive
       @closePanel="sidePanelOpen = false"
     >
       <template #header>
@@ -164,13 +150,14 @@
           <nav class="side-panel-nav">
             <KRouterLink
               :to="channelsLink"
-              class="side-panel-nav-item"
+              class="side-panel-nav-item subheading"
+              appearance="flat-button"
+              :appearanceOverrides="navItemAppearance"
               @click.native="sidePanelOpen = false"
             >
-              <KIcon
+              <KIconButton
+                :disabled="true"
                 icon="home"
-                size="small"
-                :color="$themeTokens.text"
               />
               <span class="side-panel-nav-text">{{ $tr('channelsLink') }}</span>
             </KRouterLink>
@@ -178,71 +165,74 @@
             <KRouterLink
               v-if="user?.is_admin"
               :to="administrationLink"
-              class="side-panel-nav-item"
+              class="side-panel-nav-item subheading"
+              appearance="flat-button"
+              :appearanceOverrides="navItemAppearance"
               @click.native="sidePanelOpen = false"
             >
-              <KIcon
+              <KIconButton
+                :disabled="true"
                 icon="people"
-                size="small"
-                :color="$themeTokens.text"
               />
               <span class="side-panel-nav-text">{{ $tr('administrationLink') }}</span>
             </KRouterLink>
 
             <KRouterLink
               :to="settingsLink"
-              class="side-panel-nav-item"
+              class="side-panel-nav-item subheading"
+              appearance="flat-button"
+              :appearanceOverrides="navItemAppearance"
               @click.native="
                 sidePanelOpen = false;
                 trackClick('Settings');
               "
             >
-              <KIcon
+              <KIconButton
+                :disabled="true"
                 icon="settings"
-                size="small"
-                :color="$themeTokens.text"
               />
               <span class="side-panel-nav-text">{{ $tr('settingsLink') }}</span>
             </KRouterLink>
 
             <KButton
-              appearance="flat"
-              class="side-panel-nav-item"
+              appearance="flat-button"
+              class="side-panel-nav-item subheading"
+              :appearanceOverrides="navItemAppearance"
               @click="openLanguageModal"
             >
-              <KIcon
+              <KIconButton
+                :disabled="true"
                 icon="language"
-                size="small"
-                :color="$themeTokens.text"
               />
               <span class="side-panel-nav-text">{{ $tr('changeLanguage') }}</span>
             </KButton>
 
             <KExternalLink
               :href="helpLink"
-              class="side-panel-nav-item"
+              class="side-panel-nav-item subheading"
+              appearance="flat-button"
+              :appearanceOverrides="navItemAppearance"
               @click.native="
                 sidePanelOpen = false;
                 trackClick('Help');
               "
             >
-              <KIcon
+              <KIconButton
+                :disabled="true"
                 icon="openNewTab"
-                size="small"
-                :color="$themeTokens.text"
               />
               <span class="side-panel-nav-text">{{ $tr('helpLink') }}</span>
             </KExternalLink>
 
             <KButton
-              appearance="flat"
-              class="side-panel-nav-item"
+              appearance="flat-button"
+              class="side-panel-nav-item subheading"
+              :appearanceOverrides="navItemAppearance"
               @click="logout"
             >
-              <KIcon
+              <KIconButton
+                :disabled="true"
                 icon="logout"
-                size="small"
-                :color="$themeTokens.text"
               />
               <span class="side-panel-nav-text">{{ $tr('logoutLink') }}</span>
             </KButton>
@@ -309,10 +299,6 @@
         required: false,
         default: null,
       },
-      showMenuButton: {
-        type: Boolean,
-        default: true,
-      },
     },
     data() {
       return {
@@ -328,6 +314,11 @@
       ...mapGetters(['loggedIn']),
       hasTabs() {
         return !!this.$slots.tabs;
+      },
+      navItemAppearance() {
+        return {
+          justifyContent: 'flex-start',
+        };
       },
       homeLink() {
         return window.Urls?.channels() || '/';
@@ -373,9 +364,6 @@
             label: this.$tr('help'),
             value: 'help',
             icon: 'openNewTab',
-          },
-          {
-            type: 'separator',
           },
           {
             label: this.$tr('logOut'),
@@ -435,6 +423,7 @@
             break;
           case 'help':
             window.open(this.helpLink, '_blank');
+            this.trackClick('Help');
             break;
           case 'logout':
             this.logout();
@@ -466,8 +455,8 @@
         if (!tabs.length) return;
 
         // Find currently focused tab
-        const currentIndex = tabs.findIndex(tab => 
-          tab === event.target || tab.contains(event.target)
+        const currentIndex = tabs.findIndex(
+          tab => tab === event.target || tab.contains(event.target),
         );
 
         if (currentIndex === -1) return;
@@ -515,17 +504,17 @@
       getTabElements() {
         // Get all tab children from the slot
         if (!this.$refs.tabsContainer) return [];
-        
+
         // Find all interactive elements that represent tabs
         const tabs = Array.from(
-          this.$refs.tabsContainer.querySelectorAll('a[role], button[role="tab"], a[href]')
+          this.$refs.tabsContainer.querySelectorAll('a[role], button[role="tab"], a[href]'),
         );
-        
+
         return tabs;
       },
       focusTab(tabElement) {
         if (!tabElement) return;
-        
+
         // Try to call focus method on Vue component instance if available
         const vueInstance = tabElement.__vueParentComponent?.ctx;
         if (vueInstance?.focus) {
@@ -541,9 +530,10 @@
         if (!tabs.length) return;
 
         // Find active tab or use first tab
-        const activeTab = tabs.find(tab => 
-          tab.getAttribute('aria-current') === 'page' ||
-          tab.getAttribute('aria-selected') === 'true'
+        const activeTab = tabs.find(
+          tab =>
+            tab.getAttribute('aria-current') === 'page' ||
+            tab.getAttribute('aria-selected') === 'true',
         );
         const focusableTab = activeTab || tabs[0];
 
@@ -581,34 +571,13 @@
 
 <style lang="scss" scoped>
 
+  @import '~kolibri-design-system/lib/styles/definitions';
+
   .studio-navigation {
     position: sticky;
     top: 0;
     z-index: 5;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-
-  ::v-deep .k-toolbar-left {
-    display: flex;
-    align-items: center;
-    margin-left: 8px;
-  }
-
-  ::v-deep .k-toolbar-brand {
-    display: flex;
-    align-items: center;
-    margin-right: 24px;
-  }
-
-  ::v-deep .k-toolbar-navigation {
-    display: flex;
-    align-items: center;
-    margin-left: 24px;
-  }
-
-  ::v-deep .k-toolbar-right {
-    display: flex;
-    align-items: center;
   }
 
   .studio-navigation__logo-link {
@@ -629,35 +598,15 @@
     font-weight: 500;
   }
 
-  .studio-navigation__tabs {
-    display: flex;
-    align-items: center;
-    height: 100%;
-  }
-
   .studio-navigation__actions {
     display: flex;
     gap: 16px;
     align-items: center;
   }
 
-  .studio-navigation__user-name {
-    margin: 0 8px;
-    font-size: 14px;
-    font-weight: 500;
-  }
-
-  .studio-navigation__dropdown-icon {
-    transition: transform 0.2s ease;
-
-    &--open {
-      transform: rotate(180deg);
-    }
-  }
-
   /* Tabs extension area */
   .studio-navigation__tabs-extension {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    @extend %dropshadow-2dp;
   }
 
   .studio-navigation__tabs-container {
@@ -695,34 +644,21 @@
   .side-panel-nav {
     flex: 1;
     padding: 16px 0;
+    width: 100%;
   }
 
   .side-panel-nav-item {
     display: flex;
-    gap: 16px;
     align-items: center;
+    gap: 12px;
     width: 100%;
-    padding: 12px 24px;
-    font-size: 16px;
+    margin: 0;
+    padding: 8px 16px;
     text-align: left;
-    text-decoration: none;
-    cursor: pointer;
-    background: transparent;
-    outline: none;
-    transition: background-color 0.2s ease;
-
-    &:hover {
-      background-color: rgba(0, 0, 0, 0.04);
-    }
-
-    &:focus-visible {
-      outline: 2px solid currentcolor;
-      outline-offset: -2px;
-    }
+    justify-content: flex-start;
   }
 
   .side-panel-nav-text {
-    flex: 1;
     font-size: 16px;
     font-weight: 500;
   }
@@ -764,10 +700,6 @@
       font-size: 18px;
     }
 
-    .studio-navigation__tabs {
-      display: none;
-    }
-
     .studio-navigation__tabs-container {
       padding: 0 12px;
       overflow-x: auto;
@@ -802,10 +734,6 @@
 
     .side-panel-nav-item {
       text-align: right;
-    }
-
-    .studio-navigation__dropdown-icon--open {
-      transform: rotate(180deg) scaleX(-1);
     }
   }
 
