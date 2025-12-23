@@ -630,23 +630,22 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+    
   }
-
   .side-panel-nav {
     flex: 1;
-    padding: 16px 0;
     width: 100%;
   }
 
   .side-panel-nav-item {
     display: flex;
-    align-items: center;
     gap: 12px;
     width: 100%;
     margin: 0;
     padding: 8px 16px;
-    text-align: left;
-    justify-content: flex-start;
+  }
+  .side-panel-nav-item.button {
+    text-align: start;
   }
 
   .side-panel-nav-text {
