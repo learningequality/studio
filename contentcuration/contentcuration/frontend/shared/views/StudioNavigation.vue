@@ -646,7 +646,6 @@
   }
   .side-panel-nav-item.button {
     text-align: start;
-    padding: 0px;
   }
 
   .side-panel-nav-text {
