@@ -145,7 +145,7 @@
       </template>
 
       <template #default>
-        <div class="side-panel-content">
+        <div class="sidepanel-content">
           <nav class="side-panel-nav">
             <KExternalLink
               :href="channelsLink"
@@ -626,7 +626,7 @@
     font-weight: 500;
   }
 
-  .side-panel-content {
+  .sidepanel-content {
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -643,8 +643,10 @@
     gap: 12px;
     width: 100%;
     padding: 8px 16px;
-    text-align: left;
-    justify-content: flex-start;
+  }
+  .side-panel-nav-item.button {
+    text-align: start;
+    padding: 0px;
   }
 
   .side-panel-nav-text {
