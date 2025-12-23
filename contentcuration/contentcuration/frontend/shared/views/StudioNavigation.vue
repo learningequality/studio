@@ -630,24 +630,21 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+    
   }
-
   .side-panel-nav {
     flex: 1;
-    width: 100%;
-    padding: 16px 0;
     width: 100%;
   }
 
   .side-panel-nav-item {
     display: flex;
-    gap: 12px;
     align-items: center;
-    justify-content: flex-start;
+    gap: 12px;
     width: 100%;
     padding: 8px 16px;
-    margin: 0;
     text-align: left;
+    justify-content: flex-start;
   }
 
   .side-panel-nav-text {
