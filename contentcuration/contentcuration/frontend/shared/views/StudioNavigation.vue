@@ -320,6 +320,7 @@
           justifyContent: 'flex-start',
           fontSize: '16px',
           textTransform: 'none',
+          height: '48px',
         };
       },
       homeLink() {
