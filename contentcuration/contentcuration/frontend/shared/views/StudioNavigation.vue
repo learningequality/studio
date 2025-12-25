@@ -637,8 +637,7 @@
 }
 
   .side-panel-nav {
-    flex: 1;
-    width: 100%;
+    padding: 4px;
   }
 
   .side-panel-nav-item {
