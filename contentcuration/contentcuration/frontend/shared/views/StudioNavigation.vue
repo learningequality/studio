@@ -193,18 +193,18 @@
               <span class="side-panel-nav-text">{{ $tr('settingsLink') }}</span>
             </KExternalLink>
 
-            <KButton
+            <KExternalLink
               appearance="flat-button"
               class="side-panel-nav-item subheading"
               :appearanceOverrides="navItemAppearance"
-              @click="openLanguageModal"
+              @click.native.prevent="openLanguageModal"
             >
               <KIconButton
                 :disabled="true"
                 icon="language"
               />
               <span class="side-panel-nav-text">{{ $tr('changeLanguage') }}</span>
-            </KButton>
+            </KExternalLink>
 
             <KExternalLink
               :href="helpLink"
@@ -223,18 +223,18 @@
               <span class="side-panel-nav-text">{{ $tr('helpLink') }}</span>
             </KExternalLink>
 
-            <KButton
+            <KExternalLink
               appearance="flat-button"
               class="side-panel-nav-item subheading"
               :appearanceOverrides="navItemAppearance"
-              @click="logout"
+              @click.native.prevent="logout"
             >
               <KIconButton
                 :disabled="true"
                 icon="logout"
               />
               <span class="side-panel-nav-text">{{ $tr('logoutLink') }}</span>
-            </KButton>
+            </KExternalLink>
           </nav>
 
           <div class="side-panel-footer">
@@ -318,6 +318,8 @@
       navItemAppearance() {
         return {
           justifyContent: 'flex-start',
+          fontSize: '16px',
+          textTransform: 'none',
         };
       },
       homeLink() {
