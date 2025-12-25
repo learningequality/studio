@@ -632,6 +632,10 @@
     height: 100%;
     
   }
+  ::v-deep .side-panel-content {
+  padding: 0 !important;
+}
+
   .side-panel-nav {
     flex: 1;
     width: 100%;
