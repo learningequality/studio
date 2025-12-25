@@ -249,6 +249,7 @@
             <KExternalLink
               :href="copyrightLink"
               class="side-panel-copyright"
+              openInNewTab
               @click.native="sidePanelOpen = false"
             >
               {{ $tr('copyright', { year: new Date().getFullYear() }) }}
@@ -257,6 +258,7 @@
             <p class="side-panel-feedback">
               <KExternalLink
                 href="https://community.learningequality.org/c/support/studio"
+                openInNewTab
                 @click.native="sidePanelOpen = false"
               >
                 {{ $tr('giveFeedback') }}
