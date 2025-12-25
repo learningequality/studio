@@ -637,8 +637,8 @@
 }
 
   .side-panel-nav {
-    padding: 4px;
-  }
+  padding: 8px 0;
+}
 
   .side-panel-nav-item {
     display: flex;
