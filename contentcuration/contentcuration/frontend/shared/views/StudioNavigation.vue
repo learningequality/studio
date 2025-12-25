@@ -658,8 +658,7 @@
 
   .side-panel-footer {
     padding: 24px;
-    text-align: center;
-    border-top: 1px solid rgba(0, 0, 0, 0.12);
+    text-align: left;
   }
 
   .side-panel-logo {
