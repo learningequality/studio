@@ -211,10 +211,7 @@
               class="side-panel-nav-item subheading"
               appearance="flat-button"
               :appearanceOverrides="navItemAppearance"
-              @click.native="
-                sidePanelOpen = false;
-                trackClick('Help');
-              "
+              @click.native="handleHelpClick"
             >
               <KIconButton
                 :disabled="true"
@@ -435,6 +432,12 @@
             this.showLanguageModal = true;
             break;
         }
+      },
+      handleHelpClick(event) {
+        event.preventDefault();
+        this.sidePanelOpen = false;
+        this.trackClick('Help');
+        window.open(this.helpLink, '_blank', 'noopener,noreferrer');
       },
       trackClick(label) {
         if (this.$analytics) {
