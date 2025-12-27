@@ -42,9 +42,15 @@
       </template>
 
       <template #brand>
-        <span class="studio-navigation__title">
-          {{ title || $tr('title') }}
-        </span>
+        <div
+          v-if="shouldShowTitle"
+          class="text-truncate"
+          style="max-width: 150px"
+        >
+          <span class="studio-navigation__title">
+            {{ title || $tr('title') }}
+          </span>
+        </div>
       </template>
 
       <template #actions>
@@ -64,7 +70,10 @@
                 icon="person"
                 color="black"
               />
-              <span class="mx-2 subheading">
+              <span
+                v-if="shouldShowTitle"
+                class="mx-2 subheading"
+              >
                 {{ user.first_name }}
               </span>
               <KIconButton
@@ -302,6 +311,7 @@
       return {
         sidePanelOpen: false,
         showLanguageModal: false,
+        windowWidth: 0,
       };
     },
     computed: {
@@ -388,15 +398,24 @@
           },
         ];
       },
+      shouldShowTitle() {
+        // Hide title when screen width is less than 500px
+        return this.windowWidth >= 400;
+      },
     },
     mounted() {
       this.updateTabIndices();
+      this.updateWindowWidth();
+      window.addEventListener('resize', this.updateWindowWidth);
     },
     updated() {
       // Update tab indices whenever tabs change
       this.$nextTick(() => {
         this.updateTabIndices();
       });
+    },
+    beforeDestroy() {
+      window.removeEventListener('resize', this.updateWindowWidth);
     },
     methods: {
       ...mapActions(['logout']),
@@ -447,6 +466,9 @@
       openLanguageModal() {
         this.sidePanelOpen = false;
         this.showLanguageModal = true;
+      },
+      updateWindowWidth() {
+        this.windowWidth = window.innerWidth;
       },
       handleTabsKeydown(event) {
         // Get all tab elements
@@ -592,9 +614,16 @@
   }
 
   .studio-navigation__title {
-    margin-left: 16px;
+    display: block;
+    width: 100%;
     font-size: 20px;
     font-weight: 500;
+  }
+
+  .text-truncate {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   .studio-navigation__actions {
