@@ -351,9 +351,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         tree_cte = With(self.get_user_active_trees().distinct(), name="trees")
 
         user_files_cte = With(
-            self.files.get_queryset()
-            .values("checksum", "contentnode_id", "file_format_id")
-            .distinct(),
+            self.files.get_queryset().only(
+                "id",
+                "checksum",
+                "contentnode_id",
+                "file_format_id",
+                "file_size",
+                "preset_id",
+            ),
             name="user_files",
         )
 
@@ -364,7 +369,8 @@ class User(AbstractBaseUser, PermissionsMixin):
             .filter(
                 Exists(
                     tree_cte.join(
-                        ContentNode.objects.all(), tree_id=tree_cte.col.tree_id
+                        ContentNode.objects.only("id", "tree_id"),
+                        tree_id=tree_cte.col.tree_id,
                     )
                     .with_cte(tree_cte)
                     .filter(id=OuterRef("contentnode_id"))
@@ -395,10 +401,15 @@ class User(AbstractBaseUser, PermissionsMixin):
             )
         )
 
+        unique_staging_ids = (
+            staging_files_qs.order_by("checksum", "id")
+            .distinct("checksum")
+            .values("id")
+        )
         staged_size = float(
-            staging_files_qs.values("checksum")
-            .distinct()
-            .aggregate(used=Sum("file_size"))["used"]
+            staging_files_qs.filter(id__in=Subquery(unique_staging_ids)).aggregate(
+                used=Sum("file_size")
+            )["used"]
             or 0
         )
 
@@ -446,19 +457,26 @@ class User(AbstractBaseUser, PermissionsMixin):
         tree_cte = With(self.get_user_active_trees().distinct(), name="trees")
 
         user_files_cte = With(
-            self.files.get_queryset()
-            .values("checksum", "contentnode_id", "file_format_id")
-            .distinct(),
+            self.files.get_queryset().only(
+                "id",
+                "checksum",
+                "contentnode_id",
+                "file_format_id",
+                "file_size",
+                "preset_id",
+            ),
             name="user_files",
         )
-        file_qs = (
+
+        base_files_qs = (
             user_files_cte.queryset()
             .with_cte(tree_cte)
             .with_cte(user_files_cte)
             .filter(
                 Exists(
                     tree_cte.join(
-                        ContentNode.objects.all(), tree_id=tree_cte.col.tree_id
+                        ContentNode.objects.only("id", "tree_id"),
+                        tree_id=tree_cte.col.tree_id,
                     )
                     .with_cte(tree_cte)
                     .filter(id=OuterRef("contentnode_id"))
@@ -466,9 +484,15 @@ class User(AbstractBaseUser, PermissionsMixin):
             )
         )
 
-        files_qs = self._filter_storage_billable_files(file_qs)
+        base_files_qs = self._filter_storage_billable_files(base_files_qs)
 
-        return files_qs.values("checksum").distinct()
+        unique_file_ids = (
+            base_files_qs.order_by("checksum", "id").distinct("checksum").values("id")
+        )
+
+        files_qs = base_files_qs.filter(id__in=Subquery(unique_file_ids))
+
+        return files_qs
 
     def _filter_storage_billable_files(self, queryset):
         """
