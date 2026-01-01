@@ -381,21 +381,33 @@ class User(AbstractBaseUser, PermissionsMixin):
         editable_files_qs = self._filter_storage_billable_files(editable_files_qs)
 
         existing_checksums_cte = With(
-            editable_files_qs.values("checksum").distinct(), name="existing_checksums"
-        )
-
-        staging_files_qs = self._filter_storage_billable_files(
-            self.files.filter(contentnode__tree_id=channel.staging_tree.tree_id)
+            editable_files_qs.values("checksum", "file_format_id").distinct(),
+            name="existing_checksums",
         )
 
         staging_files_qs = (
-            staging_files_qs.with_cte(tree_cte)
+            user_files_cte.queryset()
             .with_cte(user_files_cte)
+            .filter(
+                Exists(
+                    ContentNode.objects.only("id").filter(
+                        tree_id=channel.staging_tree.tree_id,
+                        id=OuterRef("contentnode_id"),
+                    )
+                )
+            )
+        )
+
+        staging_files_qs = self._filter_storage_billable_files(staging_files_qs)
+
+        staging_files_qs = (
+            staging_files_qs.with_cte(tree_cte)
             .with_cte(existing_checksums_cte)
             .exclude(
                 Exists(
                     existing_checksums_cte.queryset().filter(
-                        checksum=OuterRef("checksum")
+                        checksum=OuterRef("checksum"),
+                        file_format_id=OuterRef("file_format_id"),
                     )
                 )
             )
