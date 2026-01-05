@@ -79,7 +79,7 @@ export function useSpecialPermissions(channelVersionId) {
 
   watch(
     () => unref(channelVersionId),
-    (versionId) => {
+    versionId => {
       fetchPermissions(versionId);
     },
     { immediate: true },
