@@ -441,7 +441,6 @@
         isLoading: licenseAuditIsLoading,
         isFinished: licenseAuditIsFinished,
         invalidLicenses,
-        specialPermissions,
         includedLicenses,
         checkAndTriggerAudit: checkAndTriggerLicenseAudit,
       } = useLicenseAudit(props.channel, currentChannelVersion);
@@ -589,7 +588,6 @@
         licenseAuditIsLoading,
         licenseAuditIsFinished,
         invalidLicenses,
-        specialPermissions,
         includedLicenses,
         onSubmit,
         // Translation functions
