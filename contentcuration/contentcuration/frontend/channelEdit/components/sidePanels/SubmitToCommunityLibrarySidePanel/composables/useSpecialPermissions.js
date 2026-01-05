@@ -5,10 +5,10 @@ const ITEMS_PER_PAGE = 3;
 
 /**
  * Composable that fetches and paginates audited special-permissions licenses
- * for a given set of permission IDs.
+ * for a given channel version ID.
  *
- * @param {Array<string|number>|import('vue').Ref<Array<string|number>>} permissionIds
- *   A list (or ref to a list) of special-permissions license IDs to fetch.
+ * @param {string|number|import('vue').Ref<string|number>|null} channelVersionId
+ *   The ChannelVersion ID to fetch special permissions for via ManyToMany relationship.
  *
  * @returns {{
  *   permissions: import('vue').Ref<Array<Object>>,
@@ -23,7 +23,7 @@ const ITEMS_PER_PAGE = 3;
  *   Reactive state for the fetched, flattened permissions and pagination
  *   helpers used by `SpecialPermissionsList.vue`.
  */
-export function useSpecialPermissions(channelVersionId, permissionIds) {
+export function useSpecialPermissions(channelVersionId) {
   const permissions = ref([]);
   const isLoading = ref(false);
   const error = ref(null);
@@ -39,30 +39,24 @@ export function useSpecialPermissions(channelVersionId, permissionIds) {
     return permissions.value.slice(start, end);
   });
 
-  async function fetchPermissions(versionId, ids) {
+  async function fetchPermissions(versionId) {
     isLoading.value = true;
     error.value = null;
     permissions.value = [];
 
     try {
-      let response = [];
       if (versionId) {
-        response = await AuditedSpecialPermissionsLicense.fetchCollection({
+        const response = await AuditedSpecialPermissionsLicense.fetchCollection({
           channel_version: versionId,
           distributable: false,
         });
-      } else if (ids && ids.length > 0) {
-        response = await AuditedSpecialPermissionsLicense.fetchCollection({
-          by_ids: ids.join(','),
-          distributable: false,
-        });
-      }
 
-      permissions.value = response.map(permission => ({
-        id: permission.id,
-        description: permission.description,
-        distributable: permission.distributable,
-      }));
+        permissions.value = response.map(permission => ({
+          id: permission.id,
+          description: permission.description,
+          distributable: permission.distributable,
+        }));
+      }
     } catch (err) {
       error.value = err;
       permissions.value = [];
@@ -84,9 +78,9 @@ export function useSpecialPermissions(channelVersionId, permissionIds) {
   }
 
   watch(
-    [() => unref(channelVersionId), () => unref(permissionIds)],
-    ([versionId, ids]) => {
-      fetchPermissions(versionId, ids);
+    () => unref(channelVersionId),
+    (versionId) => {
+      fetchPermissions(versionId);
     },
     { immediate: true },
   );

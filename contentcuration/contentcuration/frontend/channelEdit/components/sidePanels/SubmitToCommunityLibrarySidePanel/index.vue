@@ -161,10 +161,9 @@
               :licenses="includedLicenses"
             />
             <SpecialPermissionsList
-              v-if="licenseAuditIsFinished && specialPermissions.length > 0"
+              v-if="licenseAuditIsFinished && channelVersionId"
               v-model="checkedSpecialPermissions"
-              :channel-version-id="versionDetail && versionDetail.id"
-              :permission-ids="specialPermissions"
+              :channel-version-id="channelVersionId"
               @update:allChecked="allSpecialPermissionsChecked = $event"
             />
             <div class="country-area">
@@ -431,6 +430,13 @@
         return channelVersion;
       });
 
+      const channelVersionId = computed(() => {
+        if (versionDetail.value?.id) {
+          return versionDetail.value.id;
+        }
+        return null;
+      });
+
       const {
         isLoading: licenseAuditIsLoading,
         isFinished: licenseAuditIsFinished,
@@ -574,6 +580,7 @@
         isCurrentVersionAlreadySubmitted,
         canBeEdited,
         displayedVersion,
+        channelVersionId,
         canBeSubmitted,
         publishedDataIsLoading,
         publishedDataIsFinished,
