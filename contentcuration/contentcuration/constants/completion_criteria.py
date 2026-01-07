@@ -52,6 +52,7 @@ ALLOWED_MODELS_PER_KIND = {
         completion_criteria.APPROX_TIME,
         completion_criteria.REFERENCE,
     },
+    content_kinds.TOPIC: {completion_criteria.MASTERY},
 }
 
 

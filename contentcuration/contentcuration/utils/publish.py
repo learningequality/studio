@@ -35,6 +35,7 @@ from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
+from le_utils.constants import modalities
 from le_utils.constants import roles
 from search.models import ChannelFullTextSearch
 from search.models import ContentNodeFullTextSearch
@@ -227,6 +228,22 @@ inheritable_simple_value_fields = [
 ]
 
 
+def has_assessments(node):
+    """Check if a node should have its assessment items published.
+
+    Returns True for EXERCISE nodes and TOPIC nodes with UNIT modality
+    that have assessment items.
+    """
+    if node.kind_id == content_kinds.EXERCISE:
+        return True
+    if node.kind_id == content_kinds.TOPIC:
+        options = node.extra_fields.get("options", {}) if node.extra_fields else {}
+        if options.get("modality") == modalities.UNIT:
+            # Only return True if the UNIT has assessment items
+            return node.assessment_items.filter(deleted=False).exists()
+    return False
+
+
 class TreeMapper:
     def __init__(
         self,
@@ -296,9 +313,10 @@ class TreeMapper:
 
         # Only process nodes that are either non-topics or have non-topic descendants
         if node.is_publishable():
-            # early validation to make sure we don't have any exercises without mastery models
-            # which should be unlikely when the node is complete, but just in case
-            if node.kind_id == content_kinds.EXERCISE:
+            # early validation to make sure we don't have any nodes with assessments
+            # without mastery models, which should be unlikely when the node is complete,
+            # but just in case
+            if has_assessments(node):
                 try:
                     # migrates and extracts the mastery model from the exercise
                     _, mastery_model = parse_assessment_metadata(node)
@@ -306,8 +324,8 @@ class TreeMapper:
                         raise ValueError("Exercise does not have a mastery model")
                 except Exception as e:
                     logging.warning(
-                        "Unable to parse exercise {id} mastery model: {error}".format(
-                            id=node.pk, error=str(e)
+                        "Unable to parse exercise {id} {title} mastery model: {error}".format(
+                            id=node.pk, title=node.title, error=str(e)
                         )
                     )
                     return
@@ -322,7 +340,7 @@ class TreeMapper:
                 metadata,
             )
 
-            if node.kind_id == content_kinds.EXERCISE:
+            if has_assessments(node):
                 exercise_data = process_assessment_metadata(node)
                 any_free_response = any(
                     t == exercises.FREE_RESPONSE
@@ -359,10 +377,16 @@ class TreeMapper:
                     )
                     generator.create_exercise_archive()
 
-                create_kolibri_assessment_metadata(node, kolibrinode)
+                # Only create assessment metadata for exercises, not UNIT topics
+                # UNIT topics store their assessment config in options/completion_criteria
+                if node.kind_id == content_kinds.EXERCISE:
+                    create_kolibri_assessment_metadata(node, kolibrinode)
             elif node.kind_id == content_kinds.SLIDESHOW:
                 create_slideshow_manifest(node, user_id=self.user_id)
-            elif node.kind_id == content_kinds.TOPIC:
+
+            # TOPIC nodes need to recurse into children, including UNIT topics
+            # that also had their assessments processed above
+            if node.kind_id == content_kinds.TOPIC:
                 for child in node.children.all():
                     self.recurse_nodes(child, metadata)
             create_associated_file_objects(kolibrinode, node)
