@@ -351,7 +351,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         tree_cte = With(self.get_user_active_trees().distinct(), name="trees")
 
         user_files_cte = With(
-            self.files.get_queryset().only(
+            self.files.get_queryset().values(
                 "id",
                 "checksum",
                 "contentnode_id",
@@ -369,7 +369,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             .filter(
                 Exists(
                     tree_cte.join(
-                        ContentNode.objects.only("id", "tree_id"),
+                        ContentNode.objects.all(),
                         tree_id=tree_cte.col.tree_id,
                     )
                     .with_cte(tree_cte)
@@ -378,10 +378,8 @@ class User(AbstractBaseUser, PermissionsMixin):
             )
         )
 
-        editable_files_qs = self._filter_storage_billable_files(editable_files_qs)
-
         existing_checksums_cte = With(
-            editable_files_qs.values("checksum", "file_format_id").distinct(),
+            editable_files_qs.values("checksum").distinct(),
             name="existing_checksums",
         )
 
@@ -390,7 +388,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             .with_cte(user_files_cte)
             .filter(
                 Exists(
-                    ContentNode.objects.only("id").filter(
+                    ContentNode.objects.filter(
                         tree_id=channel.staging_tree.tree_id,
                         id=OuterRef("contentnode_id"),
                     )
@@ -398,28 +396,27 @@ class User(AbstractBaseUser, PermissionsMixin):
             )
         )
 
-        staging_files_qs = self._filter_storage_billable_files(staging_files_qs)
-
-        staging_files_qs = (
+        new_staging_files_qs = (
             staging_files_qs.with_cte(tree_cte)
             .with_cte(existing_checksums_cte)
             .exclude(
                 Exists(
                     existing_checksums_cte.queryset().filter(
                         checksum=OuterRef("checksum"),
-                        file_format_id=OuterRef("file_format_id"),
                     )
                 )
             )
         )
 
+        new_staging_files_qs = self._filter_storage_billable_files(new_staging_files_qs)
+
         unique_staging_ids = (
-            staging_files_qs.order_by("checksum", "id")
+            new_staging_files_qs.order_by("checksum", "id")
             .distinct("checksum")
             .values("id")
         )
         staged_size = float(
-            staging_files_qs.filter(id__in=Subquery(unique_staging_ids)).aggregate(
+            new_staging_files_qs.filter(id__in=Subquery(unique_staging_ids)).aggregate(
                 used=Sum("file_size")
             )["used"]
             or 0
