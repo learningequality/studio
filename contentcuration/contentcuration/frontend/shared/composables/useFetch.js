@@ -15,9 +15,9 @@ export function useFetch({ asyncFetchFunc }) {
       data.value = await asyncFetchFunc();
       isLoading.value = false;
       isFinished.value = true;
-    } catch (error) {
-      error.value = error;
-      throw error;
+    } catch (caughtError) {
+      error.value = caughtError;
+      throw caughtError;
     } finally {
       isLoading.value = false;
     }

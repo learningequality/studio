@@ -1223,6 +1223,7 @@ class AdminChannelViewSet(ChannelViewSet, RESTUpdateModelMixin, RESTDestroyModel
         "latest_community_library_submission__id",
         "latest_community_library_submission__status",
         "has_any_live_community_library_submission",
+        "published_data",
     )
 
     def perform_destroy(self, instance):

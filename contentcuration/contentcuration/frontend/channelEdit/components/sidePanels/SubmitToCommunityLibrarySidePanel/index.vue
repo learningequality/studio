@@ -61,7 +61,7 @@
                     {{ infoText }}
                   </template>
                 </div>
-                <StatusChip
+                <CommunityLibraryStatusChip
                   v-if="latestSubmissionStatus"
                   :status="latestSubmissionStatus"
                   class="status-chip"
@@ -118,8 +118,8 @@
                 class="metadata-line"
               >
                 <LoadingText
-                  :loading="publishedDataIsLoading"
-                  :finishedLoading="publishedDataIsFinished"
+                  :loading="versionDetailIsLoading"
+                  :finishedLoading="versionDetailIsFinished"
                   :omitted="!detectedLanguages"
                 >
                   {{ detectedLanguages }}
@@ -130,8 +130,8 @@
                 class="metadata-line"
               >
                 <LoadingText
-                  :loading="publishedDataIsLoading"
-                  :finishedLoading="publishedDataIsFinished"
+                  :loading="versionDetailIsLoading"
+                  :finishedLoading="versionDetailIsFinished"
                   :omitted="!detectedCategories"
                 >
                   {{ detectedCategories }}
@@ -245,14 +245,14 @@
 
   import Box from './Box';
   import LoadingText from './LoadingText';
-  import StatusChip from './StatusChip';
-  import { useLatestCommunityLibrarySubmission } from './composables/useLatestCommunityLibrarySubmission';
   import { useLicenseAudit } from './composables/useLicenseAudit';
-  import { usePublishedData } from './composables/usePublishedData';
+  import { useVersionDetail } from './composables/useVersionDetail';
 
   import InvalidLicensesNotice from './licenseCheck/InvalidLicensesNotice.vue';
   import CompatibleLicensesNotice from './licenseCheck/CompatibleLicensesNotice.vue';
   import SpecialPermissionsList from './licenseCheck/SpecialPermissionsList.vue';
+  import CommunityLibraryStatusChip from 'shared/views/communityLibrary/CommunityLibraryStatusChip';
+  import { useLatestCommunityLibrarySubmission } from 'shared/composables/useLatestCommunityLibrarySubmission';
   import { translateMetadataString } from 'shared/utils/metadataStringsTranslation';
   import countriesUtil from 'shared/utils/countries';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
@@ -269,7 +269,7 @@
       SidePanelModal,
       Box,
       LoadingText,
-      StatusChip,
+      CommunityLibraryStatusChip,
       CountryField,
       InvalidLicensesNotice,
       CompatibleLicensesNotice,
@@ -330,7 +330,7 @@
         isFinished: latestSubmissionIsFinished,
         data: latestSubmissionData,
         fetchData: fetchLatestSubmission,
-      } = useLatestCommunityLibrarySubmission(props.channel.id);
+      } = useLatestCommunityLibrarySubmission({ channelId: props.channel.id });
 
       function countryCodeToName(code) {
         return countriesUtil.getName(code, 'en');
@@ -416,11 +416,11 @@
       });
 
       const {
-        isLoading: publishedDataIsLoading,
-        isFinished: publishedDataIsFinished,
+        isLoading: versionDetailIsLoading,
+        isFinished: versionDetailIsFinished,
         data: versionDetail,
-        fetchData: fetchPublishedData,
-      } = usePublishedData(props.channel.id);
+        fetchData: fetchVersionDetail,
+      } = useVersionDetail(props.channel.id);
 
       // Use the latest version available from either channel or versionDetail
       const displayedVersion = computed(() => {
@@ -453,7 +453,7 @@
           !hasInvalidLicenses.value,
           licenseAuditIsFinished.value,
           canBeEdited.value,
-          publishedDataIsFinished.value,
+          versionDetailIsFinished.value,
           description.value.length >= 1,
         ];
 
@@ -467,7 +467,7 @@
       // Watch for when publishing completes - fetch publishedData to get the new version's data
       watch(isPublishing, async (newIsPublishing, oldIsPublishing) => {
         if (oldIsPublishing === true && newIsPublishing === false) {
-          await fetchPublishedData();
+          await fetchVersionDetail();
           await checkAndTriggerLicenseAudit();
         }
       });
@@ -476,7 +476,7 @@
         await fetchLatestSubmission();
 
         if (!isPublishing.value) {
-          await fetchPublishedData();
+          await fetchVersionDetail();
           await checkAndTriggerLicenseAudit();
         }
       });
@@ -575,8 +575,8 @@
         canBeEdited,
         displayedVersion,
         canBeSubmitted,
-        publishedDataIsLoading,
-        publishedDataIsFinished,
+        versionDetailIsLoading,
+        versionDetailIsFinished,
         detectedLanguages,
         detectedCategories,
         licenseAuditIsLoading,

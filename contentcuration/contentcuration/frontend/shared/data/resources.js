@@ -2413,10 +2413,24 @@ export const CommunityLibrarySubmission = new APIResource({
       return response.data || [];
     });
   },
+  fetchCollectionAsAdmin(params) {
+    return client
+      .get(window.Urls.adminCommunityLibrarySubmissionList(), { params })
+      .then(response => {
+        return response.data || [];
+      });
+  },
   create(params) {
     return client.post(this.collectionUrl(), params).then(response => {
       return response.data;
     });
+  },
+  resolveAsAdmin(id, params) {
+    return client
+      .post(window.Urls.adminCommunityLibrarySubmissionResolve(id), params)
+      .then(response => {
+        return response.data;
+      });
   },
 });
 

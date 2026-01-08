@@ -4,18 +4,18 @@ import { factory } from '../../../../store';
 
 import SubmitToCommunityLibrarySidePanel from '../';
 import Box from '../Box.vue';
-import StatusChip from '../StatusChip.vue';
 
-import { usePublishedData } from '../composables/usePublishedData';
-import { useLatestCommunityLibrarySubmission } from '../composables/useLatestCommunityLibrarySubmission';
+import { useVersionDetail } from '../composables/useVersionDetail';
+import { useLatestCommunityLibrarySubmission } from 'shared/composables/useLatestCommunityLibrarySubmission';
+import CommunityLibraryStatusChip from 'shared/views/communityLibrary/CommunityLibraryStatusChip.vue';
 import { Categories, CommunityLibraryStatus } from 'shared/constants';
 import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 import { CommunityLibrarySubmission } from 'shared/data/resources';
 import CountryField from 'shared/views/form/CountryField.vue';
 
-jest.mock('../composables/usePublishedData');
-jest.mock('../composables/useLatestCommunityLibrarySubmission');
+jest.mock('../composables/useVersionDetail');
 jest.mock('../composables/useLicenseAudit');
+jest.mock('shared/composables/useLatestCommunityLibrarySubmission');
 jest.mock('shared/data/resources', () => ({
   CommunityLibrarySubmission: {
     create: jest.fn(() => Promise.resolve()),
@@ -40,7 +40,7 @@ async function makeWrapper({ channel, publishedData, latestSubmission }) {
   store.state.currentChannel.currentChannelId = channel.id;
   store.commit('channel/ADD_CHANNEL', channel);
 
-  usePublishedData.mockReturnValue({
+  useVersionDetail.mockReturnValue({
     isLoading,
     isFinished,
     data: computed(() => publishedData),
@@ -377,7 +377,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
         latestSubmission: null,
       });
 
-      const statusChip = wrapper.findAllComponents(StatusChip);
+      const statusChip = wrapper.findAllComponents(CommunityLibraryStatusChip);
       expect(statusChip.exists()).toBe(false);
     });
 
@@ -389,7 +389,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
           latestSubmission: { channel_version: 1, status: submissionStatus },
         });
 
-        const statusChip = wrapper.findComponent(StatusChip);
+        const statusChip = wrapper.findComponent(CommunityLibraryStatusChip);
         expect(statusChip.props('status')).toBe(chipStatus);
       });
     }

@@ -20,7 +20,7 @@
   import { CommunityLibraryStatus } from 'shared/constants';
 
   export default {
-    name: 'StatusChip',
+    name: 'CommunityLibraryStatusChip',
     setup(props) {
       const theme = themePalette();
 
@@ -79,9 +79,10 @@
 <style lang="css" scoped>
 
   .status-chip {
-    display: flex;
+    display: inline-flex;
     gap: 3px;
     align-items: center;
+    width: fit-content;
     height: 20px;
     padding-top: 2px;
     padding-right: 5px;

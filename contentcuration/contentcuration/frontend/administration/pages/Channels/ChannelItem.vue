@@ -201,6 +201,7 @@
       <CommunityLibraryStatusButton
         v-if="communityLibraryStatus"
         :status="communityLibraryStatus"
+        @click="showReviewSubmissionPanel = true"
       />
       <KEmptyPlaceholder v-else />
     </td>
@@ -210,6 +211,11 @@
         flat
       />
     </td>
+    <ReviewSubmissionSidePanel
+      v-if="showReviewSubmissionPanel"
+      :channel="channel"
+      @close="showReviewSubmissionPanel = false"
+    />
   </tr>
 
 </template>
@@ -219,6 +225,7 @@
 
   import { mapGetters, mapActions } from 'vuex';
   import ClipboardChip from '../../components/ClipboardChip';
+  import ReviewSubmissionSidePanel from '../../components/sidePanels/ReviewSubmissionSidePanel';
   import CommunityLibraryStatusButton from '../../components/CommunityLibraryStatusButton.vue';
   import { RouteNames } from '../../constants';
   import ChannelActionsDropdown from './ChannelActionsDropdown';
@@ -233,6 +240,7 @@
       ClipboardChip,
       Checkbox,
       CommunityLibraryStatusButton,
+      ReviewSubmissionSidePanel,
     },
     mixins: [fileSizeMixin],
     props: {
@@ -244,6 +252,11 @@
         type: String,
         required: true,
       },
+    },
+    data() {
+      return {
+        showReviewSubmissionPanel: false,
+      };
     },
     computed: {
       ...mapGetters('channel', ['getChannel']),
