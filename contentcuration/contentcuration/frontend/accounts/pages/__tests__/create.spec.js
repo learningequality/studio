@@ -105,7 +105,7 @@ describe('Create account page', () => {
 // Testing Library.
 //
 // These tests will be re-enabled once this page is migrated to the
-// Kolibri Design System as part of the Vuetify removal effort (see #5060).
+// Kolibri Design System as part of the Vuetify removal effort .
 
   test.skip('creates an account when the user submits valid information', async () => {
     const registerSpy = jest
@@ -140,7 +140,12 @@ describe('Create account page', () => {
       expect(registerSpy).toHaveBeenCalled();
     });
   });
-
+// NOTE:
+// Offline submission depends on the same required Vuetify select fields
+// as the successful submission flow.
+// Since those fields cannot be reliably exercised via userEvent,
+// this scenario cannot currently reach the submission state.
+// This test will be re-enabled once Vuetify is removed .
   test.skip('shows an offline error when the user is offline', async () => {
     await renderComponent({ offline: true });
 
