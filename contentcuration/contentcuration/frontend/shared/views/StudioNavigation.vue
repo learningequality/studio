@@ -609,6 +609,7 @@
     width: 100%;
     font-size: 20px;
     font-weight: 500;
+    padding-inline-start: 20px;
   }
 
   .text-truncate {
