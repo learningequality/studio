@@ -4,7 +4,14 @@
     v-if="to"
     ref="tabElement"
     :to="to"
-    :class="tabClasses"
+    :class="[
+      tabClasses, 
+      $computedClass({
+        ':active': { backgroundColor: 'rgba(0, 0, 0, 0.2)' },
+        ':focus': { ...$coreOutline, outlineOffset: 0 }
+      })
+    ]"
+
     :style="tabStyles"
     :aria-current="isActive ? 'page' : null"
     :tabindex="tabindex"
@@ -84,12 +91,11 @@
         return this.badgeValue > 0;
       },
       formattedBadgeValue() {
-        return this.badgeValue > 99 ? '99+' : this.badgeValue.toString();
+        return this.badgeValue.toString();
       },
       badgeAriaLabel() {
         if (!this.showBadge) return null;
-        const count = this.badgeValue > 99 ? 'more than 99' : this.badgeValue;
-        return `${count} notification${this.badgeValue !== 1 ? 's' : ''}`;
+        return `${this.badgeValue} notification${this.badgeValue !== 1 ? 's' : ''}`;
       },
     },
     methods: {
@@ -115,7 +121,8 @@
     align-items: center;
     justify-content: center;
     flex: 0 0 auto;
-    width: 160px;
+    min-width: 160px;
+    max-width: 264px;
     height: 100%;
     min-height: 48px;
     padding: 6px 12px;
@@ -128,7 +135,6 @@
     white-space: normal;
     cursor: pointer;
     background: transparent;
-    border: none;
     outline: none;
     user-select: none;
     transition: 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
@@ -138,10 +144,6 @@
     opacity: 0.7;
   }
 
-  .studio-navigation-tab:focus-visible {
-    outline: 2px solid currentcolor;
-    outline-offset: -2px;
-  }
 
   .studio-navigation-tab__content {
     position: relative;
@@ -152,20 +154,19 @@
 
   .studio-navigation-tab__badge {
     position: absolute;
-    top: -8px;
-    right: -8px;
-    display: inline-flex;
+    top: -11px;
+    right: -22px;
+    display: flex;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
-    min-width: 20px;
-    width: 20px;
-    height: 20px;
-    padding: 0 6px;
-    font-size: 12px;
-    font-weight: 600;
+    width: 22px;
+    height: 22px;
+    font-size: 14px;
     color: white;
     background-color: black;
     border-radius: 50%;
+    transition: 0.3s;
   }
 
   .studio-navigation-tab__indicator {
