@@ -11,45 +11,17 @@
   >
     <p>{{ text }}</p>
 
-    <form
-      ref="form"
-      @submit.prevent="confirm"
-    >
-      <p>{{ $tr('confirmEmailPrompt') }}</p>
+    <p>{{ $tr('confirmEmailPrompt') }}</p>
 
-      <KTextbox
-        v-model="emailConfirm"
-        box
-        :maxlength="100"
-        counter
-        :label="$tr('emailLabel')"
-        :invalid="errors.emailConfirm"
-        :invalidText="$tr('emailValidationMessage')"
-        :showInvalidText="true"
-        data-test="email-input"
-      />
-    </form>
-
-    <template #actions>
-      <KButton
-        flat
-        data-test="cancel"
-        type="button"
-        class="mr-2"
-        @click="close"
-      >
-        {{ $tr('cancelAction') }}
-      </KButton>
-
-      <KButton
-        data-test="confirm"
-        primary
-        type="button"
-        @click="submit"
-      >
-        {{ confirmText }}
-      </KButton>
-    </template>
+    <KTextbox
+      v-model="emailConfirm"
+      :maxlength="100"
+      :label="$tr('emailLabel')"
+      :invalid="errors.emailConfirm"
+      :invalidText="$tr('emailValidationMessage')"
+      :showInvalidText="true"
+      data-test="email-input"
+    />
   </KModal>
 
 </template>
@@ -104,7 +76,6 @@
           return this.value;
         },
         set(value) {
-          // CHANGED 'v' to 'value'
           this.$emit('input', value);
         },
       },
@@ -118,34 +89,16 @@
     },
     methods: {
       close() {
-        if (typeof this.reset === 'function') {
-          this.reset();
-        }
         this.$emit('input', false);
       },
 
-      // eslint-disable-next-line vue/no-unused-properties
-      confirm() {
-        if (typeof this.submit === 'function') {
-          return this.submit();
-        }
-        return Promise.resolve();
-      },
-      // eslint-disable-next-line vue/no-unused-properties
-      onSubmit(formData) {
-        try {
-          const res = this.confirmAction(formData);
-          if (res && typeof res.then === 'function') {
-            return res.then(val => {
-              this.dialog = false;
-              return val;
-            });
-          }
+      // This is called from formMixin
+      // eslint-disable-next-line kolibri/vue-no-unused-methods, vue/no-unused-properties
+      onSubmit() {
+        return Promise.resolve(this.confirmAction()).then(result => {
           this.dialog = false;
-          return Promise.resolve(res);
-        } catch (err) {
-          return Promise.reject(err);
-        }
+          return result;
+        });
       },
     },
 
