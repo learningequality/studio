@@ -1,5 +1,5 @@
 import { ref, watch } from 'vue';
-import { throttle } from 'lodash';
+import throttle from 'lodash/throttle';
 import { isTouchDevice } from 'shared/utils/browserInfo';
 
 export function useModalPositioning() {

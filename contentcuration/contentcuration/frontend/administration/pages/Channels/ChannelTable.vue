@@ -143,7 +143,7 @@
 
   import { mapGetters, mapActions } from 'vuex';
   import { getCurrentInstance, onMounted, ref, computed, watch } from 'vue';
-  import { transform } from 'lodash';
+  import transform from 'lodash/transform';
   import { RouteNames, rowsPerPageItems } from '../../constants';
   import { useTable } from '../../composables/useTable';
   import { useKeywordSearch } from '../../composables/useKeywordSearch';
