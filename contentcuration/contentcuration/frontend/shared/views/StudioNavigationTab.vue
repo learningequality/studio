@@ -138,25 +138,31 @@
 
   .studio-navigation-tab {
     position: relative;
-    display: inline-flex;
+    display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    flex: 0 0 auto;
+    width: 160px;
+    height: 100%;
     min-height: 48px;
-    padding: 0 16px;
+    padding: 6px 12px;
     font-family: inherit;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 700;
+    color: inherit;
     text-decoration: none;
     text-transform: uppercase;
+    white-space: normal;
     cursor: pointer;
     background: transparent;
     border: none;
     outline: none;
-    transition: color 0.2s ease, opacity 0.2s ease;
+    user-select: none;
+    transition: 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
   }
 
-  .studio-navigation-tab:hover {
+  .studio-navigation-tab:not(.studio-navigation-tab--active) {
     opacity: 0.7;
   }
 
