@@ -4,6 +4,7 @@
     ref="studioNavigation"
     class="studio-navigation"
     :style="{
+      
       backgroundColor: $themeTokens.appBar,
       color: $themeTokens.text,
     }"
@@ -13,6 +14,7 @@
     <KToolbar
       type="clear"
       :style="{
+        overflowX: 'auto',  
         backgroundColor: $themeTokens.appBar,
         height: '56px',
       }"
@@ -127,7 +129,6 @@
     >
       <div
         ref="tabsContainer"
-        role="tablist"
         class="studio-navigation__tabs-container"
         @keydown="handleTabsKeydown"
       >
@@ -324,10 +325,10 @@
       },
       navItemAppearance() {
         return {
-          justifyContent: 'flex-start',
           fontSize: '16px',
           textTransform: 'none',
           height: '48px',
+          width: '100%',
         };
       },
       homeLink() {
@@ -505,16 +506,6 @@
             }
             break;
 
-          case 'Home':
-            event.preventDefault();
-            nextIndex = 0;
-            break;
-
-          case 'End':
-            event.preventDefault();
-            nextIndex = tabs.length - 1;
-            break;
-
           default:
             return;
         }
@@ -641,6 +632,7 @@
     display: flex;
     flex: 1 0 auto;
     padding: 0 24px;
+    overflow-x: auto;
     height: 48px;
     list-style-type: none;
     position: relative;
@@ -719,50 +711,6 @@
       &:hover {
         text-decoration: underline;
       }
-    }
-  }
-
-  /* Mobile styles */
-  @media (max-width: 767px) {
-    .studio-navigation__title {
-      margin-left: 12px;
-      font-size: 18px;
-    }
-
-    .studio-navigation__tabs-container {
-      padding: 0 12px;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-
-      &::-webkit-scrollbar {
-        display: none;
-      }
-    }
-
-    .studio-navigation__user-name {
-      display: none;
-    }
-
-    .studio-navigation__actions {
-      gap: 8px;
-    }
-  }
-
-  /* RTL Support */
-  [dir='rtl'] {
-    .studio-navigation__title {
-      margin-right: 16px;
-      margin-left: 0;
-    }
-
-    .side-panel-title {
-      margin-right: 16px;
-      margin-left: 0;
-    }
-
-    .side-panel-nav-item {
-      text-align: right;
     }
   }
 
