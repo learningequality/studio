@@ -28,34 +28,6 @@
       aria-hidden="true"
     ></span>
   </RouterLink>
-  <button
-    v-else
-    ref="tabElement"
-    :class="tabClasses"
-    :style="tabStyles"
-    role="tab"
-    :aria-selected="isActive"
-    :tabindex="tabindex"
-    @click="handleClick"
-    @keydown="handleKeydown"
-  >
-    <span class="studio-navigation-tab__content">
-      <slot></slot>
-      <span
-        v-if="showBadge"
-        class="studio-navigation-tab__badge"
-        :aria-label="badgeAriaLabel"
-      >
-        {{ formattedBadgeValue }}
-      </span>
-    </span>
-    <span
-      v-if="isActive"
-      class="studio-navigation-tab__indicator"
-      :style="indicatorStyles"
-      aria-hidden="true"
-    ></span>
-  </button>
 
 </template>
 
@@ -93,12 +65,12 @@
       },
       tabStyles() {
         return {
-          color: this.isActive ? this.$themeTokens.primary : this.$themeTokens.text,
+          color: this.$themeTokens.text,
         };
       },
       indicatorStyles() {
         return {
-          backgroundColor: this.$themeTokens.primary,
+          backgroundColor: this.$themeTokens.surface,
         };
       },
       isActive() {
@@ -189,7 +161,7 @@
     font-weight: 600;
     line-height: 1;
     color: white;
-    background-color: #d32f2f;
+    background-color: black;
     border-radius: 10px;
   }
 
@@ -198,7 +170,7 @@
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 3px;
+    height: 2px;
   }
 
 </style>
