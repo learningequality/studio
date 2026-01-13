@@ -36,7 +36,7 @@
           v-for="listType in lists"
           :key="listType.id"
           :to="getChannelLink(listType)"
-          :badgeValue="5"
+          :badgeValue="invitationsByListCounts[listType]"
           @click="trackTabClick(listType)"
         >
           {{ translateConstant(listType) }}
