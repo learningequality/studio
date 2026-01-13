@@ -639,14 +639,14 @@
 
   .studio-navigation__tabs-container {
     display: flex;
-    align-items: center;
-    min-height: 48px;
-    padding: 0 16px;
+    flex: 1 0 auto;
+    padding: 0 24px;
+    height: 48px;
+    list-style-type: none;
+    position: relative;
+    transition: transform 0.6s cubic-bezier(0.86, 0, 0.07, 1);
+    white-space: nowrap;
 
-    /* Focus within styling for keyboard navigation */
-    &:focus-within {
-      outline: none;
-    }
   }
 
   /* Side panel styles */
