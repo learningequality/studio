@@ -1,11 +1,13 @@
 import json
 
+from django.db import IntegrityError
 from django.http.response import HttpResponseBadRequest
 from django.http.response import HttpResponseForbidden
 from django.http.response import HttpResponseNotAllowed
 from django.http.response import HttpResponseRedirectBase
 from django.urls import reverse_lazy
 from mock import mock
+from mock import patch
 
 from contentcuration.models import User
 from contentcuration.tests import testdata
@@ -127,8 +129,8 @@ class UserRegistrationViewTestCase(BaseAPITestCase):
             first_name="Tester",
             last_name="Tester",
             email="tester@tester.com",
-            pasword1="tester123",
-            pasword2="tester123",
+            password1="tester123",
+            password2="tester123",
             uses="IDK",
             source="IDK",
             policies=json.dumps(dict(policy_etc=True)),
@@ -148,8 +150,8 @@ class UserRegistrationViewTestCase(BaseAPITestCase):
         self.assertIsInstance(response, HttpResponseNotAllowed)
 
     def test_post__password_too_short(self):
-        self.request_data["pasword1"] = "123"
-        self.request_data["pasword2"] = "123"
+        self.request_data["password1"] = "123"
+        self.request_data["password2"] = "123"
         response = self.post(self.view, self.request_data)
         self.assertIsInstance(response, HttpResponseBadRequest)
         self.assertIn("password1", response.content.decode())
@@ -159,6 +161,22 @@ class UserRegistrationViewTestCase(BaseAPITestCase):
         user.delete()
         response = self.post(self.view, self.request_data)
         self.assertIsInstance(response, HttpResponseForbidden)
+
+    @patch("contentcuration.views.users.UserRegistrationView.register")
+    def test_post__handles_integrity_error_gracefully(self, mock_register):
+        """Test that IntegrityError during registration returns 403 instead of 500"""
+        # Simulate IntegrityError (race condition on duplicate email)
+        mock_register.side_effect = IntegrityError(
+            'duplicate key value violates unique constraint "contentcuration_user_email_key"'
+        )
+
+        response = self.post(self.view, self.request_data)
+
+        # Should return 403 Forbidden, not 500
+        self.assertIsInstance(response, HttpResponseForbidden)
+        # Error response should include "email" field
+        error_data = json.loads(response.content.decode())
+        self.assertIn("email", error_data)
 
 
 class UserActivationViewTestCase(StudioAPITestCase):
