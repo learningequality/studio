@@ -151,18 +151,21 @@
   }
 
   .studio-navigation-tab__badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     min-width: 20px;
+    width: 20px;
     height: 20px;
     padding: 0 6px;
     font-size: 12px;
     font-weight: 600;
-    line-height: 1;
     color: white;
     background-color: black;
-    border-radius: 10px;
+    border-radius: 50%;
   }
 
   .studio-navigation-tab__indicator {
