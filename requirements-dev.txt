@@ -117,9 +117,10 @@ typing-extensions==4.15.0
     # via
     #   -c requirements.txt
     #   exceptiongroup
+    #   virtualenv
 uritemplate==3.0.1
     # via drf-yasg
-virtualenv==20.26.6
+virtualenv==20.36.1
     # via pre-commit
 wheel==0.38.1
     # via pip-tools
