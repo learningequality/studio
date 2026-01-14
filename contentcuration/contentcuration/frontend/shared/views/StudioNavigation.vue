@@ -12,6 +12,7 @@
     <header>
       
       <KToolbar
+        ref="toolbar"
         type="clear"
         :style="{
           overflowX: 'auto',  
@@ -21,7 +22,6 @@
         :raised="false"
       >
         <template #icon>
-          <!-- Menu button for logged in users -->
           <KIconButton
             v-if="loggedIn"
             icon="menu"
@@ -29,8 +29,6 @@
             :ariaLabel="$tr('openMenu')"
             @click="toggleSidePanel"
           />
-
-          <!-- Logo link for non-logged in users -->
           <KExternalLink
             v-else
             :href="homeLink"
@@ -45,11 +43,11 @@
 
         <template #brand>
           <div
-            class="text-truncate"
+            class="studio-navigation__title-container"
             style="max-width: 160px"
           >
-            <span class="studio-navigation__title">
-              {{ title || $tr('title') }}
+            <span>
+              {{ truncatedTitle }}
             </span>
           </div>
         </template>
@@ -120,10 +118,6 @@
       </KToolbar>
 
     </header>
-
-    
-
-    <!-- Tabs extension area (for when tabs are provided) -->
     <div
       v-if="hasTabs"
       :aria-label="$tr('mainNavigationLabel')"
@@ -164,8 +158,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Side panel (replaces MainNavigationDrawer) -->
     <SidePanelModal
       v-if="loggedIn && sidePanelOpen"
       alignment="left"
@@ -284,8 +276,6 @@
         </div>
       </template>
     </SidePanelModal>
-
-    <!-- Language Switcher Modal -->
     <LanguageSwitcherModal
       v-if="showLanguageModal"
       :style="{ color: $themeTokens.text }"
@@ -326,6 +316,7 @@
         isOverflowing: false,
         canScrollLeft: false,
         canScrollRight: false,
+        toolbarWidth: 0,
       };
     },
     computed: {
@@ -353,6 +344,14 @@
       },
       copyrightLink() {
         return 'https://learningequality.org/';
+      },
+      truncatedTitle() {
+        const displayTitle = this.title || this.$tr('title');
+        const offset = (this.$refs.studioNavigationActions?.clientWidth || 0) + 100;
+        const averageCharWidth = 10;
+        const availableWidth = this.toolbarWidth - offset;
+        const maxChars = availableWidth > 0 ? Math.floor(availableWidth / averageCharWidth) : 1;
+        return this.truncateText(displayTitle, maxChars);
       },
       userMenuItems() {
         const items = [];
@@ -408,7 +407,8 @@
     mounted() {
       this.updateTabIndices();
       this.updateWindowWidth();
-      window.addEventListener('resize', this.updateWindowWidth);
+      this.updateToolbarWidth();
+      window.addEventListener('resize', this.handleResize);
       const el = this.$refs.tabsContainer;
       if (el) {
         el.addEventListener('scroll', this.checkScrollPositions);
@@ -421,10 +421,11 @@
     updated() {
       this.$nextTick(() => {
         this.updateTabIndices();
+        this.updateToolbarWidth();
       });
     },
     beforeDestroy() {
-      window.removeEventListener('resize', this.updateWindowWidth);
+      window.removeEventListener('resize', this.handleResize);
     },
     methods: {
       ...mapActions(['logout']),
@@ -510,8 +511,21 @@
         this.sidePanelOpen = false;
         this.showLanguageModal = true;
       },
+      handleResize() {
+        this.updateWindowWidth();
+        this.updateToolbarWidth();
+      },
       updateWindowWidth() {
         this.windowWidth = window.innerWidth;
+      },
+      updateToolbarWidth() {
+        this.toolbarWidth = this.$refs.studioNavigation?.clientWidth || 0;
+      },
+      truncateText(value, maxLength) {
+        if (value && value.length > maxLength) {
+          return value.substring(0, maxLength) + '...';
+        }
+        return value;
       },
       handleTabsKeydown(event) {
         const tabs = this.getTabElements();
@@ -633,9 +647,11 @@
     }
   }
 
-  .studio-navigation__title {
-    display: block;
-    width: 100%;
+  .studio-navigation__title-container {
+    display: block;    
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
     font-size: 20px;
     font-weight: 500;
     padding-inline-start: 20px;
@@ -649,7 +665,6 @@
 
   .studio-navigation__actions {
     display: flex;
-    gap: 16px;
     align-items: center;
   }
 
