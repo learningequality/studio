@@ -4,7 +4,6 @@
     ref="studioNavigation"
     class="studio-navigation"
     :style="{
-      
       backgroundColor: $themeTokens.appBar,
       color: $themeTokens.text,
     }"
@@ -147,7 +146,7 @@
       @closePanel="sidePanelOpen = false"
     >
       <template #header>
-        <div class="side-panelheader">
+        <div class="side-panel-header">
           <span class="side-panel-title">
             {{ $tr('title') }}
           </span>
@@ -155,7 +154,7 @@
       </template>
 
       <template #default>
-        <div class="sidepanel-content">
+        <div class="side-panel-content">
           <nav class="side-panel-nav">
             <div
               class="side-panel-nav-item"
@@ -215,7 +214,7 @@
 
             <div
               class="side-panel-nav-item"
-              @click="logout"
+              @click="handleLogout"
             >
               <KIconButton
                 :disabled="true"
@@ -226,7 +225,7 @@
           </nav>
 
           <div class="side-panel-footer">
-            <div class="side-panel-logo">
+            <div>
               <KLogo
                 altText="Kolibri logo"
                 :showBackground="true"
@@ -237,20 +236,18 @@
             <KExternalLink
               :href="copyrightLink"
               class="side-panel-copyright"
+              :text="$tr('copyright', { year: new Date().getFullYear() })"
               openInNewTab
               @click.native="sidePanelOpen = false"
-            >
-              {{ $tr('copyright', { year: new Date().getFullYear() }) }}
-            </KExternalLink>
+            />
 
             <p class="side-panel-feedback">
               <KExternalLink
                 href="https://community.learningequality.org/c/support/studio"
                 openInNewTab
+                :text="$tr('giveFeedback')"
                 @click.native="sidePanelOpen = false"
-              >
-                {{ $tr('giveFeedback') }}
-              </KExternalLink>
+              />
             </p>
           </div>
         </div>
@@ -304,7 +301,6 @@
       hasTabs() {
         return !!this.$slots.tabs;
       },
-    
       homeLink() {
         return window.Urls?.channels() || '/';
       },
@@ -374,7 +370,6 @@
         ];
       },
       shouldShowTitle() {
-        // Hide title when screen width is less than 500px
         return this.windowWidth >= 400;
       },
     },
@@ -384,7 +379,6 @@
       window.addEventListener('resize', this.updateWindowWidth);
     },
     updated() {
-      // Update tab indices whenever tabs change
       this.$nextTick(() => {
         this.updateTabIndices();
       });
@@ -397,38 +391,43 @@
       toggleSidePanel() {
         this.sidePanelOpen = !this.sidePanelOpen;
       },
-      navigateToChannels() {
+      closeSidePanelAndNavigate(url) {
         this.sidePanelOpen = false;
-        window.location.href = this.channelsLink;
+        window.location.href = url;
+      },
+      navigateToChannels() {
+        this.closeSidePanelAndNavigate(this.channelsLink);
       },
       navigateToAdministration() {
-        this.sidePanelOpen = false;
-        window.location.href = this.administrationLink;
+        this.closeSidePanelAndNavigate(this.administrationLink);
       },
       navigateToSettings() {
-        this.sidePanelOpen = false;
         this.trackClick('Settings');
-        window.location.href = this.settingsLink;
+        this.closeSidePanelAndNavigate(this.settingsLink);
       },
       navigateToHelp() {
         this.sidePanelOpen = false;
         this.trackClick('Help');
         window.open(this.helpLink, '_blank', 'noopener,noreferrer');
       },
+      handleLogout() {
+        this.sidePanelOpen = false;
+        this.logout();
+      },
       handleUserMenuSelect(item) {
         switch (item.value) {
           case 'administration':
-            window.location.href = this.administrationLink;
+            this.navigateToAdministration();
             break;
           case 'settings':
-            window.location.href = this.settingsLink;
+            this.navigateToSettings();
             break;
           case 'change-language':
             this.showLanguageModal = true;
             break;
           case 'help':
-            window.open(this.helpLink, '_blank');
             this.trackClick('Help');
+            window.open(this.helpLink, '_blank');
             break;
           case 'logout':
             this.logout();
@@ -458,11 +457,9 @@
         this.windowWidth = window.innerWidth;
       },
       handleTabsKeydown(event) {
-        // Get all tab elements
         const tabs = this.getTabElements();
         if (!tabs.length) return;
 
-        // Find currently focused tab
         const currentIndex = tabs.findIndex(
           tab => tab === event.target || tab.contains(event.target),
         );
@@ -474,9 +471,7 @@
         switch (event.key) {
           case 'ArrowLeft':
             event.preventDefault();
-            // Move to previous tab (or wrap to last)
             nextIndex = currentIndex > 0 ? currentIndex - 1 : tabs.length - 1;
-            // Reverse for RTL
             if (this.$isRTL) {
               nextIndex = currentIndex < tabs.length - 1 ? currentIndex + 1 : 0;
             }
@@ -484,9 +479,7 @@
 
           case 'ArrowRight':
             event.preventDefault();
-            // Move to next tab (or wrap to first)
             nextIndex = currentIndex < tabs.length - 1 ? currentIndex + 1 : 0;
-            // Reverse for RTL
             if (this.$isRTL) {
               nextIndex = currentIndex > 0 ? currentIndex - 1 : tabs.length - 1;
             }
@@ -496,14 +489,11 @@
             return;
         }
 
-        // Focus the next tab
         this.focusTab(tabs[nextIndex]);
       },
       getTabElements() {
-        // Get all tab children from the slot
         if (!this.$refs.tabsContainer) return [];
 
-        // Find all interactive elements that represent tabs
         const tabs = Array.from(
           this.$refs.tabsContainer.querySelectorAll('a[role], button[role="tab"], a[href]'),
         );
@@ -513,21 +503,17 @@
       focusTab(tabElement) {
         if (!tabElement) return;
 
-        // Try to call focus method on Vue component instance if available
         const vueInstance = tabElement.__vueParentComponent?.ctx;
         if (vueInstance?.focus) {
           vueInstance.focus();
         } else {
-          // Fallback to native focus
           tabElement.focus();
         }
       },
       updateTabIndices() {
-        // Update tabindex for roving tabindex pattern
         const tabs = this.getTabElements();
         if (!tabs.length) return;
 
-        // Find active tab or use first tab
         const activeTab = tabs.find(
           tab =>
             tab.getAttribute('aria-current') === 'page' ||
@@ -535,7 +521,6 @@
         );
         const focusableTab = activeTab || tabs[0];
 
-        // Set tabindex: 0 for focusable tab, -1 for others
         tabs.forEach(tab => {
           tab.setAttribute('tabindex', tab === focusableTab ? '0' : '-1');
         });
@@ -610,9 +595,10 @@
     align-items: center;
   }
 
-  /* Tabs extension area */
   .studio-navigation__tabs-extension {
-    @extend %dropshadow-2dp;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    margin-top: -1px;
+    
   }
 
   .studio-navigation__tabs-container {
@@ -625,15 +611,14 @@
     position: relative;
     transition: transform 0.6s cubic-bezier(0.86, 0, 0.07, 1);
     white-space: nowrap;
-
   }
 
   /* Side panel styles */
-  .side-panelheader {
+  .side-panel-header {
     display: flex;
     align-items: center;
     height: 63.2px;
-    padding-right:74px;
+    padding-right: 74px;
   }
 
   .side-panel-title {
@@ -642,7 +627,7 @@
     font-weight: 500;
   }
 
-  .sidepanel-content {
+  .side-panel-content {
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -653,30 +638,21 @@
 }
 
   .side-panel-nav {
-  padding: 8px 0;
-}
+    padding: 8px 0;
+  }
 
   .side-panel-nav-item {
     display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  margin: 0;
-  padding: 8px 16px;
-  cursor: pointer;
-  transition: background-color 0.2s ease; 
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 4px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
 
-  &:hover {
-    background-color: rgba(0, 0, 0, 0.05); 
-  }
-  }
-  .side-panel-nav-item.button {
-    text-align: start;
-  }
-
-  .side-panel-nav-text {
-    font-size: 16px;
-    font-weight: 500;
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
   }
 
   .side-panel-footer {
@@ -684,15 +660,9 @@
     text-align: left;
   }
 
-  .side-panel-logo {
-    margin-bottom: 16px;
-  }
-
   .side-panel-copyright {
-    display: block;
-    margin-bottom: 8px;
+    margin-bottom: 24px;
     font-size: 14px;
-    text-decoration: none;
   }
 
   .side-panel-feedback {
@@ -700,7 +670,6 @@
 
     a {
       font-size: 14px;
-      text-decoration: none;
 
       &:hover {
         text-decoration: underline;
