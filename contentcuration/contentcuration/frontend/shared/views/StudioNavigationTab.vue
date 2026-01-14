@@ -11,12 +11,11 @@
         ':focus': { ...$coreOutline, outlineOffset: 0 }
       })
     ]"
-
     :style="tabStyles"
     :aria-current="isActive ? 'page' : null"
     :tabindex="tabindex"
-    @click="handleClick"
-    @keydown="handleKeydown"
+    @click="$emit('click', $event)"
+    @keydown="$emit('keydown', $event)"
   >
     <span class="studio-navigation-tab__content">
       <slot></slot>
@@ -25,7 +24,7 @@
         class="studio-navigation-tab__badge"
         :aria-label="badgeAriaLabel"
       >
-        {{ formattedBadgeValue }}
+        {{ badgeValue }}
       </span>
     </span>
     <span
@@ -81,7 +80,6 @@
         };
       },
       isActive() {
-        // Check if current route matches this tab's route
         if (!this.to || !this.$route) return false;
 
         const targetRoute = this.$router.resolve(this.to);
@@ -90,21 +88,8 @@
       showBadge() {
         return this.badgeValue > 0;
       },
-      formattedBadgeValue() {
-        return this.badgeValue.toString();
-      },
       badgeAriaLabel() {
-        if (!this.showBadge) return null;
         return `${this.badgeValue} notification${this.badgeValue !== 1 ? 's' : ''}`;
-      },
-    },
-    methods: {
-      handleClick(event) {
-        this.$emit('click', event);
-      },
-      handleKeydown(event) {
-        // Emit keydown event for parent to handle navigation
-        this.$emit('keydown', event);
       },
     },
   };
