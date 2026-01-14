@@ -657,11 +657,6 @@
     padding-inline-start: 20px;
   }
 
-  .text-truncate {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
 
   .studio-navigation__actions {
     display: flex;
