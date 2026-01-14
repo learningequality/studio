@@ -142,6 +142,10 @@
           @keydown="handleTabsKeydown"
         >
           <slot name="tabs"></slot>
+          <div
+            class="sliding-indicator"
+            :style="[indicatorStyle, { backgroundColor: $themeTokens.surface }]"
+          ></div>
         </div>
 
         <div
@@ -317,8 +321,13 @@
         canScrollLeft: false,
         canScrollRight: false,
         toolbarWidth: 0,
+        indicatorStyle: {
+          width: '0px',
+          transform: 'translateX(0px)',
+        },
       };
     },
+    
     computed: {
       ...mapState({
         user: state => state.session.currentUser,
@@ -404,11 +413,20 @@
         ];
       },
     },
+    watch: {
+      '$route'() {
+        this.$nextTick(() => {
+          this.moveIndicator();
+        });
+      },
+    },
     mounted() {
       this.updateTabIndices();
       this.updateWindowWidth();
       this.updateToolbarWidth();
       window.addEventListener('resize', this.handleResize);
+      window.addEventListener('resize', this.moveIndicator);
+      this.$nextTick(() => this.moveIndicator());
       const el = this.$refs.tabsContainer;
       if (el) {
         el.addEventListener('scroll', this.checkScrollPositions);
@@ -426,11 +444,28 @@
     },
     beforeDestroy() {
       window.removeEventListener('resize', this.handleResize);
+      window.removeEventListener('resize', this.moveIndicator);
     },
     methods: {
       ...mapActions(['logout']),
       toggleSidePanel() {
         this.sidePanelOpen = !this.sidePanelOpen;
+      },
+      moveIndicator() {
+        const container = this.$refs.tabsContainer;
+        if (!container) return;
+        const activeTab = container.querySelector('.studio-navigation-tab--active');
+
+        if (activeTab) {
+          const containerRect = container.getBoundingClientRect();
+          const tabRect = activeTab.getBoundingClientRect();
+          const leftPosition = tabRect.left - containerRect.left + container.scrollLeft;
+
+          this.indicatorStyle = {
+            width: `${tabRect.width}px`,
+            transform: `translateX(${leftPosition}px)`,
+          };
+        }
       },
       checkScrollPositions() {
         const el = this.$refs.tabsContainer;
@@ -697,6 +732,7 @@
   }
 
   .studio-navigation__tabs-container {
+    position: relative;
     display: flex;
     flex: 1;
     padding: 0 24px;
@@ -707,6 +743,16 @@
     scrollbar-width: none;
     scroll-behavior: auto;
   }
+  .sliding-indicator {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+    pointer-events: none; 
+    z-index: 1;
+}
 
   /* Side panel styles */
   .side-panel-header {

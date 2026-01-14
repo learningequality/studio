@@ -27,12 +27,6 @@
         {{ badgeValue }}
       </span>
     </span>
-    <span
-      v-if="isActive"
-      class="studio-navigation-tab__indicator"
-      :style="indicatorStyles"
-      aria-hidden="true"
-    ></span>
   </RouterLink>
 
 </template>
@@ -42,7 +36,6 @@
 
   export default {
     name: 'StudioNavigationTab',
-    inject: ['$themeTokens'],
     props: {
       to: {
         type: [String, Object],
@@ -74,11 +67,7 @@
           color: this.$themeTokens.text,
         };
       },
-      indicatorStyles() {
-        return {
-          backgroundColor: this.$themeTokens.surface,
-        };
-      },
+      
       isActive() {
         if (!this.to || !this.$route) return false;
 
@@ -152,14 +141,6 @@
     background-color: black;
     border-radius: 50%;
     transition: 0.3s;
-  }
-
-  .studio-navigation-tab__indicator {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 2px;
   }
 
 </style>
