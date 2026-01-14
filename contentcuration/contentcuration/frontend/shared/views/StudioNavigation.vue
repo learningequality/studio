@@ -15,7 +15,7 @@
         ref="toolbar"
         type="clear"
         :style="{
-          overflowX: 'auto',  
+          overflowX: 'hidden',  
           backgroundColor: $themeTokens.appBar,
           height: '56px',
         }"
