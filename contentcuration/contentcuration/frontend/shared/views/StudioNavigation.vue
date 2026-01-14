@@ -143,6 +143,7 @@
       :aria-label="$tr('navigationMenu')"
       closeButtonIconType="clear"
       immersive
+      fixedWidth
       @closePanel="sidePanelOpen = false"
     >
       <template #header>
