@@ -17,11 +17,11 @@
     @click="$emit('click', $event)"
     @keydown="$emit('keydown', $event)"
   >
-    <span class="studio-navigation-tab__content">
+    <span class="studio-navigation-tab-content">
       <slot></slot>
       <span
         v-if="showBadge"
-        class="studio-navigation-tab__badge"
+        class="studio-navigation-tab-badge"
         :aria-label="badgeAriaLabel"
       >
         {{ badgeValue }}
@@ -58,7 +58,7 @@
       tabClasses() {
         return {
           'studio-navigation-tab': true,
-          'studio-navigation-tab--active': this.isActive,
+          'studio-navigation-tab-active': this.isActive,
           notranslate: this.notranslate,
         };
       },
@@ -114,19 +114,19 @@
     transition: 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
   }
 
-  .studio-navigation-tab:not(.studio-navigation-tab--active) {
+  .studio-navigation-tab:not(.studio-navigation-tab-active) {
     opacity: 0.7;
   }
 
 
-  .studio-navigation-tab__content {
+  .studio-navigation-tab-content {
     position: relative;
     display: flex;
     gap: 8px;
     align-items: center;
   }
 
-  .studio-navigation-tab__badge {
+  .studio-navigation-tab-badge {
     position: absolute;
     top: -11px;
     right: -22px;
