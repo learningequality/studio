@@ -139,7 +139,6 @@
         <div
           ref="tabsContainer"
           class="studio-navigation__tabs-container"
-          @keydown="handleTabsKeydown"
         >
           <slot name="tabs"></slot>
           <div
@@ -421,7 +420,6 @@
       },
     },
     mounted() {
-      this.updateTabIndices();
       this.updateWindowWidth();
       this.updateToolbarWidth();
       window.addEventListener('resize', this.handleResize);
@@ -438,7 +436,6 @@
     },
     updated() {
       this.$nextTick(() => {
-        this.updateTabIndices();
         this.updateToolbarWidth();
       });
     },
@@ -562,75 +559,7 @@
         }
         return value;
       },
-      handleTabsKeydown(event) {
-        const tabs = this.getTabElements();
-        if (!tabs.length) return;
 
-        const currentIndex = tabs.findIndex(
-          tab => tab === event.target || tab.contains(event.target),
-        );
-
-        if (currentIndex === -1) return;
-
-        let nextIndex = currentIndex;
-
-        switch (event.key) {
-          case 'ArrowLeft':
-            event.preventDefault();
-            nextIndex = currentIndex > 0 ? currentIndex - 1 : tabs.length - 1;
-            if (this.$isRTL) {
-              nextIndex = currentIndex < tabs.length - 1 ? currentIndex + 1 : 0;
-            }
-            break;
-
-          case 'ArrowRight':
-            event.preventDefault();
-            nextIndex = currentIndex < tabs.length - 1 ? currentIndex + 1 : 0;
-            if (this.$isRTL) {
-              nextIndex = currentIndex > 0 ? currentIndex - 1 : tabs.length - 1;
-            }
-            break;
-
-          default:
-            return;
-        }
-
-        this.focusTab(tabs[nextIndex]);
-      },
-      getTabElements() {
-        if (!this.$refs.tabsContainer) return [];
-
-        const tabs = Array.from(
-          this.$refs.tabsContainer.querySelectorAll('a[role], button[role="tab"], a[href]'),
-        );
-
-        return tabs;
-      },
-      focusTab(tabElement) {
-        if (!tabElement) return;
-
-        const vueInstance = tabElement.__vueParentComponent?.ctx;
-        if (vueInstance?.focus) {
-          vueInstance.focus();
-        } else {
-          tabElement.focus();
-        }
-      },
-      updateTabIndices() {
-        const tabs = this.getTabElements();
-        if (!tabs.length) return;
-
-        const activeTab = tabs.find(
-          tab =>
-            tab.getAttribute('aria-current') === 'page' ||
-            tab.getAttribute('aria-selected') === 'true',
-        );
-        const focusableTab = activeTab || tabs[0];
-
-        tabs.forEach(tab => {
-          tab.setAttribute('tabindex', tab === focusableTab ? '0' : '-1');
-        });
-      },
     },
     $trs: {
       title: 'Kolibri Studio',
