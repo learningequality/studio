@@ -67,7 +67,7 @@
 
   .skip-nav-link {
     position: relative;
-    z-index: 2;
+    z-index: 100;
   }
 
   .skip-nav-link a {
@@ -82,6 +82,7 @@
     &:focus {
       top: 8px;
       left: 8px;
+      z-index: 100;
     }
   }
 

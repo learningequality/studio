@@ -8,122 +8,124 @@
       color: $themeTokens.text,
     }"
   >
-    <SkipNavigationLink />
-
-    <KToolbar
-      type="clear"
-      :style="{
-        overflowX: 'auto',  
-        backgroundColor: $themeTokens.appBar,
-        height: '56px',
-      }"
-      :raised="false"
-    >
-      <template #icon>
-        <!-- Menu button for logged in users -->
-        <KIconButton
-          v-if="loggedIn"
-          icon="menu"
-          :color="$themeTokens.text"
-          :ariaLabel="$tr('openMenu')"
-          @click="toggleSidePanel"
-        />
-
-        <!-- Logo link for non-logged in users -->
-        <KExternalLink
-          v-else
-          :href="homeLink"
-          class="studio-navigation__logo-link"
-        >
-          <KLogo
-            altText="Kolibri Logo with background"
-            :size="36"
+    <header>
+      <SkipNavigationLink />
+      <KToolbar
+        type="clear"
+        :style="{
+          backgroundColor: $themeTokens.appBar,
+          height: '56px',
+        }"
+        :raised="false"
+      >
+        <template #icon>
+          <!-- Menu button for logged in users -->
+          <KIconButton
+            v-if="loggedIn"
+            icon="menu"
+            :color="$themeTokens.text"
+            :ariaLabel="$tr('openMenu')"
+            @click="toggleSidePanel"
           />
-        </KExternalLink>
-      </template>
 
-      <template #brand>
-        <div
-          v-if="shouldShowTitle"
-          class="text-truncate"
-          style="max-width: 160px"
-        >
-          <span class="studio-navigation__title">
-            {{ title || $tr('title') }}
-          </span>
-        </div>
-      </template>
+          <!-- Logo link for non-logged in users -->
+          <KExternalLink
+            v-else
+            :href="homeLink"
+            class="studio-navigation__logo-link"
+          >
+            <KLogo
+              altText="Kolibri Logo with background"
+              :size="36"
+            />
+          </KExternalLink>
+        </template>
 
-      <template #actions>
-        <div
-          ref="studioNavigationActions"
-          aria-live="polite"
-          class="studio-navigation__actions"
-        >
-          <template v-if="loggedIn">
-            <KButton
-              appearance="flat-button"
-              style="text-transform: none"
-              :ariaLabel="$tr('userMenuLabel')"
-            >
-              <KIconButton
-                :disabled="true"
-                icon="person"
-                color="black"
-              />
-              <span
-                v-if="shouldShowTitle"
-                class="mx-2 subheading"
+        <template #brand>
+          <div
+            v-if="shouldShowTitle"
+            class="text-truncate"
+            style="max-width: 160px"
+          >
+            <span class="studio-navigation__title">
+              {{ title || $tr('title') }}
+            </span>
+          </div>
+        </template>
+
+        <template #actions>
+          <div
+            ref="studioNavigationActions"
+            aria-live="polite"
+            class="studio-navigation__actions"
+          >
+            <template v-if="loggedIn">
+              <KButton
+                appearance="flat-button"
+                style="text-transform: none"
+                :ariaLabel="$tr('userMenuLabel')"
               >
-                {{ user.first_name }}
-              </span>
-              <KIconButton
-                :disabled="true"
-                icon="dropdown"
-                color="black"
-              />
+                <KIconButton
+                  :disabled="true"
+                  icon="person"
+                  color="black"
+                />
+                <span
+                  v-if="shouldShowTitle"
+                  class="mx-2 subheading"
+                >
+                  {{ user.first_name }}
+                </span>
+                <KIconButton
+                  :disabled="true"
+                  icon="dropdown"
+                  color="black"
+                />
 
-              <KDropdownMenu
-                :options="userMenuItems"
-                :hasIcons="true"
-                @select="handleUserMenuSelect"
-              />
-            </KButton>
-          </template>
+                <KDropdownMenu
+                  :options="userMenuItems"
+                  :hasIcons="true"
+                  @select="handleUserMenuSelect"
+                />
+              </KButton>
+            </template>
 
-          <template v-else>
-            <KButton
-              appearance="flat-button"
-              style="text-transform: none"
-              :ariaLabel="$tr('guestMenuLabel')"
-              class="guest-menu-button"
-            >
-              <KIconButton
-                :disabled="true"
-                icon="person"
-                color="black"
-              />
-              <KIconButton
-                :disabled="true"
-                icon="dropdown"
-                color="black"
-              />
+            <template v-else>
+              <KButton
+                appearance="flat-button"
+                style="text-transform: none"
+                :ariaLabel="$tr('guestMenuLabel')"
+                class="guest-menu-button"
+              >
+                <KIconButton
+                  :disabled="true"
+                  icon="person"
+                  color="black"
+                />
+                <KIconButton
+                  :disabled="true"
+                  icon="dropdown"
+                  color="black"
+                />
 
-              <KDropdownMenu
-                :options="guestMenuItems"
-                :hasIcons="true"
-                @select="handleGuestMenuSelect"
-              />
-            </KButton>
-          </template>
-        </div>
-      </template>
-    </KToolbar>
+                <KDropdownMenu
+                  :options="guestMenuItems"
+                  :hasIcons="true"
+                  @select="handleGuestMenuSelect"
+                />
+              </KButton>
+            </template>
+          </div>
+        </template>
+      </KToolbar>
+
+    </header>
+
+    
 
     <!-- Tabs extension area (for when tabs are provided) -->
     <div
       v-if="hasTabs"
-      class="studio-navigation__tabs-extension"
       :aria-label="$tr('mainNavigationLabel')"
     >
       <div class="studio-navigation__tabs-wrapper">
@@ -300,6 +302,7 @@
   import LanguageSwitcherModal from '../languageSwitcher/LanguageSwitcherModal.vue';
   import SidePanelModal from './SidePanelModal';
   import SkipNavigationLink from './SkipNavigationLink.vue';
+
 
   export default {
     name: 'StudioNavigation',
@@ -616,10 +619,9 @@
   @import '~kolibri-design-system/lib/styles/definitions';
 
   .studio-navigation {
-    position: sticky;
     top: 0;
     z-index: 5;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.42);
   }
 
   .studio-navigation__logo-link {
@@ -652,11 +654,6 @@
     display: flex;
     gap: 16px;
     align-items: center;
-  }
-
-  .studio-navigation__tabs-extension {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-    margin-top: -1px;
   }
 
   .studio-navigation__tabs-wrapper {
@@ -702,10 +699,6 @@
     white-space: nowrap;
     scrollbar-width: none;
     scroll-behavior: auto;
-    
-    &::-webkit-scrollbar {
-      display: none;
-    }
   }
 
   /* Side panel styles */
