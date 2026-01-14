@@ -270,14 +270,14 @@
               @click.native="sidePanelOpen = false"
             />
 
-            <p class="side-panel-feedback">
-              <KExternalLink
-                href="https://community.learningequality.org/c/support/studio"
-                openInNewTab
-                :text="$tr('giveFeedback')"
-                @click.native="sidePanelOpen = false"
-              />
-            </p>
+            
+            <KExternalLink
+              href="https://community.learningequality.org/c/support/studio"
+              openInNewTab
+              :text="$tr('giveFeedback')"
+              @click.native="sidePanelOpen = false"
+            />
+          
           </div>
         </div>
       </template>
@@ -746,7 +746,7 @@
     transition: background-color 0.2s ease;
 
     &:hover {
-      background-color: rgba(0, 0, 0, 0.05);
+      background-color: rgba(0, 0, 0, 0.048);
     }
   }
 
@@ -758,18 +758,6 @@
   .side-panel-copyright {
     margin-bottom: 24px;
     font-size: 14px;
-  }
-
-  .side-panel-feedback {
-    margin: 0;
-
-    a {
-      font-size: 14px;
-
-      &:hover {
-        text-decoration: underline;
-      }
-    }
   }
 
 </style>
