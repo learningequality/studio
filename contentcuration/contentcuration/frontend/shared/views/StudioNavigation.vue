@@ -46,7 +46,7 @@
         <div
           v-if="shouldShowTitle"
           class="text-truncate"
-          style="max-width: 150px"
+          style="max-width: 160px"
         >
           <span class="studio-navigation__title">
             {{ title || $tr('title') }}
