@@ -126,12 +126,40 @@
       class="studio-navigation__tabs-extension"
       :aria-label="$tr('mainNavigationLabel')"
     >
-      <div
-        ref="tabsContainer"
-        class="studio-navigation__tabs-container"
-        @keydown="handleTabsKeydown"
-      >
-        <slot name="tabs"></slot>
+      <div class="studio-navigation__tabs-wrapper">
+        <div
+          v-if="isOverflowing && canScrollLeft"
+          class="scroll-button scroll-button--left"
+          :style="{ backgroundColor: $themeTokens.appBar }"
+          @click="scrollTabs(-300)"
+        >
+          <KIconButton
+            icon="chevronLeft"
+            :color="$themeTokens.text"
+            :ariaLabel="$tr('scrollLeft')"
+          />
+        </div>
+
+        <div
+          ref="tabsContainer"
+          class="studio-navigation__tabs-container"
+          @keydown="handleTabsKeydown"
+        >
+          <slot name="tabs"></slot>
+        </div>
+
+        <div
+          v-if="isOverflowing && canScrollRight"
+          class="scroll-button scroll-button--right"
+          :style="{ backgroundColor: $themeTokens.appBar }"
+          @click="scrollTabs(300)"
+        >
+          <KIconButton
+            icon="chevronRight"
+            :color="$themeTokens.text"
+            :ariaLabel="$tr('scrollRight')"
+          />
+        </div>
       </div>
     </div>
 
@@ -292,6 +320,9 @@
         sidePanelOpen: false,
         showLanguageModal: false,
         windowWidth: 0,
+        isOverflowing: false,
+        canScrollLeft: false,
+        canScrollRight: false,
       };
     },
     computed: {
@@ -378,6 +409,14 @@
       this.updateTabIndices();
       this.updateWindowWidth();
       window.addEventListener('resize', this.updateWindowWidth);
+      const el = this.$refs.tabsContainer;
+      if (el) {
+        el.addEventListener('scroll', this.checkScrollPositions);
+        this.checkScrollPositions();
+        
+        const resizeObserver = new ResizeObserver(this.checkScrollPositions);
+        resizeObserver.observe(el);
+      }
     },
     updated() {
       this.$nextTick(() => {
@@ -391,6 +430,23 @@
       ...mapActions(['logout']),
       toggleSidePanel() {
         this.sidePanelOpen = !this.sidePanelOpen;
+      },
+      checkScrollPositions() {
+        const el = this.$refs.tabsContainer;
+        if (!el) return;
+
+        this.isOverflowing = el.scrollWidth > el.clientWidth;
+        this.canScrollLeft = el.scrollLeft > 0;
+
+        const atEnd = Math.ceil(el.scrollLeft + el.clientWidth) >= el.scrollWidth;
+        this.canScrollRight = !atEnd;
+      },
+      scrollTabs(distance) {
+        const container = this.$refs.tabsContainer;
+        if (container) {
+          const scrollDirection = this.$isRTL ? -distance : distance;
+          container.scrollBy({ left: scrollDirection, behavior: 'smooth' });
+        }
       },
       closeSidePanelAndNavigate(url) {
         this.sidePanelOpen = false;
@@ -547,6 +603,8 @@
       logoutLink: 'Sign out',
       copyright: '© {year} Learning Equality',
       giveFeedback: 'Give feedback',
+      scrollLeft: 'Scroll tabs left',
+      scrollRight: 'Scroll tabs right',
     },
   };
 
@@ -599,19 +657,55 @@
   .studio-navigation__tabs-extension {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
     margin-top: -1px;
+  }
+
+  .studio-navigation__tabs-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+
+  .scroll-button {
+    position: absolute;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    z-index: 5;
+    cursor: pointer;
+    user-select: none;
+    padding: 0 4px;
+    transition: background-color 0.2s ease;
+  
     
+    &--left {
+      left: 0;
+      padding-right: 8px;
+    }
+    
+    &--right {
+      right: 0;
+      padding-left: 8px;
+     
+    }
   }
 
   .studio-navigation__tabs-container {
     display: flex;
-    flex: 1 0 auto;
+    flex: 1;
     padding: 0 24px;
     overflow-x: auto;
     height: 48px;
     list-style-type: none;
-    position: relative;
-    transition: transform 0.6s cubic-bezier(0.86, 0, 0.07, 1);
     white-space: nowrap;
+    scrollbar-width: none;
+    scroll-behavior: auto;
+    
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 
   /* Side panel styles */
@@ -632,11 +726,11 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    
   }
+  
   ::v-deep .side-panel-content {
-  padding: 0 !important;
-}
+    padding: 0 !important;
+  }
 
   .side-panel-nav {
     padding: 8px 0;
