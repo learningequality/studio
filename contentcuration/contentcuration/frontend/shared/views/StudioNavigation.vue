@@ -8,11 +8,13 @@
       color: $themeTokens.text,
     }"
   >
+    <SkipNavigationLink />
     <header>
-      <SkipNavigationLink />
+      
       <KToolbar
         type="clear"
         :style="{
+          overflowX: 'auto',  
           backgroundColor: $themeTokens.appBar,
           height: '56px',
         }"
