@@ -45,7 +45,6 @@
 
         <template #brand>
           <div
-            v-if="shouldShowTitle"
             class="text-truncate"
             style="max-width: 160px"
           >
@@ -73,7 +72,6 @@
                   color="black"
                 />
                 <span
-                  v-if="shouldShowTitle"
                   class="mx-2 subheading"
                 >
                   {{ user.first_name }}
@@ -405,9 +403,6 @@
             icon: 'language',
           },
         ];
-      },
-      shouldShowTitle() {
-        return this.windowWidth >= 400;
       },
     },
     mounted() {
