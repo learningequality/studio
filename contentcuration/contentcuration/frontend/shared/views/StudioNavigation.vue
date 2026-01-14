@@ -147,7 +147,7 @@
       @closePanel="sidePanelOpen = false"
     >
       <template #header>
-        <div class="side-panel-header">
+        <div class="side-panelheader">
           <span class="side-panel-title">
             {{ $tr('title') }}
           </span>
@@ -643,11 +643,11 @@
   }
 
   /* Side panel styles */
-  .side-panel-header {
+  .side-panelheader {
     display: flex;
     align-items: center;
-    min-height: 60px;
-    padding: 0 16px;
+    height: 63.2px;
+    padding-right:74px;
   }
 
   .side-panel-title {
