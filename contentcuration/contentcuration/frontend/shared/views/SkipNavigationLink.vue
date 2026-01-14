@@ -20,7 +20,7 @@
     computed: {
       linkStyles() {
         return {
-          backgroundColor: this.$themeTokens.surface,
+          backgroundColor: this.$themeTokens.surface + ' !important',
         };
       },
     },
@@ -67,7 +67,7 @@
 
   .skip-nav-link {
     position: relative;
-    z-index: 100;
+    z-index: 2;
   }
 
   .skip-nav-link a {
@@ -82,7 +82,7 @@
     &:focus {
       top: 8px;
       left: 8px;
-      z-index: 100;
+      z-index: 2;
     }
   }
 
