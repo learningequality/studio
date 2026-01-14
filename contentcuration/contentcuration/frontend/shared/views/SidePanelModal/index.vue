@@ -118,6 +118,11 @@
           return ['right', 'left'].includes(value);
         },
       },
+      fixedWidth: {
+        type: Boolean,
+        required: false,
+        default: false,
+      },
       ariaLabel: {
         type: String,
         required: false,
@@ -152,6 +157,9 @@
         };
       },
       responsiveWidth() {
+        if (this.fixedWidth) {
+          return this.sidePanelWidth;
+        }
         return this.isMobile ? '100vw' : this.sidePanelWidth;
       },
       /** Styling Properties */
