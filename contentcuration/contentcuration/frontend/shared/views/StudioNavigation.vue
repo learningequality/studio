@@ -157,91 +157,72 @@
       <template #default>
         <div class="sidepanel-content">
           <nav class="side-panel-nav">
-            <KExternalLink
-              :href="channelsLink"
-              class="side-panel-nav-item subheading"
-              appearance="flat-button"
-              :appearanceOverrides="navItemAppearance"
-              @click.native="sidePanelOpen = false"
+            <div
+              class="side-panel-nav-item"
+              @click="navigateToChannels"
             >
               <KIconButton
                 :disabled="true"
                 icon="home"
               />
-              <span class="side-panel-nav-text">{{ $tr('channelsLink') }}</span>
-            </KExternalLink>
+              <span class="subheading">{{ $tr('channelsLink') }}</span>
+            </div>
 
-            <KExternalLink
+            <div
               v-if="user?.is_admin"
-              :href="administrationLink"
-              class="side-panel-nav-item subheading"
-              appearance="flat-button"
-              :appearanceOverrides="navItemAppearance"
-              @click.native="sidePanelOpen = false"
+              class="side-panel-nav-item"
+              @click="navigateToAdministration"
             >
               <KIconButton
                 :disabled="true"
                 icon="people"
               />
-              <span class="side-panel-nav-text">{{ $tr('administrationLink') }}</span>
-            </KExternalLink>
+              <span class="subheading">{{ $tr('administrationLink') }}</span>
+            </div>
 
-            <KExternalLink
-              :href="settingsLink"
-              class="side-panel-nav-item subheading"
-              appearance="flat-button"
-              :appearanceOverrides="navItemAppearance"
-              @click.native="
-                sidePanelOpen = false;
-                trackClick('Settings');
-              "
+            <div
+              class="side-panel-nav-item"
+              @click="navigateToSettings"
             >
               <KIconButton
                 :disabled="true"
                 icon="settings"
               />
-              <span class="side-panel-nav-text">{{ $tr('settingsLink') }}</span>
-            </KExternalLink>
+              <span class="subheading">{{ $tr('settingsLink') }}</span>
+            </div>
 
-            <KExternalLink
-              appearance="flat-button"
-              class="side-panel-nav-item subheading"
-              :appearanceOverrides="navItemAppearance"
-              @click.native.prevent="openLanguageModal"
+            <div
+              class="side-panel-nav-item"
+              @click="openLanguageModal"
             >
               <KIconButton
                 :disabled="true"
                 icon="language"
               />
-              <span class="side-panel-nav-text">{{ $tr('changeLanguage') }}</span>
-            </KExternalLink>
+              <span class="subheading">{{ $tr('changeLanguage') }}</span>
+            </div>
 
-            <KExternalLink
-              :href="helpLink"
-              class="side-panel-nav-item subheading"
-              appearance="flat-button"
-              :appearanceOverrides="navItemAppearance"
-              @click.native="handleHelpClick"
+            <div
+              class="side-panel-nav-item"
+              @click="navigateToHelp"
             >
               <KIconButton
                 :disabled="true"
                 icon="openNewTab"
               />
-              <span class="side-panel-nav-text">{{ $tr('helpLink') }}</span>
-            </KExternalLink>
+              <span class="subheading">{{ $tr('helpLink') }}</span>
+            </div>
 
-            <KExternalLink
-              appearance="flat-button"
-              class="side-panel-nav-item subheading"
-              :appearanceOverrides="navItemAppearance"
-              @click.native.prevent="logout"
+            <div
+              class="side-panel-nav-item"
+              @click="logout"
             >
               <KIconButton
                 :disabled="true"
                 icon="logout"
               />
-              <span class="side-panel-nav-text">{{ $tr('logoutLink') }}</span>
-            </KExternalLink>
+              <span class="subheading">{{ $tr('logoutLink') }}</span>
+            </div>
           </nav>
 
           <div class="side-panel-footer">
@@ -323,14 +304,7 @@
       hasTabs() {
         return !!this.$slots.tabs;
       },
-      navItemAppearance() {
-        return {
-          fontSize: '16px',
-          textTransform: 'none',
-          height: '48px',
-          width: '100%',
-        };
-      },
+    
       homeLink() {
         return window.Urls?.channels() || '/';
       },
@@ -423,6 +397,24 @@
       toggleSidePanel() {
         this.sidePanelOpen = !this.sidePanelOpen;
       },
+      navigateToChannels() {
+        this.sidePanelOpen = false;
+        window.location.href = this.channelsLink;
+      },
+      navigateToAdministration() {
+        this.sidePanelOpen = false;
+        window.location.href = this.administrationLink;
+      },
+      navigateToSettings() {
+        this.sidePanelOpen = false;
+        this.trackClick('Settings');
+        window.location.href = this.settingsLink;
+      },
+      navigateToHelp() {
+        this.sidePanelOpen = false;
+        this.trackClick('Help');
+        window.open(this.helpLink, '_blank', 'noopener,noreferrer');
+      },
       handleUserMenuSelect(item) {
         switch (item.value) {
           case 'administration':
@@ -452,12 +444,6 @@
             this.showLanguageModal = true;
             break;
         }
-      },
-      handleHelpClick(event) {
-        event.preventDefault();
-        this.sidePanelOpen = false;
-        this.trackClick('Help');
-        window.open(this.helpLink, '_blank', 'noopener,noreferrer');
       },
       trackClick(label) {
         if (this.$analytics) {
@@ -672,10 +658,17 @@
 
   .side-panel-nav-item {
     display: flex;
-    gap: 12px;
-    width: 100%;
-    margin: 0;
-    padding: 8px 16px;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin: 0;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease; 
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.05); 
+  }
   }
   .side-panel-nav-item.button {
     text-align: start;
