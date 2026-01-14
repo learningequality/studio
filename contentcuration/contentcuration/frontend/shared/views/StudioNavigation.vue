@@ -32,7 +32,7 @@
           <KExternalLink
             v-else
             :href="homeLink"
-            class="studio-navigation__logo-link"
+            class="studio-navigation-logo-link"
           >
             <KLogo
               altText="Kolibri Logo with background"
@@ -43,7 +43,7 @@
 
         <template #brand>
           <div
-            class="studio-navigation__title-container"
+            class="studio-navigation-title-container"
             style="max-width: 160px"
           >
             <span>
@@ -56,7 +56,7 @@
           <div
             ref="studioNavigationActions"
             aria-live="polite"
-            class="studio-navigation__actions"
+            class="studio-navigation-actions"
           >
             <template v-if="loggedIn">
               <KButton
@@ -93,7 +93,6 @@
                 appearance="flat-button"
                 style="text-transform: none"
                 :ariaLabel="$tr('guestMenuLabel')"
-                class="guest-menu-button"
               >
                 <KIconButton
                   :disabled="true"
@@ -122,10 +121,10 @@
       v-if="hasTabs"
       :aria-label="$tr('mainNavigationLabel')"
     >
-      <div class="studio-navigation__tabs-wrapper">
+      <div class="studio-navigation-tabs-wrapper">
         <div
           v-if="isOverflowing && canScrollLeft"
-          class="scroll-button scroll-button--left"
+          class="scroll-button scroll-button-left"
           :style="{ backgroundColor: $themeTokens.appBar }"
           @click="scrollTabs(-300)"
         >
@@ -138,7 +137,7 @@
 
         <div
           ref="tabsContainer"
-          class="studio-navigation__tabs-container"
+          class="studio-navigation-tabs-container"
         >
           <slot name="tabs"></slot>
           <div
@@ -149,7 +148,7 @@
 
         <div
           v-if="isOverflowing && canScrollRight"
-          class="scroll-button scroll-button--right"
+          class="scroll-button scroll-button-right"
           :style="{ backgroundColor: $themeTokens.appBar }"
           @click="scrollTabs(300)"
         >
@@ -451,7 +450,7 @@
       moveIndicator() {
         const container = this.$refs.tabsContainer;
         if (!container) return;
-        const activeTab = container.querySelector('.studio-navigation-tab--active');
+        const activeTab = container.querySelector('.studio-navigation-tab-active');
 
         if (activeTab) {
           const containerRect = container.getBoundingClientRect();
@@ -599,7 +598,7 @@
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.42);
   }
 
-  .studio-navigation__logo-link {
+  .studio-navigation-logo-link {
     display: flex;
     align-items: center;
     padding: 4px;
@@ -611,7 +610,7 @@
     }
   }
 
-  .studio-navigation__title-container {
+  .studio-navigation-title-container {
     display: block;    
     overflow: hidden;
     white-space: nowrap;
@@ -622,12 +621,12 @@
   }
 
 
-  .studio-navigation__actions {
+  .studio-navigation-actions {
     display: flex;
     align-items: center;
   }
 
-  .studio-navigation__tabs-wrapper {
+  .studio-navigation-tabs-wrapper {
     position: relative;
     display: flex;
     align-items: center;
@@ -648,19 +647,19 @@
     transition: background-color 0.2s ease;
   
     
-    &--left {
+    &-left {
       left: 0;
       padding-right: 8px;
     }
     
-    &--right {
+    &-right {
       right: 0;
       padding-left: 8px;
      
     }
   }
 
-  .studio-navigation__tabs-container {
+  .studio-navigation-tabs-container {
     position: relative;
     display: flex;
     flex: 1;
