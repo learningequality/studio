@@ -141,6 +141,9 @@
         <div
           ref="tabsContainer"
           class="studio-navigation-tabs-container"
+          :class="{ 'is-dragging': isDragging }"
+          @mousedown="handleDragStart"
+          @touchstart="handleDragStart"
         >
           <slot name="tabs"></slot>
           <div
@@ -333,6 +336,20 @@
           width: '0px',
           transform: 'translateX(0px)',
         },
+        // Drag state
+        isDragging: false,
+        dragStartX: 0,
+        dragStartScrollLeft: 0,
+        currentTranslateX: 0,
+        dragVelocity: 0,
+        lastDragX: 0,
+        lastDragTime: 0,
+        potentialDrag: false,
+        dragStarted: false,
+        // Resize debounce
+        resizeTimeout: null,
+        resizeObserverTimeout: null,
+        resizeObserver: null,
       };
     },
     
@@ -432,20 +449,60 @@
           this.moveIndicator();
         });
       },
+      windowBreakpoint() {
+        // Clear existing timeout
+        if (this.resizeTimeout) {
+          clearTimeout(this.resizeTimeout);
+        }
+        
+        // Wait 2 seconds before centering
+        this.resizeTimeout = setTimeout(() => {
+          this.centerActiveTab();
+        }, 2000);
+      },
     },
     mounted() {
       this.updateWindowWidth();
       this.updateToolbarWidth();
       window.addEventListener('resize', this.handleResize);
       window.addEventListener('resize', this.moveIndicator);
-      this.$nextTick(() => this.moveIndicator());
+      
+      // Use requestAnimationFrame to ensure DOM is painted
+      this.$nextTick(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            this.moveIndicator();
+            this.setupDragListeners();
+            this.checkScrollPositions();
+            
+            // Add a small delay before centering to ensure all styles are applied
+            setTimeout(() => {
+              this.centerActiveTab();
+            }, 100);
+          });
+        });
+      });
+      
       const el = this.$refs.tabsContainer;
       if (el) {
         el.addEventListener('scroll', this.checkScrollPositions);
-        this.checkScrollPositions();
         
-        const resizeObserver = new ResizeObserver(this.checkScrollPositions);
+        // Initial check with delay
+        setTimeout(() => {
+          this.checkScrollPositions();
+        }, 150);
+        
+        const resizeObserver = new ResizeObserver(() => {
+          // Debounce the resize observer
+          if (this.resizeObserverTimeout) {
+            clearTimeout(this.resizeObserverTimeout);
+          }
+          this.resizeObserverTimeout = setTimeout(() => {
+            this.checkScrollPositions();
+          }, 100);
+        });
         resizeObserver.observe(el);
+        this.resizeObserver = resizeObserver;
       }
     },
     updated() {
@@ -456,6 +513,28 @@
     beforeDestroy() {
       window.removeEventListener('resize', this.handleResize);
       window.removeEventListener('resize', this.moveIndicator);
+      
+      // Clear all timeouts
+      if (this.resizeTimeout) {
+        clearTimeout(this.resizeTimeout);
+      }
+      if (this.resizeObserverTimeout) {
+        clearTimeout(this.resizeObserverTimeout);
+      }
+      
+      // Disconnect resize observer
+      if (this.resizeObserver) {
+        this.resizeObserver.disconnect();
+      }
+      
+      // Remove scroll listener
+      const el = this.$refs.tabsContainer;
+      if (el) {
+        el.removeEventListener('scroll', this.checkScrollPositions);
+      }
+      
+      // Remove drag event listeners
+      this.removeDragListeners();
     },
     methods: {
       ...mapActions(['logout']),
@@ -478,15 +557,74 @@
           };
         }
       },
+      centerActiveTab() {
+        const container = this.$refs.tabsContainer;
+        if (!container) {
+          // Retry after a short delay if container isn't ready
+          setTimeout(() => {
+            if (this.$refs.tabsContainer) {
+              this.centerActiveTab();
+            }
+          }, 100);
+          return;
+        }
+        
+        // Wait for overflow check to complete
+        if (!this.isOverflowing) {
+          setTimeout(() => {
+            this.checkScrollPositions();
+            if (this.isOverflowing) {
+              this.centerActiveTab();
+            }
+          }, 50);
+          return;
+        }
+        
+        const activeTab = container.querySelector('.studio-navigation-tab-active');
+        if (!activeTab) return;
+
+        const containerWidth = container.clientWidth;
+        const tabRect = activeTab.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        
+        // Calculate position to center the active tab
+        const tabLeft = tabRect.left - containerRect.left + container.scrollLeft;
+        const tabCenter = tabLeft + (tabRect.width / 2);
+        const targetScroll = tabCenter - (containerWidth / 2);
+        
+        // Clamp to valid scroll range
+        const maxScroll = container.scrollWidth - container.clientWidth;
+        const clampedScroll = Math.max(0, Math.min(maxScroll, targetScroll));
+        
+        container.style.scrollBehavior = 'auto';
+        container.style.transition = 'scroll-left 0.6s ease-in-out';
+        
+        container.scrollTo({
+          left: clampedScroll,
+          behavior: 'smooth'
+        });
+
+        setTimeout(() => {
+          container.style.transition = '';
+          container.style.scrollBehavior = 'smooth';
+          this.checkScrollPositions();
+        }, 600);
+      },
       checkScrollPositions() {
         const el = this.$refs.tabsContainer;
         if (!el) return;
 
-        this.isOverflowing = el.scrollWidth > el.clientWidth;
-        this.canScrollLeft = el.scrollLeft > 0;
+        // Force a reflow to get accurate measurements
+        void el.offsetHeight;
 
-        const atEnd = Math.ceil(el.scrollLeft + el.clientWidth) >= el.scrollWidth;
-        this.canScrollRight = !atEnd;
+        this.isOverflowing = el.scrollWidth > el.clientWidth;
+        
+        // Use a small threshold to account for rounding errors
+        const threshold = 1;
+        this.canScrollLeft = el.scrollLeft > threshold;
+
+        const atEnd = Math.ceil(el.scrollLeft + el.clientWidth) >= (el.scrollWidth - threshold);
+        this.canScrollRight = !atEnd && this.isOverflowing;
       },
       scrollTabs(distance) {
         const container = this.$refs.tabsContainer;
@@ -494,6 +632,155 @@
           const scrollDirection = this.$isRTL ? -distance : distance;
           container.scrollBy({ left: scrollDirection, behavior: 'smooth' });
         }
+      },
+      setupDragListeners() {
+        const container = this.$refs.tabsContainer;
+        if (!container) {
+          return;
+        }
+
+        // Add event listeners to document for global tracking
+        document.addEventListener('mousemove', this.handleDragMove, { passive: false });
+        document.addEventListener('mouseup', this.handleDragEnd);
+        document.addEventListener('touchmove', this.handleDragMove, { passive: false });
+        document.addEventListener('touchend', this.handleDragEnd);
+        document.addEventListener('touchcancel', this.handleDragEnd);
+      },
+      removeDragListeners() {
+        document.removeEventListener('mousemove', this.handleDragMove);
+        document.removeEventListener('mouseup', this.handleDragEnd);
+        document.removeEventListener('touchmove', this.handleDragMove);
+        document.removeEventListener('touchend', this.handleDragEnd);
+        document.removeEventListener('touchcancel', this.handleDragEnd);
+      },
+      // Drag handlers
+      handleDragStart(e) {
+        const container = this.$refs.tabsContainer;
+        
+        if (!container || !this.isOverflowing) {
+          return;
+        }
+        
+        this.isDragging = false;
+        this.dragStarted = false;
+        const clientX = e.type === 'mousedown' ? e.clientX : e.touches[0].clientX;
+        this.dragStartX = clientX;
+        this.dragStartScrollLeft = container.scrollLeft;
+        this.currentTranslateX = 0;
+        this.lastDragX = clientX;
+        this.lastDragTime = Date.now();
+        this.dragVelocity = 0;
+        this.potentialDrag = true;
+      },
+      handleDragMove(e) {
+        if (!this.potentialDrag && !this.isDragging) return;
+
+        const container = this.$refs.tabsContainer;
+        if (!container) return;
+
+        const clientX = e.type === 'mousemove' ? e.clientX : e.touches[0].clientX;
+        const deltaX = clientX - this.dragStartX;
+        
+        // If movement is more than 5px, consider it a drag (not a click)
+        if (!this.dragStarted && Math.abs(deltaX) > 5) {
+          this.dragStarted = true;
+          this.isDragging = true;
+          this.potentialDrag = false;
+          
+          e.preventDefault();
+          e.stopPropagation();
+          
+          container.style.scrollBehavior = 'auto';
+          container.style.transition = 'none';
+        }
+        
+        if (!this.isDragging) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const currentTime = Date.now();
+        const deltaTime = currentTime - this.lastDragTime;
+
+        if (deltaTime > 0) {
+          this.dragVelocity = (clientX - this.lastDragX) / deltaTime;
+        }
+
+        this.lastDragX = clientX;
+        this.lastDragTime = currentTime;
+
+        const newScrollLeft = this.dragStartScrollLeft - deltaX;
+        const maxScroll = container.scrollWidth - container.clientWidth;
+
+        // Allow over-scrolling with resistance
+        if (newScrollLeft < 0) {
+          const overScroll = Math.abs(newScrollLeft);
+          const resistance = Math.min(overScroll * 0.7, 600);
+          container.scrollLeft = 0;
+          this.currentTranslateX = resistance;
+        } else if (newScrollLeft > maxScroll) {
+          const overScroll = newScrollLeft - maxScroll;
+          const resistance = Math.min(overScroll * 0.7, 600);
+          container.scrollLeft = maxScroll;
+          this.currentTranslateX = -resistance;
+        } else {
+          container.scrollLeft = newScrollLeft;
+          this.currentTranslateX = 0;
+        }
+
+        container.style.transform = `translateX(${this.currentTranslateX}px)`;
+      },
+      handleDragEnd() {
+        if (!this.potentialDrag && !this.isDragging) return;
+
+        const container = this.$refs.tabsContainer;
+        if (!container) return;
+
+        // If no drag movement, allow the click to happen
+        if (this.potentialDrag && !this.dragStarted) {
+          this.potentialDrag = false;
+          return;
+        }
+
+        this.isDragging = false;
+        this.potentialDrag = false;
+        this.dragStarted = false;
+
+        // Animate back if over-scrolled
+        if (this.currentTranslateX !== 0) {
+          container.style.transition = 'transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+          container.style.transform = 'translateX(0px)';
+          
+          setTimeout(() => {
+            container.style.transition = '';
+            container.style.scrollBehavior = 'smooth';
+            this.currentTranslateX = 0;
+            this.checkScrollPositions();
+          }, 350);
+        } else {
+          container.style.scrollBehavior = 'smooth';
+          
+          // Add momentum scrolling
+          const absVelocity = Math.abs(this.dragVelocity);
+          if (absVelocity > 0.5) {
+            const momentum = this.dragVelocity * 400;
+            const currentScroll = container.scrollLeft;
+            const targetScroll = currentScroll - momentum;
+            const maxScroll = container.scrollWidth - container.clientWidth;
+            const clampedScroll = Math.max(0, Math.min(maxScroll, targetScroll));
+            
+            container.scrollTo({
+              left: clampedScroll,
+              behavior: 'smooth'
+            });
+          }
+          
+          setTimeout(() => {
+            this.checkScrollPositions();
+          }, 50);
+        }
+
+        this.dragVelocity = 0;
       },
       closeSidePanelAndNavigate(url) {
         this.sidePanelOpen = false;
@@ -560,6 +847,16 @@
       handleResize() {
         this.updateWindowWidth();
         this.updateToolbarWidth();
+        
+        // Clear existing timeout
+        if (this.resizeTimeout) {
+          clearTimeout(this.resizeTimeout);
+        }
+        
+        // Wait 2 seconds after resize stops before centering
+        this.resizeTimeout = setTimeout(() => {
+          this.centerActiveTab();
+        }, 1000);
       },
       updateWindowWidth() {
         this.windowWidth = window.innerWidth;
@@ -683,19 +980,34 @@
     list-style-type: none;
     white-space: nowrap;
     scrollbar-width: none;
-    scroll-behavior: auto;
-    transition: transform .6s cubic-bezier(.86, 0, .07, 1);
+    scroll-behavior: smooth;
+    cursor: grab;
+    user-select: none;
+    will-change: transform;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    &.is-dragging {
+      cursor: grabbing;
+      scroll-behavior: auto;
+      
+      * {
+        pointer-events: none;
+      }
+    }
   }
+
   .sliding-indicator {
     position: absolute;
     bottom: 0;
     left: 0;
     height: 2px;
-    
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
     pointer-events: none; 
     z-index: 1;
-}
+  }
 
   /* Side panel styles */
   .side-panel-header {
