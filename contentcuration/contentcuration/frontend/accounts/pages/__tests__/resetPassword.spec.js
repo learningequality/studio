@@ -1,53 +1,96 @@
-import { mount } from '@vue/test-utils';
-import router from '../../router';
+import { render, screen, fireEvent, waitFor } from '@testing-library/vue';
+import VueRouter from 'vue-router';
 import ResetPassword from '../resetPassword/ResetPassword';
+import { createLocalVue } from '@vue/test-utils';
 
-function makeWrapper() {
-  return mount(ResetPassword, { router });
-}
 
-describe('resetPassword', () => {
-  let wrapper, setPassword;
+const localVue = createLocalVue();
+localVue.use(VueRouter);
 
-  beforeEach(() => {
-    wrapper = makeWrapper();
-    setPassword = jest.spyOn(wrapper.vm, 'setPassword');
-    setPassword.mockImplementation(() => Promise.resolve());
+const setPasswordMock = jest.fn(()=>Promise.resolve());
+
+const renderComponent = (queryParams={})=> {
+  const router = new VueRouter({
+    routes: [
+      { path: '/', name: 'Main' }, 
+      { path: '/reset-password', name: 'ResetPassword' },
+      { path: '/reset-password/success', name: 'ResetPasswordSuccess' }
+    ]
   });
-
-  it('should not call setPassword on submit if password 1 is not set', async () => {
-    await wrapper.setData({ new_password2: 'pass' });
-    await wrapper.findComponent({ ref: 'form' }).trigger('submit');
-    expect(setPassword).not.toHaveBeenCalled();
-  });
-
-  it('should not call setPassword on submit if password 2 is not set', async () => {
-    await wrapper.setData({ new_password1: 'pass' });
-    await wrapper.findComponent({ ref: 'form' }).trigger('submit');
-    expect(setPassword).not.toHaveBeenCalled();
-  });
-
-  it('should not call setPassword on submit if passwords do not not match', async () => {
-    await wrapper.setData({ new_password1: 'pass', new_password2: 'pass2' });
-    await wrapper.findComponent({ ref: 'form' }).trigger('submit');
-    expect(setPassword).not.toHaveBeenCalled();
-  });
-
-  it('should call setPassword on submit if password data is valid', async () => {
-    await wrapper.setData({ new_password1: 'passw123', new_password2: 'passw123' });
-    await wrapper.findComponent({ ref: 'form' }).trigger('submit');
-    expect(setPassword).toHaveBeenCalled();
-  });
-
-  it('should retain data from query params so reset credentials are preserved', async () => {
-    router.replace({
-      name: 'ResetPassword',
-      query: {
-        test: 'testing',
+  if(Object.keys(queryParams).length>0) {
+    router.replace({name:'ResetPassword', query:queryParams}).catch(()=>{});
+  }
+  const utils = render(ResetPassword, {
+    localVue,
+    router,
+    mocks: {
+      $tr: (key) => {
+        const translations = {
+          passwordLabel: 'New Password',
+          passwordConfirmLabel: 'Confirm Password',
+          submitButton: 'Submit',
+          resetPasswordFailed: 'Failed to reset password. Please try again.',
+          passwordValidationMessage: 'Password should be at least 8 characters long',
+          passwordMatchMessage: "Passwords don't match",
+        };
+        return translations[key] || key;
       },
+    },
+    store: {
+      modules: {
+        account: {
+          namespaced: true,
+          actions: {
+            setPassword: setPasswordMock,
+          },
+        },
+      },
+    },
+  });
+
+  return {...utils, router};
+};
+
+describe('ResetPassword', () => {
+  beforeEach(()=> {
+    jest.clearAllMocks();
+  });
+
+  it('shows validation errors when submitting invalid or mismatching passwords', async ()=> {
+    renderComponent();
+
+    await fireEvent.update(screen.getByLabelText(/New password/i), 'short');
+    await fireEvent.update(screen.getByLabelText(/Confirm password/i),'mismatched');
+    await fireEvent.click(screen.getByRole('button',{name:/Submit/i}));
+
+    expect(setPasswordMock).not.toHaveBeenCalled();
+
+    await screen.findByText("Password should be at least 8 characters long");
+    await screen.findByText("Passwords don't match");
+  });
+
+  it('submits form with correct data and preserves query params', async () => {
+    setPasswordMock.mockResolvedValue({});
+    const queryParams = {token: 'xyz123', email: 'test@example.com'};
+    const {router} = renderComponent(queryParams);
+
+    await fireEvent.update(screen.getByLabelText(/New password/i), 'validPassword123');
+    await fireEvent.update(screen.getByLabelText(/Confirm password/i), 'validPassword123');
+
+    await fireEvent.click(screen.getByRole('button', {name:/Submit/i}));
+
+    await waitFor(()=>{
+      expect(setPasswordMock).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          ...queryParams,
+          new_password1: 'validPassword123',
+          new_password2: 'validPassword123',
+      }));
     });
-    await wrapper.setData({ new_password1: 'passw123', new_password2: 'passw123' });
-    await wrapper.findComponent({ ref: 'form' }).trigger('submit');
-    expect(setPassword.mock.calls[0][0].test).toBe('testing');
+
+    await waitFor(()=> {
+      expect(router.currentRoute.name).toBe('ResetPasswordSuccess');
+    });
   });
 });
