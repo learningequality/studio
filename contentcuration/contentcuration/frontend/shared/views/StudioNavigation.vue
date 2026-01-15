@@ -121,7 +121,10 @@
       v-if="hasTabs"
       :aria-label="$tr('mainNavigationLabel')"
     >
-      <div class="studio-navigation-tabs-wrapper">
+      <div 
+        class="studio-navigation-tabs-wrapper"
+        :style="tabsWrapperStyles"
+      >
         <div
           v-if="isOverflowing && canScrollLeft"
           class="scroll-button scroll-button-left"
@@ -291,6 +294,7 @@
 <script>
 
   import { mapActions, mapState, mapGetters } from 'vuex';
+  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import LanguageSwitcherModal from '../languageSwitcher/LanguageSwitcherModal.vue';
   import SidePanelModal from './SidePanelModal';
   import SkipNavigationLink from './SkipNavigationLink.vue';
@@ -302,6 +306,12 @@
       SidePanelModal,
       SkipNavigationLink,
       LanguageSwitcherModal,
+    },
+    setup() {
+      const { windowBreakpoint } = useKResponsiveWindow();
+      return {
+        windowBreakpoint,
+      };
     },
     props: {
       title: {
@@ -409,6 +419,11 @@
             icon: 'language',
           },
         ];
+      },
+      tabsWrapperStyles() {
+        return {
+          padding: this.windowBreakpoint <= 3 ? '0 16px' : '0 24px',
+        };
       },
     },
     watch: {
@@ -663,13 +678,13 @@
     position: relative;
     display: flex;
     flex: 1;
-    padding: 0 24px;
     overflow-x: auto;
     height: 48px;
     list-style-type: none;
     white-space: nowrap;
     scrollbar-width: none;
     scroll-behavior: auto;
+    transition: transform .6s cubic-bezier(.86, 0, .07, 1);
   }
   .sliding-indicator {
     position: absolute;
