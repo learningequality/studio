@@ -1,19 +1,10 @@
 <template>
 
-  <FullscreenModal :value="isModalOpen">
-    <template #close>
-      <div class="back-action">
-        <KIconButton
-          icon="back"
-          :ariaLabel="commonStrings.backAction$()"
-          :color="$themeTokens.textInverted"
-          @click="isModalOpen = false"
-        />
-
-        <span>
-          {{ commonStrings.backAction$() }}
-        </span>
-      </div>
+  <StudioImmersiveModal v-model="isModalOpen">
+    <template #header>
+      <span>
+        {{ notificationsLabel$() }}
+      </span>
     </template>
     <template #default>
       <div
@@ -71,7 +62,7 @@
         </div>
       </div>
     </template>
-  </FullscreenModal>
+  </StudioImmersiveModal>
 
 </template>
 
@@ -83,10 +74,10 @@
   import { useRoute, useRouter } from 'vue-router/composables';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
 
-  import FullscreenModal from '../FullscreenModal.vue';
   import NotificationFilters from './NotificationFilters.vue';
   import NotificationList from './NotificationList.vue';
   import useCommunityLibraryUpdates from './composables/useCommunityLibraryUpdates';
+  import StudioImmersiveModal from 'shared/views/StudioImmersiveModal.vue';
   import Tabs from 'shared/views/Tabs';
   import ToolBar from 'shared/views/ToolBar';
   import { commonStrings } from 'shared/strings/commonStrings';
@@ -262,13 +253,6 @@
 
 
 <style scoped lang="scss">
-
-  .back-action {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-    font-size: 14px;
-  }
 
   .notifications-page-container {
     max-width: 1000px;
