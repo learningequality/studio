@@ -2,7 +2,6 @@
 
   <RouterLink
     v-if="to"
-    ref="tabElement"
     :to="to"
     :class="[
       tabClasses, 
@@ -12,21 +11,24 @@
       })
     ]"
     :style="tabStyles"
-    :aria-current="isActive ? 'page' : null"
+    :aria-current="isActive ? 'Navigation' : null"
     :tabindex="tabindex"
-    @click="$emit('click', $event)"
-    @keydown="$emit('keydown', $event)"
   >
     <span class="studio-navigation-tab-content">
       <slot></slot>
       <span
         v-if="showBadge"
         class="studio-navigation-tab-badge"
-        :aria-label="badgeAriaLabel"
       >
-        {{ badgeValue }}
+        {{ $formatNumber(badgeValue) }}
       </span>
     </span>
+    <span
+      v-if="isActive"
+      class="studio-navigation-tab-indicator"
+      :style="indicatorStyles"
+      aria-hidden="true"
+    ></span>
   </RouterLink>
 
 </template>
@@ -67,7 +69,11 @@
           color: this.$themeTokens.text,
         };
       },
-      
+      indicatorStyles() {
+        return {
+          backgroundColor: this.$themeTokens.surface,
+        };
+      },
       isActive() {
         if (!this.to || !this.$route) return false;
 
@@ -76,9 +82,6 @@
       },
       showBadge() {
         return this.badgeValue > 0;
-      },
-      badgeAriaLabel() {
-        return `${this.badgeValue} notification${this.badgeValue !== 1 ? 's' : ''}`;
       },
     },
   };
@@ -141,6 +144,14 @@
     background-color: black;
     border-radius: 50%;
     transition: 0.3s;
+  }
+
+  .studio-navigation-tab-indicator {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
   }
 
 </style>
