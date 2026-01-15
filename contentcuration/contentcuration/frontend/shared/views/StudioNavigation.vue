@@ -142,6 +142,7 @@
           ref="tabsContainer"
           class="studio-navigation-tabs-container"
           :class="{ 'is-dragging': isDragging }"
+          :style="containerStyles"
           @mousedown="handleDragStart"
           @touchstart="handleDragStart"
         >
@@ -387,6 +388,11 @@
         const maxChars = availableWidth > 0 ? Math.floor(availableWidth / averageCharWidth) : 1;
         return this.truncateText(displayTitle, maxChars);
       },
+      containerStyles() {
+        return {
+          padding: this.windowBreakpoint <= 3 ? '0 16px' : '0 24px',
+        };
+      },
       userMenuItems() {
         const items = [];
 
@@ -439,7 +445,7 @@
       },
       tabsWrapperStyles() {
         return {
-          padding: this.windowBreakpoint <= 3 ? '0 16px' : '0 24px',
+          padding: this.windowBreakpoint <= 2 ? '0 48px' : '0',
         };
       },
     },
@@ -447,6 +453,7 @@
       '$route'() {
         this.$nextTick(() => {
           this.moveIndicator();
+          this.centerActiveTab();
         });
       },
       windowBreakpoint() {
@@ -458,7 +465,7 @@
         // Wait 2 seconds before centering
         this.resizeTimeout = setTimeout(() => {
           this.centerActiveTab();
-        }, 2000);
+        }, 1000);
       },
     },
     mounted() {
@@ -467,7 +474,6 @@
       window.addEventListener('resize', this.handleResize);
       window.addEventListener('resize', this.moveIndicator);
       
-      // Use requestAnimationFrame to ensure DOM is painted
       this.$nextTick(() => {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
@@ -559,79 +565,57 @@
       },
       centerActiveTab() {
         const container = this.$refs.tabsContainer;
-        if (!container) {
-          // Retry after a short delay if container isn't ready
-          setTimeout(() => {
-            if (this.$refs.tabsContainer) {
-              this.centerActiveTab();
-            }
-          }, 100);
-          return;
-        }
-        
-        // Wait for overflow check to complete
-        if (!this.isOverflowing) {
-          setTimeout(() => {
-            this.checkScrollPositions();
-            if (this.isOverflowing) {
-              this.centerActiveTab();
-            }
-          }, 50);
-          return;
-        }
-        
+        // Safety checks
+        if (!container || !this.isOverflowing) return;
+
         const activeTab = container.querySelector('.studio-navigation-tab-active');
         if (!activeTab) return;
 
-        const containerWidth = container.clientWidth;
-        const tabRect = activeTab.getBoundingClientRect();
+        // 1. Get Geometry
         const containerRect = container.getBoundingClientRect();
-        
-        // Calculate position to center the active tab
-        const tabLeft = tabRect.left - containerRect.left + container.scrollLeft;
-        const tabCenter = tabLeft + (tabRect.width / 2);
-        const targetScroll = tabCenter - (containerWidth / 2);
-        
-        // Clamp to valid scroll range
-        const maxScroll = container.scrollWidth - container.clientWidth;
-        const clampedScroll = Math.max(0, Math.min(maxScroll, targetScroll));
-        
-        container.style.scrollBehavior = 'auto';
-        container.style.transition = 'scroll-left 0.6s ease-in-out';
-        
-        container.scrollTo({
-          left: clampedScroll,
-          behavior: 'smooth'
-        });
+        const tabRect = activeTab.getBoundingClientRect();
+        const computedStyle = window.getComputedStyle(container);
+        const paddingLeft = parseFloat(computedStyle.paddingLeft) || 0;
+       
+        const visibleLeftEdge = containerRect.left + paddingLeft;
+        const visibleRightEdge = containerRect.left + container.clientWidth;
+        const isOffScreenLeft = tabRect.left < (visibleLeftEdge - 1);
+        const isOffScreenRight = tabRect.right > (visibleRightEdge + 1);
 
-        setTimeout(() => {
-          container.style.transition = '';
-          container.style.scrollBehavior = 'smooth';
-          this.checkScrollPositions();
-        }, 600);
+        if (isOffScreenLeft || isOffScreenRight) {
+          activeTab.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+            inline: 'center'
+          });
+        }
       },
       checkScrollPositions() {
         const el = this.$refs.tabsContainer;
         if (!el) return;
-
-        // Force a reflow to get accurate measurements
         void el.offsetHeight;
 
         this.isOverflowing = el.scrollWidth > el.clientWidth;
         
-        // Use a small threshold to account for rounding errors
         const threshold = 1;
         this.canScrollLeft = el.scrollLeft > threshold;
 
         const atEnd = Math.ceil(el.scrollLeft + el.clientWidth) >= (el.scrollWidth - threshold);
         this.canScrollRight = !atEnd && this.isOverflowing;
       },
-      scrollTabs(distance) {
+      scrollTabs(direction) {
         const container = this.$refs.tabsContainer;
-        if (container) {
-          const scrollDirection = this.$isRTL ? -distance : distance;
-          container.scrollBy({ left: scrollDirection, behavior: 'smooth' });
-        }
+        if (!container) return;
+        const scrollAmount = container.clientWidth * 0.75;
+        const vector = this.$isRTL ? -direction : direction;
+
+        container.scrollBy({
+          left: vector * scrollAmount,
+          behavior: 'smooth'
+        });
+        setTimeout(() => {
+          this.checkScrollPositions();
+        }, 500);
       },
       setupDragListeners() {
         const container = this.$refs.tabsContainer;
@@ -639,7 +623,7 @@
           return;
         }
 
-        // Add event listeners to document for global tracking
+  
         document.addEventListener('mousemove', this.handleDragMove, { passive: false });
         document.addEventListener('mouseup', this.handleDragEnd);
         document.addEventListener('touchmove', this.handleDragMove, { passive: false });
@@ -653,7 +637,7 @@
         document.removeEventListener('touchend', this.handleDragEnd);
         document.removeEventListener('touchcancel', this.handleDragEnd);
       },
-      // Drag handlers
+   
       handleDragStart(e) {
         const container = this.$refs.tabsContainer;
         
@@ -681,7 +665,6 @@
         const clientX = e.type === 'mousemove' ? e.clientX : e.touches[0].clientX;
         const deltaX = clientX - this.dragStartX;
         
-        // If movement is more than 5px, consider it a drag (not a click)
         if (!this.dragStarted && Math.abs(deltaX) > 5) {
           this.dragStarted = true;
           this.isDragging = true;
@@ -712,7 +695,6 @@
         const newScrollLeft = this.dragStartScrollLeft - deltaX;
         const maxScroll = container.scrollWidth - container.clientWidth;
 
-        // Allow over-scrolling with resistance
         if (newScrollLeft < 0) {
           const overScroll = Math.abs(newScrollLeft);
           const resistance = Math.min(overScroll * 0.7, 600);
@@ -735,8 +717,6 @@
 
         const container = this.$refs.tabsContainer;
         if (!container) return;
-
-        // If no drag movement, allow the click to happen
         if (this.potentialDrag && !this.dragStarted) {
           this.potentialDrag = false;
           return;
@@ -745,8 +725,6 @@
         this.isDragging = false;
         this.potentialDrag = false;
         this.dragStarted = false;
-
-        // Animate back if over-scrolled
         if (this.currentTranslateX !== 0) {
           container.style.transition = 'transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
           container.style.transform = 'translateX(0px)';
@@ -759,8 +737,6 @@
           }, 350);
         } else {
           container.style.scrollBehavior = 'smooth';
-          
-          // Add momentum scrolling
           const absVelocity = Math.abs(this.dragVelocity);
           if (absVelocity > 0.5) {
             const momentum = this.dragVelocity * 400;
@@ -848,12 +824,9 @@
         this.updateWindowWidth();
         this.updateToolbarWidth();
         
-        // Clear existing timeout
         if (this.resizeTimeout) {
           clearTimeout(this.resizeTimeout);
         }
-        
-        // Wait 2 seconds after resize stops before centering
         this.resizeTimeout = setTimeout(() => {
           this.centerActiveTab();
         }, 1000);
@@ -955,18 +928,17 @@
     z-index: 5;
     cursor: pointer;
     user-select: none;
-    padding: 0 4px;
     transition: background-color 0.2s ease;
   
     
     &-left {
       left: 0;
-      padding-right: 8px;
+      padding-left: 16px;
     }
     
     &-right {
       right: 0;
-      padding-left: 8px;
+      padding-right: 16px;
      
     }
   }
@@ -981,7 +953,6 @@
     white-space: nowrap;
     scrollbar-width: none;
     scroll-behavior: smooth;
-    cursor: grab;
     user-select: none;
     will-change: transform;
 
