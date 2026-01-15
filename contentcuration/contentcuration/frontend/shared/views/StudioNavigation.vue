@@ -8,17 +8,20 @@
       color: $themeTokens.text,
     }"
   >
-    <SkipNavigationLink />
+    
     <header>
+      <SkipNavigationLink />
       
       <KToolbar
-        ref="toolbar"
         type="clear"
-        :style="{
-          overflowX: 'hidden',  
-          backgroundColor: $themeTokens.appBar,
-          height: '56px',
-        }"
+        :style="[
+          {
+            overflowX: 'hidden',  
+            backgroundColor: $themeTokens.appBar,
+            height: '56px',
+          },
+          containerStyles
+        ]"
         :raised="false"
       >
         <template #icon>
@@ -59,10 +62,11 @@
             class="studio-navigation-actions"
           >
             <template v-if="loggedIn">
-              <KButton
-                appearance="flat-button"
-                style="text-transform: none"
-                :ariaLabel="$tr('userMenuLabel')"
+              <div
+                class="studio-navigation-menu"
+                role="button"
+                tabindex="0"
+                :aria-label="$tr('userMenuLabel')"
               >
                 <KIconButton
                   :disabled="true"
@@ -85,14 +89,14 @@
                   :hasIcons="true"
                   @select="handleUserMenuSelect"
                 />
-              </KButton>
+              </div>
             </template>
 
             <template v-else>
-              <KButton
-                appearance="flat-button"
-                style="text-transform: none"
-                :ariaLabel="$tr('guestMenuLabel')"
+              <div
+                class="studio-navigation-menu"
+                role="button"
+                :aria-label="$tr('guestMenuLabel')"
               >
                 <KIconButton
                   :disabled="true"
@@ -110,7 +114,7 @@
                   :hasIcons="true"
                   @select="handleGuestMenuSelect"
                 />
-              </KButton>
+              </div>
             </template>
           </div>
         </template>
@@ -126,41 +130,11 @@
         :style="tabsWrapperStyles"
       >
         <div
-          v-if="isOverflowing && canScrollLeft"
-          class="scroll-button scroll-button-left"
-          :style="{ backgroundColor: $themeTokens.appBar }"
-          @click="scrollTabs(-350)"
-        >
-          <KIconButton
-            icon="chevronLeft"
-            :color="$themeTokens.text"
-            :ariaLabel="$tr('scrollLeft')"
-          />
-        </div>
-
-        <div
           ref="tabsContainer"
           class="studio-navigation-tabs-container"
           :style="containerStyles"
         >
           <slot name="tabs"></slot>
-          <div
-            class="sliding-indicator"
-            :style="[indicatorStyle, { backgroundColor: $themeTokens.surface }]"
-          ></div>
-        </div>
-
-        <div
-          v-if="isOverflowing && canScrollRight"
-          class="scroll-button scroll-button-right"
-          :style="{ backgroundColor: $themeTokens.appBar }"
-          @click="scrollTabs(350)"
-        >
-          <KIconButton
-            icon="chevronRight"
-            :color="$themeTokens.text"
-            :ariaLabel="$tr('scrollRight')"
-          />
         </div>
       </div>
     </div>
@@ -326,14 +300,7 @@
         sidePanelOpen: false,
         showLanguageModal: false,
         windowWidth: 0,
-        isOverflowing: false,
-        canScrollLeft: false,
-        canScrollRight: false,
         toolbarWidth: 0,
-        indicatorStyle: {
-          width: '0px',
-          transform: 'translateX(0px)',
-        },
       };
     },
     
@@ -432,27 +399,10 @@
         };
       },
     },
-    watch: {
-      '$route'() {
-        this.$nextTick(() => {
-          this.moveIndicator();
-        });
-      },
-    },
     mounted() {
       this.updateWindowWidth();
       this.updateToolbarWidth();
       window.addEventListener('resize', this.handleResize);
-      window.addEventListener('resize', this.moveIndicator);
-      this.$nextTick(() => this.moveIndicator());
-      const el = this.$refs.tabsContainer;
-      if (el) {
-        el.addEventListener('scroll', this.checkScrollPositions);
-        this.checkScrollPositions();
-        
-        const resizeObserver = new ResizeObserver(this.checkScrollPositions);
-        resizeObserver.observe(el);
-      }
     },
     updated() {
       this.$nextTick(() => {
@@ -461,46 +411,13 @@
     },
     beforeDestroy() {
       window.removeEventListener('resize', this.handleResize);
-      window.removeEventListener('resize', this.moveIndicator);
     },
     methods: {
       ...mapActions(['logout']),
       toggleSidePanel() {
         this.sidePanelOpen = !this.sidePanelOpen;
       },
-      moveIndicator() {
-        const container = this.$refs.tabsContainer;
-        if (!container) return;
-        const activeTab = container.querySelector('.studio-navigation-tab-active');
 
-        if (activeTab) {
-          const containerRect = container.getBoundingClientRect();
-          const tabRect = activeTab.getBoundingClientRect();
-          const leftPosition = tabRect.left - containerRect.left + container.scrollLeft;
-
-          this.indicatorStyle = {
-            width: `${tabRect.width}px`,
-            transform: `translateX(${leftPosition}px)`,
-          };
-        }
-      },
-      checkScrollPositions() {
-        const el = this.$refs.tabsContainer;
-        if (!el) return;
-
-        this.isOverflowing = el.scrollWidth > el.clientWidth;
-        this.canScrollLeft = el.scrollLeft > 0;
-
-        const atEnd = Math.ceil(el.scrollLeft + el.clientWidth) >= el.scrollWidth;
-        this.canScrollRight = !atEnd;
-      },
-      scrollTabs(distance) {
-        const container = this.$refs.tabsContainer;
-        if (container) {
-          const scrollDirection = this.$isRTL ? -distance : distance;
-          container.scrollBy({ left: scrollDirection, behavior: 'smooth' });
-        }
-      },
       closeSidePanelAndNavigate(url) {
         this.sidePanelOpen = false;
         window.location.href = url;
@@ -601,8 +518,6 @@
       logoutLink: 'Sign out',
       copyright: '© {year} Learning Equality',
       giveFeedback: 'Give feedback',
-      scrollLeft: 'Scroll tabs left',
-      scrollRight: 'Scroll tabs right',
     },
   };
 
@@ -620,22 +535,11 @@
   }
 
   .studio-navigation-logo-link {
-    display: flex;
-    align-items: center;
-    padding: 4px;
-    text-decoration: none;
     border-radius: 8px;
-
-    &:hover {
-      background-color: rgba(0, 0, 0, 0.04);
-    }
   }
 
   .studio-navigation-title-container {
-    display: block;    
-    overflow: hidden;
     white-space: nowrap;
-    text-overflow: ellipsis;
     font-size: 20px;
     font-weight: 500;
     padding-inline-start: 20px;
@@ -654,30 +558,7 @@
     width: 100%;
   }
 
-  .scroll-button {
-    position: absolute;
-    top: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    z-index: 5;
-    cursor: pointer;
-    user-select: none;
-    transition: background-color 0.2s ease;
   
-    
-    &-left {
-      left: 0;
-      padding-left: 16px;
-    }
-    
-    &-right {
-      right: 0;
-      padding-right: 16px;
-     
-    }
-  }
 
   .studio-navigation-tabs-container {
     position: relative;
@@ -689,18 +570,7 @@
     white-space: nowrap;
     scrollbar-width: none;
     scroll-behavior: auto;
-    transition: transform .6s cubic-bezier(.86, 0, .07, 1);
   }
-  .sliding-indicator {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    height: 2px;
-    
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-    pointer-events: none; 
-    z-index: 1;
-}
 
   /* Side panel styles */
   .side-panel-header {
@@ -752,6 +622,16 @@
   .side-panel-copyright {
     margin-bottom: 24px;
     font-size: 14px;
+  }
+  .studio-navigation-menu {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
   }
 
 </style>
