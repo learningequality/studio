@@ -1,10 +1,13 @@
-import { render, screen, waitFor } from '@testing-library/vue';
+import { render, screen, waitFor, configure } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { createLocalVue } from '@vue/test-utils';
 import Vuex, { Store } from 'vuex';
 import VueRouter from 'vue-router';
 import CatalogList from '../CatalogList';
 import { RouteNames } from '../../../constants';
+
+// Configuring Vue Testing Library to treat 'data-test' as the testId attribute
+configure({ testIdAttribute: 'data-test' });
 
 const localVue = createLocalVue();
 localVue.use(Vuex);
@@ -137,8 +140,7 @@ describe('CatalogList', () => {
     it('should display download button when results are available', async () => {
       makeWrapper();
       await waitFor(() => {
-        // Use actual button text rendered by component
-        expect(screen.getByText(/download a summary/i)).toBeInTheDocument();
+        expect(screen.getByTestId('select')).toBeInTheDocument();
       });
     });
   });
@@ -146,23 +148,23 @@ describe('CatalogList', () => {
   describe('selection mode workflow', () => {
     it('should hide checkboxes and toolbar initially', async () => {
       makeWrapper();
-      await waitFor(() => screen.getByText(/download a summary/i));
+      await waitFor(() => screen.getByTestId('select'));
 
       // Toolbar should not be visible initially (appears only in selection mode)
-      expect(screen.queryByText(/select all/i)).not.toBeInTheDocument();
-      expect(screen.queryByText(/cancel/i)).not.toBeInTheDocument();
+      expect(screen.queryByTestId('select-all')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('toolbar')).not.toBeInTheDocument();
     });
 
     it('should enter selection mode and show toolbar when user clicks select button', async () => {
       const user = userEvent.setup();
       makeWrapper();
 
-      await waitFor(() => screen.getByText(/download a summary/i));
-      await user.click(screen.getByText(/download a summary/i));
+      await waitFor(() => screen.getByTestId('select'));
+      await user.click(screen.getByTestId('select'));
 
       await waitFor(() => {
-        expect(screen.getByText(/select all/i)).toBeInTheDocument();
-        expect(screen.getByText(/cancel/i)).toBeInTheDocument();
+        expect(screen.getByTestId('select-all')).toBeInTheDocument();
+        expect(screen.getByTestId('cancel')).toBeInTheDocument();
         expect(screen.getByText(/channels selected/i)).toBeInTheDocument();
       });
     });
@@ -171,16 +173,15 @@ describe('CatalogList', () => {
       const user = userEvent.setup();
       makeWrapper();
 
-      // Enter selection mode
-      await waitFor(() => screen.getByText(/download a summary/i));
-      await user.click(screen.getByText(/download a summary/i));
-      await waitFor(() => screen.getByText(/cancel/i));
+      await waitFor(() => screen.getByTestId('select'));
+      await user.click(screen.getByTestId('select'));
+      await waitFor(() => screen.getByTestId('cancel'));
 
-      await user.click(screen.getByText(/cancel/i));
+      await user.click(screen.getByTestId('cancel'));
 
       await waitFor(() => {
-        expect(screen.queryByText(/cancel/i)).not.toBeInTheDocument();
-        expect(screen.queryByText(/select all/i)).not.toBeInTheDocument();
+        expect(screen.queryByTestId('cancel')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('select-all')).not.toBeInTheDocument();
       });
     });
   });
@@ -190,11 +191,11 @@ describe('CatalogList', () => {
       const user = userEvent.setup();
       makeWrapper();
 
-      await waitFor(() => screen.getByText(/download a summary/i));
-      await user.click(screen.getByText(/download a summary/i));
+      await waitFor(() => screen.getByTestId('select'));
+      await user.click(screen.getByTestId('select'));
 
       await waitFor(() => {
-        expect(screen.getByText(/select all/i)).toBeInTheDocument();
+        expect(screen.getByTestId('select-all')).toBeInTheDocument();
         expect(screen.getByText(/channels selected/i)).toBeInTheDocument();
       });
     });
@@ -239,7 +240,7 @@ describe('CatalogList', () => {
       makeWrapper();
 
       await waitFor(() => {
-        expect(screen.getByText(/download a summary/i)).toBeInTheDocument();
+        expect(screen.getByTestId('select')).toBeInTheDocument();
       });
     });
   });
