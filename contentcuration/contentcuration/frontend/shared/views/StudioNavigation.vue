@@ -64,8 +64,6 @@
             <template v-if="loggedIn">
               <div
                 class="studio-navigation-menu"
-                role="button"
-                tabindex="0"
                 :aria-label="$tr('userMenuLabel')"
               >
                 <KIconButton
@@ -95,7 +93,6 @@
             <template v-else>
               <div
                 class="studio-navigation-menu"
-                role="button"
                 :aria-label="$tr('guestMenuLabel')"
               >
                 <KIconButton
