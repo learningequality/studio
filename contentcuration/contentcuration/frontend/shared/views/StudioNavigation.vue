@@ -270,7 +270,6 @@
       return {
         sidePanelOpen: false,
         showLanguageModal: false,
-        windowWidth: 0,
         toolbarWidth: 0,
       };
     },
@@ -449,11 +448,7 @@
         this.showLanguageModal = true;
       },
       handleResize() {
-        this.updateWindowWidth();
         this.updateToolbarWidth();
-      },
-      updateWindowWidth() {
-        this.windowWidth = window.innerWidth;
       },
       updateToolbarWidth() {
         this.toolbarWidth = this.$refs.studioNavigation?.clientWidth || 0;
@@ -579,9 +574,6 @@
     font-size: 14px;
   }
   .studio-navigation-menu {
-    display: flex;
-    align-items: center;
-    padding: 4px 8px;
     cursor: pointer;
     transition: background-color 0.2s ease;
     &:hover {
