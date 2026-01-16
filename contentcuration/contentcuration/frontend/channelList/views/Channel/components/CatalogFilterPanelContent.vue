@@ -1,6 +1,9 @@
 <template>
 
-  <div class="filter-panel-content">
+  <div 
+    class="filter-panel-content"
+    :style="contentStyles"
+  >
     <div class="filters-container">
       <!-- Keyword search -->
       <KTextbox
@@ -99,6 +102,7 @@
 
   import { mapGetters } from 'vuex';
   import debounce from 'lodash/debounce';
+  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { RouteNames } from '../../../constants';
   import { catalogFilterMixin } from '../mixins';
   import LanguageFilter from './LanguageFilter.vue';
@@ -107,6 +111,7 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import HelpTooltip from 'shared/views/HelpTooltip';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+  
 
   const excludedKinds = new Set([ContentKindsNames.TOPIC, ContentKindsNames.H5P]);
 
@@ -119,6 +124,12 @@
       MultiSelect,
     },
     mixins: [constantsTranslationMixin, catalogFilterMixin],
+    setup() {
+      const { windowIsSmall } = useKResponsiveWindow();
+      return {
+        windowIsSmall,
+      };
+    },
 
     data() {
       return {
@@ -155,6 +166,14 @@
       },
       setKeywords() {
         return debounce(this.updateKeywords, 500);
+      },
+      contentStyles() {
+        if (this.windowIsSmall) {
+          return {
+            padding: '24px 32px 16px',
+          };
+        }
+        return {};
       },
     },
     watch: {
