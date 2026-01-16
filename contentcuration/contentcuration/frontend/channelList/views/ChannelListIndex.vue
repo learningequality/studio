@@ -39,6 +39,9 @@
         :offset="toolbarHeight"
       />
       <VContainer
+        id="main"
+        role="main"
+        tabindex="-1"
         fluid
         class="main-container pa-0"
         :style="`height: calc(100vh - ${contentOffset}px); margin-top: ${offline ? 48 : 0}px;`"
