@@ -149,16 +149,14 @@
       ...mapGetters(['loggedIn']),
       ...mapGetters('channelList', ['invitations']),
       
-      // NEW COMPUTED PROPERTY: Generates the tab data structure
       navigationTabs() {
         if (!this.loggedIn) return [];
 
         const tabs = [];
 
-        // 1. Add Tabs for each Channel List Type (Editable, Starred, etc.)
         this.lists.forEach(listType => {
           tabs.push({
-            id: listType, // Unique ID for tracking
+            id: listType, 
             label: this.translateConstant(listType),
             to: this.getChannelLink(listType),
             badgeValue: this.invitationsByListCounts[listType] || 0,
@@ -166,16 +164,14 @@
           });
         });
 
-        // 2. Add Catalog Tab
         tabs.push({
           id: 'catalog',
           label: this.$tr('catalog'),
           to: this.catalogLink,
           badgeValue: 0,
-          analyticsLabel: 'PUBLIC' // Reusing public analytics label logic if appropriate
+          analyticsLabel: 'PUBLIC' 
         });
 
-        // 3. Add Channel Sets Tab
         tabs.push({
           id: CHANNEL_SETS,
           label: this.$tr('channelSets'),
@@ -296,10 +292,7 @@
           this.updateTabTitle(title);
         }
       },
-      // Note: trackTabClick logic can now be moved into the StudioNavigation component
-      // if you emit an event, or handled via a watcher on the route.
-      // Since the links are standard router-links, analytics might need to 
-      // be triggered differently or passed down if you need specific click tracking.
+
     },
     $trs: {
       channelSets: 'Collections',
