@@ -284,7 +284,7 @@
       SidePanelOption,
       SkipNavigationLink,
       LanguageSwitcherModal,
-      StudioNavigationTab, // Ensure this component is imported
+      StudioNavigationTab,
     },
     setup() {
       const { windowBreakpoint } = useKResponsiveWindow();
