@@ -21,7 +21,12 @@
       alignment="left"
       @closePanel="closeSidePanel"
     >
-      <CatalogFilterPanelContent />
+      <div
+        style="padding: 24px 32px 16px;"
+      >
+        <CatalogFilterPanelContent />
+      </div>
+      
     </SidePanelModal>
   </div>
 
@@ -82,6 +87,8 @@
   .catalog-filters-wrapper {
     width: 100%;
     height: 100%;
+    
+    
   }
 
   .filter-button {
