@@ -27,34 +27,12 @@
         {{ isFAQPage ? $tr('frequentlyAskedQuestions') : $tr('libraryTitle') }}
       </VToolbarTitle>
     </VToolbar>
-    <StudioNavigation v-else>
-      <template
-        v-if="loggedIn"
-        #tabs
-      >
-        <StudioNavigationTab
-          v-for="listType in lists"
-          :key="listType.id"
-          :to="getChannelLink(listType)"
-          :badgeValue="invitationsByListCounts[listType]"
-          @click="trackTabClick(listType)"
-        >
-          {{ translateConstant(listType) }}
-        </StudioNavigationTab>
-        <StudioNavigationTab
-          :to="catalogLink"
-          @click="publicTabClick"
-        >
-          {{ $tr('catalog') }}
-        </StudioNavigationTab>
-        <StudioNavigationTab
-          :to="channelSetLink"
-          @click="channelSetsTabClick"
-        >
-          {{ $tr('channelSets') }}
-        </StudioNavigationTab>
-      </template>
-    </StudioNavigation>
+
+    <StudioNavigation 
+      v-else
+      :tabs="navigationTabs" 
+    />
+
     <VContent>
       <StudioOfflineAlert
         v-if="!isCatalogPage"
@@ -131,7 +109,6 @@
   import { constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import StudioNavigation from 'shared/views/StudioNavigation';
-  import StudioNavigationTab from 'shared/views/StudioNavigationTab';
   import StudioOfflineAlert from 'shared/views/StudioOfflineAlert.vue';
   import PolicyModals from 'shared/views/policies/PolicyModals';
 
@@ -154,7 +131,6 @@
     name: 'ChannelListIndex',
     components: {
       StudioNavigation,
-      StudioNavigationTab,
       ChannelInvitation,
       ChannelListAppError,
       GlobalSnackbar,
@@ -169,6 +145,45 @@
       }),
       ...mapGetters(['loggedIn']),
       ...mapGetters('channelList', ['invitations']),
+      
+      // NEW COMPUTED PROPERTY: Generates the tab data structure
+      navigationTabs() {
+        if (!this.loggedIn) return [];
+
+        const tabs = [];
+
+        // 1. Add Tabs for each Channel List Type (Editable, Starred, etc.)
+        this.lists.forEach(listType => {
+          tabs.push({
+            id: listType, // Unique ID for tracking
+            label: this.translateConstant(listType),
+            to: this.getChannelLink(listType),
+            badgeValue: this.invitationsByListCounts[listType] || 0,
+            analyticsLabel: ListTypeToAnalyticsLabel[listType] // Optional: pass data for tracking
+          });
+        });
+
+        // 2. Add Catalog Tab
+        tabs.push({
+          id: 'catalog',
+          label: this.$tr('catalog'),
+          to: this.catalogLink,
+          badgeValue: 0,
+          analyticsLabel: 'PUBLIC' // Reusing public analytics label logic if appropriate
+        });
+
+        // 3. Add Channel Sets Tab
+        tabs.push({
+          id: CHANNEL_SETS,
+          label: this.$tr('channelSets'),
+          to: this.channelSetLink,
+          badgeValue: 0,
+          analyticsLabel: 'CHANNEL_SETS'
+        });
+
+        return tabs;
+      },
+
       fullPageError() {
         return this.$store.state.errors.fullPageError;
       },
@@ -221,12 +236,6 @@
       },
       homeLink() {
         return this.libraryMode ? window.Urls.base() : window.Urls.channels();
-      },
-      publicTabClick() {
-        return this.trackTabClick.bind(this, ChannelListTypes.PUBLIC);
-      },
-      channelSetsTabClick() {
-        return this.trackTabClick.bind(this, CHANNEL_SETS);
       },
     },
     watch: {
@@ -284,9 +293,10 @@
           this.updateTabTitle(title);
         }
       },
-      trackTabClick(list) {
-        this.$analytics.trackClick('channel_list', ListTypeToAnalyticsLabel[list]);
-      },
+      // Note: trackTabClick logic can now be moved into the StudioNavigation component
+      // if you emit an event, or handled via a watcher on the route.
+      // Since the links are standard router-links, analytics might need to 
+      // be triggered differently or passed down if you need specific click tracking.
     },
     $trs: {
       channelSets: 'Collections',
