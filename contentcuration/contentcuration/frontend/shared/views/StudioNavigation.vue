@@ -156,72 +156,46 @@
       <template #default>
         <div class="side-panel-content">
           <nav class="side-panel-nav">
-            <div
-              class="side-panel-nav-item"
-              @click="navigateToChannels"
-            >
-              <KIconButton
-                :disabled="true"
-                icon="home"
-              />
-              <span class="subheading">{{ $tr('channelsLink') }}</span>
-            </div>
+            <SidePanelOption
+              :label="$tr('channelsLink')"
+              :link="channelsLink"
+              icon="home"
+              @click="sidePanelOpen = false"
+            />
 
-            <div
+            <SidePanelOption
               v-if="user?.is_admin"
-              class="side-panel-nav-item"
-              @click="navigateToAdministration"
-            >
-              <KIconButton
-                :disabled="true"
-                icon="people"
-              />
-              <span class="subheading">{{ $tr('administrationLink') }}</span>
-            </div>
+              :label="$tr('administrationLink')"
+              :link="administrationLink"
+              icon="people"
+              @click="sidePanelOpen = false"
+            />
 
-            <div
-              class="side-panel-nav-item"
-              @click="navigateToSettings"
-            >
-              <KIconButton
-                :disabled="true"
-                icon="settings"
-              />
-              <span class="subheading">{{ $tr('settingsLink') }}</span>
-            </div>
+            <SidePanelOption
+              :label="$tr('settingsLink')"
+              :link="settingsLink"
+              icon="settings"
+              @click="sidePanelOpen = false"
+            />
 
-            <div
-              class="side-panel-nav-item"
-              @click="openLanguageModal"
-            >
-              <KIconButton
-                :disabled="true"
-                icon="language"
-              />
-              <span class="subheading">{{ $tr('changeLanguage') }}</span>
-            </div>
+            <!-- Action buttons (no links) -->
+            <SidePanelOption
+              :label="$tr('changeLanguage')"
+              icon="language"
+              @select="openLanguageModal"
+            />
 
-            <div
-              class="side-panel-nav-item"
-              @click="navigateToHelp"
-            >
-              <KIconButton
-                :disabled="true"
-                icon="openNewTab"
-              />
-              <span class="subheading">{{ $tr('helpLink') }}</span>
-            </div>
+            <SidePanelOption
+              :label="$tr('helpLink')"
+              icon="openNewTab"
+              @select="navigateToHelp"
+            />
 
-            <div
-              class="side-panel-nav-item"
-              @click="handleLogout"
-            >
-              <KIconButton
-                :disabled="true"
-                icon="logout"
-              />
-              <span class="subheading">{{ $tr('logoutLink') }}</span>
-            </div>
+            <SidePanelOption
+              :label="$tr('logoutLink')"
+              icon="logout"
+              @select="handleLogout"
+            />
           </nav>
 
           <div class="side-panel-footer">
@@ -241,14 +215,12 @@
               @click.native="sidePanelOpen = false"
             />
 
-            
             <KExternalLink
               href="https://community.learningequality.org/c/support/studio"
               openInNewTab
               :text="$tr('giveFeedback')"
               @click.native="sidePanelOpen = false"
             />
-          
           </div>
         </div>
       </template>
@@ -270,12 +242,14 @@
   import LanguageSwitcherModal from '../languageSwitcher/LanguageSwitcherModal.vue';
   import SidePanelModal from './SidePanelModal';
   import SkipNavigationLink from './SkipNavigationLink.vue';
+  import SidePanelOption from './SidePanelOption.vue';
 
 
   export default {
     name: 'StudioNavigation',
     components: {
       SidePanelModal,
+      SidePanelOption,
       SkipNavigationLink,
       LanguageSwitcherModal,
     },
@@ -418,9 +392,6 @@
       closeSidePanelAndNavigate(url) {
         this.sidePanelOpen = false;
         window.location.href = url;
-      },
-      navigateToChannels() {
-        this.closeSidePanelAndNavigate(this.channelsLink);
       },
       navigateToAdministration() {
         this.closeSidePanelAndNavigate(this.administrationLink);
@@ -597,19 +568,6 @@
     padding: 8px 0;
   }
 
-  .side-panel-nav-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    padding: 4px 16px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-
-    &:hover {
-      background-color: rgba(0, 0, 0, 0.048);
-    }
-  }
 
   .side-panel-footer {
     padding: 24px;
