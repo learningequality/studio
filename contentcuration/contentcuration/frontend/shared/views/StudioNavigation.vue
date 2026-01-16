@@ -68,7 +68,7 @@
                 :aria-label="$tr('userMenuLabel')"
               >
                 <KIconButton
-                  :disabled="true"
+                  :disabled=true
                   icon="person"
                   color="black"
                 />
@@ -78,14 +78,14 @@
                   {{ user.first_name }}
                 </span>
                 <KIconButton
-                  :disabled="true"
+                  :disabled=true
                   icon="dropdown"
                   color="black"
                 />
 
                 <KDropdownMenu
                   :options="userMenuItems"
-                  :hasIcons="true"
+                  :hasIcons=true
                   @select="handleUserMenuSelect"
                 />
               </div>
@@ -97,19 +97,19 @@
                 :aria-label="$tr('guestMenuLabel')"
               >
                 <KIconButton
-                  :disabled="true"
+                  :disabled=true
                   icon="person"
                   color="black"
                 />
                 <KIconButton
-                  :disabled="true"
+                  :disabled=true
                   icon="dropdown"
                   color="black"
                 />
 
                 <KDropdownMenu
                   :options="guestMenuItems"
-                  :hasIcons="true"
+                  :hasIcons=true
                   @select="handleGuestMenuSelect"
                 />
               </div>
@@ -233,7 +233,7 @@
             <div>
               <KLogo
                 altText="Kolibri logo"
-                :showBackground="true"
+                :showBackground=true
                 :size="88"
               />
             </div>
