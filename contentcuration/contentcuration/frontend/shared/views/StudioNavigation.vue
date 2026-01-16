@@ -64,6 +64,11 @@
             <template v-if="loggedIn">
               <div
                 class="studio-navigation-menu"
+                :class="
+                  $computedClass({
+                    ':hover': { backgroundColor: $themePalette.grey.v_300 },
+                  })
+                "
                 :aria-label="$tr('userMenuLabel')"
               >
                 <KIconButton
@@ -118,8 +123,9 @@
       </KToolbar>
 
     </header>
+
     <div
-      v-if="hasTabs"
+      v-if="tabs && tabs.length"
       :aria-label="$tr('mainNavigationLabel')"
     >
       <div 
@@ -131,10 +137,40 @@
           class="studio-navigation-tabs-container"
           :style="containerStyles"
         >
-          <slot name="tabs"></slot>
+          <StudioNavigationTab
+            v-for="(tab) in tabs"
+            :key="tab.id"
+            ref="tabRefs"
+            :to="tab.to"
+            :badgeValue="tab.badgeValue"
+            class="studio-navigation-tab-item"
+          >
+            {{ tab.label }}
+          </StudioNavigationTab>
         </div>
+
+        <div 
+          v-if="overflowMenuOptions.length > 0" 
+          class="overflow-menu-container"
+        >
+          <KIconButton
+            icon="optionsHorizontal"
+            :color="$themeTokens.text"
+            :tooltip="$tr('moreOptions')"
+            appearance="flat-button"
+          >
+            <template #menu>
+              <KDropdownMenu
+                :options="overflowMenuOptions"
+                @select="handleOverflowSelect"
+              />
+            </template>
+          </KIconButton>
+        </div>
+
       </div>
     </div>
+
     <SidePanelModal
       v-if="loggedIn && sidePanelOpen"
       alignment="left"
@@ -178,7 +214,6 @@
               @click="sidePanelOpen = false"
             />
 
-            <!-- Action buttons (no links) -->
             <SidePanelOption
               :label="$tr('changeLanguage')"
               icon="language"
@@ -243,6 +278,7 @@
   import SidePanelModal from './SidePanelModal';
   import SkipNavigationLink from './SkipNavigationLink.vue';
   import SidePanelOption from './SidePanelOption.vue';
+  import StudioNavigationTab from './StudioNavigationTab.vue';
 
 
   export default {
@@ -252,6 +288,7 @@
       SidePanelOption,
       SkipNavigationLink,
       LanguageSwitcherModal,
+      StudioNavigationTab, // Ensure this component is imported
     },
     setup() {
       const { windowBreakpoint } = useKResponsiveWindow();
@@ -265,12 +302,21 @@
         required: false,
         default: null,
       },
+      // CHANGED: Tabs are now data props, not slots
+      tabs: {
+        type: Array,
+        default: () => [],
+        // Structure: [{ id: '1', label: 'Tab Name', to: {...}, badgeValue: 0 }]
+      },
     },
     data() {
       return {
         sidePanelOpen: false,
         showLanguageModal: false,
         toolbarWidth: 0,
+        // Overflow state
+        overflowMenuOptions: [],
+        resizeTimeout: null,
       };
     },
     
@@ -279,9 +325,6 @@
         user: state => state.session.currentUser,
       }),
       ...mapGetters(['loggedIn']),
-      hasTabs() {
-        return !!this.$slots.tabs;
-      },
       homeLink() {
         return window.Urls?.channels() || '/';
       },
@@ -365,14 +408,33 @@
       },
       tabsWrapperStyles() {
         return {
-          padding: this.windowBreakpoint <= 2 ? '0 48px' : '0',
+          // Adjust padding to accommodate the "More" button on smaller screens
+          padding: this.windowBreakpoint <= 2 ? '0 8px' : '0 24px',
         };
       },
     },
+    watch: {
+      // Recalculate overflow when window resizes or tabs data changes
+      windowBreakpoint() { 
+        this.debouncedCalculateOverflow(); 
+      },
+      tabs: {
+        handler() { 
+          this.$nextTick(() => {
+            this.calculateOverflow();
+          });
+        },
+        deep: true,
+      },
+    },
     mounted() {
-      this.updateWindowWidth();
       this.updateToolbarWidth();
       window.addEventListener('resize', this.handleResize);
+      
+      this.$nextTick(() => {
+        this.calculateOverflow();
+        this.moveIndicator();
+      });
     },
     updated() {
       this.$nextTick(() => {
@@ -384,6 +446,43 @@
     },
     methods: {
       ...mapActions(['logout']),
+      
+      /* --- OVERFLOW LOGIC --- */
+      calculateOverflow() {
+        const container = this.$refs.tabsContainer;
+        const tabComponents = this.$refs.tabRefs;
+
+        if (!container || !tabComponents || tabComponents.length === 0) return;
+
+        const hiddenLinks = [];
+        const containerTop = container.offsetTop;
+
+        this.tabs.forEach((tab, index) => {
+          const tabEl = tabComponents[index].$el;
+          if (!tabEl) return;
+
+          // LOGIC: If tab is pushed to next line (top > 10px relative to container), it is hidden
+          const isWrapped = (tabEl.offsetTop - containerTop) > 10;
+
+          if (isWrapped) {
+            hiddenLinks.push({
+              label: tab.label,
+              value: tab.to, // We store the route object
+              
+            });
+          }
+        });
+
+        this.overflowMenuOptions = hiddenLinks;
+      },
+
+      handleOverflowSelect(option) {
+        if (option && option.value) {
+          this.$router.push(option.value);
+        }
+      },
+
+      /* --- STANDARD METHODS --- */
       toggleSidePanel() {
         this.sidePanelOpen = !this.sidePanelOpen;
       },
@@ -449,6 +548,13 @@
       },
       handleResize() {
         this.updateToolbarWidth();
+        this.debouncedCalculateOverflow();
+      },
+      debouncedCalculateOverflow() {
+        if (this.resizeTimeout) clearTimeout(this.resizeTimeout);
+        this.resizeTimeout = setTimeout(() => {
+          this.calculateOverflow();
+        }, 100);
       },
       updateToolbarWidth() {
         this.toolbarWidth = this.$refs.studioNavigation?.clientWidth || 0;
@@ -481,6 +587,7 @@
       logoutLink: 'Sign out',
       copyright: '© {year} Learning Equality',
       giveFeedback: 'Give feedback',
+      moreOptions: 'More options',
     },
   };
 
@@ -508,7 +615,6 @@
     padding-inline-start: 20px;
   }
 
-
   .studio-navigation-actions {
     display: flex;
     align-items: center;
@@ -519,20 +625,34 @@
     display: flex;
     align-items: center;
     width: 100%;
+    /* Enforce height so tabs don't jump around visibly before overflow calc */
+    height: 48px;
   }
-
-  
 
   .studio-navigation-tabs-container {
     position: relative;
     display: flex;
     flex: 1;
-    overflow-x: auto;
-    height: 48px;
-    list-style-type: none;
-    white-space: nowrap;
-    scrollbar-width: none;
-    scroll-behavior: auto;
+    /* KEY: Allow wrapping to push items down */
+    flex-wrap: wrap; 
+    /* KEY: Hide the pushed down items */
+    height: 48px; 
+    overflow: hidden; 
+  }
+
+  .studio-navigation-tab-item {
+    
+    flex: 0 0 auto; 
+  }
+
+  .overflow-menu-container {
+    flex: 0 0 auto;
+    padding-left: 8px;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    background-color: inherit;
+    z-index: 2;
   }
 
   /* Side panel styles */
@@ -563,7 +683,6 @@
     padding: 8px 0;
   }
 
-
   .side-panel-footer {
     padding: 24px;
     text-align: left;
@@ -573,12 +692,16 @@
     margin-bottom: 24px;
     font-size: 14px;
   }
+
   .studio-navigation-menu {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: $radius;
     cursor: pointer;
     transition: background-color 0.2s ease;
-    &:hover {
-      background-color: rgba(0, 0, 0, 0.1);
-    }
+    
+   
   }
 
 </style>
