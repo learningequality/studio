@@ -36,6 +36,7 @@
             v-else
             :href="homeLink"
             class="studio-navigation-logo-link"
+            style="padding-top: 8px"
           >
             <KLogo
               altText="Kolibri Logo with background"
