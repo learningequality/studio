@@ -297,7 +297,6 @@
         required: false,
         default: null,
       },
-      // CHANGED: Tabs are now data props, not slots
       tabs: {
         type: Array,
         default: () => [],
@@ -403,8 +402,7 @@
       },
       tabsWrapperStyles() {
         return {
-          // Adjust padding to accommodate the "More" button on smaller screens
-          padding: this.windowBreakpoint <= 2 ? '0 8px' : '0 24px',
+          padding: this.windowBreakpoint <= 2 ? '0 8px' :0,
         };
       },
     },
@@ -428,7 +426,7 @@
       
       this.$nextTick(() => {
         this.calculateOverflow();
-        this.moveIndicator();
+  
       });
     },
     updated() {
@@ -620,7 +618,6 @@
     display: flex;
     align-items: center;
     width: 100%;
-    /* Enforce height so tabs don't jump around visibly before overflow calc */
     height: 48px;
   }
 
@@ -628,9 +625,9 @@
     position: relative;
     display: flex;
     flex: 1;
-    /* KEY: Allow wrapping to push items down */
+
     flex-wrap: wrap; 
-    /* KEY: Hide the pushed down items */
+
     height: 48px; 
     overflow: hidden; 
   }
