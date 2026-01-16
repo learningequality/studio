@@ -14,7 +14,7 @@
       <slot>
         <KIconButton
           v-if="icon"
-          disabled="true"
+          :disabled=true
           :icon="icon"
           :color="optionIconColor"
         />
