@@ -73,7 +73,7 @@
                   color="black"
                 />
                 <span
-                  class="mx-2 subheading"
+                  class="mx-2 notranslate subheading"
                 >
                   {{ user.first_name }}
                 </span>
@@ -198,7 +198,7 @@
             />
 
             <StudioNavigationOption
-              v-if="user?.is_admin"
+              v-if="user && user.is_admin"
               :label="$tr('administrationLink')"
               :link="administrationLink"
               icon="people"
@@ -341,7 +341,9 @@
       },
       truncatedTitle() {
         const displayTitle = this.title || this.$tr('title');
-        const offset = (this.$refs.studioNavigationActions?.clientWidth || 0) + 100;
+        const actionsEl = this.$refs.studioNavigationActions;
+        const actionsWidth = actionsEl ? actionsEl.clientWidth : 0;
+        const offset = actionsWidth + 100;
         const averageCharWidth = 10;
         const availableWidth = this.toolbarWidth - offset;
         const maxChars = availableWidth > 0 ? Math.floor(availableWidth / averageCharWidth) : 1;
