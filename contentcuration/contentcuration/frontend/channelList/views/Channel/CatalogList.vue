@@ -65,35 +65,13 @@
               :value="item.id"
               data-testid="checkbox"
             />
-            <Checkbox
-              v-else-if="selecting"
-              v-model="selectAll"
-              class="mb-4 mx-2"
-              :label="$tr('selectAll')"
-              data-test="select-all"
-              :indeterminate="selected.length > 0 && selected.length < channels.length"
+            <ChannelItem
+              :channelId="item.id"
+              :detailsRouteName="detailsRouteName"
+              style="flex-grow: 1; width: 100%"
             />
-          </VFlex>
-          <VFlex xs12>
-            <VLayout
-              v-for="item in channels"
-              :key="item.id"
-              align-center
-            >
-              <Checkbox
-                v-show="selecting"
-                v-model="selected"
-                class="mx-2"
-                :value="item.id"
-                data-test="checkbox"
-              />
-              <ChannelItem
-                :channelId="item.id"
-                :detailsRouteName="detailsRouteName"
-                style="flex-grow: 1; width: 100%"
-              />
-            </VLayout>
-          </VFlex>
+          </VLayout>
+        </VFlex>
           <VFlex
             xs12
             style="padding-bottom: 72px"
@@ -108,28 +86,9 @@
         </VLayout>
         <BottomBar
           v-if="selecting"
-          data-test="toolbar"
-          :appearanceOverrides="{ height: windowIsSmall ? '72px' : '56px' }"
+          data-testid="toolbar"
+          :appearanceOverrides="{ height: $vuetify.breakpoint.xsOnly ? '72px' : '56px' }"
         >
-          <div class="mx-2">
-            {{ $tr('channelSelectionCount', { count: selectedCount }) }}
-          </div>
-          <VSpacer />
-          <div>
-            <KButton
-              :text="$tr('cancelButton')"
-              data-test="cancel"
-              appearance="flat-button"
-              @click="setSelection(false)"
-            />
-          </VLayout>
-        </VFlex>
-      </VLayout>
-      <BottomBar
-        v-if="selecting"
-        data-testid="toolbar"
-        :appearanceOverrides="{ height: $vuetify.breakpoint.xsOnly ? '72px' : '56px' }"
-      >
         <div class="mx-2">
           {{ $tr('channelSelectionCount', { count: selectedCount }) }}
         </div>
@@ -150,19 +109,14 @@
         >
           <KDropdownMenu
             :primary="true"
-            data-test="download-button"
-            iconAfter="dropup"
-          >
-            <KDropdownMenu
-              :primary="true"
-              :options="[
-                { label: $tr('downloadPDF'), value: 'pdf' },
-                { label: $tr('downloadCSV'), value: 'csv' },
-              ]"
-              appearance="raised-button"
-              @select="option => selectDownloadOption(option)"
-            />
-          </KButton>
+            :options="[
+              { label: $tr('downloadPDF'), value: 'pdf' },
+              { label: $tr('downloadCSV'), value: 'csv' },
+            ]"
+            appearance="raised-button"
+            @select="option => selectDownloadOption(option)"
+          />
+        </KButton>
         </BottomBar>
       </VContainer>
     </div>
