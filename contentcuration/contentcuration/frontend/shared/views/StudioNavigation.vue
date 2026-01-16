@@ -173,7 +173,8 @@
       alignment="left"
       sidePanelWidth="300px"
       :aria-label="$tr('navigationMenu')"
-      closeButtonIconType="clear"
+      closeButtonIconType="close"
+      closeButtonPosition="left"
       immersive
       fixedWidth
       @closePanel="sidePanelOpen = false"
