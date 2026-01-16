@@ -12,8 +12,10 @@
       </template>
 
       <template #default>
-        <div>
-          <component :is="showDraftMode ? 'KRadioButtonGroup' : 'div'">
+        <div
+          style="padding: 24px 32px 16px;"
+        >
+        <component :is="showDraftMode ? 'KRadioButtonGroup' : 'div'">
             <KRadioButton
               v-if="showDraftMode"
               :label="modeLive$()"
