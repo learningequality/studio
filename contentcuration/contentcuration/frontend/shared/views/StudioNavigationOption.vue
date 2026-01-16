@@ -4,7 +4,7 @@
     <a
       ref="menuItem"
       :href="link"
-      class="side-panel-option"
+      class="studio-navigation-option"
       role="menuitem"
       :class="$computedClass(optionStyle)"
       tabindex="0"
@@ -34,7 +34,7 @@
 <script>
 
   export default {
-    name: 'SidePanelOption',
+    name: 'StudioNavigationOption',
     props: {
       label: {
         type: String,
@@ -67,13 +67,10 @@
     },
     methods: {
       handleClick(event) {
-        // If no link, emit select event (for actions like logout, language modal)
         if (!this.link) {
           event.preventDefault();
           this.$emit('select');
         }
-        
-        // Emit click event for closing panel
         this.$emit('click', event);
       },
     },
@@ -86,7 +83,7 @@
 
 @import '~kolibri-design-system/lib/styles/definitions';
 
-.side-panel-option {
+.studio-navigation-option {
   display: flex;
   align-items: center;
   gap: 16px;

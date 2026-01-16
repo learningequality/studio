@@ -140,6 +140,7 @@
             :to="tab.to"
             :badgeValue="tab.badgeValue"
             class="studio-navigation-tab-item"
+            @click.native="handleTrackClick(tab)"
           >
             {{ tab.label }}
           </StudioNavigationTab>
@@ -188,14 +189,14 @@
       <template #default>
         <div class="side-panel-content">
           <nav class="side-panel-nav">
-            <SidePanelOption
+            <StudioNavigationOption
               :label="$tr('channelsLink')"
               :link="channelsLink"
               icon="home"
               @click="sidePanelOpen = false"
             />
 
-            <SidePanelOption
+            <StudioNavigationOption
               v-if="user?.is_admin"
               :label="$tr('administrationLink')"
               :link="administrationLink"
@@ -203,26 +204,26 @@
               @click="sidePanelOpen = false"
             />
 
-            <SidePanelOption
+            <StudioNavigationOption
               :label="$tr('settingsLink')"
               :link="settingsLink"
               icon="settings"
               @click="sidePanelOpen = false"
             />
 
-            <SidePanelOption
+            <StudioNavigationOption
               :label="$tr('changeLanguage')"
               icon="language"
               @select="openLanguageModal"
             />
 
-            <SidePanelOption
+            <StudioNavigationOption
               :label="$tr('helpLink')"
               icon="openNewTab"
               @select="navigateToHelp"
             />
 
-            <SidePanelOption
+            <StudioNavigationOption
               :label="$tr('logoutLink')"
               icon="logout"
               @select="handleLogout"
@@ -273,7 +274,7 @@
   import LanguageSwitcherModal from '../languageSwitcher/LanguageSwitcherModal.vue';
   import SidePanelModal from './SidePanelModal';
   import SkipNavigationLink from './SkipNavigationLink.vue';
-  import SidePanelOption from './SidePanelOption.vue';
+  import StudioNavigationOption from './StudioNavigationOption.vue';
   import StudioNavigationTab from './StudioNavigationTab.vue';
 
 
@@ -281,7 +282,7 @@
     name: 'StudioNavigation',
     components: {
       SidePanelModal,
-      SidePanelOption,
+      StudioNavigationOption,
       SkipNavigationLink,
       LanguageSwitcherModal,
       StudioNavigationTab,
@@ -309,7 +310,6 @@
         sidePanelOpen: false,
         showLanguageModal: false,
         toolbarWidth: 0,
-        // Overflow state
         overflowMenuOptions: [],
         resizeTimeout: null,
       };
@@ -408,7 +408,6 @@
       },
     },
     watch: {
-      // Recalculate overflow when window resizes or tabs data changes
       windowBreakpoint() { 
         this.debouncedCalculateOverflow(); 
       },
@@ -440,8 +439,7 @@
     },
     methods: {
       ...mapActions(['logout']),
-      
-      /* --- OVERFLOW LOGIC --- */
+    
       calculateOverflow() {
         const container = this.$refs.tabsContainer;
         const tabComponents = this.$refs.tabRefs;
@@ -454,14 +452,12 @@
         this.tabs.forEach((tab, index) => {
           const tabEl = tabComponents[index].$el;
           if (!tabEl) return;
-
-          // LOGIC: If tab is pushed to next line (top > 10px relative to container), it is hidden
           const isWrapped = (tabEl.offsetTop - containerTop) > 10;
 
           if (isWrapped) {
             hiddenLinks.push({
               label: tab.label,
-              value: tab.to, // We store the route object
+              value: tab.to, 
               
             });
           }
@@ -473,10 +469,15 @@
       handleOverflowSelect(option) {
         if (option && option.value) {
           this.$router.push(option.value);
+          const originalTab = this.tabs.find(t => {
+            return option.label.startsWith(t.label);
+          });
+          
+          if (originalTab) {
+            this.handleTrackClick(originalTab);
+          }
         }
       },
-
-      /* --- STANDARD METHODS --- */
       toggleSidePanel() {
         this.sidePanelOpen = !this.sidePanelOpen;
       },
@@ -552,6 +553,11 @@
       },
       updateToolbarWidth() {
         this.toolbarWidth = this.$refs.studioNavigation?.clientWidth || 0;
+      },
+      handleTrackClick(tab) {
+        if (this.$analytics && tab.analyticsLabel) {
+          this.$analytics.trackClick('channel_list', tab.analyticsLabel);
+        }
       },
       truncateText(value, maxLength) {
         if (value && value.length > maxLength) {
@@ -647,8 +653,6 @@
     background-color: inherit;
     z-index: 2;
   }
-
-  /* Side panel styles */
   .side-panel-header {
     display: flex;
     align-items: center;
@@ -666,10 +670,6 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-  }
-  
-  ::v-deep .side-panel-content {
-    padding: 0 !important;
   }
 
   .side-panel-nav {
