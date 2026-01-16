@@ -8,9 +8,9 @@
       color: $themeTokens.text,
     }"
   >
-    
+    <SkipNavigationLink />
     <header>
-      <SkipNavigationLink />
+      
       
       <KToolbar
         type="clear"
