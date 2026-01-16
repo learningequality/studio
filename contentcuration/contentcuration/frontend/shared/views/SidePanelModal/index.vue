@@ -26,7 +26,7 @@
             <div
               class="header-content"
               :style="{
-                flexDirection: closeButtonIconType === 'close' ? 'row' : 'row-reverse',
+                flexDirection: headerFlexDirection, 
               }"
             >
               <div style="overflow: hidden">
@@ -104,6 +104,13 @@
           return ['close', 'back'].includes(value);
         },
       },
+      closeButtonPosition: {
+        type: String,
+        required: false,
+        default: null,
+        validator: value => ['left', 'right'].includes(value),
+      },
+      
       /* Optionally override the default width of the side panel with valid CSS value */
       sidePanelWidth: {
         type: String,
@@ -155,6 +162,11 @@
         return {
           [this.rtlAlignment]: 0,
         };
+      },
+      headerFlexDirection() {
+        if (this.closeButtonPosition === 'left') return 'row-reverse';
+        if (this.closeButtonPosition === 'right') return 'row';
+        return this.closeButtonIconType === 'close' ? 'row' : 'row-reverse';
       },
       responsiveWidth() {
         if (this.fixedWidth) {
