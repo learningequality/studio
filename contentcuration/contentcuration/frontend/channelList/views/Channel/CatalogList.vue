@@ -100,7 +100,7 @@
         <KButton
           :text="$tr('downloadButton')"
           :primary="true"
-          data-test="download-button"
+          data-testid="download-button"
           iconAfter="dropup"
         >
           <KDropdownMenu
