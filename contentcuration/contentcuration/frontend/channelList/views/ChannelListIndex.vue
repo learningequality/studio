@@ -160,7 +160,7 @@
             label: this.translateConstant(listType),
             to: this.getChannelLink(listType),
             badgeValue: this.invitationsByListCounts[listType] || 0,
-            analyticsLabel: ListTypeToAnalyticsLabel[listType] // Optional: pass data for tracking
+            analyticsLabel: ListTypeToAnalyticsLabel[listType] 
           });
         });
 
