@@ -23,7 +23,7 @@ const ITEMS_PER_PAGE = 3;
  *   Reactive state for the fetched, flattened permissions and pagination
  *   helpers used by `SpecialPermissionsList.vue`.
  */
-export function useSpecialPermissions(permissionIds) {
+export function useSpecialPermissions(channelVersionId, permissionIds) {
   const permissions = ref([]);
   const isLoading = ref(false);
   const error = ref(null);
@@ -39,20 +39,24 @@ export function useSpecialPermissions(permissionIds) {
     return permissions.value.slice(start, end);
   });
 
-  async function fetchPermissions(ids) {
-    if (!ids || ids.length === 0) {
-      permissions.value = [];
-      return;
-    }
-
+  async function fetchPermissions(versionId, ids) {
     isLoading.value = true;
     error.value = null;
+    permissions.value = [];
 
     try {
-      const response = await AuditedSpecialPermissionsLicense.fetchCollection({
-        by_ids: ids.join(','),
-        distributable: false,
-      });
+      let response = [];
+      if (versionId) {
+        response = await AuditedSpecialPermissionsLicense.fetchCollection({
+          channel_version: versionId,
+          distributable: false,
+        });
+      } else if (ids && ids.length > 0) {
+        response = await AuditedSpecialPermissionsLicense.fetchCollection({
+          by_ids: ids.join(','),
+          distributable: false,
+        });
+      }
 
       permissions.value = response.map(permission => ({
         id: permission.id,
@@ -79,18 +83,10 @@ export function useSpecialPermissions(permissionIds) {
     }
   }
 
-  const resolvedPermissionIds = computed(() => {
-    const ids = unref(permissionIds);
-    if (!ids || ids.length === 0) {
-      return [];
-    }
-    return ids;
-  });
-
   watch(
-    resolvedPermissionIds,
-    ids => {
-      fetchPermissions(ids);
+    [() => unref(channelVersionId), () => unref(permissionIds)],
+    ([versionId, ids]) => {
+      fetchPermissions(versionId, ids);
     },
     { immediate: true },
   );

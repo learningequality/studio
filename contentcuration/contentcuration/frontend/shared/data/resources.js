@@ -1412,8 +1412,8 @@ export const Channel = new CreateModelResource({
       .then(response => response.data.languages);
     return uniq(compact(localLanguages.concat(remoteLanguages)));
   },
-  async getPublishedData(id) {
-    const response = await client.get(window.Urls.channel_published_data(id));
+  async getVersionDetail(id) {
+    const response = await client.get(window.Urls.channel_version_detail(id));
     return response.data;
   },
   async auditLicenses(id) {

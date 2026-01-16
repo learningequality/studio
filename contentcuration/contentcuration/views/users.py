@@ -11,6 +11,7 @@ from django.contrib.sites.models import Site
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
+from django.db import IntegrityError
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
@@ -181,8 +182,19 @@ class UserRegistrationView(RegistrationView):
         return kwargs
 
     def form_valid(self, form):
-        self.register(form)
-        return HttpResponse()
+        try:
+            self.register(form)
+            return HttpResponse()
+        except IntegrityError as e:
+            # Handle race condition where duplicate user is created between
+            # form validation and save (e.g., double submit)
+            logger.warning(
+                "IntegrityError during user registration, likely due to race condition: %s",
+                str(e),
+                extra={"email": form.cleaned_data.get("email")},
+            )
+            # Return same error as duplicate active account for consistency
+            return HttpResponseForbidden(json.dumps(["email"]))
 
     def form_invalid(self, form):
         # frontend handles the error messages
