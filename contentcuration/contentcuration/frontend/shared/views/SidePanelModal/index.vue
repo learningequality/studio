@@ -261,7 +261,6 @@
 
     .side-panel-content {
       flex-grow: 1;
-      padding: 24px 32px 16px;
       overflow-x: hidden;
       overflow-y: auto;
     }
