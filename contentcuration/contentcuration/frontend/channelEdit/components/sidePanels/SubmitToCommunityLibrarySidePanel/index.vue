@@ -631,6 +631,7 @@
   .content {
     display: flex;
     flex-direction: column;
+    padding: 24px 32px 16px;
     gap: 16px;
     margin-top: -24px;
     line-height: 140%;
