@@ -64,11 +64,6 @@
             <template v-if="loggedIn">
               <div
                 class="studio-navigation-menu"
-                :class="
-                  $computedClass({
-                    ':hover': { backgroundColor: $themePalette.grey.v_300 },
-                  })
-                "
                 :aria-label="$tr('userMenuLabel')"
               >
                 <KIconButton
@@ -701,7 +696,9 @@
     cursor: pointer;
     transition: background-color 0.2s ease;
     
-   
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
   }
 
 </style>
