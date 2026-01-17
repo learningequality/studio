@@ -66,7 +66,11 @@
               <button
                 class="studio-navigation-menu"
                 :aria-label="$tr('userMenuLabel')"
-                type="button"
+                :class="
+                  $computedClass({
+                    ':focus': { ...$coreOutline, outlineOffset: 0 },
+                  })
+                "
               >
                 <KIconButton
                   :disabled=true
@@ -96,7 +100,11 @@
               <button
                 class="studio-navigation-menu"
                 :aria-label="$tr('guestMenuLabel')"
-                type="button" 
+                :class="
+                  $computedClass({
+                    ':focus': { ...$coreOutline, outlineOffset: 0 },
+                  })
+                "
               >
                 <KIconButton
                   :disabled=true

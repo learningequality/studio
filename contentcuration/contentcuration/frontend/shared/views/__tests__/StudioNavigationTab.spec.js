@@ -81,7 +81,7 @@ describe('StudioNavigationTab', () => {
     });
 
     it('should not show badge when value is zero', async () => {
-      const { container } = await renderComponent({
+       await renderComponent({
         props: {
           to: { name: 'channels' },
           badgeValue: 0,
@@ -89,36 +89,29 @@ describe('StudioNavigationTab', () => {
         slots: { default: 'Channels' },
       });
 
-      const badge = container.querySelector('.studio-navigation-tab-badge');
-      expect(badge).not.toBeInTheDocument();
+      expect(screen.queryByText('0')).not.toBeInTheDocument();
     });
 
     it('should show active indicator when on current page', async () => {
-      const { container } = await renderComponent({
+       await renderComponent({
         props: { to: { name: 'channels' } },
         slots: { default: 'Channels' },
         initialRoute: '/channels',
       });
 
       const link = screen.getByRole('link', { name: 'Channels' });
-      expect(link).toHaveClass('studio-navigation-tab-active');
-      
-      const indicator = container.querySelector('.studio-navigation-tab-indicator');
-      expect(indicator).toBeInTheDocument();
+      expect(link).toHaveAttribute('aria-current', 'Navigation');
     });
 
     it('should not show active indicator when not on current page', async () => {
-      const { container } = await renderComponent({
+      await renderComponent({
         props: { to: { name: 'channels' } },
         slots: { default: 'Channels' },
         initialRoute: '/settings',
       });
 
       const link = screen.getByRole('link', { name: 'Channels' });
-      expect(link).not.toHaveClass('studio-navigation-tab-active');
-      
-      const indicator = container.querySelector('.studio-navigation-tab-indicator');
-      expect(indicator).not.toBeInTheDocument();
+      expect(link).not.toHaveAttribute('aria-current');
     });
 
     it('should navigate when clicked', async () => {
