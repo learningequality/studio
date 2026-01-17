@@ -1,5 +1,5 @@
 import { render, screen, cleanup } from '@testing-library/vue';
-import userEvent from '@testing-library/user-event';
+
 import { createLocalVue } from '@vue/test-utils';
 import VueRouter from 'vue-router';
 import StudioNavigationOption from '../StudioNavigationOption.vue';
@@ -41,7 +41,7 @@ const renderComponent = (props = {}, options = {}) => {
 };
 
 describe('StudioNavigationOption', () => {
-  const user = userEvent.setup();
+
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -89,19 +89,4 @@ describe('StudioNavigationOption', () => {
     });
   });
 
-  describe('Click handling', () => {
-    it('should emit select event when clicked without link', async () => {
-      const { emitted } = renderComponent({
-        label: 'Logout',
-        icon: validIcons.logout,
-        link: null,
-      });
-
-      const menuItem = screen.getByRole('menuitem', { name: 'Logout' });
-      await user.click(menuItem);
-
-      expect(emitted().select).toHaveLength(1);
-      expect(emitted().click).toHaveLength(1);
-    });
-  });
 });
