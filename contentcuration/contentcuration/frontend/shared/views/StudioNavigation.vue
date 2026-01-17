@@ -63,9 +63,10 @@
             class="studio-navigation-actions"
           >
             <template v-if="loggedIn">
-              <div
+              <button
                 class="studio-navigation-menu"
                 :aria-label="$tr('userMenuLabel')"
+                type="button"
               >
                 <KIconButton
                   :disabled=true
@@ -88,13 +89,14 @@
                   :hasIcons=true
                   @select="handleUserMenuSelect"
                 />
-              </div>
+              </button>
             </template>
 
             <template v-else>
-              <div
+              <button
                 class="studio-navigation-menu"
                 :aria-label="$tr('guestMenuLabel')"
+                type="button" 
               >
                 <KIconButton
                   :disabled=true
@@ -112,7 +114,7 @@
                   :hasIcons=true
                   @select="handleGuestMenuSelect"
                 />
-              </div>
+              </button>
             </template>
           </div>
         </template>
@@ -508,7 +510,9 @@
       handleUserMenuSelect(item) {
         switch (item.value) {
           case 'administration':
-            this.navigateToAdministration();
+            if (this.user && this.user.is_admin) {
+              this.navigateToAdministration();
+            }
             break;
           case 'settings':
             this.navigateToSettings();

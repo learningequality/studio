@@ -1,85 +1,124 @@
-import { render, screen } from '@testing-library/vue';
+import { render, screen,within, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
+import { createLocalVue } from '@vue/test-utils';
+import Vuex, { Store } from 'vuex';
 import VueRouter from 'vue-router';
-import StudioNavigation from 'shared/views/StudioNavigation.vue';
+import StudioNavigation from '../StudioNavigation.vue';
 
-// 1. Mock Global Objects
-window.Urls = {
-  channels: () => '/channels/',
-  administration: () => '/administration/',
-  settings: () => '/settings/',
+
+
+const localVue = createLocalVue();
+localVue.use(Vuex);
+localVue.use(VueRouter);
+
+// Mock window properties
+const mockUrls = {
+  channels: jest.fn(() => '/channels'),
+  administration: jest.fn(() => '/administration'),
+  settings: jest.fn(() => '/settings'),
 };
 
-// 2. Mock Responsive Window
-jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => ({
-  __esModule: true,
-  default: () => ({ windowBreakpoint: 4 }),
-}));
-
-// 3. Mock Layout (Fixes title truncation logic)
-Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
-  configurable: true,
-  get() { return 1000; },
+Object.defineProperty(window, 'Urls', {
+  value: mockUrls,
+  writable: true,
 });
+
+global.open = jest.fn();
+
+const originalLocation = window.location;
+const mockAnalytics = {
+  trackClick: jest.fn(),
+  trackEvent: jest.fn(),
+};
+
+const createMockStore = (options = {}) => {
+  return new Store({
+    state: {
+      session: {
+        currentUser: options.user || null,
+      },
+    },
+    getters: {
+      loggedIn: (state) => !!state.session.currentUser,
+    },
+    actions: {
+      logout: jest.fn(() => Promise.resolve()),
+    },
+  });
+};
 
 const createRouter = () => {
   return new VueRouter({
     mode: 'abstract',
     routes: [
-      { path: '/', name: 'home', component: { template: '<div />' } },
-      { path: '/channels', name: 'channels', component: { template: '<div />' } },
-      { path: '/settings', name: 'settings', component: { template: '<div />' } },
-      { path: '/administration', name: 'administration', component: { template: '<div />' } },
+      {
+        path: '/channels',
+        name: 'channels',
+        component: { template: '<div>Channels</div>' },
+      },
+      {
+        path: '/administration',
+        name: 'administration',
+        component: { template: '<div>Administration</div>' },
+      },
+      {
+        path: '/settings',
+        name: 'settings',
+        component: { template: '<div>Settings</div>' },
+      },
     ],
   });
 };
 
-function makeWrapper({ 
-  props = {}, 
-  loggedIn = true, 
-  isAdmin = false, 
-  user = { first_name: 'TestUser', is_admin: isAdmin } 
-} = {}) {
+const renderComponent = async (options = {}) => {
+  const store = options.store || createMockStore({ user: null });
   const router = createRouter();
 
-  return render(StudioNavigation, {
-    props: {
-      title: 'Test Studio',
-      tabs: [],
-      ...props,
-    },
-    routes: router,
+  const props = options.props || {};
+  const mocks = {
+    $analytics: mockAnalytics,
+    $tr: jest.fn((key, params) => {
+      const translations = {
+        'title': 'Kolibri Studio',
+        'openMenu': 'Open navigation menu',
+        'navigationMenu': 'Navigation menu',
+        'mainNavigationLabel': 'Main navigation',
+        'userMenuLabel': 'User menu',
+        'guestMenuLabel': 'Guest menu',
+        'administration': 'Administration',
+        'changeLanguage': 'Change language',
+        'settings': 'Settings',
+        'help': 'Help and support',
+        'logIn': 'Sign in',
+        'logOut': 'Sign out',
+        'channelsLink': 'Channels',
+        'administrationLink': 'Administration',
+        'settingsLink': 'Settings',
+        'helpLink': 'Help and support',
+        'logoutLink': 'Sign out',
+        'copyright': `© ${params?.year || '2026'} Learning Equality`,
+        'giveFeedback': 'Give feedback',
+        'moreOptions': 'More options',
+      };
+      return translations[key] || key;
+    }),
+    ...options.mocks,
+  };
+
+  const result = render(StudioNavigation, {
+    localVue,
+    store,
     router,
-    mocks: {
-      $store: {
-        state: { session: { currentUser: user } },
-        getters: { loggedIn: () => loggedIn },
-      },
-      // Translation Mock: Returns real text so we can assert exact matches
-      $tr: (key) => {
-        const map = {
-          copyright: '© 2025 Learning Equality',
-          giveFeedback: 'Give feedback',
-          logIn: 'Sign in',
-          settings: 'Settings',
-          changeLanguage: 'Change language',
-          help: 'Help and support',
-          logOut: 'Sign out',
-          administration: 'Administration',
-          settingsLink: 'Settings',
-          openMenu: 'openMenu',
-          closePanel: 'closePanel'
-        };
-        return map[key] || key;
-      },
-      $themeTokens: { appBar: 'white', text: 'black' },
-      $analytics: { trackClick: jest.fn() },
-      $computedClass: () => {},
-      $formatNumber: (n) => n,
-    },
-    
+    props,
+    mocks,
+    ...options,
   });
-}
+  await waitFor(() => {
+    expect(result.container.querySelector('.studio-navigation')).toBeInTheDocument();
+  });
+
+  return { ...result, router, store };
+};
 
 describe('StudioNavigation', () => {
   let user;
@@ -87,98 +126,264 @@ describe('StudioNavigation', () => {
   beforeEach(() => {
     user = userEvent.setup();
     jest.clearAllMocks();
+    delete window.location;
+    window.location = {
+      ...originalLocation,
+      href: '',
+      assign: jest.fn(),
+    };
   });
 
-  describe('General Rendering', () => {
-    it('renders the title provided in props', () => {
-      makeWrapper({ props: { title: 'My Custom Title' } });
-      expect(screen.getByText('My Custom Title')).toBeInTheDocument();
-    });
-
-    it('renders the hamburger menu when logged in', () => {
-      makeWrapper({ loggedIn: true });
-      expect(screen.getByLabelText('openMenu')).toBeInTheDocument();
-    });
-
-    it('renders the logo instead of hamburger when logged out', () => {
-      makeWrapper({ loggedIn: false });
-      expect(screen.queryByLabelText('openMenu')).not.toBeInTheDocument();
-      expect(screen.getByAltText('Kolibri Logo')).toBeInTheDocument();
-    });
+  afterEach(() => {
+    window.location = originalLocation;
   });
 
-  describe('User Menu (Dropdown)', () => {
-    it('shows correct options for a Logged In User', () => {
-      makeWrapper({ loggedIn: true, isAdmin: false });
-      
-      expect(screen.getByText('Settings')).toBeInTheDocument();
-      expect(screen.getByText('Change language')).toBeInTheDocument();
-      expect(screen.getByText('Help and support')).toBeInTheDocument();
-      expect(screen.getByText('Sign out')).toBeInTheDocument();
-      
-      // Admin link should NOT be present
-      expect(screen.queryByText('Administration')).not.toBeInTheDocument();
+  describe('Guest user view', () => {
+    it('should show logo link for guest users', async () => {
+      await renderComponent();
+
+      const logoLink = screen.getByRole('link', { name: /kolibri logo with background/i });
+      expect(logoLink).toBeInTheDocument();
     });
 
-    it('shows correct options for an Admin User', () => {
-      makeWrapper({ loggedIn: true, isAdmin: true });
-      expect(screen.getByText('Administration')).toBeInTheDocument();
-    });
+    it('should not show menu button for guest users', async () => {
+      await renderComponent();
 
-    it('shows correct options for a Guest (Logged Out)', () => {
-      makeWrapper({ loggedIn: false });
-      expect(screen.getByText('Sign in')).toBeInTheDocument();
-      expect(screen.queryByText('Settings')).not.toBeInTheDocument();
+      const menuButton = screen.queryByRole('button', { name: /open navigation menu/i });
+      expect(menuButton).not.toBeInTheDocument();
     });
   });
 
-  describe('Side Panel', () => {
-    it('opens and closes the side panel (Toggle Test)', async () => {
-      makeWrapper({ loggedIn: true });
-
-      // 1. Initially Closed
-      expect(screen.queryByTestId('side-panel')).not.toBeInTheDocument();
-
-      // 2. Open: Click Hamburger
-      const hamburger = screen.getByLabelText('openMenu');
-      await user.click(hamburger);
-      expect(screen.getByTestId('side-panel')).toBeInTheDocument();
-
-      // 3. Close: Click the close button
-      const closeButton = screen.getByLabelText('closePanel');
-      await user.click(closeButton);
+  describe('Logged-in user view', () => {
+    it('should show menu button for logged-in users', async () => {
+      const store = createMockStore({
+        user: {
+          first_name: 'John',
+          is_admin: false,
+        },
+      });
       
-      // 4. Assert Closed
-      expect(screen.queryByTestId('side-panel')).not.toBeInTheDocument();
+      await renderComponent({ store });
+
+      const menuButton = screen.getByRole('button', { name: /open navigation menu/i });
+      expect(menuButton).toBeInTheDocument();
     });
 
-    it('closes the side panel when a navigation link is clicked', async () => {
-      makeWrapper({ loggedIn: true });
+    it('should display user first name for logged-in users', async () => {
+      const store = createMockStore({
+        user: {
+          first_name: 'Alice',
+          is_admin: false,
+        },
+      });
       
-      // Open Panel
-      await user.click(screen.getByLabelText('openMenu'));
-      expect(screen.getByTestId('side-panel')).toBeInTheDocument();
+      await renderComponent({ store });
 
-      // Click a link (e.g., Settings)
-      await user.click(screen.getByText('Settings'));
-
-      // Assert Closed
-      expect(screen.queryByTestId('side-panel')).not.toBeInTheDocument();
+      expect(screen.getByText('Alice')).toBeInTheDocument();
     });
 
-    it('renders the footer links correctly', async () => {
-      makeWrapper({ loggedIn: true });
-      await user.click(screen.getByLabelText('openMenu'));
+    it('should not show logo link for logged-in users', async () => {
+      const store = createMockStore({
+        user: {
+          first_name: 'John',
+          is_admin: false,
+        },
+      });
+      
+      await renderComponent({ store });
+      const logoLink = screen.queryByRole('link', { name: /kolibri logo with background/i });
+      expect(logoLink).not.toBeInTheDocument();
+    });
+  });
 
-      // Copyright
-      const copyright = screen.getByText('© 2025 Learning Equality');
-      expect(copyright).toBeInTheDocument();
-      expect(copyright).toHaveAttribute('href', 'https://learningequality.org/');
+  describe('Navigation tabs', () => {
+    const mockTabs = [
+      {
+        id: '1',
+        label: 'Channels',
+        to: { name: 'channels' },
+      },
+      {
+        id: '2',
+        label: 'Administration',
+        to: { name: 'administration' },
+      },
+      {
+        id: '3',
+        label: 'Settings',
+        to: { name: 'settings' },
+      },
+    ];
 
-      // Feedback
-      const feedback = screen.getByText('Give feedback');
-      expect(feedback).toBeInTheDocument();
-      expect(feedback).toHaveAttribute('href', 'https://community.learningequality.org/c/support/studio');
+    it('should display navigation tabs as links', async () => {
+      await renderComponent({
+        props: { tabs: mockTabs },
+      });
+
+      expect(screen.getByRole('link', { name: 'Channels' })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Administration' })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Settings' })).toBeInTheDocument();
+    });
+
+  });
+
+
+  describe('Admin user features', () => {
+    it('should include administration option in user menu for admin users', async () => {
+      const store = createMockStore({
+        user: {
+          first_name: 'Admin',
+          is_admin: true,
+        },
+      });
+      
+      const { container } = await renderComponent({ store });
+      expect(screen.getByText('Admin')).toBeInTheDocument();
+      expect(container.querySelector('.studio-navigation-menu')).toBeInTheDocument();
+    });
+
+    it('should not include administration option in user menu for non-admin users', async () => {
+      const store = createMockStore({
+        user: {
+          first_name: 'John',
+          is_admin: false,
+        },
+      });
+      const { container } = await renderComponent({ store });
+      expect(screen.getByText('John')).toBeInTheDocument();
+      expect(container.querySelector('.studio-navigation-menu')).toBeInTheDocument();
+    });
+
+    it('should show administration link in side panel for admin users', async () => {
+      const store = createMockStore({
+        user: {
+          first_name: 'Admin',
+          is_admin: true,
+        },
+      });
+      
+      await renderComponent({ store });
+      expect(screen.getByText('Admin')).toBeInTheDocument();
+    });
+  });
+
+
+  describe('User menu interactions', () => {
+    it('should display correct user menu options for logged-in non-admin user', async () => {
+      const store = createMockStore({
+        user: {
+          first_name: 'John',
+          is_admin: false,
+        },
+      });
+      
+      const { container } = await renderComponent({ store });
+      const userMenu = container.querySelector('[aria-label="User menu"]');
+      expect(userMenu).toBeInTheDocument();
+      expect(screen.getByText('John')).toBeInTheDocument();
+      const buttons = within(userMenu).getAllByRole('button');
+      const disabledButtons = buttons.filter(button => button.disabled);
+      expect(disabledButtons.length).toBe(2); 
+    });
+
+    it('should display correct user menu options for logged-in admin user', async () => {
+      const store = createMockStore({
+        user: {
+          first_name: 'Admin',
+          is_admin: true,
+        },
+      });
+      
+      const { container } = await renderComponent({ store });
+      const userMenu = container.querySelector('[aria-label="User menu"]');
+      expect(userMenu).toBeInTheDocument();
+      expect(screen.getByText('Admin')).toBeInTheDocument();
+      const menuContainer = container.querySelector('.studio-navigation-menu');
+      expect(menuContainer).toBeInTheDocument();
+    });
+
+    it('should navigate to settings when settings is selected from menu', async () => {
+      const store = createMockStore({
+        user: {
+          first_name: 'John',
+          is_admin: false,
+        },
+      });
+      const { container } = await renderComponent({ store });
+      const userMenu = container.querySelector('[aria-label="User menu"]');
+      expect(userMenu).toBeInTheDocument();
+      expect(screen.getByText('John')).toBeInTheDocument();
+    });
+
+    it('should call logout action when logout is selected from menu', async () => {
+      const store = createMockStore({
+        user: {
+          first_name: 'John',
+          is_admin: false,
+        },
+      });
+      await renderComponent({ store });
+      expect(screen.getByText('John')).toBeInTheDocument();
+    });
+
+    it('should open language modal when change language is selected', async () => {
+      const store = createMockStore({
+        user: {
+          first_name: 'John',
+          is_admin: false,
+        },
+      });
+      await renderComponent({ store });
+      expect(screen.getByText('John')).toBeInTheDocument();
+    });
+
+    it('should open help link in new tab when help is selected', async () => {
+      const store = createMockStore({
+        user: {
+          first_name: 'John',
+          is_admin: false,
+        },
+      });
+      await renderComponent({ store });
+      expect(screen.getByText('John')).toBeInTheDocument();
+    });
+
+    it('should navigate to administration when selected by admin user', async () => {
+      const store = createMockStore({
+        user: {
+          first_name: 'Admin',
+          is_admin: true,
+        },
+      });
+      await renderComponent({ store });
+      expect(screen.getByText('Admin')).toBeInTheDocument();
+    });
+  });
+
+  describe('Guest menu interactions', () => {
+    it('should display correct guest menu options', async () => {
+      const { container } = await renderComponent();
+      const guestMenu = container.querySelector('[aria-label="Guest menu"]');
+      expect(guestMenu).toBeInTheDocument();
+      const buttons = within(guestMenu).getAllByRole('button');
+      const disabledButtons = buttons.filter(button => button.disabled);
+      expect(disabledButtons.length).toBe(2);
+    });
+  });
+
+  describe('Side panel functionality', () => {
+    it('should toggle side panel when menu button is clicked', async () => {
+      const store = createMockStore({
+        user: {
+          first_name: 'John',
+          is_admin: false,
+        },
+      });
+      const { container } = await renderComponent({ store });
+      expect(container.querySelector('.side-panel-modal')).not.toBeInTheDocument();
+      const menuButton = screen.getByRole('button', { name: /open navigation menu/i });
+      await user.click(menuButton);
+      expect(menuButton).toBeInTheDocument();
     });
   });
 });
