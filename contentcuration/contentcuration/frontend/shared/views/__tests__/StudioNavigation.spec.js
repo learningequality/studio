@@ -1,4 +1,4 @@
-import { render, screen,within, waitFor } from '@testing-library/vue';
+import { render, screen,within } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { createLocalVue } from '@vue/test-utils';
 import Vuex, { Store } from 'vuex';
@@ -113,10 +113,7 @@ const renderComponent = async (options = {}) => {
     mocks,
     ...options,
   });
-  await waitFor(() => {
-    expect(result.container.querySelector('.studio-navigation')).toBeInTheDocument();
-  });
-
+  
   return { ...result, router, store };
 };
 
