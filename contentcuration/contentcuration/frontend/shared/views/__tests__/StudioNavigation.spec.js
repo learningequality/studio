@@ -1,386 +1,279 @@
-import { render, screen,within } from '@testing-library/vue';
+import { render, screen, within } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { createLocalVue } from '@vue/test-utils';
-import Vuex, { Store } from 'vuex';
+import Vuex from 'vuex';
 import VueRouter from 'vue-router';
-import StudioNavigation from '../StudioNavigation.vue';
-
-
+import StudioNavigation from '../StudioNavigation';
 
 const localVue = createLocalVue();
 localVue.use(Vuex);
-localVue.use(VueRouter);
 
-// Mock window properties
-const mockUrls = {
+global.window.Urls = {
   channels: jest.fn(() => '/channels'),
   administration: jest.fn(() => '/administration'),
   settings: jest.fn(() => '/settings'),
 };
 
-Object.defineProperty(window, 'Urls', {
-  value: mockUrls,
-  writable: true,
-});
-
-global.open = jest.fn();
-
-const originalLocation = window.location;
-const mockAnalytics = {
+const mockActions = {
+  logout: jest.fn(() => Promise.resolve()),
   trackClick: jest.fn(),
-  trackEvent: jest.fn(),
 };
 
-const createMockStore = (options = {}) => {
-  return new Store({
-    state: {
+const createMockStore = (currentUser = null) => {
+  return new Vuex.Store({
+    modules: {
       session: {
-        currentUser: options.user || null,
+        state: {
+          currentUser: currentUser,
+        },
+        getters: {
+          loggedIn: () => !!currentUser,
+        },
+        actions: {
+          logout: mockActions.logout,
+        },
       },
-    },
-    getters: {
-      loggedIn: (state) => !!state.session.currentUser,
-    },
-    actions: {
-      logout: jest.fn(() => Promise.resolve()),
     },
   });
 };
 
-const createRouter = () => {
+const createMockRouter = () => {
   return new VueRouter({
-    mode: 'abstract',
     routes: [
-      {
-        path: '/channels',
-        name: 'channels',
-        component: { template: '<div>Channels</div>' },
-      },
-      {
-        path: '/administration',
-        name: 'administration',
-        component: { template: '<div>Administration</div>' },
-      },
-      {
-        path: '/settings',
-        name: 'settings',
-        component: { template: '<div>Settings</div>' },
-      },
+      { path: '/', name: 'home' },
+      { path: '/channels', name: 'channels' },
+      { path: '/settings', name: 'settings' },
+      { path: '/administration', name: 'administration' },
+      { path: '/library', name: 'library' },
     ],
   });
 };
 
-const renderComponent = async (options = {}) => {
-  const store = options.store || createMockStore({ user: null });
-  const router = createRouter();
+const stubs = {
+  KToolbar: { template: '<div><slot name="icon"></slot><slot name="brand"></slot><slot name="actions"></slot></div>' },
+  KIconButton: { 
+    props: ['icon', 'ariaLabel'], 
+    template: '<button :aria-label="ariaLabel || icon" v-on="$listeners"><slot></slot></button>' 
+  },
+  KExternalLink: { 
+    props: ['href', 'text'], 
+    template: '<a :href="href">{{ text }}<slot></slot></a>' 
+  },
+  KLogo: { template: '<img alt="Kolibri Logo" />' },
+  KDropdownMenu: {
+    props: ['options'],
+    template: `
+      <div data-testid="dropdown-menu">
+        <button v-for="opt in options" :key="opt.value" @click="$emit('select', opt)">
+          {{ opt.label }}
+        </button>
+      </div>
+    `
+  },
+  StudioNavigationTab: { 
+    props: ['to'],
+    template: '<router-link :to="to"><slot></slot></router-link>' 
+  },
+  SidePanelModal: { 
+    template: `
+      <div role="dialog" aria-label="Navigation menu">
+        <button aria-label="Close" @click="$emit('closePanel')">Close</button>
+        <slot name="header"></slot>
+        <slot></slot>
+      </div>
+    ` 
+  },
+  StudioNavigationOption: { 
+    props: ['label', 'link'], 
+    template: '<a :href="link" @click="$emit(\'select\') || $emit(\'click\')">{{ label }}</a>' 
+  },
+  SkipNavigationLink: { template: '<a>Skip</a>' },
+  LanguageSwitcherModal: { template: '<div role="dialog">Language Modal</div>' },
+};
 
-  const props = options.props || {};
-  const mocks = {
-    $analytics: mockAnalytics,
-    $tr: jest.fn((key, params) => {
-      const translations = {
-        'title': 'Kolibri Studio',
-        'openMenu': 'Open navigation menu',
-        'navigationMenu': 'Navigation menu',
-        'mainNavigationLabel': 'Main navigation',
-        'userMenuLabel': 'User menu',
-        'guestMenuLabel': 'Guest menu',
-        'administration': 'Administration',
-        'changeLanguage': 'Change language',
-        'settings': 'Settings',
-        'help': 'Help and support',
-        'logIn': 'Sign in',
-        'logOut': 'Sign out',
-        'channelsLink': 'Channels',
-        'administrationLink': 'Administration',
-        'settingsLink': 'Settings',
-        'helpLink': 'Help and support',
-        'logoutLink': 'Sign out',
-        'copyright': `© ${params?.year || '2026'} Learning Equality`,
-        'giveFeedback': 'Give feedback',
-        'moreOptions': 'More options',
-      };
-      return translations[key] || key;
-    }),
-    ...options.mocks,
-  };
+const renderComponent = (props = {}, user = null) => {
+  const store = createMockStore(user);
+  const router = createMockRouter();
 
-  const result = render(StudioNavigation, {
+  return render(StudioNavigation, {
     localVue,
     store,
-    router,
-    props,
-    mocks,
-    ...options,
+    routes: router,
+    props: {
+      title: 'Kolibri Studio',
+      ...props,
+    },
+    stubs,
+    mocks: {
+      $tr: (key) => {
+        const strings = {
+          title: 'Kolibri Studio',
+          openMenu: 'Open navigation menu',
+          navigationMenu: 'Navigation menu',
+          userMenuLabel: 'User menu',
+          guestMenuLabel: 'Guest menu',
+          signIn: 'Sign in',
+          signOut: 'Sign out',
+          administration: 'Administration',
+          settings: 'Settings',
+          help: 'Help and support',
+          changeLanguage: 'Change language',
+          channels: 'Channels',
+          copyright: '© 2026 Learning Equality',
+          giveFeedback: 'Give feedback',
+        };
+        return strings[key] || key;
+      },
+    },
   });
-  
-  return { ...result, router, store };
 };
 
 describe('StudioNavigation', () => {
-  let user;
-
   beforeEach(() => {
-    user = userEvent.setup();
     jest.clearAllMocks();
-    delete window.location;
-    window.location = {
-      ...originalLocation,
-      href: '',
-      assign: jest.fn(),
-    };
   });
 
-  afterEach(() => {
-    window.location = originalLocation;
-  });
 
-  describe('Guest user view', () => {
-    it('should show logo link for guest users', async () => {
-      await renderComponent();
 
-      const logoLink = screen.getByRole('link', { name: /kolibri logo with background/i });
+
+  describe('guest view', () => {
+    it('should display the logo link and guest menu', () => {
+      renderComponent({}, null);
+
+      const logoLink = screen.getByRole('link', { name: /Kolibri Logo/i });
       expect(logoLink).toBeInTheDocument();
+      expect(logoLink).toHaveAttribute('href', expect.stringContaining('/'));
+
+      expect(screen.getByRole('button', { name: /Guest menu/i })).toBeVisible();
+      expect(screen.queryByRole('button', { name: /Open navigation menu/i })).not.toBeInTheDocument();
     });
 
-    it('should not show menu button for guest users', async () => {
-      await renderComponent();
+    it('should display correct guest dropdown options', async () => {
+      const user = userEvent.setup();
+      renderComponent({}, null);
 
-      const menuButton = screen.queryByRole('button', { name: /open navigation menu/i });
-      expect(menuButton).not.toBeInTheDocument();
-    });
-  });
+      const guestMenuTrigger = screen.getByRole('button', { name: /Guest menu/i });
+      expect(guestMenuTrigger).toBeVisible();
+      await user.click(guestMenuTrigger);
 
-  describe('Logged-in user view', () => {
-    it('should show menu button for logged-in users', async () => {
-      const store = createMockStore({
-        user: {
-          first_name: 'John',
-          is_admin: false,
-        },
-      });
-      
-      await renderComponent({ store });
-
-      const menuButton = screen.getByRole('button', { name: /open navigation menu/i });
-      expect(menuButton).toBeInTheDocument();
-    });
-
-    it('should display user first name for logged-in users', async () => {
-      const store = createMockStore({
-        user: {
-          first_name: 'Alice',
-          is_admin: false,
-        },
-      });
-      
-      await renderComponent({ store });
-
-      expect(screen.getByText('Alice')).toBeInTheDocument();
-    });
-
-    it('should not show logo link for logged-in users', async () => {
-      const store = createMockStore({
-        user: {
-          first_name: 'John',
-          is_admin: false,
-        },
-      });
-      
-      await renderComponent({ store });
-      const logoLink = screen.queryByRole('link', { name: /kolibri logo with background/i });
-      expect(logoLink).not.toBeInTheDocument();
+      // Verify buttons exist
+      expect(screen.getByRole('button', { name: 'Sign in' })).toBeVisible();
+      // Dropdown items are inside the button trigger scope in the DOM structure often, 
+      // but strictly speaking, "Change language" appears in both Guest Dropdown and User Dropdown.
+      // Since we are in Guest View, we just check existence.
+      expect(screen.getByRole('button', { name: 'Change language' })).toBeVisible();
     });
   });
 
-  describe('Navigation tabs', () => {
-    const mockTabs = [
-      {
-        id: '1',
-        label: 'Channels',
-        to: { name: 'channels' },
-      },
-      {
-        id: '2',
-        label: 'Administration',
-        to: { name: 'administration' },
-      },
-      {
-        id: '3',
-        label: 'Settings',
-        to: { name: 'settings' },
-      },
+  describe('logged in view', () => {
+    const defaultUser = {
+      first_name: 'TestUser',
+      is_admin: false,
+    };
+
+    it('should display hamburger menu and user name', () => {
+      renderComponent({}, defaultUser);
+
+      expect(screen.getByRole('button', { name: /Open navigation menu/i })).toBeVisible();
+      expect(screen.getByRole('button', { name: /User menu/i })).toBeVisible();
+      expect(screen.getByText('TestUser')).toBeVisible();
+      expect(screen.queryByRole('link', { name: /Kolibri Logo/i })).not.toBeInTheDocument();
+    });
+
+    it('should show correct user dropdown options for non-admin', () => {
+      renderComponent({}, defaultUser);
+
+      // We explicitly check items that are unique to the user menu or common
+      expect(screen.getByRole('button', { name: 'Settings' })).toBeVisible();
+      expect(screen.getByRole('button', { name: 'Help and support' })).toBeVisible();
+      expect(screen.getByRole('button', { name: 'Change language' })).toBeVisible();
+      expect(screen.getByRole('button', { name: 'Sign out' })).toBeVisible();
+      
+      expect(screen.queryByRole('button', { name: 'Administration' })).not.toBeInTheDocument();
+    });
+
+    it('should show administration option for admin user', () => {
+      renderComponent({}, { ...defaultUser, is_admin: true });
+      expect(screen.getByRole('button', { name: 'Administration' })).toBeVisible();
+    });
+
+    it('should call logout action when Sign out is clicked', async () => {
+      const user = userEvent.setup();
+      renderComponent({}, defaultUser);
+
+      const logoutBtn = screen.getByRole('button', { name: 'Sign out' });
+      await user.click(logoutBtn);
+
+      expect(mockActions.logout).toHaveBeenCalled();
+    });
+  });
+
+  describe('side panel navigation', () => {
+    const defaultUser = { first_name: 'TestUser' };
+
+    it('should open side panel when hamburger menu is clicked', async () => {
+      const user = userEvent.setup();
+      renderComponent({}, defaultUser);
+
+      expect(screen.queryByRole('dialog', { name: /Navigation menu/i })).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: /Open navigation menu/i }));
+
+      const dialog = screen.getByRole('dialog', { name: /Navigation menu/i });
+      expect(dialog).toBeVisible();
+      
+      // FIX 1: Ambiguous "Kolibri Studio" text (Title in bar vs Title in panel)
+      // We check that the title exists specifically INSIDE the dialog
+      expect(within(dialog).getByText('Kolibri Studio')).toBeVisible();
+    });
+
+    it('should display correct navigation links in side panel', async () => {
+      const user = userEvent.setup();
+      renderComponent({}, defaultUser);
+
+      await user.click(screen.getByRole('button', { name: /Open navigation menu/i }));
+
+      const dialog = screen.getByRole('dialog', { name: /Navigation menu/i });
+      
+      // FIX 2: Ambiguous "Settings" text (Button in User Dropdown vs Link in Side Panel)
+   
+      const sidePanel = within(dialog);
+
+      expect(sidePanel.getByText('Channels')).toBeVisible();
+      expect(sidePanel.getByText('Settings')).toBeVisible();
+      expect(sidePanel.getByText('Help and support')).toBeVisible();
+      expect(sidePanel.getByText('Sign out')).toBeVisible();
+    });
+
+    it('should trigger Language Modal from side panel', async () => {
+        const user = userEvent.setup();
+        renderComponent({}, defaultUser);
+  
+        await user.click(screen.getByRole('button', { name: /Open navigation menu/i }));
+        
+        const dialog = screen.getByRole('dialog', { name: /Navigation menu/i });
+        const sidePanel = within(dialog);
+
+        // FIX 3: Ambiguous "Change language" text
+        // Scope to side panel
+        const changeLangLink = sidePanel.getByText('Change language');
+        await user.click(changeLangLink);
+
+        expect(screen.getByText('Language Modal')).toBeVisible();
+    });
+  });
+
+  describe('navigation tabs', () => {
+    const tabs = [
+      { id: '1', label: 'My Channels', to: { name: 'channels' } },
+      { id: '2', label: 'Content Library', to: { name: 'library' } },
     ];
 
-    it('should display navigation tabs as links', async () => {
-      await renderComponent({
-        props: { tabs: mockTabs },
-      });
+    it('should render navigation tabs when provided', () => {
+      renderComponent({ tabs }, null);
 
-      expect(screen.getByRole('link', { name: 'Channels' })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: 'Administration' })).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: 'Settings' })).toBeInTheDocument();
-    });
-
-  });
-
-
-  describe('Admin user features', () => {
-    it('should include administration option in user menu for admin users', async () => {
-      const store = createMockStore({
-        user: {
-          first_name: 'Admin',
-          is_admin: true,
-        },
-      });
-      
-      const { container } = await renderComponent({ store });
-      expect(screen.getByText('Admin')).toBeInTheDocument();
-      expect(container.querySelector('.studio-navigation-menu')).toBeInTheDocument();
-    });
-
-    it('should not include administration option in user menu for non-admin users', async () => {
-      const store = createMockStore({
-        user: {
-          first_name: 'John',
-          is_admin: false,
-        },
-      });
-      const { container } = await renderComponent({ store });
-      expect(screen.getByText('John')).toBeInTheDocument();
-      expect(container.querySelector('.studio-navigation-menu')).toBeInTheDocument();
-    });
-
-    it('should show administration link in side panel for admin users', async () => {
-      const store = createMockStore({
-        user: {
-          first_name: 'Admin',
-          is_admin: true,
-        },
-      });
-      
-      await renderComponent({ store });
-      expect(screen.getByText('Admin')).toBeInTheDocument();
-    });
-  });
-
-
-  describe('User menu interactions', () => {
-    it('should display correct user menu options for logged-in non-admin user', async () => {
-      const store = createMockStore({
-        user: {
-          first_name: 'John',
-          is_admin: false,
-        },
-      });
-      
-      const { container } = await renderComponent({ store });
-      const userMenu = container.querySelector('[aria-label="User menu"]');
-      expect(userMenu).toBeInTheDocument();
-      expect(screen.getByText('John')).toBeInTheDocument();
-      const buttons = within(userMenu).getAllByRole('button');
-      const disabledButtons = buttons.filter(button => button.disabled);
-      expect(disabledButtons.length).toBe(2); 
-    });
-
-    it('should display correct user menu options for logged-in admin user', async () => {
-      const store = createMockStore({
-        user: {
-          first_name: 'Admin',
-          is_admin: true,
-        },
-      });
-      
-      const { container } = await renderComponent({ store });
-      const userMenu = container.querySelector('[aria-label="User menu"]');
-      expect(userMenu).toBeInTheDocument();
-      expect(screen.getByText('Admin')).toBeInTheDocument();
-      const menuContainer = container.querySelector('.studio-navigation-menu');
-      expect(menuContainer).toBeInTheDocument();
-    });
-
-    it('should navigate to settings when settings is selected from menu', async () => {
-      const store = createMockStore({
-        user: {
-          first_name: 'John',
-          is_admin: false,
-        },
-      });
-      const { container } = await renderComponent({ store });
-      const userMenu = container.querySelector('[aria-label="User menu"]');
-      expect(userMenu).toBeInTheDocument();
-      expect(screen.getByText('John')).toBeInTheDocument();
-    });
-
-    it('should call logout action when logout is selected from menu', async () => {
-      const store = createMockStore({
-        user: {
-          first_name: 'John',
-          is_admin: false,
-        },
-      });
-      await renderComponent({ store });
-      expect(screen.getByText('John')).toBeInTheDocument();
-    });
-
-    it('should open language modal when change language is selected', async () => {
-      const store = createMockStore({
-        user: {
-          first_name: 'John',
-          is_admin: false,
-        },
-      });
-      await renderComponent({ store });
-      expect(screen.getByText('John')).toBeInTheDocument();
-    });
-
-    it('should open help link in new tab when help is selected', async () => {
-      const store = createMockStore({
-        user: {
-          first_name: 'John',
-          is_admin: false,
-        },
-      });
-      await renderComponent({ store });
-      expect(screen.getByText('John')).toBeInTheDocument();
-    });
-
-    it('should navigate to administration when selected by admin user', async () => {
-      const store = createMockStore({
-        user: {
-          first_name: 'Admin',
-          is_admin: true,
-        },
-      });
-      await renderComponent({ store });
-      expect(screen.getByText('Admin')).toBeInTheDocument();
-    });
-  });
-
-  describe('Guest menu interactions', () => {
-    it('should display correct guest menu options', async () => {
-      const { container } = await renderComponent();
-      const guestMenu = container.querySelector('[aria-label="Guest menu"]');
-      expect(guestMenu).toBeInTheDocument();
-      const buttons = within(guestMenu).getAllByRole('button');
-      const disabledButtons = buttons.filter(button => button.disabled);
-      expect(disabledButtons.length).toBe(2);
-    });
-  });
-
-  describe('Side panel functionality', () => {
-    it('should toggle side panel when menu button is clicked', async () => {
-      const store = createMockStore({
-        user: {
-          first_name: 'John',
-          is_admin: false,
-        },
-      });
-      const { container } = await renderComponent({ store });
-      expect(container.querySelector('.side-panel-modal')).not.toBeInTheDocument();
-      const menuButton = screen.getByRole('button', { name: /open navigation menu/i });
-      await user.click(menuButton);
-      expect(menuButton).toBeInTheDocument();
+      expect(screen.getByText('My Channels')).toBeVisible();
+      expect(screen.getByText('Content Library')).toBeVisible();
     });
   });
 });
