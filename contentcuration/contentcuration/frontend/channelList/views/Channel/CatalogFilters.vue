@@ -22,7 +22,6 @@
       @closePanel="closeSidePanel"
     >
       <CatalogFilterPanelContent />
-      
     </SidePanelModal>
   </div>
 
@@ -83,8 +82,6 @@
   .catalog-filters-wrapper {
     width: 100%;
     height: 100%;
-    
-    
   }
 
   .filter-button {
