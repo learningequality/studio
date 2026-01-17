@@ -193,7 +193,7 @@
         <div class="side-panel-content">
           <nav class="side-panel-nav">
             <StudioNavigationOption
-              :label="$tr('channelsLink')"
+              :label="$tr('channels')"
               :link="channelsLink"
               icon="home"
               @click="sidePanelOpen = false"
@@ -201,14 +201,14 @@
 
             <StudioNavigationOption
               v-if="user && user.is_admin"
-              :label="$tr('administrationLink')"
+              :label="$tr('administration')"
               :link="administrationLink"
               icon="people"
               @click="sidePanelOpen = false"
             />
 
             <StudioNavigationOption
-              :label="$tr('settingsLink')"
+              :label="$tr('settings')"
               :link="settingsLink"
               icon="settings"
               @click="sidePanelOpen = false"
@@ -221,13 +221,13 @@
             />
 
             <StudioNavigationOption
-              :label="$tr('helpLink')"
+              :label="$tr('help')"
               icon="openNewTab"
               @select="navigateToHelp"
             />
 
             <StudioNavigationOption
-              :label="$tr('logoutLink')"
+              :label="$tr('signOut')"
               icon="logout"
               @select="handleLogout"
             />
@@ -384,7 +384,7 @@
             icon: 'openNewTab',
           },
           {
-            label: this.$tr('logOut'),
+            label: this.$tr('signOut'),
             value: 'logout',
             icon: 'logout',
           },
@@ -395,7 +395,7 @@
       guestMenuItems() {
         return [
           {
-            label: this.$tr('logIn'),
+            label: this.$tr('signIn'),
             value: 'login',
             icon: 'login',
           },
@@ -581,20 +581,16 @@
       mainNavigationLabel: 'Main navigation',
       userMenuLabel: 'User menu',
       guestMenuLabel: 'Guest menu',
+      moreOptions: 'More options',
+      channels: 'Channels',
       administration: 'Administration',
-      changeLanguage: 'Change language',
       settings: 'Settings',
+      changeLanguage: 'Change language',
       help: 'Help and support',
-      logIn: 'Sign in',
-      logOut: 'Sign out',
-      channelsLink: 'Channels',
-      administrationLink: 'Administration',
-      settingsLink: 'Settings',
-      helpLink: 'Help and support',
-      logoutLink: 'Sign out',
+      signIn: 'Sign in',
+      signOut: 'Sign out',
       copyright: '© {year} Learning Equality',
       giveFeedback: 'Give feedback',
-      moreOptions: 'More options',
     },
   };
 
