@@ -19,6 +19,7 @@
       <span
         v-if="showBadge"
         class="studio-navigation-tab-badge"
+        :style="badgeStyles"
       >
         {{ $formatNumber(badgeValue) }}
       </span>
@@ -67,6 +68,12 @@
       tabStyles() {
         return {
           color: this.$themeTokens.text,
+        };
+      },
+      badgeStyles() {
+        return {
+          color: this.$themeTokens.surface,
+          backgroundColor: this.$themeTokens.text,
         };
       },
       indicatorStyles() {
@@ -140,8 +147,6 @@
     width: 22px;
     height: 22px;
     font-size: 14px;
-    color: white;
-    background-color: black;
     border-radius: 50%;
     transition: 0.3s;
   }
