@@ -64,7 +64,7 @@
           >
             <template v-if="loggedIn">
               <button
-                class="studio-navigation-menu"
+                class="studio-navigation-dropdown"
                 :aria-label="$tr('userMenuLabel')"
                 :class="
                   $computedClass({
@@ -98,7 +98,7 @@
 
             <template v-else>
               <button
-                class="studio-navigation-menu"
+                class="studio-navigation-dropdown"
                 :aria-label="$tr('guestMenuLabel')"
                 :class="
                   $computedClass({
@@ -190,16 +190,16 @@
       @closePanel="sidePanelOpen = false"
     >
       <template #header>
-        <div class="side-panel-header">
-          <span class="side-panel-title">
+        <div class="navigation-menu-header">
+          <span class="navigation-menu-title">
             {{ $tr('title') }}
           </span>
         </div>
       </template>
 
       <template #default>
-        <div class="side-panel-content">
-          <nav class="side-panel-nav">
+        <div class="navigation-menu-content">
+          <nav class="navigation-menu-nav">
             <StudioNavigationOption
               :label="$tr('channels')"
               :link="channelsLink"
@@ -241,7 +241,7 @@
             />
           </nav>
 
-          <div class="side-panel-footer">
+          <div class="navigation-menu-footer">
             <div>
               <KLogo
                 altText="Kolibri logo"
@@ -252,7 +252,7 @@
 
             <KExternalLink
               :href="copyrightLink"
-              class="side-panel-copyright"
+              class="navigation-menu-copyright"
               :text="$tr('copyright', { year: new Date().getFullYear() })"
               openInNewTab
               @click.native="sidePanelOpen = false"
@@ -664,40 +664,40 @@
     background-color: inherit;
     z-index: 2;
   }
-  .side-panel-header {
+  .navigation-menu-header {
     display: flex;
     align-items: center;
     height: 63.2px;
     padding-right: 74px;
   }
 
-  .side-panel-title {
+  .navigation-menu-title {
     margin-left: 16px;
     font-size: 20px;
     font-weight: 500;
   }
 
-  .side-panel-content {
+  .navigation-menu-content {
     display: flex;
     flex-direction: column;
     height: 100%;
   }
 
-  .side-panel-nav {
+  .navigation-menu-nav {
     padding: 8px 0;
   }
 
-  .side-panel-footer {
+  .navigation-menu-footer {
     padding: 24px;
     text-align: left;
   }
 
-  .side-panel-copyright {
+  .navigation-menu-copyright {
     margin-bottom: 24px;
     font-size: 14px;
   }
 
-  .studio-navigation-menu {
+  .studio-navigation-dropdown {
     display: flex;
     align-items: center;
     padding: 4px 8px;
