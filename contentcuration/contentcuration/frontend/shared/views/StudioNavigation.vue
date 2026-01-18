@@ -10,17 +10,15 @@
   >
     <SkipNavigationLink />
     <header>
-      
-      
       <KToolbar
         type="clear"
         :style="[
           {
-            overflowX: 'hidden',  
+            overflowX: 'hidden',
             backgroundColor: $themeTokens.appBar,
             height: '56px',
           },
-          containerStyles
+          containerStyles,
         ]"
         :raised="false"
       >
@@ -73,24 +71,22 @@
                 "
               >
                 <KIconButton
-                  :disabled=true
+                  :disabled="true"
                   icon="person"
                   color="black"
                 />
-                <span
-                  class="mx-2 notranslate subheading"
-                >
+                <span class="mx-2 notranslate subheading">
                   {{ user.first_name }}
                 </span>
                 <KIconButton
-                  :disabled=true
+                  :disabled="true"
                   icon="dropdown"
                   color="black"
                 />
 
                 <KDropdownMenu
                   :options="userMenuItems"
-                  :hasIcons=true
+                  :hasIcons="true"
                   @select="handleUserMenuSelect"
                 />
               </button>
@@ -107,19 +103,19 @@
                 "
               >
                 <KIconButton
-                  :disabled=true
+                  :disabled="true"
                   icon="person"
                   color="black"
                 />
                 <KIconButton
-                  :disabled=true
+                  :disabled="true"
                   icon="dropdown"
                   color="black"
                 />
 
                 <KDropdownMenu
                   :options="guestMenuItems"
-                  :hasIcons=true
+                  :hasIcons="true"
                   @select="handleGuestMenuSelect"
                 />
               </button>
@@ -127,14 +123,13 @@
           </div>
         </template>
       </KToolbar>
-
     </header>
 
     <div
       v-if="tabs && tabs.length"
       :aria-label="$tr('mainNavigationLabel')"
     >
-      <div 
+      <div
         class="studio-navigation-tabs-wrapper"
         :style="tabsWrapperStyles"
       >
@@ -144,7 +139,7 @@
           :style="containerStyles"
         >
           <StudioNavigationTab
-            v-for="(tab) in tabs"
+            v-for="tab in tabs"
             :key="tab.id"
             ref="tabRefs"
             :to="tab.to"
@@ -156,8 +151,8 @@
           </StudioNavigationTab>
         </div>
 
-        <div 
-          v-if="overflowMenuOptions.length > 0" 
+        <div
+          v-if="overflowMenuOptions.length > 0"
           class="overflow-menu-container"
         >
           <KIconButton
@@ -174,7 +169,6 @@
             </template>
           </KIconButton>
         </div>
-
       </div>
     </div>
 
@@ -245,7 +239,7 @@
             <div>
               <KLogo
                 altText="Kolibri logo"
-                :showBackground=true
+                :showBackground="true"
                 :size="88"
               />
             </div>
@@ -288,7 +282,6 @@
   import StudioNavigationOption from './StudioNavigationOption.vue';
   import StudioNavigationTab from './StudioNavigationTab.vue';
 
-
   export default {
     name: 'StudioNavigation',
     components: {
@@ -325,7 +318,7 @@
         resizeTimeout: null,
       };
     },
-    
+
     computed: {
       ...mapState({
         user: state => state.session.currentUser,
@@ -416,16 +409,16 @@
       },
       tabsWrapperStyles() {
         return {
-          padding: this.windowBreakpoint <= 2 ? '0 8px' :0,
+          padding: this.windowBreakpoint <= 2 ? '0 8px' : 0,
         };
       },
     },
     watch: {
-      windowBreakpoint() { 
-        this.debouncedCalculateOverflow(); 
+      windowBreakpoint() {
+        this.debouncedCalculateOverflow();
       },
       tabs: {
-        handler() { 
+        handler() {
           this.$nextTick(() => {
             this.calculateOverflow();
           });
@@ -436,10 +429,9 @@
     mounted() {
       this.updateToolbarWidth();
       window.addEventListener('resize', this.handleResize);
-      
+
       this.$nextTick(() => {
         this.calculateOverflow();
-  
       });
     },
     updated() {
@@ -452,7 +444,7 @@
     },
     methods: {
       ...mapActions(['logout']),
-    
+
       calculateOverflow() {
         const container = this.$refs.tabsContainer;
         const tabComponents = this.$refs.tabRefs;
@@ -465,13 +457,12 @@
         this.tabs.forEach((tab, index) => {
           const tabEl = tabComponents[index].$el;
           if (!tabEl) return;
-          const isWrapped = (tabEl.offsetTop - containerTop) > 10;
+          const isWrapped = tabEl.offsetTop - containerTop > 10;
 
           if (isWrapped) {
             hiddenLinks.push({
               label: tab.label,
-              value: tab.to, 
-              
+              value: tab.to,
             });
           }
         });
@@ -485,7 +476,7 @@
           const originalTab = this.tabs.find(t => {
             return option.label.startsWith(t.label);
           });
-          
+
           if (originalTab) {
             this.handleTrackClick(originalTab);
           }
@@ -580,7 +571,6 @@
         }
         return value;
       },
-
     },
     $trs: {
       title: 'Kolibri Studio',
@@ -620,10 +610,10 @@
   }
 
   .studio-navigation-title-container {
-    white-space: nowrap;
+    padding-inline-start: 20px;
     font-size: 20px;
     font-weight: 500;
-    padding-inline-start: 20px;
+    white-space: nowrap;
   }
 
   .studio-navigation-actions {
@@ -643,27 +633,25 @@
     position: relative;
     display: flex;
     flex: 1;
-
-    flex-wrap: wrap; 
-
-    height: 48px; 
-    overflow: hidden; 
+    flex-wrap: wrap;
+    height: 48px;
+    overflow: hidden;
   }
 
   .studio-navigation-tab-item {
-    
-    flex: 0 0 auto; 
+    flex: 0 0 auto;
   }
 
   .overflow-menu-container {
-    flex: 0 0 auto;
-    padding-left: 8px;
+    z-index: 2;
     display: flex;
+    flex: 0 0 auto;
     align-items: center;
     height: 100%;
+    padding-left: 8px;
     background-color: inherit;
-    z-index: 2;
   }
+
   .navigation-menu-header {
     display: flex;
     align-items: center;
@@ -701,10 +689,10 @@
     display: flex;
     align-items: center;
     padding: 4px 8px;
-    border-radius: $radius;
     cursor: pointer;
+    border-radius: $radius;
     transition: background-color 0.2s ease;
-    
+
     &:hover {
       background-color: rgba(0, 0, 0, 0.1);
     }
