@@ -27,7 +27,7 @@ const createRouter = () => {
 
 const renderComponent = async (options = {}) => {
   const router = createRouter();
-  
+
   if (options.initialRoute) {
     await router.push(options.initialRoute);
   }
@@ -81,7 +81,7 @@ describe('StudioNavigationTab', () => {
     });
 
     it('should not show badge when value is zero', async () => {
-       await renderComponent({
+      await renderComponent({
         props: {
           to: { name: 'channels' },
           badgeValue: 0,
@@ -93,7 +93,7 @@ describe('StudioNavigationTab', () => {
     });
 
     it('should show active indicator when on current page', async () => {
-       await renderComponent({
+      await renderComponent({
         props: { to: { name: 'channels' } },
         slots: { default: 'Channels' },
         initialRoute: '/channels',

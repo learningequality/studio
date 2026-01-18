@@ -9,8 +9,6 @@ const localVue = createLocalVue();
 localVue.use(Vuex);
 localVue.use(VueRouter);
 
-
-
 global.window.Urls = {
   channels: jest.fn(() => '/channels'),
   administration: jest.fn(() => '/administration'),
@@ -51,10 +49,10 @@ const renderComponent = (props = {}, user = null) => {
       title: 'Kolibri Studio',
       ...props,
     },
-  
+
     mocks: {
       $formatNumber: n => n,
-      $tr: (key) => {
+      $tr: key => {
         const map = {
           title: 'Kolibri Studio',
           openMenu: 'Open navigation menu',
@@ -87,7 +85,6 @@ describe('StudioNavigation', () => {
     delete window.location;
     window.location = { href: '', assign: jest.fn() };
     window.open = jest.fn();
-  
   });
 
   afterAll(() => {
@@ -99,9 +96,6 @@ describe('StudioNavigation', () => {
     jest.clearAllMocks();
   });
 
-
-
-
   describe('guest view', () => {
     it('should display the logo link and guest menu', () => {
       renderComponent({}, null);
@@ -111,7 +105,9 @@ describe('StudioNavigation', () => {
       expect(logoLink).toHaveAttribute('href', expect.stringContaining('/'));
 
       expect(screen.getByRole('button', { name: /Guest menu/i })).toBeVisible();
-      expect(screen.queryByRole('button', { name: /Open navigation menu/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /Open navigation menu/i }),
+      ).not.toBeInTheDocument();
     });
 
     it('opens guest menu and shows options', async () => {
@@ -200,7 +196,7 @@ describe('StudioNavigation', () => {
       await user.click(screen.getByRole('button', { name: /Open navigation menu/i }));
 
       const sidePanel = screen.getByRole('region', { name: 'Navigation menu' });
-      
+
       const panelScope = within(sidePanel);
 
       expect(panelScope.getByText('Channels')).toBeVisible();
@@ -218,7 +214,6 @@ describe('StudioNavigation', () => {
       await user.click(within(sidePanel).getByText('Change language'));
       expect(await screen.findByRole('dialog', { name: 'Change language' })).toBeVisible();
       expect(screen.getByLabelText('English')).toBeVisible();
-   
     });
   });
 
@@ -230,7 +225,6 @@ describe('StudioNavigation', () => {
 
     it('renders tabs correctly', () => {
       renderComponent({ tabs }, { first_name: 'User' });
-
 
       expect(screen.getByText('My Channels')).toBeVisible();
       expect(screen.getByText('Content Library')).toBeVisible();

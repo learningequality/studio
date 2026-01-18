@@ -4,11 +4,11 @@
     v-if="to"
     :to="to"
     :class="[
-      tabClasses, 
+      tabClasses,
       $computedClass({
         ':active': { backgroundColor: 'rgba(0, 0, 0, 0.2)' },
-        ':focus': { ...$coreOutline, outlineOffset: 0 }
-      })
+        ':focus': { ...$coreOutline, outlineOffset: 0 },
+      }),
     ]"
     :style="tabStyles"
     :aria-current="isActive ? 'Navigation' : null"
@@ -101,10 +101,10 @@
   .studio-navigation-tab {
     position: relative;
     display: flex;
+    flex: 0 0 auto;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    flex: 0 0 auto;
     min-width: 160px;
     max-width: 264px;
     height: 100%;
@@ -118,16 +118,15 @@
     text-transform: uppercase;
     white-space: normal;
     cursor: pointer;
+    user-select: none;
     background: transparent;
     outline: none;
-    user-select: none;
     transition: 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
   }
 
   .studio-navigation-tab:not(.studio-navigation-tab-active) {
     opacity: 0.7;
   }
-
 
   .studio-navigation-tab-content {
     position: relative;

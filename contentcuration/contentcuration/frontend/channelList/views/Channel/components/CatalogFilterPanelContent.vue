@@ -1,6 +1,6 @@
 <template>
 
-  <div 
+  <div
     class="filter-panel-content"
     :style="contentStyles"
   >
@@ -110,7 +110,6 @@
   import { constantsTranslationMixin } from 'shared/mixins';
   import HelpTooltip from 'shared/views/HelpTooltip';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
-  
 
   const excludedKinds = new Set([ContentKindsNames.TOPIC, ContentKindsNames.H5P]);
 

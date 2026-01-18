@@ -26,7 +26,7 @@
             <div
               class="header-content"
               :style="{
-                flexDirection: headerFlexDirection, 
+                flexDirection: headerFlexDirection,
               }"
             >
               <div style="overflow: hidden">
@@ -110,7 +110,7 @@
         default: null,
         validator: value => ['left', 'right'].includes(value),
       },
-      
+
       /* Optionally override the default width of the side panel with valid CSS value */
       sidePanelWidth: {
         type: String,
