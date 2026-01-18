@@ -28,9 +28,9 @@
       </VToolbarTitle>
     </VToolbar>
 
-    <StudioNavigation 
+    <StudioNavigation
       v-else
-      :tabs="navigationTabs" 
+      :tabs="navigationTabs"
     />
 
     <VContent>
@@ -148,7 +148,7 @@
       }),
       ...mapGetters(['loggedIn']),
       ...mapGetters('channelList', ['invitations']),
-      
+
       navigationTabs() {
         if (!this.loggedIn) return [];
 
@@ -156,11 +156,11 @@
 
         this.lists.forEach(listType => {
           tabs.push({
-            id: listType, 
+            id: listType,
             label: this.translateConstant(listType),
             to: this.getChannelLink(listType),
             badgeValue: this.invitationsByListCounts[listType] || 0,
-            analyticsLabel: ListTypeToAnalyticsLabel[listType] 
+            analyticsLabel: ListTypeToAnalyticsLabel[listType],
           });
         });
 
@@ -169,7 +169,7 @@
           label: this.$tr('catalog'),
           to: this.catalogLink,
           badgeValue: 0,
-          analyticsLabel: 'PUBLIC' 
+          analyticsLabel: 'PUBLIC',
         });
 
         tabs.push({
@@ -177,7 +177,7 @@
           label: this.$tr('channelSets'),
           to: this.channelSetLink,
           badgeValue: 0,
-          analyticsLabel: 'CHANNEL_SETS'
+          analyticsLabel: 'CHANNEL_SETS',
         });
 
         return tabs;
@@ -292,7 +292,6 @@
           this.updateTabTitle(title);
         }
       },
-
     },
     $trs: {
       channelSets: 'Collections',
