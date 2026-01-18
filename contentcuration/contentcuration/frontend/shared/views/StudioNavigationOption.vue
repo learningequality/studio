@@ -14,7 +14,7 @@
       <slot>
         <KIconButton
           v-if="icon"
-          :disabled=true
+          :disabled="true"
           :icon="icon"
           :color="optionIconColor"
         />
@@ -61,9 +61,8 @@
         };
       },
       optionIconColor() {
-  
         return this.$themeTokens.text;
-      }
+      },
     },
     methods: {
       handleClick(event) {
@@ -81,28 +80,28 @@
 
 <style lang="scss" scoped>
 
-@import '~kolibri-design-system/lib/styles/definitions';
+  @import '~kolibri-design-system/lib/styles/definitions';
 
-.studio-navigation-option {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 0 16px;
-  font-size: 16px;
-  text-decoration: none;
-  cursor: pointer;
-  border-radius: $radius;
-  outline-offset: -1px;
-  transition: background-color $core-time ease;
-
-  &:hover {
+  .studio-navigation-option {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    padding: 0 16px;
+    font-size: 16px;
+    text-decoration: none;
+    cursor: pointer;
+    border-radius: $radius;
     outline-offset: -1px;
-  }
-}
+    transition: background-color $core-time ease;
 
-.option-label {
-  flex: 1;
-  padding: 12px 0;
-}
+    &:hover {
+      outline-offset: -1px;
+    }
+  }
+
+  .option-label {
+    flex: 1;
+    padding: 12px 0;
+  }
 
 </style>

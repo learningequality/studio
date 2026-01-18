@@ -40,8 +40,6 @@ const renderComponent = (props = {}, options = {}) => {
 };
 
 describe('StudioNavigationOption', () => {
-
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -61,7 +59,6 @@ describe('StudioNavigationOption', () => {
       const menuItem = screen.getByRole('menuitem', { name: 'Settings' });
       expect(menuItem).toBeInTheDocument();
     });
-
   });
 
   describe('Link behavior', () => {
@@ -87,5 +84,4 @@ describe('StudioNavigationOption', () => {
       expect(link).not.toHaveAttribute('href');
     });
   });
-
 });
