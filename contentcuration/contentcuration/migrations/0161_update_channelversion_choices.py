@@ -92,15 +92,15 @@ class Migration(migrations.Migration):
             field=django.contrib.postgres.fields.ArrayField(
                 base_field=models.IntegerField(
                     choices=[
-                        ("CC BY", "CC BY"),
-                        ("CC BY-SA", "CC BY-SA"),
-                        ("CC BY-ND", "CC BY-ND"),
-                        ("CC BY-NC", "CC BY-NC"),
-                        ("CC BY-NC-SA", "CC BY-NC-SA"),
-                        ("CC BY-NC-ND", "CC BY-NC-ND"),
-                        ("All Rights Reserved", "All Rights Reserved"),
-                        ("Public Domain", "Public Domain"),
-                        ("Special Permissions", "Special Permissions"),
+                        (1, "CC BY"),
+                        (2, "CC BY-SA"),
+                        (3, "CC BY-ND"),
+                        (4, "CC BY-NC"),
+                        (5, "CC BY-NC-SA"),
+                        (6, "CC BY-NC-ND"),
+                        (7, "All Rights Reserved"),
+                        (8, "Public Domain"),
+                        (9, "Special Permissions"),
                     ]
                 ),
                 blank=True,
@@ -114,15 +114,15 @@ class Migration(migrations.Migration):
             field=django.contrib.postgres.fields.ArrayField(
                 base_field=models.IntegerField(
                     choices=[
-                        ("CC BY", "CC BY"),
-                        ("CC BY-SA", "CC BY-SA"),
-                        ("CC BY-ND", "CC BY-ND"),
-                        ("CC BY-NC", "CC BY-NC"),
-                        ("CC BY-NC-SA", "CC BY-NC-SA"),
-                        ("CC BY-NC-ND", "CC BY-NC-ND"),
-                        ("All Rights Reserved", "All Rights Reserved"),
-                        ("Public Domain", "Public Domain"),
-                        ("Special Permissions", "Special Permissions"),
+                        (1, "CC BY"),
+                        (2, "CC BY-SA"),
+                        (3, "CC BY-ND"),
+                        (4, "CC BY-NC"),
+                        (5, "CC BY-NC-SA"),
+                        (6, "CC BY-NC-ND"),
+                        (7, "All Rights Reserved"),
+                        (8, "Public Domain"),
+                        (9, "Special Permissions"),
                     ]
                 ),
                 blank=True,
