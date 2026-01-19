@@ -102,7 +102,7 @@
 
     $trs: {
       emailLabel: 'Email address',
-      emailValidationMessage: 'Email must match your account email',
+      emailValidationMessage: 'Email does not match your account email',
       cancelAction: 'Cancel',
       confirmEmailPrompt: 'Enter your email address to continue',
     },

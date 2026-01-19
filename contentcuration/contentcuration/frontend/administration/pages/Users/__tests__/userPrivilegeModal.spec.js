@@ -98,7 +98,7 @@ describe('userPrivilegeModal', () => {
     });
 
     it('should show validation error', () => {
-      expect(screen.getByText('Email must match your account email')).toBeInTheDocument();
+      expect(screen.getByText('Email does not match your account email')).toBeInTheDocument();
     });
 
     it('should not call confirmAction', () => {
@@ -129,7 +129,7 @@ describe('userPrivilegeModal', () => {
     });
 
     it('should show validation error', () => {
-      expect(screen.getByText('Email must match your account email')).toBeInTheDocument();
+      expect(screen.getByText('Email does not match your account email')).toBeInTheDocument();
     });
 
     it('should not call confirmAction', () => {
@@ -160,7 +160,7 @@ describe('userPrivilegeModal', () => {
     });
 
     it('should not show validation error', () => {
-      expect(screen.queryByText('Email must match your account email')).not.toBeInTheDocument();
+      expect(screen.queryByText('Email does not match your account email')).not.toBeInTheDocument();
     });
 
     it('should call confirmAction', () => {
