@@ -161,10 +161,9 @@
               :licenses="includedLicenses"
             />
             <SpecialPermissionsList
-              v-if="licenseAuditIsFinished && specialPermissions.length > 0"
+              v-if="licenseAuditIsFinished && channelVersionId"
               v-model="checkedSpecialPermissions"
-              :channel-version-id="versionDetail && versionDetail.id"
-              :permission-ids="specialPermissions"
+              :channel-version-id="channelVersionId"
               @update:allChecked="allSpecialPermissionsChecked = $event"
             />
             <div class="country-area">
@@ -431,11 +430,14 @@
         return channelVersion;
       });
 
+      const channelVersionId = computed(() => {
+        return versionDetail.value?.id;
+      });
+
       const {
         isLoading: licenseAuditIsLoading,
         isFinished: licenseAuditIsFinished,
         invalidLicenses,
-        specialPermissions,
         includedLicenses,
         checkAndTriggerAudit: checkAndTriggerLicenseAudit,
       } = useLicenseAudit(props.channel, currentChannelVersion);
@@ -574,6 +576,7 @@
         isCurrentVersionAlreadySubmitted,
         canBeEdited,
         displayedVersion,
+        channelVersionId,
         canBeSubmitted,
         publishedDataIsLoading,
         publishedDataIsFinished,
@@ -582,7 +585,6 @@
         licenseAuditIsLoading,
         licenseAuditIsFinished,
         invalidLicenses,
-        specialPermissions,
         includedLicenses,
         onSubmit,
         // Translation functions

@@ -1494,12 +1494,15 @@ def validate_language_code(value):
 
 def get_license_choices():
     """Helper function to get license choices for ArrayField."""
-    return [(lic[0], lic[1]) for lic in licenses.LICENSELIST]
+    license_labels = dict(licenses.choices)
+    return [
+        (lic.id, license_labels.get(lic.name, lic.name)) for lic in licenses.LICENSELIST
+    ]
 
 
 def get_categories_choices():
     """Helper function to get category choices for ArrayField."""
-    return [(subj, subj) for subj in subjects.SUBJECTSLIST]
+    return subjects.choices
 
 
 class ChannelVersion(models.Model):

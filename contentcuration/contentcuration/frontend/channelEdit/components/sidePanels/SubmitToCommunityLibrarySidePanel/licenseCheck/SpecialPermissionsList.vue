@@ -87,7 +87,7 @@
         totalPages,
         nextPage,
         previousPage,
-      } = useSpecialPermissions(props.channelVersionId, props.permissionIds);
+      } = useSpecialPermissions(props.channelVersionId);
 
       function togglePermission(permissionId) {
         const currentChecked = [...props.value];
@@ -132,11 +132,6 @@
         type: String,
         required: false,
         default: null,
-      },
-      permissionIds: {
-        type: Array,
-        required: false,
-        default: () => [],
       },
       value: {
         type: Array,
