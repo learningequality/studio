@@ -16,6 +16,7 @@ from contentcuration.celery import app
 from contentcuration.models import Change
 from contentcuration.models import ContentNode
 from contentcuration.models import User
+from contentcuration.utils.audit_channel_licenses import audit_channel_licenses
 from contentcuration.utils.csv_writer import write_user_csv
 from contentcuration.utils.nodes import calculate_resource_size
 from contentcuration.utils.nodes import generate_diff
@@ -152,7 +153,7 @@ def sendcustomemails_task(subject, message, query):
         text = message.format(
             current_date=time.strftime("%A, %B %d"),
             current_time=time.strftime("%H:%M %Z"),
-            **recipient.__dict__
+            **recipient.__dict__,
         )
         text = render_to_string("registration/custom_email.txt", {"message": text})
         recipient.email_user(
@@ -165,3 +166,8 @@ def sendcustomemails_task(subject, message, query):
 @app.task(name="ensure_versioned_database_exists_task")
 def ensure_versioned_database_exists_task(channel_id, channel_version):
     ensure_versioned_database_exists(channel_id, channel_version)
+
+
+@app.task(name="audit-channel-licenses")
+def audit_channel_licenses_task(channel_id, user_id):
+    audit_channel_licenses(channel_id, user_id)

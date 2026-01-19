@@ -1,7 +1,7 @@
 import { ref } from 'vue';
 
 export function useFetch({ asyncFetchFunc }) {
-  const isLoading = ref(true);
+  const isLoading = ref(false);
   const isFinished = ref(false);
   const data = ref(null);
   const error = ref(null);
@@ -22,7 +22,6 @@ export function useFetch({ asyncFetchFunc }) {
       isLoading.value = false;
     }
   }
-  fetchData();
 
-  return { isLoading, isFinished, data, error };
+  return { isLoading, isFinished, data, error, fetchData };
 }

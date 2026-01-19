@@ -27,7 +27,7 @@ jobs:
     if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Use pnpm
       uses: pnpm/action-setup@v4
     - name: Use Node.js

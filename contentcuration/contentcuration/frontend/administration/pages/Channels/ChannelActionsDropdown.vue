@@ -1,56 +1,32 @@
 <template>
 
   <div>
-    <ConfirmationDialog
-      v-model="restoreDialog"
-      title="Restore channel"
-      :text="`Are you sure you want to restore ${name} and make it active again?`"
-      data-test="confirm-restore"
-      confirmButtonText="Restore"
-      @confirm="restoreHandler"
-    />
+    <KModal
+      v-if="activeDialog"
+      :title="dialogConfig.title"
+      :submitText="dialogConfig.submitText"
+      cancelText="Cancel"
+      data-test="confirm-dialog"
+      :submitDisabled="dialogConfig.submitDisabled"
+      @submit="handleSubmit"
+      @cancel="activeDialog = null"
+    >
+      <p>{{ dialogConfig.message }}</p>
+      <StudioBanner
+        v-if="dialogConfig.errorMessage"
+        error
+      >
+        {{ dialogConfig.errorMessage }}
+      </StudioBanner>
+    </KModal>
 
-    <ConfirmationDialog
-      v-model="makePublicDialog"
-      title="Make channel public"
-      :text="`All users will be able to view and import content from ${name}.`"
-      :error-text="communityChannelErrorMessage"
-      :disable-submit="isCommunityChannel"
-      data-test="confirm-public"
-      confirmButtonText="Make public"
-      @confirm="makePublicHandler"
-    />
-    <ConfirmationDialog
-      v-model="makePrivateDialog"
-      title="Make channel private"
-      :text="`Only users with view-only or edit permissions will be able to access ${name}.`"
-      data-test="confirm-private"
-      confirmButtonText="Make private"
-      @confirm="makePrivateHandler"
-    />
-    <ConfirmationDialog
-      v-model="deleteDialog"
-      title="Permanently delete channel"
-      :text="`Are you sure you want to permanently delete ${name}?  This can not be undone.`"
-      data-test="confirm-delete"
-      confirmButtonText="Delete permanently"
-      @confirm="deleteHandler"
-    />
-    <ConfirmationDialog
-      v-model="softDeleteDialog"
-      title="Permanently delete channel"
-      :text="`Are you sure you want to delete ${name}?`"
-      data-test="confirm-softdelete"
-      confirmButtonText="Delete"
-      @confirm="softDeleteHandler"
-    />
     <BaseMenu>
       <template #activator="{ on }">
         <VBtn
           v-bind="$attrs"
           v-on="on"
         >
-          actions
+          Actions
           <Icon
             icon="dropdown"
             class="ml-1"
@@ -61,13 +37,13 @@
         <template v-if="channel.deleted">
           <VListTile
             data-test="restore"
-            @click="restoreDialog = true"
+            @click="openDialog('restore')"
           >
             <VListTileTitle>Restore</VListTileTitle>
           </VListTile>
           <VListTile
             data-test="delete"
-            @click="deleteDialog = true"
+            @click="openDialog('permanentDelete')"
           >
             <VListTileTitle>Delete permanently</VListTileTitle>
           </VListTile>
@@ -94,21 +70,21 @@
           <VListTile
             v-if="channel.public"
             data-test="private"
-            @click="makePrivateDialog = true"
+            @click="openDialog('makePrivate')"
           >
             <VListTileTitle>Make private</VListTileTitle>
           </VListTile>
           <VListTile
             v-else
             data-test="public"
-            @click="makePublicDialog = true"
+            @click="openDialog('makePublic')"
           >
             <VListTileTitle>Make public</VListTileTitle>
           </VListTile>
           <VListTile
             v-if="!channel.public"
             data-test="softdelete"
-            @click="softDeleteDialog = true"
+            @click="openDialog('softDelete')"
           >
             <VListTileTitle>Delete channel</VListTileTitle>
           </VListTile>
@@ -123,15 +99,15 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import ConfirmationDialog from '../../components/ConfirmationDialog';
   import { RouteNames } from '../../constants';
   import { channelExportMixin } from 'shared/views/channel/mixins';
   import { CommunityLibraryStatus } from 'shared/constants';
+  import StudioBanner from 'shared/views/StudioBanner';
 
   export default {
     name: 'ChannelActionsDropdown',
     components: {
-      ConfirmationDialog,
+      StudioBanner,
     },
     mixins: [channelExportMixin],
     props: {
@@ -141,11 +117,7 @@
       },
     },
     data: () => ({
-      deleteDialog: false,
-      makePublicDialog: false,
-      makePrivateDialog: false,
-      restoreDialog: false,
-      softDeleteDialog: false,
+      activeDialog: null,
     }),
     computed: {
       ...mapGetters('channel', ['getChannel']),
@@ -162,6 +134,43 @@
             keywords: `${this.channel.id}`,
           },
         };
+      },
+      dialogConfig() {
+        const configs = {
+          restore: {
+            title: 'Restore channel',
+            submitText: 'Restore',
+            message: `Are you sure you want to restore ${this.name} and make it active again?`,
+            handler: this.restoreHandler,
+          },
+          makePublic: {
+            title: 'Make channel public',
+            submitText: 'Make public',
+            message: `All users will be able to view and import content from ${this.name}.`,
+            handler: this.makePublicHandler,
+            errorMessage: this.communityChannelErrorMessage,
+            submitDisabled: this.isCommunityChannel,
+          },
+          makePrivate: {
+            title: 'Make channel private',
+            submitText: 'Make private',
+            message: `Only users with view-only or edit permissions will be able to access ${this.name}.`,
+            handler: this.makePrivateHandler,
+          },
+          permanentDelete: {
+            title: 'Permanently delete channel',
+            submitText: 'Delete permanently',
+            message: `Are you sure you want to permanently delete ${this.name}? This can not be undone.`,
+            handler: this.deleteHandler,
+          },
+          softDelete: {
+            title: 'Delete channel',
+            submitText: 'Delete',
+            message: `Are you sure you want to delete ${this.name}?`,
+            handler: this.softDeleteHandler,
+          },
+        };
+        return configs[this.activeDialog] || {};
       },
       isCommunityChannel() {
         const status = this.channel.latest_community_library_submission_status;
@@ -180,6 +189,15 @@
         'deleteChannel',
         'updateChannel',
       ]),
+      openDialog(type) {
+        this.activeDialog = type;
+      },
+      handleSubmit() {
+        if (this.dialogConfig.handler) {
+          this.dialogConfig.handler();
+        }
+        this.activeDialog = null;
+      },
       async downloadPDF() {
         this.$store.dispatch('showSnackbarSimple', 'Generating PDF...');
         const channelList = await this.getAdminChannelListDetails([this.channel.id]);
@@ -191,7 +209,6 @@
         return this.generateChannelsCSV(channelList);
       },
       restoreHandler() {
-        this.restoreDialog = false;
         this.updateChannel({
           id: this.channelId,
           deleted: false,
@@ -200,7 +217,6 @@
         });
       },
       softDeleteHandler() {
-        this.softDeleteDialog = false;
         this.updateChannel({
           id: this.channelId,
           deleted: true,
@@ -209,14 +225,12 @@
         });
       },
       deleteHandler() {
-        this.deleteDialog = false;
         this.$emit('deleted');
         return this.deleteChannel(this.channelId).then(() => {
           this.$store.dispatch('showSnackbarSimple', 'Channel deleted permanently');
         });
       },
       makePublicHandler() {
-        this.makePublicDialog = false;
         this.updateChannel({
           id: this.channelId,
           isPublic: true,
@@ -225,7 +239,6 @@
         });
       },
       makePrivateHandler() {
-        this.makePrivateDialog = false;
         this.updateChannel({
           id: this.channelId,
           isPublic: false,

@@ -208,36 +208,40 @@
         this.$emit('upload');
 
         if (!this.readonly) {
-          files = this.allowMultiple ? files : [files[0]];
-          files = await this.validateFiles(files);
+          try {
+            files = this.allowMultiple ? files : [files[0]];
+            files = await this.validateFiles(files);
 
-          // Show errors if relevant
-          if (this.totalUploadSize > this.availableSpace) {
-            this.showStorageExceededAlert = true;
-            return;
-          } else if (this.unsupportedFiles.length) {
-            this.showUnsupportedFilesAlert = true;
-          } else if (this.tooLargeFiles.length) {
-            this.showTooLargeFilesAlert = true;
-          }
-          return this.handleUploads(files).then(fileUploads => {
-            const objects = fileUploads.map(f => f.fileObject).filter(f => !f.error);
-            if (fileUploads.length) {
-              for (const fileUpload of fileUploads) {
-                fileUpload.uploadPromise
-                  .then(fileObject => {
-                    if (isFunction(this.uploadCompleteHandler)) {
-                      this.uploadCompleteHandler(this.getFileUpload(fileObject.id));
-                    }
-                  })
-                  .catch(() => {});
-              }
-              if (isFunction(this.uploadingHandler)) {
-                this.uploadingHandler(this.allowMultiple ? objects : objects[0]);
-              }
+            // Show errors if relevant
+            if (this.totalUploadSize > this.availableSpace) {
+              this.showStorageExceededAlert = true;
+              return;
+            } else if (this.unsupportedFiles.length) {
+              this.showUnsupportedFilesAlert = true;
+            } else if (this.tooLargeFiles.length) {
+              this.showTooLargeFilesAlert = true;
             }
-            return objects;
-          });
+            return this.handleUploads(files).then(fileUploads => {
+              const objects = fileUploads.map(f => f.fileObject).filter(f => !f.error);
+              if (fileUploads.length) {
+                for (const fileUpload of fileUploads) {
+                  fileUpload.uploadPromise
+                    .then(fileObject => {
+                      if (isFunction(this.uploadCompleteHandler)) {
+                        this.uploadCompleteHandler(this.getFileUpload(fileObject.id));
+                      }
+                    })
+                    .catch(() => {});
+                }
+                if (isFunction(this.uploadingHandler)) {
+                  this.uploadingHandler(this.allowMultiple ? objects : objects[0]);
+                }
+              }
+              return objects;
+            });
+          } finally {
+            this.resetFileInput();
+          }
         }
       },
       handleUploads(files) {
@@ -254,6 +258,9 @@
           // Filter out any null values here
           return fileUploads.filter(Boolean);
         });
+      },
+      resetFileInput() {
+        this.$refs.fileUpload.value = '';
       },
     },
     $trs: {

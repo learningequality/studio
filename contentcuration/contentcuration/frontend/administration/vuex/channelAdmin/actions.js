@@ -6,9 +6,12 @@ import { Channel } from 'shared/data/resources';
 export function loadChannels({ commit }, params) {
   const extendedParams = {
     ...params,
-    deleted: Boolean(params.deleted) && params.deleted.toString() === 'true',
     page_size: params.page_size || 25,
   };
+
+  if (params.has_community_library_submission === undefined) {
+    extendedParams.deleted = Boolean(params.deleted) && params.deleted.toString() === 'true';
+  }
 
   const paramsSerializer = {
     indexes: null, // Handle arrays by providing the same query param multiple times

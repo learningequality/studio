@@ -8,6 +8,8 @@
     <HoverIcon
       outlineIcon="helpOutline"
       filledIcon="help"
+      :outlineColor="$themePalette.blue.v_500"
+      :filledColor="$themePalette.blue.v_500"
     />
   </button>
 

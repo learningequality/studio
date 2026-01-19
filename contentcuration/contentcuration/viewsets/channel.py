@@ -49,6 +49,7 @@ from contentcuration.constants import (
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Change
 from contentcuration.models import Channel
+from contentcuration.models import ChannelVersion
 from contentcuration.models import CommunityLibrarySubmission
 from contentcuration.models import ContentNode
 from contentcuration.models import Country
@@ -56,6 +57,7 @@ from contentcuration.models import File
 from contentcuration.models import generate_storage_url
 from contentcuration.models import SecretToken
 from contentcuration.models import User
+from contentcuration.tasks import audit_channel_licenses_task
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.utils.pagination import CachedListPagination
 from contentcuration.utils.pagination import ValuesViewsetPageNumberPagination
@@ -394,6 +396,7 @@ base_channel_values = (
     "staging_tree__id",
     "source_url",
     "demo_server_url",
+    "published_data",
 )
 
 channel_field_map = {
@@ -573,6 +576,7 @@ class ChannelViewSet(ValuesViewset):
                             {
                                 "published": True,
                                 "publishing": False,
+                                "version": channel.version,
                                 "primary_token": channel.get_human_token().token,
                                 "last_published": channel.last_published,
                                 "unpublished_changes": _unpublished_changes_query(
@@ -881,23 +885,86 @@ class ChannelViewSet(ValuesViewset):
     @action(
         detail=True,
         methods=["get"],
-        url_path="published_data",
-        url_name="published-data",
+        url_path="version_detail",
+        url_name="version-detail",
     )
-    def get_published_data(self, request, pk=None) -> Response:
+    def get_version_detail(self, request, pk=None) -> Response:
         """
-        Get the published data for a channel.
+        Get the version detail for a channel.
 
         :param request: The request object
         :param pk: The ID of the channel
-        :return: Response with the published data of the channel
+        :return: Response with the version detail of the channel
         :rtype: Response
         """
-        # Allow exactly users with permission to edit the channel to
-        # access the published data.
         channel = self.get_edit_object()
 
-        return Response(channel.published_data)
+        if not channel.version_info:
+            return Response({})
+
+        version_data = (
+            ChannelVersion.objects.filter(id=channel.version_info.id)
+            .values(
+                "id",
+                "version",
+                "resource_count",
+                "kind_count",
+                "size",
+                "date_published",
+                "version_notes",
+                "included_languages",
+                "included_licenses",
+                "included_categories",
+                "non_distributable_licenses_included",
+            )
+            .first()
+        )
+
+        if not version_data:
+            return Response({})
+
+        return Response(version_data)
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="audit_licenses",
+        url_name="audit-licenses",
+    )
+    def audit_licenses(self, request, pk=None) -> Response:
+        """
+        Trigger license audit for a channel's community library submission.
+        This will check for invalid licenses (All Rights Reserved) and special
+        permissions licenses, and update the channel's published_data with audit results.
+
+        :param request: The request object
+        :param pk: The ID of the channel
+        :return: Response with task_id if task was enqueued
+        :rtype: Response
+        """
+        channel = self.get_edit_object()
+
+        if not channel.main_tree.published:
+            raise ValidationError("Channel must be published to audit licenses")
+
+        async_result = audit_channel_licenses_task.fetch_or_enqueue(
+            request.user, channel_id=channel.id, user_id=request.user.id
+        )
+
+        return Response({"task_id": async_result.task_id})
+
+    @action(
+        detail=True,
+        methods=["get"],
+        url_path="has_community_library_submission",
+        url_name="has-community-library-submission",
+    )
+    def has_community_library_submission(self, request, pk=None) -> Response:
+        channel = self.get_object()
+        has_submission = CommunityLibrarySubmission.objects.filter(
+            channel_id=channel.id
+        ).exists()
+        return Response({"has_community_library_submission": has_submission})
 
     def _channel_exists(self, channel_id) -> bool:
         """
@@ -1050,6 +1117,7 @@ class CatalogViewSet(ReadOnlyValuesViewset):
 
 
 class AdminChannelFilter(BaseChannelFilter):
+
     latest_community_library_submission_status = CharFilter(
         method="filter_latest_community_library_submission_status"
     )
