@@ -1400,7 +1400,8 @@ def validate_language_code(value):
 
 def get_license_choices():
     """Helper function to get license choices for ArrayField."""
-    return licenses.choices
+    license_labels = dict(licenses.choices)
+    return [(lic.id, license_labels.get(lic.name, lic.name)) for lic in licenses.LICENSELIST]
 
 
 def get_categories_choices():
