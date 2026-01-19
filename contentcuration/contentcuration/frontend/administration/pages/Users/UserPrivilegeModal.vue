@@ -5,7 +5,6 @@
     :title="title"
     :submitText="confirmText"
     :cancelText="$tr('cancelAction')"
-    data-test="user-privilege-modal"
     @submit="submit"
     @cancel="close"
   >
@@ -20,7 +19,6 @@
       :invalid="errors.emailConfirm"
       :invalidText="$tr('emailValidationMessage')"
       :showInvalidText="true"
-      data-test="email-input"
     />
   </KModal>
 
