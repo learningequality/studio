@@ -51,11 +51,7 @@ export function useSpecialPermissions(channelVersionId) {
           distributable: false,
         });
 
-        permissions.value = response.map(permission => ({
-          id: permission.id,
-          description: permission.description,
-          distributable: permission.distributable,
-        }));
+        permissions.value = response;
       }
     } catch (err) {
       error.value = err;

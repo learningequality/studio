@@ -431,10 +431,7 @@
       });
 
       const channelVersionId = computed(() => {
-        if (versionDetail.value?.id) {
-          return versionDetail.value.id;
-        }
-        return null;
+        return versionDetail.value?.id;
       });
 
       const {
