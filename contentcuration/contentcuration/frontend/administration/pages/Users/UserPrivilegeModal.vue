@@ -4,20 +4,20 @@
     v-if="dialog"
     :title="title"
     :submitText="confirmText"
-    :cancelText="$tr('cancelAction')"
+    cancelText="Cancel"
     @submit="submit"
     @cancel="close"
   >
     <p>{{ text }}</p>
 
-    <p>{{ $tr('confirmEmailPrompt') }}</p>
+    <p>Enter your email address to continue</p>
 
     <KTextbox
       v-model="emailConfirm"
       :maxlength="100"
-      :label="$tr('emailLabel')"
+      label="Email address"
       :invalid="errors.emailConfirm"
-      :invalidText="$tr('emailValidationMessage')"
+      invalidText="Email does not match your account email"
       :showInvalidText="true"
     />
   </KModal>
@@ -98,13 +98,6 @@
           return result;
         });
       },
-    },
-
-    $trs: {
-      emailLabel: 'Email address',
-      emailValidationMessage: 'Email does not match your account email',
-      cancelAction: 'Cancel',
-      confirmEmailPrompt: 'Enter your email address to continue',
     },
   };
 
