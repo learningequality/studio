@@ -2,7 +2,12 @@
 
   <div
     class="studio-details-row"
-    :class="{ 'printing-mode': printing }"
+    :class="{
+      'printing-mode': printing,
+      'small': windowIsSmall,
+      'medium': windowIsMedium,
+      'large': windowIsLarge
+    }"
   >
     <div class="label-column">
       <label
@@ -34,6 +39,7 @@
 
 <script>
 
+  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import HelpTooltip from '../HelpTooltip';
   import { printingMixin } from '../../mixins';
 
@@ -43,6 +49,14 @@
       HelpTooltip,
     },
     mixins: [printingMixin],
+    setup() {
+      const { windowIsSmall, windowIsMedium, windowIsLarge } = useKResponsiveWindow();
+      return {
+        windowIsSmall,
+        windowIsMedium,
+        windowIsLarge,
+      };
+    },
     props: {
       label: {
         type: String,
@@ -75,11 +89,11 @@
     padding: 16px 0;
     word-break: break-word;
 
-    @media (min-width: 600px) {
+    &.medium {
       grid-template-columns: 5fr 7fr;
     }
 
-    @media (min-width: 960px) {
+    &.large {
       grid-template-columns: 4fr 8fr;
     }
 
