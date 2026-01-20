@@ -1570,3 +1570,21 @@ class NodeCompletionTestCase(StudioTestCase):
         new_obj.save()
         new_obj.mark_complete()
         self.assertFalse(new_obj.complete)
+
+    def test_create_topic_unit_modality_without_completion_criteria_incomplete(self):
+        """Topic with UNIT modality MUST have completion criteria - it's not optional."""
+        channel = testdata.channel()
+        new_obj = ContentNode(
+            title="Unit Topic Without Criteria",
+            kind_id=content_kinds.TOPIC,
+            parent=channel.main_tree,
+            extra_fields={
+                "options": {
+                    "modality": modalities.UNIT,
+                    # No completion_criteria
+                }
+            },
+        )
+        new_obj.save()
+        new_obj.mark_complete()
+        self.assertFalse(new_obj.complete)
