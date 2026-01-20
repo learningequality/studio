@@ -402,7 +402,7 @@
   import ExpandableList from '../ExpandableList';
   import StudioChip from '../StudioChip';
   import StudioLargeLoader from '../StudioLargeLoader';
-  import StudioCopyToken from '../../../settings/pages/Account/StudioCopyToken';
+  import StudioCopyToken from '../CopyToken';
   import { SCALE_TEXT, SCALE, CHANNEL_SIZE_DIVISOR } from './constants';
   import StudioDetailsRow from './StudioDetailsRow';
 
