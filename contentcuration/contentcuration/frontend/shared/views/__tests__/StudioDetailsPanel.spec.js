@@ -110,7 +110,7 @@ describe('StudioDetailsPanel', () => {
     it('renders channel header with name and description', () => {
       render(StudioDetailsPanel, {
         router,
-        props: { details: fullChannel, isChannel: true, loading: false },
+        props: { details: fullChannel, loading: false },
         mocks: createMocks(),
       });
 
@@ -121,7 +121,7 @@ describe('StudioDetailsPanel', () => {
     it('shows placeholder when thumbnail is missing', () => {
       render(StudioDetailsPanel, {
         router,
-        props: { details: minimalChannel, isChannel: true, loading: false },
+        props: { details: minimalChannel, loading: false },
         mocks: createMocks(),
       });
 
@@ -133,7 +133,7 @@ describe('StudioDetailsPanel', () => {
     beforeEach(() => {
       render(StudioDetailsPanel, {
         router,
-        props: { details: fullChannel, isChannel: true, loading: false },
+        props: { details: fullChannel, loading: false },
         mocks: createMocks(),
       });
     });
@@ -163,7 +163,7 @@ describe('StudioDetailsPanel', () => {
     beforeEach(() => {
       render(StudioDetailsPanel, {
         router,
-        props: { details: minimalChannel, isChannel: true, loading: false },
+        props: { details: minimalChannel, loading: false },
         mocks: createMocks(),
       });
     });
