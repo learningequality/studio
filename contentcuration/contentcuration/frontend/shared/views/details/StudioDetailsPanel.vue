@@ -6,11 +6,10 @@
   >
     <div class="thumbnail-container">
       <KImg
-        v-if="isChannel ? _details.thumbnail_url : _details.thumbnail_src"
-        :src="isChannel ? _details.thumbnail_url : _details.thumbnail_src"
-        :altText="isChannel ? _details.name : _details.title"
+        v-if="thumbnailSrc"
+        :src="thumbnailSrc"
+        :altText="_details.name"
         aspectRatio="16:9"
-        scaleType="centerInside"
       />
       <KImg
         v-else
@@ -25,7 +24,7 @@
           >
             <KIcon
               icon="image"
-              :style="{ fill: $themePalette.grey.v_400, width: '48px', height: '48px' }"
+              :style="{ fill: $themePalette.grey.v_400, width: '40%', height: '40%' }"
             />
           </div>
         </template>
@@ -36,7 +35,7 @@
       class="notranslate"
       dir="auto"
     >
-      {{ isChannel ? _details.name : _details.title }}
+      {{ _details.name }}
     </h1>
     <p
       class="notranslate"
@@ -46,40 +45,38 @@
     </p>
     <br >
 
-    <template v-if="isChannel">
-      <StudioDetailsRow
-        v-if="_details.published && _details.primary_token"
-        :label="$tr('tokenHeading')"
-      >
-        <template #default>
-          <StudioCopyToken
-            v-if="!printing"
-            :token="_details.primary_token"
-            :loading="false"
-          />
-          <span v-else>
-            {{ _details.primary_token.slice(0, 5) + '-' + _details.primary_token.slice(5) }}
-          </span>
-        </template>
-      </StudioDetailsRow>
-      <StudioDetailsRow :label="$tr('publishedHeading')">
-        <span v-if="_details.published">{{ publishedDate }}</span>
-        <em v-else>{{ $tr('unpublishedText') }}</em>
-      </StudioDetailsRow>
-      <StudioDetailsRow :label="$tr('currentVersionHeading')">
-        <template v-if="_details.published">
-          {{ _details.version }}
-        </template>
-        <template v-else>
-          {{ defaultText }}
-        </template>
-      </StudioDetailsRow>
-      <StudioDetailsRow
-        v-if="_details.language"
-        :label="$tr('primaryLanguageHeading')"
-        :text="translateLanguage(_details.language)"
-      />
-    </template>
+    <StudioDetailsRow
+      v-if="_details.published && _details.primary_token"
+      :label="$tr('tokenHeading')"
+    >
+      <template #default>
+        <StudioCopyToken
+          v-if="!printing"
+          :token="_details.primary_token"
+          :loading="false"
+        />
+        <span v-else>
+          {{ _details.primary_token.slice(0, 5) + '-' + _details.primary_token.slice(5) }}
+        </span>
+      </template>
+    </StudioDetailsRow>
+    <StudioDetailsRow :label="$tr('publishedHeading')">
+      <span v-if="_details.published">{{ publishedDate }}</span>
+      <em v-else>{{ $tr('unpublishedText') }}</em>
+    </StudioDetailsRow>
+    <StudioDetailsRow :label="$tr('currentVersionHeading')">
+      <template v-if="_details.published">
+        {{ _details.version }}
+      </template>
+      <template v-else>
+        {{ defaultText }}
+      </template>
+    </StudioDetailsRow>
+    <StudioDetailsRow
+      v-if="_details.language"
+      :label="$tr('primaryLanguageHeading')"
+      :text="translateLanguage(_details.language)"
+    />
 
     <StudioLargeLoader v-if="loading" />
     <div v-else-if="hasDetails">
@@ -333,11 +330,16 @@
         v-if="_details.sample_nodes.length"
         class="sample-heading"
       >
-        {{ isChannel ? $tr('sampleFromChannelHeading') : $tr('sampleFromTopicHeading') }}
+        {{ $tr('sampleFromChannelHeading') }}
       </label>
       <div
         class="sample-nodes"
-        :class="{ 'printing-grid': printing }"
+        :class="{
+          'printing-grid': printing,
+          'small': windowIsSmall,
+          'medium': windowIsMedium,
+          'large': windowIsLarge
+        }"
       >
         <div
           v-for="node in _details.sample_nodes"
@@ -363,7 +365,7 @@
               >
                 <KIcon
                   icon="image"
-                  :style="{ fill: $themePalette.grey.v_400, width: '32px', height: '32px' }"
+                  :style="{ fill: $themePalette.grey.v_400, width: '40%', height: '40%' }"
                 />
               </div>
             </template>
@@ -387,6 +389,7 @@
   import defaultsDeep from 'lodash/defaultsDeep';
   import camelCase from 'lodash/camelCase';
   import orderBy from 'lodash/orderBy';
+  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import {
     fileSizeMixin,
     constantsTranslationMixin,
@@ -453,14 +456,18 @@
       titleMixin,
       metadataTranslationMixin,
     ],
+    setup() {
+      const { windowIsSmall, windowIsMedium, windowIsLarge } = useKResponsiveWindow();
+      return {
+        windowIsSmall,
+        windowIsMedium,
+        windowIsLarge,
+      };
+    },
     props: {
       details: {
         type: Object,
         required: true,
-      },
-      isChannel: {
-        type: Boolean,
-        default: true,
       },
       loading: {
         type: Boolean,
@@ -474,19 +481,22 @@
         details.published = Boolean(details.last_published);
         return details;
       },
+      thumbnailSrc() {
+        const encoding = this._details.thumbnail_encoding;
+        return encoding && encoding.base64
+          ? encoding.base64
+          : this._details.thumbnail_url;
+      },
       defaultText() {
         // Making this a computed property so it's easier to update
         return '---';
       },
       publishedDate() {
-        if (this.isChannel) {
-          return this.$formatDate(this._details.last_published, {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          });
-        }
-        return '';
+        return this.$formatDate(this._details.last_published, {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        });
       },
       sizeText() {
         const size = this._details.resource_size;
@@ -563,11 +573,6 @@
       },
     },
     mounted() {
-      if (!this.isChannel) {
-        this.$analytics.trackAction('node_details', 'View', {
-          id: this._details.id,
-        });
-      }
     },
     methods: {
       channelUrl(channel) {
@@ -738,7 +743,8 @@
     padding-top: 4px;
     margin: 16px 0;
 
-    @media (min-width: 600px) {
+    &.medium,
+    &.large {
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     }
 
