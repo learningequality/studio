@@ -1,23 +1,57 @@
+import VueRouter from 'vue-router'
 import Vuex from 'vuex';
 import { render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
-import router from '../../router';
 import Create from '../Create';
+
+// We use a stub for all routes except the one we are testing ('Create').
+// This ensures true unit isolation and prevents bugs in other pages from breaking this test.
+const Stub = { template: '<div></div>' };
+
+const routes = [
+  { path: '/', component: Stub, name: 'Main' },
+  { path: '/create', component: Create, name: 'Create' },
+  { path: '/activation-sent', component: Stub },
+  { path: '/account-created', component: Stub },
+  { path: '/account-not-active', component: Stub },
+  { path: '/activation-expired', component: Stub },
+  { path: '/request-activation-link', component: Stub },
+  { path: '/activation-resent', component: Stub },
+  { path: '/forgot-password', component: Stub },
+  { path: '/reset-password', component: Stub },
+  { path: '/password-reset-sent', component: Stub },
+  { path: '/password-reset-success', component: Stub },
+  { path: '/reset-expired', component: Stub },
+  { path: '/account-deleted', component: Stub },
+  { path: '*', redirect: '/' },
+];
+
+//Setup Mocks
+const mockRegisterAction = jest.fn().mockResolvedValue({});
 
 const makeStore = ({ offline = false } = {}) =>
   new Vuex.Store({
     state: {
       connection: {
-        offline,
+        online: !offline,
       },
+    },
+    modules: {
+      policies: {
+        namespaced: true,
+        getters: {
+          getPolicyAcceptedData: () => () => ({}),
+        },
+      },
+    },
+    actions: {
+      register: mockRegisterAction,
     },
   });
 
 const renderComponent = async ({ routeQuery = {}, offline = false } = {}) => {
-  if (router.currentRoute.path === '/create') {
-    await router.push('/').catch(() => {});
-  }
-
+  // Fresh router instance for every test
+  const router = new VueRouter({ routes });
   await router.push({ name: 'Create', query: routeQuery }).catch(() => {});
 
   return render(Create, {
@@ -30,7 +64,10 @@ const renderComponent = async ({ routeQuery = {}, offline = false } = {}) => {
 };
 
 describe('Create account page', () => {
-  test('smoke test: renders the create account page', async () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  test('renders the create account page', async () => {
     await renderComponent();
 
     expect(await screen.findByRole('heading', { name: /create an account/i })).toBeInTheDocument();
@@ -42,7 +79,7 @@ describe('Create account page', () => {
     const finishButton = screen.getByRole('button', { name: /finish/i });
     await userEvent.click(finishButton);
 
-    expect(finishButton).toBeDisabled();
+    expect(mockRegisterAction).not.toHaveBeenCalled();
   });
 
   test('allows user to fill in text input fields', async () => {
@@ -85,6 +122,30 @@ describe('Create account page', () => {
       expect(emailInput).toHaveValue('newtest@test.com');
     });
   });
+
+  describe('password validation', () => {
+    test('shows error when password is too short', async () => {
+      await renderComponent();
+      const passwordInput = screen.getByLabelText(/^password$/i);
+      await userEvent.type(passwordInput, '123');
+      await userEvent.tab();
+
+      expect(
+        await screen.findByText(/password should be at least 8 characters long/i)
+      ).toBeInTheDocument();
+    });
+
+    test('shows error when passwords do not match', async () => {
+      await renderComponent();
+      await userEvent.type(screen.getByLabelText(/^password$/i), 'tester123');
+      await userEvent.type(screen.getByLabelText(/confirm password/i), 'different456');
+      await userEvent.tab();
+
+      expect(await screen.findByText(/passwords don't match/i)).toBeInTheDocument();
+    });
+  });
+  
+
   // NOTE:
   // Full form submission tests are intentionally skipped here.
   //
@@ -100,9 +161,32 @@ describe('Create account page', () => {
   //
   // These tests will be re-enabled once this page is migrated to the
   // Kolibri Design System as part of the Vuetify removal effort .
+  describe('backend failures', () => {
+    test.skip('shows specific error when email already exists (403)', async () => {
+      mockRegisterAction.mockRejectedValue({ response: { status: 403 } });
+      await renderComponent();
+      // fill form...
+      // click submit...
+      // expect(await screen.findByText(/account with this email already exists/i)).toBeInTheDocument();
+    });
 
+    test.skip('redirects if account not activated (405)', async () => {
+      mockRegisterAction.mockRejectedValue({ response: { status: 405 } });
+      await renderComponent();
+      // fill form...
+      // click submit...
+      // expect(router.currentRoute.name).toBe('AccountNotActivated');
+    });
+
+    test.skip('shows generic error for other server errors', async () => {
+      mockRegisterAction.mockRejectedValue({ response: { status: 500 } });
+      await renderComponent();
+      // fill form...
+      // click submit...
+      // expect(await screen.findByText(/problem creating account/i)).toBeInTheDocument();
+    });
+  });
   test.skip('creates an account when the user submits valid information', async () => {
-    const registerSpy = jest.spyOn(Create.methods, 'register').mockResolvedValue();
 
     await renderComponent();
 
@@ -125,7 +209,7 @@ describe('Create account page', () => {
     await userEvent.click(finishButton);
 
     await waitFor(() => {
-      expect(registerSpy).toHaveBeenCalled();
+      expect(mockRegisterAction).toHaveBeenCalled();
     });
   });
   // NOTE:
