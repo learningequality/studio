@@ -10,6 +10,7 @@ from le_utils.constants import completion_criteria
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import format_presets
+from le_utils.constants import modalities
 from mixer.backend.django import mixer
 from mock import patch
 
@@ -1481,3 +1482,109 @@ class NodeCompletionTestCase(StudioTestCase):
             new_obj.mark_complete()
         except AttributeError:
             self.fail("Null extra_fields not handled")
+
+    def _make_preposttest_extra_fields(self, modality):
+        """Helper to create extra_fields with valid pre_post_test completion criteria."""
+        uuid_a = "a" * 32
+        uuid_b = "b" * 32
+        return {
+            "options": {
+                "modality": modality,
+                "completion_criteria": {
+                    "model": completion_criteria.MASTERY,
+                    "threshold": {
+                        "mastery_model": exercises.PRE_POST_TEST,
+                        "pre_post_test": {
+                            "assessment_item_ids": [uuid_a, uuid_b],
+                            "version_a_item_ids": [uuid_a],
+                            "version_b_item_ids": [uuid_b],
+                        },
+                    },
+                },
+            }
+        }
+
+    def test_create_topic_unit_modality_valid_preposttest_complete(self):
+        """Topic with UNIT modality and valid PRE_POST_TEST completion criteria should be complete."""
+        channel = testdata.channel()
+        new_obj = ContentNode(
+            title="Unit Topic",
+            kind_id=content_kinds.TOPIC,
+            parent=channel.main_tree,
+            extra_fields=self._make_preposttest_extra_fields(modalities.UNIT),
+        )
+        new_obj.save()
+        new_obj.mark_complete()
+        self.assertTrue(new_obj.complete)
+
+    def test_create_topic_unit_modality_wrong_mastery_model_incomplete(self):
+        """Topic with UNIT modality but M_OF_N mastery model should be incomplete."""
+        channel = testdata.channel()
+        new_obj = ContentNode(
+            title="Unit Topic",
+            kind_id=content_kinds.TOPIC,
+            parent=channel.main_tree,
+            extra_fields={
+                "options": {
+                    "modality": modalities.UNIT,
+                    "completion_criteria": {
+                        "model": completion_criteria.MASTERY,
+                        "threshold": {
+                            "mastery_model": exercises.M_OF_N,
+                            "m": 3,
+                            "n": 5,
+                        },
+                    },
+                }
+            },
+        )
+        new_obj.save()
+        new_obj.mark_complete()
+        self.assertFalse(new_obj.complete)
+
+    def test_create_topic_lesson_modality_with_completion_criteria_incomplete(self):
+        """Topic with LESSON modality should not have completion criteria."""
+        channel = testdata.channel()
+        new_obj = ContentNode(
+            title="Lesson Topic",
+            kind_id=content_kinds.TOPIC,
+            parent=channel.main_tree,
+            extra_fields=self._make_preposttest_extra_fields(modalities.LESSON),
+        )
+        new_obj.save()
+        new_obj.mark_complete()
+        self.assertFalse(new_obj.complete)
+
+    def test_create_topic_no_modality_with_completion_criteria_incomplete(self):
+        """Topic with no modality should not have completion criteria."""
+        channel = testdata.channel()
+        extra_fields = self._make_preposttest_extra_fields(modalities.UNIT)
+        # Remove the modality
+        del extra_fields["options"]["modality"]
+        new_obj = ContentNode(
+            title="Topic Without Modality",
+            kind_id=content_kinds.TOPIC,
+            parent=channel.main_tree,
+            extra_fields=extra_fields,
+        )
+        new_obj.save()
+        new_obj.mark_complete()
+        self.assertFalse(new_obj.complete)
+
+    def test_create_topic_unit_modality_without_completion_criteria_incomplete(self):
+        """Topic with UNIT modality MUST have completion criteria - it's not optional."""
+        channel = testdata.channel()
+        new_obj = ContentNode(
+            title="Unit Topic Without Criteria",
+            kind_id=content_kinds.TOPIC,
+            parent=channel.main_tree,
+            extra_fields={
+                "options": {
+                    "modality": modalities.UNIT,
+                    # No completion_criteria
+                }
+            },
+        )
+        new_obj.save()
+        new_obj.mark_complete()
+        self.assertFalse(new_obj.complete)
