@@ -33,45 +33,49 @@
           wrap
           class="list-wrapper"
         >
-          <h1 class="mb-2 ml-1 title">
-            {{ $tr('resultsText', { count: page.count }) }}
-          </h1>
-          <KButton
-            v-if="page.count && !selecting"
-            :text="$tr('selectChannels')"
-            data-testid="select"
-            appearance="basic-link"
-            @click="setSelection(true)"
-          />
-          <Checkbox
-            v-else-if="selecting"
-            v-model="selectAll"
-            class="mb-4 mx-2"
-            :label="$tr('selectAll')"
-            data-testid="select-all"
-            :indeterminate="selected.length > 0 && selected.length < channels.length"
-          />
-        </VFlex>
-        <VFlex xs12>
-          <VLayout
-            v-for="item in channels"
-            :key="item.id"
-            align-center
+          <VFlex
+            xs12
+            class="mb-2"
           >
+            <h1 class="mb-2 ml-1 title">
+              {{ $tr('resultsText', { count: page.count }) }}
+            </h1>
+            <KButton
+              v-if="page.count && !selecting"
+              :text="$tr('selectChannels')"
+              data-testid="select"
+              appearance="basic-link"
+              @click="setSelection(true)"
+            />
             <Checkbox
-              v-show="selecting"
-              v-model="selected"
-              class="mx-2"
-              :value="item.id"
-              data-testid="checkbox"
+              v-else-if="selecting"
+              v-model="selectAll"
+              class="mb-4 mx-2"
+              :label="$tr('selectAll')"
+              data-testid="select-all"
+              :indeterminate="selected.length > 0 && selected.length < channels.length"
             />
-            <ChannelItem
-              :channelId="item.id"
-              :detailsRouteName="detailsRouteName"
-              style="flex-grow: 1; width: 100%"
-            />
-          </VLayout>
-        </VFlex>
+          </VFlex>
+          <VFlex xs12>
+            <VLayout
+              v-for="item in channels"
+              :key="item.id"
+              align-center
+            >
+              <Checkbox
+                v-show="selecting"
+                v-model="selected"
+                class="mx-2"
+                :value="item.id"
+                data-testid="checkbox"
+              />
+              <ChannelItem
+                :channelId="item.id"
+                :detailsRouteName="detailsRouteName"
+                style="flex-grow: 1; width: 100%"
+              />
+            </VLayout>
+          </VFlex>
           <VFlex
             xs12
             style="padding-bottom: 72px"
@@ -87,36 +91,36 @@
         <BottomBar
           v-if="selecting"
           data-testid="toolbar"
-          :appearanceOverrides="{ height: $vuetify.breakpoint.xsOnly ? '72px' : '56px' }"
+          :appearanceOverrides="{ height: windowIsSmall ? '72px' : '56px' }"
         >
-        <div class="mx-2">
-          {{ $tr('channelSelectionCount', { count: selectedCount }) }}
-        </div>
-        <VSpacer />
-        <div>
+          <div class="mx-2">
+            {{ $tr('channelSelectionCount', { count: selectedCount }) }}
+          </div>
+          <VSpacer />
+          <div>
+            <KButton
+              :text="$tr('cancelButton')"
+              data-testid="cancel"
+              appearance="flat-button"
+              @click="setSelection(false)"
+            />
+          </div>
           <KButton
-            :text="$tr('cancelButton')"
-            data-testid="cancel"
-            appearance="flat-button"
-            @click="setSelection(false)"
-          />
-        </div>
-        <KButton
-          :text="$tr('downloadButton')"
-          :primary="true"
-          data-testid="download-button"
-          iconAfter="dropup"
-        >
-          <KDropdownMenu
+            :text="$tr('downloadButton')"
             :primary="true"
-            :options="[
-              { label: $tr('downloadPDF'), value: 'pdf' },
-              { label: $tr('downloadCSV'), value: 'csv' },
-            ]"
-            appearance="raised-button"
-            @select="option => selectDownloadOption(option)"
-          />
-        </KButton>
+            data-testid="download-button"
+            iconAfter="dropup"
+          >
+            <KDropdownMenu
+              :primary="true"
+              :options="[
+                { label: $tr('downloadPDF'), value: 'pdf' },
+                { label: $tr('downloadCSV'), value: 'csv' },
+              ]"
+              appearance="raised-button"
+              @select="option => selectDownloadOption(option)"
+            />
+          </KButton>
         </BottomBar>
       </VContainer>
     </div>
