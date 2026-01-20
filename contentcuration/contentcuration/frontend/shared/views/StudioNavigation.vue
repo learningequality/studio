@@ -125,9 +125,9 @@
       </KToolbar>
     </header>
 
-    <div
+    <nav
       v-if="tabs && tabs.length"
-      :aria-label="$tr('mainNavigationLabel')"
+      :aria-labelledby="$tr('mainNavigationLabel')"
     >
       <div
         class="studio-navigation-tabs-wrapper"
@@ -170,13 +170,12 @@
           </KIconButton>
         </div>
       </div>
-    </div>
+    </nav>
 
     <SidePanelModal
       v-if="loggedIn && sidePanelOpen"
       alignment="left"
       sidePanelWidth="300px"
-      :aria-label="$tr('navigationMenu')"
       closeButtonIconType="close"
       closeButtonPosition="left"
       immersive
@@ -193,7 +192,10 @@
 
       <template #default>
         <div class="navigation-menu-content">
-          <nav class="navigation-menu-nav">
+          <nav
+            class="navigation-menu-nav"
+            :aria-label="$tr('navigationMenu')"
+          >
             <StudioNavigationOption
               :label="$tr('channels')"
               :link="channelsLink"
