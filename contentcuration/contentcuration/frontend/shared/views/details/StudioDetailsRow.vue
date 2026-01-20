@@ -4,9 +4,9 @@
     class="studio-details-row"
     :class="{
       'printing-mode': printing,
-      'small': windowIsSmall,
-      'medium': windowIsMedium,
-      'large': windowIsLarge
+      small: windowIsSmall,
+      medium: windowIsMedium,
+      large: windowIsLarge,
     }"
   >
     <div class="label-column">

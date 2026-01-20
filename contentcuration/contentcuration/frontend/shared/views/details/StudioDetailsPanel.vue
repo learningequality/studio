@@ -336,9 +336,9 @@
         class="sample-nodes"
         :class="{
           'printing-grid': printing,
-          'small': windowIsSmall,
-          'medium': windowIsMedium,
-          'large': windowIsLarge
+          small: windowIsSmall,
+          medium: windowIsMedium,
+          large: windowIsLarge,
         }"
       >
         <div
@@ -483,9 +483,7 @@
       },
       thumbnailSrc() {
         const encoding = this._details.thumbnail_encoding;
-        return encoding && encoding.base64
-          ? encoding.base64
-          : this._details.thumbnail_url;
+        return encoding && encoding.base64 ? encoding.base64 : this._details.thumbnail_url;
       },
       defaultText() {
         // Making this a computed property so it's easier to update
@@ -572,8 +570,7 @@
         return this.categories.join(', ');
       },
     },
-    mounted() {
-    },
+    mounted() {},
     methods: {
       channelUrl(channel) {
         return window.Urls.channel(channel.id);
@@ -609,7 +606,6 @@
       [SCALE_TEXT.VERY_LARGE]: 'Very large',
       containsContentHeading: 'Contains content from',
       sampleFromChannelHeading: 'Sample content from this channel',
-      sampleFromTopicHeading: 'Sample content from this topic',
       tokenHeading: 'Channel token',
       publishedHeading: 'Published on',
       currentVersionHeading: 'Published version',
