@@ -23,10 +23,12 @@ const query = {
 function makeWrapper() {
   const store = factory();
 
-  router.push({
-    name: 'CHANNELS_EDITABLE',
-    query,
-  }).catch(() => {});
+  router
+    .push({
+      name: 'CHANNELS_EDITABLE',
+      query,
+    })
+    .catch(() => {});
 
   return render(CatalogFilterBar, {
     localVue,
@@ -42,10 +44,12 @@ function makeWrapper() {
 
 describe('catalogFilterBar', () => {
   beforeEach(() => {
-    router.push({
-      name: 'CHANNELS_EDITABLE',
-      query: { ...query },
-    }).catch(() => {});
+    router
+      .push({
+        name: 'CHANNELS_EDITABLE',
+        query: { ...query },
+      })
+      .catch(() => {});
   });
 
   afterEach(() => {
