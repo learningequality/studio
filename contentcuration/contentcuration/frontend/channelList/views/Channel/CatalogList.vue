@@ -33,7 +33,6 @@
           wrap
           class="list-wrapper"
         >
-          <!-- Results bar -->
           <VFlex
             xs12
             class="mb-2"
@@ -44,7 +43,7 @@
             <KButton
               v-if="page.count && !selecting"
               :text="$tr('selectChannels')"
-              data-test="select"
+              data-testid="select"
               appearance="basic-link"
               @click="setSelection(true)"
             />
@@ -53,7 +52,6 @@
               v-model="selectAll"
               class="mb-4 mx-2"
               :label="$tr('selectAll')"
-              data-test="select-all"
               :indeterminate="selected.length > 0 && selected.length < channels.length"
             />
           </VFlex>
@@ -68,7 +66,6 @@
                 v-model="selected"
                 class="mx-2"
                 :value="item.id"
-                data-test="checkbox"
               />
               <ChannelItem
                 :channelId="item.id"
@@ -91,7 +88,6 @@
         </VLayout>
         <BottomBar
           v-if="selecting"
-          data-test="toolbar"
           :appearanceOverrides="{ height: windowIsSmall ? '72px' : '56px' }"
         >
           <div class="mx-2">
@@ -101,7 +97,6 @@
           <div>
             <KButton
               :text="$tr('cancelButton')"
-              data-test="cancel"
               appearance="flat-button"
               @click="setSelection(false)"
             />
@@ -109,7 +104,6 @@
           <KButton
             :text="$tr('downloadButton')"
             :primary="true"
-            data-test="download-button"
             iconAfter="dropup"
           >
             <KDropdownMenu
