@@ -73,6 +73,7 @@
 
   .link,
   a.link {
+    /* Removes Vuetify default button background and border styles */
     background-color: transparent !important;
     border-color: transparent !important;
   }
