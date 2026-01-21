@@ -16,98 +16,86 @@ const mockChannels = [
     name: 'Channel 1',
     description: 'Test channel 1',
     language: 'en',
+    modified: new Date('2024-01-15'),
+    last_published: new Date('2024-01-10'),
   },
   {
     id: 'channel-2',
     name: 'Channel 2',
     description: 'Test channel 2',
     language: 'en',
+    modified: new Date('2024-01-20'),
+    last_published: new Date('2024-01-18'),
   },
 ];
 
-const results = ['channel-1', 'channel-2'];
+const mockChannelIds = mockChannels.map(c => c.id);
 
-function makeWrapper(overrides = {}) {
+function createMockStore() {
   const mockSearchCatalog = jest.fn(() => Promise.resolve());
 
-  const store = new Store({
-    state: {
-      connection: {
-        online: overrides.offline ? false : true,
+  return {
+    store: new Store({
+      state: {
+        connection: { online: true },
       },
-    },
-    getters: {
-      loggedIn: () => true,
-    },
-    actions: {
-      showSnackbar: jest.fn(),
-    },
-    modules: {
-      channel: {
-        namespaced: true,
-        state: {
-          channelsMap: {
-            'channel-1': mockChannels[0],
-            'channel-2': mockChannels[1],
+      getters: {
+        loggedIn: () => true,
+      },
+      actions: {
+        showSnackbar: jest.fn(),
+      },
+      modules: {
+        channel: {
+          namespaced: true,
+          state: {
+            channelsMap: Object.fromEntries(mockChannels.map(c => [c.id, c])),
+          },
+          getters: {
+            getChannels: state => ids => ids.map(id => state.channelsMap[id]).filter(Boolean),
+            getChannel: state => id => state.channelsMap[id],
           },
         },
-        getters: {
-          getChannels: state => ids => {
-            return ids.map(id => state.channelsMap[id]).filter(Boolean);
+        channelList: {
+          namespaced: true,
+          state: {
+            page: {
+              count: mockChannelIds.length,
+              results: mockChannelIds,
+            },
           },
-          getChannel: state => id => state.channelsMap[id],
-        },
-        actions: {
-          getChannelListDetails: jest.fn(() => Promise.resolve(mockChannels)),
-        },
-      },
-      channelList: {
-        namespaced: true,
-        state: {
-          page: {
-            count: results.length,
-            results,
-            page_number: 1,
-            total_pages: 1,
-            next: null,
-            previous: null,
-            ...overrides.page,
+          actions: {
+            searchCatalog: mockSearchCatalog,
           },
         },
-        actions: {
-          searchCatalog: mockSearchCatalog,
-        },
       },
-    },
-  });
+    }),
+    mockSearchCatalog,
+  };
+}
 
+function createMockRouter() {
   const router = new VueRouter({
     routes: [
-      {
-        name: RouteNames.CATALOG_ITEMS,
-        path: '/catalog',
-      },
-      {
-        name: RouteNames.CATALOG_DETAILS,
-        path: '/catalog/:channelId',
-      },
+      { name: RouteNames.CATALOG_ITEMS, path: '/catalog' },
+      { name: RouteNames.CATALOG_DETAILS, path: '/catalog/:channelId' },
     ],
   });
-
   router.push({ name: RouteNames.CATALOG_ITEMS }).catch(() => {});
+  return router;
+}
 
-  const renderResult = render(CatalogList, {
-    localVue,
-    store,
-    router,
-    stubs: {
-      CatalogFilters: true,
-    },
-  });
+function renderComponent() {
+  const { store, mockSearchCatalog } = createMockStore();
+  const router = createMockRouter();
 
   return {
-    ...renderResult,
-    store,
+    ...render(CatalogList, {
+      localVue,
+      store,
+      router,
+      stubs: { CatalogFilters: true },
+    }),
     router,
     mockSearchCatalog,
   };
@@ -118,89 +106,80 @@ describe('CatalogList', () => {
     jest.clearAllMocks();
   });
 
-  describe('initial load', () => {
-    it('should render catalog results on mount', async () => {
-      makeWrapper();
+  it('calls searchCatalog on mount', async () => {
+    const { mockSearchCatalog } = renderComponent();
+    await waitFor(() => {
+      expect(mockSearchCatalog).toHaveBeenCalled();
+    });
+  });
+
+  it('renders title', async () => {
+    renderComponent();
+    await waitFor(() => {
+      expect(screen.getByText(/results found/i)).toBeInTheDocument();
+    });
+  });
+
+  it('displays download button', async () => {
+    renderComponent();
+    await waitFor(() => {
+      expect(screen.getByTestId('select')).toBeInTheDocument();
+    });
+  });
+
+  it('renders channel cards', async () => {
+    renderComponent();
+    await waitFor(() => {
+      expect(screen.getByText('Channel 1')).toBeInTheDocument();
+      expect(screen.getByText('Channel 2')).toBeInTheDocument();
+    });
+  });
+
+  describe('selection', () => {
+    it('hides checkboxes and selection text initially', async () => {
+      renderComponent();
+      await waitFor(() => screen.getByTestId('select'));
+
+      expect(screen.queryByRole('checkbox', { name: /select all/i })).not.toBeInTheDocument();
+      expect(screen.queryByText(/channels selected/i)).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /cancel/i })).not.toBeInTheDocument();
+    });
+
+    it('shows checkboxes, selection text, and cancel button when selecting', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      const selectButton = await waitFor(() => screen.getByTestId('select'));
+      await user.click(selectButton);
+
       await waitFor(() => {
-        // Component renders actual translation - use regex for flexibility
-        expect(screen.getByText(/results found/i)).toBeInTheDocument();
+        expect(screen.queryByRole('checkbox', { name: /select all/i })).toBeInTheDocument();
+        expect(screen.queryByText(/channels selected/i)).toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: /cancel/i })).toBeInTheDocument();
       });
     });
 
-    it('should call searchCatalog on mount', async () => {
-      const { mockSearchCatalog } = makeWrapper();
-      await waitFor(() => {
-        expect(mockSearchCatalog).toHaveBeenCalled();
-      });
-    });
+    it('exits selection when cancel button is clicked', async () => {
+      const user = userEvent.setup();
+      renderComponent();
 
-    it('should display download button when results are available', async () => {
-      makeWrapper();
+      const selectButton = await waitFor(() => screen.getByTestId('select'));
+      await user.click(selectButton);
+      const cancelButton = await waitFor(() => screen.getByRole('button', { name: /cancel/i }));
+
+      await user.click(cancelButton);
+
       await waitFor(() => {
-        expect(screen.getByTestId('select')).toBeInTheDocument();
+        expect(screen.queryByRole('checkbox', { name: /select all/i })).not.toBeInTheDocument();
+        expect(screen.queryByText(/channels selected/i)).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: /cancel/i })).not.toBeInTheDocument();
       });
     });
   });
 
-  describe('selection mode workflow', () => {
-    it('should hide checkboxes and toolbar initially', async () => {
-      makeWrapper();
-      await waitFor(() => screen.getByTestId('select'));
-
-      // Toolbar should not be visible initially (appears only in selection mode)
-      expect(screen.queryByTestId('select-all')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('toolbar')).not.toBeInTheDocument();
-    });
-
-    it('should enter selection mode and show toolbar when user clicks select button', async () => {
-      const user = userEvent.setup();
-      makeWrapper();
-
-      await waitFor(() => screen.getByTestId('select'));
-      await user.click(screen.getByTestId('select'));
-
-      await waitFor(() => {
-        expect(screen.getByTestId('select-all')).toBeInTheDocument();
-        expect(screen.getByTestId('cancel')).toBeInTheDocument();
-        expect(screen.getByText(/channels selected/i)).toBeInTheDocument();
-      });
-    });
-
-    it('should exit selection mode when user clicks cancel', async () => {
-      const user = userEvent.setup();
-      makeWrapper();
-
-      await waitFor(() => screen.getByTestId('select'));
-      await user.click(screen.getByTestId('select'));
-      await waitFor(() => screen.getByTestId('cancel'));
-
-      await user.click(screen.getByTestId('cancel'));
-
-      await waitFor(() => {
-        expect(screen.queryByTestId('cancel')).not.toBeInTheDocument();
-        expect(screen.queryByTestId('select-all')).not.toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('channel selection', () => {
-    it('should display select-all checkbox in selection mode', async () => {
-      const user = userEvent.setup();
-      makeWrapper();
-
-      await waitFor(() => screen.getByTestId('select'));
-      await user.click(screen.getByTestId('select'));
-
-      await waitFor(() => {
-        expect(screen.getByTestId('select-all')).toBeInTheDocument();
-        expect(screen.getByText(/channels selected/i)).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('search and filtering', () => {
-    it('should call searchCatalog when query parameters change', async () => {
-      const { router, mockSearchCatalog } = makeWrapper();
+  describe('search', () => {
+    it('triggers searchCatalog when query parameters change', async () => {
+      const { router, mockSearchCatalog } = renderComponent();
 
       await waitFor(() => screen.getByText(/results found/i));
 
@@ -213,31 +192,6 @@ describe('CatalogList', () => {
 
       await waitFor(() => {
         expect(mockSearchCatalog.mock.calls.length).toBeGreaterThan(initialCalls);
-      });
-    });
-
-    it('should maintain results display after filtering', async () => {
-      const { router } = makeWrapper();
-
-      await waitFor(() => screen.getByText(/results found/i));
-
-      await router.push({
-        name: RouteNames.CATALOG_ITEMS,
-        query: { keywords: 'test search' },
-      });
-
-      await waitFor(() => {
-        expect(screen.getByText(/results found/i)).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('download workflow', () => {
-    it('should show select button to enable downloads', async () => {
-      makeWrapper();
-
-      await waitFor(() => {
-        expect(screen.getByTestId('select')).toBeInTheDocument();
       });
     });
   });

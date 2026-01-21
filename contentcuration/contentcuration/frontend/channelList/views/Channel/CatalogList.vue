@@ -52,7 +52,6 @@
               v-model="selectAll"
               class="mb-4 mx-2"
               :label="$tr('selectAll')"
-              data-testid="select-all"
               :indeterminate="selected.length > 0 && selected.length < channels.length"
             />
           </VFlex>
@@ -67,7 +66,6 @@
                 v-model="selected"
                 class="mx-2"
                 :value="item.id"
-                data-testid="checkbox"
               />
               <ChannelItem
                 :channelId="item.id"
@@ -90,7 +88,6 @@
         </VLayout>
         <BottomBar
           v-if="selecting"
-          data-testid="toolbar"
           :appearanceOverrides="{ height: windowIsSmall ? '72px' : '56px' }"
         >
           <div class="mx-2">
@@ -100,7 +97,6 @@
           <div>
             <KButton
               :text="$tr('cancelButton')"
-              data-testid="cancel"
               appearance="flat-button"
               @click="setSelection(false)"
             />
@@ -108,7 +104,6 @@
           <KButton
             :text="$tr('downloadButton')"
             :primary="true"
-            data-testid="download-button"
             iconAfter="dropup"
           >
             <KDropdownMenu
