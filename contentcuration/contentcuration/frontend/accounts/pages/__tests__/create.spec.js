@@ -1,4 +1,4 @@
-import VueRouter from 'vue-router'
+import VueRouter from 'vue-router';
 import Vuex from 'vuex';
 import { render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
@@ -131,7 +131,7 @@ describe('Create account page', () => {
       await userEvent.tab();
 
       expect(
-        await screen.findByText(/password should be at least 8 characters long/i)
+        await screen.findByText(/password should be at least 8 characters long/i),
       ).toBeInTheDocument();
     });
 
@@ -144,7 +144,6 @@ describe('Create account page', () => {
       expect(await screen.findByText(/passwords don't match/i)).toBeInTheDocument();
     });
   });
-  
 
   // NOTE:
   // Full form submission tests are intentionally skipped here.
@@ -187,7 +186,6 @@ describe('Create account page', () => {
     });
   });
   test.skip('creates an account when the user submits valid information', async () => {
-
     await renderComponent();
 
     await userEvent.type(screen.getByLabelText(/first name/i), 'Test');
