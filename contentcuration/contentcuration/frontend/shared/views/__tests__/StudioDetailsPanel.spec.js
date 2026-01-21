@@ -47,6 +47,21 @@ const createMocks = () => ({
   $formatDate: jest.fn(() => 'January 15, 2025'),
   $tr: jest.fn(key => translations[key] || key),
   translateConstant: jest.fn(key => key),
+  translateMetadataString: jest.fn(key => {
+    const metadataTranslations = {
+      lowerPrimary: 'Lower Primary',
+      upperPrimary: 'Upper Primary',
+      mathematics: 'Mathematics',
+      sciences: 'Sciences',
+    };
+    return metadataTranslations[key] || key;
+  }),
+  translateLanguage: jest.fn(code => {
+    const languageMap = {
+      en: 'English',
+    };
+    return languageMap[code] || code;
+  }),
 });
 
 describe('StudioDetailsPanel', () => {
