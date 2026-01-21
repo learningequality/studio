@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout codebase
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
@@ -79,7 +79,7 @@ jobs:
         with:
           skip_after_successful_duplicate: false
           github_token: ${{ github.token }}
-          paths: '["k8s/images/nginx/*", ".github/workflows/containerbuild.yml"]'
+          paths: '["docker/Dockerfile.nginx.prod", "docker/nginx/*", ".github/workflows/containerbuild.yml"]'
 
   build_nginx:
     name: nginx - test build of nginx Docker image
@@ -88,7 +88,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout codebase
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
@@ -100,6 +100,6 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         context: ./
-        file: ./k8s/images/nginx/Dockerfile
+        file: ./docker/Dockerfile.nginx.prod
         platforms: linux/amd64
         push: false

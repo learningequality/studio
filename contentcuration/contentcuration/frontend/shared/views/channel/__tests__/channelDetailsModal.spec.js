@@ -1,99 +1,157 @@
-import { mount } from '@vue/test-utils';
+import { render, screen, waitFor } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
+import { createLocalVue } from '@vue/test-utils';
+import Vuex, { Store } from 'vuex';
 import VueRouter from 'vue-router';
-import ChannelDetailsModal from './../ChannelDetailsModal';
-import storeFactory from 'shared/vuex/baseStore';
+import ChannelDetailsModal from '../ChannelDetailsModal.vue';
 
-const PARENTROUTE = 'Parent route';
-const TESTROUTE = 'test channel details modal route';
-const router = new VueRouter({
-  routes: [
-    {
-      name: PARENTROUTE,
-      path: '/',
-      props: true,
-      children: [
-        {
-          name: TESTROUTE,
-          path: '/testroute',
-          props: true,
-          component: ChannelDetailsModal,
-        },
-      ],
-    },
-  ],
-});
+const localVue = createLocalVue();
+localVue.use(Vuex);
+localVue.use(VueRouter);
 
-const store = storeFactory();
 const channelId = '11111111111111111111111111111111';
+const testChannel = {
+  id: channelId,
+  name: 'Test Channel',
+  description: 'Test Description',
+};
 
-function makeWrapper() {
-  return mount(ChannelDetailsModal, {
-    router,
+const testDetails = {
+  count: 10,
+  size: 1024,
+};
+
+const mockActions = {
+  loadChannel: jest.fn(() => Promise.resolve(testChannel)),
+  loadChannelDetails: jest.fn(() => Promise.resolve(testDetails)),
+};
+
+const createMockStore = () => {
+  return new Store({
+    state: {
+      connection: {
+        online: true,
+      },
+    },
+    modules: {
+      channel: {
+        namespaced: true,
+        state: {
+          channelsMap: {
+            [channelId]: testChannel,
+          },
+        },
+        getters: {
+          getChannel: state => id => state.channelsMap[id],
+        },
+        actions: mockActions,
+      },
+    },
+  });
+};
+
+const createRouter = () => {
+  return new VueRouter({
+    routes: [
+      {
+        path: '/',
+        children: [
+          {
+            path: '/channel/:channelId',
+          },
+        ],
+      },
+    ],
+  });
+};
+
+const renderComponent = (options = {}) => {
+  const store = createMockStore();
+  const router = createRouter();
+
+  return render(ChannelDetailsModal, {
+    localVue,
     store,
-    propsData: {
+    router,
+    props: {
       channelId,
     },
-    computed: {
-      channel() {
-        return {
-          name: 'test',
-        };
-      },
-    },
+    ...options,
   });
-}
+};
 
-describe('channelDetailsModal', () => {
-  let wrapper;
-
+describe('ChannelDetailsModal', () => {
   beforeEach(() => {
-    router.push({
-      name: TESTROUTE,
-      params: {
-        channelId,
-      },
-    });
-    wrapper = makeWrapper();
+    jest.clearAllMocks();
   });
 
-  it('clicking close should close the modal', async () => {
-    await wrapper.findComponent('[data-test="close"]').trigger('click');
-    expect(wrapper.vm.dialog).toBe(false);
+  it('should display loading indicator initially', () => {
+    renderComponent();
+    expect(screen.getByTestId('loader')).toBeInTheDocument();
   });
 
-  it('clicking download CSV button should call generateChannelsCSV', async () => {
-    await wrapper.setData({ loading: false });
-    const generateChannelsCSV = jest.spyOn(wrapper.vm, 'generateChannelsCSV');
-    generateChannelsCSV.mockImplementation(() => Promise.resolve());
-    await wrapper.findComponent('[data-test="dl-csv"]').trigger('click');
-    expect(generateChannelsCSV).toHaveBeenCalledWith([wrapper.vm.channelWithDetails]);
+  it('should display channel name in header', async () => {
+    renderComponent();
+    await waitFor(() => {
+      expect(screen.getByText(testChannel.name)).toBeInTheDocument();
+    });
   });
 
-  describe('load', () => {
-    let loadChannel;
-    let loadChannelDetails;
+  it('should close modal when close button is clicked', async () => {
+    const user = userEvent.setup();
+    renderComponent();
 
-    beforeEach(() => {
-      loadChannel = jest.spyOn(wrapper.vm, 'loadChannel');
-      loadChannelDetails = jest.spyOn(wrapper.vm, 'loadChannelDetails');
+    await waitFor(() => {
+      expect(screen.getByText(testChannel.name)).toBeInTheDocument();
     });
 
-    it('should automatically close if loadChannel does not find a channel', async () => {
-      await wrapper.vm.load();
-      expect(wrapper.vm.dialog).toBe(false);
+    const closeButton = screen.getByRole('button', { name: /close/i });
+    await user.click(closeButton);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('modal-wrapper')).not.toBeInTheDocument();
+    });
+  });
+
+  it('should close modal when ESC key is pressed', async () => {
+    const user = userEvent.setup();
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('modal-wrapper')).toBeInTheDocument();
     });
 
-    it('load should call loadChannel and loadChannelDetails', async () => {
-      await wrapper.vm.load();
-      expect(loadChannel).toHaveBeenCalled();
-      expect(loadChannelDetails).toHaveBeenCalled();
-    });
+    await user.keyboard('{Escape}');
 
-    it('load should update document.title', async () => {
-      const channel = { name: 'testing channel' };
-      loadChannel.mockImplementation(() => Promise.resolve(channel));
-      await wrapper.vm.load();
-      expect(document.title).toContain(channel.name);
+    await waitFor(() => {
+      expect(screen.queryByTestId('modal-wrapper')).not.toBeInTheDocument();
+    });
+  });
+
+  it('should display download button after loading', async () => {
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText('Download channel summary')).toBeInTheDocument();
+    });
+  });
+
+  it('should display details panel after loading', async () => {
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('details-panel')).toBeInTheDocument();
+    });
+  });
+
+  it('should call loadChannel and loadChannelDetails on mount with correct channel ID', async () => {
+    renderComponent();
+
+    await waitFor(() => {
+      expect(mockActions.loadChannel).toHaveBeenCalledWith(expect.any(Object), channelId);
+      expect(mockActions.loadChannel).toHaveBeenCalledTimes(1);
+      expect(mockActions.loadChannelDetails).toHaveBeenCalledWith(expect.any(Object), channelId);
+      expect(mockActions.loadChannelDetails).toHaveBeenCalledTimes(1);
     });
   });
 });

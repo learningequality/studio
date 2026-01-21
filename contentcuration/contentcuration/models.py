@@ -6,11 +6,13 @@ import urllib.parse
 import uuid
 from datetime import datetime
 
+import jsonschema
 import pytz
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
+from django.contrib.postgres.fields import ArrayField
 from django.contrib.sessions.models import Session
 from django.core.cache import cache
 from django.core.exceptions import MultipleObjectsReturned
@@ -54,7 +56,9 @@ from le_utils.constants import exercises
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from le_utils.constants import languages
+from le_utils.constants import licenses
 from le_utils.constants import roles
+from le_utils.constants.labels import subjects
 from model_utils import FieldTracker
 from mptt.models import MPTTModel
 from mptt.models import raise_if_unsaved
@@ -349,25 +353,77 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def check_channel_space(self, channel):
         tree_cte = With(self.get_user_active_trees().distinct(), name="trees")
-        files_cte = With(
-            tree_cte.join(
-                self.files.get_queryset(), contentnode__tree_id=tree_cte.col.tree_id
-            )
-            .values("checksum")
-            .distinct(),
-            name="files",
+
+        user_files_cte = With(
+            self.files.get_queryset().values(
+                "id",
+                "checksum",
+                "contentnode_id",
+                "file_format_id",
+                "file_size",
+                "preset_id",
+            ),
+            name="user_files",
         )
 
-        staging_tree_files = (
-            self.files.filter(contentnode__tree_id=channel.staging_tree.tree_id)
+        editable_files_qs = (
+            user_files_cte.queryset()
             .with_cte(tree_cte)
-            .with_cte(files_cte)
-            .exclude(Exists(files_cte.queryset().filter(checksum=OuterRef("checksum"))))
-            .values("checksum")
-            .distinct()
+            .with_cte(user_files_cte)
+            .filter(
+                Exists(
+                    tree_cte.join(
+                        ContentNode.objects.all(),
+                        tree_id=tree_cte.col.tree_id,
+                    )
+                    .with_cte(tree_cte)
+                    .filter(id=OuterRef("contentnode_id"))
+                )
+            )
+        )
+
+        existing_checksums_cte = With(
+            editable_files_qs.values("checksum").distinct(),
+            name="existing_checksums",
+        )
+
+        staging_files_qs = (
+            user_files_cte.queryset()
+            .with_cte(user_files_cte)
+            .filter(
+                Exists(
+                    ContentNode.objects.filter(
+                        tree_id=channel.staging_tree.tree_id,
+                        id=OuterRef("contentnode_id"),
+                    )
+                )
+            )
+        )
+
+        new_staging_files_qs = (
+            staging_files_qs.with_cte(tree_cte)
+            .with_cte(existing_checksums_cte)
+            .exclude(
+                Exists(
+                    existing_checksums_cte.queryset().filter(
+                        checksum=OuterRef("checksum"),
+                    )
+                )
+            )
+        )
+
+        new_staging_files_qs = self._filter_storage_billable_files(new_staging_files_qs)
+
+        unique_staging_ids = (
+            new_staging_files_qs.order_by("checksum", "id")
+            .distinct("checksum")
+            .values("id")
         )
         staged_size = float(
-            staging_tree_files.aggregate(used=Sum("file_size"))["used"] or 0
+            new_staging_files_qs.filter(id__in=Subquery(unique_staging_ids)).aggregate(
+                used=Sum("file_size")
+            )["used"]
+            or 0
         )
 
         if self.get_available_space() < staged_size:
@@ -410,13 +466,55 @@ class User(AbstractBaseUser, PermissionsMixin):
         )
 
     def get_user_active_files(self):
-        cte = With(self.get_user_active_trees().distinct())
 
-        return (
-            cte.join(self.files.get_queryset(), contentnode__tree_id=cte.col.tree_id)
-            .with_cte(cte)
-            .values("checksum")
-            .distinct()
+        tree_cte = With(self.get_user_active_trees().distinct(), name="trees")
+
+        user_files_cte = With(
+            self.files.get_queryset().only(
+                "id",
+                "checksum",
+                "contentnode_id",
+                "file_format_id",
+                "file_size",
+                "preset_id",
+            ),
+            name="user_files",
+        )
+
+        base_files_qs = (
+            user_files_cte.queryset()
+            .with_cte(tree_cte)
+            .with_cte(user_files_cte)
+            .filter(
+                Exists(
+                    tree_cte.join(
+                        ContentNode.objects.only("id", "tree_id"),
+                        tree_id=tree_cte.col.tree_id,
+                    )
+                    .with_cte(tree_cte)
+                    .filter(id=OuterRef("contentnode_id"))
+                )
+            )
+        )
+
+        base_files_qs = self._filter_storage_billable_files(base_files_qs)
+
+        unique_file_ids = (
+            base_files_qs.order_by("checksum", "id").distinct("checksum").values("id")
+        )
+
+        files_qs = base_files_qs.filter(id__in=Subquery(unique_file_ids))
+
+        return files_qs
+
+    def _filter_storage_billable_files(self, queryset):
+        """
+        Perseus exports would not be included in storage calculations.
+        """
+        if queryset is None:
+            return queryset
+        return queryset.exclude(file_format_id__isnull=True).exclude(
+            file_format_id=file_formats.PERSEUS
         )
 
     def get_space_used(self, active_files=None):
@@ -975,6 +1073,13 @@ class Channel(models.Model):
         verbose_name="languages",
         blank=True,
     )
+    version_info = models.OneToOneField(
+        "ChannelVersion",
+        related_name="+",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
 
     _field_updates = FieldTracker(
         fields=[
@@ -1192,6 +1297,13 @@ class Channel(models.Model):
         ):
             delete_public_channel_cache_keys()
 
+        if self.version and (
+            not self.version_info or self.version_info.version != self.version
+        ):
+            self.version_info, _ = ChannelVersion.objects.get_or_create(
+                channel=self, version=self.version
+            )
+
     def save(self, *args, **kwargs):
         self._actor_id = kwargs.pop("actor_id", None)
         creating = self._state.adding
@@ -1345,6 +1457,118 @@ class Channel(models.Model):
             models.Index(fields=["name"], name=CHANNEL_NAME_INDEX_NAME),
         ]
         index_together = [["deleted", "public"]]
+
+
+KIND_COUNT_ITEM_SCHEMA = {
+    "type": "object",
+    "required": ["count", "kind_id"],
+    "properties": {
+        "count": {"type": "integer", "minimum": 0},
+        "kind_id": {"type": "string", "minLength": 1},
+    },
+    "additionalProperties": False,
+}
+
+
+def validate_kind_count_item(value):
+    """
+    Validator for kind_count items.
+    """
+    for item in value:
+        try:
+            jsonschema.validate(instance=item, schema=KIND_COUNT_ITEM_SCHEMA)
+        except jsonschema.ValidationError as e:
+            raise ValidationError(f"Invalid kind_count item: {str(e)}")
+
+
+def validate_language_code(value):
+    """
+    Validator for language codes in included_languages array.
+    """
+    valid_language_codes = [lang.code for lang in languages.LANGUAGELIST]
+    for code in value:
+        if code not in valid_language_codes:
+            raise ValidationError(f"'{code}' is not a valid language code")
+    return
+
+
+def get_license_choices():
+    """Helper function to get license choices for ArrayField."""
+    license_labels = dict(licenses.choices)
+    return [
+        (lic.id, license_labels.get(lic.name, lic.name)) for lic in licenses.LICENSELIST
+    ]
+
+
+def get_categories_choices():
+    """Helper function to get category choices for ArrayField."""
+    return subjects.choices
+
+
+class ChannelVersion(models.Model):
+    """
+    Stores version-specific information for a channel. This allows retrieving
+    specific channel versions using secret tokens.
+    """
+
+    id = UUIDField(primary_key=True, default=uuid.uuid4)
+    channel = models.ForeignKey(
+        Channel, on_delete=models.CASCADE, related_name="channel_versions"
+    )
+    version = models.PositiveIntegerField(null=True, blank=True)
+    secret_token = models.ForeignKey(
+        SecretToken, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    version_notes = models.TextField(null=True, blank=True)
+    size = models.PositiveIntegerField(null=True, blank=True)
+    date_published = models.DateTimeField(null=True, blank=True)
+    resource_count = models.PositiveIntegerField(null=True, blank=True)
+    kind_count = ArrayField(
+        JSONField(), validators=[validate_kind_count_item], null=True, blank=True
+    )
+    included_licenses = ArrayField(
+        models.IntegerField(choices=get_license_choices()),
+        null=True,
+        blank=True,
+    )
+    included_categories = ArrayField(
+        models.CharField(max_length=100, choices=get_categories_choices()),
+        null=True,
+        blank=True,
+    )
+    included_languages = ArrayField(
+        models.CharField(max_length=100),
+        validators=[validate_language_code],
+        null=True,
+        blank=True,
+    )
+    non_distributable_licenses_included = ArrayField(
+        models.IntegerField(choices=get_license_choices()),
+        null=True,
+        blank=True,
+    )
+    special_permissions_included = models.ManyToManyField(
+        "AuditedSpecialPermissionsLicense",
+        related_name="channel_versions",
+        blank=True,
+    )
+
+    class Meta:
+        unique_together = ("channel", "version")
+
+    def save(self, *args, **kwargs):
+        if self.version is not None and self.version > self.channel.version:
+            raise ValidationError("Version cannot be greater than channel version")
+        self.full_clean()
+        super(ChannelVersion, self).save(*args, **kwargs)
+
+    def new_token(self):
+        if not self.secret_token:
+            self.secret_token = SecretToken.objects.create(
+                token=SecretToken.generate_new_token(), is_primary=False
+            )
+            self.save()
+        return self.secret_token
 
 
 CHANNEL_HISTORY_CHANNEL_INDEX_NAME = "idx_channel_history_channel_id"
@@ -2594,11 +2818,12 @@ class CommunityLibrarySubmission(models.Model):
     )
     categories = models.JSONField(blank=True, null=True)
     date_created = models.DateTimeField(auto_now_add=True)
-    date_resolved = models.DateTimeField(blank=True, null=True)
+    date_updated = models.DateTimeField(auto_now=True, db_index=True)
     status = models.CharField(
         max_length=20,
         choices=community_library_submission.status_choices,
         default=community_library_submission.STATUS_PENDING,
+        db_index=True,
     )
     resolved_by = models.ForeignKey(
         User,
@@ -2657,6 +2882,11 @@ class CommunityLibrarySubmission(models.Model):
                 channel_id=self.channel.id,
                 channel_version=self.channel.version,
             )
+            # Create a ChannelVersion and token for this submission
+            channel_version, _ = ChannelVersion.objects.get_or_create(
+                channel=self.channel, version=self.channel_version
+            )
+            channel_version.new_token()
 
         super().save(*args, **kwargs)
 
@@ -2702,9 +2932,28 @@ class CommunityLibrarySubmission(models.Model):
                 name="unique_channel_with_channel_version",
             ),
         ]
+
+
+class AuditedSpecialPermissionsLicense(models.Model):
+    """
+    Stores special permission license descriptions that have been audited
+    for community library submissions. When a channel contains resources with
+    "Special Permissions" licenses, their license descriptions are stored here
+    for admin review.
+    """
+
+    id = UUIDField(primary_key=True, default=uuid.uuid4)
+    description = models.TextField(unique=True, db_index=True)
+    distributable = models.BooleanField(default=False)
+
+    def __str__(self):
+        return (
+            self.description[:100] if len(self.description) > 100 else self.description
+        )
+
+    class Meta:
         indexes = [
-            # Useful for cursor pagination
-            models.Index(fields=["-date_created"], name="submission_date_created_idx"),
+            models.Index(fields=["description"], name="audited_special_perms_desc_idx"),
         ]
 
 
@@ -3337,7 +3586,7 @@ class Change(models.Model):
         table=None,
         rev=None,
         unpublishable=False,
-        **data
+        **data,
     ):
         change_type = data.pop("type")
         if table is None or table not in ALL_TABLES:

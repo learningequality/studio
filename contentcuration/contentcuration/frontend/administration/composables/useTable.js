@@ -1,4 +1,5 @@
-import { pickBy, isEqual } from 'lodash';
+import pickBy from 'lodash/pickBy';
+import isEqual from 'lodash/isEqual';
 import { ref, computed, unref, watch, nextTick } from 'vue';
 import { useRoute } from 'vue-router/composables';
 import { useQueryParams } from './useQueryParams';

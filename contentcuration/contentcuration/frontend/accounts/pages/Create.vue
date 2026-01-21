@@ -213,9 +213,10 @@
         <KButton
           primary
           class="mt-5"
-          :disabled="offline"
+          :disabled="offline || submitting"
           :text="$tr('finishButton')"
           type="submit"
+          data-test="submit-button"
         />
       </VForm>
     </VLayout>
@@ -260,6 +261,7 @@
       return {
         valid: true,
         registrationFailed: false,
+        submitting: false,
         form: {
           first_name: '',
           last_name: '',
@@ -482,6 +484,12 @@
         // We need to check the "acceptedAgreement" here explicitly because it is not a
         // Vuetify form field and does not trigger the form validation.
         if (this.$refs.form.validate() && this.acceptedAgreement) {
+          // Prevent double submission
+          if (this.submitting) {
+            return Promise.resolve();
+          }
+
+          this.submitting = true;
           const cleanedData = this.clean(this.form);
           return this.register(cleanedData)
             .then(() => {
@@ -517,6 +525,9 @@
                 this.registrationFailed = true;
                 this.valid = false;
               }
+            })
+            .finally(() => {
+              this.submitting = false;
             });
         } else if (this.$refs.top.scrollIntoView) {
           this.$refs.top.scrollIntoView({ behavior: 'smooth' });

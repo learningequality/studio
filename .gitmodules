@@ -1,6 +1,0 @@
-[submodule "kolibri"]
-	path = kolibri
-	url = https://github.com/learningequality/kolibri.git
-[submodule "contentcuration/kolibri"]
-	path = contentcuration/kolibri
-	url = https://github.com/learningequality/kolibri.git
