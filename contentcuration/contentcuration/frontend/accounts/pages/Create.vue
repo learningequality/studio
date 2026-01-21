@@ -17,7 +17,7 @@
       class="mb-4 primary--text text-xs-center"
     >
       {{ $tr('createAnAccountTitle') }}
-  </h1>
+    </h1>
     <VLayout
       justify-center
       class="px-3"
@@ -639,7 +639,9 @@
   .align-items {
     display: block;
   }
-  h1{
+
+  h1 {
     font-size: 21px;
   }
+
 </style>
