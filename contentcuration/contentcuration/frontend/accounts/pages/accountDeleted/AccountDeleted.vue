@@ -16,7 +16,7 @@
 
 <script>
 
-  import StudioMessageLayout from '../../components/MessageLayout';
+  import StudioMessageLayout from '../../components/StudioMessageLayout.vue';
 
   export default {
     name: 'AccountDeleted',

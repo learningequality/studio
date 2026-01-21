@@ -23,7 +23,7 @@
             <KRouterLink
               :to="{ name: 'Main' }"
               :text="$tr('backToLogin')"
-              :appearance="basic - link"
+              appearance="basic-link"
             />
           </slot>
         </div>
@@ -69,6 +69,12 @@
     align-items: center;
     justify-content: center;
     min-height: 100vh;
+  }
+
+  .link,
+  a.link {
+    background-color: transparent !important;
+    border-color: transparent !important;
   }
 
   .message-layout-content {
