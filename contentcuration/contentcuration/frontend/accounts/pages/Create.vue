@@ -12,12 +12,12 @@
         :size="120"
       />
     </div>
-    <h2
+    <h1
       ref="top"
       class="mb-4 primary--text text-xs-center"
     >
       {{ $tr('createAnAccountTitle') }}
-    </h2>
+  </h1>
     <VLayout
       justify-center
       class="px-3"
@@ -43,9 +43,9 @@
           {{ $tr('registrationFailedOffline') }}
         </Banner>
         <!-- Basic information -->
-        <h1 class="font-weight-bold my-2 subheading">
+        <h2 class="font-weight-bold my-2 subheading">
           {{ $tr('basicInformationHeader') }}
-        </h1>
+        </h2>
         <TextField
           v-model="form.first_name"
           maxlength="100"
@@ -92,7 +92,7 @@
           :rules="usageRules"
           class="mt-2"
         />
-        <h1 class="font-weight-bold mb-2 subheading">{{ $tr('usageLabel') }}*</h1>
+        <h2 class="font-weight-bold mb-2 subheading">{{ $tr('usageLabel') }}*</h2>
         <div
           v-for="option in usageOptions"
           :key="option.id"
@@ -125,7 +125,7 @@
           :rules="locationRules"
           class="mt-4"
         />
-        <h1 class="font-weight-bold my-2 subheading">{{ $tr('locationLabel') }}*</h1>
+        <h2 class="font-weight-bold my-2 subheading">{{ $tr('locationLabel') }}*</h2>
         <CountryField
           v-model="form.locations"
           clearable
@@ -137,7 +137,7 @@
           :rules="sourceRules"
           class="mt-2"
         />
-        <h1 class="font-weight-bold my-2 subheading">{{ $tr('sourceLabel') }}*</h1>
+        <h2 class="font-weight-bold my-2 subheading">{{ $tr('sourceLabel') }}*</h2>
         <DropdownWrapper>
           <template #default="{ attach, menuProps }">
             <VSelect
@@ -639,5 +639,7 @@
   .align-items {
     display: block;
   }
-
+  h1{
+    font-size: 24px;
+  }
 </style>
