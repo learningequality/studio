@@ -2,7 +2,7 @@ import VueRouter from 'vue-router';
 import StudioMyChannels from './views/Channel/StudioMyChannels.vue';
 import StudioStarredChannels from './views/Channel/StudioStarredChannels.vue';
 import StudioViewOnlyChannels from './views/Channel/StudioViewOnlyChannels.vue';
-import ChannelSetList from './views/ChannelSet/ChannelSetList';
+import StudioCollectionsTable from './views/ChannelSet/StudioCollectionsTable';
 import ChannelSetModal from './views/ChannelSet/ChannelSetModal';
 import CatalogList from './views/Channel/CatalogList';
 import { RouteNames } from './constants';
@@ -20,7 +20,7 @@ const router = new VueRouter({
     {
       name: RouteNames.CHANNEL_SETS,
       path: '/collections',
-      component: ChannelSetList,
+      component: StudioCollectionsTable,
     },
     {
       name: RouteNames.NEW_CHANNEL_SET,

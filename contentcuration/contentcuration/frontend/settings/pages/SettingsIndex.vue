@@ -18,7 +18,10 @@
       </template>
     </AppBar>
     <StudioOfflineAlert :offset="104" />
-    <StudioPage :offline="offline">
+    <StudioPage
+      :offline="offline"
+      :marginTop="104"
+    >
       <router-view />
     </StudioPage>
     <GlobalSnackbar />

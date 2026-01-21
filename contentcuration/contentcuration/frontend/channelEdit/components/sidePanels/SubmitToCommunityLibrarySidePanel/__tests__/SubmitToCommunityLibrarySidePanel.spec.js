@@ -13,15 +13,16 @@ import { communityChannelsStrings } from 'shared/strings/communityChannelsString
 import { CommunityLibrarySubmission } from 'shared/data/resources';
 import CountryField from 'shared/views/form/CountryField.vue';
 
-jest.mock('../composables/usePublishedData', () => ({
-  usePublishedData: jest.fn(),
-}));
-jest.mock('../composables/useLatestCommunityLibrarySubmission', () => ({
-  useLatestCommunityLibrarySubmission: jest.fn(),
-}));
+jest.mock('../composables/usePublishedData');
+jest.mock('../composables/useLatestCommunityLibrarySubmission');
+jest.mock('../composables/useLicenseAudit');
 jest.mock('shared/data/resources', () => ({
   CommunityLibrarySubmission: {
     create: jest.fn(() => Promise.resolve()),
+  },
+  Channel: {
+    fetchModel: jest.fn(),
+    getCatalogChannel: jest.fn(() => Promise.resolve()),
   },
 }));
 
@@ -33,6 +34,8 @@ const { nonePrimaryInfo$, flaggedPrimaryInfo$, approvedPrimaryInfo$, submittedPr
 async function makeWrapper({ channel, publishedData, latestSubmission }) {
   const isLoading = ref(true);
   const isFinished = ref(false);
+  const fetchPublishedData = jest.fn(() => Promise.resolve());
+  const fetchLatestSubmission = jest.fn(() => Promise.resolve());
 
   store.state.currentChannel.currentChannelId = channel.id;
   store.commit('channel/ADD_CHANNEL', channel);
@@ -41,12 +44,14 @@ async function makeWrapper({ channel, publishedData, latestSubmission }) {
     isLoading,
     isFinished,
     data: computed(() => publishedData),
+    fetchData: fetchPublishedData,
   });
 
   useLatestCommunityLibrarySubmission.mockReturnValue({
     isLoading,
     isFinished,
     data: computed(() => latestSubmission),
+    fetchData: fetchLatestSubmission,
   });
 
   const wrapper = mount(SubmitToCommunityLibrarySidePanel, {
@@ -93,16 +98,10 @@ const nonPublishedChannel = {
 };
 
 const publishedData = {
-  2: {
-    included_languages: ['en', null],
-    included_licenses: [1],
-    included_categories: [Categories.SCHOOL],
-  },
-  1: {
-    included_languages: ['en', null],
-    included_licenses: [1],
-    included_categories: [Categories.SCHOOL],
-  },
+  version: 2,
+  included_languages: ['en', null],
+  included_licenses: [1],
+  included_categories: [Categories.SCHOOL],
 };
 
 const submittedLatestSubmission = { channel_version: 2, status: CommunityLibraryStatus.PENDING };
@@ -144,7 +143,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
     it('when channel is not published', async () => {
       const wrapper = await makeWrapper({
         channel: nonPublishedChannel,
-        publishedData: {},
+        publishedData: null,
         latestSubmission: null,
       });
 
@@ -265,6 +264,65 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
     });
   });
 
+  describe('publishing state', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('disables form and shows loader when channel is publishing', async () => {
+      const channel = { ...publishedNonPublicChannel, publishing: true };
+      const wrapper = await makeWrapper({ channel, publishedData, latestSubmission: null });
+
+      // Loader/message container should exist
+      expect(wrapper.find('.publishing-loader').exists()).toBe(true);
+
+      const descriptionTextbox = wrapper.findComponent('.description-textbox');
+      expect(descriptionTextbox.exists()).toBe(false);
+      const submitButton = wrapper.find('[data-test="submit-button"]');
+      expect(submitButton.exists()).toBe(false);
+    });
+
+    it('enables form after publishing flips to false (poll-driven)', async () => {
+      const { Channel } = require('shared/data/resources');
+      Channel.fetchModel.mockResolvedValue({
+        id: publishedNonPublicChannel.id,
+        publishing: false,
+        version: 3,
+      });
+
+      const channel = { ...publishedNonPublicChannel, publishing: true };
+      const publishedDataWithVersion3 = {
+        version: 3,
+        included_languages: ['en', null],
+        included_licenses: [1],
+        included_categories: [Categories.SCHOOL],
+      };
+      const wrapper = await makeWrapper({
+        channel,
+        publishedData: publishedDataWithVersion3,
+        latestSubmission: null,
+      });
+
+      const updatedChannel = { ...channel, publishing: false, version: 3 };
+      await wrapper.setProps({ channel: updatedChannel });
+      store.commit('channel/ADD_CHANNEL', updatedChannel);
+
+      await wrapper.vm.$nextTick();
+      await wrapper.vm.$nextTick();
+
+      const descriptionTextbox = wrapper.findComponent('.description-textbox');
+      expect(descriptionTextbox.props('disabled')).toBe(false);
+
+      await descriptionTextbox.vm.$emit('input', 'Some description');
+      await wrapper.vm.$nextTick();
+      const submitButton = wrapper.find('[data-test="submit-button"]');
+      expect(submitButton.attributes('disabled')).toBeUndefined();
+    });
+  });
+
   describe('show less button', () => {
     it('is displayed when additional info is shown', async () => {
       const wrapper = await makeWrapper({
@@ -368,7 +426,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
     it('when channel is not published', async () => {
       const wrapper = await makeWrapper({
         channel: nonPublishedChannel,
-        publishedData: {},
+        publishedData: null,
         latestSubmission: null,
       });
 
@@ -404,7 +462,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       it('when channel is not published', async () => {
         const wrapper = await makeWrapper({
           channel: nonPublishedChannel,
-          publishedData: {},
+          publishedData: null,
           latestSubmission: null,
         });
 

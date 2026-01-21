@@ -74,6 +74,7 @@
       >
         <VContainer
           fluid
+          class="h-100"
           :class="isCatalogPage ? 'pa-0' : 'pa-4'"
         >
           <VLayout
@@ -235,8 +236,10 @@
     },
     watch: {
       $route(route) {
-        if (this.loggedIn && route.name === RouteNames.CHANNELS_EDITABLE) {
-          this.loadInvitationList();
+        if (route.name === RouteNames.CHANNELS_EDITABLE) {
+          this.loggedIn
+            ? this.loadInvitationList()
+            : this.$router.replace({ name: RouteNames.CATALOG_ITEMS });
         }
         if (this.fullPageError) {
           this.$store.dispatch('errors/clearError');
@@ -251,9 +254,7 @@
       if (this.loggedIn) {
         this.loadInvitationList();
       } else if (!CATALOG_PAGES.includes(this.$route.name)) {
-        this.$router.push({
-          name: RouteNames.CATALOG_ITEMS,
-        });
+        this.$router.replace({ name: RouteNames.CATALOG_ITEMS });
       }
     },
     mounted() {
@@ -342,6 +343,10 @@
 
   .invitation-list {
     padding: 0;
+  }
+
+  .h-100 {
+    height: 100%;
   }
 
 </style>

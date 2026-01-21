@@ -14,6 +14,7 @@ x-studio-environment:
     CELERY_BROKER_ENDPOINT: redis
     CELERY_RESULT_BACKEND_ENDPOINT: redis
     CELERY_REDIS_PASSWORD: ""
+    REMAP_SIGTERM: "SIGQUIT"
     PROBER_STUDIO_BASE_URL: http://studio-app:8080/{path}
 
 x-studio-worker:
@@ -35,7 +36,7 @@ services:
     platform: linux/amd64
     build:
       context: .
-      dockerfile: k8s/images/nginx/Dockerfile
+      dockerfile: docker/Dockerfile.nginx.prod
     ports:
       - "8081:8080"
     depends_on:
@@ -44,7 +45,7 @@ services:
 
   studio-app:
     <<: *studio-worker
-    entrypoint: python docker/entrypoint.py
+    entrypoint: python docker/studio-dev/entrypoint.py
     command: pnpm run devserver
     ports:
       - "8080:8080"
@@ -82,17 +83,6 @@ services:
 
   redis:
     image: redis:6.0.9
-
-  cloudprober:
-    <<: *studio-worker
-    working_dir: /src/deploy
-    entrypoint: ""
-    # sleep 30 seconds allowing some time for the studio app to start up
-    command: '/bin/bash -c "sleep 30 && /bin/cloudprober --config_file ./cloudprober.cfg"'
-    # wait until the main app and celery worker have started
-    depends_on:
-      - studio-app
-      - celery-worker
 
 
 volumes:

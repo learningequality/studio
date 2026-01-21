@@ -7,6 +7,7 @@ import { Categories, CategoriesLookup } from 'shared/constants';
 import { LicensesList } from 'shared/leUtils/Licenses';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import FormatPresetsMap, { FormatPresetsNames } from 'shared/leUtils/FormatPresets';
+import { constantStrings } from 'shared/mixins';
 
 function safeParseInt(str) {
   const parsed = parseInt(str);
@@ -301,6 +302,36 @@ export function findLicense(key, defaultValue = {}) {
   );
 
   return license || defaultValue;
+}
+
+/**
+ * Formats and translates license names from license IDs
+ * @param {Array} licenseIds - Array of license IDs
+ * @param {Object} options - Optional configuration
+ * @param {Array<string>} options.excludes - Array of license names to exclude
+ *   (e.g., ['Special Permissions'])
+ * @returns {string} Comma-separated string of translated license names
+ */
+export function formatLicenseNames(licenseIds, options = {}) {
+  if (!licenseIds || !Array.isArray(licenseIds) || licenseIds.length === 0) {
+    return '';
+  }
+
+  const { excludes = [] } = options;
+
+  return licenseIds
+    .map(id => {
+      const license = findLicense(id);
+      const licenseName = license?.license_name;
+
+      if (!licenseName || excludes.includes(licenseName)) {
+        return null;
+      }
+
+      return constantStrings.$tr(licenseName);
+    })
+    .filter(Boolean)
+    .join(', ');
 }
 
 /**

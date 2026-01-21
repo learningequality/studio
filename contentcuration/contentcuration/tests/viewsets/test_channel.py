@@ -6,13 +6,18 @@ from django.db.models import OuterRef
 from django.urls import reverse
 from kolibri_public.models import ContentNode as PublicContentNode
 from le_utils.constants import content_kinds
+from le_utils.constants.labels import subjects
+from mock import Mock
 from mock import patch
 
 from contentcuration import models
 from contentcuration import models as cc
 from contentcuration.constants import channel_history
 from contentcuration.constants import community_library_submission
+from contentcuration.models import AuditedSpecialPermissionsLicense
 from contentcuration.models import Change
+from contentcuration.models import Channel
+from contentcuration.models import ChannelVersion
 from contentcuration.models import CommunityLibrarySubmission
 from contentcuration.models import ContentNode
 from contentcuration.models import Country
@@ -819,25 +824,43 @@ class CRUDTestCase(StudioAPITestCase):
             [submission1.channel.id],
         )
 
-    def test_admin_channel_filter__has_community_library_submission(self):
-        self.client.force_authenticate(user=self.admin_user)
-
+    def test_has_community_library_submission_endpoint(self):
+        """Test the on-demand has_community_library_submission endpoint"""
+        user = testdata.user()
+        channel_with_submission = testdata.channel()
+        channel_with_submission.editors.add(user)
+        channel_with_submission.version = 1
+        channel_with_submission.save()
         submission = testdata.community_library_submission()
+        submission.channel = channel_with_submission
+        submission.author = user
+        submission.channel_version = channel_with_submission.version
+        submission.save()
 
-        testdata.channel()  # Another channel without submission
+        channel_without_submission = testdata.channel()
+        channel_without_submission.editors.add(user)
+
+        self.client.force_authenticate(user=user)
 
         response = self.client.get(
-            reverse_with_query(
-                "admin-channels-list",
-                query={"has_community_library_submission": True},
+            reverse(
+                "channel-has-community-library-submission",
+                kwargs={"pk": channel_with_submission.id},
             ),
             format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
-        self.assertCountEqual(
-            [ch["id"] for ch in response.data],
-            [submission.channel.id],
+        self.assertTrue(response.data["has_community_library_submission"])
+
+        response = self.client.get(
+            reverse(
+                "channel-has-community-library-submission",
+                kwargs={"pk": channel_without_submission.id},
+            ),
+            format="json",
         )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertFalse(response.data["has_community_library_submission"])
 
     def test_create_channel(self):
         user = testdata.user()
@@ -1232,10 +1255,12 @@ class GetPublishedDataTestCase(StudioAPITestCase):
         super().setUp()
 
         self.editor_user = testdata.user(email="editor@user.com")
+        self.admin_user = testdata.user(email="admin@user.com")
         self.forbidden_user = testdata.user(email="forbidden@user.com")
 
         self.channel = testdata.channel()
         self.channel.editors.add(self.editor_user)
+        self.channel.editors.add(self.admin_user)
 
         self.channel.published_data = {
             "key1": "value1",
@@ -1243,31 +1268,333 @@ class GetPublishedDataTestCase(StudioAPITestCase):
         }
         self.channel.save()
 
-    def test_get_published_data__is_editor(self):
+    def test_get_version_detail__is_editor(self):
+        """Test that editors can get version detail with populated versionInfo."""
+        from contentcuration.models import ChannelVersion
+
         self.client.force_authenticate(user=self.editor_user)
 
+        self.channel.version = 1
+        self.channel.save()
+
+        channel_version, created = ChannelVersion.objects.get_or_create(
+            channel=self.channel,
+            version=1,
+            defaults={
+                "resource_count": 100,
+                "size": 1024000,
+            },
+        )
+        if not created:
+            channel_version.resource_count = 100
+            channel_version.size = 1024000
+            channel_version.save()
+
+        self.channel.version_info = channel_version
+        self.channel.save()
+
         response = self.client.get(
-            reverse("channel-published-data", kwargs={"pk": self.channel.id}),
+            reverse("channel-version-detail", kwargs={"pk": self.channel.id}),
             format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
-        self.assertEqual(response.json(), self.channel.published_data)
+        data = response.json()
 
-    def test_get_published_data__is_admin(self):
+        self.assertEqual(data["version"], 1)
+        self.assertEqual(data["resource_count"], 100)
+        self.assertEqual(data["size"], 1024000)
+
+    def test_get_version_detail__is_admin(self):
+        """Test that admins can get version detail with populated versionInfo."""
+        from contentcuration.models import ChannelVersion
+
         self.client.force_authenticate(user=self.admin_user)
 
+        self.channel.version = 2
+        self.channel.save()
+
+        channel_version, created = ChannelVersion.objects.get_or_create(
+            channel=self.channel,
+            version=2,
+            defaults={
+                "resource_count": 200,
+                "size": 2048000,
+            },
+        )
+        if not created:
+            channel_version.resource_count = 200
+            channel_version.size = 2048000
+            channel_version.save()
+
+        self.channel.version_info = channel_version
+        self.channel.save()
+
         response = self.client.get(
-            reverse("channel-published-data", kwargs={"pk": self.channel.id}),
+            reverse("channel-version-detail", kwargs={"pk": self.channel.id}),
             format="json",
         )
         self.assertEqual(response.status_code, 200, response.content)
-        self.assertEqual(response.json(), self.channel.published_data)
+        data = response.json()
 
-    def test_get_published_data__is_forbidden_user(self):
+        # Assert against the most recent ChannelVersion
+        self.assertEqual(data["version"], 2)
+        self.assertEqual(data["resource_count"], 200)
+        self.assertEqual(data["size"], 2048000)
+
+    def test_get_version_detail__is_forbidden_user(self):
+        """Test that forbidden users cannot access version detail."""
         self.client.force_authenticate(user=self.forbidden_user)
 
         response = self.client.get(
-            reverse("channel-published-data", kwargs={"pk": self.channel.id}),
+            reverse("channel-version-detail", kwargs={"pk": self.channel.id}),
             format="json",
         )
         self.assertEqual(response.status_code, 404, response.content)
+
+    def test_published_data_in_channel_list(self):
+        """Test that published_data is included in channel list response"""
+        self.client.force_authenticate(user=self.editor_user)
+
+        response = self.client.get(
+            reverse("channel-list") + "?edit=true", format="json"
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        response_data = response.json()
+        channels = (
+            response_data
+            if isinstance(response_data, list)
+            else response_data["results"]
+        )
+        channel = next((c for c in channels if c["id"] == self.channel.id), None)
+        self.assertIsNotNone(channel)
+        self.assertIn("published_data", channel)
+        self.assertEqual(channel["published_data"], self.channel.published_data)
+
+
+class AuditLicensesActionTestCase(StudioAPITestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.editor_user = testdata.user(email="editor@user.com")
+        self.forbidden_user = testdata.user(email="forbidden@user.com")
+        self.admin_user = self.admin_user
+
+        self.channel = testdata.channel()
+        self.channel.editors.add(self.editor_user)
+        # Mark channel as published
+        self.channel.main_tree.published = True
+        self.channel.main_tree.save()
+        self.channel.version = 1
+        self.channel.save()
+
+    def test_audit_licenses__is_editor(self):
+        """Test that an editor can trigger license audit"""
+        from contentcuration.tasks import audit_channel_licenses_task
+
+        self.client.force_authenticate(user=self.editor_user)
+
+        with patch.object(
+            audit_channel_licenses_task, "fetch_or_enqueue"
+        ) as mock_enqueue:
+            mock_async_result = Mock()
+            mock_async_result.task_id = "test-task-id-123"
+            mock_enqueue.return_value = mock_async_result
+
+            response = self.client.post(
+                reverse("channel-audit-licenses", kwargs={"pk": self.channel.id}),
+                format="json",
+            )
+
+            self.assertEqual(response.status_code, 200, response.content)
+            data = response.json()
+            self.assertIn("task_id", data)
+            self.assertEqual(data["task_id"], "test-task-id-123")
+            mock_enqueue.assert_called_once()
+
+    def test_audit_licenses__is_admin(self):
+        """Test that an admin can trigger license audit"""
+        from contentcuration.tasks import audit_channel_licenses_task
+
+        self.client.force_authenticate(user=self.admin_user)
+
+        with patch.object(
+            audit_channel_licenses_task, "fetch_or_enqueue"
+        ) as mock_enqueue:
+            mock_async_result = Mock()
+            mock_async_result.task_id = "test-task-id-456"
+            mock_enqueue.return_value = mock_async_result
+
+            response = self.client.post(
+                reverse("channel-audit-licenses", kwargs={"pk": self.channel.id}),
+                format="json",
+            )
+
+            self.assertEqual(response.status_code, 200, response.content)
+            data = response.json()
+            self.assertIn("task_id", data)
+
+    def test_audit_licenses__is_forbidden_user(self):
+        """Test that a non-editor cannot trigger license audit"""
+        self.client.force_authenticate(user=self.forbidden_user)
+
+        response = self.client.post(
+            reverse("channel-audit-licenses", kwargs={"pk": self.channel.id}),
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 404, response.content)
+
+    def test_audit_licenses__channel_not_published(self):
+        """Test that audit fails when channel is not published"""
+        self.channel.main_tree.published = False
+        self.channel.main_tree.save()
+
+        self.client.force_authenticate(user=self.editor_user)
+
+        response = self.client.post(
+            reverse("channel-audit-licenses", kwargs={"pk": self.channel.id}),
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400, response.content)
+        response_data = response.json()
+        error_message = (
+            response_data["detail"]
+            if isinstance(response_data, dict)
+            else response_data[0]
+        )
+        self.assertIn("must be published", str(error_message))
+
+
+class GetVersionDetailEndpointTestCase(StudioAPITestCase):
+    """Test get_version_detail API endpoint."""
+
+    def setUp(self):
+        super(GetVersionDetailEndpointTestCase, self).setUp()
+        self.user = testdata.user()
+        self.client.force_authenticate(user=self.user)
+
+        self.channel = testdata.channel()
+        self.channel.version = 3
+        self.channel.published = True
+        self.channel.editors.add(self.user)
+        self.channel.save()
+
+        self.channel_version, _ = ChannelVersion.objects.update_or_create(
+            channel=self.channel,
+            version=3,
+            defaults={
+                "version_notes": "Test version",
+                "size": 5000,
+                "resource_count": 25,
+                "kind_count": [
+                    {"count": 10, "kind_id": "video"},
+                    {"count": 15, "kind_id": "document"},
+                ],
+                "included_languages": ["en", "es"],
+                "included_licenses": [1, 2],
+                "included_categories": [
+                    subjects.SUBJECTSLIST[0],
+                    subjects.SUBJECTSLIST[1],
+                ],
+            },
+        )
+
+        self.channel.version_info = self.channel_version
+        self.channel.save()
+
+    def test_get_version_detail_success(self):
+        """Test successfully retrieving version detail."""
+        url = reverse("channel-version-detail", kwargs={"pk": self.channel.id})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+
+        data = response.json()
+        self.assertEqual(data["version"], 3)
+        self.assertEqual(data["version_notes"], "Test version")
+        self.assertEqual(data["size"], 5000)
+        self.assertEqual(data["resource_count"], 25)
+
+    def test_get_version_detail_no_version_info(self):
+        """Test endpoint when channel has no version_info."""
+        channel2 = testdata.channel()
+        channel2.version = 1
+        channel2.editors.add(self.user)
+        channel2.save()
+
+        ChannelVersion.objects.filter(channel=channel2).delete()
+
+        Channel.objects.filter(pk=channel2.pk).update(version_info=None)
+
+        url = reverse("channel-version-detail", kwargs={"pk": channel2.id})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {})
+
+    def test_get_version_detail_returns_all_fields(self):
+        """Test that get_version_detail returns all expected fields."""
+        url = reverse("channel-version-detail", kwargs={"pk": self.channel.id})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+
+        expected_fields = [
+            "id",
+            "version",
+            "resource_count",
+            "kind_count",
+            "size",
+            "date_published",
+            "version_notes",
+            "included_languages",
+            "included_licenses",
+            "included_categories",
+            "non_distributable_licenses_included",
+        ]
+        for field in expected_fields:
+            self.assertIn(field, data, f"Field '{field}' should be in response")
+
+    def test_get_version_detail_excludes_special_permissions_included(self):
+        """Test that special_permissions_included is not in the response."""
+        special_license = AuditedSpecialPermissionsLicense.objects.create(
+            description="Test special permissions license"
+        )
+        self.channel_version.special_permissions_included.add(special_license)
+
+        url = reverse("channel-version-detail", kwargs={"pk": self.channel.id})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+
+        self.assertNotIn(
+            "special_permissions_included",
+            data,
+            "special_permissions_included should not be in the response. "
+            "Use /api/audited_special_permissions_license/?channel_version=<uuid> instead.",
+        )
+
+    def test_get_version_detail_with_special_permissions_licenses(self):
+        """Test that get_version_detail works correctly even when special permissions licenses exist."""
+        license1 = AuditedSpecialPermissionsLicense.objects.create(
+            description="First special permissions license"
+        )
+        license2 = AuditedSpecialPermissionsLicense.objects.create(
+            description="Second special permissions license"
+        )
+
+        self.channel_version.special_permissions_included.add(license1, license2)
+
+        url = reverse("channel-version-detail", kwargs={"pk": self.channel.id})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+
+        self.assertNotIn("special_permissions_included", data)
+        self.assertEqual(data["version"], 3)
+        self.assertEqual(data["resource_count"], 25)
