@@ -166,7 +166,8 @@ describe('Create account page', () => {
       await renderComponent();
       // fill form...
       // click submit...
-      // expect(await screen.findByText(/account with this email already exists/i)).toBeInTheDocument();
+      // expect(await screen.findByText(/account with this email already exists/i))
+      // .toBeInTheDocument();
     });
 
     test.skip('redirects if account not activated (405)', async () => {
