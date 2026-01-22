@@ -82,7 +82,7 @@ def validate_published_data(data, channel):
             if special_perms_descriptions:
                 new_licenses = [
                     AuditedSpecialPermissionsLicense(
-                        description=description, distributable=False
+                        description=description, distributable=channel.published
                     )
                     for description in special_perms_descriptions
                 ]
@@ -110,7 +110,6 @@ class Command(BaseCommand):
                 validate_published_data(pub_data, channel)
 
                 # TODO This is a m2m field for AuditedSpecialPermissionsLicense do that instead
-                # special_permissions_included=pub_data.get('special_permissions_included'),
                 # Create a new channel version
                 last_created_ch_ver = ChannelVersion.objects.create(
                     channel=channel,
@@ -120,6 +119,7 @@ class Command(BaseCommand):
                     included_languages=pub_data.get('included_languages'),
                     non_distributable_licenses_included=pub_data.get('non_distributable_licenses_included'),
                 )
+                last_created_ch_ver.special_permissions_included.set(pub_data.get('special_permissions_included', []))
                 logging.info(f"Created channel version {last_created_ch_ver.id} for channel {channel.id}")
 
             channel.version_info = last_created_ch_ver

@@ -65,14 +65,6 @@ class TestCreateChannelVersions(StudioTestCase):
     def setUp(self):
         super(TestCreateChannelVersions, self).setUp()
 
-    def _validate_required_fields(self, channel_version):
-        if (not channel_version.included_licenses or
-        not channel_version.included_languages or
-        not channel_version.included_categories or
-        not channel_version.non_distributable_licenses_included or
-        not channel_version.special_permissions_included):
-            self.fail("ChannelVersion is missing required fields")
-
     def test_channel_with_no_published_data(self):
         """A channel with version 0 and no published_data should create no ChannelVersions."""
         channel = testdata.channel()
