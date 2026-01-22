@@ -54,7 +54,7 @@ from contentcuration.tests.base import StudioTestCase
 def _bump(channel):
     channel.version += 1
     channel.published_data[str(channel.version)] = {
-        "version": channel.version
+        "version": channel.version,
     }
     channel.save()
 
@@ -62,6 +62,16 @@ def _bump(channel):
 class TestCreateChannelVersions(StudioTestCase):
     """Tests for the create_channel_versions management command."""
 
+    def setUp(self):
+        super(TestCreateChannelVersions, self).setUp()
+
+    def _validate_required_fields(self, channel_version):
+        if (not channel_version.included_licenses or
+        not channel_version.included_languages or
+        not channel_version.included_categories or
+        not channel_version.non_distributable_licenses_included or
+        not channel_version.special_permissions_included):
+            self.fail("ChannelVersion is missing required fields")
 
     def test_channel_with_no_published_data(self):
         """A channel with version 0 and no published_data should create no ChannelVersions."""
@@ -71,6 +81,7 @@ class TestCreateChannelVersions(StudioTestCase):
         channel.save()
 
         call_command("create_channel_versions")
+        channel.refresh_from_db()
 
         self.assertEqual(
             ChannelVersion.objects.filter(channel=channel).count(),
@@ -81,10 +92,11 @@ class TestCreateChannelVersions(StudioTestCase):
     def test_single_channel_with_published_data(self):
         """A channel with version 1 and 1 published_data should create 1 ChannelVersion."""
         channel = testdata.channel()
-
         _bump(channel)
+        ChannelVersion.objects.all().delete()
 
         call_command("create_channel_versions")
+        channel.refresh_from_db()
 
         self.assertEqual(
             ChannelVersion.objects.filter(channel=channel).count(),
