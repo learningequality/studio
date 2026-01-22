@@ -54,6 +54,7 @@ from le_utils.constants import exercises
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from le_utils.constants import languages
+from le_utils.constants import modalities
 from le_utils.constants import roles
 from model_utils import FieldTracker
 from mptt.models import MPTTModel
@@ -2290,22 +2291,23 @@ class ContentNode(MPTTModel, models.Model):
                 )
                 if not (self.extra_fields.get("mastery_model") or criterion):
                     errors.append("Missing mastery criterion")
-                if criterion:
-                    try:
-                        completion_criteria.validate(
-                            criterion, kind=content_kinds.EXERCISE
-                        )
-                    except completion_criteria.ValidationError:
-                        errors.append("Mastery criterion is defined but is invalid")
-            else:
-                criterion = self.extra_fields and self.extra_fields.get(
-                    "options", {}
-                ).get("completion_criteria", {})
-                if criterion:
-                    try:
-                        completion_criteria.validate(criterion, kind=self.kind_id)
-                    except completion_criteria.ValidationError:
-                        errors.append("Completion criterion is defined but is invalid")
+        options = self.extra_fields and self.extra_fields.get("options", {}) or {}
+        criterion = options.get("completion_criteria", {})
+        modality = options.get("modality")
+        # UNIT modality topics must have completion criteria
+        if (
+            self.kind_id == content_kinds.TOPIC
+            and modality == modalities.UNIT
+            and not criterion
+        ):
+            errors.append("UNIT modality topics must have completion criteria")
+        if criterion:
+            try:
+                completion_criteria.validate(
+                    criterion, kind=self.kind_id, modality=modality
+                )
+            except completion_criteria.ValidationError:
+                errors.append("Completion criterion is defined but is invalid")
         self.complete = not errors
         return errors
 

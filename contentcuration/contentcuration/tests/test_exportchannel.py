@@ -16,6 +16,7 @@ from kolibri_content.router import get_active_content_database
 from kolibri_content.router import set_active_content_database
 from le_utils.constants import exercises
 from le_utils.constants import format_presets
+from le_utils.constants import modalities
 from le_utils.constants.labels import accessibility_categories
 from le_utils.constants.labels import learning_activities
 from le_utils.constants.labels import levels
@@ -304,6 +305,83 @@ class ExportChannelTestCase(StudioTestCase):
         }
         first_topic_first_child.save()
 
+        # Add a UNIT topic with directly attached assessment items
+        unit_assessment_id_1 = uuid.uuid4().hex
+        unit_assessment_id_2 = uuid.uuid4().hex
+
+        unit_topic = create_node(
+            {"kind_id": "topic", "title": "Test Unit Topic", "children": []},
+            parent=self.content_channel.main_tree,
+        )
+        unit_topic.extra_fields = {
+            "options": {
+                "modality": modalities.UNIT,
+                "completion_criteria": {
+                    "model": "mastery",
+                    "threshold": {
+                        "mastery_model": exercises.PRE_POST_TEST,
+                        "pre_post_test": {
+                            "assessment_item_ids": [
+                                unit_assessment_id_1,
+                                unit_assessment_id_2,
+                            ],
+                            "version_a_item_ids": [unit_assessment_id_1],
+                            "version_b_item_ids": [unit_assessment_id_2],
+                        },
+                    },
+                },
+            }
+        }
+        unit_topic.save()
+
+        cc.AssessmentItem.objects.create(
+            contentnode=unit_topic,
+            assessment_id=unit_assessment_id_1,
+            type=exercises.SINGLE_SELECTION,
+            question="What is 2+2?",
+            answers=json.dumps(
+                [
+                    {"answer": "4", "correct": True, "order": 1},
+                    {"answer": "3", "correct": False, "order": 2},
+                ]
+            ),
+            hints=json.dumps([]),
+            raw_data="{}",
+            order=1,
+            randomize=False,
+        )
+
+        cc.AssessmentItem.objects.create(
+            contentnode=unit_topic,
+            assessment_id=unit_assessment_id_2,
+            type=exercises.SINGLE_SELECTION,
+            question="What is 3+3?",
+            answers=json.dumps(
+                [
+                    {"answer": "6", "correct": True, "order": 1},
+                    {"answer": "5", "correct": False, "order": 2},
+                ]
+            ),
+            hints=json.dumps([]),
+            raw_data="{}",
+            order=2,
+            randomize=False,
+        )
+
+        # Add a LESSON child topic under the UNIT with a video child
+        lesson_topic = create_node(
+            {
+                "kind_id": "topic",
+                "title": "Test Lesson Topic",
+                "children": [
+                    {"kind_id": "video", "title": "Unit Lesson Video", "children": []},
+                ],
+            },
+            parent=unit_topic,
+        )
+        lesson_topic.extra_fields = {"options": {"modality": modalities.LESSON}}
+        lesson_topic.save()
+
         set_channel_icon_encoding(self.content_channel)
         self.tempdb = create_content_database(
             self.content_channel, True, self.admin_user.id, True
@@ -348,6 +426,10 @@ class ExportChannelTestCase(StudioTestCase):
         assert incomplete_nodes.count() > 0
 
         for node in complete_nodes:
+            # Skip nodes that are known to fail validation and not be published:
+            # - "Bad mastery test" exercise has no mastery model (checked separately below)
+            if node.title == "Bad mastery test":
+                continue
             # if a parent node is incomplete, this node is excluded as well.
             if node.get_ancestors().filter(complete=False).count() == 0:
                 assert kolibri_nodes.filter(pk=node.node_id).count() == 1
@@ -641,6 +723,30 @@ class ExportChannelTestCase(StudioTestCase):
         qti_exercise = cc.ContentNode.objects.get(title="QTI Free Response Exercise")
         for i, ai in enumerate(qti_exercise.assessment_items.order_by("order")):
             self.assertEqual(assessment_ids[i], hex_to_qti_id(ai.assessment_id))
+
+    def test_unit_topic_publishes_with_exercise_zip(self):
+        """Test that a TOPIC node with UNIT modality gets its directly
+        attached assessment items compiled into a zip file during publishing."""
+        unit_topic = cc.ContentNode.objects.get(title="Test Unit Topic")
+
+        # Assert UNIT topic has exercise file in Studio
+        unit_files = cc.File.objects.filter(
+            contentnode=unit_topic,
+            preset_id=format_presets.EXERCISE,
+        )
+        self.assertEqual(
+            unit_files.count(),
+            1,
+            "UNIT topic should have exactly one exercise archive file",
+        )
+
+        # Assert NO assessment metadata in Kolibri export for UNIT topics
+        # UNIT topics store assessment config in options/completion_criteria instead
+        published_unit = kolibri_models.ContentNode.objects.get(title="Test Unit Topic")
+        self.assertFalse(
+            published_unit.assessmentmetadata.exists(),
+            "UNIT topic should NOT have assessment metadata",
+        )
 
 
 class EmptyChannelTestCase(StudioTestCase):

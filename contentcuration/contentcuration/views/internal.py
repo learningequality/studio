@@ -839,7 +839,9 @@ def create_node(node_data, parent_node, sort_order):  # noqa: C901
     if "options" in extra_fields and "completion_criteria" in extra_fields["options"]:
         try:
             completion_criteria.validate(
-                extra_fields["options"]["completion_criteria"], kind=node_data["kind"]
+                extra_fields["options"]["completion_criteria"],
+                kind=node_data["kind"],
+                modality=extra_fields["options"].get("modality"),
             )
         except completion_criteria.ValidationError:
             raise NodeValidationError(
