@@ -7,7 +7,58 @@ from le_utils.constants import licenses
 
 logging = logmodule.getLogger("command")
 
+def compute_special_permissions(data, channel, published_nodes):
+    """
+    Compute and create AuditedSpecialPermissionsLicense objects for special permissions content.
+
+    Returns a list of AuditedSpecialPermissionsLicense objects to be associated with the ChannelVersion.
+    Note: These objects are NOT stored in the data dict since they are not JSON serializable
+    and the data dict may be saved to a JSONField (channel.published_data).
+    """
+    if data.get('special_permissions_included'):
+        # Already computed, return empty (will be handled by existing data)
+        return []
+
+    special_permissions_id = (
+        License.objects.filter(license_name=licenses.SPECIAL_PERMISSIONS)
+        .values_list("id", flat=True)
+        .first()
+    )
+
+    if not special_permissions_id or special_permissions_id not in data.get('included_licenses', []):
+        return []
+
+    special_perms_descriptions = list(
+        published_nodes.filter(license_id=special_permissions_id)
+        .exclude(license_description__isnull=True)
+        .exclude(license_description="")
+        .values_list("license_description", flat=True)
+        .distinct()
+    )
+
+    if not special_perms_descriptions:
+        return []
+
+    new_licenses = [
+        AuditedSpecialPermissionsLicense(
+            description=description, distributable=channel.public
+        )
+        for description in special_perms_descriptions
+    ]
+
+    return AuditedSpecialPermissionsLicense.objects.bulk_create(
+        new_licenses, ignore_conflicts=True
+    )
+
+
 def validate_published_data(data, channel):
+    """
+    Fill in any missing fields in the published_data dict.
+    Returns a list of AuditedSpecialPermissionsLicense objects for the M2M relation.
+
+    Note: special_permissions_included is returned separately since it contains
+    model objects that cannot be JSON serialized into the data dict.
+    """
     # Logic for filling each missing field stolen from
     # contentcuration.utils.publish.fill_published_fields
     published_nodes = (
@@ -60,36 +111,10 @@ def validate_published_data(data, channel):
             if all_rights_reserved_id and all_rights_reserved_id in data['included_licenses']
             else []
         )
-    if not data.get('special_permissions_included'):
-        # records for each unique description so reviewers can approve/reject them individually.
-        # This allows centralized tracking of custom licenses across all channels.
-        special_permissions_id = (
-            License.objects.filter(license_name=licenses.SPECIAL_PERMISSIONS)
-            .values_list("id", flat=True)
-            .first()
-        )
 
-        special_perms_descriptions = None
-        if special_permissions_id and special_permissions_id in data['included_licenses']:
-            special_perms_descriptions = list(
-                published_nodes.filter(license_id=special_permissions_id)
-                .exclude(license_description__isnull=True)
-                .exclude(license_description="")
-                .values_list("license_description", flat=True)
-                .distinct()
-            )
-
-            if special_perms_descriptions:
-                new_licenses = [
-                    AuditedSpecialPermissionsLicense(
-                        description=description, distributable=channel.published
-                    )
-                    for description in special_perms_descriptions
-                ]
-
-                data['special_permissions_included'] = AuditedSpecialPermissionsLicense.objects.bulk_create(
-                    new_licenses, ignore_conflicts=True
-                )
+    # Compute special permissions and return them separately (not stored in data dict)
+    special_permissions = compute_special_permissions(data, channel, published_nodes)
+    return special_permissions
 
 
 class Command(BaseCommand):
@@ -107,9 +132,8 @@ class Command(BaseCommand):
             # Validate published_data
             for pub_data in channel.published_data.values():
                 logging.info(f"Validating published data for channel {channel.id} version {pub_data['version']}")
-                validate_published_data(pub_data, channel)
+                special_permissions = validate_published_data(pub_data, channel)
 
-                # TODO This is a m2m field for AuditedSpecialPermissionsLicense do that instead
                 # Create a new channel version
                 last_created_ch_ver = ChannelVersion.objects.create(
                     channel=channel,
@@ -119,7 +143,9 @@ class Command(BaseCommand):
                     included_languages=pub_data.get('included_languages'),
                     non_distributable_licenses_included=pub_data.get('non_distributable_licenses_included'),
                 )
-                last_created_ch_ver.special_permissions_included.set(pub_data.get('special_permissions_included', []))
+                # Set the M2M relation for special permissions
+                if special_permissions:
+                    last_created_ch_ver.special_permissions_included.set(special_permissions)
                 logging.info(f"Created channel version {last_created_ch_ver.id} for channel {channel.id}")
 
             channel.version_info = last_created_ch_ver
