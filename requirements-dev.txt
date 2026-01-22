@@ -61,6 +61,7 @@ packaging==25.0
     #   build
     #   drf-yasg
     #   pytest
+    #   wheel
 pip-tools==7.5.2
     # via -r requirements-dev.in
 platformdirs==4.3.6
@@ -121,5 +122,5 @@ uritemplate==3.0.1
     # via drf-yasg
 virtualenv==20.26.6
     # via pre-commit
-wheel==0.38.1
+wheel==0.46.2
     # via pip-tools
