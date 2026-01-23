@@ -3,7 +3,6 @@ from le_utils.constants import content_kinds
 from le_utils.constants import licenses
 
 from contentcuration.models import AuditedSpecialPermissionsLicense
-from contentcuration.models import Channel
 from contentcuration.models import ChannelVersion
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
@@ -191,7 +190,9 @@ class TestCreateChannelVersions(StudioTestCase):
         call_command("create_channel_versions")
         channel.refresh_from_db()
 
-        channel_versions = ChannelVersion.objects.filter(channel=channel).order_by("version")
+        channel_versions = ChannelVersion.objects.filter(channel=channel).order_by(
+            "version"
+        )
         self.assertEqual(
             channel_versions.count(),
             2,

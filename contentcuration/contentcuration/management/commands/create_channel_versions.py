@@ -1,11 +1,16 @@
 import logging as logmodule
 from itertools import chain
 
-from contentcuration.models import AuditedSpecialPermissionsLicense, Channel, ChannelVersion, License
 from django.core.management.base import BaseCommand
 from le_utils.constants import licenses
 
+from contentcuration.models import AuditedSpecialPermissionsLicense
+from contentcuration.models import Channel
+from contentcuration.models import ChannelVersion
+from contentcuration.models import License
+
 logging = logmodule.getLogger("command")
+
 
 def compute_special_permissions(data, channel, published_nodes):
     """
@@ -15,7 +20,7 @@ def compute_special_permissions(data, channel, published_nodes):
     Note: These objects are NOT stored in the data dict since they are not JSON serializable
     and the data dict may be saved to a JSONField (channel.published_data).
     """
-    if data.get('special_permissions_included'):
+    if data.get("special_permissions_included"):
         # Already computed, return empty (will be handled by existing data)
         return []
 
@@ -25,7 +30,9 @@ def compute_special_permissions(data, channel, published_nodes):
         .first()
     )
 
-    if not special_permissions_id or special_permissions_id not in data.get('included_licenses', []):
+    if not special_permissions_id or special_permissions_id not in data.get(
+        "included_licenses", []
+    ):
         return []
 
     special_perms_descriptions = list(
@@ -71,11 +78,11 @@ def validate_published_data(data, channel):
         data = {}
 
     # Go through each required field and calculate any missing fields if we can
-    if not data.get('included_categories'):
-        included_categories_dicts = published_nodes.exclude(categories=None).values_list(
-            "categories", flat=True
-        )
-        data['included_categories'] = sorted(
+    if not data.get("included_categories"):
+        included_categories_dicts = published_nodes.exclude(
+            categories=None
+        ).values_list("categories", flat=True)
+        data["included_categories"] = sorted(
             set(
                 chain.from_iterable(
                     (
@@ -85,20 +92,20 @@ def validate_published_data(data, channel):
                 )
             )
         )
-    if not data.get('included_languages'):
+    if not data.get("included_languages"):
         node_languages = published_nodes.exclude(language=None).values_list(
             "language", flat=True
         )
         file_languages = published_nodes.exclude(files__language=None).values_list(
             "files__language", flat=True
         )
-        data['included_languages'] = list(set(chain(node_languages, file_languages)))
+        data["included_languages"] = list(set(chain(node_languages, file_languages)))
 
-    if not data.get('included_licenses'):
-        data['included_licenses'] = list(published_nodes.exclude(license=None).values_list(
-            "license", flat=True
-        ))
-    if not data.get('non_distributable_licenses_included'):
+    if not data.get("included_licenses"):
+        data["included_licenses"] = list(
+            published_nodes.exclude(license=None).values_list("license", flat=True)
+        )
+    if not data.get("non_distributable_licenses_included"):
         # Calculate non-distributable licenses (All Rights Reserved)
         all_rights_reserved_id = (
             License.objects.filter(license_name=licenses.ALL_RIGHTS_RESERVED)
@@ -106,9 +113,10 @@ def validate_published_data(data, channel):
             .first()
         )
 
-        data['non_distributable_licenses'] = (
+        data["non_distributable_licenses"] = (
             [all_rights_reserved_id]
-            if all_rights_reserved_id and all_rights_reserved_id in data['included_licenses']
+            if all_rights_reserved_id
+            and all_rights_reserved_id in data["included_licenses"]
             else []
         )
 
@@ -131,22 +139,30 @@ class Command(BaseCommand):
 
             # Validate published_data
             for pub_data in channel.published_data.values():
-                logging.info(f"Validating published data for channel {channel.id} version {pub_data['version']}")
+                logging.info(
+                    f"Validating published data for channel {channel.id} version {pub_data['version']}"
+                )
                 special_permissions = validate_published_data(pub_data, channel)
 
                 # Create a new channel version
                 last_created_ch_ver = ChannelVersion.objects.create(
                     channel=channel,
-                    version=pub_data.get('version'),
-                    included_categories=pub_data.get('included_categories', []),
-                    included_licenses=pub_data.get('included_licenses'),
-                    included_languages=pub_data.get('included_languages'),
-                    non_distributable_licenses_included=pub_data.get('non_distributable_licenses_included'),
+                    version=pub_data.get("version"),
+                    included_categories=pub_data.get("included_categories", []),
+                    included_licenses=pub_data.get("included_licenses"),
+                    included_languages=pub_data.get("included_languages"),
+                    non_distributable_licenses_included=pub_data.get(
+                        "non_distributable_licenses_included"
+                    ),
                 )
                 # Set the M2M relation for special permissions
                 if special_permissions:
-                    last_created_ch_ver.special_permissions_included.set(special_permissions)
-                logging.info(f"Created channel version {last_created_ch_ver.id} for channel {channel.id}")
+                    last_created_ch_ver.special_permissions_included.set(
+                        special_permissions
+                    )
+                logging.info(
+                    f"Created channel version {last_created_ch_ver.id} for channel {channel.id}"
+                )
 
             channel.version_info = last_created_ch_ver
             channel.save()
