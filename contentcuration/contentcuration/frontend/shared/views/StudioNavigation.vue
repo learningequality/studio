@@ -127,7 +127,7 @@
 
     <nav
       v-if="tabs && tabs.length"
-      :aria-labelledby="$tr('mainNavigationLabel')"
+      :aria-label="$tr('mainNavigationLabel')"
     >
       <div
         class="studio-navigation-tabs-wrapper"
