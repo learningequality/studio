@@ -176,6 +176,7 @@
       v-if="loggedIn && sidePanelOpen"
       alignment="left"
       sidePanelWidth="300px"
+      :aria-label="$tr('navigationMenu')"
       closeButtonIconType="close"
       closeButtonPosition="left"
       immersive
@@ -192,10 +193,7 @@
 
       <template #default>
         <div class="navigation-menu-content">
-          <nav
-            class="navigation-menu-nav"
-            :aria-label="$tr('navigationMenu')"
-          >
+          <nav class="navigation-menu-nav">
             <StudioNavigationOption
               :label="$tr('channels')"
               :link="channelsLink"
