@@ -12,9 +12,7 @@
       </template>
 
       <template #default>
-        <div
-          style="padding: 24px 32px 16px;"
-        >
+        <div style="padding: 24px 32px 16px">
           <KRadioButtonGroup>
             <KRadioButton
               :label="modeLive$()"
