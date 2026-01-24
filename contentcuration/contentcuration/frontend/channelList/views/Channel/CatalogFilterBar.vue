@@ -7,6 +7,7 @@
         :key="`catalog-filter-${index}`"
         close
         class="ma-1"
+        :data-test="`filter-chip-${index}`"
         @input="filter.onclose"
       >
         {{ filter.text }}
@@ -16,7 +17,7 @@
         class="clear-link"
         :text="$tr('clearAll')"
         appearance="basic-link"
-        data-test="clear"
+        data-testid="clear"
         @click="clearFilters"
       />
     </div>
