@@ -1,15 +1,14 @@
 import { render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
-import { createLocalVue } from '@vue/test-utils';
 import Vuex from 'vuex';
 import VueRouter from 'vue-router';
 import { factory } from '../../../store';
 import router from '../../../router';
 import CatalogFilterBar from '../CatalogFilterBar';
+import Vue from 'vue';
 
-const localVue = createLocalVue();
-localVue.use(Vuex);
-localVue.use(VueRouter);
+Vue.use(Vuex);
+Vue.use(VueRouter);
 
 const collection = { id: 'test-collection' };
 
@@ -19,6 +18,17 @@ const query = {
   coach: true,
   collection: 'some-collection',
 };
+
+async function closeChipByText(user, text) {
+  const chip = await screen.findByText(text);
+
+  const closeButton = chip
+    .closest('[data-test^="filter-chip"]')
+    .querySelector('i');
+
+  await user.click(closeButton);
+}
+
 
 function makeWrapper() {
   const store = factory();
@@ -31,7 +41,7 @@ function makeWrapper() {
     .catch(() => {});
 
   return render(CatalogFilterBar, {
-    localVue,
+    // localVue,
     store,
     router,
     computed: {
@@ -52,16 +62,11 @@ describe('catalogFilterBar', () => {
       .catch(() => {});
   });
 
-  afterEach(() => {
-    document.body.innerHTML = '';
-  });
-
   it('clear all button should remove all filters', async () => {
     const user = userEvent.setup();
     makeWrapper();
 
-    const clearButton = await screen.findByText('Clear all');
-    await user.click(clearButton);
+    await user.click(screen.getByTestId('clear'));
 
     await waitFor(() => {
       expect(router.currentRoute.query.keywords).toBeUndefined();
@@ -75,9 +80,7 @@ describe('catalogFilterBar', () => {
     const user = userEvent.setup();
     makeWrapper();
 
-    const testingChip = await screen.findByText('"testing"');
-    const closeButton = testingChip.closest('.v-chip').querySelector('.v-chip__close');
-    await user.click(closeButton);
+    await closeChipByText(user, '"testing"');
 
     await waitFor(() => {
       expect(router.currentRoute.query.keywords).toBeUndefined();
@@ -91,10 +94,7 @@ describe('catalogFilterBar', () => {
     const user = userEvent.setup();
     makeWrapper();
 
-    // Find the chip with "Coach content" text and click its close button
-    const coachChip = await screen.findByText('Coach content');
-    const coachCloseButton = coachChip.closest('.v-chip').querySelector('.v-chip__close');
-    await user.click(coachCloseButton);
+    await closeChipByText(user, 'Coach content');
 
     await waitFor(() => {
       expect(router.currentRoute.query.coach).toBeUndefined();
@@ -107,18 +107,13 @@ describe('catalogFilterBar', () => {
   it('removing list-based filter should only remove that item from the query', async () => {
     const user = userEvent.setup();
     makeWrapper();
-
-    const englishChip = await screen.findByText('English');
-    const englishCloseButton = englishChip.closest('.v-chip').querySelector('.v-chip__close');
-    await user.click(englishCloseButton);
+    await closeChipByText(user, 'English');
 
     await waitFor(() => {
       expect(router.currentRoute.query.languages).toBe('es');
     });
 
-    const espanolChip = await screen.findByText('Español');
-    const espanolCloseButton = espanolChip.closest('.v-chip').querySelector('.v-chip__close');
-    await user.click(espanolCloseButton);
+    await closeChipByText(user, 'Español');
 
     await waitFor(() => {
       expect(router.currentRoute.query.languages).toBeUndefined();
