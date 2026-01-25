@@ -17,9 +17,9 @@
       </p>
       <p>
         {{ $untranslated('introductionP1Part1') }}
-        <ActionLink
+        <KRouterLink
           :text="$untranslated('introductionP1TC')"
-          @click="$router.push({ query: { showPolicy: policies.COMMUNITY_STANDARDS } })"
+          :to="{ query: { showPolicy: policies.COMMUNITY_STANDARDS } }"
         />
         {{ $untranslated('introductionP1Part2') }}
         <b>{{ $untranslated('introductionP1TU') }}</b>
@@ -238,9 +238,9 @@
         <h2>{{ $untranslated('expectationOfPrivacyHeader') }}</h2>
         <p>
           {{ $untranslated('expectationOfPrivacyP1') }}
-          <ActionLink
+          <KRouterLink
             :text="$untranslated('expectationOfPrivacyP1TC')"
-            @click="$router.push({ query: { showPolicy: policies.TERMS_OF_SERVICE } })"
+            :to="{query: { showPolicy: policies.TERMS_OF_SERVICE }}"
           />
         </p>
       </div>
@@ -284,7 +284,7 @@
         <p>{{ $untranslated('cookiesP1') }}</p>
         <p>
           {{ $untranslated('cookiesP2') }}
-          <ActionLink
+          <KExternalLink
             :text="$untranslated('cookieLink')"
             href="https://learningequality.org/cookies/"
             target="_blank"

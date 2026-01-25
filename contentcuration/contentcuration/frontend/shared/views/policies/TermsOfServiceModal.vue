@@ -183,7 +183,7 @@
         <h2>{{ $tr('dmcaHeader') }}</h2>
         <p>{{ $tr('dmcaP1') }}</p>
         <p>
-          <ActionLink
+          <KExternalLink
             :text="$tr('dmcaLink')"
             href="https://docs.google.com/forms/d/e/1FAIpQLSd7qWORCOOczCnOlDzaftIjBsaUtl3DKH3hbxlO1arRc1_IQg/viewform?usp=sf_link"
             target="_blank"
@@ -208,9 +208,9 @@
         <h2>{{ $tr('communityStandardsHeader') }}</h2>
         <p>{{ $tr('communityStandardsP1') }}</p>
         <p>
-          <ActionLink
+          <KRouterLink
             :text="$tr('communityStandardsLink')"
-            @click="$router.push({ query: { showPolicy: policies.COMMUNITY_STANDARDS } })"
+            :to="{ query: { showPolicy: policies.COMMUNITY_STANDARDS }}"
           />
         </p>
       </div>
@@ -223,9 +223,9 @@
         <h2>{{ $tr('yourPrivacyHeader') }}</h2>
         <p>{{ $tr('yourPrivacyP1') }}</p>
         <p>
-          <ActionLink
+          <KRouterLink
             :text="$tr('yourPrivacyLink')"
-            @click="$router.push({ query: { showPolicy: policies.PRIVACY } })"
+            :to="{query: { showPolicy: policies.PRIVACY } }"
           />
         </p>
       </div>
