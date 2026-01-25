@@ -240,7 +240,7 @@
           {{ $untranslated('expectationOfPrivacyP1') }}
           <KRouterLink
             :text="$untranslated('expectationOfPrivacyP1TC')"
-            :to="{query: { showPolicy: policies.TERMS_OF_SERVICE }}"
+            :to="{ query: { showPolicy: policies.TERMS_OF_SERVICE } }"
           />
         </p>
       </div>

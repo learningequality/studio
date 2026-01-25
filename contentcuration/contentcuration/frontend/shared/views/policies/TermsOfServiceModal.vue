@@ -210,7 +210,7 @@
         <p>
           <KRouterLink
             :text="$tr('communityStandardsLink')"
-            :to="{ query: { showPolicy: policies.COMMUNITY_STANDARDS }}"
+            :to="{ query: { showPolicy: policies.COMMUNITY_STANDARDS } }"
           />
         </p>
       </div>
@@ -225,7 +225,7 @@
         <p>
           <KRouterLink
             :text="$tr('yourPrivacyLink')"
-            :to="{query: { showPolicy: policies.PRIVACY } }"
+            :to="{ query: { showPolicy: policies.PRIVACY } }"
           />
         </p>
       </div>
