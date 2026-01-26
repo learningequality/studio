@@ -1,6 +1,6 @@
 <template>
 
-  <MessageLayout :header="$tr('accountCreatedTitle')">
+  <StudioMessageLayout :header="$tr('accountCreatedTitle')">
     <template #back>
       <KRouterLink
         :to="{ name: 'Main' }"
@@ -9,19 +9,19 @@
         appearance="raised-button"
       />
     </template>
-  </MessageLayout>
+  </StudioMessageLayout>
 
 </template>
 
 
 <script>
 
-  import MessageLayout from '../../components/MessageLayout';
+  import StudioMessageLayout from '../../components/StudioMessageLayout';
 
   export default {
     name: 'AccountCreated',
     components: {
-      MessageLayout,
+      StudioMessageLayout,
     },
     $trs: {
       accountCreatedTitle: 'Account successfully created',
