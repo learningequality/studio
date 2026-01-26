@@ -2,8 +2,8 @@ import { render, screen, within, configure } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import VueRouter from 'vue-router';
 import Vuex from 'vuex';
-import { ChannelListTypes } from 'shared/constants';
 import ChannelSelectionList from '../ChannelSelectionList';
+import { ChannelListTypes } from 'shared/constants';
 
 // Configure VTL to use 'data-test' instead of the default 'data-testid'
 configure({ testIdAttribute: 'data-test' });
@@ -66,7 +66,7 @@ const renderComponent = (props = {}) => {
     props: {
       listType: ChannelListTypes.EDITABLE,
       value: [], // Default to empty
-      ...props,  // Allow overriding props for specific tests
+      ...props, // Allow overriding props for specific tests
     },
   });
 };
@@ -81,7 +81,7 @@ describe('ChannelSelectionList', () => {
 
     // Specific wait avoids wrapping the whole block in waitFor
     expect(await screen.findByLabelText(/search for a channel/i)).toBeInTheDocument();
-    
+
     expect(screen.getByText(editChannel.name)).toBeInTheDocument();
     expect(screen.getByText(editChannel2.name)).toBeInTheDocument();
     expect(screen.queryByText(publicChannel.name)).not.toBeInTheDocument();
@@ -112,10 +112,10 @@ describe('ChannelSelectionList', () => {
 
     // Using getByTestId because the component doesn't expose unique accessible roles for individual channel checkboxes
     const checkboxRow = screen.getByTestId(`checkbox-${editChannel.id}`);
-    
+
     // Find the checkbox strictly within this row
     const checkbox = within(checkboxRow).getByRole('checkbox');
-    
+
     await user.click(checkbox);
 
     expect(emitted()).toHaveProperty('input');
@@ -125,7 +125,7 @@ describe('ChannelSelectionList', () => {
 
   it('deselects a channel when the user clicks the checkbox of an already selected channel', async () => {
     const user = userEvent.setup();
-    
+
     // Initialize with the channel already selected
     const { emitted } = await renderComponent({ value: [editChannel.id] });
 
@@ -137,10 +137,10 @@ describe('ChannelSelectionList', () => {
 
     // Click the checkbox to deselect
     await user.click(checkbox);
-    
+
     expect(emitted()).toHaveProperty('input');
     expect(emitted().input).toHaveLength(1);
-    expect(emitted().input[0][0]).toEqual([]); 
+    expect(emitted().input[0][0]).toEqual([]);
   });
 
   it('selects a channel when the user clicks the channel card', async () => {
@@ -160,7 +160,7 @@ describe('ChannelSelectionList', () => {
 
   it('deselects a channel when the user clicks a selected channel card', async () => {
     const user = userEvent.setup();
-    
+
     // Initialize with the channel already selected
     const { emitted } = await renderComponent({ value: [editChannel.id] });
 
