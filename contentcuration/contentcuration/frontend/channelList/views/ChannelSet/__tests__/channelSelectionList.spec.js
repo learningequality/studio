@@ -1,7 +1,7 @@
 import { render, screen, within, configure } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import VueRouter from 'vue-router';
-import Vuex from 'vuex';
+import { Store } from 'vuex';
 import ChannelSelectionList from '../ChannelSelectionList';
 import { ChannelListTypes } from 'shared/constants';
 
@@ -38,7 +38,7 @@ const mockActions = {
 };
 
 const makeStore = () =>
-  new Vuex.Store({
+  new Store({
     modules: {
       channel: {
         namespaced: true,
@@ -110,7 +110,8 @@ describe('ChannelSelectionList', () => {
 
     await screen.findByText(editChannel.name);
 
-    // Using getByTestId because the component doesn't expose unique accessible roles for individual channel checkboxes
+    // Using getByTestId because the component doesn't expose unique
+    // accessible roles for individual channel checkboxes
     const checkboxRow = screen.getByTestId(`checkbox-${editChannel.id}`);
 
     // Find the checkbox strictly within this row
@@ -131,7 +132,8 @@ describe('ChannelSelectionList', () => {
 
     await screen.findByText(editChannel.name);
 
-    // Using getByTestId because the component doesn't expose unique accessible roles for individual channel checkboxes
+    // Using getByTestId because the component doesn't expose unique
+    // accessible roles for individual channel checkboxes
     const checkboxRow = screen.getByTestId(`checkbox-${editChannel.id}`);
     const checkbox = within(checkboxRow).getByRole('checkbox');
 
@@ -149,7 +151,8 @@ describe('ChannelSelectionList', () => {
 
     await screen.findByText(editChannel.name);
 
-    // Using getByTestId because the component doesn't expose accessible roles for channel cards
+    // Using getByTestId because the component doesn't expose accessible
+    // roles for channel cards
     const card = screen.getByTestId(`channel-item-${editChannel.id}`);
     await user.click(card);
 
@@ -166,7 +169,8 @@ describe('ChannelSelectionList', () => {
 
     await screen.findByText(editChannel.name);
 
-    // Using getByTestId because the component doesn't expose accessible roles for channel cards
+    // Using getByTestId because the component doesn't expose accessible
+    // roles for channel cards
     const card = screen.getByTestId(`channel-item-${editChannel.id}`);
     await user.click(card);
 
