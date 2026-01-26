@@ -5,7 +5,7 @@ import StudioMessageLayout from '../StudioMessageLayout.vue';
 const createRouter = () => {
   return new VueRouter({
     mode: 'abstract',
-    routes: [{ path: '/', name: 'Main', component: { template: '<div />' } }],
+    routes: [{ path: '/', name: 'Main' }],
   });
 };
 
@@ -17,15 +17,6 @@ const renderComponent = (props = {}, slots = {}) => {
     },
     slots,
     routes: createRouter(),
-    stubs: {
-      StudioPage: {
-        template: '<div class="studio-page-stub"><slot /></div>',
-      },
-      KRouterLink: {
-        props: ['to', 'text', 'appearance'],
-        template: '<a href="#">{{ text }}</a>',
-      },
-    },
   });
 };
 
