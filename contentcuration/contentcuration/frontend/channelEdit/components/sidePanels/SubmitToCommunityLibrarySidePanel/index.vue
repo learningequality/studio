@@ -439,8 +439,7 @@
         isFinished: licenseAuditIsFinished,
         invalidLicenses,
         includedLicenses,
-        checkAndTriggerAudit: checkAndTriggerLicenseAudit,
-      } = useLicenseAudit(props.channel, currentChannelVersion);
+      } = useLicenseAudit(versionDetail, publishedDataIsLoading, publishedDataIsFinished);
 
       const allSpecialPermissionsChecked = ref(true);
 
@@ -470,7 +469,6 @@
       watch(isPublishing, async (newIsPublishing, oldIsPublishing) => {
         if (oldIsPublishing === true && newIsPublishing === false) {
           await fetchPublishedData();
-          await checkAndTriggerLicenseAudit();
         }
       });
 
@@ -479,7 +477,6 @@
 
         if (!isPublishing.value) {
           await fetchPublishedData();
-          await checkAndTriggerLicenseAudit();
         }
       });
 

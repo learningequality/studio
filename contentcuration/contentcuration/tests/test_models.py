@@ -1818,8 +1818,8 @@ class ChannelVersionValidationTestCase(StudioTestCase):
         with self.assertRaises(ValidationError):
             cv.full_clean()
 
-    def test_non_distributable_licenses_included_valid_choices(self):
-        """Test that non_distributable_licenses_included accepts valid license IDs."""
+    def test_non_distributable_included_licenses_valid_choices(self):
+        """Test that non_distributable_included_licenses accepts valid license IDs."""
 
         call_command("loadconstants")
         valid_license = License.objects.first()
@@ -1829,19 +1829,19 @@ class ChannelVersionValidationTestCase(StudioTestCase):
         cv = ChannelVersion(
             channel=self.channel,
             version=1,
-            non_distributable_licenses_included=[valid_license.id],
+            non_distributable_included_licenses=[valid_license.id],
         )
         cv.full_clean()
         cv.save()
-        self.assertEqual(cv.non_distributable_licenses_included, [valid_license.id])
+        self.assertEqual(cv.non_distributable_included_licenses, [valid_license.id])
 
-    def test_non_distributable_licenses_included_invalid_choice(self):
-        """Test that non_distributable_licenses_included rejects invalid license IDs."""
+    def test_non_distributable_included_licenses_invalid_choice(self):
+        """Test that non_distributable_included_licenses rejects invalid license IDs."""
         invalid_license_id = 99999
         cv = ChannelVersion(
             channel=self.channel,
             version=1,
-            non_distributable_licenses_included=[invalid_license_id],
+            non_distributable_included_licenses=[invalid_license_id],
         )
         with self.assertRaises(ValidationError):
             cv.full_clean()

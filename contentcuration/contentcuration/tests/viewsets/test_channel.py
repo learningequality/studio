@@ -1351,120 +1351,6 @@ class GetPublishedDataTestCase(StudioAPITestCase):
         )
         self.assertEqual(response.status_code, 404, response.content)
 
-    def test_published_data_in_channel_list(self):
-        """Test that published_data is included in channel list response"""
-        self.client.force_authenticate(user=self.editor_user)
-
-        response = self.client.get(
-            reverse("channel-list") + "?edit=true", format="json"
-        )
-        self.assertEqual(response.status_code, 200, response.content)
-
-        response_data = response.json()
-        channels = (
-            response_data
-            if isinstance(response_data, list)
-            else response_data["results"]
-        )
-        channel = next((c for c in channels if c["id"] == self.channel.id), None)
-        self.assertIsNotNone(channel)
-        self.assertIn("published_data", channel)
-        self.assertEqual(channel["published_data"], self.channel.published_data)
-
-
-class AuditLicensesActionTestCase(StudioAPITestCase):
-    def setUp(self):
-        super().setUp()
-
-        self.editor_user = testdata.user(email="editor@user.com")
-        self.forbidden_user = testdata.user(email="forbidden@user.com")
-        self.admin_user = self.admin_user
-
-        self.channel = testdata.channel()
-        self.channel.editors.add(self.editor_user)
-        # Mark channel as published
-        self.channel.main_tree.published = True
-        self.channel.main_tree.save()
-        self.channel.version = 1
-        self.channel.save()
-
-    def test_audit_licenses__is_editor(self):
-        """Test that an editor can trigger license audit"""
-        from contentcuration.tasks import audit_channel_licenses_task
-
-        self.client.force_authenticate(user=self.editor_user)
-
-        with patch.object(
-            audit_channel_licenses_task, "fetch_or_enqueue"
-        ) as mock_enqueue:
-            mock_async_result = Mock()
-            mock_async_result.task_id = "test-task-id-123"
-            mock_enqueue.return_value = mock_async_result
-
-            response = self.client.post(
-                reverse("channel-audit-licenses", kwargs={"pk": self.channel.id}),
-                format="json",
-            )
-
-            self.assertEqual(response.status_code, 200, response.content)
-            data = response.json()
-            self.assertIn("task_id", data)
-            self.assertEqual(data["task_id"], "test-task-id-123")
-            mock_enqueue.assert_called_once()
-
-    def test_audit_licenses__is_admin(self):
-        """Test that an admin can trigger license audit"""
-        from contentcuration.tasks import audit_channel_licenses_task
-
-        self.client.force_authenticate(user=self.admin_user)
-
-        with patch.object(
-            audit_channel_licenses_task, "fetch_or_enqueue"
-        ) as mock_enqueue:
-            mock_async_result = Mock()
-            mock_async_result.task_id = "test-task-id-456"
-            mock_enqueue.return_value = mock_async_result
-
-            response = self.client.post(
-                reverse("channel-audit-licenses", kwargs={"pk": self.channel.id}),
-                format="json",
-            )
-
-            self.assertEqual(response.status_code, 200, response.content)
-            data = response.json()
-            self.assertIn("task_id", data)
-
-    def test_audit_licenses__is_forbidden_user(self):
-        """Test that a non-editor cannot trigger license audit"""
-        self.client.force_authenticate(user=self.forbidden_user)
-
-        response = self.client.post(
-            reverse("channel-audit-licenses", kwargs={"pk": self.channel.id}),
-            format="json",
-        )
-
-        self.assertEqual(response.status_code, 404, response.content)
-
-    def test_audit_licenses__channel_not_published(self):
-        """Test that audit fails when channel is not published"""
-        self.channel.main_tree.published = False
-        self.channel.main_tree.save()
-
-        self.client.force_authenticate(user=self.editor_user)
-
-        response = self.client.post(
-            reverse("channel-audit-licenses", kwargs={"pk": self.channel.id}),
-            format="json",
-        )
-
-        self.assertEqual(response.status_code, 400, response.content)
-        response_data = response.json()
-        error_message = (
-            response_data["detail"]
-            if isinstance(response_data, dict)
-            else response_data[0]
-        )
-        self.assertIn("must be published", str(error_message))
 
 
 class GetVersionDetailEndpointTestCase(StudioAPITestCase):
@@ -1553,17 +1439,18 @@ class GetVersionDetailEndpointTestCase(StudioAPITestCase):
             "included_languages",
             "included_licenses",
             "included_categories",
-            "non_distributable_licenses_included",
+            "non_distributable_included_licenses",
+            "included_special_permissions",
         ]
         for field in expected_fields:
             self.assertIn(field, data, f"Field '{field}' should be in response")
 
-    def test_get_version_detail_excludes_special_permissions_included(self):
-        """Test that special_permissions_included is not in the response."""
+    def test_get_version_detail_includes_special_permissions(self):
+        """Test that included_special_permissions is returned in the response."""
         special_license = AuditedSpecialPermissionsLicense.objects.create(
             description="Test special permissions license"
         )
-        self.channel_version.special_permissions_included.add(special_license)
+        self.channel_version.included_special_permissions.add(special_license)
 
         url = reverse("channel-version-detail", kwargs={"pk": self.channel.id})
         response = self.client.get(url)
@@ -1571,15 +1458,11 @@ class GetVersionDetailEndpointTestCase(StudioAPITestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
 
-        self.assertNotIn(
-            "special_permissions_included",
-            data,
-            "special_permissions_included should not be in the response. "
-            "Use /api/audited_special_permissions_license/?channel_version=<uuid> instead.",
-        )
+        self.assertIn("included_special_permissions", data)
+        self.assertEqual(data["included_special_permissions"], [special_license.id])
 
     def test_get_version_detail_with_special_permissions_licenses(self):
-        """Test that get_version_detail works correctly even when special permissions licenses exist."""
+        """Test that get_version_detail includes special permissions licenses."""
         license1 = AuditedSpecialPermissionsLicense.objects.create(
             description="First special permissions license"
         )
@@ -1587,7 +1470,7 @@ class GetVersionDetailEndpointTestCase(StudioAPITestCase):
             description="Second special permissions license"
         )
 
-        self.channel_version.special_permissions_included.add(license1, license2)
+        self.channel_version.included_special_permissions.add(license1, license2)
 
         url = reverse("channel-version-detail", kwargs={"pk": self.channel.id})
         response = self.client.get(url)
@@ -1595,6 +1478,9 @@ class GetVersionDetailEndpointTestCase(StudioAPITestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
 
-        self.assertNotIn("special_permissions_included", data)
+        self.assertCountEqual(
+            data["included_special_permissions"],
+            [license1.id, license2.id],
+        )
         self.assertEqual(data["version"], 3)
         self.assertEqual(data["resource_count"], 25)

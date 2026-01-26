@@ -1542,12 +1542,12 @@ class ChannelVersion(models.Model):
         null=True,
         blank=True,
     )
-    non_distributable_licenses_included = ArrayField(
+    non_distributable_included_licenses = ArrayField(
         models.IntegerField(choices=get_license_choices()),
         null=True,
         blank=True,
     )
-    special_permissions_included = models.ManyToManyField(
+    included_special_permissions = models.ManyToManyField(
         "AuditedSpecialPermissionsLicense",
         related_name="channel_versions",
         blank=True,

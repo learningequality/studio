@@ -1416,10 +1416,6 @@ export const Channel = new CreateModelResource({
     const response = await client.get(window.Urls.channel_version_detail(id));
     return response.data;
   },
-  async auditLicenses(id) {
-    const response = await client.post(window.Urls.channel_audit_licenses(id));
-    return response.data;
-  },
 });
 
 function getChannelFromChannelScope() {
