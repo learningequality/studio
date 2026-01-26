@@ -14,17 +14,25 @@ jest.mock('../../constants', () => ({
   },
 }));
 
-jest.mock('../../utils/metadataStringsTranslation', () => ({
-  translateMetadataString: key => {
-    const translations = {
-      lowerPrimary: 'Lower Primary',
-      upperPrimary: 'Upper Primary',
-      mathematics: 'Mathematics',
-      sciences: 'Sciences',
-    };
-    return translations[key] || key;
-  },
-}));
+jest.mock('../../mixins', () => {
+  const actualMixins = jest.requireActual('../../mixins');
+  return {
+    ...actualMixins,
+    metadataTranslationMixin: {
+      methods: {
+        translateMetadataString(key) {
+          const translations = {
+            lowerPrimary: 'Lower Primary',
+            upperPrimary: 'Upper Primary',
+            mathematics: 'Mathematics',
+            sciences: 'Sciences',
+          };
+          return translations[key] || key;
+        },
+      },
+    },
+  };
+});
 
 const router = new VueRouter({ routes: [] });
 
@@ -42,13 +50,6 @@ const translations = {
   unpublishedText: 'Unpublished',
 };
 
-const metadataTranslations = {
-  lowerPrimary: 'Lower Primary',
-  upperPrimary: 'Upper Primary',
-  mathematics: 'Mathematics',
-  sciences: 'Sciences',
-};
-
 const createMocks = () => ({
   $formatNumber: jest.fn(n => String(n)),
   $formatDate: jest.fn(() => 'January 15, 2025'),
@@ -60,7 +61,6 @@ const createMocks = () => ({
     };
     return languageMap[code] || code;
   }),
-  translateMetadataString: jest.fn(key => metadataTranslations[key] || key),
 });
 
 describe('StudioDetailsPanel', () => {
