@@ -10,6 +10,7 @@ from celery.utils.log import get_task_logger
 from django.core.management import call_command
 from django.test import TransactionTestCase
 from django_celery_results.models import TaskResult
+
 from . import testdata
 from .helpers import clear_tasks
 from contentcuration.celery import app
@@ -273,5 +274,3 @@ class AsyncTaskTestCase(TransactionTestCase):
             TaskResult.objects.get(task_id=async_result.task_id, status=states.REVOKED)
         except TaskResult.DoesNotExist:
             self.fail("Missing revoked task result")
-
-

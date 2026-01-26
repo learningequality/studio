@@ -87,9 +87,7 @@ class Command(BaseCommand):
                 )
             except Exception as error:  # noqa: BLE001
                 failures += 1
-                self.stderr.write(
-                    f"Failed to backfill channel {channel.id}: {error}"
-                )
+                self.stderr.write(f"Failed to backfill channel {channel.id}: {error}")
 
         self.stdout.write(
             f"Backfill complete. Processed={processed} Failures={failures}"

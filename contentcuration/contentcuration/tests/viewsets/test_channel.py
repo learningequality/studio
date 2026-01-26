@@ -1352,7 +1352,6 @@ class GetPublishedDataTestCase(StudioAPITestCase):
         self.assertEqual(response.status_code, 404, response.content)
 
 
-
 class GetVersionDetailEndpointTestCase(StudioAPITestCase):
     """Test get_version_detail API endpoint."""
 

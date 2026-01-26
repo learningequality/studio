@@ -165,5 +165,3 @@ def sendcustomemails_task(subject, message, query):
 @app.task(name="ensure_versioned_database_exists_task")
 def ensure_versioned_database_exists_task(channel_id, channel_version):
     ensure_versioned_database_exists(channel_id, channel_version)
-
-
