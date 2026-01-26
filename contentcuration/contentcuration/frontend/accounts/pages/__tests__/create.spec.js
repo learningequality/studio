@@ -53,13 +53,13 @@ describe('Create account page', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
-  test('renders the page', async () => {
+  it('renders the page', async () => {
     await renderComponent();
 
     expect(await screen.findByRole('heading', { name: /create an account/i })).toBeInTheDocument();
   });
 
-  test("doesn't call register action when fields are empty", async () => {
+  it("doesn't call register action when fields are empty", async () => {
     await renderComponent();
 
     const finishButton = screen.getByRole('button', { name: /finish/i });
@@ -68,7 +68,7 @@ describe('Create account page', () => {
     expect(mockRegisterAction).not.toHaveBeenCalled();
   });
 
-  test('automatically fills the email field when provided in the URL', async () => {
+  it('automatically fills the email field when provided in the URL', async () => {
     await renderComponent({
       routeQuery: { email: 'newtest@test.com' },
     });
@@ -81,7 +81,7 @@ describe('Create account page', () => {
   });
 
   describe('password validation', () => {
-    test('shows error when password is too short', async () => {
+    it('shows error when password is too short', async () => {
       await renderComponent();
       const passwordInput = screen.getByLabelText(/^password$/i);
       await userEvent.type(passwordInput, '123');
@@ -92,7 +92,7 @@ describe('Create account page', () => {
       ).toBeInTheDocument();
     });
 
-    test('shows error when passwords do not match', async () => {
+    it('shows error when passwords do not match', async () => {
       await renderComponent();
       await userEvent.type(screen.getByLabelText(/^password$/i), 'tester123');
       await userEvent.type(screen.getByLabelText(/confirm password/i), 'different456');
@@ -117,7 +117,7 @@ describe('Create account page', () => {
   //
   // These tests will be re-enabled once this page is migrated to the
   // Kolibri Design System as part of the Vuetify removal effort .
-  test.skip('creates an account when the user submits valid information', async () => {
+  it.skip('creates an account when the user submits valid information', async () => {
     await renderComponent();
 
     await userEvent.type(screen.getByLabelText(/first name/i), 'Test');
@@ -144,7 +144,7 @@ describe('Create account page', () => {
   });
 
   // Skipped for the same reason as above
-  test.skip('shows an offline error when the user is offline', async () => {
+  it.skip('shows an offline error when the user is offline', async () => {
     await renderComponent({ offline: true });
 
     await userEvent.type(screen.getByLabelText(/first name/i), 'Test');
