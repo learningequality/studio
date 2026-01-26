@@ -2,7 +2,6 @@ import threading
 import time
 import uuid
 
-import mock
 import pytest
 from celery import states
 from celery.result import allow_join_result

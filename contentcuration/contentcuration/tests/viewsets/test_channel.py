@@ -7,7 +7,6 @@ from django.urls import reverse
 from kolibri_public.models import ContentNode as PublicContentNode
 from le_utils.constants import content_kinds
 from le_utils.constants.labels import subjects
-from mock import Mock
 from mock import patch
 
 from contentcuration import models
