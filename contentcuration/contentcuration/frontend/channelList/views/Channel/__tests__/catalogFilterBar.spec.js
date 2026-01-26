@@ -2,10 +2,10 @@ import { render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import Vuex from 'vuex';
 import VueRouter from 'vue-router';
+import Vue from 'vue';
 import { factory } from '../../../store';
 import router from '../../../router';
 import CatalogFilterBar from '../CatalogFilterBar';
-import Vue from 'vue';
 
 Vue.use(Vuex);
 Vue.use(VueRouter);
@@ -22,13 +22,10 @@ const query = {
 async function closeChipByText(user, text) {
   const chip = await screen.findByText(text);
 
-  const closeButton = chip
-    .closest('[data-test^="filter-chip"]')
-    .querySelector('i');
+  const closeButton = chip.closest('[data-test^="filter-chip"]').querySelector('i');
 
   await user.click(closeButton);
 }
-
 
 function makeWrapper() {
   const store = factory();
