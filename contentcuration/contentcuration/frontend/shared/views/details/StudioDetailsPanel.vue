@@ -303,19 +303,13 @@
             >
               {{ channel.name }}
             </div>
-            <a
+            <KExternalLink
               v-else
+              class="channel-name notranslate"
               :href="channelUrl(channel)"
-              target="_blank"
-              class="channel-link notranslate"
-            >
-              <span>{{ channel.name }}</span>
-              <KIcon
-                icon="openNewTab"
-                class="rtl-flip"
-                :style="{ marginLeft: '4px', marginRight: '4px' }"
-              />
-            </a>
+              :text="channel.name"
+              openInNewTab
+            />
           </div>
         </template>
       </StudioDetailsRow>
@@ -628,24 +622,7 @@
   }
 
   .channel-name {
-    padding: 0 16px;
-    font-size: 16px;
     font-weight: bold;
-  }
-
-  .channel-link {
-    margin: 0 8px;
-    font-weight: bold;
-    color: #1976d2;
-    text-decoration: none;
-
-    span {
-      text-decoration: underline;
-    }
-
-    &:hover {
-      opacity: 0.8;
-    }
   }
 
   .rtl-flip {
