@@ -51,7 +51,7 @@ describe('ResetPassword', () => {
 
     expect(setPasswordMock).not.toHaveBeenCalled();
 
-    await screen.findByText("Password should be at least 8 characters long");
+    await screen.findByText('Password should be at least 8 characters long');
     await screen.findByText("Passwords don't match");
   });
 
