@@ -92,19 +92,27 @@
         <template #default>
           <p>{{ $formatNumber(_details.resource_count) }}</p>
           <dl class="resource-list">
-            <div
+            <KFixedGrid
               v-for="item in kindCount"
               :key="item.kind_id"
+              :numCols="4"
               class="resource-item"
             >
-              <dt class="resource-label">
-                <ContentNodeIcon :kind="item.kind_id" />
-                <span>{{ translateConstant(item.kind_id) }}</span>
-              </dt>
-              <dd class="resource-value">
-                {{ $formatNumber(item.count) }}
-              </dd>
-            </div>
+              <KGridItem :layout="{ span: 3 }">
+                <dt>
+                  <ContentNodeIcon
+                    class="resource-icon"
+                    :kind="item.kind_id"
+                  />
+                  <span>{{ translateConstant(item.kind_id) }}</span>
+                </dt>
+              </KGridItem>
+              <KGridItem :layout="{ span: 1, alignment: 'right' }">
+                <dd>
+                  {{ $formatNumber(item.count) }}
+                </dd>
+              </KGridItem>
+            </KFixedGrid>
           </dl>
         </template>
       </StudioDetailsRow>
@@ -332,19 +340,16 @@
       >
         {{ $tr('sampleFromChannelHeading') }}
       </label>
-      <div
+      <KGrid
+        gutter="0"
         class="sample-nodes"
-        :class="{
-          'printing-grid': printing,
-          small: windowIsSmall,
-          medium: windowIsMedium,
-          large: windowIsLarge,
-        }"
       >
-        <div
+        <KGridItem
           v-for="node in _details.sample_nodes"
           :key="node.node_id"
-          class="sample-node-card"
+          :layout12="{ span: 3 }"
+          :layout8="{ span: 4 }"
+          :layout4="{ span: printing ? 1 : 4 }"
         >
           <KImg
             v-if="node.thumbnail"
@@ -370,13 +375,14 @@
               </div>
             </template>
           </KImg>
-          <div :class="getTitleClass(node)">
-            <p dir="auto">
-              {{ getTitle(node) }}
-            </p>
-          </div>
-        </div>
-      </div>
+          <p
+            dir="auto"
+            class="sample-node-title"
+          >
+            {{ getTitle(node) }}
+          </p>
+        </KGridItem>
+      </KGrid>
     </div>
   </div>
 
@@ -389,7 +395,6 @@
   import defaultsDeep from 'lodash/defaultsDeep';
   import camelCase from 'lodash/camelCase';
   import orderBy from 'lodash/orderBy';
-  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import {
     fileSizeMixin,
     constantsTranslationMixin,
@@ -456,14 +461,6 @@
       titleMixin,
       metadataTranslationMixin,
     ],
-    setup() {
-      const { windowIsSmall, windowIsMedium, windowIsLarge } = useKResponsiveWindow();
-      return {
-        windowIsSmall,
-        windowIsMedium,
-        windowIsLarge,
-      };
-    },
     props: {
       details: {
         type: Object,
@@ -646,29 +643,11 @@
   }
 
   .resource-item {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 16px;
-    align-items: center;
-    padding: 4px 0;
-    font-size: 12pt;
-    border-top: 0;
-
-    &:hover {
-      background: transparent;
-    }
+    margin: 12px 0;
   }
 
-  .resource-label {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    font-weight: normal;
-  }
-
-  .resource-value {
-    margin: 0;
-    text-align: right;
+  .resource-icon {
+    margin-right: 8px;
   }
 
   .license-chip-wrapper {
@@ -724,7 +703,7 @@
 
   .sample-heading {
     display: block;
-    margin-top: 24px;
+    margin-top: 28px;
     margin-bottom: 8px;
     font-size: 14px;
     font-weight: bold;
@@ -733,39 +712,14 @@
   }
 
   .sample-nodes {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 16px;
-    padding-top: 4px;
-    margin: 16px 0;
-
-    &.medium,
-    &.large {
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    }
-
-    &.printing-grid {
-      grid-template-columns: repeat(4, 1fr);
-    }
+    margin-top: 28px;
   }
 
-  .sample-node-card {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    overflow: hidden;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-
-    > div:last-child {
-      padding: 12px;
-      font-weight: bold;
-      word-break: break-word;
-
-      p {
-        margin: 0;
-      }
-    }
+  .sample-node-title {
+    margin-top: 12px;
+    margin-bottom: 42px;
+    font-weight: bold;
+    word-break: break-word;
   }
 
 </style>

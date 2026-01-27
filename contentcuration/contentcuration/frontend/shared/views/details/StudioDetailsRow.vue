@@ -1,45 +1,48 @@
 <template>
 
-  <div
-    class="studio-details-row"
-    :class="{
-      'printing-mode': printing,
-      small: windowIsSmall,
-      medium: windowIsMedium,
-      large: windowIsLarge,
-    }"
-  >
-    <div class="label-column">
-      <label
-        class="label-text"
-        :style="{ color: $themeTokens.text }"
-        :aria-describedby="definition ? `tooltip-${uniqueId}` : undefined"
-      >
-        {{ label }}
-      </label>
-      <HelpTooltip
-        v-if="definition"
-        class="help-icon"
-        :text="definition"
-        :tooltipId="`tooltip-${uniqueId}`"
-      />
-    </div>
-    <div
-      class="value-column"
-      :class="{ notranslate }"
+  <KGrid class="details-row">
+    <KGridItem
+      :layout12="{ span: 4 }"
+      :layout8="{ span: 3 }"
+      :layout4="{ span: printing ? 2 : 4 }"
     >
-      <slot>
-        {{ text }}
-      </slot>
-    </div>
-  </div>
+      <div class="label-container">
+        <label
+          class="label-text"
+          :style="{ color: $themeTokens.text }"
+          :aria-describedby="definition ? `tooltip-${uniqueId}` : undefined"
+        >
+          {{ label }}
+        </label>
+        <HelpTooltip
+          v-if="definition"
+          class="help-icon"
+          :text="definition"
+          :tooltipId="`tooltip-${uniqueId}`"
+        />
+      </div>
+    </KGridItem>
+    <KGridItem
+      :layout12="{ span: 8 }"
+      :layout8="{ span: 5 }"
+      :layout4="{ span: printing ? 2 : 4 }"
+    >
+      <div
+        class="value-column"
+        :class="{ notranslate }"
+      >
+        <slot>
+          {{ text }}
+        </slot>
+      </div>
+    </KGridItem>
+  </KGrid>
 
 </template>
 
 
 <script>
 
-  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import HelpTooltip from '../HelpTooltip';
   import { printingMixin } from '../../mixins';
 
@@ -51,14 +54,6 @@
       HelpTooltip,
     },
     mixins: [printingMixin],
-    setup() {
-      const { windowIsSmall, windowIsMedium, windowIsLarge } = useKResponsiveWindow();
-      return {
-        windowIsSmall,
-        windowIsMedium,
-        windowIsLarge,
-      };
-    },
     props: {
       label: {
         type: String,
@@ -89,50 +84,31 @@
 
 <style lang="scss" scoped>
 
-  .studio-details-row {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 8px;
-    padding: 16px 0;
-    word-break: break-word;
-
-    &.medium {
-      grid-template-columns: 5fr 7fr;
-    }
-
-    &.large {
-      grid-template-columns: 4fr 8fr;
-    }
-
-    &.printing-mode {
-      grid-template-columns: 4fr 8fr;
-    }
+  .details-row {
+    margin-bottom: 22px;
   }
 
-  .label-column {
+  .label-container {
     position: relative;
-    display: flex;
-    align-items: flex-start;
-    padding-right: 44px;
+    display: inline-block;
+    padding-right: 44px; // space for the help icon
   }
 
   .label-text {
-    font-size: 14px;
     font-weight: bold;
-    line-height: 20px;
+    line-height: 22px;
     vertical-align: middle;
   }
 
   .help-icon {
     position: absolute;
-    top: -12px;
+    top: -10px;
     right: 0;
   }
 
   .value-column {
     padding-left: 10px;
-    font-size: 14px;
-    line-height: 20px;
+    line-height: 22px;
   }
 
 </style>
