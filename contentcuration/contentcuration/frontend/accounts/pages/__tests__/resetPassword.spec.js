@@ -22,9 +22,6 @@ const renderComponent = (queryParams = {}) => {
   const utils = render(ResetPassword, {
     localVue,
     router,
-    mocks: {
-      $tr: key => key,
-    },
     store: {
       modules: {
         account: {
@@ -48,14 +45,14 @@ describe('ResetPassword', () => {
   it('shows validation errors when submitting invalid or mismatching passwords', async () => {
     renderComponent();
 
-    await fireEvent.update(screen.getByLabelText(/passwordLabel/i), 'short');
-    await fireEvent.update(screen.getByLabelText(/passwordConfirmLabel/i), 'mismatched');
-    await fireEvent.click(screen.getByRole('button', { name: /submitButton/i }));
+    await fireEvent.update(screen.getByLabelText(/New Password/i), 'short');
+    await fireEvent.update(screen.getByLabelText(/Confirm Password/i), 'mismatched');
+    await fireEvent.click(screen.getByRole('button', { name: /Submit/i }));
 
     expect(setPasswordMock).not.toHaveBeenCalled();
 
-    await screen.findByText('passwordValidationMessage');
-    await screen.findByText("passwordMatchMessage");
+    await screen.findByText("Password should be at least 8 characters long");
+    await screen.findByText("Passwords don't match");
   });
 
   it('submits form with correct data and preserves query params', async () => {
@@ -63,10 +60,10 @@ describe('ResetPassword', () => {
     const queryParams = { token: 'xyz123', email: 'test@example.com' };
     const { router } = renderComponent(queryParams);
 
-    await fireEvent.update(screen.getByLabelText(/passwordLabel/i), 'validPassword123');
-    await fireEvent.update(screen.getByLabelText(/passwordConfirmLabel/i), 'validPassword123');
+    await fireEvent.update(screen.getByLabelText(/New Password/i), 'validPassword123');
+    await fireEvent.update(screen.getByLabelText(/Confirm Password/i), 'validPassword123');
 
-    await fireEvent.click(screen.getByRole('button', { name: /submitButton/i }));
+    await fireEvent.click(screen.getByRole('button', { name: /Submit/i }));
 
     await waitFor(() => {
       expect(setPasswordMock).toHaveBeenCalledWith(
