@@ -625,14 +625,6 @@
     font-weight: bold;
   }
 
-  .rtl-flip {
-    transform: scaleX(1);
-
-    [dir='rtl'] & {
-      transform: scaleX(-1);
-    }
-  }
-
   .sample-heading {
     margin-top: 28px;
     margin-bottom: 8px;
