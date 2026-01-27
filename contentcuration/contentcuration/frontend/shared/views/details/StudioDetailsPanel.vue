@@ -526,7 +526,6 @@
         return this.categories.join(', ');
       },
     },
-    mounted() {},
     methods: {
       channelUrl(channel) {
         return window.Urls.channel(channel.id);
@@ -575,11 +574,10 @@
 
 <style lang="scss" scoped>
 
-  .printing {
+  .printing ::v-deep * {
     font-family: 'Noto Sans', helvetica !important;
 
-    /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
-    :global(.material-icons) {
+    &.material-icons {
       font-family: 'Material Icons' !important;
     }
   }
