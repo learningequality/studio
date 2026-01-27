@@ -43,7 +43,6 @@
   import useKShow from 'kolibri-design-system/lib/composables/useKShow';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { channelExportMixin } from './mixins';
-  import { qaChannelData } from './qaChannelData';
   import StudioDetailsPanel from 'shared/views/details/StudioDetailsPanel.vue';
   import StudioLargeLoader from 'shared/views/StudioLargeLoader';
   import StudioImmersiveModal from 'shared/views/StudioImmersiveModal';
@@ -97,7 +96,7 @@
         if (!this.channel || !this.details) {
           return {};
         }
-        return { ...this.channel, ...this.details, ...qaChannelData };
+        return { ...this.channel, ...this.details };
       },
       downloadOptions() {
         return [
