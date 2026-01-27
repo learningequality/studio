@@ -8,7 +8,7 @@
       :channelList="channelList"
       :style="pageStyle"
     />
-    <DetailsPanel
+    <StudioDetailsPanel
       v-for="channelWithDetails in channelList"
       :key="channelWithDetails.id"
       ref="details"
@@ -25,7 +25,7 @@
 
 <script>
 
-  import DetailsPanel from '../details/DetailsPanel.vue';
+  import StudioDetailsPanel from '../details/StudioDetailsPanel';
   import { fitToScale, generatePdf } from '../../utils/helpers';
   import ChannelCatalogFrontPage from './ChannelCatalogFrontPage';
 
@@ -33,7 +33,7 @@
     name: 'ChannelCatalogPrint',
     components: {
       ChannelCatalogFrontPage,
-      DetailsPanel,
+      StudioDetailsPanel,
     },
     provide: {
       printing: true,
