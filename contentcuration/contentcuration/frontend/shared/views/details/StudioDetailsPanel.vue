@@ -33,6 +33,8 @@
           v-if="!printing"
           :token="_details.primary_token"
           :loading="false"
+          :style="{ maxWidth: 'max-content' }"
+          :showLabel="false"
         />
         <span v-else>
           {{ _details.primary_token.slice(0, 5) + '-' + _details.primary_token.slice(5) }}
@@ -361,10 +363,10 @@
   import ExpandableList from '../ExpandableList';
   import StudioChip from '../StudioChip';
   import StudioLargeLoader from '../StudioLargeLoader';
-  import StudioCopyToken from '../CopyToken';
   import { SCALE_TEXT, SCALE, CHANNEL_SIZE_DIVISOR } from './constants';
   import StudioDetailsRow from './StudioDetailsRow';
   import StudioThumbnail from 'shared/views/files/StudioThumbnail';
+  import StudioCopyToken from 'shared/views/StudioCopyToken';
 
   const DEFAULT_DETAILS = {
     name: '',
