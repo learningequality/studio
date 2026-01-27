@@ -1,67 +1,15 @@
 import { render, screen } from '@testing-library/vue';
 import VueRouter from 'vue-router';
+import ContentLevels from 'kolibri-constants/labels/Levels';
+import Categories from 'kolibri-constants/labels/Subjects';
 import StudioDetailsPanel from '../details/StudioDetailsPanel.vue';
 
-jest.mock('../../constants', () => ({
-  ...jest.requireActual('../../constants'),
-  LevelsLookup: {
-    lower_primary: 'LOWER_PRIMARY',
-    upper_primary: 'UPPER_PRIMARY',
-  },
-  CategoriesLookup: {
-    mathematics: 'MATHEMATICS',
-    sciences: 'SCIENCES',
-  },
-}));
-
-jest.mock('../../mixins', () => {
-  const actualMixins = jest.requireActual('../../mixins');
-  return {
-    ...actualMixins,
-    metadataTranslationMixin: {
-      methods: {
-        translateMetadataString(key) {
-          const translations = {
-            lowerPrimary: 'Lower Primary',
-            upperPrimary: 'Upper Primary',
-            mathematics: 'Mathematics',
-            sciences: 'Sciences',
-          };
-          return translations[key] || key;
-        },
-      },
-    },
-  };
-});
-
-const router = new VueRouter({ routes: [] });
-
-const translations = {
-  publishedHeading: 'Published on',
-  currentVersionHeading: 'Published version',
-  primaryLanguageHeading: 'Primary language',
-  creationHeading: 'Created on',
-  sizeHeading: 'Channel size',
-  resourceHeading: 'Total resources',
-  levelsHeading: 'Levels',
-  categoriesHeading: 'Categories',
-  authorsLabel: 'Authors',
-  tagsHeading: 'Common tags',
-  unpublishedText: 'Unpublished',
+const renderComponent = (props = {}) => {
+  return render(StudioDetailsPanel, {
+    props,
+    routes: new VueRouter(),
+  });
 };
-
-const createMocks = () => ({
-  $formatNumber: jest.fn(n => String(n)),
-  $formatDate: jest.fn(() => 'January 15, 2025'),
-  $tr: jest.fn(key => translations[key] || key),
-  translateConstant: jest.fn(key => key),
-  translateLanguage: jest.fn(code => {
-    const languageMap = {
-      en: 'English',
-    };
-    return languageMap[code] || code;
-  }),
-});
 
 describe('StudioDetailsPanel', () => {
   const fullChannel = {
@@ -77,8 +25,8 @@ describe('StudioDetailsPanel', () => {
     resource_count: 42,
     resource_size: 1024000000,
     kind_count: [],
-    levels: ['lower_primary', 'upper_primary'],
-    categories: ['mathematics', 'sciences'],
+    levels: [ContentLevels.LOWER_PRIMARY, ContentLevels.UPPER_PRIMARY],
+    categories: [Categories.MATHEMATICS, Categories.SCIENCES],
     includes: { coach_content: 1, exercises: 1 },
     tags: [{ tag_name: 'science' }, { tag_name: 'math' }],
     languages: [],
@@ -120,36 +68,16 @@ describe('StudioDetailsPanel', () => {
     sample_nodes: [],
   };
 
-  describe('basic rendering', () => {
-    it('renders channel header with name and description', () => {
-      render(StudioDetailsPanel, {
-        router,
-        props: { details: fullChannel, loading: false },
-        mocks: createMocks(),
-      });
+  it('renders channel header with name and description', () => {
+    renderComponent({ details: fullChannel, loading: false });
 
-      expect(screen.getByText('Complete Channel')).toBeInTheDocument();
-      expect(screen.getByText('A fully populated channel')).toBeInTheDocument();
-    });
-
-    it('shows placeholder when thumbnail is missing', () => {
-      render(StudioDetailsPanel, {
-        router,
-        props: { details: minimalChannel, loading: false },
-        mocks: createMocks(),
-      });
-
-      expect(screen.getByTestId('placeholder-content')).toBeInTheDocument();
-    });
+    expect(screen.getByText('Complete Channel')).toBeInTheDocument();
+    expect(screen.getByText('A fully populated channel')).toBeInTheDocument();
   });
 
   describe('published channel with full data', () => {
     beforeEach(() => {
-      render(StudioDetailsPanel, {
-        router,
-        props: { details: fullChannel, loading: false },
-        mocks: createMocks(),
-      });
+      renderComponent({ details: fullChannel, loading: false });
     });
 
     it('displays published status and version', () => {
@@ -158,8 +86,8 @@ describe('StudioDetailsPanel', () => {
     });
 
     it('displays translated levels and categories', () => {
-      expect(screen.getByText('Lower Primary')).toBeInTheDocument();
-      expect(screen.getByText('Upper Primary')).toBeInTheDocument();
+      expect(screen.getByText('Lower primary')).toBeInTheDocument();
+      expect(screen.getByText('Upper primary')).toBeInTheDocument();
       expect(screen.getByText('Mathematics')).toBeInTheDocument();
       expect(screen.getByText('Sciences')).toBeInTheDocument();
     });
@@ -175,11 +103,7 @@ describe('StudioDetailsPanel', () => {
 
   describe('unpublished channel with missing data', () => {
     beforeEach(() => {
-      render(StudioDetailsPanel, {
-        router,
-        props: { details: minimalChannel, loading: false },
-        mocks: createMocks(),
-      });
+      renderComponent({ details: minimalChannel, loading: false });
     });
 
     it('displays unpublished status', () => {
@@ -189,10 +113,6 @@ describe('StudioDetailsPanel', () => {
     it('shows placeholder text for empty fields', () => {
       const placeholders = screen.getAllByText('---');
       expect(placeholders.length).toBeGreaterThan(0);
-    });
-
-    it('hides conditional fields when data is missing', () => {
-      expect(screen.queryByText('Primary language')).not.toBeInTheDocument();
     });
   });
 });

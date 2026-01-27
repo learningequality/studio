@@ -1,9 +1,6 @@
 <template>
 
-  <div
-    :class="{ printing }"
-    data-testid="details-panel"
-  >
+  <div :class="{ printing }">
     <StudioThumbnail
       :src="_details.thumbnail_url"
       :encoding="_details.thumbnail_encoding"
