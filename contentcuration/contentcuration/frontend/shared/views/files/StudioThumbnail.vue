@@ -5,13 +5,13 @@
     :style="{ borderColor: $themeTokens.fineLine }"
   >
     <figcaption
-      v-if="kind"
+      v-if="!printing && kind"
       class="caption"
       :class="kind"
     >
       <KIcon
         class="caption-icon"
-        :icon="icon"
+        :icon="kindIcon"
         :color="$themeTokens.textInverted"
       />
       <span :style="{ color: $themeTokens.textInverted }">
@@ -27,9 +27,16 @@
       <template #placeholder>
         <div class="placeholder-wrapper">
           <KIcon
+            v-if="!printing"
+            class="placeholder-icon"
             icon="image"
             :color="$themePalette.grey.v_400"
+          />
+          <KIcon
+            v-else
             class="placeholder-icon"
+            :icon="kind ? kindIcon : 'image'"
+            :color="printing ? $vuetify.theme[kind] : $themePalette.grey.v_400"
           />
         </div>
       </template>
@@ -41,12 +48,12 @@
 
 <script>
 
-  import { constantsTranslationMixin } from 'shared/mixins';
+  import { constantsTranslationMixin, printingMixin } from 'shared/mixins';
   import { getContentKindIcon } from 'shared/utils/icons';
 
   export default {
     name: 'StudioThumbnail',
-    mixins: [constantsTranslationMixin],
+    mixins: [constantsTranslationMixin, printingMixin],
     props: {
       src: {
         type: String,
@@ -66,7 +73,7 @@
       },
     },
     computed: {
-      icon() {
+      kindIcon() {
         return getContentKindIcon(this.kind);
       },
       thumbnailSrc() {
