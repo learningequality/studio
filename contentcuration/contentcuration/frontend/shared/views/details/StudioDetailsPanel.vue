@@ -106,6 +106,7 @@
             v-for="level in levels"
             v-else-if="!printing"
             :key="level"
+            class="chip"
           >
             {{ level }}
           </StudioChip>
@@ -123,6 +124,7 @@
             v-for="category in categories"
             v-else-if="!printing"
             :key="category"
+            class="chip"
           >
             {{ category }}
           </StudioChip>
@@ -136,10 +138,16 @@
           v-if="!printing"
           #default
         >
-          <StudioChip v-if="_details.includes.coach_content">
+          <StudioChip
+            v-if="_details.includes.coach_content"
+            class="chip"
+          >
             {{ $tr('coachHeading') }}
           </StudioChip>
-          <StudioChip v-if="_details.includes.exercises">
+          <StudioChip
+            v-if="_details.includes.exercises"
+            class="chip"
+          >
             {{ $tr('assessmentsIncludedText') }}
           </StudioChip>
           <div v-if="!_details.includes.exercises && !_details.includes.coach_content">
@@ -167,6 +175,7 @@
             v-for="tag in sortedTags"
             v-else-if="!printing"
             :key="tag.tag_name"
+            class="chip"
           >
             <span class="notranslate">{{ tag.tag_name }}</span>
           </StudioChip>
@@ -245,13 +254,14 @@
               :ref="`licenseChip-${license}`"
               class="license-chip-wrapper"
             >
-              <StudioChip>
+              <StudioChip class="chip">
                 {{ translateConstant(license) }}
               </StudioChip>
               <KTooltip
                 :reference="`licenseChip-${license}`"
                 :refs="$refs"
                 placement="top"
+                maxWidth="200px"
               >
                 <span>{{ translateConstant(license + '_description') }}</span>
               </KTooltip>
@@ -592,9 +602,13 @@
     margin-right: 8px;
   }
 
+  .chip {
+    padding: 16px;
+    font-weight: bold;
+  }
+
   .license-chip-wrapper {
-    position: relative;
-    display: inline-block;
+    cursor: pointer;
   }
 
   .preview-row {
