@@ -23,17 +23,7 @@ const renderComponent = (queryParams = {}) => {
     localVue,
     router,
     mocks: {
-      $tr: key => {
-        const translations = {
-          passwordLabel: 'New Password',
-          passwordConfirmLabel: 'Confirm Password',
-          submitButton: 'Submit',
-          resetPasswordFailed: 'Failed to reset password. Please try again.',
-          passwordValidationMessage: 'Password should be at least 8 characters long',
-          passwordMatchMessage: "Passwords don't match",
-        };
-        return translations[key] || key;
-      },
+      $tr: key => key,
     },
     store: {
       modules: {
@@ -58,14 +48,14 @@ describe('ResetPassword', () => {
   it('shows validation errors when submitting invalid or mismatching passwords', async () => {
     renderComponent();
 
-    await fireEvent.update(screen.getByLabelText(/New password/i), 'short');
-    await fireEvent.update(screen.getByLabelText(/Confirm password/i), 'mismatched');
-    await fireEvent.click(screen.getByRole('button', { name: /Submit/i }));
+    await fireEvent.update(screen.getByLabelText(/passwordLabel/i), 'short');
+    await fireEvent.update(screen.getByLabelText(/passwordConfirmLabel/i), 'mismatched');
+    await fireEvent.click(screen.getByRole('button', { name: /submitButton/i }));
 
     expect(setPasswordMock).not.toHaveBeenCalled();
 
-    await screen.findByText('Password should be at least 8 characters long');
-    await screen.findByText("Passwords don't match");
+    await screen.findByText('passwordValidationMessage');
+    await screen.findByText("passwordMatchMessage");
   });
 
   it('submits form with correct data and preserves query params', async () => {
@@ -73,10 +63,10 @@ describe('ResetPassword', () => {
     const queryParams = { token: 'xyz123', email: 'test@example.com' };
     const { router } = renderComponent(queryParams);
 
-    await fireEvent.update(screen.getByLabelText(/New password/i), 'validPassword123');
-    await fireEvent.update(screen.getByLabelText(/Confirm password/i), 'validPassword123');
+    await fireEvent.update(screen.getByLabelText(/passwordLabel/i), 'validPassword123');
+    await fireEvent.update(screen.getByLabelText(/passwordConfirmLabel/i), 'validPassword123');
 
-    await fireEvent.click(screen.getByRole('button', { name: /Submit/i }));
+    await fireEvent.click(screen.getByRole('button', { name: /submitButton/i }));
 
     await waitFor(() => {
       expect(setPasswordMock).toHaveBeenCalledWith(
