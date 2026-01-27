@@ -421,6 +421,10 @@
       metadataTranslationMixin,
     ],
     props: {
+      // Object matching that returned by the channel details and
+      // node details API endpoints, see backend for details of the
+      // object structure and keys. get_details method on ContentNode
+      // model as a starting point.`
       details: {
         type: Object,
         required: true,
