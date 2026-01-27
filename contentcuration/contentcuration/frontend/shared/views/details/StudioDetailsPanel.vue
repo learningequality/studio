@@ -4,32 +4,11 @@
     :class="{ printing }"
     data-testid="details-panel"
   >
-    <div class="thumbnail-container">
-      <KImg
-        v-if="thumbnailSrc"
-        :src="thumbnailSrc"
-        :altText="_details.name"
-        aspectRatio="16:9"
-      />
-      <KImg
-        v-else
-        isDecorative
-        aspectRatio="16:9"
-      >
-        <template #placeholder>
-          <div
-            class="placeholder-content"
-            data-testid="placeholder-content"
-            :style="{ backgroundColor: $themePalette.grey.v_200 }"
-          >
-            <KIcon
-              icon="image"
-              :style="{ fill: $themePalette.grey.v_400, width: '40%', height: '40%' }"
-            />
-          </div>
-        </template>
-      </KImg>
-    </div>
+    <StudioThumbnail
+      :src="_details.thumbnail_url"
+      :encoding="_details.thumbnail_encoding"
+      :style="{ maxWidth: '300px' }"
+    />
     <br >
     <h1
       class="notranslate"
@@ -302,15 +281,10 @@
             :key="channel.id"
             class="preview-row"
           >
-            <div class="source-thumbnail">
-              <KImg
-                v-if="channel.thumbnail"
-                :src="channel.thumbnail"
-                :altText="channel.name"
-                aspectRatio="16:9"
-                scaleType="contain"
-              />
-            </div>
+            <StudioThumbnail
+              class="source-thumbnail"
+              :src="channel.thumbnail"
+            />
             <div
               v-if="printing"
               class="channel-name notranslate"
@@ -351,30 +325,10 @@
           :layout8="{ span: 4 }"
           :layout4="{ span: printing ? 1 : 4 }"
         >
-          <KImg
-            v-if="node.thumbnail"
+          <StudioThumbnail
             :src="node.thumbnail"
-            :altText="getTitle(node)"
-            aspectRatio="16:9"
-            scaleType="contain"
+            :kind="node.kind"
           />
-          <KImg
-            v-else
-            isDecorative
-            aspectRatio="16:9"
-          >
-            <template #placeholder>
-              <div
-                class="placeholder-content"
-                :style="{ backgroundColor: $themePalette.grey.v_200 }"
-              >
-                <KIcon
-                  icon="image"
-                  :style="{ fill: $themePalette.grey.v_400, width: '40%', height: '40%' }"
-                />
-              </div>
-            </template>
-          </KImg>
           <p
             dir="auto"
             class="sample-node-title"
@@ -410,6 +364,7 @@
   import StudioCopyToken from '../CopyToken';
   import { SCALE_TEXT, SCALE, CHANNEL_SIZE_DIVISOR } from './constants';
   import StudioDetailsRow from './StudioDetailsRow';
+  import StudioThumbnail from 'shared/views/files/StudioThumbnail';
 
   const DEFAULT_DETAILS = {
     name: '',
@@ -453,6 +408,7 @@
       StudioCopyToken,
       StudioDetailsRow,
       StudioChip,
+      StudioThumbnail,
     },
     mixins: [
       fileSizeMixin,
@@ -477,10 +433,6 @@
         defaultsDeep(details, DEFAULT_DETAILS);
         details.published = Boolean(details.last_published);
         return details;
-      },
-      thumbnailSrc() {
-        const encoding = this._details.thumbnail_encoding;
-        return encoding && encoding.base64 ? encoding.base64 : this._details.thumbnail_url;
       },
       defaultText() {
         // Making this a computed property so it's easier to update
@@ -625,18 +577,6 @@
     }
   }
 
-  .thumbnail-container {
-    max-width: 300px;
-  }
-
-  .placeholder-content {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-  }
-
   .resource-list {
     max-width: 350px;
     margin: 8px 0;
@@ -669,7 +609,6 @@
   .source-thumbnail {
     flex-shrink: 0;
     width: 150px;
-    border: 1px solid #e0e0e0;
   }
 
   .channel-name {
