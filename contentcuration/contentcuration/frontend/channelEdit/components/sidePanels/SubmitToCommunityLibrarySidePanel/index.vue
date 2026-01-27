@@ -112,24 +112,60 @@
                 })
               }}
             </div>
-            <div class="metadata-line">
-              <LoadingText
-                :loading="publishedDataIsLoading"
-                :finishedLoading="publishedDataIsFinished"
-                :omitted="!detectedLanguages"
+            <div class="metadata-section">
+              <div
+                v-if="detectedLanguages"
+                class="metadata-line"
               >
-                {{ detectedLanguages }}
-              </LoadingText>
-            </div>
-            <div class="metadata-line">
-              <LoadingText
-                :loading="publishedDataIsLoading"
-                :finishedLoading="publishedDataIsFinished"
-                :omitted="!detectedCategories"
+                <LoadingText
+                  :loading="publishedDataIsLoading"
+                  :finishedLoading="publishedDataIsFinished"
+                  :omitted="!detectedLanguages"
+                >
+                  {{ detectedLanguages }}
+                </LoadingText>
+              </div>
+              <div
+                v-if="detectedCategories"
+                class="metadata-line"
               >
-                {{ detectedCategories }}
-              </LoadingText>
+                <LoadingText
+                  :loading="publishedDataIsLoading"
+                  :finishedLoading="publishedDataIsFinished"
+                  :omitted="!detectedCategories"
+                >
+                  {{ detectedCategories }}
+                </LoadingText>
+              </div>
             </div>
+            <div
+              v-if="licenseAuditIsLoading"
+              class="license-audit-loader"
+            >
+              <KCircularLoader disableDefaultTransition />
+              <div class="audit-text-wrapper">
+                <div class="audit-text-primary">
+                  {{ checkingChannelCompatibility$() }}
+                </div>
+                <div class="audit-text-secondary">
+                  {{ checkingChannelCompatibilitySecondary$() }}
+                </div>
+              </div>
+            </div>
+            <InvalidLicensesNotice
+              v-if="licenseAuditIsFinished && invalidLicenses.length"
+              :invalid-licenses="invalidLicenses"
+            />
+            <CompatibleLicensesNotice
+              v-else-if="licenseAuditIsFinished"
+              :licenses="includedLicenses"
+            />
+            <SpecialPermissionsList
+              v-if="licenseAuditIsFinished && channelVersionId"
+              v-model="checkedSpecialPermissions"
+              :channel-version-id="channelVersionId"
+              @update:allChecked="allSpecialPermissionsChecked = $event"
+            />
             <div class="country-area">
               <KTransition kind="component-fade-out-in">
                 <div
@@ -210,8 +246,12 @@
   import LoadingText from './LoadingText';
   import StatusChip from './StatusChip';
   import { useLatestCommunityLibrarySubmission } from './composables/useLatestCommunityLibrarySubmission';
+  import { useLicenseAudit } from './composables/useLicenseAudit';
   import { usePublishedData } from './composables/usePublishedData';
 
+  import InvalidLicensesNotice from './licenseCheck/InvalidLicensesNotice.vue';
+  import CompatibleLicensesNotice from './licenseCheck/CompatibleLicensesNotice.vue';
+  import SpecialPermissionsList from './licenseCheck/SpecialPermissionsList.vue';
   import { translateMetadataString } from 'shared/utils/metadataStringsTranslation';
   import countriesUtil from 'shared/utils/countries';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
@@ -230,6 +270,9 @@
       LoadingText,
       StatusChip,
       CountryField,
+      InvalidLicensesNotice,
+      CompatibleLicensesNotice,
+      SpecialPermissionsList,
     },
     emits: ['close'],
     setup(props, { emit }) {
@@ -266,6 +309,8 @@
         submittingSnackbar$,
         publishingMessage$,
         confirmReplacementText$,
+        checkingChannelCompatibility$,
+        checkingChannelCompatibilitySecondary$,
       } = communityChannelsStrings;
 
       const annotationColor = computed(() => tokensTheme.annotation);
@@ -277,6 +322,7 @@
       const isPublishing = computed(() => props.channel?.publishing === true);
       const currentChannelVersion = computed(() => props.channel?.version);
       const replacementConfirmed = ref(false);
+      const checkedSpecialPermissions = ref([]);
 
       const {
         isLoading: latestSubmissionIsLoading,
@@ -368,45 +414,63 @@
         );
       });
 
-      const canBeSubmitted = computed(() => {
-        if (isPublishing.value) return false;
-        const baseCondition =
-          canBeEdited.value && publishedDataIsFinished.value && description.value.length >= 1;
-
-        if (needsReplacementConfirmation.value) {
-          return baseCondition && replacementConfirmed.value;
-        }
-
-        return baseCondition;
-      });
-
       const {
         isLoading: publishedDataIsLoading,
         isFinished: publishedDataIsFinished,
-        data: publishedData,
+        data: versionDetail,
         fetchData: fetchPublishedData,
       } = usePublishedData(props.channel.id);
 
-      // Use the latest version available from either channel or publishedData
+      // Use the latest version available from either channel or versionDetail
       const displayedVersion = computed(() => {
         const channelVersion = currentChannelVersion.value || 0;
-        if (publishedData.value && Object.keys(publishedData.value).length > 0) {
-          const publishedVersions = Object.keys(publishedData.value).map(v => parseInt(v, 10));
-          const maxPublishedVersion = Math.max(...publishedVersions);
-          return Math.max(channelVersion, maxPublishedVersion);
+        if (versionDetail.value && versionDetail.value.version) {
+          return Math.max(channelVersion, versionDetail.value.version);
         }
         return channelVersion;
       });
 
-      const latestPublishedData = computed(() => {
-        if (!publishedData.value || !displayedVersion.value) return undefined;
-        return publishedData.value[displayedVersion.value];
+      const channelVersionId = computed(() => {
+        return versionDetail.value?.id;
+      });
+
+      const {
+        isLoading: licenseAuditIsLoading,
+        isFinished: licenseAuditIsFinished,
+        invalidLicenses,
+        includedLicenses,
+        checkAndTriggerAudit: checkAndTriggerLicenseAudit,
+      } = useLicenseAudit(props.channel, currentChannelVersion);
+
+      const allSpecialPermissionsChecked = ref(true);
+
+      const hasInvalidLicenses = computed(() => {
+        return invalidLicenses.value && invalidLicenses.value.length > 0;
+      });
+
+      const canBeSubmitted = computed(() => {
+        const conditions = [
+          allSpecialPermissionsChecked.value,
+          !isPublishing.value,
+          !hasInvalidLicenses.value,
+          licenseAuditIsFinished.value,
+          canBeEdited.value,
+          publishedDataIsFinished.value,
+          description.value.length >= 1,
+        ];
+
+        if (needsReplacementConfirmation.value) {
+          conditions.push(replacementConfirmed.value);
+        }
+
+        return conditions.every(condition => condition);
       });
 
       // Watch for when publishing completes - fetch publishedData to get the new version's data
       watch(isPublishing, async (newIsPublishing, oldIsPublishing) => {
         if (oldIsPublishing === true && newIsPublishing === false) {
           await fetchPublishedData();
+          await checkAndTriggerLicenseAudit();
         }
       });
 
@@ -415,15 +479,12 @@
 
         if (!isPublishing.value) {
           await fetchPublishedData();
+          await checkAndTriggerLicenseAudit();
         }
       });
 
       const detectedLanguages = computed(() => {
-        // We need to filter out null values due to a backend bug
-        // causing null values to sometimes be included in the list
-        const languageCodes = latestPublishedData.value?.included_languages.filter(
-          code => code !== null,
-        );
+        const languageCodes = versionDetail.value?.included_languages;
 
         // We distinguish here between "not loaded yet" (undefined)
         // and "loaded and none present" (null). This distinction is
@@ -433,7 +494,7 @@
         if (!languageCodes) return undefined;
         if (languageCodes.length === 0) return null;
 
-        return languageCodes.map(code => LanguagesMap.get(code).readable_name).join(', ');
+        return languageCodes.map(code => LanguagesMap.get(code)?.readable_name || code).join(', ');
       });
 
       function categoryIdToName(categoryId) {
@@ -446,10 +507,10 @@
         // not used in the UI and is mostly intended to convey the
         // state more accurately to the developer in case of debugging.
         // UI code should rely on XXXIsLoading and XXXIsFinished instead.
-        if (!latestPublishedData.value?.included_categories) return undefined;
-        if (latestPublishedData.value.included_categories.length === 0) return null;
+        if (!versionDetail.value?.included_categories) return undefined;
+        if (versionDetail.value.included_categories.length === 0) return null;
 
-        return latestPublishedData.value.included_categories
+        return versionDetail.value.included_categories
           .map(categoryId => categoryIdToName(categoryId))
           .join(', ');
       });
@@ -475,7 +536,7 @@
             description: description.value,
             channel: props.channel.id,
             countries: countries.value.map(country => countriesUtil.getAlpha2Code(country, 'en')),
-            categories: latestPublishedData.value.included_categories,
+            categories: versionDetail.value.included_categories,
           })
             .then(() => {
               showSnackbar({ text: submittedSnackbar$() });
@@ -515,11 +576,16 @@
         isCurrentVersionAlreadySubmitted,
         canBeEdited,
         displayedVersion,
+        channelVersionId,
         canBeSubmitted,
         publishedDataIsLoading,
         publishedDataIsFinished,
         detectedLanguages,
         detectedCategories,
+        licenseAuditIsLoading,
+        licenseAuditIsFinished,
+        invalidLicenses,
+        includedLicenses,
         onSubmit,
         // Translation functions
         submitToCommunityLibrary$,
@@ -541,6 +607,10 @@
         isPublishing,
         publishingMessage$,
         confirmReplacementText$,
+        checkingChannelCompatibility$,
+        checkingChannelCompatibilitySecondary$,
+        checkedSpecialPermissions,
+        allSpecialPermissionsChecked,
       };
     },
     props: {
@@ -569,6 +639,12 @@
   .channel-title {
     font-size: 18px;
     font-weight: 600;
+  }
+
+  .metadata-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 
   .metadata-line {
@@ -643,6 +719,35 @@
   .publishing-text {
     font-size: 14px;
     color: v-bind('infoTextColor');
+  }
+
+  .license-audit-loader {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    align-items: flex-start;
+    width: 100%;
+    padding: 16px 0;
+  }
+
+  .audit-text-wrapper {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .audit-text-primary {
+    font-size: 14px;
+    line-height: 140%;
+    color: v-bind('infoTextColor');
+  }
+
+  .audit-text-secondary {
+    font-size: 14px;
+    line-height: 140%;
+    color: v-bind('infoTextColor');
+    opacity: 0.7;
   }
 
   .info-section {

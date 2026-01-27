@@ -13,12 +13,9 @@ import { communityChannelsStrings } from 'shared/strings/communityChannelsString
 import { CommunityLibrarySubmission } from 'shared/data/resources';
 import CountryField from 'shared/views/form/CountryField.vue';
 
-jest.mock('../composables/usePublishedData', () => ({
-  usePublishedData: jest.fn(),
-}));
-jest.mock('../composables/useLatestCommunityLibrarySubmission', () => ({
-  useLatestCommunityLibrarySubmission: jest.fn(),
-}));
+jest.mock('../composables/usePublishedData');
+jest.mock('../composables/useLatestCommunityLibrarySubmission');
+jest.mock('../composables/useLicenseAudit');
 jest.mock('shared/data/resources', () => ({
   CommunityLibrarySubmission: {
     create: jest.fn(() => Promise.resolve()),
@@ -101,16 +98,10 @@ const nonPublishedChannel = {
 };
 
 const publishedData = {
-  2: {
-    included_languages: ['en', null],
-    included_licenses: [1],
-    included_categories: [Categories.SCHOOL],
-  },
-  1: {
-    included_languages: ['en', null],
-    included_licenses: [1],
-    included_categories: [Categories.SCHOOL],
-  },
+  version: 2,
+  included_languages: ['en', null],
+  included_licenses: [1],
+  included_categories: [Categories.SCHOOL],
 };
 
 const submittedLatestSubmission = { channel_version: 2, status: CommunityLibraryStatus.PENDING };
@@ -152,7 +143,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
     it('when channel is not published', async () => {
       const wrapper = await makeWrapper({
         channel: nonPublishedChannel,
-        publishedData: {},
+        publishedData: null,
         latestSubmission: null,
       });
 
@@ -304,12 +295,10 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
 
       const channel = { ...publishedNonPublicChannel, publishing: true };
       const publishedDataWithVersion3 = {
-        ...publishedData,
-        3: {
-          included_languages: ['en', null],
-          included_licenses: [1],
-          included_categories: [Categories.SCHOOL],
-        },
+        version: 3,
+        included_languages: ['en', null],
+        included_licenses: [1],
+        included_categories: [Categories.SCHOOL],
       };
       const wrapper = await makeWrapper({
         channel,
@@ -437,7 +426,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
     it('when channel is not published', async () => {
       const wrapper = await makeWrapper({
         channel: nonPublishedChannel,
-        publishedData: {},
+        publishedData: null,
         latestSubmission: null,
       });
 
@@ -473,7 +462,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       it('when channel is not published', async () => {
         const wrapper = await makeWrapper({
           channel: nonPublishedChannel,
-          publishedData: {},
+          publishedData: null,
           latestSubmission: null,
         });
 

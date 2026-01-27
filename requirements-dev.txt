@@ -8,10 +8,6 @@ asgiref==3.3.4
     # via
     #   -c requirements.txt
     #   django
-attrs==23.1.0
-    # via
-    #   -c requirements.txt
-    #   pytest-subtests
 build==1.2.1
     # via pip-tools
 cfgv==3.3.1
@@ -35,11 +31,13 @@ djangorestframework==3.15.1
     #   drf-yasg
 drf-yasg==1.21.10
     # via -r requirements-dev.in
-exceptiongroup==1.2.2
-    # via pytest
+exceptiongroup==1.3.1
+    # via
+    #   -c requirements.txt
+    #   pytest
 faker==12.0.1
     # via mixer
-filelock==3.16.1
+filelock==3.20.1
     # via virtualenv
 identify==2.4.4
     # via pre-commit
@@ -69,7 +67,7 @@ platformdirs==4.3.6
     # via virtualenv
 pluggy==1.5.0
     # via pytest
-pre-commit==4.5.0
+pre-commit==4.5.1
     # via -r requirements-dev.in
 pygments==2.19.1
     # via pytest
@@ -77,15 +75,12 @@ pyproject-hooks==1.1.0
     # via
     #   build
     #   pip-tools
-pytest==8.4.2
+pytest==9.0.2
     # via
     #   -r requirements-dev.in
     #   pytest-django
-    #   pytest-subtests
     #   pytest-timeout
 pytest-django==4.11.1
-    # via -r requirements-dev.in
-pytest-subtests==0.15.0
     # via -r requirements-dev.in
 pytest-timeout==2.4.0
     # via -r requirements-dev.in
@@ -118,13 +113,13 @@ tomli==1.2.3
     #   build
     #   pip-tools
     #   pytest
+typing-extensions==4.15.0
+    # via
+    #   -c requirements.txt
+    #   exceptiongroup
 uritemplate==3.0.1
     # via drf-yasg
 virtualenv==20.26.6
     # via pre-commit
 wheel==0.38.1
     # via pip-tools
-
-# The following packages are considered to be unsafe in a requirements file:
-# pip
-# setuptools

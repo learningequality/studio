@@ -1,115 +1,161 @@
-import { mount } from '@vue/test-utils';
-import router from '../../router';
+import { render, screen, waitFor } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
+import VueRouter from 'vue-router';
 import AccountsMain from '../AccountsMain.vue';
 
-async function makeWrapper() {
-  const wrapper = mount(AccountsMain, {
-    router,
-    stubs: ['GlobalSnackbar', 'PolicyModals'],
-    mocks: {
-      $store: {
-        state: {
-          connection: {
-            online: true,
+window.Urls = {
+  channels: () => '/channels/',
+};
+
+const originalLocation = window.location;
+
+const createRouter = () => {
+  return new VueRouter({
+    mode: 'abstract',
+    routes: [
+      { path: '/', name: 'Main', component: { template: '<div />' } },
+      { path: '/forgot-password', name: 'ForgotPassword', component: { template: '<div />' } },
+      { path: '/create', name: 'Create', component: { template: '<div />' } },
+      {
+        path: '/account-not-active',
+        name: 'AccountNotActivated',
+        component: { template: '<div />' },
+      },
+    ],
+  });
+};
+
+function makeWrapper({ loginMock = jest.fn(), online = true, nextParam = null } = {}) {
+  const router = createRouter();
+
+  delete window.location;
+  window.location = {
+    ...originalLocation,
+    search: nextParam ? `?next=${nextParam}` : '',
+    assign: jest.fn(),
+  };
+
+  return {
+    ...render(AccountsMain, {
+      routes: router,
+      stubs: ['PolicyModals'],
+      mocks: {
+        $store: {
+          state: {
+            connection: {
+              online,
+            },
           },
+          dispatch: loginMock,
         },
       },
-    },
-  });
-  await wrapper.setData({
-    username: 'test@test.com',
-    password: 'pass',
-  });
-
-  const login = jest.spyOn(wrapper.vm, 'login');
-  login.mockImplementation(() => Promise.resolve());
-  return [wrapper, login];
-}
-
-function makeFailedPromise(statusCode) {
-  return () => {
-    return new Promise((resolve, reject) => {
-      reject({
-        response: {
-          status: statusCode || 500,
-        },
-      });
-    });
+    }),
+    router,
+    loginMock,
   };
 }
 
-describe('main', () => {
-  let wrapper, login, loginToProceed;
+describe('AccountsMain', () => {
+  let user;
 
-  beforeEach(async () => {
-    [wrapper, login] = await makeWrapper();
-    await wrapper.vm.$nextTick();
-    loginToProceed = wrapper.findAllComponents('[data-test="loginToProceed"]').at(0);
+  beforeEach(() => {
+    user = userEvent.setup();
+    jest.clearAllMocks();
   });
 
   afterEach(() => {
-    if (wrapper) {
-      wrapper.destroy();
-    }
+    window.location = originalLocation;
   });
 
-  it('should trigger submit method when form is submitted', async () => {
-    expect(loginToProceed.isVisible()).toBe(false);
-    const submit = jest.spyOn(wrapper.vm, 'submit');
-    submit.mockImplementation(() => {});
-    await wrapper.findComponent({ ref: 'form' }).trigger('submit');
-    expect(submit).toHaveBeenCalled();
+  it('should render sign-in form with email, password fields and sign in button', () => {
+    makeWrapper();
+
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
   });
 
-  it('should call login with username and password provided', () => {
-    expect(loginToProceed.isVisible()).toBe(false);
-    wrapper.vm.submit();
-    expect(login).toHaveBeenCalled();
+  it('should show error when submitting empty form', async () => {
+    makeWrapper();
+    await user.click(screen.getByRole('button', { name: /sign in/i }));
+
+    // User sees validation errors (from EmailField and PasswordField components)
+    await waitFor(() => {
+      const errorMessages = screen.queryAllByText(/required|field is required/i);
+      expect(errorMessages.length).toBeGreaterThan(0);
+    });
   });
 
-  it('should fail if username is not provided', async () => {
-    expect(loginToProceed.isVisible()).toBe(false);
-    await wrapper.setData({ username: ' ' });
-    wrapper.vm.submit();
-    expect(login).not.toHaveBeenCalled();
+  it('should show error message when login fails', async () => {
+    const loginMock = jest.fn().mockRejectedValue({
+      response: { status: 401 },
+    });
+    makeWrapper({ loginMock });
+
+    await user.type(screen.getByLabelText(/email/i), 'test@test.com');
+    await user.type(screen.getByLabelText(/password/i), 'wrongpassword');
+    await user.click(screen.getByRole('button', { name: /sign in/i }));
+
+    // User sees error banner
+    await waitFor(() => {
+      expect(screen.getByText('Email or password is incorrect')).toBeInTheDocument();
+    });
   });
 
-  it('should fail if password is not provided', async () => {
-    expect(loginToProceed.isVisible()).toBe(false);
-    await wrapper.setData({ password: '' });
-    wrapper.vm.submit();
-    expect(login).not.toHaveBeenCalled();
+  it('should redirect to channels page after successful login', async () => {
+    const loginMock = jest.fn().mockResolvedValue();
+    makeWrapper({ loginMock });
+
+    await user.type(screen.getByLabelText(/email/i), 'test@test.com');
+    await user.type(screen.getByLabelText(/password/i), 'testpassword');
+    await user.click(screen.getByRole('button', { name: /sign in/i }));
+
+    // User is redirected to channels page
+    await waitFor(() => {
+      expect(window.location.assign).toHaveBeenCalledWith('/channels/');
+    });
   });
 
-  it('should set loginFailed if login fails', async () => {
-    expect(loginToProceed.isVisible()).toBe(false);
-    jest.spyOn(wrapper.vm, 'login').mockImplementation(makeFailedPromise());
-    await wrapper.vm.submit();
-    expect(wrapper.vm.loginFailed).toBe(true);
+  it('should show "You must sign in" banner when ?next= param is present', () => {
+    makeWrapper({ nextParam: '/protected-page/' });
+
+    expect(screen.getByText('You must sign in to view that page')).toBeInTheDocument();
   });
 
-  it('should say account has not been activated if login returns 405', async () => {
-    expect(loginToProceed.isVisible()).toBe(false);
-    jest.spyOn(wrapper.vm, 'login').mockImplementation(makeFailedPromise());
-    await wrapper.vm.submit();
-    expect(wrapper.vm.loginFailed).toBe(true);
+  it('should redirect to next URL when provided after successful login', async () => {
+    const loginMock = jest.fn().mockResolvedValue();
+    const nextUrl = '/protected-page/';
+    makeWrapper({ loginMock, nextParam: nextUrl });
+
+    await user.type(screen.getByLabelText(/email/i), 'test@test.com');
+    await user.type(screen.getByLabelText(/password/i), 'testpassword');
+    await user.click(screen.getByRole('button', { name: /sign in/i }));
+
+    // User is redirected to next URL
+    await waitFor(() => {
+      expect(window.location.assign).toHaveBeenCalledWith(nextUrl);
+    });
   });
 
-  it('should navigate to next url if next query param is set', async () => {
-    const testUrl = '/testnext/';
-    const location = new URL(`http://studio.time/?next=${testUrl}`);
+  it('should navigate to AccountNotActivated when account is not activated', async () => {
+    const loginMock = jest.fn().mockRejectedValue({
+      response: { status: 405 },
+    });
+    const { router } = makeWrapper({ loginMock });
 
-    delete window.location;
-    window.location = location;
-    window.location.assign = jest.fn();
+    await user.type(screen.getByLabelText(/email/i), 'test@test.com');
+    await user.type(screen.getByLabelText(/password/i), 'testpassword');
+    await user.click(screen.getByRole('button', { name: /sign in/i }));
 
-    wrapper.destroy();
-    [wrapper, login] = await makeWrapper();
-    await wrapper.vm.$nextTick();
-    loginToProceed = wrapper.findAll('[data-test="loginToProceed"]').at(0);
-    expect(loginToProceed.isVisible()).toBe(true);
+    // User is redirected to account not activated page
+    await waitFor(() => {
+      expect(router.currentRoute.name).toBe('AccountNotActivated');
+    });
+  });
 
-    await wrapper.vm.submit();
-    expect(window.location.assign.mock.calls[0][0]).toBe(testUrl);
+  it('should disable sign in button when offline', () => {
+    makeWrapper({ online: false });
+
+    expect(screen.getByRole('button', { name: /sign in/i })).toBeDisabled();
   });
 });

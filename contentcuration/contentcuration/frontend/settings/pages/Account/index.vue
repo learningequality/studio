@@ -155,10 +155,10 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
+  import StudioCopyToken from '../../../shared/views/StudioCopyToken';
   import FullNameForm from './FullNameForm';
   import ChangePasswordForm from './ChangePasswordForm';
   import DeleteAccountForm from './DeleteAccountForm';
-  import StudioCopyToken from './StudioCopyToken.vue';
 
   export default {
     name: 'Account',

@@ -69,9 +69,13 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Language',
     context: 'Label for the language selection dropdown',
   },
+  versionNotesRequiredMessage: {
+    message: 'Version notes are required',
+    context: 'Error message when version notes are required but not provided',
+  },
   languageRequiredMessage: {
     message: 'Language is required',
-    context: 'Error message when language selection is required',
+    context: 'Error message when language selection is required but not provided',
   },
   pendingStatus: {
     message: 'Submitted',
@@ -236,5 +240,67 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   dismissAction: {
     message: 'Dismiss',
     context: 'Action in the resubmit modal to dismiss the modal',
+  },
+  checkingChannelCompatibility: {
+    message: 'Checking channel compatibility for submission...',
+    context:
+      'Message shown in the "Submit to Community Library" panel while the license audit is in progress',
+  },
+  checkingChannelCompatibilitySecondary: {
+    message: 'This usually takes a few seconds...',
+    context:
+      'Secondary message shown below the main checking message to indicate the expected duration',
+  },
+  licenseCheckPassed: {
+    message: 'License check passed',
+    context: 'Title shown when license audit passes (no invalid licenses found)',
+  },
+  allLicensesCompatible: {
+    message: 'All licenses are compatible with Community Library.',
+    context: 'Message shown after listing compatible licenses when license check passes',
+  },
+  incompatibleLicensesDetected: {
+    message: 'Incompatible license(s) detected',
+    context: 'Title shown when invalid licenses are detected in the channel',
+  },
+  channelCannotBeDistributed: {
+    message: 'this channel cannot be distributed via Kolibri.',
+    context: 'Message explaining that channels with incompatible licenses cannot be distributed',
+  },
+  fixLicensingBeforeSubmission: {
+    message: 'Please fix licensing before submitting a new version.',
+    context: 'Call to action message when incompatible licenses are detected',
+  },
+  incompatibleLicensesDescription: {
+    message:
+      '"{licenseNames}" - this channel cannot be distributed via Kolibri. Please fix licensing before submitting a new version.',
+    context:
+      'Description shown when incompatible licenses are detected, includes the license names and explanation',
+  },
+  compatibleLicensesDescription: {
+    message: '{licenseNames} - All licenses are compatible with Community Library.',
+    context:
+      'Description shown when all licenses are compatible, includes the license names and confirmation message',
+  },
+  specialPermissionsDetected: {
+    message: 'Special Permissions license(s) detected',
+    context: 'Title shown when special permissions licenses are detected in the channel',
+  },
+  confirmDistributionRights: {
+    message: 'Please confirm you have the right to distribute this content via Kolibri.',
+    context:
+      'Message asking user to confirm they have distribution rights for special permissions content',
+  },
+  previousPageAction: {
+    message: 'Previous',
+    context: 'Button text to navigate to the previous page in pagination',
+  },
+  nextPageAction: {
+    message: 'Next',
+    context: 'Button text to navigate to the next page in pagination',
+  },
+  pageIndicator: {
+    message: '{currentPage} of {totalPages}',
+    context: 'Page indicator showing current page and total pages (e.g., "1 of 5")',
   },
 });
