@@ -4,7 +4,10 @@
     <template #header>
       <span class="notranslate">{{ channel ? channel.name : '' }}</span>
     </template>
-    <StudioLargeLoader v-if="show('channelDetails', loading, 500)" />
+    <StudioLargeLoader
+      v-if="show('channelDetails', loading, 500)"
+      :style="{ marginTop: '160px' }"
+    />
     <div v-else-if="channel">
       <div
         class="download-button-container"
