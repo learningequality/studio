@@ -13,7 +13,7 @@
       <label
         class="label-text"
         :style="{ color: $themeTokens.text }"
-        :aria-describedby="definition ? `tooltip-${_uid}` : undefined"
+        :aria-describedby="definition ? `tooltip-${uniqueId}` : undefined"
       >
         {{ label }}
       </label>
@@ -21,7 +21,7 @@
         v-if="definition"
         class="help-icon"
         :text="definition"
-        :tooltipId="`tooltip-${_uid}`"
+        :tooltipId="`tooltip-${uniqueId}`"
       />
     </div>
     <div
@@ -42,6 +42,8 @@
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import HelpTooltip from '../HelpTooltip';
   import { printingMixin } from '../../mixins';
+
+  let instanceCounter = 0;
 
   export default {
     name: 'StudioDetailsRow',
@@ -74,6 +76,11 @@
         type: Boolean,
         default: false,
       },
+    },
+    data() {
+      return {
+        uniqueId: instanceCounter++,
+      };
     },
   };
 
