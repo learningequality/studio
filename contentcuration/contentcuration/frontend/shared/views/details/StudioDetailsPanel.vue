@@ -314,12 +314,12 @@
         </template>
       </StudioDetailsRow>
 
-      <label
+      <h2
         v-if="_details.sample_nodes.length"
         class="sample-heading"
       >
         {{ $tr('sampleFromChannelHeading') }}
-      </label>
+      </h2>
       <KGrid
         gutter="0"
         class="sample-nodes"
@@ -634,13 +634,10 @@
   }
 
   .sample-heading {
-    display: block;
     margin-top: 28px;
     margin-bottom: 8px;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: bold;
-    line-height: 20px;
-    color: #424242;
   }
 
   .sample-nodes {
