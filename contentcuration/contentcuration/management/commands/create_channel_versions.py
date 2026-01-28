@@ -156,19 +156,21 @@ class Command(BaseCommand):
                     pub_data, channel
                 )
 
-                # Create a new channel version
-                channel_version = ChannelVersion.objects.create(
+                # Create or update channel version
+                channel_version, _ = ChannelVersion.objects.update_or_create(
                     channel=channel,
                     version=valid_data.get("version"),
-                    included_categories=valid_data.get("included_categories"),
-                    included_licenses=valid_data.get("included_licenses"),
-                    included_languages=valid_data.get("included_languages"),
-                    non_distributable_licenses_included=valid_data.get(
-                        "non_distributable_licenses_included"
-                    ),
-                    kind_count=valid_data.get("kind_count"),
-                    size=int(channel.published_size),
-                    resource_count=channel.total_resource_count,
+                    defaults={
+                        "included_categories": valid_data.get("included_categories"),
+                        "included_licenses": valid_data.get("included_licenses"),
+                        "included_languages": valid_data.get("included_languages"),
+                        "non_distributable_licenses_included": valid_data.get(
+                            "non_distributable_licenses_included"
+                        ),
+                        "kind_count": valid_data.get("kind_count"),
+                        "size": int(channel.published_size),
+                        "resource_count": channel.total_resource_count,
+                    },
                 )
 
                 if channel.version == pub_data.get("version"):
