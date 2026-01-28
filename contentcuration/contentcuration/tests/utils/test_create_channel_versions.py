@@ -2,10 +2,15 @@ from django.core.management import call_command
 from le_utils.constants import content_kinds
 from le_utils.constants import licenses
 
+from contentcuration.management.commands.create_channel_versions import (
+    validate_published_data,
+)
 from contentcuration.models import AuditedSpecialPermissionsLicense
 from contentcuration.models import ChannelVersion
 from contentcuration.models import ContentKind
 from contentcuration.models import ContentNode
+from contentcuration.models import File
+from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioTestCase
@@ -40,6 +45,211 @@ def _create_special_permissions_node(parent, description):
         complete=True,
     )
     return node
+
+
+class TestValidatePublishedData(StudioTestCase):
+    """Unit tests for the validate_published_data function."""
+
+    def setUp(self):
+        super(TestValidatePublishedData, self).setUp()
+        self.channel = testdata.channel()
+        AuditedSpecialPermissionsLicense.objects.all().delete()
+
+    def test_returns_tuple_of_data_and_special_permissions(self):
+        """validate_published_data should return (data_dict, special_permissions_list)."""
+        result = validate_published_data({}, self.channel)
+
+        self.assertIsInstance(result, tuple)
+        self.assertEqual(len(result), 2)
+        self.assertIsInstance(result[0], dict)
+        self.assertIsInstance(result[1], list)
+
+    def test_computes_included_licenses_when_missing(self):
+        """Should compute included_licenses from published nodes when not in data."""
+        cc_license = License.objects.first()
+        video_kind = ContentKind.objects.get(kind=content_kinds.VIDEO)
+
+        ContentNode.objects.create(
+            title="Licensed Content",
+            kind=video_kind,
+            parent=self.channel.main_tree,
+            license=cc_license,
+            published=True,
+            complete=True,
+        )
+
+        data, _ = validate_published_data({}, self.channel)
+
+        self.assertIn("included_licenses", data)
+        self.assertIn(cc_license.id, data["included_licenses"])
+
+    def test_does_not_overwrite_existing_included_licenses(self):
+        """Should preserve existing included_licenses in data."""
+        existing_licenses = [99, 100]
+        input_data = {"included_licenses": existing_licenses}
+
+        data, _ = validate_published_data(input_data, self.channel)
+
+        self.assertEqual(data["included_licenses"], existing_licenses)
+
+    def test_computes_included_languages_from_nodes(self):
+        """Should compute included_languages from node languages."""
+        lang = Language.objects.first()
+        video_kind = ContentKind.objects.get(kind=content_kinds.VIDEO)
+
+        ContentNode.objects.create(
+            title="Content with language",
+            kind=video_kind,
+            parent=self.channel.main_tree,
+            language=lang,
+            published=True,
+            complete=True,
+        )
+
+        data, _ = validate_published_data({}, self.channel)
+
+        self.assertIn("included_languages", data)
+        self.assertIn(lang.id, data["included_languages"])
+
+    def test_computes_included_languages_from_files(self):
+        """Should compute included_languages from file languages."""
+        lang = Language.objects.first()
+        video_kind = ContentKind.objects.get(kind=content_kinds.VIDEO)
+
+        node = ContentNode.objects.create(
+            title="Content with file language",
+            kind=video_kind,
+            parent=self.channel.main_tree,
+            published=True,
+            complete=True,
+        )
+
+        # Create a file with a language
+        File.objects.create(
+            contentnode=node,
+            language=lang,
+        )
+
+        data, _ = validate_published_data({}, self.channel)
+
+        self.assertIn("included_languages", data)
+        self.assertIn(lang.id, data["included_languages"])
+
+    def test_does_not_overwrite_existing_included_languages(self):
+        """Should preserve existing included_languages in data."""
+        existing_languages = ["en", "es"]
+        input_data = {"included_languages": existing_languages}
+
+        data, _ = validate_published_data(input_data, self.channel)
+
+        self.assertEqual(data["included_languages"], existing_languages)
+
+    def test_computes_included_categories_when_missing(self):
+        """Should compute included_categories from published nodes."""
+        video_kind = ContentKind.objects.get(kind=content_kinds.VIDEO)
+
+        ContentNode.objects.create(
+            title="Categorized Content",
+            kind=video_kind,
+            parent=self.channel.main_tree,
+            categories={"math": True, "science": True},
+            published=True,
+            complete=True,
+        )
+
+        data, _ = validate_published_data({}, self.channel)
+
+        self.assertIn("included_categories", data)
+        self.assertIn("math", data["included_categories"])
+        self.assertIn("science", data["included_categories"])
+
+    def test_does_not_overwrite_existing_included_categories(self):
+        """Should preserve existing included_categories in data."""
+        existing_categories = ["history", "art"]
+        input_data = {"included_categories": existing_categories}
+
+        data, _ = validate_published_data(input_data, self.channel)
+
+        self.assertEqual(data["included_categories"], existing_categories)
+
+    def test_computes_kind_counts_when_missing(self):
+        """Should compute kind_counts from published nodes."""
+        video_kind = ContentKind.objects.get(kind=content_kinds.VIDEO)
+
+        # Create two video nodes
+        for i in range(2):
+            ContentNode.objects.create(
+                title=f"Video {i}",
+                kind=video_kind,
+                parent=self.channel.main_tree,
+                published=True,
+                complete=True,
+            )
+
+        data, _ = validate_published_data({}, self.channel)
+
+        self.assertIn("kind_counts", data)
+        # Find the video kind count
+        video_count = next(
+            (kc for kc in data["kind_counts"] if kc["kind_id"] == content_kinds.VIDEO),
+            None,
+        )
+        self.assertIsNotNone(video_count)
+        self.assertEqual(video_count["count"], 2)
+
+    def test_does_not_overwrite_existing_kind_counts(self):
+        """Should preserve existing kind_counts in data."""
+        existing_counts = [{"kind_id": "video", "count": 99}]
+        input_data = {"kind_counts": existing_counts}
+
+        data, _ = validate_published_data(input_data, self.channel)
+
+        self.assertEqual(data["kind_counts"], existing_counts)
+
+    def test_computes_non_distributable_licenses_when_arr_present(self):
+        """Should set non_distributable_licenses when All Rights Reserved is included."""
+        arr_license = License.objects.get(license_name=licenses.ALL_RIGHTS_RESERVED)
+        video_kind = ContentKind.objects.get(kind=content_kinds.VIDEO)
+
+        ContentNode.objects.create(
+            title="All Rights Reserved Content",
+            kind=video_kind,
+            parent=self.channel.main_tree,
+            license=arr_license,
+            published=True,
+            complete=True,
+        )
+
+        data, _ = validate_published_data({}, self.channel)
+
+        self.assertIn("non_distributable_licenses", data)
+        self.assertIn(arr_license.id, data["non_distributable_licenses"])
+
+    def test_handles_none_data_input(self):
+        """Should handle None as input data by creating empty dict."""
+        data, special_permissions = validate_published_data(None, self.channel)
+
+        self.assertIsInstance(data, dict)
+        self.assertIsInstance(special_permissions, list)
+
+    def test_computes_special_permissions_for_special_license(self):
+        """Should create AuditedSpecialPermissionsLicense for special permissions content."""
+        special_description = "Test special permissions"
+        _create_special_permissions_node(self.channel.main_tree, special_description)
+
+        _, special_permissions = validate_published_data({}, self.channel)
+
+        self.assertEqual(len(special_permissions), 1)
+        self.assertEqual(special_permissions[0].description, special_description)
+
+    def test_skips_special_permissions_when_already_in_data(self):
+        """Should return empty list when special_permissions_included already exists."""
+        _create_special_permissions_node(self.channel.main_tree, "Some description")
+        input_data = {"special_permissions_included": ["existing"]}
+
+        _, special_permissions = validate_published_data(input_data, self.channel)
+
+        self.assertEqual(special_permissions, [])
 
 
 class TestCreateChannelVersions(StudioTestCase):
@@ -303,66 +513,3 @@ class TestCreateChannelVersions(StudioTestCase):
                 audited_license.distributable,
                 f"distributable should be True for public channel, description: {desc}",
             )
-
-    def test_command_skips_channels_with_existing_version_info(self):
-        """
-        The command should only process channels that don't already have version_info set.
-        This tests idempotency behavior.
-        """
-        channel = testdata.channel()
-        _bump(channel)
-        ChannelVersion.objects.all().delete()
-
-        # Run command first time
-        call_command("create_channel_versions")
-        first_count = ChannelVersion.objects.filter(channel=channel).count()
-
-        self.assertEqual(
-            first_count,
-            1,
-            "First run should create 1 ChannelVersion",
-        )
-
-        # Verify version_info is set
-        channel.refresh_from_db()
-        self.assertIsNotNone(channel.version_info)
-
-    def test_channel_with_existing_special_permissions_in_published_data(self):
-        """
-        If published_data already contains special_permissions_included,
-        the command should not recompute it.
-        """
-        channel = testdata.channel()
-        channel.public = True
-        channel.save()
-
-        # Create a node with special permissions license
-        special_description = "Pre-existing special permissions"
-        _create_special_permissions_node(channel.main_tree, special_description)
-
-        # Pre-create an AuditedSpecialPermissionsLicense
-        existing_license = AuditedSpecialPermissionsLicense.objects.create(
-            description="Already audited license",
-            distributable=False,  # Set to False to distinguish from computed ones
-        )
-
-        channel.version = 1
-        channel.published_data = {
-            "1": {
-                "version": 1,
-                # Already has special_permissions_included
-                "special_permissions_included": [str(existing_license.id)],
-            }
-        }
-        channel.save()
-
-        ChannelVersion.objects.all().delete()
-
-        call_command("create_channel_versions")
-
-        # The existing license should remain unchanged (distributable=False)
-        existing_license.refresh_from_db()
-        self.assertFalse(
-            existing_license.distributable,
-            "Pre-existing AuditedSpecialPermissionsLicense should not be modified",
-        )
