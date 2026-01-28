@@ -2441,3 +2441,11 @@ export const AuditedSpecialPermissionsLicense = new APIResource({
     return response.data || [];
   },
 });
+
+export const ChannelVersion = new APIResource({
+  urlName: 'channelversion',
+  async fetchCollection(params) {
+    const response = await client.get(this.collectionUrl(), { params });
+    return response.data;
+  },
+});
