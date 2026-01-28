@@ -10,8 +10,11 @@
     </template>
 
     <template #default>
-      <div class="container">
-        <KCircularLoader v-if="submissionIsLoading" />
+      <div class="submission-side-panel-wrapper">
+        <KCircularLoader
+          v-if="isLoading"
+          disableDefaultTransition
+        />
         <div
           v-if="submissionIsFinished"
           class="submission-info-text"
@@ -29,10 +32,10 @@
             />
           </span>
           <span data-test="submission-date">
-            {{ $formatRelative(submission.created_at) }}
+            {{ $formatRelative(submission.date_created) }}
           </span>
         </div>
-        <div v-else-if="submissionIsLoading">Loading submission data...</div>
+        <div v-else-if="isLoading">Loading submission data...</div>
         <div v-else>Error loading submission data.</div>
 
         <div class="details">
@@ -138,11 +141,13 @@
               v-model="editorNotes"
               label="Clarify your reasoning"
               textArea
-              class="wide-textbox"
               :invalid="editorNotesRequiredButNotGiven"
               invalidText="Required when resource is flagged"
               showInvalidText
               :disabled="!canBeEdited"
+              :appearanceOverrides="{
+                maxWidth: 'none',
+              }"
             />
           </section>
 
@@ -153,7 +158,9 @@
               v-model="personalNotes"
               label="Personal notes on possible actions for this submission"
               textArea
-              class="wide-textbox"
+              :appearanceOverrides="{
+                maxWidth: 'none',
+              }"
               :disabled="!canBeEdited"
             />
           </section>
@@ -189,7 +196,7 @@
   import camelCase from 'lodash/camelCase';
 
   import { RouteNames } from '../../constants';
-  import { AdminCommunityLibrarySubmission } from 'shared/data/resources';
+  import { AdminCommunityLibrarySubmission, ChannelVersion } from 'shared/data/resources';
   import LanguagesMap from 'shared/leUtils/Languages';
   import LicensesMap from 'shared/leUtils/Licenses';
   import SidePanelModal from 'shared/views/SidePanelModal';
@@ -203,6 +210,7 @@
     CommunityLibraryResolutionReason,
   } from 'shared/constants';
   import { useFetch } from 'shared/composables/useFetch';
+  import { getUiSubmissionStatus } from 'shared/utils/communityLibrary';
 
   export default {
     name: 'ReviewSubmissionSidePanel',
@@ -218,10 +226,6 @@
       const { proxy } = getCurrentInstance();
       const store = proxy.$store;
 
-      if (!props.submissionId) {
-        emit('close');
-      }
-
       const {
         data: submission,
         isLoading: submissionIsLoading,
@@ -229,6 +233,28 @@
         fetchData: fetchSubmission,
       } = useFetch({
         asyncFetchFunc: () => AdminCommunityLibrarySubmission.fetchModel(props.submissionId),
+      });
+
+      const {
+        data: channelVersionData,
+        isLoading: channelVersionIsLoading,
+        isFinished: channelVersionIsFinished,
+        fetchData: fetchChannelVersion,
+      } = useFetch({
+        asyncFetchFunc: async () => {
+          if (!submission.value) {
+            throw new Error('Submission data not loaded yet');
+          }
+          const response = await ChannelVersion.fetchCollection({
+            channel: submission.value.channel_id,
+            version: submission.value.channel_version,
+          });
+          return response.results[0];
+        },
+      });
+
+      const isLoading = computed(() => {
+        return submissionIsLoading.value || channelVersionIsLoading.value;
       });
 
       const authorName = computed(() => {
@@ -259,21 +285,10 @@
         return submission.value.countries.map(code => countryCodeToName(code)).join(', ');
       });
 
-      const versionPublishedData = computed(() => {
-        if (!submissionIsFinished.value) return undefined;
-
-        const publishedData = props.channel.published_data;
-        return publishedData[submission.value.channel_version];
-      });
-
       const languagesString = computed(() => {
-        if (versionPublishedData.value === undefined) return undefined;
+        if (!channelVersionIsFinished.value) return undefined;
 
-        // We need to filter out null values due to a backend bug
-        // causing null values to sometimes be included in the list
-        const languageCodes = versionPublishedData.value.included_languages.filter(
-          code => code !== null,
-        );
+        const languageCodes = channelVersionData.value.included_languages;
 
         // We distinguish here between "not loaded yet" (undefined)
         // and "loaded and none present" (null). This distinction is
@@ -291,19 +306,19 @@
       }
 
       const categoriesString = computed(() => {
-        if (versionPublishedData.value === undefined) return undefined;
-        if (versionPublishedData.value.included_categories.length === 0) return null;
+        if (!channelVersionIsFinished.value) return undefined;
+        if (channelVersionData.value.included_categories.length === 0) return null;
 
-        return versionPublishedData.value.included_categories
+        return channelVersionData.value.included_categories
           .map(categoryId => categoryIdToName(categoryId))
           .join(', ');
       });
 
       const licensesString = computed(() => {
-        if (versionPublishedData.value === undefined) return undefined;
-        if (versionPublishedData.value.included_licenses.length === 0) return null;
+        if (!channelVersionIsFinished.value) return undefined;
+        if (channelVersionData.value.included_licenses.length === 0) return null;
 
-        return versionPublishedData.value.included_licenses
+        return channelVersionData.value.included_licenses
           .map(licenseId => LicensesMap.get(licenseId).license_name)
           .join(', ');
       });
@@ -339,16 +354,6 @@
 
       const flagReasonChoice = ref(flagReasonChoiceOptions[0]);
 
-      watch(statusChoice, (newChoice, oldChoice) => {
-        if (!oldChoice) {
-          // The status was changed because the initial loading of the submission
-          // data completed. In that case, the flag reason choice has already been
-          // pre-filled from the submission data, so we do not want to overwrite it.
-          return;
-        }
-        flagReasonChoice.value = flagReasonChoiceOptions[0];
-      });
-
       const editorNotes = ref('');
       const personalNotes = ref('');
 
@@ -380,12 +385,7 @@
         if (!submissionIsFinished.value) {
           return undefined;
         }
-
-        if (submission.value.status === CommunityLibraryStatus.LIVE) {
-          // Treat LIVE as APPROVED in the UI context
-          return CommunityLibraryStatus.APPROVED;
-        }
-        return submission.value.status;
+        return getUiSubmissionStatus(submission.value.status);
       });
 
       watch(submissionIsFinished, () => {
@@ -433,30 +433,28 @@
 
         currentlySubmitting.value = true;
 
-        const timer = setTimeout(() => {
-          AdminCommunityLibrarySubmission.resolve(submission.value.id, {
-            status: statusChoice.value,
-            feedback_notes: editorNotes.value,
-            internal_notes: personalNotes.value,
-            ...(statusChoice.value === CommunityLibraryStatus.REJECTED
-              ? { resolution_reason: flagReasonChoice.value.value }
-              : {}),
-          })
-            .then(async () => {
-              const snackbarText =
-                statusChoice.value === CommunityLibraryStatus.APPROVED
-                  ? 'Submission approved'
-                  : 'Submission flagged for review';
-
-              showSnackbar({ text: snackbarText });
-              updateStatusInStore(statusChoice.value);
-            })
-            .catch(async () => {
-              showSnackbar({ text: 'Changing channel status failed' });
-            })
-            .finally(() => {
-              currentlySubmitting.value = false;
+        const timer = setTimeout(async () => {
+          try {
+            await AdminCommunityLibrarySubmission.resolve(submission.value.id, {
+              status: statusChoice.value,
+              feedback_notes: editorNotes.value,
+              internal_notes: personalNotes.value,
+              ...(statusChoice.value === CommunityLibraryStatus.REJECTED
+                ? { resolution_reason: flagReasonChoice.value.value }
+                : {}),
             });
+            const snackbarText =
+              statusChoice.value === CommunityLibraryStatus.APPROVED
+                ? 'Submission approved'
+                : 'Submission flagged for review';
+
+            showSnackbar({ text: snackbarText });
+            updateStatusInStore(statusChoice.value);
+          } catch (error) {
+            showSnackbar({ text: 'Changing channel status failed' });
+          } finally {
+            currentlySubmitting.value = false;
+          }
         }, submitDelayMs);
 
         showSnackbar({
@@ -486,10 +484,15 @@
         REJECTED: STATUS_REJECTED,
       } = CommunityLibraryStatus;
 
-      // Load data
-      fetchSubmission();
+      const loadData = async () => {
+        await fetchSubmission();
+        await fetchChannelVersion();
+      };
+
+      loadData();
 
       return {
+        isLoading,
         chipColor,
         chipTextColor,
         annotationColor,
@@ -497,7 +500,6 @@
         boxTitleColor,
         authorName,
         submissionIsFinished,
-        submissionIsLoading,
         submission,
         channelLink,
         channelVersionedName,
@@ -527,8 +529,8 @@
         required: true,
       },
       submissionId: {
-        type: String,
-        default: null,
+        type: [String, Number],
+        required: true,
       },
     },
   };
@@ -544,7 +546,7 @@
     font-size: 20px;
   }
 
-  .container {
+  .submission-side-panel-wrapper {
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -614,14 +616,6 @@
     margin-bottom: 8px;
     font-size: 14px;
     font-weight: 600;
-  }
-
-  .wide-textbox {
-    width: 100%;
-  }
-
-  .wide-textbox ::v-deep .textbox {
-    max-width: 100%;
   }
 
   .flag-reason-select {
