@@ -43,7 +43,7 @@
             <KButton
               v-if="page.count && !selecting"
               :text="$tr('selectChannels')"
-              data-testid="select"
+              data-test="select"
               appearance="basic-link"
               @click="setSelection(true)"
             />
