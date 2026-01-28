@@ -1,5 +1,5 @@
 import { useLatestCommunityLibrarySubmission } from '../useLatestCommunityLibrarySubmission';
-import { CommunityLibrarySubmission } from 'shared/data/resources';
+import { AdminCommunityLibrarySubmission, CommunityLibrarySubmission } from 'shared/data/resources';
 
 const mockResponse = {
   results: [],
@@ -9,7 +9,9 @@ jest.mock('shared/data/resources', () => {
   return {
     CommunityLibrarySubmission: {
       fetchCollection: jest.fn(() => Promise.resolve(mockResponse)),
-      fetchCollectionAsAdmin: jest.fn(() => Promise.resolve(mockResponse)),
+    },
+    AdminCommunityLibrarySubmission: {
+      fetchCollection: jest.fn(() => Promise.resolve(mockResponse)),
     },
   };
 });
@@ -24,7 +26,7 @@ describe('useLatestCommunityLibrarySubmission', () => {
     await fetchData();
 
     expect(CommunityLibrarySubmission.fetchCollection).toHaveBeenCalled();
-    expect(CommunityLibrarySubmission.fetchCollectionAsAdmin).not.toHaveBeenCalled();
+    expect(CommunityLibrarySubmission.fetchCollection).not.toHaveBeenCalled();
   });
 
   it('uses admin endpoint when initialized with admin=true', async () => {
@@ -35,6 +37,6 @@ describe('useLatestCommunityLibrarySubmission', () => {
     await fetchData();
 
     expect(CommunityLibrarySubmission.fetchCollection).not.toHaveBeenCalled();
-    expect(CommunityLibrarySubmission.fetchCollectionAsAdmin).toHaveBeenCalled();
+    expect(AdminCommunityLibrarySubmission.fetchCollection).toHaveBeenCalled();
   });
 });

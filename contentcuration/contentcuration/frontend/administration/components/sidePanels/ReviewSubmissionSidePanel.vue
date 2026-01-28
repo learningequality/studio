@@ -11,8 +11,9 @@
 
     <template #default>
       <div class="container">
+        <KCircularLoader v-if="submissionIsLoading" />
         <div
-          v-if="latestSubmissionIsFinished"
+          v-if="submissionIsFinished"
           class="submission-info-text"
         >
           <span class="author-name">{{ authorName }}</span>
@@ -28,10 +29,10 @@
             />
           </span>
           <span data-test="submission-date">
-            {{ $formatRelative(submissionDate) }}
+            {{ $formatRelative(submission.created_at) }}
           </span>
         </div>
-        <div v-else-if="latestSubmissionIsLoading">Loading submission data...</div>
+        <div v-else-if="submissionIsLoading">Loading submission data...</div>
         <div v-else>Error loading submission data.</div>
 
         <div class="details">
@@ -77,8 +78,8 @@
           </template>
           <span class="detail-annotation">Status</span>
           <CommunityLibraryStatusChip
-            v-if="latestSubmissionIsFinished"
-            :status="latestSubmissionData.status"
+            v-if="submissionIsFinished"
+            :status="submission.status"
           />
           <template v-else>
             <KEmptyPlaceholder />
@@ -182,19 +183,18 @@
 
 <script>
 
-  import { computed, onMounted, ref, watch, getCurrentInstance } from 'vue';
+  import { computed, ref, watch, getCurrentInstance } from 'vue';
   import { themeTokens, themePalette } from 'kolibri-design-system/lib/styles/theme';
 
   import camelCase from 'lodash/camelCase';
 
   import { RouteNames } from '../../constants';
-  import { CommunityLibrarySubmission } from 'shared/data/resources';
+  import { AdminCommunityLibrarySubmission } from 'shared/data/resources';
   import LanguagesMap from 'shared/leUtils/Languages';
   import LicensesMap from 'shared/leUtils/Licenses';
   import SidePanelModal from 'shared/views/SidePanelModal';
   import countriesUtil from 'shared/utils/countries';
   import { translateMetadataString } from 'shared/utils/metadataStringsTranslation';
-  import { useLatestCommunityLibrarySubmission } from 'shared/composables/useLatestCommunityLibrarySubmission';
   import ActionLink from 'shared/views/ActionLink.vue';
   import CommunityLibraryStatusChip from 'shared/views/communityLibrary/CommunityLibraryStatusChip.vue';
   import {
@@ -202,6 +202,7 @@
     CommunityLibraryStatus,
     CommunityLibraryResolutionReason,
   } from 'shared/constants';
+  import { useFetch } from 'shared/composables/useFetch';
 
   export default {
     name: 'ReviewSubmissionSidePanel',
@@ -217,28 +218,26 @@
       const { proxy } = getCurrentInstance();
       const store = proxy.$store;
 
-      const {
-        isLoading: latestSubmissionIsLoading,
-        isFinished: latestSubmissionIsFinished,
-        data: latestSubmissionData,
-        fetchData: fetchLatestSubmission,
-      } = useLatestCommunityLibrarySubmission({ channelId: props.channel.id, admin: true });
+      if (!props.submissionId) {
+        emit('close');
+      }
 
-      const submissionDate = computed(() => {
-        return latestSubmissionIsFinished.value
-          ? latestSubmissionData.value.date_created
-          : undefined;
+      const {
+        data: submission,
+        isLoading: submissionIsLoading,
+        isFinished: submissionIsFinished,
+        fetchData: fetchSubmission,
+      } = useFetch({
+        asyncFetchFunc: () => AdminCommunityLibrarySubmission.fetchModel(props.submissionId),
       });
 
       const authorName = computed(() => {
-        return latestSubmissionIsFinished.value
-          ? latestSubmissionData.value.author_name
-          : 'Loading...';
+        return submissionIsFinished.value ? submission.value.author_name : 'Loading...';
       });
 
       const channelVersionedName = computed(() => {
-        return latestSubmissionIsFinished.value
-          ? `${props.channel.name} v${latestSubmissionData.value.channel_version}`
+        return submissionIsFinished.value
+          ? `${props.channel.name} v${submission.value.channel_version}`
           : undefined;
       });
 
@@ -256,15 +255,15 @@
       }
 
       const countriesString = computed(() => {
-        if (!latestSubmissionIsFinished.value) return '';
-        return latestSubmissionData.value.countries.map(code => countryCodeToName(code)).join(', ');
+        if (!submissionIsFinished.value) return '';
+        return submission.value.countries.map(code => countryCodeToName(code)).join(', ');
       });
 
       const versionPublishedData = computed(() => {
-        if (!latestSubmissionIsFinished.value) return undefined;
+        if (!submissionIsFinished.value) return undefined;
 
         const publishedData = props.channel.published_data;
-        return publishedData[latestSubmissionData.value.channel_version];
+        return publishedData[submission.value.channel_version];
       });
 
       const languagesString = computed(() => {
@@ -310,9 +309,7 @@
       });
 
       const submissionNotes = computed(() => {
-        return latestSubmissionIsFinished.value
-          ? latestSubmissionData.value.description
-          : undefined;
+        return submissionIsFinished.value ? submission.value.description : undefined;
       });
 
       // Start with being unchecked, the initial status will be set
@@ -363,7 +360,7 @@
 
       const canBeEdited = computed(() => {
         return (
-          latestSubmissionIsFinished.value &&
+          submissionIsFinished.value &&
           uiSubmissionStatus.value === CommunityLibraryStatus.PENDING &&
           !currentlySubmitting.value
         );
@@ -380,19 +377,19 @@
       });
 
       const uiSubmissionStatus = computed(() => {
-        if (!latestSubmissionIsFinished.value) {
+        if (!submissionIsFinished.value) {
           return undefined;
         }
 
-        if (latestSubmissionData.value.status === CommunityLibraryStatus.LIVE) {
+        if (submission.value.status === CommunityLibraryStatus.LIVE) {
           // Treat LIVE as APPROVED in the UI context
           return CommunityLibraryStatus.APPROVED;
         }
-        return latestSubmissionData.value.status;
+        return submission.value.status;
       });
 
-      watch(latestSubmissionIsFinished, () => {
-        if (latestSubmissionIsFinished.value) {
+      watch(submissionIsFinished, () => {
+        if (submissionIsFinished.value) {
           if (
             [
               CommunityLibraryStatus.PENDING,
@@ -405,10 +402,10 @@
             statusChoice.value = false;
           }
 
-          editorNotes.value = latestSubmissionData.value.feedback_notes || '';
-          personalNotes.value = latestSubmissionData.value.internal_notes || '';
+          editorNotes.value = submission.value.feedback_notes || '';
+          personalNotes.value = submission.value.internal_notes || '';
 
-          const resolutionReason = latestSubmissionData.value.resolution_reason;
+          const resolutionReason = submission.value.resolution_reason;
           if (resolutionReason) {
             flagReasonChoice.value = flagReasonChoiceOptionMap[resolutionReason];
           }
@@ -437,7 +434,7 @@
         currentlySubmitting.value = true;
 
         const timer = setTimeout(() => {
-          CommunityLibrarySubmission.resolveAsAdmin(latestSubmissionData.value.id, {
+          AdminCommunityLibrarySubmission.resolve(submission.value.id, {
             status: statusChoice.value,
             feedback_notes: editorNotes.value,
             internal_notes: personalNotes.value,
@@ -483,15 +480,14 @@
       const boxBackgroundColor = computed(() => paletteTheme.grey.v_100);
       const boxTitleColor = computed(() => paletteTheme.grey.v_800);
 
-      onMounted(async () => {
-        await fetchLatestSubmission();
-      });
-
       const {
         PENDING: STATUS_PENDING,
         APPROVED: STATUS_APPROVED,
         REJECTED: STATUS_REJECTED,
       } = CommunityLibraryStatus;
+
+      // Load data
+      fetchSubmission();
 
       return {
         chipColor,
@@ -500,12 +496,11 @@
         boxBackgroundColor,
         boxTitleColor,
         authorName,
-        latestSubmissionIsFinished,
-        latestSubmissionIsLoading,
-        latestSubmissionData,
+        submissionIsFinished,
+        submissionIsLoading,
+        submission,
         channelLink,
         channelVersionedName,
-        submissionDate,
         countriesString,
         languagesString,
         categoriesString,
@@ -530,6 +525,10 @@
       channel: {
         type: Object,
         required: true,
+      },
+      submissionId: {
+        type: String,
+        default: null,
       },
     },
   };

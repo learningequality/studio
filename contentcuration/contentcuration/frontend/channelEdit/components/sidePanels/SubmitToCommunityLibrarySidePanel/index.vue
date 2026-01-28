@@ -104,15 +104,15 @@
                 {{ alreadySubmittedWarningDescription$() }}
               </template>
             </Box>
-            <div class="channel-title">
-              {{
-                channelVersion$({
-                  name: channel ? channel.name : '',
-                  version: displayedVersion,
-                })
-              }}
-            </div>
-            <div class="metadata-section">
+            <div class="channel-metadata">
+              <div class="channel-title">
+                {{
+                  channelVersion$({
+                    name: channel ? channel.name : '',
+                    version: displayedVersion,
+                  })
+                }}
+              </div>
               <div
                 v-if="detectedLanguages"
                 class="metadata-line"
@@ -261,6 +261,7 @@
   import CountryField from 'shared/views/form/CountryField';
   import LanguagesMap from 'shared/leUtils/Languages';
   import { CategoriesLookup, CommunityLibraryStatus } from 'shared/constants';
+  import { getUiSubmissionStatus } from 'shared/utils/communityLibrary';
 
   export default {
     name: 'SubmitToCommunityLibrarySidePanel',
@@ -352,13 +353,7 @@
         if (!latestSubmissionIsFinished.value) return undefined;
         if (!latestSubmissionData.value) return null;
 
-        // We do not need to distinguish LIVE from APPROVED in the UI
-        const uiSubmissionStatus =
-          latestSubmissionData.value.status == CommunityLibraryStatus.LIVE
-            ? CommunityLibraryStatus.APPROVED
-            : latestSubmissionData.value.status;
-
-        return uiSubmissionStatus;
+        return getUiSubmissionStatus(latestSubmissionData.value.status);
       });
 
       const infoConfig = computed(() => {
@@ -532,11 +527,15 @@
         const submitDelayMs = 5000;
 
         const timer = setTimeout(() => {
+          const categories = {};
+          for (const categoryId of versionDetail.value.included_categories || []) {
+            categories[categoryId] = true;
+          }
           CommunityLibrarySubmission.create({
             description: description.value,
             channel: props.channel.id,
             countries: countries.value.map(country => countriesUtil.getAlpha2Code(country, 'en')),
-            categories: versionDetail.value.included_categories,
+            categories,
           })
             .then(() => {
               showSnackbar({ text: submittedSnackbar$() });
@@ -578,6 +577,7 @@
         displayedVersion,
         channelVersionId,
         canBeSubmitted,
+        versionDetail,
         versionDetailIsLoading,
         versionDetailIsFinished,
         detectedLanguages,
@@ -641,7 +641,7 @@
     font-weight: 600;
   }
 
-  .metadata-section {
+  .channel-metadata {
     display: flex;
     flex-direction: column;
     gap: 4px;

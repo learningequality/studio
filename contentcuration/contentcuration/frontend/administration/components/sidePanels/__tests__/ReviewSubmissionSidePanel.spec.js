@@ -10,13 +10,13 @@ import {
   CommunityLibraryResolutionReason,
   CommunityLibraryStatus,
 } from 'shared/constants';
-import { CommunityLibrarySubmission } from 'shared/data/resources';
+import { AuditedSpecialPermissionsLicense } from 'shared/data/resources';
 import CommunityLibraryStatusChip from 'shared/views/communityLibrary/CommunityLibraryStatusChip.vue';
 
 jest.mock('shared/composables/useLatestCommunityLibrarySubmission');
 jest.mock('shared/data/resources', () => ({
-  CommunityLibrarySubmission: {
-    resolveAsAdmin: jest.fn(() => Promise.resolve()),
+  AuditedSpecialPermissionsLicense: {
+    resolve: jest.fn(() => Promise.resolve()),
   },
 }));
 
@@ -320,7 +320,7 @@ describe('ReviewSubmissionSidePanel', () => {
     let channel, submission, wrapper;
 
     beforeEach(async () => {
-      CommunityLibrarySubmission.resolveAsAdmin.mockClear();
+      AuditedSpecialPermissionsLicense.resolve.mockClear();
 
       const { channel: _channel, submission: _submission } = testData.submitted;
       channel = _channel;
@@ -353,7 +353,7 @@ describe('ReviewSubmissionSidePanel', () => {
       await confirmButton.trigger('click');
 
       expect(store.getters['snackbarIsVisible']).toBe(true);
-      expect(CommunityLibrarySubmission.resolveAsAdmin).not.toHaveBeenCalled();
+      expect(AuditedSpecialPermissionsLicense.resolve).not.toHaveBeenCalled();
     });
 
     describe('after a timeout', () => {
@@ -375,7 +375,7 @@ describe('ReviewSubmissionSidePanel', () => {
           jest.runAllTimers();
           await wrapper.vm.$nextTick();
 
-          expect(CommunityLibrarySubmission.resolveAsAdmin).toHaveBeenCalledWith(submission.id, {
+          expect(AuditedSpecialPermissionsLicense.resolve).toHaveBeenCalledWith(submission.id, {
             status: CommunityLibraryStatus.APPROVED,
             feedback_notes: feedbackNotes,
             internal_notes: personalNotes,
@@ -448,7 +448,7 @@ describe('ReviewSubmissionSidePanel', () => {
           jest.runAllTimers();
           await wrapper.vm.$nextTick();
 
-          expect(CommunityLibrarySubmission.resolveAsAdmin).toHaveBeenCalledWith(submission.id, {
+          expect(AuditedSpecialPermissionsLicense.resolve).toHaveBeenCalledWith(submission.id, {
             status: CommunityLibraryStatus.REJECTED,
             feedback_notes: feedbackNotes,
             internal_notes: personalNotes,

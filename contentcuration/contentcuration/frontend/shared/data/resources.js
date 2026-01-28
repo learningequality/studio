@@ -2413,24 +2413,23 @@ export const CommunityLibrarySubmission = new APIResource({
       return response.data || [];
     });
   },
-  fetchCollectionAsAdmin(params) {
-    return client
-      .get(window.Urls.adminCommunityLibrarySubmissionList(), { params })
-      .then(response => {
-        return response.data || [];
-      });
-  },
   create(params) {
     return client.post(this.collectionUrl(), params).then(response => {
       return response.data;
     });
   },
-  resolveAsAdmin(id, params) {
-    return client
-      .post(window.Urls.adminCommunityLibrarySubmissionResolve(id), params)
-      .then(response => {
-        return response.data;
-      });
+});
+
+export const AdminCommunityLibrarySubmission = new APIResource({
+  urlName: 'admin_community_library_submission',
+  fetchCollection(params) {
+    return client.get(this.collectionUrl(), { params }).then(response => {
+      return response.data || [];
+    });
+  },
+  async fetchModel(id) {
+    const response = await client.get(this.modelUrl(id));
+    return response.data;
   },
 });
 
@@ -2439,6 +2438,10 @@ export const AuditedSpecialPermissionsLicense = new APIResource({
   async fetchCollection(params) {
     const response = await client.get(this.collectionUrl(), { params });
     return response.data || [];
+  },
+  async resolve(id, params) {
+    const response = await client.post(this.getUrlFunction('resolve')(id), params);
+    return response.data;
   },
 });
 

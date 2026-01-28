@@ -201,7 +201,7 @@
       <CommunityLibraryStatusButton
         v-if="communityLibraryStatus"
         :status="communityLibraryStatus"
-        @click="showReviewSubmissionPanel = true"
+        @click="submissionToReview = channel.latest_community_library_submission_id"
       />
       <KEmptyPlaceholder v-else />
     </td>
@@ -212,9 +212,10 @@
       />
     </td>
     <ReviewSubmissionSidePanel
-      v-if="showReviewSubmissionPanel"
+      v-if="submissionToReview"
       :channel="channel"
-      @close="showReviewSubmissionPanel = false"
+      :submissionId="submissionToReview"
+      @close="submissionToReview = null"
     />
   </tr>
 
@@ -231,7 +232,7 @@
   import ChannelActionsDropdown from './ChannelActionsDropdown';
   import { fileSizeMixin } from 'shared/mixins';
   import Checkbox from 'shared/views/form/Checkbox';
-  import { CommunityLibraryStatus } from 'shared/constants';
+  import { getUiSubmissionStatus } from 'shared/utils/communityLibrary';
 
   export default {
     name: 'ChannelItem',
@@ -255,7 +256,7 @@
     },
     data() {
       return {
-        showReviewSubmissionPanel: false,
+        submissionToReview: null,
       };
     },
     computed: {
@@ -298,14 +299,7 @@
         };
       },
       communityLibraryStatus() {
-        // We do not need to distinguish LIVE from APPROVED in the UI
-        if (
-          this.channel.latest_community_library_submission_status === CommunityLibraryStatus.LIVE
-        ) {
-          return CommunityLibraryStatus.APPROVED;
-        }
-
-        return this.channel.latest_community_library_submission_status;
+        return getUiSubmissionStatus(this.channel.latest_community_library_submission_status);
       },
     },
     methods: {

@@ -398,6 +398,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
     testStatusChip(CommunityLibraryStatus.LIVE, CommunityLibraryStatus.APPROVED);
     testStatusChip(CommunityLibraryStatus.REJECTED, CommunityLibraryStatus.REJECTED);
     testStatusChip(CommunityLibraryStatus.PENDING, CommunityLibraryStatus.PENDING);
+    testStatusChip(CommunityLibraryStatus.SUPERSEDED, CommunityLibraryStatus.PENDING);
   });
 
   it('is editable when channel is published, not public and not submitted', async () => {
