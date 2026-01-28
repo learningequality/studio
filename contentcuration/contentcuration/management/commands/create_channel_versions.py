@@ -135,7 +135,6 @@ class Command(BaseCommand):
         # to the most recent ChannelVersion instance
         for channel in channels.iterator():
             logging.info(f"Processing channel {channel.id}")
-            last_created_ch_ver = None
 
             # Validate published_data
             for pub_data in channel.published_data.values():
@@ -145,7 +144,7 @@ class Command(BaseCommand):
                 special_permissions = validate_published_data(pub_data, channel)
 
                 # Create a new channel version
-                last_created_ch_ver = ChannelVersion.objects.create(
+                channel_version = ChannelVersion.objects.create(
                     channel=channel,
                     version=pub_data.get("version"),
                     included_categories=pub_data.get("included_categories", []),
@@ -155,14 +154,17 @@ class Command(BaseCommand):
                         "non_distributable_licenses_included"
                     ),
                 )
+
+                if channel.version == pub_data.get("version"):
+                    channel.version_info = channel_version
+
                 # Set the M2M relation for special permissions
                 if special_permissions:
-                    last_created_ch_ver.special_permissions_included.set(
+                    channel_version.special_permissions_included.set(
                         special_permissions
                     )
                 logging.info(
-                    f"Created channel version {last_created_ch_ver.id} for channel {channel.id}"
+                    f"Created channel version {channel_version.id} for channel {channel.id}"
                 )
 
-            channel.version_info = last_created_ch_ver
             channel.save()
