@@ -2,6 +2,7 @@ import logging as logmodule
 from itertools import chain
 
 from django.core.management.base import BaseCommand
+from django.db.models import Count
 from le_utils.constants import licenses
 
 from contentcuration.models import AuditedSpecialPermissionsLicense
@@ -65,7 +66,11 @@ def validate_published_data(data, channel):
 
     Note: special_permissions_included is returned separately since it contains
     model objects that cannot be JSON serialized into the data dict.
+
+    returns tuple (pub_data, special_permissions) - the former a dict of values, the
+        latter is a list of AuditedSpecialPermissionsLicense objects
     """
+
     # Logic for filling each missing field stolen from
     # contentcuration.utils.publish.fill_published_fields
     published_nodes = (
@@ -120,9 +125,15 @@ def validate_published_data(data, channel):
             else []
         )
 
+    if not data.get("kind_counts"):
+        data["kind_counts"] = list(
+            published_nodes.values("kind_id")
+            .annotate(count=Count("kind_id"))
+            .order_by("kind_id")
+        )
     # Compute special permissions and return them separately (not stored in data dict)
     special_permissions = compute_special_permissions(data, channel, published_nodes)
-    return special_permissions
+    return data, special_permissions
 
 
 class Command(BaseCommand):
@@ -141,18 +152,23 @@ class Command(BaseCommand):
                 logging.info(
                     f"Validating published data for channel {channel.id} version {pub_data['version']}"
                 )
-                special_permissions = validate_published_data(pub_data, channel)
+                valid_data, special_permissions = validate_published_data(
+                    pub_data, channel
+                )
 
                 # Create a new channel version
                 channel_version = ChannelVersion.objects.create(
                     channel=channel,
-                    version=pub_data.get("version"),
-                    included_categories=pub_data.get("included_categories", []),
-                    included_licenses=pub_data.get("included_licenses"),
-                    included_languages=pub_data.get("included_languages"),
-                    non_distributable_licenses_included=pub_data.get(
+                    version=valid_data.get("version"),
+                    included_categories=valid_data.get("included_categories"),
+                    included_licenses=valid_data.get("included_licenses"),
+                    included_languages=valid_data.get("included_languages"),
+                    non_distributable_licenses_included=valid_data.get(
                         "non_distributable_licenses_included"
                     ),
+                    kind_count=valid_data.get("kind_count"),
+                    size=int(channel.published_size),
+                    resource_count=channel.total_resource_count,
                 )
 
                 if channel.version == pub_data.get("version"):
