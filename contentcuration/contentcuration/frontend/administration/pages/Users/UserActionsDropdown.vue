@@ -67,7 +67,7 @@
             <VListTile
               v-if="user.is_admin"
               data-test="removeadmin"
-              @mousedown.stop
+              @click.stop
               @click="removeAdminPrivilegeDialog = true"
             >
               <VListTileTitle>Remove admin privileges</VListTileTitle>
@@ -75,7 +75,7 @@
             <VListTile
               v-else
               data-test="addadmin"
-              @mousedown.stop
+              @click.stop
               @click="addAdminPrivilegeDialog = true"
             >
               <VListTileTitle>Add admin privileges</VListTileTitle>
