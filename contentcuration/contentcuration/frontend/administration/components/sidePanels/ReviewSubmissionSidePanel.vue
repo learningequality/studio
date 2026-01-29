@@ -99,6 +99,21 @@
           </span>
         </div>
 
+        <SpecialPermissionsList
+          v-if="channelVersionData"
+          v-model="checkedSpecialPermissions"
+          :channelVersionId="channelVersionData.id"
+          :disabled="!canBeEdited"
+          @update:allChecked="allSpecialPermissionsChecked = $event"
+        >
+          <template #description>
+            <span>
+              Please confirm that the submitter has the necessary distribution rights for all
+              included content.
+            </span>
+          </template>
+        </SpecialPermissionsList>
+
         <div>
           <section>
             <h2 class="section-title">Change status</h2>
@@ -203,6 +218,7 @@
   import countriesUtil from 'shared/utils/countries';
   import { translateMetadataString } from 'shared/utils/metadataStringsTranslation';
   import ActionLink from 'shared/views/ActionLink.vue';
+  import SpecialPermissionsList from 'shared/views/communityLibrary/SpecialPermissionsList.vue';
   import CommunityLibraryStatusChip from 'shared/views/communityLibrary/CommunityLibraryStatusChip.vue';
   import {
     CategoriesLookup,
@@ -217,6 +233,7 @@
     components: {
       ActionLink,
       SidePanelModal,
+      SpecialPermissionsList,
       CommunityLibraryStatusChip,
     },
     setup(props, { emit }) {
@@ -225,6 +242,9 @@
 
       const { proxy } = getCurrentInstance();
       const store = proxy.$store;
+
+      const checkedSpecialPermissions = ref([]);
+      const allSpecialPermissionsChecked = ref(false);
 
       const {
         data: submission,
@@ -249,7 +269,7 @@
             channel: submission.value.channel_id,
             version: submission.value.channel_version,
           });
-          return response.results[0];
+          return response[0];
         },
       });
 
@@ -372,13 +392,17 @@
       });
 
       const readyToSubmit = computed(() => {
-        return (
-          canBeEdited.value &&
-          !editorNotesRequiredButNotGiven.value &&
+        const conditions = [
+          canBeEdited.value,
+          !editorNotesRequiredButNotGiven.value,
           [CommunityLibraryStatus.APPROVED, CommunityLibraryStatus.REJECTED].includes(
             statusChoice.value,
-          )
-        );
+          ),
+        ];
+        if (statusChoice.value === CommunityLibraryStatus.APPROVED) {
+          conditions.push(allSpecialPermissionsChecked.value);
+        }
+        return conditions.every(condition => condition);
       });
 
       const uiSubmissionStatus = computed(() => {
@@ -499,6 +523,9 @@
         boxBackgroundColor,
         boxTitleColor,
         authorName,
+        channelVersionData,
+        checkedSpecialPermissions,
+        allSpecialPermissionsChecked,
         submissionIsFinished,
         submission,
         channelLink,

@@ -2431,6 +2431,10 @@ export const AdminCommunityLibrarySubmission = new APIResource({
     const response = await client.get(this.modelUrl(id));
     return response.data;
   },
+  async resolve(id, params) {
+    const response = await client.post(this.getUrlFunction('resolve')(id), params);
+    return response.data;
+  },
 });
 
 export const AuditedSpecialPermissionsLicense = new APIResource({
@@ -2438,10 +2442,6 @@ export const AuditedSpecialPermissionsLicense = new APIResource({
   async fetchCollection(params) {
     const response = await client.get(this.collectionUrl(), { params });
     return response.data || [];
-  },
-  async resolve(id, params) {
-    const response = await client.post(this.getUrlFunction('resolve')(id), params);
-    return response.data;
   },
 });
 

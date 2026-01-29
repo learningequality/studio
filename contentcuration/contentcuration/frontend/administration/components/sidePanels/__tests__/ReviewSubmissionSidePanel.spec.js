@@ -1,39 +1,42 @@
-import Vue, { ref, computed } from 'vue';
+import Vue from 'vue';
 import { mount } from '@vue/test-utils';
 import { factory } from '../../../store';
 import router from '../../../router';
 
 import ReviewSubmissionSidePanel from '../ReviewSubmissionSidePanel';
-import { useLatestCommunityLibrarySubmission } from 'shared/composables/useLatestCommunityLibrarySubmission';
 import {
   Categories,
   CommunityLibraryResolutionReason,
   CommunityLibraryStatus,
 } from 'shared/constants';
-import { AuditedSpecialPermissionsLicense } from 'shared/data/resources';
+import { ChannelVersion, AdminCommunityLibrarySubmission } from 'shared/data/resources';
 import CommunityLibraryStatusChip from 'shared/views/communityLibrary/CommunityLibraryStatusChip.vue';
 
-jest.mock('shared/composables/useLatestCommunityLibrarySubmission');
 jest.mock('shared/data/resources', () => ({
-  AuditedSpecialPermissionsLicense: {
+  AdminCommunityLibrarySubmission: {
+    fetchModel: jest.fn(),
     resolve: jest.fn(() => Promise.resolve()),
+  },
+  ChannelVersion: {
+    fetchCollection: jest.fn(),
+  },
+  AuditedSpecialPermissionsLicense: {
+    fetchCollection: jest.fn(() => Promise.resolve([])),
   },
 }));
 
 const store = factory();
 
-let isLoading, isFinished;
+async function makeWrapper({ channel, latestSubmission, submissionFetch }) {
+  AdminCommunityLibrarySubmission.fetchModel.mockImplementation(
+    submissionFetch ||
+      (() => {
+        return Promise.resolve(latestSubmission);
+      }),
+  );
 
-async function makeWrapper({ channel, latestSubmission }) {
-  isLoading = ref(true);
-  isFinished = ref(false);
-  const fetchLatestSubmission = jest.fn(() => Promise.resolve());
-
-  useLatestCommunityLibrarySubmission.mockReturnValue({
-    isLoading,
-    isFinished,
-    data: computed(() => latestSubmission),
-    fetchData: fetchLatestSubmission,
+  ChannelVersion.fetchCollection.mockImplementation(() => {
+    return Promise.resolve([channelVersionData]);
   });
 
   const wrapper = mount(ReviewSubmissionSidePanel, {
@@ -51,10 +54,6 @@ async function makeWrapper({ channel, latestSubmission }) {
   // To simulate that first the data is loading and then it finishes loading
   // and correctly trigger watchers depending on that
   await wrapper.vm.$nextTick();
-
-  isLoading.value = false;
-  isFinished.value = true;
-
   await wrapper.vm.$nextTick();
 
   return wrapper;
@@ -65,17 +64,17 @@ const channelCommon = {
   name: 'Test Channel',
   published_data: {
     1: {
-      included_languages: ['en', null],
+      included_languages: ['en'],
       included_licenses: [1],
       included_categories: [Categories.SCHOOL],
     },
     2: {
-      included_languages: ['en', 'cs', null],
+      included_languages: ['en', 'cs'],
       included_licenses: [1, 2],
       included_categories: [Categories.SCHOOL, Categories.ALGEBRA],
     },
     3: {
-      included_languages: ['en', null],
+      included_languages: ['en'],
       included_licenses: [1],
       included_categories: [Categories.SCHOOL],
     },
@@ -96,6 +95,8 @@ const submissionCommon = {
   feedback_notes: null,
   internal_notes: null,
 };
+
+const channelVersionData = channelCommon.published_data[submissionCommon.channel_version];
 
 const testData = {
   submitted: {
@@ -140,6 +141,7 @@ describe('ReviewSubmissionSidePanel', () => {
     const { channel, submission } = testData.flagged;
     const wrapper = await makeWrapper({ channel, latestSubmission: submission });
 
+    await wrapper.vm.$nextTick();
     expect(wrapper.find('.author-name').text()).toBe(submission.author_name);
     expect(wrapper.find('.channel-link').text()).toBe(
       `${channel.name} v${submission.channel_version}`,
@@ -208,12 +210,14 @@ describe('ReviewSubmissionSidePanel', () => {
   });
 
   describe('is not editable', () => {
-    it('when latest submission data are still loading', async () => {
-      const { channel, submission } = testData.submitted;
-      const wrapper = await makeWrapper({ channel, latestSubmission: submission });
-
-      isLoading.value = true;
-      isFinished.value = false;
+    it('when submission data is still loading', async () => {
+      const { channel } = testData.submitted;
+      const mockSubmissionFetch = () => {
+        return new Promise(() => {
+          // Never resolves to simulate loading state
+        });
+      };
+      const wrapper = await makeWrapper({ channel, submissionFetch: mockSubmissionFetch });
 
       await wrapper.vm.$nextTick();
 
@@ -286,12 +290,14 @@ describe('ReviewSubmissionSidePanel', () => {
   });
 
   describe('cannot be submitted', () => {
-    it('when latest submission data are still loading', async () => {
-      const { channel, submission } = testData.submitted;
-      const wrapper = await makeWrapper({ channel, latestSubmission: submission });
-
-      isLoading.value = true;
-      isFinished.value = false;
+    it('when submission data is still loading', async () => {
+      const { channel } = testData.submitted;
+      const mockSubmissionFetch = () => {
+        return new Promise(() => {
+          // Never resolves to simulate loading state
+        });
+      };
+      const wrapper = await makeWrapper({ channel, submissionFetch: mockSubmissionFetch });
 
       await wrapper.vm.$nextTick();
 
@@ -320,7 +326,7 @@ describe('ReviewSubmissionSidePanel', () => {
     let channel, submission, wrapper;
 
     beforeEach(async () => {
-      AuditedSpecialPermissionsLicense.resolve.mockClear();
+      AdminCommunityLibrarySubmission.resolve.mockClear();
 
       const { channel: _channel, submission: _submission } = testData.submitted;
       channel = _channel;
@@ -353,7 +359,7 @@ describe('ReviewSubmissionSidePanel', () => {
       await confirmButton.trigger('click');
 
       expect(store.getters['snackbarIsVisible']).toBe(true);
-      expect(AuditedSpecialPermissionsLicense.resolve).not.toHaveBeenCalled();
+      expect(AdminCommunityLibrarySubmission.resolve).not.toHaveBeenCalled();
     });
 
     describe('after a timeout', () => {
@@ -375,7 +381,7 @@ describe('ReviewSubmissionSidePanel', () => {
           jest.runAllTimers();
           await wrapper.vm.$nextTick();
 
-          expect(AuditedSpecialPermissionsLicense.resolve).toHaveBeenCalledWith(submission.id, {
+          expect(AdminCommunityLibrarySubmission.resolve).toHaveBeenCalledWith(submission.id, {
             status: CommunityLibraryStatus.APPROVED,
             feedback_notes: feedbackNotes,
             internal_notes: personalNotes,
@@ -448,7 +454,7 @@ describe('ReviewSubmissionSidePanel', () => {
           jest.runAllTimers();
           await wrapper.vm.$nextTick();
 
-          expect(AuditedSpecialPermissionsLicense.resolve).toHaveBeenCalledWith(submission.id, {
+          expect(AdminCommunityLibrarySubmission.resolve).toHaveBeenCalledWith(submission.id, {
             status: CommunityLibraryStatus.REJECTED,
             feedback_notes: feedbackNotes,
             internal_notes: personalNotes,

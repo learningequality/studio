@@ -26,7 +26,7 @@ describe('useLatestCommunityLibrarySubmission', () => {
     await fetchData();
 
     expect(CommunityLibrarySubmission.fetchCollection).toHaveBeenCalled();
-    expect(CommunityLibrarySubmission.fetchCollection).not.toHaveBeenCalled();
+    expect(AdminCommunityLibrarySubmission.fetchCollection).not.toHaveBeenCalled();
   });
 
   it('uses admin endpoint when initialized with admin=true', async () => {

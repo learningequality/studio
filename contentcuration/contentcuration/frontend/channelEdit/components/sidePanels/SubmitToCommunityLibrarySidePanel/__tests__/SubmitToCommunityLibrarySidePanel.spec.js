@@ -6,6 +6,7 @@ import SubmitToCommunityLibrarySidePanel from '../';
 import Box from '../Box.vue';
 
 import { useVersionDetail } from '../composables/useVersionDetail';
+import { useLicenseAudit } from '../composables/useLicenseAudit';
 import { useLatestCommunityLibrarySubmission } from 'shared/composables/useLatestCommunityLibrarySubmission';
 import CommunityLibraryStatusChip from 'shared/views/communityLibrary/CommunityLibraryStatusChip.vue';
 import { Categories, CommunityLibraryStatus } from 'shared/constants';
@@ -23,6 +24,9 @@ jest.mock('shared/data/resources', () => ({
   Channel: {
     fetchModel: jest.fn(),
     getCatalogChannel: jest.fn(() => Promise.resolve()),
+  },
+  AuditedSpecialPermissionsLicense: {
+    fetchCollection: jest.fn(() => Promise.resolve([])),
   },
 }));
 
@@ -43,7 +47,7 @@ async function makeWrapper({ channel, publishedData, latestSubmission }) {
   useVersionDetail.mockReturnValue({
     isLoading,
     isFinished,
-    data: computed(() => publishedData),
+    data: computed(() => ({ id: 'abcdabcdabcdabcdabcdabcdabcdabcd', ...publishedData })),
     fetchData: fetchPublishedData,
   });
 
@@ -52,6 +56,16 @@ async function makeWrapper({ channel, publishedData, latestSubmission }) {
     isFinished,
     data: computed(() => latestSubmission),
     fetchData: fetchLatestSubmission,
+  });
+
+  useLicenseAudit.mockReturnValue({
+    isLoading: computed(() => false),
+    isFinished: computed(() => true),
+    isAuditing: ref(false),
+    invalidLicenses: ref([]),
+    includedLicenses: ref([]),
+    hasAuditData: computed(() => true),
+    checkAndTriggerAudit: jest.fn(),
   });
 
   const wrapper = mount(SubmitToCommunityLibrarySidePanel, {
@@ -595,7 +609,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
         description: 'Some description',
         channel: publishedNonPublicChannel.id,
         countries: ['CZ'],
-        categories: [Categories.SCHOOL],
+        categories: { [Categories.SCHOOL]: true },
       });
       jest.useRealTimers();
     });

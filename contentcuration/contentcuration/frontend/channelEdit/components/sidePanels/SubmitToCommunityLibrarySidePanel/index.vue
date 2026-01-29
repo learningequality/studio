@@ -249,7 +249,7 @@
 
   import InvalidLicensesNotice from './licenseCheck/InvalidLicensesNotice.vue';
   import CompatibleLicensesNotice from './licenseCheck/CompatibleLicensesNotice.vue';
-  import SpecialPermissionsList from './licenseCheck/SpecialPermissionsList.vue';
+  import SpecialPermissionsList from 'shared/views/communityLibrary/SpecialPermissionsList.vue';
   import CommunityLibraryStatusChip from 'shared/views/communityLibrary/CommunityLibraryStatusChip';
   import { useLatestCommunityLibrarySubmission } from 'shared/composables/useLatestCommunityLibrarySubmission';
   import { translateMetadataString } from 'shared/utils/metadataStringsTranslation';
@@ -437,7 +437,7 @@
         checkAndTriggerAudit: checkAndTriggerLicenseAudit,
       } = useLicenseAudit(props.channel, currentChannelVersion);
 
-      const allSpecialPermissionsChecked = ref(true);
+      const allSpecialPermissionsChecked = ref(false);
 
       const hasInvalidLicenses = computed(() => {
         return invalidLicenses.value && invalidLicenses.value.length > 0;
@@ -577,7 +577,6 @@
         displayedVersion,
         channelVersionId,
         canBeSubmitted,
-        versionDetail,
         versionDetailIsLoading,
         versionDetailIsFinished,
         detectedLanguages,
