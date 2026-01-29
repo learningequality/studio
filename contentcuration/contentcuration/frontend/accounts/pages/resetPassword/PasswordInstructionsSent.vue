@@ -1,6 +1,6 @@
 <template>
 
-  <MessageLayout
+  <StudioMessageLayout
     :header="$tr('passwordInstructionsHeader')"
     :text="$tr('passwordInstructionsText')"
   />
@@ -10,12 +10,12 @@
 
 <script>
 
-  import MessageLayout from '../../components/MessageLayout';
+  import StudioMessageLayout from '../../components/StudioMessageLayout';
 
   export default {
     name: 'PasswordInstructionsSent',
     components: {
-      MessageLayout,
+      StudioMessageLayout,
     },
     $trs: {
       passwordInstructionsHeader: 'Instructions sent. Thank you!',

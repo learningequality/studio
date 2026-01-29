@@ -4,18 +4,17 @@
     :class="{ printing }"
     data-testid="details-panel"
   >
-    <div style="max-width: 300px">
-      <Thumbnail
-        :src="isChannel ? _details.thumbnail_url : _details.thumbnail_src"
-        :encoding="isChannel ? _details.thumbnail_encoding : null"
-      />
-    </div>
+    <StudioThumbnail
+      :src="_details.thumbnail_url"
+      :encoding="_details.thumbnail_encoding"
+      :style="{ maxWidth: '300px' }"
+    />
     <br >
     <h1
       class="notranslate"
       dir="auto"
     >
-      {{ isChannel ? _details.name : _details.title }}
+      {{ _details.name }}
     </h1>
     <p
       class="notranslate"
@@ -25,130 +24,132 @@
     </p>
     <br >
 
-    <template v-if="isChannel">
-      <DetailsRow
-        v-if="_details.published && _details.primary_token"
-        :label="$tr('tokenHeading')"
-      >
-        <template #default>
-          <CopyToken
-            v-if="!printing"
-            :token="_details.primary_token"
-            style="max-width: max-content"
-          />
-          <span v-else>
-            {{ _details.primary_token.slice(0, 5) + '-' + _details.primary_token.slice(5) }}
-          </span>
-        </template>
-      </DetailsRow>
-      <DetailsRow :label="$tr('publishedHeading')">
-        <span v-if="_details.published">{{ publishedDate }}</span>
-        <em v-else>{{ $tr('unpublishedText') }}</em>
-      </DetailsRow>
-      <DetailsRow :label="$tr('currentVersionHeading')">
-        <template v-if="_details.published">
-          {{ _details.version }}
-        </template>
-        <template v-else>
-          {{ defaultText }}
-        </template>
-      </DetailsRow>
-      <DetailsRow
-        v-if="_details.language"
-        :label="$tr('primaryLanguageHeading')"
-        :text="translateLanguage(_details.language)"
-      />
-    </template>
+    <StudioDetailsRow
+      v-if="_details.published && _details.primary_token"
+      :label="$tr('tokenHeading')"
+    >
+      <template #default>
+        <StudioCopyToken
+          v-if="!printing"
+          :token="_details.primary_token"
+          :loading="false"
+          :style="{ maxWidth: 'max-content' }"
+          :showLabel="false"
+        />
+        <span v-else>
+          {{ _details.primary_token.slice(0, 5) + '-' + _details.primary_token.slice(5) }}
+        </span>
+      </template>
+    </StudioDetailsRow>
+    <StudioDetailsRow :label="$tr('publishedHeading')">
+      <span v-if="_details.published">{{ publishedDate }}</span>
+      <em v-else>{{ $tr('unpublishedText') }}</em>
+    </StudioDetailsRow>
+    <StudioDetailsRow :label="$tr('currentVersionHeading')">
+      <template v-if="_details.published">
+        {{ _details.version }}
+      </template>
+      <template v-else>
+        {{ defaultText }}
+      </template>
+    </StudioDetailsRow>
+    <StudioDetailsRow
+      v-if="_details.language"
+      :label="$tr('primaryLanguageHeading')"
+      :text="translateLanguage(_details.language)"
+    />
 
-    <LoadingText v-if="loading" />
+    <StudioLargeLoader v-if="loading" />
     <div v-else-if="hasDetails">
-      <DetailsRow
+      <StudioDetailsRow
         :label="$tr('creationHeading')"
         :text="createdDate"
       />
-      <DetailsRow
+      <StudioDetailsRow
         :label="$tr('sizeHeading')"
         :text="sizeText"
       />
-      <DetailsRow :label="$tr('resourceHeading')">
+      <StudioDetailsRow :label="$tr('resourceHeading')">
         <template #default>
           <p>{{ $formatNumber(_details.resource_count) }}</p>
-          <VDataTable
-            :items="kindCount"
-            hide-actions
-            hide-headers
-            class="kind-table"
-          >
-            <template #items="{ item }">
-              <td
-                style="width: 24px"
-                class="pr-2 py-0"
-              >
-                <ContentNodeIcon :kind="item.kind_id" />
-              </td>
-              <td class="kind-name pa-0">
-                {{ translateConstant(item.kind_id) }}
-              </td>
-              <td class="pa-0 text-xs-right">
-                {{ $formatNumber(item.count) }}
-              </td>
-            </template>
-          </VDataTable>
+          <dl class="resource-list">
+            <KFixedGrid
+              v-for="item in kindCount"
+              :key="item.kind_id"
+              :numCols="4"
+              class="resource-item"
+            >
+              <KGridItem :layout="{ span: 3 }">
+                <dt>
+                  <ContentNodeIcon
+                    class="resource-icon"
+                    :kind="item.kind_id"
+                  />
+                  <span>{{ translateConstant(item.kind_id) }}</span>
+                </dt>
+              </KGridItem>
+              <KGridItem :layout="{ span: 1, alignment: 'right' }">
+                <dd>
+                  {{ $formatNumber(item.count) }}
+                </dd>
+              </KGridItem>
+            </KFixedGrid>
+          </dl>
         </template>
-      </DetailsRow>
-      <DetailsRow :label="$tr('levelsHeading')">
+      </StudioDetailsRow>
+      <StudioDetailsRow :label="$tr('levelsHeading')">
         <template #default>
           <div v-if="!levels.length">
             {{ defaultText }}
           </div>
-          <VChip
+          <StudioChip
             v-for="level in levels"
             v-else-if="!printing"
             :key="level"
-            class="tag"
+            class="chip"
           >
             {{ level }}
-          </VChip>
+          </StudioChip>
           <span v-else>
             {{ levelsPrintable }}
           </span>
         </template>
-      </DetailsRow>
-      <DetailsRow :label="$tr('categoriesHeading')">
+      </StudioDetailsRow>
+      <StudioDetailsRow :label="$tr('categoriesHeading')">
         <template #default>
           <div v-if="!categories.length">
             {{ defaultText }}
           </div>
-          <VChip
+          <StudioChip
             v-for="category in categories"
             v-else-if="!printing"
             :key="category"
-            class="tag"
+            class="chip"
           >
             {{ category }}
-          </VChip>
+          </StudioChip>
           <span v-else>
             {{ categoriesPrintable }}
           </span>
         </template>
-      </DetailsRow>
-      <DetailsRow :label="$tr('containsHeading')">
+      </StudioDetailsRow>
+      <StudioDetailsRow :label="$tr('containsHeading')">
         <template
           v-if="!printing"
           #default
         >
-          <VChip
+          <StudioChip
             v-if="_details.includes.coach_content"
-            class="tag"
+            class="chip"
           >
             {{ $tr('coachHeading') }}
-          </VChip>
-          <VChip
+          </StudioChip>
+          <StudioChip
             v-if="_details.includes.exercises"
-            class="tag"
+            class="chip"
           >
             {{ $tr('assessmentsIncludedText') }}
-          </VChip>
+          </StudioChip>
           <div v-if="!_details.includes.exercises && !_details.includes.coach_content">
             {{ defaultText }}
           </div>
@@ -159,31 +160,31 @@
         >
           <span>{{ includesPrintable }}</span>
         </template>
-      </DetailsRow>
-      <DetailsRow
+      </StudioDetailsRow>
+      <StudioDetailsRow
         :label="$tr('coachHeading')"
         :text="$formatNumber(_details.includes.coach_content)"
         :definition="!printing ? $tr('coachDescription') : ''"
       />
-      <DetailsRow :label="$tr('tagsHeading')">
+      <StudioDetailsRow :label="$tr('tagsHeading')">
         <template #default>
           <div v-if="!sortedTags.length">
             {{ defaultText }}
           </div>
-          <VChip
+          <StudioChip
             v-for="tag in sortedTags"
             v-else-if="!printing"
             :key="tag.tag_name"
-            class="tag"
+            class="chip"
           >
-            {{ tag.tag_name }}
-          </VChip>
+            <span class="notranslate">{{ tag.tag_name }}</span>
+          </StudioChip>
           <span v-else>
             {{ tagPrintable }}
           </span>
         </template>
-      </DetailsRow>
-      <DetailsRow :label="$tr('languagesHeading')">
+      </StudioDetailsRow>
+      <StudioDetailsRow :label="$tr('languagesHeading')">
         <template #default>
           <ExpandableList
             :noItemsText="defaultText"
@@ -192,8 +193,8 @@
             inline
           />
         </template>
-      </DetailsRow>
-      <DetailsRow :label="$tr('subtitlesHeading')">
+      </StudioDetailsRow>
+      <StudioDetailsRow :label="$tr('subtitlesHeading')">
         <template #default>
           <ExpandableList
             :noItemsText="defaultText"
@@ -202,9 +203,9 @@
             inline
           />
         </template>
-      </DetailsRow>
+      </StudioDetailsRow>
 
-      <DetailsRow
+      <StudioDetailsRow
         :label="$tr('authorsLabel')"
         :definition="!printing ? $tr('authorToolTip') : ''"
       >
@@ -216,8 +217,8 @@
             inline
           />
         </template>
-      </DetailsRow>
-      <DetailsRow
+      </StudioDetailsRow>
+      <StudioDetailsRow
         :label="$tr('providersLabel')"
         :definition="!printing ? $tr('providerToolTip') : ''"
       >
@@ -229,8 +230,8 @@
             inline
           />
         </template>
-      </DetailsRow>
-      <DetailsRow
+      </StudioDetailsRow>
+      <StudioDetailsRow
         :label="$tr('aggregatorsLabel')"
         :definition="!printing ? $tr('aggregatorToolTip') : ''"
       >
@@ -242,34 +243,36 @@
             inline
           />
         </template>
-      </DetailsRow>
+      </StudioDetailsRow>
 
-      <DetailsRow :label="$tr('licensesLabel')">
+      <StudioDetailsRow :label="$tr('licensesLabel')">
         <template #default>
           <template v-if="!printing">
-            <VTooltip
+            <span
               v-for="license in _details.licenses"
               :key="license"
-              top
-              lazy
+              :ref="`licenseChip-${license}`"
+              class="license-chip-wrapper"
             >
-              <template #activator="{ on }">
-                <VChip
-                  class="tag"
-                  v-on="on"
-                >
-                  {{ translateConstant(license) }}
-                </VChip>
-              </template>
-              <span>{{ translateConstant(license + '_description') }}</span>
-            </VTooltip>
+              <StudioChip class="chip">
+                {{ translateConstant(license) }}
+              </StudioChip>
+              <KTooltip
+                :reference="`licenseChip-${license}`"
+                :refs="$refs"
+                placement="top"
+                maxWidth="200px"
+              >
+                <span>{{ translateConstant(license + '_description') }}</span>
+              </KTooltip>
+            </span>
           </template>
           <span v-else>
             {{ licensesPrintable }}
           </span>
         </template>
-      </DetailsRow>
-      <DetailsRow :label="$tr('copyrightHoldersLabel')">
+      </StudioDetailsRow>
+      <StudioDetailsRow :label="$tr('copyrightHoldersLabel')">
         <template #default>
           <ExpandableList
             :items="_details.copyright_holders"
@@ -278,80 +281,68 @@
             inline
           />
         </template>
-      </DetailsRow>
+      </StudioDetailsRow>
 
-      <DetailsRow
+      <StudioDetailsRow
         v-if="_details.original_channels.length"
         :label="$tr('containsContentHeading')"
       >
         <template #default>
-          <VLayout
+          <div
             v-for="channel in _details.original_channels"
             :key="channel.id"
             class="preview-row"
-            align-center
-            row
           >
-            <VFlex class="source-thumbnail">
-              <Thumbnail :src="channel.thumbnail" />
-            </VFlex>
-            <VFlex
+            <StudioThumbnail
+              class="source-thumbnail"
+              :src="channel.thumbnail"
+            />
+            <div
               v-if="printing"
-              class="font-weight-bold notranslate px-4 subheading"
+              class="channel-name notranslate"
             >
               {{ channel.name }}
-            </VFlex>
-            <a
+            </div>
+            <KExternalLink
               v-else
+              class="channel-name notranslate"
               :href="channelUrl(channel)"
-              target="_blank"
-              class="notranslate primary--text"
-            >
-              <span>{{ channel.name }}</span>
-              <Icon
-                class="mx-1 rtl-flip"
-                icon="openNewTab"
-              />
-            </a>
-          </VLayout>
+              :text="channel.name"
+              openInNewTab
+            />
+          </div>
         </template>
-      </DetailsRow>
+      </StudioDetailsRow>
 
-      <label
+      <h2
         v-if="_details.sample_nodes.length"
-        class="body-1 font-weight-bold"
-        :style="{ color: $vuetify.theme.darkGrey }"
+        class="sample-heading"
       >
-        {{ isChannel ? $tr('sampleFromChannelHeading') : $tr('sampleFromTopicHeading') }}
-      </label>
-      <VLayout
-        row
-        :wrap="!printing"
-        class="my-4 pt-1 sample-nodes"
+        {{ $tr('sampleFromChannelHeading') }}
+      </h2>
+      <KGrid
+        gutter="0"
+        class="sample-nodes"
       >
-        <VFlex
+        <KGridItem
           v-for="node in _details.sample_nodes"
           :key="node.node_id"
-          :xs12="!printing"
-          :xs3="printing"
-          sm3
+          :layout12="{ span: 3 }"
+          :layout8="{ span: 4 }"
+          :layout4="{ span: printing ? 1 : 4 }"
         >
-          <VCard
-            height="100%"
-            flat
+          <StudioThumbnail
+            :src="node.thumbnail"
+            :kind="node.kind"
+          />
+          <p
+            dir="auto"
+            class="sample-node-title"
           >
-            <Thumbnail
-              :src="node.thumbnail"
-              :kind="node.kind"
-            />
-            <VCardText :class="getTitleClass(node)">
-              <p dir="auto">
-                {{ getTitle(node) }}
-              </p>
-            </VCardText>
-          </VCard>
-        </VFlex>
-      </VLayout>
+            {{ getTitle(node) }}
+          </p>
+        </KGridItem>
+      </KGrid>
     </div>
   </div>
 
@@ -364,21 +355,22 @@
   import defaultsDeep from 'lodash/defaultsDeep';
   import camelCase from 'lodash/camelCase';
   import orderBy from 'lodash/orderBy';
-  import { SCALE_TEXT, SCALE, CHANNEL_SIZE_DIVISOR } from './constants';
-  import DetailsRow from './DetailsRow';
-  import { CategoriesLookup, LevelsLookup } from 'shared/constants';
   import {
     fileSizeMixin,
     constantsTranslationMixin,
     printingMixin,
     titleMixin,
     metadataTranslationMixin,
-  } from 'shared/mixins';
-  import LoadingText from 'shared/views/LoadingText';
-  import ExpandableList from 'shared/views/ExpandableList';
-  import ContentNodeIcon from 'shared/views/ContentNodeIcon';
-  import Thumbnail from 'shared/views/files/Thumbnail';
-  import CopyToken from 'shared/views/CopyToken';
+  } from '../../mixins';
+  import { CategoriesLookup, LevelsLookup } from '../../constants';
+  import ContentNodeIcon from '../ContentNodeIcon';
+  import ExpandableList from '../ExpandableList';
+  import StudioChip from '../StudioChip';
+  import StudioLargeLoader from '../StudioLargeLoader';
+  import { SCALE_TEXT, SCALE, CHANNEL_SIZE_DIVISOR } from './constants';
+  import StudioDetailsRow from './StudioDetailsRow';
+  import StudioThumbnail from 'shared/views/files/StudioThumbnail';
+  import StudioCopyToken from 'shared/views/StudioCopyToken';
 
   const DEFAULT_DETAILS = {
     name: '',
@@ -414,14 +406,15 @@
   };
 
   export default {
-    name: 'DetailsPanel',
+    name: 'StudioDetailsPanel',
     components: {
-      LoadingText,
+      StudioLargeLoader,
       ContentNodeIcon,
       ExpandableList,
-      CopyToken,
-      DetailsRow,
-      Thumbnail,
+      StudioCopyToken,
+      StudioDetailsRow,
+      StudioChip,
+      StudioThumbnail,
     },
     mixins: [
       fileSizeMixin,
@@ -438,10 +431,6 @@
       details: {
         type: Object,
         required: true,
-      },
-      isChannel: {
-        type: Boolean,
-        default: true,
       },
       loading: {
         type: Boolean,
@@ -460,14 +449,11 @@
         return '---';
       },
       publishedDate() {
-        if (this.isChannel) {
-          return this.$formatDate(this._details.last_published, {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          });
-        }
-        return '';
+        return this.$formatDate(this._details.last_published, {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        });
       },
       sizeText() {
         const size = this._details.resource_size;
@@ -543,21 +529,12 @@
         return this.categories.join(', ');
       },
     },
-    mounted() {
-      if (!this.isChannel) {
-        // Track node details view when not a channel-- is this happening?
-        this.$analytics.trackAction('node_details', 'View', {
-          id: this._details.id,
-        });
-      }
-    },
     methods: {
       channelUrl(channel) {
         return window.Urls.channel(channel.id);
       },
     },
     $trs: {
-      /* eslint-disable kolibri/vue-no-unused-translations */
       sizeHeading: 'Channel size',
       sizeText: '{text} ({size})',
       resourceHeading: 'Total resources',
@@ -587,7 +564,6 @@
       [SCALE_TEXT.VERY_LARGE]: 'Very large',
       containsContentHeading: 'Contains content from',
       sampleFromChannelHeading: 'Sample content from this channel',
-      sampleFromTopicHeading: 'Sample content from this topic',
       tokenHeading: 'Channel token',
       publishedHeading: 'Published on',
       currentVersionHeading: 'Published version',
@@ -609,78 +585,62 @@
     }
   }
 
-  .v-toolbar__title {
-    font-weight: bold;
-  }
-
-  .draft-header {
-    color: gray;
-  }
-
-  .subheader {
-    margin-top: 20px;
-    margin-bottom: 0;
-    font-size: 10pt !important;
-    font-weight: bold;
-    color: gray;
-  }
-
-  .detail-value {
-    font-size: 14pt;
-    font-weight: bold;
-  }
-
-  .tag {
-    padding: 0 8px;
-    font-weight: bold;
-    background-color: var(--v-grey-lighten3);
-    border-radius: 10px;
-  }
-
-  .kind-table {
+  .resource-list {
     max-width: 350px;
-    font-size: 12pt;
+    margin: 8px 0;
+  }
 
-    ::v-deep tr {
-      border-top: 0 !important;
+  .resource-item {
+    margin: 12px 0;
+  }
 
-      &:hover {
-        background: transparent !important;
-      }
-    }
+  .resource-icon {
+    margin-right: 8px;
+  }
 
-    td {
-      height: 36px;
-      font-size: 12pt;
-    }
+  .chip {
+    padding: 16px;
+    font-weight: bold;
+  }
+
+  .license-chip-wrapper {
+    cursor: pointer;
   }
 
   .preview-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
     margin: 16px 0;
 
     &:first-child {
       margin-top: 0;
     }
-
-    a {
-      margin: 0 8px;
-      font-weight: bold;
-      text-decoration: none;
-
-      span {
-        text-decoration: underline;
-      }
-    }
-
-    .source-thumbnail {
-      flex-grow: 0;
-      width: 150px;
-      border: 1px solid var(--v-grey-lighten3);
-    }
   }
 
-  .sample-nodes .v-card__text {
-    max-width: 800px;
+  .source-thumbnail {
+    flex-shrink: 0;
+    width: 150px;
+  }
+
+  .channel-name {
+    font-weight: bold;
+  }
+
+  .sample-heading {
+    margin-top: 28px;
+    margin-bottom: 8px;
+    font-size: 16px;
+    font-weight: bold;
+  }
+
+  .sample-nodes {
+    margin-top: 28px;
+  }
+
+  .sample-node-title {
+    margin-top: 12px;
+    margin-bottom: 42px;
     font-weight: bold;
     word-break: break-word;
   }

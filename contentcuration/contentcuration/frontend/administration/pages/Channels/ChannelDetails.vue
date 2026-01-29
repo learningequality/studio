@@ -59,7 +59,7 @@
             flat
             class="px-5"
           >
-            <DetailsPanel
+            <StudioDetailsPanel
               v-if="channel && details"
               :details="channelWithDetails"
               :loading="loading"
@@ -87,7 +87,7 @@
   import { RouteNames } from '../../constants';
   import ChannelActionsDropdown from './ChannelActionsDropdown';
   import ChannelSharing from 'shared/views/channel/ChannelSharing';
-  import DetailsPanel from 'shared/views/details/DetailsPanel';
+  import StudioDetailsPanel from 'shared/views/details/StudioDetailsPanel';
   import { routerMixin } from 'shared/mixins';
   import LoadingText from 'shared/views/LoadingText';
   import FullscreenModal from 'shared/views/FullscreenModal';
@@ -96,7 +96,7 @@
   export default {
     name: 'ChannelDetails',
     components: {
-      DetailsPanel,
+      StudioDetailsPanel,
       LoadingText,
       FullscreenModal,
       ChannelSharing,

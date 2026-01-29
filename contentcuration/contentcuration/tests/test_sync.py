@@ -4,6 +4,7 @@ from django.urls import reverse
 from le_utils.constants import content_kinds
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
+from le_utils.constants import roles
 from le_utils.constants.labels import accessibility_categories
 from le_utils.constants.labels import learning_activities
 from le_utils.constants.labels import levels
@@ -17,6 +18,7 @@ from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ContentTag
 from contentcuration.models import File
+from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
@@ -108,7 +110,6 @@ class SyncTestCase(StudioTestCase):
             if child.title == contentnode.title:
                 target_child = child
                 break
-        self.assertIsNotNone(target_child)
         self.assertEqual(target_child.files.count(), contentnode.files.count())
 
         db_file = self._add_temp_file_to_content_node(contentnode)
@@ -172,7 +173,6 @@ class SyncTestCase(StudioTestCase):
             source_node_id=contentnode.node_id
         )
 
-        self.assertIsNotNone(target_child)
         self.assertEqual(
             target_child.assessment_items.count(), contentnode.assessment_items.count()
         )
@@ -224,7 +224,6 @@ class SyncTestCase(StudioTestCase):
             source_node_id=contentnode.node_id
         )
 
-        self.assertIsNotNone(target_child)
         self.assertEqual(target_child.tags.count(), contentnode.tags.count())
 
         tag = ContentTag.objects.create(tag_name="tagname")
@@ -263,7 +262,6 @@ class SyncTestCase(StudioTestCase):
             source_node_id=contentnode.node_id
         )
 
-        self.assertIsNotNone(target_child)
         self.assertEqual(target_child.tags.count(), contentnode.tags.count())
 
         # Create the same tag twice
@@ -313,8 +311,6 @@ class SyncTestCase(StudioTestCase):
         target_child = self.derivative_channel.main_tree.get_descendants().get(
             source_node_id=contentnode.node_id
         )
-
-        self.assertIsNotNone(target_child)
 
         for key, value in labels.items():
             setattr(contentnode, key, value)
@@ -407,8 +403,6 @@ class SyncTestCase(StudioTestCase):
             source_node_id=contentnode.node_id
         )
 
-        self.assertIsNotNone(target_child)
-
         for key, value in labels.items():
             setattr(contentnode, key, {value: True})
         contentnode.save()
@@ -428,6 +422,239 @@ class SyncTestCase(StudioTestCase):
 
         for key, value in labels.items():
             self.assertEqual(getattr(target_child, key), {value: True})
+
+    def test_sync_language_field(self):
+        """
+        Test that the language field is synced correctly when sync_resource_details is True.
+        """
+        self.assertFalse(self.channel.has_changes())
+        self.assertFalse(self.derivative_channel.has_changes())
+
+        contentnode = (
+            self.channel.main_tree.get_descendants()
+            .exclude(kind_id=content_kinds.TOPIC)
+            .first()
+        )
+
+        target_child = self.derivative_channel.main_tree.get_descendants().get(
+            source_node_id=contentnode.node_id
+        )
+
+        # Set a different language on the original node
+        spanish_language = Language.objects.get(id="es")
+        contentnode.language = spanish_language
+        contentnode.save()
+
+        sync_channel(
+            self.derivative_channel,
+            sync_titles_and_descriptions=False,
+            sync_resource_details=True,
+            sync_files=False,
+            sync_assessment_items=False,
+        )
+
+        self.assertTrue(self.channel.has_changes())
+        self.assertTrue(self.derivative_channel.has_changes())
+
+        target_child.refresh_from_db()
+        self.assertEqual(target_child.language, spanish_language)
+
+    def test_sync_provider_field(self):
+        """
+        Test that the provider field is synced correctly when sync_resource_details is True.
+        """
+        self.assertFalse(self.channel.has_changes())
+        self.assertFalse(self.derivative_channel.has_changes())
+
+        contentnode = (
+            self.channel.main_tree.get_descendants()
+            .exclude(kind_id=content_kinds.TOPIC)
+            .first()
+        )
+
+        target_child = self.derivative_channel.main_tree.get_descendants().get(
+            source_node_id=contentnode.node_id
+        )
+
+        # Set a provider on the original node
+        contentnode.provider = "Test Provider Organization"
+        contentnode.save()
+
+        sync_channel(
+            self.derivative_channel,
+            sync_titles_and_descriptions=False,
+            sync_resource_details=True,
+            sync_files=False,
+            sync_assessment_items=False,
+        )
+
+        self.assertTrue(self.channel.has_changes())
+        self.assertTrue(self.derivative_channel.has_changes())
+
+        target_child.refresh_from_db()
+        self.assertEqual(target_child.provider, "Test Provider Organization")
+
+    def test_sync_aggregator_field(self):
+        """
+        Test that the aggregator field is synced correctly when sync_resource_details is True.
+        """
+        self.assertFalse(self.channel.has_changes())
+        self.assertFalse(self.derivative_channel.has_changes())
+
+        contentnode = (
+            self.channel.main_tree.get_descendants()
+            .exclude(kind_id=content_kinds.TOPIC)
+            .first()
+        )
+
+        target_child = self.derivative_channel.main_tree.get_descendants().get(
+            source_node_id=contentnode.node_id
+        )
+
+        # Set an aggregator on the original node
+        contentnode.aggregator = "Test Aggregator Organization"
+        contentnode.save()
+
+        sync_channel(
+            self.derivative_channel,
+            sync_titles_and_descriptions=False,
+            sync_resource_details=True,
+            sync_files=False,
+            sync_assessment_items=False,
+        )
+
+        self.assertTrue(self.channel.has_changes())
+        self.assertTrue(self.derivative_channel.has_changes())
+
+        target_child.refresh_from_db()
+        self.assertEqual(target_child.aggregator, "Test Aggregator Organization")
+
+    def test_sync_role_visibility_field(self):
+        """
+        Test that the role_visibility field is synced correctly when sync_resource_details is True.
+        """
+        self.assertFalse(self.channel.has_changes())
+        self.assertFalse(self.derivative_channel.has_changes())
+
+        contentnode = (
+            self.channel.main_tree.get_descendants()
+            .exclude(kind_id=content_kinds.TOPIC)
+            .first()
+        )
+
+        target_child = self.derivative_channel.main_tree.get_descendants().get(
+            source_node_id=contentnode.node_id
+        )
+
+        # Set role_visibility to COACH on the original node
+        contentnode.role_visibility = roles.COACH
+        contentnode.save()
+
+        sync_channel(
+            self.derivative_channel,
+            sync_titles_and_descriptions=False,
+            sync_resource_details=True,
+            sync_files=False,
+            sync_assessment_items=False,
+        )
+
+        self.assertTrue(self.channel.has_changes())
+        self.assertTrue(self.derivative_channel.has_changes())
+
+        target_child.refresh_from_db()
+        self.assertEqual(target_child.role_visibility, roles.COACH)
+
+    def test_sync_all_missing_fields(self):
+        """
+        Test that all four previously missing fields (language, provider, aggregator,
+        role_visibility) are synced together when sync_resource_details is True.
+        """
+        self.assertFalse(self.channel.has_changes())
+        self.assertFalse(self.derivative_channel.has_changes())
+
+        contentnode = (
+            self.channel.main_tree.get_descendants()
+            .exclude(kind_id=content_kinds.TOPIC)
+            .first()
+        )
+
+        target_child = self.derivative_channel.main_tree.get_descendants().get(
+            source_node_id=contentnode.node_id
+        )
+
+        # Set all four fields on the original node
+        french_language = Language.objects.get(id="fr")
+        contentnode.language = french_language
+        contentnode.provider = "Comprehensive Test Provider"
+        contentnode.aggregator = "Comprehensive Test Aggregator"
+        contentnode.role_visibility = roles.COACH
+        contentnode.save()
+
+        sync_channel(
+            self.derivative_channel,
+            sync_titles_and_descriptions=False,
+            sync_resource_details=True,
+            sync_files=False,
+            sync_assessment_items=False,
+        )
+
+        self.assertTrue(self.channel.has_changes())
+        self.assertTrue(self.derivative_channel.has_changes())
+
+        target_child.refresh_from_db()
+        self.assertEqual(target_child.language, french_language)
+        self.assertEqual(target_child.provider, "Comprehensive Test Provider")
+        self.assertEqual(target_child.aggregator, "Comprehensive Test Aggregator")
+        self.assertEqual(target_child.role_visibility, roles.COACH)
+
+    def test_sync_missing_fields_not_synced_without_flag(self):
+        """
+        Test that the four fields (language, provider, aggregator, role_visibility)
+        are NOT synced when sync_resource_details is False.
+        """
+        self.assertFalse(self.channel.has_changes())
+        self.assertFalse(self.derivative_channel.has_changes())
+
+        contentnode = (
+            self.channel.main_tree.get_descendants()
+            .exclude(kind_id=content_kinds.TOPIC)
+            .first()
+        )
+
+        target_child = self.derivative_channel.main_tree.get_descendants().get(
+            source_node_id=contentnode.node_id
+        )
+
+        # Store original values
+        original_language = target_child.language
+        original_provider = target_child.provider
+        original_aggregator = target_child.aggregator
+        original_role_visibility = target_child.role_visibility
+
+        # Modify all four fields in the original node
+        german_language = Language.objects.get(id="de")
+        contentnode.language = german_language
+        contentnode.provider = "Should Not Sync Provider"
+        contentnode.aggregator = "Should Not Sync Aggregator"
+        contentnode.role_visibility = roles.COACH
+        contentnode.save()
+
+        # Sync WITHOUT sync_resource_details
+        sync_channel(
+            self.derivative_channel,
+            sync_titles_and_descriptions=False,
+            sync_resource_details=False,
+            sync_files=False,
+            sync_assessment_items=False,
+        )
+
+        target_child.refresh_from_db()
+
+        # Verify fields remain unchanged
+        self.assertEqual(target_child.language, original_language)
+        self.assertEqual(target_child.provider, original_provider)
+        self.assertEqual(target_child.aggregator, original_aggregator)
+        self.assertEqual(target_child.role_visibility, original_role_visibility)
 
 
 class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):
