@@ -1,6 +1,6 @@
-import { useFetch } from '../../../../composables/useFetch';
+import { useFetch } from 'shared/composables/useFetch';
 import { Channel } from 'shared/data/resources';
 
-export function usePublishedData(channelId) {
+export function useVersionDetail(channelId) {
   return useFetch({ asyncFetchFunc: () => Channel.getVersionDetail(channelId) });
 }

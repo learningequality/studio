@@ -1598,3 +1598,167 @@ class GetVersionDetailEndpointTestCase(StudioAPITestCase):
         self.assertNotIn("special_permissions_included", data)
         self.assertEqual(data["version"], 3)
         self.assertEqual(data["resource_count"], 25)
+
+
+class ChannelVersionViewsetTestCase(StudioAPITestCase):
+    """Test channel_version Viewset."""
+
+    def setUpChannelWithVersions(self, name, version_count):
+        channel = testdata.channel(name=name)
+        channel.version = version_count
+        channel.published = True
+        channel.editors.add(self.user)
+        channel.save()
+
+        for i in range(version_count):
+            ChannelVersion.objects.update_or_create(
+                channel=channel,
+                version=i + 1,
+                defaults={
+                    "version_notes": f"Test version {i + 1}",
+                },
+            )
+        return channel
+
+    def setUp(self):
+        super().setUp()
+        self.user = testdata.user()
+        self.client.force_authenticate(user=self.user)
+
+        self.channel = self.setUpChannelWithVersions(
+            name="Test Channel with Versions", version_count=3
+        )
+
+        self.channel_2 = self.setUpChannelWithVersions(
+            name="Test Channel with Versions 2", version_count=5
+        )
+
+    def test_get_channel_version_without_channel_filter_should_fail(self):
+        """Test retrieving channel versions without channel filter."""
+        url = reverse("channelversion-list")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 412)
+
+    def test_get_channel_version_with_invalid_channel_filter_should_fail(self):
+        """Test retrieving channel versions with invalid channel filter."""
+        url = reverse("channelversion-list") + "?channel=invalid-channel-id"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 400)
+
+    def test_get_channel_versions_with_valid_channel_filter(self):
+        """Test retrieving channel versions with valid channel filter."""
+        url = reverse("channelversion-list") + f"?channel={self.channel.id}"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        results = data["results"] if "results" in data else data
+        self.assertEqual(len(results), 3)
+        for version_data in results:
+            self.assertEqual(version_data["channel"], self.channel.id)
+
+    def test_get_specific_channel_version(self):
+        """Test retrieving a specific channel version."""
+        channel_version = ChannelVersion.objects.filter(channel=self.channel).first()
+        url = reverse("channelversion-detail", kwargs={"pk": channel_version.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["id"], channel_version.id)
+        self.assertEqual(data["channel"], self.channel.id)
+        self.assertEqual(data["version"], channel_version.version)
+
+    def test_get_channel_versions_ordering(self):
+        """Test ordering of channel versions."""
+        url = (
+            reverse("channelversion-list")
+            + f"?channel={self.channel_2.id}&ordering=version"
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        results = response.json()
+        versions = [version_data["version"] for version_data in results]
+        self.assertEqual(versions, sorted(versions))
+
+        url_desc = (
+            reverse("channelversion-list")
+            + f"?channel={self.channel_2.id}&ordering=-version"
+        )
+        response_desc = self.client.get(url_desc)
+        self.assertEqual(response_desc.status_code, 200)
+        results_desc = response_desc.json()
+        versions_desc = [version_data["version"] for version_data in results_desc]
+        self.assertEqual(versions_desc, sorted(versions_desc, reverse=True))
+
+    def test_get_channel_versions_filter_by_version(self):
+        """Test filtering channel versions by specific version number."""
+        target_version = 2
+        url = (
+            reverse("channelversion-list")
+            + f"?channel={self.channel.id}&version={target_version}"
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        results = response.json()
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["version"], target_version)
+
+    def test_get_channel_versions_filter_by_version_gte(self):
+        """Test filtering channel versions by specific version number."""
+        target_version = 2
+        url = (
+            reverse("channelversion-list")
+            + f"?channel={self.channel.id}&version__gte={target_version}"
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        results = response.json()
+        self.assertEqual(len(results), 2)
+        for version_data in results:
+            self.assertGreaterEqual(version_data["version"], target_version)
+
+    def test_channel_version_cannot_be_created_via_api(self):
+        """Test that channel versions cannot be created via the API."""
+        url = reverse("channelversion-list")
+        payload = {
+            "channel": self.channel.id,
+            "version": 4,
+            "version_notes": "New version via API",
+        }
+        response = self.client.post(url, payload, format="json")
+        self.assertEqual(response.status_code, 405)
+
+    def test_channel_version_cannot_be_updated_via_api(self):
+        """Test that channel versions cannot be updated via the API."""
+        channel_version = ChannelVersion.objects.filter(channel=self.channel).first()
+        url = reverse("channelversion-detail", kwargs={"pk": channel_version.id})
+        payload = {
+            "version_notes": "Updated version notes via API",
+        }
+        response = self.client.patch(url, payload, format="json")
+        self.assertEqual(response.status_code, 405)
+
+    def test_channel_version_cannot_be_deleted_via_api(self):
+        """Test that channel versions cannot be deleted via the API."""
+        channel_version = ChannelVersion.objects.filter(channel=self.channel).first()
+        url = reverse("channelversion-detail", kwargs={"pk": channel_version.id})
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, 405)
+
+    def test_channel_viewer_can_access_channel_versions(self):
+        """Test that a user with channel viewer permissions can access channel versions."""
+        viewer_user = testdata.user(email="vieweruser@example.com")
+        self.channel.viewers.add(viewer_user)
+        self.client.force_authenticate(user=viewer_user)
+        url = reverse("channelversion-list") + f"?channel={self.channel.id}"
+        response = self.client.get(url)
+        results = response.json()
+        self.assertEqual(len(results), 3)
+
+    def test_non_channel_viewer_cannot_access_channel_versions(self):
+        """Test that a user without channel viewer permissions cannot access channel versions."""
+        other_user = testdata.user(email="otheruser@example.com")
+        self.client.force_authenticate(user=other_user)
+        url = reverse("channelversion-list") + f"?channel={self.channel.id}"
+        response = self.client.get(url)
+        results = response.json()
+        self.assertEqual(len(results), 0)

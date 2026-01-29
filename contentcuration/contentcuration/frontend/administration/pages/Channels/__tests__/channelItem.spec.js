@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils';
 import CommunityLibraryStatusButton from '../../../components/CommunityLibraryStatusButton.vue';
+import ReviewSubmissionSidePanel from '../../../components/sidePanels/ReviewSubmissionSidePanel';
 import router from '../../../router';
 import { factory } from '../../../store';
 import { RouteNames } from '../../../constants';
@@ -175,5 +176,19 @@ describe('channelItem', () => {
       expect(statusButton.exists()).toBe(true);
       expect(statusButton.props('status')).toBe(CommunityLibraryStatus.REJECTED);
     });
+  });
+
+  it('Clicking on the status button opens the review submission side panel', async () => {
+    wrapper.setData({ testedChannel: submittedChannel });
+    await wrapper.vm.$nextTick();
+
+    const statusCell = wrapper.find('[data-test="community-library-status"]');
+    const statusButton = statusCell.findComponent(CommunityLibraryStatusButton);
+
+    expect(wrapper.findComponent(ReviewSubmissionSidePanel).exists()).toBe(false);
+
+    await statusButton.trigger('click');
+
+    expect(wrapper.findComponent(ReviewSubmissionSidePanel).exists()).toBe(true);
   });
 });
