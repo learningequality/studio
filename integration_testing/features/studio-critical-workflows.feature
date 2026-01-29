@@ -4,6 +4,7 @@ Feature: Kolibri Studio critical workflows
   Background:
     Given Kolibri Studio is accessible at https://studio.learningequality.org/ or any of the test environments
     	And I am at Kolibri Studio's sign-in page
+    	And I already have several testing accounts with different channels and resources
 
   Scenario: Create an account and sign in with the created account
 		When I click the *Create an account* button
@@ -58,14 +59,16 @@ Feature: Kolibri Studio critical workflows
 		Then the interface language changes to the selected language
 
 	Scenario: Open and close the sidebar menu
+    Given I am signed-in to Kolibri Studio
     When I click the hamburger menu button in the upper left screen corner
     Then I see the sidebar menu
-    	And I can see the following options: *Channels*, *Settings*, *Change language*, *Help and support*, *Sign out*, the LE logo,  *© 2025 Learning Equality", *Give feedback*
+    	And I can see the following options: *Channels*, *Settings*, *Change language*, *Help and support*, *Sign out*, the LE logo,  *© 2026 Learning Equality*, *Give feedback*
 	    And I can click any of the options inside
     When I click the *X* button, or anywhere on the browser screen
     Then I don't see the sidebar menu anymore
 
   Scenario: Open and close the user menu
+    Given I am signed-in to Kolibri Studio
     When I click the user menu button in the upper right screen corner
     Then I see the user menu
     	And I can see the following options: *Settings*, *Change language*, *Help and support*, *Sign out*
@@ -84,7 +87,7 @@ Feature: Kolibri Studio critical workflows
 			And I enter channel description (optional)
 			And I fill in the default copyright fields (optional)
 			And I click the *Create* button
-		Then I am at the channel editor view
+		Then I am at the channel editor page
 			And I see the title of the channel to the left
 			And I see a disabled *Publish* button
 			And I see *Click "ADD" to start building your channel Create, upload, or import resources from other channels*
@@ -92,7 +95,7 @@ Feature: Kolibri Studio critical workflows
 
 	Scenario: Edit channel details
 		Given I am signed in to Studio
-			And I am at the channel editor view
+			And I am at the channel editor page
 		When I click the pencil icon next to the channel name
 		Then I see a modal window with the channel details
 			And I see the details for the channel - channel name, language, channel description etc.
@@ -132,13 +135,14 @@ Feature: Kolibri Studio critical workflows
 		Then I am back at the channel editor page
 			And I can see the uploaded files
 
-	Scenario: Create a new exercise
+	Scenario: Create a new exercise (Completion: When goal is met - Goal: 100% correct)
 		Given I am signed in to Studio
 			And I am at the channel editor page
 		When I click the *Add* button
 			And I select the *New exercise* option
 		Then I see the *Details* tab of the *New exercise* modal
 		When I fill in all of the required fields
+			And I set the completion criteria to *When goal is met - Goal: 100% correct)*
 			And I click the *Questions* tab
 		Then I see the text: *Exercise has no questions*
 			And I see a *New question* button
@@ -149,6 +153,55 @@ Feature: Kolibri Studio critical workflows
 			And I click the *Finish* button
 		Then I am back at the channel editor page
 			And I can see the newly added exercise
+			And I see a small green dot indicating that the exercise is unpublished
+
+	Scenario: Create a new exercise - practice quiz
+		Given I am signed in to Studio
+			And I am at the channel editor page
+		When I click the *Add* button
+			And I select the *New exercise* option
+		Then I see the *Details* tab of the *New exercise* modal
+		When I fill in all of the required fields
+			And I set the completion criteria to *Practice quiz*
+			And I click the *Questions* tab
+		Then I see the text: *Exercise has no questions*
+			And I see a *New question* button
+		When I click the *New question* button
+		Then I see the question editor
+		When I add one or several questions of the desired type
+			And I add answers and hints as necessary
+			And I click the *Finish* button
+		Then I am back at the channel editor page
+			And I can see the newly added exercise
+			And I see a small green dot indicating that the exercise is unpublished
+
+	Scenario: Create a new exercise - survey
+		Given I am signed in to Studio
+			And I am at the channel editor page
+		When I click the *Add* button
+			And I select the *New exercise* option
+		Then I see the *Details* tab of the *New exercise* modal
+		When I fill in all of the required fields
+			And I set the completion criteria to *Survey*
+			And I click the *Questions* tab
+		Then I see the text: *Exercise has no questions*
+			And I see a *New question* button
+		When I click the *New question* button
+		Then I see the question editor
+		When I add one or several questions of the desired type
+			And I add answers and hints as necessary
+			And I click the *Finish* button
+		Then I am back at the channel editor page
+			And I can see the newly added exercise
+			And I see a small green dot indicating that the exercise is unpublished
+
+	Scenario: Existing and newly created exercises behave consistently
+  	Given I am signed in to Studio
+  	When I open a published channel containing previously created exercises with various completion types and questions
+  	Then I can see all exercises displayed in the channel editor page
+	    And exercises which were previously marked as *Incomplete* are still marked as *Incomplete*
+	    And exercises without an *Incomplete* indicator are still displayed without it
+	    And existing and newly created exercises look and function the same
 
 	Scenario: Import content from another channel
 		Given I am signed in to Studio
@@ -167,6 +220,8 @@ Feature: Kolibri Studio critical workflows
 			And I click the *Import* button
 		Then I am back at the channel editor page
 			And I see the *Copying* indicator for each folder or resource which is being copied
+		When after a period of time I refresh the page
+  	Then I can see the imported folders and resources in the channel editor page
 
 	Scenario: Publish a channel
 		Given I am signed in to Studio
@@ -179,8 +234,26 @@ Feature: Kolibri Studio critical workflows
 		When I fill in the required fields
 			And I click *Publish*
 		Then I see the *Publishing channel* progress indicator at the top right
+		When the channel has been published successfully
+		Then I see the *Published N seconds ago* text
+			And I receive a confirmation email that the channel has been published successfully
+
+	Scenario: Publish a channel with incomplete resources
+		Given I am signed in to Studio
+			And I am at the channel editor page
+			And I have write access to the channel
+			And the channel contains unpublished resources or edits plus one or several incomplete resources
+		When I click the *Publish* button at the top right corner
+		Then the *Publish modal* appears
+			And I see a warning that incomplete resources will not be published and made available for download in Kolibri.
+		When I click *Continue*
+		Then I see the *Describe what's new in this channel version* field and the *Language* drop-down
+		When I fill in the required fields
+			And I click *Publish*
+		Then I see the *Publishing channel* progress indicator at the top right
 		When the the channel has been published successfully
 		Then I see the *Published N seconds ago* text
+			And I see a yellow exclamation icon with the following text *N resources are incomplete and cannot be published*
 			And I receive a confirmation email that the channel has been published successfully
 
 	Scenario: Invite collaborators with *Can edit* permissions
@@ -192,14 +265,39 @@ Feature: Kolibri Studio critical workflows
 		When I type the email of the person I want to invite
 			And I don't change the preselected *Can edit* option in the drop-down
 			And I click the *Send invitation* button
-		Then the collaborator will be notified on their *My Channels* page, where they can accept or reject the pending invitation
-			And the collaborator will receive an email allowing them to accept/reject the pending invitation
+		Then the collaborator will be notified on their *My Channels* page, where they can accept or decline the pending invitation
+			And the collaborator will receive an email allowing them to accept/decline the pending invitation
+		When I sign in to Studio as the collaborator
+		Then I can accept the pending invitation
+		When I make some changes to the channel or resources
+			And I click the *Publish* button
+		Then I can publish the channel
+			And any changes made to the channel are visible by the other collaborators
+
+	Scenario: Invite collaborators with *Can view* permissions
+		Given I am signed in to Studio
+			And I am at the channel editor page
+		When I click the *...* (options) button in the topbar
+			And select the *Share channel* option
+		Then I am at the *Sharing* tab for the channel
+		When I type the email of the person I want to invite
+			And I select the *Can view* option from the drop-down
+			And I click the *Send invitation* button
+		Then the collaborator will be notified on their *View-only* page, where they can accept or decline the pending invitation
+			And the collaborator will receive an email allowing them to accept/decline the pending invitation
+		When I sign in to Studio as the collaborator
+			And I accept the pending invitation
+			And I open the channel editor page
+		Then I can see the channel marked as *View-only*
+			And I can see the available folders and resources
+			And I can't add or edit folders and resources
+			And I can't publish the channel
 
 	Scenario: Sync resources
 		Given I am signed in to Studio
 			And I am at the channel editor page for <channel_a>
 			And there is a resource in the <channel_a> that has been imported from <channel_b>
-		  And there is new version of the resource file in the <channel_b>
+		  And there is a new version of the resource in <channel_b>
 		When I click the *···* button in the top-right corner
 			And I select the *Sync resources* option
 		Then I see *Sync resources* modal window
@@ -249,6 +347,17 @@ Feature: Kolibri Studio critical workflows
 		Then I can see the *Sent to trash* snackbar message
 			And I see the *Undo* button
 			And I no longer see the resource
+
+	Scenario: Removed folder and resources can be restored
+	  Given I am signed in to Studio
+	    And I am at the channel editor page
+	    And there are available folders and resources of different types
+	  When I check the checkbox of a folder or a resource
+	    And I click the *Remove* button
+	  Then I can see the *Sent to trash* snackbar message
+	    And I see the *Undo* button
+	  When I click the *Undo* button
+	  Then I can still see the folder or resource in the channel editor page
 
 	Scenario: Copy multiple resources
 		Given I am signed in to Studio
@@ -317,6 +426,7 @@ Feature: Kolibri Studio critical workflows
 			And I can see the *Request more space* section
 
 	Scenario: Submit more space request
+		Given I am signed-in to Kolibri Studio
 		When I fill in all the space request text fields
 			And I click the *Send request* submit button
 		Then I see all the text fields clear
@@ -338,7 +448,7 @@ Feature: Kolibri Studio critical workflows
 			And I see the newly created collection
 			And I see the number of channels in that collection
 
-	Scenario: Explore the content library
+	Scenario: Explore the Content library
 		Given I am signed in to Studio
 		When I go to the *Content library*
 		Then I see a page with the available public channels
@@ -346,3 +456,12 @@ Feature: Kolibri Studio critical workflows
 			And I can view or download the channel summary
 		When I click on a channel card
 		Then I can see all of the channel's resources in *View-only* format
+
+	Scenario: Sign out and confirm that pages visible only to a signed-in user are no longer accessible
+	  Given I am signed in to Studio
+	  When I click the user profile icon
+	    And I click *Sign out*
+	  Then I am at Kolibri Studio's sign-in page
+	  When I click the browser's *Back* button
+	  Then I can't access any of the pages I've visited as a signed-in user
+	  
