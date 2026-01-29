@@ -464,4 +464,3 @@ Feature: Kolibri Studio critical workflows
 	  Then I am at Kolibri Studio's sign-in page
 	  When I click the browser's *Back* button
 	  Then I can't access any of the pages I've visited as a signed-in user
-	  
