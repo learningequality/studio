@@ -159,7 +159,9 @@
   }
 
   .kexternal-redirect {
-    margin-left: -8px;
+    display: inline-flex !important;
+    align-items: center !important;
+    margin-left: 0;
   }
 
 </style>
