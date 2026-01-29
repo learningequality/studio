@@ -244,7 +244,6 @@
 
   import Box from './Box';
   import LoadingText from './LoadingText';
-  import StatusChip from './StatusChip';
   import { useLatestCommunityLibrarySubmission } from './composables/useLatestCommunityLibrarySubmission';
   import { useLicenseAudit } from './composables/useLicenseAudit';
   import { usePublishedData } from './composables/usePublishedData';
@@ -252,6 +251,7 @@
   import InvalidLicensesNotice from './licenseCheck/InvalidLicensesNotice.vue';
   import CompatibleLicensesNotice from './licenseCheck/CompatibleLicensesNotice.vue';
   import SpecialPermissionsList from './licenseCheck/SpecialPermissionsList.vue';
+  import StatusChip from 'shared/views/communityLibrary/StatusChip.vue';
   import { translateMetadataString } from 'shared/utils/metadataStringsTranslation';
   import countriesUtil from 'shared/utils/countries';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
