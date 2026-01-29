@@ -1,12 +1,9 @@
-import { render, screen, within, configure } from '@testing-library/vue';
+import { render, screen, within } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import VueRouter from 'vue-router';
 import { Store } from 'vuex';
 import ChannelSelectionList from '../ChannelSelectionList';
 import { ChannelListTypes } from 'shared/constants';
-
-// Configure VTL to use 'data-test' instead of the default 'data-testid'
-configure({ testIdAttribute: 'data-test' });
 
 const searchWord = 'search test';
 
