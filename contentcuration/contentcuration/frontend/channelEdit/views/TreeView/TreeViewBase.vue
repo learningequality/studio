@@ -475,7 +475,7 @@
           if (this.canEdit) {
             let label = this.$tr('editChannel');
             if (!this.currentChannel.language) {
-              label = `${label} ⚠️`;
+              label = `${label}`;
             }
             options.push({
               label,
