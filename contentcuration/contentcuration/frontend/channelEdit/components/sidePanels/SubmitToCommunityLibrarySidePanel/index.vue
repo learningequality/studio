@@ -138,30 +138,16 @@
                 </LoadingText>
               </div>
             </div>
-            <div
-              v-if="licenseAuditIsLoading"
-              class="license-audit-loader"
-            >
-              <KCircularLoader disableDefaultTransition />
-              <div class="audit-text-wrapper">
-                <div class="audit-text-primary">
-                  {{ checkingChannelCompatibility$() }}
-                </div>
-                <div class="audit-text-secondary">
-                  {{ checkingChannelCompatibilitySecondary$() }}
-                </div>
-              </div>
-            </div>
             <InvalidLicensesNotice
-              v-if="licenseAuditIsFinished && invalidLicenses.length"
+              v-if="versionDetailIsFinished && invalidLicenses.length"
               :invalid-licenses="invalidLicenses"
             />
             <CompatibleLicensesNotice
-              v-else-if="licenseAuditIsFinished"
+              v-else-if="versionDetailIsFinished"
               :licenses="includedLicenses"
             />
             <SpecialPermissionsList
-              v-if="licenseAuditIsFinished && channelVersionId"
+              v-if="versionDetailIsFinished && channelVersionId"
               v-model="checkedSpecialPermissions"
               :channel-version-id="channelVersionId"
               @update:allChecked="allSpecialPermissionsChecked = $event"
@@ -244,7 +230,6 @@
 
   import Box from './Box';
   import LoadingText from './LoadingText';
-  import { useLicenseAudit } from './composables/useLicenseAudit';
   import { useVersionDetail } from './composables/useVersionDetail';
 
   import InvalidLicensesNotice from './licenseCheck/InvalidLicensesNotice.vue';
@@ -310,8 +295,6 @@
         submittingSnackbar$,
         publishingMessage$,
         confirmReplacementText$,
-        checkingChannelCompatibility$,
-        checkingChannelCompatibilitySecondary$,
       } = communityChannelsStrings;
 
       const annotationColor = computed(() => tokensTheme.annotation);
@@ -429,13 +412,13 @@
         return versionDetail.value?.id;
       });
 
-      const {
-        isLoading: licenseAuditIsLoading,
-        isFinished: licenseAuditIsFinished,
-        invalidLicenses,
-        includedLicenses,
-        checkAndTriggerAudit: checkAndTriggerLicenseAudit,
-      } = useLicenseAudit(props.channel, currentChannelVersion);
+      const invalidLicenses = computed(() => {
+        return versionDetail.value?.non_distributable_licenses_included || [];
+      });
+
+      const includedLicenses = computed(() => {
+        return versionDetail.value?.included_licenses || [];
+      });
 
       const allSpecialPermissionsChecked = ref(false);
 
@@ -448,7 +431,7 @@
           allSpecialPermissionsChecked.value,
           !isPublishing.value,
           !hasInvalidLicenses.value,
-          licenseAuditIsFinished.value,
+          versionDetailIsFinished.value,
           canBeEdited.value,
           versionDetailIsFinished.value,
           description.value.length >= 1,
@@ -461,11 +444,10 @@
         return conditions.every(condition => condition);
       });
 
-      // Watch for when publishing completes - fetch publishedData to get the new version's data
+      // Watch for when publishing completes - fetch version detail to get the new version's data
       watch(isPublishing, async (newIsPublishing, oldIsPublishing) => {
         if (oldIsPublishing === true && newIsPublishing === false) {
           await fetchVersionDetail();
-          await checkAndTriggerLicenseAudit();
         }
       });
 
@@ -474,7 +456,6 @@
 
         if (!isPublishing.value) {
           await fetchVersionDetail();
-          await checkAndTriggerLicenseAudit();
         }
       });
 
@@ -581,8 +562,6 @@
         versionDetailIsFinished,
         detectedLanguages,
         detectedCategories,
-        licenseAuditIsLoading,
-        licenseAuditIsFinished,
         invalidLicenses,
         includedLicenses,
         onSubmit,
@@ -606,8 +585,6 @@
         isPublishing,
         publishingMessage$,
         confirmReplacementText$,
-        checkingChannelCompatibility$,
-        checkingChannelCompatibilitySecondary$,
         checkedSpecialPermissions,
         allSpecialPermissionsChecked,
       };
@@ -718,35 +695,6 @@
   .publishing-text {
     font-size: 14px;
     color: v-bind('infoTextColor');
-  }
-
-  .license-audit-loader {
-    display: flex;
-    flex-direction: row;
-    gap: 12px;
-    align-items: flex-start;
-    width: 100%;
-    padding: 16px 0;
-  }
-
-  .audit-text-wrapper {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .audit-text-primary {
-    font-size: 14px;
-    line-height: 140%;
-    color: v-bind('infoTextColor');
-  }
-
-  .audit-text-secondary {
-    font-size: 14px;
-    line-height: 140%;
-    color: v-bind('infoTextColor');
-    opacity: 0.7;
   }
 
   .info-section {

@@ -6,7 +6,6 @@ import SubmitToCommunityLibrarySidePanel from '../';
 import Box from '../Box.vue';
 
 import { useVersionDetail } from '../composables/useVersionDetail';
-import { useLicenseAudit } from '../composables/useLicenseAudit';
 import { useLatestCommunityLibrarySubmission } from 'shared/composables/useLatestCommunityLibrarySubmission';
 import CommunityLibraryStatusChip from 'shared/views/communityLibrary/CommunityLibraryStatusChip.vue';
 import { Categories, CommunityLibraryStatus } from 'shared/constants';
@@ -15,7 +14,6 @@ import { CommunityLibrarySubmission } from 'shared/data/resources';
 import CountryField from 'shared/views/form/CountryField.vue';
 
 jest.mock('../composables/useVersionDetail');
-jest.mock('../composables/useLicenseAudit');
 jest.mock('shared/composables/useLatestCommunityLibrarySubmission');
 jest.mock('shared/data/resources', () => ({
   CommunityLibrarySubmission: {
@@ -56,16 +54,6 @@ async function makeWrapper({ channel, publishedData, latestSubmission }) {
     isFinished,
     data: computed(() => latestSubmission),
     fetchData: fetchLatestSubmission,
-  });
-
-  useLicenseAudit.mockReturnValue({
-    isLoading: computed(() => false),
-    isFinished: computed(() => true),
-    isAuditing: ref(false),
-    invalidLicenses: ref([]),
-    includedLicenses: ref([]),
-    hasAuditData: computed(() => true),
-    checkAndTriggerAudit: jest.fn(),
   });
 
   const wrapper = mount(SubmitToCommunityLibrarySidePanel, {
