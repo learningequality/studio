@@ -441,6 +441,7 @@ export function useToolbarActions(emit) {
         : require('../../assets/icon-alignRight.svg'),
       handler: handleToggleAlign,
       isActive: false,
+      isAvailable: !isMarkActive('codeBlock'),
     };
   });
 
