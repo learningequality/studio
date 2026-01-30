@@ -69,17 +69,15 @@
     <ToolbarDivider v-if="visibleCategories.includes('clipboard')" />
 
     <!-- Text Alignment -->
-    <div
-      role="group"
-      :aria-label="copyAndPasteActions$()"
-    >
-      <ToolbarButton
-        :title="alignAction.title"
-        :icon="alignAction.icon"
-        :is-active="alignAction.isActive"
-        @click="alignAction.handler"
-      />
-    </div>
+    <ToolbarButton
+      v-if="visibleCategories.includes('align')"
+      :title="alignAction.title"
+      :icon="alignAction.icon"
+      :is-active="alignAction.isActive"
+      @click="alignAction.handler"
+    />
+
+    <ToolbarDivider v-if="visibleCategories.includes('align')" />
 
     <ToolbarButton
       v-if="visibleCategories.includes('clearFormat')"
@@ -234,6 +232,24 @@
           </button>
         </template>
 
+        <!-- Overflow Text Alignment -->
+        <template v-if="overflowCategories.includes('align')">
+          <button
+            class="dropdown-item"
+            :class="{ active: alignAction.isActive }"
+            role="menuitem"
+            @click="alignAction.handler"
+          >
+            <img
+              :src="alignAction.icon"
+              class="dropdown-item-icon"
+              alt=""
+              aria-hidden="true"
+            >
+            <span class="dropdown-item-text">{{ alignAction.title }}</span>
+          </button>
+        </template>
+
         <!-- Overflow Clear Format -->
         <template v-if="overflowCategories.includes('clearFormat')">
           <button
@@ -358,6 +374,7 @@
         script: 710,
         lists: 650,
         clearFormat: 560,
+        align: 530,
         clipboard: 500,
         textFormat: 400,
       };
@@ -368,6 +385,7 @@
         'script',
         'lists',
         'clearFormat',
+        'align',
         'clipboard',
         'textFormat',
       ];
