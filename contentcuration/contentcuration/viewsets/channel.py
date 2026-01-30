@@ -96,6 +96,12 @@ class CatalogListPagination(CachedListPagination):
     max_page_size = 1000
 
 
+class ChannelVersionListPagination(ValuesViewsetPageNumberPagination):
+    page_size = None
+    page_size_query_param = "page_size"
+    max_page_size = 1000
+
+
 primary_token_subquery = Subquery(
     SecretToken.objects.filter(channels=OuterRef("id"), is_primary=True)
     .values("token")
@@ -1022,6 +1028,35 @@ class ChannelViewSet(ValuesViewset):
             logging.error(str(e))
             unique_lang_ids = []
         return unique_lang_ids
+
+
+class ChannelVersionFilter(RequiredFilterSet):
+    class Meta:
+        model = ChannelVersion
+        fields = {
+            "channel": ["exact"],
+            "version": ["exact", "gte", "lte"],
+        }
+
+
+class ChannelVersionViewSet(ReadOnlyValuesViewset):
+    queryset = ChannelVersion.objects.all()
+    permission_classes = [IsAuthenticated]
+    pagination_class = ChannelVersionListPagination
+    filterset_class = ChannelVersionFilter
+    ordering_fields = ["version"]
+    ordering = "-version"
+
+    values = (
+        "id",
+        "channel",
+        "version",
+        "date_published",
+        "version_notes",
+        "included_languages",
+        "included_licenses",
+        "included_categories",
+    )
 
 
 @method_decorator(

@@ -1570,6 +1570,20 @@ class ChannelVersion(models.Model):
             self.save()
         return self.secret_token
 
+    @classmethod
+    def filter_view_queryset(cls, queryset, user):
+        if user.is_anonymous:
+            return queryset.none()
+
+        if user.is_admin:
+            return queryset
+
+        return queryset.filter(Q(channel__viewers=user) | Q(channel__editors=user))
+
+    @classmethod
+    def filter_edit_queryset(cls, queryset, user):
+        return queryset.none()
+
 
 CHANNEL_HISTORY_CHANNEL_INDEX_NAME = "idx_channel_history_channel_id"
 
