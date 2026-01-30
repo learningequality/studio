@@ -190,6 +190,35 @@ class BackendFactory(ABC):
         pass
 
 
+class CompositeBackend:
+    def __init__(self, backend, prefixes):
+        self.backend = backend
+        self.prefixes = prefixes
+        self._connected = False
+
+    def connect(self, **kwargs):
+        """
+        Loops through a list of prefixes in order to establish
+        which backend is available to connect.
+
+        """
+        for prefix in self.prefixes:
+            self.backend.url_prefix = prefix
+            if self.backend.connect():
+                self._connected = True
+                return True
+        raise AssertionError(
+            f"Could not connect to any backend in list: {self.prefixes}"
+        )
+
+    def make_request(self, request):
+        if self._connected:
+            return self.backend.make_request(request)
+        else:
+            self.connect()
+            return self.backend.make_request(request)
+
+
 class Adapter:
     """
     Base class for adapters that interact with a backend interface.
