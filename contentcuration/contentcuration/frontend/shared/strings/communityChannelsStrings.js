@@ -241,16 +241,6 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Dismiss',
     context: 'Action in the resubmit modal to dismiss the modal',
   },
-  checkingChannelCompatibility: {
-    message: 'Checking channel compatibility for submission...',
-    context:
-      'Message shown in the "Submit to Community Library" panel while the license audit is in progress',
-  },
-  checkingChannelCompatibilitySecondary: {
-    message: 'This usually takes a few seconds...',
-    context:
-      'Secondary message shown below the main checking message to indicate the expected duration',
-  },
   licenseCheckPassed: {
     message: 'License check passed',
     context: 'Title shown when license audit passes (no invalid licenses found)',

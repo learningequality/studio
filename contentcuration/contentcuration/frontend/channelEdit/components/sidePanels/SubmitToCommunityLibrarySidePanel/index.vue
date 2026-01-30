@@ -138,30 +138,16 @@
                 </LoadingText>
               </div>
             </div>
-            <div
-              v-if="publishedDataIsLoading"
-              class="license-audit-loader"
-            >
-              <KCircularLoader disableDefaultTransition />
-              <div class="audit-text-wrapper">
-                <div class="audit-text-primary">
-                  {{ checkingChannelCompatibility$() }}
-                </div>
-                <div class="audit-text-secondary">
-                  {{ checkingChannelCompatibilitySecondary$() }}
-                </div>
-              </div>
-            </div>
             <InvalidLicensesNotice
-              v-if="publishedDataIsFinished && invalidLicenses.length"
+              v-if="versionDetailIsFinished && invalidLicenses.length"
               :invalid-licenses="invalidLicenses"
             />
             <CompatibleLicensesNotice
-              v-else-if="publishedDataIsFinished"
+              v-else-if="versionDetailIsFinished"
               :licenses="includedLicenses"
             />
             <SpecialPermissionsList
-              v-if="publishedDataIsFinished && channelVersionId"
+              v-if="versionDetailIsFinished && channelVersionId"
               v-model="checkedSpecialPermissions"
               :channel-version-id="channelVersionId"
               @update:allChecked="allSpecialPermissionsChecked = $event"
@@ -309,8 +295,6 @@
         submittingSnackbar$,
         publishingMessage$,
         confirmReplacementText$,
-        checkingChannelCompatibility$,
-        checkingChannelCompatibilitySecondary$,
       } = communityChannelsStrings;
 
       const annotationColor = computed(() => tokensTheme.annotation);
@@ -436,9 +420,6 @@
         return versionDetail.value?.included_licenses || [];
       });
 
-      const publishedDataIsLoading = versionDetailIsLoading;
-      const publishedDataIsFinished = versionDetailIsFinished;
-
       const allSpecialPermissionsChecked = ref(false);
 
       const hasInvalidLicenses = computed(() => {
@@ -450,7 +431,7 @@
           allSpecialPermissionsChecked.value,
           !isPublishing.value,
           !hasInvalidLicenses.value,
-          publishedDataIsFinished.value,
+          versionDetailIsFinished.value,
           canBeEdited.value,
           versionDetailIsFinished.value,
           description.value.length >= 1,
@@ -581,8 +562,6 @@
         versionDetailIsFinished,
         detectedLanguages,
         detectedCategories,
-        publishedDataIsLoading,
-        publishedDataIsFinished,
         invalidLicenses,
         includedLicenses,
         onSubmit,
@@ -606,8 +585,6 @@
         isPublishing,
         publishingMessage$,
         confirmReplacementText$,
-        checkingChannelCompatibility$,
-        checkingChannelCompatibilitySecondary$,
         checkedSpecialPermissions,
         allSpecialPermissionsChecked,
       };
@@ -718,35 +695,6 @@
   .publishing-text {
     font-size: 14px;
     color: v-bind('infoTextColor');
-  }
-
-  .license-audit-loader {
-    display: flex;
-    flex-direction: row;
-    gap: 12px;
-    align-items: flex-start;
-    width: 100%;
-    padding: 16px 0;
-  }
-
-  .audit-text-wrapper {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .audit-text-primary {
-    font-size: 14px;
-    line-height: 140%;
-    color: v-bind('infoTextColor');
-  }
-
-  .audit-text-secondary {
-    font-size: 14px;
-    line-height: 140%;
-    color: v-bind('infoTextColor');
-    opacity: 0.7;
   }
 
   .info-section {
