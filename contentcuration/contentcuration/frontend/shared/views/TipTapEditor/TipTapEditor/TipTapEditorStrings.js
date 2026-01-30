@@ -103,6 +103,16 @@ const MESSAGES = {
     context: 'Option to set text format to header 3',
   },
 
+  // Text alignments
+  alignLeft: {
+    message: 'Align left',
+    context: 'Button to align text to the left',
+  },
+  alignRight: {
+    message: 'Align right',
+    context: 'Button to align text to the right',
+  },
+
   // Accessibility labels
   textFormattingToolbar: {
     message: 'Text formatting toolbar',

@@ -3,6 +3,7 @@ import { Editor } from '@tiptap/vue-2';
 import StarterKitExtension from '@tiptap/starter-kit';
 import { Superscript } from '@tiptap/extension-superscript';
 import { Subscript } from '@tiptap/extension-subscript';
+import { TextAlign } from '@tiptap/extension-text-align';
 import { Small } from '../extensions/SmallTextExtension';
 import { Image } from '../extensions/Image';
 import { CodeBlockSyntaxHighlight } from '../extensions/CodeBlockSyntaxHighlight';
@@ -30,6 +31,9 @@ export function useEditor() {
         Image,
         CustomLink, // Use our custom Link extension
         Math,
+        TextAlign.configure({
+          types: ['heading', 'paragraph', 'image'],
+        }),
       ],
       content: content || '<p></p>',
       editorProps: {
