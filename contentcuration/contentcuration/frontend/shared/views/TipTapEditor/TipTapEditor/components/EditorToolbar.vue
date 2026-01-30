@@ -74,10 +74,13 @@
       :title="alignAction.title"
       :icon="alignAction.icon"
       :is-active="alignAction.isActive"
+      :is-available="alignAction.isAvailable"
       @click="alignAction.handler"
     />
 
     <ToolbarDivider v-if="visibleCategories.includes('align')" />
+
+    <!-- Clear Formatting -->
 
     <ToolbarButton
       v-if="visibleCategories.includes('clearFormat')"
@@ -238,6 +241,7 @@
             class="dropdown-item"
             :class="{ active: alignAction.isActive }"
             role="menuitem"
+            :disabled="alignAction.isAvailable"
             @click="alignAction.handler"
           >
             <img
