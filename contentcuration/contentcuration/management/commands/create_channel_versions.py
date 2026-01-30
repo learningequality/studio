@@ -2,6 +2,7 @@ import logging as logmodule
 from itertools import chain
 
 from django.core.management.base import BaseCommand
+from django.db import DatabaseError
 from django.db.models import Count
 from le_utils.constants import licenses
 
@@ -54,8 +55,11 @@ def compute_special_permissions(data, channel, published_nodes):
         for description in special_perms_descriptions
     ]
 
-    return AuditedSpecialPermissionsLicense.objects.bulk_create(
+    AuditedSpecialPermissionsLicense.objects.bulk_create(
         new_licenses, ignore_conflicts=True
+    )
+    return AuditedSpecialPermissionsLicense.objects.filter(
+        description__in=special_perms_descriptions
     )
 
 
@@ -97,6 +101,10 @@ def validate_published_data(data, channel):
                 )
             )
         )
+    data["included_categories"] = [
+        c for c in data["included_categories"] if c is not None
+    ]
+
     if not data.get("included_languages"):
         node_languages = published_nodes.exclude(language=None).values_list(
             "language", flat=True
@@ -105,6 +113,10 @@ def validate_published_data(data, channel):
             "files__language", flat=True
         )
         data["included_languages"] = list(set(chain(node_languages, file_languages)))
+
+    data["included_languages"] = [
+        lang for lang in data["included_languages"] if lang is not None
+    ]
 
     if not data.get("included_licenses"):
         data["included_licenses"] = list(
@@ -125,8 +137,8 @@ def validate_published_data(data, channel):
             else []
         )
 
-    if not data.get("kind_counts"):
-        data["kind_counts"] = list(
+    if not data.get("kind_count"):
+        data["kind_count"] = list(
             published_nodes.values("kind_id")
             .annotate(count=Count("kind_id"))
             .order_by("kind_id")
@@ -141,6 +153,7 @@ class Command(BaseCommand):
         logging.info("Creating channel versions")
 
         channels = Channel.objects.filter(version__gt=0)
+        failures = list()
 
         # Create ChannelVersions for each published version and set version_info
         # to the most recent ChannelVersion instance
@@ -149,40 +162,57 @@ class Command(BaseCommand):
 
             # Validate published_data
             for pub_data in channel.published_data.values():
-                logging.info(
-                    f"Validating published data for channel {channel.id} version {pub_data['version']}"
-                )
-                valid_data, special_permissions = validate_published_data(
-                    pub_data, channel
-                )
-
-                # Create or update channel version
-                channel_version, _ = ChannelVersion.objects.update_or_create(
-                    channel=channel,
-                    version=valid_data.get("version"),
-                    defaults={
-                        "included_categories": valid_data.get("included_categories"),
-                        "included_licenses": valid_data.get("included_licenses"),
-                        "included_languages": valid_data.get("included_languages"),
-                        "non_distributable_licenses_included": valid_data.get(
-                            "non_distributable_licenses_included"
-                        ),
-                        "kind_count": valid_data.get("kind_count"),
-                        "size": int(channel.published_size),
-                        "resource_count": channel.total_resource_count,
-                    },
-                )
-
-                if channel.version == pub_data.get("version"):
-                    channel.version_info = channel_version
-
-                # Set the M2M relation for special permissions
-                if special_permissions:
-                    channel_version.special_permissions_included.set(
-                        special_permissions
+                try:
+                    logging.info(
+                        f"Validating published data for channel {channel.id} version {pub_data['version']}"
                     )
-                logging.info(
-                    f"Created channel version {channel_version.id} for channel {channel.id}"
-                )
+                    valid_data, special_permissions = validate_published_data(
+                        pub_data, channel
+                    )
+
+                    # Create or update channel version
+                    channel_version, _ = ChannelVersion.objects.update_or_create(
+                        channel=channel,
+                        version=valid_data.get("version"),
+                        defaults={
+                            "included_categories": valid_data.get(
+                                "included_categories"
+                            ),
+                            "included_licenses": valid_data.get("included_licenses"),
+                            "included_languages": valid_data.get("included_languages"),
+                            "non_distributable_licenses_included": valid_data.get(
+                                "non_distributable_licenses_included"
+                            ),
+                            "kind_count": valid_data.get("kind_count"),
+                            "size": int(channel.published_size),
+                            "resource_count": channel.total_resource_count,
+                        },
+                    )
+
+                    if channel.version == pub_data.get("version"):
+                        channel.version_info = channel_version
+
+                    # Set the M2M relation for special permissions
+                    if special_permissions:
+                        channel_version.special_permissions_included.set(
+                            special_permissions
+                        )
+                    logging.info(
+                        f"Created channel version {channel_version.id} for channel {channel.id}"
+                    )
+                except DatabaseError as e:
+                    failures.append(
+                        {
+                            "exception": e,
+                            "channel_id": channel.id,
+                            "version": channel.version,
+                        }
+                    )
+
+                if len(failures) > 0:
+                    logging.error(
+                        "Some channel+version combinations failed to have a ChannelVersion created",
+                        failures,
+                    )
 
             channel.save()

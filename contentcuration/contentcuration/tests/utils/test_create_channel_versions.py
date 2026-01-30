@@ -172,8 +172,18 @@ class TestValidatePublishedData(StudioTestCase):
 
         self.assertEqual(data["included_categories"], existing_categories)
 
-    def test_computes_kind_counts_when_missing(self):
-        """Should compute kind_counts from published nodes."""
+    def test_works_with_null_category(self):
+        """Should preserve existing included_categories in data."""
+        existing_categories = ["history", "art", None]
+        fixed_existing_categories = ["history", "art"]
+        input_data = {"included_categories": existing_categories}
+
+        data, _ = validate_published_data(input_data, self.channel)
+
+        self.assertEqual(data["included_categories"], fixed_existing_categories)
+
+    def test_computes_kind_count(self):
+        """Should compute kind_count from published nodes."""
         video_kind = ContentKind.objects.get(kind=content_kinds.VIDEO)
 
         # Create two video nodes
@@ -188,23 +198,23 @@ class TestValidatePublishedData(StudioTestCase):
 
         data, _ = validate_published_data({}, self.channel)
 
-        self.assertIn("kind_counts", data)
+        self.assertIn("kind_count", data)
         # Find the video kind count
         video_count = next(
-            (kc for kc in data["kind_counts"] if kc["kind_id"] == content_kinds.VIDEO),
+            (kc for kc in data["kind_count"] if kc["kind_id"] == content_kinds.VIDEO),
             None,
         )
         self.assertIsNotNone(video_count)
         self.assertEqual(video_count["count"], 2)
 
-    def test_does_not_overwrite_existing_kind_counts(self):
-        """Should preserve existing kind_counts in data."""
+    def test_does_not_overwrite_existing_kind_count(self):
+        """Should preserve existing kind_count in data."""
         existing_counts = [{"kind_id": "video", "count": 99}]
-        input_data = {"kind_counts": existing_counts}
+        input_data = {"kind_count": existing_counts}
 
         data, _ = validate_published_data(input_data, self.channel)
 
-        self.assertEqual(data["kind_counts"], existing_counts)
+        self.assertEqual(data["kind_count"], existing_counts)
 
     def test_computes_non_distributable_licenses_when_arr_present(self):
         """Should set non_distributable_licenses when All Rights Reserved is included."""
