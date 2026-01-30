@@ -13,7 +13,6 @@ from contentcuration import models
 from contentcuration import models as cc
 from contentcuration.constants import channel_history
 from contentcuration.constants import community_library_submission
-from contentcuration.models import AuditedSpecialPermissionsLicense
 from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import ChannelVersion
@@ -1437,48 +1436,7 @@ class GetVersionDetailEndpointTestCase(StudioAPITestCase):
             "included_languages",
             "included_licenses",
             "included_categories",
-            "non_distributable_included_licenses",
-            "included_special_permissions",
+            "non_distributable_licenses_included",
         ]
         for field in expected_fields:
             self.assertIn(field, data, f"Field '{field}' should be in response")
-
-    def test_get_version_detail_includes_special_permissions(self):
-        """Test that included_special_permissions is returned in the response."""
-        special_license = AuditedSpecialPermissionsLicense.objects.create(
-            description="Test special permissions license"
-        )
-        self.channel_version.included_special_permissions.add(special_license)
-
-        url = reverse("channel-version-detail", kwargs={"pk": self.channel.id})
-        response = self.client.get(url)
-
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
-
-        self.assertIn("included_special_permissions", data)
-        self.assertEqual(data["included_special_permissions"], [special_license.id])
-
-    def test_get_version_detail_with_special_permissions_licenses(self):
-        """Test that get_version_detail includes special permissions licenses."""
-        license1 = AuditedSpecialPermissionsLicense.objects.create(
-            description="First special permissions license"
-        )
-        license2 = AuditedSpecialPermissionsLicense.objects.create(
-            description="Second special permissions license"
-        )
-
-        self.channel_version.included_special_permissions.add(license1, license2)
-
-        url = reverse("channel-version-detail", kwargs={"pk": self.channel.id})
-        response = self.client.get(url)
-
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
-
-        self.assertCountEqual(
-            data["included_special_permissions"],
-            [license1.id, license2.id],
-        )
-        self.assertEqual(data["version"], 3)
-        self.assertEqual(data["resource_count"], 25)

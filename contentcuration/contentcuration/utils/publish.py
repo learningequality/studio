@@ -970,7 +970,7 @@ def fill_published_fields(channel, version_notes):
         .first()
     )
 
-    non_distributable_included_licenses = (
+    non_distributable_licenses_included = (
         [all_rights_reserved_id]
         if all_rights_reserved_id and all_rights_reserved_id in license_list
         else []
@@ -1015,19 +1015,19 @@ def fill_published_fields(channel, version_notes):
         channel.version_info.included_languages = language_list
         channel.version_info.included_licenses = license_list
         channel.version_info.included_categories = category_list
-        channel.version_info.non_distributable_included_licenses = (
-            non_distributable_included_licenses
+        channel.version_info.non_distributable_licenses_included = (
+            non_distributable_licenses_included
         )
         channel.version_info.save()
 
         if special_perms_descriptions:
-            channel.version_info.included_special_permissions.set(
+            channel.version_info.special_permissions_included.set(
                 ccmodels.AuditedSpecialPermissionsLicense.objects.filter(
                     description__in=special_perms_descriptions
                 )
             )
         else:
-            channel.version_info.included_special_permissions.clear()
+            channel.version_info.special_permissions_included.clear()
 
     channel.save()
 

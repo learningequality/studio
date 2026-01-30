@@ -139,7 +139,7 @@
               </div>
             </div>
             <div
-              v-if="licenseAuditIsLoading"
+              v-if="publishedDataIsLoading"
               class="license-audit-loader"
             >
               <KCircularLoader disableDefaultTransition />
@@ -153,15 +153,15 @@
               </div>
             </div>
             <InvalidLicensesNotice
-              v-if="licenseAuditIsFinished && invalidLicenses.length"
+              v-if="publishedDataIsFinished && invalidLicenses.length"
               :invalid-licenses="invalidLicenses"
             />
             <CompatibleLicensesNotice
-              v-else-if="licenseAuditIsFinished"
+              v-else-if="publishedDataIsFinished"
               :licenses="includedLicenses"
             />
             <SpecialPermissionsList
-              v-if="licenseAuditIsFinished && channelVersionId"
+              v-if="publishedDataIsFinished && channelVersionId"
               v-model="checkedSpecialPermissions"
               :channel-version-id="channelVersionId"
               @update:allChecked="allSpecialPermissionsChecked = $event"
@@ -246,7 +246,6 @@
   import LoadingText from './LoadingText';
   import StatusChip from './StatusChip';
   import { useLatestCommunityLibrarySubmission } from './composables/useLatestCommunityLibrarySubmission';
-  import { useLicenseAudit } from './composables/useLicenseAudit';
   import { usePublishedData } from './composables/usePublishedData';
 
   import InvalidLicensesNotice from './licenseCheck/InvalidLicensesNotice.vue';
@@ -434,12 +433,13 @@
         return versionDetail.value?.id;
       });
 
-      const {
-        isLoading: licenseAuditIsLoading,
-        isFinished: licenseAuditIsFinished,
-        invalidLicenses,
-        includedLicenses,
-      } = useLicenseAudit(versionDetail, publishedDataIsLoading, publishedDataIsFinished);
+      const invalidLicenses = computed(() => {
+        return versionDetail.value?.non_distributable_licenses_included || [];
+      });
+
+      const includedLicenses = computed(() => {
+        return versionDetail.value?.included_licenses || [];
+      });
 
       const allSpecialPermissionsChecked = ref(true);
 
@@ -452,7 +452,7 @@
           allSpecialPermissionsChecked.value,
           !isPublishing.value,
           !hasInvalidLicenses.value,
-          licenseAuditIsFinished.value,
+          publishedDataIsFinished.value,
           canBeEdited.value,
           publishedDataIsFinished.value,
           description.value.length >= 1,
@@ -579,8 +579,6 @@
         publishedDataIsFinished,
         detectedLanguages,
         detectedCategories,
-        licenseAuditIsLoading,
-        licenseAuditIsFinished,
         invalidLicenses,
         includedLicenses,
         onSubmit,

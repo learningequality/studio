@@ -900,33 +900,26 @@ class ChannelViewSet(ValuesViewset):
         if not channel.version_info:
             return Response({})
 
-        channel_version = ChannelVersion.objects.filter(
-            id=channel.version_info.id
-        ).first()
+        version_data = (
+            ChannelVersion.objects.filter(id=channel.version_info.id)
+            .values(
+                "id",
+                "version",
+                "resource_count",
+                "kind_count",
+                "size",
+                "date_published",
+                "version_notes",
+                "included_languages",
+                "included_licenses",
+                "included_categories",
+                "non_distributable_licenses_included",
+            )
+            .first()
+        )
 
-        if not channel_version:
+        if not version_data:
             return Response({})
-
-        version_data = {
-            "id": channel_version.id,
-            "version": channel_version.version,
-            "resource_count": channel_version.resource_count,
-            "kind_count": channel_version.kind_count,
-            "size": channel_version.size,
-            "date_published": channel_version.date_published,
-            "version_notes": channel_version.version_notes,
-            "included_languages": channel_version.included_languages,
-            "included_licenses": channel_version.included_licenses,
-            "included_categories": channel_version.included_categories,
-            "non_distributable_included_licenses": (
-                channel_version.non_distributable_included_licenses
-            ),
-            "included_special_permissions": list(
-                channel_version.included_special_permissions.values_list(
-                    "id", flat=True
-                )
-            ),
-        }
 
         return Response(version_data)
 
