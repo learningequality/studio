@@ -77,7 +77,7 @@ describe('ChannelSelectionList', () => {
     await renderComponent();
 
     // Specific wait avoids wrapping the whole block in waitFor
-    expect(await screen.findByLabelText("Search for a channel")).toBeInTheDocument();
+    expect(await screen.findByLabelText('Search for a channel')).toBeInTheDocument();
 
     expect(screen.getByText(editChannel.name)).toBeInTheDocument();
     expect(screen.getByText(editChannel2.name)).toBeInTheDocument();
@@ -92,7 +92,7 @@ describe('ChannelSelectionList', () => {
     expect(await screen.findByText(editChannel.name)).toBeInTheDocument();
     expect(screen.getByText(editChannel2.name)).toBeInTheDocument();
 
-    const searchInput = screen.getByLabelText("Search for a channel");
+    const searchInput = screen.getByLabelText('Search for a channel');
     await user.clear(searchInput);
     await user.type(searchInput, editChannel.name);
 
