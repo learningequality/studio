@@ -83,6 +83,13 @@
       />
       <ToolbarDivider />
       <ToolbarButton
+        :title="alignAction.title"
+        :icon="alignAction.icon"
+        :is-active="alignAction.isActive"
+        @click="alignAction.handler"
+      />
+      <ToolbarDivider />
+      <ToolbarButton
         v-for="action in scriptActions"
         :key="action.name"
         :title="action.title"
@@ -131,7 +138,8 @@
         textFormattingToolbar$,
       } = getTipTapEditorStrings();
 
-      const { textActions, listActions, scriptActions, insertTools } = useToolbarActions(emit);
+      const { textActions, listActions, scriptActions, insertTools, alignAction } =
+        useToolbarActions(emit);
 
       const { canIncreaseFormat, canDecreaseFormat, increaseFormat, decreaseFormat } =
         useFormatControls();
@@ -200,6 +208,7 @@
         listActions,
         scriptActions,
         insertTools,
+        alignAction,
         toggleToolbar,
         canIncreaseFormat,
         canDecreaseFormat,
