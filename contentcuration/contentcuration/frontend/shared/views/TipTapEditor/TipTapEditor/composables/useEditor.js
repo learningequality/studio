@@ -32,7 +32,7 @@ export function useEditor() {
         CustomLink, // Use our custom Link extension
         Math,
         TextAlign.configure({
-          types: ['heading', 'paragraph'],
+          types: ['heading', 'paragraph', 'image'],
         }),
       ],
       content: content || '<p></p>',

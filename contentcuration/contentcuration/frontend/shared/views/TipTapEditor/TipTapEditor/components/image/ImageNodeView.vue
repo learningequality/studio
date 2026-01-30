@@ -1,6 +1,6 @@
 <template>
 
-  <NodeViewWrapper class="image-node-wrapper">
+  <NodeViewWrapper :style="wrapperStyle">
     <div
       ref="containerRef"
       class="image-node-view"
@@ -87,6 +87,21 @@
       const minWidth = 50;
       const compactThreshold = 200;
       let resizeListeners = null;
+
+      // Compute wrapper style based on textAlign attribute
+      const wrapperStyle = computed(() => {
+        const align = props.node.attrs.textAlign || 'left';
+        const alignmentMap = {
+          left: 'flex-start',
+          center: 'center',
+          right: 'flex-end',
+          justify: 'flex-start',
+        };
+        return {
+          display: 'flex',
+          justifyContent: alignmentMap[align] || 'flex-start',
+        };
+      });
 
       // Create debounced version of saveSize function
       const debouncedSaveSize = debounce(() => {
@@ -296,6 +311,7 @@
         containerRef,
         resizeHandleRef,
         styleWidth,
+        wrapperStyle,
         onResizeStart,
         removeImage,
         editImage,
