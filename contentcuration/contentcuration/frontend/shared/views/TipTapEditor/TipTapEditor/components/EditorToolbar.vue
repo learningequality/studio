@@ -68,6 +68,19 @@
 
     <ToolbarDivider v-if="visibleCategories.includes('clipboard')" />
 
+    <!-- Text Alignment -->
+    <div
+      role="group"
+      :aria-label="copyAndPasteActions$()"
+    >
+      <ToolbarButton
+        :title="alignAction.title"
+        :icon="alignAction.icon"
+        :is-active="alignAction.isActive"
+        @click="alignAction.handler"
+      />
+    </div>
+
     <ToolbarButton
       v-if="visibleCategories.includes('clearFormat')"
       :title="clearFormatting$()"
@@ -365,6 +378,7 @@
         canClearFormat,
         historyActions,
         textActions,
+        alignAction,
         listActions,
         scriptActions,
         insertTools,
@@ -523,6 +537,7 @@
         canClearFormat,
         historyActions,
         textActions,
+        alignAction,
         listActions,
         scriptActions,
         insertTools,
