@@ -59,6 +59,7 @@
     "@tiptap/extension-link": "^3.13.0",
     "@tiptap/extension-subscript": "^3.13.0",
     "@tiptap/extension-superscript": "^3.13.0",
+    "@tiptap/extension-text-align": "^3.18.0",
     "@tiptap/starter-kit": "^3.13.0",
     "@tiptap/vue-2": "^3.13.0",
     "ajv": "^8.12.0",
