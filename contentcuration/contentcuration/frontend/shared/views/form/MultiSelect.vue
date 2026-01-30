@@ -17,12 +17,12 @@
         @blur="resetScroll"
       >
         <template #selection="{ item }">
-          <VChip :class="{ notranslate }">
+          <StudioChip :class="{ notranslate }">
             {{ item.text }}
-          </VChip>
+          </StudioChip>
         </template>
         <template #item="{ item }">
-          <Checkbox
+          <KCheckbox
             :ref="'checkbox-' + item.value"
             v-model="selections"
             :value="item.value"
@@ -35,7 +35,7 @@
             >
               {{ item.text }}
             </span>
-          </Checkbox>
+          </KCheckbox>
         </template>
       </VSelect>
     </template>

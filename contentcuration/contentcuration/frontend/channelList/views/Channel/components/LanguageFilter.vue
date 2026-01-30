@@ -23,20 +23,20 @@
         lazy
       >
         <template #activator="{ on }">
-          <VChip
+          <StudioChip
             class="ma-1"
             v-on="on"
           >
             <div class="text-truncate">
               {{ item.name }}
             </div>
-          </VChip>
+          </StudioChip>
         </template>
         <span>{{ item.name }}</span>
       </VTooltip>
     </template>
     <template #item="{ item }">
-      <Checkbox
+      <KCheckbox
         :key="item.id"
         :ref="'checkbox-' + item.id"
         v-model="languages"
@@ -59,7 +59,7 @@
           </template>
           <span>{{ item.name }}</span>
         </VTooltip>
-      </Checkbox>
+      </KCheckbox>
     </template>
   </VAutocomplete>
 
