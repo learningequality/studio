@@ -21,6 +21,8 @@ export function useToolbarActions(emit) {
     mathFormula$,
     codeBlock$,
     clipboardAccessFailed$,
+    alignLeft$,
+    alignRight$,
   } = getTipTapEditorStrings();
 
   // Action handlers
@@ -178,6 +180,17 @@ export function useToolbarActions(emit) {
       editor.value.chain().focus().insertContent(normalized).run();
     } catch (err) {
       editor.value.chain().focus().insertContent(clipboardAccessFailed$()).run();
+    }
+  };
+
+  const handleToggleAlign = () => {
+    if (editor?.value) {
+      const isRightAligned = editor.value.isActive({ textAlign: 'right' });
+      if (isRightAligned) {
+        editor.value.chain().focus().setTextAlign('left').run();
+      } else {
+        editor.value.chain().focus().setTextAlign('right').run();
+      }
     }
   };
 
@@ -418,6 +431,19 @@ export function useToolbarActions(emit) {
     handler: handleMinimize,
   };
 
+  const alignAction = computed(() => {
+    const isRightAligned = editor?.value?.isActive({ textAlign: 'right' }) || false;
+    return {
+      name: 'toggleAlign',
+      title: isRightAligned ? alignLeft$() : alignRight$(),
+      icon: isRightAligned
+        ? require('../../assets/icon-alignLeft.svg')
+        : require('../../assets/icon-alignRight.svg'),
+      handler: handleToggleAlign,
+      isActive: false,
+    };
+  });
+
   return {
     // Individual handlers
     handleUndo,
@@ -429,6 +455,7 @@ export function useToolbarActions(emit) {
     handleCopy,
     handlePaste,
     handlePasteNoFormat,
+    handleToggleAlign,
     handleBulletList,
     handleNumberList,
     handleSubscript,
@@ -444,6 +471,7 @@ export function useToolbarActions(emit) {
     // Action arrays
     historyActions,
     textActions,
+    alignAction,
     listActions,
     scriptActions,
     insertTools,
