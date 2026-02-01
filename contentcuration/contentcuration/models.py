@@ -2960,6 +2960,12 @@ class AuditedSpecialPermissionsLicense(models.Model):
     description = models.TextField(unique=True, db_index=True)
     distributable = models.BooleanField(default=False)
 
+    @classmethod
+    def mark_channel_version_as_distributable(cls, channel_version_id):
+        return cls.objects.filter(
+            channel_versions__id=channel_version_id
+        ).update(distributable=True)
+
     def __str__(self):
         return (
             self.description[:100] if len(self.description) > 100 else self.description

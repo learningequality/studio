@@ -572,6 +572,10 @@ class ChannelViewSet(ValuesViewset):
                     progress_tracker=progress_tracker,
                     language=language,
                 )
+                if channel.public and channel.version_info:
+                    models.AuditedSpecialPermissionsLicense.mark_channel_version_as_distributable(
+                        channel.version_info.id
+                    )
                 Change.create_changes(
                     [
                         generate_update_event(
@@ -831,6 +835,14 @@ class ChannelViewSet(ValuesViewset):
             public=False,  # Community library
             categories=categories_list,
             countries=countries,
+        )
+
+        published_version = ChannelVersion.objects.get(
+            channel_id=channel_id,
+            version=channel_version,
+        )
+        models.AuditedSpecialPermissionsLicense.mark_channel_version_as_distributable(
+            published_version.id
         )
 
         new_live_submission = CommunityLibrarySubmission.objects.get(
