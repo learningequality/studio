@@ -8,8 +8,8 @@ from google.cloud.storage import Client
 from google.cloud.storage.blob import Blob
 from mixer.main import mixer
 
-from contentcuration.utils.gcs_storage import CompositeGCS
-from contentcuration.utils.gcs_storage import GoogleCloudStorage
+from contentcuration.utils.storage.gcs import CompositeGCS
+from contentcuration.utils.storage.gcs import GoogleCloudStorage
 
 
 class GoogleCloudStorageSaveTestCase(TestCase):
@@ -74,9 +74,9 @@ class GoogleCloudStorageSaveTestCase(TestCase):
         self.storage.save(filename, self.content, blob_object=self.blob_obj)
         assert "private" in self.blob_obj.cache_control
 
-    @mock.patch("contentcuration.utils.gcs_storage.BytesIO")
+    @mock.patch("contentcuration.utils.storage.gcs.BytesIO")
     @mock.patch(
-        "contentcuration.utils.gcs_storage.GoogleCloudStorage._is_file_empty",
+        "contentcuration.utils.storage.gcs.GoogleCloudStorage._is_file_empty",
         return_value=False,
     )
     def test_gzip_if_content_database(self, bytesio_mock, file_empty_mock):
@@ -158,10 +158,10 @@ class CompositeGCSTestCase(TestCase):
         self.mock_anon_client.get_bucket.return_value = self.mock_anon_bucket
 
         with mock.patch(
-            "contentcuration.utils.gcs_storage._create_default_client",
+            "contentcuration.utils.storage.gcs._create_default_client",
             return_value=self.mock_default_client,
         ), mock.patch(
-            "contentcuration.utils.gcs_storage.Client.create_anonymous_client",
+            "contentcuration.utils.storage.gcs.Client.create_anonymous_client",
             return_value=self.mock_anon_client,
         ):
             self.storage = CompositeGCS()
@@ -192,7 +192,7 @@ class CompositeGCSTestCase(TestCase):
         self.assertIsInstance(f, File)
         self.mock_default_bucket.get_blob.assert_called_with("blob")
 
-    @mock.patch("contentcuration.utils.gcs_storage.Blob")
+    @mock.patch("contentcuration.utils.storage.gcs.Blob")
     def test_save(self, mock_blob):
         self.storage.save("blob", BytesIO(b"content"))
         blob = mock_blob.return_value
