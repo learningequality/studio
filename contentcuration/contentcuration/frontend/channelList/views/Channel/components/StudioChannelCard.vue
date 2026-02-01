@@ -18,13 +18,12 @@
       v-if="selectable"
       #select
     >
-      <div class="select-label visuallyhidden">
-        {{ $tr('selectChannel', { name: channel.name }) }}
-      </div>
       <KCheckbox
         :checked="selected"
         @change="$emit('toggle-selection', channel.id)"
-      />
+      >
+        <span class="visuallyhidden">{{ $tr('selectChannel', { name: channel.name }) }}</span>
+      </KCheckbox>
     </template>
     <template #thumbnailPlaceholder>
       <KIcon
