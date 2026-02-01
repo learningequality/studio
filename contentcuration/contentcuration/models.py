@@ -2962,9 +2962,9 @@ class AuditedSpecialPermissionsLicense(models.Model):
 
     @classmethod
     def mark_channel_version_as_distributable(cls, channel_version_id):
-        return cls.objects.filter(
-            channel_versions__id=channel_version_id
-        ).update(distributable=True)
+        return cls.objects.filter(channel_versions__id=channel_version_id).update(
+            distributable=True
+        )
 
     def __str__(self):
         return (
