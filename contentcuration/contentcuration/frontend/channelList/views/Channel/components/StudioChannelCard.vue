@@ -14,6 +14,17 @@
     data-testid="card"
     @click="goToChannelRoute()"
   >
+    <template
+      v-if="selectable"
+      #select
+    >
+      <KCheckbox
+        :checked="selected"
+        @change="$emit('toggle-selection', channel.id)"
+      >
+        <span class="visuallyhidden">{{ $tr('selectChannel', { name: channel.name }) }}</span>
+      </KCheckbox>
+    </template>
     <template #thumbnailPlaceholder>
       <KIcon
         :color="$themePalette.grey.v_400"
@@ -164,6 +175,19 @@
         type: Object,
         required: true,
       },
+      selectable: {
+        type: Boolean,
+        default: false,
+      },
+      selected: {
+        type: Boolean,
+        default: false,
+      },
+      detailsRouteName: {
+        type: String,
+        required: false,
+        default: null,
+      },
     },
     data() {
       return {
@@ -226,7 +250,22 @@
     methods: {
       ...mapActions('channel', ['deleteChannel', 'removeViewer']),
       goToChannelRoute() {
-        window.location.href = window.Urls.channel(this.channel.id);
+        if (this.detailsRouteName) {
+          // Catalog context: using Vue Router modal navigation (read-only details)
+          this.$router.push({
+            name: this.detailsRouteName,
+            params: {
+              channelId: this.channel.id,
+            },
+            query: {
+              ...this.$route.query,
+              last: this.$route.name,
+            },
+          }).catch(() => {});
+        } else {
+          // My Channels context: direct navigation to edit page
+          window.location.href = window.Urls.channel(this.channel.id);
+        }
       },
       openDropDown() {
         this.dropDownArr = this.dropDownItems();
@@ -328,6 +367,7 @@
       lastPublished: 'Published {last_published}',
       lastUpdated: 'Updated {updated}',
       details: 'Details',
+      selectChannel: 'Select {name}',
       viewContent: 'View channel on Kolibri',
       goToWebsite: 'Go to source website',
       editChannel: 'Edit channel details',
