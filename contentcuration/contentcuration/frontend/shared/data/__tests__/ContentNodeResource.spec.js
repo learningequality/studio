@@ -320,8 +320,8 @@ describe('ContentNode methods', () => {
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
         expect(get).toHaveBeenCalledWith('abc123', false);
         expect(where).toHaveBeenCalledWith({ parent: parent.id }, false);
-        expect(getNewSortOrder).not.toBeCalled();
-        expect(cb).toBeCalled();
+        expect(getNewSortOrder).not.toHaveBeenCalled();
+        expect(cb).toHaveBeenCalled();
         const result = cb.mock.calls[0][0];
         expect(result).toMatchObject({
           node,
@@ -356,8 +356,8 @@ describe('ContentNode methods', () => {
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
         expect(get).toHaveBeenCalledWith('abc123', false);
         expect(where).toHaveBeenCalledWith({ parent: parent.id }, false);
-        expect(getNewSortOrder).not.toBeCalled();
-        expect(cb).toBeCalled();
+        expect(getNewSortOrder).not.toHaveBeenCalled();
+        expect(cb).toHaveBeenCalled();
         const result = cb.mock.calls[0][0];
         expect(result).toMatchObject({
           node,
@@ -397,7 +397,7 @@ describe('ContentNode methods', () => {
         expect(get).toHaveBeenCalledWith('abc123', false);
         expect(where).toHaveBeenCalledWith({ parent: parent.id }, false);
         expect(getNewSortOrder).toHaveBeenCalledWith('abc123', 'target', 'position', siblings);
-        expect(cb).toBeCalled();
+        expect(cb).toHaveBeenCalled();
         const result = cb.mock.calls[0][0];
         expect(result).toMatchObject({
           node,
@@ -436,7 +436,7 @@ describe('ContentNode methods', () => {
         expect(get).toHaveBeenCalledWith('abc123', false);
         expect(where).toHaveBeenCalledWith({ parent: parent.id }, false);
         expect(getNewSortOrder).toHaveBeenCalledWith('abc123', 'target', 'position', siblings);
-        expect(cb).not.toBeCalled();
+        expect(cb).not.toHaveBeenCalled();
       });
     });
 
@@ -453,8 +453,8 @@ describe('ContentNode methods', () => {
         expect(treeLock).toHaveBeenCalledWith(parent.root_id, expect.any(Function));
         expect(tableGet).toHaveBeenCalledWith('abc123');
         expect(where).toHaveBeenCalledWith({ parent: parent.id }, false);
-        expect(getNewSortOrder).not.toBeCalled();
-        expect(cb).toBeCalled();
+        expect(getNewSortOrder).not.toHaveBeenCalled();
+        expect(cb).toHaveBeenCalled();
         const result = cb.mock.calls[0][0];
         expect(result).toMatchObject({
           node: undefined,
@@ -494,7 +494,7 @@ describe('ContentNode methods', () => {
         expect(tableGet).toHaveBeenCalledWith('abc123');
         expect(where).toHaveBeenCalledWith({ parent: parent.id }, false);
         expect(getNewSortOrder).toHaveBeenCalledWith(null, 'target', 'position', siblings);
-        expect(cb).toBeCalled();
+        expect(cb).toHaveBeenCalled();
         const result = cb.mock.calls[0][0];
         expect(result).toMatchObject({
           node: undefined,
@@ -534,7 +534,7 @@ describe('ContentNode methods', () => {
         expect(tableGet).toHaveBeenCalledWith('abc123');
         expect(where).toHaveBeenCalledWith({ parent: parent.id }, false);
         expect(getNewSortOrder).toHaveBeenCalledWith(null, 'target', 'position', siblings);
-        expect(cb).not.toBeCalled();
+        expect(cb).not.toHaveBeenCalled();
       });
     });
   });
@@ -580,7 +580,7 @@ describe('ContentNode methods', () => {
       const [updateId, updatePayload] = table.update.mock.calls[0];
       expect(updateId).toBe(node.id);
       expect(updatePayload).toBe(result);
-      expect(table.put).not.toBeCalled();
+      expect(table.put).not.toHaveBeenCalled();
       expect(table.update).not.toHaveBeenCalledWith(node.parent, { changed: true });
     });
 
@@ -605,7 +605,7 @@ describe('ContentNode methods', () => {
         node.id,
         expect.objectContaining({ ...payload, modified: expect.any(String) }),
       );
-      expect(table.put).not.toBeCalled();
+      expect(table.put).not.toHaveBeenCalled();
       expect(table.update).toHaveBeenCalledWith(node.parent, { changed: true });
     });
 
@@ -717,7 +717,7 @@ describe('ContentNode methods', () => {
         node,
       );
       expect(table.get).toHaveBeenCalledWith({ '[node_id+channel_id]': [node_id, channel_id] });
-      expect(fetchCollection).not.toBeCalled();
+      expect(fetchCollection).not.toHaveBeenCalled();
     });
 
     it('should use call fetchCollection when missing locally', async () => {

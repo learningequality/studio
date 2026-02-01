@@ -165,6 +165,10 @@
       showPrivacyPolicy() {
         this.$router.push({ query: { showPolicy: policies.PRIVACY } });
       },
+      navigate(path) {
+        // Extracted for easier testing
+        window.location.assign(path);
+      },
       submit() {
         if (this.$refs.form.validate()) {
           this.busy = true;
@@ -176,7 +180,8 @@
             .then(() => {
               this.loginFailedOffline = false;
               this.loginFailed = false;
-              window.location.assign(this.nextParam || window.Urls.channels());
+              const path = this.nextParam || window.Urls.channels();
+              this.navigate(path);
             })
             .catch(err => {
               this.busy = false;
