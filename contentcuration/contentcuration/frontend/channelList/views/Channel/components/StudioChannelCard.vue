@@ -18,10 +18,11 @@
       v-if="selectable"
       #select
     >
+      <div class="select-label visuallyhidden">
+        {{ $tr('selectChannel', { name: channel.name }) }}
+      </div>
       <KCheckbox
         :checked="selected"
-        :ariaLabel="$tr('selectChannel', { name: channel.name })"
-        data-test="checkbox"
         @change="$emit('toggle-selection', channel.id)"
       />
     </template>
@@ -183,6 +184,11 @@
         type: Boolean,
         default: false,
       },
+      detailsRouteName: {
+        type: String,
+        required: false,
+        default: null,
+      },
     },
     data() {
       return {
@@ -245,7 +251,22 @@
     methods: {
       ...mapActions('channel', ['deleteChannel', 'removeViewer']),
       goToChannelRoute() {
-        window.location.href = window.Urls.channel(this.channel.id);
+        if (this.detailsRouteName) {
+          // Catalog context: using Vue Router modal navigation (read-only details)
+          this.$router.push({
+            name: this.detailsRouteName,
+            params: {
+              channelId: this.channel.id,
+            },
+            query: {
+              ...this.$route.query,
+              last: this.$route.name,
+            },
+          }).catch(() => {});
+        } else {
+          // My Channels context: direct navigation to edit page
+          window.location.href = window.Urls.channel(this.channel.id);
+        }
       },
       openDropDown() {
         this.dropDownArr = this.dropDownItems();

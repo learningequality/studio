@@ -56,22 +56,14 @@
             />
           </VFlex>
           <VFlex xs12>
-            <KCardGrid
-              layout="1-1-1"
-              :skeletonsConfig="[
-                {
-                  breakpoints: [0, 1, 2, 3, 4, 5, 6, 7],
-                  orientation: 'vertical',
-                  count: 3,
-                },
-              ]"
-            >
+            <KCardGrid layout="1-1-1">
               <StudioChannelCard
                 v-for="channel in channels"
                 :key="channel.id"
                 :channel="channel"
                 :selectable="selecting"
                 :selected="isChannelSelected(channel.id)"
+                :detailsRouteName="detailsRouteName"
                 @toggle-selection="handleSelectionToggle"
               />
             </KCardGrid>
@@ -215,6 +207,9 @@
       },
       debouncedSearch() {
         return debounce(this.loadCatalog, 1000);
+      },
+      detailsRouteName() {
+        return RouteNames.CATALOG_DETAILS;
       },
       channels() {
         // Sort again by the same ordering used on the backend - name.
