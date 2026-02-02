@@ -160,7 +160,7 @@ class Command(BaseCommand):
                         f"Validating published data for channel {channel.id} version {pub_data_version}"
                     )
                     special_permissions = None
-                    if channel.version == pub_data_version:
+                    if channel.version == int(pub_data_version):
                         # overwriting pub_data directly to avoid duplicating the update_or_create
                         # below
                         pub_data, special_permissions = validate_published_data(
@@ -187,7 +187,7 @@ class Command(BaseCommand):
                             "included_licenses": pub_data.get("included_licenses"),
                             "included_languages": pub_data.get("included_languages"),
                             "date_published": pub_data.get("date_published"),
-                            "license_notes": pub_data.get("license_notes"),
+                            "version_notes": pub_data.get("version_notes"),
                             "non_distributable_licenses_included": pub_data.get(
                                 "non_distributable_licenses_included"
                             ),
@@ -197,7 +197,7 @@ class Command(BaseCommand):
                         },
                     )
 
-                    if channel.version == pub_data_version:
+                    if channel.version == int(pub_data_version):
                         channel.version_info = channel_version
 
                     # Set the M2M relation for special permissions
