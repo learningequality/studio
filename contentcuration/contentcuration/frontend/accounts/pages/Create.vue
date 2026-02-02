@@ -104,18 +104,20 @@
             :label="option.label"
             @change="toggleUsage(option.id)"
           />
-          <KTransition>
+          <KTransition kind="component-vertical-slide-out-in">
             <KTextbox
               v-if="showStorageField(option.id)"
+              key="storage-field"
               v-model="form.storage"
               :label="$tr('storingUsagePlaceholder')"
               :placeholder="$tr('storingUsageExample')"
               class="ml-4 my-1"
             />
           </KTransition>
-          <KTransition>
+          <KTransition kind="component-vertical-slide-out-in">
             <KTextbox
               v-if="showOtherField(option.id)"
+              key="other-use-field"
               v-model="form.other_use"
               :label="$tr('otherUsagePlaceholder')"
               :textArea="true"
@@ -138,43 +140,36 @@
         />
 
         <!-- Source -->
-        <VInput
-          required
-          :rules="sourceRules"
-          class="mt-2"
-        />
         <h2 class="font-weight-bold my-2 subheading">{{ $tr('sourceLabel') }}*</h2>
-        <DropdownWrapper>
-          <template #default="{ attach, menuProps }">
-            <VSelect
-              v-model="form.source"
-              :items="sourceOptions"
-              item-text="label"
-              item-value="id"
-              box
-              :menu-props="menuProps"
-              :attach="attach"
-              :label="$tr('sourcePlaceholder')"
-            />
-          </template>
-        </DropdownWrapper>
-        <VSlideYTransition>
-          <TextArea
+        <KSelect
+          :value="sourceValue"
+          :options="sourceOptions"
+          :label="$tr('sourcePlaceholder')"
+          @change="form.source = $event.value"
+        />
+        <KTransition kind="component-vertical-slide-out-in">
+          <KTextbox
             v-if="form.source === sources.ORGANIZATION"
+            key="organization-source"
             v-model="form.organization"
             :label="$tr('organizationSourcePlaceholder')"
+            :textArea="true"
           />
-          <TextArea
+          <KTextbox
             v-else-if="form.source === sources.CONFERENCE"
+            key="conference-source"
             v-model="form.conference"
             :label="$tr('conferenceSourcePlaceholder')"
+            :textArea="true"
           />
-          <TextArea
+          <KTextbox
             v-else-if="form.source === sources.OTHER"
+            key="other-source"
             v-model="form.other_source"
             :label="$tr('otherSourcePlaceholder')"
+            :textArea="true"
           />
-        </VSlideYTransition>
+        </KTransition>
 
         <!-- Agreements -->
         <Checkbox
@@ -240,30 +235,28 @@
   import KTextbox from 'kolibri-design-system/lib/KTextbox';
   import KCheckbox from 'kolibri-design-system/lib/KCheckbox';
   import KTransition from 'kolibri-design-system/lib/KTransition';
+  import KSelect from 'kolibri-design-system/lib/KSelect';
   import StudioEmailField from '../components/form/StudioEmailField';
   import StudioPasswordField from '../components/form/StudioPasswordField';
-  import TextArea from 'shared/views/form/TextArea';
   import CountryField from 'shared/views/form/CountryField';
   import PolicyModals from 'shared/views/policies/PolicyModals';
   import ImmersiveModalLayout from 'shared/layouts/ImmersiveModalLayout';
   import Banner from 'shared/views/Banner';
   import Checkbox from 'shared/views/form/Checkbox';
   import { policies } from 'shared/constants';
-  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
   import commonStrings from 'shared/translator';
 
   export default {
     name: 'Create',
     components: {
-      DropdownWrapper,
       ImmersiveModalLayout,
       TextField,
       KTextbox,
       KCheckbox,
       KTransition,
+      KSelect,
       StudioEmailField,
       StudioPasswordField,
-      TextArea,
       CountryField,
       PolicyModals,
       Banner,
@@ -368,10 +361,17 @@
       sources() {
         return sources;
       },
+      sourceValue() {
+        if (!this.form.source) {
+          return {};
+        }
+        const option = this.sourceOptions.find(opt => opt.value === this.form.source);
+        return option || {};
+      },
       sourceOptions() {
         return [
           {
-            id: sources.ORGANIZATION,
+            value: sources.ORGANIZATION,
             label: this.$tr('organizationSourceOption'),
             additional: {
               model: this.form.organization,
@@ -379,27 +379,27 @@
             },
           },
           {
-            id: sources.WEBSITE,
+            value: sources.WEBSITE,
             label: this.$tr('websiteSourceOption'),
           },
           {
-            id: sources.NEWSLETTER,
+            value: sources.NEWSLETTER,
             label: this.$tr('newsletterSourceOption'),
           },
           {
-            id: sources.FORUM,
+            value: sources.FORUM,
             label: this.$tr('forumSourceOption'),
           },
           {
-            id: sources.GITHUB,
+            value: sources.GITHUB,
             label: this.$tr('githubSourceOption'),
           },
           {
-            id: sources.SOCIAL_MEDIA,
+            value: sources.SOCIAL_MEDIA,
             label: this.$tr('socialMediaSourceOption'),
           },
           {
-            id: sources.CONFERENCE,
+            value: sources.CONFERENCE,
             label: this.$tr('conferenceSourceOption'),
             additional: {
               model: this.form.conference,
@@ -407,15 +407,15 @@
             },
           },
           {
-            id: sources.CONVERSATION,
+            value: sources.CONVERSATION,
             label: this.$tr('conversationSourceOption'),
           },
           {
-            id: sources.DEMO,
+            value: sources.DEMO,
             label: this.$tr('personalDemoSourceOption'),
           },
           {
-            id: sources.OTHER,
+            value: sources.OTHER,
             label: this.$tr('otherSourceOption'),
             additional: {
               model: this.form.other_source,
@@ -423,10 +423,6 @@
             },
           },
         ];
-      },
-      sourceRules() {
-        /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
-        return [() => (this.form.source.length ? true : commonStrings.$tr('fieldRequired'))];
       },
       clean() {
         return data => {
