@@ -18,7 +18,7 @@
               :text="$slots['left-actions'][0]['text']"
               appearance="flat-button"
               :aria-expanded="showAccordionItem.toString()"
-              :aria-controls="id"
+              :aria-controls="`${id}-content`"
               :appearanceOverrides="appearanceOverrides"
               @click="openAccordion"
             >
