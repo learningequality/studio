@@ -1,32 +1,77 @@
-import { mount } from '@vue/test-utils';
+import { render, screen, waitFor } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
+import Vuex from 'vuex';
+import Vue from 'vue';
 import VueRouter from 'vue-router';
 import RequestNewActivationLink from '../activateAccount/RequestNewActivationLink';
 
-function makeWrapper() {
-  return mount(RequestNewActivationLink, {
-    // Need to add a router instance as a child component relies on route linking
-    router: new VueRouter(),
+Vue.use(Vuex);
+let testStore;
+
+function createTestStore() {
+  testStore = new Vuex.Store({
+    modules: {
+      account: {
+        namespaced: true,
+        actions: {
+          sendActivationLink: jest.fn(() => Promise.resolve()),
+        },
+      },
+    },
+  });
+  return testStore;
+}
+
+
+function renderComponent() {
+  const router = new VueRouter({
+    routes: [
+      {
+        path: '/main',
+        name: 'Main',
+        component: { render: h => h('div') }, // dummy
+      },
+      {
+        path: '/activation-link-resent',
+        name: 'ActivationLinkReSent',
+        component: { render: h => h('div') }, // dummy
+      },
+    ],
+  });
+
+  return render(RequestNewActivationLink, {
+    store: createTestStore(),
+    router,
   });
 }
 
+
 describe('requestNewActivationLink', () => {
-  let wrapper;
-  let sendActivationLink;
+  it('should show validation error when submitting with invalid email', async () => {
+    const user = userEvent.setup();
+    renderComponent();
 
-  beforeEach(() => {
-    wrapper = makeWrapper();
-    sendActivationLink = jest.spyOn(wrapper.vm, 'sendActivationLink');
-    sendActivationLink.mockImplementation(() => Promise.resolve());
+    const submitButton = screen.getByRole('button', { name: /submit/i });
+    await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/activation failed/i)).toBeInTheDocument();
+    });
   });
 
-  it('should not call sendActivationLink on submit if email is invalid', async () => {
-    await wrapper.findComponent({ ref: 'form' }).trigger('submit');
-    expect(sendActivationLink).not.toHaveBeenCalled();
-  });
+  it('should submit when email is valid', async () => {
+    const user = userEvent.setup();
+    renderComponent();
+    const sendActivationLink = jest.spyOn(testStore, 'dispatch');
 
-  it('should call sendActivationLink on submit if email is valid', async () => {
-    await wrapper.setData({ email: 'test@test.com' });
-    await wrapper.findComponent({ ref: 'form' }).trigger('submit');
-    expect(sendActivationLink).toHaveBeenCalled();
+    const emailInput = screen.getByLabelText(/email/i);
+    const submitButton = screen.getByRole('button', { name: /submit/i });
+
+    await user.type(emailInput, 'test@test.com');
+    await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(sendActivationLink).toHaveBeenCalledWith('account/sendActivationLink', expect.any(String));
+    });
   });
 });
