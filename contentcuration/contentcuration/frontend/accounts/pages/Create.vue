@@ -46,43 +46,45 @@
         <h2 class="font-weight-bold my-2 subheading">
           {{ $tr('basicInformationHeader') }}
         </h2>
-        <TextField
+        <KTextbox
           v-model="form.first_name"
-          maxlength="100"
-          counter
-          autofocus
+          :maxlength="100"
+          :showMaxLength="true"
+          :autofocus="true"
           :label="$tr('firstNameLabel')"
-          :error-messages="errors.first_name"
+          :invalid="Boolean(errors.first_name)"
+          :invalidText="errors.first_name"
           @input="resetErrors('first_name')"
         />
-        <TextField
+        <KTextbox
           v-model="form.last_name"
-          maxlength="100"
-          counter
+          :maxlength="100"
+          :showMaxLength="true"
           :label="$tr('lastNameLabel')"
-          :error-messages="errors.last_name"
+          :invalid="Boolean(errors.last_name)"
+          :invalidText="errors.last_name"
           @input="resetErrors('last_name')"
         />
-        <EmailField
+        <StudioEmailField
           v-model="form.email"
-          maxlength="100"
-          counter
+          :maxlength="100"
           :disabled="Boolean($route.query.email)"
-          :error-messages="errors.email"
+          :invalid="Boolean(errors.email)"
+          :invalidText="errors.email"
           @input="resetErrors('email')"
         />
-        <PasswordField
+        <StudioPasswordField
           v-model="form.password1"
-          :additionalRules="passwordValidationRules"
           :label="$tr('passwordLabel')"
-          :error-messages="errors.password1"
+          :invalid="Boolean(errors.password1)"
+          :invalidText="errors.password1"
           @input="resetErrors('password1')"
         />
-        <PasswordField
+        <StudioPasswordField
           v-model="form.password2"
-          :additionalRules="passwordConfirmRules"
           :label="$tr('confirmPasswordLabel')"
-          :error-messages="errors.password2"
+          :invalid="Boolean(errors.password2)"
+          :invalidText="errors.password2"
           @input="resetErrors('password2')"
         />
 
@@ -231,8 +233,9 @@
   import { mapActions, mapGetters, mapState } from 'vuex';
   import { uses, sources } from '../constants';
   import TextField from 'shared/views/form/TextField';
-  import EmailField from 'shared/views/form/EmailField';
-  import PasswordField from 'shared/views/form/PasswordField';
+  import KTextbox from 'kolibri-design-system/lib/KTextbox';
+  import StudioEmailField from '../components/form/StudioEmailField';
+  import StudioPasswordField from '../components/form/StudioPasswordField';
   import TextArea from 'shared/views/form/TextArea';
   import CountryField from 'shared/views/form/CountryField';
   import PolicyModals from 'shared/views/policies/PolicyModals';
@@ -249,8 +252,9 @@
       DropdownWrapper,
       ImmersiveModalLayout,
       TextField,
-      EmailField,
-      PasswordField,
+      KTextbox,
+      StudioEmailField,
+      StudioPasswordField,
       TextArea,
       CountryField,
       PolicyModals,
@@ -480,10 +484,85 @@
       showOtherField(id) {
         return id === uses.OTHER && this.form.uses.includes(id);
       },
+      validateForm() {
+        // Custom validation to replace Vuetify form validation
+        let isValid = true;
+
+        // Reset all errors first
+        this.errors = {
+          first_name: null,
+          last_name: null,
+          email: null,
+          password1: null,
+          password2: null,
+          uses: null,
+          locations: null,
+          source: null,
+        };
+
+        // Validate first name
+        if (!this.form.first_name || this.form.first_name.trim() === '') {
+          this.errors.first_name = commonStrings.$tr('fieldRequired');
+          isValid = false;
+        }
+
+        // Validate last name
+        if (!this.form.last_name || this.form.last_name.trim() === '') {
+          this.errors.last_name = commonStrings.$tr('fieldRequired');
+          isValid = false;
+        }
+
+        // Validate email
+        if (!this.form.email || this.form.email.trim() === '') {
+          this.errors.email = commonStrings.$tr('fieldRequired');
+          isValid = false;
+        } else if (!/\S+@\S+\.\S+/.test(this.form.email)) {
+          this.errors.email = this.$tr('emailValidationMessage');
+          isValid = false;
+        }
+
+        // Validate password1
+        if (!this.form.password1) {
+          this.errors.password1 = commonStrings.$tr('fieldRequired');
+          isValid = false;
+        } else if (this.form.password1.length < 8) {
+          this.errors.password1 = this.$tr('passwordValidationMessage');
+          isValid = false;
+        }
+
+        // Validate password2 (confirmation)
+        if (!this.form.password2) {
+          this.errors.password2 = commonStrings.$tr('fieldRequired');
+          isValid = false;
+        } else if (this.form.password1 !== this.form.password2) {
+          this.errors.password2 = this.$tr('passwordMatchMessage');
+          isValid = false;
+        }
+
+        // Validate usage selection
+        if (!this.form.uses || this.form.uses.length === 0) {
+          this.errors.uses = commonStrings.$tr('fieldRequired');
+          isValid = false;
+        }
+
+        // Validate location selection
+        if (!this.form.locations || this.form.locations.length === 0) {
+          this.errors.locations = commonStrings.$tr('fieldRequired');
+          isValid = false;
+        }
+
+        // Validate source selection
+        if (!this.form.source) {
+          this.errors.source = commonStrings.$tr('fieldRequired');
+          isValid = false;
+        }
+
+        return isValid;
+      },
       submit() {
         // We need to check the "acceptedAgreement" here explicitly because it is not a
         // Vuetify form field and does not trigger the form validation.
-        if (this.$refs.form.validate() && this.acceptedAgreement) {
+        if (this.validateForm() && this.acceptedAgreement) {
           // Prevent double submission
           if (this.submitting) {
             return Promise.resolve();
@@ -551,6 +630,7 @@
       firstNameLabel: 'First name',
       lastNameLabel: 'Last name',
       emailExistsMessage: 'An account with this email already exists',
+      emailValidationMessage: 'Please enter a valid email address',
       passwordLabel: 'Password',
       confirmPasswordLabel: 'Confirm password',
       passwordMatchMessage: "Passwords don't match",
