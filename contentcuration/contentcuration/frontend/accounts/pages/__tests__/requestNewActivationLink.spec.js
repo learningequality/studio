@@ -22,7 +22,6 @@ function createTestStore() {
   return testStore;
 }
 
-
 function renderComponent() {
   const router = new VueRouter({
     routes: [
@@ -44,7 +43,6 @@ function renderComponent() {
     router,
   });
 }
-
 
 describe('requestNewActivationLink', () => {
   it('should show validation error when submitting with invalid email', async () => {
@@ -71,7 +69,10 @@ describe('requestNewActivationLink', () => {
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(sendActivationLink).toHaveBeenCalledWith('account/sendActivationLink', expect.any(String));
+      expect(sendActivationLink).toHaveBeenCalledWith(
+        'account/sendActivationLink',
+        expect.any(String),
+      );
     });
   });
 });
