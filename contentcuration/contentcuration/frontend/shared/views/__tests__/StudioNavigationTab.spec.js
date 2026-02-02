@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { createLocalVue } from '@vue/test-utils';
 import VueRouter from 'vue-router';
-import StudioNavigationTab from '../StudioNavigationTab.vue';
+import StudioNavigationTab from '../StudioNavigation/StudioNavigationTab.vue';
 
 const localVue = createLocalVue();
 localVue.use(VueRouter);

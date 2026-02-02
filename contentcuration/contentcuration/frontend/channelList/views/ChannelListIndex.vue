@@ -74,7 +74,7 @@
   import { ChannelListTypes } from 'shared/constants';
   import { constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
-  import StudioNavigation from 'shared/views/StudioNavigation';
+  import StudioNavigation from 'shared/views/StudioNavigation/StudioNavigation.vue';
   import StudioOfflineAlert from 'shared/views/StudioOfflineAlert.vue';
   import PolicyModals from 'shared/views/policies/PolicyModals';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
@@ -138,7 +138,7 @@
           label: this.$tr('catalog'),
           to: this.catalogLink,
           badgeValue: 0,
-          analyticsLabel: 'PUBLIC',
+          analyticsLabel: ChannelListTypes.PUBLIC,
         });
 
         tabs.push({
@@ -146,7 +146,7 @@
           label: this.$tr('channelSets'),
           to: this.channelSetLink,
           badgeValue: 0,
-          analyticsLabel: 'CHANNEL_SETS',
+          analyticsLabel: CHANNEL_SETS,
         });
 
         return tabs;
