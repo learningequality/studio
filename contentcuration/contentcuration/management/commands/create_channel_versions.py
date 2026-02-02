@@ -101,9 +101,6 @@ def validate_published_data(data, channel):
                 )
             )
         )
-    data["included_categories"] = [
-        c for c in data["included_categories"] if c is not None
-    ]
 
     if not data.get("included_languages"):
         node_languages = published_nodes.exclude(language=None).values_list(
@@ -113,10 +110,6 @@ def validate_published_data(data, channel):
             "files__language", flat=True
         )
         data["included_languages"] = list(set(chain(node_languages, file_languages)))
-
-    data["included_languages"] = [
-        lang for lang in data["included_languages"] if lang is not None
-    ]
 
     if not data.get("included_licenses"):
         data["included_licenses"] = list(
@@ -173,6 +166,17 @@ class Command(BaseCommand):
                         pub_data, special_permissions = validate_published_data(
                             pub_data, channel
                         )
+
+                    # Can't have nulls in these lists!
+                    pub_data["included_languages"] = [
+                        lang
+                        for lang in pub_data["included_languages"]
+                        if lang is not None
+                    ]
+
+                    pub_data["included_categories"] = [
+                        c for c in pub_data["included_categories"] if c is not None
+                    ]
 
                     # Create or update channel version
                     channel_version, _ = ChannelVersion.objects.update_or_create(
