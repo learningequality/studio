@@ -29,12 +29,10 @@ function renderComponent() {
       {
         path: '/main',
         name: 'Main',
-        // component: { render: h => h('div') }, // dummy
       },
       {
         path: '/activation-link-resent',
         name: 'ActivationLinkReSent',
-        // component: { render: h => h('div') }, // dummy
       },
     ],
   });
