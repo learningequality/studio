@@ -186,6 +186,8 @@ class Command(BaseCommand):
                             "included_categories": pub_data.get("included_categories"),
                             "included_licenses": pub_data.get("included_licenses"),
                             "included_languages": pub_data.get("included_languages"),
+                            "date_published": pub_data.get("date_published"),
+                            "license_notes": pub_data.get("license_notes"),
                             "non_distributable_licenses_included": pub_data.get(
                                 "non_distributable_licenses_included"
                             ),
