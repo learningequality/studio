@@ -161,35 +161,37 @@ class Command(BaseCommand):
             logging.info(f"Processing channel {channel.id}")
 
             # Validate published_data
-            for pub_data in channel.published_data.values():
+            for pub_data_version, pub_data in channel.published_data.items():
                 try:
                     logging.info(
-                        f"Validating published data for channel {channel.id} version {pub_data['version']}"
+                        f"Validating published data for channel {channel.id} version {pub_data_version}"
                     )
-                    valid_data, special_permissions = validate_published_data(
-                        pub_data, channel
-                    )
+                    special_permissions = None
+                    if channel.version == pub_data_version:
+                        # overwriting pub_data directly to avoid duplicating the update_or_create
+                        # below
+                        pub_data, special_permissions = validate_published_data(
+                            pub_data, channel
+                        )
 
                     # Create or update channel version
                     channel_version, _ = ChannelVersion.objects.update_or_create(
                         channel=channel,
-                        version=valid_data.get("version"),
+                        version=pub_data_version,
                         defaults={
-                            "included_categories": valid_data.get(
-                                "included_categories"
-                            ),
-                            "included_licenses": valid_data.get("included_licenses"),
-                            "included_languages": valid_data.get("included_languages"),
-                            "non_distributable_licenses_included": valid_data.get(
+                            "included_categories": pub_data.get("included_categories"),
+                            "included_licenses": pub_data.get("included_licenses"),
+                            "included_languages": pub_data.get("included_languages"),
+                            "non_distributable_licenses_included": pub_data.get(
                                 "non_distributable_licenses_included"
                             ),
-                            "kind_count": valid_data.get("kind_count"),
+                            "kind_count": pub_data.get("kind_count"),
                             "size": int(channel.published_size),
                             "resource_count": channel.total_resource_count,
                         },
                     )
 
-                    if channel.version == pub_data.get("version"):
+                    if channel.version == pub_data_version:
                         channel.version_info = channel_version
 
                     # Set the M2M relation for special permissions
