@@ -25,18 +25,18 @@ function createTestStore() {
 
 function renderComponent() {
   const router = new VueRouter({
-    routes: [
-      {
-        path: '/main',
-        name: 'Main',
-        component: { render: h => h('div') }, // dummy
-      },
-      {
-        path: '/activation-link-resent',
-        name: 'ActivationLinkReSent',
-        component: { render: h => h('div') }, // dummy
-      },
-    ],
+    // routes: [
+      // {
+      //   path: '/main',
+      //   name: 'Main',
+      //   component: { render: h => h('div') }, // dummy
+      // },
+      // {
+      //   path: '/activation-link-resent',
+      //   name: 'ActivationLinkReSent',
+      //   component: { render: h => h('div') }, // dummy
+      // },
+    // ],
   });
 
   return render(RequestNewActivationLink, {
