@@ -1,7 +1,7 @@
 import { render, screen, cleanup } from '@testing-library/vue';
 import { createLocalVue } from '@vue/test-utils';
 import VueRouter from 'vue-router';
-import StudioNavigationOption from '../StudioNavigationOption.vue';
+import StudioNavigationOption from '../StudioNavigation/StudioNavigationOption.vue';
 
 const localVue = createLocalVue();
 localVue.use(VueRouter);
