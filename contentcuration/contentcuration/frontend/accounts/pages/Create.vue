@@ -99,26 +99,30 @@
           v-for="option in usageOptions"
           :key="option.id"
         >
-          <Checkbox
-            v-model="form.uses"
+          <KCheckbox
+            :checked="form.uses.includes(option.id)"
             :label="option.label"
-            :value="option.id"
+            @change="toggleUsage(option.id)"
           />
-          <VSlideYTransition>
-            <TextField
+          <KTransition>
+            <KTextbox
               v-if="showStorageField(option.id)"
               v-model="form.storage"
               :label="$tr('storingUsagePlaceholder')"
               :placeholder="$tr('storingUsageExample')"
               class="ml-4 my-1"
             />
-            <TextArea
-              v-else-if="showOtherField(option.id)"
+          </KTransition>
+          <KTransition>
+            <KTextbox
+              v-if="showOtherField(option.id)"
               v-model="form.other_use"
               :label="$tr('otherUsagePlaceholder')"
+              :textArea="true"
+              :maxlength="500"
               class="ml-4 my-2"
             />
-          </VSlideYTransition>
+          </KTransition>
         </div>
 
         <!-- Location -->
@@ -234,6 +238,8 @@
   import { uses, sources } from '../constants';
   import TextField from 'shared/views/form/TextField';
   import KTextbox from 'kolibri-design-system/lib/KTextbox';
+  import KCheckbox from 'kolibri-design-system/lib/KCheckbox';
+  import KTransition from 'kolibri-design-system/lib/KTransition';
   import StudioEmailField from '../components/form/StudioEmailField';
   import StudioPasswordField from '../components/form/StudioPasswordField';
   import TextArea from 'shared/views/form/TextArea';
@@ -253,6 +259,8 @@
       ImmersiveModalLayout,
       TextField,
       KTextbox,
+      KCheckbox,
+      KTransition,
       StudioEmailField,
       StudioPasswordField,
       TextArea,
@@ -472,6 +480,14 @@
     },
     methods: {
       ...mapActions('account', ['register']),
+      toggleUsage(id) {
+        const index = this.form.uses.indexOf(id);
+        if (index > -1) {
+          this.form.uses.splice(index, 1);
+        } else {
+          this.form.uses.push(id);
+        }
+      },
       showTermsOfService() {
         this.$router.push({ query: { showPolicy: policies.TERMS_OF_SERVICE } });
       },
