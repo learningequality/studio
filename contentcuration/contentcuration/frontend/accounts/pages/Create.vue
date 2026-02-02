@@ -172,22 +172,22 @@
         </KTransition>
 
         <!-- Agreements -->
-        <Checkbox
-          v-model="acceptedAgreement"
+        <KCheckbox
+          :checked="acceptedAgreement"
           :label="$tr('agreement')"
           class="my-1 policy-checkbox"
+          @change="acceptedAgreement = $event"
         />
         <!-- Error message for Agreements -->
-        <VSlideYTransition>
+        <KTransition kind="component-vertical-slide-out-in">
           <div
             v-if="!acceptedAgreement"
-            class="error--text policy-error theme--light v-messages"
+            key="agreement-error"
+            class="policy-error"
           >
-            <div class="v-messages__message">
-              {{ $tr('ToSRequiredMessage') }}
-            </div>
+            {{ $tr('ToSRequiredMessage') }}
           </div>
-        </VSlideYTransition>
+        </KTransition>
 
         <div class="span-spacing">
           <span>
@@ -242,7 +242,6 @@
   import PolicyModals from 'shared/views/policies/PolicyModals';
   import ImmersiveModalLayout from 'shared/layouts/ImmersiveModalLayout';
   import Banner from 'shared/views/Banner';
-  import Checkbox from 'shared/views/form/Checkbox';
   import { policies } from 'shared/constants';
   import commonStrings from 'shared/translator';
 
@@ -260,7 +259,6 @@
       CountryField,
       PolicyModals,
       Banner,
-      Checkbox,
     },
     data() {
       return {
@@ -714,6 +712,8 @@
     min-height: 0;
     margin-bottom: 4px;
     margin-left: 40px;
+    color: #b00020;
+    font-size: 12px;
   }
 
   iframe {
