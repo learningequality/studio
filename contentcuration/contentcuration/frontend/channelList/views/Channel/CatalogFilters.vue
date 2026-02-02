@@ -21,7 +21,7 @@
       alignment="left"
       @closePanel="closeSidePanel"
     >
-      <CatalogFilterPanelContent />
+      <CatalogFilterPanelContent :style="{ padding: '24px 32px 16px' }" />
     </SidePanelModal>
   </div>
 

@@ -1,9 +1,6 @@
 <template>
 
-  <div
-    class="filter-panel-content"
-    :style="contentStyles"
-  >
+  <div class="filter-panel-content">
     <div class="filters-container">
       <!-- Keyword search -->
       <KTextbox
@@ -102,7 +99,6 @@
 
   import { mapGetters } from 'vuex';
   import debounce from 'lodash/debounce';
-  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { RouteNames } from '../../../constants';
   import { catalogFilterMixin } from '../mixins';
   import LanguageFilter from './LanguageFilter.vue';
@@ -123,12 +119,6 @@
       MultiSelect,
     },
     mixins: [constantsTranslationMixin, catalogFilterMixin],
-    setup() {
-      const { windowIsSmall } = useKResponsiveWindow();
-      return {
-        windowIsSmall,
-      };
-    },
 
     data() {
       return {
@@ -165,14 +155,6 @@
       },
       setKeywords() {
         return debounce(this.updateKeywords, 500);
-      },
-      contentStyles() {
-        if (this.windowIsSmall) {
-          return {
-            padding: '24px 32px 16px',
-          };
-        }
-        return {};
       },
     },
     watch: {

@@ -276,8 +276,8 @@
 
   import { mapActions, mapState, mapGetters } from 'vuex';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
-  import LanguageSwitcherModal from '../languageSwitcher/LanguageSwitcherModal.vue';
-  import SidePanelModal from './SidePanelModal';
+  import LanguageSwitcherModal from '../../languageSwitcher/LanguageSwitcherModal.vue';
+  import SidePanelModal from '../SidePanelModal';
   import SkipNavigationLink from './SkipNavigationLink.vue';
   import StudioNavigationOption from './StudioNavigationOption.vue';
   import StudioNavigationTab from './StudioNavigationTab.vue';
