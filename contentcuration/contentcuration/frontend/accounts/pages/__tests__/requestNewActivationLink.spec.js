@@ -6,6 +6,7 @@ import VueRouter from 'vue-router';
 import RequestNewActivationLink from '../activateAccount/RequestNewActivationLink';
 
 Vue.use(Vuex);
+Vue.use(VueRouter);
 let testStore;
 
 function createTestStore() {
