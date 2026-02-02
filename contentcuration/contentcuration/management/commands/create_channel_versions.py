@@ -181,7 +181,7 @@ class Command(BaseCommand):
                     # Create or update channel version
                     channel_version, _ = ChannelVersion.objects.update_or_create(
                         channel=channel,
-                        version=pub_data_version,
+                        version=int(pub_data_version),
                         defaults={
                             "included_categories": pub_data.get("included_categories"),
                             "included_licenses": pub_data.get("included_licenses"),
