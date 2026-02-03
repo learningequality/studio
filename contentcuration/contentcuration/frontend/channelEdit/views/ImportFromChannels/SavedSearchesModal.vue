@@ -13,6 +13,7 @@
       />
       <p
         v-else-if="savedSearches.length === 0"
+        :style="{ color: $themeTokens.annotation }"
         class="empty-state"
       >
         {{ $tr('noSavedSearches') }}
@@ -24,6 +25,7 @@
         <li
           v-for="search in savedSearches"
           :key="search.id"
+          :style="itemStyle"
           class="search-item"
         >
           <div class="search-content">
@@ -36,7 +38,10 @@
                 {{ search.name }}
               </KRouterLink>
             </div>
-            <div class="metadata">
+            <div
+              class="metadata"
+              :style="{ color: $themeTokens.annotation }"
+            >
               <span>
                 {{ $formatRelative(search.created, { now: new Date() }) }}
               </span>
@@ -49,7 +54,6 @@
           <div class="search-actions">
             <KIconButton
               icon="clear"
-              :color="$themeTokens.secondaryText"
               :tooltip="$tr('deleteAction')"
               @click="handleClickDelete(search.id)"
             />
@@ -102,6 +106,11 @@
         set(value) {
           this.$emit('input', value);
         },
+      },
+      itemStyle() {
+        return {
+          borderBottom: `1px solid ${this.$themeTokens.fineLine}`,
+        };
       },
     },
     mounted() {
@@ -174,7 +183,6 @@
 
   .empty-state {
     padding: 8px;
-    color: var(--v-grey-base);
   }
 
   .saved-searches-list {
@@ -188,7 +196,6 @@
     align-items: center;
     justify-content: space-between;
     padding: 16px 0;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 
     &:last-child {
       border-bottom: none;
@@ -210,11 +217,9 @@
 
   .metadata {
     font-size: 14px;
-    color: var(--v-grey-darken2);
 
     span:not(:last-child)::after {
       margin: 0 4px;
-      color: var(--v-grey-base);
       content: '•';
     }
   }
