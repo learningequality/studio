@@ -567,6 +567,12 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         channel.editors.add(editor_user)
         channel.save()
 
+        channel_version = ChannelVersion.objects.get(channel=channel, version=2)
+        special_license = AuditedSpecialPermissionsLicense.objects.create(
+            description="Community library special permissions"
+        )
+        channel_version.special_permissions_included.add(special_license)
+
         current_live_submission = CommunityLibrarySubmission.objects.create(
             channel=channel,
             channel_version=1,
@@ -643,6 +649,37 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             new_submission.status,
             community_library_submission.STATUS_LIVE,
         )
+        special_license.refresh_from_db()
+        self.assertTrue(special_license.distributable)
+
+    @mock.patch("contentcuration.viewsets.channel.publish_channel")
+    def test_publish_public_channel_marks_special_permissions_distributable(
+        self, mock_publish_channel
+    ):
+        user = testdata.user()
+        channel = testdata.channel()
+        channel.version = 1
+        channel.public = True
+        channel.editors.add(user)
+        channel.save()
+
+        channel_version = ChannelVersion.objects.get(channel=channel, version=1)
+        channel.version_info = channel_version
+        channel.save()
+
+        special_license = AuditedSpecialPermissionsLicense.objects.create(
+            description="Public channel special permissions"
+        )
+        channel_version.special_permissions_included.add(special_license)
+
+        mock_publish_channel.return_value = channel
+
+        self.client.force_authenticate(user)
+        response = self.sync_changes([generate_publish_channel_event(channel.id)])
+
+        self.assertEqual(response.status_code, 200, response.content)
+        special_license.refresh_from_db()
+        self.assertTrue(special_license.distributable)
 
 
 class CRUDTestCase(StudioAPITestCase):
