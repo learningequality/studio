@@ -348,6 +348,11 @@ CELERY = {
     "result_serializer": "json",
     "result_extended": True,
     "worker_send_task_events": True,
+    # Graceful shutdown: allow 28 seconds for tasks to complete before forced termination
+    # This is 2 seconds less than Kubernetes terminationGracePeriodSeconds (30s)
+    "worker_soft_shutdown_timeout": int(
+        os.getenv("CELERY_WORKER_SOFT_SHUTDOWN_TIMEOUT", "28")
+    ),
 }
 
 # When cleaning up orphan nodes, only clean up any that have been last modified

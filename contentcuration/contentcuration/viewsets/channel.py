@@ -49,6 +49,7 @@ from contentcuration.constants import (
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Change
 from contentcuration.models import Channel
+from contentcuration.models import ChannelVersion
 from contentcuration.models import CommunityLibrarySubmission
 from contentcuration.models import ContentNode
 from contentcuration.models import Country
@@ -56,7 +57,6 @@ from contentcuration.models import File
 from contentcuration.models import generate_storage_url
 from contentcuration.models import SecretToken
 from contentcuration.models import User
-from contentcuration.tasks import audit_channel_licenses_task
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.utils.pagination import CachedListPagination
 from contentcuration.utils.pagination import ValuesViewsetPageNumberPagination
@@ -91,6 +91,12 @@ class ChannelListPagination(ValuesViewsetPageNumberPagination):
 
 
 class CatalogListPagination(CachedListPagination):
+    page_size = None
+    page_size_query_param = "page_size"
+    max_page_size = 1000
+
+
+class ChannelVersionListPagination(ValuesViewsetPageNumberPagination):
     page_size = None
     page_size_query_param = "page_size"
     max_page_size = 1000
@@ -395,7 +401,6 @@ base_channel_values = (
     "staging_tree__id",
     "source_url",
     "demo_server_url",
-    "published_data",
 )
 
 channel_field_map = {
@@ -884,51 +889,45 @@ class ChannelViewSet(ValuesViewset):
     @action(
         detail=True,
         methods=["get"],
-        url_path="published_data",
-        url_name="published-data",
+        url_path="version_detail",
+        url_name="version-detail",
     )
-    def get_published_data(self, request, pk=None) -> Response:
+    def get_version_detail(self, request, pk=None) -> Response:
         """
-        Get the published data for a channel.
+        Get the version detail for a channel.
 
         :param request: The request object
         :param pk: The ID of the channel
-        :return: Response with the published data of the channel
-        :rtype: Response
-        """
-        # Allow exactly users with permission to edit the channel to
-        # access the published data.
-        channel = self.get_edit_object()
-
-        return Response(channel.published_data)
-
-    @action(
-        detail=True,
-        methods=["post"],
-        url_path="audit_licenses",
-        url_name="audit-licenses",
-    )
-    def audit_licenses(self, request, pk=None) -> Response:
-        """
-        Trigger license audit for a channel's community library submission.
-        This will check for invalid licenses (All Rights Reserved) and special
-        permissions licenses, and update the channel's published_data with audit results.
-
-        :param request: The request object
-        :param pk: The ID of the channel
-        :return: Response with task_id if task was enqueued
+        :return: Response with the version detail of the channel
         :rtype: Response
         """
         channel = self.get_edit_object()
 
-        if not channel.main_tree.published:
-            raise ValidationError("Channel must be published to audit licenses")
+        if not channel.version_info:
+            return Response({})
 
-        async_result = audit_channel_licenses_task.fetch_or_enqueue(
-            request.user, channel_id=channel.id, user_id=request.user.id
+        version_data = (
+            ChannelVersion.objects.filter(id=channel.version_info.id)
+            .values(
+                "id",
+                "version",
+                "resource_count",
+                "kind_count",
+                "size",
+                "date_published",
+                "version_notes",
+                "included_languages",
+                "included_licenses",
+                "included_categories",
+                "non_distributable_licenses_included",
+            )
+            .first()
         )
 
-        return Response({"task_id": async_result.task_id})
+        if not version_data:
+            return Response({})
+
+        return Response(version_data)
 
     @action(
         detail=True,
@@ -1029,6 +1028,35 @@ class ChannelViewSet(ValuesViewset):
             logging.error(str(e))
             unique_lang_ids = []
         return unique_lang_ids
+
+
+class ChannelVersionFilter(RequiredFilterSet):
+    class Meta:
+        model = ChannelVersion
+        fields = {
+            "channel": ["exact"],
+            "version": ["exact", "gte", "lte"],
+        }
+
+
+class ChannelVersionViewSet(ReadOnlyValuesViewset):
+    queryset = ChannelVersion.objects.all()
+    permission_classes = [IsAuthenticated]
+    pagination_class = ChannelVersionListPagination
+    filterset_class = ChannelVersionFilter
+    ordering_fields = ["version"]
+    ordering = "-version"
+
+    values = (
+        "id",
+        "channel",
+        "version",
+        "date_published",
+        "version_notes",
+        "included_languages",
+        "included_licenses",
+        "included_categories",
+    )
 
 
 @method_decorator(

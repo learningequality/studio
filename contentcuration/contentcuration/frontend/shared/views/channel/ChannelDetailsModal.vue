@@ -4,7 +4,10 @@
     <template #header>
       <span class="notranslate">{{ channel ? channel.name : '' }}</span>
     </template>
-    <StudioLargeLoader v-if="show('channelDetails', loading, 500)" />
+    <StudioLargeLoader
+      v-if="show('channelDetails', loading, 500)"
+      :style="{ marginTop: '160px' }"
+    />
     <div v-else-if="channel">
       <div
         class="download-button-container"
@@ -24,7 +27,7 @@
           </template>
         </KButton>
       </div>
-      <DetailsPanel
+      <StudioDetailsPanel
         v-if="channel && details"
         class="channel-details-wrapper"
         :details="channelWithDetails"
@@ -43,7 +46,7 @@
   import useKShow from 'kolibri-design-system/lib/composables/useKShow';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { channelExportMixin } from './mixins';
-  import DetailsPanel from 'shared/views/details/DetailsPanel.vue';
+  import StudioDetailsPanel from 'shared/views/details/StudioDetailsPanel.vue';
   import StudioLargeLoader from 'shared/views/StudioLargeLoader';
   import StudioImmersiveModal from 'shared/views/StudioImmersiveModal';
   import { routerMixin } from 'shared/mixins';
@@ -51,7 +54,7 @@
   export default {
     name: 'ChannelDetailsModal',
     components: {
-      DetailsPanel,
+      StudioDetailsPanel,
       StudioLargeLoader,
       StudioImmersiveModal,
     },

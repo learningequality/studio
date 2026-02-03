@@ -121,7 +121,7 @@ google-cloud-logging==2.3.1
     # via google-cloud-error-reporting
 google-cloud-storage==1.41.1
     # via -r requirements.in
-google-crc32c==1.7.1
+google-crc32c==1.8.0
     # via
     #   -r requirements.in
     #   google-resumable-media
@@ -242,7 +242,7 @@ rsa==4.7.2
     # via google-auth
 s3transfer==0.4.2
     # via boto3
-sentry-sdk==2.47.0
+sentry-sdk==2.48.0
     # via -r requirements.in
 six==1.16.0
     # via

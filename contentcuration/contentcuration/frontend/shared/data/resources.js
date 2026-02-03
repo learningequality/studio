@@ -1412,12 +1412,8 @@ export const Channel = new CreateModelResource({
       .then(response => response.data.languages);
     return uniq(compact(localLanguages.concat(remoteLanguages)));
   },
-  async getPublishedData(id) {
-    const response = await client.get(window.Urls.channel_published_data(id));
-    return response.data;
-  },
-  async auditLicenses(id) {
-    const response = await client.post(window.Urls.channel_audit_licenses(id));
+  async getVersionDetail(id) {
+    const response = await client.get(window.Urls.channel_version_detail(id));
     return response.data;
   },
 });
@@ -2420,10 +2416,35 @@ export const CommunityLibrarySubmission = new APIResource({
   },
 });
 
+export const AdminCommunityLibrarySubmission = new APIResource({
+  urlName: 'admin_community_library_submission',
+  fetchCollection(params) {
+    return client.get(this.collectionUrl(), { params }).then(response => {
+      return response.data || [];
+    });
+  },
+  async fetchModel(id) {
+    const response = await client.get(this.modelUrl(id));
+    return response.data;
+  },
+  async resolve(id, params) {
+    const response = await client.post(this.getUrlFunction('resolve')(id), params);
+    return response.data;
+  },
+});
+
 export const AuditedSpecialPermissionsLicense = new APIResource({
   urlName: 'audited_special_permissions_license',
   async fetchCollection(params) {
     const response = await client.get(this.collectionUrl(), { params });
     return response.data || [];
+  },
+});
+
+export const ChannelVersion = new APIResource({
+  urlName: 'channelversion',
+  async fetchCollection(params) {
+    const response = await client.get(this.collectionUrl(), { params });
+    return response.data;
   },
 });

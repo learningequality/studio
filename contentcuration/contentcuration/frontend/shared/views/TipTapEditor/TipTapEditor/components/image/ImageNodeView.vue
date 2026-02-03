@@ -69,7 +69,7 @@
 
   import { defineComponent, ref, computed, onUnmounted, onMounted, watch } from 'vue';
   import { NodeViewWrapper } from '@tiptap/vue-2';
-  import _ from 'lodash';
+  import debounce from 'lodash/debounce';
 
   export default defineComponent({
     name: 'ImageNodeView',
@@ -89,7 +89,7 @@
       let resizeListeners = null;
 
       // Create debounced version of saveSize function
-      const debouncedSaveSize = _.debounce(() => {
+      const debouncedSaveSize = debounce(() => {
         props.updateAttributes({
           width: width.value,
           height: height.value,

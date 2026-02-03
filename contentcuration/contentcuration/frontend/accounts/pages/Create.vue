@@ -12,12 +12,12 @@
         :size="120"
       />
     </div>
-    <h2
+    <h1
       ref="top"
       class="mb-4 primary--text text-xs-center"
     >
       {{ $tr('createAnAccountTitle') }}
-    </h2>
+    </h1>
     <VLayout
       justify-center
       class="px-3"
@@ -43,9 +43,9 @@
           {{ $tr('registrationFailedOffline') }}
         </Banner>
         <!-- Basic information -->
-        <h1 class="font-weight-bold my-2 subheading">
+        <h2 class="font-weight-bold my-2 subheading">
           {{ $tr('basicInformationHeader') }}
-        </h1>
+        </h2>
         <TextField
           v-model="form.first_name"
           maxlength="100"
@@ -92,7 +92,7 @@
           :rules="usageRules"
           class="mt-2"
         />
-        <h1 class="font-weight-bold mb-2 subheading">{{ $tr('usageLabel') }}*</h1>
+        <h2 class="font-weight-bold mb-2 subheading">{{ $tr('usageLabel') }}*</h2>
         <div
           v-for="option in usageOptions"
           :key="option.id"
@@ -125,7 +125,7 @@
           :rules="locationRules"
           class="mt-4"
         />
-        <h1 class="font-weight-bold my-2 subheading">{{ $tr('locationLabel') }}*</h1>
+        <h2 class="font-weight-bold my-2 subheading">{{ $tr('locationLabel') }}*</h2>
         <CountryField
           v-model="form.locations"
           clearable
@@ -137,7 +137,7 @@
           :rules="sourceRules"
           class="mt-2"
         />
-        <h1 class="font-weight-bold my-2 subheading">{{ $tr('sourceLabel') }}*</h1>
+        <h2 class="font-weight-bold my-2 subheading">{{ $tr('sourceLabel') }}*</h2>
         <DropdownWrapper>
           <template #default="{ attach, menuProps }">
             <VSelect
@@ -213,9 +213,10 @@
         <KButton
           primary
           class="mt-5"
-          :disabled="offline"
+          :disabled="offline || submitting"
           :text="$tr('finishButton')"
           type="submit"
+          data-test="submit-button"
         />
       </VForm>
     </VLayout>
@@ -260,6 +261,7 @@
       return {
         valid: true,
         registrationFailed: false,
+        submitting: false,
         form: {
           first_name: '',
           last_name: '',
@@ -482,6 +484,12 @@
         // We need to check the "acceptedAgreement" here explicitly because it is not a
         // Vuetify form field and does not trigger the form validation.
         if (this.$refs.form.validate() && this.acceptedAgreement) {
+          // Prevent double submission
+          if (this.submitting) {
+            return Promise.resolve();
+          }
+
+          this.submitting = true;
           const cleanedData = this.clean(this.form);
           return this.register(cleanedData)
             .then(() => {
@@ -517,6 +525,9 @@
                 this.registrationFailed = true;
                 this.valid = false;
               }
+            })
+            .finally(() => {
+              this.submitting = false;
             });
         } else if (this.$refs.top.scrollIntoView) {
           this.$refs.top.scrollIntoView({ behavior: 'smooth' });
@@ -638,6 +649,10 @@
 
   .align-items {
     display: block;
+  }
+
+  h1 {
+    font-size: 21px;
   }
 
 </style>

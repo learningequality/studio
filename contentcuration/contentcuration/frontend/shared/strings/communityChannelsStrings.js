@@ -69,9 +69,13 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Language',
     context: 'Label for the language selection dropdown',
   },
+  versionNotesRequiredMessage: {
+    message: 'Version notes are required',
+    context: 'Error message when version notes are required but not provided',
+  },
   languageRequiredMessage: {
     message: 'Language is required',
-    context: 'Error message when language selection is required',
+    context: 'Error message when language selection is required but not provided',
   },
   pendingStatus: {
     message: 'Submitted',
@@ -236,16 +240,6 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   dismissAction: {
     message: 'Dismiss',
     context: 'Action in the resubmit modal to dismiss the modal',
-  },
-  checkingChannelCompatibility: {
-    message: 'Checking channel compatibility for submission...',
-    context:
-      'Message shown in the "Submit to Community Library" panel while the license audit is in progress',
-  },
-  checkingChannelCompatibilitySecondary: {
-    message: 'This usually takes a few seconds...',
-    context:
-      'Secondary message shown below the main checking message to indicate the expected duration',
   },
   licenseCheckPassed: {
     message: 'License check passed',

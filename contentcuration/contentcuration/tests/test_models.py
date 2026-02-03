@@ -5,11 +5,13 @@ import pytest
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.core.management import call_command
 from django.db.models import Q
 from django.db.utils import IntegrityError
 from django.utils import timezone
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
+from le_utils.constants.labels import subjects
 
 from contentcuration.constants import channel_history
 from contentcuration.constants import community_library_submission
@@ -20,6 +22,7 @@ from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import ChannelHistory
 from contentcuration.models import ChannelSet
+from contentcuration.models import ChannelVersion
 from contentcuration.models import CommunityLibrarySubmission
 from contentcuration.models import ContentNode
 from contentcuration.models import CONTENTNODE_TREE_ID_CACHE_KEY
@@ -28,6 +31,7 @@ from contentcuration.models import FILE_DURATION_CONSTRAINT
 from contentcuration.models import FlagFeedbackEvent
 from contentcuration.models import generate_object_storage_name
 from contentcuration.models import Invitation
+from contentcuration.models import License
 from contentcuration.models import object_storage_name
 from contentcuration.models import RecommendationsEvent
 from contentcuration.models import RecommendationsInteractionEvent
@@ -1667,3 +1671,200 @@ class AuditedSpecialPermissionsLicenseTestCase(StudioTestCase):
         )
         self.assertEqual(len(str(audited_license2)), 100)
         self.assertEqual(str(audited_license2), "A" * 100)
+
+
+class ChannelVersionValidationTestCase(StudioTestCase):
+    """Test validations for ChannelVersion model."""
+
+    def setUp(self):
+        super().setUp()
+        self.channel = testdata.channel()
+        self.channel.version = 10
+        self.channel.save()
+
+    def test_kind_count_valid_schema(self):
+        """Test that kind_count accepts valid schema."""
+        valid_kind_count = [{"kind_id": "video", "count": 5}]
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=1,
+            kind_count=valid_kind_count,
+        )
+        cv.full_clean()
+        cv.save()
+        self.assertEqual(cv.kind_count, valid_kind_count)
+
+        valid_kind_count_multi = [
+            {"kind_id": "video", "count": 5},
+            {"kind_id": "exercise", "count": 10},
+        ]
+        cv2 = ChannelVersion(
+            channel=self.channel,
+            version=2,
+            kind_count=valid_kind_count_multi,
+        )
+        cv2.full_clean()
+        cv2.save()
+        self.assertEqual(cv2.kind_count, valid_kind_count_multi)
+
+    def test_kind_count_invalid_schema_missing_required_fields(self):
+        """Test that kind_count rejects items missing required fields."""
+        invalid_kind_count = [{"kind_id": "video"}]
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=1,
+            kind_count=invalid_kind_count,
+        )
+        with self.assertRaises(ValidationError):
+            cv.full_clean()
+
+    def test_kind_count_invalid_schema_negative_count(self):
+        """Test that kind_count rejects negative counts."""
+        invalid_kind_count = [{"kind_id": "video", "count": -1}]
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=1,
+            kind_count=invalid_kind_count,
+        )
+        with self.assertRaises(ValidationError):
+            cv.full_clean()
+
+    def test_kind_count_invalid_schema_additional_properties(self):
+        """Test that kind_count rejects items with additional properties."""
+        invalid_kind_count = [{"kind_id": "video", "count": 5, "extra": "field"}]
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=1,
+            kind_count=invalid_kind_count,
+        )
+        with self.assertRaises(ValidationError):
+            cv.full_clean()
+
+    def test_included_languages_valid_codes(self):
+        """Test that included_languages accepts valid language codes."""
+        valid_language_code = "en"
+
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=1,
+            included_languages=[valid_language_code],
+        )
+        cv.full_clean()
+        cv.save()
+        self.assertEqual(cv.included_languages, [valid_language_code])
+
+    def test_included_languages_invalid_code(self):
+        """Test that included_languages rejects invalid language codes."""
+        invalid_language_code = "invalid_lang_code"
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=1,
+            included_languages=[invalid_language_code],
+        )
+        with self.assertRaises(ValidationError) as context:
+            cv.full_clean()
+        self.assertIn(invalid_language_code, str(context.exception))
+
+    def test_included_licenses_valid_choices(self):
+        """Test that included_licenses accepts valid license IDs."""
+        from django.core.management import call_command
+        from contentcuration.models import License
+
+        call_command("loadconstants")
+        valid_license = License.objects.first()
+        self.assertIsNotNone(
+            valid_license, "No licenses found. Ensure loadconstants has been run."
+        )
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=1,
+            included_licenses=[valid_license.id],
+        )
+        cv.full_clean()
+        cv.save()
+        self.assertEqual(cv.included_licenses, [valid_license.id])
+
+    def test_included_licenses_invalid_choice(self):
+        """Test that included_licenses rejects invalid license IDs."""
+        invalid_license_id = 99999
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=1,
+            included_licenses=[invalid_license_id],
+        )
+        with self.assertRaises(ValidationError):
+            cv.full_clean()
+
+    def test_included_categories_valid_choices(self):
+        """Test that included_categories accepts valid category names."""
+        valid_category = subjects.SUBJECTSLIST[0]
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=1,
+            included_categories=[valid_category],
+        )
+        cv.full_clean()
+        cv.save()
+        self.assertEqual(cv.included_categories, [valid_category])
+
+    def test_included_categories_invalid_choice(self):
+        """Test that included_categories rejects invalid category names."""
+        invalid_category = "InvalidCategory"
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=1,
+            included_categories=[invalid_category],
+        )
+        with self.assertRaises(ValidationError):
+            cv.full_clean()
+
+    def test_non_distributable_licenses_included_valid_choices(self):
+        """Test that non_distributable_licenses_included accepts valid license IDs."""
+
+        call_command("loadconstants")
+        valid_license = License.objects.first()
+        self.assertIsNotNone(
+            valid_license, "No licenses found. Ensure loadconstants has been run."
+        )
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=1,
+            non_distributable_licenses_included=[valid_license.id],
+        )
+        cv.full_clean()
+        cv.save()
+        self.assertEqual(cv.non_distributable_licenses_included, [valid_license.id])
+
+    def test_non_distributable_licenses_included_invalid_choice(self):
+        """Test that non_distributable_licenses_included rejects invalid license IDs."""
+        invalid_license_id = 99999
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=1,
+            non_distributable_licenses_included=[invalid_license_id],
+        )
+        with self.assertRaises(ValidationError):
+            cv.full_clean()
+
+    def test_full_clean_called_on_save(self):
+        """Test that full_clean is automatically called on save."""
+        invalid_language_code = "invalid_lang_code"
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=1,
+            included_languages=[invalid_language_code],
+        )
+        with self.assertRaises(ValidationError):
+            cv.save()
+
+    def test_version_cannot_exceed_channel_version(self):
+        """Test that version cannot be greater than channel version."""
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=11,
+        )
+        with self.assertRaises(ValidationError) as context:
+            cv.save()
+        self.assertIn(
+            "Version cannot be greater than channel version", str(context.exception)
+        )
