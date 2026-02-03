@@ -198,7 +198,7 @@
     padding: 16px 0;
 
     &:last-child {
-      border-bottom: none;
+      border-bottom: unset;
     }
   }
 
