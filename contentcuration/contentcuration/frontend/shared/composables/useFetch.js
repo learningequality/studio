@@ -9,15 +9,15 @@ export function useFetch({ asyncFetchFunc }) {
   async function fetchData() {
     isLoading.value = true;
     isFinished.value = false;
-    data.value = null;
     error.value = null;
     try {
       data.value = await asyncFetchFunc();
       isLoading.value = false;
       isFinished.value = true;
-    } catch (caughtError) {
-      error.value = caughtError;
-      throw caughtError;
+    } catch (error) {
+      error.value = error;
+      data.value = null;
+      throw error;
     } finally {
       isLoading.value = false;
     }
