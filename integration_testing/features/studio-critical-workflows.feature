@@ -38,7 +38,7 @@ Feature: Kolibri Studio critical workflows
 		Given I am not signed in to Studio
 			And I am at Kolibri Studio's sign-in page
 		When I click the *Explore without an account* link
-		Then I see the *Content Library* page with the available public channels
+		Then I see the *Content library* page with the available public channels
 			And I can filter the search results by keyword, language, license, format, resources for coach, available captions and subtitles
 			And I can view or download the channel summary
 
@@ -78,7 +78,7 @@ Feature: Kolibri Studio critical workflows
 
 	Scenario: Create a new channel
 		Given I am signed in to Studio
-			And I am at *My Channels* tab
+			And I am at *My channels* tab
 		When I click the *New channel* button
 		Then I see the *New channel* page
 		When I upload an image file as a channel thumbnail (optional)
@@ -142,7 +142,7 @@ Feature: Kolibri Studio critical workflows
 			And I select the *New exercise* option
 		Then I see the *Details* tab of the *New exercise* modal
 		When I fill in all of the required fields
-			And I set the completion criteria to *When goal is met - Goal: 100% correct)*
+			And I set the completion criteria to *When goal is met - Goal: 100% correct*
 			And I click the *Questions* tab
 		Then I see the text: *Exercise has no questions*
 			And I see a *New question* button
@@ -251,7 +251,7 @@ Feature: Kolibri Studio critical workflows
 		When I fill in the required fields
 			And I click *Publish*
 		Then I see the *Publishing channel* progress indicator at the top right
-		When the the channel has been published successfully
+		When the channel has been published successfully
 		Then I see the *Published N seconds ago* text
 			And I see a yellow exclamation icon with the following text *N resources are incomplete and cannot be published*
 			And I receive a confirmation email that the channel has been published successfully
@@ -265,7 +265,7 @@ Feature: Kolibri Studio critical workflows
 		When I type the email of the person I want to invite
 			And I don't change the preselected *Can edit* option in the drop-down
 			And I click the *Send invitation* button
-		Then the collaborator will be notified on their *My Channels* page, where they can accept or decline the pending invitation
+		Then the collaborator will be notified on their *My channels* page, where they can accept or decline the pending invitation
 			And the collaborator will receive an email allowing them to accept/decline the pending invitation
 		When I sign in to Studio as the collaborator
 		Then I can accept the pending invitation
@@ -398,13 +398,13 @@ Feature: Kolibri Studio critical workflows
 	Scenario: Delete a channel
 		Given I am signed in to Studio
 			And I have permissions to edit
-			And I am on *My Channels* tab
+			And I am on *My channels* tab
 		When I click the *Options* button of a channel #the three dots to the right
 		Then I see a *Delete channel* option
 		When I click the *Delete channel* option
 			And I click the *Delete channel* button
 		Then I see a message that the channel is deleted
-			And the deleted channel is no longer displayed at *My Channels* page
+			And the deleted channel is no longer displayed at *My channels* page
 
 	Feature: View and edit account information
 		Given I am signed in to Studio
