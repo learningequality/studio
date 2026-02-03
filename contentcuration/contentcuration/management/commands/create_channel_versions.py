@@ -142,7 +142,7 @@ def validate_published_data(data, channel):
 
 
 class Command(BaseCommand):
-    def handle(self, *args, **options):
+    def handle(self, *args, **options):  # noqa: C901
         logging.info("Creating channel versions")
 
         channels = Channel.objects.filter(version__gt=0)
@@ -168,15 +168,17 @@ class Command(BaseCommand):
                         )
 
                     # Can't have nulls in these lists!
-                    pub_data["included_languages"] = [
-                        lang
-                        for lang in pub_data["included_languages"]
-                        if lang is not None
-                    ]
+                    if pub_data.get("included_languages"):
+                        pub_data["included_languages"] = [
+                            lang
+                            for lang in pub_data["included_languages"]
+                            if lang is not None
+                        ]
 
-                    pub_data["included_categories"] = [
-                        c for c in pub_data["included_categories"] if c is not None
-                    ]
+                    if pub_data.get("included_categories"):
+                        pub_data["included_categories"] = [
+                            c for c in pub_data["included_categories"] if c is not None
+                        ]
 
                     # Create or update channel version
                     channel_version, _ = ChannelVersion.objects.update_or_create(

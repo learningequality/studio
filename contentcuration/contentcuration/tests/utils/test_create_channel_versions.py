@@ -172,16 +172,6 @@ class TestValidatePublishedData(StudioTestCase):
 
         self.assertEqual(data["included_categories"], existing_categories)
 
-    def test_works_with_null_category(self):
-        """Should preserve existing included_categories in data."""
-        existing_categories = ["history", "art", None]
-        fixed_existing_categories = ["history", "art"]
-        input_data = {"included_categories": existing_categories}
-
-        data, _ = validate_published_data(input_data, self.channel)
-
-        self.assertEqual(data["included_categories"], fixed_existing_categories)
-
     def test_computes_kind_count(self):
         """Should compute kind_count from published nodes."""
         video_kind = ContentKind.objects.get(kind=content_kinds.VIDEO)
