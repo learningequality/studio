@@ -181,10 +181,6 @@
 
 <style scoped lang="scss">
 
-  .empty-state {
-    padding: 8px;
-  }
-
   .saved-searches-list {
     padding: 0;
     margin: 0;
