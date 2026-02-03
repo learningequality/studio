@@ -22,7 +22,7 @@
         class="saved-searches-list"
       >
         <li
-          v-for="(search, index) in savedSearches"
+          v-for="search in savedSearches"
           :key="search.id"
           class="search-item"
         >
