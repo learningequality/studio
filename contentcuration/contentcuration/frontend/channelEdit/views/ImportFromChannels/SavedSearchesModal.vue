@@ -47,10 +47,10 @@
           </div>
 
           <div class="search-actions">
-            <IconButton
+            <KIconButton
               icon="clear"
-              color="grey"
-              :text="$tr('deleteAction')"
+              :color="$themeTokens.secondaryText"
+              :tooltip="$tr('deleteAction')"
               @click="handleClickDelete(search.id)"
             />
           </div>
@@ -76,14 +76,10 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import IconButton from 'shared/views/IconButton';
 
   export default {
     name: 'SavedSearchesModal',
     inject: ['RouteNames'],
-    components: {
-      IconButton,
-    },
     props: {
       value: {
         type: Boolean,
