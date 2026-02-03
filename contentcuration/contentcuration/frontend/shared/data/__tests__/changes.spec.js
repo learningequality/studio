@@ -356,7 +356,7 @@ describe('Change Types Unhappy Paths', () => {
   it('should throw error when Change is instantiated without a source', () => {
     expect(
       () => new Change({ key: '1', table: TABLE_NAMES.CONTENTNODE, type: CHANGE_TYPES.CREATED }),
-    ).toThrow(new ReferenceError('source should be a string, but undefined was passed instead'));
+    ).toThrow(new TypeError('source should be a string, but undefined was passed instead'));
   });
 
   it('should throw error when Change is instantiated with a non-string source', () => {
@@ -368,7 +368,7 @@ describe('Change Types Unhappy Paths', () => {
           table: TABLE_NAMES.CONTENTNODE,
           type: CHANGE_TYPES.CREATED,
         }),
-    ).toThrow(new ReferenceError('source should be a string, but 123 was passed instead'));
+    ).toThrow(new TypeError('source should be a string, but 123 was passed instead'));
   });
 
   it('should throw error when Change is instantiated with invalid table', () => {
@@ -386,7 +386,7 @@ describe('Change Types Unhappy Paths', () => {
           source: CLIENTID,
           type: CHANGE_TYPES.CREATED,
         }),
-    ).toThrow(new TypeError('session is not a syncable table'));
+    ).toThrow(new ReferenceError('session is not a syncable table'));
   });
 
   // CreatedChange
@@ -502,7 +502,7 @@ describe('Change Types Unhappy Paths', () => {
           source: CLIENTID,
           oldObj,
         }),
-    ).toThrow(new ReferenceError('parent is required for a MovedChange but it was undefined'));
+    ).toThrow(new TypeError('parent is required for a MovedChange but it was undefined'));
   });
 
   // CopiedChange
