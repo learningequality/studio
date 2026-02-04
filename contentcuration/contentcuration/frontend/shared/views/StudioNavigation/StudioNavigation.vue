@@ -596,10 +596,16 @@
   .studio-navigation-title-container {
     padding-inline-start: 20px;
     padding-top: 8px;
+    //Given to remove the bottom spacing due to inline-block nature of KTextTruncator
     font-size: 20px;
     font-weight: 500;
     white-space: nowrap;
-    //Given to remove the bottom spacing due to inline-block nature of KTextTruncator
+  }
+
+  ::v-deep .k-toolbar-left {
+    flex: 1;
+    min-width: 0;
+    //Added so that Ktexttruncator can properly truncate the title when necessary.
   }
 
   .studio-navigation-actions {
