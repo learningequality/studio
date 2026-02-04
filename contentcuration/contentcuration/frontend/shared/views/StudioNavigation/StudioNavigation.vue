@@ -43,14 +43,15 @@
           </KExternalLink>
         </template>
 
-        <template #brand>
+        <template #default>
           <div
             class="studio-navigation-title-container"
-            style="max-width: 160px"
+            style="flex: 1; min-width: 0"
           >
-            <span>
-              {{ truncatedTitle }}
-            </span>
+            <KTextTruncator
+              :text="title || $tr('title')"
+              :maxLines="1"
+            />
           </div>
         </template>
 
@@ -342,16 +343,6 @@
       copyrightLink() {
         return 'https://learningequality.org/';
       },
-      truncatedTitle() {
-        const displayTitle = this.title || this.$tr('title');
-        const actionsEl = this.$refs.studioNavigationActions;
-        const actionsWidth = actionsEl ? actionsEl.clientWidth : 0;
-        const offset = actionsWidth + 100;
-        const averageCharWidth = 10;
-        const availableWidth = this.toolbarWidth - offset;
-        const maxChars = availableWidth > 0 ? Math.floor(availableWidth / averageCharWidth) : 1;
-        return this.truncateText(displayTitle, maxChars);
-      },
       containerStyles() {
         return {
           padding: this.windowBreakpoint <= 3 ? '0 16px' : '0 24px',
@@ -564,12 +555,6 @@
         if (this.$analytics && tab.analyticsLabel) {
           this.$analytics.trackClick('channel_list', tab.analyticsLabel);
         }
-      },
-      truncateText(value, maxLength) {
-        if (value && value.length > maxLength) {
-          return value.substring(0, maxLength) + '...';
-        }
-        return value;
       },
     },
     $trs: {
