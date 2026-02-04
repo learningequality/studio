@@ -287,7 +287,7 @@
           <KExternalLink
             :text="$untranslated('cookieLink')"
             href="https://learningequality.org/cookies/"
-            target="_blank"
+            :openInNewTab="true"
           />
         </p>
       </div>

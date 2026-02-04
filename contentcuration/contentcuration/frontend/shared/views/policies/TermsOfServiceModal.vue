@@ -186,7 +186,7 @@
           <KExternalLink
             :text="$tr('dmcaLink')"
             href="https://docs.google.com/forms/d/e/1FAIpQLSd7qWORCOOczCnOlDzaftIjBsaUtl3DKH3hbxlO1arRc1_IQg/viewform?usp=sf_link"
-            target="_blank"
+            :openInNewTab="true"
           />
         </p>
       </div>
