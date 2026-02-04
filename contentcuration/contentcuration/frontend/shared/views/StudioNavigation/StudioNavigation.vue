@@ -58,7 +58,6 @@
         <template #actions>
           <div
             ref="studioNavigationActions"
-            aria-live="polite"
             class="studio-navigation-actions"
           >
             <template v-if="loggedIn">
