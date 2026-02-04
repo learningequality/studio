@@ -10,9 +10,9 @@
   >
     <p>{{ $tr('description') }}</p>
     <p>
-      <ActionLink
-        href="https://learningequality.org/about/values/"
-        target="_blank"
+      <KExternalLink
+        href="https://learningequality.org/about/our-core-values/"
+        :openInNewTab="true"
         :text="$tr('coreValuesLink')"
       />
     </p>
