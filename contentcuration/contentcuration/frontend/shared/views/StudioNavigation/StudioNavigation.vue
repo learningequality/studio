@@ -596,9 +596,11 @@
 
   .studio-navigation-title-container {
     padding-inline-start: 20px;
+    padding-top: 8px;
     font-size: 20px;
     font-weight: 500;
     white-space: nowrap;
+    //Given to remove the bottom spacing due to inline-block nature of KTextTruncator
   }
 
   .studio-navigation-actions {
