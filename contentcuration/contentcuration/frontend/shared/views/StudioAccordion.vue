@@ -1,6 +1,6 @@
 <template>
 
-  <div class="studio-accordion">
+  <div class="accordion">
     <div>
       <KGrid
         :style="{
@@ -12,24 +12,21 @@
           :layout8="{ span: 8 }"
           :layout12="{ span: 12 }"
         >
-          <h3 class="studio-accordion-header">
-            <KButton
+          <h3 class="accordion-title">
+            <button
               :id="id"
-              :text="$slots['left-actions'][0]['text']"
-              appearance="flat-button"
               :aria-expanded="showAccordionItem.toString()"
               :aria-controls="`${id}-content`"
-              :appearanceOverrides="appearanceOverrides"
+              :class="$computedClass(coreOutlineFocus)"
               @click="openAccordion"
             >
-              <template #iconAfter>
-                <KIcon
-                  :icon="showAccordionItem ? 'chevronUp' : 'chevronDown'"
-                  :color="$themePalette.grey.v_400"
-                  class="accordion-icon"
-                />
-              </template>
-            </KButton>
+              <slot name="title"></slot>
+              <KIcon
+                :icon="showAccordionItem ? 'chevronUp' : 'chevronDown'"
+                :color="$themePalette.grey.v_400"
+                class="accordion-icon"
+              />
+            </button>
           </h3>
         </KGridItem>
       </KGrid>
@@ -41,14 +38,18 @@
         :id="`${id}-content`"
         role="region"
         :aria-labelledby="id"
+        class="accordion-body"
+        :style="{
+          backgroundColor: $themeTokens.surface,
+        }"
       >
-        <slot></slot>
+        <slot name="body"> </slot>
       </div>
     </KTransition>
     <div
       v-if="!lastItem"
       :style="{
-        borderBottom: `1.5px solid ${$themePalette.grey.v_200}`,
+        borderBottom: `1.5px solid ${$themeTokens.fineLine}`,
       }"
     ></div>
   </div>
@@ -67,27 +68,22 @@
       },
       id: {
         type: String,
-        default: 'studio-accordion',
+        default: 'accordion',
       },
     },
+    expose: ['openAccordion'],
     data() {
       return {
         showAccordionItem: false,
       };
     },
     computed: {
-      appearanceOverrides() {
+      coreOutlineFocus() {
         return {
-          width: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '10px 24px',
-          textAlign: 'left',
-          cursor: 'pointer',
-          textTransform: 'none',
-          textWrap: 'stable',
-          lineHeight: '18px',
+          ':focus': {
+            ...this.$coreOutline,
+            outlineOffset: '-2px',
+          },
         };
       },
     },
@@ -103,20 +99,30 @@
 
 <style lang="scss" scoped>
 
-  .studio-accordion-header {
-    ::v-deep .link-text {
+  .accordion-title {
+    margin: 0;
+    font-weight: 700;
+    text-wrap: stable;
+
+    button {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       width: 100%;
+      padding: 14px 24px;
+      line-height: 18px;
+      text-align: left;
+      text-transform: none;
+      text-wrap: stable;
+      cursor: pointer;
+      background: transparent;
+      border: 0;
     }
   }
 
-  .studio-accordion-title {
-    font-weight: 700;
-    text-wrap: stable;
-  }
-
-  .fade-enter-active,
-  .fade-leave-active {
-    transition: opacity 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
+  .accordion-body {
+    padding: 16px;
+    font-size: 16px;
   }
 
   .accordion-icon {

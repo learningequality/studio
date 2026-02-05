@@ -1,9 +1,10 @@
 <template>
 
   <div :class="{ 'catalog-faq': !windowIsSmall }">
-    <h2 class="main-title">
+    <h1 class="visuallyhidden">{{ $tr('faqHeader') }}</h1>
+    <p class="main-title">
       {{ $tr('aboutHeader') }}
-    </h2>
+    </p>
     <p class="desc">
       {{ $tr('descriptionP1') }}
 
@@ -11,7 +12,7 @@
         :text="$tr('channelLink')"
         appearance="basic-link"
         href="#channel-question"
-        @click="openChannelAccordion()"
+        @click="$refs.channelAccordion.openAccordion()"
       />
     </p>
     <p class="desc">
@@ -28,76 +29,66 @@
     <div class="faq-accordion">
       <!-- How do you determine what goes into this library? -->
       <StudioAccordion id="selection-question">
-        <template #left-actions>
+        <template #title>
           {{ $tr('selectionQuestion') }}
         </template>
 
-        <StudioAccordionItem>
-          <template #content>
-            <p>{{ $tr('selectionAnswerP1') }}</p>
-            <p>{{ $tr('selectionAnswerP2') }}</p>
-          </template>
-        </StudioAccordionItem>
+        <template #body>
+          <p>{{ $tr('selectionAnswerP1') }}</p>
+          <p>{{ $tr('selectionAnswerP2') }}</p>
+        </template>
       </StudioAccordion>
 
       <!-- How is this library created and maintained? -->
       <StudioAccordion id="maintenance-question">
-        <template #left-actions>
+        <template #title>
           {{ $tr('maintenanceQuestion') }}
         </template>
 
-        <StudioAccordionItem>
-          <template #content>
-            <p>{{ $tr('maintenanceAnswerP1') }}</p>
-            <p>
-              {{ $tr('maintenanceAnswerP2') }}
-              <KExternalLink
-                :text="$tr('viewIntegrationGuide')"
-                openInNewTab
-                href="http://learningequality.org/r/integration-guide"
-              />
-            </p>
-          </template>
-        </StudioAccordionItem>
+        <template #body>
+          <p>{{ $tr('maintenanceAnswerP1') }}</p>
+          <p>
+            {{ $tr('maintenanceAnswerP2') }}
+            <KExternalLink
+              :text="$tr('viewIntegrationGuide')"
+              openInNewTab
+              href="http://learningequality.org/r/integration-guide"
+            />
+          </p>
+        </template>
       </StudioAccordion>
 
       <!-- Have these sources been vetted or endorsed as classroom-safe and ready? -->
       <StudioAccordion id="endoresement-question">
-        <template #left-actions>
+        <template #title>
           {{ $tr('endoresementQuestion') }}
         </template>
 
-        <StudioAccordionItem>
-          <template #content>
-            <p>{{ $tr('endorsementAnswer') }}</p>
-          </template>
-        </StudioAccordionItem>
+        <template #body>
+          <p>{{ $tr('endorsementAnswer') }}</p>
+        </template>
       </StudioAccordion>
 
       <!-- Does Learning Equality own these resources? -->
       <StudioAccordion id="ownership-question">
-        <template #left-actions>
+        <template #title>
           {{ $tr('ownershipQuestion') }}
         </template>
 
-        <StudioAccordionItem>
-          <template #content>
-            <p>{{ $tr('ownershipAnswer') }}</p>
-          </template>
-        </StudioAccordionItem>
+        <template #body>
+          <p>{{ $tr('ownershipAnswer') }}</p>
+        </template>
       </StudioAccordion>
 
       <!-- Do you add new materials? -->
       <StudioAccordion id="new-content-question">
-        <template #left-actions>
+        <template #title>
           {{ $tr('newContentQuestion') }}
         </template>
 
-        <StudioAccordionItem>
-          <template #content>
-            <p>{{ $tr('newContentAnswer') }}</p>
-          </template>
-        </StudioAccordionItem>
+        <template #body>
+          <p>{{ $tr('newContentAnswer') }}</p>
+        </template>
       </StudioAccordion>
 
       <!-- How can I add my own materials or recommend others' materials for this library? -->
@@ -105,15 +96,13 @@
         id="custom-content-question"
         lastItem
       >
-        <template #left-actions>
+        <template #title>
           {{ $tr('customContentQuestion') }}
         </template>
 
-        <StudioAccordionItem>
-          <template #content>
-            <p>{{ $tr('customContentAnswer') }}</p>
-          </template>
-        </StudioAccordionItem>
+        <template #body>
+          <p>{{ $tr('customContentAnswer') }}</p>
+        </template>
       </StudioAccordion>
     </div>
 
@@ -124,86 +113,79 @@
       <!-- I found something I'm interested in and would like to start using it.
             What should I do? -->
       <StudioAccordion id="using-content-question">
-        <template #left-actions>
+        <template #title>
           {{ $tr('usingContentQuestion') }}
         </template>
 
-        <StudioAccordionItem>
-          <template #content>
-            <p>
-              {{ $tr('usingContentAnswer') }}
-              <KExternalLink
-                :text="$tr('viewGettingStartedLink')"
-                openInNewTab
-                href="https://learningequality.org/documentation/"
-              />
-            </p>
-          </template>
-        </StudioAccordionItem>
+        <template #body>
+          <p>
+            {{ $tr('usingContentAnswer') }}
+            <KExternalLink
+              :text="$tr('viewGettingStartedLink')"
+              openInNewTab
+              href="https://learningequality.org/documentation/"
+            />
+          </p>
+        </template>
       </StudioAccordion>
 
       <!-- What is a channel? -->
-      <StudioAccordion id="channel-question">
-        <template #left-actions>
+      <StudioAccordion
+        id="channel-question"
+        ref="channelAccordion"
+      >
+        <template #title>
           {{ $tr('channelQuestion') }}
         </template>
 
-        <StudioAccordionItem>
-          <template #content>
-            <p>{{ $tr('channelAnswer') }}</p>
-          </template>
-        </StudioAccordionItem>
+        <template #body>
+          <p>{{ $tr('channelAnswer') }}</p>
+        </template>
       </StudioAccordion>
 
       <!-- How do I review the contents of the channels themselves? -->
       <StudioAccordion id="sample-content-question">
-        <template #left-actions>
+        <template #title>
           {{ $tr('sampleContentQuestion') }}
         </template>
 
-        <StudioAccordionItem>
-          <template #content>
-            <p>{{ $tr('sampleContentAnswer') }}</p>
-            <ul>
-              <li>{{ $tr('sampleContentAnswerItem1') }}</li>
-              <li>{{ $tr('sampleContentAnswerItem2') }}</li>
-              <li>
-                {{ $tr('sampleContentAnswerItem3') }}
-                <KExternalLink
-                  :text="$tr('downloadKolibriLink')"
-                  openInNewTab
-                  href="https://learningequality.org/download"
-                />
-              </li>
-            </ul>
-          </template>
-        </StudioAccordionItem>
+        <template #body>
+          <p>{{ $tr('sampleContentAnswer') }}</p>
+          <ul>
+            <li>{{ $tr('sampleContentAnswerItem1') }}</li>
+            <li>{{ $tr('sampleContentAnswerItem2') }}</li>
+            <li>
+              {{ $tr('sampleContentAnswerItem3') }}
+              <KExternalLink
+                :text="$tr('downloadKolibriLink')"
+                openInNewTab
+                href="https://learningequality.org/download"
+              />
+            </li>
+          </ul>
+        </template>
       </StudioAccordion>
 
       <!-- I want to use some of this resource, but not all of it. What should I do? -->
       <StudioAccordion id="partial-channel-question">
-        <template #left-actions>
+        <template #title>
           {{ $tr('partialChannelQuestion') }}
         </template>
 
-        <StudioAccordionItem>
-          <template #content>
-            <p>{{ $tr('partialChannelAnswer') }}</p>
-          </template>
-        </StudioAccordionItem>
+        <template #body>
+          <p>{{ $tr('partialChannelAnswer') }}</p>
+        </template>
       </StudioAccordion>
 
       <!-- What is coach content? -->
       <StudioAccordion id="coach-content-question">
-        <template #left-actions>
+        <template #title>
           {{ $tr('coachContentQuestion') }}
         </template>
 
-        <StudioAccordionItem>
-          <template #content>
-            <p>{{ $tr('coachContentAnswer') }}</p>
-          </template>
-        </StudioAccordionItem>
+        <template #body>
+          <p>{{ $tr('coachContentAnswer') }}</p>
+        </template>
       </StudioAccordion>
 
       <!-- I found a bug, broken link, or instance of mislabeled information
@@ -212,15 +194,13 @@
         id="issue-question"
         lastItem
       >
-        <template #left-actions>
+        <template #title>
           {{ $tr('issueQuestion') }}
         </template>
 
-        <StudioAccordionItem>
-          <template #content>
-            <p>{{ $tr('issueAnswer') }}</p>
-          </template>
-        </StudioAccordionItem>
+        <template #body>
+          <p>{{ $tr('issueAnswer') }}</p>
+        </template>
       </StudioAccordion>
     </div>
 
@@ -230,67 +210,63 @@
     <div class="faq-accordion">
       <!-- What is Kolibri? -->
       <StudioAccordion id="kolibri-question">
-        <template #left-actions>
+        <template #title>
           {{ $tr('KolibriQuestion') }}
         </template>
 
-        <StudioAccordionItem>
-          <template #content>
-            <p>{{ $tr('KolibriAnswer') }}</p>
-            <ul>
-              <li>{{ $tr('KolibriAnswerItem1') }}</li>
-              <li>{{ $tr('KolibriAnswerItem2') }}</li>
-              <li>{{ $tr('KolibriAnswerItem3') }}</li>
-            </ul>
-          </template>
-        </StudioAccordionItem>
+        <template #body>
+          <p>{{ $tr('KolibriAnswer') }}</p>
+          <ul>
+            <li>{{ $tr('KolibriAnswerItem1') }}</li>
+            <li>{{ $tr('KolibriAnswerItem2') }}</li>
+            <li>{{ $tr('KolibriAnswerItem3') }}</li>
+          </ul>
+        </template>
       </StudioAccordion>
 
       <!-- How can I use Kolibri? -->
       <StudioAccordion id="using-kolibri-question">
-        <template #left-actions>
+        <template #title>
           {{ $tr('usingKolibriQuestion') }}
         </template>
 
-        <StudioAccordionItem>
-          <template #content>
-            <p>{{ $tr('usingKolibriAnswerP1') }}</p>
-            <ul>
-              <li>
-                {{ $tr('usingKolibriItem1') }}
-                <KExternalLink
-                  :text="$tr('visitWebsiteLink')"
-                  openInNewTab
-                  href="https://learningequality.org/kolibri/"
-                />
-              </li>
-              <li>
-                {{ $tr('usingKolibriItem2') }}
-                <KExternalLink
-                  :text="$tr('viewDemoLink')"
-                  openInNewTab
-                  href="https://kolibri-demo.learningequality.org/en/user/#/signin"
-                />
-              </li>
-              <li>
-                {{ $tr('usingKolibriItem3') }}
-                <KExternalLink
-                  :text="$tr('downloadLink')"
-                  openInNewTab
-                  href="https://learningequality.org/download/"
-                />
-              </li>
-            </ul>
-            <p>
-              {{ $tr('usingKolibriAnswerP2') }}
+        <template #body>
+          <p>{{ $tr('usingKolibriAnswerP1') }}</p>
+          <ul>
+            <li>
+              {{ $tr('usingKolibriItem1') }}
               <KExternalLink
-                :text="$tr('viewDocsLink')"
+                :text="$tr('visitWebsiteLink')"
                 openInNewTab
-                href="https://kolibri.readthedocs.io"
+                href="https://learningequality.org/kolibri/"
               />
-            </p>
-          </template>
-        </StudioAccordionItem>
+            </li>
+            <li>
+              {{ $tr('usingKolibriItem2') }}
+              <KExternalLink
+                :text="$tr('viewDemoLink')"
+                openInNewTab
+                href="https://kolibri-demo.learningequality.org/en/user/#/signin"
+              />
+            </li>
+            <li>
+              {{ $tr('usingKolibriItem3') }}
+              <KExternalLink
+                :text="$tr('downloadLink')"
+                openInNewTab
+                href="https://learningequality.org/download/"
+              />
+            </li>
+          </ul>
+          <p>
+            {{ $tr('usingKolibriAnswerP2') }}
+            <KExternalLink
+              :text="$tr('viewDocsLink')"
+              openInNewTab
+              href="https://kolibri.readthedocs.io"
+            />
+          </p>
+        </template>
       </StudioAccordion>
 
       <!-- Who are the makers of Kolibri? -->
@@ -298,16 +274,14 @@
         id="maker-question"
         lastItem
       >
-        <template #left-actions>
+        <template #title>
           {{ $tr('makerQuestion') }}
         </template>
 
-        <StudioAccordionItem>
-          <template #content>
-            <p>{{ $tr('makerAnswerP1') }}</p>
-            <p>{{ $tr('makerAnswerP2') }}</p>
-          </template>
-        </StudioAccordionItem>
+        <template #body>
+          <p>{{ $tr('makerAnswerP1') }}</p>
+          <p>{{ $tr('makerAnswerP2') }}</p>
+        </template>
       </StudioAccordion>
     </div>
   </div>
@@ -319,13 +293,11 @@
 
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { routerMixin } from 'shared/mixins';
-  import StudioAccordionItem from 'shared/views/StudioAccordionItem.vue';
   import StudioAccordion from 'shared/views/StudioAccordion.vue';
 
   export default {
     name: 'CatalogFAQ',
     components: {
-      StudioAccordionItem,
       StudioAccordion,
     },
     mixins: [routerMixin],
@@ -337,17 +309,6 @@
     },
     beforeMount() {
       this.updateTabTitle(this.$tr('faqHeader'));
-    },
-    methods: {
-      openChannelAccordion() {
-        const channelAccordion = document.getElementById('channel-question');
-        if (channelAccordion) {
-          const button = document.getElementById('channel-question');
-          if (button && button.getAttribute('aria-expanded') === 'false') {
-            button.click();
-          }
-        }
-      },
     },
     $trs: {
       faqHeader: 'Frequently asked questions',
@@ -465,7 +426,9 @@
 </script>
 
 
-<style scoped>
+<style lang="scss" scoped>
+
+  @import '~kolibri-design-system/lib/styles/definitions';
 
   .catalog-faq {
     padding: 0 24px;
@@ -489,10 +452,18 @@
   }
 
   .faq-accordion {
-    box-shadow:
-      0 2px 1px -1px rgba(0, 0, 0, 0.2),
-      0 1px 1px 0 rgba(0, 0, 0, 0.14),
-      0 1px 3px 0 rgba(0, 0, 0, 0.12);
+    @extend %dropshadow-1dp;
+  }
+
+  .visuallyhidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    border: 0;
   }
 
 </style>
