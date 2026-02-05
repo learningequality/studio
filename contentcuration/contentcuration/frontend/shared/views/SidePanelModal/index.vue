@@ -26,7 +26,7 @@
             <div
               class="header-content"
               :style="{
-                flexDirection: closeButtonIconType === 'close' ? 'row' : 'row-reverse',
+                flexDirection: headerFlexDirection,
               }"
             >
               <div style="overflow: hidden">
@@ -104,6 +104,13 @@
           return ['close', 'back'].includes(value);
         },
       },
+      closeButtonPosition: {
+        type: String,
+        required: false,
+        default: null,
+        validator: value => ['left', 'right'].includes(value),
+      },
+
       /* Optionally override the default width of the side panel with valid CSS value */
       sidePanelWidth: {
         type: String,
@@ -117,6 +124,11 @@
         validator(value) {
           return ['right', 'left'].includes(value);
         },
+      },
+      fixedWidth: {
+        type: Boolean,
+        required: false,
+        default: false,
       },
       ariaLabel: {
         type: String,
@@ -151,7 +163,15 @@
           [this.rtlAlignment]: 0,
         };
       },
+      headerFlexDirection() {
+        if (this.closeButtonPosition === 'left') return 'row-reverse';
+        if (this.closeButtonPosition === 'right') return 'row';
+        return this.closeButtonIconType === 'close' ? 'row' : 'row-reverse';
+      },
       responsiveWidth() {
+        if (this.fixedWidth) {
+          return this.sidePanelWidth;
+        }
         return this.isMobile ? '100vw' : this.sidePanelWidth;
       },
       /** Styling Properties */
@@ -253,7 +273,6 @@
 
     .side-panel-content {
       flex-grow: 1;
-      padding: 24px 32px 16px;
       overflow-x: hidden;
       overflow-y: auto;
     }
