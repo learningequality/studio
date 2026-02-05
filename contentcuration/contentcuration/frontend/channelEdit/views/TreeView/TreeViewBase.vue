@@ -60,22 +60,21 @@
         v-if="errorsInChannel && canEdit"
         class="mx-1"
       >
-        <VTooltip
-          bottom
-          lazy
+        <div
+          ref="errorCount"
+          class="amber--text title"
+          style="width: max-content"
         >
-          <template #activator="{ on }">
-            <div
-              class="amber--text title"
-              style="width: max-content"
-              v-on="on"
-            >
-              {{ $formatNumber(errorsInChannel) }}
-              <KIcon icon="warningIncomplete" />
-            </div>
-          </template>
+          {{ $formatNumber(errorsInChannel) }}
+          <KIcon icon="warningIncomplete" />
+        </div>
+        <KTooltip
+          reference="errorCount"
+          :refs="$refs"
+          placement="bottom"
+        >
           <span>{{ $tr('incompleteDescendantsText', { count: errorsInChannel }) }}</span>
-        </VTooltip>
+        </KTooltip>
       </div>
       <template v-if="$vuetify.breakpoint.smAndUp">
         <span
@@ -84,65 +83,44 @@
         >
           {{ $tr('apiGenerated') }}
         </span>
-        <BaseMenu v-if="canShareChannel">
-          <template #activator="{ on }">
-            <KButton
-              hasDropdown
-              class="share-button"
-              v-on="on"
-            >
-              {{ $tr('shareMenuButton') }}
-            </KButton>
-          </template>
-          <VList>
-            <VListTile
-              v-if="canSubmitToCommunityLibrary"
-              @click="showSubmitToCommunityLibrarySidePanel = true"
-            >
-              <VListTileTitle>{{ $tr('submitToCommunityLibrary') }}</VListTileTitle>
-            </VListTile>
-            <VListTile
-              v-if="canManage"
-              :to="shareChannelLink"
-              @click="trackClickEvent('Share channel')"
-            >
-              <VListTileTitle>{{ $tr('inviteCollaborators') }}</VListTileTitle>
-            </VListTile>
-            <VListTile
-              v-if="isPublished"
-              @click="showTokenModal = true"
-            >
-              <VListTileTitle>{{ $tr('shareToken') }}</VListTileTitle>
-            </VListTile>
-          </VList>
-        </BaseMenu>
-        <VTooltip
-          v-if="!loading && canManage"
-          bottom
-          attach="body"
-          lazy
+        <KButton
+          v-if="canShareChannel"
+          :text="$tr('shareMenuButton')"
+          hasDropdown
+          class="share-button"
         >
-          <template #activator="{ on }">
-            <!-- Need to wrap in div to enable tooltip when button is disabled -->
-            <div
-              style="height: 100%"
-              v-on="on"
-            >
-              <VBtn
-                color="primary"
-                flat
-                class="ma-0"
-                :class="{ disabled: disablePublish }"
-                :disabled="disablePublish"
-                style="height: inherit"
-                @click.stop="publishChannel"
-              >
-                {{ $tr('publishButton') }}
-              </VBtn>
-            </div>
+          <template #menu>
+            <KDropdownMenu
+              :options="shareMenuOptions"
+              @select="handleShareMenuSelect"
+            />
           </template>
+        </KButton>
+        <!-- Need to wrap in div to enable tooltip when button is disabled -->
+        <div
+          v-if="!loading && canManage"
+          ref="publishButton"
+          style="height: 100%"
+        >
+          <KButton
+            :text="$tr('publishButton')"
+            :primary="true"
+            appearance="flat-button"
+            class="ma-0"
+            :class="{ disabled: disablePublish }"
+            :disabled="disablePublish"
+            style="height: inherit"
+            @click="publishChannel"
+          />
+        </div>
+        <KTooltip
+          v-if="!loading && canManage"
+          reference="publishButton"
+          :refs="$refs"
+          placement="bottom"
+        >
           <span>{{ publishButtonTooltip }}</span>
-        </VTooltip>
+        </KTooltip>
         <span
           v-else-if="!loading"
           class="font-weight-bold grey--text subheading"
@@ -151,83 +129,19 @@
         </span>
       </template>
       <VToolbarItems>
-        <BaseMenu v-if="showChannelMenu">
-          <template #activator="{ on }">
-            <VBtn
-              flat
-              icon
-              v-on="on"
-            >
-              <Icon
-                icon="optionsHorizontal"
-                style="font-size: 25px"
-              />
-            </VBtn>
+        <KIconButton
+          v-if="showChannelMenu"
+          class="toolbar-icon-btn"
+          icon="optionsHorizontal"
+          :tooltip="$tr('moreOptions')"
+        >
+          <template #menu>
+            <KDropdownMenu
+              :options="channelMenuOptions"
+              @select="handleChannelMenuSelect"
+            />
           </template>
-          <VList>
-            <template v-if="$vuetify.breakpoint.xsOnly">
-              <VListTile
-                v-if="canManage"
-                :disabled="disablePublish"
-                @click="showPublishModal = true"
-              >
-                <VListTileTitle>{{ $tr('publishButton') }}</VListTileTitle>
-              </VListTile>
-              <VListTile :to="viewChannelDetailsLink">
-                <VListTileTitle>{{ $tr('channelDetails') }}</VListTileTitle>
-              </VListTile>
-              <VListTile
-                v-if="canEdit"
-                :to="editChannelLink"
-              >
-                <VListTileTitle>
-                  {{ $tr('editChannel') }}
-                  <Icon
-                    v-if="!currentChannel.language"
-                    class="mx-1"
-                    color="red"
-                    icon="error"
-                    style="vertical-align: baseline"
-                  />
-                </VListTileTitle>
-              </VListTile>
-            </template>
-            <VListTile
-              v-if="isPublished"
-              @click="showTokenModal = true"
-            >
-              <VListTileTitle>{{ $tr('getToken') }}</VListTileTitle>
-            </VListTile>
-            <VListTile
-              v-if="canManage"
-              :to="shareChannelLink"
-              @click="trackClickEvent('Share channel')"
-            >
-              <VListTileTitle>{{ $tr('shareChannel') }}</VListTileTitle>
-            </VListTile>
-            <VListTile
-              v-if="canEdit"
-              @click="syncChannel"
-            >
-              <VListTileTitle>{{ $tr('syncChannel') }}</VListTileTitle>
-            </VListTile>
-            <VListTile
-              v-if="canEdit"
-              :to="trashLink"
-              @click="trackClickEvent('Trash')"
-            >
-              <VListTileTitle>{{ $tr('openTrash') }}</VListTileTitle>
-            </VListTile>
-            <VListTile
-              v-if="canEdit"
-              @click="deleteChannelModal"
-            >
-              <VListTileTitle class="red--text">
-                {{ $tr('deleteChannel') }}
-              </VListTileTitle>
-            </VListTile>
-          </VList>
-        </BaseMenu>
+        </KIconButton>
       </VToolbarItems>
       <template #extension>
         <slot name="extension"></slot>
@@ -521,6 +435,104 @@
       dropEffect() {
         return DropEffect.COPY;
       },
+      shareMenuOptions() {
+        const options = [];
+        if (this.canSubmitToCommunityLibrary) {
+          options.push({
+            label: this.$tr('submitToCommunityLibrary'),
+            value: 'submit-to-library',
+          });
+        }
+        if (this.canManage) {
+          options.push({
+            label: this.$tr('inviteCollaborators'),
+            value: 'invite-collaborators',
+          });
+        }
+        if (this.isPublished) {
+          options.push({
+            label: this.$tr('shareToken'),
+            value: 'share-token',
+          });
+        }
+        return options;
+      },
+      channelMenuOptions() {
+        const options = [];
+
+        if (this.$vuetify.breakpoint.xsOnly) {
+          if (this.canManage) {
+            options.push({
+              label: this.$tr('publishButton'),
+              value: 'publish',
+              disabled: this.disablePublish,
+            });
+          }
+          options.push({
+            label: this.$tr('channelDetails'),
+            value: 'view-details',
+          });
+          if (this.canEdit) {
+            let label = this.$tr('editChannel');
+            if (!this.currentChannel.language) {
+              label = `${label}`;
+            }
+            options.push({
+              label,
+              value: 'edit-channel',
+            });
+          }
+
+          if (this.canSubmitToCommunityLibrary) {
+            options.push({
+              label: this.$tr('submitToCommunityLibrary'),
+              value: 'submit-to-library',
+            });
+          }
+          if (this.canManage) {
+            options.push({
+              label: this.$tr('inviteCollaborators'),
+              value: 'invite-collaborators',
+            });
+          }
+          if (this.isPublished) {
+            options.push({
+              label: this.$tr('shareToken'),
+              value: 'share-token',
+            });
+          }
+        } else {
+          if (this.isPublished) {
+            options.push({
+              label: this.$tr('getToken'),
+              value: 'get-token',
+            });
+          }
+          if (this.canManage) {
+            options.push({
+              label: this.$tr('shareChannel'),
+              value: 'share-channel',
+            });
+          }
+        }
+
+        if (this.canEdit) {
+          options.push({
+            label: this.$tr('syncChannel'),
+            value: 'sync',
+          });
+          options.push({
+            label: this.$tr('openTrash'),
+            value: 'trash',
+          });
+          options.push({
+            label: this.$tr('deleteChannel'),
+            value: 'delete',
+          });
+        }
+
+        return options;
+      },
     },
     watch: {
       rootId: {
@@ -573,6 +585,56 @@
       trackClickEvent(eventLabel) {
         this.$analytics.trackClick('channel_editor_toolbar', eventLabel);
       },
+      handleShareMenuSelect(option) {
+        if (option.value === 'submit-to-library') {
+          this.showSubmitToCommunityLibrarySidePanel = true;
+        } else if (option.value === 'invite-collaborators') {
+          this.trackClickEvent('Share channel');
+          this.$router.push(this.shareChannelLink);
+        } else if (option.value === 'share-token') {
+          this.showTokenModal = true;
+        }
+      },
+      handleChannelMenuSelect(option) {
+        switch (option.value) {
+          case 'publish':
+            this.showPublishSidePanel = true;
+            break;
+          case 'view-details':
+            this.$router.push(this.viewChannelDetailsLink);
+            break;
+          case 'edit-channel':
+            this.$router.push(this.editChannelLink);
+            break;
+          case 'submit-to-library':
+            this.showSubmitToCommunityLibrarySidePanel = true;
+            break;
+          case 'invite-collaborators':
+            this.trackClickEvent('Share channel');
+            this.$router.push(this.shareChannelLink);
+            break;
+          case 'share-token':
+            this.showTokenModal = true;
+            break;
+          case 'get-token':
+            this.showTokenModal = true;
+            break;
+          case 'share-channel':
+            this.trackClickEvent('Share channel');
+            this.$router.push(this.shareChannelLink);
+            break;
+          case 'sync':
+            this.syncChannel();
+            break;
+          case 'trash':
+            this.trackClickEvent('Trash');
+            this.$router.push(this.trashLink);
+            break;
+          case 'delete':
+            this.deleteChannelModal();
+            break;
+        }
+      },
     },
     $trs: {
       channelDetails: 'View channel details',
@@ -597,6 +659,9 @@
       submitToCommunityLibrary: 'Submit to community library',
       inviteCollaborators: 'Invite collaborators',
       shareToken: 'Share token',
+
+      // More options menu
+      moreOptions: 'More options',
 
       channelDeletedSnackbar: 'Channel deleted',
     },
