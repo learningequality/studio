@@ -4,10 +4,16 @@
     :class="{ printing }"
     data-testid="details-panel"
   >
+    <!--
+      whenever modifying thumbnail styles,
+      check if pdf channel summary still fine
+    -->
     <StudioThumbnail
       :src="_details.thumbnail_url"
       :encoding="_details.thumbnail_encoding"
       :style="{ maxWidth: '300px' }"
+      :printing="printing"
+      :printIconStyle="{ paddingLeft: '20px' }"
     />
     <br >
     <h1
@@ -293,9 +299,15 @@
             :key="channel.id"
             class="preview-row"
           >
+            <!--
+              whenever modifying thumbnail styles,
+              check if pdf channel summary still fine
+            -->
             <StudioThumbnail
               class="source-thumbnail"
               :src="channel.thumbnail"
+              :printing="printing"
+              :style="{ maxWidth: printing ? '160px' : 'unset' }"
             />
             <div
               v-if="printing"
@@ -331,9 +343,16 @@
           :layout8="{ span: 4 }"
           :layout4="{ span: printing ? 1 : 4 }"
         >
+          <!--
+            whenever modifying thumbnail styles,
+            check if pdf channel summary still fine
+          -->
           <StudioThumbnail
             :src="node.thumbnail"
             :kind="node.kind"
+            :printing="printing"
+            :printIconStyle="{ paddingLeft: '48px' }"
+            :style="{ maxWidth: printing ? '160px' : 'unset' }"
           />
           <p
             dir="auto"
@@ -628,19 +647,15 @@
   }
 
   .sample-heading {
-    margin-top: 28px;
-    margin-bottom: 8px;
+    padding-top: 48px;
+    padding-bottom: 26px;
     font-size: 16px;
     font-weight: bold;
   }
 
-  .sample-nodes {
-    margin-top: 28px;
-  }
-
   .sample-node-title {
     margin-top: 12px;
-    margin-bottom: 42px;
+    margin-bottom: 36px;
     font-weight: bold;
     word-break: break-word;
   }
