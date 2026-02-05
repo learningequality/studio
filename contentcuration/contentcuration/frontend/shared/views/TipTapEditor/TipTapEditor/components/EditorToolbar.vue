@@ -68,6 +68,20 @@
 
     <ToolbarDivider v-if="visibleCategories.includes('clipboard')" />
 
+    <!-- Text Alignment -->
+    <ToolbarButton
+      v-if="visibleCategories.includes('align')"
+      :title="alignAction.title"
+      :icon="alignAction.icon"
+      :is-active="alignAction.isActive"
+      :is-available="alignAction.isAvailable"
+      @click="alignAction.handler"
+    />
+
+    <ToolbarDivider v-if="visibleCategories.includes('align')" />
+
+    <!-- Clear Formatting -->
+
     <ToolbarButton
       v-if="visibleCategories.includes('clearFormat')"
       :title="clearFormatting$()"
@@ -221,6 +235,25 @@
           </button>
         </template>
 
+        <!-- Overflow Text Alignment -->
+        <template v-if="overflowCategories.includes('align')">
+          <button
+            class="dropdown-item"
+            :class="{ active: alignAction.isActive }"
+            role="menuitem"
+            :disabled="alignAction.isAvailable"
+            @click="alignAction.handler"
+          >
+            <img
+              :src="alignAction.icon"
+              class="dropdown-item-icon"
+              alt=""
+              aria-hidden="true"
+            >
+            <span class="dropdown-item-text">{{ alignAction.title }}</span>
+          </button>
+        </template>
+
         <!-- Overflow Clear Format -->
         <template v-if="overflowCategories.includes('clearFormat')">
           <button
@@ -345,6 +378,7 @@
         script: 710,
         lists: 650,
         clearFormat: 560,
+        align: 530,
         clipboard: 500,
         textFormat: 400,
       };
@@ -355,6 +389,7 @@
         'script',
         'lists',
         'clearFormat',
+        'align',
         'clipboard',
         'textFormat',
       ];
@@ -365,6 +400,7 @@
         canClearFormat,
         historyActions,
         textActions,
+        alignAction,
         listActions,
         scriptActions,
         insertTools,
@@ -523,6 +559,7 @@
         canClearFormat,
         historyActions,
         textActions,
+        alignAction,
         listActions,
         scriptActions,
         insertTools,
