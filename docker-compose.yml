@@ -15,7 +15,8 @@ x-studio-environment:
     CELERY_RESULT_BACKEND_ENDPOINT: redis
     CELERY_REDIS_PASSWORD: ""
     REMAP_SIGTERM: "SIGQUIT"
-    PROBER_STUDIO_BASE_URL: http://studio-app:8080/{path}
+    PROBER_STUDIO_BASE_URL: http://studio-app:8081/{path}
+    WEBPACK_DEV_HOST: 0.0.0.0
 
 x-studio-worker:
   &studio-worker
@@ -37,10 +38,7 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.nginx.prod
-    ports:
-      - "8081:8080"
-    depends_on:
-      - studio-app
+    network_mode: host
     environment: *studio-environment
 
   studio-app:
@@ -48,7 +46,7 @@ services:
     entrypoint: python docker/studio-dev/entrypoint.py
     command: pnpm run devserver
     ports:
-      - "8080:8080"
+      - "8081:8081"
       - "4000:4000"
 
   celery-worker:
