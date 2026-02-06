@@ -5,9 +5,13 @@
     data-testid="studio-banner"
     :style="{
       backgroundColor: error ? $themePalette.red.v_100 : '',
-      color: error ? $themeTokens.error : '',
     }"
   >
+    <KIcon
+      v-if="error"
+      class="icon"
+      icon="error"
+    />
     <slot>
       {{ text }}
     </slot>
@@ -34,7 +38,16 @@
 <style lang="scss" scoped>
 
   .banner {
-    padding: 16px;
+    display: flex;
+    gap: 16px;
+    padding: 12px 16px;
+  }
+
+  .icon {
+    position: relative;
+    top: -1px;
+    flex-shrink: 0;
+    font-size: 18px;
   }
 
 </style>
