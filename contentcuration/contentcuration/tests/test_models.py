@@ -555,10 +555,6 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
         self.assertNotEqual(copied_node_old_content_id, copied_node.content_id)
 
 
-@mock.patch(
-    "contentcuration.tasks.ensure_versioned_database_exists_task.fetch_or_enqueue",
-    return_value=None,
-)
 class CommunityLibrarySubmissionTestCase(
     EagerTasksTestMixin, PermissionQuerysetTestCase
 ):
@@ -566,7 +562,7 @@ class CommunityLibrarySubmissionTestCase(
     def base_queryset(self):
         return CommunityLibrarySubmission.objects.all()
 
-    def test_create_submission(self, mock_ensure_db_exists_task_fetch_or_enqueue):
+    def test_create_submission(self):
         # Smoke test
         channel = testdata.channel()
         author = testdata.user()
@@ -589,33 +585,27 @@ class CommunityLibrarySubmissionTestCase(
         submission.full_clean()
         submission.save()
 
-    def test_save__author_not_editor(self, mock_ensure_db_exists):
+    def test_save__author_not_editor(self):
         submission = testdata.community_library_submission()
         user = testdata.user("some@email.com")
         submission.author = user
         with self.assertRaises(ValidationError):
             submission.save()
 
-    def test_save__nonpositive_channel_version(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_save__nonpositive_channel_version(self):
         submission = testdata.community_library_submission()
         submission.channel_version = 0
         with self.assertRaises(ValidationError):
             submission.save()
 
-    def test_save__matching_channel_version(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_save__matching_channel_version(self):
         submission = testdata.community_library_submission()
         submission.channel.version = 5
         submission.channel.save()
         submission.channel_version = 5
         submission.save()
 
-    def test_save__impossibly_high_channel_version(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_save__impossibly_high_channel_version(self):
         submission = testdata.community_library_submission()
         submission.channel.version = 5
         submission.channel.save()
@@ -623,31 +613,7 @@ class CommunityLibrarySubmissionTestCase(
         with self.assertRaises(ValidationError):
             submission.save()
 
-    def test_save__ensure_versioned_database_exists_on_create(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
-        submission = testdata.community_library_submission()
-
-        mock_ensure_db_exists_task_fetch_or_enqueue.assert_called_once_with(
-            user=submission.author,
-            channel_id=submission.channel.id,
-            channel_version=submission.channel.version,
-        )
-
-    def test_save__dont_ensure_versioned_database_exists_on_update(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
-        submission = testdata.community_library_submission()
-        mock_ensure_db_exists_task_fetch_or_enqueue.reset_mock()
-
-        submission.description = "Updated description"
-        submission.save()
-
-        mock_ensure_db_exists_task_fetch_or_enqueue.assert_not_called()
-
-    def test_filter_view_queryset__anonymous(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_filter_view_queryset__anonymous(self):
         _ = testdata.community_library_submission()
 
         queryset = CommunityLibrarySubmission.filter_view_queryset(
@@ -655,9 +621,7 @@ class CommunityLibrarySubmissionTestCase(
         )
         self.assertFalse(queryset.exists())
 
-    def test_filter_view_queryset__forbidden_user(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_filter_view_queryset__forbidden_user(self):
         _ = testdata.community_library_submission()
 
         queryset = CommunityLibrarySubmission.filter_view_queryset(
@@ -665,9 +629,7 @@ class CommunityLibrarySubmissionTestCase(
         )
         self.assertFalse(queryset.exists())
 
-    def test_filter_view_queryset__channel_editor(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_filter_view_queryset__channel_editor(self):
         submission_a = testdata.community_library_submission()
         submission_b = testdata.community_library_submission()
 
@@ -681,9 +643,7 @@ class CommunityLibrarySubmissionTestCase(
         self.assertQuerysetContains(queryset, pk=submission_a.id)
         self.assertQuerysetDoesNotContain(queryset, pk=submission_b.id)
 
-    def test_filter_view_queryset__admin(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_filter_view_queryset__admin(self):
         submission_a = testdata.community_library_submission()
 
         queryset = CommunityLibrarySubmission.filter_view_queryset(
@@ -691,9 +651,7 @@ class CommunityLibrarySubmissionTestCase(
         )
         self.assertQuerysetContains(queryset, pk=submission_a.id)
 
-    def test_filter_edit_queryset__anonymous(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_filter_edit_queryset__anonymous(self):
         _ = testdata.community_library_submission()
 
         queryset = CommunityLibrarySubmission.filter_edit_queryset(
@@ -701,9 +659,7 @@ class CommunityLibrarySubmissionTestCase(
         )
         self.assertFalse(queryset.exists())
 
-    def test_filter_edit_queryset__forbidden_user(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_filter_edit_queryset__forbidden_user(self):
         _ = testdata.community_library_submission()
 
         queryset = CommunityLibrarySubmission.filter_edit_queryset(
@@ -711,9 +667,7 @@ class CommunityLibrarySubmissionTestCase(
         )
         self.assertFalse(queryset.exists())
 
-    def test_filter_edit_queryset__channel_editor(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_filter_edit_queryset__channel_editor(self):
         submission = testdata.community_library_submission()
 
         user = testdata.user()
@@ -725,9 +679,7 @@ class CommunityLibrarySubmissionTestCase(
         )
         self.assertFalse(queryset.exists())
 
-    def test_filter_edit_queryset__author(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_filter_edit_queryset__author(self):
         submission_a = testdata.community_library_submission()
         submission_b = testdata.community_library_submission()
 
@@ -737,9 +689,7 @@ class CommunityLibrarySubmissionTestCase(
         self.assertQuerysetContains(queryset, pk=submission_a.id)
         self.assertQuerysetDoesNotContain(queryset, pk=submission_b.id)
 
-    def test_filter_edit_queryset__admin(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_filter_edit_queryset__admin(self):
         submission_a = testdata.community_library_submission()
 
         queryset = CommunityLibrarySubmission.filter_edit_queryset(
@@ -747,7 +697,7 @@ class CommunityLibrarySubmissionTestCase(
         )
         self.assertQuerysetContains(queryset, pk=submission_a.id)
 
-    def test_mark_live(self, mock_ensure_db_exists_task_fetch_or_enqueue):
+    def test_mark_live(self):
         submission_a = testdata.community_library_submission()
         submission_b = testdata.community_library_submission()
 
@@ -783,9 +733,7 @@ class CommunityLibrarySubmissionTestCase(
             community_library_submission.STATUS_LIVE,
         )
 
-    def test_cannot_create_multiple_submissions_same_channel_same_version(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_cannot_create_multiple_submissions_same_channel_same_version(self):
         from django.db import IntegrityError, transaction
 
         channel = testdata.channel()
@@ -825,9 +773,7 @@ class CommunityLibrarySubmissionTestCase(
         self.assertEqual(submission1.channel, channel)
         self.assertEqual(submission1.channel_version, 1)
 
-    def test_can_create_submission_for_new_version_when_previous_pending(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_can_create_submission_for_new_version_when_previous_pending(self):
         channel = testdata.channel()
         author = testdata.user()
         channel.editors.add(author)
