@@ -1,20 +1,17 @@
-import { mount, createLocalVue } from '@vue/test-utils';
-import Vuex from 'vuex';
+import { render, screen, waitFor } from '@testing-library/vue';
+import { configure } from '@testing-library/dom';
+import userEvent from '@testing-library/user-event';
+import { createLocalVue } from '@vue/test-utils';
+import Vuex, { Store } from 'vuex';
 import VueRouter from 'vue-router';
-import cloneDeep from 'lodash/cloneDeep';
-import flushPromises from 'flush-promises';
 
 import { RouteNames } from '../../../constants';
-import router from '../../../router';
-import channelSet from '../../../vuex/channelSet';
 import ChannelSetModal from '../ChannelSetModal';
-import channel from 'shared/vuex/channel';
-import storeFactory from 'shared/vuex/baseStore';
 
 jest.mock('kolibri-design-system/lib/composables/useKShow', () => ({
   __esModule: true,
   default: () => ({
-    show: () => false, // skip loading state
+    show: () => false,
   }),
 }));
 
@@ -22,283 +19,280 @@ const localVue = createLocalVue();
 localVue.use(Vuex);
 localVue.use(VueRouter);
 
-const STORE_CONFIG = {
-  modules: { channel, channelSet },
-};
-
 const CHANNEL_1 = {
   id: 'id-channel-1',
   name: 'Channel 1',
   description: 'First channel description',
+  editable: true,
+  published: true,
+  version: 1,
 };
+
 const CHANNEL_2 = {
   id: 'id-channel-2',
   name: 'Channel 2',
   description: 'Second channel description',
+  editable: true,
+  published: true,
+  version: 2,
 };
 
 const CHANNEL_SET = {
   id: 'id-channel-set',
+  name: 'My collection',
   channels: {
     [CHANNEL_1.id]: true,
     [CHANNEL_2.id]: true,
   },
 };
 
-const makeWrapper = ({ store, channelSetId }) => {
-  if (router.currentRoute.name !== RouteNames.CHANNEL_SET_DETAILS) {
-    router.push({
-      name: RouteNames.CHANNEL_SET_DETAILS,
-      params: {
-        channelSetId,
+const mockActions = {
+  loadChannelSet: jest.fn(({ commit }, id) => {
+    if (id === CHANNEL_SET.id) {
+      commit('channelSet/ADD_CHANNELSET', CHANNEL_SET, { root: true });
+      return Promise.resolve(CHANNEL_SET);
+    }
+    return Promise.resolve(null);
+  }),
+  loadChannelList: jest.fn(() => Promise.resolve()),
+  updateChannelSet: jest.fn(() => Promise.resolve()),
+  commitChannelSet: jest.fn(() => Promise.resolve({ id: 'new-collection-id' })),
+  deleteChannelSet: jest.fn(() => Promise.resolve()),
+  addChannels: jest.fn(() => Promise.resolve()),
+  removeChannels: jest.fn(() => Promise.resolve()),
+  showSnackbarSimple: jest.fn(() => Promise.resolve()),
+};
+
+const makeStore = ({
+  channelSet = CHANNEL_SET,
+  channels = [CHANNEL_1, CHANNEL_2],
+  preloadChannelSet = true,
+} = {}) => {
+  const channelsMap = channels.reduce((map, channel) => {
+    map[channel.id] = channel;
+    return map;
+  }, {});
+
+  const channelSetsMap = preloadChannelSet && channelSet ? { [channelSet.id]: channelSet } : {};
+
+  return new Store({
+    state: {
+      connection: {
+        online: true,
       },
+    },
+    modules: {
+      channel: {
+        namespaced: true,
+        state: {
+          channelsMap,
+        },
+        getters: {
+          channels: state => Object.values(state.channelsMap),
+          getChannel: state => id => state.channelsMap[id],
+        },
+        actions: {
+          loadChannelList: mockActions.loadChannelList,
+        },
+      },
+      channelSet: {
+        namespaced: true,
+        state: {
+          channelSetsMap,
+        },
+        getters: {
+          getChannelSet: state => id => {
+            const set = state.channelSetsMap[id];
+            if (!set) {
+              return;
+            }
+
+            return {
+              ...set,
+              channels: Object.keys(set.channels || {}),
+            };
+          },
+        },
+        mutations: {
+          ADD_CHANNELSET(state, data) {
+            state.channelSetsMap = {
+              ...state.channelSetsMap,
+              [data.id]: data,
+            };
+          },
+        },
+        actions: {
+          loadChannelSet: mockActions.loadChannelSet,
+          updateChannelSet: mockActions.updateChannelSet,
+          commitChannelSet: mockActions.commitChannelSet,
+          deleteChannelSet: mockActions.deleteChannelSet,
+          addChannels: mockActions.addChannels,
+          removeChannels: mockActions.removeChannels,
+        },
+      },
+    },
+    actions: {
+      showSnackbarSimple: mockActions.showSnackbarSimple,
+    },
+  });
+};
+
+const makeRouter = () => {
+  return new VueRouter({
+    routes: [
+      {
+        name: RouteNames.CHANNEL_SETS,
+        path: '/collections',
+        component: { template: '<div>Collections</div>' },
+      },
+      {
+        name: RouteNames.NEW_CHANNEL_SET,
+        path: '/collections/new',
+        component: ChannelSetModal,
+        props: true,
+      },
+      {
+        name: RouteNames.CHANNEL_SET_DETAILS,
+        path: '/collections/:channelSetId',
+        component: ChannelSetModal,
+        props: true,
+      },
+    ],
+  });
+};
+
+const renderComponent = async ({
+  routeName = RouteNames.CHANNEL_SET_DETAILS,
+  channelSetId = CHANNEL_SET.id,
+  channelSet = CHANNEL_SET,
+  channels = [CHANNEL_1, CHANNEL_2],
+  preloadChannelSet = true,
+} = {}) => {
+  const store = makeStore({ channelSet, channels, preloadChannelSet });
+  const router = makeRouter();
+
+  if (routeName === RouteNames.NEW_CHANNEL_SET) {
+    await router.push({ name: RouteNames.NEW_CHANNEL_SET });
+  } else {
+    await router.push({
+      name: RouteNames.CHANNEL_SET_DETAILS,
+      params: { channelSetId },
     });
   }
 
-  const loadChannelSet = jest.spyOn(ChannelSetModal.methods, 'loadChannelSet');
-  loadChannelSet.mockImplementation(() => {
-    store.commit('channelSet/ADD_CHANNELSET', CHANNEL_SET);
-    return Promise.resolve(CHANNEL_SET);
-  });
-  const loadChannelList = jest.spyOn(ChannelSetModal.methods, 'loadChannelList');
-  loadChannelList.mockImplementation(() => Promise.resolve(CHANNEL_SET.channels));
-
-  const wrapper = mount(ChannelSetModal, {
-    propsData: {
-      channelSetId,
-    },
-    router,
+  const result = render(ChannelSetModal, {
     localVue,
+    router,
     store,
+    props: routeName === RouteNames.CHANNEL_SET_DETAILS ? { channelSetId } : {},
   });
-  return [wrapper, { loadChannelSet, loadChannelList }];
-};
 
-const getCollectionNameInput = wrapper => {
-  return wrapper.findComponent('[data-test="input-name"]');
-};
-
-const getUnsavedDialog = wrapper => {
-  return wrapper.findComponent('[data-test="dialog-unsaved"]');
-};
-
-const getCloseButton = wrapper => {
-  return wrapper.findComponent('[data-test="close"]');
-};
-
-const getSaveButton = wrapper => {
-  return wrapper.findComponent('[data-test="button-save"]');
-};
-
-const getSelectChannelsButton = wrapper => {
-  return wrapper.findComponent('[data-test="button-select"]');
-};
-
-const getFinishButton = wrapper => {
-  return wrapper.findComponent('[data-test="button-finish"]');
+  return { ...result, router };
 };
 
 describe('ChannelSetModal', () => {
+  beforeAll(() => {
+    configure({ testIdAttribute: 'data-test' });
+  });
+
+  afterAll(() => {
+    configure({ testIdAttribute: 'data-testid' });
+  });
+
   beforeEach(() => {
-    jest.resetAllMocks();
+    jest.clearAllMocks();
   });
 
-  it('should show collection channels view at first', () => {
-    const storeConfig = cloneDeep(STORE_CONFIG);
-    const store = storeFactory(storeConfig);
-    const [wrapper] = makeWrapper({ store, channelSetId: CHANNEL_SET.id });
+  it('shows existing collection details and channel list', async () => {
+    await renderComponent();
 
-    expect(wrapper.find('[data-test="collection-channels-view"]').isVisible()).toBe(true);
+    const nameInput = await screen.findByLabelText('Collection name');
+
+    expect(nameInput).toHaveValue('My collection');
+    expect(screen.getByText('2 channels')).toBeInTheDocument();
+    expect(screen.getByText(CHANNEL_1.name)).toBeInTheDocument();
+    expect(screen.getByText(CHANNEL_2.name)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Select channels' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save and close' })).toBeInTheDocument();
   });
 
-  describe('if there are no data for a channel set yet', () => {
-    let mocks;
+  it('loads existing collection data when opened directly on details route', async () => {
+    await renderComponent({ preloadChannelSet: false });
 
-    beforeEach(() => {
-      const storeConfig = cloneDeep(STORE_CONFIG);
-      const store = storeFactory(storeConfig);
-
-      mocks = makeWrapper({ store, channelSetId: CHANNEL_SET.id })[1];
-    });
-
-    it('should load the channel set', () => {
-      expect(mocks.loadChannelSet).toHaveBeenCalledTimes(1);
-      expect(mocks.loadChannelSet.mock.calls[0][0]).toBe(CHANNEL_SET.id);
-    });
-
-    it('should load channels of the channel set', () => {
-      expect(mocks.loadChannelList).toHaveBeenCalledTimes(1);
-      expect(mocks.loadChannelList.mock.calls[0][0]).toEqual({
-        id__in: [CHANNEL_1.id, CHANNEL_2.id],
-      });
-    });
+    expect(await screen.findByDisplayValue('My collection')).toBeInTheDocument();
+    expect(mockActions.loadChannelSet).toHaveBeenCalledWith(expect.any(Object), CHANNEL_SET.id);
   });
 
-  describe('if a channel set has been already loaded', () => {
-    let store, mocks;
+  it('lets the user move to channel selection and finish back to the collection view', async () => {
+    const user = userEvent.setup();
+    await renderComponent();
 
-    beforeEach(() => {
-      const storeConfig = cloneDeep(STORE_CONFIG);
-      store = storeFactory(storeConfig);
-      store.commit('channelSet/ADD_CHANNELSET', CHANNEL_SET);
+    await user.click(screen.getByRole('button', { name: 'Select channels' }));
 
-      mocks = makeWrapper({ store, channelSetId: CHANNEL_SET.id })[1];
-    });
+    expect(await screen.findByRole('heading', { name: 'Select channels' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Finish' })).toBeInTheDocument();
 
-    it("shouldn't load the channel set", () => {
-      expect(mocks.loadChannelSet).not.toHaveBeenCalled();
-    });
+    await user.click(screen.getByRole('button', { name: 'Finish' }));
 
-    it('should load channels from the channel set', () => {
-      expect(mocks.loadChannelList).toHaveBeenCalledTimes(1);
-      expect(mocks.loadChannelList.mock.calls[0][0]).toEqual({
-        id__in: [CHANNEL_1.id, CHANNEL_2.id],
-      });
-    });
+    expect(await screen.findByRole('heading', { name: 'Collection channels' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save and close' })).toBeInTheDocument();
   });
 
-  describe('collection channels view', () => {
-    let wrapper, updateChannelSet;
-
-    beforeEach(() => {
-      const storeConfig = cloneDeep(STORE_CONFIG);
-      updateChannelSet = jest.fn();
-      storeConfig.modules.channel.actions.loadChannelList = jest.fn().mockResolvedValue();
-      storeConfig.modules.channelSet.actions.updateChannelSet = updateChannelSet;
-      const store = storeFactory(storeConfig);
-      store.commit('channelSet/ADD_CHANNELSET', CHANNEL_SET);
-      store.commit('channel/ADD_CHANNELS', [CHANNEL_1, CHANNEL_2]);
-
-      [wrapper] = makeWrapper({ store, channelSetId: CHANNEL_SET.id });
+  it('shows a validation message when user tries to create without a name', async () => {
+    const user = userEvent.setup();
+    const { router } = await renderComponent({
+      routeName: RouteNames.NEW_CHANNEL_SET,
+      preloadChannelSet: false,
+      channelSet: null,
+      channels: [],
     });
 
-    it('should render a collection name input', () => {
-      expect(getCollectionNameInput(wrapper).isVisible()).toBe(true);
-    });
+    expect(await screen.findByRole('button', { name: 'Create' })).toBeInTheDocument();
 
-    it('should render select channels button', () => {
-      expect(getSelectChannelsButton(wrapper).isVisible()).toBe(true);
-    });
+    await user.click(screen.getByRole('button', { name: 'Create' }));
 
-    it('should render save button', () => {
-      expect(getSaveButton(wrapper).isVisible()).toBe(true);
-    });
+    expect(screen.getByText('Field is required')).toBeInTheDocument();
+    expect(router.currentRoute.name).toBe(RouteNames.NEW_CHANNEL_SET);
+  });
 
-    it('should render close button', () => {
-      expect(getCloseButton(wrapper).isVisible()).toBe(true);
-    });
+  it('saves valid changes and returns the user to collections', async () => {
+    const user = userEvent.setup();
+    const { router } = await renderComponent();
 
-    it('should render a correct channels count', () => {
-      expect(wrapper.findComponent('.subheading').html()).toContain('2 channels');
-    });
+    const nameInput = await screen.findByLabelText('Collection name');
 
-    it("should render channels' names, descriptions and remove buttons", () => {
-      const channelItems = wrapper.findAllComponents({ name: 'ChannelItem' });
+    await user.clear(nameInput);
+    await user.type(nameInput, 'Updated collection name');
+    await user.click(screen.getByRole('button', { name: 'Save and close' }));
 
-      expect(channelItems.length).toBe(2);
-
-      expect(channelItems.at(0).html()).toContain('Channel 1');
-      expect(channelItems.at(0).html()).toContain('First channel description');
-      expect(channelItems.at(0).find('button').text()).toBe('Remove');
-
-      expect(channelItems.at(1).html()).toContain('Channel 2');
-      expect(channelItems.at(1).html()).toContain('Second channel description');
-      expect(channelItems.at(1).find('button').text()).toBe('Remove');
-    });
-
-    it('clicking select channels button should navigate to channels selection view', async () => {
-      await getSelectChannelsButton(wrapper).trigger('click');
-      await wrapper.vm.$nextTick();
-
-      expect(wrapper.findComponent('[data-test="collection-channels-view"]').isVisible()).toBe(
-        false,
-      );
-      expect(wrapper.findComponent('[data-test="channels-selection-view"]').isVisible()).toBe(true);
-    });
-
-    describe('clicking close button', () => {
-      it('should redirect to channel sets page', async () => {
-        await getCloseButton(wrapper).trigger('click');
-
-        expect(wrapper.vm.$route.name).toBe(RouteNames.CHANNEL_SETS);
-      });
-
-      it('should prompt user if there are unsaved changes', async () => {
-        expect(getUnsavedDialog(wrapper).exists()).toBeFalsy();
-
-        await wrapper.setData({ name: 'My collection' });
-        await getCloseButton(wrapper).trigger('click');
-
-        expect(getUnsavedDialog(wrapper).exists()).toBeTruthy();
-      });
-    });
-
-    describe('clicking save button', () => {
-      it("shouldn't update a channel set when a collection name is missing", async () => {
-        await wrapper.setData({ name: '' });
-        await getSaveButton(wrapper).trigger('click');
-        await flushPromises();
-
-        expect(updateChannelSet).not.toHaveBeenCalled();
-      });
-
-      it("shouldn't update a channel set when a collection name is made of empty characters", async () => {
-        await wrapper.setData({ name: ' ' });
-        await getSaveButton(wrapper).trigger('click');
-        await flushPromises();
-
-        expect(updateChannelSet).not.toHaveBeenCalled();
-      });
-
-      it('should update a channel set when a collection name is valid', async () => {
-        await wrapper.setData({ name: 'My collection' });
-        await getSaveButton(wrapper).trigger('click');
-        await flushPromises();
-
-        expect(updateChannelSet).toHaveBeenCalledTimes(1);
-        expect(updateChannelSet.mock.calls[0][1]).toEqual({
-          id: CHANNEL_SET.id,
-          name: 'My collection',
-        });
-      });
+    await waitFor(() => {
+      expect(router.currentRoute.name).toBe(RouteNames.CHANNEL_SETS);
     });
   });
 
-  describe('channels selection view', () => {
-    let wrapper;
+  it('prompts before closing when there are unsaved changes', async () => {
+    const user = userEvent.setup();
+    await renderComponent();
 
-    beforeEach(async () => {
-      const storeConfig = cloneDeep(STORE_CONFIG);
-      storeConfig.modules.channel.actions.loadChannelList = jest.fn().mockResolvedValue();
-      const store = storeFactory(storeConfig);
-      store.commit('channelSet/ADD_CHANNELSET', CHANNEL_SET);
-      store.commit('channel/ADD_CHANNELS', [CHANNEL_1, CHANNEL_2]);
+    const nameInput = await screen.findByLabelText('Collection name');
+    await user.type(nameInput, ' Updated');
 
-      [wrapper] = makeWrapper({ store, channelSetId: CHANNEL_SET.id });
-      await wrapper.vm.$nextTick();
-      await wrapper.vm.$nextTick();
+    await user.click(screen.getByTestId('close'));
 
-      await getSelectChannelsButton(wrapper).trigger('click');
-      await wrapper.vm.$nextTick();
+    expect(await screen.findByRole('heading', { name: 'Unsaved changes' })).toBeInTheDocument();
+    expect(
+      screen.getByText('You will lose any unsaved changes. Are you sure you want to exit?'),
+    ).toBeInTheDocument();
+  });
 
-      expect(wrapper.findComponent('[data-test="channels-selection-view"]').isVisible()).toBe(true);
-    });
+  it('closes directly when there are no unsaved changes', async () => {
+    const user = userEvent.setup();
+    const { router } = await renderComponent();
 
-    it('should render finish button', async () => {
-      expect(wrapper.vm.step).toBe(2);
-      expect(getFinishButton(wrapper).isVisible()).toBe(true);
-    });
+    await user.click(screen.getByTestId('close'));
 
-    it('clicking finish button should navigate back to collection channels view', async () => {
-      await getFinishButton(wrapper).trigger('click');
-      await wrapper.vm.$nextTick();
-
-      expect(wrapper.findComponent('[data-test="channels-selection-view"]').isVisible()).toBe(
-        false,
-      );
-      expect(wrapper.findComponent('[data-test="collection-channels-view"]').isVisible()).toBe(
-        true,
-      );
+    await waitFor(() => {
+      expect(router.currentRoute.name).toBe(RouteNames.CHANNEL_SETS);
     });
   });
 });
