@@ -12,11 +12,11 @@
       @keydown.enter="handleClick"
     >
       <slot>
-        <KIconButton
+        <KIcon
           v-if="icon"
-          :disabled="true"
           :icon="icon"
           :color="optionIconColor"
+          class="menu-icon"
         />
         <span
           v-if="label"
@@ -55,7 +55,7 @@
         return {
           color: this.$themeTokens.text,
           ':hover': {
-            backgroundColor: 'rgba(0, 0, 0, 0.048)',
+            backgroundColor: this.$themePalette.grey.v_200,
           },
           ':focus': this.$coreOutline,
         };
@@ -84,9 +84,9 @@
 
   .studio-navigation-option {
     display: flex;
-    gap: 16px;
     align-items: center;
-    padding: 0 16px;
+    padding: 8px;
+    margin: 4px 8px;
     font-size: 16px;
     text-decoration: none;
     cursor: pointer;
@@ -99,9 +99,12 @@
     }
   }
 
+  .menu-icon {
+    margin-right: 16px;
+  }
+
   .option-label {
     flex: 1;
-    padding: 12px 0;
   }
 
 </style>

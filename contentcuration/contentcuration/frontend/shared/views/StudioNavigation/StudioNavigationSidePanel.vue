@@ -22,14 +22,14 @@
     <template #default>
       <div class="navigation-menu-content">
         <nav class="navigation-menu-nav">
-          <StudioNavigationOption
+          <StudioSideNavOption
             :label="$tr('channels')"
             :link="channelsLink"
             icon="home"
             @click="handleOptionClick"
           />
 
-          <StudioNavigationOption
+          <StudioSideNavOption
             v-if="user && user.is_admin"
             :label="$tr('administration')"
             :link="administrationLink"
@@ -37,26 +37,26 @@
             @click="handleOptionClick"
           />
 
-          <StudioNavigationOption
+          <StudioSideNavOption
             :label="$tr('settings')"
             :link="settingsLink"
             icon="settings"
             @click="handleOptionClick"
           />
 
-          <StudioNavigationOption
+          <StudioSideNavOption
             :label="$tr('changeLanguage')"
             icon="language"
             @select="handleLanguageChange"
           />
 
-          <StudioNavigationOption
+          <StudioSideNavOption
             :label="$tr('help')"
             icon="openNewTab"
             @select="handleHelp"
           />
 
-          <StudioNavigationOption
+          <StudioSideNavOption
             :label="$tr('signOut')"
             icon="logout"
             @select="handleLogout"
@@ -98,13 +98,13 @@
 
   import { mapState } from 'vuex';
   import SidePanelModal from '../SidePanelModal';
-  import StudioNavigationOption from './StudioNavigationOption.vue';
+  import StudioSideNavOption from './StudioSideNavOption.vue';
 
   export default {
     name: 'StudioNavigationSidePanel',
     components: {
       SidePanelModal,
-      StudioNavigationOption,
+      StudioSideNavOption,
     },
     props: {
       isOpen: {
@@ -174,7 +174,7 @@
   .navigation-menu-header {
     display: flex;
     align-items: center;
-    height: 63.2px;
+    height: 56px;
     padding-right: 74px;
   }
 
@@ -191,7 +191,7 @@
   }
 
   .navigation-menu-nav {
-    padding: 8px 0;
+    padding: 8px 12px;
   }
 
   .navigation-menu-footer {
