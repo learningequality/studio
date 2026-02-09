@@ -21,46 +21,48 @@
 
     <template #default>
       <div class="navigation-menu-content">
-        <nav class="navigation-menu-nav">
-          <StudioSideNavOption
-            :label="$tr('channels')"
-            :link="channelsLink"
-            icon="home"
-            @click="handleOptionClick"
-          />
+        <nav>
+          <ul class="navigation-menu-nav">
+            <StudioSideNavOption
+              :label="$tr('channels')"
+              :link="channelsLink"
+              icon="home"
+              @click="handleOptionClick"
+            />
 
-          <StudioSideNavOption
-            v-if="user && user.is_admin"
-            :label="$tr('administration')"
-            :link="administrationLink"
-            icon="people"
-            @click="handleOptionClick"
-          />
+            <StudioSideNavOption
+              v-if="user && user.is_admin"
+              :label="$tr('administration')"
+              :link="administrationLink"
+              icon="people"
+              @click="handleOptionClick"
+            />
 
-          <StudioSideNavOption
-            :label="$tr('settings')"
-            :link="settingsLink"
-            icon="settings"
-            @click="handleOptionClick"
-          />
+            <StudioSideNavOption
+              :label="$tr('settings')"
+              :link="settingsLink"
+              icon="settings"
+              @click="handleOptionClick"
+            />
 
-          <StudioSideNavOption
-            :label="$tr('changeLanguage')"
-            icon="language"
-            @select="handleLanguageChange"
-          />
+            <StudioSideNavOption
+              :label="$tr('changeLanguage')"
+              icon="language"
+              @select="handleLanguageChange"
+            />
 
-          <StudioSideNavOption
-            :label="$tr('help')"
-            icon="openNewTab"
-            @select="handleHelp"
-          />
+            <StudioSideNavOption
+              :label="$tr('help')"
+              icon="openNewTab"
+              @select="handleHelp"
+            />
 
-          <StudioSideNavOption
-            :label="$tr('signOut')"
-            icon="logout"
-            @select="handleLogout"
-          />
+            <StudioSideNavOption
+              :label="$tr('signOut')"
+              icon="logout"
+              @select="handleLogout"
+            />
+          </ul>
         </nav>
 
         <div class="navigation-menu-footer">
@@ -192,6 +194,8 @@
 
   .navigation-menu-nav {
     padding: 8px 12px;
+    margin: 0;
+    list-style: none;
   }
 
   .navigation-menu-footer {
