@@ -62,7 +62,7 @@
           >
             <template v-if="loggedIn">
               <button
-                class="studio-navigation-dropdown"
+                class="studio-navigation-dropdown-button"
                 :aria-label="$tr('userMenuLabel')"
                 :class="
                   $computedClass({
@@ -92,7 +92,7 @@
 
             <template v-else>
               <button
-                class="studio-navigation-dropdown"
+                class="studio-navigation-dropdown-button"
                 :aria-label="$tr('guestMenuLabel')"
                 :class="
                   $computedClass({
@@ -289,6 +289,8 @@
             label: this.$tr('help'),
             value: MenuOptions.HELP,
             icon: 'openNewTab',
+            href: this.helpLink,
+            target: '_blank',
           },
           {
             label: this.$tr('signOut'),
@@ -377,7 +379,6 @@
             hiddenLinks.push({
               label: tab.label,
               value: tab.to,
-              // Update: Pass the analytics label here to avoid lookup later
               analyticsLabel: tab.analyticsLabel,
             });
           }
@@ -422,7 +423,6 @@
             break;
           case MenuOptions.HELP:
             this.trackClick('Help');
-            window.open(this.helpLink, '_blank');
             break;
           case MenuOptions.LOGOUT:
             this.logout();
@@ -481,7 +481,7 @@
   .studio-navigation {
     top: 0;
     z-index: 5;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.42);
+    @extend %dropshadow-2dp;
   }
 
   .studio-navigation-logo-link {
@@ -539,7 +539,7 @@
     background-color: inherit;
   }
 
-  .studio-navigation-dropdown {
+  .studio-navigation-dropdown-button {
     display: flex;
     align-items: center;
     height: 40px;
