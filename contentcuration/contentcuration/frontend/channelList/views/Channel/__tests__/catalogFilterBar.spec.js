@@ -16,9 +16,7 @@ const query = {
 async function closeChipByText(user, text) {
   const chip = await screen.findByText(text);
 
-  const closeButton = chip
-    .closest('[data-test^="filter-chip"]')
-    .querySelector('.v-chip__close');
+  const closeButton = chip.closest('[data-test^="filter-chip"]').querySelector('.v-chip__close');
 
   await user.click(closeButton);
 }
