@@ -15,3 +15,7 @@ class FeatureFlagsTestCase(SimpleTestCase):
     def test_validate__nonexistent(self):
         with self.assertRaises(ValidationError):
             feature_flags.validate({"does_not_exist": True})
+
+    def test_validate__ai_feature_rejected(self):
+        with self.assertRaises(ValidationError):
+            feature_flags.validate({"ai_feature": True})
