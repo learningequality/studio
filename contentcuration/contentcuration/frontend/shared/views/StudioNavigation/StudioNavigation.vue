@@ -168,96 +168,13 @@
       </div>
     </nav>
 
-    <SidePanelModal
-      v-if="loggedIn && sidePanelOpen"
-      alignment="left"
-      sidePanelWidth="300px"
-      :aria-label="$tr('navigationMenu')"
-      closeButtonIconType="close"
-      closeButtonPosition="left"
-      immersive
-      fixedWidth
-      @closePanel="sidePanelOpen = false"
-    >
-      <template #header>
-        <div class="navigation-menu-header">
-          <span class="navigation-menu-title">
-            {{ $tr('title') }}
-          </span>
-        </div>
-      </template>
-
-      <template #default>
-        <div class="navigation-menu-content">
-          <nav class="navigation-menu-nav">
-            <StudioNavigationOption
-              :label="$tr('channels')"
-              :link="channelsLink"
-              icon="home"
-              @click="sidePanelOpen = false"
-            />
-
-            <StudioNavigationOption
-              v-if="user && user.is_admin"
-              :label="$tr('administration')"
-              :link="administrationLink"
-              icon="people"
-              @click="sidePanelOpen = false"
-            />
-
-            <StudioNavigationOption
-              :label="$tr('settings')"
-              :link="settingsLink"
-              icon="settings"
-              @click="sidePanelOpen = false"
-            />
-
-            <StudioNavigationOption
-              :label="$tr('changeLanguage')"
-              icon="language"
-              @select="openLanguageModal"
-            />
-
-            <StudioNavigationOption
-              :label="$tr('help')"
-              icon="openNewTab"
-              @select="navigateToHelp"
-            />
-
-            <StudioNavigationOption
-              :label="$tr('signOut')"
-              icon="logout"
-              @select="handleLogout"
-            />
-          </nav>
-
-          <div class="navigation-menu-footer">
-            <div>
-              <KLogo
-                altText="Kolibri logo"
-                :showBackground="true"
-                :size="88"
-              />
-            </div>
-
-            <KExternalLink
-              :href="copyrightLink"
-              class="navigation-menu-copyright"
-              :text="$tr('copyright', { year: new Date().getFullYear() })"
-              openInNewTab
-              @click.native="sidePanelOpen = false"
-            />
-
-            <KExternalLink
-              href="https://community.learningequality.org/c/support/studio"
-              openInNewTab
-              :text="$tr('giveFeedback')"
-              @click.native="sidePanelOpen = false"
-            />
-          </div>
-        </div>
-      </template>
-    </SidePanelModal>
+    <StudioNavigationSidePanel
+      v-if="loggedIn"
+      :isOpen="sidePanelOpen"
+      @close="sidePanelOpen = false"
+      @openLanguageModal="showLanguageModal = true"
+      @logout="logout"
+    />
     <LanguageSwitcherModal
       v-if="showLanguageModal"
       :style="{ color: $themeTokens.text }"
@@ -273,16 +190,15 @@
   import { mapActions, mapState, mapGetters } from 'vuex';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import LanguageSwitcherModal from '../../languageSwitcher/LanguageSwitcherModal.vue';
-  import SidePanelModal from '../SidePanelModal';
   import SkipNavigationLink from './SkipNavigationLink.vue';
-  import StudioNavigationOption from './StudioNavigationOption.vue';
+
   import StudioNavigationTab from './StudioNavigationTab.vue';
+  import StudioNavigationSidePanel from './StudioNavigationSidePanel.vue';
 
   export default {
     name: 'StudioNavigation',
     components: {
-      SidePanelModal,
-      StudioNavigationOption,
+      StudioNavigationSidePanel,
       SkipNavigationLink,
       LanguageSwitcherModal,
       StudioNavigationTab,
@@ -324,9 +240,6 @@
       homeLink() {
         return window.Urls?.channels() || '/';
       },
-      channelsLink() {
-        return window.Urls?.channels() || '/channels';
-      },
       administrationLink() {
         return window.Urls?.administration() || '/administration';
       },
@@ -335,9 +248,6 @@
       },
       helpLink() {
         return 'https://kolibri-studio.readthedocs.io/en/latest/index.html';
-      },
-      copyrightLink() {
-        return 'https://learningequality.org/';
       },
       containerStyles() {
         return {
@@ -484,15 +394,6 @@
         this.trackClick('Settings');
         this.closeSidePanelAndNavigate(this.settingsLink);
       },
-      navigateToHelp() {
-        this.sidePanelOpen = false;
-        this.trackClick('Help');
-        window.open(this.helpLink, '_blank', 'noopener,noreferrer');
-      },
-      handleLogout() {
-        this.sidePanelOpen = false;
-        this.logout();
-      },
       handleUserMenuSelect(item) {
         switch (item.value) {
           case 'administration':
@@ -530,10 +431,6 @@
           this.$analytics.trackClick('general', `User dropdown - ${label}`);
         }
       },
-      openLanguageModal() {
-        this.sidePanelOpen = false;
-        this.showLanguageModal = true;
-      },
       handleResize() {
         this.updateToolbarWidth();
         this.debouncedCalculateOverflow();
@@ -556,20 +453,18 @@
     $trs: {
       title: 'Kolibri Studio',
       openMenu: 'Open navigation menu',
-      navigationMenu: 'Navigation menu',
+
       mainNavigationLabel: 'Main navigation',
       userMenuLabel: 'User menu',
       guestMenuLabel: 'Guest menu',
       moreOptions: 'More options',
-      channels: 'Channels',
+
       administration: 'Administration',
       settings: 'Settings',
       changeLanguage: 'Change language',
       help: 'Help and support',
       signIn: 'Sign in',
       signOut: 'Sign out',
-      copyright: '© {year} Learning Equality',
-      giveFeedback: 'Give feedback',
     },
   };
 
@@ -639,39 +534,6 @@
     height: 100%;
     padding-left: 8px;
     background-color: inherit;
-  }
-
-  .navigation-menu-header {
-    display: flex;
-    align-items: center;
-    height: 63.2px;
-    padding-right: 74px;
-  }
-
-  .navigation-menu-title {
-    margin-left: 16px;
-    font-size: 20px;
-    font-weight: 500;
-  }
-
-  .navigation-menu-content {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-  }
-
-  .navigation-menu-nav {
-    padding: 8px 0;
-  }
-
-  .navigation-menu-footer {
-    padding: 24px;
-    text-align: left;
-  }
-
-  .navigation-menu-copyright {
-    margin-bottom: 24px;
-    font-size: 14px;
   }
 
   .studio-navigation-dropdown {
