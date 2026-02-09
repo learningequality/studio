@@ -288,9 +288,10 @@
       StudioNavigationTab,
     },
     setup() {
-      const { windowBreakpoint } = useKResponsiveWindow();
+      const { windowBreakpoint, windowWidth } = useKResponsiveWindow();
       return {
         windowBreakpoint,
+        windowWidth,
       };
     },
     props: {
@@ -400,7 +401,7 @@
       },
     },
     watch: {
-      windowBreakpoint() {
+      windowWidth() {
         this.debouncedCalculateOverflow();
       },
       tabs: {
