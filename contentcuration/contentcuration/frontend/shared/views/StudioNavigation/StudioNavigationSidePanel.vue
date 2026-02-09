@@ -27,6 +27,7 @@
               :label="$tr('channels')"
               :link="channelsLink"
               icon="home"
+              :active="isActive(channelsLink)"
               @click="handleOptionClick"
             />
 
@@ -35,6 +36,7 @@
               :label="$tr('administration')"
               :link="administrationLink"
               icon="people"
+              :active="isActive(administrationLink)"
               @click="handleOptionClick"
             />
 
@@ -42,6 +44,7 @@
               :label="$tr('settings')"
               :link="settingsLink"
               icon="settings"
+              :active="isActive(settingsLink)"
               @click="handleOptionClick"
             />
 
@@ -135,6 +138,9 @@
       },
     },
     methods: {
+      isActive(link) {
+        return window.location.pathname === link;
+      },
       handleOptionClick() {
         this.$emit('close');
       },
