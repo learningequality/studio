@@ -1,10 +1,10 @@
 <template>
 
-  <div>
+  <li>
     <a
       ref="menuItem"
       :href="link"
-      class="studio-navigation-option"
+      class="studio-sidenav-option"
       role="menuitem"
       :class="$computedClass(optionStyle)"
       tabindex="0"
@@ -26,7 +26,7 @@
         </span>
       </slot>
     </a>
-  </div>
+  </li>
 
 </template>
 
@@ -34,7 +34,7 @@
 <script>
 
   export default {
-    name: 'StudioNavigationOption',
+    name: 'StudioSideNavOption',
     props: {
       label: {
         type: String,
@@ -82,7 +82,7 @@
 
   @import '~kolibri-design-system/lib/styles/definitions';
 
-  .studio-navigation-option {
+  .studio-sidenav-option {
     display: flex;
     align-items: center;
     padding: 8px;
