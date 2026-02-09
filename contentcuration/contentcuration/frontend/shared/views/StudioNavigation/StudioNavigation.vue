@@ -70,18 +70,16 @@
                   })
                 "
               >
-                <KIconButton
-                  :disabled="true"
+                <KIcon
                   icon="person"
-                  color="black"
+                  style="margin: 8px; font-size: 22px"
                 />
                 <span class="mx-2 notranslate subheading">
                   {{ user.first_name }}
                 </span>
-                <KIconButton
-                  :disabled="true"
+                <KIcon
                   icon="dropdown"
-                  color="black"
+                  style="margin: 8px; font-size: 22px"
                 />
 
                 <KDropdownMenu
@@ -680,7 +678,7 @@
   .studio-navigation-dropdown {
     display: flex;
     align-items: center;
-    padding: 4px 8px;
+    height: 40px;
     cursor: pointer;
     border-radius: $radius;
     transition: background-color 0.2s ease;
