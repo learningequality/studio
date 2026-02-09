@@ -151,6 +151,22 @@ class RecommendationsCRUDTestCase(StudioAPITestCase):
         mock_load_recommendations.assert_called_once()
 
 
+    @patch(
+        "contentcuration.utils.automation_manager.AutomationManager.load_recommendations"
+    )
+    def test_recommend_success_nonadmin_user(self, mock_load_recommendations):
+        user = testdata.user()
+        self.client.force_authenticate(user=user)
+        mock_load_recommendations.return_value = self.recommendations_list
+
+        response = self.client.post(
+            reverse("recommendations"), data=self.topics, format="json"
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.json(), self.recommendations_list)
+
+
 class RecommendationsEventViewSetTestCase(StudioAPITestCase):
     @property
     def recommendations_event_object(self):
