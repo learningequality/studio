@@ -377,6 +377,8 @@
             hiddenLinks.push({
               label: tab.label,
               value: tab.to,
+              // Update: Pass the analytics label here to avoid lookup later
+              analyticsLabel: tab.analyticsLabel,
             });
           }
         });
@@ -387,13 +389,7 @@
       handleOverflowSelect(option) {
         if (option && option.value) {
           this.$router.push(option.value);
-          const originalTab = this.tabs.find(t => {
-            return option.label.startsWith(t.label);
-          });
-
-          if (originalTab) {
-            this.handleTrackClick(originalTab);
-          }
+          this.handleTrackClick(option);
         }
       },
       toggleSidePanel() {
@@ -451,9 +447,9 @@
       updateToolbarWidth() {
         this.toolbarWidth = this.$refs.studioNavigation?.clientWidth || 0;
       },
-      handleTrackClick(tab) {
-        if (this.$analytics && tab.analyticsLabel) {
-          this.$analytics.trackClick('channel_list', tab.analyticsLabel);
+      handleTrackClick(item) {
+        if (this.$analytics && item.analyticsLabel) {
+          this.$analytics.trackClick('channel_list', item.analyticsLabel);
         }
       },
     },
