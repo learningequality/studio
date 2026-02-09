@@ -55,7 +55,7 @@ describe('ForgotPassword', () => {
 
   it('should not submit form with invalid email', async () => {
     renderComponent();
-    await fireEvent.update(screen.getByLabelText('Email'), 'invalid-email');
+    await fireEvent.update(screen.getByLabelText(/email/i), 'invalid-email');
     await fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     expect(sendPasswordResetLinkMock).not.toHaveBeenCalled();
   });
@@ -63,9 +63,10 @@ describe('ForgotPassword', () => {
   it('should submit form with valid email and navigate to success page', async () => {
     sendPasswordResetLinkMock.mockResolvedValue({});
     const { router } = renderComponent();
-    await fireEvent.update(screen.getByLabelText('Email'), 'test@test.com');
+    await fireEvent.update(screen.getByLabelText(/email/i), 'test@test.com');
     await fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     await waitFor(() => {
+      expect(sendPasswordResetLinkMock).toHaveBeenCalledTimes(1);
       expect(sendPasswordResetLinkMock).toHaveBeenCalledWith(expect.anything(), 'test@test.com');
     });
     await waitFor(() => {
@@ -76,7 +77,7 @@ describe('ForgotPassword', () => {
   it('should show error banner when submission fails', async () => {
     sendPasswordResetLinkMock.mockRejectedValue(new Error('Failed'));
     renderComponent();
-    await fireEvent.update(screen.getByLabelText('Email'), 'test@test.com');
+    await fireEvent.update(screen.getByLabelText(/email/i), 'test@test.com');
     await fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
     expect(await screen.findByTestId('error-banner')).toBeInTheDocument();
   });
