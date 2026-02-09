@@ -196,6 +196,15 @@
   import StudioNavigationTab from './StudioNavigationTab.vue';
   import StudioNavigationSidePanel from './StudioNavigationSidePanel.vue';
 
+  const MenuOptions = {
+    ADMINISTRATION: 'administration',
+    SETTINGS: 'settings',
+    CHANGE_LANGUAGE: 'change-language',
+    HELP: 'help',
+    LOGOUT: 'logout',
+    LOGIN: 'login',
+  };
+
   export default {
     name: 'StudioNavigation',
     components: {
@@ -260,7 +269,7 @@
         if (this.user?.is_admin) {
           items.push({
             label: this.$tr('administration'),
-            value: 'administration',
+            value: MenuOptions.ADMINISTRATION,
             icon: 'people',
           });
         }
@@ -268,22 +277,22 @@
         items.push(
           {
             label: this.$tr('settings'),
-            value: 'settings',
+            value: MenuOptions.SETTINGS,
             icon: 'settings',
           },
           {
             label: this.$tr('changeLanguage'),
-            value: 'change-language',
+            value: MenuOptions.CHANGE_LANGUAGE,
             icon: 'language',
           },
           {
             label: this.$tr('help'),
-            value: 'help',
+            value: MenuOptions.HELP,
             icon: 'openNewTab',
           },
           {
             label: this.$tr('signOut'),
-            value: 'logout',
+            value: MenuOptions.LOGOUT,
             icon: 'logout',
           },
         );
@@ -294,12 +303,12 @@
         return [
           {
             label: this.$tr('signIn'),
-            value: 'login',
+            value: MenuOptions.LOGIN,
             icon: 'login',
           },
           {
             label: this.$tr('changeLanguage'),
-            value: 'change-language',
+            value: MenuOptions.CHANGE_LANGUAGE,
             icon: 'language',
           },
         ];
@@ -328,7 +337,6 @@
       },
     },
     created() {
-      // Create debounced version of calculateOverflow
       this.debouncedCalculateOverflow = debounce(this.calculateOverflow, 100);
     },
     mounted() {
@@ -405,32 +413,32 @@
       },
       handleUserMenuSelect(item) {
         switch (item.value) {
-          case 'administration':
+          case MenuOptions.ADMINISTRATION:
             if (this.user && this.user.is_admin) {
               this.navigateToAdministration();
             }
             break;
-          case 'settings':
+          case MenuOptions.SETTINGS:
             this.navigateToSettings();
             break;
-          case 'change-language':
+          case MenuOptions.CHANGE_LANGUAGE:
             this.showLanguageModal = true;
             break;
-          case 'help':
+          case MenuOptions.HELP:
             this.trackClick('Help');
             window.open(this.helpLink, '_blank');
             break;
-          case 'logout':
+          case MenuOptions.LOGOUT:
             this.logout();
             break;
         }
       },
       handleGuestMenuSelect(item) {
         switch (item.value) {
-          case 'login':
+          case MenuOptions.LOGIN:
             window.location.href = '/accounts/';
             break;
-          case 'change-language':
+          case MenuOptions.CHANGE_LANGUAGE:
             this.showLanguageModal = true;
             break;
         }
