@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { createLocalVue } from '@vue/test-utils';
 import Vuex from 'vuex';
 import VueRouter from 'vue-router';
-import StudioNavigation from '../StudioNavigation';
+import StudioNavigation from '../StudioNavigation/StudioNavigation.vue';
 
 const localVue = createLocalVue();
 localVue.use(Vuex);

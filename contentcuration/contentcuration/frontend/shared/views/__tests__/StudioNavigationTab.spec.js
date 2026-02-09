@@ -100,7 +100,7 @@ describe('StudioNavigationTab', () => {
       });
 
       const link = screen.getByRole('link', { name: 'Channels' });
-      expect(link).toHaveAttribute('aria-current', 'Navigation');
+      expect(link).toHaveAttribute('aria-current', 'page');
     });
 
     it('should not show active indicator when not on current page', async () => {
