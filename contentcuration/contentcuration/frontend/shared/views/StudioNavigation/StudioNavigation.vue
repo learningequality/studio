@@ -72,14 +72,14 @@
               >
                 <KIcon
                   icon="person"
-                  style="margin: 8px; font-size: 22px"
+                  style="margin: 8px; margin-top: 0; font-size: 22px"
                 />
                 <span class="mx-2 notranslate subheading">
                   {{ user.first_name }}
                 </span>
                 <KIcon
                   icon="dropdown"
-                  style="margin: 8px; font-size: 22px"
+                  style="margin: 8px; margin-top: 0; font-size: 22px"
                 />
 
                 <KDropdownMenu
@@ -100,15 +100,13 @@
                   })
                 "
               >
-                <KIconButton
-                  :disabled="true"
+                <KIcon
                   icon="person"
-                  color="black"
+                  style="margin: 8px; margin-top: 0; font-size: 22px"
                 />
-                <KIconButton
-                  :disabled="true"
+                <KIcon
                   icon="dropdown"
-                  color="black"
+                  style="margin: 8px; margin-top: 0; font-size: 22px"
                 />
 
                 <KDropdownMenu
