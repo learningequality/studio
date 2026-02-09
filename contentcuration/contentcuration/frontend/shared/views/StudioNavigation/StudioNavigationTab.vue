@@ -1,36 +1,37 @@
 <template>
 
-  <RouterLink
-    v-if="to"
-    :to="to"
-    :class="[
-      tabClasses,
-      $computedClass({
-        ':active': { backgroundColor: 'rgba(0, 0, 0, 0.2)' },
-        ':focus': { ...$coreOutline, outlineOffset: '-2px' },
-      }),
-    ]"
-    :style="tabStyles"
-    :aria-current="isActive ? 'Navigation' : null"
-    :tabindex="tabindex"
-  >
-    <span class="studio-navigation-tab-content">
-      <slot></slot>
-      <span
-        v-if="showBadge"
-        class="studio-navigation-tab-badge"
-        :style="badgeStyles"
-      >
-        {{ $formatNumber(badgeValue) }}
+  <li v-if="to">
+    <RouterLink
+      :to="to"
+      :class="[
+        tabClasses,
+        $computedClass({
+          ':active': { backgroundColor: 'rgba(0, 0, 0, 0.2)' },
+          ':focus': { ...$coreOutline, outlineOffset: '-2px' },
+        }),
+      ]"
+      :style="tabStyles"
+      :aria-current="isActive ? 'page' : null"
+      :tabindex="tabindex"
+    >
+      <span class="studio-navigation-tab-content">
+        <slot></slot>
+        <span
+          v-if="showBadge"
+          class="studio-navigation-tab-badge"
+          :style="badgeStyles"
+        >
+          {{ $formatNumber(badgeValue) }}
+        </span>
       </span>
-    </span>
-    <span
-      v-if="isActive"
-      class="studio-navigation-tab-indicator"
-      :style="indicatorStyles"
-      aria-hidden="true"
-    ></span>
-  </RouterLink>
+      <span
+        v-if="isActive"
+        class="studio-navigation-tab-indicator"
+        :style="indicatorStyles"
+        aria-hidden="true"
+      ></span>
+    </RouterLink>
+  </li>
 
 </template>
 
@@ -105,6 +106,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    width: 100%;
     min-width: 160px;
     max-width: 264px;
     height: 100%;
