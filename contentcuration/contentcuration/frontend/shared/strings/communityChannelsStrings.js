@@ -43,6 +43,10 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: "You're publishing: Version {version}",
     context: 'Information about the version being published',
   },
+  channelVersion: {
+    message: '{name} v{version}',
+    context: 'Formatted channel title that includes the channel name and its version;',
+  },
   incompleteResourcesWarning: {
     message:
       '{count, number} {count, plural, one {incomplete resource} other {incomplete resources}}',
@@ -65,12 +69,16 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Language',
     context: 'Label for the language selection dropdown',
   },
+  versionNotesRequiredMessage: {
+    message: 'Version notes are required',
+    context: 'Error message when version notes are required but not provided',
+  },
   languageRequiredMessage: {
     message: 'Language is required',
-    context: 'Error message when language selection is required',
+    context: 'Error message when language selection is required but not provided',
   },
   pendingStatus: {
-    message: 'Pending',
+    message: 'Submitted',
     context: 'Status indicating that an Community Library submission is pending',
   },
   approvedStatus: {
@@ -86,18 +94,20 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Submit to Community Library',
     context: 'The title of the "Submit to Community Library" panel',
   },
+  publishingMessage: {
+    message: 'Channel is being published',
+    context:
+      'Shown in the Submit to Community Library side panel when the channel is currently publishing',
+  },
   submittedPrimaryInfo: {
-    message: 'A previous version is still pending review.',
+    message:
+      'A previous version is still pending review. Reviewers will see the latest submission first.',
     context:
       'Information shown in the "Submit to Community Library" panel when a previous version is pending review',
   },
-  reviewersWillSeeLatestFirst: {
-    message: 'Reviewers will see the latest submission first.',
-    context:
-      'Information shown in the "Submit to Community Library" panel about how reviewers see submissions',
-  },
   approvedPrimaryInfo: {
-    message: 'A previous version is live in the Community Library.',
+    message:
+      'A previous version is live in the Community Library. Reviewers will see the latest submission first.',
     context:
       'Information shown in the "Submit to Community Library" panel when a previous version is approved and live',
   },
@@ -113,12 +123,12 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
       'Information shown in the "Submit to Community Library" panel when there are no previous submissions',
   },
   moreDetailsButton: {
-    message: 'More details about the Community Library',
+    message: 'More details',
     context:
       'Button in the "Submit to Community Library" panel to show more details about the Community Library',
   },
   lessDetailsButton: {
-    message: 'Show less',
+    message: 'Less details',
     context:
       'Button in the "Submit to Community Library" panel to hide details about the Community Library',
   },
@@ -128,22 +138,36 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     context:
       'Detailed description of the Community Library shown in the "Submit to Community Library" panel',
   },
-  notPublishedWarning: {
-    message:
-      "This channel isn't published to Kolibri Studio yet. Publish first, then submit to the Community Library.",
+  notPublishedWarningTitle: {
+    message: "This channel isn't published to Kolibri Studio yet",
     context:
-      'Warning shown in the "Submit to Community Library" panel when the channel is not published',
+      'Title of warning shown in the "Submit to Community Library" panel when the channel is not published',
   },
-  publicWarning: {
-    message:
-      'This channel is currently public in the Content Library. It is not possible to submit public channels to the Community Library.',
-    context: 'Warning shown in the "Submit to Community Library" panel when the channel is public',
-  },
-  alreadySubmittedWarning: {
-    message:
-      'This version of the channel has already been submitted to the Community Library. Please wait for review or make changes and publish a new version before submitting again.',
+  notPublishedWarningDescription: {
+    message: 'Publish to Studio first, then submit to the Community Library.',
     context:
-      'Warning shown in the "Submit to Community Library" panel when the current version of the channel is already submitted',
+      'Description of warning shown in the "Submit to Community Library" panel when the channel is not published',
+  },
+  publicWarningTitle: {
+    message: 'This channel is currently public in the Content Library.',
+    context:
+      'Title of warning shown in the "Submit to Community Library" panel when the channel is public',
+  },
+  publicWarningDescription: {
+    message: 'It is not possible to submit public channels to the Community Library.',
+    context:
+      'Description of warning shown in the "Submit to Community Library" panel when the channel is public',
+  },
+  alreadySubmittedWarningTitle: {
+    message: 'This version of the channel has already been submitted to the Community Library.',
+    context:
+      'Title of warning shown in the "Submit to Community Library" panel when the current version is already submitted',
+  },
+  alreadySubmittedWarningDescription: {
+    message:
+      'Please wait for review or make changes and publish a new version before submitting again.',
+    context:
+      'Description of warning shown in the "Submit to Community Library" panel when the current version is already submitted',
   },
   descriptionLabel: {
     message: "Describe what's new in this submission",
@@ -188,5 +212,85 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   categoriesDetected: {
     message: 'Categories',
     context: 'Label for detected categories in the "Submit to Community Library" panel',
+  },
+  confirmReplacementText: {
+    message: 'I understand this will replace my earlier submission on the review queue',
+    context: 'Checkbox text shown when there is a pending submission to confirm replacement',
+  },
+  resubmitModalTitle: {
+    message: 'Resubmit channel for Community library review?',
+    context:
+      'Title of the modal shown after publishing a channel that already has Community Library submissions',
+  },
+  resubmitModalBodyFirst: {
+    message: '{channelName} v{version} is also published to the Community Library.',
+    context:
+      'First sentence of the body text of the modal shown after publishing a channel that already has Community Library submissions',
+  },
+  resubmitModalBodySecond: {
+    message:
+      'Would you like to resubmit this version with your changes for community library review?',
+    context:
+      'Second sentence of the body text of the modal shown after publishing a channel that already has Community Library submissions',
+  },
+  resubmitAction: {
+    message: 'Resubmit',
+    context: 'Action in the resubmit modal to open the submit to Community Library side panel',
+  },
+  dismissAction: {
+    message: 'Dismiss',
+    context: 'Action in the resubmit modal to dismiss the modal',
+  },
+  licenseCheckPassed: {
+    message: 'License check passed',
+    context: 'Title shown when license audit passes (no invalid licenses found)',
+  },
+  allLicensesCompatible: {
+    message: 'All licenses are compatible with Community Library.',
+    context: 'Message shown after listing compatible licenses when license check passes',
+  },
+  incompatibleLicensesDetected: {
+    message: 'Incompatible license(s) detected',
+    context: 'Title shown when invalid licenses are detected in the channel',
+  },
+  channelCannotBeDistributed: {
+    message: 'this channel cannot be distributed via Kolibri.',
+    context: 'Message explaining that channels with incompatible licenses cannot be distributed',
+  },
+  fixLicensingBeforeSubmission: {
+    message: 'Please fix licensing before submitting a new version.',
+    context: 'Call to action message when incompatible licenses are detected',
+  },
+  incompatibleLicensesDescription: {
+    message:
+      '"{licenseNames}" - this channel cannot be distributed via Kolibri. Please fix licensing before submitting a new version.',
+    context:
+      'Description shown when incompatible licenses are detected, includes the license names and explanation',
+  },
+  compatibleLicensesDescription: {
+    message: '{licenseNames} - All licenses are compatible with Community Library.',
+    context:
+      'Description shown when all licenses are compatible, includes the license names and confirmation message',
+  },
+  specialPermissionsDetected: {
+    message: 'Special Permissions license(s) detected',
+    context: 'Title shown when special permissions licenses are detected in the channel',
+  },
+  confirmDistributionRights: {
+    message: 'Please confirm you have the right to distribute this content via Kolibri.',
+    context:
+      'Message asking user to confirm they have distribution rights for special permissions content',
+  },
+  previousPageAction: {
+    message: 'Previous',
+    context: 'Button text to navigate to the previous page in pagination',
+  },
+  nextPageAction: {
+    message: 'Next',
+    context: 'Button text to navigate to the next page in pagination',
+  },
+  pageIndicator: {
+    message: '{currentPage} of {totalPages}',
+    context: 'Page indicator showing current page and total pages (e.g., "1 of 5")',
   },
 });

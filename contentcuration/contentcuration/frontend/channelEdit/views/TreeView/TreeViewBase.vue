@@ -84,7 +84,7 @@
         >
           {{ $tr('apiGenerated') }}
         </span>
-        <BaseMenu>
+        <BaseMenu v-if="canShareChannel">
           <template #activator="{ on }">
             <KButton
               hasDropdown
@@ -95,16 +95,23 @@
             </KButton>
           </template>
           <VList>
-            <VListTile @click="showSubmitToCommunityLibrarySidePanel = true">
+            <VListTile
+              v-if="canSubmitToCommunityLibrary"
+              @click="showSubmitToCommunityLibrarySidePanel = true"
+            >
               <VListTileTitle>{{ $tr('submitToCommunityLibrary') }}</VListTileTitle>
             </VListTile>
             <VListTile
+              v-if="canManage"
               :to="shareChannelLink"
               @click="trackClickEvent('Share channel')"
             >
               <VListTileTitle>{{ $tr('inviteCollaborators') }}</VListTileTitle>
             </VListTile>
-            <VListTile @click="showTokenModal = true">
+            <VListTile
+              v-if="isPublished"
+              @click="showTokenModal = true"
+            >
               <VListTileTitle>{{ $tr('shareToken') }}</VListTileTitle>
             </VListTile>
           </VList>
@@ -235,11 +242,19 @@
     <PublishSidePanel
       v-if="showPublishSidePanel"
       @close="showPublishSidePanel = false"
+      @showResubmitCommunityLibraryModal="handleShowResubmitToCommunityLibraryModal"
     />
     <SubmitToCommunityLibrarySidePanel
       v-if="showSubmitToCommunityLibrarySidePanel"
       :channel="currentChannel"
       @close="showSubmitToCommunityLibrarySidePanel = false"
+    />
+    <ResubmitToCommunityLibraryModal
+      v-if="resubmitToCommunityLibraryModalData"
+      :channel="resubmitToCommunityLibraryModalData.channel"
+      :latestSubmissionVersion="resubmitToCommunityLibraryModalData.latestSubmissionVersion"
+      @resubmit="handleResubmitToCommunityLibrary"
+      @close="handleDismissResubmitToCommunityLibrary"
     />
     <template v-if="isPublished">
       <ChannelTokenModal
@@ -254,29 +269,14 @@
       @syncing="syncInProgress"
     />
     <QuickEditModal />
-    <MessageDialog
-      v-model="showDeleteModal"
-      :header="$tr('deleteTitle')"
-    >
-      {{ $tr('deletePrompt') }}
-      <template #buttons="{ close }">
-        <VSpacer />
-        <VBtn
-          color="primary"
-          flat
-          @click="close"
-        >
-          {{ $tr('cancel') }}
-        </VBtn>
-        <VBtn
-          color="primary"
-          data-test="delete"
-          @click="handleDelete"
-        >
-          {{ $tr('deleteChannelButton') }}
-        </VBtn>
-      </template>
-    </MessageDialog>
+    <RemoveChannelModal
+      v-if="showDeleteModal && currentChannel"
+      :channel-id="currentChannel.id"
+      :can-edit="canEdit"
+      data-test="delete-modal"
+      @delete="handleDelete"
+      @close="showDeleteModal = false"
+    />
     <VSpeedDial
       v-if="showClipboardSpeedDial"
       v-model="showClipboard"
@@ -349,12 +349,13 @@
   import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
   import PublishSidePanel from '../../components/sidePanels/PublishSidePanel';
   import SubmitToCommunityLibrarySidePanel from '../../components/sidePanels/SubmitToCommunityLibrarySidePanel';
+  import ResubmitToCommunityLibraryModal from '../../components/modals/ResubmitToCommunityLibraryModal';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import ToolBar from 'shared/views/ToolBar';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
+  import RemoveChannelModal from 'shared/views/channel/RemoveChannelModal';
   import OfflineText from 'shared/views/OfflineText';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
-  import MessageDialog from 'shared/views/MessageDialog';
   import { RouteNames as ChannelRouteNames } from 'frontend/channelList/constants';
   import { titleMixin } from 'shared/mixins';
   import DraggableRegion from 'shared/views/draggable/DraggableRegion';
@@ -369,14 +370,15 @@
       ToolBar,
       PublishSidePanel,
       SubmitToCommunityLibrarySidePanel,
+      ResubmitToCommunityLibraryModal,
       ProgressModal,
       ChannelTokenModal,
+      RemoveChannelModal,
       SyncResourcesModal,
       Clipboard,
       OfflineText,
       ContentNodeIcon,
       DraggablePlaceholder,
-      MessageDialog,
       SavingIndicator,
       QuickEditModal,
     },
@@ -397,6 +399,7 @@
         showClipboard: false,
         showDeleteModal: false,
         syncing: false,
+        resubmitToCommunityLibraryModalData: null,
       };
     },
     computed: {
@@ -453,6 +456,15 @@
         return (
           !this.loading && (this.$vuetify.breakpoint.xsOnly || this.canManage || this.isPublished)
         );
+      },
+      canShareChannel() {
+        return this.canManage || this.isPublished;
+      },
+      canSubmitToCommunityLibrary() {
+        if (!this.currentChannel) {
+          return false;
+        }
+        return this.canManage && this.isPublished && !this.currentChannel.public;
       },
       viewChannelDetailsLink() {
         return {
@@ -546,6 +558,18 @@
         this.showPublishSidePanel = true;
         this.trackClickEvent('Publish');
       },
+      handleResubmitToCommunityLibrary() {
+        this.showSubmitToCommunityLibrarySidePanel = true;
+      },
+      handleDismissResubmitToCommunityLibrary() {
+        this.resubmitToCommunityLibraryModalData = null;
+      },
+      handleShowResubmitToCommunityLibraryModal(resubmitData) {
+        if (resubmitData?.latestSubmissionVersion == null) {
+          return;
+        }
+        this.resubmitToCommunityLibraryModalData = resubmitData;
+      },
       trackClickEvent(eventLabel) {
         this.$analytics.trackClick('channel_editor_toolbar', eventLabel);
       },
@@ -574,11 +598,6 @@
       inviteCollaborators: 'Invite collaborators',
       shareToken: 'Share token',
 
-      // Delete channel section
-      deleteChannelButton: 'Delete channel',
-      deleteTitle: 'Delete this channel',
-      deletePrompt: 'This channel will be permanently deleted. This cannot be undone.',
-      cancel: 'Cancel',
       channelDeletedSnackbar: 'Channel deleted',
     },
   };

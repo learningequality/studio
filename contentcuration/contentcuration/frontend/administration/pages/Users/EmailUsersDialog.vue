@@ -1,148 +1,129 @@
 <template>
 
-  <VDialog
-    v-model="show"
-    width="600"
-    max-width="100vw"
-    persistent
+  <KModal
+    v-if="show"
+    :size="600"
+    title="Send email"
+    submitText="Send email"
+    cancelText="Cancel"
+    data-test="email-dialog"
+    @submit="submit"
+    @cancel="cancel"
   >
-    <VCard class="px-2 py-3">
-      <VCardTitle class="font-weight-bold pb-0 title"> Send email </VCardTitle>
-      <VForm
-        ref="form"
-        lazy-validation
-        @submit.prevent="emailHandler"
-      >
-        <VCardText class="pb-4 pt-3">
-          <VLayout
-            align-top
-            row
-            class="mb-2"
-          >
-            <VFlex
-              shrink
-              class="pa-2"
-            >
-              From:
-            </VFlex>
-            <VFlex>
-              <VChip small>
-                {{ senderEmail }}
-              </VChip>
-            </VFlex>
-          </VLayout>
-          <VLayout
-            align-top
-            row
-          >
-            <VFlex
-              shrink
-              class="pa-2"
-            >
-              To:
-            </VFlex>
-            <VFlex data-test="to-line">
-              <ExpandableList
-                v-if="initialRecipients"
-                :items="users"
-                :max="4"
-                inline
-                :delimit="false"
-              >
-                <template #item="{ item }">
-                  <VTooltip
-                    bottom
-                    lazy
-                  >
-                    <template #activator="{ on }">
-                      <VChip
-                        small
-                        :close="recipients.length > 1"
-                        data-test="remove"
-                        v-on="on"
-                        @input="remove(item.id)"
-                      >
-                        <div style="max-width: 72px">
-                          <div class="text-truncate">
-                            {{ item.name }}
-                          </div>
-                        </div>
-                      </VChip>
-                    </template>
-                    <span>{{ item.name }} &lt;{{ item.email }}&gt;</span>
-                  </VTooltip>
-                </template>
-              </ExpandableList>
-              <VChip
-                v-else-if="usersFilterFetchQueryParams"
-                small
-              >
-                {{ searchString }}
-              </VChip>
-            </VFlex>
-          </VLayout>
-          <VTextField
-            v-model="subject"
-            class="mt-4"
-            box
-            label="Subject line"
-            required
-            :rules="requiredRules"
-          />
-          <div class="caption grey--text">Add placeholder to message</div>
-          <div class="mb-1">
-            <VBtn
-              v-for="placeholder in placeholders"
-              :key="`placeholder-${placeholder.label}`"
-              small
-              round
-              depressed
-              color="grey lighten-4"
-              style="text-transform: none"
-              @click="addPlaceholder(placeholder.placeholder)"
-            >
-              {{ placeholder.label }}
-            </VBtn>
+    <form
+      ref="form"
+      @submit.prevent="onSubmit"
+    >
+      <div class="form-container">
+        <div class="form-row form-row-margin">
+          <div class="form-label">From:</div>
+          <div class="form-content">
+            <StudioChip :text="senderEmail" />
           </div>
-          <VTextarea
+        </div>
+        <div class="form-row">
+          <div class="form-label">To:</div>
+          <div
+            style="flex-grow: 1"
+            data-test="to-line"
+          >
+            <ExpandableList
+              v-if="initialRecipients"
+              :items="users"
+              :max="4"
+              inline
+              :delimit="false"
+            >
+              <template #item="{ item }">
+                <div class="chip-container">
+                  <KTooltip
+                    :refs="getRefs()"
+                    :reference="`tooltip-${item.id}`"
+                    placement="bottom"
+                  >
+                    <span>{{ item.name }} &lt;{{ item.email }}&gt;</span>
+                  </KTooltip>
+                  <StudioChip
+                    :ref="`tooltip-${item.id}`"
+                    :text="item.name"
+                    :close="recipients.length > 1"
+                    data-test="remove"
+                    @close="remove(item.id)"
+                  >
+                    <div class="text-truncate">
+                      {{ item.name }}
+                    </div>
+                  </StudioChip>
+                </div>
+              </template>
+            </ExpandableList>
+            <StudioChip v-else-if="usersFilterFetchQueryParams">
+              {{ searchString }}
+            </StudioChip>
+          </div>
+        </div>
+        <KTextbox
+          v-model="subject"
+          class="mt-4"
+          label="Subject line"
+          :required="true"
+          :invalid="errors.subject"
+          :showInvalidText="true"
+          invalidText="Field is required"
+          :showLabel="true"
+          :appearanceOverrides="getAppearanceOverrides()"
+        />
+        <div :style="{ color: $themeTokens.annotation, fontSize: '12px' }">
+          Add placeholder to message
+        </div>
+        <div class="placeholder-buttons-container">
+          <button
+            v-for="placeholder in placeholders"
+            :key="`placeholder-${placeholder.label}`"
+            class="placeholder-button"
+            :style="placeholderButtonStyles"
+            :class="
+              $computedClass({
+                ':hover': { backgroundColor: $themePalette.grey.v_300 },
+                ':focus': { ...$coreOutline, outlineOffset: 0 },
+              })
+            "
+            type="button"
+            @click="addPlaceholder(placeholder.placeholder)"
+          >
+            {{ placeholder.label }}
+          </button>
+        </div>
+        <div class="email-textarea">
+          <KTextbox
             ref="message"
             v-model="message"
-            box
-            auto-grow
             label="Email body"
-            required
-            :rules="requiredRules"
+            :required="true"
+            :invalid="errors.message"
+            :showInvalidText="true"
+            invalidText="Field is required"
+            :showLabel="true"
+            :appearanceOverrides="getAppearanceOverrides()"
+            :textArea="true"
           />
-        </VCardText>
-        <VCardActions data-test="buttons">
-          <VSpacer />
-          <VBtn
-            data-test="cancel"
-            flat
-            @click="cancel"
-          >
-            Cancel
-          </VBtn>
-          <VBtn
-            data-test="send"
-            color="primary"
-            type="submit"
-          >
-            Send email
-          </VBtn>
-        </VCardActions>
-      </VForm>
-      <ConfirmationDialog
-        v-model="showWarning"
-        title="Draft in progress"
-        text="Draft will be lost upon exiting this editor. Are you sure you want to continue?"
-        confirmButtonText="Discard draft"
-        cancelButtonText="Keep open"
-        data-test="confirm"
-        @confirm="close"
-      />
-    </VCard>
-  </VDialog>
+        </div>
+      </div>
+    </form>
+
+    <!-- Warning modal for draft -->
+    <KModal
+      v-if="showWarning"
+      title="Draft in progress"
+      submitText="Discard draft"
+      cancelText="Keep open"
+      data-test="confirm"
+      @submit="close"
+      @cancel="showWarning = false"
+    >
+      <p>Draft will be lost upon exiting this editor. Are you sure you want to continue?</p>
+    </KModal>
+  </KModal>
 
 </template>
 
@@ -150,15 +131,22 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
-  import ConfirmationDialog from '../../components/ConfirmationDialog';
+  import StudioChip from 'shared/views/StudioChip';
   import ExpandableList from 'shared/views/ExpandableList';
+  import { generateFormMixin } from 'shared/mixins';
+
+  const formMixin = generateFormMixin({
+    subject: { required: true },
+    message: { required: true },
+  });
 
   export default {
     name: 'EmailUsersDialog',
     components: {
       ExpandableList,
-      ConfirmationDialog,
+      StudioChip,
     },
+    mixins: [formMixin],
     props: {
       value: {
         type: Boolean,
@@ -188,10 +176,8 @@
     },
     data() {
       return {
-        subject: '',
-        message: '',
         showWarning: false,
-        recipients: [],
+        recipients: this.initialRecipients || [],
       };
     },
     computed: {
@@ -207,11 +193,14 @@
       users() {
         return this.getUsers(this.recipients);
       },
-      requiredRules() {
-        return [v => Boolean(v.trim()) || 'Field is required'];
-      },
       senderEmail() {
         return window.senderEmail;
+      },
+      placeholderButtonStyles() {
+        return {
+          backgroundColor: this.$themePalette.grey.v_200,
+          color: this.$themeTokens.text,
+        };
       },
       placeholders() {
         return [
@@ -264,34 +253,45 @@
         this.show = false;
         this.subject = '';
         this.message = '';
-        this.$refs.form.resetValidation();
-      },
-      emailHandler() {
-        if (this.$refs.form.validate()) {
-          const query = this.initialRecipients
-            ? { ids: this.recipients.join(',') }
-            : this.usersFilterFetchQueryParams;
-
-          this.sendEmail({
-            query,
-            subject: this.subject,
-            message: this.message,
-          })
-            .then(() => {
-              this.close();
-              this.$store.dispatch('showSnackbarSimple', 'Email sent');
-            })
-            .catch(() => {
-              this.$store.dispatch('showSnackbarSimple', 'Email failed to send');
-            });
-        }
+        this.showWarning = false;
+        this.reset(); // Reset form validation state
       },
       addPlaceholder(placeholder) {
         this.message += ` ${placeholder}`;
-        this.$refs.message.focus();
+        this.$refs.message.$el.focus();
       },
       remove(id) {
         this.recipients = this.recipients.filter(u => u !== id);
+      },
+      getRefs() {
+        return this.$refs;
+      },
+      getAppearanceOverrides() {
+        const baseStyles = { maxWidth: '100%', width: '100%' };
+
+        return baseStyles;
+      },
+      onSubmit() {
+        if (this.errorCount() > 0) {
+          return;
+        }
+
+        const query = this.initialRecipients
+          ? { ids: this.recipients.join(',') }
+          : this.usersFilterFetchQueryParams;
+
+        this.sendEmail({
+          query,
+          subject: this.subject,
+          message: this.message,
+        })
+          .then(() => {
+            this.close();
+            this.$store.dispatch('showSnackbarSimple', 'Email sent');
+          })
+          .catch(() => {
+            this.$store.dispatch('showSnackbarSimple', 'Email failed to send');
+          });
       },
     },
   };
@@ -301,8 +301,67 @@
 
 <style lang="scss" scoped>
 
-  ::v-deep .v-chip__close {
-    padding-top: 4px;
+  ::v-deep textarea {
+    height: 120px;
+    min-height: 120px;
+  }
+
+  .chip-container {
+    display: inline;
+    margin: 2px;
+  }
+
+  .form-container {
+    padding-top: 12px;
+    padding-bottom: 16px;
+  }
+
+  .form-row {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .form-row-margin {
+    margin-bottom: 8px;
+  }
+
+  .form-label {
+    flex: 0 0 auto;
+    padding: 8px;
+  }
+
+  .form-content {
+    flex: 1 1 auto;
+  }
+
+  .text-truncate {
+    display: inline-block;
+    max-width: 68px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .placeholder-buttons-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    width: 100%;
+    padding: 8px;
+  }
+
+  .placeholder-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 88px;
+    height: 30px;
+    font-size: 13px;
+    text-transform: none;
+    cursor: pointer;
+    border-radius: 14px;
+    transition: all 0.2s ease;
   }
 
 </style>

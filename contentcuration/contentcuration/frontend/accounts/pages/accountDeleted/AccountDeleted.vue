@@ -1,6 +1,6 @@
 <template>
 
-  <MessageLayout :header="$tr('accountDeletedTitle')">
+  <StudioMessageLayout :header="$tr('accountDeletedTitle')">
     <template #back>
       <KRouterLink
         :to="{ name: 'Main' }"
@@ -9,19 +9,19 @@
         appearance="raised-button"
       />
     </template>
-  </MessageLayout>
+  </StudioMessageLayout>
 
 </template>
 
 
 <script>
 
-  import MessageLayout from '../../components/MessageLayout';
+  import StudioMessageLayout from '../../components/StudioMessageLayout.vue';
 
   export default {
     name: 'AccountDeleted',
     components: {
-      MessageLayout,
+      StudioMessageLayout,
     },
     $trs: {
       accountDeletedTitle: 'Account successfully deleted',

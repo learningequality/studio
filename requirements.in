@@ -9,7 +9,7 @@ le-utils>=0.2.12
 gunicorn==23.0.0
 django-postmark==0.1.6
 jsonfield==3.1.0
-celery==5.5.3
+celery==5.6.0
 redis
 python-postmark==0.7.0
 Django==3.2.24
@@ -21,7 +21,7 @@ requests>=2.20.0
 google-cloud-core
 django-db-readonly==0.7.0
 google-cloud-kms==2.10.0
-google-crc32c==1.7.1
+google-crc32c==1.8.0
 backoff
 django-model-utils==5.0.0
 django-redis
@@ -34,7 +34,7 @@ jsonschema>=3.2.0
 django-celery-results
 packaging>=21.0
 pycountry
-langcodes==3.5.0
-pydantic==2.12.3
+langcodes==3.5.1
+pydantic==2.12.5
 latex2mathml==3.78.0
 markdown-it-py==4.0.0

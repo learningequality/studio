@@ -1,6 +1,9 @@
 <template>
 
-  <main class="studio-page-outer">
+  <main
+    class="studio-page-outer"
+    :style="outerStyle"
+  >
     <div
       class="studio-page-inner"
       :style="innerStyle"
@@ -29,12 +32,22 @@
         paddingRight: `${paddingX.value}px`,
         paddingTop: `${paddingTop.value}px`,
         maxWidth: windowIsLarge.value ? '1000px' : '100%',
+        margin: props.centered ? '0 auto' : '0',
       }));
 
-      return { innerStyle };
+      const outerStyle = computed(() => {
+        return {
+          marginTop: `${props.marginTop}px`,
+          height: `calc(100vh - ${props.marginTop}px)`,
+        };
+      });
+
+      return { innerStyle, outerStyle };
     },
     props: {
       offline: { type: Boolean, default: false },
+      marginTop: { type: Number, default: 104 },
+      centered: { type: Boolean, default: false },
     },
   };
 
@@ -45,16 +58,12 @@
 
   .studio-page-outer {
     width: 100%;
-    height: calc(100vh - 104px);
-    margin-top: 104px;
     margin-bottom: 16px;
-    overflow-x: hidden;
     overflow-y: auto;
   }
 
   .studio-page-inner {
     width: 100%;
-    margin-left: 0;
   }
 
 </style>

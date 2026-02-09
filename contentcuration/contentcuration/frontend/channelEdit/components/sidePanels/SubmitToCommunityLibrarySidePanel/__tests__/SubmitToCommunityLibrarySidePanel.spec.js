@@ -4,51 +4,56 @@ import { factory } from '../../../../store';
 
 import SubmitToCommunityLibrarySidePanel from '../';
 import Box from '../Box.vue';
-import StatusChip from '../StatusChip.vue';
 
-import { usePublishedData } from '../composables/usePublishedData';
-import { useLatestCommunityLibrarySubmission } from '../composables/useLatestCommunityLibrarySubmission';
+import { useVersionDetail } from '../composables/useVersionDetail';
+import { useLatestCommunityLibrarySubmission } from 'shared/composables/useLatestCommunityLibrarySubmission';
+import CommunityLibraryStatusChip from 'shared/views/communityLibrary/CommunityLibraryStatusChip.vue';
 import { Categories, CommunityLibraryStatus } from 'shared/constants';
 import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 import { CommunityLibrarySubmission } from 'shared/data/resources';
 import CountryField from 'shared/views/form/CountryField.vue';
 
-jest.mock('../composables/usePublishedData', () => ({
-  usePublishedData: jest.fn(),
-}));
-jest.mock('../composables/useLatestCommunityLibrarySubmission', () => ({
-  useLatestCommunityLibrarySubmission: jest.fn(),
-}));
+jest.mock('../composables/useVersionDetail');
+jest.mock('shared/composables/useLatestCommunityLibrarySubmission');
 jest.mock('shared/data/resources', () => ({
   CommunityLibrarySubmission: {
     create: jest.fn(() => Promise.resolve()),
+  },
+  Channel: {
+    fetchModel: jest.fn(),
+    getCatalogChannel: jest.fn(() => Promise.resolve()),
+  },
+  AuditedSpecialPermissionsLicense: {
+    fetchCollection: jest.fn(() => Promise.resolve([])),
   },
 }));
 
 const store = factory();
 
-const {
-  nonePrimaryInfo$,
-  flaggedPrimaryInfo$,
-  approvedPrimaryInfo$,
-  submittedPrimaryInfo$,
-  reviewersWillSeeLatestFirst$,
-} = communityChannelsStrings;
+const { nonePrimaryInfo$, flaggedPrimaryInfo$, approvedPrimaryInfo$, submittedPrimaryInfo$ } =
+  communityChannelsStrings;
 
 async function makeWrapper({ channel, publishedData, latestSubmission }) {
   const isLoading = ref(true);
   const isFinished = ref(false);
+  const fetchPublishedData = jest.fn(() => Promise.resolve());
+  const fetchLatestSubmission = jest.fn(() => Promise.resolve());
 
-  usePublishedData.mockReturnValue({
+  store.state.currentChannel.currentChannelId = channel.id;
+  store.commit('channel/ADD_CHANNEL', channel);
+
+  useVersionDetail.mockReturnValue({
     isLoading,
     isFinished,
-    data: computed(() => publishedData),
+    data: computed(() => ({ id: 'abcdabcdabcdabcdabcdabcdabcdabcd', ...publishedData })),
+    fetchData: fetchPublishedData,
   });
 
   useLatestCommunityLibrarySubmission.mockReturnValue({
     isLoading,
     isFinished,
     data: computed(() => latestSubmission),
+    fetchData: fetchLatestSubmission,
   });
 
   const wrapper = mount(SubmitToCommunityLibrarySidePanel, {
@@ -79,9 +84,9 @@ const publishedNonPublicChannel = {
 };
 
 const publicChannel = {
-  id: 'published-non-public-channel',
+  id: 'public-channel',
   version: 2,
-  name: 'Published Non-Public Channel',
+  name: 'Public Channel',
   published: true,
   public: true,
 };
@@ -95,21 +100,19 @@ const nonPublishedChannel = {
 };
 
 const publishedData = {
-  2: {
-    included_languages: ['en', null],
-    included_licenses: [1],
-    included_categories: [Categories.SCHOOL],
-  },
-  1: {
-    included_languages: ['en', null],
-    included_licenses: [1],
-    included_categories: [Categories.SCHOOL],
-  },
+  version: 2,
+  included_languages: ['en', null],
+  included_licenses: [1],
+  included_categories: [Categories.SCHOOL],
 };
 
 const submittedLatestSubmission = { channel_version: 2, status: CommunityLibraryStatus.PENDING };
 
 describe('SubmitToCommunityLibrarySidePanel', () => {
+  beforeEach(() => {
+    store.state.currentChannel.currentChannelId = null;
+    store.state.channel.channelsMap = {};
+  });
   describe('correct warnings are shown', () => {
     it('when channel is published, not public and not submitted', async () => {
       const wrapper = await makeWrapper({
@@ -142,7 +145,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
     it('when channel is not published', async () => {
       const wrapper = await makeWrapper({
         channel: nonPublishedChannel,
-        publishedData: {},
+        publishedData: null,
         latestSubmission: null,
       });
 
@@ -178,10 +181,9 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
         latestSubmission: null,
       });
 
-      const infoBoxes = wrapper.findAllComponents(Box).filter(box => box.props('kind') === 'info');
-      expect(infoBoxes.length).toBe(1);
-      const infoBox = infoBoxes.wrappers[0];
-      expect(infoBox.text()).toContain(nonePrimaryInfo$());
+      const infoSection = wrapper.find('.info-section');
+      expect(infoSection.exists()).toBe(true);
+      expect(infoSection.text()).toContain(nonePrimaryInfo$());
     });
 
     it('when the previous submission was rejected', async () => {
@@ -191,10 +193,9 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
         latestSubmission: { channel_version: 1, status: CommunityLibraryStatus.REJECTED },
       });
 
-      const infoBoxes = wrapper.findAllComponents(Box).filter(box => box.props('kind') === 'info');
-      expect(infoBoxes.length).toBe(1);
-      const infoBox = infoBoxes.wrappers[0];
-      expect(infoBox.text()).toContain(flaggedPrimaryInfo$());
+      const infoSection = wrapper.find('.info-section');
+      expect(infoSection.exists()).toBe(true);
+      expect(infoSection.text()).toContain(flaggedPrimaryInfo$());
     });
 
     it('when the previous submission was approved', async () => {
@@ -204,11 +205,9 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
         latestSubmission: { channel_version: 1, status: CommunityLibraryStatus.APPROVED },
       });
 
-      const infoBoxes = wrapper.findAllComponents(Box).filter(box => box.props('kind') === 'info');
-      expect(infoBoxes.length).toBe(1);
-      const infoBox = infoBoxes.wrappers[0];
-      expect(infoBox.text()).toContain(approvedPrimaryInfo$());
-      expect(infoBox.text()).toContain(reviewersWillSeeLatestFirst$());
+      const infoSection = wrapper.find('.info-section');
+      expect(infoSection.exists()).toBe(true);
+      expect(infoSection.text()).toContain(approvedPrimaryInfo$());
     });
 
     it('when the previous submission is pending', async () => {
@@ -218,11 +217,9 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
         latestSubmission: { channel_version: 1, status: CommunityLibraryStatus.PENDING },
       });
 
-      const infoBoxes = wrapper.findAllComponents(Box).filter(box => box.props('kind') === 'info');
-      expect(infoBoxes.length).toBe(1);
-      const infoBox = infoBoxes.wrappers[0];
-      expect(infoBox.text()).toContain(submittedPrimaryInfo$());
-      expect(infoBox.text()).toContain(reviewersWillSeeLatestFirst$());
+      const infoSection = wrapper.find('.info-section');
+      expect(infoSection.exists()).toBe(true);
+      expect(infoSection.text()).toContain(submittedPrimaryInfo$());
     });
   });
 
@@ -256,17 +253,75 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
         latestSubmission: null,
       });
 
-      let moreDetails = wrapper.find('[data-test="more-details"]');
-      expect(moreDetails.exists()).toBe(false);
+      const infoText = wrapper.find('.info-text');
+      expect(infoText.text()).not.toContain('The Kolibri Community Library features channels');
 
-      let moreDetailsButton = wrapper.find('[data-test="more-details-button"]');
+      const moreDetailsButton = wrapper.find('[data-test="more-details-button"]');
       await moreDetailsButton.trigger('click');
 
-      moreDetails = wrapper.find('.more-details-text');
-      expect(moreDetails.exists()).toBe(true);
+      expect(infoText.text()).toContain('The Kolibri Community Library features channels');
 
-      moreDetailsButton = wrapper.find('[data-test="more-details-button"]');
-      expect(moreDetailsButton.exists()).toBe(false);
+      const lessDetailsButton = wrapper.find('[data-test="less-details-button"]');
+      expect(lessDetailsButton.exists()).toBe(true);
+    });
+  });
+
+  describe('publishing state', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('disables form and shows loader when channel is publishing', async () => {
+      const channel = { ...publishedNonPublicChannel, publishing: true };
+      const wrapper = await makeWrapper({ channel, publishedData, latestSubmission: null });
+
+      // Loader/message container should exist
+      expect(wrapper.find('.publishing-loader').exists()).toBe(true);
+
+      const descriptionTextbox = wrapper.findComponent('.description-textbox');
+      expect(descriptionTextbox.exists()).toBe(false);
+      const submitButton = wrapper.find('[data-test="submit-button"]');
+      expect(submitButton.exists()).toBe(false);
+    });
+
+    it('enables form after publishing flips to false (poll-driven)', async () => {
+      const { Channel } = require('shared/data/resources');
+      Channel.fetchModel.mockResolvedValue({
+        id: publishedNonPublicChannel.id,
+        publishing: false,
+        version: 3,
+      });
+
+      const channel = { ...publishedNonPublicChannel, publishing: true };
+      const publishedDataWithVersion3 = {
+        version: 3,
+        included_languages: ['en', null],
+        included_licenses: [1],
+        included_categories: [Categories.SCHOOL],
+      };
+      const wrapper = await makeWrapper({
+        channel,
+        publishedData: publishedDataWithVersion3,
+        latestSubmission: null,
+      });
+
+      const updatedChannel = { ...channel, publishing: false, version: 3 };
+      await wrapper.setProps({ channel: updatedChannel });
+      store.commit('channel/ADD_CHANNEL', updatedChannel);
+
+      await wrapper.vm.$nextTick();
+      await wrapper.vm.$nextTick();
+
+      const descriptionTextbox = wrapper.findComponent('.description-textbox');
+      expect(descriptionTextbox.props('disabled')).toBe(false);
+
+      await descriptionTextbox.vm.$emit('input', 'Some description');
+      await wrapper.vm.$nextTick();
+      const submitButton = wrapper.find('[data-test="submit-button"]');
+      expect(submitButton.attributes('disabled')).toBeUndefined();
     });
   });
 
@@ -324,7 +379,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
         latestSubmission: null,
       });
 
-      const statusChip = wrapper.findAllComponents(StatusChip);
+      const statusChip = wrapper.findAllComponents(CommunityLibraryStatusChip);
       expect(statusChip.exists()).toBe(false);
     });
 
@@ -336,7 +391,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
           latestSubmission: { channel_version: 1, status: submissionStatus },
         });
 
-        const statusChip = wrapper.findComponent(StatusChip);
+        const statusChip = wrapper.findComponent(CommunityLibraryStatusChip);
         expect(statusChip.props('status')).toBe(chipStatus);
       });
     }
@@ -345,6 +400,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
     testStatusChip(CommunityLibraryStatus.LIVE, CommunityLibraryStatus.APPROVED);
     testStatusChip(CommunityLibraryStatus.REJECTED, CommunityLibraryStatus.REJECTED);
     testStatusChip(CommunityLibraryStatus.PENDING, CommunityLibraryStatus.PENDING);
+    testStatusChip(CommunityLibraryStatus.SUPERSEDED, CommunityLibraryStatus.PENDING);
   });
 
   it('is editable when channel is published, not public and not submitted', async () => {
@@ -373,7 +429,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
     it('when channel is not published', async () => {
       const wrapper = await makeWrapper({
         channel: nonPublishedChannel,
-        publishedData: {},
+        publishedData: null,
         latestSubmission: null,
       });
 
@@ -409,7 +465,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       it('when channel is not published', async () => {
         const wrapper = await makeWrapper({
           channel: nonPublishedChannel,
-          publishedData: {},
+          publishedData: null,
           latestSubmission: null,
         });
 
@@ -478,6 +534,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
     });
 
     it('the panel closes', async () => {
+      jest.useFakeTimers();
       const wrapper = await makeWrapper({
         channel: publishedNonPublicChannel,
         publishedData,
@@ -491,9 +548,11 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       await submitButton.trigger('click');
 
       expect(wrapper.emitted('close')).toBeTruthy();
+      jest.useRealTimers();
     });
 
     it('a submission snackbar is shown', async () => {
+      jest.useFakeTimers();
       const wrapper = await makeWrapper({
         channel: publishedNonPublicChannel,
         publishedData,
@@ -505,14 +564,15 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
 
       const submitButton = wrapper.find('[data-test="submit-button"]');
       await submitButton.trigger('click');
-
-      jest.useFakeTimers();
+      await wrapper.vm.$nextTick();
 
       expect(store.getters['snackbarIsVisible']).toBe(true);
       expect(CommunityLibrarySubmission.create).not.toHaveBeenCalled();
+      jest.useRealTimers();
     });
 
     it('the submission is created after a timeout', async () => {
+      jest.useFakeTimers();
       const wrapper = await makeWrapper({
         channel: publishedNonPublicChannel,
         publishedData,
@@ -524,20 +584,22 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
 
       const countryField = wrapper.findComponent(CountryField);
       await countryField.vm.$emit('input', ['Czech Republic']);
-
-      jest.useFakeTimers();
+      await wrapper.vm.$nextTick();
 
       const submitButton = wrapper.find('[data-test="submit-button"]');
       await submitButton.trigger('click');
+      await wrapper.vm.$nextTick();
 
       jest.runAllTimers();
+      await wrapper.vm.$nextTick();
 
       expect(CommunityLibrarySubmission.create).toHaveBeenCalledWith({
         description: 'Some description',
         channel: publishedNonPublicChannel.id,
         countries: ['CZ'],
-        categories: [Categories.SCHOOL],
+        categories: { [Categories.SCHOOL]: true },
       });
+      jest.useRealTimers();
     });
   });
 

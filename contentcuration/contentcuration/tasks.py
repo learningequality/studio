@@ -152,7 +152,7 @@ def sendcustomemails_task(subject, message, query):
         text = message.format(
             current_date=time.strftime("%A, %B %d"),
             current_time=time.strftime("%H:%M %Z"),
-            **recipient.__dict__
+            **recipient.__dict__,
         )
         text = render_to_string("registration/custom_email.txt", {"message": text})
         recipient.email_user(

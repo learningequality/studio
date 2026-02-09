@@ -143,7 +143,7 @@
 
   import { mapGetters, mapActions } from 'vuex';
   import { getCurrentInstance, onMounted, ref, computed, watch } from 'vue';
-  import { transform } from 'lodash';
+  import transform from 'lodash/transform';
   import { RouteNames, rowsPerPageItems } from '../../constants';
   import { useTable } from '../../composables/useTable';
   import { useKeywordSearch } from '../../composables/useKeywordSearch';
@@ -334,7 +334,7 @@
           { text: 'Demo URL', value: 'demo_server_url', sortable: false },
           { text: 'Source URL', value: 'source_url', sortable: false },
           {
-            text: 'Community Library Status',
+            text: 'Latest community library submission',
             value: 'latest_community_library_submission_status',
             sortable: false,
           },

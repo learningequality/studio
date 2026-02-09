@@ -574,8 +574,12 @@ describe('ContentNode methods', () => {
 
     it('should update the node with the payload', async () => {
       node.parent = parent.id;
-      await expect(ContentNode.tableMove({ node, parent, payload, change })).resolves.toBe(payload);
-      expect(table.update).toHaveBeenCalledWith(node.id, payload);
+      const result = await ContentNode.tableMove({ node, parent, payload, change });
+      expect(result).toMatchObject({ ...payload, modified: expect.any(String) });
+      expect(table.update).toHaveBeenCalledTimes(1);
+      const [updateId, updatePayload] = table.update.mock.calls[0];
+      expect(updateId).toBe(node.id);
+      expect(updatePayload).toBe(result);
       expect(table.put).not.toBeCalled();
       expect(table.update).not.toHaveBeenCalledWith(node.parent, { changed: true });
     });
@@ -584,19 +588,23 @@ describe('ContentNode methods', () => {
       node.parent = parent.id;
       updated = false;
       const newPayload = { ...payload, root_id: parent.root_id };
-      await expect(ContentNode.tableMove({ node, parent, payload, change })).resolves.toMatchObject(
-        newPayload,
+      const result = await ContentNode.tableMove({ node, parent, payload, change });
+      expect(result).toMatchObject({ ...newPayload, modified: expect.any(String) });
+      expect(table.update).toHaveBeenCalledWith(
+        node.id,
+        expect.objectContaining({ ...payload, modified: expect.any(String) }),
       );
-      expect(table.update).toHaveBeenCalledWith(node.id, payload);
-      expect(table.put).toHaveBeenCalledWith(newPayload);
+      expect(table.put).toHaveBeenCalledWith(result);
       expect(table.update).not.toHaveBeenCalledWith(node.parent, { changed: true });
     });
 
     it('should mark the old parent as changed', async () => {
-      await expect(ContentNode.tableMove({ node, parent, payload, change })).resolves.toMatchObject(
-        payload,
+      const result = await ContentNode.tableMove({ node, parent, payload, change });
+      expect(result).toMatchObject({ ...payload, modified: expect.any(String) });
+      expect(table.update).toHaveBeenCalledWith(
+        node.id,
+        expect.objectContaining({ ...payload, modified: expect.any(String) }),
       );
-      expect(table.update).toHaveBeenCalledWith(node.id, payload);
       expect(table.put).not.toBeCalled();
       expect(table.update).toHaveBeenCalledWith(node.parent, { changed: true });
     });

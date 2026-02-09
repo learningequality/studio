@@ -49,6 +49,7 @@ from contentcuration.constants import (
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Change
 from contentcuration.models import Channel
+from contentcuration.models import ChannelVersion
 from contentcuration.models import CommunityLibrarySubmission
 from contentcuration.models import ContentNode
 from contentcuration.models import Country
@@ -90,6 +91,12 @@ class ChannelListPagination(ValuesViewsetPageNumberPagination):
 
 
 class CatalogListPagination(CachedListPagination):
+    page_size = None
+    page_size_query_param = "page_size"
+    max_page_size = 1000
+
+
+class ChannelVersionListPagination(ValuesViewsetPageNumberPagination):
     page_size = None
     page_size_query_param = "page_size"
     max_page_size = 1000
@@ -573,6 +580,7 @@ class ChannelViewSet(ValuesViewset):
                             {
                                 "published": True,
                                 "publishing": False,
+                                "version": channel.version,
                                 "primary_token": channel.get_human_token().token,
                                 "last_published": channel.last_published,
                                 "unpublished_changes": _unpublished_changes_query(
@@ -881,23 +889,58 @@ class ChannelViewSet(ValuesViewset):
     @action(
         detail=True,
         methods=["get"],
-        url_path="published_data",
-        url_name="published-data",
+        url_path="version_detail",
+        url_name="version-detail",
     )
-    def get_published_data(self, request, pk=None) -> Response:
+    def get_version_detail(self, request, pk=None) -> Response:
         """
-        Get the published data for a channel.
+        Get the version detail for a channel.
 
         :param request: The request object
         :param pk: The ID of the channel
-        :return: Response with the published data of the channel
+        :return: Response with the version detail of the channel
         :rtype: Response
         """
-        # Allow exactly users with permission to edit the channel to
-        # access the published data.
         channel = self.get_edit_object()
 
-        return Response(channel.published_data)
+        if not channel.version_info:
+            return Response({})
+
+        version_data = (
+            ChannelVersion.objects.filter(id=channel.version_info.id)
+            .values(
+                "id",
+                "version",
+                "resource_count",
+                "kind_count",
+                "size",
+                "date_published",
+                "version_notes",
+                "included_languages",
+                "included_licenses",
+                "included_categories",
+                "non_distributable_licenses_included",
+            )
+            .first()
+        )
+
+        if not version_data:
+            return Response({})
+
+        return Response(version_data)
+
+    @action(
+        detail=True,
+        methods=["get"],
+        url_path="has_community_library_submission",
+        url_name="has-community-library-submission",
+    )
+    def has_community_library_submission(self, request, pk=None) -> Response:
+        channel = self.get_object()
+        has_submission = CommunityLibrarySubmission.objects.filter(
+            channel_id=channel.id
+        ).exists()
+        return Response({"has_community_library_submission": has_submission})
 
     def _channel_exists(self, channel_id) -> bool:
         """
@@ -987,6 +1030,35 @@ class ChannelViewSet(ValuesViewset):
         return unique_lang_ids
 
 
+class ChannelVersionFilter(RequiredFilterSet):
+    class Meta:
+        model = ChannelVersion
+        fields = {
+            "channel": ["exact"],
+            "version": ["exact", "gte", "lte"],
+        }
+
+
+class ChannelVersionViewSet(ReadOnlyValuesViewset):
+    queryset = ChannelVersion.objects.all()
+    permission_classes = [IsAuthenticated]
+    pagination_class = ChannelVersionListPagination
+    filterset_class = ChannelVersionFilter
+    ordering_fields = ["version"]
+    ordering = "-version"
+
+    values = (
+        "id",
+        "channel",
+        "version",
+        "date_published",
+        "version_notes",
+        "included_languages",
+        "included_licenses",
+        "included_categories",
+    )
+
+
 @method_decorator(
     cache_page(
         settings.PUBLIC_CHANNELS_CACHE_DURATION, key_prefix="public_catalog_list"
@@ -1050,6 +1122,7 @@ class CatalogViewSet(ReadOnlyValuesViewset):
 
 
 class AdminChannelFilter(BaseChannelFilter):
+
     latest_community_library_submission_status = CharFilter(
         method="filter_latest_community_library_submission_status"
     )

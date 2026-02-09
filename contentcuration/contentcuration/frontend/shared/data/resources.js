@@ -1412,8 +1412,8 @@ export const Channel = new CreateModelResource({
       .then(response => response.data.languages);
     return uniq(compact(localLanguages.concat(remoteLanguages)));
   },
-  async getPublishedData(id) {
-    const response = await client.get(window.Urls.channel_published_data(id));
+  async getVersionDetail(id) {
+    const response = await client.get(window.Urls.channel_version_detail(id));
     return response.data;
   },
 });
@@ -1706,6 +1706,10 @@ export const ContentNode = new TreeResource({
   async tableMove({ node, parent, payload }) {
     // Do direct table writes here rather than using add/update methods to avoid
     // creating unnecessary additional change events.
+    payload = {
+      ...payload,
+      modified: new Date().toISOString(),
+    };
     const updated = await this.table.update(node.id, payload);
     // Update didn't succeed, this node probably doesn't exist, do a put instead,
     // but need to add in other parent info.
@@ -2409,5 +2413,38 @@ export const CommunityLibrarySubmission = new APIResource({
     return client.post(this.collectionUrl(), params).then(response => {
       return response.data;
     });
+  },
+});
+
+export const AdminCommunityLibrarySubmission = new APIResource({
+  urlName: 'admin_community_library_submission',
+  fetchCollection(params) {
+    return client.get(this.collectionUrl(), { params }).then(response => {
+      return response.data || [];
+    });
+  },
+  async fetchModel(id) {
+    const response = await client.get(this.modelUrl(id));
+    return response.data;
+  },
+  async resolve(id, params) {
+    const response = await client.post(this.getUrlFunction('resolve')(id), params);
+    return response.data;
+  },
+});
+
+export const AuditedSpecialPermissionsLicense = new APIResource({
+  urlName: 'audited_special_permissions_license',
+  async fetchCollection(params) {
+    const response = await client.get(this.collectionUrl(), { params });
+    return response.data || [];
+  },
+});
+
+export const ChannelVersion = new APIResource({
+  urlName: 'channelversion',
+  async fetchCollection(params) {
+    const response = await client.get(this.collectionUrl(), { params });
+    return response.data;
   },
 });

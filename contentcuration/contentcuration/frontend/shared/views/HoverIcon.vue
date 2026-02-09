@@ -3,12 +3,12 @@
   <span class="hover-icon">
     <KIcon
       :icon="outlineIcon"
-      :color="$themePalette.blue.v_500"
+      :color="outlineColor"
       class="outline"
     />
     <KIcon
       :icon="filledIcon"
-      :color="$themePalette.blue.v_500"
+      :color="filledColor"
       class="filled"
     />
   </span>
@@ -22,7 +22,7 @@
    * Displays an outline icon that smoothly
    * transitions to a filled icon on hover.
    *
-   * Icon is blue and 16px by default (for current
+   * Icon is 16px by default (for current
    * usages, customization is not needed).
    **/
   export default {
@@ -39,6 +39,20 @@
        * (`KIcon` compatible) name of the filled icon
        **/
       filledIcon: {
+        type: String,
+        required: true,
+      },
+      /**
+       * Color for the outline icon
+       **/
+      outlineColor: {
+        type: String,
+        required: true,
+      },
+      /**
+       * Color for the filled icon
+       **/
+      filledColor: {
         type: String,
         required: true,
       },

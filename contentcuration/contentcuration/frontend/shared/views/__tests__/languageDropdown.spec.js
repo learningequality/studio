@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils';
+import { mount, shallowMount } from '@vue/test-utils';
 import LanguageDropdown from '../LanguageDropdown.vue';
 import TestForm from './TestForm.vue';
 import { LanguagesList } from 'shared/leUtils/Languages';
@@ -60,5 +60,25 @@ describe('languageDropdown', () => {
     formWrapper.vm.validate();
     await wrapper.vm.$nextTick();
     expect(wrapper.find('.error--text').exists()).toBe(true);
+  });
+
+  it('returns formatted language text when native_name is present', () => {
+    const wrapper = shallowMount(LanguageDropdown, {
+      mocks: {
+        $tr: (key, params) => `${params.language} (${params.code})`,
+      },
+    });
+    const item = { native_name: 'Español,Spanish', id: 'es' };
+    expect(wrapper.vm.languageText(item)).toBe('Español (es)');
+  });
+
+  it('returns formatted language text when native_name is an empty string', () => {
+    const wrapper = shallowMount(LanguageDropdown, {
+      mocks: {
+        $tr: (key, params) => `${params.language} (${params.code})`,
+      },
+    });
+    const item = { native_name: '', id: 'de' };
+    expect(wrapper.vm.languageText(item)).toBe(' (de)');
   });
 });

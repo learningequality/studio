@@ -1,4 +1,4 @@
-import { debounce } from 'lodash';
+import debounce from 'lodash/debounce';
 import { ref, computed, onBeforeMount, watch } from 'vue';
 import { useRoute } from 'vue-router/composables';
 import { useQueryParams } from './useQueryParams';

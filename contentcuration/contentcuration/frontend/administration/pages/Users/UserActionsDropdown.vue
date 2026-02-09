@@ -29,21 +29,21 @@
     </KModal>
     <UserPrivilegeModal
       v-model="addAdminPrivilegeDialog"
-      header="Add admin privileges"
+      title="Add admin privileges"
       :text="`Are you sure you want to add admin privileges to user '${user.name}'?`"
       confirmText="Add privileges"
       :confirmAction="addAdminHandler"
     />
     <UserPrivilegeModal
       v-model="removeAdminPrivilegeDialog"
-      header="Remove admin privileges"
+      title="Remove admin privileges"
       :text="`Are you sure you want to remove admin privileges from user '${user.name}'?`"
       confirmText="Remove privileges"
       :confirmAction="removeAdminHandler"
     />
     <EmailUsersDialog
       v-model="emailDialog"
-      :query="{ ids: [userId] }"
+      :initialRecipients="[userId]"
     />
     <BaseMenu>
       <template #activator="{ on }">
@@ -67,6 +67,7 @@
             <VListTile
               v-if="user.is_admin"
               data-test="removeadmin"
+              @click.stop
               @click="removeAdminPrivilegeDialog = true"
             >
               <VListTileTitle>Remove admin privileges</VListTileTitle>
@@ -74,6 +75,7 @@
             <VListTile
               v-else
               data-test="addadmin"
+              @click.stop
               @click="addAdminPrivilegeDialog = true"
             >
               <VListTileTitle>Add admin privileges</VListTileTitle>
