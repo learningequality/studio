@@ -5,21 +5,31 @@
     class="channel"
     :headingLevel="2"
     thumbnailDisplay="small"
-    :thumbnailSrc="thumbnailSrc"
-    :thumbnailAlign="'left'"
-    :thumbnailScaleType="'contain'"
+    thumbnailAlign="left"
     :orientation="windowIsSmall ? 'vertical' : 'horizontal'"
     :title="channel.name"
     :titleMaxLines="2"
     data-testid="card"
     @click="goToChannelRoute()"
   >
-    <template #thumbnailPlaceholder>
-      <KIcon
-        :color="$themePalette.grey.v_400"
-        class="img-placeholder-icon"
-        icon="image"
-      />
+    <template #thumbnail>
+      <KImg
+        :src="thumbnailSrc"
+        :style="{ width: '100%', height: '100%' }"
+        scaleType="contain"
+        aspectRatio="16:9"
+        isDecorative
+      >
+        <template #placeholder>
+          <span class="placeholder">
+            <KIcon
+              :color="$themePalette.grey.v_400"
+              class="placeholder-icon"
+              icon="image"
+            />
+          </span>
+        </template>
+      </KImg>
     </template>
     <template #belowTitle>
       <div class="below-title">
@@ -408,7 +418,14 @@
     height: 24px;
   }
 
-  .img-placeholder-icon {
+  .placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+  }
+
+  .placeholder-icon {
     width: 50%;
     min-width: 24px;
     height: 50%;
