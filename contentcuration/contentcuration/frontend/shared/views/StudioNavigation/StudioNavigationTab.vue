@@ -7,7 +7,7 @@
       tabClasses,
       $computedClass({
         ':active': { backgroundColor: 'rgba(0, 0, 0, 0.2)' },
-        ':focus': { ...$coreOutline, outlineOffset: 0 },
+        ':focus': { ...$coreOutline, outlineOffset: '-2px' },
       }),
     ]"
     :style="tabStyles"
