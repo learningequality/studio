@@ -1,9 +1,12 @@
-import { mount } from '@vue/test-utils';
+import { render, screen, within } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
+import VueRouter from 'vue-router';
 import { Store } from 'vuex';
 import ChannelSelectionList from '../ChannelSelectionList';
 import { ChannelListTypes } from 'shared/constants';
 
 const searchWord = 'search test';
+
 const editChannel = {
   id: 'editchannel',
   name: searchWord,
@@ -14,7 +17,7 @@ const editChannel = {
 
 const editChannel2 = {
   id: 'editchannel2',
-  name: '',
+  name: 'Another Channel',
   description: '',
   edit: true,
   published: true,
@@ -22,100 +25,154 @@ const editChannel2 = {
 
 const publicChannel = {
   id: 'publicchannel',
+  name: 'Public Channel',
   public: true,
   published: true,
 };
 
-const getters = {
-  channels: jest.fn(() => [editChannel, editChannel2, publicChannel]),
-  getChannel: jest.fn(() => () => editChannel),
-};
-
-const actions = {
+const mockActions = {
   loadChannelList: jest.fn(() => Promise.resolve()),
 };
 
-const store = new Store({
-  modules: {
-    channel: {
-      namespaced: true,
-      getters,
-      actions,
-    },
-  },
-});
-
-function makeWrapper() {
-  const loadChannelList = jest.spyOn(ChannelSelectionList.methods, 'loadChannelList');
-  loadChannelList.mockImplementation(() => Promise.resolve());
-
-  const wrapper = mount(ChannelSelectionList, {
-    propsData: {
-      listType: ChannelListTypes.EDITABLE,
-    },
-    computed: {
-      channels() {
-        return [editChannel, editChannel2, publicChannel];
+const makeStore = () =>
+  new Store({
+    modules: {
+      channel: {
+        namespaced: true,
+        state: {},
+        getters: {
+          channels: () => [editChannel, editChannel2, publicChannel],
+          getChannel: () => id => [editChannel, editChannel2, publicChannel].find(c => c.id === id),
+        },
+        actions: mockActions,
+        mutations: {
+          ADD_CHANNELS() {},
+        },
       },
     },
-    store,
   });
 
-  return [wrapper, { loadChannelList }];
-}
+const renderComponent = (props = {}) => {
+  const router = new VueRouter({
+    routes: [{ path: '/', name: 'Home' }],
+  });
 
-describe('channelSelectionList', () => {
-  let wrapper, mocks;
+  return render(ChannelSelectionList, {
+    router,
+    store: makeStore(),
+    props: {
+      listType: ChannelListTypes.EDITABLE,
+      value: [], // Default to empty
+      ...props, // Allow overriding props for specific tests
+    },
+  });
+};
 
+describe('ChannelSelectionList', () => {
   beforeEach(() => {
-    [wrapper, mocks] = makeWrapper();
+    jest.clearAllMocks();
   });
 
-  afterEach(() => {
-    mocks.loadChannelList.mockRestore();
+  it('renders a list of editable channels and hides non-editable ones', async () => {
+    await renderComponent();
+
+    // Specific wait avoids wrapping the whole block in waitFor
+    expect(await screen.findByLabelText('Search for a channel')).toBeInTheDocument();
+
+    expect(screen.getByText(editChannel.name)).toBeInTheDocument();
+    expect(screen.getByText(editChannel2.name)).toBeInTheDocument();
+    expect(screen.queryByText(publicChannel.name)).not.toBeInTheDocument();
   });
 
-  it('should show the correct channels based on listType', async () => {
-    await wrapper.setData({ loading: false });
-    expect(wrapper.vm.listChannels.find(c => c.id === editChannel.id)).toBeTruthy();
-    expect(wrapper.vm.listChannels.find(c => c.id === editChannel2.id)).toBeTruthy();
-    expect(wrapper.vm.listChannels.find(c => c.id === publicChannel.id)).toBeFalsy();
+  it('filters the channel list when the user types in the search box', async () => {
+    const user = userEvent.setup();
+    await renderComponent();
+
+    // Wait for data load
+    expect(await screen.findByText(editChannel.name)).toBeInTheDocument();
+    expect(screen.getByText(editChannel2.name)).toBeInTheDocument();
+
+    const searchInput = screen.getByLabelText('Search for a channel');
+    await user.clear(searchInput);
+    await user.type(searchInput, editChannel.name);
+
+    // Verify filter happened
+    expect(await screen.findByText(editChannel.name)).toBeInTheDocument();
+    expect(screen.queryByText(editChannel2.name)).not.toBeInTheDocument();
   });
 
-  it('should select channels when the channel has been checked', async () => {
-    await wrapper.setData({ loading: false });
-    await wrapper.findComponent(`[data-test="checkbox-${editChannel.id}"]`).trigger('click');
+  it('selects a channel when the user clicks the checkbox', async () => {
+    const user = userEvent.setup();
+    const { emitted } = await renderComponent();
 
-    expect(wrapper.emitted('input')[0][0]).toEqual([editChannel.id]);
+    await screen.findByText(editChannel.name);
+
+    // Using getByTestId because the component doesn't expose unique
+    // accessible roles for individual channel checkboxes
+    const checkboxRow = screen.getByTestId(`checkbox-${editChannel.id}`);
+
+    // Find the checkbox strictly within this row
+    const checkbox = within(checkboxRow).getByRole('checkbox');
+
+    await user.click(checkbox);
+
+    expect(emitted()).toHaveProperty('input');
+    expect(emitted().input).toHaveLength(1);
+    expect(emitted().input[0][0]).toEqual([editChannel.id]);
   });
 
-  it('should deselect channels when the channel has been unchecked', async () => {
-    await wrapper.setData({ loading: false });
-    await wrapper.findComponent(`[data-test="checkbox-${editChannel.id}"]`).trigger('click'); // Check the channel
-    await wrapper.findComponent(`[data-test="checkbox-${editChannel.id}"]`).trigger('click'); // Uncheck the channel
+  it('deselects a channel when the user clicks the checkbox of an already selected channel', async () => {
+    const user = userEvent.setup();
 
-    expect(wrapper.emitted('input')[0].length).toEqual(1); // Only one event should be emitted (corresponding to the initial check)
-    expect(wrapper.emitted('input')[0][0]).toEqual([editChannel.id]); // The initial check event should be emitted
+    // Initialize with the channel already selected
+    const { emitted } = await renderComponent({ value: [editChannel.id] });
+
+    await screen.findByText(editChannel.name);
+
+    // Using getByTestId because the component doesn't expose unique
+    // accessible roles for individual channel checkboxes
+    const checkboxRow = screen.getByTestId(`checkbox-${editChannel.id}`);
+    const checkbox = within(checkboxRow).getByRole('checkbox');
+
+    // Click the checkbox to deselect
+    await user.click(checkbox);
+
+    expect(emitted()).toHaveProperty('input');
+    expect(emitted().input).toHaveLength(1);
+    expect(emitted().input[0][0]).toEqual([]);
   });
 
-  it('should filter channels based on the search text', async () => {
-    await wrapper.setData({ loading: false, search: searchWord });
-    expect(wrapper.vm.listChannels.find(c => c.id === editChannel.id)).toBeTruthy();
-    expect(wrapper.vm.listChannels.find(c => c.id === editChannel2.id)).toBeFalsy();
+  it('selects a channel when the user clicks the channel card', async () => {
+    const user = userEvent.setup();
+    const { emitted } = await renderComponent();
+
+    await screen.findByText(editChannel.name);
+
+    // Using getByTestId because the component doesn't expose accessible
+    // roles for channel cards
+    const card = screen.getByTestId(`channel-item-${editChannel.id}`);
+    await user.click(card);
+
+    expect(emitted()).toHaveProperty('input');
+    expect(emitted().input).toHaveLength(1);
+    expect(emitted().input[0][0]).toEqual([editChannel.id]);
   });
 
-  it('should select channels when the channel card has been clicked', async () => {
-    await wrapper.setData({ loading: false });
-    await wrapper.findComponent(`[data-test="channel-item-${editChannel.id}"]`).trigger('click');
-    expect(wrapper.emitted('input')[0][0]).toEqual([editChannel.id]);
-  });
+  it('deselects a channel when the user clicks a selected channel card', async () => {
+    const user = userEvent.setup();
 
-  it('should deselect channels when the channel card has been clicked', async () => {
-    await wrapper.setData({ loading: false });
-    await wrapper.findComponent(`[data-test="channel-item-${editChannel.id}"]`).trigger('click'); // Check the channel
-    await wrapper.findComponent(`[data-test="channel-item-${editChannel.id}"]`).trigger('click'); // Uncheck the channel
+    // Initialize with the channel already selected
+    const { emitted } = await renderComponent({ value: [editChannel.id] });
 
-    expect(wrapper.emitted('input')[0].length).toEqual(1); // Only one event should be emitted (corresponding to the initial check)
-    expect(wrapper.emitted('input')[0][0]).toEqual([editChannel.id]); // The initial check event should be emitted
+    await screen.findByText(editChannel.name);
+
+    // Using getByTestId because the component doesn't expose accessible
+    // roles for channel cards
+    const card = screen.getByTestId(`channel-item-${editChannel.id}`);
+    await user.click(card);
+
+    expect(emitted()).toHaveProperty('input');
+    expect(emitted().input).toHaveLength(1);
+    expect(emitted().input[0][0]).toEqual([]);
   });
 });

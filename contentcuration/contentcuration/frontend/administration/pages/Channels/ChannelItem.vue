@@ -201,6 +201,7 @@
       <CommunityLibraryStatusButton
         v-if="communityLibraryStatus"
         :status="communityLibraryStatus"
+        @click="submissionToReview = channel.latest_community_library_submission_id"
       />
       <KEmptyPlaceholder v-else />
     </td>
@@ -210,6 +211,12 @@
         flat
       />
     </td>
+    <ReviewSubmissionSidePanel
+      v-if="submissionToReview"
+      :channel="channel"
+      :submissionId="submissionToReview"
+      @close="submissionToReview = null"
+    />
   </tr>
 
 </template>
@@ -219,12 +226,13 @@
 
   import { mapGetters, mapActions } from 'vuex';
   import ClipboardChip from '../../components/ClipboardChip';
+  import ReviewSubmissionSidePanel from '../../components/sidePanels/ReviewSubmissionSidePanel';
   import CommunityLibraryStatusButton from '../../components/CommunityLibraryStatusButton.vue';
   import { RouteNames } from '../../constants';
   import ChannelActionsDropdown from './ChannelActionsDropdown';
   import { fileSizeMixin } from 'shared/mixins';
   import Checkbox from 'shared/views/form/Checkbox';
-  import { CommunityLibraryStatus } from 'shared/constants';
+  import { getUiSubmissionStatus } from 'shared/utils/communityLibrary';
 
   export default {
     name: 'ChannelItem',
@@ -233,6 +241,7 @@
       ClipboardChip,
       Checkbox,
       CommunityLibraryStatusButton,
+      ReviewSubmissionSidePanel,
     },
     mixins: [fileSizeMixin],
     props: {
@@ -244,6 +253,11 @@
         type: String,
         required: true,
       },
+    },
+    data() {
+      return {
+        submissionToReview: null,
+      };
     },
     computed: {
       ...mapGetters('channel', ['getChannel']),
@@ -285,14 +299,7 @@
         };
       },
       communityLibraryStatus() {
-        // We do not need to distinguish LIVE from APPROVED in the UI
-        if (
-          this.channel.latest_community_library_submission_status === CommunityLibraryStatus.LIVE
-        ) {
-          return CommunityLibraryStatus.APPROVED;
-        }
-
-        return this.channel.latest_community_library_submission_status;
+        return getUiSubmissionStatus(this.channel.latest_community_library_submission_status);
       },
     },
     methods: {

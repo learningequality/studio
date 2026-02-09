@@ -61,7 +61,7 @@
                     {{ infoText }}
                   </template>
                 </div>
-                <StatusChip
+                <CommunityLibraryStatusChip
                   v-if="latestSubmissionStatus"
                   :status="latestSubmissionStatus"
                   class="status-chip"
@@ -104,22 +104,22 @@
                 {{ alreadySubmittedWarningDescription$() }}
               </template>
             </Box>
-            <div class="channel-title">
-              {{
-                channelVersion$({
-                  name: channel ? channel.name : '',
-                  version: displayedVersion,
-                })
-              }}
-            </div>
-            <div class="metadata-section">
+            <div class="channel-metadata">
+              <div class="channel-title">
+                {{
+                  channelVersion$({
+                    name: channel ? channel.name : '',
+                    version: displayedVersion,
+                  })
+                }}
+              </div>
               <div
                 v-if="detectedLanguages"
                 class="metadata-line"
               >
                 <LoadingText
-                  :loading="publishedDataIsLoading"
-                  :finishedLoading="publishedDataIsFinished"
+                  :loading="versionDetailIsLoading"
+                  :finishedLoading="versionDetailIsFinished"
                   :omitted="!detectedLanguages"
                 >
                   {{ detectedLanguages }}
@@ -130,38 +130,24 @@
                 class="metadata-line"
               >
                 <LoadingText
-                  :loading="publishedDataIsLoading"
-                  :finishedLoading="publishedDataIsFinished"
+                  :loading="versionDetailIsLoading"
+                  :finishedLoading="versionDetailIsFinished"
                   :omitted="!detectedCategories"
                 >
                   {{ detectedCategories }}
                 </LoadingText>
               </div>
             </div>
-            <div
-              v-if="licenseAuditIsLoading"
-              class="license-audit-loader"
-            >
-              <KCircularLoader disableDefaultTransition />
-              <div class="audit-text-wrapper">
-                <div class="audit-text-primary">
-                  {{ checkingChannelCompatibility$() }}
-                </div>
-                <div class="audit-text-secondary">
-                  {{ checkingChannelCompatibilitySecondary$() }}
-                </div>
-              </div>
-            </div>
             <InvalidLicensesNotice
-              v-if="licenseAuditIsFinished && invalidLicenses.length"
+              v-if="versionDetailIsFinished && invalidLicenses.length"
               :invalid-licenses="invalidLicenses"
             />
             <CompatibleLicensesNotice
-              v-else-if="licenseAuditIsFinished"
+              v-else-if="versionDetailIsFinished"
               :licenses="includedLicenses"
             />
             <SpecialPermissionsList
-              v-if="licenseAuditIsFinished && channelVersionId"
+              v-if="versionDetailIsFinished && channelVersionId"
               v-model="checkedSpecialPermissions"
               :channel-version-id="channelVersionId"
               @update:allChecked="allSpecialPermissionsChecked = $event"
@@ -244,14 +230,13 @@
 
   import Box from './Box';
   import LoadingText from './LoadingText';
-  import StatusChip from './StatusChip';
-  import { useLatestCommunityLibrarySubmission } from './composables/useLatestCommunityLibrarySubmission';
-  import { useLicenseAudit } from './composables/useLicenseAudit';
-  import { usePublishedData } from './composables/usePublishedData';
+  import { useVersionDetail } from './composables/useVersionDetail';
 
   import InvalidLicensesNotice from './licenseCheck/InvalidLicensesNotice.vue';
   import CompatibleLicensesNotice from './licenseCheck/CompatibleLicensesNotice.vue';
-  import SpecialPermissionsList from './licenseCheck/SpecialPermissionsList.vue';
+  import SpecialPermissionsList from 'shared/views/communityLibrary/SpecialPermissionsList.vue';
+  import CommunityLibraryStatusChip from 'shared/views/communityLibrary/CommunityLibraryStatusChip';
+  import { useLatestCommunityLibrarySubmission } from 'shared/composables/useLatestCommunityLibrarySubmission';
   import { translateMetadataString } from 'shared/utils/metadataStringsTranslation';
   import countriesUtil from 'shared/utils/countries';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
@@ -261,6 +246,7 @@
   import CountryField from 'shared/views/form/CountryField';
   import LanguagesMap from 'shared/leUtils/Languages';
   import { CategoriesLookup, CommunityLibraryStatus } from 'shared/constants';
+  import { getUiSubmissionStatus } from 'shared/utils/communityLibrary';
 
   export default {
     name: 'SubmitToCommunityLibrarySidePanel',
@@ -268,7 +254,7 @@
       SidePanelModal,
       Box,
       LoadingText,
-      StatusChip,
+      CommunityLibraryStatusChip,
       CountryField,
       InvalidLicensesNotice,
       CompatibleLicensesNotice,
@@ -309,8 +295,6 @@
         submittingSnackbar$,
         publishingMessage$,
         confirmReplacementText$,
-        checkingChannelCompatibility$,
-        checkingChannelCompatibilitySecondary$,
       } = communityChannelsStrings;
 
       const annotationColor = computed(() => tokensTheme.annotation);
@@ -329,7 +313,7 @@
         isFinished: latestSubmissionIsFinished,
         data: latestSubmissionData,
         fetchData: fetchLatestSubmission,
-      } = useLatestCommunityLibrarySubmission(props.channel.id);
+      } = useLatestCommunityLibrarySubmission({ channelId: props.channel.id });
 
       function countryCodeToName(code) {
         return countriesUtil.getName(code, 'en');
@@ -352,13 +336,7 @@
         if (!latestSubmissionIsFinished.value) return undefined;
         if (!latestSubmissionData.value) return null;
 
-        // We do not need to distinguish LIVE from APPROVED in the UI
-        const uiSubmissionStatus =
-          latestSubmissionData.value.status == CommunityLibraryStatus.LIVE
-            ? CommunityLibraryStatus.APPROVED
-            : latestSubmissionData.value.status;
-
-        return uiSubmissionStatus;
+        return getUiSubmissionStatus(latestSubmissionData.value.status);
       });
 
       const infoConfig = computed(() => {
@@ -415,11 +393,11 @@
       });
 
       const {
-        isLoading: publishedDataIsLoading,
-        isFinished: publishedDataIsFinished,
+        isLoading: versionDetailIsLoading,
+        isFinished: versionDetailIsFinished,
         data: versionDetail,
-        fetchData: fetchPublishedData,
-      } = usePublishedData(props.channel.id);
+        fetchData: fetchVersionDetail,
+      } = useVersionDetail(props.channel.id);
 
       // Use the latest version available from either channel or versionDetail
       const displayedVersion = computed(() => {
@@ -434,15 +412,15 @@
         return versionDetail.value?.id;
       });
 
-      const {
-        isLoading: licenseAuditIsLoading,
-        isFinished: licenseAuditIsFinished,
-        invalidLicenses,
-        includedLicenses,
-        checkAndTriggerAudit: checkAndTriggerLicenseAudit,
-      } = useLicenseAudit(props.channel, currentChannelVersion);
+      const invalidLicenses = computed(() => {
+        return versionDetail.value?.non_distributable_licenses_included || [];
+      });
 
-      const allSpecialPermissionsChecked = ref(true);
+      const includedLicenses = computed(() => {
+        return versionDetail.value?.included_licenses || [];
+      });
+
+      const allSpecialPermissionsChecked = ref(false);
 
       const hasInvalidLicenses = computed(() => {
         return invalidLicenses.value && invalidLicenses.value.length > 0;
@@ -453,9 +431,9 @@
           allSpecialPermissionsChecked.value,
           !isPublishing.value,
           !hasInvalidLicenses.value,
-          licenseAuditIsFinished.value,
+          versionDetailIsFinished.value,
           canBeEdited.value,
-          publishedDataIsFinished.value,
+          versionDetailIsFinished.value,
           description.value.length >= 1,
         ];
 
@@ -466,11 +444,10 @@
         return conditions.every(condition => condition);
       });
 
-      // Watch for when publishing completes - fetch publishedData to get the new version's data
+      // Watch for when publishing completes - fetch version detail to get the new version's data
       watch(isPublishing, async (newIsPublishing, oldIsPublishing) => {
         if (oldIsPublishing === true && newIsPublishing === false) {
-          await fetchPublishedData();
-          await checkAndTriggerLicenseAudit();
+          await fetchVersionDetail();
         }
       });
 
@@ -478,8 +455,7 @@
         await fetchLatestSubmission();
 
         if (!isPublishing.value) {
-          await fetchPublishedData();
-          await checkAndTriggerLicenseAudit();
+          await fetchVersionDetail();
         }
       });
 
@@ -532,11 +508,15 @@
         const submitDelayMs = 5000;
 
         const timer = setTimeout(() => {
+          const categories = {};
+          for (const categoryId of versionDetail.value.included_categories || []) {
+            categories[categoryId] = true;
+          }
           CommunityLibrarySubmission.create({
             description: description.value,
             channel: props.channel.id,
             countries: countries.value.map(country => countriesUtil.getAlpha2Code(country, 'en')),
-            categories: versionDetail.value.included_categories,
+            categories,
           })
             .then(() => {
               showSnackbar({ text: submittedSnackbar$() });
@@ -578,12 +558,10 @@
         displayedVersion,
         channelVersionId,
         canBeSubmitted,
-        publishedDataIsLoading,
-        publishedDataIsFinished,
+        versionDetailIsLoading,
+        versionDetailIsFinished,
         detectedLanguages,
         detectedCategories,
-        licenseAuditIsLoading,
-        licenseAuditIsFinished,
         invalidLicenses,
         includedLicenses,
         onSubmit,
@@ -607,8 +585,6 @@
         isPublishing,
         publishingMessage$,
         confirmReplacementText$,
-        checkingChannelCompatibility$,
-        checkingChannelCompatibilitySecondary$,
         checkedSpecialPermissions,
         allSpecialPermissionsChecked,
       };
@@ -641,7 +617,7 @@
     font-weight: 600;
   }
 
-  .metadata-section {
+  .channel-metadata {
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -719,35 +695,6 @@
   .publishing-text {
     font-size: 14px;
     color: v-bind('infoTextColor');
-  }
-
-  .license-audit-loader {
-    display: flex;
-    flex-direction: row;
-    gap: 12px;
-    align-items: flex-start;
-    width: 100%;
-    padding: 16px 0;
-  }
-
-  .audit-text-wrapper {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .audit-text-primary {
-    font-size: 14px;
-    line-height: 140%;
-    color: v-bind('infoTextColor');
-  }
-
-  .audit-text-secondary {
-    font-size: 14px;
-    line-height: 140%;
-    color: v-bind('infoTextColor');
-    opacity: 0.7;
   }
 
   .info-section {

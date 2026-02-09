@@ -970,7 +970,7 @@ def fill_published_fields(channel, version_notes):
         .first()
     )
 
-    non_distributable_licenses = (
+    non_distributable_licenses_included = (
         [all_rights_reserved_id]
         if all_rights_reserved_id and all_rights_reserved_id in license_list
         else []
@@ -1016,7 +1016,7 @@ def fill_published_fields(channel, version_notes):
         channel.version_info.included_licenses = license_list
         channel.version_info.included_categories = category_list
         channel.version_info.non_distributable_licenses_included = (
-            non_distributable_licenses
+            non_distributable_licenses_included
         )
         channel.version_info.save()
 
