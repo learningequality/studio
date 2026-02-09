@@ -1,14 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
-import Vuex from 'vuex';
-import VueRouter from 'vue-router';
-import Vue from 'vue';
 import { factory } from '../../../store';
 import router from '../../../router';
 import CatalogFilterBar from '../CatalogFilterBar';
-
-Vue.use(Vuex);
-Vue.use(VueRouter);
 
 const collection = { id: 'test-collection' };
 
@@ -22,20 +16,15 @@ const query = {
 async function closeChipByText(user, text) {
   const chip = await screen.findByText(text);
 
-  const closeButton = chip.closest('[data-test^="filter-chip"]').querySelector('i');
+  const closeButton = chip
+    .closest('[data-test^="filter-chip"]')
+    .querySelector('.v-chip__close');
 
   await user.click(closeButton);
 }
 
 function makeWrapper() {
   const store = factory();
-
-  router
-    .push({
-      name: 'CHANNELS_EDITABLE',
-      query,
-    })
-    .catch(() => {});
 
   return render(CatalogFilterBar, {
     // localVue,
