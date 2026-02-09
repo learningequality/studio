@@ -117,13 +117,13 @@
         user: state => state.session.currentUser,
       }),
       channelsLink() {
-        return window.Urls?.channels() || '/channels';
+        return window.Urls.channels();
       },
       administrationLink() {
-        return window.Urls?.administration() || '/administration';
+        return window.Urls.administration();
       },
       settingsLink() {
-        return window.Urls?.settings() || '/settings';
+        return window.Urls.settings();
       },
       helpLink() {
         return 'https://kolibri-studio.readthedocs.io/en/latest/index.html';
