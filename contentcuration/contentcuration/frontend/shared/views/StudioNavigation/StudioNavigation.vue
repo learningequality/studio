@@ -129,7 +129,7 @@
         class="studio-navigation-tabs-wrapper"
         :style="tabsWrapperStyles"
       >
-        <div
+        <ul
           ref="tabsContainer"
           class="studio-navigation-tabs-container"
           :style="containerStyles"
@@ -145,7 +145,7 @@
           >
             {{ tab.label }}
           </StudioNavigationTab>
-        </div>
+        </ul>
 
         <div
           v-if="overflowMenuOptions.length > 0"
@@ -522,7 +522,9 @@
     flex: 1;
     flex-wrap: wrap;
     height: 48px;
+    margin: 0;
     overflow: hidden;
+    list-style: none;
   }
 
   .studio-navigation-tab-item {
