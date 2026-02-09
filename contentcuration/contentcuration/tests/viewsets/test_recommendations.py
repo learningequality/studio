@@ -150,7 +150,6 @@ class RecommendationsCRUDTestCase(StudioAPITestCase):
         self.assertEqual(response.content.decode(), error_message)
         mock_load_recommendations.assert_called_once()
 
-
     @patch(
         "contentcuration.utils.automation_manager.AutomationManager.load_recommendations"
     )
