@@ -170,8 +170,8 @@
 
     <StudioNavigationSidePanel
       v-if="loggedIn"
-      :isOpen="sidePanelOpen"
-      @close="sidePanelOpen = false"
+      :isOpen="isSideNavOpen"
+      @close="isSideNavOpen = false"
       @openLanguageModal="showLanguageModal = true"
       @logout="logout"
     />
@@ -189,6 +189,7 @@
 
   import { mapActions, mapState, mapGetters } from 'vuex';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
+  import debounce from 'lodash/debounce';
   import LanguageSwitcherModal from '../../languageSwitcher/LanguageSwitcherModal.vue';
   import SkipNavigationLink from './SkipNavigationLink.vue';
 
@@ -224,11 +225,10 @@
     },
     data() {
       return {
-        sidePanelOpen: false,
+        isSideNavOpen: false,
         showLanguageModal: false,
         toolbarWidth: 0,
         overflowMenuOptions: [],
-        resizeTimeout: null,
       };
     },
 
@@ -238,13 +238,13 @@
       }),
       ...mapGetters(['loggedIn']),
       homeLink() {
-        return window.Urls?.channels() || '/';
+        return window.Urls.channels();
       },
       administrationLink() {
-        return window.Urls?.administration() || '/administration';
+        return window.Urls.administration();
       },
       settingsLink() {
-        return window.Urls?.settings() || '/settings';
+        return window.Urls.settings();
       },
       helpLink() {
         return 'https://kolibri-studio.readthedocs.io/en/latest/index.html';
@@ -306,12 +306,16 @@
       },
       tabsWrapperStyles() {
         return {
+          // Adds horizontal padding on mobile devices to ensure the overflow menu button
+          // and its hover effect do not touch the screen edge.
           padding: this.windowBreakpoint <= 2 ? '0 8px' : 0,
         };
       },
     },
+
     watch: {
       windowWidth() {
+        this.updateToolbarWidth();
         this.debouncedCalculateOverflow();
       },
       tabs: {
@@ -323,9 +327,12 @@
         deep: true,
       },
     },
+    created() {
+      // Create debounced version of calculateOverflow
+      this.debouncedCalculateOverflow = debounce(this.calculateOverflow, 100);
+    },
     mounted() {
       this.updateToolbarWidth();
-      window.addEventListener('resize', this.handleResize);
 
       this.$nextTick(() => {
         this.calculateOverflow();
@@ -337,7 +344,9 @@
       });
     },
     beforeDestroy() {
-      window.removeEventListener('resize', this.handleResize);
+      if (this.debouncedCalculateOverflow) {
+        this.debouncedCalculateOverflow.cancel();
+      }
     },
     methods: {
       ...mapActions(['logout']),
@@ -380,11 +389,11 @@
         }
       },
       toggleSidePanel() {
-        this.sidePanelOpen = !this.sidePanelOpen;
+        this.isSideNavOpen = !this.isSideNavOpen;
       },
 
       closeSidePanelAndNavigate(url) {
-        this.sidePanelOpen = false;
+        this.isSideNavOpen = false;
         window.location.href = url;
       },
       navigateToAdministration() {
@@ -430,16 +439,6 @@
         if (this.$analytics) {
           this.$analytics.trackClick('general', `User dropdown - ${label}`);
         }
-      },
-      handleResize() {
-        this.updateToolbarWidth();
-        this.debouncedCalculateOverflow();
-      },
-      debouncedCalculateOverflow() {
-        if (this.resizeTimeout) clearTimeout(this.resizeTimeout);
-        this.resizeTimeout = setTimeout(() => {
-          this.calculateOverflow();
-        }, 100);
       },
       updateToolbarWidth() {
         this.toolbarWidth = this.$refs.studioNavigation?.clientWidth || 0;
