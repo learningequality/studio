@@ -49,9 +49,24 @@
         type: String,
         required: true,
       },
+      active: {
+        type: Boolean,
+        default: false,
+      },
     },
     computed: {
       optionStyle() {
+        if (this.active) {
+          return {
+            color: this.$themeTokens.primaryDark,
+            fontWeight: 'bold',
+            backgroundColor: this.$themePalette.grey.v_200,
+            ':hover': {
+              backgroundColor: this.$themePalette.grey.v_300,
+            },
+            ':focus': this.$coreOutline,
+          };
+        }
         return {
           color: this.$themeTokens.text,
           ':hover': {
