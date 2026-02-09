@@ -1,7 +1,7 @@
 import { render, screen, cleanup } from '@testing-library/vue';
 import { createLocalVue } from '@vue/test-utils';
 import VueRouter from 'vue-router';
-import StudioNavigationOption from '../StudioNavigation/StudioNavigationOption.vue';
+import StudioSideNavOption from '../StudioNavigation/StudioSideNavOption.vue';
 
 const localVue = createLocalVue();
 localVue.use(VueRouter);
@@ -31,7 +31,7 @@ const renderComponent = (props = {}, options = {}) => {
     ],
   });
 
-  return render(StudioNavigationOption, {
+  return render(StudioSideNavOption, {
     localVue,
     router,
     props,
@@ -39,7 +39,7 @@ const renderComponent = (props = {}, options = {}) => {
   });
 };
 
-describe('StudioNavigationOption', () => {
+describe('StudioSideNavOption', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
