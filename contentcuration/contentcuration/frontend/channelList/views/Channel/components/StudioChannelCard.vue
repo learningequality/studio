@@ -183,8 +183,12 @@
         type: Boolean,
         default: false,
       },
-      detailsRouteName: {
-        type: String,
+      /**
+       * When provided, overrides the default navigation to the channel edit page.
+       * Accepts any Vue Router location object.
+       */
+      to: {
+        type: Object,
         required: false,
         default: null,
       },
@@ -250,20 +254,9 @@
     methods: {
       ...mapActions('channel', ['deleteChannel', 'removeViewer']),
       goToChannelRoute() {
-        if (this.detailsRouteName) {
-          // Catalog context: using Vue Router modal navigation (read-only details)
-          this.$router.push({
-            name: this.detailsRouteName,
-            params: {
-              channelId: this.channel.id,
-            },
-            query: {
-              ...this.$route.query,
-              last: this.$route.name,
-            },
-          }).catch(() => {});
+        if (this.to) {
+          this.$router.push(this.to).catch(() => {});
         } else {
-          // My Channels context: direct navigation to edit page
           window.location.href = window.Urls.channel(this.channel.id);
         }
       },

@@ -63,7 +63,7 @@
                 :channel="channel"
                 :selectable="selecting"
                 :selected="isChannelSelected(channel.id)"
-                :detailsRouteName="detailsRouteName"
+                :to="getChannelDetailsRoute(channel.id)"
                 @toggle-selection="handleSelectionToggle"
               />
             </KCardGrid>
@@ -129,6 +129,8 @@
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { RouteNames } from '../../constants';
   import CatalogFilters from './CatalogFilters';
+  import CatalogFilterBar from './CatalogFilterBar';
+  import StudioChannelCard from './components/StudioChannelCard';
   import LoadingText from 'shared/views/LoadingText';
   import Pagination from 'shared/views/Pagination';
   import BottomBar from 'shared/views/BottomBar';
@@ -136,8 +138,6 @@
   import OfflineText from 'shared/views/OfflineText';
   import { constantsTranslationMixin } from 'shared/mixins';
   import { channelExportMixin } from 'shared/views/channel/mixins';
-  import CatalogFilterBar from './CatalogFilterBar';
-  import StudioChannelCard from './components/StudioChannelCard';
 
   export default {
     name: 'CatalogList',
@@ -208,9 +208,6 @@
       debouncedSearch() {
         return debounce(this.loadCatalog, 1000);
       },
-      detailsRouteName() {
-        return RouteNames.CATALOG_DETAILS;
-      },
       channels() {
         // Sort again by the same ordering used on the backend - name.
         // Have to do this because of how we are getting the object data via getChannels.
@@ -245,6 +242,16 @@
     },
     methods: {
       ...mapActions('channelList', ['searchCatalog']),
+      getChannelDetailsRoute(channelId) {
+        return {
+          name: RouteNames.CATALOG_DETAILS,
+          params: { channelId },
+          query: {
+            ...this.$route.query,
+            last: this.$route.name,
+          },
+        };
+      },
       isChannelSelected(channelId) {
         return this.selected.includes(channelId);
       },
