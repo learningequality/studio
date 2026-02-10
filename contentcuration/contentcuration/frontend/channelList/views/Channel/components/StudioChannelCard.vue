@@ -14,6 +14,17 @@
     data-testid="card"
     @click="goToChannelRoute()"
   >
+    <template
+      v-if="selectable"
+      #select
+    >
+      <KCheckbox
+        :checked="selected"
+        @change="$emit('toggle-selection', channel.id)"
+      >
+        <span class="visuallyhidden">{{ $tr('selectChannel', { name: channel.name }) }}</span>
+      </KCheckbox>
+    </template>
     <template #thumbnailPlaceholder>
       <KIcon
         :color="$themePalette.grey.v_400"
@@ -164,6 +175,23 @@
         type: Object,
         required: true,
       },
+      selectable: {
+        type: Boolean,
+        default: false,
+      },
+      selected: {
+        type: Boolean,
+        default: false,
+      },
+      /**
+       * When provided, overrides the default navigation to the channel edit page.
+       * Accepts any Vue Router location object.
+       */
+      to: {
+        type: Object,
+        required: false,
+        default: null,
+      },
     },
     data() {
       return {
@@ -226,7 +254,11 @@
     methods: {
       ...mapActions('channel', ['deleteChannel', 'removeViewer']),
       goToChannelRoute() {
-        window.location.href = window.Urls.channel(this.channel.id);
+        if (this.to) {
+          this.$router.push(this.to).catch(() => {});
+        } else {
+          window.location.href = window.Urls.channel(this.channel.id);
+        }
       },
       openDropDown() {
         this.dropDownArr = this.dropDownItems();
@@ -328,6 +360,7 @@
       lastPublished: 'Published {last_published}',
       lastUpdated: 'Updated {updated}',
       details: 'Details',
+      selectChannel: 'Select {name}',
       viewContent: 'View channel on Kolibri',
       goToWebsite: 'Go to source website',
       editChannel: 'Edit channel details',
