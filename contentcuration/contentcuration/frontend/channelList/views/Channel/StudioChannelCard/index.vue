@@ -7,7 +7,7 @@
     data-testid="channel-card"
     thumbnailDisplay="small"
     thumbnailAlign="left"
-    :orientation="windowIsSmall ? 'vertical' : 'horizontal'"
+    :orientation="cardOrientation"
     :title="channel.name"
     :titleMaxLines="2"
     @click="onCardClick"
@@ -207,6 +207,12 @@
       };
     },
     props: {
+      orientation: {
+        type: String,
+        required: false,
+        default: null,
+        validator: value => ['vertical', 'horizontal'].includes(value),
+      },
       channel: {
         type: Object,
         required: true,
@@ -268,6 +274,12 @@
       };
     },
     computed: {
+      cardOrientation() {
+        if (this.orientation) {
+          return this.orientation;
+        }
+        return this.windowIsSmall ? 'vertical' : 'horizontal';
+      },
       linkComputedClass() {
         return this.$computedClass({
           ':hover': {

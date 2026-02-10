@@ -61,6 +61,7 @@
                 v-for="channel in channels"
                 :key="channel.id"
                 :headingLevel="2"
+                :orientation="windowBreakpoint > 2 ? 'horizontal' : 'vertical'"
                 :showUpdateStatus="false"
                 :channel="channel"
                 :footerButtons="getFooterButtons(channel)"
@@ -157,10 +158,11 @@
     },
     mixins: [channelExportMixin, constantsTranslationMixin],
     setup() {
-      const { windowIsSmall } = useKResponsiveWindow();
+      const { windowIsSmall, windowBreakpoint } = useKResponsiveWindow();
 
       return {
         windowIsSmall,
+        windowBreakpoint,
       };
     },
     data() {
