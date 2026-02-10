@@ -4,6 +4,24 @@
     class="channels-container"
     :style="{ maxWidth: maxWidthStyle }"
   >
+    <StudioRaisedBox
+      v-if="invitations.length"
+      class="invitations"
+    >
+      <template #header>
+        {{ $tr('invitations', { count: invitations.length }) }}
+      </template>
+      <template #main>
+        <ul>
+          <ChannelInvitation
+            v-for="invitation in invitations"
+            :key="invitation.id"
+            :invitationID="invitation.id"
+          />
+        </ul>
+      </template>
+    </StudioRaisedBox>
+
     <slot name="header"></slot>
 
     <p
@@ -30,9 +48,15 @@
 
   import { computed } from 'vue';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
+  import ChannelInvitation from '../ChannelInvitation';
+  import StudioRaisedBox from 'shared/views/StudioRaisedBox';
 
   export default {
     name: 'StudioChannelsPage',
+    components: {
+      ChannelInvitation,
+      StudioRaisedBox,
+    },
     setup() {
       const { windowBreakpoint } = useKResponsiveWindow();
 
@@ -74,9 +98,14 @@
         type: Boolean,
         required: true,
       },
+      invitations: {
+        type: Array,
+        default: () => [],
+      },
     },
     $trs: {
       noChannelsFound: 'No channels found',
+      invitations: 'You have {count, plural,\n =1 {# invitation}\n other {# invitations}}',
     },
   };
 
@@ -89,6 +118,10 @@
     padding-bottom: 24px;
     margin-right: auto;
     margin-left: auto;
+  }
+
+  .invitations {
+    margin-bottom: 24px;
   }
 
   .no-channels {

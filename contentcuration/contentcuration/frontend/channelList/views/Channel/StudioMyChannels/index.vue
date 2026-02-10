@@ -1,23 +1,11 @@
 <template>
 
-  <StudioChannelsPage :loading="loading">
+  <StudioChannelsPage
+    :loading="loading"
+    :invitations="filteredInvitations"
+  >
     <template #header>
       <h1 class="visuallyhidden">{{ $tr('title') }}</h1>
-
-      <StudioRaisedBox v-if="invitationList.length">
-        <template #header>
-          {{ $tr('invitations', { count: invitationList.length }) }}
-        </template>
-        <template #main>
-          <ul class="invitation-list">
-            <ChannelInvitation
-              v-for="invitation in invitationList"
-              :key="invitation.id"
-              :invitationID="invitation.id"
-            />
-          </ul>
-        </template>
-      </StudioRaisedBox>
 
       <div
         v-if="!loading"
@@ -48,20 +36,16 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import { useChannelList } from '../../../composables/useChannelList';
-  import { RouteNames, ChannelInvitationMapping } from '../../../constants';
+  import { RouteNames, InvitationShareModes } from '../../../constants';
   import StudioChannelsPage from '../StudioChannelsPage';
   import StudioChannelCard from '../StudioChannelCard';
-  import ChannelInvitation from '../ChannelInvitation';
   import { ChannelListTypes } from 'shared/constants';
-  import StudioRaisedBox from 'shared/views/StudioRaisedBox';
 
   export default {
     name: 'StudioMyChannels',
     components: {
       StudioChannelsPage,
       StudioChannelCard,
-      StudioRaisedBox,
-      ChannelInvitation,
     },
     setup() {
       const { loading, channels } = useChannelList({
@@ -77,9 +61,8 @@
     },
     computed: {
       ...mapGetters('channelList', ['invitations']),
-      invitationList() {
-        const invitations = this.invitations;
-        return invitations.filter(i => ChannelInvitationMapping[i.share_mode] === 'edit') || [];
+      filteredInvitations() {
+        return this.invitations.filter(i => i.share_mode === InvitationShareModes.EDIT);
       },
     },
     created() {
@@ -98,7 +81,6 @@
     $trs: {
       newChannel: 'New channel',
       title: 'My channels',
-      invitations: 'You have {count, plural,\n =1 {# invitation}\n other {# invitations}}',
     },
   };
 

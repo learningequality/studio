@@ -37,6 +37,7 @@ const CHANNELS = [
 ];
 
 const mockLoadChannelList = jest.fn();
+const mockLoadInvitationList = jest.fn();
 
 const store = new Store({
   modules: {
@@ -47,6 +48,16 @@ const store = new Store({
       },
       actions: {
         loadChannelList: mockLoadChannelList,
+      },
+    },
+    channelList: {
+      namespaced: true,
+      getters: {
+        invitations: () => [],
+        getInvitation: () => () => {},
+      },
+      actions: {
+        loadInvitationList: mockLoadInvitationList,
       },
     },
   },
@@ -69,6 +80,11 @@ describe('StudioViewOnlyChannels', () => {
     expect(mockLoadChannelList).toHaveBeenCalledWith(expect.anything(), {
       listType: ChannelListTypes.VIEW_ONLY,
     });
+  });
+
+  it('calls the load invitations action on mount', () => {
+    renderComponent();
+    expect(mockLoadInvitationList).toHaveBeenCalled();
   });
 
   it('shows the visually hidden title and all channel cards in correct semantic structure', async () => {
