@@ -8,7 +8,7 @@ import { RouteNames } from '../../../constants';
 const CHANNELS = [
   {
     id: 'channel-1',
-    name: 'Channel 1',
+    name: 'Channel title 1',
     description: 'Test channel 1',
     language: 'en',
     modified: new Date('2024-01-15'),
@@ -16,7 +16,7 @@ const CHANNELS = [
   },
   {
     id: 'channel-2',
-    name: 'Channel 2',
+    name: 'Channel title 2',
     description: 'Test channel 2',
     language: 'en',
     modified: new Date('2024-01-20'),
@@ -102,12 +102,20 @@ describe('CatalogList', () => {
     });
   });
 
-  it('shows channel cards', async () => {
+  it('shows the visually hidden title and all channel cards in correct semantic structure', async () => {
     renderComponent();
-    await waitFor(() => {
-      expect(screen.getByText('Channel 1')).toBeInTheDocument();
-      expect(screen.getByText('Channel 2')).toBeInTheDocument();
-    });
+
+    const title = await screen.findByRole('heading', { name: /content library/i });
+    expect(title).toBeInTheDocument();
+    expect(title.tagName).toBe('H1');
+    expect(title).toHaveClass('visuallyhidden');
+
+    const cards = await screen.findAllByTestId('channel-card');
+    expect(cards).toHaveLength(CHANNELS.length);
+    expect(cards[0]).toHaveTextContent('Channel title 1');
+    expect(cards[0].querySelector('h2')).toBeInTheDocument();
+    expect(cards[1]).toHaveTextContent('Channel title 2');
+    expect(cards[1].querySelector('h2')).toBeInTheDocument();
   });
 
   describe('selection', () => {

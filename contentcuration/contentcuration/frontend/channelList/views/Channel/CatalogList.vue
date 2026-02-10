@@ -37,9 +37,10 @@
             xs12
             class="mb-2"
           >
-            <h1 class="mb-2 ml-1 title">
+            <h1 class="visuallyhidden">{{ $tr('title') }}</h1>
+            <p class="mb-2 ml-1 title">
               {{ $tr('resultsText', { count: page.count }) }}
-            </h1>
+            </p>
             <KButton
               v-if="page.count && !selecting"
               :text="$tr('selectChannels')"
@@ -63,6 +64,7 @@
                 :selectable="selecting"
                 :selected="isChannelSelected(channel.id)"
                 :to="getChannelDetailsRoute(channel.id)"
+                :headingLevel="2"
                 @toggle-selection="handleSelectionToggle"
               />
             </KCardGrid>
@@ -309,6 +311,7 @@
       },
     },
     $trs: {
+      title: 'Content library',
       resultsText: '{count, plural,\n =1 {# result found}\n other {# results found}}',
       selectChannels: 'Download a summary of selected channels',
       cancelButton: 'Cancel',
