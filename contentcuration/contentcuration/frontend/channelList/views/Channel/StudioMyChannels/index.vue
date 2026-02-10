@@ -1,0 +1,84 @@
+<template>
+
+  <StudioChannelsPage :loading="loading">
+    <template #header>
+      <h1 class="visuallyhidden">{{ $tr('title') }}</h1>
+      <div
+        v-if="!loading"
+        class="button-container"
+      >
+        <KButton
+          primary
+          :text="$tr('newChannel')"
+          @click="newChannel"
+        />
+      </div>
+    </template>
+
+    <template #cards>
+      <StudioChannelCard
+        v-for="channel in channels"
+        :key="channel.id"
+        :headingLevel="2"
+        :channel="channel"
+      />
+    </template>
+  </StudioChannelsPage>
+
+</template>
+
+
+<script>
+
+  import { useChannelList } from '../../../composables/useChannelList';
+  import { RouteNames } from '../../../constants';
+  import StudioChannelsPage from '../StudioChannelsPage';
+  import StudioChannelCard from '../StudioChannelCard';
+  import { ChannelListTypes } from 'shared/constants';
+
+  export default {
+    name: 'StudioMyChannels',
+    components: {
+      StudioChannelsPage,
+      StudioChannelCard,
+    },
+    setup() {
+      const { loading, channels } = useChannelList({
+        listType: ChannelListTypes.EDITABLE,
+        sortFields: ['modified'],
+        orderFields: ['desc'],
+      });
+
+      return {
+        loading,
+        channels,
+      };
+    },
+    methods: {
+      newChannel() {
+        this.$analytics.trackClick('channel_list', 'Create channel');
+        this.$router.push({
+          name: RouteNames.NEW_CHANNEL,
+          query: { last: this.$route.name },
+        });
+      },
+    },
+    $trs: {
+      newChannel: 'New channel',
+      title: 'My channels',
+    },
+  };
+
+</script>
+
+
+<style lang="scss" scoped>
+
+  .button-container {
+    display: flex;
+    justify-content: end;
+    width: 100%;
+    margin-top: 20px;
+  }
+
+</style>

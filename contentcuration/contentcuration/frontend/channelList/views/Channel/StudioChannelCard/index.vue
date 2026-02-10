@@ -3,13 +3,13 @@
   <KCard
     :key="channel.id"
     class="channel"
-    :headingLevel="2"
+    :headingLevel="headingLevel"
+    data-testid="channel-card"
     thumbnailDisplay="small"
     thumbnailAlign="left"
     :orientation="windowIsSmall ? 'vertical' : 'horizontal'"
     :title="channel.name"
     :titleMaxLines="2"
-    data-testid="card"
     @click="goToChannelRoute()"
   >
     <template #thumbnail>
@@ -50,7 +50,10 @@
     <template #footer>
       <div class="footer">
         <div class="footer-left">
-          <span :style="{ color: $themeTokens.annotation }">
+          <span
+            data-testid="publish-status"
+            :style="{ color: $themeTokens.annotation }"
+          >
             {{ getPublishStatus }}
           </span>
           <div v-if="hasUnpublishedChanges">
@@ -169,6 +172,10 @@
     props: {
       channel: {
         type: Object,
+        required: true,
+      },
+      headingLevel: {
+        type: Number,
         required: true,
       },
     },
