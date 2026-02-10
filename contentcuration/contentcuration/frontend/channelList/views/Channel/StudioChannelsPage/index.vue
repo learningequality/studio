@@ -16,13 +16,7 @@
     <KCardGrid
       layout="1-1-1"
       :loading="loading"
-      :skeletonsConfig="[
-        {
-          breakpoints: [0, 1, 2, 3, 4, 5, 6, 7],
-          orientation: 'vertical',
-          count: 3,
-        },
-      ]"
+      :skeletonsConfig="skeletonsConfig"
       class="cards"
     >
       <slot name="cards"></slot>
@@ -49,8 +43,30 @@
         return '100%';
       });
 
+      const skeletonsConfig = computed(() => {
+        return [
+          {
+            breakpoints: [0, 1],
+            count: 3,
+            orientation: 'vertical',
+            thumbnailDisplay: 'small',
+            thumbnailAlign: 'left',
+            minHeight: '380px',
+          },
+          {
+            breakpoints: [2, 3, 4, 5, 6, 7],
+            count: 3,
+            orientation: 'horizontal',
+            thumbnailDisplay: 'small',
+            thumbnailAlign: 'left',
+            minHeight: '230px',
+          },
+        ];
+      });
+
       return {
         maxWidthStyle,
+        skeletonsConfig,
       };
     },
     props: {
