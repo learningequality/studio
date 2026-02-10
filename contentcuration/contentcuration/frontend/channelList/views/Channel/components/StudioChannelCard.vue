@@ -41,7 +41,7 @@
         </div>
         <div
           class="desc"
-          :style="{ color: $themePalette.text }"
+          :style="{ color: $themeTokens.text }"
         >
           {{ channel.description }}
         </div>
