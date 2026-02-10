@@ -53,7 +53,7 @@
           <span :style="{ color: $themeTokens.annotation }">
             {{ getPublishStatus }}
           </span>
-          <div>
+          <div v-if="hasUnpublishedChanges">
             <KTooltip
               :reference="`lastUpdatedTime`"
               placement="bottom"
@@ -65,10 +65,7 @@
                 })
               }}
             </KTooltip>
-            <div
-              v-if="hasUnpublishedChanges"
-              class="last-updated"
-            >
+            <div class="last-updated">
               <KIcon
                 :ref="`lastUpdatedTime`"
                 :color="$themePalette.green.v_600"
