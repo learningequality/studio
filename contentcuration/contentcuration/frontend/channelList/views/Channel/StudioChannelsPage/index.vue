@@ -86,7 +86,9 @@
 <style lang="scss" scoped>
 
   .channels-container {
-    margin: auto;
+    padding-bottom: 24px;
+    margin-right: auto;
+    margin-left: auto;
   }
 
   .no-channels {
