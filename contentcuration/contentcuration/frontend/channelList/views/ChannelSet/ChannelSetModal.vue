@@ -42,7 +42,7 @@
                 <KTextbox
                   v-model="name"
                   :label="$tr('titleLabel')"
-                  maxlength="200"
+                  :maxlength="200"
                   :invalid="errors.name"
                   :invalidText="$tr('titleRequiredText')"
                   showInvalidText

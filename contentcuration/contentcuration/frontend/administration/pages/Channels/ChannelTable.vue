@@ -334,7 +334,7 @@
           { text: 'Demo URL', value: 'demo_server_url', sortable: false },
           { text: 'Source URL', value: 'source_url', sortable: false },
           {
-            text: 'Community Library Status',
+            text: 'Latest community library submission',
             value: 'latest_community_library_submission_status',
             sortable: false,
           },

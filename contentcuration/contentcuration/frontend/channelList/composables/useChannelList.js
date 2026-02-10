@@ -1,5 +1,4 @@
 import { ref, computed, onMounted, getCurrentInstance } from 'vue';
-import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
 import orderBy from 'lodash/orderBy';
 
 /**
@@ -17,34 +16,21 @@ export function useChannelList(options = {}) {
   const instance = getCurrentInstance();
   const store = instance.proxy.$store;
 
-  const { windowIsMedium, windowIsLarge, windowBreakpoint } = useKResponsiveWindow();
-
   const loading = ref(false);
 
-  const channels = computed(() => store.getters['channel/channels'] || []);
+  const allChannels = computed(() => store.getters['channel/channels'] || []);
 
-  const listChannels = computed(() => {
-    if (!channels.value || channels.value.length === 0) {
+  const channels = computed(() => {
+    if (!allChannels.value || allChannels.value.length === 0) {
       return [];
     }
 
-    const filtered = channels.value.filter(channel => channel[listType] && !channel.deleted);
+    const filtered = allChannels.value.filter(channel => channel[listType] && !channel.deleted);
 
     return orderBy(filtered, sortFields, orderFields);
   });
 
-  const hasChannels = computed(() => listChannels.value.length > 0);
-
-  const maxWidthStyle = computed(() => {
-    if (windowBreakpoint.value >= 5) return '50%';
-    if (windowBreakpoint.value === 4) return '66.66%';
-    if (windowBreakpoint.value === 3) return '83.33%';
-
-    if (windowIsLarge.value) return '50%';
-    if (windowIsMedium.value) return '83.33%';
-
-    return '100%';
-  });
+  const hasChannels = computed(() => channels.value.length > 0);
 
   const loadData = async () => {
     loading.value = true;
@@ -64,10 +50,7 @@ export function useChannelList(options = {}) {
   return {
     loading,
     channels,
-    listChannels,
     hasChannels,
-
-    maxWidthStyle,
 
     loadData,
   };

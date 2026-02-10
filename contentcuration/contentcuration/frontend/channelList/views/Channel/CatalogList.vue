@@ -130,7 +130,7 @@
   import { RouteNames } from '../../constants';
   import CatalogFilters from './CatalogFilters';
   import CatalogFilterBar from './CatalogFilterBar';
-  import StudioChannelCard from './components/StudioChannelCard';
+  import StudioChannelCard from './StudioChannelCard';
   import LoadingText from 'shared/views/LoadingText';
   import Pagination from 'shared/views/Pagination';
   import BottomBar from 'shared/views/BottomBar';
