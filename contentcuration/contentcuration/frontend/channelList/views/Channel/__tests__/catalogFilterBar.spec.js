@@ -18,6 +18,7 @@ async function closeChipByText(user, text) {
 
   const closeButton = chip.closest('[data-test^="filter-chip"]').querySelector('.v-chip__close');
 
+  expect(closeButton).toBeTruthy();
   await user.click(closeButton);
 }
 
@@ -46,6 +47,10 @@ describe('catalogFilterBar', () => {
       .catch(() => {});
   });
 
+  afterEach(() => {
+    router.replace({ query: {} }).catch(() => {});
+  });
+
   it('clear all button should remove all filters', async () => {
     const user = userEvent.setup();
     makeWrapper();
@@ -68,9 +73,9 @@ describe('catalogFilterBar', () => {
 
     await waitFor(() => {
       expect(router.currentRoute.query.keywords).toBeUndefined();
-      expect(router.currentRoute.query.coach).toBeTruthy();
-      expect(router.currentRoute.query.collection).toBeTruthy();
-      expect(router.currentRoute.query.languages).toBeTruthy();
+      expect(router.currentRoute.query.coach).toBe(true);
+      expect(router.currentRoute.query.collection).toBe('some-collection');
+      expect(router.currentRoute.query.languages).toBe('en,es');
     });
   });
 
@@ -82,9 +87,9 @@ describe('catalogFilterBar', () => {
 
     await waitFor(() => {
       expect(router.currentRoute.query.coach).toBeUndefined();
-      expect(router.currentRoute.query.collection).toBeTruthy();
-      expect(router.currentRoute.query.languages).toBeTruthy();
-      expect(router.currentRoute.query.keywords).toBeTruthy();
+      expect(router.currentRoute.query.collection).toBe('some-collection');
+      expect(router.currentRoute.query.languages).toBe('en,es');
+      expect(router.currentRoute.query.keywords).toBe('testing');
     });
   });
 
@@ -101,9 +106,9 @@ describe('catalogFilterBar', () => {
 
     await waitFor(() => {
       expect(router.currentRoute.query.languages).toBeUndefined();
-      expect(router.currentRoute.query.coach).toBeTruthy();
-      expect(router.currentRoute.query.collection).toBeTruthy();
-      expect(router.currentRoute.query.keywords).toBeTruthy();
+      expect(router.currentRoute.query.coach).toBe(true);
+      expect(router.currentRoute.query.collection).toBe('some-collection');
+      expect(router.currentRoute.query.keywords).toBe('testing');
     });
   });
 });
