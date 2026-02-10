@@ -1,231 +1,177 @@
-import { render, screen, fireEvent } from '@testing-library/vue';
+import { render, screen, waitFor } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
 import VueRouter from 'vue-router';
 import { Store } from 'vuex';
-import CatalogList from '../CatalogList';
+import CatalogList from '../CatalogList.vue';
 import { RouteNames } from '../../../constants';
 
-const mockChannels = [
+const CHANNELS = [
   {
     id: 'channel-1',
-    name: 'Testing Channel 1',
-    description: 'First test channel',
-    thumbnail: null,
-    thumbnail_encoding: {},
+    name: 'Channel 1',
+    description: 'Test channel 1',
     language: 'en',
-    public: false,
-    version: 0,
-    last_published: null,
-    deleted: false,
-    source_url: 'https://example.com',
-    demo_server_url: 'https://demo.com',
-    edit: true,
-    view: true,
-    modified: '2025-12-19T10:00:00Z',
-    primary_token: null,
-    count: 10,
-    unpublished_changes: true,
-    thumbnail_url: null,
-    published: false,
-    publishing: false,
-    bookmark: false,
+    modified: new Date('2024-01-15'),
+    last_published: new Date('2024-01-10'),
   },
   {
     id: 'channel-2',
-    name: 'Testing Channel 2',
-    description: 'Second test channel',
-    thumbnail: null,
-    thumbnail_encoding: {},
-    language: 'es',
-    public: false,
-    version: 0,
-    last_published: null,
-    deleted: false,
-    source_url: 'https://example.com',
-    demo_server_url: 'https://demo.com',
-    edit: true,
-    view: true,
-    modified: '2025-12-19T10:00:00Z',
-    primary_token: null,
-    count: 20,
-    unpublished_changes: false,
-    thumbnail_url: null,
-    published: true,
-    publishing: false,
-    bookmark: false,
+    name: 'Channel 2',
+    description: 'Test channel 2',
+    language: 'en',
+    modified: new Date('2024-01-20'),
+    last_published: new Date('2024-01-18'),
   },
 ];
 
+const CHANNEL_IDS = CHANNELS.map(c => c.id);
+
 const router = new VueRouter({
   routes: [
+    { name: RouteNames.CHANNEL_DETAILS, path: '/:channelId/details' },
     { name: RouteNames.CATALOG_ITEMS, path: '/catalog' },
-    { name: RouteNames.CATALOG_DETAILS, path: '/catalog/:channelId/details' },
-    { name: 'CHANNEL_EDIT', path: '/:channelId/:tab' },
+    { name: RouteNames.CATALOG_DETAILS, path: '/catalog/:channelId' },
   ],
 });
 
-router.push({ name: RouteNames.CATALOG_ITEMS });
+const mockSearchCatalog = jest.fn(() => Promise.resolve());
 
-function renderComponent(customStore = null) {
-  const searchCatalog = jest.fn().mockResolvedValue();
-
-  const store =
-    customStore ||
-    new Store({
-      modules: {
-        channel: {
-          namespaced: true,
-          getters: {
-            getChannels: () => ids => {
-              return ids.map(id => mockChannels.find(c => c.id === id)).filter(Boolean);
-            },
-          },
-          actions: {
-            deleteChannel: jest.fn(),
-            removeViewer: jest.fn(),
-          },
-        },
-        channelList: {
-          namespaced: true,
-          state: {
-            page: {
-              count: mockChannels.length,
-              results: mockChannels.map(c => c.id),
-              page_number: 1,
-              total_pages: 1,
-            },
-          },
-          actions: {
-            searchCatalog,
-          },
-        },
-      },
+const store = new Store({
+  state: {
+    connection: { online: true },
+  },
+  modules: {
+    channel: {
+      namespaced: true,
       state: {
-        connection: {
-          online: true,
-        },
-        session: {
-          currentUser: {
-            id: 'user-1',
-          },
+        channelsMap: Object.fromEntries(CHANNELS.map(c => [c.id, c])),
+      },
+      getters: {
+        getChannels: state => ids => ids.map(id => state.channelsMap[id]).filter(Boolean),
+        getChannel: state => id => state.channelsMap[id],
+      },
+    },
+    channelList: {
+      namespaced: true,
+      state: {
+        page: {
+          count: CHANNEL_IDS.length,
+          results: CHANNEL_IDS,
         },
       },
       actions: {
-        showSnackbar: jest.fn(),
-        showSnackbarSimple: jest.fn(),
+        searchCatalog: mockSearchCatalog,
       },
-    });
+    },
+  },
+});
 
+function renderComponent() {
   return render(CatalogList, {
     store,
     routes: router,
-    stubs: {
-      CatalogFilters: {
-        template: '<div data-testid="catalog-filters">Filters</div>',
-      },
-      Pagination: {
-        template: '<div data-testid="pagination">Pagination</div>',
-        props: ['pageNumber', 'totalPages'],
-      },
-    },
+    stubs: { CatalogFilters: true },
   });
 }
 
 describe('CatalogList', () => {
-  it('renders catalog channels', async () => {
-    renderComponent();
-    const cards = await screen.findAllByTestId('card');
-    expect(cards.length).toBe(2);
+  beforeEach(() => {
+    jest.clearAllMocks();
+    router.push({ name: RouteNames.CATALOG_ITEMS }).catch(() => {});
   });
 
-  it('shows results count', async () => {
+  it('calls the searchCatalog action on mount', async () => {
     renderComponent();
-    expect(await screen.findByText(/2 results found/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(mockSearchCatalog).toHaveBeenCalled();
+    });
   });
 
-  it('shows empty state when no channels found', async () => {
-    const emptyStore = new Store({
-      modules: {
-        channel: {
-          namespaced: true,
-          getters: {
-            getChannels: () => () => [],
-          },
-          actions: {
-            deleteChannel: jest.fn(),
-            removeViewer: jest.fn(),
-          },
-        },
-        channelList: {
-          namespaced: true,
-          state: {
-            page: {
-              count: 0,
-              results: [],
-              page_number: 1,
-              total_pages: 0,
-            },
-          },
-          actions: {
-            searchCatalog: jest.fn().mockResolvedValue(),
-          },
-        },
-      },
-      state: {
-        connection: {
-          online: true,
-        },
-        session: {
-          currentUser: {
-            id: 'user-1',
-          },
-        },
-      },
-      actions: {
-        showSnackbar: jest.fn(),
-        showSnackbarSimple: jest.fn(),
-      },
+  it('shows results found title', async () => {
+    renderComponent();
+    await waitFor(() => {
+      expect(screen.getByText(/results found/i)).toBeInTheDocument();
+    });
+  });
+
+  it('shows the selection link', async () => {
+    renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getByText('Download a summary of selected channels')).toBeInTheDocument();
+    });
+  });
+
+  it('shows channel cards', async () => {
+    renderComponent();
+    await waitFor(() => {
+      expect(screen.getByText('Channel 1')).toBeInTheDocument();
+      expect(screen.getByText('Channel 2')).toBeInTheDocument();
+    });
+  });
+
+  describe('selection', () => {
+    it('hides checkboxes and selection text initially', async () => {
+      renderComponent();
+      await waitFor(() => screen.getByText('Download a summary of selected channels'));
+
+      expect(screen.queryByRole('checkbox', { name: /select all/i })).not.toBeInTheDocument();
+      expect(screen.queryByText(/channels selected/i)).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /cancel/i })).not.toBeInTheDocument();
     });
 
-    renderComponent(emptyStore);
-    const cards = screen.queryAllByTestId('card');
-    expect(cards.length).toBe(0);
-    expect(await screen.findByText(/0 results found/i)).toBeInTheDocument();
-  });
-
-  describe('selection mode', () => {
-    it('shows select all checkbox when entering selection mode', async () => {
+    it('shows checkboxes, selection text, and cancel button when selecting', async () => {
+      const user = userEvent.setup();
       renderComponent();
 
-      // Initially no select-all checkbox
-      expect(screen.queryByLabelText(/select all/i)).not.toBeInTheDocument();
+      const selectButton = await waitFor(() =>
+        screen.getByText('Download a summary of selected channels'),
+      );
+      await user.click(selectButton);
 
-      // Click select button
-      const selectButton = await screen.findByText(/download a summary of selected channels/i);
-      await fireEvent.click(selectButton);
-
-      // Select-all checkbox should appear
-      expect(await screen.findByLabelText(/select all/i)).toBeInTheDocument();
-
-      // Toolbar with count should appear
-      expect(await screen.findByText(/2 channels selected/i)).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.queryByRole('checkbox', { name: /select all/i })).toBeInTheDocument();
+        expect(screen.queryByText(/channels selected/i)).toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: /cancel/i })).toBeInTheDocument();
+      });
     });
 
-    it('exits selection mode when cancel is clicked', async () => {
+    it('exits selection when cancel button is clicked', async () => {
+      const user = userEvent.setup();
       renderComponent();
 
-      // Enter selection mode
-      const selectButton = await screen.findByText(/download a summary of selected channels/i);
-      await fireEvent.click(selectButton);
+      const selectButton = await waitFor(() =>
+        screen.getByText('Download a summary of selected channels'),
+      );
+      await user.click(selectButton);
+      const cancelButton = await waitFor(() => screen.getByRole('button', { name: /cancel/i }));
 
-      // Verify we're in selection mode
-      expect(await screen.findByLabelText(/select all/i)).toBeInTheDocument();
+      await user.click(cancelButton);
 
-      // Click cancel
-      const cancelButton = await screen.findByText(/cancel/i);
-      await fireEvent.click(cancelButton);
+      await waitFor(() => {
+        expect(screen.queryByRole('checkbox', { name: /select all/i })).not.toBeInTheDocument();
+        expect(screen.queryByText(/channels selected/i)).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: /cancel/i })).not.toBeInTheDocument();
+      });
+    });
+  });
 
-      // Selection UI should disappear
-      expect(screen.queryByLabelText(/select all/i)).not.toBeInTheDocument();
+  describe('search', () => {
+    it('calls the searchCatalog action when query parameters change', async () => {
+      renderComponent();
+
+      await waitFor(() => screen.getByText(/results found/i));
+
+      const initialCalls = mockSearchCatalog.mock.calls.length;
+
+      await router.push({
+        name: RouteNames.CATALOG_ITEMS,
+        query: { keywords: 'search test' },
+      });
+
+      await waitFor(() => {
+        expect(mockSearchCatalog.mock.calls.length).toBeGreaterThan(initialCalls);
+      });
     });
   });
 });

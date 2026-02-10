@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/vue';
+import { render, screen, waitFor } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
 import VueRouter from 'vue-router';
 import { Store } from 'vuex';
 import StudioMyChannels from '../index.vue';
@@ -75,16 +76,17 @@ const store = new Store({
 function renderComponent(props = {}) {
   return render(StudioMyChannels, {
     store,
+    routes: router,
     props: {
       ...props,
     },
-    routes: router,
   });
 }
 
 describe('StudioMyChannels', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    router.push('/').catch(() => {});
   });
 
   it('calls the load channel list action with correct parameters on mount', () => {
@@ -119,5 +121,21 @@ describe('StudioMyChannels', () => {
     renderComponent();
     expect(screen.getByText('You have 1 invitation'));
     expect(screen.getByText('User A has invited you to edit Channel A'));
+  });
+
+  it('navigates to the new channel route when the new channel button clicked', async () => {
+    renderComponent();
+
+    // Wait for loading to complete by waiting for channel cards to appear,
+    // otherwise button click silently fails
+    await screen.findAllByTestId('channel-card');
+
+    const newChannelButton = screen.getByRole('button', { name: /new channel/i });
+
+    expect(router.currentRoute.path).toBe('/');
+    await userEvent.click(newChannelButton);
+    await waitFor(() => {
+      expect(router.currentRoute.path).toBe('/new');
+    });
   });
 });
