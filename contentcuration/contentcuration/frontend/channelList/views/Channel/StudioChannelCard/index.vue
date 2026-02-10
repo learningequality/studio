@@ -316,7 +316,7 @@
       selectedItem(option) {
         const value = option.value;
         if (value === 'edit') {
-          this.channelEditLink();
+          this.goToChannelEdit();
         } else if (value === 'copy') {
           this.tokenDialog = true;
         } else if (value === 'delete') {
@@ -327,7 +327,7 @@
           window.open(this.channel.demo_server_url, '_blank');
         }
       },
-      channelEditLink() {
+      goToChannelEdit() {
         this.$router.push({
           name: RouteNames.CHANNEL_EDIT,
           query: {
