@@ -66,16 +66,10 @@ function renderComponent(props = {}) {
   });
 }
 
-const originalLocation = window.location;
-
 describe('StudioChannelCard', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     router.push('/').catch(() => {});
-  });
-
-  afterEach(() => {
-    window.location = originalLocation;
   });
 
   it('shows channel title', () => {
@@ -110,17 +104,6 @@ describe('StudioChannelCard', () => {
     renderComponent({ channel: { ...CHANNEL, last_published: null } });
     const publishStatus = await screen.findByTestId('publish-status');
     expect(publishStatus).toHaveTextContent('Unpublished');
-  });
-
-  it('updates the window location on card click', async () => {
-    delete window.location;
-    window.location = { ...originalLocation, href: '' };
-
-    renderComponent();
-    const card = screen.getByTestId('channel-card');
-    await userEvent.click(card);
-
-    expect(window.location.href).toBe('channel');
   });
 
   it('navigates to channel details page on detail button click', async () => {

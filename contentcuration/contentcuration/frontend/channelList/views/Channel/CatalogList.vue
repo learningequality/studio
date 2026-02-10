@@ -63,9 +63,9 @@
                 :channel="channel"
                 :selectable="selecting"
                 :selected="isChannelSelected(channel.id)"
-                :to="getChannelDetailsRoute(channel.id)"
                 :headingLevel="2"
                 @toggle-selection="handleSelectionToggle"
+                @click="onCardClick(channel.id)"
               />
             </KCardGrid>
           </VFlex>
@@ -183,6 +183,7 @@
     },
     computed: {
       ...mapGetters('channel', ['getChannels']),
+      ...mapGetters(['loggedIn']),
       ...mapState('channelList', ['page']),
       ...mapState({
         offline: state => !state.connection.online,
@@ -243,15 +244,21 @@
     },
     methods: {
       ...mapActions('channelList', ['searchCatalog']),
-      getChannelDetailsRoute(channelId) {
-        return {
-          name: RouteNames.CATALOG_DETAILS,
-          params: { channelId },
-          query: {
-            ...this.$route.query,
-            last: this.$route.name,
-          },
-        };
+      onCardClick(channelId) {
+        if (this.loggedIn) {
+          window.location.href = window.Urls.channel(channelId);
+        } else {
+          this.$router.push({
+            name: RouteNames.CHANNEL_DETAILS,
+            query: {
+              ...this.$route.query,
+              last: this.$route.name,
+            },
+            params: {
+              channelId,
+            },
+          });
+        }
       },
       isChannelSelected(channelId) {
         return this.selected.includes(channelId);

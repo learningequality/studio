@@ -262,11 +262,7 @@
     methods: {
       ...mapActions('channel', ['deleteChannel', 'removeViewer']),
       onCardClick() {
-        if (this.to) {
-          this.$router.push(this.to);
-        } else {
-          window.location.href = window.Urls.channel(this.channel.id);
-        }
+        this.$emit('click');
       },
       openDropDown() {
         this.dropDownArr = this.dropDownItems();

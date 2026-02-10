@@ -1,8 +1,11 @@
 import { render, screen } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
 import VueRouter from 'vue-router';
 import { Store } from 'vuex';
 import StudioStarredChannels from '../index';
 import { ChannelListTypes } from 'shared/constants';
+
+const originalLocation = window.location;
 
 const router = new VueRouter({
   routes: [
@@ -63,6 +66,14 @@ function renderComponent(props = {}) {
 }
 
 describe('StudioStarredChannels', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    window.location = originalLocation;
+  });
+
   it('calls the load channel list action with correct parameters on mount', () => {
     renderComponent();
     expect(mockLoadChannelList).toHaveBeenCalledTimes(1);
@@ -84,5 +95,16 @@ describe('StudioStarredChannels', () => {
     expect(cards[0].querySelector('h2')).toBeInTheDocument();
     expect(cards[1]).toHaveTextContent('Channel title 2');
     expect(cards[1].querySelector('h2')).toBeInTheDocument();
+  });
+
+  it('navigates to channel via window.location when card clicked', async () => {
+    delete window.location;
+    window.location = { ...originalLocation, href: '' };
+
+    renderComponent();
+    const cards = await screen.findAllByTestId('channel-card');
+    await userEvent.click(cards[0]);
+
+    expect(window.location.href).toBe('channel');
   });
 });

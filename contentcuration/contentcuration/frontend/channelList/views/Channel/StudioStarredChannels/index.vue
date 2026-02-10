@@ -10,6 +10,7 @@
         :key="channel.id"
         :headingLevel="2"
         :channel="channel"
+        @click="onCardClick(channel.id)"
       />
     </template>
   </StudioChannelsPage>
@@ -41,6 +42,11 @@
         loading,
         channels,
       };
+    },
+    methods: {
+      onCardClick(channelId) {
+        window.location.href = window.Urls.channel(channelId);
+      },
     },
     $trs: {
       title: 'Starred channels',

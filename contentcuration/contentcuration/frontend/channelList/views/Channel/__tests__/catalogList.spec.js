@@ -5,6 +5,8 @@ import { Store } from 'vuex';
 import CatalogList from '../CatalogList.vue';
 import { RouteNames } from '../../../constants';
 
+const originalLocation = window.location;
+
 const CHANNELS = [
   {
     id: 'channel-1',
@@ -36,39 +38,46 @@ const router = new VueRouter({
 
 const mockSearchCatalog = jest.fn(() => Promise.resolve());
 
-const store = new Store({
-  state: {
-    connection: { online: true },
-  },
-  modules: {
-    channel: {
-      namespaced: true,
-      state: {
-        channelsMap: Object.fromEntries(CHANNELS.map(c => [c.id, c])),
-      },
-      getters: {
-        getChannels: state => ids => ids.map(id => state.channelsMap[id]).filter(Boolean),
-        getChannel: state => id => state.channelsMap[id],
-      },
+function createStore({ loggedIn = true } = {}) {
+  return new Store({
+    state: {
+      connection: { online: true },
     },
-    channelList: {
-      namespaced: true,
-      state: {
-        page: {
-          count: CHANNEL_IDS.length,
-          results: CHANNEL_IDS,
+    getters: {
+      loggedIn: () => loggedIn,
+    },
+    modules: {
+      channel: {
+        namespaced: true,
+        state: {
+          channelsMap: Object.fromEntries(CHANNELS.map(c => [c.id, c])),
+        },
+        getters: {
+          getChannels: state => ids => ids.map(id => state.channelsMap[id]).filter(Boolean),
+          getChannel: state => id => state.channelsMap[id],
         },
       },
-      actions: {
-        searchCatalog: mockSearchCatalog,
+      channelList: {
+        namespaced: true,
+        state: {
+          page: {
+            count: CHANNEL_IDS.length,
+            results: CHANNEL_IDS,
+          },
+        },
+        actions: {
+          searchCatalog: mockSearchCatalog,
+        },
       },
     },
-  },
-});
+  });
+}
 
-function renderComponent() {
+const store = createStore();
+
+function renderComponent({ storeOverrides } = {}) {
   return render(CatalogList, {
-    store,
+    store: storeOverrides || store,
     routes: router,
     stubs: { CatalogFilters: true },
   });
@@ -78,6 +87,10 @@ describe('CatalogList', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     router.push({ name: RouteNames.CATALOG_ITEMS }).catch(() => {});
+  });
+
+  afterEach(() => {
+    window.location = originalLocation;
   });
 
   it('calls the searchCatalog action on mount', async () => {
@@ -116,6 +129,28 @@ describe('CatalogList', () => {
     expect(cards[0].querySelector('h2')).toBeInTheDocument();
     expect(cards[1]).toHaveTextContent('Channel title 2');
     expect(cards[1].querySelector('h2')).toBeInTheDocument();
+  });
+
+  it('navigates to channel via window.location when logged in and card is clicked', async () => {
+    delete window.location;
+    window.location = { ...originalLocation, href: '' };
+
+    renderComponent({ storeOverrides: createStore({ loggedIn: true }) });
+    const cards = await screen.findAllByTestId('channel-card');
+    await userEvent.click(cards[0]);
+
+    expect(window.location.href).toBe('channel');
+  });
+
+  it('navigates to channel details via router when not logged in and card is clicked', async () => {
+    renderComponent({ storeOverrides: createStore({ loggedIn: false }) });
+    const cards = await screen.findAllByTestId('channel-card');
+    await userEvent.click(cards[0]);
+
+    await waitFor(() => {
+      expect(router.currentRoute.name).toBe(RouteNames.CHANNEL_DETAILS);
+      expect(router.currentRoute.params.channelId).toBe('channel-1');
+    });
   });
 
   describe('selection', () => {

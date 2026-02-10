@@ -13,6 +13,7 @@
         :key="channel.id"
         :headingLevel="2"
         :channel="channel"
+        @click="onCardClick(channel.id)"
       />
     </template>
   </StudioChannelsPage>
@@ -58,6 +59,9 @@
     },
     methods: {
       ...mapActions('channelList', ['loadInvitationList']),
+      onCardClick(channelId) {
+        window.location.href = window.Urls.channel(channelId);
+      },
     },
     $trs: {
       title: 'View-only channels',

@@ -25,6 +25,7 @@
         :key="channel.id"
         :headingLevel="2"
         :channel="channel"
+        @click="onCardClick(channel.id)"
       />
     </template>
   </StudioChannelsPage>
@@ -76,6 +77,9 @@
           name: RouteNames.NEW_CHANNEL,
           query: { last: this.$route.name },
         });
+      },
+      onCardClick(channelId) {
+        window.location.href = window.Urls.channel(channelId);
       },
     },
     $trs: {
