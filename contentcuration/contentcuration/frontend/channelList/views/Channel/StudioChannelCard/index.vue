@@ -10,7 +10,7 @@
     :orientation="windowIsSmall ? 'vertical' : 'horizontal'"
     :title="channel.name"
     :titleMaxLines="2"
-    @click="onCardClick()"
+    @click="onCardClick"
   >
     <template
       v-if="selectable"
