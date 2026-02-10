@@ -37,7 +37,16 @@ const CHANNELS = [
   },
 ];
 
+const INVITATION = {
+  id: 'invitation-1',
+  accepted: false,
+  sender_name: 'User A',
+  channel_name: 'Channel A',
+  share_mode: 'edit',
+};
+
 const mockLoadChannelList = jest.fn();
+const mockLoadInvitationList = jest.fn();
 
 const store = new Store({
   modules: {
@@ -48,6 +57,16 @@ const store = new Store({
       },
       actions: {
         loadChannelList: mockLoadChannelList,
+      },
+    },
+    channelList: {
+      namespaced: true,
+      getters: {
+        invitations: () => [INVITATION],
+        getInvitation: () => () => INVITATION,
+      },
+      actions: {
+        loadInvitationList: mockLoadInvitationList,
       },
     },
   },
@@ -64,12 +83,21 @@ function renderComponent(props = {}) {
 }
 
 describe('StudioMyChannels', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('calls the load channel list action with correct parameters on mount', () => {
     renderComponent();
     expect(mockLoadChannelList).toHaveBeenCalledTimes(1);
     expect(mockLoadChannelList).toHaveBeenCalledWith(expect.anything(), {
       listType: ChannelListTypes.EDITABLE,
     });
+  });
+
+  it('calls the load invitations action on mount', () => {
+    renderComponent();
+    expect(mockLoadInvitationList).toHaveBeenCalledTimes(1);
   });
 
   it('shows the visually hidden title and all channel cards in correct semantic structure', async () => {
@@ -85,5 +113,11 @@ describe('StudioMyChannels', () => {
     expect(cards[0].querySelector('h2')).toBeInTheDocument();
     expect(cards[1]).toHaveTextContent('Channel title 2');
     expect(cards[1].querySelector('h2')).toBeInTheDocument();
+  });
+
+  it('shows invitations', () => {
+    renderComponent();
+    expect(screen.getByText('You have 1 invitation'));
+    expect(screen.getByText('User A has invited you to edit Channel A'));
   });
 });
