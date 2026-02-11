@@ -1029,6 +1029,11 @@ def fill_published_fields(channel, version_notes):
         else:
             channel.version_info.special_permissions_included.clear()
 
+        if channel.public:
+            ccmodels.AuditedSpecialPermissionsLicense.mark_channel_version_as_distributable(
+                channel.version_info.id
+            )
+
     channel.save()
 
 

@@ -652,34 +652,41 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         special_license.refresh_from_db()
         self.assertTrue(special_license.distributable)
 
-    @mock.patch("contentcuration.viewsets.channel.publish_channel")
-    def test_publish_public_channel_marks_special_permissions_distributable(
-        self, mock_publish_channel
-    ):
+    def test_publish_public_channel_marks_special_permissions_distributable(self):
         user = testdata.user()
         channel = testdata.channel()
-        channel.version = 1
         channel.public = True
         channel.editors.add(user)
         channel.save()
 
-        channel_version = ChannelVersion.objects.get(channel=channel, version=1)
-        channel.version_info = channel_version
-        channel.save()
-
-        special_license = AuditedSpecialPermissionsLicense.objects.create(
-            description="Public channel special permissions"
+        special_permissions_license = models.License.objects.get(
+            license_name="Special Permissions"
         )
-        channel_version.special_permissions_included.add(special_license)
-
-        mock_publish_channel.return_value = channel
+        special_license_description = "Public channel special permissions"
+        contentnode = (
+            channel.main_tree.get_descendants()
+            .exclude(kind_id=content_kinds.TOPIC)
+            .first()
+        )
+        contentnode.license = special_permissions_license
+        contentnode.license_description = special_license_description
+        contentnode.copyright_holder = "Public channel"
+        contentnode.save()
 
         self.client.force_authenticate(user)
         response = self.sync_changes([generate_publish_channel_event(channel.id)])
 
         self.assertEqual(response.status_code, 200, response.content)
-        special_license.refresh_from_db()
-        self.assertTrue(special_license.distributable)
+        channel.refresh_from_db()
+        audited_license = AuditedSpecialPermissionsLicense.objects.get(
+            description=special_license_description
+        )
+        self.assertTrue(audited_license.distributable)
+        self.assertTrue(
+            channel.version_info.special_permissions_included.filter(
+                id=audited_license.id
+            ).exists()
+        )
 
 
 class CRUDTestCase(StudioAPITestCase):

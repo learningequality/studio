@@ -572,10 +572,6 @@ class ChannelViewSet(ValuesViewset):
                     progress_tracker=progress_tracker,
                     language=language,
                 )
-                if channel.public and channel.version_info:
-                    models.AuditedSpecialPermissionsLicense.mark_channel_version_as_distributable(
-                        channel.version_info.id
-                    )
                 Change.create_changes(
                     [
                         generate_update_event(
