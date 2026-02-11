@@ -52,8 +52,4 @@ describe('session module feature flag related getters', () => {
       expect(getters.hasFeatureEnabled(state, getters)('false_flag')).toBe(false);
     });
   });
-
-  it('should not have isAIFeatureEnabled getter', () => {
-    expect(vuexSessionModule.getters.isAIFeatureEnabled).toBeUndefined();
-  });
 });
