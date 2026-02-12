@@ -19,7 +19,6 @@ from contentcuration.models import User
 from contentcuration.utils.csv_writer import write_user_csv
 from contentcuration.utils.nodes import calculate_resource_size
 from contentcuration.utils.nodes import generate_diff
-from contentcuration.utils.publish import ensure_versioned_database_exists
 from contentcuration.viewsets.user import AdminUserFilter
 
 
@@ -160,8 +159,3 @@ def sendcustomemails_task(subject, message, query):
             text,
             settings.DEFAULT_FROM_EMAIL,
         )
-
-
-@app.task(name="ensure_versioned_database_exists_task")
-def ensure_versioned_database_exists_task(channel_id, channel_version):
-    ensure_versioned_database_exists(channel_id, channel_version)
