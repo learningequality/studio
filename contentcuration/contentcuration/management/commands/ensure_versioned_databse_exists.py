@@ -21,7 +21,7 @@ class Command(BaseCommand):
     help = "Ensure all published channels have versioned content databases."
 
     def handle(self, *args, **options):
-        published_channels = Channel.objects.filter(main_tree_published=True)
+        published_channels = Channel.objects.filter(main_tree__published=True)
 
         processed_count = 0
         error_count = 0

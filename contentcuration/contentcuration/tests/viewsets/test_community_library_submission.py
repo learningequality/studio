@@ -47,12 +47,6 @@ class CRUDTestCase(StudioAPITestCase):
         self.country1 = testdata.country(name="Country 1", code="C1")
         self.country2 = testdata.country(name="Country 2", code="C2")
 
-        # Mock to allow creating submissions without having to set up content databases
-        self.ensure_db_exists_patcher = mock.patch(
-            "contentcuration.utils.publish.ensure_versioned_database_exists"
-        )
-        self.ensure_db_exists_patcher.start()
-
         self.channel_with_submission1 = testdata.channel()
         self.channel_with_submission1.public = False
         self.channel_with_submission1.version = 1
@@ -103,7 +97,6 @@ class CRUDTestCase(StudioAPITestCase):
         self.existing_submission2.save()
 
     def tearDown(self):
-        self.ensure_db_exists_patcher.stop()
         super().tearDown()
 
     def test_create_submission__is_editor(self):
@@ -509,12 +502,6 @@ class AdminViewSetTestCase(StudioAPITestCase):
         )
         self.django_timezone_patcher.start()
 
-        # Mock to allow creating submissions without having to set up content databases
-        self.ensure_db_exists_patcher = mock.patch(
-            "contentcuration.utils.publish.ensure_versioned_database_exists"
-        )
-        self.ensure_db_exists_patcher.start()
-
         self.submission = testdata.community_library_submission()
         self.submission.channel.version = 3
         self.submission.channel.save()
@@ -558,7 +545,6 @@ class AdminViewSetTestCase(StudioAPITestCase):
 
     def tearDown(self):
         self.django_timezone_patcher.stop()
-        self.ensure_db_exists_patcher.stop()
         super().tearDown()
 
     def _manually_reject_submission(self):
@@ -926,11 +912,6 @@ class FilteringAndSearchTestCase(StudioAPITestCase):
         self.admin_user.last_name = "User"
         self.admin_user.save()
 
-        self.ensure_db_exists_patcher = mock.patch(
-            "contentcuration.utils.publish.ensure_versioned_database_exists"
-        )
-        self.ensure_db_exists_patcher.start()
-
         self.math_channel = testdata.channel(name="Math Basics")
         self.math_channel.public = False
         self.math_channel.version = 1
@@ -1008,7 +989,6 @@ class FilteringAndSearchTestCase(StudioAPITestCase):
             )
 
     def tearDown(self):
-        self.ensure_db_exists_patcher.stop()
         super().tearDown()
 
     def test_filter_by_date_updated_gte(self):
