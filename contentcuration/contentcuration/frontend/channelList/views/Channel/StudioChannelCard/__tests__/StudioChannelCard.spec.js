@@ -74,7 +74,6 @@ describe('StudioChannelCard', () => {
 
   it('shows channel title', () => {
     renderComponent();
-    // The title is rendered twice, once as visually hidden
     expect(screen.getAllByText('Channel title').length).toBeGreaterThan(0);
   });
 
@@ -93,118 +92,42 @@ describe('StudioChannelCard', () => {
     expect(screen.getByText('3 resources')).toBeInTheDocument();
   });
 
-  it('shows correct publish status for a published channel', async () => {
+  it('shows correct publish status for a published channel', () => {
     renderComponent();
-    const publishStatus = await screen.findByTestId('publish-status');
-    expect(publishStatus).not.toHaveTextContent('Unpublished');
-    expect(publishStatus).toHaveTextContent('Published');
+    expect(screen.getByText(/^Published/)).toBeInTheDocument();
+    expect(screen.queryByText('Unpublished')).not.toBeInTheDocument();
   });
 
-  it('shows correct published status for an unpublished channel', async () => {
+  it('shows correct published status for an unpublished channel', () => {
     renderComponent({ channel: { ...CHANNEL, last_published: null } });
-    const publishStatus = await screen.findByTestId('publish-status');
-    expect(publishStatus).toHaveTextContent('Unpublished');
+    expect(screen.getByText('Unpublished')).toBeInTheDocument();
   });
 
-  it('navigates to channel details page on detail button click', async () => {
-    renderComponent();
-    const detailsButton = await screen.findByTestId('details-button');
-    expect(router.currentRoute.path).toBe('/');
-    await userEvent.click(detailsButton);
-    expect(router.currentRoute.path).toBe('/channel-id/details');
-  });
-
-  it('bookmarks the channel on bookmark button click', async () => {
-    renderComponent({ channel: { ...CHANNEL, bookmark: false } });
-    const [bookmarkWrapper] = screen.getAllByTestId('bookmark-button');
-    const bookmarkBtn = within(bookmarkWrapper).getByRole('button');
-    await userEvent.click(bookmarkBtn);
-
-    await waitFor(() => {
-      expect(bookmarkChannel).toHaveBeenCalledWith(expect.anything(), {
-        id: 'channel-id',
-        bookmark: true,
-      });
-    });
-  });
-
-  it('unbookmarks the channel on bookmark button click', async () => {
-    renderComponent({ channel: { ...CHANNEL, bookmark: true } });
-    const [bookmarkWrapper] = screen.getAllByTestId('bookmark-button');
-    const bookmarkBtn = within(bookmarkWrapper).getByRole('button');
-    await userEvent.click(bookmarkBtn);
-
-    await waitFor(() => {
-      expect(bookmarkChannel).toHaveBeenCalledWith(expect.anything(), {
-        id: 'channel-id',
-        bookmark: false,
-      });
-    });
-  });
-
-  describe('dropdown menu', () => {
-    async function openDropdown(channelOverrides = {}) {
-      renderComponent({ channel: { ...CHANNEL, ...channelOverrides } });
-      const dropdownButton = await screen.findByTestId('dropdown-button');
-      await userEvent.click(dropdownButton);
-      return screen.getByRole('menu');
-    }
-
-    it('opens dropdown on click', async () => {
-      const menu = await openDropdown();
-      expect(within(menu).getByText('Edit channel details')).toBeInTheDocument();
-      expect(within(menu).getByText('Copy channel token')).toBeInTheDocument();
+  describe('footer buttons', () => {
+    it('shows only details button by default', () => {
+      renderComponent();
+      expect(screen.getByRole('link', { name: 'Details' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /starred channels/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Copy channel token' })).not.toBeInTheDocument();
     });
 
-    it('does not show edit for non-editable channel', async () => {
-      const menu = await openDropdown({ edit: false });
-      expect(within(menu).queryByText('Edit channel details')).not.toBeInTheDocument();
-    });
-
-    it('shows edit for editable channel and goes to the correct route on click', async () => {
-      const menu = await openDropdown({ edit: true });
+    it('navigates to channel details page on info button click', async () => {
+      renderComponent();
+      const detailsLink = screen.getByRole('link', { name: 'Details' });
       expect(router.currentRoute.path).toBe('/');
-      await userEvent.click(within(menu).getByText('Edit channel details'));
-      expect(router.currentRoute.path).toBe('/channel-id/edit');
+      await userEvent.click(detailsLink);
+      expect(router.currentRoute.path).toBe('/channel-id/details');
     });
 
-    it('shows delete for editable channel and calls the correct action on confirm', async () => {
-      const menu = await openDropdown({ edit: true });
-      await userEvent.click(within(menu).getByText('Delete channel'));
-
-      const dialog = screen.getByRole('dialog');
-      expect(dialog).toBeInTheDocument();
-
-      const submitButton = within(dialog).getByText('Delete channel');
-      await userEvent.click(submitButton);
-
-      await waitFor(() => {
-        expect(deleteChannel).toHaveBeenCalledWith(expect.anything(), 'channel-id');
-      });
+    it('shows copy button when footerButtons includes "copy"', () => {
+      renderComponent({ footerButtons: ['copy'] });
+      expect(screen.getByRole('button', { name: 'Copy channel token' })).toBeInTheDocument();
     });
 
-    it('shows remove from list for non-editable channel and calls the correct action on confirm', async () => {
-      const menu = await openDropdown({ edit: false });
-      expect(within(menu).queryByText('Delete channel')).not.toBeInTheDocument();
-      await userEvent.click(within(menu).getByText('Remove from channel list'));
-
-      const dialog = screen.getByRole('dialog');
-      expect(dialog).toBeInTheDocument();
-
-      const submitButton = within(dialog).getByText('Remove');
-      await userEvent.click(submitButton);
-
-      await waitFor(() => {
-        expect(removeViewer).toHaveBeenCalledWith(expect.anything(), {
-          channelId: 'channel-id',
-          userId: 'user-id',
-        });
-      });
-    });
-
-    it('shows copy token for published channel and opens modal on click', async () => {
-      const menu = await openDropdown({ published: true });
-      await userEvent.click(within(menu).getByText('Copy channel token'));
+    it('clicking copy button shows copy token modal', async () => {
+      renderComponent({ footerButtons: ['copy'] });
+      const button = screen.getByRole('button', { name: 'Copy channel token' });
+      userEvent.click(button);
 
       await waitFor(() => {
         expect(
@@ -213,33 +136,132 @@ describe('StudioChannelCard', () => {
       });
     });
 
-    it('does not show copy token for unpublished channel', async () => {
-      const menu = await openDropdown({ published: false });
+    it('shows bookmark button when footerButtons includes "bookmark"', () => {
+      renderComponent({ footerButtons: ['bookmark'] });
+      expect(screen.getByRole('button', { name: 'Add to starred channels' })).toBeInTheDocument();
+    });
+
+    it('bookmarks the channel on bookmark button click', async () => {
+      renderComponent({ channel: { ...CHANNEL, bookmark: false }, footerButtons: ['bookmark'] });
+      await userEvent.click(screen.getByRole('button', { name: 'Add to starred channels' }));
+      await waitFor(() => {
+        expect(bookmarkChannel).toHaveBeenCalledWith(expect.anything(), {
+          id: 'channel-id',
+          bookmark: true,
+        });
+      });
+    });
+
+    it('unbookmarks the channel on bookmark button click', async () => {
+      renderComponent({ channel: { ...CHANNEL, bookmark: true }, footerButtons: ['bookmark'] });
+      await userEvent.click(screen.getByRole('button', { name: 'Remove from starred channels' }));
+      await waitFor(() => {
+        expect(bookmarkChannel).toHaveBeenCalledWith(expect.anything(), {
+          id: 'channel-id',
+          bookmark: false,
+        });
+      });
+    });
+  });
+
+  describe('dropdown menu', () => {
+    async function openDropdown(dropdownOptions) {
+      renderComponent({ dropdownOptions });
+      const dropdownButton = screen.getByRole('button', { name: 'More options' });
+      await userEvent.click(dropdownButton);
+      return screen.getByRole('menu');
+    }
+
+    it('does not show dropdown by default', () => {
+      renderComponent();
+      expect(screen.queryByRole('button', { name: 'More options' })).not.toBeInTheDocument();
+    });
+
+    it('shows dropdown when dropdownOptions provided', async () => {
+      const menu = await openDropdown(['edit']);
+      expect(screen.getByRole('button', { name: 'More options' })).toBeInTheDocument();
+      expect(within(menu).getByText('Edit channel details')).toBeInTheDocument();
+
+      // also check that options are not displayed when not configured via dropdownOptions
       expect(within(menu).queryByText('Copy channel token')).not.toBeInTheDocument();
-    });
-
-    it('does not show go to source website if channel has no source url', async () => {
-      const menu = await openDropdown({ source_url: '' });
       expect(within(menu).queryByText('Go to source website')).not.toBeInTheDocument();
+      expect(within(menu).queryByText('View channel on Kolibri')).not.toBeInTheDocument();
+      expect(within(menu).queryByText('Delete channel')).not.toBeInTheDocument();
+      expect(within(menu).queryByText('Remove from channel list')).not.toBeInTheDocument();
     });
 
-    it('shows go to source website and opens in new tab on click', async () => {
+    it('has "Edit channel details" when "dropdownOptions" includes "edit"', async () => {
+      const menu = await openDropdown(['edit']);
+
+      // clicking the option navigates to the channel edit page
+      expect(router.currentRoute.path).toBe('/');
+      await userEvent.click(within(menu).getByText('Edit channel details'));
+      expect(router.currentRoute.path).toBe('/channel-id/edit');
+    });
+
+    it('has "Copy channel token" when "dropdownOptions" includes "copy"', async () => {
+      const menu = await openDropdown(['copy']);
+      await userEvent.click(within(menu).getByText('Copy channel token'));
+
+      // clicking the option shows  copy token modal
+      await waitFor(() => {
+        expect(
+          screen.getByText('Paste this token into Kolibri to import this channel'),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it('has "Go to source website" when "dropdownOptions" includes "source-url"', async () => {
       window.open = jest.fn();
-      const menu = await openDropdown({ source_url: 'https://source.example.com' });
+      const menu = await openDropdown(['source-url']);
       await userEvent.click(within(menu).getByText('Go to source website'));
+
+      // clicking the option opens the URL in a new tab
       expect(window.open).toHaveBeenCalledWith('https://source.example.com', '_blank');
     });
 
-    it('does not show go to demo server if channel has no demo server url', async () => {
-      const menu = await openDropdown({ demo_server_url: '' });
-      expect(within(menu).queryByText('View channel on Kolibri')).not.toBeInTheDocument();
+    it('has "View channel on Kolibri" when "dropdownOptions" includes "demo-url"', async () => {
+      window.open = jest.fn();
+      const menu = await openDropdown(['demo-url']);
+      await userEvent.click(within(menu).getByText('View channel on Kolibri'));
+
+      // clicking the option opens the URL in a new tab
+      expect(window.open).toHaveBeenCalledWith('https://demo.example.com', '_blank');
     });
 
-    it('shows go to demo server and opens in new tab on click', async () => {
-      window.open = jest.fn();
-      const menu = await openDropdown({ demo_server_url: 'https://demo.example.com' });
-      await userEvent.click(within(menu).getByText('View channel on Kolibri'));
-      expect(window.open).toHaveBeenCalledWith('https://demo.example.com', '_blank');
+    it('has "Delete channel" when "dropdownOptions" includes "delete"', async () => {
+      const menu = await openDropdown(['delete']);
+      await userEvent.click(within(menu).getByText('Delete channel'));
+
+      // clicking the option opens the confirmation dialog
+      const dialog = screen.getByRole('dialog');
+      expect(dialog).toBeInTheDocument();
+      const submitButton = within(dialog).getByText('Delete channel');
+
+      // confirming calls 'deleteChannel' action
+      await userEvent.click(submitButton);
+      await waitFor(() => {
+        expect(deleteChannel).toHaveBeenCalledWith(expect.anything(), 'channel-id');
+      });
+    });
+
+    it('has "Remove from channel list" when "dropdownOptions" includes "remove"', async () => {
+      const menu = await openDropdown(['remove']);
+      await userEvent.click(within(menu).getByText('Remove from channel list'));
+
+      // clicking the option opens the confirmation dialog
+      const dialog = screen.getByRole('dialog');
+      expect(dialog).toBeInTheDocument();
+      const submitButton = within(dialog).getByText('Remove');
+
+      // confirming calls 'removeViewer' action
+      await userEvent.click(submitButton);
+      await waitFor(() => {
+        expect(removeViewer).toHaveBeenCalledWith(expect.anything(), {
+          channelId: 'channel-id',
+          userId: 'user-id',
+        });
+      });
     });
   });
 });

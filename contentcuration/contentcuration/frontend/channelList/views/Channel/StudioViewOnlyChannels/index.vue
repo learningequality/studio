@@ -2,18 +2,21 @@
 
   <StudioChannelsPage
     :loading="loading"
-    :invitations="filteredInvitations"
+    :invitations="viewOnlyInvitations"
   >
     <template #header>
       <h1 class="visuallyhidden">{{ $tr('title') }}</h1>
     </template>
+
     <template #cards>
       <StudioChannelCard
-        v-for="channel in channels"
+        v-for="channel in viewOnlyChannels"
         :key="channel.id"
         :headingLevel="2"
         :channel="channel"
-        @click="onCardClick(channel.id)"
+        :footerButtons="['info', 'bookmark']"
+        :dropdownOptions="getDropdownOptions(channel)"
+        @click="onCardClick(channel)"
       />
     </template>
   </StudioChannelsPage>
@@ -45,12 +48,12 @@
 
       return {
         loading,
-        channels,
+        viewOnlyChannels: channels,
       };
     },
     computed: {
       ...mapGetters('channelList', ['invitations']),
-      filteredInvitations() {
+      viewOnlyInvitations() {
         return this.invitations.filter(i => i.share_mode === InvitationShareModes.VIEW_ONLY);
       },
     },
@@ -59,8 +62,21 @@
     },
     methods: {
       ...mapActions('channelList', ['loadInvitationList']),
-      onCardClick(channelId) {
-        window.location.href = window.Urls.channel(channelId);
+      onCardClick(channel) {
+        window.location.href = window.Urls.channel(channel.id);
+      },
+      getDropdownOptions(channel) {
+        const options = ['remove'];
+        if (channel.published) {
+          options.push('copy');
+        }
+        if (channel.source_url) {
+          options.push('source-url');
+        }
+        if (channel.demo_server_url) {
+          options.push('demo-url');
+        }
+        return options;
       },
     },
     $trs: {

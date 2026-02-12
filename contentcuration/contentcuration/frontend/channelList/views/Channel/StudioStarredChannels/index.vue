@@ -4,13 +4,16 @@
     <template #header>
       <h1 class="visuallyhidden">{{ $tr('title') }}</h1>
     </template>
+
     <template #cards>
       <StudioChannelCard
-        v-for="channel in channels"
+        v-for="channel in bookmarkedChannels"
         :key="channel.id"
         :headingLevel="2"
         :channel="channel"
-        @click="onCardClick(channel.id)"
+        :footerButtons="['info', 'bookmark']"
+        :dropdownOptions="getDropdownOptions(channel)"
+        @click="onCardClick(channel)"
       />
     </template>
   </StudioChannelsPage>
@@ -40,12 +43,31 @@
 
       return {
         loading,
-        channels,
+        bookmarkedChannels: channels,
       };
     },
     methods: {
-      onCardClick(channelId) {
-        window.location.href = window.Urls.channel(channelId);
+      onCardClick(channel) {
+        window.location.href = window.Urls.channel(channel.id);
+      },
+      getDropdownOptions(channel) {
+        const options = [];
+        if (channel.edit) {
+          options.push('edit');
+          options.push('delete');
+        } else {
+          options.push('remove');
+        }
+        if (channel.published) {
+          options.push('copy');
+        }
+        if (channel.source_url) {
+          options.push('source-url');
+        }
+        if (channel.demo_server_url) {
+          options.push('demo-url');
+        }
+        return options;
       },
     },
     $trs: {

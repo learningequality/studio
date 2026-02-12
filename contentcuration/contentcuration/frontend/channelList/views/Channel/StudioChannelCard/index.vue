@@ -64,13 +64,10 @@
     <template #footer>
       <div class="footer">
         <div class="footer-left">
-          <span
-            data-testid="publish-status"
-            :style="{ color: $themeTokens.annotation }"
-          >
+          <span :style="{ color: $themeTokens.annotation }">
             {{ getPublishStatus }}
           </span>
-          <div v-if="hasUnpublishedChanges">
+          <div v-if="showUpdateStatus && hasUnpublishedChanges">
             <KTooltip
               :reference="`lastUpdatedTime`"
               placement="bottom"
@@ -92,9 +89,12 @@
           </div>
         </div>
         <div class="footer-right">
-          <div ref="detailIcon">
+          <div
+            v-if="showInfoButton"
+            ref="infoBtn"
+          >
             <router-link
-              data-testid="details-button"
+              :aria-label="$tr('details')"
               :to="channelDetailsLink"
               :class="['details-link', linkComputedClass]"
               @click.native.stop
@@ -106,7 +106,7 @@
               />
             </router-link>
             <KTooltip
-              reference="detailIcon"
+              reference="infoBtnn"
               :refs="$refs"
               maxWidth="200px"
             >
@@ -114,16 +114,27 @@
             </KTooltip>
           </div>
 
+          <KIconButton
+            v-if="showCopyButton"
+            icon="copy"
+            :tooltip="$tr('copyToken')"
+            data-testid="copy-button"
+            @click.stop.prevent="tokenDialog = true"
+          />
+
           <ChannelStar
+            v-if="showBookmarkButton"
             :channelId="channel.id"
             data-testid="bookmark-button"
             :bookmark="channel.bookmark"
           />
+
           <KIconButton
+            v-if="showDropdown"
             size="small"
             icon="optionsVertical"
             appearance="flat-button"
-            data-testid="dropdown-button"
+            :ariaLabel="$tr('moreOptions')"
             @click.stop="openDropDown"
           >
             <template #menu>
@@ -138,18 +149,30 @@
       </div>
       <KModal
         v-if="deleteDialog"
-        :title="canEdit ? $tr('deleteTitle') : $tr('removeTitle')"
-        :submitText="canEdit ? $tr('deleteChannel') : $tr('removeBtn')"
+        :title="$tr('deleteTitle')"
+        :submitText="$tr('deleteChannel')"
         :cancelText="$tr('cancel')"
         data-testid="delete-modal"
         appendToOverlay
         @submit="handleDelete"
         @cancel="deleteDialog = false"
       >
-        {{ canEdit ? $tr('deletePrompt') : $tr('removePrompt') }}
+        {{ $tr('deletePrompt') }}
+      </KModal>
+      <KModal
+        v-if="removeDialog"
+        :title="$tr('removeTitle')"
+        :submitText="$tr('removeBtn')"
+        :cancelText="$tr('cancel')"
+        data-testid="remove-modal"
+        appendToOverlay
+        @submit="handleRemove"
+        @cancel="removeDialog = false"
+      >
+        {{ $tr('removePrompt') }}
       </KModal>
       <ChannelTokenModal
-        v-if="channel && channel.published"
+        v-if="showCopyButton || hasDropdownOption('copy')"
         v-model="tokenDialog"
         appendToOverlay
         data-testid="copy-modal"
@@ -188,6 +211,11 @@
         type: Object,
         required: true,
       },
+      showUpdateStatus: {
+        type: Boolean,
+        required: false,
+        default: true,
+      },
       selectable: {
         type: Boolean,
         default: false,
@@ -200,11 +228,42 @@
         type: Number,
         required: true,
       },
+      /**
+       * Which buttons to show in the card footer.
+       * Possible values:
+       * - 'info' - Info button - navigate to the channel details page
+       * - 'copy' - Copy token button
+       * - 'bookmark' - Star button - (un)bookmark the channel
+       */
+      footerButtons: {
+        type: Array,
+        default: () => ['info'],
+        validator: value => value.every(v => ['info', 'copy', 'bookmark'].includes(v)),
+      },
+      /**
+       * Which items to include in the dropdown menu.
+       * Possible values:
+       * - 'edit' - 'Edit channel details' option
+       * - 'copy' - 'Copy channel token' option
+       * - 'source-url' - 'Go to source website' option
+       * - 'demo-url' - 'View channel on Kolibri' option
+       * - 'delete' - 'Delete channel' option
+       * - 'remove' - 'Remove from channel list' option
+       */
+      dropdownOptions: {
+        type: Array,
+        default: () => [],
+        validator: value =>
+          value.every(v =>
+            ['edit', 'copy', 'source-url', 'demo-url', 'delete', 'remove'].includes(v),
+          ),
+      },
     },
     data() {
       return {
         tokenDialog: false,
         deleteDialog: false,
+        removeDialog: false,
         dropDownArr: [],
       };
     },
@@ -216,9 +275,6 @@
           },
           ':focus': { ...this.$coreOutline, outlineOffset: 0 },
         });
-      },
-      canEdit() {
-        return this.channel.edit;
       },
       thumbnailSrc() {
         return this.channel.thumbnail_encoding && this.channel.thumbnail_encoding.base64
@@ -258,9 +314,24 @@
       hasUnpublishedChanges() {
         return !this.channel.last_published || this.channel.modified > this.channel.last_published;
       },
+      showInfoButton() {
+        return this.footerButtons.includes('info');
+      },
+      showCopyButton() {
+        return this.footerButtons.includes('copy');
+      },
+      showBookmarkButton() {
+        return this.footerButtons.includes('bookmark');
+      },
+      showDropdown() {
+        return this.dropdownOptions.length > 0;
+      },
     },
     methods: {
       ...mapActions('channel', ['deleteChannel', 'removeViewer']),
+      hasDropdownOption(option) {
+        return this.dropdownOptions.includes(option);
+      },
       onCardClick() {
         this.$emit('click');
       },
@@ -268,44 +339,24 @@
         this.dropDownArr = this.dropDownItems();
       },
       dropDownItems() {
-        let options = [
-          {
-            label: this.$tr('editChannel'),
-            icon: 'edit',
-            value: 'edit',
-          },
-          {
-            label: this.$tr('copyToken'),
-            icon: 'copy',
-            value: 'copy',
-          },
-          {
-            label: this.$tr('goToWebsite'),
-            icon: 'openNewTab',
-            value: 'source-url',
-          },
-          {
-            label: this.$tr('viewContent'),
-            icon: 'openNewTab',
-            value: 'demo-url',
-          },
-          {
-            label: this.canEdit ? this.$tr('deleteChannel') : this.$tr('removeChannel'),
-            icon: 'trash',
-            value: 'delete',
-          },
-        ];
-        if (!this.channel.published) {
-          options = options.filter(item => item.value !== 'copy');
+        const options = [];
+        if (this.hasDropdownOption('edit')) {
+          options.push({ label: this.$tr('editChannel'), icon: 'edit', value: 'edit' });
         }
-        if (!this.channel.edit) {
-          options = options.filter(item => item.value !== 'edit');
+        if (this.hasDropdownOption('copy')) {
+          options.push({ label: this.$tr('copyToken'), icon: 'copy', value: 'copy' });
         }
-        if (this.channel.source_url === '') {
-          options = options.filter(item => item.value !== 'source-url');
+        if (this.hasDropdownOption('source-url')) {
+          options.push({ label: this.$tr('goToWebsite'), icon: 'openNewTab', value: 'source-url' });
         }
-        if (this.channel.demo_server_url === '') {
-          options = options.filter(item => item.value !== 'demo-url');
+        if (this.hasDropdownOption('demo-url')) {
+          options.push({ label: this.$tr('viewContent'), icon: 'openNewTab', value: 'demo-url' });
+        }
+        if (this.hasDropdownOption('delete')) {
+          options.push({ label: this.$tr('deleteChannel'), icon: 'trash', value: 'delete' });
+        }
+        if (this.hasDropdownOption('remove')) {
+          options.push({ label: this.$tr('removeChannel'), icon: 'trash', value: 'remove' });
         }
         return options;
       },
@@ -317,6 +368,8 @@
           this.tokenDialog = true;
         } else if (value === 'delete') {
           this.deleteDialog = true;
+        } else if (value === 'remove') {
+          this.removeDialog = true;
         } else if (value === 'source-url') {
           window.open(this.channel.source_url, '_blank');
         } else if (value === 'demo-url') {
@@ -339,18 +392,17 @@
         });
       },
       handleDelete() {
-        if (!this.canEdit) {
-          const currentUserId = this.$store.state.session.currentUser.id;
-          this.removeViewer({ channelId: this.channel.id, userId: currentUserId }).then(() => {
-            this.deleteDialog = false;
-            this.$store.dispatch('showSnackbarSimple', this.$tr('channelRemovedSnackbar'));
-          });
-        } else {
-          this.deleteChannel(this.channel.id).then(() => {
-            this.deleteDialog = false;
-            this.$store.dispatch('showSnackbarSimple', this.$tr('channelDeletedSnackbar'));
-          });
-        }
+        this.deleteChannel(this.channel.id).then(() => {
+          this.deleteDialog = false;
+          this.$store.dispatch('showSnackbarSimple', this.$tr('channelDeletedSnackbar'));
+        });
+      },
+      handleRemove() {
+        const currentUserId = this.$store.state.session.currentUser.id;
+        this.removeViewer({ channelId: this.channel.id, userId: currentUserId }).then(() => {
+          this.removeDialog = false;
+          this.$store.dispatch('showSnackbarSimple', this.$tr('channelRemovedSnackbar'));
+        });
       },
       trackTokenCopy() {
         this.$analytics.trackAction('channel_list', 'Copy token', {
@@ -380,6 +432,7 @@
       channelDeletedSnackbar: 'Channel deleted',
       channelRemovedSnackbar: 'Channel removed',
       channelLanguageNotSetIndicator: 'No language set',
+      moreOptions: 'More options',
       cancel: 'Cancel',
     },
   };

@@ -2,7 +2,7 @@
 
   <StudioChannelsPage
     :loading="loading"
-    :invitations="filteredInvitations"
+    :invitations="editInvitations"
   >
     <template #header>
       <h1 class="visuallyhidden">{{ $tr('title') }}</h1>
@@ -21,11 +21,13 @@
 
     <template #cards>
       <StudioChannelCard
-        v-for="channel in channels"
+        v-for="channel in editableChannels"
         :key="channel.id"
         :headingLevel="2"
         :channel="channel"
-        @click="onCardClick(channel.id)"
+        :footerButtons="['info', 'bookmark']"
+        :dropdownOptions="getDropdownOptions(channel)"
+        @click="onCardClick(channel)"
       />
     </template>
   </StudioChannelsPage>
@@ -57,12 +59,12 @@
 
       return {
         loading,
-        channels,
+        editableChannels: channels,
       };
     },
     computed: {
       ...mapGetters('channelList', ['invitations']),
-      filteredInvitations() {
+      editInvitations() {
         return this.invitations.filter(i => i.share_mode === InvitationShareModes.EDIT);
       },
     },
@@ -78,8 +80,21 @@
           query: { last: this.$route.name },
         });
       },
-      onCardClick(channelId) {
-        window.location.href = window.Urls.channel(channelId);
+      onCardClick(channel) {
+        window.location.href = window.Urls.channel(channel.id);
+      },
+      getDropdownOptions(channel) {
+        const options = ['edit', 'delete'];
+        if (channel.published) {
+          options.push('copy');
+        }
+        if (channel.source_url) {
+          options.push('source-url');
+        }
+        if (channel.demo_server_url) {
+          options.push('demo-url');
+        }
+        return options;
       },
     },
     $trs: {

@@ -60,12 +60,15 @@
               <StudioChannelCard
                 v-for="channel in channels"
                 :key="channel.id"
-                :channel="channel"
-                :selectable="selecting"
-                :selected="isChannelSelected(channel.id)"
                 :headingLevel="2"
+                :showUpdateStatus="false"
+                :channel="channel"
+                :footerButtons="getFooterButtons(channel)"
+                :dropdownOptions="getDropdownOptions(channel)"
+                :selectable="selecting"
+                :selected="isChannelSelected(channel)"
                 @toggle-selection="handleSelectionToggle"
-                @click="onCardClick(channel.id)"
+                @click="onCardClick(channel)"
               />
             </KCardGrid>
           </VFlex>
@@ -244,9 +247,29 @@
     },
     methods: {
       ...mapActions('channelList', ['searchCatalog']),
-      onCardClick(channelId) {
+      getFooterButtons(channel) {
+        const buttons = ['info'];
+        if (channel.published) {
+          buttons.push('copy');
+        }
         if (this.loggedIn) {
-          window.location.href = window.Urls.channel(channelId);
+          buttons.push('bookmark');
+        }
+        return buttons;
+      },
+      getDropdownOptions(channel) {
+        const options = [];
+        if (channel.source_url) {
+          options.push('source-url');
+        }
+        if (channel.demo_server_url) {
+          options.push('demo-url');
+        }
+        return options;
+      },
+      onCardClick(channel) {
+        if (this.loggedIn) {
+          window.location.href = window.Urls.channel(channel.id);
         } else {
           this.$router.push({
             name: RouteNames.CHANNEL_DETAILS,
@@ -255,13 +278,13 @@
               last: this.$route.name,
             },
             params: {
-              channelId,
+              channelId: channel.id,
             },
           });
         }
       },
-      isChannelSelected(channelId) {
-        return this.selected.includes(channelId);
+      isChannelSelected(channel) {
+        return this.selected.includes(channel.id);
       },
       handleSelectionToggle(channelId) {
         const currentlySelected = this.selected;
