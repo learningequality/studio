@@ -28,7 +28,7 @@ django-redis
 django-prometheus
 sentry-sdk
 html5lib==1.1
-pillow==12.0.0
+pillow==12.1.1
 python-dateutil>=2.8.1
 jsonschema>=3.2.0
 django-celery-results
