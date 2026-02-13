@@ -88,9 +88,7 @@
         />
 
         <!-- Usage -->
-        <h2 class="section-header">
-          {{ $tr('usageLabel') }}*
-        </h2>
+        <h2 class="section-header">{{ $tr('usageLabel') }}*</h2>
         <div
           v-for="option in usageOptions"
           :key="option.id"
@@ -524,8 +522,10 @@
             }
             break;
           case 'other_use':
-            if (this.form.uses.includes(uses.OTHER) &&
-                (!this.form.other_use || this.form.other_use.trim() === '')) {
+            if (
+              this.form.uses.includes(uses.OTHER) &&
+              (!this.form.other_use || this.form.other_use.trim() === '')
+            ) {
               /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
               this.errors.other_use = [commonStrings.$tr('fieldRequired')];
             } else {
@@ -537,12 +537,14 @@
       validateForm() {
         let isValid = true;
 
-        ['first_name', 'last_name', 'email', 'password1', 'password2', 'other_use'].forEach(field => {
-          this.validateField(field);
-          if (this.errors[field].length > 0) {
-            isValid = false;
-          }
-        });
+        ['first_name', 'last_name', 'email', 'password1', 'password2', 'other_use'].forEach(
+          field => {
+            this.validateField(field);
+            if (this.errors[field].length > 0) {
+              isValid = false;
+            }
+          },
+        );
 
         if (!this.form.uses || this.form.uses.length === 0) {
           isValid = false;
@@ -735,8 +737,8 @@
     min-height: 0;
     margin-top: 4px;
     margin-bottom: 8px;
-    color: #b00020;
     font-size: 12px;
+    color: #b00020;
   }
 
   .policy-checkbox {
@@ -748,8 +750,8 @@
     min-height: 0;
     margin-bottom: 4px;
     margin-left: 40px;
-    color: #b00020;
     font-size: 12px;
+    color: #b00020;
   }
 
   .span-spacing {
