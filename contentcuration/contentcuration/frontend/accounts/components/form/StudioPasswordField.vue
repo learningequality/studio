@@ -6,6 +6,7 @@
     :label="label || $tr('passwordLabel')"
     :invalid="hasError"
     :invalidText="errorText"
+    :showInvalidText="hasError"
     @input="$emit('input', $event)"
     @blur="$emit('blur')"
   />
@@ -47,18 +48,3 @@
 </script>
 
 
-<style scoped>
-
-  .password-field-wrapper {
-    position: relative;
-    display: flex;
-    align-items: flex-start;
-  }
-
-  .password-toggle {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-  }
-
-</style>

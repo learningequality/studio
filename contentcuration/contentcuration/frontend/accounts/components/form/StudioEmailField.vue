@@ -5,10 +5,10 @@
     type="email"
     :label="label || $tr('emailLabel')"
     :maxlength="maxlength"
-    :showCounter="Boolean(maxlength)"
     :disabled="disabled"
     :invalid="hasError"
     :invalidText="errorText"
+    :showInvalidText="hasError"
     v-bind="$attrs"
     @input="handleInput"
     @blur="$emit('blur')"
@@ -53,7 +53,6 @@
     },
     methods: {
       handleInput(value) {
-        // Trim input like original EmailField
         this.$emit('input', value.trim());
       },
     },
@@ -64,9 +63,3 @@
 
 </script>
 
-
-<style scoped>
-
-  /* Minimal styling - KTextbox handles the rest */
-
-</style>
