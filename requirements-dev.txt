@@ -51,7 +51,7 @@ mock==5.2.0
     # via
     #   -r requirements-dev.in
     #   django-concurrent-test-helper
-nodeenv==1.9.1
+nodeenv==1.10.0
     # via
     #   -r requirements-dev.in
     #   pre-commit
