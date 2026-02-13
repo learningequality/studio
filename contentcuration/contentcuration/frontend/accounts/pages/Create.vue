@@ -120,12 +120,14 @@
               :invalidText="errors.other_use.length ? errors.other_use[0] : ''"
               :showInvalidText="true"
               class="conditional-field-textarea"
+              @input="resetErrors('other_use')"
               @blur="validateField('other_use')"
             />
           </KTransition>
         </div>
         <div
           v-if="!valid && (!form.uses || !form.uses.length)"
+          :style="{ color: $themeTokens.error }"
           class="field-error"
         >
           {{ $tr('fieldRequired') }}
@@ -139,6 +141,7 @@
         />
         <div
           v-if="!valid && (!form.locations || !form.locations.length)"
+          :style="{ color: $themeTokens.error }"
           class="field-error"
         >
           {{ $tr('fieldRequired') }}
@@ -176,6 +179,7 @@
         </KTransition>
         <div
           v-if="!valid && (!form.source || !form.source.value)"
+          :style="{ color: $themeTokens.error }"
           class="field-error"
         >
           {{ $tr('fieldRequired') }}
@@ -193,6 +197,7 @@
           <div
             v-if="!acceptedAgreement"
             key="agreement-error"
+            :style="{ color: $themeTokens.error }"
             class="policy-error"
           >
             {{ $tr('ToSRequiredMessage') }}
@@ -409,7 +414,9 @@
               const sourceValue =
                 cleanedData[key] && cleanedData[key].value != null
                   ? cleanedData[key].value
-                  : cleanedData[key] || '';
+                  : typeof cleanedData[key] === 'string'
+                    ? cleanedData[key]
+                    : '';
               if (sourceValue === sources.ORGANIZATION) {
                 cleanedData[key] = `${cleanedData.organization} (organization)`;
               } else if (sourceValue === sources.CONFERENCE) {
@@ -738,7 +745,6 @@
     margin-top: 4px;
     margin-bottom: 8px;
     font-size: 12px;
-    color: #b00020;
   }
 
   .policy-checkbox {
@@ -751,7 +757,6 @@
     margin-bottom: 4px;
     margin-left: 40px;
     font-size: 12px;
-    color: #b00020;
   }
 
   .span-spacing {
