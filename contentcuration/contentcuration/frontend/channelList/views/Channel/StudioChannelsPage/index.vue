@@ -70,19 +70,17 @@
       const skeletonsConfig = computed(() => {
         return [
           {
-            breakpoints: [0, 1],
-            count: 3,
+            breakpoints: [0, 1, 2, 3, 4, 5, 6, 7],
+            count: 2,
             orientation: 'vertical',
             thumbnailDisplay: 'small',
             thumbnailAlign: 'left',
+            thumbnailAspectRatio: '16:9',
             minHeight: '380px',
           },
           {
             breakpoints: [2, 3, 4, 5, 6, 7],
-            count: 3,
             orientation: 'horizontal',
-            thumbnailDisplay: 'small',
-            thumbnailAlign: 'left',
             minHeight: '230px',
           },
         ];

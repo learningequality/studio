@@ -26,9 +26,7 @@
         fluid
         :style="`margin-top: ${offline ? 48 : 0}`"
       >
-        <LoadingText v-if="loading" />
         <VLayout
-          v-else
           grid
           wrap
           class="list-wrapper"
@@ -38,17 +36,24 @@
             class="mb-2"
           >
             <h1 class="visuallyhidden">{{ $tr('title') }}</h1>
-            <p class="mb-2 ml-1 title">
-              {{ $tr('resultsText', { count: page.count }) }}
+            <!-- minHeight to prevent layout shifts when loading state changes -->
+            <p
+              class="mb-2 ml-1 title"
+              :style="{ minHeight: '30px' }"
+            >
+              <span v-if="!loading">{{ $tr('resultsText', { count: page.count }) }}</span>
             </p>
-            <KButton
-              v-if="page.count && !selecting"
-              :text="$tr('selectChannels')"
-              appearance="basic-link"
-              @click="setSelection(true)"
-            />
+            <!-- minHeight to prevent layout shifts when loading state changes -->
+            <div :style="{ minHeight: '30px' }">
+              <KButton
+                v-if="page.count && !selecting && !loading"
+                :text="$tr('selectChannels')"
+                appearance="basic-link"
+                @click="setSelection(true)"
+              />
+            </div>
             <KCheckbox
-              v-else-if="selecting"
+              v-if="selecting"
               v-model="selectAll"
               :indeterminate="isIndeterminate"
               :label="$tr('selectAll')"
@@ -56,7 +61,11 @@
             />
           </VFlex>
           <VFlex xs12>
-            <KCardGrid layout="1-1-1">
+            <KCardGrid
+              layout="1-1-1"
+              :loading="loading"
+              :skeletonsConfig="skeletonsConfig"
+            >
               <StudioChannelCard
                 v-for="channel in channels"
                 :key="channel.id"
@@ -136,7 +145,6 @@
   import CatalogFilters from './CatalogFilters';
   import CatalogFilterBar from './CatalogFilterBar';
   import StudioChannelCard from './StudioChannelCard';
-  import LoadingText from 'shared/views/LoadingText';
   import Pagination from 'shared/views/Pagination';
   import BottomBar from 'shared/views/BottomBar';
   import ToolBar from 'shared/views/ToolBar';
@@ -148,7 +156,6 @@
     name: 'CatalogList',
     components: {
       StudioChannelCard,
-      LoadingText,
       CatalogFilters,
       CatalogFilterBar,
       Pagination,
@@ -176,8 +183,12 @@
          * differences between previous query params and new
          * query params, so just track it manually
          */
-        previousQuery: this.$route.query,
-
+        /**
+         * MisRob: Add 'page: 1' as default to prevent it from being
+         * added later and causing redundant $router watcher call when
+         * page initially loading (fixes loading state showing twice)
+         */
+        previousQuery: { page: 1, ...this.$route.query },
         /**
          * jayoshih: using excluded logic here instead of selected
          * to account for selections across pages (some channels
@@ -193,6 +204,24 @@
       ...mapState({
         offline: state => !state.connection.online,
       }),
+      skeletonsConfig() {
+        return [
+          {
+            breakpoints: [0, 1, 2, 3, 4, 5, 6, 7],
+            count: 2,
+            orientation: 'vertical',
+            thumbnailDisplay: 'small',
+            thumbnailAlign: 'left',
+            thumbnailAspectRatio: '16:9',
+            minHeight: '380px',
+          },
+          {
+            breakpoints: [3, 4, 5, 6, 7],
+            orientation: 'horizontal',
+            minHeight: '230px',
+          },
+        ];
+      },
       selectAll: {
         get() {
           return this.selected.length === this.channels.length;
@@ -244,7 +273,7 @@
         this.previousQuery = { ...to.query };
       },
     },
-    mounted() {
+    created() {
       this.loadCatalog();
     },
     methods: {
