@@ -35,6 +35,7 @@
       layout="1-1-1"
       :loading="loading"
       :skeletonsConfig="skeletonsConfig"
+      :syncCardsMetrics="false"
       class="cards"
     >
       <slot name="cards"></slot>

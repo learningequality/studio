@@ -65,6 +65,7 @@
               layout="1-1-1"
               :loading="loading"
               :skeletonsConfig="skeletonsConfig"
+              :syncCardsMetrics="false"
             >
               <StudioChannelCard
                 v-for="channel in channels"
