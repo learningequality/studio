@@ -30,28 +30,15 @@ export function useChannelList(options = {}) {
     return orderBy(filtered, sortFields, orderFields);
   });
 
-  const hasChannels = computed(() => channels.value.length > 0);
-
-  const loadData = async () => {
-    loading.value = true;
-    try {
-      await store.dispatch('channel/loadChannelList', { listType });
-    } catch (error) {
-      loading.value = false;
-    } finally {
-      loading.value = false;
-    }
-  };
-
   onMounted(() => {
-    loadData();
+    loading.value = true;
+    store.dispatch('channel/loadChannelList', { listType }).then(() => {
+      loading.value = false;
+    });
   });
 
   return {
     loading,
     channels,
-    hasChannels,
-
-    loadData,
   };
 }
