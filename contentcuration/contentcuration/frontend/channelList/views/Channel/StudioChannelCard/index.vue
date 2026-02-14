@@ -106,7 +106,7 @@
               />
             </router-link>
             <KTooltip
-              reference="infoBtnn"
+              reference="infoBtn"
               :refs="$refs"
               maxWidth="200px"
             >
