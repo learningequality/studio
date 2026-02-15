@@ -17,9 +17,8 @@
         @blur="resetScroll"
       >
         <template #selection="{ item }">
-          <StudioChip 
+          <StudioChip
             :class="{ notranslate }"
-            @input="parent.selectItem(item)"
           >
             {{ item.text }}
           </StudioChip>
@@ -48,12 +47,13 @@
 
 
 <script>
-  import DropdownWrapper from './DropdownWrapper';
+
   import StudioChip from '../StudioChip.vue';
+  import DropdownWrapper from './DropdownWrapper';
 
   export default {
     name: 'MultiSelect',
-    components: {  DropdownWrapper, StudioChip },
+    components: { DropdownWrapper, StudioChip },
     // $attrs are rebound to a descendent component
     inheritAttrs: false,
     props: {

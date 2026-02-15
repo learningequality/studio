@@ -25,7 +25,7 @@
         <template #activator="{ on }">
           <StudioChip
             class="ma-1"
-            v-on="on" 
+            v-on="on"
           >
             <div class="text-truncate">
               {{ item.name }}
@@ -39,7 +39,7 @@
       <KCheckbox
         :key="item.id"
         :ref="'checkbox-' + item.id"
-        :checked="languages.includes(item.value)"
+        :checked="languages.includes(item.id)"
         :value="item.id"
         class="mb-0 mt-1 scroll-margin"
         :labelDir="null"
@@ -67,6 +67,7 @@
 
 
 <script>
+
   import LanguagesMap, { LanguagesList } from 'shared/leUtils/Languages';
   import StudioChip from 'shared/views/StudioChip.vue';
 
