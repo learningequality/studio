@@ -31,7 +31,7 @@
       />
 
       <!-- Starred -->
-      <KCheckbox 
+      <KCheckbox
         v-if="loggedIn"
         v-model="bookmark"
         :label="$tr('starredLabel')"

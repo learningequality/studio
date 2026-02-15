@@ -25,7 +25,7 @@
         <template #activator="{ on }">
           <StudioChip
             class="ma-1"
-            v-on="on" 
+            v-on="on"
           >
             <div class="text-truncate">
               {{ item.name }}
@@ -67,6 +67,7 @@
 
 
 <script>
+
   import LanguagesMap, { LanguagesList } from 'shared/leUtils/Languages';
   import StudioChip from 'shared/views/StudioChip.vue';
 
