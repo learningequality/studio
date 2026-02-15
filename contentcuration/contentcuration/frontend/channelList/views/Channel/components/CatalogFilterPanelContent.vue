@@ -104,7 +104,6 @@
   import LanguageFilter from './LanguageFilter.vue';
   import MultiSelect from 'shared/views/form/MultiSelect';
   import { constantsTranslationMixin } from 'shared/mixins';
-  import Checkbox from 'shared/views/form/Checkbox';
   import HelpTooltip from 'shared/views/HelpTooltip';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
@@ -114,7 +113,6 @@
     name: 'CatalogFilterPanelContent',
     components: {
       LanguageFilter,
-      Checkbox,
       HelpTooltip,
       MultiSelect,
     },
