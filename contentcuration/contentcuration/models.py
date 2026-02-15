@@ -2856,9 +2856,6 @@ class CommunityLibrarySubmission(models.Model):
     internal_notes = models.TextField(blank=True, null=True)
 
     def save(self, *args, **kwargs):
-        # Not a top-level import to avoid circular import issues
-        from contentcuration.tasks import ensure_versioned_database_exists_task
-
         # Validate on save that the submission author is an editor of the channel
         # and that the version is not greater than the current channel version.
         # These cannot be expressed as constraints because traversing
@@ -2888,14 +2885,6 @@ class CommunityLibrarySubmission(models.Model):
             )
 
         if self.pk is None:
-            # When creating a new submission, ensure the channel has a versioned database
-            # (it might not have if the channel was published before versioned databases
-            # were introduced).
-            ensure_versioned_database_exists_task.fetch_or_enqueue(
-                user=self.author,
-                channel_id=self.channel.id,
-                channel_version=self.channel.version,
-            )
             # Create a ChannelVersion and token for this submission
             channel_version, _ = ChannelVersion.objects.get_or_create(
                 channel=self.channel, version=self.channel_version
@@ -2959,6 +2948,12 @@ class AuditedSpecialPermissionsLicense(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     description = models.TextField(unique=True, db_index=True)
     distributable = models.BooleanField(default=False)
+
+    @classmethod
+    def mark_channel_version_as_distributable(cls, channel_version_id):
+        return cls.objects.filter(channel_versions__id=channel_version_id).update(
+            distributable=True
+        )
 
     def __str__(self):
         return (

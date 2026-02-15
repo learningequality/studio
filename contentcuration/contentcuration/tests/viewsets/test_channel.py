@@ -551,11 +551,8 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.assertEqual(len(response.json()["allowed"]), 0, response.content)
         self.assertEqual(len(response.json()["disallowed"]), 1, response.content)
 
-    @mock.patch("contentcuration.utils.publish.ensure_versioned_database_exists")
     @mock.patch("contentcuration.viewsets.channel.export_channel_to_kolibri_public")
-    def test_process_added_to_community_library_change(
-        self, mock_export_func, mock_ensure_db_exists
-    ):
+    def test_process_added_to_community_library_change(self, mock_export_func):
         # Creating the change on the backend should be supported
         self.client.force_authenticate(self.admin_user)
 
@@ -566,6 +563,12 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         channel.public = False
         channel.editors.add(editor_user)
         channel.save()
+
+        channel_version = ChannelVersion.objects.get(channel=channel, version=2)
+        special_license = AuditedSpecialPermissionsLicense.objects.create(
+            description="Community library special permissions"
+        )
+        channel_version.special_permissions_included.add(special_license)
 
         current_live_submission = CommunityLibrarySubmission.objects.create(
             channel=channel,
@@ -642,6 +645,44 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.assertEqual(
             new_submission.status,
             community_library_submission.STATUS_LIVE,
+        )
+        special_license.refresh_from_db()
+        self.assertTrue(special_license.distributable)
+
+    def test_publish_public_channel_marks_special_permissions_distributable(self):
+        user = testdata.user()
+        channel = testdata.channel()
+        channel.public = True
+        channel.editors.add(user)
+        channel.save()
+
+        special_permissions_license = models.License.objects.get(
+            license_name="Special Permissions"
+        )
+        special_license_description = "Public channel special permissions"
+        contentnode = (
+            channel.main_tree.get_descendants()
+            .exclude(kind_id=content_kinds.TOPIC)
+            .first()
+        )
+        contentnode.license = special_permissions_license
+        contentnode.license_description = special_license_description
+        contentnode.copyright_holder = "Public channel"
+        contentnode.save()
+
+        self.client.force_authenticate(user)
+        response = self.sync_changes([generate_publish_channel_event(channel.id)])
+
+        self.assertEqual(response.status_code, 200, response.content)
+        channel.refresh_from_db()
+        audited_license = AuditedSpecialPermissionsLicense.objects.get(
+            description=special_license_description
+        )
+        self.assertTrue(audited_license.distributable)
+        self.assertTrue(
+            channel.version_info.special_permissions_included.filter(
+                id=audited_license.id
+            ).exists()
         )
 
 

@@ -833,6 +833,14 @@ class ChannelViewSet(ValuesViewset):
             countries=countries,
         )
 
+        published_version = ChannelVersion.objects.get(
+            channel_id=channel_id,
+            version=channel_version,
+        )
+        models.AuditedSpecialPermissionsLicense.mark_channel_version_as_distributable(
+            published_version.id
+        )
+
         new_live_submission = CommunityLibrarySubmission.objects.get(
             channel_id=channel_id,
             channel_version=channel_version,
