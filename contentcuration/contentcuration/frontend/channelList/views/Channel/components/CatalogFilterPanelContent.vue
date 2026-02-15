@@ -31,7 +31,7 @@
       />
 
       <!-- Starred -->
-      <Checkbox
+      <KCheckbox 
         v-if="loggedIn"
         v-model="bookmark"
         :label="$tr('starredLabel')"
@@ -46,7 +46,7 @@
       </div>
 
       <div class="checkbox-with-tooltip">
-        <Checkbox
+        <KCheckbox
           v-model="coach"
           aria-describedby="tooltip-coach"
           :label="$tr('coachLabel')"
@@ -58,7 +58,7 @@
         />
       </div>
 
-      <Checkbox
+      <KCheckbox
         v-model="subtitles"
         :label="$tr('subtitlesLabel')"
       />

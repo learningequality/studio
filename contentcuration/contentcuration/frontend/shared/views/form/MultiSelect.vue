@@ -17,14 +17,17 @@
         @blur="resetScroll"
       >
         <template #selection="{ item }">
-          <VChip :class="{ notranslate }">
+          <StudioChip 
+            :class="{ notranslate }"
+            @input="parent.selectItem(item)"
+          >
             {{ item.text }}
-          </VChip>
+          </StudioChip>
         </template>
         <template #item="{ item }">
-          <Checkbox
+          <KCheckbox
             :ref="'checkbox-' + item.value"
-            v-model="selections"
+            :checked="selections.includes(item.value)"
             :value="item.value"
             class="scroll-margin"
           >
@@ -35,7 +38,7 @@
             >
               {{ item.text }}
             </span>
-          </Checkbox>
+          </KCheckbox>
         </template>
       </VSelect>
     </template>
@@ -45,13 +48,12 @@
 
 
 <script>
-
-  import Checkbox from './Checkbox';
   import DropdownWrapper from './DropdownWrapper';
+  import StudioChip from '../StudioChip.vue';
 
   export default {
     name: 'MultiSelect',
-    components: { Checkbox, DropdownWrapper },
+    components: {  DropdownWrapper, StudioChip },
     // $attrs are rebound to a descendent component
     inheritAttrs: false,
     props: {
