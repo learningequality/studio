@@ -17,9 +17,7 @@
         @blur="resetScroll"
       >
         <template #selection="{ item }">
-          <StudioChip
-            :class="{ notranslate }"
-          >
+          <StudioChip :class="{ notranslate }">
             {{ item.text }}
           </StudioChip>
         </template>
