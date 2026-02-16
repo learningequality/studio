@@ -100,7 +100,7 @@ describe('CatalogList', () => {
     });
   });
 
-  it('shows results found title', async () => {
+  it('shows results found', async () => {
     renderComponent();
     await waitFor(() => {
       expect(screen.getByText(/results found/i)).toBeInTheDocument();

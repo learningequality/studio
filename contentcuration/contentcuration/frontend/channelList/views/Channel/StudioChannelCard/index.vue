@@ -306,8 +306,6 @@
         return {
           name: RouteNames.CHANNEL_DETAILS,
           query: {
-            // this component is used on the catalog search
-            // page => do not lose search query
             ...this.$route.query,
             last: this.$route.name,
           },
@@ -392,8 +390,6 @@
         this.$router.push({
           name: RouteNames.CHANNEL_EDIT,
           query: {
-            // this component is used on the catalog search
-            // page => do not lose search query
             ...this.$route.query,
             last: this.$route.name,
           },

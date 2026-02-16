@@ -8,7 +8,7 @@ import orderBy from 'lodash/orderBy';
  * @param {string} options.listType - Type of channel list (from ChannelListTypes)
  * @param {Array<string>} options.sortFields - Fields to sort by (default: ['modified'])
  * @param {Array<string>} options.orderFields - Sort order (default: ['desc'])
- * @returns {Object} Channel list state and methods
+ * @returns {Object} Loading state and filtered & sorted channels
  */
 export function useChannelList(options = {}) {
   const { listType, sortFields = ['modified'], orderFields = ['desc'] } = options;
