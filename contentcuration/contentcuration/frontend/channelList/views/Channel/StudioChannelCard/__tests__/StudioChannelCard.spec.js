@@ -187,7 +187,7 @@ describe('StudioChannelCard', () => {
       expect(within(menu).queryByText('Go to source website')).not.toBeInTheDocument();
       expect(within(menu).queryByText('View channel on Kolibri')).not.toBeInTheDocument();
       expect(within(menu).queryByText('Delete channel')).not.toBeInTheDocument();
-      expect(within(menu).queryByText('Remove from channel list')).not.toBeInTheDocument();
+      expect(within(menu).queryByText('Remove channel')).not.toBeInTheDocument();
     });
 
     it('has "Edit channel details" when "dropdownOptions" includes "edit"', async () => {
@@ -245,9 +245,9 @@ describe('StudioChannelCard', () => {
       });
     });
 
-    it('has "Remove from channel list" when "dropdownOptions" includes "remove"', async () => {
+    it('has "Remove channel" when "dropdownOptions" includes "remove"', async () => {
       const menu = await openDropdown(['remove']);
-      await userEvent.click(within(menu).getByText('Remove from channel list'));
+      await userEvent.click(within(menu).getByText('Remove channel'));
 
       // clicking the option opens the confirmation dialog
       const dialog = screen.getByRole('dialog');

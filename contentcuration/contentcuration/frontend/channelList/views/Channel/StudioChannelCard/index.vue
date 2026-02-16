@@ -431,7 +431,7 @@
       copyToken: 'Copy channel token',
       deleteChannel: 'Delete channel',
       deleteTitle: 'Delete this channel',
-      removeChannel: 'Remove from channel list',
+      removeChannel: 'Remove channel',
       removeBtn: 'Remove',
       removeTitle: 'Remove from channel list',
       deletePrompt: 'This channel will be permanently deleted. This cannot be undone.',
