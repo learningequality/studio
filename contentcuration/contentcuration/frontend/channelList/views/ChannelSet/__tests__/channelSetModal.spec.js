@@ -211,7 +211,10 @@ describe('ChannelSetModal', () => {
     expect(nameInput).toHaveValue('My collection');
     expect(screen.getByText('2 channels')).toBeInTheDocument();
     expect(screen.getByText(CHANNEL_1.name)).toBeInTheDocument();
+    expect(screen.getByText(CHANNEL_1.description)).toBeInTheDocument();
     expect(screen.getByText(CHANNEL_2.name)).toBeInTheDocument();
+    expect(screen.getByText(CHANNEL_2.description)).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Remove' })).toHaveLength(2);
     expect(screen.getByRole('button', { name: 'Select channels' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Save and close' })).toBeInTheDocument();
   });
@@ -255,6 +258,33 @@ describe('ChannelSetModal', () => {
     expect(router.currentRoute.name).toBe(RouteNames.NEW_CHANNEL_SET);
   });
 
+  it('creates a new collection successfully', async () => {
+    const user = userEvent.setup();
+    const { router } = await renderComponent({
+      routeName: RouteNames.NEW_CHANNEL_SET,
+      preloadChannelSet: false,
+      channelSet: null,
+      channels: [],
+    });
+    const replaceSpy = jest.spyOn(router, 'replace');
+
+    const nameInput = await screen.findByLabelText('Collection name');
+    await user.type(nameInput, 'New collection');
+    await user.click(screen.getByRole('button', { name: 'Create' }));
+
+    await waitFor(() => {
+      expect(mockActions.commitChannelSet).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({ name: 'New collection' }),
+      );
+      expect(replaceSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          params: { channelSetId: 'new-collection-id' },
+        }),
+      );
+    });
+  });
+
   it('saves valid changes and returns the user to collections', async () => {
     const user = userEvent.setup();
     const { router } = await renderComponent();
@@ -266,6 +296,15 @@ describe('ChannelSetModal', () => {
     await user.click(screen.getByRole('button', { name: 'Save and close' }));
 
     await waitFor(() => {
+      expect(mockActions.updateChannelSet).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({
+          id: CHANNEL_SET.id,
+          name: 'Updated collection name',
+        }),
+      );
+      expect(mockActions.addChannels).not.toHaveBeenCalled();
+      expect(mockActions.removeChannels).not.toHaveBeenCalled();
       expect(router.currentRoute.name).toBe(RouteNames.CHANNEL_SETS);
     });
   });
