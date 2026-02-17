@@ -26,7 +26,6 @@ function makeWrapper() {
   const store = factory();
 
   return render(CatalogFilterBar, {
-    // localVue,
     store,
     router,
     computed: {
