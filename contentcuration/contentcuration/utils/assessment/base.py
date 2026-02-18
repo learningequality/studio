@@ -284,10 +284,7 @@ class ExerciseArchiveGenerator(ABC):
         for answer in answer_data:
             if answer["answer"]:
                 if isinstance(answer["answer"], str):
-                    (
-                        answer["answer"],
-                        answer_images,
-                    ) = self._process_content(
+                    (answer["answer"], answer_images,) = self._process_content(
                         answer["answer"],
                     )
                     answer["images"] = answer_images
