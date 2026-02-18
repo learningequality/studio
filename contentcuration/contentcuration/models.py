@@ -47,6 +47,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django_cte import CTEManager
+from django_cte import CTEQuerySet
 from django_cte import With
 from le_utils import proquint
 from le_utils.constants import content_kinds
@@ -837,7 +838,7 @@ class PermissionCTE(With):
         return Exists(self.queryset().filter(*filters).values("user_id"))
 
 
-class ChannelModelQuerySet(models.QuerySet):
+class ChannelModelQuerySet(CTEQuerySet):
     def create(self, **kwargs):
         """
         Create a new object with the given kwargs, saving it to the database
@@ -861,6 +862,12 @@ class ChannelModelQuerySet(models.QuerySet):
     def update_or_create(self, defaults=None, **kwargs):
         self._actor_id = kwargs.pop("actor_id", None)
         return super().update_or_create(defaults, **kwargs)
+
+
+class ChannelModelManager(models.Manager.from_queryset(ChannelModelQuerySet)):
+    """Custom Channel models manager with CTE support"""
+
+    pass
 
 
 class Channel(models.Model):
@@ -994,7 +1001,7 @@ class Channel(models.Model):
         ]
     )
 
-    objects = ChannelModelQuerySet.as_manager()
+    objects = ChannelModelManager()
 
     @classmethod
     def get_editable(cls, user, channel_id):
