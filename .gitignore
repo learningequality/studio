@@ -25,10 +25,14 @@ var/
 
 # Ignore editor / IDE related data
 .vscode/
+.gemini/
 
 # IntelliJ IDE, except project config
 .idea/
 /*.iml
+.junie/
+.aiassistant/
+.aiignore
 # ignore future updates to run configuration
 .run/devserver.run.xml
 
