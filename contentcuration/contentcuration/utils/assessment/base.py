@@ -274,7 +274,7 @@ class ExerciseArchiveGenerator(ABC):
         try:
             return sorted(items, key=lambda x: x.get("order"))
         except TypeError:
-            logging.error(f"Unable to sort {item_type}, leaving unsorted.")
+            logging.warning(f"Unable to sort {item_type}, leaving unsorted.")
             return items
 
     def _process_answers(self, assessment_item):
