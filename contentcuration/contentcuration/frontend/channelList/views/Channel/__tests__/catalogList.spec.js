@@ -1,19 +1,16 @@
 import { render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
-import { createLocalVue } from '@vue/test-utils';
-import Vuex, { Store } from 'vuex';
 import VueRouter from 'vue-router';
-import CatalogList from '../CatalogList';
+import { Store } from 'vuex';
+import CatalogList from '../CatalogList.vue';
 import { RouteNames } from '../../../constants';
 
-const localVue = createLocalVue();
-localVue.use(Vuex);
-localVue.use(VueRouter);
+const originalLocation = window.location;
 
-const mockChannels = [
+const CHANNELS = [
   {
     id: 'channel-1',
-    name: 'Channel 1',
+    name: 'Channel title 1',
     description: 'Test channel 1',
     language: 'en',
     modified: new Date('2024-01-15'),
@@ -21,7 +18,7 @@ const mockChannels = [
   },
   {
     id: 'channel-2',
-    name: 'Channel 2',
+    name: 'Channel title 2',
     description: 'Test channel 2',
     language: 'en',
     modified: new Date('2024-01-20'),
@@ -29,116 +26,137 @@ const mockChannels = [
   },
 ];
 
-const mockChannelIds = mockChannels.map(c => c.id);
+const CHANNEL_IDS = CHANNELS.map(c => c.id);
 
-function createMockStore() {
-  const mockSearchCatalog = jest.fn(() => Promise.resolve());
+const router = new VueRouter({
+  routes: [
+    { name: RouteNames.CHANNEL_DETAILS, path: '/:channelId/details' },
+    { name: RouteNames.CATALOG_ITEMS, path: '/catalog' },
+    { name: RouteNames.CATALOG_DETAILS, path: '/catalog/:channelId' },
+  ],
+});
 
-  return {
-    store: new Store({
-      state: {
-        connection: { online: true },
-      },
-      getters: {
-        loggedIn: () => true,
-      },
-      actions: {
-        showSnackbar: jest.fn(),
-      },
-      modules: {
-        channel: {
-          namespaced: true,
-          state: {
-            channelsMap: Object.fromEntries(mockChannels.map(c => [c.id, c])),
-          },
-          getters: {
-            getChannels: state => ids => ids.map(id => state.channelsMap[id]).filter(Boolean),
-            getChannel: state => id => state.channelsMap[id],
-          },
+const mockSearchCatalog = jest.fn(() => Promise.resolve());
+
+function createStore({ loggedIn = true } = {}) {
+  return new Store({
+    state: {
+      connection: { online: true },
+    },
+    getters: {
+      loggedIn: () => loggedIn,
+    },
+    modules: {
+      channel: {
+        namespaced: true,
+        state: {
+          channelsMap: Object.fromEntries(CHANNELS.map(c => [c.id, c])),
         },
-        channelList: {
-          namespaced: true,
-          state: {
-            page: {
-              count: mockChannelIds.length,
-              results: mockChannelIds,
-            },
-          },
-          actions: {
-            searchCatalog: mockSearchCatalog,
-          },
+        getters: {
+          getChannels: state => ids => ids.map(id => state.channelsMap[id]).filter(Boolean),
+          getChannel: state => id => state.channelsMap[id],
         },
       },
-    }),
-    mockSearchCatalog,
-  };
-}
-
-function createMockRouter() {
-  const router = new VueRouter({
-    routes: [
-      { name: RouteNames.CATALOG_ITEMS, path: '/catalog' },
-      { name: RouteNames.CATALOG_DETAILS, path: '/catalog/:channelId' },
-    ],
+      channelList: {
+        namespaced: true,
+        state: {
+          page: {
+            count: CHANNEL_IDS.length,
+            results: CHANNEL_IDS,
+          },
+        },
+        actions: {
+          searchCatalog: mockSearchCatalog,
+        },
+      },
+    },
   });
-  router.push({ name: RouteNames.CATALOG_ITEMS }).catch(() => {});
-  return router;
 }
 
-function renderComponent() {
-  const { store, mockSearchCatalog } = createMockStore();
-  const router = createMockRouter();
+const store = createStore();
 
-  return {
-    ...render(CatalogList, {
-      localVue,
-      store,
-      router,
-      stubs: { CatalogFilters: true },
-    }),
-    router,
-    mockSearchCatalog,
-  };
+function renderComponent({ storeOverrides } = {}) {
+  return render(CatalogList, {
+    store: storeOverrides || store,
+    routes: router,
+    stubs: { CatalogFilters: true },
+  });
 }
 
 describe('CatalogList', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    router.push({ name: RouteNames.CATALOG_ITEMS }).catch(() => {});
   });
 
-  it('calls searchCatalog on mount', async () => {
-    const { mockSearchCatalog } = renderComponent();
+  afterEach(() => {
+    window.location = originalLocation;
+  });
+
+  it('calls the searchCatalog action on mount', async () => {
+    renderComponent();
     await waitFor(() => {
       expect(mockSearchCatalog).toHaveBeenCalled();
     });
   });
 
-  it('renders title', async () => {
+  it('shows results found', async () => {
     renderComponent();
     await waitFor(() => {
       expect(screen.getByText(/results found/i)).toBeInTheDocument();
     });
   });
 
-  it('displays download button', async () => {
+  it('shows the selection link', async () => {
     renderComponent();
+
     await waitFor(() => {
-      expect(screen.getByTestId('select')).toBeInTheDocument();
+      expect(screen.getByText('Download a summary of selected channels')).toBeInTheDocument();
     });
   });
 
-  it('renders channel cards', async () => {
+  it('shows the visually hidden title and all channel cards in correct semantic structure', async () => {
     renderComponent();
+
+    const title = await screen.findByRole('heading', { name: /content library/i });
+    expect(title).toBeInTheDocument();
+    expect(title.tagName).toBe('H1');
+    expect(title).toHaveClass('visuallyhidden');
+
+    const cards = await screen.findAllByTestId('channel-card');
+    expect(cards).toHaveLength(CHANNELS.length);
+    expect(cards[0]).toHaveTextContent('Channel title 1');
+    expect(cards[0].querySelector('h2')).toBeInTheDocument();
+    expect(cards[1]).toHaveTextContent('Channel title 2');
+    expect(cards[1].querySelector('h2')).toBeInTheDocument();
+  });
+
+  it('navigates to channel via window.location when logged in and card is clicked', async () => {
+    delete window.location;
+    window.location = { ...originalLocation, href: '' };
+
+    renderComponent({ storeOverrides: createStore({ loggedIn: true }) });
+    const cards = await screen.findAllByTestId('channel-card');
+    await userEvent.click(cards[0]);
+
+    expect(window.location.href).toBe('channel');
+  });
+
+  it('navigates to channel details via router when not logged in and card is clicked', async () => {
+    renderComponent({ storeOverrides: createStore({ loggedIn: false }) });
+    const cards = await screen.findAllByTestId('channel-card');
+    await userEvent.click(cards[0]);
+
     await waitFor(() => {
-      expect(screen.getByText('Channel 1')).toBeInTheDocument();
-      expect(screen.getByText('Channel 2')).toBeInTheDocument();
+      expect(router.currentRoute.name).toBe(RouteNames.CHANNEL_DETAILS);
+      expect(router.currentRoute.params.channelId).toBe('channel-1');
     });
   });
 
   describe('selection', () => {
     it('hides checkboxes and selection text initially', async () => {
       renderComponent();
-      await waitFor(() => screen.getByTestId('select'));
+      await waitFor(() => screen.getByText('Download a summary of selected channels'));
 
       expect(screen.queryByRole('checkbox', { name: /select all/i })).not.toBeInTheDocument();
       expect(screen.queryByText(/channels selected/i)).not.toBeInTheDocument();
@@ -149,7 +167,9 @@ describe('CatalogList', () => {
       const user = userEvent.setup();
       renderComponent();
 
-      const selectButton = await waitFor(() => screen.getByTestId('select'));
+      const selectButton = await waitFor(() =>
+        screen.getByText('Download a summary of selected channels'),
+      );
       await user.click(selectButton);
 
       await waitFor(() => {
@@ -163,7 +183,9 @@ describe('CatalogList', () => {
       const user = userEvent.setup();
       renderComponent();
 
-      const selectButton = await waitFor(() => screen.getByTestId('select'));
+      const selectButton = await waitFor(() =>
+        screen.getByText('Download a summary of selected channels'),
+      );
       await user.click(selectButton);
       const cancelButton = await waitFor(() => screen.getByRole('button', { name: /cancel/i }));
 
@@ -178,8 +200,8 @@ describe('CatalogList', () => {
   });
 
   describe('search', () => {
-    it('triggers searchCatalog when query parameters change', async () => {
-      const { router, mockSearchCatalog } = renderComponent();
+    it('calls the searchCatalog action when query parameters change', async () => {
+      renderComponent();
 
       await waitFor(() => screen.getByText(/results found/i));
 

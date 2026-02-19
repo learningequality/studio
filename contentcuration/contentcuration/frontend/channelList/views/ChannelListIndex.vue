@@ -77,36 +77,6 @@
           class="h-100"
           :class="isCatalogPage ? 'pa-0' : 'pa-4'"
         >
-          <VLayout
-            row
-            wrap
-            justify-center
-          >
-            <VFlex
-              xs12
-              sm10
-              md8
-              lg6
-            >
-              <StudioRaisedBox
-                v-if="invitationList.length"
-                v-show="isChannelList"
-              >
-                <template #header>
-                  {{ $tr('invitations', { count: invitationList.length }) }}
-                </template>
-                <template #main>
-                  <ul class="invitation-list">
-                    <ChannelInvitation
-                      v-for="invitation in invitationList"
-                      :key="invitation.id"
-                      :invitationID="invitation.id"
-                    />
-                  </ul>
-                </template>
-              </StudioRaisedBox>
-            </VFlex>
-          </VLayout>
           <ChannelListAppError
             v-if="fullPageError"
             :error="fullPageError"
@@ -125,15 +95,8 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
-  import {
-    RouteNames,
-    ChannelInvitationMapping,
-    ListTypeToRouteMapping,
-    RouteToListTypeMapping,
-  } from '../constants';
+  import { RouteNames, ChannelInvitationMapping, ListTypeToRouteMapping } from '../constants';
   import ChannelListAppError from './ChannelListAppError';
-  import ChannelInvitation from './Channel/ChannelInvitation';
-  import StudioRaisedBox from 'shared/views/StudioRaisedBox.vue';
   import { ChannelListTypes } from 'shared/constants';
   import { constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
@@ -160,12 +123,10 @@
     name: 'ChannelListIndex',
     components: {
       AppBar,
-      ChannelInvitation,
       ChannelListAppError,
       GlobalSnackbar,
       PolicyModals,
       StudioOfflineAlert,
-      StudioRaisedBox,
     },
     mixins: [constantsTranslationMixin, routerMixin],
     computed: {
@@ -186,9 +147,6 @@
       isCatalogPage() {
         return this.$route.name === RouteNames.CATALOG_ITEMS;
       },
-      currentListType() {
-        return RouteToListTypeMapping[this.$route.name];
-      },
       toolbarHeight() {
         return this.loggedIn && !this.isFAQPage ? 112 : 64;
       },
@@ -197,14 +155,6 @@
       },
       lists() {
         return Object.values(ChannelListTypes).filter(l => l !== 'public');
-      },
-      invitationList() {
-        const invitations = this.invitations;
-        return (
-          invitations.filter(
-            i => ChannelInvitationMapping[i.share_mode] === this.currentListType,
-          ) || []
-        );
       },
       invitationsByListCounts() {
         const inviteMap = {};
@@ -220,9 +170,6 @@
       },
       catalogLink() {
         return { name: RouteNames.CATALOG_ITEMS };
-      },
-      isChannelList() {
-        return this.lists.includes(this.currentListType);
       },
       homeLink() {
         return this.libraryMode ? window.Urls.base() : window.Urls.channels();
@@ -296,7 +243,6 @@
     $trs: {
       channelSets: 'Collections',
       catalog: 'Content Library',
-      invitations: 'You have {count, plural,\n =1 {# invitation}\n other {# invitations}}',
       libraryTitle: 'Kolibri Content Library Catalog',
       frequentlyAskedQuestions: 'Frequently asked questions',
     },
@@ -339,10 +285,6 @@
 
   .main-container {
     overflow: auto;
-  }
-
-  .invitation-list {
-    padding: 0;
   }
 
   .h-100 {
