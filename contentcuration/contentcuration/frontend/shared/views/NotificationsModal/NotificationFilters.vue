@@ -1,10 +1,12 @@
 <template>
 
-  <div class="notifications-filters">
+  <div
+    class="notifications-filters"
+    :class="{ disabled }"
+  >
     <KTextbox
       v-model="keywordInput"
       clearable
-      :disabled="disabled"
       class="notifications-keyword-search"
       :label="searchNotificationsLabel$()"
       :clearLabel="commonStrings.clearAction$()"
@@ -22,14 +24,12 @@
     <KSelect
       v-model="dateFilter"
       clearable
-      :disabled="disabled"
       :label="filterByDateLabel$()"
       :options="dateOptions"
     />
     <KSelect
       v-model="communityLibraryStatusFilter"
       clearable
-      :disabled="disabled"
       :label="filterByStatusLabel$()"
       :options="communityLibraryStatusOptions"
     />
@@ -54,6 +54,7 @@
       default: false,
     },
   });
+
   const emit = defineEmits(['update:filters']);
 
   const {
@@ -71,7 +72,10 @@
 
   function getStartOfWeek() {
     const date = new Date();
-    const startOfWeek = new Date(date.setDate(date.getDate() - date.getDay()));
+    const day = date.getDay();
+    // Setting first day of the week to Monday
+    const diff = day === 0 ? 6 : day - 1;
+    const startOfWeek = new Date(date.setDate(date.getDate() - diff));
     return startOfWeek.toISOString().split('T')[0];
   }
 
@@ -186,7 +190,13 @@
   .notifications-filters {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-auto-rows: 1fr;
     gap: 6px 12px;
+
+    &.disabled {
+      pointer-events: none;
+      opacity: 0.7;
+    }
 
     /* TODO: Open a KDS follow up to fix KTextbox feedback message alignment */
     ::v-deep .ui-textbox-feedback {

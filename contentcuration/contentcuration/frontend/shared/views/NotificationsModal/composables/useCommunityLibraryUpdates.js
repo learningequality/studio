@@ -72,26 +72,27 @@ export default function useCommunityLibraryUpdates({ queryParams } = {}) {
   const getSubmissionsUpdates = (submissions = []) => {
     let updates = [];
     for (const submission of submissions) {
-      submission.date_created = new Date(submission.date_created);
-      submission.date_updated = submission.date_updated && new Date(submission.date_updated);
+      const sub = {
+        ...submission,
+        date_created: new Date(submission.date_created),
+        date_updated: submission.date_updated && new Date(submission.date_updated),
+      };
 
       // Always add creation update
       updates.push({
-        ...submission,
+        ...sub,
         type: NotificationType.COMMUNITY_LIBRARY_SUBMISSION_CREATED,
-        date: submission.date_created,
+        date: sub.date_created,
       });
 
       // If the status is not PENDING or SUPERSEDED, it means there is also a status update
       if (
-        ![CommunityLibraryStatus.PENDING, CommunityLibraryStatus.SUPERSEDED].includes(
-          submission.status,
-        )
+        ![CommunityLibraryStatus.PENDING, CommunityLibraryStatus.SUPERSEDED].includes(sub.status)
       ) {
         updates.push({
-          ...submission,
-          type: statusToNotificationType[submission.status],
-          date: submission.date_updated,
+          ...sub,
+          type: statusToNotificationType[sub.status],
+          date: sub.date_updated,
         });
       }
     }
@@ -122,7 +123,7 @@ export default function useCommunityLibraryUpdates({ queryParams } = {}) {
     });
 
     // Since we are combining multiple updates per submission, we need to sort them again
-    updates.sort((a, b) => new Date(b.date) - new Date(a.date));
+    updates.sort((a, b) => b.date - a.date);
 
     return updates;
   };
@@ -152,20 +153,21 @@ export default function useCommunityLibraryUpdates({ queryParams } = {}) {
         max_results: MAX_RESULTS_PER_PAGE,
       });
     }
+    const wasLoadingMore = isLoadingMore.value;
     try {
       const response = await CommunityLibrarySubmission.fetchCollection(params);
 
       // Transforming submissions into updates before concatenation with existing updates
       // for performance reasons
       response.results = getSubmissionsUpdates(response.results);
-      if (isLoadingMore.value) {
+      if (wasLoadingMore) {
         response.results = [...submissionsUpdates.value, ...response.results];
       }
       moreObject.value = response.more;
       isLoadingMore.value = false;
       return response.results;
     } catch (error) {
-      const returnedResults = isLoadingMore.value ? submissionsUpdates.value : [];
+      const returnedResults = wasLoadingMore ? submissionsUpdates.value : [];
       isLoadingMore.value = false;
       createSnackbar(commonStrings.genericErrorMessage$());
       // Do not manage any error state in the useFetch composable, just return the current results

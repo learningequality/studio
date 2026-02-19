@@ -14,10 +14,12 @@ export function useFetch({ asyncFetchFunc }) {
       data.value = await asyncFetchFunc();
       isLoading.value = false;
       isFinished.value = true;
-    } catch (error) {
-      error.value = error;
+    } catch (caughtError) {
+      error.value = caughtError;
+      // Setting data to null just in case of error to preserve data visible during
+      // refetches.
       data.value = null;
-      throw error;
+      throw caughtError;
     } finally {
       isLoading.value = false;
     }

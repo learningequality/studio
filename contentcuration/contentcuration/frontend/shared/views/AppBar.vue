@@ -234,6 +234,7 @@
             modal: Modals.NOTIFICATIONS,
           },
         });
+        this.$analytics.trackClick('general', `Notifications`);
       },
     },
     $trs: {

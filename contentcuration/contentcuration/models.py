@@ -41,6 +41,7 @@ from django.db.models import UUIDField as DjangoUUIDField
 from django.db.models import Value
 from django.db.models.expressions import ExpressionList
 from django.db.models.expressions import RawSQL
+from django.db.models.functions import Coalesce
 from django.db.models.functions import Greatest
 from django.db.models.functions import Lower
 from django.db.models.indexes import IndexExpression
@@ -616,7 +617,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     def mark_notifications_read(self, timestamp):
         # Greatest between last read and timestamp
         self.last_read_notification_date = Greatest(
-            F("last_read_notification_date"), Value(timestamp)
+            Coalesce(F("last_read_notification_date"), Value(timestamp)),
+            Value(timestamp),
         )
         self.save(update_fields=["last_read_notification_date"])
 
@@ -694,8 +696,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     def notify_users(cls, users_queryset, date):
         users_queryset.update(
             newest_notification_date=Greatest(
-                F("newest_notification_date"), Value(date)
+                Coalesce(F("newest_notification_date"), Value(date)), Value(date)
             )
+        )
+        # refresh to get the latest newest_notification_date values after the update
+        refreshed_qs = cls.objects.filter(
+            pk__in=users_queryset.values_list("pk", flat=True)
         )
 
         Change.create_changes(
@@ -706,7 +712,7 @@ class User(AbstractBaseUser, PermissionsMixin):
                     {"newest_notification_date": user.newest_notification_date},
                     user_id=user.pk,
                 )
-                for user in users_queryset
+                for user in refreshed_qs
             ],
             applied=True,
         )
@@ -2926,10 +2932,11 @@ class CommunityLibrarySubmission(models.Model):
             )
             channel_version.new_token()
 
-            # Notify channel editors of new submission
-            self.notify_update_to_channel_editors()
-
         super().save(*args, **kwargs)
+
+        if is_adding:
+            # When a new submission is created, notify channel editors
+            self.notify_update_to_channel_editors(exclude_user_id=self.author_id)
 
     def mark_live(self):
         """
@@ -2946,11 +2953,14 @@ class CommunityLibrarySubmission(models.Model):
         self.status = community_library_submission.STATUS_LIVE
         self.save()
 
-    def notify_update_to_channel_editors(self):
+    def notify_update_to_channel_editors(self, exclude_user_id=None):
         """
         Notify channel editors that a submission has been updated.
         """
-        editors = self.channel.editors.all()
+        editors = self.channel.editors
+        if exclude_user_id:
+            editors = editors.exclude(id=exclude_user_id)
+
         User.notify_users(editors, date=self.date_updated)
 
     @classmethod

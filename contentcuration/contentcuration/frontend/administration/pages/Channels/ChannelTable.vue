@@ -283,7 +283,7 @@
 
       watch(channelTypeFilter, () => {
         const options = channelStatusOptions.value;
-        channelStatusFilter.value = options.length ? options[0].key : null;
+        channelStatusFilter.value = options.length ? options[0].value : null;
       });
 
       const filterFetchQueryParams = computed(() => {

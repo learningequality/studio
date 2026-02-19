@@ -25,9 +25,9 @@
       <div>
         <ul>
           <component
-            :is="NotificationTypeToComponent[notification.type]"
-            v-for="(notification, index) in notifications"
-            :key="index"
+            :is="NotificationTypeToComponent[notification.type] || 'div'"
+            v-for="notification in notifications"
+            :key="`${notification.id}-${notification.type}`"
             :notification="notification"
           />
         </ul>

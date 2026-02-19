@@ -347,7 +347,7 @@ describe('useCommunityLibraryUpdates', () => {
       });
     });
 
-    it('should take the newest date between date_updated__lte and lastRead - 1', async () => {
+    it('should take the newest date between date_updated__gte and lastRead - 1', async () => {
       const GTE_DATE__OLDER = '2026-01-01T00:00:00Z';
       const LAST_READ__NEWER = '2026-01-02T00:00:00Z';
 
@@ -371,7 +371,7 @@ describe('useCommunityLibraryUpdates', () => {
       });
     });
 
-    it('should take the newest date between date_updated__lte and lastRead - 2', async () => {
+    it('should take the newest date between date_updated__gte and lastRead - 2', async () => {
       const GTE_DATE__NEWER = '2026-01-02T00:00:00Z';
       const LAST_READ__OLDER = '2026-01-01T00:00:00Z';
 
