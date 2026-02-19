@@ -183,7 +183,7 @@ class UserViewSet(ReadOnlyValuesViewset):
         methods=["post"],
         serializer_class=MarkNotificationsReadSerializer,
     )
-    def mark_notifications_read(self, request, pk=None):
+    def mark_notifications_read(self, request):
         """
         Allows a user to mark the timestamp of their last read notification.
         """

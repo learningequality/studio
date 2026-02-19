@@ -80,10 +80,12 @@
             <KEmptyPlaceholder />
           </template>
           <span class="detail-annotation">Status</span>
-          <CommunityLibraryStatusChip
+          <div
             v-if="submissionIsFinished"
-            :status="submission.status"
-          />
+            style="display: flex"
+          >
+            <CommunityLibraryStatusChip :status="submission.status" />
+          </div>
           <template v-else>
             <KEmptyPlaceholder />
           </template>

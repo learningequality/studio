@@ -357,7 +357,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
       'Notification message shown to the user when their submission to the Community Library is successful',
   },
   flaggedNotification: {
-    message: '{ author } ({ userType }) flagged { channelVersion }',
+    message: '{author} ({userType}) flagged {channelVersion}',
     context: 'Notification message shown when a user flags a channel version for review',
   },
   showOlderAction: {
@@ -375,5 +375,10 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   emptyNotificationsWithFiltersNotice: {
     message: 'No notifications match the applied filters.',
     context: 'Notice shown when no notifications match the current filters',
+  },
+  newNotificationsNotice: {
+    message: 'New notifications available.',
+    context:
+      'Notice for screen readers on the new notifications badge to indicate that new notifications have arrived',
   },
 });

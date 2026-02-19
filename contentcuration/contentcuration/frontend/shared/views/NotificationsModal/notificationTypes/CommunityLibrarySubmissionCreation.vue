@@ -2,7 +2,7 @@
 
   <NotificationBase
     :title="title"
-    :date="notification.date_created"
+    :date="notification.date"
   >
     <template #default>
       {{ submissionCreationNotification$() }}

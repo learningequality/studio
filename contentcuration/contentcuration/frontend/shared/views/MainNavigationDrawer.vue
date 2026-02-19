@@ -236,6 +236,7 @@
         this.showLanguageModal = true;
       },
       showNotificationsModal() {
+        this.drawer = false;
         this.$router.push({
           query: {
             ...this.$route.query,

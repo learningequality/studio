@@ -158,6 +158,10 @@ export default {
         });
       });
     }, 500),
+    async markNotificationsRead(context, timestamp) {
+      await User.markNotificationsRead(timestamp);
+      context.commit('UPDATE_SESSION', { last_read_notification_date: timestamp });
+    },
   },
   listeners: {
     [TABLE_NAMES.SESSION]: {

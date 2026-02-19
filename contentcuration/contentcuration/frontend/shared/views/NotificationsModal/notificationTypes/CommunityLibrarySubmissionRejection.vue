@@ -2,7 +2,7 @@
 
   <NotificationBase
     :title="title"
-    :date="notification.date_created"
+    :date="notification.date"
   >
     <template
       v-if="notification.feedback_notes"
@@ -51,7 +51,7 @@
 
   const title = computed(() =>
     flaggedNotification$({
-      author: props.notification.resolved_by_name,
+      author: props.notification.resolved_by_name || '',
       userType: adminLabel$(),
       channelVersion: channelVersion$({
         name: props.notification.channel_name,

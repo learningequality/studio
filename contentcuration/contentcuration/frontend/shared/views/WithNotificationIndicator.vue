@@ -5,7 +5,11 @@
     <div
       v-if="hasNewNotifications"
       class="notification-indicator"
-    ></div>
+    >
+      <span class="visuallyhidden">
+        {{ newNotificationsNotice$() }}
+      </span>
+    </div>
   </div>
 
 </template>
@@ -15,9 +19,11 @@
 
   import { computed } from 'vue';
   import useStore from 'shared/composables/useStore';
+  import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 
   const store = useStore();
   const hasNewNotifications = computed(() => store.getters['hasNewNotifications']);
+  const { newNotificationsNotice$ } = communityChannelsStrings;
 
 </script>
 

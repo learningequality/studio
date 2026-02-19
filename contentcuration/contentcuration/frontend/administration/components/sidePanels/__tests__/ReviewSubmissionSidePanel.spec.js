@@ -153,7 +153,7 @@ describe('ReviewSubmissionSidePanel', () => {
     expect(wrapper.find('[data-test="languages"]').text()).toBe('English, Czech');
     expect(wrapper.find('[data-test="categories"]').text()).toBe('School, Algebra');
     expect(wrapper.find('[data-test="licenses"]').text()).toBe('CC BY, CC BY-SA');
-    expect(wrapper.findComponent(CommunityLibraryStatusChip).props('status')).toEqual(
+    expect(wrapper.findComponent(CommunityLibraryStatusChip).attributes('status')).toEqual(
       submission.status,
     );
     expect(wrapper.find('[data-test="submission-notes"]').text()).toBe(submission.description);

@@ -2,7 +2,7 @@
 
   <NotificationBase
     :title="title"
-    :date="notification.date_created"
+    :date="notification.date"
   >
     <template
       v-if="notification.feedback_notes"

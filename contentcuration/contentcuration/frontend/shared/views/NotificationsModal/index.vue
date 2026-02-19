@@ -10,7 +10,12 @@
       <div
         v-if="isModalOpen"
         class="notifications-page-container"
-        :style="containerStyles"
+        :style="[
+          containerStyles,
+          {
+            color: $themeTokens.text,
+          },
+        ]"
       >
         <h1>{{ notificationsLabel$() }}</h1>
         <ToolBar color="white">
@@ -22,14 +27,14 @@
             <VTab
               class="px-3"
               :disabled="isBusy"
-              @click="selectedTab = NotificationsTab.UNREAD"
+              :value="NotificationsTab.UNREAD"
             >
               {{ unreadNotificationsLabel$() }}
             </VTab>
             <VTab
               class="px-3"
               :disabled="isBusy"
-              @click="selectedTab = NotificationsTab.ALL"
+              :value="NotificationsTab.ALL"
             >
               {{ allNotificationsLabel$() }}
             </VTab>
@@ -41,7 +46,6 @@
         >
           <NotificationFilters
             :disabled="isBusy"
-            :lastReadFilter="lastReadFilter"
             @update:filters="filters = $event"
           />
           <!--
@@ -84,7 +88,6 @@
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
   import { Modals } from 'shared/constants';
   import useStore from 'shared/composables/useStore';
-  import { User } from 'shared/data/resources';
   import useSnackbar from 'shared/composables/useSnackbar';
 
   const NotificationsTab = {
@@ -140,39 +143,16 @@
     return store.state.session.currentUser?.last_read_notification_date;
   });
 
-  const waitForLastReadUpdate = async () => {
-    return new Promise(resolve => {
-      let timeoutId = null;
-
-      const unwatch = watch(lastReadNotificationDate, (newValue, oldValue) => {
-        if (newValue !== oldValue) {
-          clearTimeout(timeoutId);
-          unwatch();
-          resolve();
-        }
-      });
-
-      // Set timeout for 5 seconds
-      timeoutId = setTimeout(() => {
-        unwatch();
-        resolve();
-      }, 5000);
-    });
-  };
-
   const handleNotificationsRead = async () => {
     isSaving.value = true;
     try {
       const [newestNotification] = notifications.value;
       if (newestNotification) {
-        // Add 1 second to avoid precisision issues
+        // Add 1 second to avoid precision issues
         const timestamp = new Date(newestNotification.date);
         timestamp.setSeconds(timestamp.getSeconds() + 1);
-        await User.markNotificationsRead(timestamp.toISOString());
 
-        // Refresh the notifications list after notifications read timestamp is updated
-        // in the vuex store so that the lastRead filter gets updated and the list refetched
-        await waitForLastReadUpdate();
+        await store.dispatch('markNotificationsRead', timestamp.toISOString());
       }
     } catch (error) {
       createSnackbar(commonStrings.genericErrorMessage$());
