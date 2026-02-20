@@ -36,12 +36,12 @@
             <CommunityLibraryStatusChip :status="submission.status" />
           </div>
           <div
-            v-if="channelVersion.token"
+            v-if="submission.version_token"
             class="channel-token"
           >
             <strong>{{ channelVersionTokenLabel$() }}</strong>
             <StudioCopyToken
-              :token="channelVersion.token"
+              :token="submission.version_token"
               :showLabel="false"
             />
           </div>
@@ -69,6 +69,19 @@
           />
         </div>
       </div>
+      <div
+        :style="{
+          width: '100%',
+          height: '1px',
+          margin: '24px 0 12px',
+          backgroundColor: $themeTokens.fineLine,
+        }"
+      ></div>
+      <ChannelDetails
+        :channel="channel"
+        :submission="submission"
+        :channelVersion="channelVersion"
+      />
     </div>
   </StudioImmersiveModal>
 
@@ -81,6 +94,7 @@
   import { computed, ref, watch } from 'vue';
   import CommunityLibraryChip from '../CommunityLibraryChip.vue';
   import CommunityLibraryStatusChip from '../CommunityLibraryStatusChip.vue';
+  import ChannelDetails from './ChannelDetails.vue';
   import StudioCopyToken from 'shared/views/StudioCopyToken/index.vue';
   import StudioThumbnail from 'shared/views/files/StudioThumbnail.vue';
   import { useFetch } from 'shared/composables/useFetch';
@@ -129,7 +143,7 @@
   });
 
   const closeModal = () => {
-    // tes
+    isModalOpen.value = false;
   };
 
   const {
@@ -139,17 +153,12 @@
   } = useFetch({
     asyncFetchFunc: async () => {
       try {
-        const channelPromise = store.dispatch('channel/loadChannel', props.channelId);
-        const channelDetailsPromise = store.dispatch('channel/loadChannelDetails', props.channelId);
-        const [channel, channelDetails] = await Promise.all([
-          channelPromise,
-          channelDetailsPromise,
-        ]);
+        const channel = await store.dispatch('channel/loadChannel', props.channelId);
         if (!channel) {
           closeModal();
           return;
         }
-        return { ...channel, ...channelDetails };
+        return channel;
       } catch (error) {
         store.dispatch('errors/handleAxiosError', error);
       }

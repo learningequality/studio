@@ -211,20 +211,34 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
       'Snackbar message shown when submission fails from the "Submit to Community Library" panel',
   },
   countryLabel: {
-    message: 'Country',
+    message: 'Country(s)',
     context: 'Label for the country selection field in the "Submit to Community Library" panel',
   },
-  languagesDetected: {
-    message: 'Language(s) detected',
+  languagesLabel: {
+    message: 'Language(s)',
     context: 'Label for detected languages in the "Submit to Community Library" panel',
   },
-  licensesDetected: {
-    message: 'License(s) detected',
+  licensesLabel: {
+    message: 'License(s)',
     context: 'Label for detected licenses in the "Submit to Community Library" panel',
   },
-  categoriesDetected: {
+  categoriesLabel: {
     message: 'Categories',
     context: 'Label for detected categories in the "Submit to Community Library" panel',
+  },
+  submissionNotesLabel: {
+    message: 'Submission notes',
+    context: 'Label for the notes the editor can add to their submission to the Community Library',
+  },
+  feedbackNotesLabel: {
+    message: 'Feedback notes',
+    context:
+      'Label for the feedback notes that reviewers can add to a submission in the Community Library ',
+  },
+  internalNotesLabel: {
+    message: 'Internal notes',
+    context:
+      'Label for the notes that admins can add to a submission in the Community Library for themselves',
   },
   confirmReplacementText: {
     message: 'I understand this will replace my earlier submission on the review queue',
@@ -369,6 +383,14 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: '{author} ({userType}) flagged {channelVersion}',
     context: 'Notification message shown when a user flags a channel version for review',
   },
+  submissionNotification: {
+    message: '{author} ({userType}) submitted {channelVersion}',
+    context: 'Notification message shown when a user submits a channel version for review',
+  },
+  approvedNotification: {
+    message: '{author} ({userType}) approved {channelVersion}',
+    context: 'Notification message shown when a user approves a channel version',
+  },
   showOlderAction: {
     message: 'Show older',
     context: 'Action button to load older items in a list',
@@ -376,6 +398,10 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   adminLabel: {
     message: 'Admin',
     context: 'Label indicating administrative status',
+  },
+  editorLabel: {
+    message: 'Editor',
+    context: 'Label indicating editor status',
   },
   emptyNotificationsNotice: {
     message: 'You have no notifications at this time.',
