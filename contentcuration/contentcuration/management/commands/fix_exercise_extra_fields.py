@@ -127,18 +127,16 @@ class Command(BaseCommand):
             return None, None
 
         if _needs_old_style_migration(ef):
-            if not dry_run:
-                ef = migrate_extra_fields(ef)
-                node.save(update_fields=["extra_fields", "complete"])
+            ef = migrate_extra_fields(ef)
             fix_type = "old_style"
         elif _needs_m_n_fix(ef):
-            if not dry_run:
-                ef["options"]["completion_criteria"]["threshold"]["m"] = None
-                ef["options"]["completion_criteria"]["threshold"]["n"] = None
+            ef["options"]["completion_criteria"]["threshold"]["m"] = None
+            ef["options"]["completion_criteria"]["threshold"]["n"] = None
             fix_type = "m_n_fix"
         else:
             return None, None
         node.extra_fields = ef
         complete = node.mark_complete()
-        node.save(update_fields=["extra_fields", "complete"])
+        if not dry_run:
+            node.save(update_fields=["extra_fields", "complete"])
         return fix_type, complete
