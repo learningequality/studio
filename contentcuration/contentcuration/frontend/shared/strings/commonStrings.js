@@ -11,8 +11,12 @@ export const commonStrings = createTranslator('CommonStrings', {
     context: 'A label for an action that clears a selection or input field',
   },
   seeAllAction: {
-    message: 'See All',
+    message: 'See all',
     context: 'A label for an action that shows all items in a list or collection',
+  },
+  seeLessAction: {
+    message: 'See less',
+    context: 'A label for an action that shows fewer items in a list or collection',
   },
   closeAction: {
     message: 'Close',
@@ -21,5 +25,9 @@ export const commonStrings = createTranslator('CommonStrings', {
   genericErrorMessage: {
     message: 'Sorry! Something went wrong, please try again.',
     context: 'Default error message for operation errors.',
+  },
+  channelDetailsLabel: {
+    message: 'Channel Details',
+    context: 'Label for a section that displays details about a channel',
   },
 });

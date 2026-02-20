@@ -23,7 +23,7 @@ const ITEMS_PER_PAGE = 3;
  *   Reactive state for the fetched, flattened permissions and pagination
  *   helpers used by `SpecialPermissionsList.vue`.
  */
-export function useSpecialPermissions(channelVersionId) {
+export function useSpecialPermissions(channelVersionId, { distributable }) {
   const permissions = ref([]);
   const isLoading = ref(false);
   const error = ref(null);
@@ -46,10 +46,13 @@ export function useSpecialPermissions(channelVersionId) {
 
     try {
       if (versionId) {
-        const response = await AuditedSpecialPermissionsLicense.fetchCollection({
+        const filters = {
           channel_version: versionId,
-          distributable: false,
-        });
+        };
+        if (distributable !== null) {
+          filters.distributable = distributable;
+        }
+        const response = await AuditedSpecialPermissionsLicense.fetchCollection(filters);
 
         permissions.value = response;
       }

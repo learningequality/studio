@@ -13,7 +13,10 @@
         <div class="header-title">
           {{ specialPermissionsDetected$() }}
         </div>
-        <div class="description">
+        <div
+          v-if="!readOnly"
+          class="description"
+        >
           <slot name="description">
             {{ confirmDistributionRights$() }}
           </slot>
@@ -23,9 +26,10 @@
         <KCheckbox
           v-for="permission in currentPagePermissions"
           :key="permission.id"
-          :checked="value.includes(permission.id)"
+          :checked="isPermissionChecked(permission)"
           :label="permission.description"
           class="permission-checkbox"
+          :presentational="readOnly"
           :disabled="disabled"
           @change="togglePermission(permission.id)"
         />
@@ -89,9 +93,21 @@
         totalPages,
         nextPage,
         previousPage,
-      } = useSpecialPermissions(props.channelVersionId);
+      } = useSpecialPermissions(props.channelVersionId, {
+        // only load non-distributable permissions for editable special permission lists
+        // as those are the ones that the user should check
+        distributable: props.readOnly ? null : false,
+      });
+
+      function isPermissionChecked(permission) {
+        if (props.readOnly) {
+          return permission.distributable;
+        }
+        return props.value.includes(permission.id);
+      }
 
       function togglePermission(permissionId) {
+        if (props.disabled || props.readOnly) return;
         const currentChecked = [...props.value];
         const index = currentChecked.indexOf(permissionId);
         if (index === -1) {
@@ -104,7 +120,7 @@
 
       const allChecked = computed(() => {
         if (isLoading.value) return false;
-        return permissions.value.every(p => props.value.includes(p.id));
+        return permissions.value.every(p => isPermissionChecked(p));
       });
 
       watch(
@@ -123,6 +139,7 @@
         togglePermission,
         nextPage,
         previousPage,
+        isPermissionChecked,
         specialPermissionsDetected$,
         confirmDistributionRights$,
         previousPageAction$,
@@ -142,6 +159,11 @@
         default: () => [],
       },
       disabled: {
+        type: Boolean,
+        required: false,
+        default: false,
+      },
+      readOnly: {
         type: Boolean,
         required: false,
         default: false,
