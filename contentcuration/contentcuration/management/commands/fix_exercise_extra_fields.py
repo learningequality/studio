@@ -134,7 +134,7 @@ class Command(BaseCommand):
         else:
             return None, None
         node.extra_fields = ef
-        complete = node.mark_complete()
+        complete = not node.mark_complete()
         if not dry_run:
             node.save(update_fields=["extra_fields", "complete"])
         return fix_type, complete
