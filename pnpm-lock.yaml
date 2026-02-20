@@ -26,6 +26,9 @@ importers:
       '@tiptap/extension-superscript':
         specifier: ^3.13.0
         version: 3.13.0(@tiptap/core@3.13.0(@tiptap/pm@3.13.0))(@tiptap/pm@3.13.0)
+      '@tiptap/extension-text-align':
+        specifier: ^3.18.0
+        version: 3.18.0(@tiptap/core@3.13.0(@tiptap/pm@3.13.0))
       '@tiptap/starter-kit':
         specifier: ^3.13.0
         version: 3.13.0
@@ -1636,6 +1639,11 @@ packages:
     peerDependencies:
       '@tiptap/core': ^3.13.0
       '@tiptap/pm': ^3.13.0
+
+  '@tiptap/extension-text-align@3.18.0':
+    resolution: {integrity: sha512-NEd2IUgOymKPmGOnxum4hLRbdQyBlK1Cmkt8QGIrmatovPrw2PtWmHVZ6foNChsi/r932dKVfqZ/uMUh8QUppQ==}
+    peerDependencies:
+      '@tiptap/core': ^3.18.0
 
   '@tiptap/extension-text@3.13.0':
     resolution: {integrity: sha512-VcZIna93rixw7hRkHGCxDbL3kvJWi80vIT25a2pXg0WP1e7Pi3nBYvZIL4SQtkbBCji9EHrbZx3p8nNPzfazYw==}
@@ -9479,6 +9487,10 @@ snapshots:
     dependencies:
       '@tiptap/core': 3.13.0(@tiptap/pm@3.13.0)
       '@tiptap/pm': 3.13.0
+
+  '@tiptap/extension-text-align@3.18.0(@tiptap/core@3.13.0(@tiptap/pm@3.13.0))':
+    dependencies:
+      '@tiptap/core': 3.13.0(@tiptap/pm@3.13.0)
 
   '@tiptap/extension-text@3.13.0(@tiptap/core@3.13.0(@tiptap/pm@3.13.0))':
     dependencies:
