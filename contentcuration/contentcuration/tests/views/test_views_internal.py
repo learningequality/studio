@@ -9,6 +9,7 @@ from unittest import skipIf
 from django.db import connections
 from django.urls import reverse_lazy
 from le_utils.constants import content_kinds
+from le_utils.constants import exercises
 from le_utils.constants import format_presets
 from le_utils.constants.labels.accessibility_categories import (
     ACCESSIBILITYCATEGORIESLIST,
@@ -33,6 +34,7 @@ from ..testdata import fileobj_video
 from ..testdata import thumbnail_bytes
 from ..testdata import user
 from contentcuration import ricecooker_versions as rc
+from contentcuration.constants import completion_criteria as studio_completion_criteria
 from contentcuration.db.models.manager import ALLOWED_OVERRIDES
 from contentcuration.db.models.manager import EDIT_ALLOWED_OVERRIDES
 from contentcuration.models import Channel
@@ -470,6 +472,112 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
         assert response.status_code == 400, "Got a non-400 request error: {}".format(
             response.status_code
         )
+
+
+class ApiAddExerciseExtraFieldsMigrationTestCase(StudioTestCase):
+    """
+    Tests that exercise extra_fields are properly migrated when nodes
+    are added through the ricecooker import endpoint.
+    """
+
+    def setUp(self):
+        super(ApiAddExerciseExtraFieldsMigrationTestCase, self).setUp()
+        self.channel = channel()
+        self.root_node = self.channel.main_tree
+
+    def _make_exercise_data(self, extra_fields):
+        return {
+            "title": "Test Exercise",
+            "language": "en",
+            "description": "An exercise for testing extra_fields migration",
+            "node_id": uuid.uuid4().hex,
+            "content_id": uuid.uuid4().hex,
+            "source_domain": "test.com",
+            "source_id": "test",
+            "author": "Test Author",
+            "files": [],
+            "kind": content_kinds.EXERCISE,
+            "license": "CC BY",
+            "license_description": None,
+            "copyright_holder": "Test",
+            "questions": [],
+            "extra_fields": extra_fields,
+        }
+
+    def _add_exercise(self, extra_fields):
+        data = self._make_exercise_data(extra_fields)
+        request_data = {
+            "root_id": self.root_node.id,
+            "content_data": [data],
+        }
+        response = self.admin_client().post(
+            reverse_lazy("api_add_nodes_to_tree"),
+            data=request_data,
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        return ContentNode.objects.get(node_id=data["node_id"])
+
+    def test_old_style_extra_fields_migrated_on_import(self):
+        """
+        Old-style extra_fields (top-level mastery_model, m, n) should be
+        migrated to new-style options.completion_criteria format with m/n
+        set to null for non-m_of_n mastery models.
+        """
+        node = self._add_exercise(
+            {
+                "mastery_model": exercises.DO_ALL,
+                "m": 0,
+                "n": 0,
+                "randomize": False,
+            }
+        )
+        extra_fields = node.extra_fields
+
+        assert "options" in extra_fields
+        criteria = extra_fields["options"]["completion_criteria"]
+        threshold = criteria["threshold"]
+
+        self.assertEqual(threshold["mastery_model"], exercises.DO_ALL)
+        self.assertIsNone(threshold["m"])
+        self.assertIsNone(threshold["n"])
+
+        # Old-style keys should not remain at top level
+        self.assertNotIn("mastery_model", extra_fields)
+        self.assertNotIn("m", extra_fields)
+        self.assertNotIn("n", extra_fields)
+
+        studio_completion_criteria.validate(criteria, kind=content_kinds.EXERCISE)
+
+    def test_new_style_extra_fields_preserved_on_import(self):
+        """
+        New-style extra_fields (options.completion_criteria) should pass
+        through unchanged.
+        """
+        node = self._add_exercise(
+            {
+                "options": {
+                    "completion_criteria": {
+                        "threshold": {
+                            "mastery_model": exercises.M_OF_N,
+                            "m": 3,
+                            "n": 5,
+                        },
+                        "model": "mastery",
+                    }
+                },
+            }
+        )
+        extra_fields = node.extra_fields
+
+        criteria = extra_fields["options"]["completion_criteria"]
+        threshold = criteria["threshold"]
+
+        self.assertEqual(threshold["mastery_model"], exercises.M_OF_N)
+        self.assertEqual(threshold["m"], 3)
+        self.assertEqual(threshold["n"], 5)
+
+        studio_completion_criteria.validate(criteria, kind=content_kinds.EXERCISE)
 
 
 class PublishEndpointTestCase(BaseAPITestCase):

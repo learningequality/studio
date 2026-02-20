@@ -1,3 +1,4 @@
+import json
 import random
 import string
 import time
@@ -17,6 +18,10 @@ from mock import patch
 from . import testdata
 from .base import StudioTestCase
 from .testdata import create_studio_file
+from contentcuration.constants import completion_criteria as studio_completion_criteria
+from contentcuration.management.commands.fix_exercise_extra_fields import (
+    Command as FixExerciseExtraFieldsCommand,
+)
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
@@ -29,6 +34,7 @@ from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.utils.db_tools import TreeBuilder
 from contentcuration.utils.files import create_thumbnail_from_base64
+from contentcuration.utils.nodes import migrate_extra_fields
 from contentcuration.utils.sync import sync_node
 
 
@@ -1423,6 +1429,53 @@ class NodeCompletionTestCase(StudioTestCase):
         new_obj.mark_complete()
         self.assertTrue(new_obj.complete)
 
+    def test_migrate_extra_fields_do_all_with_non_null_m_n(self):
+        """Migrated do_all exercises with non-null m/n must pass completion criteria validation."""
+        extra_fields = {
+            "mastery_model": exercises.DO_ALL,
+            "m": 0,
+            "n": 0,
+            "randomize": False,
+        }
+        result = migrate_extra_fields(extra_fields)
+        criterion = result["options"]["completion_criteria"]
+        # Should not raise
+        studio_completion_criteria.validate(criterion, kind=content_kinds.EXERCISE)
+
+    def test_migrate_extra_fields_num_correct_in_a_row_with_non_null_m_n(self):
+        """Migrated num_correct_in_a_row exercises with leftover m/n must pass validation."""
+        for mastery_model in (
+            exercises.NUM_CORRECT_IN_A_ROW_2,
+            exercises.NUM_CORRECT_IN_A_ROW_3,
+            exercises.NUM_CORRECT_IN_A_ROW_5,
+            exercises.NUM_CORRECT_IN_A_ROW_10,
+        ):
+            extra_fields = {
+                "mastery_model": mastery_model,
+                "m": 5,
+                "n": 10,
+                "randomize": False,
+            }
+            result = migrate_extra_fields(extra_fields)
+            criterion = result["options"]["completion_criteria"]
+            # Should not raise
+            studio_completion_criteria.validate(criterion, kind=content_kinds.EXERCISE)
+
+    def test_migrate_extra_fields_m_of_n_preserves_m_n(self):
+        """Migrated m_of_n exercises must preserve m and n values."""
+        extra_fields = {
+            "mastery_model": exercises.M_OF_N,
+            "m": 3,
+            "n": 5,
+            "randomize": False,
+        }
+        result = migrate_extra_fields(extra_fields)
+        criterion = result["options"]["completion_criteria"]
+        self.assertEqual(criterion["threshold"]["m"], 3)
+        self.assertEqual(criterion["threshold"]["n"], 5)
+        # Should not raise
+        studio_completion_criteria.validate(criterion, kind=content_kinds.EXERCISE)
+
     def test_create_exercise_bad_new_extra_fields(self):
         licenses = list(
             License.objects.filter(
@@ -1571,7 +1624,9 @@ class NodeCompletionTestCase(StudioTestCase):
         new_obj.mark_complete()
         self.assertFalse(new_obj.complete)
 
-    def test_create_topic_unit_modality_without_completion_criteria_incomplete(self):
+    def test_create_topic_unit_modality_without_completion_criteria_incomplete(
+        self,
+    ):
         """Topic with UNIT modality MUST have completion criteria - it's not optional."""
         channel = testdata.channel()
         new_obj = ContentNode(
@@ -1588,3 +1643,205 @@ class NodeCompletionTestCase(StudioTestCase):
         new_obj.save()
         new_obj.mark_complete()
         self.assertFalse(new_obj.complete)
+
+
+class FixExerciseExtraFieldsTestCase(StudioTestCase):
+    def setUp(self):
+        super(FixExerciseExtraFieldsTestCase, self).setUpBase()
+        self.licenses = list(
+            License.objects.filter(
+                copyright_holder_required=False, is_custom=False
+            ).values_list("pk", flat=True)
+        )
+        self.channel = testdata.channel()
+
+    def _create_exercise(self, extra_fields, with_assessment=True):
+        node = ContentNode(
+            title="Exercise",
+            kind_id=content_kinds.EXERCISE,
+            parent=self.channel.main_tree,
+            license_id=self.licenses[0],
+            extra_fields=extra_fields,
+        )
+        node.save()
+        if with_assessment:
+            AssessmentItem.objects.create(
+                contentnode=node,
+                question="A question",
+                answers='[{"correct": true, "text": "answer"}]',
+            )
+        return node
+
+    def test_fixes_migrated_do_all_with_non_null_m_n(self):
+        """Command should null out m/n for already-migrated do_all exercises."""
+        node = self._create_exercise(
+            {
+                "options": {
+                    "completion_criteria": {
+                        "threshold": {
+                            "mastery_model": exercises.DO_ALL,
+                            "m": 0,
+                            "n": 0,
+                        },
+                        "model": completion_criteria.MASTERY,
+                    }
+                },
+            }
+        )
+        node.mark_complete()
+        node.save()
+
+        command = FixExerciseExtraFieldsCommand()
+        command.handle()
+
+        node.refresh_from_db()
+        threshold = node.extra_fields["options"]["completion_criteria"]["threshold"]
+        self.assertIsNone(threshold["m"])
+        self.assertIsNone(threshold["n"])
+        self.assertEqual(threshold["mastery_model"], exercises.DO_ALL)
+        # Should now pass schema validation
+        studio_completion_criteria.validate(
+            node.extra_fields["options"]["completion_criteria"],
+            kind=content_kinds.EXERCISE,
+        )
+
+    def test_fixes_migrated_num_correct_in_a_row_with_non_null_m_n(self):
+        """Command should null out m/n for num_correct_in_a_row exercises."""
+        node = self._create_exercise(
+            {
+                "options": {
+                    "completion_criteria": {
+                        "threshold": {
+                            "mastery_model": exercises.NUM_CORRECT_IN_A_ROW_5,
+                            "m": 5,
+                            "n": 10,
+                        },
+                        "model": completion_criteria.MASTERY,
+                    }
+                },
+            }
+        )
+        node.mark_complete()
+        node.save()
+
+        command = FixExerciseExtraFieldsCommand()
+        command.handle()
+
+        node.refresh_from_db()
+        threshold = node.extra_fields["options"]["completion_criteria"]["threshold"]
+        self.assertIsNone(threshold["m"])
+        self.assertIsNone(threshold["n"])
+        self.assertEqual(threshold["mastery_model"], exercises.NUM_CORRECT_IN_A_ROW_5)
+
+    def test_does_not_touch_m_of_n(self):
+        """Command should leave m_of_n exercises untouched."""
+        node = self._create_exercise(
+            {
+                "options": {
+                    "completion_criteria": {
+                        "threshold": {
+                            "mastery_model": exercises.M_OF_N,
+                            "m": 3,
+                            "n": 5,
+                        },
+                        "model": completion_criteria.MASTERY,
+                    }
+                },
+            }
+        )
+        node.mark_complete()
+        node.save()
+
+        command = FixExerciseExtraFieldsCommand()
+        command.handle()
+
+        node.refresh_from_db()
+        threshold = node.extra_fields["options"]["completion_criteria"]["threshold"]
+        self.assertEqual(threshold["m"], 3)
+        self.assertEqual(threshold["n"], 5)
+
+    def test_migrates_old_style_extra_fields(self):
+        """Command should migrate old-style top-level mastery_model to new format."""
+        node = self._create_exercise(
+            {
+                "mastery_model": exercises.DO_ALL,
+                "m": 0,
+                "n": 0,
+                "randomize": False,
+            }
+        )
+
+        command = FixExerciseExtraFieldsCommand()
+        command.handle()
+
+        node.refresh_from_db()
+        # Should have new-style structure
+        criterion = node.extra_fields["options"]["completion_criteria"]
+        self.assertEqual(criterion["model"], completion_criteria.MASTERY)
+        self.assertEqual(criterion["threshold"]["mastery_model"], exercises.DO_ALL)
+        # m and n should be null for do_all
+        self.assertIsNone(criterion["threshold"]["m"])
+        self.assertIsNone(criterion["threshold"]["n"])
+        # Old keys should be gone
+        self.assertNotIn("mastery_model", node.extra_fields)
+        self.assertNotIn("m", node.extra_fields)
+        self.assertNotIn("n", node.extra_fields)
+        # randomize should be preserved
+        self.assertFalse(node.extra_fields["randomize"])
+
+    def test_dry_run_does_not_modify(self):
+        """Dry run should report counts but not modify data."""
+        node = self._create_exercise(
+            {
+                "options": {
+                    "completion_criteria": {
+                        "threshold": {
+                            "mastery_model": exercises.DO_ALL,
+                            "m": 0,
+                            "n": 0,
+                        },
+                        "model": completion_criteria.MASTERY,
+                    }
+                },
+            }
+        )
+        node.mark_complete()
+        node.save()
+
+        command = FixExerciseExtraFieldsCommand()
+        command.handle(dry_run=True)
+
+        node.refresh_from_db()
+        threshold = node.extra_fields["options"]["completion_criteria"]["threshold"]
+        # Should still have the invalid values
+        self.assertEqual(threshold["m"], 0)
+        self.assertEqual(threshold["n"], 0)
+
+    def test_migrates_string_extra_fields(self):
+        """Command should parse and migrate extra_fields stored as a JSON string."""
+        node = self._create_exercise(
+            json.dumps(
+                {
+                    "mastery_model": exercises.DO_ALL,
+                    "m": 0,
+                    "n": 0,
+                    "randomize": False,
+                }
+            ),
+        )
+
+        command = FixExerciseExtraFieldsCommand()
+        command.handle()
+
+        node.refresh_from_db()
+        extra_fields = node.extra_fields
+        # Should now be a dict, not a string
+        self.assertIsInstance(extra_fields, dict)
+        threshold = extra_fields["options"]["completion_criteria"]["threshold"]
+        self.assertIsNone(threshold["m"])
+        self.assertIsNone(threshold["n"])
+        self.assertEqual(threshold["mastery_model"], exercises.DO_ALL)
+        studio_completion_criteria.validate(
+            extra_fields["options"]["completion_criteria"],
+            kind=content_kinds.EXERCISE,
+        )

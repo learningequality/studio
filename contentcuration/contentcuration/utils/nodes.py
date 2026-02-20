@@ -15,6 +15,7 @@ from django.db.models import Sum
 from django.utils import timezone
 from le_utils.constants import completion_criteria
 from le_utils.constants import content_kinds
+from le_utils.constants import exercises
 from le_utils.constants import format_presets
 
 from contentcuration.models import AssessmentItem
@@ -525,6 +526,9 @@ def migrate_extra_fields(extra_fields):
         not extra_fields.get("options", {}).get("completion_criteria", {})
         and mastery_model is not None
     ):
+        if mastery_model != exercises.M_OF_N:
+            m = None
+            n = None
         extra_fields["options"] = extra_fields.get("options", {})
         extra_fields["options"]["completion_criteria"] = {
             "threshold": {
