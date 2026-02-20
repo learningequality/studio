@@ -16,7 +16,7 @@
       >
         <VSelect
           v-model="channelTypeFilter"
-          :items="channelTypeFilters"
+          :items="channelTypeOptions"
           item-text="label"
           item-value="key"
           label="Channel Type"
@@ -34,7 +34,7 @@
       >
         <VSelect
           v-model="channelStatusFilter"
-          :items="channelStatusFilters"
+          :items="channelStatusOptions"
           item-text="label"
           item-value="key"
           label="Channel Status"
@@ -146,9 +146,9 @@
   import transform from 'lodash/transform';
   import { RouteNames, rowsPerPageItems } from '../../constants';
   import { useTable } from '../../composables/useTable';
-  import { useKeywordSearch } from '../../composables/useKeywordSearch';
-  import { useFilter } from '../../composables/useFilter';
   import ChannelItem from './ChannelItem';
+  import { useKeywordSearch } from 'shared/composables/useKeywordSearch';
+  import { useFilter } from 'shared/composables/useFilter';
   import { channelExportMixin } from 'shared/views/channel/mixins';
   import { routerMixin } from 'shared/mixins';
   import Checkbox from 'shared/views/form/Checkbox';
@@ -224,26 +224,54 @@
       });
 
       const {
-        filter: channelTypeFilter,
-        filters: channelTypeFilters,
+        filter: _channelTypeFilter,
+        options: channelTypeOptions,
         fetchQueryParams: channelTypeFetchQueryParams,
       } = useFilter({
         name: 'channelType',
         filterMap: channelTypeFilterMap,
       });
+      // Temporal wrapper, must be removed after migrating to KSelect
+      const channelTypeFilter = computed({
+        get: () => _channelTypeFilter.value.value || undefined,
+        set: value => {
+          _channelTypeFilter.value =
+            channelTypeOptions.value.find(option => option.value === value) || {};
+        },
+      });
 
       const {
-        filter: channelStatusFilter,
-        filters: channelStatusFilters,
+        filter: _channelStatusFilter,
+        options: channelStatusOptions,
         fetchQueryParams: channelStatusFetchQueryParams,
       } = useFilter({
         name: 'channelStatus',
         filterMap: statusFilterMap,
       });
+      // Temporal wrapper, must be removed after migrating to KSelect
+      const channelStatusFilter = computed({
+        get: () => _channelStatusFilter.value.value || undefined,
+        set: value => {
+          _channelStatusFilter.value =
+            channelStatusOptions.value.find(option => option.value === value) || {};
+        },
+      });
 
-      const { filter: languageFilter, fetchQueryParams: languageFetchQueryParams } = useFilter({
+      const {
+        filter: _languageFilter,
+        options: languageOptions,
+        fetchQueryParams: languageFetchQueryParams,
+      } = useFilter({
         name: 'language',
         filterMap: languageFilterMap,
+      });
+      // Temporal wrapper, must be removed after migrating to KSelect
+      const languageFilter = computed({
+        get: () => _languageFilter.value.value || undefined,
+        set: value => {
+          _languageFilter.value =
+            languageOptions.value.find(option => option.value === value) || {};
+        },
       });
 
       const {
@@ -254,8 +282,8 @@
       } = useKeywordSearch();
 
       watch(channelTypeFilter, () => {
-        const filters = channelStatusFilters.value;
-        channelStatusFilter.value = filters.length ? filters[0].key : null;
+        const options = channelStatusOptions.value;
+        channelStatusFilter.value = options.length ? options[0].value : null;
       });
 
       const filterFetchQueryParams = computed(() => {
@@ -278,9 +306,9 @@
 
       return {
         channelTypeFilter,
-        channelTypeFilters,
+        channelTypeOptions,
         channelStatusFilter,
-        channelStatusFilters,
+        channelStatusOptions,
         languageFilter,
         languageDropdown,
         keywordInput,
