@@ -62,16 +62,50 @@ class Command(BaseCommand):
             "id", "extra_fields", "complete", "kind_id"
         )
 
+        total = ContentNode.objects.filter(kind_id="exercise").count()
         migrated_fixed = 0
+        migrated_complete = 0
         old_style_fixed = 0
+        old_style_complete = 0
+        exercises_checked = 0
 
         for node in queryset.iterator(chunk_size=CHUNKSIZE):
-            result = self._process_node(node, dry_run)
-            if result == "old_style":
+            fix_type, complete = self._process_node(node, dry_run)
+            if fix_type == "old_style":
                 old_style_fixed += 1
-            elif result == "m_n_fix":
+                if complete:
+                    old_style_complete += 1
+            elif fix_type == "m_n_fix":
                 migrated_fixed += 1
+                if complete:
+                    migrated_complete += 1
+            exercises_checked += 1
+            if exercises_checked % CHUNKSIZE == 0:
+                logging.info(
+                    "{} / {} exercises checked".format(exercises_checked, total)
+                )
+                logging.info(
+                    "{} marked complete out of {} old style fixed".format(
+                        old_style_complete, old_style_fixed
+                    )
+                )
+                logging.info(
+                    "{} marked complete out of {} migrated fixed".format(
+                        migrated_complete, migrated_fixed
+                    )
+                )
 
+        logging.info("{} / {} exercises checked".format(exercises_checked, total))
+        logging.info(
+            "{} marked complete out of {} old style fixed".format(
+                old_style_complete, old_style_fixed
+            )
+        )
+        logging.info(
+            "{} marked complete out of {} migrated fixed".format(
+                migrated_complete, migrated_fixed
+            )
+        )
         logging.info(
             "Done in {:.1f}s. Fixed {} migrated exercises, "
             "migrated {} old-style exercises.{}".format(
@@ -88,23 +122,23 @@ class Command(BaseCommand):
             try:
                 ef = json.loads(ef)
             except (json.JSONDecodeError, ValueError):
-                return None
-            node.extra_fields = ef
+                return None, None
         if not isinstance(ef, dict):
-            return None
+            return None, None
 
         if _needs_old_style_migration(ef):
             if not dry_run:
-                node.extra_fields = migrate_extra_fields(ef)
-                node.mark_complete()
+                ef = migrate_extra_fields(ef)
                 node.save(update_fields=["extra_fields", "complete"])
-            return "old_style"
+            fix_type = "old_style"
         elif _needs_m_n_fix(ef):
             if not dry_run:
-                threshold = ef["options"]["completion_criteria"]["threshold"]
-                threshold["m"] = None
-                threshold["n"] = None
-                node.mark_complete()
-                node.save(update_fields=["extra_fields", "complete"])
-            return "m_n_fix"
-        return None
+                ef["options"]["completion_criteria"]["threshold"]["m"] = None
+                ef["options"]["completion_criteria"]["threshold"]["n"] = None
+            fix_type = "m_n_fix"
+        else:
+            return None, None
+        node.extra_fields = ef
+        complete = node.mark_complete()
+        node.save(update_fields=["extra_fields", "complete"])
+        return fix_type, complete
