@@ -23,6 +23,7 @@
       <KButton
         :text="viewMoreAction$()"
         appearance="basic-link"
+        @click="$emit('viewMore')"
       />
     </template>
   </NotificationBase>

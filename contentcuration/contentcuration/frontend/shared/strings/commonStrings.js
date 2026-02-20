@@ -10,6 +10,10 @@ export const commonStrings = createTranslator('CommonStrings', {
     message: 'Clear',
     context: 'A label for an action that clears a selection or input field',
   },
+  seeAllAction: {
+    message: 'See All',
+    context: 'A label for an action that shows all items in a list or collection',
+  },
   closeAction: {
     message: 'Close',
     context: 'A label for an action that closes a dialog or window',

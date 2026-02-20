@@ -85,6 +85,11 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Submitted',
     context: 'Status indicating that an Community Library submission is pending',
   },
+  superseededStatus: {
+    message: 'Superseded',
+    context:
+      'Status indicating that an Community Library submission is superseded by a newer submission',
+  },
   approvedStatus: {
     message: 'Approved',
     context: 'Status indicating that an Community Library submission is approved',
@@ -92,6 +97,10 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   flaggedStatus: {
     message: 'Flagged',
     context: 'Status indicating that an Community Library submission is rejected',
+  },
+  liveStatus: {
+    message: 'Live',
+    context: 'Status indicating that an Community Library submission is live',
   },
   // Submit to Community Library panel strings
   submitToCommunityLibrary: {
@@ -380,5 +389,17 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'New notifications available.',
     context:
       'Notice for screen readers on the new notifications badge to indicate that new notifications have arrived',
+  },
+  communityLibrarySubmissionLabel: {
+    message: 'Community Library submission',
+    context: 'Label for notifications related to Community Library submissions',
+  },
+  channelVersionTokenLabel: {
+    message: 'Channel version token',
+    context: 'Label for the channel version token included in submission details page',
+  },
+  liveVersionLabel: {
+    message: 'Live version:',
+    context: 'Label indicating the live version of a channel',
   },
 });
