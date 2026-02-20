@@ -7,6 +7,7 @@ import ChannelSetModal from './views/ChannelSet/ChannelSetModal';
 import CatalogList from './views/Channel/CatalogList';
 import { RouteNames } from './constants';
 import CatalogFAQ from './views/Channel/CatalogFAQ';
+import SubmissionDetailsModal from 'shared/views/communityLibrary/SubmissionDetailsModal/index.vue';
 import ChannelModal from 'shared/views/channel/ChannelModal';
 import ChannelDetailsModal from 'shared/views/channel/ChannelDetailsModal';
 
@@ -78,6 +79,12 @@ const router = new VueRouter({
       name: RouteNames.CATALOG_FAQ,
       path: '/faq',
       component: CatalogFAQ,
+    },
+    {
+      name: RouteNames.COMMUNITY_LIBRARY_SUBMISSION,
+      path: '/community-library/:channelId/:submissionId',
+      component: SubmissionDetailsModal,
+      props: true,
     },
     // Catch-all for unrecognized URLs
     {

@@ -26,8 +26,10 @@
       required: true,
       validator: value =>
         [
+          CommunityLibraryStatus.LIVE,
           CommunityLibraryStatus.APPROVED,
           CommunityLibraryStatus.PENDING,
+          CommunityLibraryStatus.SUPERSEDED,
           CommunityLibraryStatus.REJECTED,
         ].includes(value),
     },
@@ -35,9 +37,17 @@
 
   const theme = themePalette();
 
-  const { pendingStatus$, approvedStatus$, flaggedStatus$ } = communityChannelsStrings;
+  const { pendingStatus$, superseededStatus$, approvedStatus$, flaggedStatus$, liveStatus$ } =
+    communityChannelsStrings;
 
   const configChoices = {
+    [CommunityLibraryStatus.SUPERSEDED]: {
+      text: superseededStatus$(),
+      backgroundColor: theme.yellow.v_100,
+      labelColor: theme.orange.v_600,
+      borderColor: theme.orange.v_400,
+      icon: 'timer',
+    },
     [CommunityLibraryStatus.PENDING]: {
       text: pendingStatus$(),
       backgroundColor: theme.yellow.v_100,
@@ -47,6 +57,13 @@
     },
     [CommunityLibraryStatus.APPROVED]: {
       text: approvedStatus$(),
+      backgroundColor: theme.green.v_100,
+      labelColor: theme.green.v_600,
+      borderColor: theme.green.v_400,
+      icon: 'circleCheckmark',
+    },
+    [CommunityLibraryStatus.LIVE]: {
+      text: liveStatus$(),
       backgroundColor: theme.green.v_100,
       labelColor: theme.green.v_600,
       borderColor: theme.green.v_400,
