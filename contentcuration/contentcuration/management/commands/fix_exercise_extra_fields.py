@@ -58,9 +58,7 @@ class Command(BaseCommand):
 
         # Single pass over all exercises, filtering in Python to avoid
         # expensive nested JSON field queries in the database.
-        queryset = ContentNode.objects.filter(kind_id=content_kinds.EXERCISE).only(
-            "id", "extra_fields", "complete", "kind_id"
-        )
+        queryset = ContentNode.objects.filter(kind_id=content_kinds.EXERCISE)
 
         total = ContentNode.objects.filter(kind_id="exercise").count()
         migrated_fixed = 0
