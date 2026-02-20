@@ -69,7 +69,7 @@
             <Icon icon="edit" />
           </VBtn>
         </template>
-        <VCard>
+        <VCard style="min-width: 280px">
           <VCardText>
             <UserStorage
               :userId="userId"
