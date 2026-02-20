@@ -1,59 +1,75 @@
 <template>
 
-  <figure
+  <div
     class="thumbnail"
     :style="{ borderColor: $themeTokens.fineLine }"
   >
-    <figcaption
-      v-if="!printing && kind"
-      class="caption"
-      :class="kind"
-    >
-      <KIcon
-        class="caption-icon"
-        :icon="kindIcon"
-        :color="$themeTokens.textInverted"
-      />
-      <span :style="{ color: $themeTokens.textInverted }">
-        {{ kindTitle }}
-      </span>
-    </figcaption>
+    <figure v-if="!printing">
+      <figcaption
+        v-if="kind"
+        class="caption"
+        :class="kind"
+      >
+        <KIcon
+          class="caption-icon"
+          :icon="kindIcon"
+          :color="$themeTokens.textInverted"
+        />
+        <span :style="{ color: $themeTokens.textInverted }">
+          {{ kindTitle }}
+        </span>
+      </figcaption>
 
-    <KImg
-      :src="thumbnailSrc"
-      isDecorative
-      aspectRatio="16:9"
-    >
-      <template #placeholder>
-        <div class="placeholder-wrapper">
-          <KIcon
-            v-if="!printing"
-            class="placeholder-icon"
-            icon="image"
-            :color="$themePalette.grey.v_400"
-          />
-          <KIcon
-            v-else
-            class="placeholder-icon"
-            :icon="kind ? kindIcon : 'image'"
-            :color="printing ? $vuetify.theme[kind] : $themePalette.grey.v_400"
-          />
-        </div>
-      </template>
-    </KImg>
-  </figure>
+      <KImg
+        :src="thumbnailSrc"
+        isDecorative
+        aspectRatio="16:9"
+      >
+        <template #placeholder>
+          <span class="placeholder-wrapper">
+            <KIcon
+              class="placeholder-icon"
+              icon="image"
+              :color="$themePalette.grey.v_400"
+            />
+          </span>
+        </template>
+      </KImg>
+    </figure>
+
+    <div v-else>
+      <KImg
+        v-if="thumbnailSrc"
+        :src="thumbnailSrc"
+        isDecorative
+        aspectRatio="16:9"
+      />
+      <div
+        v-else
+        class="print-wrapper"
+        capture-as-image
+        :style="printIconStyle"
+      >
+        <KIcon
+          class="print-icon"
+          :icon="kind ? kindIcon : 'image'"
+          :color="kind ? $vuetify.theme[kind] : $themePalette.grey.v_400"
+        />
+      </div>
+    </div>
+  </div>
 
 </template>
 
 
 <script>
 
-  import { constantsTranslationMixin, printingMixin } from 'shared/mixins';
+  import { constantsTranslationMixin } from 'shared/mixins';
   import { getContentKindIcon } from 'shared/utils/icons';
 
   export default {
     name: 'StudioThumbnail',
-    mixins: [constantsTranslationMixin, printingMixin],
+    mixins: [constantsTranslationMixin],
     props: {
       src: {
         type: String,
@@ -70,6 +86,16 @@
         type: String,
         required: false,
         default: null,
+      },
+      printing: {
+        type: Boolean,
+        default: false,
+      },
+      printIconStyle: {
+        type: Object,
+        default() {
+          return {};
+        },
       },
     },
     computed: {
@@ -121,6 +147,17 @@
   .placeholder-icon {
     width: 40%;
     height: 40%;
+  }
+
+  .print-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .print-icon {
+    width: 30%;
+    height: 30%;
   }
 
 </style>
