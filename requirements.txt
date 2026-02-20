@@ -160,7 +160,7 @@ kombu==5.6.1
     # via celery
 langcodes==3.5.1
     # via -r requirements.in
-latex2mathml==3.78.0
+latex2mathml==3.78.1
     # via -r requirements.in
 le-utils==0.2.12
     # via -r requirements.in
