@@ -1,13 +1,10 @@
-import { mount } from '@vue/test-utils';
+import { render, screen, waitFor } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
 import { factory } from '../../../store';
 import router from '../../../router';
 import CatalogFilterBar from '../CatalogFilterBar';
 
-const store = factory();
-
-const collection = {
-  id: 'test-collection',
-};
+const collection = { id: 'test-collection' };
 
 const query = {
   keywords: 'testing',
@@ -16,11 +13,21 @@ const query = {
   collection: 'some-collection',
 };
 
+async function closeChipByText(user, text) {
+  const chip = await screen.findByText(text);
+
+  const closeButton = chip.closest('[data-test^="filter-chip"]').querySelector('.v-chip__close');
+
+  expect(closeButton).toBeTruthy();
+  await user.click(closeButton);
+}
+
 function makeWrapper() {
-  return mount(CatalogFilterBar, {
-    sync: false,
-    router,
+  const store = factory();
+
+  return render(CatalogFilterBar, {
     store,
+    router,
     computed: {
       collections() {
         return [collection];
@@ -30,52 +37,77 @@ function makeWrapper() {
 }
 
 describe('catalogFilterBar', () => {
-  let wrapper;
   beforeEach(() => {
-    wrapper = makeWrapper();
+    router
+      .push({
+        name: 'CHANNELS_EDITABLE',
+        query: { ...query },
+      })
+      .catch(() => {});
   });
 
-  describe('removing filters', () => {
-    beforeEach(() => {
-      Object.entries(query).forEach(([key, val]) => {
-        wrapper.vm[key] = val;
-      });
-      router.replace({ query });
-    });
-    it('clear all button should remove all filters', () => {
-      wrapper.find('[data-test="clear"]').trigger('click');
-      expect(wrapper.keywords).toBeUndefined();
-      expect(wrapper.vm.currentFilters).toHaveLength(0);
-    });
-    it('removing text-based filter should remove it from the query', () => {
-      wrapper.vm.resetKeywords();
-      expect(wrapper.vm.$route.query.keywords).toBeUndefined();
+  afterEach(() => {
+    router.replace({ query: {} }).catch(() => {});
+  });
 
-      // Make sure other queries weren't affected
-      expect(wrapper.vm.$route.query.coach).toBeTruthy();
-      expect(wrapper.vm.$route.query.collection).toBeTruthy();
-      expect(wrapper.vm.$route.query.languages).toBeTruthy();
+  it('clear all button should remove all filters', async () => {
+    const user = userEvent.setup();
+    makeWrapper();
+
+    await user.click(screen.getByTestId('clear'));
+
+    await waitFor(() => {
+      expect(router.currentRoute.query.keywords).toBeUndefined();
+      expect(router.currentRoute.query.coach).toBeUndefined();
+      expect(router.currentRoute.query.collection).toBeUndefined();
+      expect(router.currentRoute.query.languages).toBeUndefined();
     });
-    it('removing boolean-based filter should remove it from the query', () => {
-      wrapper.vm.resetCoach();
-      expect(wrapper.vm.$route.query.coach).toBeUndefined();
+  });
 
-      // Make sure other queries weren't affected
-      expect(wrapper.vm.$route.query.collection).toBeTruthy();
-      expect(wrapper.vm.$route.query.languages).toBeTruthy();
-      expect(wrapper.vm.$route.query.keywords).toBeTruthy();
+  it('removing text-based filter should remove it from the query', async () => {
+    const user = userEvent.setup();
+    makeWrapper();
+
+    await closeChipByText(user, '"testing"');
+
+    await waitFor(() => {
+      expect(router.currentRoute.query.keywords).toBeUndefined();
+      expect(router.currentRoute.query.coach).toBe(true);
+      expect(router.currentRoute.query.collection).toBe('some-collection');
+      expect(router.currentRoute.query.languages).toBe('en,es');
     });
-    it('removing list-based filter should only remove that item from the query', () => {
-      wrapper.vm.removeLanguage('en');
-      expect(wrapper.vm.$route.query.languages).toBe('es');
+  });
 
-      wrapper.vm.removeLanguage('es');
-      expect(wrapper.vm.$route.query.languages).toBeUndefined();
+  it('removing boolean-based filter should remove it from the query', async () => {
+    const user = userEvent.setup();
+    makeWrapper();
 
-      // Make sure other queries weren't affected
-      expect(wrapper.vm.$route.query.coach).toBeTruthy();
-      expect(wrapper.vm.$route.query.collection).toBeTruthy();
-      expect(wrapper.vm.$route.query.keywords).toBeTruthy();
+    await closeChipByText(user, 'Coach content');
+
+    await waitFor(() => {
+      expect(router.currentRoute.query.coach).toBeUndefined();
+      expect(router.currentRoute.query.collection).toBe('some-collection');
+      expect(router.currentRoute.query.languages).toBe('en,es');
+      expect(router.currentRoute.query.keywords).toBe('testing');
+    });
+  });
+
+  it('removing list-based filter should only remove that item from the query', async () => {
+    const user = userEvent.setup();
+    makeWrapper();
+    await closeChipByText(user, 'English');
+
+    await waitFor(() => {
+      expect(router.currentRoute.query.languages).toBe('es');
+    });
+
+    await closeChipByText(user, 'Español');
+
+    await waitFor(() => {
+      expect(router.currentRoute.query.languages).toBeUndefined();
+      expect(router.currentRoute.query.coach).toBe(true);
+      expect(router.currentRoute.query.collection).toBe('some-collection');
+      expect(router.currentRoute.query.keywords).toBe('testing');
     });
   });
 });
