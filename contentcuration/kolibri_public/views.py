@@ -239,7 +239,9 @@ class ChannelMetadataViewSet(ReadOnlyValuesViewset):
         """
         token = self.request.query_params.get("token")
         if token:
-            self._token_queryset, self._version_data = self.get_queryset_from_token(token)
+            self._token_queryset, self._version_data = self.get_queryset_from_token(
+                token
+            )
             return self._token_queryset
         self._version_data = None
         return models.ChannelMetadata.objects.all()

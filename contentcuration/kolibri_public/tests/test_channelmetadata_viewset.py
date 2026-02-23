@@ -204,7 +204,9 @@ class ChannelMetadataTokenFilterTestCase(StudioAPITestCase):
         token = SecretToken.objects.create(token="testchanneltokenabc", is_primary=True)
         channel.secret_tokens.add(token)
 
-        metadata = mixer.blend(ChannelMetadata, id=channel.id, root=public_root_node, public=False)
+        metadata = mixer.blend(
+            ChannelMetadata, id=channel.id, root=public_root_node, public=False
+        )
 
         response = self.client.get(
             reverse_with_query(
@@ -229,7 +231,9 @@ class ChannelMetadataTokenFilterTestCase(StudioAPITestCase):
         channel.version = 5
         channel.save()
 
-        token = SecretToken.objects.create(token="testversiontokenxyz", is_primary=False)
+        token = SecretToken.objects.create(
+            token="testversiontokenxyz", is_primary=False
+        )
         channel_version = ChannelVersion.objects.create(
             channel=channel,
             version=3,
@@ -292,10 +296,14 @@ class ChannelMetadataTokenFilterTestCase(StudioAPITestCase):
         mixer = KolibriPublicMixer()
 
         channel, public_root_node = self._create_channel_with_main_tree(mixer)
-        token = SecretToken.objects.create(token="testignorefilterstoken", is_primary=True)
+        token = SecretToken.objects.create(
+            token="testignorefilterstoken", is_primary=True
+        )
         channel.secret_tokens.add(token)
 
-        metadata = mixer.blend(ChannelMetadata, id=channel.id, root=public_root_node, public=False)
+        metadata = mixer.blend(
+            ChannelMetadata, id=channel.id, root=public_root_node, public=False
+        )
 
         response = self.client.get(
             reverse_with_query(
@@ -318,7 +326,9 @@ class ChannelMetadataTokenFilterTestCase(StudioAPITestCase):
         token = SecretToken.objects.create(token="abcd1234efgh5678", is_primary=True)
         channel.secret_tokens.add(token)
 
-        metadata = mixer.blend(ChannelMetadata, id=channel.id, root=public_root_node, public=False)
+        metadata = mixer.blend(
+            ChannelMetadata, id=channel.id, root=public_root_node, public=False
+        )
 
         response = self.client.get(
             reverse_with_query(
