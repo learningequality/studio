@@ -42,6 +42,8 @@ from rest_framework.response import Response
 
 from contentcuration.middleware.locale import locale_exempt
 from contentcuration.middleware.session import session_exempt
+from contentcuration.models import Channel
+from contentcuration.models import ChannelVersion
 from contentcuration.models import Country
 from contentcuration.models import generate_storage_url
 from contentcuration.utils.pagination import ValuesViewsetCursorPagination
@@ -176,40 +178,143 @@ class ChannelMetadataViewSet(ReadOnlyValuesViewset):
         "lang_name": "root__lang__native_name",
     }
 
+    def get_queryset_from_token(self, token):
+        """
+        Retrieve a queryset of channels based on a token.
+
+        This method checks both Channel.secret_tokens and ChannelVersion.secret_token
+        to find matching channels. It returns an annotated queryset from the
+        ChannelMetadata model.
+
+        Args:
+            token: The secret token string to look up
+
+        Returns:
+            tuple: (QuerySet, dict or None)
+                - QuerySet: A queryset of ChannelMetadata objects
+                - dict or None: Version-specific data for ChannelVersion tokens, or None for Channel tokens
+        """
+        normalized_token = token.replace("-", "").strip()
+
+        channels = Channel.objects.filter(
+            secret_tokens__token=normalized_token,
+            deleted=False,
+            main_tree__published=True,
+        )
+
+        if channels.exists():
+            channel_ids = list(channels.values_list("id", flat=True))
+            return models.ChannelMetadata.objects.filter(id__in=channel_ids), None
+
+        channel_versions = ChannelVersion.objects.filter(
+            secret_token__token=normalized_token
+        ).select_related("channel")
+
+        if channel_versions.exists():
+            channel_ids = [cv.channel_id for cv in channel_versions]
+
+            version_data = {}
+            for cv in channel_versions:
+                version_data[str(cv.channel_id)] = {
+                    "published_size": cv.size,
+                    "total_resource_count": cv.resource_count,
+                    "last_updated": cv.date_published,
+                    "included_languages": cv.included_languages or [],
+                    "categories": cv.included_categories or [],
+                    "version": cv.version,
+                }
+
+            queryset = models.ChannelMetadata.objects.filter(id__in=channel_ids)
+
+            return queryset, version_data
+
+        return models.ChannelMetadata.objects.none(), None
+
     def get_queryset(self):
+        """
+        Get the base queryset for the viewset.
+
+        If a 'token' query parameter is present, this will return channels
+        matching that token. Otherwise, returns all channels.
+        """
+        token = self.request.query_params.get("token")
+        if token:
+            self._token_queryset, self._version_data = self.get_queryset_from_token(token)
+            return self._token_queryset
+        self._version_data = None
         return models.ChannelMetadata.objects.all()
 
+    def filter_queryset(self, queryset):
+        """
+        Filter the queryset.
+
+        If a 'token' query parameter is present, all other filters are disabled
+        and the queryset is returned unfiltered. Otherwise, applies the normal
+        filter behavior.
+        """
+        token = self.request.query_params.get("token")
+        if token:
+            return queryset
+        return super().filter_queryset(queryset)
+
     def consolidate(self, items, queryset):
-        # Only keep a single item for every channel ID, to get rid of possible
-        # duplicates caused by filtering
+        """
+        Consolidate items by adding additional data.
+
+        For token-based queries, this uses data from ChannelVersion.
+        For regular queries, it computes included_languages and countries.
+        """
         items = list(OrderedDict((item["id"], item) for item in items).values())
 
-        included_languages = {}
-        for (
-            channel_id,
-            language_id,
-        ) in models.ChannelMetadata.included_languages.through.objects.filter(
-            channelmetadata__in=queryset
-        ).values_list(
-            "channelmetadata_id", "language_id"
-        ):
-            if channel_id not in included_languages:
-                included_languages[channel_id] = []
-            included_languages[channel_id].append(language_id)
-        for item in items:
-            item["included_languages"] = included_languages.get(item["id"], [])
-            item["last_published"] = item["last_updated"]
+        version_data = getattr(self, "_version_data", None)
 
-        countries = {}
-        for (channel_id, country_code) in Country.objects.filter(
-            public_channels__in=queryset
-        ).values_list("public_channels", "code"):
-            if channel_id not in countries:
-                countries[channel_id] = []
-            countries[channel_id].append(country_code)
+        if version_data:
+            for item in items:
+                channel_id = str(item["id"])
+                if channel_id in version_data:
+                    data = version_data[channel_id]
+                    if data["published_size"] is not None:
+                        item["published_size"] = data["published_size"]
+                    if data["total_resource_count"] is not None:
+                        item["total_resource_count"] = data["total_resource_count"]
+                    if data["last_updated"] is not None:
+                        item["last_updated"] = data["last_updated"]
+                    if data["categories"]:
+                        item["categories"] = data["categories"]
+                    item["included_languages"] = data["included_languages"] or []
+                    item["last_published"] = item["last_updated"]
+                    item["countries"] = []
+                else:
+                    item["included_languages"] = []
+                    item["countries"] = []
+                    item["last_published"] = item["last_updated"]
+        else:
+            included_languages = {}
+            for (
+                channel_id,
+                language_id,
+            ) in models.ChannelMetadata.included_languages.through.objects.filter(
+                channelmetadata__in=queryset
+            ).values_list(
+                "channelmetadata_id", "language_id"
+            ):
+                if channel_id not in included_languages:
+                    included_languages[channel_id] = []
+                included_languages[channel_id].append(language_id)
+            for item in items:
+                item["included_languages"] = included_languages.get(item["id"], [])
+                item["last_published"] = item["last_updated"]
 
-        for item in items:
-            item["countries"] = countries.get(item["id"], [])
+            countries = {}
+            for (channel_id, country_code) in Country.objects.filter(
+                public_channels__in=queryset
+            ).values_list("public_channels", "code"):
+                if channel_id not in countries:
+                    countries[channel_id] = []
+                countries[channel_id].append(country_code)
+
+            for item in items:
+                item["countries"] = countries.get(item["id"], [])
 
         return items
 
