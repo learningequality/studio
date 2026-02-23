@@ -201,7 +201,7 @@
       <CommunityLibraryStatusButton
         v-if="communityLibraryStatus"
         :status="communityLibraryStatus"
-        @click="submissionToReview = channel.latest_community_library_submission_id"
+        @click="onCommunityLibraryButtonClick"
       />
       <KEmptyPlaceholder v-else />
     </td>
@@ -211,12 +211,6 @@
         flat
       />
     </td>
-    <ReviewSubmissionSidePanel
-      v-if="submissionToReview"
-      :channel="channel"
-      :submissionId="submissionToReview"
-      @close="submissionToReview = null"
-    />
   </tr>
 
 </template>
@@ -226,7 +220,6 @@
 
   import { mapGetters, mapActions } from 'vuex';
   import ClipboardChip from '../../components/ClipboardChip';
-  import ReviewSubmissionSidePanel from '../../components/sidePanels/ReviewSubmissionSidePanel';
   import CommunityLibraryStatusButton from '../../components/CommunityLibraryStatusButton.vue';
   import { RouteNames } from '../../constants';
   import ChannelActionsDropdown from './ChannelActionsDropdown';
@@ -241,7 +234,6 @@
       ClipboardChip,
       Checkbox,
       CommunityLibraryStatusButton,
-      ReviewSubmissionSidePanel,
     },
     mixins: [fileSizeMixin],
     props: {
@@ -253,11 +245,6 @@
         type: String,
         required: true,
       },
-    },
-    data() {
-      return {
-        submissionToReview: null,
-      };
     },
     computed: {
       ...mapGetters('channel', ['getChannel']),
@@ -318,6 +305,15 @@
           source_url: this.channel.source_url,
         }).then(() => {
           this.$store.dispatch('showSnackbarSimple', 'Source URL saved');
+        });
+      },
+      onCommunityLibraryButtonClick() {
+        this.$router.push({
+          name: RouteNames.COMMUNITY_LIBRARY_SUBMISSION,
+          params: {
+            channelId: this.channelId,
+            submissionId: this.channel.latest_community_library_submission_id.toString(),
+          },
         });
       },
     },

@@ -658,16 +658,5 @@ export function getMergedMapFields(node, contentNodeData) {
 }
 
 export function getCommunityLibrarySubmissionDetailsUrl(channelId, submissionId) {
-  const pathname = window.location.pathname;
-  const hash = window.location.hash;
-  const prevUrl = pathname + hash;
-
-  const externalUrl = `/channels/#/community-library/${channelId}/${submissionId}`;
-
-  const queryParams = new URLSearchParams({
-    back: prevUrl,
-  });
-  const query = queryParams.toString();
-
-  return `${externalUrl}?${query}`;
+  return `/channels/#/community-library/${channelId}/${submissionId}`;
 }
