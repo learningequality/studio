@@ -73,8 +73,19 @@
         offline: state => !state.connection.online,
       }),
     },
+    watch: {
+      value: {
+        handler(newValue) {
+          if (newValue) {
+            document.documentElement.classList.add('modal-open');
+          } else {
+            document.documentElement.classList.remove('modal-open');
+          }
+        },
+        immediate: true,
+      },
+    },
     mounted() {
-      document.documentElement.classList.add('modal-open');
       const handleKeyDown = event => {
         if (event.key === 'Escape') {
           this.$emit('input', false);
@@ -82,7 +93,6 @@
       };
       document.addEventListener('keydown', handleKeyDown);
       this.$once('hook:beforeDestroy', () => {
-        document.documentElement.classList.remove('modal-open');
         document.removeEventListener('keydown', handleKeyDown);
       });
     },
