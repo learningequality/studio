@@ -260,64 +260,58 @@ class ChannelMetadataViewSet(ReadOnlyValuesViewset):
         return super().filter_queryset(queryset)
 
     def consolidate(self, items, queryset):
-        """
-        Consolidate items by adding additional data.
-
-        For token-based queries, this uses data from ChannelVersion.
-        For regular queries, it computes included_languages and countries.
-        """
         items = list(OrderedDict((item["id"], item) for item in items).values())
-
         version_data = getattr(self, "_version_data", None)
-
         if version_data:
-            for item in items:
-                channel_id = str(item["id"])
-                if channel_id in version_data:
-                    data = version_data[channel_id]
-                    if data["published_size"] is not None:
-                        item["published_size"] = data["published_size"]
-                    if data["total_resource_count"] is not None:
-                        item["total_resource_count"] = data["total_resource_count"]
-                    if data["last_updated"] is not None:
-                        item["last_updated"] = data["last_updated"]
-                    if data["categories"]:
-                        item["categories"] = data["categories"]
-                    item["included_languages"] = data["included_languages"] or []
-                    item["last_published"] = item["last_updated"]
-                    item["countries"] = []
-                else:
-                    item["included_languages"] = []
-                    item["countries"] = []
-                    item["last_published"] = item["last_updated"]
-        else:
-            included_languages = {}
-            for (
-                channel_id,
-                language_id,
-            ) in models.ChannelMetadata.included_languages.through.objects.filter(
-                channelmetadata__in=queryset
-            ).values_list(
-                "channelmetadata_id", "language_id"
-            ):
-                if channel_id not in included_languages:
-                    included_languages[channel_id] = []
-                included_languages[channel_id].append(language_id)
-            for item in items:
-                item["included_languages"] = included_languages.get(item["id"], [])
-                item["last_published"] = item["last_updated"]
+            return self._consolidate_token_items(items, version_data)
+        return self._consolidate_regular_items(items, queryset)
 
-            countries = {}
-            for (channel_id, country_code) in Country.objects.filter(
-                public_channels__in=queryset
-            ).values_list("public_channels", "code"):
-                if channel_id not in countries:
-                    countries[channel_id] = []
-                countries[channel_id].append(country_code)
+    def _consolidate_token_items(self, items, version_data):
+        for item in items:
+            channel_id = str(item["id"])
+            data = version_data.get(channel_id)
+            if data:
+                if data["published_size"] is not None:
+                    item["published_size"] = data["published_size"]
+                if data["total_resource_count"] is not None:
+                    item["total_resource_count"] = data["total_resource_count"]
+                if data["last_updated"] is not None:
+                    item["last_updated"] = data["last_updated"]
+                if data["categories"]:
+                    item["categories"] = data["categories"]
+                item["included_languages"] = data["included_languages"] or []
+            else:
+                item["included_languages"] = []
+            item["last_published"] = item["last_updated"]
+            item["countries"] = []
+        return items
 
-            for item in items:
-                item["countries"] = countries.get(item["id"], [])
+    def _consolidate_regular_items(self, items, queryset):
+        included_languages = {}
+        for (
+            channel_id,
+            language_id,
+        ) in models.ChannelMetadata.included_languages.through.objects.filter(
+            channelmetadata__in=queryset
+        ).values_list(
+            "channelmetadata_id", "language_id"
+        ):
+            if channel_id not in included_languages:
+                included_languages[channel_id] = []
+            included_languages[channel_id].append(language_id)
 
+        countries = {}
+        for (channel_id, country_code) in Country.objects.filter(
+            public_channels__in=queryset
+        ).values_list("public_channels", "code"):
+            if channel_id not in countries:
+                countries[channel_id] = []
+            countries[channel_id].append(country_code)
+
+        for item in items:
+            item["included_languages"] = included_languages.get(item["id"], [])
+            item["last_published"] = item["last_updated"]
+            item["countries"] = countries.get(item["id"], [])
         return items
 
 

@@ -8,7 +8,6 @@ from contentcuration.models import Channel
 from contentcuration.models import ChannelVersion
 from contentcuration.models import ContentNode
 from contentcuration.models import Country
-from contentcuration.models import Language
 from contentcuration.models import SecretToken
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
@@ -234,7 +233,7 @@ class ChannelMetadataTokenFilterTestCase(StudioAPITestCase):
         token = SecretToken.objects.create(
             token="testversiontokenxyz", is_primary=False
         )
-        channel_version = ChannelVersion.objects.create(
+        ChannelVersion.objects.create(
             channel=channel,
             version=3,
             secret_token=token,
@@ -276,7 +275,7 @@ class ChannelMetadataTokenFilterTestCase(StudioAPITestCase):
         mixer = KolibriPublicMixer()
 
         metadata1 = mixer.blend(ChannelMetadata, public=True)
-        metadata2 = mixer.blend(ChannelMetadata, public=False)
+        mixer.blend(ChannelMetadata, public=False)
 
         response = self.client.get(
             reverse_with_query(
