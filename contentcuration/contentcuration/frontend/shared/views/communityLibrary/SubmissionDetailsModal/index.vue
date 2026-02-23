@@ -9,7 +9,12 @@
       v-else-if="channel && submission"
       class="page-content"
     >
-      <div class="channel-header">
+      <div
+        class="channel-header"
+        :style="{
+          flexDirection: windowBreakpoint < 2 ? 'column' : 'row',
+        }"
+      >
         <div class="thumbnail-wrapper">
           <StudioThumbnail
             :src="channel.thumbnail_url"
@@ -72,6 +77,7 @@
             v-if="adminReview && submission.status === CommunityLibraryStatus.PENDING"
             text="review"
             style="height: 40px"
+            @click="showReviewSidePanel = true"
           />
         </div>
       </div>
@@ -89,9 +95,17 @@
         :channelVersion="channelVersion"
       />
       <ActivityHistory
+        ref="activityHistoryRef"
         class="mt-16"
         :submissionId="submissionId"
         :channelId="channelId"
+      />
+      <ReviewSubmissionSidePanel
+        v-if="adminReview && showReviewSidePanel"
+        :submissionId="submission.id"
+        :channel="channel"
+        @close="showReviewSidePanel = false"
+        @change="onSubmissionChange"
       />
     </div>
   </StudioImmersiveModal>
@@ -103,6 +117,8 @@
 
   import { useRoute, useRouter } from 'vue-router/composables';
   import { computed, ref, watch } from 'vue';
+  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
+  import ReviewSubmissionSidePanel from '../../../../administration/components/sidePanels/ReviewSubmissionSidePanel.vue';
   import CommunityLibraryChip from '../CommunityLibraryChip.vue';
   import CommunityLibraryStatusChip from '../CommunityLibraryStatusChip.vue';
   import ChannelDetails from './ChannelDetails.vue';
@@ -136,11 +152,13 @@
     },
   });
 
-  const previousQuery = ref(null);
+  const showReviewSidePanel = ref(false);
+  const activityHistoryRef = ref(null);
 
   const route = useRoute();
   const router = useRouter();
   const store = useStore();
+  const { windowBreakpoint } = useKResponsiveWindow();
 
   const isModalOpen = computed({
     get() {
@@ -148,8 +166,7 @@
     },
     set(value) {
       if (!value) {
-        const backURL = route.query.back || '/';
-        window.location.href = decodeURIComponent(backURL);
+        router.back();
       }
     },
   });
@@ -254,18 +271,10 @@
     { immediate: true },
   );
 
-  watch(
-    isModalOpen,
-    (newVal, oldVal) => {
-      if (newVal && !oldVal) {
-        // Store previous query params to restore when closing modal
-        previousQuery.value = { ...route.query };
-      } else if (!newVal && oldVal) {
-        previousQuery.value = null;
-      }
-    },
-    { immediate: true },
-  );
+  const onSubmissionChange = () => {
+    fetchSubmission();
+    activityHistoryRef.value?.onSubmissionChange();
+  };
 
   const {
     communityLibrarySubmissionLabel$,

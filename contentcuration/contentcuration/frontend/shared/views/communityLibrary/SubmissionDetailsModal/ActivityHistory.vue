@@ -59,11 +59,7 @@
                 </span>
               </p>
               <KButton
-                v-if="
-                  [CommunityLibraryStatus.PENDING, CommunityLibraryStatus.SUPERSEDED].includes(
-                    update.status,
-                  ) && update.id.toString() !== props.submissionId
-                "
+                v-if="update.id.toString() !== props.submissionId"
                 class="no-shrink"
                 appearance="flat-button"
                 :text="viewMoreAction$()"
@@ -201,6 +197,14 @@
         return '';
     }
   };
+
+  function onSubmissionChange() {
+    fetchData();
+  }
+
+  defineExpose({
+    onSubmissionChange,
+  });
 
   watch(
     () => props.channelId,
