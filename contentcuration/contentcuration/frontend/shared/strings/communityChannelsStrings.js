@@ -428,4 +428,35 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Live version:',
     context: 'Label indicating the live version of a channel',
   },
+  activityHistoryLabel: {
+    message: 'Activity history',
+    context: 'Label for the activity history section in the submission details page',
+  },
+
+  // Resolution reasons strings
+  reasonLabel: {
+    message: 'Reason: {reason}',
+    context: 'Label for the reason provided for a given action (e.g., rejection reason)',
+  },
+  invalidLicensingReason: {
+    message: 'Invalid or non-compliant licenses',
+    context: 'Rejection reason indicating that the channel has invalid or non-compliant licenses',
+  },
+  qualityAssuranceReason: {
+    message: 'Quality assurance issues',
+    context: 'Rejection reason indicating that the channel has quality assurance issues',
+  },
+  invalidMetadataReason: {
+    message: 'Invalid or missing metadata',
+    context: 'Rejection reason indicating that the channel has invalid or missing metadata',
+  },
+  portabilityIssuesReason: {
+    message: 'Portability problems',
+    context: 'Rejection reason indicating that the channel has portability problems',
+  },
+  otherIssuesReason: {
+    message: 'Other issues',
+    context:
+      'Rejection reason indicating that the channel has other issues not covered by other reasons',
+  },
 });

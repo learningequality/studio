@@ -22,7 +22,12 @@
               class="notranslate"
               dir="auto"
             >
-              {{ channelVersion$({ name: channel.name, version: submission.channel_version }) }}
+              {{
+                channelVersion$({
+                  name: channel.name,
+                  version: submission.channel_version,
+                })
+              }}
             </h1>
             <p
               class="channel-description notranslate"
@@ -82,6 +87,11 @@
         :submission="submission"
         :channelVersion="channelVersion"
       />
+      <ActivityHistory
+        class="mt-16"
+        :submissionId="submissionId"
+        :channelId="channelId"
+      />
     </div>
   </StudioImmersiveModal>
 
@@ -95,6 +105,7 @@
   import CommunityLibraryChip from '../CommunityLibraryChip.vue';
   import CommunityLibraryStatusChip from '../CommunityLibraryStatusChip.vue';
   import ChannelDetails from './ChannelDetails.vue';
+  import ActivityHistory from './ActivityHistory.vue';
   import StudioCopyToken from 'shared/views/StudioCopyToken/index.vue';
   import StudioThumbnail from 'shared/views/files/StudioThumbnail.vue';
   import { useFetch } from 'shared/composables/useFetch';
@@ -306,6 +317,10 @@
       display: flex;
       gap: 4px;
     }
+  }
+
+  .mt-16 {
+    margin-top: 16px;
   }
 
 </style>
