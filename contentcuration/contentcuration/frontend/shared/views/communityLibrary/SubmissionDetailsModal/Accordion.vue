@@ -2,7 +2,7 @@
 
   <div class="accordion-container">
     <div class="accordion-header">
-      <h2>
+      <h2 ref="accordionTitleRef">
         {{ title }}
       </h2>
       <KButton
@@ -19,7 +19,7 @@
 
 <script setup>
 
-  import { ref } from 'vue';
+  import { nextTick, ref } from 'vue';
   import { commonStrings } from 'shared/strings/commonStrings';
 
   const emit = defineEmits(['open']);
@@ -31,13 +31,19 @@
     },
   });
 
+  const accordionTitleRef = ref(null);
+
   const isOpen = ref(false);
 
   const { seeAllAction$, seeLessAction$ } = commonStrings;
 
-  function toggleAccordion() {
+  async function toggleAccordion() {
     isOpen.value = !isOpen.value;
     emit('open', isOpen.value);
+    if (isOpen.value) {
+      await nextTick();
+      accordionTitleRef.value.scrollIntoView({ behavior: 'smooth' });
+    }
   }
 
 </script>

@@ -69,6 +69,7 @@
         </div>
         <div class="actions">
           <KButton
+            v-if="adminReview && submission.status === CommunityLibraryStatus.PENDING"
             text="review"
             style="height: 40px"
           />
