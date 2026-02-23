@@ -18,11 +18,6 @@
           <li
             v-for="update in getUpdates(isOpen)"
             :key="`${update.id}-${update.type}`"
-            :style="{
-              border: `1px solid ${$themeTokens.fineLine}`,
-              borderRadius: '8px',
-              padding: '16px',
-            }"
           >
             <div class="update-header">
               <strong> {{ getUpdateTitle(update) }}</strong>
@@ -220,6 +215,12 @@
 
 <style scoped lang="scss">
 
+  $list-items-gap: 16px;
+  $list-item-padding: 16px;
+  $list-line-width: 14px;
+  $list-line-margin: 12px;
+  $list-title-line-height-margin: 4px;
+
   .no-shrink {
     flex-shrink: 0;
   }
@@ -232,15 +233,56 @@
   .activity-list {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: $list-items-gap;
     padding: 0;
     margin: 16px 0 0;
     list-style: none;
 
     li {
+      position: relative;
       display: flex;
       flex-direction: column;
       gap: 12px;
+      padding: $list-item-padding;
+      margin-left: calc(#{$list-line-width} + #{$list-line-margin});
+      border: 1px solid v-bind('$themeTokens.fineLine');
+      border-radius: 8px;
+
+      &::before {
+        position: absolute;
+        top: 0;
+        // -4px to account for 2px borders 2 times (current and next one)
+        bottom: calc(
+          -1 * #{$list-item-padding + $list-items-gap + $list-title-line-height-margin} - 4px
+        );
+        // -1px to account for the width of the line itself, so the line is centered between items
+        left: calc(-1 * #{$list-line-width / 2 + $list-line-margin} - 1px);
+        z-index: 1;
+        width: 2px;
+        content: '';
+        background-color: v-bind('$themePalette.grey.v_400');
+      }
+
+      &:first-of-type::before {
+        top: calc(#{$list-item-padding + $list-title-line-height-margin});
+      }
+
+      &:last-of-type::before {
+        // width 0 to remove the line for the last item
+        width: 0;
+      }
+
+      &::after {
+        position: absolute;
+        top: calc(#{$list-item-padding + $list-title-line-height-margin});
+        left: calc(-1 * #{$list-line-width + $list-line-margin});
+        z-index: 1;
+        width: $list-line-width;
+        height: $list-line-width;
+        content: '';
+        background-color: v-bind('$themePalette.grey.v_400');
+        border-radius: 50%;
+      }
     }
 
     .update-header {
