@@ -1938,10 +1938,10 @@ const LanguagesMap = new Map([
     },
   ],
   [
-    'fo',
+    'of',
     {
-      id: 'fo',
-      lang_code: 'fo',
+      id: 'of',
+      lang_code: 'of',
       lang_subcode: null,
       readable_name: 'Faroese',
       native_name: 'f\u00f8royskt',
@@ -3336,7 +3336,7 @@ export const LanguagesNames = {
   EU: 'eu',
   TO: 'to',
   MLG: 'mlg',
-  FO: 'fo',
+  of: 'of',
   SM: 'sm',
   HR: 'hr',
   ND: 'nd',
