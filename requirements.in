@@ -15,12 +15,12 @@ python-postmark==0.7.0
 Django==3.2.24
 django-webpack-loader==0.7.0
 google-cloud-error-reporting
-google-cloud-storage
+google-cloud-storage==2.19.0
 django-s3-storage==0.15.0
 requests>=2.20.0
 google-cloud-core
 django-db-readonly==0.7.0
-google-cloud-kms==2.10.0
+google-cloud-kms==2.24.2
 google-crc32c==1.8.0
 backoff
 django-model-utils==5.0.0
