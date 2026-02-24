@@ -1,11 +1,13 @@
 <template>
 
-  <ImmersiveModalLayout
-    :previousPage="{ name: 'Main' }"
-    :appBarText="$tr('backToLoginButton')"
-    backButton
+  <StudioImmersiveModal
+    :value="true"
+    @input="goBack"
   >
-    <div class="align-center d-flex justify-center mb-2">
+    <template #header>
+      {{ $tr('createAnAccountTitle') }}
+    </template>
+    <div class="logo-container">
       <KLogo
         altText="Kolibri Logo with background"
         :showBackground="true"
@@ -14,214 +16,226 @@
     </div>
     <h1
       ref="top"
-      class="mb-4 primary--text text-xs-center"
+      class="page-title"
     >
       {{ $tr('createAnAccountTitle') }}
     </h1>
-    <VLayout
-      justify-center
-      class="px-3"
-    >
-      <VForm
+    <div class="form-container">
+      <form
         ref="form"
-        v-model="valid"
-        lazy-validation
         @submit.prevent="submit"
       >
-        <Banner
-          :value="!valid"
+        <StudioBanner
+          v-if="!valid"
           error
-          class="mb-4"
+          class="banner"
         >
           {{ registrationFailed ? $tr('registrationFailed') : $tr('errorsMessage') }}
-        </Banner>
-        <Banner
-          :value="offline"
+        </StudioBanner>
+        <StudioBanner
+          v-if="offline"
           error
-          class="mb-4"
+          class="banner"
         >
           {{ $tr('registrationFailedOffline') }}
-        </Banner>
+        </StudioBanner>
         <!-- Basic information -->
-        <h2 class="font-weight-bold my-2 subheading">
+        <h2 class="section-header">
           {{ $tr('basicInformationHeader') }}
         </h2>
-        <TextField
+        <KTextbox
           v-model="form.first_name"
-          maxlength="100"
-          counter
-          autofocus
+          :maxlength="100"
+          :autofocus="true"
           :label="$tr('firstNameLabel')"
-          :error-messages="errors.first_name"
+          :invalid="Boolean(errors.first_name.length)"
+          :invalidText="errors.first_name.length ? errors.first_name[0] : ''"
+          :showInvalidText="true"
           @input="resetErrors('first_name')"
+          @blur="validateField('first_name')"
         />
-        <TextField
+        <KTextbox
           v-model="form.last_name"
-          maxlength="100"
-          counter
+          :maxlength="100"
           :label="$tr('lastNameLabel')"
-          :error-messages="errors.last_name"
+          :invalid="Boolean(errors.last_name.length)"
+          :invalidText="errors.last_name.length ? errors.last_name[0] : ''"
+          :showInvalidText="true"
           @input="resetErrors('last_name')"
+          @blur="validateField('last_name')"
         />
-        <EmailField
+        <StudioEmailField
           v-model="form.email"
-          maxlength="100"
-          counter
+          :maxlength="100"
           :disabled="Boolean($route.query.email)"
-          :error-messages="errors.email"
+          :errorMessages="errors.email"
           @input="resetErrors('email')"
+          @blur="validateField('email')"
         />
-        <PasswordField
+        <StudioPasswordField
           v-model="form.password1"
-          :additionalRules="passwordValidationRules"
           :label="$tr('passwordLabel')"
-          :error-messages="errors.password1"
+          :errorMessages="errors.password1"
           @input="resetErrors('password1')"
+          @blur="validateField('password1')"
         />
-        <PasswordField
+        <StudioPasswordField
           v-model="form.password2"
-          :additionalRules="passwordConfirmRules"
           :label="$tr('confirmPasswordLabel')"
-          :error-messages="errors.password2"
+          :errorMessages="errors.password2"
           @input="resetErrors('password2')"
+          @blur="validateField('password2')"
         />
 
         <!-- Usage -->
-        <VInput
-          required
-          :rules="usageRules"
-          class="mt-2"
-        />
-        <h2 class="font-weight-bold mb-2 subheading">{{ $tr('usageLabel') }}*</h2>
+        <h2 class="section-header">{{ $tr('usageLabel') }}*</h2>
         <div
           v-for="option in usageOptions"
           :key="option.id"
         >
-          <Checkbox
-            v-model="form.uses"
+          <KCheckbox
+            :checked="form.uses.includes(option.id)"
             :label="option.label"
-            :value="option.id"
+            @change="toggleUsage(option.id)"
           />
-          <VSlideYTransition>
-            <TextField
+          <KTransition kind="component-vertical-slide-out-in">
+            <KTextbox
               v-if="showStorageField(option.id)"
+              key="storage-field"
               v-model="form.storage"
               :label="$tr('storingUsagePlaceholder')"
               :placeholder="$tr('storingUsageExample')"
-              class="ml-4 my-1"
+              class="conditional-field"
             />
-            <TextArea
-              v-else-if="showOtherField(option.id)"
+          </KTransition>
+          <KTransition kind="component-vertical-slide-out-in">
+            <KTextbox
+              v-if="showOtherField(option.id)"
+              key="other-use-field"
               v-model="form.other_use"
               :label="$tr('otherUsagePlaceholder')"
-              class="ml-4 my-2"
+              :textArea="true"
+              :maxlength="500"
+              :invalid="Boolean(errors.other_use.length)"
+              :invalidText="errors.other_use.length ? errors.other_use[0] : ''"
+              :showInvalidText="true"
+              class="conditional-field-textarea"
+              @input="resetErrors('other_use')"
+              @blur="validateField('other_use')"
             />
-          </VSlideYTransition>
+          </KTransition>
+        </div>
+        <div
+          v-if="!valid && (!form.uses || !form.uses.length)"
+          :style="{ color: $themeTokens.error }"
+          class="field-error"
+        >
+          {{ $tr('fieldRequired') }}
         </div>
 
         <!-- Location -->
-        <VInput
-          required
-          :rules="locationRules"
-          class="mt-4"
-        />
-        <h2 class="font-weight-bold my-2 subheading">{{ $tr('locationLabel') }}*</h2>
+        <h2 class="section-header">{{ $tr('locationLabel') }}*</h2>
         <CountryField
           v-model="form.locations"
           clearable
         />
+        <div
+          v-if="!valid && (!form.locations || !form.locations.length)"
+          :style="{ color: $themeTokens.error }"
+          class="field-error"
+        >
+          {{ $tr('fieldRequired') }}
+        </div>
 
         <!-- Source -->
-        <VInput
-          required
-          :rules="sourceRules"
-          class="mt-2"
+        <h2 class="section-header">{{ $tr('sourceLabel') }}*</h2>
+        <KSelect
+          v-model="form.source"
+          :options="sourceOptions"
+          :placeholder="$tr('sourcePlaceholder')"
         />
-        <h2 class="font-weight-bold my-2 subheading">{{ $tr('sourceLabel') }}*</h2>
-        <DropdownWrapper>
-          <template #default="{ attach, menuProps }">
-            <VSelect
-              v-model="form.source"
-              :items="sourceOptions"
-              item-text="label"
-              item-value="id"
-              box
-              :menu-props="menuProps"
-              :attach="attach"
-              :label="$tr('sourcePlaceholder')"
-            />
-          </template>
-        </DropdownWrapper>
-        <VSlideYTransition>
-          <TextArea
-            v-if="form.source === sources.ORGANIZATION"
+        <KTransition kind="component-vertical-slide-out-in">
+          <KTextbox
+            v-if="form.source && form.source.value === sources.ORGANIZATION"
+            key="organization-source"
             v-model="form.organization"
             :label="$tr('organizationSourcePlaceholder')"
+            :textArea="true"
           />
-          <TextArea
-            v-else-if="form.source === sources.CONFERENCE"
+          <KTextbox
+            v-else-if="form.source && form.source.value === sources.CONFERENCE"
+            key="conference-source"
             v-model="form.conference"
             :label="$tr('conferenceSourcePlaceholder')"
+            :textArea="true"
           />
-          <TextArea
-            v-else-if="form.source === sources.OTHER"
+          <KTextbox
+            v-else-if="form.source && form.source.value === sources.OTHER"
+            key="other-source"
             v-model="form.other_source"
             :label="$tr('otherSourcePlaceholder')"
+            :textArea="true"
           />
-        </VSlideYTransition>
+        </KTransition>
+        <div
+          v-if="!valid && (!form.source || !form.source.value)"
+          :style="{ color: $themeTokens.error }"
+          class="field-error"
+        >
+          {{ $tr('fieldRequired') }}
+        </div>
 
         <!-- Agreements -->
-        <Checkbox
-          v-model="acceptedAgreement"
+        <KCheckbox
+          :checked="acceptedAgreement"
           :label="$tr('agreement')"
-          class="my-1 policy-checkbox"
+          class="policy-checkbox"
+          @change="acceptedAgreement = $event"
         />
         <!-- Error message for Agreements -->
-        <VSlideYTransition>
+        <KTransition kind="component-vertical-slide-out-in">
           <div
             v-if="!acceptedAgreement"
-            class="error--text policy-error theme--light v-messages"
+            key="agreement-error"
+            :style="{ color: $themeTokens.error }"
+            class="policy-error"
           >
-            <div class="v-messages__message">
-              {{ $tr('ToSRequiredMessage') }}
-            </div>
+            {{ $tr('ToSRequiredMessage') }}
           </div>
-        </VSlideYTransition>
+        </KTransition>
 
         <div class="span-spacing">
           <span>
-            <ActionLink
+            <KRouterLink
+              :to="{ query: { showPolicy: policies.PRIVACY } }"
               :text="$tr('viewPrivacyPolicyLink')"
-              @click="showPrivacyPolicy"
             />
           </span>
           <span> | </span>
           <span>
-            <ActionLink
+            <KRouterLink
+              :to="{ query: { showPolicy: policies.TERMS_OF_SERVICE } }"
               :text="$tr('viewToSLink')"
-              @click="showTermsOfService"
             />
           </span>
         </div>
 
-        <div class="mt-2 span-spacing">
-          <div class="align-items">
-            {{ $tr('contactMessage') }}
-          </div>
+        <div class="contact-message">
+          {{ $tr('contactMessage') }}
         </div>
 
         <KButton
           primary
-          class="mt-5"
+          class="submit-button"
           :disabled="offline || submitting"
           :text="$tr('finishButton')"
           type="submit"
           data-test="submit-button"
         />
-      </VForm>
-    </VLayout>
+      </form>
+    </div>
     <PolicyModals />
-  </ImmersiveModalLayout>
+  </StudioImmersiveModal>
 
 </template>
 
@@ -229,33 +243,35 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
+  import KTextbox from 'kolibri-design-system/lib/KTextbox';
+  import KCheckbox from 'kolibri-design-system/lib/KCheckbox';
+  import KTransition from 'kolibri-design-system/lib/KTransition';
+  import KSelect from 'kolibri-design-system/lib/KSelect';
+  import KRouterLink from 'kolibri-design-system/lib/buttons-and-links/KRouterLink';
   import { uses, sources } from '../constants';
-  import TextField from 'shared/views/form/TextField';
-  import EmailField from 'shared/views/form/EmailField';
-  import PasswordField from 'shared/views/form/PasswordField';
-  import TextArea from 'shared/views/form/TextArea';
+  import StudioEmailField from '../components/form/StudioEmailField';
+  import StudioPasswordField from '../components/form/StudioPasswordField';
   import CountryField from 'shared/views/form/CountryField';
   import PolicyModals from 'shared/views/policies/PolicyModals';
-  import ImmersiveModalLayout from 'shared/layouts/ImmersiveModalLayout';
-  import Banner from 'shared/views/Banner';
-  import Checkbox from 'shared/views/form/Checkbox';
+  import StudioImmersiveModal from 'shared/views/StudioImmersiveModal';
+  import StudioBanner from 'shared/views/StudioBanner';
   import { policies } from 'shared/constants';
-  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
   import commonStrings from 'shared/translator';
 
   export default {
     name: 'Create',
     components: {
-      DropdownWrapper,
-      ImmersiveModalLayout,
-      TextField,
-      EmailField,
-      PasswordField,
-      TextArea,
+      StudioImmersiveModal,
+      KTextbox,
+      KCheckbox,
+      KTransition,
+      KSelect,
+      StudioEmailField,
+      StudioPasswordField,
       CountryField,
       PolicyModals,
-      Banner,
-      Checkbox,
+      StudioBanner,
+      KRouterLink,
     },
     data() {
       return {
@@ -272,7 +288,7 @@
           storage: '',
           other_use: '',
           locations: [],
-          source: '',
+          source: {},
           organization: '',
           conference: '',
           other_source: '',
@@ -284,6 +300,7 @@
           last_name: [],
           email: [],
           password1: [],
+          other_use: [],
           password2: [],
         },
       };
@@ -293,12 +310,6 @@
         offline: state => !state.connection.online,
       }),
       ...mapGetters('policies', ['getPolicyAcceptedData']),
-      passwordConfirmRules() {
-        return [value => (this.form.password1 === value ? true : this.$tr('passwordMatchMessage'))];
-      },
-      passwordValidationRules() {
-        return [value => (value.length >= 8 ? true : this.$tr('passwordValidationMessage'))];
-      },
       acceptedAgreement: {
         get() {
           return this.form.accepted_tos && this.form.accepted_policy;
@@ -345,91 +356,75 @@
           },
         ];
       },
-      usageRules() {
-        /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
-        return [() => (this.form.uses.length ? true : commonStrings.$tr('fieldRequired'))];
-      },
-      locationRules() {
-        /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
-        return [() => (this.form.locations.length ? true : commonStrings.$tr('fieldRequired'))];
-      },
       sources() {
         return sources;
+      },
+      policies() {
+        return policies;
       },
       sourceOptions() {
         return [
           {
-            id: sources.ORGANIZATION,
+            value: sources.ORGANIZATION,
             label: this.$tr('organizationSourceOption'),
-            additional: {
-              model: this.form.organization,
-              label: this.$tr('organizationSourcePlaceholder'),
-            },
           },
           {
-            id: sources.WEBSITE,
+            value: sources.WEBSITE,
             label: this.$tr('websiteSourceOption'),
           },
           {
-            id: sources.NEWSLETTER,
+            value: sources.NEWSLETTER,
             label: this.$tr('newsletterSourceOption'),
           },
           {
-            id: sources.FORUM,
+            value: sources.FORUM,
             label: this.$tr('forumSourceOption'),
           },
           {
-            id: sources.GITHUB,
+            value: sources.GITHUB,
             label: this.$tr('githubSourceOption'),
           },
           {
-            id: sources.SOCIAL_MEDIA,
+            value: sources.SOCIAL_MEDIA,
             label: this.$tr('socialMediaSourceOption'),
           },
           {
-            id: sources.CONFERENCE,
+            value: sources.CONFERENCE,
             label: this.$tr('conferenceSourceOption'),
-            additional: {
-              model: this.form.conference,
-              label: this.$tr('conferenceSourcePlaceholder'),
-            },
           },
           {
-            id: sources.CONVERSATION,
+            value: sources.CONVERSATION,
             label: this.$tr('conversationSourceOption'),
           },
           {
-            id: sources.DEMO,
+            value: sources.DEMO,
             label: this.$tr('personalDemoSourceOption'),
           },
           {
-            id: sources.OTHER,
+            value: sources.OTHER,
             label: this.$tr('otherSourceOption'),
-            additional: {
-              model: this.form.other_source,
-              label: this.$tr('otherSourcePlaceholder'),
-            },
           },
         ];
-      },
-      sourceRules() {
-        /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
-        return [() => (this.form.source.length ? true : commonStrings.$tr('fieldRequired'))];
       },
       clean() {
         return data => {
           const cleanedData = { ...data, policies: {} };
           Object.keys(cleanedData).forEach(key => {
-            // Trim text fields
             if (key === 'source') {
-              if (cleanedData[key] === sources.ORGANIZATION) {
+              const sourceValue =
+                cleanedData[key] && cleanedData[key].value != null
+                  ? cleanedData[key].value
+                  : typeof cleanedData[key] === 'string'
+                    ? cleanedData[key]
+                    : '';
+              if (sourceValue === sources.ORGANIZATION) {
                 cleanedData[key] = `${cleanedData.organization} (organization)`;
-              } else if (cleanedData[key] === sources.CONFERENCE) {
+              } else if (sourceValue === sources.CONFERENCE) {
                 cleanedData[key] = `${cleanedData.conference} (conference)`;
-              } else if (cleanedData[key] === sources.OTHER) {
+              } else if (sourceValue === sources.OTHER) {
                 cleanedData[key] = `${cleanedData.other_source} (other)`;
               } else {
-                cleanedData[key] = cleanedData[key].trim();
+                cleanedData[key] = sourceValue.trim();
               }
             } else if (typeof cleanedData[key] === 'string') {
               cleanedData[key] = cleanedData[key].trim();
@@ -468,11 +463,16 @@
     },
     methods: {
       ...mapActions('account', ['register']),
-      showTermsOfService() {
-        this.$router.push({ query: { showPolicy: policies.TERMS_OF_SERVICE } });
+      goBack() {
+        this.$router.push({ name: 'Main' });
       },
-      showPrivacyPolicy() {
-        this.$router.push({ query: { showPolicy: policies.PRIVACY } });
+      toggleUsage(id) {
+        const index = this.form.uses.indexOf(id);
+        if (index > -1) {
+          this.form.uses.splice(index, 1);
+        } else {
+          this.form.uses.push(id);
+        }
       },
       showStorageField(id) {
         return id === uses.STORING && this.form.uses.includes(id);
@@ -480,10 +480,96 @@
       showOtherField(id) {
         return id === uses.OTHER && this.form.uses.includes(id);
       },
+      validateField(field) {
+        switch (field) {
+          case 'first_name':
+            if (!this.form.first_name || this.form.first_name.trim() === '') {
+              /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+              this.errors.first_name = [commonStrings.$tr('fieldRequired')];
+            } else {
+              this.errors.first_name = [];
+            }
+            break;
+          case 'last_name':
+            if (!this.form.last_name || this.form.last_name.trim() === '') {
+              /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+              this.errors.last_name = [commonStrings.$tr('fieldRequired')];
+            } else {
+              this.errors.last_name = [];
+            }
+            break;
+          case 'email':
+            if (!this.form.email || this.form.email.trim() === '') {
+              /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+              this.errors.email = [commonStrings.$tr('fieldRequired')];
+            } else if (!/\S+@\S+\.\S+/.test(this.form.email)) {
+              this.errors.email = [this.$tr('emailValidationMessage')];
+            } else {
+              this.errors.email = [];
+            }
+            break;
+          case 'password1':
+            if (!this.form.password1) {
+              /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+              this.errors.password1 = [commonStrings.$tr('fieldRequired')];
+            } else if (this.form.password1.length < 8) {
+              this.errors.password1 = [this.$tr('passwordValidationMessage')];
+            } else {
+              this.errors.password1 = [];
+            }
+            break;
+          case 'password2':
+            if (!this.form.password2) {
+              /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+              this.errors.password2 = [commonStrings.$tr('fieldRequired')];
+            } else if (this.form.password1 !== this.form.password2) {
+              this.errors.password2 = [this.$tr('passwordMatchMessage')];
+            } else {
+              this.errors.password2 = [];
+            }
+            break;
+          case 'other_use':
+            if (
+              this.form.uses.includes(uses.OTHER) &&
+              (!this.form.other_use || this.form.other_use.trim() === '')
+            ) {
+              /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+              this.errors.other_use = [commonStrings.$tr('fieldRequired')];
+            } else {
+              this.errors.other_use = [];
+            }
+            break;
+        }
+      },
+      validateForm() {
+        let isValid = true;
+
+        ['first_name', 'last_name', 'email', 'password1', 'password2', 'other_use'].forEach(
+          field => {
+            this.validateField(field);
+            if (this.errors[field].length > 0) {
+              isValid = false;
+            }
+          },
+        );
+
+        if (!this.form.uses || this.form.uses.length === 0) {
+          isValid = false;
+        }
+        if (!this.form.locations || this.form.locations.length === 0) {
+          isValid = false;
+        }
+        if (!this.form.source || !this.form.source.value) {
+          isValid = false;
+        }
+
+        this.valid = isValid;
+        return isValid;
+      },
       submit() {
         // We need to check the "acceptedAgreement" here explicitly because it is not a
         // Vuetify form field and does not trigger the form validation.
-        if (this.$refs.form.validate() && this.acceptedAgreement) {
+        if (this.validateForm() && this.acceptedAgreement) {
           // Prevent double submission
           if (this.submitting) {
             return Promise.resolve();
@@ -540,7 +626,6 @@
     },
 
     $trs: {
-      backToLoginButton: 'Sign in',
       createAnAccountTitle: 'Create an account',
       errorsMessage: 'Please fix the errors below',
       registrationFailed: 'There was an error registering your account. Please try again',
@@ -551,6 +636,7 @@
       firstNameLabel: 'First name',
       lastNameLabel: 'Last name',
       emailExistsMessage: 'An account with this email already exists',
+      emailValidationMessage: 'Please enter a valid email address',
       passwordLabel: 'Password',
       confirmPasswordLabel: 'Confirm password',
       passwordMatchMessage: "Passwords don't match",
@@ -591,6 +677,7 @@
       otherSourcePlaceholder: 'Please describe',
 
       // Privacy policy + terms of service
+      fieldRequired: 'Field is required',
       viewToSLink: 'View Terms of Service',
       ToSRequiredMessage: 'Please accept our terms of service and policy',
 
@@ -606,30 +693,70 @@
 
 <style lang="scss" scoped>
 
-  .v-text-field {
-    margin-top: 8px !important;
+  .logo-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
   }
 
-  .policy-checkbox ::v-deep .v-input__slot {
-    margin-bottom: 4px !important;
+  .page-title {
+    margin-bottom: 32px;
+    font-size: 24px;
+    text-align: center;
+  }
 
-    label {
-      color: var(--v-grey-darken1) !important;
-    }
+  .form-container {
+    display: flex;
+    justify-content: center;
+    padding: 0 24px;
+  }
+
+  form {
+    width: 100%;
+    max-width: 600px;
+  }
+
+  .banner {
+    margin-bottom: 32px;
+  }
+
+  .section-header {
+    margin-top: 16px;
+    margin-bottom: 16px;
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  .conditional-field {
+    margin-top: 8px;
+    margin-bottom: 8px;
+    margin-left: 32px;
+  }
+
+  .conditional-field-textarea {
+    margin-top: 16px;
+    margin-bottom: 16px;
+    margin-left: 32px;
+  }
+
+  .field-error {
+    min-height: 0;
+    margin-top: 4px;
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+
+  .policy-checkbox {
+    margin-top: 8px;
+    margin-bottom: 8px;
   }
 
   .policy-error {
     min-height: 0;
     margin-bottom: 4px;
     margin-left: 40px;
-  }
-
-  iframe {
-    width: 100%;
-    min-height: 400px;
-    padding: 8px;
-    padding-right: 0;
-    border: 0;
+    font-size: 12px;
   }
 
   .span-spacing {
@@ -642,17 +769,13 @@
     }
   }
 
-  .span-spacing-email {
-    margin-left: 3px;
-    font-size: 16px;
+  .contact-message {
+    margin-top: 16px;
+    margin-left: 40px;
   }
 
-  .align-items {
-    display: block;
-  }
-
-  h1 {
-    font-size: 21px;
+  .submit-button {
+    margin-top: 40px;
   }
 
 </style>
