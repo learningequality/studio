@@ -11,11 +11,57 @@
         :key="channel.id"
         :headingLevel="2"
         :channel="channel"
-        :footerButtons="['info', 'bookmark']"
-        :dropdownOptions="getDropdownOptions(channel)"
         @click="onCardClick(channel)"
-      />
+      >
+        <template #footerActions>
+          <ChannelStar
+            :channelId="channel.id"
+            :bookmark="channel.bookmark"
+          />
+
+          <KIconButton
+            size="small"
+            icon="optionsVertical"
+            appearance="flat-button"
+            :ariaLabel="$tr('moreOptions')"
+            @click.stop
+          >
+            <template #menu>
+              <KDropdownMenu
+                :hasIcons="true"
+                :options="getDropdownItems(channel)"
+                @select="option => handleDropdownSelect(option, channel)"
+              />
+            </template>
+          </KIconButton>
+        </template>
+      </StudioChannelCard>
     </template>
+
+    <DeleteChannelModal
+      v-if="deleteChannelId"
+      :channelId="deleteChannelId"
+      @close="deleteChannelId = null"
+    />
+
+    <RemoveChannelFromListModal
+      v-if="removeChannelId"
+      :channelId="removeChannelId"
+      @close="removeChannelId = null"
+    />
+
+    <ChannelTokenModal
+      :value="Boolean(tokenChannel)"
+      appendToOverlay
+      data-testid="copy-modal"
+      :channel="tokenChannel"
+      @input="
+        val => {
+          if (!val) tokenChannelId = null;
+        }
+      "
+      @copied="trackTokenCopy(tokenChannel)"
+    />
   </StudioChannelsPage>
 
 </template>
@@ -24,8 +70,13 @@
 <script>
 
   import { useChannelList } from '../../../composables/useChannelList';
+  import { RouteNames } from '../../../constants';
   import StudioChannelsPage from '../StudioChannelsPage';
   import StudioChannelCard from '../StudioChannelCard';
+  import ChannelStar from '../ChannelStar';
+  import DeleteChannelModal from '../DeleteChannelModal';
+  import RemoveChannelFromListModal from '../RemoveChannelFromListModal';
+  import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import { ChannelListTypes } from 'shared/constants';
 
   export default {
@@ -33,6 +84,10 @@
     components: {
       StudioChannelsPage,
       StudioChannelCard,
+      ChannelStar,
+      DeleteChannelModal,
+      RemoveChannelFromListModal,
+      ChannelTokenModal,
     },
     setup() {
       const { loading, channels } = useChannelList({
@@ -46,32 +101,76 @@
         bookmarkedChannels: channels,
       };
     },
+    data() {
+      return {
+        deleteChannelId: null,
+        removeChannelId: null,
+        tokenChannelId: null,
+      };
+    },
+    computed: {
+      tokenChannel() {
+        if (!this.tokenChannelId) return null;
+        return this.bookmarkedChannels.find(c => c.id === this.tokenChannelId) || null;
+      },
+    },
     methods: {
       onCardClick(channel) {
         window.location.href = window.Urls.channel(channel.id);
       },
-      getDropdownOptions(channel) {
-        const options = [];
+      getDropdownItems(channel) {
+        const items = [];
         if (channel.edit) {
-          options.push('edit');
-          options.push('delete');
+          items.push({ label: this.$tr('editChannel'), icon: 'edit', value: 'edit' });
+          items.push({ label: this.$tr('deleteChannel'), icon: 'trash', value: 'delete' });
         } else {
-          options.push('remove');
+          items.push({ label: this.$tr('removeChannel'), icon: 'trash', value: 'remove' });
         }
         if (channel.published) {
-          options.push('copy');
+          items.push({ label: this.$tr('copyToken'), icon: 'copy', value: 'copy' });
         }
         if (channel.source_url) {
-          options.push('source-url');
+          items.push({ label: this.$tr('goToWebsite'), icon: 'openNewTab', value: 'source-url' });
         }
         if (channel.demo_server_url) {
-          options.push('demo-url');
+          items.push({ label: this.$tr('viewContent'), icon: 'openNewTab', value: 'demo-url' });
         }
-        return options;
+        return items;
+      },
+      handleDropdownSelect(option, channel) {
+        if (option.value === 'edit') {
+          this.$router.push({
+            name: RouteNames.CHANNEL_EDIT,
+            query: { ...this.$route.query, last: this.$route.name },
+            params: { channelId: channel.id, tab: 'edit' },
+          });
+        } else if (option.value === 'copy') {
+          this.tokenChannelId = channel.id;
+        } else if (option.value === 'delete') {
+          this.deleteChannelId = channel.id;
+        } else if (option.value === 'remove') {
+          this.removeChannelId = channel.id;
+        } else if (option.value === 'source-url') {
+          window.open(channel.source_url, '_blank');
+        } else if (option.value === 'demo-url') {
+          window.open(channel.demo_server_url, '_blank');
+        }
+      },
+      trackTokenCopy(channel) {
+        this.$analytics.trackAction('channel_list', 'Copy token', {
+          eventLabel: channel.primary_token,
+        });
       },
     },
     $trs: {
       title: 'Starred channels',
+      moreOptions: 'More options',
+      editChannel: 'Edit channel details',
+      deleteChannel: 'Delete channel',
+      removeChannel: 'Remove channel',
+      copyToken: 'Copy channel token',
+      goToWebsite: 'Go to source website',
+      viewContent: 'View channel on Kolibri',
     },
   };
 

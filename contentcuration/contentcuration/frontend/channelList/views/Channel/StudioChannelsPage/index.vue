@@ -40,6 +40,8 @@
     >
       <slot name="cards"></slot>
     </KCardGrid>
+
+    <slot></slot>
   </div>
 
 </template>

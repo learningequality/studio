@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/vue';
+import { render, screen, within, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import VueRouter from 'vue-router';
 import { Store } from 'vuex';
@@ -24,8 +24,11 @@ const CHANNELS = [
     edit: true,
     view: true,
     bookmark: false,
+    published: true,
     last_published: '2025-08-25T15:00:00Z',
     modified: '2026-01-10T08:00:00Z',
+    source_url: 'https://source.example.com',
+    demo_server_url: 'https://demo.example.com',
   },
   {
     id: 'channel-id-2',
@@ -35,41 +38,57 @@ const CHANNELS = [
     edit: true,
     view: true,
     bookmark: true,
-    last_published: '2025-08-25T15:00:00Z',
+    published: false,
+    last_published: null,
     modified: '2026-01-10T08:00:00Z',
   },
 ];
 
 const mockLoadChannelList = jest.fn();
 const mockLoadInvitationList = jest.fn();
+const mockDeleteChannel = jest.fn();
+const mockBookmarkChannel = jest.fn();
 
-const store = new Store({
-  modules: {
-    channel: {
-      namespaced: true,
-      getters: {
-        channels: () => CHANNELS,
-      },
-      actions: {
-        loadChannelList: mockLoadChannelList,
+function createStore() {
+  return new Store({
+    state: {
+      session: {
+        currentUser: { id: 'user-id' },
       },
     },
-    channelList: {
-      namespaced: true,
-      getters: {
-        invitations: () => [],
-        getInvitation: () => () => {},
+    actions: {
+      showSnackbarSimple: jest.fn(),
+    },
+    modules: {
+      channel: {
+        namespaced: true,
+        getters: {
+          channels: () => CHANNELS,
+          getChannel: () => id => CHANNELS.find(c => c.id === id),
+        },
+        actions: {
+          loadChannelList: mockLoadChannelList,
+          deleteChannel: mockDeleteChannel,
+          bookmarkChannel: mockBookmarkChannel,
+        },
       },
-      actions: {
-        loadInvitationList: mockLoadInvitationList,
+      channelList: {
+        namespaced: true,
+        getters: {
+          invitations: () => [],
+          getInvitation: () => () => {},
+        },
+        actions: {
+          loadInvitationList: mockLoadInvitationList,
+        },
       },
     },
-  },
-});
+  });
+}
 
 function renderComponent(props = {}) {
   return render(StudioMyChannels, {
-    store,
+    store: createStore(),
     routes: router,
     props: {
       ...props,
@@ -140,5 +159,101 @@ describe('StudioMyChannels', () => {
     await userEvent.click(cards[0]);
 
     expect(window.location.href).toBe('channel');
+  });
+
+  describe('cards footer actions', () => {
+    async function openDropdownForCard(cardIndex = 0) {
+      renderComponent();
+      await screen.findAllByTestId('channel-card');
+      const dropdownButtons = screen.getAllByRole('button', { name: 'More options' });
+      await userEvent.click(dropdownButtons[cardIndex]);
+      return screen.getByRole('menu');
+    }
+
+    it('shows bookmark button', async () => {
+      renderComponent();
+      await screen.findAllByTestId('channel-card');
+      const bookmarkButtons = screen.getAllByRole('button', { name: /starred channels/i });
+      expect(bookmarkButtons).toHaveLength(CHANNELS.length);
+    });
+
+    it('shows more options dropdown button', async () => {
+      renderComponent();
+      await screen.findAllByTestId('channel-card');
+      const dropdownButtons = screen.getAllByRole('button', { name: 'More options' });
+      expect(dropdownButtons).toHaveLength(CHANNELS.length);
+    });
+
+    it('does not show remove option', async () => {
+      renderComponent();
+      expect(screen.queryByText('Remove channel')).not.toBeInTheDocument();
+    });
+
+    it('shows edit and delete dropdown options', async () => {
+      const menu = await openDropdownForCard(0);
+      expect(within(menu).getByText('Edit channel details')).toBeInTheDocument();
+      expect(within(menu).getByText('Delete channel')).toBeInTheDocument();
+    });
+
+    it('navigates to edit page when edit option is clicked', async () => {
+      const menu = await openDropdownForCard(0);
+      expect(router.currentRoute.path).toBe('/');
+      await userEvent.click(within(menu).getByText('Edit channel details'));
+      await waitFor(() => {
+        expect(router.currentRoute.path).toBe('/channel-id-1/edit');
+      });
+    });
+
+    it('opens delete modal when delete option is clicked', async () => {
+      const menu = await openDropdownForCard(0);
+      await userEvent.click(within(menu).getByText('Delete channel'));
+      const dialog = await screen.findByRole('dialog');
+      expect(dialog).toBeInTheDocument();
+      expect(within(dialog).getByText('Delete this channel')).toBeInTheDocument();
+    });
+
+    it('does not show copy token option when channel is not published', async () => {
+      const menu = await openDropdownForCard(1);
+      expect(within(menu).queryByText('Copy channel token')).not.toBeInTheDocument();
+    });
+
+    it('shows copy token option when channel is published', async () => {
+      const menu = await openDropdownForCard(0);
+      expect(within(menu).getByText('Copy channel token')).toBeInTheDocument();
+    });
+
+    it('opens copy token modal when "Copy channel token" is clicked', async () => {
+      const menu = await openDropdownForCard(0);
+      await userEvent.click(within(menu).getByText('Copy channel token'));
+      await waitFor(() => {
+        expect(
+          screen.getByText('Paste this token into Kolibri to import this channel'),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it('shows source website option when channel has source_url', async () => {
+      const menu = await openDropdownForCard(0);
+      expect(within(menu).getByText('Go to source website')).toBeInTheDocument();
+    });
+
+    it('opens source URL in new tab when source website option is clicked', async () => {
+      window.open = jest.fn();
+      const menu = await openDropdownForCard(0);
+      await userEvent.click(within(menu).getByText('Go to source website'));
+      expect(window.open).toHaveBeenCalledWith('https://source.example.com', '_blank');
+    });
+
+    it('shows view on Kolibri option when channel has demo_server_url', async () => {
+      const menu = await openDropdownForCard(0);
+      expect(within(menu).getByText('View channel on Kolibri')).toBeInTheDocument();
+    });
+
+    it('opens demo URL in new tab when view on Kolibri is clicked', async () => {
+      window.open = jest.fn();
+      const menu = await openDropdownForCard(0);
+      await userEvent.click(within(menu).getByText('View channel on Kolibri'));
+      expect(window.open).toHaveBeenCalledWith('https://demo.example.com', '_blank');
+    });
   });
 });

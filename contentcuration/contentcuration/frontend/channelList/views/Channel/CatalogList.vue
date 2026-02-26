@@ -74,13 +74,44 @@
                 :orientation="windowBreakpoint > 2 ? 'horizontal' : 'vertical'"
                 :showUpdateStatus="false"
                 :channel="channel"
-                :footerButtons="getFooterButtons(channel)"
-                :dropdownOptions="getDropdownOptions(channel)"
                 :selectable="selecting"
                 :selected="isChannelSelected(channel)"
                 @toggle-selection="handleSelectionToggle"
                 @click="onCardClick(channel)"
-              />
+              >
+                <template #footerActions>
+                  <KIconButton
+                    v-if="channel.published"
+                    icon="copy"
+                    :tooltip="$tr('copyToken')"
+                    data-testid="copy-button"
+                    @click.stop.prevent="tokenChannelId = channel.id"
+                  />
+
+                  <ChannelStar
+                    v-if="loggedIn"
+                    :channelId="channel.id"
+                    :bookmark="channel.bookmark"
+                  />
+
+                  <KIconButton
+                    v-if="channel.source_url || channel.demo_server_url"
+                    size="small"
+                    icon="optionsVertical"
+                    appearance="flat-button"
+                    :ariaLabel="$tr('moreOptions')"
+                    @click.stop
+                  >
+                    <template #menu>
+                      <KDropdownMenu
+                        :hasIcons="true"
+                        :options="getDropdownItems(channel)"
+                        @select="option => handleDropdownSelect(option, channel)"
+                      />
+                    </template>
+                  </KIconButton>
+                </template>
+              </StudioChannelCard>
             </KCardGrid>
           </VFlex>
           <VFlex
@@ -126,6 +157,19 @@
             />
           </KButton>
         </BottomBar>
+
+        <ChannelTokenModal
+          :value="Boolean(tokenChannel)"
+          appendToOverlay
+          data-testid="copy-modal"
+          :channel="tokenChannel"
+          @input="
+            val => {
+              if (!val) tokenChannelId = null;
+            }
+          "
+          @copied="trackTokenCopy(tokenChannel)"
+        />
       </VContainer>
     </div>
   </div>
@@ -146,6 +190,8 @@
   import CatalogFilters from './CatalogFilters';
   import CatalogFilterBar from './CatalogFilterBar';
   import StudioChannelCard from './StudioChannelCard';
+  import ChannelStar from './ChannelStar';
+  import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import Pagination from 'shared/views/Pagination';
   import BottomBar from 'shared/views/BottomBar';
   import ToolBar from 'shared/views/ToolBar';
@@ -157,6 +203,8 @@
     name: 'CatalogList',
     components: {
       StudioChannelCard,
+      ChannelStar,
+      ChannelTokenModal,
       CatalogFilters,
       CatalogFilterBar,
       Pagination,
@@ -178,6 +226,7 @@
         loading: true,
         loadError: false,
         selecting: false,
+        tokenChannelId: null,
 
         /**
          * jayoshih: router guard makes it difficult to track
@@ -256,6 +305,10 @@
       isIndeterminate() {
         return this.selected.length > 0 && this.selected.length < this.channels.length;
       },
+      tokenChannel() {
+        if (!this.tokenChannelId) return null;
+        return this.channels.find(c => c.id === this.tokenChannelId) || null;
+      },
     },
     watch: {
       $route(to) {
@@ -279,25 +332,27 @@
     },
     methods: {
       ...mapActions('channelList', ['searchCatalog']),
-      getFooterButtons(channel) {
-        const buttons = ['info'];
-        if (channel.published) {
-          buttons.push('copy');
-        }
-        if (this.loggedIn) {
-          buttons.push('bookmark');
-        }
-        return buttons;
-      },
-      getDropdownOptions(channel) {
-        const options = [];
+      getDropdownItems(channel) {
+        const items = [];
         if (channel.source_url) {
-          options.push('source-url');
+          items.push({ label: this.$tr('goToWebsite'), icon: 'openNewTab', value: 'source-url' });
         }
         if (channel.demo_server_url) {
-          options.push('demo-url');
+          items.push({ label: this.$tr('viewContent'), icon: 'openNewTab', value: 'demo-url' });
         }
-        return options;
+        return items;
+      },
+      handleDropdownSelect(option, channel) {
+        if (option.value === 'source-url') {
+          window.open(channel.source_url, '_blank');
+        } else if (option.value === 'demo-url') {
+          window.open(channel.demo_server_url, '_blank');
+        }
+      },
+      trackTokenCopy(channel) {
+        this.$analytics.trackAction('channel_list', 'Copy token', {
+          eventLabel: channel.primary_token,
+        });
       },
       onCardClick(channel) {
         if (this.loggedIn) {
@@ -384,6 +439,10 @@
       channelSelectionCount:
         '{count, plural,\n =1 {# channel selected}\n other {# channels selected}}',
       selectAll: 'Select all',
+      copyToken: 'Copy channel token',
+      moreOptions: 'More options',
+      goToWebsite: 'Go to source website',
+      viewContent: 'View channel on Kolibri',
     },
   };
 

@@ -89,10 +89,7 @@
           </div>
         </div>
         <div class="footer-right">
-          <div
-            v-if="showInfoButton"
-            ref="infoBtn"
-          >
+          <div ref="infoBtn">
             <router-link
               :aria-label="$tr('details')"
               :to="channelDetailsLink"
@@ -114,71 +111,9 @@
             </KTooltip>
           </div>
 
-          <KIconButton
-            v-if="showCopyButton"
-            icon="copy"
-            :tooltip="$tr('copyToken')"
-            data-testid="copy-button"
-            @click.stop.prevent="tokenDialog = true"
-          />
-
-          <ChannelStar
-            v-if="showBookmarkButton"
-            :channelId="channel.id"
-            data-testid="bookmark-button"
-            :bookmark="channel.bookmark"
-          />
-
-          <KIconButton
-            v-if="showDropdown"
-            size="small"
-            icon="optionsVertical"
-            appearance="flat-button"
-            :ariaLabel="$tr('moreOptions')"
-            @click.stop="openDropDown"
-          >
-            <template #menu>
-              <KDropdownMenu
-                :hasIcons="true"
-                :options="dropDownArr"
-                @select="option => selectedItem(option)"
-              />
-            </template>
-          </KIconButton>
+          <slot name="footerActions"></slot>
         </div>
       </div>
-      <KModal
-        v-if="deleteDialog"
-        :title="$tr('deleteTitle')"
-        :submitText="$tr('deleteChannel')"
-        :cancelText="$tr('cancel')"
-        data-testid="delete-modal"
-        appendToOverlay
-        @submit="handleDelete"
-        @cancel="deleteDialog = false"
-      >
-        {{ $tr('deletePrompt') }}
-      </KModal>
-      <KModal
-        v-if="removeDialog"
-        :title="$tr('removeTitle')"
-        :submitText="$tr('removeBtn')"
-        :cancelText="$tr('cancel')"
-        data-testid="remove-modal"
-        appendToOverlay
-        @submit="handleRemove"
-        @cancel="removeDialog = false"
-      >
-        {{ $tr('removePrompt') }}
-      </KModal>
-      <ChannelTokenModal
-        v-if="showCopyButton || hasDropdownOption('copy')"
-        v-model="tokenDialog"
-        appendToOverlay
-        data-testid="copy-modal"
-        :channel="channel"
-        @copied="trackTokenCopy"
-      />
     </template>
   </KCard>
 
@@ -187,19 +122,12 @@
 
 <script>
 
-  import { mapActions } from 'vuex';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { RouteNames } from '../../../constants';
-  import ChannelStar from '../ChannelStar';
-  import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import Languages from 'shared/leUtils/Languages';
 
   export default {
     name: 'StudioChannelCard',
-    components: {
-      ChannelStar,
-      ChannelTokenModal,
-    },
     setup() {
       const { windowIsSmall } = useKResponsiveWindow();
       return {
@@ -234,44 +162,6 @@
         type: Number,
         required: true,
       },
-      /**
-       * Which buttons to show in the card footer.
-       * Possible values:
-       * - 'info' - Info button - navigate to the channel details page
-       * - 'copy' - Copy token button
-       * - 'bookmark' - Star button - (un)bookmark the channel
-       */
-      footerButtons: {
-        type: Array,
-        default: () => ['info'],
-        validator: value => value.every(v => ['info', 'copy', 'bookmark'].includes(v)),
-      },
-      /**
-       * Which items to include in the dropdown menu.
-       * Possible values:
-       * - 'edit' - 'Edit channel details' option
-       * - 'copy' - 'Copy channel token' option
-       * - 'source-url' - 'Go to source website' option
-       * - 'demo-url' - 'View channel on Kolibri' option
-       * - 'delete' - 'Delete channel' option
-       * - 'remove' - 'Remove from channel list' option
-       */
-      dropdownOptions: {
-        type: Array,
-        default: () => [],
-        validator: value =>
-          value.every(v =>
-            ['edit', 'copy', 'source-url', 'demo-url', 'delete', 'remove'].includes(v),
-          ),
-      },
-    },
-    data() {
-      return {
-        tokenDialog: false,
-        deleteDialog: false,
-        removeDialog: false,
-        dropDownArr: [],
-      };
     },
     computed: {
       cardOrientation() {
@@ -324,98 +214,10 @@
       hasUnpublishedChanges() {
         return !this.channel.last_published || this.channel.modified > this.channel.last_published;
       },
-      showInfoButton() {
-        return this.footerButtons.includes('info');
-      },
-      showCopyButton() {
-        return this.footerButtons.includes('copy');
-      },
-      showBookmarkButton() {
-        return this.footerButtons.includes('bookmark');
-      },
-      showDropdown() {
-        return this.dropdownOptions.length > 0;
-      },
     },
     methods: {
-      ...mapActions('channel', ['deleteChannel', 'removeViewer']),
-      hasDropdownOption(option) {
-        return this.dropdownOptions.includes(option);
-      },
       onCardClick() {
         this.$emit('click');
-      },
-      openDropDown() {
-        this.dropDownArr = this.dropDownItems();
-      },
-      dropDownItems() {
-        const options = [];
-        if (this.hasDropdownOption('edit')) {
-          options.push({ label: this.$tr('editChannel'), icon: 'edit', value: 'edit' });
-        }
-        if (this.hasDropdownOption('copy')) {
-          options.push({ label: this.$tr('copyToken'), icon: 'copy', value: 'copy' });
-        }
-        if (this.hasDropdownOption('source-url')) {
-          options.push({ label: this.$tr('goToWebsite'), icon: 'openNewTab', value: 'source-url' });
-        }
-        if (this.hasDropdownOption('demo-url')) {
-          options.push({ label: this.$tr('viewContent'), icon: 'openNewTab', value: 'demo-url' });
-        }
-        if (this.hasDropdownOption('delete')) {
-          options.push({ label: this.$tr('deleteChannel'), icon: 'trash', value: 'delete' });
-        }
-        if (this.hasDropdownOption('remove')) {
-          options.push({ label: this.$tr('removeChannel'), icon: 'trash', value: 'remove' });
-        }
-        return options;
-      },
-      selectedItem(option) {
-        const value = option.value;
-        if (value === 'edit') {
-          this.goToChannelEdit();
-        } else if (value === 'copy') {
-          this.tokenDialog = true;
-        } else if (value === 'delete') {
-          this.deleteDialog = true;
-        } else if (value === 'remove') {
-          this.removeDialog = true;
-        } else if (value === 'source-url') {
-          window.open(this.channel.source_url, '_blank');
-        } else if (value === 'demo-url') {
-          window.open(this.channel.demo_server_url, '_blank');
-        }
-      },
-      goToChannelEdit() {
-        this.$router.push({
-          name: RouteNames.CHANNEL_EDIT,
-          query: {
-            ...this.$route.query,
-            last: this.$route.name,
-          },
-          params: {
-            channelId: this.channel.id,
-            tab: 'edit',
-          },
-        });
-      },
-      handleDelete() {
-        this.deleteChannel(this.channel.id).then(() => {
-          this.deleteDialog = false;
-          this.$store.dispatch('showSnackbarSimple', this.$tr('channelDeletedSnackbar'));
-        });
-      },
-      handleRemove() {
-        const currentUserId = this.$store.state.session.currentUser.id;
-        this.removeViewer({ channelId: this.channel.id, userId: currentUserId }).then(() => {
-          this.removeDialog = false;
-          this.$store.dispatch('showSnackbarSimple', this.$tr('channelRemovedSnackbar'));
-        });
-      },
-      trackTokenCopy() {
-        this.$analytics.trackAction('channel_list', 'Copy token', {
-          eventLabel: this.channel.primary_token,
-        });
       },
     },
     $trs: {
@@ -425,23 +227,7 @@
       lastUpdated: 'Updated {updated}',
       details: 'Details',
       selectChannel: 'Select {name}',
-      viewContent: 'View channel on Kolibri',
-      goToWebsite: 'Go to source website',
-      editChannel: 'Edit channel details',
-      copyToken: 'Copy channel token',
-      deleteChannel: 'Delete channel',
-      deleteTitle: 'Delete this channel',
-      removeChannel: 'Remove channel',
-      removeBtn: 'Remove',
-      removeTitle: 'Remove from channel list',
-      deletePrompt: 'This channel will be permanently deleted. This cannot be undone.',
-      removePrompt:
-        'You have view-only access to this channel. Confirm that you want to remove it from your list of channels.',
-      channelDeletedSnackbar: 'Channel deleted',
-      channelRemovedSnackbar: 'Channel removed',
       channelLanguageNotSetIndicator: 'No language set',
-      moreOptions: 'More options',
-      cancel: 'Cancel',
     },
   };
 

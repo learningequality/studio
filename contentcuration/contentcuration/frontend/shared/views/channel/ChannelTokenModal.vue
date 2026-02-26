@@ -37,9 +37,12 @@
       },
       channel: {
         type: Object,
-        required: true,
+        required: false,
+        default: null,
         validator(channel) {
-          return channel.id && channel.published && channel.primary_token;
+          return (
+            channel === null || Boolean(channel.id && channel.published && channel.primary_token)
+          );
         },
       },
     },

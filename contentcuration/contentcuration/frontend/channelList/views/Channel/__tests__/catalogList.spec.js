@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/vue';
+import { render, screen, within, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import VueRouter from 'vue-router';
 import { Store } from 'vuex';
@@ -15,6 +15,9 @@ const CHANNELS = [
     language: 'en',
     modified: new Date('2024-01-15'),
     last_published: new Date('2024-01-10'),
+    published: true,
+    source_url: 'https://source.example.com',
+    demo_server_url: 'https://demo.example.com',
   },
   {
     id: 'channel-2',
@@ -23,6 +26,7 @@ const CHANNELS = [
     language: 'en',
     modified: new Date('2024-01-20'),
     last_published: new Date('2024-01-18'),
+    published: false,
   },
 ];
 
@@ -42,6 +46,9 @@ function createStore({ loggedIn = true } = {}) {
   return new Store({
     state: {
       connection: { online: true },
+      session: {
+        currentUser: { id: 'user-id' },
+      },
     },
     getters: {
       loggedIn: () => loggedIn,
@@ -150,6 +157,90 @@ describe('CatalogList', () => {
     await waitFor(() => {
       expect(router.currentRoute.name).toBe(RouteNames.CHANNEL_DETAILS);
       expect(router.currentRoute.params.channelId).toBe('channel-1');
+    });
+  });
+
+  describe('cards footer actions', () => {
+    it('shows copy token button only for published channels', async () => {
+      renderComponent();
+      const cards = await screen.findAllByTestId('channel-card');
+      expect(within(cards[0]).getByTestId('copy-button')).toBeInTheDocument();
+      expect(within(cards[1]).queryByTestId('copy-button')).not.toBeInTheDocument();
+    });
+
+    it('opens copy token modal when copy button is clicked', async () => {
+      renderComponent();
+      const cards = await screen.findAllByTestId('channel-card');
+      const copyButton = within(cards[0]).getByTestId('copy-button');
+      await userEvent.click(copyButton);
+      await waitFor(() => {
+        expect(
+          screen.getByText('Paste this token into Kolibri to import this channel'),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it('shows bookmark button when logged in', async () => {
+      renderComponent({ storeOverrides: createStore({ loggedIn: true }) });
+      const cards = await screen.findAllByTestId('channel-card');
+      expect(
+        within(cards[0]).getByRole('button', { name: /starred channels/i }),
+      ).toBeInTheDocument();
+      expect(
+        within(cards[1]).getByRole('button', { name: /starred channels/i }),
+      ).toBeInTheDocument();
+    });
+
+    it('does not show bookmark button when logged out', async () => {
+      renderComponent({ storeOverrides: createStore({ loggedIn: false }) });
+      const cards = await screen.findAllByTestId('channel-card');
+      expect(
+        within(cards[0]).queryByRole('button', { name: /starred channels/i }),
+      ).not.toBeInTheDocument();
+      expect(
+        within(cards[1]).queryByRole('button', { name: /starred channels/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('does not show dropdown button when channel has no source or demo urls', async () => {
+      renderComponent();
+      const cards = await screen.findAllByTestId('channel-card');
+      expect(within(cards[0]).getByRole('button', { name: 'More options' })).toBeInTheDocument();
+      expect(
+        within(cards[1]).queryByRole('button', { name: 'More options' }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('shows dropdown with source or demo options when available', async () => {
+      renderComponent();
+      const cards = await screen.findAllByTestId('channel-card');
+      const dropdownButton = within(cards[0]).getByRole('button', { name: 'More options' });
+      await userEvent.click(dropdownButton);
+      const menu = screen.getByRole('menu');
+      expect(within(menu).getByText('Go to source website')).toBeInTheDocument();
+      expect(within(menu).getByText('View channel on Kolibri')).toBeInTheDocument();
+    });
+
+    it('opens source URL in new tab when source website option is clicked', async () => {
+      window.open = jest.fn();
+      renderComponent();
+      const cards = await screen.findAllByTestId('channel-card');
+      const dropdownButton = within(cards[0]).getByRole('button', { name: 'More options' });
+      await userEvent.click(dropdownButton);
+      const menu = screen.getByRole('menu');
+      await userEvent.click(within(menu).getByText('Go to source website'));
+      expect(window.open).toHaveBeenCalledWith('https://source.example.com', '_blank');
+    });
+
+    it('opens demo URL in new tab when view on Kolibri is clicked', async () => {
+      window.open = jest.fn();
+      renderComponent();
+      const cards = await screen.findAllByTestId('channel-card');
+      const dropdownButton = within(cards[0]).getByRole('button', { name: 'More options' });
+      await userEvent.click(dropdownButton);
+      const menu = screen.getByRole('menu');
+      await userEvent.click(within(menu).getByText('View channel on Kolibri'));
+      expect(window.open).toHaveBeenCalledWith('https://demo.example.com', '_blank');
     });
   });
 
