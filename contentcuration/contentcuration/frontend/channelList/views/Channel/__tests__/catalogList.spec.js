@@ -16,6 +16,7 @@ const CHANNELS = [
     modified: new Date('2024-01-15'),
     last_published: new Date('2024-01-10'),
     published: true,
+    primary_token: 'abc12-3def4',
     source_url: 'https://source.example.com',
     demo_server_url: 'https://demo.example.com',
   },

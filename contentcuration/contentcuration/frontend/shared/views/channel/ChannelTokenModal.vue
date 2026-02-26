@@ -8,10 +8,7 @@
     @cancel="dialog = false"
   >
     <p>{{ $tr('copyTokenInstructions') }}</p>
-    <CopyToken
-      :token="channel.primary_token"
-      @copied="$emit('copied')"
-    />
+    <StudioCopyToken :token="channel.primary_token" />
   </KModal>
 
 </template>
@@ -19,12 +16,12 @@
 
 <script>
 
-  import CopyToken from '../CopyToken';
+  import StudioCopyToken from '../StudioCopyToken';
 
   export default {
     name: 'ChannelTokenModal',
     components: {
-      CopyToken,
+      StudioCopyToken,
     },
     props: {
       value: {

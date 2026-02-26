@@ -57,7 +57,6 @@
           if (!val) tokenChannelId = null;
         }
       "
-      @copied="trackTokenCopy(tokenChannel)"
     />
   </StudioChannelsPage>
 
@@ -144,11 +143,6 @@
         } else if (option.value === 'demo-url') {
           window.open(channel.demo_server_url, '_blank');
         }
-      },
-      trackTokenCopy(channel) {
-        this.$analytics.trackAction('channel_list', 'Copy token', {
-          eventLabel: channel.primary_token,
-        });
       },
     },
     $trs: {

@@ -24,6 +24,7 @@ const CHANNELS = [
     view: true,
     bookmark: false,
     published: true,
+    primary_token: 'abc12-3def4',
     last_published: '2025-08-25T15:00:00Z',
     modified: '2026-01-10T08:00:00Z',
     source_url: 'https://source.example.com',
