@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__fetch__fetch",
+      "mcp__serena__find_symbol",
+      "mcp__serena__activate_project",
+      "Bash(python:*)",
+      "mcp__serena__replace_symbol_body",
+      "mcp__serena__replace_content"
+    ]
+  }
+}
