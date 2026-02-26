@@ -199,9 +199,7 @@ class ChannelMetadataViewSet(ReadOnlyValuesViewset):
 
         channel_versions = ChannelVersion.objects.filter(
             secret_token__token=normalized_token
-        ).select_related(
-            "channel__main_tree__language"
-        )
+        ).select_related("channel__main_tree__language")
 
         if channel_versions.exists():
             channel_ids = [cv.channel_id for cv in channel_versions]
@@ -227,7 +225,7 @@ class ChannelMetadataViewSet(ReadOnlyValuesViewset):
         return Channel.objects.none(), None
 
     def _serialize_token_queryset(self, queryset):
-        
+
         channels_data = []
         for channel in queryset.select_related("main_tree__language"):
             item = {
@@ -240,9 +238,13 @@ class ChannelMetadataViewSet(ReadOnlyValuesViewset):
                 "thumbnail": channel.thumbnail_encoding or "",
                 "last_updated": channel.last_published,
                 "root": channel.main_tree.node_id,
-                "root__lang__lang_code": channel.main_tree.language.lang_code if channel.main_tree.language else None,
-                "root__lang__native_name": channel.main_tree.language.lang_name if channel.main_tree.language else None,
-                "root__available": True, 
+                "root__lang__lang_code": channel.main_tree.language.lang_code
+                if channel.main_tree.language
+                else None,
+                "root__lang__native_name": channel.main_tree.language.lang_name
+                if channel.main_tree.language
+                else None,
+                "root__available": True,
                 "root__num_coach_contents": 0,
                 "public": channel.public,
                 "total_resource_count": channel.total_resource_count,
@@ -250,7 +252,7 @@ class ChannelMetadataViewSet(ReadOnlyValuesViewset):
                 "categories": [],
             }
             channels_data.append(item)
-        
+
         return channels_data
 
     def _consolidate_token_items(self, items, version_data):
@@ -286,7 +288,7 @@ class ChannelMetadataViewSet(ReadOnlyValuesViewset):
                     item["last_published"] = item["last_updated"]
                     item["countries"] = []
             return items
-        
+
         return super().serialize(queryset)
 
     def get_queryset(self):
@@ -321,14 +323,14 @@ class ChannelMetadataViewSet(ReadOnlyValuesViewset):
     def consolidate(self, items, queryset):
         """
         Consolidate items for serialization.
-        
+
         When using token-based access, items are already consolidated in serialize(),
         so we just return them as-is for Channel querysets.
         """
         # For Channel querysets from token-based access, items are already consolidated
         if queryset.model == Channel:
             return items
-        
+
         # For ChannelMetadata querysets, use the default consolidation
         items = list(OrderedDict((item["id"], item) for item in items).values())
         version_data = getattr(self, "_version_data", None)
