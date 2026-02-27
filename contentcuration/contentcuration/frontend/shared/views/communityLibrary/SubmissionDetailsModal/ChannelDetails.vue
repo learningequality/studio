@@ -1,11 +1,11 @@
 <template>
 
-  <Accordion
+  <ExpandableContainer
     :title="channelDetailsLabel$()"
     :expanded="true"
     @open="onOpen"
   >
-    <template #default="{ isOpen }">
+    <template #default="{ isOpen, expandableContentId }">
       <div class="submission-channel-details">
         <div class="grid-layout submission-summary">
           <div>
@@ -42,6 +42,7 @@
         </div>
         <div
           v-if="isOpen"
+          :id="expandableContentId"
           class="more-channels-detail"
         >
           <StudioDetailsPanel
@@ -85,7 +86,7 @@
         </div>
       </div>
     </template>
-  </Accordion>
+  </ExpandableContainer>
 
 </template>
 
@@ -96,7 +97,7 @@
   import { computed } from 'vue';
   import { themePalette } from 'kolibri-design-system/lib/styles/theme';
   import SpecialPermissionsList from '../SpecialPermissionsList.vue';
-  import Accordion from './Accordion.vue';
+  import ExpandableContainer from './ExpandableContainer.vue';
   import countriesUtil from 'shared/utils/countries';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
   import { commonStrings } from 'shared/strings/commonStrings';

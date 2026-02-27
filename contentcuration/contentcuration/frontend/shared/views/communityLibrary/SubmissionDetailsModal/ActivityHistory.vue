@@ -1,7 +1,7 @@
 <template>
 
-  <Accordion :title="activityHistoryLabel$()">
-    <template #default="{ isOpen }">
+  <ExpandableContainer :title="activityHistoryLabel$()">
+    <template #default="{ isOpen, expandableContentId }">
       <KCircularLoader v-if="isLoading" />
       <div v-else>
         <div
@@ -14,7 +14,10 @@
             {{ newLabel$() }}
           </strong>
         </div>
-        <ul class="activity-list">
+        <ul
+          :id="expandableContentId"
+          class="activity-list"
+        >
           <li
             v-for="update in getUpdates(isOpen)"
             :key="`${update.id}-${update.type}`"
@@ -81,7 +84,7 @@
         </div>
       </div>
     </template>
-  </Accordion>
+  </ExpandableContainer>
 
 </template>
 
@@ -93,7 +96,7 @@
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import CommunityLibraryStatusChip from '../CommunityLibraryStatusChip.vue';
   import CommunityLibraryChip from '../CommunityLibraryChip.vue';
-  import Accordion from './Accordion.vue';
+  import ExpandableContainer from './ExpandableContainer.vue';
   import { CommunityLibraryStatus } from 'shared/constants';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
   import useCommunityLibraryUpdates from 'shared/views/NotificationsModal/composables/useCommunityLibraryUpdates';
