@@ -1,12 +1,10 @@
 <template>
 
-  <div
-    class="channels-container"
-    :style="{ maxWidth: maxWidthStyle }"
-  >
+  <div class="channels-page">
     <StudioRaisedBox
       v-if="invitations.length"
       class="invitations"
+      :style="{ maxWidth: invitationsMaxWidthStyle }"
     >
       <template #header>
         {{ $tr('invitations', { count: invitations.length }) }}
@@ -22,26 +20,31 @@
       </template>
     </StudioRaisedBox>
 
-    <slot name="header"></slot>
-
-    <p
-      v-if="!$slots.cards && !loading"
-      class="no-channels"
+    <div
+      class="channels"
+      :style="{ maxWidth: channelsMaxWidthStyle }"
     >
-      {{ $tr('noChannelsFound') }}
-    </p>
+      <slot name="header"></slot>
 
-    <KCardGrid
-      layout="1-1-1"
-      :loading="loading"
-      :skeletonsConfig="skeletonsConfig"
-      :syncCardsMetrics="false"
-      class="cards"
-    >
-      <slot name="cards"></slot>
-    </KCardGrid>
+      <p
+        v-if="!$slots.cards && !loading"
+        class="no-channels"
+      >
+        {{ $tr('noChannelsFound') }}
+      </p>
 
-    <slot></slot>
+      <KCardGrid
+        layout="1-1-1"
+        :loading="loading"
+        :skeletonsConfig="skeletonsConfig"
+        :syncCardsMetrics="false"
+        class="cards"
+      >
+        <slot name="cards"></slot>
+      </KCardGrid>
+
+      <slot></slot>
+    </div>
   </div>
 
 </template>
@@ -63,10 +66,18 @@
     setup() {
       const { windowBreakpoint } = useKResponsiveWindow();
 
-      const maxWidthStyle = computed(() => {
+      const channelsMaxWidthStyle = computed(() => {
         if (windowBreakpoint.value >= 5) return '50%';
-        if (windowBreakpoint.value === 4) return '66.66%';
-        if (windowBreakpoint.value === 3) return '83.33%';
+        if (windowBreakpoint.value === 4) return '66%';
+        if (windowBreakpoint.value === 3) return '83%';
+        return '100%';
+      });
+
+      // channels width + 4%
+      const invitationsMaxWidthStyle = computed(() => {
+        if (windowBreakpoint.value >= 5) return '54%';
+        if (windowBreakpoint.value === 4) return '70%';
+        if (windowBreakpoint.value === 3) return '87%';
         return '100%';
       });
 
@@ -90,7 +101,8 @@
       });
 
       return {
-        maxWidthStyle,
+        channelsMaxWidthStyle,
+        invitationsMaxWidthStyle,
         skeletonsConfig,
       };
     },
@@ -115,8 +127,12 @@
 
 <style lang="scss" scoped>
 
-  .channels-container {
+  .channels-page {
     padding-bottom: 24px;
+  }
+
+  .channels,
+  .invitations {
     margin-right: auto;
     margin-left: auto;
   }
