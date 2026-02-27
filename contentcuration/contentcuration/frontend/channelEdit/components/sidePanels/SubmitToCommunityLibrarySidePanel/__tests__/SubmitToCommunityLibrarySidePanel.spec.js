@@ -392,7 +392,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
         });
 
         const statusChip = wrapper.findComponent(CommunityLibraryStatusChip);
-        expect(statusChip.props('status')).toBe(chipStatus);
+        expect(statusChip.attributes('status')).toBe(chipStatus);
       });
     }
 

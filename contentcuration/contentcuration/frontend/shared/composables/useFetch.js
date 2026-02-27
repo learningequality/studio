@@ -9,7 +9,6 @@ export function useFetch({ asyncFetchFunc }) {
   async function fetchData() {
     isLoading.value = true;
     isFinished.value = false;
-    data.value = null;
     error.value = null;
     try {
       data.value = await asyncFetchFunc();
@@ -17,6 +16,9 @@ export function useFetch({ asyncFetchFunc }) {
       isFinished.value = true;
     } catch (caughtError) {
       error.value = caughtError;
+      // Setting data to null just in case of error to preserve data visible during
+      // refetches.
+      data.value = null;
       throw caughtError;
     } finally {
       isLoading.value = false;

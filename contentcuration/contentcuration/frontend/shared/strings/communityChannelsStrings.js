@@ -1,6 +1,10 @@
 import { createTranslator } from 'shared/i18n';
 
 export const communityChannelsStrings = createTranslator('CommunityChannelsStrings', {
+  communityLibraryLabel: {
+    message: 'Community Library',
+    context: 'Label for the Community Library',
+  },
   // Publishing panel strings
   publishChannel: {
     message: 'Publish channel',
@@ -292,5 +296,89 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   pageIndicator: {
     message: '{currentPage} of {totalPages}',
     context: 'Page indicator showing current page and total pages (e.g., "1 of 5")',
+  },
+
+  // Notifications modal strings
+  notificationsLabel: {
+    message: 'Notifications',
+    context: 'Label for the notifications modal',
+  },
+  unreadNotificationsLabel: {
+    message: 'Unread',
+    context: 'Label for the unread notifications tab in the notifications modal',
+  },
+  allNotificationsLabel: {
+    message: 'All Notifications',
+    context: 'Label for the all notifications tab in the notifications modal',
+  },
+  searchNotificationsLabel: {
+    message: 'Search notifications',
+    context: 'Placeholder text for the search notifications input field',
+  },
+  filterByDateLabel: {
+    message: 'Filter by date',
+    context: 'Label for the filter by date dropdown in the notifications modal',
+  },
+  todayLabel: {
+    message: 'Today',
+    context: 'Option label for filtering notifications from today',
+  },
+  thisWeekLabel: {
+    message: 'This week',
+    context: 'Option label for filtering notifications from this week',
+  },
+  thisMonthLabel: {
+    message: 'This month',
+    context: 'Option label for filtering notifications from this month',
+  },
+  thisYearLabel: {
+    message: 'This year',
+    context: 'Option label for filtering notifications from this year',
+  },
+  filterByStatusLabel: {
+    message: 'Filter by status',
+    context: 'Label for the filter by status dropdown in the notifications modal',
+  },
+  newLabel: {
+    message: 'New',
+    context: 'Label indicating the section for new notifications',
+  },
+  clearAllAction: {
+    message: 'Clear all',
+    context: 'Action button to clear all notifications',
+  },
+  viewMoreAction: {
+    message: 'View more',
+    context: 'Action button to view more about a given element',
+  },
+  submissionCreationNotification: {
+    message: 'Your submission to the Community Library was successful and is now under review.',
+    context:
+      'Notification message shown to the user when their submission to the Community Library is successful',
+  },
+  flaggedNotification: {
+    message: '{author} ({userType}) flagged {channelVersion}',
+    context: 'Notification message shown when a user flags a channel version for review',
+  },
+  showOlderAction: {
+    message: 'Show older',
+    context: 'Action button to load older items in a list',
+  },
+  adminLabel: {
+    message: 'Admin',
+    context: 'Label indicating administrative status',
+  },
+  emptyNotificationsNotice: {
+    message: 'You have no notifications at this time.',
+    context: 'Notice shown when there are no notifications to display',
+  },
+  emptyNotificationsWithFiltersNotice: {
+    message: 'No notifications match the applied filters.',
+    context: 'Notice shown when no notifications match the current filters',
+  },
+  newNotificationsNotice: {
+    message: 'New notifications available.',
+    context:
+      'Notice for screen readers on the new notifications badge to indicate that new notifications have arrived',
   },
 });

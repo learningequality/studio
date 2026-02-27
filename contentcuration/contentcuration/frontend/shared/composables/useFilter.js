@@ -4,10 +4,12 @@ import { useQueryParams } from './useQueryParams';
 
 /**
  * @typedef {Object} UseFilterReturn
- * @property {import('vue').ComputedRef<string|undefined>} filter Reactive settable filter value.
+ * @property {import('vue').ComputedRef<{
+ *   key: string, value: string, label: string
+ * }>} filter Reactive settable filter value.
  * @property {import('vue').ComputedRef<
- *   Array<{key: string, label: string}>
- * >} filters List of available filters.
+ *   Array<{key: string, value: string, label: string}>
+ * >} options List of available options.
  * @property {import('vue').ComputedRef<Object>} fetchQueryParams
  * Reactive fetch query parameters based on the selected filter.
  */
@@ -39,28 +41,35 @@ export function useFilter({ name, filterMap }) {
   const { updateQueryParams } = useQueryParams();
 
   const filter = computed({
-    get: () => route.query[name] || undefined,
+    get: () => {
+      const routeFilter = route.query[name];
+      const filterOption = options.value.find(option => option.value === routeFilter);
+      return filterOption || {};
+    },
     set: value => {
       updateQueryParams({
         ...route.query,
-        [name]: value || undefined,
+        // `value` is a KSelect option object with `key` and `value` properties
+        // so we use `value.value` to get the actual filter value
+        [name]: value.value || undefined,
       });
     },
   });
 
-  const filters = computed(() => {
+  const options = computed(() => {
     return Object.entries(unref(filterMap)).map(([key, value]) => {
-      return { key, label: value.label };
+      // Adding `key` and `value` properties for compatibility with KSelect and VSelect
+      return { key, value: key, label: value.label };
     });
   });
 
   const fetchQueryParams = computed(() => {
-    return unref(filterMap)[filter.value]?.params || {};
+    return unref(filterMap)[filter.value.value]?.params || {};
   });
 
   return {
     filter,
-    filters,
+    options,
     fetchQueryParams,
   };
 }

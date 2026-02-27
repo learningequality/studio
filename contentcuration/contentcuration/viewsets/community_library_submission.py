@@ -321,6 +321,8 @@ class AdminCommunityLibrarySubmissionViewSet(
             resolved_by=request.user,
         )
 
+        submission.notify_update_to_channel_editors()
+
         if submission.status == community_library_submission_constants.STATUS_APPROVED:
             self._mark_previous_pending_submissions_as_superseded(submission)
             self._add_to_community_library(submission)
