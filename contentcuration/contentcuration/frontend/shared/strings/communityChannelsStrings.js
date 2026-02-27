@@ -77,6 +77,27 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Language is required',
     context: 'Error message when language selection is required but not provided',
   },
+  // Channel version history strings
+  seeAllVersions: {
+    message: 'See all versions',
+    context: 'Button text to expand and show channel version history',
+  },
+  seeLess: {
+    message: 'See less',
+    context: 'Button text to collapse channel version history',
+  },
+  showMore: {
+    message: 'Show more',
+    context: 'Button text to load more channel versions',
+  },
+  versionLabel: {
+    message: 'Version {version}',
+    context: 'Label displaying a channel version number',
+  },
+  errorLoadingVersions: {
+    message: 'Unable to load version history',
+    context: 'Error message when channel versions fail to load',
+  },
   pendingStatus: {
     message: 'Submitted',
     context: 'Status indicating that an Community Library submission is pending',
