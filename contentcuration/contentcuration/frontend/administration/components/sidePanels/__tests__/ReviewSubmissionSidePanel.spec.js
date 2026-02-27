@@ -344,15 +344,6 @@ describe('ReviewSubmissionSidePanel', () => {
       jest.useRealTimers();
     });
 
-    it('the panel closes', async () => {
-      jest.useFakeTimers();
-
-      const confirmButton = wrapper.findComponent({ ref: 'confirmButtonRef' });
-      await confirmButton.trigger('click');
-
-      expect(wrapper.emitted('close')).toBeTruthy();
-    });
-
     it('a submission snackbar is shown', async () => {
       jest.useFakeTimers();
       const confirmButton = wrapper.findComponent({ ref: 'confirmButtonRef' });
@@ -401,6 +392,22 @@ describe('ReviewSubmissionSidePanel', () => {
 
           expect(store.getters['snackbarOptions'].text).toBe('Submission approved');
           store.replaceState(origStoreState);
+        });
+
+        it('the panel closes', async () => {
+          const origStoreState = store.state;
+          store.commit('channel/ADD_CHANNEL', channel);
+
+          jest.useFakeTimers();
+          const confirmButton = wrapper.findComponent({ ref: 'confirmButtonRef' });
+          await confirmButton.trigger('click');
+
+          jest.runAllTimers();
+          await wrapper.vm.$nextTick();
+
+          store.replaceState(origStoreState);
+
+          expect(wrapper.emitted('close')).toBeTruthy();
         });
 
         it('the channel latest submission status is updated in the store', async () => {
