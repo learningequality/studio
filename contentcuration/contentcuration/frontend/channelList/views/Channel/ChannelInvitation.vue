@@ -131,17 +131,6 @@
 
 <style lang="scss" scoped>
 
-  /deep/ .v-list__tile {
-    height: unset;
-    padding: 16px;
-    cursor: default;
-  }
-
-  .v-list__tile__title {
-    height: unset;
-    white-space: unset;
-  }
-
   .invitation {
     padding: 16px 16px 0;
     font-size: 16px;

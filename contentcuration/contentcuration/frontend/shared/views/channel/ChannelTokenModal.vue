@@ -4,13 +4,11 @@
     v-if="dialog"
     :title="$tr('copyTitle')"
     :cancelText="$tr('close')"
+    :appendToOverlay="appendToOverlay"
     @cancel="dialog = false"
   >
     <p>{{ $tr('copyTokenInstructions') }}</p>
-    <CopyToken
-      :token="channel.primary_token"
-      @copied="$emit('copied')"
-    />
+    <StudioCopyToken :token="channel.primary_token" />
   </KModal>
 
 </template>
@@ -18,23 +16,30 @@
 
 <script>
 
-  import CopyToken from '../CopyToken';
+  import StudioCopyToken from '../StudioCopyToken';
 
   export default {
     name: 'ChannelTokenModal',
     components: {
-      CopyToken,
+      StudioCopyToken,
     },
     props: {
       value: {
         type: Boolean,
         default: false,
       },
+      appendToOverlay: {
+        type: Boolean,
+        default: false,
+      },
       channel: {
         type: Object,
-        required: true,
+        required: false,
+        default: null,
         validator(channel) {
-          return channel.id && channel.published && channel.primary_token;
+          return (
+            channel === null || Boolean(channel.id && channel.published && channel.primary_token)
+          );
         },
       },
     },

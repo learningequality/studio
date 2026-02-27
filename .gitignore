@@ -25,6 +25,7 @@ var/
 
 # Ignore editor / IDE related data
 .vscode/
+.claude/
 
 # IntelliJ IDE, except project config
 .idea/
