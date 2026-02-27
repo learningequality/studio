@@ -1,104 +1,87 @@
 <template>
 
-  <div class="status-chip">
-    <KIcon
-      :icon="icon"
-      :color="labelColor"
-      class="status-icon"
-    />
-    {{ text }}
-  </div>
+  <Chip
+    :icon="icon"
+    :text="text"
+    :backgroundColor="backgroundColor"
+    :labelColor="labelColor"
+    :borderColor="borderColor"
+    :style="{ paddingLeft: '3px' }"
+  />
 
 </template>
 
 
-<script>
+<script setup>
 
   import { themePalette } from 'kolibri-design-system/lib/styles/theme';
   import { computed } from 'vue';
+  import Chip from './Chip.vue';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
   import { CommunityLibraryStatus } from 'shared/constants';
 
-  export default {
-    name: 'CommunityLibraryStatusChip',
-    setup(props) {
-      const theme = themePalette();
-
-      const { pendingStatus$, approvedStatus$, flaggedStatus$ } = communityChannelsStrings;
-
-      const configChoices = {
-        [CommunityLibraryStatus.PENDING]: {
-          text: pendingStatus$(),
-          color: theme.yellow.v_100,
-          labelColor: theme.orange.v_600,
-          icon: 'schedule',
-        },
-        [CommunityLibraryStatus.APPROVED]: {
-          text: approvedStatus$(),
-          color: theme.green.v_100,
-          labelColor: theme.green.v_600,
-          icon: 'circleCheckmark',
-        },
-        [CommunityLibraryStatus.REJECTED]: {
-          text: flaggedStatus$(),
-          color: theme.red.v_100,
-          labelColor: theme.red.v_600,
-          icon: 'error',
-        },
-      };
-
-      const icon = computed(() => configChoices[props.status].icon);
-      const text = computed(() => configChoices[props.status].text);
-      const color = computed(() => configChoices[props.status].color);
-      const labelColor = computed(() => configChoices[props.status].labelColor);
-
-      return {
-        icon,
-        text,
-        color,
-        labelColor,
-      };
+  const props = defineProps({
+    status: {
+      type: String,
+      required: true,
+      validator: value =>
+        [
+          CommunityLibraryStatus.LIVE,
+          CommunityLibraryStatus.APPROVED,
+          CommunityLibraryStatus.PENDING,
+          CommunityLibraryStatus.SUPERSEDED,
+          CommunityLibraryStatus.REJECTED,
+        ].includes(value),
     },
-    props: {
-      status: {
-        type: String,
-        required: true,
-        validator: value =>
-          [
-            CommunityLibraryStatus.APPROVED,
-            CommunityLibraryStatus.PENDING,
-            CommunityLibraryStatus.REJECTED,
-          ].includes(value),
-      },
+  });
+
+  const theme = themePalette();
+
+  const { pendingStatus$, superseededStatus$, approvedStatus$, flaggedStatus$, liveStatus$ } =
+    communityChannelsStrings;
+
+  const configChoices = {
+    [CommunityLibraryStatus.SUPERSEDED]: {
+      text: superseededStatus$(),
+      backgroundColor: theme.yellow.v_100,
+      labelColor: theme.orange.v_600,
+      borderColor: theme.orange.v_400,
+      icon: 'timer',
+    },
+    [CommunityLibraryStatus.PENDING]: {
+      text: pendingStatus$(),
+      backgroundColor: theme.yellow.v_100,
+      labelColor: theme.orange.v_600,
+      borderColor: theme.orange.v_400,
+      icon: 'timer',
+    },
+    [CommunityLibraryStatus.APPROVED]: {
+      text: approvedStatus$(),
+      backgroundColor: theme.green.v_100,
+      labelColor: theme.green.v_600,
+      borderColor: theme.green.v_400,
+      icon: 'circleCheckmark',
+    },
+    [CommunityLibraryStatus.LIVE]: {
+      text: liveStatus$(),
+      backgroundColor: theme.green.v_100,
+      labelColor: theme.green.v_600,
+      borderColor: theme.green.v_400,
+      icon: 'circleCheckmark',
+    },
+    [CommunityLibraryStatus.REJECTED]: {
+      text: flaggedStatus$(),
+      backgroundColor: theme.red.v_100,
+      labelColor: theme.red.v_600,
+      borderColor: theme.red.v_400,
+      icon: 'error',
     },
   };
 
+  const icon = computed(() => configChoices[props.status].icon);
+  const text = computed(() => configChoices[props.status].text);
+  const backgroundColor = computed(() => configChoices[props.status].backgroundColor);
+  const labelColor = computed(() => configChoices[props.status].labelColor);
+  const borderColor = computed(() => configChoices[props.status].borderColor);
+
 </script>
-
-
-<style lang="css" scoped>
-
-  .status-chip {
-    display: inline-flex;
-    gap: 3px;
-    align-items: center;
-    width: fit-content;
-    height: 20px;
-    padding-top: 2px;
-    padding-right: 5px;
-    padding-bottom: 2px;
-    padding-left: 3px;
-    font-size: 12px;
-    font-weight: 400;
-    color: v-bind('labelColor');
-    background-color: v-bind('color');
-    border-radius: 16px;
-  }
-
-  .status-icon {
-    position: static;
-    width: 18px;
-    height: 18px;
-  }
-
-</style>

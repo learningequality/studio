@@ -17,6 +17,7 @@ from django.http.response import HttpResponseNotFound
 from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import FilterSet
+from rest_framework import serializers
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import BasePermission
@@ -130,6 +131,13 @@ class UserFilter(FilterSet):
         fields = ("ids",)
 
 
+class MarkNotificationsReadSerializer(serializers.Serializer):
+    timestamp = serializers.DateTimeField(
+        required=True,
+        help_text="Timestamp of the last read notification.",
+    )
+
+
 class UserSerializer(BulkModelSerializer):
     class Meta:
         model = User
@@ -169,6 +177,24 @@ class UserViewSet(ReadOnlyValuesViewset):
     @action(detail=False, methods=["get"])
     def refresh_storage_used(self, request):
         return Response(request.user.set_space_used())
+
+    @action(
+        detail=False,
+        methods=["post"],
+        serializer_class=MarkNotificationsReadSerializer,
+    )
+    def mark_notifications_read(self, request):
+        """
+        Allows a user to mark the timestamp of their last read notification.
+        """
+        user = request.user
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        timestamp = serializer.validated_data["timestamp"]
+        user.mark_notifications_read(timestamp)
+        return Response(status=HTTP_204_NO_CONTENT)
 
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(

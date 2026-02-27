@@ -4,32 +4,33 @@
     :class="{ printing }"
     data-testid="details-panel"
   >
-    <!--
+    <template v-if="!hideChannelHeader">
+      <!--
       whenever modifying thumbnail styles,
       check if pdf channel summary still fine
     -->
-    <StudioThumbnail
-      :src="_details.thumbnail_url"
-      :encoding="_details.thumbnail_encoding"
-      :style="{ maxWidth: '300px' }"
-      :printing="printing"
-      :printIconStyle="{ paddingLeft: '20px' }"
-    />
-    <br >
-    <h1
-      class="notranslate"
-      dir="auto"
-    >
-      {{ _details.name }}
-    </h1>
-    <p
-      class="notranslate"
-      dir="auto"
-    >
-      {{ _details.description }}
-    </p>
-    <br >
-
+      <StudioThumbnail
+        :src="_details.thumbnail_url"
+        :encoding="_details.thumbnail_encoding"
+        :style="{ maxWidth: '300px' }"
+        :printing="printing"
+        :printIconStyle="{ paddingLeft: '20px' }"
+      />
+      <br >
+      <h1
+        class="notranslate"
+        dir="auto"
+      >
+        {{ _details.name }}
+      </h1>
+      <p
+        class="notranslate"
+        dir="auto"
+      >
+        {{ _details.description }}
+      </p>
+      <br >
+    </template>
     <StudioDetailsRow
       v-if="_details.published && _details.primary_token"
       :label="$tr('tokenHeading')"
@@ -66,7 +67,7 @@
     />
 
     <StudioLargeLoader v-if="loading" />
-    <div v-else-if="hasDetails">
+    <template v-else-if="hasDetails">
       <StudioDetailsRow
         :label="$tr('creationHeading')"
         :text="createdDate"
@@ -103,7 +104,10 @@
           </dl>
         </template>
       </StudioDetailsRow>
-      <StudioDetailsRow :label="$tr('levelsHeading')">
+      <StudioDetailsRow
+        v-if="levels"
+        :label="$tr('levelsHeading')"
+      >
         <template #default>
           <div v-if="!levels.length">
             {{ defaultText }}
@@ -121,7 +125,10 @@
           </span>
         </template>
       </StudioDetailsRow>
-      <StudioDetailsRow :label="$tr('categoriesHeading')">
+      <StudioDetailsRow
+        v-if="categories"
+        :label="$tr('categoriesHeading')"
+      >
         <template #default>
           <div v-if="!categories.length">
             {{ defaultText }}
@@ -139,7 +146,10 @@
           </span>
         </template>
       </StudioDetailsRow>
-      <StudioDetailsRow :label="$tr('containsHeading')">
+      <StudioDetailsRow
+        v-if="_details.includes"
+        :label="$tr('containsHeading')"
+      >
         <template
           v-if="!printing"
           #default
@@ -168,11 +178,15 @@
         </template>
       </StudioDetailsRow>
       <StudioDetailsRow
+        v-if="_details.includes"
         :label="$tr('coachHeading')"
         :text="$formatNumber(_details.includes.coach_content)"
         :definition="!printing ? $tr('coachDescription') : ''"
       />
-      <StudioDetailsRow :label="$tr('tagsHeading')">
+      <StudioDetailsRow
+        v-if="_details.tags"
+        :label="$tr('tagsHeading')"
+      >
         <template #default>
           <div v-if="!sortedTags.length">
             {{ defaultText }}
@@ -190,7 +204,10 @@
           </span>
         </template>
       </StudioDetailsRow>
-      <StudioDetailsRow :label="$tr('languagesHeading')">
+      <StudioDetailsRow
+        v-if="_details.languages"
+        :label="$tr('languagesHeading')"
+      >
         <template #default>
           <ExpandableList
             :noItemsText="defaultText"
@@ -200,7 +217,10 @@
           />
         </template>
       </StudioDetailsRow>
-      <StudioDetailsRow :label="$tr('subtitlesHeading')">
+      <StudioDetailsRow
+        v-if="_details.accessible_languages"
+        :label="$tr('subtitlesHeading')"
+      >
         <template #default>
           <ExpandableList
             :noItemsText="defaultText"
@@ -212,6 +232,7 @@
       </StudioDetailsRow>
 
       <StudioDetailsRow
+        v-if="_details.authors"
         :label="$tr('authorsLabel')"
         :definition="!printing ? $tr('authorToolTip') : ''"
       >
@@ -225,6 +246,7 @@
         </template>
       </StudioDetailsRow>
       <StudioDetailsRow
+        v-if="_details.providers"
         :label="$tr('providersLabel')"
         :definition="!printing ? $tr('providerToolTip') : ''"
       >
@@ -238,6 +260,7 @@
         </template>
       </StudioDetailsRow>
       <StudioDetailsRow
+        v-if="_details.aggregators"
         :label="$tr('aggregatorsLabel')"
         :definition="!printing ? $tr('aggregatorToolTip') : ''"
       >
@@ -251,7 +274,10 @@
         </template>
       </StudioDetailsRow>
 
-      <StudioDetailsRow :label="$tr('licensesLabel')">
+      <StudioDetailsRow
+        v-if="_details.licenses"
+        :label="$tr('licensesLabel')"
+      >
         <template #default>
           <template v-if="!printing">
             <span
@@ -278,7 +304,10 @@
           </span>
         </template>
       </StudioDetailsRow>
-      <StudioDetailsRow :label="$tr('copyrightHoldersLabel')">
+      <StudioDetailsRow
+        v-if="_details.copyright_holders"
+        :label="$tr('copyrightHoldersLabel')"
+      >
         <template #default>
           <ExpandableList
             :items="_details.copyright_holders"
@@ -326,43 +355,45 @@
         </template>
       </StudioDetailsRow>
 
-      <h2
-        v-if="_details.sample_nodes.length"
-        class="sample-heading"
+      <div
+        v-if="_details.sample_nodes && _details.sample_nodes.length"
+        class="sample-wrapper"
       >
-        {{ $tr('sampleFromChannelHeading') }}
-      </h2>
-      <KGrid
-        gutter="0"
-        class="sample-nodes"
-      >
-        <KGridItem
-          v-for="node in _details.sample_nodes"
-          :key="node.node_id"
-          :layout12="{ span: 3 }"
-          :layout8="{ span: 4 }"
-          :layout4="{ span: printing ? 1 : 4 }"
+        <h2 class="sample-heading">
+          {{ $tr('sampleFromChannelHeading') }}
+        </h2>
+        <KGrid
+          gutter="0"
+          class="sample-nodes"
         >
-          <!--
+          <KGridItem
+            v-for="node in _details.sample_nodes"
+            :key="node.node_id"
+            :layout12="{ span: 3 }"
+            :layout8="{ span: 4 }"
+            :layout4="{ span: printing ? 1 : 4 }"
+          >
+            <!--
             whenever modifying thumbnail styles,
             check if pdf channel summary still fine
           -->
-          <StudioThumbnail
-            :src="node.thumbnail"
-            :kind="node.kind"
-            :printing="printing"
-            :printIconStyle="{ paddingLeft: '48px' }"
-            :style="{ maxWidth: printing ? '160px' : 'unset' }"
-          />
-          <p
-            dir="auto"
-            class="sample-node-title"
-          >
-            {{ getTitle(node) }}
-          </p>
-        </KGridItem>
-      </KGrid>
-    </div>
+            <StudioThumbnail
+              :src="node.thumbnail"
+              :kind="node.kind"
+              :printing="printing"
+              :printIconStyle="{ paddingLeft: '48px' }"
+              :style="{ maxWidth: printing ? '160px' : 'unset' }"
+            />
+            <p
+              dir="auto"
+              class="sample-node-title"
+            >
+              {{ getTitle(node) }}
+            </p>
+          </KGridItem>
+        </KGrid>
+      </div>
+    </template>
   </div>
 
 </template>
@@ -455,6 +486,10 @@
         type: Boolean,
         default: true,
       },
+      hideChannelHeader: {
+        type: Boolean,
+        default: false,
+      },
     },
     computed: {
       _details() {
@@ -502,6 +537,9 @@
         return orderBy(this._details.tags, ['count'], ['desc']);
       },
       includesPrintable() {
+        if (!this._details.includes) {
+          return this.defaultText;
+        }
         const includes = [];
         if (this._details.includes.coach_content) {
           includes.push(this.$tr('coachHeading'));
@@ -514,12 +552,15 @@
         return includes.length ? includes.join(', ') : this.defaultText;
       },
       licensesPrintable() {
-        return this._details.licenses.map(this.translateConstant).join(', ');
+        return this._details.licenses?.map(this.translateConstant).join(', ') || this.defaultText;
       },
       tagPrintable() {
         return this.sortedTags.map(tag => tag.tag_name).join(', ');
       },
       levels() {
+        if (!this._details.levels) {
+          return null;
+        }
         return this._details.levels.map(level => {
           level = LevelsLookup[level];
           let translationKey;
@@ -536,16 +577,19 @@
         });
       },
       levelsPrintable() {
-        return this.levels.join(', ');
+        return this.levels?.join(', ') || this.defaultText;
       },
       categories() {
+        if (!this._details.categories) {
+          return null;
+        }
         return this._details.categories.map(category => {
           category = CategoriesLookup[category];
           return this.translateMetadataString(camelCase(category));
         });
       },
       categoriesPrintable() {
-        return this.categories.join(', ');
+        return this.categories?.join(', ') || this.defaultText;
       },
     },
     methods: {
@@ -658,6 +702,10 @@
     margin-bottom: 36px;
     font-weight: bold;
     word-break: break-word;
+  }
+
+  .sample-wrapper {
+    grid-column: 1 / -1;
   }
 
 </style>

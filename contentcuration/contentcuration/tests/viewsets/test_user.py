@@ -173,3 +173,65 @@ class ChannelUserCRUDTestCase(StudioAPITestCase):
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(response.json(), [])
+
+
+class MarkReadNotificationsTimestampTestCase(StudioAPITestCase):
+    def setUp(self):
+        super(MarkReadNotificationsTimestampTestCase, self).setUp()
+        self.user = testdata.user()
+
+    def test_mark_read_notifications_timestamp_success(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("user-mark-notifications-read"),
+            data={"timestamp": "2023-12-16T10:00:00Z"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 204, response.content)
+
+    def test_mark_read_notifications_timestamp_invalid_format(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("user-mark-notifications-read"),
+            data={"timestamp": "invalid-timestamp"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+
+    def test_mark_read_notifications_timestamp_missing_timestamp(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("user-mark-notifications-read"),
+            data={},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+
+    def test_mark_read_notifications_timestamp_unauthenticated(self):
+        response = self.client.post(
+            reverse("user-mark-notifications-read"),
+            data={"timestamp": "2023-12-16T10:00:00Z"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 403, response.content)
+
+    def test_mark_read_notifications_timestamp_updates_field(self):
+        timestamp = "2023-12-16T10:00:00Z"
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.post(
+            reverse("user-mark-notifications-read"),
+            data={"timestamp": timestamp},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 204, response.content)
+
+        # Refresh user from database and check the timestamp was updated
+        self.user.refresh_from_db()
+        # Check that the last_read_notification_date field was updated
+        self.assertIsNotNone(self.user.last_read_notification_date)
+        self.assertEqual(
+            self.user.last_read_notification_date.isoformat(),
+            timestamp.replace("Z", "+00:00"),
+        )

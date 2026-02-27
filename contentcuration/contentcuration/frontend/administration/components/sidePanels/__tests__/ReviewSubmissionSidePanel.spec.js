@@ -153,7 +153,7 @@ describe('ReviewSubmissionSidePanel', () => {
     expect(wrapper.find('[data-test="languages"]').text()).toBe('English, Czech');
     expect(wrapper.find('[data-test="categories"]').text()).toBe('School, Algebra');
     expect(wrapper.find('[data-test="licenses"]').text()).toBe('CC BY, CC BY-SA');
-    expect(wrapper.findComponent(CommunityLibraryStatusChip).props('status')).toEqual(
+    expect(wrapper.findComponent(CommunityLibraryStatusChip).attributes('status')).toEqual(
       submission.status,
     );
     expect(wrapper.find('[data-test="submission-notes"]').text()).toBe(submission.description);
@@ -344,15 +344,6 @@ describe('ReviewSubmissionSidePanel', () => {
       jest.useRealTimers();
     });
 
-    it('the panel closes', async () => {
-      jest.useFakeTimers();
-
-      const confirmButton = wrapper.findComponent({ ref: 'confirmButtonRef' });
-      await confirmButton.trigger('click');
-
-      expect(wrapper.emitted('close')).toBeTruthy();
-    });
-
     it('a submission snackbar is shown', async () => {
       jest.useFakeTimers();
       const confirmButton = wrapper.findComponent({ ref: 'confirmButtonRef' });
@@ -401,6 +392,22 @@ describe('ReviewSubmissionSidePanel', () => {
 
           expect(store.getters['snackbarOptions'].text).toBe('Submission approved');
           store.replaceState(origStoreState);
+        });
+
+        it('the panel closes', async () => {
+          const origStoreState = store.state;
+          store.commit('channel/ADD_CHANNEL', channel);
+
+          jest.useFakeTimers();
+          const confirmButton = wrapper.findComponent({ ref: 'confirmButtonRef' });
+          await confirmButton.trigger('click');
+
+          jest.runAllTimers();
+          await wrapper.vm.$nextTick();
+
+          store.replaceState(origStoreState);
+
+          expect(wrapper.emitted('close')).toBeTruthy();
         });
 
         it('the channel latest submission status is updated in the store', async () => {

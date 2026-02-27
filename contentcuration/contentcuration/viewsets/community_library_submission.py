@@ -1,3 +1,5 @@
+from django.db.models import OuterRef
+from django.db.models import Subquery
 from django_filters import BaseInFilter
 from django_filters import ChoiceFilter
 from django_filters.rest_framework import DateTimeFilter
@@ -15,6 +17,7 @@ from contentcuration.constants import (
 )
 from contentcuration.models import Change
 from contentcuration.models import Channel
+from contentcuration.models import ChannelVersion
 from contentcuration.models import CommunityLibrarySubmission
 from contentcuration.models import Country
 from contentcuration.tasks import apply_channel_changes_task
@@ -278,8 +281,22 @@ class AdminCommunityLibrarySubmissionViewSet(
 ):
     permission_classes = [IsAdminUser]
 
-    values = CommunityLibrarySubmissionViewSetMixin.values + ("internal_notes",)
+    values = CommunityLibrarySubmissionViewSetMixin.values + (
+        "internal_notes",
+        "version_token",
+    )
     field_map = CommunityLibrarySubmissionViewSetMixin.field_map.copy()
+
+    def annotate_queryset(self, queryset):
+        queryset = super().annotate_queryset(queryset)
+        return queryset.annotate(
+            version_token=Subquery(
+                ChannelVersion.objects.filter(
+                    channel_id=OuterRef("channel_id"),
+                    version=OuterRef("channel_version"),
+                ).values("secret_token__token")[:1]
+            )
+        )
 
     def _mark_previous_pending_submissions_as_superseded(self, submission):
         CommunityLibrarySubmission.objects.filter(
@@ -320,6 +337,8 @@ class AdminCommunityLibrarySubmissionViewSet(
         submission = serializer.save(
             resolved_by=request.user,
         )
+
+        submission.notify_update_to_channel_editors()
 
         if submission.status == community_library_submission_constants.STATUS_APPROVED:
             self._mark_previous_pending_submissions_as_superseded(submission)

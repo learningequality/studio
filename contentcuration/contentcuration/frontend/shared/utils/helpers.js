@@ -656,3 +656,7 @@ export function getMergedMapFields(node, contentNodeData) {
   }
   return mergedMapFields;
 }
+
+export function getCommunityLibrarySubmissionDetailsUrl(channelId, submissionId) {
+  return `/channels/#/community-library/${channelId}/${submissionId}`;
+}

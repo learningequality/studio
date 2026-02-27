@@ -1,6 +1,10 @@
 import { createTranslator } from 'shared/i18n';
 
 export const communityChannelsStrings = createTranslator('CommunityChannelsStrings', {
+  communityLibraryLabel: {
+    message: 'Community Library',
+    context: 'Label for the Community Library',
+  },
   // Publishing panel strings
   publishChannel: {
     message: 'Publish channel',
@@ -81,6 +85,11 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Submitted',
     context: 'Status indicating that an Community Library submission is pending',
   },
+  superseededStatus: {
+    message: 'Superseded',
+    context:
+      'Status indicating that an Community Library submission is superseded by a newer submission',
+  },
   approvedStatus: {
     message: 'Approved',
     context: 'Status indicating that an Community Library submission is approved',
@@ -88,6 +97,10 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   flaggedStatus: {
     message: 'Flagged',
     context: 'Status indicating that an Community Library submission is rejected',
+  },
+  liveStatus: {
+    message: 'Live',
+    context: 'Status indicating that an Community Library submission is live',
   },
   // Submit to Community Library panel strings
   submitToCommunityLibrary: {
@@ -198,20 +211,34 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
       'Snackbar message shown when submission fails from the "Submit to Community Library" panel',
   },
   countryLabel: {
-    message: 'Country',
+    message: 'Country(s)',
     context: 'Label for the country selection field in the "Submit to Community Library" panel',
   },
-  languagesDetected: {
-    message: 'Language(s) detected',
+  languagesLabel: {
+    message: 'Language(s)',
     context: 'Label for detected languages in the "Submit to Community Library" panel',
   },
-  licensesDetected: {
-    message: 'License(s) detected',
+  licensesLabel: {
+    message: 'License(s)',
     context: 'Label for detected licenses in the "Submit to Community Library" panel',
   },
-  categoriesDetected: {
+  categoriesLabel: {
     message: 'Categories',
     context: 'Label for detected categories in the "Submit to Community Library" panel',
+  },
+  submissionNotesLabel: {
+    message: 'Submission notes',
+    context: 'Label for the notes the editor can add to their submission to the Community Library',
+  },
+  feedbackNotesLabel: {
+    message: 'Feedback notes',
+    context:
+      'Label for the feedback notes that reviewers can add to a submission in the Community Library ',
+  },
+  internalNotesLabel: {
+    message: 'Internal notes',
+    context:
+      'Label for the notes that admins can add to a submission in the Community Library for themselves',
   },
   confirmReplacementText: {
     message: 'I understand this will replace my earlier submission on the review queue',
@@ -292,5 +319,144 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   pageIndicator: {
     message: '{currentPage} of {totalPages}',
     context: 'Page indicator showing current page and total pages (e.g., "1 of 5")',
+  },
+
+  // Notifications modal strings
+  notificationsLabel: {
+    message: 'Notifications',
+    context: 'Label for the notifications modal',
+  },
+  unreadNotificationsLabel: {
+    message: 'Unread',
+    context: 'Label for the unread notifications tab in the notifications modal',
+  },
+  allNotificationsLabel: {
+    message: 'All Notifications',
+    context: 'Label for the all notifications tab in the notifications modal',
+  },
+  searchNotificationsLabel: {
+    message: 'Search notifications',
+    context: 'Placeholder text for the search notifications input field',
+  },
+  filterByDateLabel: {
+    message: 'Filter by date',
+    context: 'Label for the filter by date dropdown in the notifications modal',
+  },
+  todayLabel: {
+    message: 'Today',
+    context: 'Option label for filtering notifications from today',
+  },
+  thisWeekLabel: {
+    message: 'This week',
+    context: 'Option label for filtering notifications from this week',
+  },
+  thisMonthLabel: {
+    message: 'This month',
+    context: 'Option label for filtering notifications from this month',
+  },
+  thisYearLabel: {
+    message: 'This year',
+    context: 'Option label for filtering notifications from this year',
+  },
+  filterByStatusLabel: {
+    message: 'Filter by status',
+    context: 'Label for the filter by status dropdown in the notifications modal',
+  },
+  newLabel: {
+    message: 'New',
+    context: 'Label indicating the section for new notifications',
+  },
+  clearAllAction: {
+    message: 'Clear all',
+    context: 'Action button to clear all notifications',
+  },
+  viewMoreAction: {
+    message: 'View more',
+    context: 'Action button to view more about a given element',
+  },
+  submissionCreationNotification: {
+    message: 'Your submission to the Community Library was successful and is now under review.',
+    context:
+      'Notification message shown to the user when their submission to the Community Library is successful',
+  },
+  flaggedNotification: {
+    message: '{author} ({userType}) flagged {channelVersion}',
+    context: 'Notification message shown when a user flags a channel version for review',
+  },
+  submissionNotification: {
+    message: '{author} ({userType}) submitted {channelVersion}',
+    context: 'Notification message shown when a user submits a channel version for review',
+  },
+  approvedNotification: {
+    message: '{author} ({userType}) approved {channelVersion}',
+    context: 'Notification message shown when a user approves a channel version',
+  },
+  showOlderAction: {
+    message: 'Show older',
+    context: 'Action button to load older items in a list',
+  },
+  adminLabel: {
+    message: 'Admin',
+    context: 'Label indicating administrative status',
+  },
+  editorLabel: {
+    message: 'Editor',
+    context: 'Label indicating editor status',
+  },
+  emptyNotificationsNotice: {
+    message: 'You have no notifications at this time.',
+    context: 'Notice shown when there are no notifications to display',
+  },
+  emptyNotificationsWithFiltersNotice: {
+    message: 'No notifications match the applied filters.',
+    context: 'Notice shown when no notifications match the current filters',
+  },
+  newNotificationsNotice: {
+    message: 'New notifications available.',
+    context:
+      'Notice for screen readers on the new notifications badge to indicate that new notifications have arrived',
+  },
+  communityLibrarySubmissionLabel: {
+    message: 'Community Library submission',
+    context: 'Label for notifications related to Community Library submissions',
+  },
+  channelVersionTokenLabel: {
+    message: 'Channel version token',
+    context: 'Label for the channel version token included in submission details page',
+  },
+  liveVersionLabel: {
+    message: 'Live version:',
+    context: 'Label indicating the live version of a channel',
+  },
+  activityHistoryLabel: {
+    message: 'Activity history',
+    context: 'Label for the activity history section in the submission details page',
+  },
+
+  // Resolution reasons strings
+  reasonLabel: {
+    message: 'Reason: {reason}',
+    context: 'Label for the reason provided for a given action (e.g., rejection reason)',
+  },
+  invalidLicensingReason: {
+    message: 'Invalid or non-compliant licenses',
+    context: 'Rejection reason indicating that the channel has invalid or non-compliant licenses',
+  },
+  qualityAssuranceReason: {
+    message: 'Quality assurance issues',
+    context: 'Rejection reason indicating that the channel has quality assurance issues',
+  },
+  invalidMetadataReason: {
+    message: 'Invalid or missing metadata',
+    context: 'Rejection reason indicating that the channel has invalid or missing metadata',
+  },
+  portabilityIssuesReason: {
+    message: 'Portability problems',
+    context: 'Rejection reason indicating that the channel has portability problems',
+  },
+  otherIssuesReason: {
+    message: 'Other issues',
+    context:
+      'Rejection reason indicating that the channel has other issues not covered by other reasons',
   },
 });
