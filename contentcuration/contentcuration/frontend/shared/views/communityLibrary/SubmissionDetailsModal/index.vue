@@ -6,7 +6,7 @@
   >
     <KCircularLoader v-if="isChannelLoading || isSubmissionLoading" />
     <div
-      v-else-if="channel && submission"
+      v-else-if="channel && submission && channelVersion"
       class="page-content"
     >
       <div
@@ -75,7 +75,7 @@
         <div class="actions">
           <KButton
             v-if="adminReview && submission.status === CommunityLibraryStatus.PENDING"
-            text="review"
+            :text="reviewAction$()"
             style="height: 40px"
             @click="showReviewSidePanel = true"
           />
@@ -281,6 +281,7 @@
     channelVersion$,
     channelVersionTokenLabel$,
     liveVersionLabel$,
+    reviewAction$,
   } = communityChannelsStrings;
 
 </script>

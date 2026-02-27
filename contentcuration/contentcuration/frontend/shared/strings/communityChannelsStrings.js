@@ -118,7 +118,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Submitted',
     context: 'Status indicating that an Community Library submission is pending',
   },
-  superseededStatus: {
+  supersededStatus: {
     message: 'Superseded',
     context:
       'Status indicating that an Community Library submission is superseded by a newer submission',
@@ -491,5 +491,9 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Other issues',
     context:
       'Rejection reason indicating that the channel has other issues not covered by other reasons',
+  },
+  reviewAction: {
+    message: 'Review',
+    context: 'Action button to review a channel version submission to the Community Library',
   },
 });

@@ -1,11 +1,10 @@
 <template>
 
-  <Accordion
+  <ExpandableContainer
     :title="channelDetailsLabel$()"
-    :expanded="true"
     @open="onOpen"
   >
-    <template #default="{ isOpen }">
+    <template #default="{ isOpen, expandableContentId }">
       <div class="submission-channel-details">
         <div class="grid-layout submission-summary">
           <div>
@@ -42,6 +41,7 @@
         </div>
         <div
           v-if="isOpen"
+          :id="expandableContentId"
           class="more-channels-detail"
         >
           <StudioDetailsPanel
@@ -85,7 +85,7 @@
         </div>
       </div>
     </template>
-  </Accordion>
+  </ExpandableContainer>
 
 </template>
 
@@ -96,7 +96,7 @@
   import { computed } from 'vue';
   import { themePalette } from 'kolibri-design-system/lib/styles/theme';
   import SpecialPermissionsList from '../SpecialPermissionsList.vue';
-  import Accordion from './Accordion.vue';
+  import ExpandableContainer from './ExpandableContainer.vue';
   import countriesUtil from 'shared/utils/countries';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
   import { commonStrings } from 'shared/strings/commonStrings';
@@ -124,7 +124,7 @@
     },
     channelVersion: {
       type: Object,
-      default: null,
+      required: true,
     },
   });
 
@@ -217,7 +217,7 @@
 
   const languagesString = computed(() => {
     const languages = props.channelVersion.included_languages || [];
-    return languages.map(code => LanguagesMap.get(code).readable_name).join(', ') || DEFAULT_TEXT;
+    return languages.map(code => LanguagesMap.get(code)?.readable_name).join(', ') || DEFAULT_TEXT;
   });
 
   function categoryIdToName(categoryId) {
@@ -233,7 +233,7 @@
   const licensesString = computed(() => {
     return (
       props.channelVersion.included_licenses
-        ?.map(licenseId => LicensesMap.get(licenseId).license_name)
+        ?.map(licenseId => LicensesMap.get(licenseId)?.license_name)
         .join(', ') || DEFAULT_TEXT
     );
   });

@@ -37,12 +37,12 @@
 
   const theme = themePalette();
 
-  const { pendingStatus$, superseededStatus$, approvedStatus$, flaggedStatus$, liveStatus$ } =
+  const { pendingStatus$, supersededStatus$, approvedStatus$, flaggedStatus$, liveStatus$ } =
     communityChannelsStrings;
 
   const configChoices = {
     [CommunityLibraryStatus.SUPERSEDED]: {
-      text: superseededStatus$(),
+      text: supersededStatus$(),
       backgroundColor: theme.yellow.v_100,
       labelColor: theme.orange.v_600,
       borderColor: theme.orange.v_400,
