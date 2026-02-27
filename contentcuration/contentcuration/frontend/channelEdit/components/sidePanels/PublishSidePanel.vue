@@ -74,6 +74,11 @@
                       @blur="isLanguageSelectBlurred = true"
                     />
                   </div>
+
+                  <ChannelVersionHistory
+                    v-if="currentChannel"
+                    :channelId="currentChannel.id"
+                  />
                 </div>
               </div>
 
@@ -154,6 +159,7 @@
 <script>
 
   import { ref, computed, getCurrentInstance } from 'vue';
+  import ChannelVersionHistory from './ChannelVersionHistory.vue';
   import SidePanelModal from 'shared/views/SidePanelModal';
   import { Channel, CommunityLibrarySubmission } from 'shared/data/resources';
   import { forceServerSync } from 'shared/data/serverSync';
@@ -165,6 +171,7 @@
     name: 'PublishSidePanel',
     components: {
       SidePanelModal,
+      ChannelVersionHistory,
     },
     setup(props, { emit }) {
       const PublishModes = {
