@@ -9,3 +9,4 @@ pre-commit==4.5.1
 nodeenv
 pip-tools==7.5.2
 drf-yasg==1.21.10
+tqdm

@@ -18,7 +18,7 @@ from contentcuration.models import generate_object_storage_name
 from contentcuration.models import generate_storage_url
 from contentcuration.utils.cache import ResourceSizeCache
 from contentcuration.utils.sentry import report_exception
-from contentcuration.utils.storage_common import get_presigned_upload_url
+from contentcuration.utils.storage.common import get_presigned_upload_url
 from contentcuration.utils.user import calculate_user_storage
 from contentcuration.viewsets.base import BulkDeleteMixin
 from contentcuration.viewsets.base import BulkListSerializer
@@ -252,9 +252,7 @@ class FileViewSet(BulkDeleteMixin, UpdateModelMixin, ReadOnlyValuesViewset):
         checksum_base64 = codecs.encode(
             codecs.decode(checksum, "hex"), "base64"
         ).decode()
-        retval = get_presigned_upload_url(
-            filepath, checksum_base64, 600, content_length=size
-        )
+        retval = get_presigned_upload_url(filepath, checksum_base64, 600)
 
         file = File(
             file_size=size,

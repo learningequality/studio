@@ -7,17 +7,15 @@ import pytest
 import requests
 from django.core.files.storage import FileSystemStorage
 from django.test import TestCase
-from django_s3_storage.storage import S3Storage
 from mock import MagicMock
 
-from .base import StudioTestCase
+from ..base import StudioTestCase
 from contentcuration.models import generate_object_storage_name
-from contentcuration.utils.storage_common import _get_gcs_presigned_put_url
-from contentcuration.utils.storage_common import determine_content_type
-from contentcuration.utils.storage_common import get_presigned_upload_url
-from contentcuration.utils.storage_common import UnknownStorageBackendError
-
-# The modules we'll test
+from contentcuration.utils.storage.common import determine_content_type
+from contentcuration.utils.storage.common import get_presigned_upload_url
+from contentcuration.utils.storage.common import UnknownStorageBackendError
+from contentcuration.utils.storage.dev import Storage as DevStorage
+from contentcuration.utils.storage.gcs import GoogleCloudStorage
 
 
 class MimeTypesTestCase(TestCase):
@@ -81,7 +79,6 @@ class FileSystemStoragePresignedURLTestCase(TestCase):
                 "nice",
                 "err",
                 5,
-                0,
                 storage=self.STORAGE,
             )
 
@@ -95,7 +92,9 @@ class GoogleCloudStoragePresignedURLUnitTestCase(TestCase):
     """
 
     def setUp(self):
+        super().setUp()
         self.client = MagicMock()
+        self.storage = GoogleCloudStorage(self.client, "fake")
         self.generate_signed_url_method = (
             self.client.get_bucket.return_value.blob.return_value.generate_signed_url
         )
@@ -107,19 +106,15 @@ class GoogleCloudStoragePresignedURLUnitTestCase(TestCase):
         """
         Check that we even call blob.generate_signed_url in the first place.
         """
-        bucket = "fake"
-        _get_gcs_presigned_put_url(self.client, bucket, "/object.jpg", "aBc", 0, 0)
+        get_presigned_upload_url("/object.jpg", "aBc", 0, storage=self.storage)
         self.generate_signed_url_method.assert_called_once()
 
     def test_that_we_return_a_string(self):
         """
         Check that _get_gcs_presigned_put_url returns a string.
         """
-        bucket = "fake"
-        ret = _get_gcs_presigned_put_url(
-            self.client, bucket, "/object.jpg", "aBc", 0, 0
-        )
-        assert isinstance(ret, str)
+        ret = get_presigned_upload_url("/object.jpg", "aBc", 0, storage=self.storage)
+        assert isinstance(ret["uploadURL"], str)
 
     def test_generate_signed_url_called_with_required_arguments(self):
         """
@@ -137,11 +132,9 @@ class GoogleCloudStoragePresignedURLUnitTestCase(TestCase):
         bucket_name = "fake"
         filepath = "object.jpg"
         lifetime = 20  # seconds
-        mimetype = "doesntmatter"
+        mimetype = "image/jpeg"
 
-        _get_gcs_presigned_put_url(
-            self.client, bucket_name, filepath, content_md5, lifetime, mimetype
-        )
+        get_presigned_upload_url(filepath, content_md5, lifetime, storage=self.storage)
 
         # assert that we're creating the right object
         self.client.get_bucket.assert_called_once_with(bucket_name)
@@ -153,8 +146,8 @@ class GoogleCloudStoragePresignedURLUnitTestCase(TestCase):
         self.generate_signed_url_method.assert_called_once_with(
             method=method,
             content_md5=content_md5,
-            expiration=lifetime_timedelta,
             content_type=mimetype,
+            expiration=lifetime_timedelta,
         )
 
 
@@ -163,11 +156,9 @@ class S3StoragePresignedURLUnitTestCase(StudioTestCase):
     Test cases for generating presigned URLs for S3 storage, i.e. Minio.
     """
 
-    STORAGE = S3Storage()
-
     def setUp(self):
-        self.client = MagicMock()
         super().setUp()
+        self.storage = DevStorage()
 
     def test_returns_string_if_inputs_are_valid(self):
         """
@@ -176,9 +167,7 @@ class S3StoragePresignedURLUnitTestCase(StudioTestCase):
         """
 
         # use a real connection here as a sanity check
-        ret = get_presigned_upload_url(
-            "a/b/abc.jpg", "aBc", 10, 1, storage=self.STORAGE, client=None
-        )
+        ret = get_presigned_upload_url("a/b/abc.jpg", "aBc", 10, storage=self.storage)
         url = ret["uploadURL"]
 
         assert isinstance(url, str)
@@ -199,9 +188,7 @@ class S3StoragePresignedURLUnitTestCase(StudioTestCase):
         filename = "blahfile.jpg"
         filepath = generate_object_storage_name(md5_checksum, filename)
 
-        ret = get_presigned_upload_url(
-            filepath, md5_checksum_base64, 1000, len(file_contents)
-        )
+        ret = get_presigned_upload_url(filepath, md5_checksum_base64, 1000)
         url = ret["uploadURL"]
         content_type = ret["mimetype"]
 
