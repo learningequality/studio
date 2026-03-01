@@ -221,7 +221,7 @@ pytz==2022.1
     #   django
     #   django-postmark
     #   google-api-core
-redis==7.1.0
+redis==7.2.0
     # via
     #   -r requirements.in
     #   django-redis
