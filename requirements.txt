@@ -162,7 +162,7 @@ langcodes==3.5.1
     # via -r requirements.in
 latex2mathml==3.78.0
     # via -r requirements.in
-le-utils==0.2.12
+le-utils==0.2.14
     # via -r requirements.in
 markdown-it-py==4.0.0
     # via -r requirements.in
