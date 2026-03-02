@@ -13,8 +13,9 @@
 
       <template #default>
         <div>
-          <KRadioButtonGroup>
+          <component :is="showDraftMode ? 'KRadioButtonGroup' : 'div'">
             <KRadioButton
+              v-if="showDraftMode"
               :label="modeLive$()"
               :buttonValue="PublishModes.LIVE"
               :currentValue="mode"
@@ -26,7 +27,7 @@
             <div
               v-if="mode === PublishModes.LIVE"
               class="live-mode-content"
-              style="margin-top: 16px; margin-left: 24px"
+              :style="showDraftMode ? { marginLeft: '24px', marginTop: '16px' } : {}"
             >
               <div class="live-publish-info">
                 <KIcon
@@ -126,13 +127,14 @@
             </div>
 
             <KRadioButton
+              v-if="showDraftMode"
               :label="modeDraft$()"
               :buttonValue="PublishModes.DRAFT"
               :currentValue="mode"
               :description="modeDraftDescription$()"
               @input="mode = PublishModes.DRAFT"
             />
-          </KRadioButtonGroup>
+          </component>
         </div>
       </template>
 
@@ -166,6 +168,7 @@
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
   import { LanguagesList } from 'shared/leUtils/Languages';
   import logging from 'shared/logging';
+  import { FeatureFlagKeys } from 'shared/constants';
 
   export default {
     name: 'PublishSidePanel',
@@ -221,6 +224,7 @@
       const currentChannel = computed(() => store.getters['currentChannel/currentChannel']);
       const getContentNode = computed(() => store.getters['contentNode/getContentNode']);
       const areAllChangesSaved = computed(() => store.getters['areAllChangesSaved']);
+      const hasFeatureEnabled = computed(() => store.getters['hasFeatureEnabled']);
 
       const incompleteResourcesCount = computed(() => {
         if (!currentChannel.value) return 0;
@@ -258,6 +262,10 @@
         }
         return true;
       });
+
+      const showDraftMode = computed(() =>
+        hasFeatureEnabled.value(FeatureFlagKeys.test_dev_feature),
+      );
 
       const submitText = computed(() => {
         return mode.value === PublishModes.DRAFT ? saveDraft$() : publishAction$();
@@ -392,6 +400,7 @@
         isChannelLanguageLoading,
         PublishModes,
         mode,
+        showDraftMode,
         version_notes,
         submitting,
         languageOptions,

@@ -51,6 +51,7 @@ const renderComponent = (props = {}) => {
   store.commit('channel/ADD_CHANNEL', currentChannel);
   store.commit('contentNode/ADD_CONTENTNODE', rootNode);
   store.commit('SET_UNSAVED_CHANGES', props.areAllChangesSaved === false);
+  store.commit('UPDATE_SESSION', { is_admin: true });
 
   const router = new VueRouter();
 
