@@ -218,6 +218,7 @@
         cancelAction$,
         languageLabel$,
         languageRequiredMessage$,
+        draftBeingPublishedNotice$,
         versionNotesRequiredMessage$,
       } = communityChannelsStrings;
 
@@ -372,6 +373,7 @@
             await Channel.publishDraft(currentChannel.value.id, {
               use_staging_tree: false,
             });
+            store.dispatch('showSnackbarSimple', draftBeingPublishedNotice$());
             emit('close');
           } else {
             // `newChannelLanguage.value` is a KSelect option { value, label }, so we need to

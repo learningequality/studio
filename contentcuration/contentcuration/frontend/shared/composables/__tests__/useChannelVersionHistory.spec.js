@@ -37,6 +37,7 @@ describe('useChannelVersionHistory', () => {
       expect(ChannelVersion.fetchCollection).toHaveBeenCalledWith({
         channel: 'channel-id',
         max_results: VERSIONS_PER_PAGE,
+        version__gte: 0,
       });
       expect(versions.value).toEqual(mockVersions);
       expect(hasMore.value).toBe(true);

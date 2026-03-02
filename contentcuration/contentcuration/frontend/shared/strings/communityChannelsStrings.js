@@ -496,4 +496,32 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Review',
     context: 'Action button to review a channel version submission to the Community Library',
   },
+
+  // Draft channel strings
+  draftBeingPublishedNotice: {
+    message: 'Draft version is being published',
+    context: 'Label indicating that a draft version of the channel is currently being published',
+  },
+  draftPublishedNotice: {
+    message: 'Draft published successfully',
+    context: 'Label indicating that a draft version of the channel has been successfully published',
+  },
+  previewYourDraftTitle: {
+    message: 'Preview your draft channel in Kolibri',
+    context: 'Title for the modal that shows instructions to preview a draft channel in Kolibri',
+  },
+  channelTokenDescription: {
+    message:
+      'To preview your draft channel right away, simply copy the unique draft channel token. This is the sole method to access the channel.',
+    context: 'Description for the channel token field in the draft preview instructions modal',
+  },
+  getDraftTokenAction: {
+    message: 'Get draft token',
+    context:
+      'Button text for the action to retrieve the draft token in the draft preview instructions modal',
+  },
+  draftTokenLabel: {
+    message: 'Draft token',
+    context: 'Label for the draft token field in the draft preview instructions modal',
+  },
 });

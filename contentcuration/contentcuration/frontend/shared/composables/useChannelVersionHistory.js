@@ -42,6 +42,7 @@ export function useChannelVersionHistory() {
       const response = await ChannelVersion.fetchCollection({
         channel: channelId,
         max_results: VERSIONS_PER_PAGE,
+        version__gte: 0, // Exclude unpublished versions with version=null
       });
 
       versions.value = response.results || [];
