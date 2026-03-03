@@ -196,7 +196,7 @@ dctest: .docker/minio .docker/postgres
 
 dcservicesup: .docker/minio .docker/postgres
 	# launch all studio's dependent services using docker-compose
-	$(DOCKER_COMPOSE) -f docker-compose.yml -f docker-compose.alt.yml up minio postgres redis
+	$(DOCKER_COMPOSE) -f docker-compose.yml -f docker-compose.alt.yml up minio postgres redis studio-nginx
 
 dcservicesdown:
 	# stop services that were started using dcservicesup

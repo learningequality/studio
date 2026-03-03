@@ -25,7 +25,7 @@
     "test-jest": "pnpm run test",
     "test-jest:debug": "node --inspect node_modules/.bin/jest --runInBand --watch",
     "minio": "MINIO_API_CORS_ALLOW_ORIGIN='http://localhost:8080,http://127.0.0.1:8080' MINIO_ACCESS_KEY=development MINIO_SECRET_KEY=development minio server ~/.minio_data/ || true",
-    "runserver": "cd contentcuration && python manage.py runserver --settings=contentcuration.dev_settings 0.0.0.0:8080",
+    "runserver": "cd contentcuration && python manage.py runserver --settings=contentcuration.dev_settings 0.0.0.0:8081",
     "devserver": "npm-run-all --parallel build:dev runserver",
     "devserver:hot": "npm-run-all --parallel build:dev:hot runserver",
     "devserver-hot": "pnpm run devserver:hot",
