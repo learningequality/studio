@@ -95,6 +95,8 @@
     ALL: 1,
   };
 
+  const NOTIFICATIONS_TAB_QUERY_PARAM = 'notificationsTab';
+
   const router = useRouter();
   const route = useRoute();
   const store = useStore();
@@ -133,7 +135,23 @@
     { immediate: true },
   );
 
-  const selectedTab = ref(NotificationsTab.UNREAD);
+  const selectedTab = computed({
+    get() {
+      const tabParam = Number(route.query[NOTIFICATIONS_TAB_QUERY_PARAM]);
+      if (tabParam === NotificationsTab.UNREAD || tabParam === NotificationsTab.ALL) {
+        return tabParam;
+      }
+      return NotificationsTab.UNREAD;
+    },
+    set(value) {
+      router.replace({
+        query: {
+          ...route.query,
+          [NOTIFICATIONS_TAB_QUERY_PARAM]: String(value),
+        },
+      });
+    },
+  });
   const filters = ref(null);
 
   const { notificationsLabel$, unreadNotificationsLabel$, allNotificationsLabel$ } =
