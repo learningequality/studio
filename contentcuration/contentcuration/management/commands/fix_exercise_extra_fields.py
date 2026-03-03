@@ -65,6 +65,7 @@ class Command(BaseCommand):
         migrated_complete = 0
         old_style_fixed = 0
         old_style_complete = 0
+        incomplete_fixed = 0
         exercises_checked = 0
 
         for node in queryset.iterator(chunk_size=CHUNKSIZE):
@@ -77,6 +78,8 @@ class Command(BaseCommand):
                 migrated_fixed += 1
                 if complete:
                     migrated_complete += 1
+            elif fix_type == "incomplete" and complete:
+                incomplete_fixed += 1
             exercises_checked += 1
             if exercises_checked % CHUNKSIZE == 0:
                 logging.info(
@@ -92,6 +95,11 @@ class Command(BaseCommand):
                         migrated_complete, migrated_fixed
                     )
                 )
+                logging.info(
+                    "{} marked complete that were previously incomplete".format(
+                        incomplete_fixed
+                    )
+                )
 
         logging.info("{} / {} exercises checked".format(exercises_checked, total))
         logging.info(
@@ -105,17 +113,25 @@ class Command(BaseCommand):
             )
         )
         logging.info(
+            "{} marked complete that were previously incomplete".format(
+                incomplete_fixed
+            )
+        )
+        logging.info(
             "Done in {:.1f}s. Fixed {} migrated exercises, "
-            "migrated {} old-style exercises.{}".format(
+            "migrated {} old-style exercises."
+            "marked {} previously incomplete exercises complete. {}".format(
                 time.time() - start,
                 migrated_fixed,
                 old_style_fixed,
+                incomplete_fixed,
                 " (dry run)" if dry_run else "",
             )
         )
 
     def _process_node(self, node, dry_run):
         ef = node.extra_fields
+        was_complete = node.complete
         if isinstance(ef, str):
             try:
                 ef = json.loads(ef)
@@ -131,6 +147,8 @@ class Command(BaseCommand):
             ef["options"]["completion_criteria"]["threshold"]["m"] = None
             ef["options"]["completion_criteria"]["threshold"]["n"] = None
             fix_type = "m_n_fix"
+        elif not was_complete:
+            fix_type = "incomplete"
         else:
             return None, None
         node.extra_fields = ef
