@@ -15,8 +15,9 @@ export function useEditor() {
   const isReady = ref(false);
   const isFocused = ref(false);
 
-  const initializeEditor = (content, mode = 'edit') => {
+  const initializeEditor = (content, mode = 'edit', { autofocus = false } = {}) => {
     editor.value = new Editor({
+      autofocus,
       editable: mode === 'edit',
       extensions: [
         StarterKitExtension.configure({

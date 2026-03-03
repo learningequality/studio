@@ -41,6 +41,7 @@
               v-if="isQuestionOpen"
               v-model="question"
               mode="edit"
+              :autofocus="shouldAutofocusQuestion"
               :imageProcessor="EditorImageProcessor"
               @update="onQuestionUpdate"
               @minimize="closeQuestion"
@@ -201,6 +202,7 @@
     data() {
       return {
         isQuestionOpen: false,
+        shouldAutofocusQuestion: false,
         openHintIdx: null,
         openAnswerIdx: null,
         kindSelectKey: 0,
@@ -322,6 +324,7 @@
     },
     mounted() {
       if (!this.question) {
+        this.shouldAutofocusQuestion = true;
         this.openQuestion();
       }
     },
