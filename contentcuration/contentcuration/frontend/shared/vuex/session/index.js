@@ -47,8 +47,8 @@ export default {
         ...data,
       };
     },
-    UPDATE_SESSION_FROM_INDEXEDDB(state, { id, ...mods }) {
-      if (id === state.currentUser.id) {
+    UPDATE_SESSION_FROM_INDEXEDDB(state, { CURRENT_USER, ...mods }) {
+      if (CURRENT_USER === 'CURRENT_USER') {
         state.currentUser = { ...applyMods(state.currentUser, mods) };
       }
     },
@@ -101,6 +101,19 @@ export default {
       }
       return false;
     },
+    hasNewNotifications(state) {
+      const {
+        newest_notification_date: newestNotificationDate,
+        last_read_notification_date: lastReadNotificationDate,
+      } = state.currentUser || {};
+      if (!newestNotificationDate) {
+        return false;
+      }
+      if (!lastReadNotificationDate) {
+        return true;
+      }
+      return new Date(newestNotificationDate) > new Date(lastReadNotificationDate);
+    },
   },
   actions: {
     saveSession(context, currentUser) {
@@ -145,6 +158,10 @@ export default {
         });
       });
     }, 500),
+    async markNotificationsRead(context, timestamp) {
+      await User.markNotificationsRead(timestamp);
+      context.commit('UPDATE_SESSION', { last_read_notification_date: timestamp });
+    },
   },
   listeners: {
     [TABLE_NAMES.SESSION]: {

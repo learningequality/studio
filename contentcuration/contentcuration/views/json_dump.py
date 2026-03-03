@@ -1,5 +1,6 @@
 import json
 
+from django.core.serializers.json import DjangoJSONEncoder
 from rest_framework.renderers import JSONRenderer
 
 """
@@ -15,7 +16,9 @@ def _json_dumps(value):
     """
     json.dumps parameters for dumping unicode into JS
     """
-    return json.dumps(value, separators=(",", ":"), ensure_ascii=False)
+    return json.dumps(
+        value, separators=(",", ":"), ensure_ascii=False, cls=DjangoJSONEncoder
+    )
 
 
 def json_for_parse_from_data(data):

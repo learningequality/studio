@@ -2111,6 +2111,12 @@ export const User = new Resource({
   getUserId(obj) {
     return obj.id;
   },
+  async markNotificationsRead(timestamp) {
+    await client.post(window.Urls.userMarkNotificationsRead(), {
+      timestamp,
+    });
+    await Session.updateSession({ last_read_notification_date: timestamp });
+  },
 });
 
 export const EditorM2M = new IndexedDBResource({
