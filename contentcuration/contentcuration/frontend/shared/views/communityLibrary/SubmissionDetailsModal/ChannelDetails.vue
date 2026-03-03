@@ -2,7 +2,7 @@
 
   <ExpandableContainer
     :title="channelDetailsLabel$()"
-    @open="onOpen"
+    @update:isOpen="onIsOpenUpdate"
   >
     <template #default="{ isOpen, expandableContentId }">
       <div class="submission-channel-details">
@@ -19,7 +19,7 @@
               :text="countriesString"
             />
             <StudioDetailsRow
-              :label="languageLabel$()"
+              :label="languagesLabel$()"
               :text="languagesString"
             />
             <StudioDetailsRow
@@ -136,7 +136,7 @@
     editorLabel$,
     channelVersion$,
     countryLabel$,
-    languageLabel$,
+    languagesLabel$,
     licensesLabel$,
     categoriesLabel$,
     internalNotesLabel$,
@@ -244,7 +244,10 @@
     padding: '16px',
   }));
 
-  const onOpen = () => {
+  const onIsOpenUpdate = isOpen => {
+    if (!isOpen) {
+      return;
+    }
     if (props.channel.version !== props.submission.channel_version) {
       // Don't fetch details if fetching details for a previous version, since channel details
       // are only available for the most recent version.

@@ -155,6 +155,7 @@ export default function useCommunityLibraryUpdates({ queryParams } = {}) {
         date_updated__gte: getNewerDate(_params?.date_updated__gte, _params?.lastRead),
         status__in: _params?.status__in,
         search: _params?.keywords,
+        channel: _params?.channel,
         max_results: MAX_RESULTS_PER_PAGE,
       });
     }

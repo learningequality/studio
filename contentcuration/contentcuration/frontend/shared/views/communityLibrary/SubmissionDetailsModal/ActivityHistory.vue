@@ -1,6 +1,9 @@
 <template>
 
-  <ExpandableContainer :title="activityHistoryLabel$()">
+  <ExpandableContainer
+    :title="activityHistoryLabel$()"
+    :expandable="truncatedUpdates.length < submissionsUpdates.length"
+  >
     <template #default="{ isOpen, expandableContentId }">
       <KCircularLoader v-if="isLoading" />
       <div v-else>
@@ -115,7 +118,7 @@
   });
   const { hasMore, submissionsUpdates, isLoading, isLoadingMore, fetchData, fetchMore } =
     useCommunityLibraryUpdates({
-      channel: props.channelId,
+      queryParams: computed(() => ({ channel: props.channelId })),
     });
 
   const getUpdates = isOpen => {

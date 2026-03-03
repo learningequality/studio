@@ -6,6 +6,7 @@
         {{ title }}
       </h2>
       <KButton
+        v-if="expandable"
         appearance="basic-link"
         :aria-controls="expandableContentId"
         :aria-expanded="isOpen.toString()"
@@ -28,12 +29,16 @@
   import { v4 as uuidv4 } from 'uuid';
   import { commonStrings } from 'shared/strings/commonStrings';
 
-  const emit = defineEmits(['open']);
+  const emit = defineEmits(['update:isOpen']);
 
   defineProps({
     title: {
       type: String,
       default: '',
+    },
+    expandable: {
+      type: Boolean,
+      default: true,
     },
   });
 
@@ -48,7 +53,7 @@
 
   async function toggleDisclosure() {
     isOpen.value = !isOpen.value;
-    emit('open', isOpen.value);
+    emit('update:isOpen', isOpen.value);
     if (isOpen.value) {
       await nextTick();
       disclosureTitleRef.value.scrollIntoView({ behavior: 'smooth' });
