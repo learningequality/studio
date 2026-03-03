@@ -185,7 +185,7 @@
         <p>
           <ActionLink
             :text="$tr('dmcaLink')"
-            href="https://docs.google.com/forms/d/e/1FAIpQLSd7qWORCOOczCnOlDzaftIjBsaUtl3DKH3hbxlO1arRc1_IQg/viewform?usp=sf_link"
+            href="https://forms.gle/oviMu2YPuFSrW7S26"
             target="_blank"
           />
         </p>
