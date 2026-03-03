@@ -129,6 +129,3 @@ storybook-static/
 
 # i18n
 /contentcuration/locale/**/LC_MESSAGES/*.csv
-
-# pyenv
-.python-version
