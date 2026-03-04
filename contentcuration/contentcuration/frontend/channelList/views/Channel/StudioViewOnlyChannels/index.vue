@@ -117,7 +117,7 @@
         if (!val) this.tokenChannelId = null;
       },
       onCardClick(channel) {
-        window.location.href = window.Urls.channel(channel.id);
+        window.location.assign(window.Urls.channel(channel.id));
       },
       getDropdownItems(channel) {
         const items = [{ label: this.$tr('removeChannel'), icon: 'trash', value: 'remove' }];

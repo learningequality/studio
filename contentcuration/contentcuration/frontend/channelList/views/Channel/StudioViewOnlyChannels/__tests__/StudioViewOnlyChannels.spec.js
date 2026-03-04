@@ -136,13 +136,13 @@ describe('StudioViewOnlyChannels', () => {
 
   it('navigates to channel via window.location when card clicked', async () => {
     delete window.location;
-    window.location = { ...originalLocation, href: '' };
+    window.location = { ...originalLocation, assign: jest.fn() };
 
     renderComponent();
     const cards = await screen.findAllByTestId('channel-card');
     await userEvent.click(cards[0]);
 
-    expect(window.location.href).toBe('channel');
+    expect(window.location.assign).toHaveBeenCalledWith('channel');
   });
 
   describe('cards footer actions', () => {
