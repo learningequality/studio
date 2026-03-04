@@ -158,11 +158,7 @@
           appendToOverlay
           data-testid="copy-modal"
           :channel="tokenChannel"
-          @input="
-            val => {
-              if (!val) tokenChannelId = null;
-            }
-          "
+          @input="onTokenModalInput"
         />
       </VContainer>
     </div>
@@ -326,6 +322,9 @@
     },
     methods: {
       ...mapActions('channelList', ['searchCatalog']),
+      onTokenModalInput(val) {
+        if (!val) this.tokenChannelId = null;
+      },
       getDropdownItems(channel) {
         const items = [];
         if (channel.source_url) {

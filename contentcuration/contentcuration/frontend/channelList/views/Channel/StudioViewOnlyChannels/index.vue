@@ -52,11 +52,7 @@
       appendToOverlay
       data-testid="copy-modal"
       :channel="tokenChannel"
-      @input="
-        val => {
-          if (!val) tokenChannelId = null;
-        }
-      "
+      @input="onTokenModalInput"
     />
   </StudioChannelsPage>
 
@@ -117,6 +113,9 @@
     },
     methods: {
       ...mapActions('channelList', ['loadInvitationList']),
+      onTokenModalInput(val) {
+        if (!val) this.tokenChannelId = null;
+      },
       onCardClick(channel) {
         window.location.href = window.Urls.channel(channel.id);
       },

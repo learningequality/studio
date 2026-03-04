@@ -63,11 +63,7 @@
       appendToOverlay
       data-testid="copy-modal"
       :channel="tokenChannel"
-      @input="
-        val => {
-          if (!val) tokenChannelId = null;
-        }
-      "
+      @input="onTokenModalInput"
     />
   </StudioChannelsPage>
 
@@ -128,6 +124,9 @@
     },
     methods: {
       ...mapActions('channelList', ['loadInvitationList']),
+      onTokenModalInput(val) {
+        if (!val) this.tokenChannelId = null;
+      },
       newChannel() {
         this.$analytics.trackClick('channel_list', 'Create channel');
         this.$router.push({
