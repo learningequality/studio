@@ -21,7 +21,6 @@
           item-value="key"
           label="Channel Type"
           box
-          clearable
           :menu-props="{ offsetY: true }"
         />
       </VFlex>
@@ -154,17 +153,29 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import IconButton from 'shared/views/IconButton';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
+  import { CommunityLibraryStatus } from 'shared/constants';
+
+  const ChannelTypeFilter = {
+    ALL: 'all',
+    KOLIBRI_LIBRARY: 'kolibriLibrary',
+    COMMUNITY_LIBRARY: 'communityLibrary',
+    UNLISTED: 'unlisted',
+  };
 
   const channelTypeFilterMap = {
-    kolibriStudio: {
+    [ChannelTypeFilter.ALL]: {
+      label: 'All Channels',
+      params: {},
+    },
+    [ChannelTypeFilter.KOLIBRI_LIBRARY]: {
       label: 'Kolibri Studio Library',
       params: { public: true, deleted: false },
     },
-    community: {
+    [ChannelTypeFilter.COMMUNITY_LIBRARY]: {
       label: 'Community Library',
       params: { has_community_library_submission: true },
     },
-    unlisted: {
+    [ChannelTypeFilter.UNLISTED]: {
       label: 'Unlisted Channels',
       params: { has_community_library_submission: false, public: false },
     },
@@ -184,29 +195,40 @@
       const store = proxy.$store;
 
       const statusFilterMap = computed(() => {
-        if (channelTypeFilter.value === 'kolibriStudio') {
+        if (channelTypeFilter.value === ChannelTypeFilter.KOLIBRI_LIBRARY) {
           return {
             live: { label: 'Live', params: {} },
             cheffed: { label: 'Sushi chef', params: { cheffed: true } },
           };
-        } else if (channelTypeFilter.value === 'community') {
+        } else if (channelTypeFilter.value === ChannelTypeFilter.COMMUNITY_LIBRARY) {
           return {
             live: { label: 'Live', params: { community_library_live: true } },
             needsReview: {
               label: 'Needs review',
               params: {
                 community_library_live: false,
-                latest_community_library_submission_status: ['PENDING', 'REJECTED'],
+                latest_community_library_submission_status: [
+                  CommunityLibraryStatus.PENDING,
+                  CommunityLibraryStatus.REJECTED,
+                ],
               },
             },
             published: { label: 'Published', params: {} },
             cheffed: { label: 'Sushi chef', params: { cheffed: true } },
           };
-        } else if (channelTypeFilter.value === 'unlisted') {
+        } else if (channelTypeFilter.value === ChannelTypeFilter.UNLISTED) {
           return {
             live: { label: 'Live', params: { deleted: false } },
             draft: { label: 'Draft', params: { published: false, deleted: false } },
             published: { label: 'Published', params: { published: true, deleted: false } },
+            cheffed: { label: 'Sushi chef', params: { cheffed: true, deleted: false } },
+            deleted: { label: 'Deleted', params: { deleted: true } },
+          };
+        } else if (channelTypeFilter.value === ChannelTypeFilter.ALL) {
+          return {
+            live: { label: 'Live', params: { deleted: false } },
+            published: { label: 'Published', params: { published: true, deleted: false } },
+            draft: { label: 'Draft', params: { published: false, deleted: false } },
             cheffed: { label: 'Sushi chef', params: { cheffed: true, deleted: false } },
             deleted: { label: 'Deleted', params: { deleted: true } },
           };
@@ -237,7 +259,9 @@
       } = useFilter({
         name: 'channelType',
         filterMap: channelTypeFilterMap,
+        defaultValue: ChannelTypeFilter.ALL,
       });
+
       // Temporal wrapper, must be removed after migrating to KSelect
       const channelTypeFilter = computed({
         get: () => _channelTypeFilter.value.value || undefined,
