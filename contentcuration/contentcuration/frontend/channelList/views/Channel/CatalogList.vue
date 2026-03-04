@@ -69,6 +69,7 @@
                 :orientation="windowBreakpoint > 2 ? 'horizontal' : 'vertical'"
                 :showUpdateStatus="false"
                 :channel="channel"
+                :detailsRoute="getChannelDetailsRoute(channel)"
                 :selectable="selecting"
                 :selected="isChannelSelected(channel)"
                 @toggle-selection="handleSelectionToggle"
@@ -342,20 +343,23 @@
           window.open(channel.demo_server_url, '_blank');
         }
       },
+      getChannelDetailsRoute(channel) {
+        return {
+          name: RouteNames.CATALOG_DETAILS,
+          query: {
+            ...this.$route.query,
+            last: this.$route.name,
+          },
+          params: {
+            channelId: channel.id,
+          },
+        };
+      },
       onCardClick(channel) {
         if (this.loggedIn) {
           window.location.assign(window.Urls.channel(channel.id));
         } else {
-          this.$router.push({
-            name: RouteNames.CHANNEL_DETAILS,
-            query: {
-              ...this.$route.query,
-              last: this.$route.name,
-            },
-            params: {
-              channelId: channel.id,
-            },
-          });
+          this.$router.push(this.getChannelDetailsRoute(channel));
         }
       },
       isChannelSelected(channel) {

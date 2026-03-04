@@ -144,6 +144,13 @@
         type: Object,
         required: true,
       },
+      // Router object - where the info / details button click leads
+      // Defaults to channel details page.
+      detailsRoute: {
+        type: Object,
+        required: false,
+        default: null,
+      },
       showUpdateStatus: {
         type: Boolean,
         required: false,
@@ -192,6 +199,9 @@
           : this.$tr('unpublishedText');
       },
       channelDetailsLink() {
+        if (this.detailsRoute) {
+          return this.detailsRoute;
+        }
         return {
           name: RouteNames.CHANNEL_DETAILS,
           query: {

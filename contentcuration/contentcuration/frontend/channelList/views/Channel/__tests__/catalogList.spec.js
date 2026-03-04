@@ -150,13 +150,13 @@ describe('CatalogList', () => {
     expect(window.location.assign).toHaveBeenCalledWith('channel');
   });
 
-  it('navigates to channel details via router when not logged in and card is clicked', async () => {
+  it('navigates to catalog details via router when not logged in and card is clicked', async () => {
     renderComponent({ storeOverrides: createStore({ loggedIn: false }) });
     const cards = await screen.findAllByTestId('channel-card');
     await userEvent.click(cards[0]);
 
     await waitFor(() => {
-      expect(router.currentRoute.name).toBe(RouteNames.CHANNEL_DETAILS);
+      expect(router.currentRoute.name).toBe(RouteNames.CATALOG_DETAILS);
       expect(router.currentRoute.params.channelId).toBe('channel-1');
     });
   });
