@@ -8,7 +8,6 @@
     thumbnailAlign="left"
     :orientation="cardOrientation"
     :title="channel.name"
-    :titleMaxLines="2"
     @click="onCardClick"
   >
     <template
@@ -43,6 +42,15 @@
       </KImg>
     </template>
 
+    <template #title="{ titleText }">
+      <KTextTruncator
+        class="notranslate"
+        dir="auto"
+        :text="titleText"
+        :maxLines="2"
+      />
+    </template>
+
     <template #belowTitle>
       <div class="below-title">
         <div class="resource">
@@ -52,7 +60,8 @@
           </span>
         </div>
         <div
-          class="desc"
+          class="desc notranslate"
+          dir="auto"
           :style="{ color: $themeTokens.text }"
         >
           {{ channel.description }}
