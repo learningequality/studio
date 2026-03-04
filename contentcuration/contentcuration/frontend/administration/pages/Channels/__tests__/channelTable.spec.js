@@ -55,8 +55,8 @@ describe('channelTable', () => {
   });
   describe('filters', () => {
     it('changing channel type filter should set query params', async () => {
-      wrapper.vm.channelTypeFilter = 'community';
-      expect(router.currentRoute.query.channelType).toBe('community');
+      wrapper.vm.channelTypeFilter = 'communityLibrary';
+      expect(router.currentRoute.query.channelType).toBe('communityLibrary');
     });
     it('changing language filter should set query params', () => {
       wrapper.vm.languageFilter = 'en';
@@ -72,7 +72,7 @@ describe('channelTable', () => {
       expect(router.currentRoute.query.keywords).toBe('keyword test');
     });
     it('changing channel type filter should reset channel status filter', async () => {
-      wrapper.vm.channelTypeFilter = 'community';
+      wrapper.vm.channelTypeFilter = 'communityLibrary';
       wrapper.vm.channelStatusFilter = 'published';
       await wrapper.vm.$nextTick();
       wrapper.vm.channelTypeFilter = 'unlisted';

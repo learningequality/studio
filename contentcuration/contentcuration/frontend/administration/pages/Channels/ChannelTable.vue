@@ -5,13 +5,13 @@
       {{ `${$formatNumber(count)} ${count === 1 ? 'channel' : 'channels'}` }}
     </h1>
     <VLayout
-      rowwrap
+      wrap
       class="mb-2"
     >
       <VFlex
         xs12
-        sm4
-        xl3
+        sm6
+        md3
         class="px-3"
       >
         <VSelect
@@ -26,8 +26,8 @@
       </VFlex>
       <VFlex
         xs12
-        sm4
-        xl3
+        sm6
+        md3
         clearable
         class="px-3"
       >
@@ -44,8 +44,8 @@
       </VFlex>
       <VFlex
         xs12
-        sm4
-        xl3
+        sm6
+        md3
         class="px-3"
       >
         <LanguageDropdown
@@ -55,8 +55,8 @@
       </VFlex>
       <VFlex
         xs12
-        sm4
-        xl3
+        sm6
+        md3
         class="px-3"
       >
         <VTextField
@@ -312,10 +312,14 @@
         fetchQueryParams: keywordSearchFetchQueryParams,
       } = useKeywordSearch();
 
-      watch(channelTypeFilter, () => {
-        const options = channelStatusOptions.value;
-        channelStatusFilter.value = options.length ? options[0].value : null;
-      });
+      watch(
+        channelTypeFilter,
+        () => {
+          const options = channelStatusOptions.value;
+          channelStatusFilter.value = options.length ? options[0].value : null;
+        },
+        { immediate: true },
+      );
 
       const filterFetchQueryParams = computed(() => {
         return {
