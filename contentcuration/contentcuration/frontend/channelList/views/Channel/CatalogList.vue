@@ -36,15 +36,10 @@
             class="mb-2"
           >
             <h1 class="visuallyhidden">{{ $tr('title') }}</h1>
-            <!-- minHeight to prevent layout shifts when loading state changes -->
-            <p
-              class="mb-2 ml-1 title"
-              :style="{ minHeight: '30px' }"
-            >
+            <p class="results-text">
               <span v-if="!loading">{{ $tr('resultsText', { count: page.count }) }}</span>
             </p>
-            <!-- minHeight to prevent layout shifts when loading state changes -->
-            <div :style="{ minHeight: '30px' }">
+            <div class="download-link-wrapper">
               <KButton
                 v-if="page.count && !selecting && !loading"
                 :text="$tr('selectChannels')"
@@ -478,6 +473,16 @@
 
   .catalog-sidebar--small {
     width: 100%;
+  }
+
+  .results-text {
+    margin-bottom: 8px;
+    font-size: 20px;
+  }
+
+  .results-text,
+  .download-link-wrapper {
+    min-height: 30px; // prevent layout shifts when loading state changes
   }
 
 </style>
