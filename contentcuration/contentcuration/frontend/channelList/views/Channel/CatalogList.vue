@@ -350,7 +350,7 @@
       },
       onCardClick(channel) {
         if (this.loggedIn) {
-          window.location.href = window.Urls.channel(channel.id);
+          window.location.assign(window.Urls.channel(channel.id));
         } else {
           this.$router.push({
             name: RouteNames.CHANNEL_DETAILS,
