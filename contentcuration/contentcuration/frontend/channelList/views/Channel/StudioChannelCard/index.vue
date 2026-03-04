@@ -1,7 +1,6 @@
 <template>
 
   <KCard
-    :key="channel.id"
     class="channel"
     :headingLevel="headingLevel"
     data-testid="channel-card"
