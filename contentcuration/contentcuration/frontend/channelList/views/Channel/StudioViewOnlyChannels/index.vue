@@ -8,7 +8,10 @@
       <h1 class="visuallyhidden">{{ $tr('title') }}</h1>
     </template>
 
-    <template #cards>
+    <template
+      v-if="viewOnlyChannels.length"
+      #cards
+    >
       <StudioChannelCard
         v-for="channel in viewOnlyChannels"
         :key="channel.id"

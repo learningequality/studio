@@ -19,7 +19,10 @@
       </div>
     </template>
 
-    <template #cards>
+    <template
+      v-if="editableChannels.length"
+      #cards
+    >
       <StudioChannelCard
         v-for="channel in editableChannels"
         :key="channel.id"

@@ -5,7 +5,10 @@
       <h1 class="visuallyhidden">{{ $tr('title') }}</h1>
     </template>
 
-    <template #cards>
+    <template
+      v-if="bookmarkedChannels.length"
+      #cards
+    >
       <StudioChannelCard
         v-for="channel in bookmarkedChannels"
         :key="channel.id"
