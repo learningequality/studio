@@ -156,8 +156,14 @@
   import LanguageDropdown from 'shared/views/LanguageDropdown';
 
   const channelTypeFilterMap = {
-    kolibriStudio: { label: 'Kolibri Studio Library', params: { public: true, deleted: false } },
-    community: { label: 'Community Library', params: { has_community_library_submission: true } },
+    kolibriStudio: {
+      label: 'Kolibri Studio Library',
+      params: { public: true, deleted: false },
+    },
+    community: {
+      label: 'Community Library',
+      params: { has_community_library_submission: true },
+    },
     unlisted: {
       label: 'Unlisted Channels',
       params: { has_community_library_submission: false, public: false },
@@ -198,10 +204,11 @@
           };
         } else if (channelTypeFilter.value === 'unlisted') {
           return {
-            live: { label: 'Live', params: {} },
-            draft: { label: 'Draft', params: { published: false } },
-            published: { label: 'Published', params: { published: true } },
-            cheffed: { label: 'Sushi chef', params: { cheffed: true } },
+            live: { label: 'Live', params: { deleted: false } },
+            draft: { label: 'Draft', params: { published: false, deleted: false } },
+            published: { label: 'Published', params: { published: true, deleted: false } },
+            cheffed: { label: 'Sushi chef', params: { cheffed: true, deleted: false } },
+            deleted: { label: 'Deleted', params: { deleted: true } },
           };
         }
         return {};
