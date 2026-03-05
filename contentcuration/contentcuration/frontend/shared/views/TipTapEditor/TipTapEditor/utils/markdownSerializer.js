@@ -4,7 +4,6 @@ import { paramsToMathMd, paramsToImageMd } from './markdown';
 export const createCustomMarkdownSerializer = editor => {
   return function getMarkdown() {
     const doc = editor.state.doc;
-    let result = '';
 
     // Handle marks (bold, italic, etc.)
     const serializeMarks = node => {
@@ -49,177 +48,133 @@ export const createCustomMarkdownSerializer = editor => {
       return leadingWhitespace + trimmedText + trailingWhitespace;
     };
 
+    // Recursively process nodes
     const serializeNode = (node, listNumber = null, depth = 0) => {
       if (!node || !node.type) {
         return;
       }
 
       switch (node.type.name) {
-        case 'doc':
+        case 'doc': {
+          const parts = [];
           // Process all children
           if (node.content && node.content.size > 0) {
             for (let i = 0; i < node.content.size; i++) {
               const child = node.content.content[i];
-              if (child) {
-                if (i > 0) result += '\n\n';
-                serializeNode(child, null, depth);
-              }
+              if (child) parts.push(serializeNode(child, null, depth));
             }
           }
-          break;
+          return parts.join('\n\n');
+        }
 
-        case 'paragraph':
-          if (node.content && node.content.size > 0) {
-            for (let i = 0; i < node.content.size; i++) {
-              const child = node.content.content[i];
-              if (child) {
-                serializeNode(child, null, depth);
-              }
-            }
+        case 'paragraph': {
+          const inner = serializeChildren(node, null, depth);
+          const align = node.attrs?.textAlign;
+          if (align && align !== 'left') {
+            return `<p style="text-align: ${align}">${inner}</p>`;
           }
-          break;
+          return inner;
+        }
 
         case 'heading': {
           const level = node.attrs.level || 1;
-          result += '#'.repeat(level) + ' ';
-          if (node.content && node.content.size > 0) {
-            for (let i = 0; i < node.content.size; i++) {
-              const child = node.content.content[i];
-              if (child) {
-                serializeNode(child, null, depth);
-              }
-            }
+          const inner = serializeChildren(node, null, depth);
+          const align = node.attrs?.textAlign;
+          const prefix = '#'.repeat(level) + ' ';
+          if (align && align !== 'left') {
+            return `<h${level} style="text-align: ${align}">${inner}</h${level}>`;
           }
-          break;
+          return prefix + inner;
         }
 
         case 'text':
-          result += serializeMarks(node);
-          break;
+          return serializeMarks(node);
 
         case 'math':
-          result += paramsToMathMd(node.attrs);
-          break;
+          return paramsToMathMd(node.attrs);
 
         case 'image':
-          result += paramsToImageMd(node.attrs);
-          break;
+          return paramsToImageMd(node.attrs);
 
         case 'small':
-          result += '<small>';
-          if (node.content && node.content.size > 0) {
-            for (let i = 0; i < node.content.size; i++) {
-              const child = node.content.content[i];
-              if (child) {
-                serializeNode(child, null, depth);
-              }
-            }
-          }
-          result += '</small>';
-          break;
+          return `<small>${serializeChildren(node, null, depth)}</small>`;
 
-        case 'bulletList':
+        case 'bulletList': {
+          const items = [];
           for (let i = 0; i < node.content.size; i++) {
             const child = node.content.content[i];
-            if (child) {
-              serializeNode(child, 'bullet', depth);
-              if (i < node.content.size - 1) result += '\n';
-            }
+            if (child) items.push(serializeNode(child, 'bullet', depth));
           }
-          break;
+          return items.join('\n');
+        }
 
-        case 'orderedList':
+        case 'orderedList': {
+          const items = [];
           for (let i = 0; i < node.content.size; i++) {
             const child = node.content.content[i];
-            if (child) {
-              serializeNode(child, i + 1, depth);
-              if (i < node.content.size - 1) result += '\n';
-            }
+            if (child) items.push(serializeNode(child, i + 1, depth));
           }
-          break;
+          return items.join('\n');
+        }
 
         case 'listItem': {
           // Add indentation for nested lists
           const indent = '  '.repeat(depth);
+          const prefix = listNumber === 'bullet' ? indent + '- ' : indent + `${listNumber}. `;
 
-          // Use the passed listNumber parameter
-          if (listNumber === 'bullet') {
-            result += indent + '- ';
-          } else if (typeof listNumber === 'number') {
-            result += indent + `${listNumber}. `;
-          }
+          let out = prefix;
+          let hasProcessedFirstParagraph = false;
 
-          // Process list item content properly
           if (node.content && node.content.size > 0) {
-            let hasProcessedFirstParagraph = false;
-
             for (let i = 0; i < node.content.size; i++) {
               const child = node.content.content[i];
-              if (child && child.type) {
-                if (child.type.name === 'paragraph') {
-                  // For paragraphs in list items, process their content directly
-                  if (child.content && child.content.size > 0) {
-                    for (let j = 0; j < child.content.size; j++) {
-                      const grandchild = child.content.content[j];
-                      if (grandchild) {
-                        serializeNode(grandchild, null, depth);
-                      }
-                    }
-                  }
-                  hasProcessedFirstParagraph = true;
-                } else if (child.type.name === 'bulletList' || child.type.name === 'orderedList') {
-                  // Handle nested lists
-                  if (hasProcessedFirstParagraph) {
-                    result += '\n';
-                  }
-                  serializeNode(child, null, depth + 1);
-                } else {
-                  serializeNode(child, null, depth);
-                }
+              if (!child?.type) continue;
+
+              if (child.type.name === 'paragraph') {
+                out += serializeChildren(child, null, depth);
+                hasProcessedFirstParagraph = true;
+              } else if (child.type.name === 'bulletList' || child.type.name === 'orderedList') {
+                // Handle nested lists
+                if (hasProcessedFirstParagraph) out += '\n';
+                out += serializeNode(child, null, depth + 1);
+              } else {
+                out += serializeNode(child, null, depth);
               }
             }
           }
-          break;
+          return out;
         }
 
         case 'blockquote':
-          result += '> ';
-          if (node.content && node.content.size > 0) {
-            for (let i = 0; i < node.content.size; i++) {
-              const child = node.content.content[i];
-              if (child) {
-                serializeNode(child, null, depth);
-              }
-            }
-          }
-          break;
+          return '> ' + serializeChildren(node, null, depth);
 
         case 'codeBlock': {
           const language = node.attrs.language || '';
-          result += '```' + language + '\n';
-          result += node.textContent;
-          result += '\n```';
-          break;
+          return '```' + language + '\n' + node.textContent + '\n```';
         }
 
         case 'hardBreak':
-          result += '  \n';
-          break;
+          return '  \n';
 
         case 'horizontalRule':
-          result += '---';
-          break;
+          return '---';
 
         default:
           // Fallback: try to process children
-          if (node.content) {
-            node.content.forEach(child => serializeNode(child, null, depth));
-          }
-          break;
+          return serializeChildren(node, null, depth);
       }
     };
 
-    serializeNode(doc, null, 0);
-    return result.trim();
+    const serializeChildren = (node, listNumber = null, depth = 0) => {
+      if (!node.content || node.content.size === 0) return '';
+      let out = '';
+      for (let i = 0; i < node.content.size; i++) {
+        const child = node.content.content[i];
+        if (child) out += serializeNode(child, listNumber, depth);
+      }
+      return out;
+    };
+
+    return serializeNode(doc, null, 0).trim();
   };
 };
