@@ -48,8 +48,10 @@ export function useChannelVersionHistory() {
       currentPage.value = 1;
 
       // Check if there are more pages
-      // response.next will be null if no more pages
-      hasMore.value = response.next !== null;
+      // Only show "more" if we got a full page AND the API says there's more
+      // This prevents showing "Show more" when there are only a few versions
+      const gotFullPage = (response.results || []).length === VERSIONS_PER_PAGE;
+      hasMore.value = response.next !== null && gotFullPage;
     } catch (err) {
       error.value = err;
       versions.value = [];

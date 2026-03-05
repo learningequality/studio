@@ -98,6 +98,14 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Unable to load version history',
     context: 'Error message when channel versions fail to load',
   },
+  noVersionsAvailable: {
+    message: 'No version history available',
+    context: 'Message shown when channel has no published versions',
+  },
+  retry: {
+    message: 'Retry',
+    context: 'Button text to retry loading more versions after an error',
+  },
   pendingStatus: {
     message: 'Submitted',
     context: 'Status indicating that an Community Library submission is pending',
