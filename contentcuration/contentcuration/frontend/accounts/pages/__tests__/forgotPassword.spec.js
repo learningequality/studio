@@ -1,10 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/vue';
 import VueRouter from 'vue-router';
-import { createLocalVue } from '@vue/test-utils';
 import ForgotPassword from '../resetPassword/ForgotPassword';
-
-const localVue = createLocalVue();
-localVue.use(VueRouter);
 
 const sendPasswordResetLinkMock = jest.fn(() => Promise.resolve());
 
@@ -18,7 +14,6 @@ const renderComponent = () => {
   });
 
   const utils = render(ForgotPassword, {
-    localVue,
     router,
     store: {
       modules: {
