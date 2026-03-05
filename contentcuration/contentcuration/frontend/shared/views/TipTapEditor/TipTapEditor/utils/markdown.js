@@ -5,7 +5,8 @@ import { storageUrl } from '../../../../vuex/file/utils';
 
 // --- Image Translation ---
 export const IMAGE_PLACEHOLDER = '${☣ CONTENTSTORAGE}';
-export const IMAGE_REGEX = /!\[([^\]]*)\]\(([^/]+\/[^\s=)]+)(?:\s*=\s*([0-9.]+)x([0-9.]+))?\)/g;
+export const IMAGE_REGEX =
+  /!\[([^\]]*)\]\(([^/]+\/[^\s=)]+)(?:\s*=\s*([0-9.]+)x([0-9.]+))?(?:\s+align=(\w+))?\)/g;
 
 export const imageMdToParams = markdown => {
   // Reset regex state before executing to ensure it works on all matches
@@ -13,7 +14,7 @@ export const imageMdToParams = markdown => {
   const match = IMAGE_REGEX.exec(markdown);
   if (!match) return null;
 
-  const [, alt, fullPath, width, height] = match;
+  const [, alt, fullPath, width, height, align] = match;
 
   // Extract just the filename from the full path
   const checksumWithExt = fullPath.split('/').pop();
@@ -24,17 +25,18 @@ export const imageMdToParams = markdown => {
   const checksum = parts.join('.');
 
   // Return the data with the correct property names that the rest of the system expects.
-  return { checksum, extension, alt: alt || '', width, height };
+  return { checksum, extension, alt: alt || '', width, height, align };
 };
 
-export const paramsToImageMd = ({ src, alt, width, height, permanentSrc }) => {
+export const paramsToImageMd = ({ src, alt, width, height, permanentSrc, textAlign }) => {
   const sourceToSave = permanentSrc || src;
 
   const fileName = sourceToSave.split('/').pop();
+  const alignSuffix = textAlign && textAlign !== 'left' ? ` align=${textAlign.trim()}` : '';
   if (Number.isFinite(+width) && Number.isFinite(+height)) {
-    return `![${alt || ''}](${IMAGE_PLACEHOLDER}/${fileName} =${width}x${height})`;
+    return `![${alt || ''}](${IMAGE_PLACEHOLDER}/${fileName} =${width}x${height}${alignSuffix})`;
   }
-  return `![${alt || ''}](${IMAGE_PLACEHOLDER}/${fileName})`;
+  return `![${alt || ''}](${IMAGE_PLACEHOLDER}/${fileName}${alignSuffix ? ` ${alignSuffix}` : ''})`;
 };
 
 // --- Math/Formula Translation ---
@@ -134,12 +136,13 @@ export function preprocessMarkdown(markdown) {
     // 2. The permanentSrc is just the checksum + extension.
     const permanentSrc = `${params.checksum}.${params.extension}`;
 
-    // 3. Create attributes string for width and height only if they exist
+    // 3. Create attributes string for width, height, and alignment only if they exist
     const widthAttr = params.width ? ` width="${params.width}"` : '';
     const heightAttr = params.height ? ` height="${params.height}"` : '';
+    const alignAttr = params.align ? ` style="text-align: ${params.align}"` : '';
 
     // 4. Create an <img> tag with the REAL display URL in `src`.
-    return `<img src="${displayUrl}" permanentSrc="${permanentSrc}" alt="${params.alt}"${widthAttr}${heightAttr} />`;
+    return `<img src="${displayUrl}" permanentSrc="${permanentSrc}" alt="${params.alt}"${widthAttr}${heightAttr}${alignAttr} />`;
   });
 
   processedMarkdown = processedMarkdown.replace(MATH_REGEX, match => {
