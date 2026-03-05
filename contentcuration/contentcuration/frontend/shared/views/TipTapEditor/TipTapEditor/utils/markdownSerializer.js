@@ -131,7 +131,7 @@ export const createCustomMarkdownSerializer = editor => {
               if (!child?.type) continue;
 
               if (child.type.name === 'paragraph') {
-                out += serializeChildren(child, null, depth);
+                out += serializeNode(child, null, depth);
                 hasProcessedFirstParagraph = true;
               } else if (child.type.name === 'bulletList' || child.type.name === 'orderedList') {
                 // Handle nested lists
