@@ -79,7 +79,8 @@ export function useChannelVersionHistory() {
       versions.value = [...versions.value, ...(response.results || [])];
       currentPage.value = nextPage;
 
-      hasMore.value = response.next !== null;
+      const gotFullPage = (response.results || []).length === VERSIONS_PER_PAGE;
+      hasMore.value = response.next !== null && gotFullPage;
     } catch (err) {
       error.value = err;
     } finally {

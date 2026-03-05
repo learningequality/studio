@@ -21,7 +21,7 @@
         class="loading"
         role="status"
         aria-live="polite"
-        aria-label="Loading version history"
+        :aria-label="loadingVersionHistory$()"
       >
         <KCircularLoader />
       </div>
@@ -155,6 +155,7 @@
         versionDescriptionLabel$,
         noVersionsAvailable$,
         retry$,
+        loadingVersionHistory$,
       } = communityChannelsStrings;
 
       const {
@@ -209,6 +210,7 @@
         versionDescriptionLabel$,
         noVersionsAvailable$,
         retry$,
+        loadingVersionHistory$,
       };
     },
     props: {

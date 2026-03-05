@@ -106,6 +106,10 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Retry',
     context: 'Button text to retry loading more versions after an error',
   },
+  loadingVersionHistory: {
+    message: 'Loading version history',
+    context: 'Aria label for screen readers when version history is loading',
+  },
   pendingStatus: {
     message: 'Submitted',
     context: 'Status indicating that an Community Library submission is pending',
