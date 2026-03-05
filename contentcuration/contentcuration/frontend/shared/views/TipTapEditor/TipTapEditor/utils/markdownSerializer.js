@@ -96,8 +96,14 @@ export const createCustomMarkdownSerializer = editor => {
         case 'image':
           return paramsToImageMd(node.attrs);
 
-        case 'small':
-          return `<small>${serializeChildren(node, null, depth)}</small>`;
+        case 'small': {
+          const inner = serializeChildren(node, null, depth);
+          const align = node.attrs?.textAlign;
+          if (align && align !== 'left') {
+            return `<small style="text-align: ${align}">${inner}</small>`;
+          }
+          return `<small>${inner}</small>`;
+        }
 
         case 'bulletList': {
           const items = [];

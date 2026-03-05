@@ -404,6 +404,7 @@
   }
 
   .editor-container small {
+    display: block;
     margin: 4px 0;
     font-size: 12px;
   }
