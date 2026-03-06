@@ -11,7 +11,7 @@
  * https://github.com/arnog/mathlive/issues/2948
  */
 
-import { onBeforeUnmount, watch } from 'vue';
+import { onUnmounted, watch } from 'vue';
 import { localizeAnnouncement } from './mathLiveA11yLocalize';
 
 const NODE_TEXT_CONTENT = Object.getOwnPropertyDescriptor(Node.prototype, 'textContent');
@@ -41,7 +41,7 @@ export function setupA11yAnnounceInterceptor(mathfield) {
     configurable: true,
   });
 
-  return () => delete ariaLiveEl.textContent;
+  return () => Object.defineProperty(ariaLiveEl, 'textContent', NODE_TEXT_CONTENT);
 }
 
 /**
@@ -67,5 +67,5 @@ export function useMathLiveA11yAnnounce(mathfieldRef) {
   };
 
   watch(mathfieldRef, setup, { immediate: true });
-  onBeforeUnmount(teardown);
+  onUnmounted(teardown);
 }

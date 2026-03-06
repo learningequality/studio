@@ -3,7 +3,7 @@ import { localizeAnnouncement } from '../TipTapEditor/components/math/mathLiveA1
 
 jest.mock('vue', () => ({
   watch: jest.fn(),
-  onBeforeUnmount: jest.fn(),
+  onUnmounted: jest.fn(),
 }));
 
 // Mock the localize module
@@ -11,11 +11,10 @@ jest.mock('../TipTapEditor/components/math/mathLiveA11yLocalize', () => ({
   localizeAnnouncement: jest.fn(text => `[localized] ${text}`),
 }));
 
-// Mock the strings module (default export + named export)
+// Mock the strings module (default export)
 jest.mock('../TipTapEditor/components/math/MathLiveA11yStrings', () => ({
   __esModule: true,
   default: { fake: 'translator' },
-  RELATION_NAMES: ['fraction'],
 }));
 
 /**

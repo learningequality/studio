@@ -4,7 +4,7 @@ import { createTranslator } from 'shared/i18n';
 // screen reader announcements. Remove when upstream fix lands:
 // https://github.com/arnog/mathlive/issues/2948
 
-const ACTION_MESSAGES = {
+const MESSAGES = {
   deleted: {
     message: 'deleted: ',
     context:
@@ -35,11 +35,6 @@ const ACTION_MESSAGES = {
     context:
       'Screen reader announcement when cursor reaches the end of the entire math input field. {spokenText} is the current element.',
   },
-};
-
-// Relation names from mathlive's relationName function.
-// Keys are the camelCase version of the English relation name string.
-const RELATION_MESSAGES = {
   accented: {
     message: 'accented',
     context: 'Screen reader name for an accented math element',
@@ -136,7 +131,6 @@ const RELATION_MESSAGES = {
     message: 'math field',
     context: 'Screen reader name for the math field root element',
   },
-  // "mathfield" (one word) is also used by mathlive as an alias
   mathfield: {
     message: 'math field',
     context: 'Screen reader name for the math field root element (one-word variant)',
@@ -174,14 +168,5 @@ const RELATION_MESSAGES = {
     context: 'Screen reader name for a combined superscript-and-subscript element',
   },
 };
-
-// English relation name strings derived from RELATION_MESSAGES, sorted longest-first
-// to prevent partial regex matches (e.g. "superscript and subscript" before "superscript")
-export const RELATION_NAMES = Object.values(RELATION_MESSAGES)
-  .map(m => m.message)
-  .filter((v, i, a) => a.indexOf(v) === i) // dedupe ("math field" appears twice)
-  .sort((a, b) => b.length - a.length);
-
-const MESSAGES = { ...ACTION_MESSAGES, ...RELATION_MESSAGES };
 
 export default createTranslator('MathLiveA11yStrings', MESSAGES);
