@@ -1,46 +1,58 @@
 <template>
 
-  <div
+  <KFocusTrap
     v-if="value"
-    class="modal-wrapper"
-    data-testid="modal-wrapper"
-    :style="{ backgroundColor: $themeTokens.surface }"
+    @shouldFocusFirstEl="focusFirstEl"
+    @shouldFocusLastEl="focusLastEl"
   >
-    <KToolbar
-      textColor="white"
-      :style="{ backgroundColor: $themeTokens.appBarDark }"
+    <div
+      ref="modalRef"
+      class="modal-wrapper"
+      data-testid="modal-wrapper"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="immersive-modal-title"
+      :style="{ backgroundColor: $themeTokens.surface }"
     >
-      <template #icon>
-        <KIconButton
-          icon="close"
-          :ariaLabel="$tr('close')"
-          :color="$themeTokens.textInverted"
-          data-test="close"
-          @click="$emit('input', false)"
-        />
-      </template>
+      <KToolbar
+        textColor="white"
+        :style="{ backgroundColor: $themeTokens.appBarDark }"
+      >
+        <template #icon>
+          <KIconButton
+            icon="close"
+            :ariaLabel="$tr('close')"
+            :color="$themeTokens.textInverted"
+            data-test="close"
+            @click="$emit('input', false)"
+          />
+        </template>
 
-      <template #default>
-        <span class="toolbar-title">
-          <slot name="header">{{ title }}</slot>
-        </span>
-      </template>
+        <template #default>
+          <span
+            id="immersive-modal-title"
+            class="toolbar-title"
+          >
+            <slot name="header">{{ title }}</slot>
+          </span>
+        </template>
 
-      <template #actions>
-        <slot name="action"></slot>
-      </template>
-    </KToolbar>
+        <template #actions>
+          <slot name="action"></slot>
+        </template>
+      </KToolbar>
 
-    <StudioOfflineAlert :offset="46" />
+      <StudioOfflineAlert :offset="46" />
 
-    <StudioPage
-      :offline="offline"
-      :marginTop="0"
-      :centered="true"
-    >
-      <slot></slot>
-    </StudioPage>
-  </div>
+      <StudioPage
+        :offline="offline"
+        :marginTop="0"
+        :centered="true"
+      >
+        <slot></slot>
+      </StudioPage>
+    </div>
+  </KFocusTrap>
 
 </template>
 
@@ -50,6 +62,7 @@
   import { mapState } from 'vuex';
   import StudioOfflineAlert from './StudioOfflineAlert';
   import StudioPage from './StudioPage';
+  import { getFirstFocusableElement, getLastFocusableElement } from 'shared/utils/focusUtils';
 
   export default {
     name: 'StudioImmersiveModal',
@@ -73,18 +86,65 @@
         offline: state => !state.connection.online,
       }),
     },
-    mounted() {
-      document.documentElement.classList.add('modal-open');
-      const handleKeyDown = event => {
-        if (event.key === 'Escape') {
-          this.$emit('input', false);
+    watch: {
+      value: {
+        handler(newValue) {
+          if (newValue) {
+            this.onModalOpen();
+          } else {
+            this.onModalClose();
+          }
+        },
+        immediate: true,
+      },
+    },
+    beforeDestroy() {
+      this.onModalClose();
+    },
+    methods: {
+      onModalOpen() {
+        if (!this.handleKeyDown) {
+          this.handleKeyDown = event => {
+            if (event.key === 'Escape') {
+              this.$emit('input', false);
+            }
+          };
+          document.addEventListener('keydown', this.handleKeyDown);
         }
-      };
-      document.addEventListener('keydown', handleKeyDown);
-      this.$once('hook:beforeDestroy', () => {
+
+        document.documentElement.classList.add('modal-open');
+
+        this.lastFocus = document.activeElement;
+        this.$nextTick(() => {
+          this.focusFirstEl();
+        });
+      },
+      onModalClose() {
+        if (this.handleKeyDown) {
+          document.removeEventListener('keydown', this.handleKeyDown);
+          this.handleKeyDown = null;
+        }
         document.documentElement.classList.remove('modal-open');
-        document.removeEventListener('keydown', handleKeyDown);
-      });
+
+        if (this.lastFocus) {
+          this.lastFocus.focus();
+        }
+      },
+      focusLastEl() {
+        const modalRef = this.$refs['modalRef'];
+        const lastEl = getLastFocusableElement(modalRef);
+        if (lastEl) {
+          lastEl.focus();
+        }
+      },
+
+      focusFirstEl() {
+        const modalRef = this.$refs['modalRef'];
+        const firstEl = getFirstFocusableElement(modalRef);
+        if (firstEl) {
+          firstEl.focus();
+        }
+      },
     },
     $trs: {
       close: 'Close',
