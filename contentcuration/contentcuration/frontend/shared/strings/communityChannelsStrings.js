@@ -244,15 +244,15 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
       'Snackbar message shown when submission fails from the "Submit to Community Library" panel',
   },
   countryLabel: {
-    message: 'Country(s)',
+    message: 'Countries',
     context: 'Label for the country selection field in the "Submit to Community Library" panel',
   },
   languagesLabel: {
-    message: 'Language(s)',
+    message: 'Languages',
     context: 'Label for detected languages in the "Submit to Community Library" panel',
   },
   licensesLabel: {
-    message: 'License(s)',
+    message: 'Licenses',
     context: 'Label for detected licenses in the "Submit to Community Library" panel',
   },
   categoriesLabel: {
@@ -310,7 +310,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     context: 'Message shown after listing compatible licenses when license check passes',
   },
   incompatibleLicensesDetected: {
-    message: 'Incompatible license(s) detected',
+    message: 'Incompatible licenses detected',
     context: 'Title shown when invalid licenses are detected in the channel',
   },
   channelCannotBeDistributed: {
@@ -333,7 +333,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
       'Description shown when all licenses are compatible, includes the license names and confirmation message',
   },
   specialPermissionsDetected: {
-    message: 'Special Permissions license(s) detected',
+    message: 'Special Permissions licenses detected',
     context: 'Title shown when special permissions licenses are detected in the channel',
   },
   confirmDistributionRights: {
