@@ -35,7 +35,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     context: 'Label for the version description text area',
   },
   modeLiveDescription: {
-    message: 'This edition will be accessible to the public through the Kolibri public library.',
+    message: 'This edition will be accessible in Kolibri through a channel token.',
     context: 'Description for the live publishing mode',
   },
   modeDraftDescription: {

@@ -76,8 +76,12 @@
           <KButton
             v-if="adminReview && submission.status === CommunityLibraryStatus.PENDING"
             :text="reviewAction$()"
-            style="height: 40px"
             @click="showReviewSidePanel = true"
+          />
+          <ChannelActionsDropdown
+            v-if="adminReview"
+            primary
+            :channelId="channelId"
           />
         </div>
       </div>
@@ -118,6 +122,7 @@
   import { useRoute, useRouter } from 'vue-router/composables';
   import { computed, ref, watch } from 'vue';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
+  import ChannelActionsDropdown from '../../../../administration/pages/Channels/ChannelActionsDropdown.vue';
   import ReviewSubmissionSidePanel from '../../../../administration/components/sidePanels/ReviewSubmissionSidePanel.vue';
   import CommunityLibraryChip from '../CommunityLibraryChip.vue';
   import CommunityLibraryStatusChip from '../CommunityLibraryStatusChip.vue';
@@ -299,7 +304,13 @@
 
     .thumbnail-wrapper {
       flex-grow: 1;
-      max-width: 300px;
+      max-width: 200px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
     }
   }
 

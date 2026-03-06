@@ -158,7 +158,6 @@
       headerStyles() {
         return {
           backgroundColor: this.immersive ? this.$themeTokens.appBar : this.$themeTokens.surface,
-          borderBottom: `1px solid ${this.$themePalette.grey.v_400}`,
         };
       },
       sidePanelStyles() {
