@@ -20,7 +20,6 @@
         v-if="isLoading && versions.length === 0"
         class="loading"
         role="status"
-        aria-live="polite"
         :aria-label="loadingVersionHistory$()"
       >
         <KCircularLoader />
@@ -30,7 +29,6 @@
         v-else-if="error && versions.length === 0"
         class="error"
         role="alert"
-        aria-live="assertive"
       >
         {{ errorLoadingVersions$() }}
       </div>
@@ -47,33 +45,36 @@
         class="versions-list"
       >
         <!-- Display each version -->
-        <ul
-          class="versions-list-items"
-          role="list"
-        >
+        <ul class="versions-list-items">
           <li
             v-for="version in versions"
             :key="version.id"
             class="version-item"
-            :style="{ borderBottom: `1px solid ${$themePalette.grey.v_200}` }"
           >
-            <span class="version-number">
-              {{ versionLabel$({ version: version.version }) }}
-            </span>
+            <div class="version-header">
+              <span class="version-number">
+                {{ versionLabel$({ version: version.version }) }}
+              </span>
+              <span :style="{ color: $themeTokens.annotation }">
+                {{ $formatDate(version.date_published) }}
+              </span>
+            </div>
             <div
-              v-if="version.version_notes"
               class="version-description"
-              :style="{ backgroundColor: $themePalette.grey.v_50 }"
+              :style="{ backgroundColor: $themePalette.grey.v_100 }"
             >
               <div class="description-label">
                 {{ versionDescriptionLabel$() }}
               </div>
-              <div
-                class="description-body"
-                :style="{ color: $themePalette.grey.v_800 }"
-              >
-                {{ version.version_notes }}
-              </div>
+              <KOptionalText>
+                <div
+                  v-if="version.version_notes"
+                  class="description-body"
+                  :style="{ color: $themeTokens.annotation }"
+                >
+                  {{ version.version_notes }}
+                </div>
+              </KOptionalText>
             </div>
           </li>
         </ul>
@@ -116,7 +117,7 @@
         <div class="collapse-section">
           <KButton
             appearance="basic-link"
-            :text="seeLess$()"
+            :text="hideVersions$()"
             data-test="collapse-versions-button"
             @click="handleCollapse"
           />
@@ -138,7 +139,7 @@
    * Displays channel version history with pagination
    *
    * Shows a collapsible list of channel versions with their descriptions.
-   * Versions are fetched on-demand when expanded and paginated with 10 versions per page.
+   * Versions are fetched on-demand when expanded and paginated with 5 versions per page.
    *
    * @component
    */
@@ -148,7 +149,7 @@
       const isExpanded = ref(false);
       const {
         seeAllVersions$,
-        seeLess$,
+        hideVersions$,
         showMore$,
         versionLabel$,
         errorLoadingVersions$,
@@ -203,7 +204,7 @@
         handleCollapse,
         handleShowMore,
         seeAllVersions$,
-        seeLess$,
+        hideVersions$,
         showMore$,
         versionLabel$,
         errorLoadingVersions$,
@@ -243,26 +244,29 @@
 
       .versions-list {
         .versions-list-items {
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
           padding: 0;
           margin: 0;
           list-style: none;
         }
 
         .version-item {
-          padding: 12px 0;
+          .version-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
 
-          &:last-child {
-            border-bottom: 0 !important;
-          }
-
-          .version-number {
-            font-weight: 500;
+            .version-number {
+              font-weight: 600;
+            }
           }
 
           .version-description {
-            padding: 12px;
-            margin-top: 8px;
-            border-radius: 6px;
+            padding: 10px;
+            margin-top: 4px;
+            border-radius: 4px;
 
             .description-label {
               margin-bottom: 6px;
@@ -284,6 +288,7 @@
           display: flex;
           gap: 8px;
           align-items: center;
+          justify-content: center;
           margin: 8px 0;
 
           .inline-loader {

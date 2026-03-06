@@ -82,8 +82,8 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'See all versions',
     context: 'Button text to expand and show channel version history',
   },
-  seeLess: {
-    message: 'See less',
+  hideVersions: {
+    message: 'Hide versions',
     context: 'Button text to collapse channel version history',
   },
   showMore: {

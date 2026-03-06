@@ -13,6 +13,13 @@ localVue.use(KThemePlugin);
 
 jest.mock('shared/composables/useChannelVersionHistory');
 
+const createVersion = (id, version, version_notes = null) => ({
+  id,
+  version,
+  version_notes,
+  date_published: '2026-03-06T12:00:00Z',
+});
+
 describe('ChannelVersionHistory', () => {
   let mockComposable;
 
@@ -52,7 +59,7 @@ describe('ChannelVersionHistory', () => {
     });
 
     it('does not show versions list when collapsed', () => {
-      mockComposable.versions.value = [{ id: 1, version: 1, version_notes: 'Test' }];
+      mockComposable.versions.value = [createVersion(1, 1, 'Test')];
       renderComponent();
 
       expect(
@@ -72,7 +79,7 @@ describe('ChannelVersionHistory', () => {
     });
 
     it('does not fetch again if versions already loaded', async () => {
-      mockComposable.versions.value = [{ id: 1, version: 1 }];
+      mockComposable.versions.value = [createVersion(1, 1)];
       renderComponent();
 
       const expandButton = screen.getByText(communityChannelsStrings.seeAllVersions$());
@@ -128,9 +135,9 @@ describe('ChannelVersionHistory', () => {
 
     it('renders version list when versions are available', async () => {
       const versions = [
-        { id: 1, version: 3, version_notes: 'Version 3 notes' },
-        { id: 2, version: 2, version_notes: 'Version 2 notes' },
-        { id: 3, version: 1, version_notes: null },
+        createVersion(1, 3, 'Version 3 notes'),
+        createVersion(2, 2, 'Version 2 notes'),
+        createVersion(3, 1, null),
       ];
       mockComposable.versions.value = versions;
 
@@ -153,7 +160,7 @@ describe('ChannelVersionHistory', () => {
     });
 
     it('renders version descriptions when available', async () => {
-      mockComposable.versions.value = [{ id: 1, version: 2, version_notes: 'Added new features' }];
+      mockComposable.versions.value = [createVersion(1, 2, 'Added new features')];
 
       renderComponent();
       await fireEvent.click(screen.getByText(communityChannelsStrings.seeAllVersions$()));
@@ -166,34 +173,21 @@ describe('ChannelVersionHistory', () => {
       });
     });
 
-    it('does not render description section when version_notes is null', async () => {
-      mockComposable.versions.value = [{ id: 1, version: 1, version_notes: null }];
-
-      renderComponent();
-      await fireEvent.click(screen.getByText(communityChannelsStrings.seeAllVersions$()));
-
-      await waitFor(() => {
-        expect(
-          screen.queryByText(communityChannelsStrings.versionDescriptionLabel$()),
-        ).not.toBeInTheDocument();
-      });
-    });
-
-    it('shows "See less" button when expanded', async () => {
-      mockComposable.versions.value = [{ id: 1, version: 1 }];
+    it('shows "Hide versions" button when expanded', async () => {
+      mockComposable.versions.value = [createVersion(1, 1)];
       renderComponent();
 
       await fireEvent.click(screen.getByText(communityChannelsStrings.seeAllVersions$()));
 
       await waitFor(() => {
-        expect(screen.getByText(communityChannelsStrings.seeLess$())).toBeInTheDocument();
+        expect(screen.getByText(communityChannelsStrings.hideVersions$())).toBeInTheDocument();
       });
     });
   });
 
   describe('pagination', () => {
     it('shows "Show more" button when hasMore is true', async () => {
-      mockComposable.versions.value = [{ id: 1, version: 1 }];
+      mockComposable.versions.value = [createVersion(1, 1)];
       mockComposable.hasMore.value = true;
 
       renderComponent();
@@ -205,7 +199,7 @@ describe('ChannelVersionHistory', () => {
     });
 
     it('does not show "Show more" button when hasMore is false', async () => {
-      mockComposable.versions.value = [{ id: 1, version: 1 }];
+      mockComposable.versions.value = [createVersion(1, 1)];
       mockComposable.hasMore.value = false;
 
       renderComponent();
@@ -217,7 +211,7 @@ describe('ChannelVersionHistory', () => {
     });
 
     it('calls fetchMore when "Show more" is clicked', async () => {
-      mockComposable.versions.value = [{ id: 1, version: 1 }];
+      mockComposable.versions.value = [createVersion(1, 1)];
       mockComposable.hasMore.value = true;
 
       renderComponent();
@@ -230,7 +224,7 @@ describe('ChannelVersionHistory', () => {
     });
 
     it('disables "Show more" button when loading more', async () => {
-      mockComposable.versions.value = [{ id: 1, version: 1 }];
+      mockComposable.versions.value = [createVersion(1, 1)];
       mockComposable.hasMore.value = true;
       mockComposable.isLoadingMore.value = true;
 
@@ -244,7 +238,7 @@ describe('ChannelVersionHistory', () => {
     });
 
     it('shows inline loader when loading more', async () => {
-      mockComposable.versions.value = [{ id: 1, version: 1 }];
+      mockComposable.versions.value = [createVersion(1, 1)];
       mockComposable.hasMore.value = true;
       mockComposable.isLoadingMore.value = true;
 
@@ -258,7 +252,7 @@ describe('ChannelVersionHistory', () => {
     });
 
     it('shows error message when fetchMore fails but versions exist', async () => {
-      mockComposable.versions.value = [{ id: 1, version: 1 }];
+      mockComposable.versions.value = [createVersion(1, 1)];
       mockComposable.hasMore.value = true;
       mockComposable.error.value = new Error('Failed to fetch more');
 
@@ -272,7 +266,7 @@ describe('ChannelVersionHistory', () => {
     });
 
     it('shows retry button when fetchMore fails', async () => {
-      mockComposable.versions.value = [{ id: 1, version: 1 }];
+      mockComposable.versions.value = [createVersion(1, 1)];
       mockComposable.hasMore.value = true;
       mockComposable.error.value = new Error('Failed to fetch more');
 
@@ -285,7 +279,7 @@ describe('ChannelVersionHistory', () => {
     });
 
     it('calls fetchMore when retry button is clicked', async () => {
-      mockComposable.versions.value = [{ id: 1, version: 1 }];
+      mockComposable.versions.value = [createVersion(1, 1)];
       mockComposable.hasMore.value = true;
       mockComposable.error.value = new Error('Failed to fetch more');
 
@@ -300,8 +294,8 @@ describe('ChannelVersionHistory', () => {
   });
 
   describe('collapsing', () => {
-    it('hides version list when "See less" is clicked', async () => {
-      mockComposable.versions.value = [{ id: 1, version: 1 }];
+    it('hides version list when "Hide versions" is clicked', async () => {
+      mockComposable.versions.value = [createVersion(1, 1)];
 
       renderComponent();
 
@@ -312,8 +306,8 @@ describe('ChannelVersionHistory', () => {
       ).toBeInTheDocument();
 
       // Collapse
-      const seeLessButton = screen.getByText(communityChannelsStrings.seeLess$());
-      await fireEvent.click(seeLessButton);
+      const hideVersionsButton = screen.getByText(communityChannelsStrings.hideVersions$());
+      await fireEvent.click(hideVersionsButton);
 
       await waitFor(() => {
         expect(
@@ -326,7 +320,7 @@ describe('ChannelVersionHistory', () => {
 
   describe('channel ID changes', () => {
     it('calls reset when channelId prop changes', async () => {
-      mockComposable.versions.value = [{ id: 1, version: 1 }];
+      mockComposable.versions.value = [createVersion(1, 1)];
 
       const wrapper = renderComponent({ channelId: 'channel-1' });
 

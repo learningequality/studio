@@ -76,7 +76,7 @@
                   </div>
 
                   <ChannelVersionHistory
-                    v-if="currentChannel"
+                    v-if="currentChannel && currentChannel.version > 0"
                     :channelId="currentChannel.id"
                   />
                 </div>
@@ -361,7 +361,9 @@
           }
 
           if (mode.value === PublishModes.DRAFT) {
-            await Channel.publishDraft(currentChannel.value.id, { use_staging_tree: false });
+            await Channel.publishDraft(currentChannel.value.id, {
+              use_staging_tree: false,
+            });
             emit('close');
           } else {
             // `newChannelLanguage.value` is a KSelect option { value, label }, so we need to
