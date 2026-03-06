@@ -32,9 +32,19 @@ export function useChannelList(options = {}) {
 
   onMounted(() => {
     loading.value = true;
-    store.dispatch('channel/loadChannelList', { listType }).then(() => {
-      loading.value = false;
-    });
+    store
+      .dispatch('channel/loadChannelList', { listType })
+      .then(() => {
+        loading.value = false;
+      })
+      .catch(error => {
+        loading.value = false;
+        if (error && error.response) {
+          store.dispatch('errors/handleAxiosError', error);
+        } else {
+          store.dispatch('errors/handleGenericError', error || {});
+        }
+      });
   });
 
   return {
