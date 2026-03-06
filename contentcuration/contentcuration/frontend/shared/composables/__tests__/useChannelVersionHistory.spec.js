@@ -14,19 +14,18 @@ describe('useChannelVersionHistory', () => {
 
   describe('fetchVersions', () => {
     it('fetches first page of versions successfully', async () => {
-      // Mock a full page of 10 versions to trigger hasMore
-      const mockVersions = Array.from({ length: 10 }, (_, i) => ({
+      const mockVersions = Array.from({ length: 5 }, (_, i) => ({
         id: i + 1,
-        version: 10 - i,
-        version_notes: `Version ${10 - i}`,
+        version: 5 - i,
+        version_notes: `Version ${5 - i}`,
       }));
+      const mockMore = { channel: 'channel-id', cursor: 'abc123' };
       ChannelVersion.fetchCollection.mockResolvedValue({
         results: mockVersions,
-        next: 'http://api.com/versions?page=2',
+        more: mockMore,
       });
 
-      const { fetchVersions, versions, isLoading, hasMore, currentPage } =
-        useChannelVersionHistory();
+      const { fetchVersions, versions, isLoading, hasMore } = useChannelVersionHistory();
 
       expect(isLoading.value).toBe(false);
 
@@ -37,19 +36,17 @@ describe('useChannelVersionHistory', () => {
 
       expect(ChannelVersion.fetchCollection).toHaveBeenCalledWith({
         channel: 'channel-id',
-        page_size: VERSIONS_PER_PAGE,
-        page: 1,
+        max_results: VERSIONS_PER_PAGE,
       });
       expect(versions.value).toEqual(mockVersions);
       expect(hasMore.value).toBe(true);
-      expect(currentPage.value).toBe(1);
       expect(isLoading.value).toBe(false);
     });
 
-    it('sets hasMore to false when no next page', async () => {
+    it('sets hasMore to false when no more object', async () => {
       ChannelVersion.fetchCollection.mockResolvedValue({
         results: [{ id: 1, version: 1 }],
-        next: null,
+        more: null,
       });
 
       const { fetchVersions, hasMore } = useChannelVersionHistory();
@@ -74,15 +71,14 @@ describe('useChannelVersionHistory', () => {
     it('resets state before fetching new versions', async () => {
       ChannelVersion.fetchCollection.mockResolvedValue({
         results: [{ id: 1, version: 1 }],
-        next: null,
+        more: null,
       });
 
-      const { fetchVersions, versions, currentPage } = useChannelVersionHistory();
+      const { fetchVersions, versions } = useChannelVersionHistory();
 
       // First fetch
       await fetchVersions('channel-1');
       expect(versions.value.length).toBe(1);
-      expect(currentPage.value).toBe(1);
 
       // Second fetch should reset
       ChannelVersion.fetchCollection.mockResolvedValue({
@@ -90,12 +86,11 @@ describe('useChannelVersionHistory', () => {
           { id: 2, version: 2 },
           { id: 3, version: 3 },
         ],
-        next: null,
+        more: null,
       });
       await fetchVersions('channel-2');
 
       expect(versions.value.length).toBe(2);
-      expect(currentPage.value).toBe(1);
     });
 
     it('clears error on new fetch', async () => {
@@ -109,7 +104,7 @@ describe('useChannelVersionHistory', () => {
       // Successful fetch should clear error
       ChannelVersion.fetchCollection.mockResolvedValue({
         results: [{ id: 1, version: 1 }],
-        next: null,
+        more: null,
       });
       await fetchVersions('channel-id');
       expect(error.value).toBe(null);
@@ -117,39 +112,33 @@ describe('useChannelVersionHistory', () => {
   });
 
   describe('fetchMore', () => {
-    it('fetches next page and appends to existing versions', async () => {
-      // Mock a full page of 10 versions for first page
-      const page1 = Array.from({ length: 10 }, (_, i) => ({ id: i + 1, version: 10 - i }));
-      const page2 = [{ id: 11, version: 1 }];
+    it('fetches next page using cursor and appends to existing versions', async () => {
+      const page1 = Array.from({ length: 5 }, (_, i) => ({ id: i + 1, version: 5 - i }));
+      const page2 = [{ id: 6, version: 1 }];
+      const moreParams = { channel: 'channel-id', cursor: 'cursor123' };
 
       ChannelVersion.fetchCollection
-        .mockResolvedValueOnce({ results: page1, next: 'page2' })
-        .mockResolvedValueOnce({ results: page2, next: null });
+        .mockResolvedValueOnce({ results: page1, more: moreParams })
+        .mockResolvedValueOnce({ results: page2, more: null });
 
-      const { fetchVersions, fetchMore, versions, currentPage, hasMore } =
-        useChannelVersionHistory();
+      const { fetchVersions, fetchMore, versions, hasMore } = useChannelVersionHistory();
 
       await fetchVersions('channel-id');
       expect(versions.value).toEqual(page1);
-      expect(currentPage.value).toBe(1);
+      expect(hasMore.value).toBe(true);
 
       await fetchMore();
 
       expect(ChannelVersion.fetchCollection).toHaveBeenCalledTimes(2);
-      expect(ChannelVersion.fetchCollection).toHaveBeenLastCalledWith({
-        channel: 'channel-id',
-        page_size: VERSIONS_PER_PAGE,
-        page: 2,
-      });
+      expect(ChannelVersion.fetchCollection).toHaveBeenLastCalledWith(moreParams);
       expect(versions.value).toEqual([...page1, ...page2]);
-      expect(currentPage.value).toBe(2);
       expect(hasMore.value).toBe(false);
     });
 
     it('does not fetch when hasMore is false', async () => {
       ChannelVersion.fetchCollection.mockResolvedValue({
         results: [{ id: 1, version: 1 }],
-        next: null,
+        more: null,
       });
 
       const { fetchVersions, fetchMore } = useChannelVersionHistory();
@@ -162,10 +151,11 @@ describe('useChannelVersionHistory', () => {
     });
 
     it('does not fetch when isLoadingMore is true', async () => {
-      const fullPage = Array.from({ length: 10 }, (_, i) => ({ id: i + 1, version: i + 1 }));
+      const fullPage = Array.from({ length: 5 }, (_, i) => ({ id: i + 1, version: i + 1 }));
+      const moreParams = { channel: 'channel-id', cursor: 'cursor123' };
       ChannelVersion.fetchCollection.mockResolvedValue({
         results: fullPage,
-        next: 'page2',
+        more: moreParams,
       });
 
       const { fetchVersions, fetchMore, isLoadingMore } = useChannelVersionHistory();
@@ -173,7 +163,7 @@ describe('useChannelVersionHistory', () => {
 
       // Start first fetchMore but don't await
       ChannelVersion.fetchCollection.mockImplementation(
-        () => new Promise(resolve => setTimeout(() => resolve({ results: [], next: null }), 100)),
+        () => new Promise(resolve => setTimeout(() => resolve({ results: [], more: null }), 100)),
       );
 
       const promise1 = fetchMore();
@@ -187,7 +177,7 @@ describe('useChannelVersionHistory', () => {
       await promise1;
     });
 
-    it('does not fetch when currentChannelId is null', async () => {
+    it('does not fetch when no initial fetch has been made', async () => {
       const { fetchMore } = useChannelVersionHistory();
 
       await fetchMore();
@@ -197,9 +187,10 @@ describe('useChannelVersionHistory', () => {
 
     it('handles errors during fetchMore', async () => {
       const mockError = new Error('Network error');
-      const fullPage = Array.from({ length: 10 }, (_, i) => ({ id: i + 1, version: i + 1 }));
+      const fullPage = Array.from({ length: 5 }, (_, i) => ({ id: i + 1, version: i + 1 }));
+      const moreParams = { channel: 'channel-id', cursor: 'cursor123' };
       ChannelVersion.fetchCollection
-        .mockResolvedValueOnce({ results: fullPage, next: 'page2' })
+        .mockResolvedValueOnce({ results: fullPage, more: moreParams })
         .mockRejectedValueOnce(mockError);
 
       const { fetchVersions, fetchMore, error, versions, isLoadingMore } =
@@ -217,17 +208,22 @@ describe('useChannelVersionHistory', () => {
 
     it('clears error before fetching more', async () => {
       const mockError = new Error('Network error');
-      const fullPage = Array.from({ length: 10 }, (_, i) => ({ id: i + 1, version: i + 1 }));
+      const fullPage = Array.from({ length: 5 }, (_, i) => ({ id: i + 1, version: i + 1 }));
+      const moreParams = { channel: 'channel-id', cursor: 'cursor123' };
       ChannelVersion.fetchCollection
-        .mockResolvedValueOnce({ results: fullPage, next: 'page2' })
+        .mockResolvedValueOnce({ results: fullPage, more: moreParams })
         .mockRejectedValueOnce(mockError)
-        .mockResolvedValueOnce({ results: [{ id: 11, version: 11 }], next: null });
+        .mockResolvedValueOnce({ results: [{ id: 6, version: 6 }], more: null });
 
-      const { fetchVersions, fetchMore, error } = useChannelVersionHistory();
+      const { fetchVersions, fetchMore, error, hasMore } = useChannelVersionHistory();
 
       await fetchVersions('channel-id');
+      expect(hasMore.value).toBe(true);
+
       await fetchMore(); // This will fail
       expect(error.value).toBe(mockError);
+      // hasMore should still be true since the error didn't update moreObject
+      expect(hasMore.value).toBe(true);
 
       await fetchMore(); // This should succeed and clear error
       expect(error.value).toBe(null);
@@ -236,28 +232,19 @@ describe('useChannelVersionHistory', () => {
 
   describe('reset', () => {
     it('resets all state to initial values', async () => {
-      // Mock a full page of results (10 versions) with more available
-      const fullPage = Array.from({ length: 10 }, (_, i) => ({ id: i + 1, version: i + 1 }));
+      const fullPage = Array.from({ length: 5 }, (_, i) => ({ id: i + 1, version: i + 1 }));
+      const moreParams = { channel: 'channel-id', cursor: 'cursor123' };
       ChannelVersion.fetchCollection.mockResolvedValue({
         results: fullPage,
-        next: 'page2',
+        more: moreParams,
       });
 
-      const {
-        fetchVersions,
-        reset,
-        versions,
-        isLoading,
-        isLoadingMore,
-        error,
-        hasMore,
-        currentPage,
-      } = useChannelVersionHistory();
+      const { fetchVersions, reset, versions, isLoading, isLoadingMore, error, hasMore } =
+        useChannelVersionHistory();
 
       await fetchVersions('channel-id');
-      expect(versions.value.length).toBe(10);
+      expect(versions.value.length).toBe(5);
       expect(hasMore.value).toBe(true);
-      expect(currentPage.value).toBe(1);
 
       reset();
 
@@ -266,13 +253,12 @@ describe('useChannelVersionHistory', () => {
       expect(isLoadingMore.value).toBe(false);
       expect(error.value).toBe(null);
       expect(hasMore.value).toBe(false);
-      expect(currentPage.value).toBe(0);
     });
 
     it('allows fetching after reset', async () => {
       ChannelVersion.fetchCollection.mockResolvedValue({
         results: [{ id: 1, version: 1 }],
-        next: null,
+        more: null,
       });
 
       const { fetchVersions, reset, versions } = useChannelVersionHistory();

@@ -59,6 +59,7 @@ from contentcuration.models import SecretToken
 from contentcuration.models import User
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.utils.pagination import CachedListPagination
+from contentcuration.utils.pagination import ValuesViewsetCursorPagination
 from contentcuration.utils.pagination import ValuesViewsetPageNumberPagination
 from contentcuration.utils.publish import ChannelIncompleteError
 from contentcuration.utils.publish import publish_channel
@@ -96,10 +97,10 @@ class CatalogListPagination(CachedListPagination):
     max_page_size = 1000
 
 
-class ChannelVersionListPagination(ValuesViewsetPageNumberPagination):
-    page_size = None
-    page_size_query_param = "page_size"
-    max_page_size = 1000
+class ChannelVersionListPagination(ValuesViewsetCursorPagination):
+    ordering = "-version"
+    page_size_query_param = "max_results"
+    max_page_size = 100
 
 
 primary_token_subquery = Subquery(

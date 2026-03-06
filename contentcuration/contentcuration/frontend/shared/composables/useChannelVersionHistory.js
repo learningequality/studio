@@ -1,20 +1,20 @@
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { ChannelVersion } from 'shared/data/resources';
 
-export const VERSIONS_PER_PAGE = 10;
+export const VERSIONS_PER_PAGE = 5;
 
 /**
- * Composable that fetches and manages paginated channel versions
+ * Composable that fetches and manages cursor-based paginated channel versions
  *
  * @returns {{
  *   versions: import('vue').Ref<Array<Object>>,
  *   isLoading: import('vue').Ref<boolean>,
  *   isLoadingMore: import('vue').Ref<boolean>,
  *   error: import('vue').Ref<Error|null>,
- *   hasMore: import('vue').Ref<boolean>,
- *   currentPage: import('vue').Ref<number>,
+ *   hasMore: import('vue').ComputedRef<boolean>,
  *   fetchVersions: (channelId: string) => Promise<void>,
  *   fetchMore: () => Promise<void>,
+ *   reset: () => void,
  * }}
  */
 export function useChannelVersionHistory() {
@@ -22,9 +22,10 @@ export function useChannelVersionHistory() {
   const isLoading = ref(false);
   const isLoadingMore = ref(false);
   const error = ref(null);
-  const hasMore = ref(false);
-  const currentPage = ref(0);
+  const moreObject = ref(null);
   const currentChannelId = ref(null);
+
+  const hasMore = computed(() => Boolean(moreObject.value));
 
   /**
    * Fetch first page of versions for a channel
@@ -34,24 +35,17 @@ export function useChannelVersionHistory() {
     isLoading.value = true;
     error.value = null;
     versions.value = [];
-    currentPage.value = 0;
+    moreObject.value = null;
     currentChannelId.value = channelId;
 
     try {
       const response = await ChannelVersion.fetchCollection({
         channel: channelId,
-        page_size: VERSIONS_PER_PAGE,
-        page: 1,
+        max_results: VERSIONS_PER_PAGE,
       });
 
       versions.value = response.results || [];
-      currentPage.value = 1;
-
-      // Check if there are more pages
-      // Only show "more" if we got a full page AND the API says there's more
-      // This prevents showing "Show more" when there are only a few versions
-      const gotFullPage = (response.results || []).length === VERSIONS_PER_PAGE;
-      hasMore.value = response.next !== null && gotFullPage;
+      moreObject.value = response.more || null;
     } catch (err) {
       error.value = err;
       versions.value = [];
@@ -61,7 +55,7 @@ export function useChannelVersionHistory() {
   }
 
   async function fetchMore() {
-    if (!hasMore.value || isLoadingMore.value || !currentChannelId.value) {
+    if (!hasMore.value || isLoadingMore.value) {
       return;
     }
 
@@ -69,18 +63,10 @@ export function useChannelVersionHistory() {
     error.value = null;
 
     try {
-      const nextPage = currentPage.value + 1;
-      const response = await ChannelVersion.fetchCollection({
-        channel: currentChannelId.value,
-        page_size: VERSIONS_PER_PAGE,
-        page: nextPage,
-      });
+      const response = await ChannelVersion.fetchCollection(moreObject.value);
 
       versions.value = [...versions.value, ...(response.results || [])];
-      currentPage.value = nextPage;
-
-      const gotFullPage = (response.results || []).length === VERSIONS_PER_PAGE;
-      hasMore.value = response.next !== null && gotFullPage;
+      moreObject.value = response.more || null;
     } catch (err) {
       error.value = err;
     } finally {
@@ -93,8 +79,7 @@ export function useChannelVersionHistory() {
     isLoading.value = false;
     isLoadingMore.value = false;
     error.value = null;
-    hasMore.value = false;
-    currentPage.value = 0;
+    moreObject.value = null;
     currentChannelId.value = null;
   }
 
@@ -104,7 +89,6 @@ export function useChannelVersionHistory() {
     isLoadingMore,
     error,
     hasMore,
-    currentPage,
     fetchVersions,
     fetchMore,
     reset,
