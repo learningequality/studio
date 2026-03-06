@@ -481,6 +481,7 @@
 <style lang="scss" scoped>
 
   .question-text {
+    border: 1px solid #b4b4b4;
     transition: 0.7s;
 
     &:hover {
