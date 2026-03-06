@@ -391,4 +391,9 @@ describe('PublishSidePanel', () => {
     await fireEvent.click(cancelBtn);
     expect(emitted().close).toBeTruthy();
   });
+
+  it('renders ChannelVersionHistory component', () => {
+    renderComponent();
+    expect(screen.getByText(communityChannelsStrings.seeAllVersions$())).toBeInTheDocument();
+  });
 });

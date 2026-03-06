@@ -74,6 +74,11 @@
                       @blur="isLanguageSelectBlurred = true"
                     />
                   </div>
+
+                  <ChannelVersionHistory
+                    v-if="currentChannel && currentChannel.version > 0"
+                    :channelId="currentChannel.id"
+                  />
                 </div>
               </div>
 
@@ -154,6 +159,7 @@
 <script>
 
   import { ref, computed, getCurrentInstance } from 'vue';
+  import ChannelVersionHistory from './ChannelVersionHistory.vue';
   import SidePanelModal from 'shared/views/SidePanelModal';
   import { Channel, CommunityLibrarySubmission } from 'shared/data/resources';
   import { forceServerSync } from 'shared/data/serverSync';
@@ -165,6 +171,7 @@
     name: 'PublishSidePanel',
     components: {
       SidePanelModal,
+      ChannelVersionHistory,
     },
     setup(props, { emit }) {
       const PublishModes = {
@@ -354,7 +361,9 @@
           }
 
           if (mode.value === PublishModes.DRAFT) {
-            await Channel.publishDraft(currentChannel.value.id, { use_staging_tree: false });
+            await Channel.publishDraft(currentChannel.value.id, {
+              use_staging_tree: false,
+            });
             emit('close');
           } else {
             // `newChannelLanguage.value` is a KSelect option { value, label }, so we need to
