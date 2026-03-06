@@ -1,5 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/vue';
-import { configure } from '@testing-library/dom';
+import { render, screen, waitFor, configure } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { createLocalVue } from '@vue/test-utils';
 import Vuex, { Store } from 'vuex';
