@@ -5,6 +5,21 @@ import { sanitizePastedHTML } from '../utils/markdown';
 export function useToolbarActions(emit) {
   const editor = inject('editor', null);
 
+  // helper
+  const getEffectiveAlignment = editorInstance => {
+    const isLeftAligned = editorInstance.isActive({ textAlign: 'left' });
+    const isRightAligned = editorInstance.isActive({ textAlign: 'right' });
+
+    if (isLeftAligned) return 'left';
+    if (isRightAligned) return 'right';
+
+    const { from } = editorInstance.state.selection;
+    const dom = editorInstance.view.domAtPos(from).node;
+    const el = dom.nodeType === 1 ? dom : dom.parentElement;
+
+    return el ? window.getComputedStyle(el).textAlign : 'left';
+  };
+
   const {
     undo$,
     redo$,
@@ -184,14 +199,15 @@ export function useToolbarActions(emit) {
   };
 
   const handleToggleAlign = () => {
-    if (editor?.value) {
-      const isRightAligned = editor.value.isActive({ textAlign: 'right' });
-      if (isRightAligned) {
-        editor.value.chain().focus().setTextAlign('left').run();
-      } else {
-        editor.value.chain().focus().setTextAlign('right').run();
-      }
-    }
+    if (!editor?.value) return;
+
+    const align = getEffectiveAlignment(editor.value);
+
+    editor.value
+      .chain()
+      .focus()
+      .setTextAlign(align === 'right' ? 'left' : 'right')
+      .run();
   };
 
   const handleBulletList = () => {
@@ -432,11 +448,14 @@ export function useToolbarActions(emit) {
   };
 
   const alignAction = computed(() => {
-    const isRightAligned = editor?.value?.isActive({ textAlign: 'right' }) || false;
+    const editorInstance = editor?.value;
+    const effectiveAlign = getEffectiveAlignment(editorInstance);
+    const effectiveRight = effectiveAlign === 'right';
+
     return {
       name: 'toggleAlign',
-      title: isRightAligned ? alignLeft$() : alignRight$(),
-      icon: isRightAligned
+      title: effectiveRight ? alignLeft$() : alignRight$(),
+      icon: effectiveRight
         ? require('../../assets/icon-alignLeft.svg')
         : require('../../assets/icon-alignRight.svg'),
       handler: handleToggleAlign,
