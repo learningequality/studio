@@ -241,7 +241,7 @@
             class="dropdown-item"
             :class="{ active: alignAction.isActive }"
             role="menuitem"
-            :disabled="alignAction.isAvailable"
+            :disabled="!alignAction.isAvailable"
             @click="alignAction.handler"
           >
             <img
