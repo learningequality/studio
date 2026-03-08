@@ -51,7 +51,7 @@ export const createCustomMarkdownSerializer = editor => {
     // Recursively process nodes
     const serializeNode = (node, listNumber = null, depth = 0) => {
       if (!node || !node.type) {
-        return;
+        return '';
       }
 
       switch (node.type.name) {

@@ -36,7 +36,7 @@ export const paramsToImageMd = ({ src, alt, width, height, permanentSrc, textAli
   if (Number.isFinite(+width) && Number.isFinite(+height)) {
     return `![${alt || ''}](${IMAGE_PLACEHOLDER}/${fileName} =${width}x${height}${alignSuffix})`;
   }
-  return `![${alt || ''}](${IMAGE_PLACEHOLDER}/${fileName}${alignSuffix ? ` ${alignSuffix}` : ''})`;
+  return `![${alt || ''}](${IMAGE_PLACEHOLDER}/${fileName}${alignSuffix})`;
 };
 
 // --- Math/Formula Translation ---
