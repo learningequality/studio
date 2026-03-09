@@ -1,17 +1,16 @@
 <template>
 
-  <VContainer class="pa-4">
-    <div v-if="currentFilters.length">
-      <VChip
+  <div class="filter-bar-container">
+    <div v-if="currentFilters.length" class="filter-bar-content">
+      <StudioChip
         v-for="(filter, index) in currentFilters"
         :key="`catalog-filter-${index}`"
-        close
-        class="ma-1"
+        :class="{ notranslate: filter.notranslate }"
+        :text="filter.text"
+        :close="true"
         :data-test="`filter-chip-${index}`"
-        @input="filter.onclose"
-      >
-        {{ filter.text }}
-      </VChip>
+        @close="filter.onclose"
+      />
       <KButton
         v-if="currentFilters.length"
         class="clear-link"
@@ -21,61 +20,50 @@
         @click="clearFilters"
       />
     </div>
-  </VContainer>
+  </div>
 
 </template>
 
 
 <script>
 
-  import flatten from 'lodash/flatten'; // Tests fail with native Array.flat() method
+  import flatten from 'lodash/flatten';
   import { catalogFilterMixin } from './mixins';
   import { constantsTranslationMixin } from 'shared/mixins';
+  import StudioChip from 'shared/views/StudioChip';
 
-  /**
-   * Returns the expected format for filters
-   * {
-   *   text: string to display for filter
-   *   onclose: action to do if filter is removed
-   * }
-   */
-  function createFilter(value, text, onclose) {
-    return value ? { text, onclose } : false;
+  function createFilter(value, text, onclose, notranslate = false) {
+    return value ? { text, onclose, notranslate } : false;
   }
 
   export default {
     name: 'CatalogFilterBar',
+    components: {
+      StudioChip,
+    },
     mixins: [constantsTranslationMixin, catalogFilterMixin],
     computed: {
       currentFilters() {
         return flatten([
-          // Keywords
           createFilter(
             this.keywords,
             this.$tr('keywords', { text: this.keywords }),
             this.resetKeywords,
+            true
           ),
-
-          // Languages
           this.languages.map(language =>
             createFilter(language, this.translateLanguage(language), () =>
-              this.removeLanguage(language),
-            ),
+              this.removeLanguage(language)
+            )
           ),
-
-          // Licenses
           this.licenses.map(license =>
             createFilter(license, this.translateLicense(license), () =>
-              this.removeLicense(license),
-            ),
+              this.removeLicense(license)
+            )
           ),
-
-          // Kinds
           this.kinds.map(kind =>
-            createFilter(kind, this.translateConstant(kind), () => this.removeKind(kind)),
+            createFilter(kind, this.translateConstant(kind), () => this.removeKind(kind))
           ),
-
-          // Includes
           createFilter(this.bookmark, this.$tr('starred'), this.resetBookmark),
           createFilter(this.coach, this.$tr('coachContent'), this.resetCoach),
           createFilter(this.assessments, this.$tr('assessments'), this.resetAssessments),
@@ -124,22 +112,16 @@
 
 <style lang="scss" scoped>
 
-  h3,
-  p {
-    width: 100%;
-  }
-
-  .container {
+  .filter-bar-container {
     max-width: 1128px;
+    padding: 16px;
     margin: 0 auto;
   }
 
-  .v-card {
-    cursor: pointer;
-
-    &:hover {
-      background-color: var(--v-grey-lighten4);
-    }
+  .filter-bar-content {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
   }
 
   .clear-link {
