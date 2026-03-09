@@ -206,7 +206,6 @@
             needsReview: {
               label: 'Needs review',
               params: {
-                community_library_live: false,
                 latest_community_library_submission_status: [
                   CommunityLibraryStatus.PENDING,
                   CommunityLibraryStatus.REJECTED,
