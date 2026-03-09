@@ -29,6 +29,7 @@
             v-for="notification in notifications"
             :key="`${notification.id}-${notification.type}`"
             :notification="notification"
+            @viewMore="goToSubmissionDetails(notification)"
           />
         </ul>
         <div
@@ -56,6 +57,7 @@
   import CommunityLibrarySubmissionCreation from './notificationTypes/CommunityLibrarySubmissionCreation.vue';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
   import { NotificationType } from 'shared/constants';
+  import { getCommunityLibrarySubmissionDetailsUrl } from 'shared/utils/helpers';
 
   defineProps({
     notifications: {
@@ -97,6 +99,13 @@
     [NotificationType.COMMUNITY_LIBRARY_SUBMISSION_APPROVED]: CommunityLibrarySubmissionApproval,
     [NotificationType.COMMUNITY_LIBRARY_SUBMISSION_REJECTED]: CommunityLibrarySubmissionRejection,
     [NotificationType.COMMUNITY_LIBRARY_SUBMISSION_CREATED]: CommunityLibrarySubmissionCreation,
+  };
+
+  const goToSubmissionDetails = notification => {
+    const channelId = notification.channel_id;
+    const submissionId = notification.id;
+    const url = getCommunityLibrarySubmissionDetailsUrl(channelId, submissionId);
+    window.location.href = url;
   };
 
   const {

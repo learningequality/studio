@@ -78,17 +78,22 @@ export default function useCommunityLibraryUpdates({ queryParams } = {}) {
         date_updated: submission.date_updated && new Date(submission.date_updated),
       };
 
+      // If the status is not PENDING or SUPERSEDED, it means there is also a status update
+      const hasUpdate = ![
+        CommunityLibraryStatus.PENDING,
+        CommunityLibraryStatus.SUPERSEDED,
+      ].includes(sub.status);
+
       // Always add creation update
       updates.push({
         ...sub,
+        // If it has updates, it means the current status is not the initial creation status
+        status: hasUpdate ? CommunityLibraryStatus.PENDING : sub.status,
         type: NotificationType.COMMUNITY_LIBRARY_SUBMISSION_CREATED,
         date: sub.date_created,
       });
 
-      // If the status is not PENDING or SUPERSEDED, it means there is also a status update
-      if (
-        ![CommunityLibraryStatus.PENDING, CommunityLibraryStatus.SUPERSEDED].includes(sub.status)
-      ) {
+      if (hasUpdate) {
         updates.push({
           ...sub,
           type: statusToNotificationType[sub.status],
@@ -150,6 +155,7 @@ export default function useCommunityLibraryUpdates({ queryParams } = {}) {
         date_updated__gte: getNewerDate(_params?.date_updated__gte, _params?.lastRead),
         status__in: _params?.status__in,
         search: _params?.keywords,
+        channel: _params?.channel,
         max_results: MAX_RESULTS_PER_PAGE,
       });
     }

@@ -35,7 +35,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     context: 'Label for the version description text area',
   },
   modeLiveDescription: {
-    message: 'This edition will be accessible to the public through the Kolibri public library.',
+    message: 'This edition will be accessible in Kolibri through a channel token.',
     context: 'Description for the live publishing mode',
   },
   modeDraftDescription: {
@@ -118,6 +118,11 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Submitted',
     context: 'Status indicating that an Community Library submission is pending',
   },
+  supersededStatus: {
+    message: 'Superseded',
+    context:
+      'Status indicating that an Community Library submission is superseded by a newer submission',
+  },
   approvedStatus: {
     message: 'Approved',
     context: 'Status indicating that an Community Library submission is approved',
@@ -125,6 +130,10 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   flaggedStatus: {
     message: 'Flagged',
     context: 'Status indicating that an Community Library submission is rejected',
+  },
+  liveStatus: {
+    message: 'Live',
+    context: 'Status indicating that an Community Library submission is live',
   },
   // Submit to Community Library panel strings
   submitToCommunityLibrary: {
@@ -235,20 +244,34 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
       'Snackbar message shown when submission fails from the "Submit to Community Library" panel',
   },
   countryLabel: {
-    message: 'Country',
+    message: 'Countries',
     context: 'Label for the country selection field in the "Submit to Community Library" panel',
   },
-  languagesDetected: {
-    message: 'Language(s) detected',
+  languagesLabel: {
+    message: 'Languages',
     context: 'Label for detected languages in the "Submit to Community Library" panel',
   },
-  licensesDetected: {
-    message: 'License(s) detected',
+  licensesLabel: {
+    message: 'Licenses',
     context: 'Label for detected licenses in the "Submit to Community Library" panel',
   },
-  categoriesDetected: {
+  categoriesLabel: {
     message: 'Categories',
     context: 'Label for detected categories in the "Submit to Community Library" panel',
+  },
+  submissionNotesLabel: {
+    message: 'Submission notes',
+    context: 'Label for the notes the editor can add to their submission to the Community Library',
+  },
+  feedbackNotesLabel: {
+    message: 'Feedback notes',
+    context:
+      'Label for the feedback notes that reviewers can add to a submission in the Community Library ',
+  },
+  internalNotesLabel: {
+    message: 'Internal notes',
+    context:
+      'Label for the notes that admins can add to a submission in the Community Library for themselves',
   },
   confirmReplacementText: {
     message: 'I understand this will replace my earlier submission on the review queue',
@@ -287,7 +310,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     context: 'Message shown after listing compatible licenses when license check passes',
   },
   incompatibleLicensesDetected: {
-    message: 'Incompatible license(s) detected',
+    message: 'Incompatible licenses detected',
     context: 'Title shown when invalid licenses are detected in the channel',
   },
   channelCannotBeDistributed: {
@@ -310,7 +333,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
       'Description shown when all licenses are compatible, includes the license names and confirmation message',
   },
   specialPermissionsDetected: {
-    message: 'Special Permissions license(s) detected',
+    message: 'Special Permissions licenses detected',
     context: 'Title shown when special permissions licenses are detected in the channel',
   },
   confirmDistributionRights: {
@@ -393,6 +416,14 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: '{author} ({userType}) flagged {channelVersion}',
     context: 'Notification message shown when a user flags a channel version for review',
   },
+  submissionNotification: {
+    message: '{author} ({userType}) submitted {channelVersion}',
+    context: 'Notification message shown when a user submits a channel version for review',
+  },
+  approvedNotification: {
+    message: '{author} ({userType}) approved {channelVersion}',
+    context: 'Notification message shown when a user approves a channel version',
+  },
   showOlderAction: {
     message: 'Show older',
     context: 'Action button to load older items in a list',
@@ -400,6 +431,10 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   adminLabel: {
     message: 'Admin',
     context: 'Label indicating administrative status',
+  },
+  editorLabel: {
+    message: 'Editor',
+    context: 'Label indicating editor status',
   },
   emptyNotificationsNotice: {
     message: 'You have no notifications at this time.',
@@ -413,5 +448,52 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'New notifications available.',
     context:
       'Notice for screen readers on the new notifications badge to indicate that new notifications have arrived',
+  },
+  communityLibrarySubmissionLabel: {
+    message: 'Community Library submission',
+    context: 'Label for notifications related to Community Library submissions',
+  },
+  channelVersionTokenLabel: {
+    message: 'Channel version token',
+    context: 'Label for the channel version token included in submission details page',
+  },
+  liveVersionLabel: {
+    message: 'Live version:',
+    context: 'Label indicating the live version of a channel',
+  },
+  activityHistoryLabel: {
+    message: 'Activity history',
+    context: 'Label for the activity history section in the submission details page',
+  },
+
+  // Resolution reasons strings
+  reasonLabel: {
+    message: 'Reason: {reason}',
+    context: 'Label for the reason provided for a given action (e.g., rejection reason)',
+  },
+  invalidLicensingReason: {
+    message: 'Invalid or non-compliant licenses',
+    context: 'Rejection reason indicating that the channel has invalid or non-compliant licenses',
+  },
+  qualityAssuranceReason: {
+    message: 'Quality assurance issues',
+    context: 'Rejection reason indicating that the channel has quality assurance issues',
+  },
+  invalidMetadataReason: {
+    message: 'Invalid or missing metadata',
+    context: 'Rejection reason indicating that the channel has invalid or missing metadata',
+  },
+  portabilityIssuesReason: {
+    message: 'Portability problems',
+    context: 'Rejection reason indicating that the channel has portability problems',
+  },
+  otherIssuesReason: {
+    message: 'Other issues',
+    context:
+      'Rejection reason indicating that the channel has other issues not covered by other reasons',
+  },
+  reviewAction: {
+    message: 'Review',
+    context: 'Action button to review a channel version submission to the Community Library',
   },
 });

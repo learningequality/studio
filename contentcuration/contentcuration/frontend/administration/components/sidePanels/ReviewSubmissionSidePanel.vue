@@ -1,6 +1,7 @@
 <template>
 
   <SidePanelModal
+    v-if="isModalVisible"
     alignment="right"
     sidePanelWidth="700px"
     @closePanel="$emit('close')"
@@ -20,7 +21,15 @@
           class="submission-info-text"
         >
           <span class="author-name">{{ authorName }}</span>
-          <div class="editor-chip">Editor</div>
+          <div
+            class="editor-chip"
+            :style="{
+              color: chipTextColor,
+              backgroundColor: chipColor,
+            }"
+          >
+            Editor
+          </div>
           <span>
             submitted
             <ActionLink
@@ -39,7 +48,10 @@
         <div v-else>Error loading submission data.</div>
 
         <div class="details">
-          <span class="detail-annotation">Country(s)</span>
+          <span
+            class="detail-annotation"
+            :style="{ color: annotationColor }"
+          >Country(s)</span>
           <span
             v-if="countriesString"
             data-test="countries"
@@ -49,7 +61,10 @@
           <template v-else>
             <KEmptyPlaceholder />
           </template>
-          <span class="detail-annotation">Language(s)</span>
+          <span
+            class="detail-annotation"
+            :style="{ color: annotationColor }"
+          >Language(s)</span>
           <span
             v-if="languagesString"
             data-test="languages"
@@ -59,7 +74,10 @@
           <template v-else>
             <KEmptyPlaceholder />
           </template>
-          <span class="detail-annotation">Categories</span>
+          <span
+            class="detail-annotation"
+            :style="{ color: annotationColor }"
+          >Categories</span>
           <span
             v-if="categoriesString"
             data-test="categories"
@@ -69,7 +87,10 @@
           <template v-else>
             <KEmptyPlaceholder />
           </template>
-          <span class="detail-annotation">License(s)</span>
+          <span
+            class="detail-annotation"
+            :style="{ color: annotationColor }"
+          >License(s)</span>
           <span
             v-if="licensesString"
             data-test="licenses"
@@ -79,7 +100,10 @@
           <template v-else>
             <KEmptyPlaceholder />
           </template>
-          <span class="detail-annotation">Status</span>
+          <span
+            class="detail-annotation"
+            :style="{ color: annotationColor }"
+          >Status</span>
           <div
             v-if="submissionIsFinished"
             style="display: flex"
@@ -91,8 +115,16 @@
           </template>
         </div>
 
-        <div class="box">
-          <h3 class="box-title">Submission notes</h3>
+        <div
+          class="box"
+          :style="{ backgroundColor: boxBackgroundColor }"
+        >
+          <h3
+            class="box-title"
+            :style="{ color: boxTitleColor }"
+          >
+            Submission notes
+          </h3>
           <span
             v-if="submissionNotes"
             data-test="submission-notes"
@@ -239,6 +271,7 @@
       CommunityLibraryStatusChip,
     },
     setup(props, { emit }) {
+      const isModalVisible = ref(true);
       const tokensTheme = themeTokens();
       const paletteTheme = themePalette();
 
@@ -476,6 +509,8 @@
 
             showSnackbar({ text: snackbarText });
             updateStatusInStore(statusChoice.value);
+            emit('change');
+            emit('close');
           } catch (error) {
             showSnackbar({ text: 'Changing channel status failed' });
           } finally {
@@ -489,13 +524,19 @@
           actionText: 'Cancel',
           actionCallback: () => {
             clearTimeout(timer);
+            // Do not emit close just yet, so that the component isn't unmounted
+            // this will keep the component live until the submit function finishes, allowing
+            // to keep communicating with the parent component, and in particular allowing the
+            // "change" event to be emitted. It also allows us to keep the working information
+            // on the component, and show the side panel in the same state if the user cancels
+            isModalVisible.value = true;
+            currentlySubmitting.value = false;
             showSnackbar({
               text: 'Action cancelled',
             });
           },
         });
-
-        emit('close');
+        isModalVisible.value = false;
       }
 
       const chipColor = computed(() => paletteTheme.grey.v_200);
@@ -519,6 +560,7 @@
 
       return {
         isLoading,
+        isModalVisible,
         chipColor,
         chipTextColor,
         annotationColor,
@@ -596,8 +638,6 @@
     height: 20px;
     padding: 2px 5px;
     font-size: 10px;
-    color: v-bind('chipTextColor');
-    background-color: v-bind('chipColor');
     border-radius: 16px;
   }
 
@@ -612,7 +652,6 @@
 
   .detail-annotation {
     grid-column-start: 1;
-    color: v-bind('annotationColor');
   }
 
   .box {
@@ -620,7 +659,6 @@
     flex-direction: column;
     gap: 8px;
     padding: 12px;
-    background-color: v-bind('boxBackgroundColor');
     border-radius: 8px;
   }
 
@@ -634,7 +672,6 @@
   .box-title {
     font-size: 12px;
     font-weight: 600;
-    color: v-bind('boxTitleColor');
   }
 
   .details-box-title {
