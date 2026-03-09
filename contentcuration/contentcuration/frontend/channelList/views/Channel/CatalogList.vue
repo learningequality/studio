@@ -111,8 +111,9 @@
             </KCardGrid>
           </VFlex>
           <VFlex
+            v-if="!loading"
             xs12
-            style="padding-bottom: 72px"
+            class="pagination-container"
           >
             <VLayout justify-center>
               <Pagination
@@ -486,6 +487,11 @@
   .results-text,
   .download-link-wrapper {
     min-height: 30px; // prevent layout shifts when loading state changes
+  }
+
+  .pagination-container {
+    padding-bottom: 72px;
+    margin-top: 32px;
   }
 
 </style>
