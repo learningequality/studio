@@ -7,6 +7,7 @@ from django.urls import reverse
 from contentcuration.constants import (
     community_library_submission as community_library_submission_constants,
 )
+from contentcuration.models import AuditedSpecialPermissionsLicense
 from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import ChannelVersion
@@ -508,6 +509,12 @@ class AdminViewSetTestCase(StudioAPITestCase):
         self.submission.channel_version = 2
         self.submission.save()
 
+        # Create the ChannelVersion for this submission (needed when approving)
+        self.channel_version = ChannelVersion.objects.create(
+            channel=self.submission.channel,
+            version=self.submission.channel_version,
+        )
+
         self.editor_user = self.submission.channel.editors.first()
 
         self.superseded_submission = CommunityLibrarySubmission.objects.create(
@@ -820,7 +827,10 @@ class AdminViewSetTestCase(StudioAPITestCase):
         )
         self.assertEqual(response.status_code, 400, response.content)
 
-    def test_resolve_submission__overrite_categories(self):
+    @mock.patch(
+        "contentcuration.viewsets.community_library_submission.apply_channel_changes_task"
+    )
+    def test_resolve_submission__overrite_categories(self, apply_task_mock):
         self.client.force_authenticate(user=self.admin_user)
         categories = ["Category 1"]
         self.resolve_approve_metadata["categories"] = categories
@@ -840,7 +850,10 @@ class AdminViewSetTestCase(StudioAPITestCase):
         )
         self.assertListEqual(resolved_submission.categories, categories)
 
-    def test_resolve_submission__accept_mark_superseded(self):
+    @mock.patch(
+        "contentcuration.viewsets.community_library_submission.apply_channel_changes_task"
+    )
+    def test_resolve_submission__accept_mark_superseded(self, apply_task_mock):
         self.client.force_authenticate(user=self.admin_user)
 
         response = self.client.post(
@@ -894,6 +907,44 @@ class AdminViewSetTestCase(StudioAPITestCase):
         self.assertEqual(
             self.submission_for_other_channel.status,
             community_library_submission_constants.STATUS_PENDING,
+        )
+
+    @mock.patch(
+        "contentcuration.viewsets.community_library_submission.apply_channel_changes_task"
+    )
+    def test_resolve_submission__approve_marks_special_permissions_distributable(
+        self, apply_task_mock
+    ):
+        """Test that approving a submission marks special permissions as distributable."""
+        self.client.force_authenticate(user=self.admin_user)
+
+        # Create an audited special permissions license
+        special_license = AuditedSpecialPermissionsLicense.objects.create(
+            description="Community library special permissions"
+        )
+        self.assertFalse(special_license.distributable)
+
+        # Add the special permission to the channel version
+        self.channel_version.special_permissions_included.add(special_license)
+
+        # Approve the submission
+        response = self.client.post(
+            reverse(
+                "admin-community-library-submission-resolve",
+                args=[self.submission.id],
+            ),
+            self.resolve_approve_metadata,
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        # Verify the special permission is marked as distributable
+        special_license.refresh_from_db()
+        self.assertTrue(special_license.distributable)
+        self.assertTrue(
+            self.channel_version.special_permissions_included.filter(
+                id=special_license.id
+            ).exists()
         )
 
 

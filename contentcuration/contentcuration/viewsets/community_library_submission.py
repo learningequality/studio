@@ -15,6 +15,7 @@ from rest_framework.serializers import ValidationError
 from contentcuration.constants import (
     community_library_submission as community_library_submission_constants,
 )
+from contentcuration.models import AuditedSpecialPermissionsLicense
 from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import ChannelVersion
@@ -343,5 +344,12 @@ class AdminCommunityLibrarySubmissionViewSet(
         if submission.status == community_library_submission_constants.STATUS_APPROVED:
             self._mark_previous_pending_submissions_as_superseded(submission)
             self._add_to_community_library(submission)
+            published_version = ChannelVersion.objects.get(
+                channel=submission.channel,
+                version=submission.channel_version,
+            )
+            AuditedSpecialPermissionsLicense.mark_channel_version_as_distributable(
+                published_version.id
+            )
 
         return Response(self.serialize_object())
