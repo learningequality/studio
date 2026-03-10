@@ -89,6 +89,7 @@ export function useLinkHandling(editor) {
     isEditorOpen.value = false;
     savedSelection.value = null;
     editorMode.value = 'create';
+    editor.value?.commands.focus();
   };
 
   const openBubbleMenu = () => {
