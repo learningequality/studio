@@ -7,3 +7,10 @@ export const RouteNames = {
 };
 
 export const rowsPerPageItems = [25, 50, 75, 100];
+
+export const ChannelTypeFilter = {
+  ALL: 'all',
+  KOLIBRI_LIBRARY: 'kolibriLibrary',
+  COMMUNITY_LIBRARY: 'communityLibrary',
+  UNLISTED: 'unlisted',
+};

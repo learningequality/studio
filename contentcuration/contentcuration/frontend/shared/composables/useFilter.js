@@ -34,9 +34,10 @@ import { useQueryParams } from './useQueryParams';
  * @param {Object} params The parameters for the filter.
  * @param {string} params.name The name of the filter used in query params.
  * @param {Object} params.filterMap A map of available filters.
+ * @param {string|null} [params.defaultValue] Optional default value if query param is not set.
  * @returns {UseFilterReturn}
  */
-export function useFilter({ name, filterMap }) {
+export function useFilter({ name, filterMap, defaultValue = null }) {
   const route = useRoute();
   const { updateQueryParams } = useQueryParams();
 
@@ -44,7 +45,7 @@ export function useFilter({ name, filterMap }) {
     get: () => {
       const routeFilter = route.query[name];
       const filterOption = options.value.find(option => option.value === routeFilter);
-      return filterOption || {};
+      return filterOption || options.value.find(option => option.value === defaultValue) || {};
     },
     set: value => {
       updateQueryParams({
