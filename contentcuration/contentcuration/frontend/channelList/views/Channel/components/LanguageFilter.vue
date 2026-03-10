@@ -23,9 +23,7 @@
         lazy
       >
         <template #activator="{ on }">
-          <StudioChip
-            class="ma-1"
-          >
+          <StudioChip class="ma-1">
             <div class="text-truncate">
               {{ item.name }}
             </div>
