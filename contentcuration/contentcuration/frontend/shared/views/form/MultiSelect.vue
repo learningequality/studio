@@ -24,7 +24,8 @@
         <template #item="{ item }">
           <KCheckbox
             :ref="'checkbox-' + item.value"
-            :checked="selections.includes(item.value)"
+            v-model="selections"
+            :presentational="true"
             :value="item.value"
             class="scroll-margin"
           >

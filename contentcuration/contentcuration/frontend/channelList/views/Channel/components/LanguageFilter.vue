@@ -25,7 +25,6 @@
         <template #activator="{ on }">
           <StudioChip
             class="ma-1"
-            v-on="on"
           >
             <div class="text-truncate">
               {{ item.name }}
@@ -39,7 +38,8 @@
       <KCheckbox
         :key="item.id"
         :ref="'checkbox-' + item.id"
-        :checked="languages.includes(item.id)"
+        v-model="languages"
+        :presentational="true"
         :value="item.id"
         class="mb-0 mt-1 scroll-margin"
         :labelDir="null"
