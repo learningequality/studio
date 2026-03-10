@@ -26,6 +26,7 @@
           >
             <VTab
               class="px-3"
+              href="#"
               :disabled="isBusy"
               :value="NotificationsTab.UNREAD"
             >
@@ -33,6 +34,7 @@
             </VTab>
             <VTab
               class="px-3"
+              href="#"
               :disabled="isBusy"
               :value="NotificationsTab.ALL"
             >

@@ -44,7 +44,23 @@
           :showLabel="false"
         />
         <span v-else>
-          {{ _details.primary_token.slice(0, 5) + '-' + _details.primary_token.slice(5) }}
+          {{ hyphenateToken(_details.primary_token) }}
+        </span>
+      </template>
+    </StudioDetailsRow>
+    <StudioDetailsRow
+      v-if="_details.draft_token"
+      :label="draftTokenLabel$()"
+    >
+      <template #default>
+        <StudioCopyToken
+          v-if="!printing"
+          :token="_details.draft_token"
+          :style="{ maxWidth: 'max-content' }"
+          :showLabel="false"
+        />
+        <span v-else>
+          {{ hyphenateToken(_details.draft_token) }}
         </span>
       </template>
     </StudioDetailsRow>
@@ -421,6 +437,8 @@
   import StudioDetailsRow from './StudioDetailsRow';
   import StudioThumbnail from 'shared/views/files/StudioThumbnail';
   import StudioCopyToken from 'shared/views/StudioCopyToken';
+  import useToken from 'shared/composables/useToken';
+  import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 
   const DEFAULT_DETAILS = {
     name: '',
@@ -473,6 +491,14 @@
       titleMixin,
       metadataTranslationMixin,
     ],
+    setup() {
+      const { hyphenateToken } = useToken();
+      const { draftTokenLabel$ } = communityChannelsStrings;
+      return {
+        hyphenateToken,
+        draftTokenLabel$,
+      };
+    },
     props: {
       // Object matching that returned by the channel details and
       // node details API endpoints, see backend for details of the

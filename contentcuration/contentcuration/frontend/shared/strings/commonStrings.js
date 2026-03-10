@@ -30,4 +30,12 @@ export const commonStrings = createTranslator('CommonStrings', {
     message: 'Channel Details',
     context: 'Label for a section that displays details about a channel',
   },
+  previewAction: {
+    message: 'Preview',
+    context: 'A label for an action that opens a preview of content',
+  },
+  dismissAction: {
+    message: 'Dismiss',
+    context: 'A label for an action that dismisses a notification or message',
+  },
 });

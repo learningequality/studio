@@ -931,6 +931,45 @@ class CRUDTestCase(StudioAPITestCase):
             channel.history.filter(actor=user, action=channel_history.RECOVERY).count(),
         )
 
+    def test_channel_detail_includes_draft_token_when_draft_version_exists(self):
+        """Test that the channel API response includes draft_token when a draft ChannelVersion exists."""
+        user = testdata.user()
+        channel = models.Channel.objects.create(
+            actor_id=user.id, **self.channel_metadata
+        )
+        channel.editors.add(user)
+
+        # Create a draft ChannelVersion (version=None) with a token
+        draft_version = ChannelVersion.objects.create(
+            channel=channel,
+            version=None,
+        )
+        token = draft_version.new_token()
+
+        self.client.force_authenticate(user=user)
+        response = self.client.get(
+            reverse("channel-detail", kwargs={"pk": channel.id}),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.data["draft_token"], token.token)
+
+    def test_channel_detail_draft_token_is_none_when_no_draft_version(self):
+        """Test that the channel API response has draft_token=None when no draft version exists."""
+        user = testdata.user()
+        channel = models.Channel.objects.create(
+            actor_id=user.id, **self.channel_metadata
+        )
+        channel.editors.add(user)
+
+        self.client.force_authenticate(user=user)
+        response = self.client.get(
+            reverse("channel-detail", kwargs={"pk": channel.id}),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertIsNone(response.data["draft_token"])
+
 
 class UnpublishedChangesQueryTestCase(StudioAPITestCase):
     def test_unpublished_changes_query_with_channel_object(self):

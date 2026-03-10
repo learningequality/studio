@@ -454,7 +454,12 @@ class ChannelViewSet(ValuesViewset):
     ordering = "-modified"
 
     field_map = channel_field_map
-    values = base_channel_values + ("edit", "view", "unpublished_changes")
+    values = base_channel_values + (
+        "edit",
+        "view",
+        "unpublished_changes",
+        "draft_token",
+    )
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -510,6 +515,14 @@ class ChannelViewSet(ValuesViewset):
             view=Exists(user_queryset.filter(view_only_channels=OuterRef("id"))),
         )
 
+    def _annotate_draft_token(self, queryset):
+        draft_token_subquery = Subquery(
+            ChannelVersion.objects.filter(channel=OuterRef("id"), version=None).values(
+                "secret_token__token"
+            )[:1]
+        )
+        return queryset.annotate(draft_token=draft_token_subquery)
+
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(primary_token=primary_token_subquery)
         channel_main_tree_nodes = ContentNode.objects.filter(
@@ -530,6 +543,8 @@ class ChannelViewSet(ValuesViewset):
         queryset = queryset.annotate(
             unpublished_changes=Exists(_unpublished_changes_query(OuterRef("id")))
         )
+
+        queryset = self._annotate_draft_token(queryset)
 
         return queryset
 
@@ -583,6 +598,7 @@ class ChannelViewSet(ValuesViewset):
                                 "publishing": False,
                                 "version": channel.version,
                                 "primary_token": channel.get_human_token().token,
+                                "draft_token": None,
                                 "last_published": channel.last_published,
                                 "unpublished_changes": _unpublished_changes_query(
                                     channel
@@ -657,13 +673,16 @@ class ChannelViewSet(ValuesViewset):
                     is_draft_version=True,
                     use_staging_tree=use_staging_tree,
                 )
+                draft_token = channel.get_draft_token()
                 Change.create_changes(
                     [
                         generate_update_event(
                             channel.id,
                             CHANNEL,
                             {
-                                "primary_token": channel.get_human_token().token,
+                                "draft_token": draft_token.token
+                                if draft_token
+                                else None,
                             },
                             channel_id=channel.id,
                         ),

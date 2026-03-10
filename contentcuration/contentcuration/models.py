@@ -1388,6 +1388,12 @@ class Channel(models.Model):
     def get_human_token(self):
         return self.secret_tokens.get(is_primary=True)
 
+    def get_draft_token(self):
+        draft_version = self.channel_versions.filter(version=None).first()
+        if not draft_version:
+            return None
+        return draft_version.secret_token
+
     def get_channel_id_token(self):
         return self.secret_tokens.get(token=self.id)
 

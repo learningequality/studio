@@ -193,6 +193,12 @@
               </VListTile>
             </template>
             <VListTile
+              v-if="currentChannel && currentChannel.draft_token"
+              @click="showPreviewDraftModal = true"
+            >
+              <VListTileTitle>{{ getDraftTokenAction$() }}</VListTileTitle>
+            </VListTile>
+            <VListTile
               v-if="isPublished"
               @click="showTokenModal = true"
             >
@@ -277,6 +283,11 @@
       @delete="handleDelete"
       @close="showDeleteModal = false"
     />
+    <PreviewDraftChannelModal
+      v-if="showPreviewDraftModal && currentChannel"
+      :channel="currentChannel"
+      @close="showPreviewDraftModal = false"
+    />
     <VSpeedDial
       v-if="showClipboardSpeedDial"
       v-model="showClipboard"
@@ -340,6 +351,7 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
+  import PreviewDraftChannelModal from '../../components/modals/PreviewDraftChannelModal.vue';
   import Clipboard from '../../components/Clipboard';
   import SyncResourcesModal from '../sync/SyncResourcesModal';
   import ProgressModal from '../progress/ProgressModal';
@@ -361,6 +373,8 @@
   import DraggableRegion from 'shared/views/draggable/DraggableRegion';
   import { DropEffect } from 'shared/mixins/draggable/constants';
   import DraggablePlaceholder from 'shared/views/draggable/DraggablePlaceholder';
+  import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
+  import { commonStrings } from 'shared/strings/commonStrings';
 
   export default {
     name: 'TreeViewBase',
@@ -381,8 +395,15 @@
       DraggablePlaceholder,
       SavingIndicator,
       QuickEditModal,
+      PreviewDraftChannelModal,
     },
     mixins: [titleMixin],
+    setup() {
+      const { getDraftTokenAction$ } = communityChannelsStrings;
+      return {
+        getDraftTokenAction$,
+      };
+    },
     props: {
       loading: {
         type: Boolean,
@@ -398,6 +419,7 @@
         showSyncModal: false,
         showClipboard: false,
         showDeleteModal: false,
+        showPreviewDraftModal: false,
         syncing: false,
         resubmitToCommunityLibraryModalData: null,
       };
@@ -532,6 +554,22 @@
           }
         },
         immediate: true,
+      },
+      isDraftPublishing(newVal, oldVal) {
+        if (!newVal && oldVal) {
+          const { draftPublishedNotice$ } = communityChannelsStrings;
+          const { previewAction$ } = commonStrings;
+          const snackbarData = {
+            text: draftPublishedNotice$(),
+          };
+          if (this.currentChannel.draft_token) {
+            snackbarData.actionText = previewAction$();
+            snackbarData.actionCallback = () => {
+              this.showPreviewDraftModal = true;
+            };
+          }
+          this.$store.dispatch('showSnackbar', snackbarData);
+        }
       },
     },
     methods: {
