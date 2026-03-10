@@ -143,7 +143,7 @@
   import { mapGetters, mapActions } from 'vuex';
   import { getCurrentInstance, onMounted, ref, computed, watch } from 'vue';
   import transform from 'lodash/transform';
-  import { RouteNames, rowsPerPageItems } from '../../constants';
+  import { ChannelTypeFilter, RouteNames, rowsPerPageItems } from '../../constants';
   import { useTable } from '../../composables/useTable';
   import ChannelItem from './ChannelItem';
   import { useKeywordSearch } from 'shared/composables/useKeywordSearch';
@@ -154,13 +154,6 @@
   import IconButton from 'shared/views/IconButton';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
   import { CommunityLibraryStatus } from 'shared/constants';
-
-  const ChannelTypeFilter = {
-    ALL: 'all',
-    KOLIBRI_LIBRARY: 'kolibriLibrary',
-    COMMUNITY_LIBRARY: 'communityLibrary',
-    UNLISTED: 'unlisted',
-  };
 
   const channelTypeFilterMap = {
     [ChannelTypeFilter.ALL]: {

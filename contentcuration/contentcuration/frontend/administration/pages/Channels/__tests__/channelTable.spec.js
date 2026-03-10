@@ -1,8 +1,8 @@
 import { mount, createLocalVue } from '@vue/test-utils';
 import Vuex, { Store } from 'vuex';
 import router from '../../../router';
-import { RouteNames } from '../../../constants';
-import ChannelTable from '../ChannelTable';
+import { ChannelTypeFilter, RouteNames } from '../../../constants';
+import ChannelTable from '../ChannelTable.vue';
 
 const localVue = createLocalVue();
 
@@ -55,8 +55,8 @@ describe('channelTable', () => {
   });
   describe('filters', () => {
     it('changing channel type filter should set query params', async () => {
-      wrapper.vm.channelTypeFilter = 'communityLibrary';
-      expect(router.currentRoute.query.channelType).toBe('communityLibrary');
+      wrapper.vm.channelTypeFilter = ChannelTypeFilter.COMMUNITY_LIBRARY;
+      expect(router.currentRoute.query.channelType).toBe(ChannelTypeFilter.COMMUNITY_LIBRARY);
     });
     it('changing language filter should set query params', () => {
       wrapper.vm.languageFilter = 'en';
@@ -72,10 +72,10 @@ describe('channelTable', () => {
       expect(router.currentRoute.query.keywords).toBe('keyword test');
     });
     it('changing channel type filter should reset channel status filter', async () => {
-      wrapper.vm.channelTypeFilter = 'communityLibrary';
+      wrapper.vm.channelTypeFilter = ChannelTypeFilter.COMMUNITY_LIBRARY;
       wrapper.vm.channelStatusFilter = 'published';
       await wrapper.vm.$nextTick();
-      wrapper.vm.channelTypeFilter = 'unlisted';
+      wrapper.vm.channelTypeFilter = ChannelTypeFilter.UNLISTED;
       await wrapper.vm.$nextTick();
       expect(wrapper.vm.channelStatusFilter).toBe('live');
     });
