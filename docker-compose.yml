@@ -1,5 +1,3 @@
-version: '3.4'
-
 x-studio-environment:
   &studio-environment
     MPLBACKEND: ps
@@ -15,7 +13,6 @@ x-studio-environment:
     CELERY_RESULT_BACKEND_ENDPOINT: redis
     CELERY_REDIS_PASSWORD: ""
     REMAP_SIGTERM: "SIGQUIT"
-    PROBER_STUDIO_BASE_URL: http://studio-app:8080/{path}
 
 x-studio-worker:
   &studio-worker
@@ -77,12 +74,16 @@ services:
       POSTGRES_USER: learningequality
       POSTGRES_PASSWORD: kolibri
       POSTGRES_DB: kolibri-studio
+    ports:
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data/pgdata
       - .docker/postgres:/docker-entrypoint-initdb.d
 
   redis:
     image: redis:6.0.9
+    ports:
+      - "6379:6379"
 
 
 volumes:
