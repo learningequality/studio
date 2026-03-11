@@ -38,6 +38,14 @@ export const Small = Node.create({
       class: {
         default: 'small-text',
       },
+      textAlign: {
+        default: 'left',
+        parseHTML: element => element.style.textAlign || 'left',
+        renderHTML: attributes => {
+          if (!attributes.textAlign || attributes.textAlign === 'left') return {};
+          return { style: `text-align: ${attributes.textAlign}` };
+        },
+      },
     };
   },
 
