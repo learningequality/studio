@@ -13,6 +13,7 @@ x-studio-environment:
     CELERY_RESULT_BACKEND_ENDPOINT: redis
     CELERY_REDIS_PASSWORD: ""
     REMAP_SIGTERM: "SIGQUIT"
+    WEBPACK_DEV_HOST: 0.0.0.0
 
 x-studio-worker:
   &studio-worker
