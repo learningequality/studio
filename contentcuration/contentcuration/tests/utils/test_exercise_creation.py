@@ -1603,7 +1603,7 @@ class TestQTIExerciseCreation(StudioTestCase):
             <math display="block">
                 <semantics>
                     <mrow>
-                        <msubsup><mo>∑</mo><mi>n</mi><mi>s</mi></msubsup>
+                        <munderover><mo>∑</mo><mi>n</mi><mi>s</mi></munderover>
                         <mi>x</mi>
                         <msup><mi>a</mi><mi>n</mi></msup>
                     </mrow>
