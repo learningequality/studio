@@ -132,6 +132,62 @@ class TexMathTestMixin:
 
         self._assert_conversion(markdown_text, expected)
 
+    def test_block_sum_uses_munderover(self):
+        """Block-mode \\sum with sub+superscript must use <munderover>, not <msubsup>"""
+
+        markdown_text = "$$\\sum_{i=1}^{n} x_i$$"
+        expected = (
+            '<math display="block">'
+            "<semantics><mrow><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mrow>"
+            "<mi>n</mi></mrow></munderover><msub><mi>x</mi><mi>i</mi></msub></mrow>"
+            '<annotation encoding="application/x-tex">\\sum_{i=1}^{n} x_i</annotation></semantics>'
+            "</math>"
+        )
+
+        self._assert_conversion(markdown_text, expected)
+
+    def test_inline_sum_uses_msubsup(self):
+        """Inline-mode \\sum with sub+superscript must use <msubsup>, not <munderover>"""
+
+        markdown_text = "The sum $$\\sum_{i=1}^{n} x_i$$ is finite."
+        expected = (
+            "<p>The sum "
+            '<math display="inline"><semantics><mrow><msubsup><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mrow>'
+            "<mi>n</mi></mrow></msubsup><msub><mi>x</mi><mi>i</mi></msub></mrow>"
+            '<annotation encoding="application/x-tex">\\sum_{i=1}^{n} x_i</annotation></semantics></math>'
+            " is finite.</p>\n"
+        )
+
+        self._assert_conversion(markdown_text, expected)
+
+    def test_block_prod_uses_munderover(self):
+        """Block-mode \\prod with sub+superscript must use <munderover>"""
+
+        markdown_text = "$$\\prod_{k=0}^{n} a_k$$"
+        expected = (
+            '<math display="block">'
+            "<semantics><mrow><munderover><mo>∏</mo><mrow><mi>k</mi><mo>=</mo><mn>0</mn></mrow><mrow>"
+            "<mi>n</mi></mrow></munderover><msub><mi>a</mi><mi>k</mi></msub></mrow>"
+            '<annotation encoding="application/x-tex">\\prod_{k=0}^{n} a_k</annotation></semantics>'
+            "</math>"
+        )
+
+        self._assert_conversion(markdown_text, expected)
+
+    def test_block_int_unaffected(self):
+        """Block-mode \\int should still use <msubsup> (not affected by munderover fix)"""
+
+        markdown_text = "$$\\int_{a}^{b} f(x) dx$$"
+        expected = (
+            '<math display="block">'
+            "<semantics><mrow><msubsup><mo>∫</mo><mrow><mi>a</mi></mrow><mrow>"
+            '<mi>b</mi></mrow></msubsup><mi>f</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mi>d</mi><mi>x</mi></mrow>'
+            '<annotation encoding="application/x-tex">\\int_{a}^{b} f(x) dx</annotation></semantics>'
+            "</math>"
+        )
+
+        self._assert_conversion(markdown_text, expected)
+
     def test_no_math_content(self):
         """Test that regular markdown without math still works"""
 
