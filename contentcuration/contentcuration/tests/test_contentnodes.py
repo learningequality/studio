@@ -1817,6 +1817,32 @@ class FixExerciseExtraFieldsTestCase(StudioTestCase):
         self.assertEqual(threshold["m"], 0)
         self.assertEqual(threshold["n"], 0)
 
+    def test_incomplete_node_with_valid_fields_gets_marked_complete(self):
+        """An incomplete exercise with valid extra_fields should be marked complete."""
+        node = self._create_exercise(
+            {
+                "options": {
+                    "completion_criteria": {
+                        "threshold": {
+                            "mastery_model": exercises.DO_ALL,
+                            "m": None,
+                            "n": None,
+                        },
+                        "model": completion_criteria.MASTERY,
+                    }
+                },
+            }
+        )
+        # Force incomplete status even though fields are valid
+        node.complete = False
+        node.save()
+
+        command = FixExerciseExtraFieldsCommand()
+        command.handle()
+
+        node.refresh_from_db()
+        self.assertTrue(node.complete)
+
     def test_migrates_string_extra_fields(self):
         """Command should parse and migrate extra_fields stored as a JSON string."""
         node = self._create_exercise(
