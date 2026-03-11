@@ -7,6 +7,8 @@ export function useToolbarActions(emit) {
 
   // helper
   const getEffectiveAlignment = editorInstance => {
+    if (!editorInstance) return 'left';
+
     const isLeftAligned = editorInstance.isActive({ textAlign: 'left' });
     const isRightAligned = editorInstance.isActive({ textAlign: 'right' });
 
