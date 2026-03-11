@@ -120,8 +120,8 @@ class TexMathTestMixin:
             "</p>\n"
             "<p>And this is block math:</p>\n"
             '<math display="block">'
-            "<semantics><mrow><msubsup><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mrow>"
-            "<mi>n</mi></mrow></msubsup><msub><mi>x</mi><mi>i</mi></msub><mo>=</mo><mi>y</mi></mrow>"
+            "<semantics><mrow><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mrow>"
+            "<mi>n</mi></mrow></munderover><msub><mi>x</mi><mi>i</mi></msub><mo>=</mo><mi>y</mi></mrow>"
             '<annotation encoding="application/x-tex">\sum_{i=1}^{n} x_i = y</annotation></semantics>'  # noqa W605
             "</math>"
             "<p>Back to text with more inline: "
