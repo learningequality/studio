@@ -7,10 +7,8 @@ RUN corepack enable pnpm && pnpm install --frozen-lockfile
 
 COPY . .
 
-# Ensure expected bundles directory exists and run production frontend build
-RUN mkdir -p contentcuration/static/js/bundles \
-    && ln -s /contentcuration/node_modules /contentcuration/contentcuration/node_modules \
-    && pnpm run build
+# The webpack build, creating the frontend assets, later copied to the final image
+RUN pnpm run build
 
 
 FROM ghcr.io/astral-sh/uv:python3.10-trixie-slim
@@ -46,11 +44,11 @@ RUN uv pip sync --system /contentcuration/requirements.txt
 COPY . /contentcuration/
 
 # Copy compiled frontend static output from node-builder
-COPY --from=node-builder /contentcuration/contentcuration/static /contentcuration/contentcuration/static
+COPY --from=node-builder /contentcuration/contentcuration/contentcuration/static /contentcuration/contentcuration/contentcuration/static
 
 ARG COMMIT_SHA
 ENV RELEASE_COMMIT_SHA=$COMMIT_SHA
 
-EXPOSE 8000
+EXPOSE 8081
 
-ENTRYPOINT ["make", "altprodserver"]
+CMD ["make", "altprodserver"]
