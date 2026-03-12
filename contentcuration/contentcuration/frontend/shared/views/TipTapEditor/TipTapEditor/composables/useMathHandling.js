@@ -18,6 +18,7 @@ export function useMathHandling(editor, editorMode) {
 
   const closeMathModal = () => {
     closeModalBase();
+    editor.value?.commands.focus();
   };
 
   setupClickOutside('.formulas-menu', closeMathModal);

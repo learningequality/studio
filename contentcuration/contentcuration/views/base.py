@@ -76,6 +76,8 @@ user_fields = (
     "clipboard_tree_id",
     "policies",
     "feature_flags",
+    "newest_notification_date",
+    "last_read_notification_date",
 )
 
 

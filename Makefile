@@ -1,9 +1,9 @@
 # standalone install method
-DOCKER_COMPOSE = docker-compose
+DOCKER_COMPOSE ?= docker-compose
 
 # support new plugin installation for docker-compose
-ifeq (, $(shell which docker-compose))
-DOCKER_COMPOSE = docker compose
+ifeq (, $(shell command -v docker-compose 2>/dev/null))
+DOCKER_COMPOSE := docker compose
 endif
 
 ###############################################################
@@ -196,8 +196,8 @@ dctest: .docker/minio .docker/postgres
 
 dcservicesup: .docker/minio .docker/postgres
 	# launch all studio's dependent services using docker-compose
-	$(DOCKER_COMPOSE) -f docker-compose.yml -f docker-compose.alt.yml up minio postgres redis
+	$(DOCKER_COMPOSE) up minio postgres redis
 
 dcservicesdown:
 	# stop services that were started using dcservicesup
-	$(DOCKER_COMPOSE) -f docker-compose.yml -f docker-compose.alt.yml down
+	$(DOCKER_COMPOSE) down

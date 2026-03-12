@@ -26,9 +26,7 @@
         fluid
         :style="`margin-top: ${offline ? 48 : 0}`"
       >
-        <LoadingText v-if="loading" />
         <VLayout
-          v-else
           grid
           wrap
           class="list-wrapper"
@@ -37,46 +35,85 @@
             xs12
             class="mb-2"
           >
-            <h1 class="mb-2 ml-1 title">
-              {{ $tr('resultsText', { count: page.count }) }}
-            </h1>
-            <KButton
-              v-if="page.count && !selecting"
-              :text="$tr('selectChannels')"
-              data-testid="select"
-              appearance="basic-link"
-              @click="setSelection(true)"
-            />
-            <Checkbox
-              v-else-if="selecting"
+            <h1 class="visuallyhidden">{{ $tr('title') }}</h1>
+            <p class="results-text">
+              <span v-if="!loading">{{ $tr('resultsText', { count: page.count }) }}</span>
+            </p>
+            <div class="download-link-wrapper">
+              <KButton
+                v-if="page.count && !selecting && !loading"
+                :text="$tr('selectChannels')"
+                appearance="basic-link"
+                @click="setSelection(true)"
+              />
+            </div>
+            <KCheckbox
+              v-if="selecting"
               v-model="selectAll"
-              class="mb-4 mx-2"
+              :indeterminate="isIndeterminate"
               :label="$tr('selectAll')"
-              :indeterminate="selected.length > 0 && selected.length < channels.length"
+              class="mb-4 mx-2"
             />
           </VFlex>
           <VFlex xs12>
-            <VLayout
-              v-for="item in channels"
-              :key="item.id"
-              align-center
+            <KCardGrid
+              layout="1-1-1"
+              :loading="loading"
+              :skeletonsConfig="skeletonsConfig"
+              :syncCardsMetrics="false"
             >
-              <Checkbox
-                v-show="selecting"
-                v-model="selected"
-                class="mx-2"
-                :value="item.id"
-              />
-              <ChannelItem
-                :channelId="item.id"
-                :detailsRouteName="detailsRouteName"
-                style="flex-grow: 1; width: 100%"
-              />
-            </VLayout>
+              <StudioChannelCard
+                v-for="channel in channels"
+                :key="channel.id"
+                :headingLevel="2"
+                :orientation="windowBreakpoint > 2 ? 'horizontal' : 'vertical'"
+                :showUpdateStatus="false"
+                :channel="channel"
+                :detailsRoute="getChannelDetailsRoute(channel)"
+                :selectable="selecting"
+                :selected="isChannelSelected(channel)"
+                @toggle-selection="handleSelectionToggle"
+                @click="onCardClick(channel)"
+              >
+                <template #footerActions>
+                  <KIconButton
+                    v-if="channel.published"
+                    icon="copy"
+                    :tooltip="$tr('copyToken')"
+                    data-testid="copy-button"
+                    @click.stop.prevent="tokenChannelId = channel.id"
+                  />
+
+                  <ChannelStar
+                    v-if="loggedIn"
+                    :channelId="channel.id"
+                    :bookmark="channel.bookmark"
+                  />
+
+                  <KIconButton
+                    v-if="channel.source_url || channel.demo_server_url"
+                    size="small"
+                    icon="optionsVertical"
+                    appearance="flat-button"
+                    :ariaLabel="$tr('moreOptions')"
+                    @click.stop
+                  >
+                    <template #menu>
+                      <KDropdownMenu
+                        :hasIcons="true"
+                        :options="getDropdownItems(channel)"
+                        @select="option => handleDropdownSelect(option, channel)"
+                      />
+                    </template>
+                  </KIconButton>
+                </template>
+              </StudioChannelCard>
+            </KCardGrid>
           </VFlex>
           <VFlex
+            v-if="!loading"
             xs12
-            style="padding-bottom: 72px"
+            class="pagination-container"
           >
             <VLayout justify-center>
               <Pagination
@@ -117,6 +154,14 @@
             />
           </KButton>
         </BottomBar>
+
+        <ChannelTokenModal
+          :value="Boolean(tokenChannel)"
+          appendToOverlay
+          data-testid="copy-modal"
+          :channel="tokenChannel"
+          @input="onTokenModalInput"
+        />
       </VContainer>
     </div>
   </div>
@@ -136,11 +181,11 @@
   import { RouteNames } from '../../constants';
   import CatalogFilters from './CatalogFilters';
   import CatalogFilterBar from './CatalogFilterBar';
-  import ChannelItem from './ChannelItem';
-  import LoadingText from 'shared/views/LoadingText';
+  import StudioChannelCard from './StudioChannelCard';
+  import ChannelStar from './ChannelStar';
+  import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import Pagination from 'shared/views/Pagination';
   import BottomBar from 'shared/views/BottomBar';
-  import Checkbox from 'shared/views/form/Checkbox';
   import ToolBar from 'shared/views/ToolBar';
   import OfflineText from 'shared/views/OfflineText';
   import { constantsTranslationMixin } from 'shared/mixins';
@@ -149,22 +194,23 @@
   export default {
     name: 'CatalogList',
     components: {
-      ChannelItem,
-      LoadingText,
+      StudioChannelCard,
+      ChannelStar,
+      ChannelTokenModal,
       CatalogFilters,
       CatalogFilterBar,
       Pagination,
       BottomBar,
-      Checkbox,
       ToolBar,
       OfflineText,
     },
     mixins: [channelExportMixin, constantsTranslationMixin],
     setup() {
-      const { windowIsSmall } = useKResponsiveWindow();
+      const { windowIsSmall, windowBreakpoint } = useKResponsiveWindow();
 
       return {
         windowIsSmall,
+        windowBreakpoint,
       };
     },
     data() {
@@ -172,14 +218,19 @@
         loading: true,
         loadError: false,
         selecting: false,
+        tokenChannelId: null,
 
         /**
          * jayoshih: router guard makes it difficult to track
          * differences between previous query params and new
          * query params, so just track it manually
          */
-        previousQuery: this.$route.query,
-
+        /**
+         * MisRob: Add 'page: 1' as default to prevent it from being
+         * added later and causing redundant $router watcher call when
+         * page initially loading (fixes loading state showing twice)
+         */
+        previousQuery: { page: 1, ...this.$route.query },
         /**
          * jayoshih: using excluded logic here instead of selected
          * to account for selections across pages (some channels
@@ -190,10 +241,29 @@
     },
     computed: {
       ...mapGetters('channel', ['getChannels']),
+      ...mapGetters(['loggedIn']),
       ...mapState('channelList', ['page']),
       ...mapState({
         offline: state => !state.connection.online,
       }),
+      skeletonsConfig() {
+        return [
+          {
+            breakpoints: [0, 1, 2, 3, 4, 5, 6, 7],
+            count: 2,
+            orientation: 'vertical',
+            thumbnailDisplay: 'small',
+            thumbnailAlign: 'left',
+            thumbnailAspectRatio: '16:9',
+            minHeight: '380px',
+          },
+          {
+            breakpoints: [3, 4, 5, 6, 7],
+            orientation: 'horizontal',
+            minHeight: '230px',
+          },
+        ];
+      },
       selectAll: {
         get() {
           return this.selected.length === this.channels.length;
@@ -216,9 +286,6 @@
       debouncedSearch() {
         return debounce(this.loadCatalog, 1000);
       },
-      detailsRouteName() {
-        return RouteNames.CATALOG_DETAILS;
-      },
       channels() {
         // Sort again by the same ordering used on the backend - name.
         // Have to do this because of how we are getting the object data via getChannels.
@@ -226,6 +293,13 @@
       },
       selectedCount() {
         return this.page.count - this.excluded.length;
+      },
+      isIndeterminate() {
+        return this.selected.length > 0 && this.selected.length < this.channels.length;
+      },
+      tokenChannel() {
+        if (!this.tokenChannelId) return null;
+        return this.channels.find(c => c.id === this.tokenChannelId) || null;
       },
     },
     watch: {
@@ -245,11 +319,61 @@
         this.previousQuery = { ...to.query };
       },
     },
-    mounted() {
+    created() {
       this.loadCatalog();
     },
     methods: {
       ...mapActions('channelList', ['searchCatalog']),
+      onTokenModalInput(val) {
+        if (!val) this.tokenChannelId = null;
+      },
+      getDropdownItems(channel) {
+        const items = [];
+        if (channel.source_url) {
+          items.push({ label: this.$tr('goToWebsite'), icon: 'openNewTab', value: 'source-url' });
+        }
+        if (channel.demo_server_url) {
+          items.push({ label: this.$tr('viewContent'), icon: 'openNewTab', value: 'demo-url' });
+        }
+        return items;
+      },
+      handleDropdownSelect(option, channel) {
+        if (option.value === 'source-url') {
+          window.open(channel.source_url, '_blank');
+        } else if (option.value === 'demo-url') {
+          window.open(channel.demo_server_url, '_blank');
+        }
+      },
+      getChannelDetailsRoute(channel) {
+        return {
+          name: RouteNames.CATALOG_DETAILS,
+          query: {
+            ...this.$route.query,
+            last: this.$route.name,
+          },
+          params: {
+            channelId: channel.id,
+          },
+        };
+      },
+      onCardClick(channel) {
+        if (this.loggedIn) {
+          window.location.assign(window.Urls.channel(channel.id));
+        } else {
+          this.$router.push(this.getChannelDetailsRoute(channel));
+        }
+      },
+      isChannelSelected(channel) {
+        return this.selected.includes(channel.id);
+      },
+      handleSelectionToggle(channelId) {
+        const currentlySelected = this.selected;
+        if (currentlySelected.includes(channelId)) {
+          this.selected = currentlySelected.filter(id => id !== channelId);
+        } else {
+          this.selected = [...currentlySelected, channelId];
+        }
+      },
       loadCatalog() {
         this.loading = true;
         const params = {
@@ -297,6 +421,7 @@
       },
     },
     $trs: {
+      title: 'Content library',
       resultsText: '{count, plural,\n =1 {# result found}\n other {# results found}}',
       selectChannels: 'Download a summary of selected channels',
       cancelButton: 'Cancel',
@@ -307,6 +432,10 @@
       channelSelectionCount:
         '{count, plural,\n =1 {# channel selected}\n other {# channels selected}}',
       selectAll: 'Select all',
+      copyToken: 'Copy channel token',
+      moreOptions: 'More options',
+      goToWebsite: 'Go to source website',
+      viewContent: 'View channel on Kolibri',
     },
   };
 
@@ -348,6 +477,21 @@
 
   .catalog-sidebar--small {
     width: 100%;
+  }
+
+  .results-text {
+    margin-bottom: 8px;
+    font-size: 20px;
+  }
+
+  .results-text,
+  .download-link-wrapper {
+    min-height: 30px; // prevent layout shifts when loading state changes
+  }
+
+  .pagination-container {
+    padding-bottom: 72px;
+    margin-top: 32px;
   }
 
 </style>

@@ -2111,6 +2111,12 @@ export const User = new Resource({
   getUserId(obj) {
     return obj.id;
   },
+  async markNotificationsRead(timestamp) {
+    await client.post(window.Urls.userMarkNotificationsRead(), {
+      timestamp,
+    });
+    await Session.updateSession({ last_read_notification_date: timestamp });
+  },
 });
 
 export const EditorM2M = new IndexedDBResource({
@@ -2408,6 +2414,10 @@ export const CommunityLibrarySubmission = new APIResource({
     return client.get(this.collectionUrl(), { params }).then(response => {
       return response.data || [];
     });
+  },
+  async fetchModel(id) {
+    const response = await client.get(this.modelUrl(id));
+    return response.data;
   },
   create(params) {
     return client.post(this.collectionUrl(), params).then(response => {

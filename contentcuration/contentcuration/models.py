@@ -41,6 +41,8 @@ from django.db.models import UUIDField as DjangoUUIDField
 from django.db.models import Value
 from django.db.models.expressions import ExpressionList
 from django.db.models.expressions import RawSQL
+from django.db.models.functions import Coalesce
+from django.db.models.functions import Greatest
 from django.db.models.functions import Lower
 from django.db.models.indexes import IndexExpression
 from django.db.models.query_utils import DeferredAttribute
@@ -86,6 +88,8 @@ from contentcuration.viewsets.sync.constants import ALL_CHANGES
 from contentcuration.viewsets.sync.constants import ALL_TABLES
 from contentcuration.viewsets.sync.constants import PUBLISHABLE_CHANGE_TABLES
 from contentcuration.viewsets.sync.constants import PUBLISHED
+from contentcuration.viewsets.sync.constants import SESSION
+from contentcuration.viewsets.sync.utils import generate_update_event
 
 EDIT_ACCESS = "edit"
 VIEW_ACCESS = "view"
@@ -233,6 +237,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     feature_flags = JSONField(default=dict, null=True)
 
     deleted = models.BooleanField(default=False, db_index=True)
+
+    newest_notification_date = models.DateTimeField(null=True, blank=True)
+    last_read_notification_date = models.DateTimeField(null=True, blank=True)
 
     _field_updates = FieldTracker(
         fields=[
@@ -607,6 +614,14 @@ class User(AbstractBaseUser, PermissionsMixin):
             .first()
         ) or 0
 
+    def mark_notifications_read(self, timestamp):
+        # Greatest between last read and timestamp
+        self.last_read_notification_date = Greatest(
+            Coalesce(F("last_read_notification_date"), Value(timestamp)),
+            Value(timestamp),
+        )
+        self.save(update_fields=["last_read_notification_date"])
+
     class Meta:
         verbose_name = "User"
         verbose_name_plural = "Users"
@@ -676,6 +691,31 @@ class User(AbstractBaseUser, PermissionsMixin):
         if deleted is not None:
             user_qs = user_qs.filter(deleted=deleted)
         return user_qs.filter(**filters).order_by("-is_active", "-id").first()
+
+    @classmethod
+    def notify_users(cls, users_queryset, date):
+        users_queryset.update(
+            newest_notification_date=Greatest(
+                Coalesce(F("newest_notification_date"), Value(date)), Value(date)
+            )
+        )
+        # refresh to get the latest newest_notification_date values after the update
+        refreshed_qs = cls.objects.filter(
+            pk__in=users_queryset.values_list("pk", flat=True)
+        )
+
+        Change.create_changes(
+            [
+                generate_update_event(
+                    "CURRENT_USER",
+                    SESSION,
+                    {"newest_notification_date": user.newest_notification_date},
+                    user_id=user.pk,
+                )
+                for user in refreshed_qs
+            ],
+            applied=True,
+        )
 
 
 class UUIDField(models.CharField):
@@ -1347,6 +1387,12 @@ class Channel(models.Model):
 
     def get_human_token(self):
         return self.secret_tokens.get(is_primary=True)
+
+    def get_draft_token(self):
+        draft_version = self.channel_versions.filter(version=None).first()
+        if not draft_version:
+            return None
+        return draft_version.secret_token
 
     def get_channel_id_token(self):
         return self.secret_tokens.get(token=self.id)
@@ -2856,9 +2902,6 @@ class CommunityLibrarySubmission(models.Model):
     internal_notes = models.TextField(blank=True, null=True)
 
     def save(self, *args, **kwargs):
-        # Not a top-level import to avoid circular import issues
-        from contentcuration.tasks import ensure_versioned_database_exists_task
-
         # Validate on save that the submission author is an editor of the channel
         # and that the version is not greater than the current channel version.
         # These cannot be expressed as constraints because traversing
@@ -2887,15 +2930,8 @@ class CommunityLibrarySubmission(models.Model):
                 code="public_channel_submission",
             )
 
-        if self.pk is None:
-            # When creating a new submission, ensure the channel has a versioned database
-            # (it might not have if the channel was published before versioned databases
-            # were introduced).
-            ensure_versioned_database_exists_task.fetch_or_enqueue(
-                user=self.author,
-                channel_id=self.channel.id,
-                channel_version=self.channel.version,
-            )
+        is_adding = self._state.adding
+        if is_adding:
             # Create a ChannelVersion and token for this submission
             channel_version, _ = ChannelVersion.objects.get_or_create(
                 channel=self.channel, version=self.channel_version
@@ -2903,6 +2939,10 @@ class CommunityLibrarySubmission(models.Model):
             channel_version.new_token()
 
         super().save(*args, **kwargs)
+
+        if is_adding:
+            # When a new submission is created, notify channel editors
+            self.notify_update_to_channel_editors(exclude_user_id=self.author_id)
 
     def mark_live(self):
         """
@@ -2918,6 +2958,16 @@ class CommunityLibrarySubmission(models.Model):
 
         self.status = community_library_submission.STATUS_LIVE
         self.save()
+
+    def notify_update_to_channel_editors(self, exclude_user_id=None):
+        """
+        Notify channel editors that a submission has been updated.
+        """
+        editors = self.channel.editors
+        if exclude_user_id:
+            editors = editors.exclude(id=exclude_user_id)
+
+        User.notify_users(editors, date=self.date_updated)
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):
@@ -2959,6 +3009,12 @@ class AuditedSpecialPermissionsLicense(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     description = models.TextField(unique=True, db_index=True)
     distributable = models.BooleanField(default=False)
+
+    @classmethod
+    def mark_channel_version_as_distributable(cls, channel_version_id):
+        return cls.objects.filter(channel_versions__id=channel_version_id).update(
+            distributable=True
+        )
 
     def __str__(self):
         return (

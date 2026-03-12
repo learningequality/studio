@@ -51,6 +51,7 @@ const renderComponent = (props = {}) => {
   store.commit('channel/ADD_CHANNEL', currentChannel);
   store.commit('contentNode/ADD_CONTENTNODE', rootNode);
   store.commit('SET_UNSAVED_CHANGES', props.areAllChangesSaved === false);
+  store.commit('UPDATE_SESSION', { is_admin: true });
 
   const router = new VueRouter();
 
@@ -390,5 +391,10 @@ describe('PublishSidePanel', () => {
     const cancelBtn = screen.getByText(communityChannelsStrings.cancelAction$());
     await fireEvent.click(cancelBtn);
     expect(emitted().close).toBeTruthy();
+  });
+
+  it('renders ChannelVersionHistory component', () => {
+    renderComponent();
+    expect(screen.getByText(communityChannelsStrings.seeAllVersions$())).toBeInTheDocument();
   });
 });

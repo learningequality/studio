@@ -1029,6 +1029,11 @@ def fill_published_fields(channel, version_notes):
         else:
             channel.version_info.special_permissions_included.clear()
 
+        if channel.public:
+            ccmodels.AuditedSpecialPermissionsLicense.mark_channel_version_as_distributable(
+                channel.version_info.id
+            )
+
     channel.save()
 
 
@@ -1136,6 +1141,13 @@ def publish_channel(  # noqa: C901
         else:
             increment_channel_version(channel)
         if not is_draft_version:
+            ccmodels.ChannelVersion.objects.filter(
+                channel=channel, version=None
+            ).delete()
+            draft_db_path = get_content_db_path(channel_id, "next")
+            if storage.exists(draft_db_path):
+                storage.delete(draft_db_path)
+
             sync_contentnode_and_channel_tsvectors(channel_id=channel.id)
             mark_all_nodes_as_published(base_tree)
             fill_published_fields(channel, version_notes)

@@ -31,7 +31,7 @@
       >
         <VSelect
           v-model="userTypeFilter"
-          :items="userTypeFilters"
+          :items="userTypeOptions"
           item-text="label"
           item-value="key"
           label="User Type"
@@ -141,11 +141,11 @@
   import { mapGetters } from 'vuex';
   import transform from 'lodash/transform';
   import { useTable } from '../../composables/useTable';
-  import { useKeywordSearch } from '../../composables/useKeywordSearch';
-  import { useFilter } from '../../composables/useFilter';
   import { RouteNames, rowsPerPageItems } from '../../constants';
   import EmailUsersDialog from './EmailUsersDialog';
   import UserItem from './UserItem';
+  import { useFilter } from 'shared/composables/useFilter';
+  import { useKeywordSearch } from 'shared/composables/useKeywordSearch';
   import { routerMixin } from 'shared/mixins';
   import IconButton from 'shared/views/IconButton';
   import Checkbox from 'shared/views/form/Checkbox';
@@ -174,12 +174,20 @@
       const store = proxy.$store;
 
       const {
-        filter: userTypeFilter,
-        filters: userTypeFilters,
+        filter: _userTypeFilter,
+        options: userTypeOptions,
         fetchQueryParams: userTypeFetchQueryParams,
       } = useFilter({
         name: 'userType',
         filterMap: userTypeFilterMap,
+      });
+      // Temporal wrapper, must be removed after migrating to KSelect
+      const userTypeFilter = computed({
+        get: () => _userTypeFilter.value.value || undefined,
+        set: value => {
+          _userTypeFilter.value =
+            userTypeOptions.value.find(option => option.value === value) || {};
+        },
       });
 
       const {
@@ -192,9 +200,21 @@
       const locationFilterMap = ref({});
       const locationDropdown = ref(null);
 
-      const { filter: locationFilter, fetchQueryParams: locationFetchQueryParams } = useFilter({
+      const {
+        filter: _locationFilter,
+        options: locationOptions,
+        fetchQueryParams: locationFetchQueryParams,
+      } = useFilter({
         name: 'location',
         filterMap: locationFilterMap,
+      });
+      // Temporal wrapper, must be removed after migrating to KSelect
+      const locationFilter = computed({
+        get: () => _locationFilter.value.value || undefined,
+        set: value => {
+          _locationFilter.value =
+            locationOptions.value.find(option => option.value === value) || {};
+        },
       });
 
       onMounted(() => {
@@ -233,7 +253,7 @@
 
       return {
         userTypeFilter,
-        userTypeFilters,
+        userTypeOptions,
         locationDropdown,
         locationFilter,
         keywordInput,

@@ -6,7 +6,7 @@ This guide will walk through setting up Kolibri Studio for local development, wh
 
 ## Prerequisites
 - [volta](https://docs.volta.sh/guide/getting-started)
-- [pyenv](https://kolibri-dev.readthedocs.io/en/develop/howtos/installing_pyenv.html) and [pyenv-virtualenv](https://github.com/pyenv/pyenv-virtualenv#installation)
+- [uv](https://docs.astral.sh/uv/) - Python package installer and virtual environment manager
 
 ## Install system dependencies and services
 Studio requires some background services to be running:
@@ -75,29 +75,25 @@ exit  # leave the postgres account
 ```
 
 ## Build your python virtual environment
-To determine what version of Python studio needs, you can check the `runtime.txt` file:
+
+Studio uses [uv](https://docs.astral.sh/uv/) for Python dependency management and virtual environments. To set up your development environment:
+
 ```bash
-$ cat runtime.txt
-# This is the required version of Python to run Studio currently.
-# This is determined by the default Python 3 version that is installed
-# inside Ubuntu Bionic, which is used to build images for Studio.
-# We encode it here so that it can be picked up by Github's dependabot
-# to manage automated package upgrades.
-python-3.10.13
+# Create a virtual environment with uv (this will use the system Python or uv-managed Python)
+uv venv --seed
+
+# Activate the virtual environment
+source .venv/bin/activate
 ```
-So to install python 3.10.13 through `pyenv` and set up a virtual environment:
-```bash
-pyenv install 3.10.13
-pyenv virtualenv 3.10.13 studio-py3.10
-pyenv activate studio-py3.10
-```
+
 Now you may install Studio's Python dependencies:
 ```bash
-pip install -r requirements.txt -r requirements-dev.txt
+uv pip sync requirements.txt requirements-dev.txt
 ```
+
 To deactivate the virtual environment, when you're finished developing on Studio for the time being:
 ```bash
-pyenv deactivate
+deactivate
 ```
 
 ### A note about `psycopg2`

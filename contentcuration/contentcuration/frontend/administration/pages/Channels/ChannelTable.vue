@@ -5,36 +5,35 @@
       {{ `${$formatNumber(count)} ${count === 1 ? 'channel' : 'channels'}` }}
     </h1>
     <VLayout
-      rowwrap
+      wrap
       class="mb-2"
     >
       <VFlex
         xs12
-        sm4
-        xl3
+        sm6
+        md3
         class="px-3"
       >
         <VSelect
           v-model="channelTypeFilter"
-          :items="channelTypeFilters"
+          :items="channelTypeOptions"
           item-text="label"
           item-value="key"
           label="Channel Type"
           box
-          clearable
           :menu-props="{ offsetY: true }"
         />
       </VFlex>
       <VFlex
         xs12
-        sm4
-        xl3
+        sm6
+        md3
         clearable
         class="px-3"
       >
         <VSelect
           v-model="channelStatusFilter"
-          :items="channelStatusFilters"
+          :items="channelStatusOptions"
           item-text="label"
           item-value="key"
           label="Channel Status"
@@ -45,8 +44,8 @@
       </VFlex>
       <VFlex
         xs12
-        sm4
-        xl3
+        sm6
+        md3
         class="px-3"
       >
         <LanguageDropdown
@@ -56,8 +55,8 @@
       </VFlex>
       <VFlex
         xs12
-        sm4
-        xl3
+        sm6
+        md3
         class="px-3"
       >
         <VTextField
@@ -144,21 +143,32 @@
   import { mapGetters, mapActions } from 'vuex';
   import { getCurrentInstance, onMounted, ref, computed, watch } from 'vue';
   import transform from 'lodash/transform';
-  import { RouteNames, rowsPerPageItems } from '../../constants';
+  import { ChannelTypeFilter, RouteNames, rowsPerPageItems } from '../../constants';
   import { useTable } from '../../composables/useTable';
-  import { useKeywordSearch } from '../../composables/useKeywordSearch';
-  import { useFilter } from '../../composables/useFilter';
   import ChannelItem from './ChannelItem';
+  import { useKeywordSearch } from 'shared/composables/useKeywordSearch';
+  import { useFilter } from 'shared/composables/useFilter';
   import { channelExportMixin } from 'shared/views/channel/mixins';
   import { routerMixin } from 'shared/mixins';
   import Checkbox from 'shared/views/form/Checkbox';
   import IconButton from 'shared/views/IconButton';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
+  import { CommunityLibraryStatus } from 'shared/constants';
 
   const channelTypeFilterMap = {
-    kolibriStudio: { label: 'Kolibri Studio Library', params: { public: true, deleted: false } },
-    community: { label: 'Community Library', params: { has_community_library_submission: true } },
-    unlisted: {
+    [ChannelTypeFilter.ALL]: {
+      label: 'All Channels',
+      params: {},
+    },
+    [ChannelTypeFilter.KOLIBRI_LIBRARY]: {
+      label: 'Kolibri Studio Library',
+      params: { public: true, deleted: false },
+    },
+    [ChannelTypeFilter.COMMUNITY_LIBRARY]: {
+      label: 'Community Library',
+      params: { has_community_library_submission: true },
+    },
+    [ChannelTypeFilter.UNLISTED]: {
       label: 'Unlisted Channels',
       params: { has_community_library_submission: false, public: false },
     },
@@ -178,30 +188,41 @@
       const store = proxy.$store;
 
       const statusFilterMap = computed(() => {
-        if (channelTypeFilter.value === 'kolibriStudio') {
+        if (channelTypeFilter.value === ChannelTypeFilter.KOLIBRI_LIBRARY) {
           return {
             live: { label: 'Live', params: {} },
             cheffed: { label: 'Sushi chef', params: { cheffed: true } },
           };
-        } else if (channelTypeFilter.value === 'community') {
+        } else if (channelTypeFilter.value === ChannelTypeFilter.COMMUNITY_LIBRARY) {
           return {
             live: { label: 'Live', params: { community_library_live: true } },
             needsReview: {
               label: 'Needs review',
               params: {
-                community_library_live: false,
-                latest_community_library_submission_status: ['PENDING', 'REJECTED'],
+                latest_community_library_submission_status: [
+                  CommunityLibraryStatus.PENDING,
+                  CommunityLibraryStatus.REJECTED,
+                ],
               },
             },
             published: { label: 'Published', params: {} },
             cheffed: { label: 'Sushi chef', params: { cheffed: true } },
           };
-        } else if (channelTypeFilter.value === 'unlisted') {
+        } else if (channelTypeFilter.value === ChannelTypeFilter.UNLISTED) {
           return {
-            live: { label: 'Live', params: {} },
-            draft: { label: 'Draft', params: { published: false } },
-            published: { label: 'Published', params: { published: true } },
-            cheffed: { label: 'Sushi chef', params: { cheffed: true } },
+            live: { label: 'Live', params: { deleted: false } },
+            draft: { label: 'Draft', params: { published: false, deleted: false } },
+            published: { label: 'Published', params: { published: true, deleted: false } },
+            cheffed: { label: 'Sushi chef', params: { cheffed: true, deleted: false } },
+            deleted: { label: 'Deleted', params: { deleted: true } },
+          };
+        } else if (channelTypeFilter.value === ChannelTypeFilter.ALL) {
+          return {
+            live: { label: 'Live', params: { deleted: false } },
+            published: { label: 'Published', params: { published: true, deleted: false } },
+            draft: { label: 'Draft', params: { published: false, deleted: false } },
+            cheffed: { label: 'Sushi chef', params: { cheffed: true, deleted: false } },
+            deleted: { label: 'Deleted', params: { deleted: true } },
           };
         }
         return {};
@@ -224,26 +245,56 @@
       });
 
       const {
-        filter: channelTypeFilter,
-        filters: channelTypeFilters,
+        filter: _channelTypeFilter,
+        options: channelTypeOptions,
         fetchQueryParams: channelTypeFetchQueryParams,
       } = useFilter({
         name: 'channelType',
         filterMap: channelTypeFilterMap,
+        defaultValue: ChannelTypeFilter.ALL,
+      });
+
+      // Temporal wrapper, must be removed after migrating to KSelect
+      const channelTypeFilter = computed({
+        get: () => _channelTypeFilter.value.value || undefined,
+        set: value => {
+          _channelTypeFilter.value =
+            channelTypeOptions.value.find(option => option.value === value) || {};
+        },
       });
 
       const {
-        filter: channelStatusFilter,
-        filters: channelStatusFilters,
+        filter: _channelStatusFilter,
+        options: channelStatusOptions,
         fetchQueryParams: channelStatusFetchQueryParams,
       } = useFilter({
         name: 'channelStatus',
         filterMap: statusFilterMap,
       });
+      // Temporal wrapper, must be removed after migrating to KSelect
+      const channelStatusFilter = computed({
+        get: () => _channelStatusFilter.value.value || undefined,
+        set: value => {
+          _channelStatusFilter.value =
+            channelStatusOptions.value.find(option => option.value === value) || {};
+        },
+      });
 
-      const { filter: languageFilter, fetchQueryParams: languageFetchQueryParams } = useFilter({
+      const {
+        filter: _languageFilter,
+        options: languageOptions,
+        fetchQueryParams: languageFetchQueryParams,
+      } = useFilter({
         name: 'language',
         filterMap: languageFilterMap,
+      });
+      // Temporal wrapper, must be removed after migrating to KSelect
+      const languageFilter = computed({
+        get: () => _languageFilter.value.value || undefined,
+        set: value => {
+          _languageFilter.value =
+            languageOptions.value.find(option => option.value === value) || {};
+        },
       });
 
       const {
@@ -253,10 +304,14 @@
         fetchQueryParams: keywordSearchFetchQueryParams,
       } = useKeywordSearch();
 
-      watch(channelTypeFilter, () => {
-        const filters = channelStatusFilters.value;
-        channelStatusFilter.value = filters.length ? filters[0].key : null;
-      });
+      watch(
+        channelTypeFilter,
+        () => {
+          const options = channelStatusOptions.value;
+          channelStatusFilter.value = options.length ? options[0].value : null;
+        },
+        { immediate: true },
+      );
 
       const filterFetchQueryParams = computed(() => {
         return {
@@ -278,9 +333,9 @@
 
       return {
         channelTypeFilter,
-        channelTypeFilters,
+        channelTypeOptions,
         channelStatusFilter,
-        channelStatusFilters,
+        channelStatusOptions,
         languageFilter,
         languageDropdown,
         keywordInput,

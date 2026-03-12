@@ -15,12 +15,12 @@ python-postmark==0.7.0
 Django==3.2.24
 django-webpack-loader==0.7.0
 google-cloud-error-reporting
-google-cloud-storage
+google-cloud-storage==2.19.0
 django-s3-storage==0.15.0
 requests>=2.20.0
 google-cloud-core
 django-db-readonly==0.7.0
-google-cloud-kms==2.10.0
+google-cloud-kms==2.24.2
 google-crc32c==1.8.0
 backoff
 django-model-utils==5.0.0
@@ -28,7 +28,7 @@ django-redis
 django-prometheus
 sentry-sdk
 html5lib==1.1
-pillow==12.0.0
+pillow==12.1.1
 python-dateutil>=2.8.1
 jsonschema>=3.2.0
 django-celery-results
@@ -36,5 +36,5 @@ packaging>=21.0
 pycountry
 langcodes==3.5.1
 pydantic==2.12.5
-latex2mathml==3.78.0
+latex2mathml==3.78.1
 markdown-it-py==4.0.0

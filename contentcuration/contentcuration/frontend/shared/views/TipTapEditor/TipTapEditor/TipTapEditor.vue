@@ -215,7 +215,9 @@
           const processedContent = preprocessMarkdown(newValue);
 
           if (!editor.value) {
-            initializeEditor(processedContent, props.mode);
+            initializeEditor(processedContent, props.mode, {
+              autofocus: props.autofocus,
+            });
             return;
           }
 
@@ -288,6 +290,10 @@
       mode: {
         type: String,
         default: 'edit', // 'edit' or 'view'
+      },
+      autofocus: {
+        type: Boolean,
+        default: false,
       },
       tabindex: {
         type: [String, Number],
@@ -404,6 +410,7 @@
   }
 
   .editor-container small {
+    display: block;
     margin: 4px 0;
     font-size: 12px;
   }

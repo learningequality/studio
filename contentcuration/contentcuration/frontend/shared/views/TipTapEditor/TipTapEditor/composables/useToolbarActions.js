@@ -5,6 +5,23 @@ import { sanitizePastedHTML } from '../utils/markdown';
 export function useToolbarActions(emit) {
   const editor = inject('editor', null);
 
+  // helper
+  const getEffectiveAlignment = editorInstance => {
+    if (!editorInstance) return 'left';
+
+    const isLeftAligned = editorInstance.isActive({ textAlign: 'left' });
+    const isRightAligned = editorInstance.isActive({ textAlign: 'right' });
+
+    if (isLeftAligned) return 'left';
+    if (isRightAligned) return 'right';
+
+    const { from } = editorInstance.state.selection;
+    const dom = editorInstance.view.domAtPos(from).node;
+    const el = dom.nodeType === 1 ? dom : dom.parentElement;
+
+    return el ? window.getComputedStyle(el).textAlign : 'left';
+  };
+
   const {
     undo$,
     redo$,
@@ -21,6 +38,8 @@ export function useToolbarActions(emit) {
     mathFormula$,
     codeBlock$,
     clipboardAccessFailed$,
+    alignLeft$,
+    alignRight$,
   } = getTipTapEditorStrings();
 
   // Action handlers
@@ -179,6 +198,18 @@ export function useToolbarActions(emit) {
     } catch (err) {
       editor.value.chain().focus().insertContent(clipboardAccessFailed$()).run();
     }
+  };
+
+  const handleToggleAlign = () => {
+    if (!editor?.value) return;
+
+    const align = getEffectiveAlignment(editor.value);
+
+    editor.value
+      .chain()
+      .focus()
+      .setTextAlign(align === 'right' ? 'left' : 'right')
+      .run();
   };
 
   const handleBulletList = () => {
@@ -418,6 +449,23 @@ export function useToolbarActions(emit) {
     handler: handleMinimize,
   };
 
+  const alignAction = computed(() => {
+    const editorInstance = editor?.value;
+    const effectiveAlign = getEffectiveAlignment(editorInstance);
+    const effectiveRight = effectiveAlign === 'right';
+
+    return {
+      name: 'toggleAlign',
+      title: effectiveRight ? alignLeft$() : alignRight$(),
+      icon: effectiveRight
+        ? require('../../assets/icon-alignLeft.svg')
+        : require('../../assets/icon-alignRight.svg'),
+      handler: handleToggleAlign,
+      isActive: false,
+      isAvailable: !isMarkActive('codeBlock'),
+    };
+  });
+
   return {
     // Individual handlers
     handleUndo,
@@ -429,6 +477,7 @@ export function useToolbarActions(emit) {
     handleCopy,
     handlePaste,
     handlePasteNoFormat,
+    handleToggleAlign,
     handleBulletList,
     handleNumberList,
     handleSubscript,
@@ -444,6 +493,7 @@ export function useToolbarActions(emit) {
     // Action arrays
     historyActions,
     textActions,
+    alignAction,
     listActions,
     scriptActions,
     insertTools,

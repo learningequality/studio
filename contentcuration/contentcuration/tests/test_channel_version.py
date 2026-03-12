@@ -70,3 +70,35 @@ class ChannelVersionTestCase(StudioTestCase):
         )
         with self.assertRaises(ValidationError):
             cv.save()
+
+    def test_get_draft_token_returns_token_when_draft_version_exists(self):
+        """Test get_draft_token returns the secret_token of the version=None ChannelVersion."""
+        draft_version = ChannelVersion.objects.create(
+            channel=self.channel,
+            version=None,
+        )
+        token = draft_version.new_token()
+
+        result = self.channel.get_draft_token()
+        self.assertEqual(result, token)
+        self.assertIsInstance(result, SecretToken)
+        self.assertFalse(result.is_primary)
+
+    def test_get_draft_token_returns_none_when_no_draft_version(self):
+        """Test get_draft_token returns None when no version=None ChannelVersion exists."""
+        # Only create versioned ChannelVersions (not drafts)
+        ChannelVersion.objects.create(
+            channel=self.channel,
+            version=1,
+        )
+        result = self.channel.get_draft_token()
+        self.assertIsNone(result)
+
+    def test_get_draft_token_returns_none_when_draft_has_no_token(self):
+        """Test get_draft_token returns None when a draft version exists but has no token."""
+        ChannelVersion.objects.create(
+            channel=self.channel,
+            version=None,
+        )
+        result = self.channel.get_draft_token()
+        self.assertIsNone(result)

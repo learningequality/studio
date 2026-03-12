@@ -2,7 +2,7 @@
 
   <div
     class="bottom-bar pa-2"
-    :style="appearanceOverrides"
+    :style="bottomBarStyles"
   >
     <slot></slot>
   </div>
@@ -17,7 +17,16 @@
     props: {
       appearanceOverrides: {
         type: Object,
-        default: () => {},
+        default: () => ({}),
+      },
+    },
+    computed: {
+      bottomBarStyles() {
+        return {
+          backgroundColor: this.$themeTokens.surface,
+          borderTop: `1px solid ${this.$themeTokens.fineLine}`,
+          ...this.appearanceOverrides,
+        };
       },
     },
   };
@@ -36,8 +45,6 @@
     align-items: center;
     width: 100%;
     height: 64px;
-    background-color: #ffffff;
-    border-top: 1px solid #dddddd;
   }
 
 </style>

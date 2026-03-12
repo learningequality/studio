@@ -7,6 +7,7 @@ from django.urls import reverse
 from contentcuration.constants import (
     community_library_submission as community_library_submission_constants,
 )
+from contentcuration.models import AuditedSpecialPermissionsLicense
 from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import ChannelVersion
@@ -46,12 +47,6 @@ class CRUDTestCase(StudioAPITestCase):
 
         self.country1 = testdata.country(name="Country 1", code="C1")
         self.country2 = testdata.country(name="Country 2", code="C2")
-
-        # Mock to allow creating submissions without having to set up content databases
-        self.ensure_db_exists_patcher = mock.patch(
-            "contentcuration.utils.publish.ensure_versioned_database_exists"
-        )
-        self.ensure_db_exists_patcher.start()
 
         self.channel_with_submission1 = testdata.channel()
         self.channel_with_submission1.public = False
@@ -103,7 +98,6 @@ class CRUDTestCase(StudioAPITestCase):
         self.existing_submission2.save()
 
     def tearDown(self):
-        self.ensure_db_exists_patcher.stop()
         super().tearDown()
 
     def test_create_submission__is_editor(self):
@@ -509,17 +503,17 @@ class AdminViewSetTestCase(StudioAPITestCase):
         )
         self.django_timezone_patcher.start()
 
-        # Mock to allow creating submissions without having to set up content databases
-        self.ensure_db_exists_patcher = mock.patch(
-            "contentcuration.utils.publish.ensure_versioned_database_exists"
-        )
-        self.ensure_db_exists_patcher.start()
-
         self.submission = testdata.community_library_submission()
         self.submission.channel.version = 3
         self.submission.channel.save()
         self.submission.channel_version = 2
         self.submission.save()
+
+        # Create the ChannelVersion for this submission (needed when approving)
+        self.channel_version = ChannelVersion.objects.create(
+            channel=self.submission.channel,
+            version=self.submission.channel_version,
+        )
 
         self.editor_user = self.submission.channel.editors.first()
 
@@ -558,7 +552,6 @@ class AdminViewSetTestCase(StudioAPITestCase):
 
     def tearDown(self):
         self.django_timezone_patcher.stop()
-        self.ensure_db_exists_patcher.stop()
         super().tearDown()
 
     def _manually_reject_submission(self):
@@ -834,7 +827,10 @@ class AdminViewSetTestCase(StudioAPITestCase):
         )
         self.assertEqual(response.status_code, 400, response.content)
 
-    def test_resolve_submission__overrite_categories(self):
+    @mock.patch(
+        "contentcuration.viewsets.community_library_submission.apply_channel_changes_task"
+    )
+    def test_resolve_submission__overrite_categories(self, apply_task_mock):
         self.client.force_authenticate(user=self.admin_user)
         categories = ["Category 1"]
         self.resolve_approve_metadata["categories"] = categories
@@ -854,7 +850,10 @@ class AdminViewSetTestCase(StudioAPITestCase):
         )
         self.assertListEqual(resolved_submission.categories, categories)
 
-    def test_resolve_submission__accept_mark_superseded(self):
+    @mock.patch(
+        "contentcuration.viewsets.community_library_submission.apply_channel_changes_task"
+    )
+    def test_resolve_submission__accept_mark_superseded(self, apply_task_mock):
         self.client.force_authenticate(user=self.admin_user)
 
         response = self.client.post(
@@ -910,6 +909,44 @@ class AdminViewSetTestCase(StudioAPITestCase):
             community_library_submission_constants.STATUS_PENDING,
         )
 
+    @mock.patch(
+        "contentcuration.viewsets.community_library_submission.apply_channel_changes_task"
+    )
+    def test_resolve_submission__approve_marks_special_permissions_distributable(
+        self, apply_task_mock
+    ):
+        """Test that approving a submission marks special permissions as distributable."""
+        self.client.force_authenticate(user=self.admin_user)
+
+        # Create an audited special permissions license
+        special_license = AuditedSpecialPermissionsLicense.objects.create(
+            description="Community library special permissions"
+        )
+        self.assertFalse(special_license.distributable)
+
+        # Add the special permission to the channel version
+        self.channel_version.special_permissions_included.add(special_license)
+
+        # Approve the submission
+        response = self.client.post(
+            reverse(
+                "admin-community-library-submission-resolve",
+                args=[self.submission.id],
+            ),
+            self.resolve_approve_metadata,
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        # Verify the special permission is marked as distributable
+        special_license.refresh_from_db()
+        self.assertTrue(special_license.distributable)
+        self.assertTrue(
+            self.channel_version.special_permissions_included.filter(
+                id=special_license.id
+            ).exists()
+        )
+
 
 class FilteringAndSearchTestCase(StudioAPITestCase):
     """
@@ -925,11 +962,6 @@ class FilteringAndSearchTestCase(StudioAPITestCase):
         self.admin_user.first_name = "Admin"
         self.admin_user.last_name = "User"
         self.admin_user.save()
-
-        self.ensure_db_exists_patcher = mock.patch(
-            "contentcuration.utils.publish.ensure_versioned_database_exists"
-        )
-        self.ensure_db_exists_patcher.start()
 
         self.math_channel = testdata.channel(name="Math Basics")
         self.math_channel.public = False
@@ -1008,7 +1040,6 @@ class FilteringAndSearchTestCase(StudioAPITestCase):
             )
 
     def tearDown(self):
-        self.ensure_db_exists_patcher.stop()
         super().tearDown()
 
     def test_filter_by_date_updated_gte(self):

@@ -13,8 +13,9 @@
 
       <template #default>
         <div>
-          <KRadioButtonGroup>
+          <component :is="showDraftMode ? 'KRadioButtonGroup' : 'div'">
             <KRadioButton
+              v-if="showDraftMode"
               :label="modeLive$()"
               :buttonValue="PublishModes.LIVE"
               :currentValue="mode"
@@ -26,7 +27,7 @@
             <div
               v-if="mode === PublishModes.LIVE"
               class="live-mode-content"
-              style="margin-top: 16px; margin-left: 24px"
+              :style="showDraftMode ? { marginLeft: '24px', marginTop: '16px' } : {}"
             >
               <div class="live-publish-info">
                 <KIcon
@@ -74,6 +75,11 @@
                       @blur="isLanguageSelectBlurred = true"
                     />
                   </div>
+
+                  <ChannelVersionHistory
+                    v-if="currentChannel && currentChannel.version > 0"
+                    :channelId="currentChannel.id"
+                  />
                 </div>
               </div>
 
@@ -121,13 +127,14 @@
             </div>
 
             <KRadioButton
+              v-if="showDraftMode"
               :label="modeDraft$()"
               :buttonValue="PublishModes.DRAFT"
               :currentValue="mode"
               :description="modeDraftDescription$()"
               @input="mode = PublishModes.DRAFT"
             />
-          </KRadioButtonGroup>
+          </component>
         </div>
       </template>
 
@@ -154,17 +161,20 @@
 <script>
 
   import { ref, computed, getCurrentInstance } from 'vue';
+  import ChannelVersionHistory from './ChannelVersionHistory.vue';
   import SidePanelModal from 'shared/views/SidePanelModal';
   import { Channel, CommunityLibrarySubmission } from 'shared/data/resources';
   import { forceServerSync } from 'shared/data/serverSync';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
   import { LanguagesList } from 'shared/leUtils/Languages';
   import logging from 'shared/logging';
+  import { FeatureFlagKeys } from 'shared/constants';
 
   export default {
     name: 'PublishSidePanel',
     components: {
       SidePanelModal,
+      ChannelVersionHistory,
     },
     setup(props, { emit }) {
       const PublishModes = {
@@ -208,12 +218,14 @@
         cancelAction$,
         languageLabel$,
         languageRequiredMessage$,
+        draftBeingPublishedNotice$,
         versionNotesRequiredMessage$,
       } = communityChannelsStrings;
 
       const currentChannel = computed(() => store.getters['currentChannel/currentChannel']);
       const getContentNode = computed(() => store.getters['contentNode/getContentNode']);
       const areAllChangesSaved = computed(() => store.getters['areAllChangesSaved']);
+      const hasFeatureEnabled = computed(() => store.getters['hasFeatureEnabled']);
 
       const incompleteResourcesCount = computed(() => {
         if (!currentChannel.value) return 0;
@@ -251,6 +263,10 @@
         }
         return true;
       });
+
+      const showDraftMode = computed(() =>
+        hasFeatureEnabled.value(FeatureFlagKeys.test_dev_feature),
+      );
 
       const submitText = computed(() => {
         return mode.value === PublishModes.DRAFT ? saveDraft$() : publishAction$();
@@ -354,7 +370,10 @@
           }
 
           if (mode.value === PublishModes.DRAFT) {
-            await Channel.publishDraft(currentChannel.value.id, { use_staging_tree: false });
+            await Channel.publishDraft(currentChannel.value.id, {
+              use_staging_tree: false,
+            });
+            store.dispatch('showSnackbarSimple', draftBeingPublishedNotice$());
             emit('close');
           } else {
             // `newChannelLanguage.value` is a KSelect option { value, label }, so we need to
@@ -383,6 +402,7 @@
         isChannelLanguageLoading,
         PublishModes,
         mode,
+        showDraftMode,
         version_notes,
         submitting,
         languageOptions,

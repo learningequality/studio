@@ -25,6 +25,7 @@ var/
 
 # Ignore editor / IDE related data
 .vscode/
+.claude/
 
 # IntelliJ IDE, except project config
 .idea/
@@ -129,6 +130,3 @@ storybook-static/
 
 # i18n
 /contentcuration/locale/**/LC_MESSAGES/*.csv
-
-# pyenv
-.python-version
