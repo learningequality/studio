@@ -130,7 +130,7 @@
           :style="{ color: $themeTokens.error }"
           class="field-error"
         >
-          {{ $tr('fieldRequired') }}
+          {{ fieldRequiredText }}
         </div>
 
         <!-- Location -->
@@ -144,7 +144,7 @@
           :style="{ color: $themeTokens.error }"
           class="field-error"
         >
-          {{ $tr('fieldRequired') }}
+          {{ fieldRequiredText }}
         </div>
 
         <!-- Source -->
@@ -182,7 +182,7 @@
           :style="{ color: $themeTokens.error }"
           class="field-error"
         >
-          {{ $tr('fieldRequired') }}
+          {{ fieldRequiredText }}
         </div>
 
         <!-- Agreements -->
@@ -243,11 +243,6 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
-  import KTextbox from 'kolibri-design-system/lib/KTextbox';
-  import KCheckbox from 'kolibri-design-system/lib/KCheckbox';
-  import KTransition from 'kolibri-design-system/lib/KTransition';
-  import KSelect from 'kolibri-design-system/lib/KSelect';
-  import KRouterLink from 'kolibri-design-system/lib/buttons-and-links/KRouterLink';
   import { uses, sources } from '../constants';
   import StudioEmailField from '../components/form/StudioEmailField';
   import StudioPasswordField from '../components/form/StudioPasswordField';
@@ -262,16 +257,11 @@
     name: 'Create',
     components: {
       StudioImmersiveModal,
-      KTextbox,
-      KCheckbox,
-      KTransition,
-      KSelect,
       StudioEmailField,
       StudioPasswordField,
       CountryField,
       PolicyModals,
       StudioBanner,
-      KRouterLink,
     },
     data() {
       return {
@@ -288,7 +278,7 @@
           storage: '',
           other_use: '',
           locations: [],
-          source: {},
+          source: { value: '', label: '' },
           organization: '',
           conference: '',
           other_source: '',
@@ -361,6 +351,10 @@
       },
       policies() {
         return policies;
+      },
+      fieldRequiredText() {
+        /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+        return commonStrings.$tr('fieldRequired');
       },
       sourceOptions() {
         return [
@@ -480,6 +474,9 @@
       showOtherField(id) {
         return id === uses.OTHER && this.form.uses.includes(id);
       },
+      // Custom validation is used (not generateFormMixin) because KTextbox requires
+      // field-specific error message strings via :invalidText, which generateFormMixin
+      // does not support (it stores only boolean errors per field).
       validateField(field) {
         switch (field) {
           case 'first_name':
@@ -567,8 +564,7 @@
         return isValid;
       },
       submit() {
-        // We need to check the "acceptedAgreement" here explicitly because it is not a
-        // Vuetify form field and does not trigger the form validation.
+        // acceptedAgreement must be checked explicitly here as it is not included in validateForm().
         if (this.validateForm() && this.acceptedAgreement) {
           // Prevent double submission
           if (this.submitting) {
@@ -677,7 +673,6 @@
       otherSourcePlaceholder: 'Please describe',
 
       // Privacy policy + terms of service
-      fieldRequired: 'Field is required',
       viewToSLink: 'View Terms of Service',
       ToSRequiredMessage: 'Please accept our terms of service and policy',
 
@@ -718,6 +713,7 @@
   }
 
   .banner {
+    width: 100%;
     margin-bottom: 32px;
   }
 
