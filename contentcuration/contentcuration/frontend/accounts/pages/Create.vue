@@ -564,7 +564,8 @@
         return isValid;
       },
       submit() {
-        // acceptedAgreement must be checked explicitly here as it is not included in validateForm().
+        // acceptedAgreement must be checked explicitly 
+        // here as it is not included in validateForm().
         if (this.validateForm() && this.acceptedAgreement) {
           // Prevent double submission
           if (this.submitting) {
