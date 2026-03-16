@@ -1,4 +1,5 @@
 <template>
+
   <PoliciesModal
     :policy="policy"
     :title="title"
@@ -310,12 +311,10 @@
           {{ $untranslated('glossaryP3') }}
         </p>
         <p>
-          <b>{{ $untranslated('glossaryP4Comply') }}</b
-          >{{ $untranslated('glossaryP4') }}
+          <b>{{ $untranslated('glossaryP4Comply') }}</b>{{ $untranslated('glossaryP4') }}
         </p>
         <p>
-          <b>{{ $untranslated('glossaryP5ThirdParty') }}</b
-          >{{ $untranslated('glossaryP5') }}
+          <b>{{ $untranslated('glossaryP5ThirdParty') }}</b>{{ $untranslated('glossaryP5') }}
         </p>
         <p>
           <b>{{ $untranslated('glossaryP6') }}</b>
@@ -360,9 +359,12 @@
       </div>
     </div>
   </PoliciesModal>
+
 </template>
 
+
 <script>
+
   import PoliciesModal from './PoliciesModal';
   import { policies } from 'shared/constants';
 
@@ -608,9 +610,12 @@
       updatedPrivacyHeader: 'Updated privacy policy',
     },
   };
+
 </script>
 
+
 <style scoped>
+
   .emphasis {
     font-weight: bold;
     text-transform: uppercase;
@@ -640,4 +645,5 @@
   .toc li {
     margin-bottom: 8px;
   }
+
 </style>
