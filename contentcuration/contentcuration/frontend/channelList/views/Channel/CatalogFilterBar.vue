@@ -32,8 +32,8 @@
 <script>
 
   import flatten from 'lodash/flatten'; // Tests fail with native Array.flat() method
-  import StudioChip from 'shared/views/StudioChip';
   import { catalogFilterMixin } from './mixins';
+  import StudioChip from 'shared/views/StudioChip';
   import { constantsTranslationMixin } from 'shared/mixins';
 
   /**
@@ -138,8 +138,8 @@
 
   .catalog-filter-bar {
     max-width: 1128px;
-    margin: 0 auto;
     padding: 16px;
+    margin: 0 auto;
   }
 
   .catalog-filter-bar-content {
