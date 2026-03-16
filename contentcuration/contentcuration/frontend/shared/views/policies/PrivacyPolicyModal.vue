@@ -285,7 +285,7 @@
           {{ $untranslated('cookiesP2') }}
           <KExternalLink
             :text="$untranslated('cookieLink')"
-            href="https://learningequality.org/cookies/"
+            href="https://learningequality.org/cookie-policy/"
             :openInNewTab="true"
           />
         </p>
