@@ -23,12 +23,12 @@ class Command(BaseCommand):
 
         futures = []
         with concurrent.futures.ThreadPoolExecutor() as e:
-            print("Scheduling all metadata update jobs...")  # noqa: T201
+            self.stdout.write("Scheduling all metadata update jobs...")
             for blob in blobs:
                 future = e.submit(self._update_metadata, blob)
                 futures.append(future)
 
-            print("Waiting for all jobs to finish...")  # noqa: T201
+            self.stdout.write("Waiting for all jobs to finish...")
 
     def _determine_cache_control(self, name):
         _, ext = os.path.splitext(name)

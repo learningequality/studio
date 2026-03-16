@@ -20,7 +20,7 @@ class Command(BaseCommand):
         self.editor.clipboard_tree.get_descendants().delete()
 
         with ContentNode.objects.delay_mptt_updates():
-            print("Creating channel...")  # noqa: T201
+            self.stdout.write("Creating channel...")
             self.generate_random_channels()
 
             # Make sure we have a channel with a lot of root topics to test initial channel load.
@@ -33,7 +33,7 @@ class Command(BaseCommand):
             self.editor.clipboard_tree = TreeBuilder(
                 levels=2, num_children=25, user=self.editor
             ).root
-            print(  # noqa: T201
+            self.stdout.write(
                 "Created clipboard with {} nodes".format(
                     self.editor.clipboard_tree.get_descendants().count()
                 )
@@ -47,7 +47,7 @@ class Command(BaseCommand):
 
             new_channel.main_tree = TreeBuilder(user=self.editor).root
 
-            print(  # noqa: T201
+            self.stdout.write(
                 "Created channel with {} nodes".format(
                     new_channel.main_tree.get_descendants().count()
                 )
@@ -55,4 +55,4 @@ class Command(BaseCommand):
 
             # make sure we have a trash tree so that can be tested with real data as well.
             new_channel.trash_tree = TreeBuilder(user=self.editor).root
-            print("Created channel with id {}".format(new_channel.pk))  # noqa: T201
+            self.stdout.write("Created channel with id {}".format(new_channel.pk))

@@ -34,24 +34,24 @@ class Command(BaseCommand):
             ] = objects.get_object_creation_stats_mptt_delay(num_objects, num_runs)
             object_types.append("ContentNode-mptt-delay")
 
-            print()
-            print("Test results:")
+            self.stdout.write("")
+            self.stdout.write("Test results:")
             for object_type in object_types:
                 run_stats = stats[object_type]
-                print(
+                self.stdout.write(
                     "Stats for creating {} {} objects over {} runs: {}".format(
                         num_objects, object_type, num_runs, run_stats
                     )
                 )
 
             if options["stress_test"]:
-                print(  # noqa: T201
+                self.stdout.write(
                     "Running stress test simulating creation / cloning of a channel like KA, "
                     "this will take at least several minutes. Please do not interrupt if possible!"
                 )
                 stats = objects.get_large_channel_creation_stats()
                 for stat in stats:
-                    print("{}: {}".format(stat, stats[stat]))
+                    self.stdout.write("{}: {}".format(stat, stats[stat]))
 
         finally:
             if objects:

@@ -55,7 +55,7 @@ class Command(BaseCommand):
         email = options["email"]
         password = options["password"]
         if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-            print("{} is not a valid email".format(email))  # noqa: T201
+            self.stderr.write(self.style.ERROR("{} is not a valid email".format(email)))
             sys.exit()
 
         # create the cache table
@@ -191,9 +191,11 @@ class Command(BaseCommand):
             for legacy_node in legacy_clipboard_nodes:
                 legacy_node.copy_to(target=user1.clipboard_tree)
 
-        print(  # noqa: T201
-            "\n\n\nSETUP DONE: Log in as admin to view data (email: {}, password: {})\n\n\n".format(
-                email, password
+        self.stdout.write(
+            self.style.SUCCESS(
+                "\n\n\nSETUP DONE: Log in as admin to view data (email: {}, password: {})\n\n\n".format(
+                    email, password
+                )
             )
         )
 

@@ -1,3 +1,4 @@
+import logging
 import sys
 import time
 
@@ -6,6 +7,9 @@ from contentcuration.models import ContentNode
 from contentcuration.models import File
 
 # TODO: Investigate more precise timing libraries
+
+
+logger = logging.getLogger(__name__)
 
 
 def print_progress(text):
@@ -34,7 +38,7 @@ class Objective:
             )
 
     def cleanup(self):
-        print("Performing clean up, please wait...")  # noqa: T201
+        logger.info("Performing clean up, please wait...")
         try:
             if self.root_node:
                 files = File.objects.filter(contentnode=self.root_node)
@@ -45,10 +49,9 @@ class Objective:
                 self.root_node = None
         except Exception:
             if self.root_node:
-                print(  # noqa: T201
-                    "Error in cleanup. Root node with id {} may still exist.".format(
-                        self.root_node.pk
-                    )
+                logger.error(
+                    "Error in cleanup. Root node with id %s may still exist.",
+                    self.root_node.pk,
                 )
             raise
 

@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import random
 import string
@@ -31,6 +32,8 @@ from contentcuration.models import License
 from contentcuration.models import User
 from contentcuration.utils.files import duplicate_file
 
+logger = logging.getLogger(__name__)
+
 LICENSE_DESCRIPTION = "Sample text for content with special permissions"
 SORT_ORDER = 0
 
@@ -43,10 +46,10 @@ def create_user(email, password, first_name, last_name, admin=False):
         user.set_password(password)
         user.first_name = first_name
         user.last_name = last_name
-        print(  # noqa: T201
-            "User created (email: {}, password: {}, admin: {})".format(
-                email, password, admin
-            )
+        logger.info(
+            "User created (email: %s, admin: %s)",
+            email,
+            admin,
         )
     user.is_staff = admin
     user.is_admin = admin

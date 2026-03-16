@@ -28,6 +28,8 @@ from contentcuration.utils.cache import ResourceSizeCache
 from contentcuration.utils.files import get_thumbnail_encoding
 from contentcuration.utils.sentry import report_exception
 
+logger = logging.getLogger(__name__)
+
 
 def map_files_to_node(user, node, data):  # noqa: C901
     """
@@ -162,7 +164,7 @@ def map_files_to_slideshow_slide_item(user, node, slides, files):
 
         if not matching_slide:
             # TODO(Jacob) Determine proper error type... raise it.
-            print("NO MATCH")  # noqa: T201
+            logger.warning("NO MATCH for checksum %s", checksum)
 
         file_path = generate_object_storage_name(checksum, filename)
         storage = default_storage

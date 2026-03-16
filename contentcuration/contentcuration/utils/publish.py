@@ -391,7 +391,7 @@ class TreeMapper:
 
 
 def create_slideshow_manifest(ccnode, user_id=None):
-    print("Creating slideshow manifest...")  # noqa: T201
+    logging.info("Creating slideshow manifest...")
 
     preset = ccmodels.FormatPreset.objects.filter(pk="slideshow_manifest")[0]
     ext = file_formats.JSON
