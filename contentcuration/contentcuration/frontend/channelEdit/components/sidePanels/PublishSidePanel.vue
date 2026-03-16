@@ -264,9 +264,7 @@
         return true;
       });
 
-      const showDraftMode = computed(() =>
-        hasFeatureEnabled.value(FeatureFlagKeys.test_dev_feature),
-      );
+      const showDraftMode = computed(() => hasFeatureEnabled.value(FeatureFlagKeys.draft_channels));
 
       const submitText = computed(() => {
         return mode.value === PublishModes.DRAFT ? saveDraft$() : publishAction$();

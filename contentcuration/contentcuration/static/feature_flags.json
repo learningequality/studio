@@ -18,6 +18,11 @@
       "type": "boolean",
       "title":"Test Survey feature",
       "description": "Allow user access to Survey"
+    },
+    "draft_channels": {
+      "type": "boolean",
+      "title": "Draft channels",
+      "description": "Allow users to publish draft channels"
     }
   },
   "examples": [
