@@ -152,14 +152,6 @@
     margin: 4px;
   }
 
-  .v-card {
-    cursor: pointer;
-
-    &:hover {
-      background-color: var(--v-grey-lighten4);
-    }
-  }
-
   .clear-link {
     margin: 0 8px;
   }
