@@ -144,7 +144,7 @@ grpc-google-iam-v1==0.12.4
     # via
     #   google-cloud-kms
     #   google-cloud-logging
-grpcio==1.78.1
+grpcio==1.78.0
     # via
     #   google-api-core
     #   google-cloud-appengine-logging
