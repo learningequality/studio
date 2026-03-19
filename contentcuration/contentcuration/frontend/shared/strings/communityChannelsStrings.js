@@ -524,4 +524,37 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Draft token',
     context: 'Label for the draft token field in the draft preview instructions modal',
   },
+  // Community Library List page strings
+  title: {
+    message: 'Community library',
+    context: 'Page title for Community Library List',
+  },
+  resultsText: {
+    message: '{count, plural, =1 {# result found} other {# results found}}',
+    context: 'Text showing number of results',
+  },
+  noResults: {
+    message: 'No channels match the selected filters.',
+    context: 'Message shown when no channels are found',
+  },
+  loadError: {
+    message: 'There was an error loading channels.',
+    context: 'Error message when loading channels fails',
+  },
+  filterLabel: {
+    message: 'Filter',
+    context: 'Button label to show filters on mobile',
+  },
+  searchLabel: {
+    message: 'Search',
+    context: 'Label for the search input',
+  },
+  nResultsFound: {
+    message: '{count, plural, one {# result found} other {# results found}}',
+    context: 'Text showing number of results found, with pluralization',
+  },
+  clearAll: {
+    message: 'Clear all',
+    context: 'Button to clear all filters',
+  },
 });

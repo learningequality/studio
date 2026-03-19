@@ -154,6 +154,16 @@ export function getChannel(channelId) {
 }
 
 /**
+ * List channels from ChannelMetadataViewSet (Kolibri public API v2).
+ *
+ * @param {Object} params
+ * @return {Promise<Object[]|{results: Object[]}>}
+ */
+export function listPublicChannels(params = {}) {
+  return client.get(urls.publicchannel_list(), { params }).then(response => response.data);
+}
+
+/**
  * Get a content node from the public API
  * @param {String} nodeId
  * @return {Promise<PublicContentNode>}

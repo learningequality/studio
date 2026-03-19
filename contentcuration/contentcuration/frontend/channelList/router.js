@@ -5,6 +5,7 @@ import StudioViewOnlyChannels from './views/Channel/StudioViewOnlyChannels';
 import StudioCollectionsTable from './views/ChannelSet/StudioCollectionsTable';
 import ChannelSetModal from './views/ChannelSet/ChannelSetModal';
 import CatalogList from './views/Channel/CatalogList';
+import CommunityLibraryList from './views/Channel/CommunityLibraryList';
 import { RouteNames } from './constants';
 import CatalogFAQ from './views/Channel/CatalogFAQ';
 import SubmissionDetailsModal from 'shared/views/communityLibrary/SubmissionDetailsModal/index.vue';
@@ -74,6 +75,11 @@ const router = new VueRouter({
       path: '/public/:channelId/details',
       component: ChannelDetailsModal,
       props: true,
+    },
+    {
+      name: RouteNames.COMMUNITY_LIBRARY_ITEMS,
+      path: '/community-library',
+      component: CommunityLibraryList,
     },
     {
       name: RouteNames.CATALOG_FAQ,
