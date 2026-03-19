@@ -9,6 +9,37 @@
       :class="{ mobile: windowIsSmall }"
     >
       <div class="community-filters-wrapper">
+        <div
+          v-if="!windowIsSmall"
+          class="filter-panel"
+          :style="asideStyles"
+        >
+          <CommunityLibraryFilters
+            :disabled="loading"
+            :style="{ padding: '16px' }"
+          />
+        </div>
+      </div>
+    </aside>
+
+    <div class="community-main-content">
+      <div class="content-container">
+        <h1>
+          {{ communityLibraryLabel$() }}
+        </h1>
+        <p>
+          {{ communityLibraryDescription$() }}
+          <KButton
+            appearance="basic-link"
+            @click="isAboutCommunityLibraryOpen = true"
+          >
+            {{ whatIsCommunityLibrary$() }}
+          </KButton>
+        </p>
+        <AboutCommunityLibraryModal
+          v-if="isAboutCommunityLibraryOpen"
+          @close="isAboutCommunityLibraryOpen = false"
+        />
         <template v-if="windowIsSmall">
           <KButton
             class="filter-button"
@@ -31,45 +62,25 @@
             </template>
           </SidePanelModal>
         </template>
-        <div
-          v-else
-          class="filter-panel"
-          :style="asideStyles"
-        >
-          <CommunityLibraryFilters
-            :disabled="loading"
-            :style="{ padding: '16px' }"
-          />
+        <div v-if="activeFilters.length">
+          <div class="active-filters">
+            <StudioChip
+              v-for="(filter, index) in activeFilters"
+              :key="`community-filter-${index}`"
+              :text="filter.text"
+              close
+              @close="filter.onclose"
+            />
+            <KButton
+              class="clear-link"
+              :text="clearAll$()"
+              appearance="basic-link"
+              @click="clearFilters"
+            />
+          </div>
         </div>
-      </div>
-    </aside>
-
-    <div class="community-main-content">
-      <div class="pa-4">
-        <div
-          v-if="activeFilters.length"
-          class="active-filters"
-        >
-          <StudioChip
-            v-for="(filter, index) in activeFilters"
-            :key="`community-filter-${index}`"
-            :text="filter.text"
-            close
-            @close="filter.onclose"
-          />
-          <KButton
-            class="clear-link"
-            :text="clearAll$()"
-            appearance="basic-link"
-            @click="clearFilters"
-          />
-        </div>
-      </div>
-
-      <div class="content-container">
         <div class="list-wrapper">
           <div class="results-header">
-            <h1 class="visuallyhidden">{{ title$() }}</h1>
             <p
               v-if="!loading"
               class="results-text"
@@ -137,15 +148,13 @@
   import StudioChannelCard from '../StudioChannelCard';
   import CommunityLibraryFilters from './CommunityLibraryFilters';
   import useCommunityChannelsFilters from './useCommunityChannelsFilters';
+  import AboutCommunityLibraryModal from './AboutCommunityLibraryModal.vue';
   import { listPublicChannels } from 'shared/data/public';
   import useStore from 'shared/composables/useStore';
   import StudioChip from 'shared/views/StudioChip';
   import Pagination from 'shared/views/Pagination';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
   import SidePanelModal from 'shared/views/SidePanelModal';
-
-  const { filterLabel$, clearAll$, title$, resultsText$, noResults$, loadError$ } =
-    communityChannelsStrings;
 
   function mapResponseChannel(channel) {
     const language = channel.lang_code || channel.included_languages?.[0] || null;
@@ -167,6 +176,7 @@
       StudioChip,
       Pagination,
       SidePanelModal,
+      AboutCommunityLibraryModal,
     },
     setup() {
       const route = useRoute();
@@ -174,6 +184,17 @@
       const store = useStore();
       const tokensTheme = themeTokens();
       const { windowIsSmall, windowBreakpoint } = useKResponsiveWindow();
+
+      const {
+        filterLabel$,
+        clearAll$,
+        resultsText$,
+        noResults$,
+        loadError$,
+        communityLibraryLabel$,
+        communityLibraryDescription$,
+        whatIsCommunityLibrary$,
+      } = communityChannelsStrings;
 
       const {
         countriesFilter,
@@ -189,6 +210,7 @@
       const loadError = ref(false);
       const channels = ref([]);
       const showFiltersSidePanel = ref(false);
+      const isAboutCommunityLibraryOpen = ref(false);
       const count = ref(0);
       const totalPages = ref(0);
 
@@ -348,6 +370,7 @@
         count,
         totalPages,
         skeletonsConfig,
+        isAboutCommunityLibraryOpen,
         clearFilters,
         getChannelDetailsRoute,
         onCardClick,
@@ -355,10 +378,12 @@
         closeSidePanel,
         filterLabel$,
         clearAll$,
-        title$,
         resultsText$,
         noResults$,
         loadError$,
+        communityLibraryLabel$,
+        whatIsCommunityLibrary$,
+        communityLibraryDescription$,
       };
     },
   };
@@ -411,7 +436,7 @@
     height: 100%;
   }
 
-  .pa-4 {
+  .p-16 {
     padding: 16px;
   }
 
@@ -419,6 +444,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    margin-top: 16px;
     margin-bottom: 16px;
   }
 
@@ -427,7 +453,11 @@
   }
 
   .content-container {
-    padding: 0 16px;
+    padding: 16px;
+
+    p {
+      margin: 8px 0;
+    }
   }
 
   .list-wrapper {
