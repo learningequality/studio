@@ -216,8 +216,6 @@
 
       const currentPage = computed(() => Number(route.query.page) || 1);
 
-      const loggedIn = computed(() => store.getters.loggedIn);
-
       const asideStyles = computed(() => ({
         backgroundColor: tokensTheme.surface,
         borderRight: `1px solid ${tokensTheme.fineLine}`,
@@ -320,10 +318,6 @@
       function getChannelDetailsRoute(channel) {
         return {
           name: RouteNames.COMMUNITY_LIBRARY_DETAILS,
-          query: {
-            ...route.query,
-            last: route.name,
-          },
           params: {
             channelId: channel.id,
           },
@@ -331,11 +325,7 @@
       }
 
       function onCardClick(channel) {
-        if (loggedIn.value) {
-          window.location.assign(window.Urls.channel(channel.id));
-        } else {
-          router.push(getChannelDetailsRoute(channel));
-        }
+        router.push(getChannelDetailsRoute(channel));
       }
 
       function openSidePanel() {

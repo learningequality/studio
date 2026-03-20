@@ -564,6 +564,11 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Clear all',
     context: 'Button to clear all filters',
   },
+  needKolibriVersionToImport: {
+    message: 'You will need Kolibri version 0.19.4 or higher to import community channels.',
+    context:
+      'Message shown in the Community Library List page informing users that they need a certain Kolibri version to import channels from the Community Library',
+  },
 
   // about community library modal
   aboutCommunityLibraryTitle: {

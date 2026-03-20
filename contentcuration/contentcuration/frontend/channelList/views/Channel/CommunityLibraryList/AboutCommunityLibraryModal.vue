@@ -12,6 +12,14 @@
       <li>{{ whatCanYouDoHereItem2$() }}</li>
       <li>{{ whatCanYouDoHereItem3$() }}</li>
     </ul>
+    <p
+      :style="{
+        color: $themeTokens.error,
+        marginTop: '16px',
+      }"
+    >
+      {{ needKolibriVersionToImport$() }}
+    </p>
   </KModal>
 
 </template>
@@ -29,6 +37,7 @@
     whatCanYouDoHereItem2$,
     whatCanYouDoHereItem3$,
     gotItLabel$,
+    needKolibriVersionToImport$,
   } = communityChannelsStrings;
 
 </script>

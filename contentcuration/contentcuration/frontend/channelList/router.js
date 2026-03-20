@@ -1,4 +1,5 @@
 import VueRouter from 'vue-router';
+import CommunityChannelDetailsModal from './views/Channel/CommunityLibraryList/CommunityChannelDetailsModal.vue';
 import StudioMyChannels from './views/Channel/StudioMyChannels';
 import StudioStarredChannels from './views/Channel/StudioStarredChannels';
 import StudioViewOnlyChannels from './views/Channel/StudioViewOnlyChannels';
@@ -80,6 +81,12 @@ const router = new VueRouter({
       name: RouteNames.COMMUNITY_LIBRARY_ITEMS,
       path: '/community-library',
       component: CommunityLibraryList,
+    },
+    {
+      name: RouteNames.COMMUNITY_LIBRARY_DETAILS,
+      path: '/community-library/:channelId/details',
+      component: CommunityChannelDetailsModal,
+      props: true,
     },
     {
       name: RouteNames.CATALOG_FAQ,

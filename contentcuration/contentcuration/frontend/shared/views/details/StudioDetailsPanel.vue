@@ -34,6 +34,7 @@
     <StudioDetailsRow
       v-if="_details.published && _details.primary_token"
       :label="$tr('tokenHeading')"
+      :definition="tokenDefinition"
     >
       <template #default>
         <StudioCopyToken
@@ -85,6 +86,7 @@
     <StudioLargeLoader v-if="loading" />
     <template v-else-if="hasDetails">
       <StudioDetailsRow
+        v-if="createdDate"
         :label="$tr('creationHeading')"
         :text="createdDate"
       />
@@ -516,6 +518,10 @@
         type: Boolean,
         default: false,
       },
+      tokenDefinition: {
+        type: String,
+        default: null,
+      },
     },
     computed: {
       _details() {
@@ -550,6 +556,9 @@
         return orderBy(this._details.kind_count, ['count', 'kind_id'], ['desc', 'asc']);
       },
       createdDate() {
+        if (!this._details.created) {
+          return null;
+        }
         return this.$formatDate(this._details.created, {
           year: 'numeric',
           month: 'long',

@@ -43,6 +43,7 @@ from rest_framework.response import Response
 
 from contentcuration.middleware.locale import locale_exempt
 from contentcuration.middleware.session import session_exempt
+from contentcuration.models import ChannelVersion
 from contentcuration.models import Country
 from contentcuration.models import generate_storage_url
 from contentcuration.utils.pagination import CachedListPagination
@@ -219,9 +220,24 @@ class ChannelMetadataViewSet(ReadOnlyValuesViewset):
             if channel_id not in included_languages:
                 included_languages[channel_id] = []
             included_languages[channel_id].append(language_id)
-        for item in items:
-            item["included_languages"] = included_languages.get(item["id"], [])
-            item["last_published"] = item["last_updated"]
+
+        channel_versions_q = Q()
+
+        # Getting channel tokens in the consolidate method instead of doing it in the annotate method
+        # to make invisible the difference in the representation between public and private models UUIDFields
+        for channel in items:
+            channel_versions_q |= Q(
+                channel_id=channel["id"], version=channel["version"]
+            )
+
+        channel_tokens = {}
+
+        for channel_version in ChannelVersion.objects.filter(channel_versions_q).values(
+            "channel_id", "secret_token__token"
+        ):
+            channel_tokens[channel_version["channel_id"]] = channel_version[
+                "secret_token__token"
+            ]
 
         countries = {}
         for (channel_id, country_code) in Country.objects.filter(
@@ -232,7 +248,10 @@ class ChannelMetadataViewSet(ReadOnlyValuesViewset):
             countries[channel_id].append(country_code)
 
         for item in items:
+            item["included_languages"] = included_languages.get(item["id"], [])
             item["countries"] = countries.get(item["id"], [])
+            item["token"] = channel_tokens.get(item["id"])
+            item["last_published"] = item["last_updated"]
 
         return items
 
