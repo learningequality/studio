@@ -556,10 +556,6 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Search',
     context: 'Label for the search input',
   },
-  nResultsFound: {
-    message: '{count, plural, one {# result found} other {# results found}}',
-    context: 'Text showing number of results found, with pluralization',
-  },
   clearAll: {
     message: 'Clear all',
     context: 'Button to clear all filters',

@@ -58,7 +58,7 @@
           <span>
             {{ language }}
           </span>
-          <span v-if="channel.countries">
+          <span v-if="country">
             {{ country }}
           </span>
         </div>

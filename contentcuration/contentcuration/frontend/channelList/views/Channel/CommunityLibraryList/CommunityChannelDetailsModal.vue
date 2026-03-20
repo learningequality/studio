@@ -43,6 +43,11 @@
   import LicensesMap from 'shared/leUtils/Licenses';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 
+  /**
+   * This function maps the channel info that comes from the public models, to a format that the
+   * current studio components expect (they are used to receive channel info from the
+   * contentcuration models)
+   */
   function mapResponseChannel(channel) {
     const language = channel.lang_code || channel.included_languages?.[0] || null;
     return {

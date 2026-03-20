@@ -278,7 +278,6 @@ class ChannelMetadataLanguageFilterTestCase(StudioAPITestCase):
         response = self._list({"languages": "en,fr", "public": "false"})
         self.assertEqual(response.status_code, 200, response.content)
         ids = [UUID(item["id"]) for item in response.data]
-        print("ids", ids)
         self.assertIn(UUID(self.channel_en.id), ids)
         self.assertIn(UUID(self.channel_fr.id), ids)
         self.assertIn(UUID(self.channel_multi.id), ids)
