@@ -227,6 +227,7 @@
             </VBtn>
 
             <VBtn
+              v-if="false"
               color="primary"
               data-test="display-publish-draft-dialog-btn"
               @click="displayPublishDraftDialog = true"

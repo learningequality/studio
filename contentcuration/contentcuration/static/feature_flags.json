@@ -9,11 +9,6 @@
       "description": "This no-op feature flag is excluded from non-dev environments",
       "$env": "development"
     },
-    "ai_feature":{
-      "type": "boolean",
-      "title":"Test AI feature",
-      "description": "Allow user access to AI features"
-    },
     "survey":{
       "type": "boolean",
       "title":"Test Survey feature",
