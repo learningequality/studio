@@ -1,4 +1,5 @@
 import json
+from collections import OrderedDict
 
 from django.conf import settings
 from django.contrib.sites.models import Site
@@ -19,6 +20,8 @@ from rest_framework.response import Response
 
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Channel
+from contentcuration.models import ChannelVersion
+from contentcuration.serializers import get_thumbnail_encoding
 from contentcuration.serializers import PublicChannelSerializer
 
 
@@ -26,6 +29,43 @@ def _get_channel_list(version, params, identifier=None):
     if version == "v1":
         return _get_channel_list_v1(params, identifier=identifier)
     raise LookupError()
+
+
+def _get_version_notes(channel, channel_version):
+    data = {
+        int(k): v["version_notes"]
+        for k, v in channel.published_data.items()
+        if int(k) <= channel_version.version
+    }
+    return OrderedDict(sorted(data.items()))
+
+
+def _serialize_channel_version(channel_version_qs):
+    channel_version = channel_version_qs.first()
+    if not channel_version or not channel_version.channel:
+        return []
+
+    channel = channel_version.channel
+    return [
+        {
+            "id": channel.id,
+            "name": channel.name,
+            "language": channel.language_id,
+            "public": channel.public,
+            "description": channel.description,
+            "icon_encoding": get_thumbnail_encoding(channel),
+            "version_notes": _get_version_notes(channel, channel_version),
+            "version": channel_version.version,
+            "kind_count": channel_version.kind_count,
+            "included_languages": channel_version.included_languages,
+            "total_resource_count": channel_version.resource_count,
+            "published_size": channel_version.size,
+            "last_published": channel_version.date_published,
+            "matching_tokens": [channel_version.secret_token.token]
+            if channel_version.secret_token
+            else [],
+        }
+    ]
 
 
 def _get_channel_list_v1(params, identifier=None):
@@ -40,6 +80,20 @@ def _get_channel_list_v1(params, identifier=None):
         )
         if not channels.exists():
             channels = Channel.objects.filter(pk=identifier)
+
+        if not channels.exists():
+            # If channels doesnt exist with the given token, check if this is a token of
+            # a channel version.
+            channel_version = ChannelVersion.objects.select_related(
+                "secret_token", "channel"
+            ).filter(
+                secret_token__token=identifier,
+                channel__deleted=False,
+                channel__main_tree__published=True,
+            )
+            if channel_version.exists():
+                # return early as we won't need to apply the other filters for channel version tokens
+                return channel_version
     else:
         channels = Channel.objects.prefetch_related("secret_tokens").filter(
             Q(public=True) | Q(secret_tokens__token__in=token_list)
@@ -96,7 +150,12 @@ def get_public_channel_lookup(request, version, identifier):
         return HttpResponseNotFound(
             _("No channel matching {} found").format(escape(identifier))
         )
-    return Response(PublicChannelSerializer(channel_list, many=True).data)
+
+    if channel_list.model == ChannelVersion:
+        channel_list = _serialize_channel_version(channel_list)
+        return Response(channel_list)
+    else:
+        return Response(PublicChannelSerializer(channel_list, many=True).data)
 
 
 @api_view(["GET"])
