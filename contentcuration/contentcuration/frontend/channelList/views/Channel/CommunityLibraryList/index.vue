@@ -105,8 +105,33 @@
                 :channel="channel"
                 :detailsRoute="getChannelDetailsRoute(channel)"
                 @click="onCardClick(channel)"
-              />
+              >
+                <template #footerActions>
+                  <KIconButton
+                    v-if="channel.token"
+                    icon="copy"
+                    :tooltip="copyChannelTokenAction$()"
+                    @click.stop.prevent="tokenChannel = channel"
+                  />
+                </template>
+              </StudioChannelCard>
             </KCardGrid>
+            <ChannelTokenModal
+              :value="Boolean(tokenChannel)"
+              appendToOverlay
+              :channel="tokenChannel"
+              @input="onTokenModalInput"
+            >
+              <template #additionalInfo>
+                <p
+                  :style="{
+                    color: $themeTokens.error,
+                  }"
+                >
+                  {{ needKolibriVersionToImport$() }}
+                </p>
+              </template>
+            </ChannelTokenModal>
           </div>
 
           <div
@@ -149,12 +174,14 @@
   import CommunityLibraryFilters from './CommunityLibraryFilters';
   import useCommunityChannelsFilters from './useCommunityChannelsFilters';
   import AboutCommunityLibraryModal from './AboutCommunityLibraryModal.vue';
+  import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import { listPublicChannels } from 'shared/data/public';
   import useStore from 'shared/composables/useStore';
   import StudioChip from 'shared/views/StudioChip';
   import Pagination from 'shared/views/Pagination';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
   import SidePanelModal from 'shared/views/SidePanelModal';
+  import { commonStrings } from 'shared/strings/commonStrings';
 
   function mapResponseChannel(channel) {
     const language = channel.lang_code || channel.included_languages?.[0] || null;
@@ -165,6 +192,8 @@
       thumbnail_url: channel.thumbnail,
       modified: channel.last_updated,
       last_published: channel.last_published || channel.last_updated,
+      primary_token: channel.token,
+      published: true,
     };
   }
 
@@ -177,6 +206,7 @@
       Pagination,
       SidePanelModal,
       AboutCommunityLibraryModal,
+      ChannelTokenModal,
     },
     setup() {
       const route = useRoute();
@@ -184,6 +214,7 @@
       const store = useStore();
       const tokensTheme = themeTokens();
       const { windowIsSmall, windowBreakpoint } = useKResponsiveWindow();
+      const tokenChannel = ref(null);
 
       const {
         filterLabel$,
@@ -194,7 +225,9 @@
         communityLibraryLabel$,
         communityLibraryDescription$,
         whatIsCommunityLibrary$,
+        needKolibriVersionToImport$,
       } = communityChannelsStrings;
+      const { copyChannelTokenAction$ } = commonStrings;
 
       const {
         countriesFilter,
@@ -328,6 +361,12 @@
         router.push(getChannelDetailsRoute(channel));
       }
 
+      const onTokenModalInput = value => {
+        if (!value) {
+          tokenChannel.value = null;
+        }
+      };
+
       function openSidePanel() {
         showFiltersSidePanel.value = true;
       }
@@ -351,6 +390,7 @@
       return {
         windowIsSmall,
         windowBreakpoint,
+        tokenChannel,
         loading,
         loadError,
         channels,
@@ -364,6 +404,7 @@
         clearFilters,
         getChannelDetailsRoute,
         onCardClick,
+        onTokenModalInput,
         openSidePanel,
         closeSidePanel,
         filterLabel$,
@@ -371,8 +412,10 @@
         resultsText$,
         noResults$,
         loadError$,
+        copyChannelTokenAction$,
         communityLibraryLabel$,
         whatIsCommunityLibrary$,
+        needKolibriVersionToImport$,
         communityLibraryDescription$,
       };
     },

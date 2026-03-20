@@ -250,6 +250,20 @@
       </StudioDetailsRow>
 
       <StudioDetailsRow
+        v-if="_details.countries"
+        :label="countryLabel$()"
+      >
+        <template #default>
+          <ExpandableList
+            :noItemsText="defaultText"
+            :items="countries"
+            :printing="printing"
+            inline
+          />
+        </template>
+      </StudioDetailsRow>
+
+      <StudioDetailsRow
         v-if="_details.authors"
         :label="$tr('authorsLabel')"
         :definition="!printing ? $tr('authorToolTip') : ''"
@@ -441,6 +455,8 @@
   import StudioCopyToken from 'shared/views/StudioCopyToken';
   import useToken from 'shared/composables/useToken';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
+  import countriesUtil from 'shared/utils/countries';
+  import { currentLanguage } from 'shared/i18n';
 
   const DEFAULT_DETAILS = {
     name: '',
@@ -495,10 +511,11 @@
     ],
     setup() {
       const { hyphenateToken } = useToken();
-      const { draftTokenLabel$ } = communityChannelsStrings;
+      const { draftTokenLabel$, countryLabel$ } = communityChannelsStrings;
       return {
         hyphenateToken,
         draftTokenLabel$,
+        countryLabel$,
       };
     },
     props: {
@@ -625,6 +642,17 @@
       },
       categoriesPrintable() {
         return this.categories?.join(', ') || this.defaultText;
+      },
+      countries() {
+        // Countries is only relevant for channels from public models,
+        // regular channels do not have this field. Didn't want to add this field to the
+        // default details, since it's not relevant for most uses of this component.
+        if (!this._details.countries?.length) {
+          return null;
+        }
+        return this._details.countries.map(countryCode =>
+          countriesUtil.getName(countryCode, currentLanguage),
+        );
       },
     },
     methods: {

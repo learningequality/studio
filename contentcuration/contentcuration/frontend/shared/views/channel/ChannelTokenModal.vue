@@ -8,6 +8,7 @@
     @cancel="dialog = false"
   >
     <p>{{ $tr('copyTokenInstructions') }}</p>
+    <slot name="additionalInfo"></slot>
     <StudioCopyToken :token="channel.primary_token" />
   </KModal>
 

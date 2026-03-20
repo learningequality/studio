@@ -66,9 +66,14 @@ export default function useCommunityChannelsFilters() {
 
   const {
     filter: languagesFilter,
-    options: languageOptions,
+    options: _languageOptions,
     fetchQueryParams: languagesFetchQueryParams,
   } = useFilter({ name: 'languages', filterMap: languageFilterMap, multi: true });
+
+  const languageOptions = computed(() => {
+    // Sort language options alphabetically by label
+    return _languageOptions.value.sort((a, b) => a.label.localeCompare(b.label));
+  });
 
   const {
     filter: categoriesFilter,
