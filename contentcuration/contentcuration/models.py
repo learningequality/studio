@@ -51,6 +51,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django_cte import CTEManager
+from django_cte import CTEQuerySet
 from django_cte import With
 from le_utils import proquint
 from le_utils.constants import content_kinds
@@ -59,6 +60,7 @@ from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from le_utils.constants import languages
 from le_utils.constants import licenses
+from le_utils.constants import modalities
 from le_utils.constants import roles
 from le_utils.constants.labels import subjects
 from model_utils import FieldTracker
@@ -975,7 +977,7 @@ class PermissionCTE(With):
         return Exists(self.queryset().filter(*filters).values("user_id"))
 
 
-class ChannelModelQuerySet(models.QuerySet):
+class ChannelModelQuerySet(CTEQuerySet):
     def create(self, **kwargs):
         """
         Create a new object with the given kwargs, saving it to the database
@@ -999,6 +1001,12 @@ class ChannelModelQuerySet(models.QuerySet):
     def update_or_create(self, defaults=None, **kwargs):
         self._actor_id = kwargs.pop("actor_id", None)
         return super().update_or_create(defaults, **kwargs)
+
+
+class ChannelModelManager(models.Manager.from_queryset(ChannelModelQuerySet)):
+    """Custom Channel models manager with CTE support"""
+
+    pass
 
 
 class Channel(models.Model):
@@ -1139,7 +1147,7 @@ class Channel(models.Model):
         ]
     )
 
-    objects = ChannelModelQuerySet.as_manager()
+    objects = ChannelModelManager()
 
     @classmethod
     def get_editable(cls, user, channel_id):
@@ -2591,22 +2599,23 @@ class ContentNode(MPTTModel, models.Model):
                 )
                 if not (self.extra_fields.get("mastery_model") or criterion):
                     errors.append("Missing mastery criterion")
-                if criterion:
-                    try:
-                        completion_criteria.validate(
-                            criterion, kind=content_kinds.EXERCISE
-                        )
-                    except completion_criteria.ValidationError:
-                        errors.append("Mastery criterion is defined but is invalid")
-            else:
-                criterion = self.extra_fields and self.extra_fields.get(
-                    "options", {}
-                ).get("completion_criteria", {})
-                if criterion:
-                    try:
-                        completion_criteria.validate(criterion, kind=self.kind_id)
-                    except completion_criteria.ValidationError:
-                        errors.append("Completion criterion is defined but is invalid")
+        options = self.extra_fields and self.extra_fields.get("options", {}) or {}
+        criterion = options.get("completion_criteria", {})
+        modality = options.get("modality")
+        # UNIT modality topics must have completion criteria
+        if (
+            self.kind_id == content_kinds.TOPIC
+            and modality == modalities.UNIT
+            and not criterion
+        ):
+            errors.append("UNIT modality topics must have completion criteria")
+        if criterion:
+            try:
+                completion_criteria.validate(
+                    criterion, kind=self.kind_id, modality=modality
+                )
+            except completion_criteria.ValidationError:
+                errors.append("Completion criterion is defined but is invalid")
         self.complete = not errors
         return errors
 
