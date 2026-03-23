@@ -824,6 +824,27 @@ class SyncNodesOperationTestCase(StudioTestCase):
         )
         self._assert_same_files(orig_video, cloned_video)
 
+    def test_sync_but_incomplete(self):
+        orig_video, cloned_video = self._setup_original_and_deriative_nodes()
+        orig_video.license_id = None
+        orig_video.mark_complete()
+        self.assertFalse(orig_video.complete)
+        orig_video.save()
+
+        self.assertTrue(cloned_video.complete)
+
+        sync_node(
+            cloned_video,
+            sync_titles_and_descriptions=True,
+            sync_resource_details=True,
+            sync_files=True,
+            sync_assessment_items=True,
+        )
+
+        self.assertIsNotNone(cloned_video.license_id)
+        cloned_video.mark_complete()
+        self.assertTrue(cloned_video.complete)
+
     def test_sync_with_subs(self):
         orig_video, cloned_video = self._setup_original_and_deriative_nodes()
         self._add_subs_to_video_node(orig_video, "fr")
@@ -868,6 +889,13 @@ class SyncNodesOperationTestCase(StudioTestCase):
             node_id="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         )
         video_node = testdata.node(data, parent=parent)
+        video_node.license_id = 9  # Special Permissions
+        video_node.license_description = "Special permissions for testing"
+        video_node.copyright_holder = "LE"
+        # ensure the node is complete according to our logic
+        video_node.mark_complete()
+        self.assertTrue(video_node.complete)
+        video_node.save()
 
         if withsubs:
             self._add_subs_to_video_node(video_node, "fr")
