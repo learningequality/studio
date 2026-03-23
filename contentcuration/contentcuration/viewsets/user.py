@@ -312,8 +312,9 @@ class ChannelUserViewSet(ReadOnlyValuesViewset):
         if not channel_id:
             return HttpResponseBadRequest("Channel ID is required.")
 
-        channel = Channel.objects.get(id=channel_id)
-        if not channel:
+        try:
+            channel = Channel.objects.get(id=channel_id)
+        except Channel.DoesNotExist:
             return HttpResponseNotFound("Channel not found {}".format(channel_id))
 
         if request.user != user and not request.user.can_edit(channel_id):
