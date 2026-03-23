@@ -650,9 +650,8 @@
         if (!this._details.countries?.length) {
           return null;
         }
-        return this._details.countries.map(countryCode =>
-          countriesUtil.getName(countryCode, currentLanguage),
-        );
+        const [lang] = currentLanguage.split('-');
+        return this._details.countries.map(countryCode => countriesUtil.getName(countryCode, lang));
       },
     },
     methods: {

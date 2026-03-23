@@ -21,7 +21,8 @@ const CLEAR_SEARCH = Symbol('clearSearch');
 
 export default function useCommunityChannelsFilters() {
   const countryFilterMap = computed(() => {
-    const allCountries = countriesUtil.getNames(currentLanguage);
+    const [lang] = currentLanguage.split('-');
+    const allCountries = countriesUtil.getNames(lang);
     return Object.fromEntries(
       Object.entries(allCountries).map(([code, name]) => [
         code,

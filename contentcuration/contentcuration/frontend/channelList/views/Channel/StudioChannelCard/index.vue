@@ -240,7 +240,8 @@
           return null;
         }
         if (countries.length === 1) {
-          return countriesUtil.getName(countries[0], currentLanguage);
+          const [lang] = currentLanguage.split('-');
+          return countriesUtil.getName(countries[0], lang);
         }
         return this.$tr('multipleCountries');
       },
