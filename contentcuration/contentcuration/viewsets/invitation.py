@@ -1,6 +1,7 @@
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import FilterSet
 from rest_framework import serializers
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -140,6 +141,11 @@ class InvitationViewSet(ValuesViewset):
     @action(detail=True, methods=["post"])
     def accept(self, request, pk=None):
         invitation = self.get_object()
+        if request.user.email.lower() != (invitation.email or "").lower():
+            return Response(
+                {"detail": "Only the invited user may accept this invitation."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         invitation.accept()
         invitation.accepted = True
         invitation.save()
@@ -158,6 +164,11 @@ class InvitationViewSet(ValuesViewset):
     @action(detail=True, methods=["post"])
     def decline(self, request, pk=None):
         invitation = self.get_object()
+        if request.user.email.lower() != (invitation.email or "").lower():
+            return Response(
+                {"detail": "Only the invited user may decline this invitation."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         invitation.declined = True
         invitation.save()
         Change.create_change(
