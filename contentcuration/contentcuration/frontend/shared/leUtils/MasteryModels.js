@@ -2,6 +2,7 @@
 const MasteryModels = new Set([
   'do_all',
   'm_of_n',
+  'pre_post_test',
   'num_correct_in_a_row_2',
   'num_correct_in_a_row_3',
   'num_correct_in_a_row_5',
@@ -15,6 +16,7 @@ export const MasteryModelsList = Array.from(MasteryModels);
 export const MasteryModelsNames = {
   DO_ALL: 'do_all',
   M_OF_N: 'm_of_n',
+  PRE_POST_TEST: 'pre_post_test',
   NUM_CORRECT_IN_A_ROW_2: 'num_correct_in_a_row_2',
   NUM_CORRECT_IN_A_ROW_3: 'num_correct_in_a_row_3',
   NUM_CORRECT_IN_A_ROW_5: 'num_correct_in_a_row_5',

@@ -184,7 +184,7 @@ const LanguagesMap = new Map([
       lang_subcode: null,
       readable_name: 'Brahui',
       native_name: 'Brahui',
-      lang_direction: 'ltr',
+      lang_direction: 'rtl',
     },
   ],
   [
@@ -1130,7 +1130,7 @@ const LanguagesMap = new Map([
       lang_subcode: null,
       readable_name: 'Northern Pashto',
       native_name: 'Northern Pashto',
-      lang_direction: 'ltr',
+      lang_direction: 'rtl',
     },
   ],
   [
@@ -1471,7 +1471,7 @@ const LanguagesMap = new Map([
       lang_subcode: null,
       readable_name: 'Southern Balochi',
       native_name: 'Southern Balochi',
-      lang_direction: 'ltr',
+      lang_direction: 'rtl',
     },
   ],
   [
@@ -1626,7 +1626,7 @@ const LanguagesMap = new Map([
       lang_subcode: null,
       readable_name: 'Uighur; Uyghur',
       native_name: 'Uy\u01a3urq\u0259, \u0626\u06c7\u064a\u063a\u06c7\u0631\u0686\u06d5\u200e',
-      lang_direction: 'ltr',
+      lang_direction: 'rtl',
     },
   ],
   [
@@ -2541,6 +2541,17 @@ const LanguagesMap = new Map([
     },
   ],
   [
+    'prs',
+    {
+      id: 'prs',
+      lang_code: 'prs',
+      lang_subcode: null,
+      readable_name: 'Dari',
+      native_name: '\u062f\u0631\u06cc',
+      lang_direction: 'rtl',
+    },
+  ],
+  [
     'arq',
     {
       id: 'arq',
@@ -2604,7 +2615,7 @@ const LanguagesMap = new Map([
       readable_name: 'Kashmiri',
       native_name:
         '\u0915\u0936\u094d\u092e\u0940\u0930\u0940, \u0643\u0634\u0645\u064a\u0631\u064a\u200e',
-      lang_direction: 'ltr',
+      lang_direction: 'rtl',
     },
   ],
   [
@@ -2740,7 +2751,7 @@ const LanguagesMap = new Map([
       readable_name: 'Sindhi',
       native_name:
         '\u0938\u093f\u0928\u094d\u0927\u0940, \u0633\u0646\u068c\u064a\u060c \u0633\u0646\u062f\u06be\u06cc\u200e',
-      lang_direction: 'ltr',
+      lang_direction: 'rtl',
     },
   ],
   [
@@ -2784,7 +2795,7 @@ const LanguagesMap = new Map([
       lang_subcode: null,
       readable_name: 'Punjabi',
       native_name: '\u0a2a\u0a70\u0a1c\u0a3e\u0a2c\u0a40',
-      lang_direction: 'ltr',
+      lang_direction: 'rtl',
     },
   ],
   [
@@ -3390,6 +3401,7 @@ export const LanguagesNames = {
   HE: 'he',
   UR: 'ur',
   AR: 'ar',
+  PRS: 'prs',
   ARQ: 'arq',
   FA: 'fa',
   PS: 'ps',
