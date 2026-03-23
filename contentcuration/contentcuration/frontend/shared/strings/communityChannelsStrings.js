@@ -540,9 +540,13 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: '{count, plural, =1 {# result found} other {# results found}}',
     context: 'Text showing number of results',
   },
-  noResults: {
+  noResultsWithFilters: {
     message: 'No channels match the selected filters.',
-    context: 'Message shown when no channels are found',
+    context: 'Message shown when no channels are found with the applied filters',
+  },
+  noCommunityChannels: {
+    message: 'No channels have been published to the Community Library yet.',
+    context: 'Message shown when there are no channels in the Community Library',
   },
   loadError: {
     message: 'There was an error loading channels.',
@@ -564,6 +568,21 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'You will need Kolibri version 0.19.4 or higher to import community channels.',
     context:
       'Message shown in the Community Library List page informing users that they need a certain Kolibri version to import channels from the Community Library',
+  },
+  communityLibraryCTATitle: {
+    message: 'Help grow the Community Library',
+    context:
+      'Title for the call to action section in the Community Library List page encouraging users to contribute to the Community Library',
+  },
+  communityLibraryCTADescription: {
+    message:
+      'Have a channel worth sharing with educators and learners? Submit it for review through the Share menu so it can be discovered in Studio.',
+    context:
+      'Description for the call to action section in the Community Library List page encouraging users to contribute to the Community Library',
+  },
+  goToMyChannelsAction: {
+    message: 'Go to My channels',
+    context: 'Button text for the action to navigate to the My Channels page',
   },
 
   // about community library modal

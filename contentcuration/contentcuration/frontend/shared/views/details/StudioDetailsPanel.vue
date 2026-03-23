@@ -250,7 +250,7 @@
       </StudioDetailsRow>
 
       <StudioDetailsRow
-        v-if="_details.countries"
+        v-if="countries"
         :label="countryLabel$()"
       >
         <template #default>

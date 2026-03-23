@@ -40,6 +40,45 @@
           v-if="isAboutCommunityLibraryOpen"
           @close="isAboutCommunityLibraryOpen = false"
         />
+        <div
+          class="community-library-banner"
+          :style="{
+            backgroundColor: $themePalette.orange.v_100,
+            ...(windowBreakpoint < 4
+              ? { flexDirection: 'column', alignItems: 'center', textAlign: 'center' }
+              : {}),
+          }"
+        >
+          <div
+            class="community-library-icon-wrapper"
+            :style="{
+              backgroundColor: $themePalette.orange.v_200,
+            }"
+          >
+            <KIcon
+              icon="communityLibrary"
+              class="community-library-icon"
+              :color="$themePalette.white"
+              :style="{
+                backgroundColor: $themePalette.orange.v_400,
+              }"
+            />
+          </div>
+          <div>
+            <h2>
+              {{ communityLibraryCTATitle$() }}
+            </h2>
+            <p>
+              {{ communityLibraryCTADescription$() }}
+            </p>
+          </div>
+          <div class="button-wrapper">
+            <KButton
+              :text="goToMyChannelsAction$()"
+              @click="goToMyChannels"
+            />
+          </div>
+        </div>
         <template v-if="windowIsSmall">
           <KButton
             class="filter-button"
@@ -138,7 +177,7 @@
             v-if="!loading && !channels.length && !loadError"
             class="empty-state"
           >
-            {{ noResults$() }}
+            {{ activeFilters.length ? noResultsWithFilters$() : noCommunityChannels$() }}
           </div>
 
           <div
@@ -225,12 +264,16 @@
         filterLabel$,
         clearAll$,
         resultsText$,
-        noResults$,
+        noResultsWithFilters$,
+        noCommunityChannels$,
         loadError$,
         communityLibraryLabel$,
         communityLibraryDescription$,
         whatIsCommunityLibrary$,
         needKolibriVersionToImport$,
+        communityLibraryCTATitle$,
+        communityLibraryCTADescription$,
+        goToMyChannelsAction$,
       } = communityChannelsStrings;
       const { copyChannelTokenAction$ } = commonStrings;
 
@@ -366,6 +409,10 @@
         router.push(getChannelDetailsRoute(channel));
       }
 
+      function goToMyChannels() {
+        router.push({ name: RouteNames.CHANNELS_EDITABLE });
+      }
+
       const onTokenModalInput = value => {
         if (!value) {
           tokenChannel.value = null;
@@ -412,16 +459,21 @@
         onTokenModalInput,
         openSidePanel,
         closeSidePanel,
+        goToMyChannels,
         filterLabel$,
         clearAll$,
         resultsText$,
-        noResults$,
+        noResultsWithFilters$,
+        noCommunityChannels$,
         loadError$,
         copyChannelTokenAction$,
         communityLibraryLabel$,
         whatIsCommunityLibrary$,
         needKolibriVersionToImport$,
         communityLibraryDescription$,
+        communityLibraryCTATitle$,
+        communityLibraryCTADescription$,
+        goToMyChannelsAction$,
       };
     },
   };
@@ -539,6 +591,40 @@
 
   .pagination-range {
     font-size: 14px;
+  }
+
+  .community-library-banner {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    padding: 20px;
+    margin: 24px 0;
+    border-radius: 4px;
+
+    .community-library-icon-wrapper {
+      display: flex;
+      flex-shrink: 0;
+      align-items: center;
+      justify-content: center;
+      width: 96px;
+      height: 96px;
+      border-radius: 2px;
+
+      .community-library-icon {
+        width: 40px;
+        height: 40px;
+        padding: 6px;
+        border-radius: 50%;
+      }
+    }
+
+    h2 {
+      font-size: 18px;
+    }
+
+    .button-wrapper {
+      flex-shrink: 0;
+    }
   }
 
 </style>
