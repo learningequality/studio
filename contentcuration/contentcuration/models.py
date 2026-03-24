@@ -1607,14 +1607,37 @@ class ChannelVersion(models.Model):
         blank=True,
     )
 
+    # Snapshot of the channel info at the time of creation.
+    channel_name = models.CharField(max_length=200, blank=True, null=True)
+    channel_description = models.CharField(max_length=400, blank=True, null=True)
+    channel_tagline = models.CharField(max_length=150, blank=True, null=True)
+    channel_thumbnail_encoding = JSONField(default=dict, blank=True)
+    channel_language = models.ForeignKey(
+        "Language",
+        null=True,
+        blank=True,
+        related_name="+",
+        on_delete=models.SET_NULL,
+    )
+
     class Meta:
         unique_together = ("channel", "version")
 
     def save(self, *args, **kwargs):
         if self.version is not None and self.version > self.channel.version:
             raise ValidationError("Version cannot be greater than channel version")
+
+        if self._state.adding and self.version == self.channel.version:
+            # When creating a new ChannelVersion for current channel version,
+            # snapshot the current channel info
+            self.channel_name = self.channel.name
+            self.channel_description = self.channel.description
+            self.channel_tagline = self.channel.tagline
+            self.channel_thumbnail_encoding = self.channel.thumbnail_encoding
+            self.channel_language = self.channel.language
+
         self.full_clean()
-        super(ChannelVersion, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     def new_token(self):
         if not self.secret_token:

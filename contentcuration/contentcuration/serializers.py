@@ -22,6 +22,22 @@ serializers.ListSerializer.__repr__ = no_field_eval_repr
 serializers.ModelSerializer.__repr__ = no_field_eval_repr
 
 
+def get_thumbnail_encoding(channel):
+    """
+    Historically, we did not set channel.icon_encoding in the Studio database. We
+    only set it in the exported Kolibri sqlite db. So when Kolibri asks for the channel
+    information, fall back to the channel thumbnail data if icon_encoding is not set.
+    """
+    if channel.icon_encoding:
+        return channel.icon_encoding
+    if channel.thumbnail_encoding:
+        base64 = channel.thumbnail_encoding.get("base64")
+        if base64:
+            return base64
+
+    return None
+
+
 class PublicChannelSerializer(serializers.ModelSerializer):
     """
     Called by the public API, primarily used by Kolibri. Contains information more specific to Kolibri's needs.
@@ -41,19 +57,7 @@ class PublicChannelSerializer(serializers.ModelSerializer):
         )
 
     def get_thumbnail_encoding(self, channel):
-        """
-        Historically, we did not set channel.icon_encoding in the Studio database. We
-        only set it in the exported Kolibri sqlite db. So when Kolibri asks for the channel
-        information, fall back to the channel thumbnail data if icon_encoding is not set.
-        """
-        if channel.icon_encoding:
-            return channel.icon_encoding
-        if channel.thumbnail_encoding:
-            base64 = channel.thumbnail_encoding.get("base64")
-            if base64:
-                return base64
-
-        return None
+        return get_thumbnail_encoding(channel)
 
     def generate_kind_count(self, channel):
         return channel.published_kind_count and json.loads(channel.published_kind_count)
