@@ -31,6 +31,7 @@ from contentcuration.models import FILE_DURATION_CONSTRAINT
 from contentcuration.models import FlagFeedbackEvent
 from contentcuration.models import generate_object_storage_name
 from contentcuration.models import Invitation
+from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.models import object_storage_name
 from contentcuration.models import RecommendationsEvent
@@ -1814,3 +1815,105 @@ class ChannelVersionValidationTestCase(StudioTestCase):
         self.assertIn(
             "Version cannot be greater than channel version", str(context.exception)
         )
+
+    def test_save_snapshots_channel_info_when_version_matches_channel_version(self):
+        """Creating a ChannelVersion whose version equals channel.version should
+        automatically snapshot the channel's current name, description, tagline,
+        thumbnail_encoding, and language."""
+        lang = Language.objects.first()
+        # Use a queryset update to set channel fields without triggering on_update
+        # (which would call get_or_create and collide with the ChannelVersion we're
+        # about to create ourselves).
+        Channel.objects.filter(id=self.channel.id).update(
+            name="Snapshot Channel",
+            description="A channel to snapshot",
+            tagline="Learn something new",
+            thumbnail_encoding={"base64": "abc123"},
+            language=lang,
+        )
+        self.channel.refresh_from_db()
+
+        # setUp's self.channel.save() already auto-created a ChannelVersion for
+        # version 10 via on_update. Delete it so we can create a fresh one and
+        # observe the snapshot logic.
+        ChannelVersion.objects.filter(
+            channel=self.channel, version=self.channel.version
+        ).delete()
+
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=self.channel.version,
+        )
+        cv.save()
+
+        cv.refresh_from_db()
+        self.assertEqual(cv.channel_name, self.channel.name)
+        self.assertEqual(cv.channel_description, self.channel.description)
+        self.assertEqual(cv.channel_tagline, self.channel.tagline)
+        self.assertEqual(cv.channel_thumbnail_encoding, self.channel.thumbnail_encoding)
+        self.assertEqual(cv.channel_language, self.channel.language)
+
+    def test_save_does_not_snapshot_when_version_differs_from_channel_version(self):
+        """Creating a ChannelVersion for an older version should NOT populate
+        the snapshot fields automatically."""
+        self.channel.name = "Current Name"
+        self.channel.save()
+
+        # version 5 is less than channel.version (10)
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=5,
+        )
+        cv.save()
+
+        cv.refresh_from_db()
+        self.assertIsNone(cv.channel_name)
+        self.assertIsNone(cv.channel_description)
+        self.assertIsNone(cv.channel_tagline)
+        self.assertIsNone(cv.channel_language)
+
+    def test_save_does_not_re_snapshot_on_update(self):
+        """Updating an existing ChannelVersion (not adding) should NOT overwrite
+        the snapshot fields even if the channel info has changed."""
+        # setUp's self.channel.save() already created a ChannelVersion for version 10
+        # via on_update -> get_or_create. Reuse that existing object so we're
+        # testing a genuine update (not insert) path.
+        cv = ChannelVersion.objects.get(
+            channel=self.channel, version=self.channel.version
+        )
+        original_name = cv.channel_name
+
+        # Change the channel name via a queryset update so on_update is not called
+        # (avoiding a second get_or_create for the same version).
+        Channel.objects.filter(id=self.channel.id).update(name="Updated Channel Name")
+        self.channel.refresh_from_db()
+
+        cv.version_notes = "some notes"
+        cv.save()
+
+        cv.refresh_from_db()
+        # The snapshot should still reflect the name captured when cv was first created.
+        self.assertEqual(cv.channel_name, original_name)
+        self.assertNotEqual(cv.channel_name, "Updated Channel Name")
+
+    def test_save_snapshots_null_language_when_channel_has_no_language(self):
+        """When the channel has no language set, channel_language on the snapshot
+        should remain None."""
+        # Ensure no language on the channel via queryset update (bypasses on_update).
+        Channel.objects.filter(id=self.channel.id).update(language=None)
+        self.channel.refresh_from_db()
+
+        # Delete the ChannelVersion auto-created during setUp so we can insert a
+        # fresh one and observe the snapshot logic.
+        ChannelVersion.objects.filter(
+            channel=self.channel, version=self.channel.version
+        ).delete()
+
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=self.channel.version,
+        )
+        cv.save()
+
+        cv.refresh_from_db()
+        self.assertIsNone(cv.channel_language)

@@ -194,8 +194,8 @@ class Command(BaseCommand):
                                 "non_distributable_licenses_included"
                             ),
                             "kind_count": pub_data.get("kind_count"),
-                            "size": int(channel.published_size),
-                            "resource_count": channel.total_resource_count,
+                            "size": int(pub_data.get("size", 0)),
+                            "resource_count": int(pub_data.get("resource_count", 0)),
                         },
                     )
 
