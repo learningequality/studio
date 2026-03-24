@@ -21,7 +21,6 @@ from rest_framework.response import Response
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Channel
 from contentcuration.models import ChannelVersion
-from contentcuration.serializers import get_thumbnail_encoding
 from contentcuration.serializers import PublicChannelSerializer
 
 
@@ -40,6 +39,12 @@ def _get_version_notes(channel, channel_version):
     return OrderedDict(sorted(data.items()))
 
 
+def get_thumbnail_encoding(channel_version):
+    if channel_version.channel_thumbnail_encoding:
+        return channel_version.channel_thumbnail_encoding.get("base64")
+    return None
+
+
 def _serialize_channel_version(channel_version_qs):
     channel_version = channel_version_qs.first()
     if not channel_version or not channel_version.channel:
@@ -48,12 +53,12 @@ def _serialize_channel_version(channel_version_qs):
     channel = channel_version.channel
     return [
         {
-            "id": channel.id,
-            "name": channel.name,
-            "language": channel.language_id,
+            "id": channel_version.channel_id,
+            "name": channel_version.channel_name,
+            "language": channel_version.channel_language_id,
             "public": channel.public,
-            "description": channel.description,
-            "icon_encoding": get_thumbnail_encoding(channel),
+            "description": channel_version.channel_description,
+            "icon_encoding": get_thumbnail_encoding(channel_version),
             "version_notes": _get_version_notes(channel, channel_version),
             "version": channel_version.version,
             "kind_count": channel_version.kind_count,

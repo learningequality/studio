@@ -172,3 +172,52 @@ class PublicAPITestCase(BaseAPITestCase):
             set(channel_version_response.data[0].keys()),
             set(channel_response.data[0].keys()),
         )
+
+    def test_channel_version_token_returns_snapshot_info_not_current_channel_info(self):
+        """
+        When a channel version token is used, the returned name, description, and
+        thumbnail should come from the ChannelVersion snapshot captured at publish time,
+        not from the channel's current (possibly updated) values.
+        """
+        self.channel.main_tree.published = True
+        self.channel.main_tree.save()
+
+        # Set the channel info BEFORE the ChannelVersion is created so that the
+        # snapshot captures these values.
+        self.channel.name = "Original Published Name"
+        self.channel.description = "Original published description"
+        self.channel.thumbnail_encoding = {"base64": generated_base64encoding()}
+        self.channel.version = 3
+        self.channel.published_data = {"3": {"version_notes": "v3 notes"}}
+        self.channel.save()
+
+        # The ChannelVersion for version == channel.version is auto-created by
+        # Channel.on_update(); re-fetch it to get the snapshot that was captured.
+        channel_version = ChannelVersion.objects.get(channel=self.channel, version=3)
+        version_token = channel_version.new_token().token
+
+        # Now mutate the channel's info AFTER the snapshot was taken.
+        self.channel.name = "Updated Name — should NOT appear in response"
+        self.channel.description = "Updated description — should NOT appear in response"
+        self.channel.thumbnail_encoding = {"base64": "UPDATED_ENCODING"}
+        self.channel.save()
+
+        lookup_url = reverse(
+            "get_public_channel_lookup",
+            kwargs={"version": "v1", "identifier": version_token},
+        )
+        response = self.client.get(lookup_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        result = response.data[0]
+
+        # Values must match the snapshot, not the current channel state.
+        self.assertEqual(result["name"], "Original Published Name")
+        self.assertEqual(result["description"], "Original published description")
+        self.assertEqual(result["icon_encoding"], generated_base64encoding())
+
+        # Sanity-check: confirm the channel itself now has the updated values.
+        self.channel.refresh_from_db()
+        self.assertNotEqual(result["name"], self.channel.name)
+        self.assertNotEqual(result["description"], self.channel.description)
