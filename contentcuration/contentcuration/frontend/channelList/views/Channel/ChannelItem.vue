@@ -215,23 +215,19 @@
       </VCardActions>
     </VCard>
     <!-- Delete dialog -->
-    <KModal
+    <RemoveChannelModal
       v-if="deleteDialog"
-      :title="canEdit ? $tr('deleteTitle') : $tr('removeTitle')"
-      :submitText="canEdit ? $tr('deleteChannel') : $tr('removeBtn')"
-      :cancelText="$tr('cancel')"
+      :channel-id="channelId"
+      :can-edit="canEdit"
       data-test="delete-modal"
-      @submit="handleDelete"
-      @cancel="deleteDialog = false"
-    >
-      {{ canEdit ? $tr('deletePrompt') : $tr('removePrompt') }}
-    </KModal>
+      @delete="handleDelete"
+      @close="deleteDialog = false"
+    />
     <!-- Copy dialog -->
     <ChannelTokenModal
       v-if="channel && channel.published"
       v-model="tokenDialog"
       :channel="channel"
-      @copied="trackTokenCopy"
     />
   </div>
 
@@ -244,6 +240,7 @@
   import { RouteNames } from '../../constants';
   import ChannelStar from './ChannelStar';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
+  import RemoveChannelModal from 'shared/views/channel/RemoveChannelModal';
   import Thumbnail from 'shared/views/files/Thumbnail';
   import Languages from 'shared/leUtils/Languages';
 
@@ -252,6 +249,7 @@
     components: {
       ChannelStar,
       ChannelTokenModal,
+      RemoveChannelModal,
       Thumbnail,
     },
     props: {
@@ -380,11 +378,6 @@
           ? (window.location.href = this.channelHref)
           : this.$router.push(this.channelDetailsLink).catch(() => {});
       },
-      trackTokenCopy() {
-        this.$analytics.trackAction('channel_list', 'Copy token', {
-          eventLabel: this.channel.primary_token,
-        });
-      },
     },
     $trs: {
       resourceCount: '{count, plural,\n =1 {# resource}\n other {# resources}}',
@@ -396,18 +389,11 @@
       goToWebsite: 'Go to source website',
       editChannel: 'Edit channel details',
       copyToken: 'Copy channel token',
-      deleteChannel: 'Delete channel',
-      deleteTitle: 'Delete this channel',
-      removeChannel: 'Remove from channel list',
-      removeBtn: 'Remove',
-      removeTitle: 'Remove from channel list',
-      deletePrompt: 'This channel will be permanently deleted. This cannot be undone.',
-      removePrompt:
-        'You have view-only access to this channel. Confirm that you want to remove it from your list of channels.',
       channelDeletedSnackbar: 'Channel deleted',
       channelRemovedSnackbar: 'Channel removed',
       channelLanguageNotSetIndicator: 'No language set',
-      cancel: 'Cancel',
+      deleteChannel: 'Delete channel',
+      removeChannel: 'Remove channel',
     },
   };
 

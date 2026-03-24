@@ -75,7 +75,7 @@
         rel="noopener noreferrer"
       />
     </p>
-    <CopyToken
+    <StudioCopyToken
       class="copy-token"
       :token="user.api_token || ' '"
       :loading="!user.api_token"
@@ -155,18 +155,18 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
+  import StudioCopyToken from '../../../shared/views/StudioCopyToken';
   import FullNameForm from './FullNameForm';
   import ChangePasswordForm from './ChangePasswordForm';
   import DeleteAccountForm from './DeleteAccountForm';
-  import CopyToken from 'shared/views/CopyToken';
 
   export default {
     name: 'Account',
     components: {
       ChangePasswordForm,
-      CopyToken,
       FullNameForm,
       DeleteAccountForm,
+      StudioCopyToken,
     },
     data() {
       return {

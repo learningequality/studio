@@ -1,6 +1,6 @@
 <template>
 
-  <MessageLayout
+  <StudioMessageLayout
     :header="$tr('activationExpiredTitle')"
     :text="$tr('activationExpiredText')"
   >
@@ -10,19 +10,19 @@
       :to="{ name: 'RequestNewActivationLink' }"
       appearance="raised-button"
     />
-  </MessageLayout>
+  </StudioMessageLayout>
 
 </template>
 
 
 <script>
 
-  import MessageLayout from '../../components/MessageLayout';
+  import StudioMessageLayout from '../../components/StudioMessageLayout';
 
   export default {
     name: 'ActivationExpired',
     components: {
-      MessageLayout,
+      StudioMessageLayout,
     },
     $trs: {
       activationExpiredTitle: 'Activation failed',

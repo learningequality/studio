@@ -1,132 +1,169 @@
 <template>
 
-  <div>
-    <CatalogFilters />
-    <VSlideYTransition>
-      <ToolBar
-        v-show="offline"
-        dense
-        clipped-left
-        absolute
-      >
-        <OfflineText />
-      </ToolBar>
-    </VSlideYTransition>
-    <VContainer
-      fluid
-      :class="$vuetify.breakpoint.xsOnly ? 'pa-0' : 'pa-4'"
-      :style="`margin-top: ${offline ? 48 : 0}`"
+  <div
+    class="catalog-page-wrapper"
+    :class="{ 'catalog-page-wrapper--small': windowIsSmall }"
+  >
+    <aside
+      class="catalog-sidebar"
+      :class="{ 'catalog-sidebar--small': windowIsSmall }"
     >
-      <LoadingText v-if="loading" />
-      <VLayout
-        v-else
-        grid
-        wrap
-        class="list-wrapper py-4"
-      >
-        <!-- Results bar -->
-        <VFlex
-          xs12
-          class="mb-2"
+      <CatalogFilters />
+    </aside>
+    <div class="catalog-main-content">
+      <VSlideYTransition>
+        <ToolBar
+          v-show="offline"
+          dense
+          clipped-left
+          absolute
         >
-          <h1 class="mb-2 ml-1 title">
-            {{ $tr('resultsText', { count: page.count }) }}
-          </h1>
-          <ActionLink
-            v-if="page.count && !selecting"
-            :text="$tr('selectChannels')"
-            data-test="select"
-            @click="setSelection(true)"
-          />
-          <Checkbox
-            v-else-if="selecting"
-            v-model="selectAll"
-            class="mb-4 mx-2"
-            :label="$tr('selectAll')"
-            data-test="select-all"
-            :indeterminate="selected.length > 0 && selected.length < channels.length"
-          />
-        </VFlex>
-        <VFlex xs12>
-          <VLayout
-            v-for="item in channels"
-            :key="item.id"
-            align-center
-          >
-            <Checkbox
-              v-show="selecting"
-              v-model="selected"
-              class="mx-2"
-              :value="item.id"
-              data-test="checkbox"
-            />
-            <ChannelItem
-              :channelId="item.id"
-              :detailsRouteName="detailsRouteName"
-              style="flex-grow: 1; width: 100%"
-            />
-          </VLayout>
-        </VFlex>
-        <VFlex
-          xs12
-          style="padding-bottom: 72px"
-        >
-          <VLayout justify-center>
-            <Pagination
-              :pageNumber="page.page_number"
-              :totalPages="page.total_pages"
-            />
-          </VLayout>
-        </VFlex>
-      </VLayout>
-      <BottomBar
-        v-if="selecting"
-        data-test="toolbar"
-        :appearanceOverrides="{ height: $vuetify.breakpoint.xsOnly ? '72px' : '56px' }"
+          <OfflineText />
+        </ToolBar>
+      </VSlideYTransition>
+      <CatalogFilterBar />
+      <VContainer
+        fluid
+        :style="`margin-top: ${offline ? 48 : 0}`"
       >
-        <div class="mx-2">
-          {{ $tr('channelSelectionCount', { count: selectedCount }) }}
-        </div>
-        <VSpacer />
-        <div>
-          <VBtn
-            flat
-            data-test="cancel"
-            class="ma-0"
-            @click="setSelection(false)"
+        <VLayout
+          grid
+          wrap
+          class="list-wrapper"
+        >
+          <VFlex
+            xs12
+            class="mb-2"
           >
-            {{ $tr('cancelButton') }}
-          </VBtn>
-        </div>
-        <BaseMenu top>
-          <template #activator="{ on }">
-            <VBtn
-              color="primary"
-              class="ma-0 mx-2"
-              v-on="on"
-            >
-              {{ $tr('downloadButton') }}
-              <Icon
-                class="ml-1"
-                icon="dropup"
-                :color="$themeTokens.textInverted"
+            <h1 class="visuallyhidden">{{ $tr('title') }}</h1>
+            <p class="results-text">
+              <span v-if="!loading">{{ $tr('resultsText', { count: page.count }) }}</span>
+            </p>
+            <div class="download-link-wrapper">
+              <KButton
+                v-if="page.count && !selecting && !loading"
+                :text="$tr('selectChannels')"
+                appearance="basic-link"
+                @click="setSelection(true)"
               />
-            </VBtn>
-          </template>
-          <VList>
-            <VListTile @click="downloadPDF">
-              <VListTileTitle>{{ $tr('downloadPDF') }}</VListTileTitle>
-            </VListTile>
-            <VListTile
-              data-test="download-csv"
-              @click="downloadCSV"
+            </div>
+            <KCheckbox
+              v-if="selecting"
+              v-model="selectAll"
+              :indeterminate="isIndeterminate"
+              :label="$tr('selectAll')"
+              class="mb-4 mx-2"
+            />
+          </VFlex>
+          <VFlex xs12>
+            <KCardGrid
+              layout="1-1-1"
+              :loading="loading"
+              :skeletonsConfig="skeletonsConfig"
+              :syncCardsMetrics="false"
             >
-              <VListTileTitle>{{ $tr('downloadCSV') }}</VListTileTitle>
-            </VListTile>
-          </VList>
-        </BaseMenu>
-      </BottomBar>
-    </VContainer>
+              <StudioChannelCard
+                v-for="channel in channels"
+                :key="channel.id"
+                :headingLevel="2"
+                :orientation="windowBreakpoint > 2 ? 'horizontal' : 'vertical'"
+                :showUpdateStatus="false"
+                :channel="channel"
+                :detailsRoute="getChannelDetailsRoute(channel)"
+                :selectable="selecting"
+                :selected="isChannelSelected(channel)"
+                @toggle-selection="handleSelectionToggle"
+                @click="onCardClick(channel)"
+              >
+                <template #footerActions>
+                  <KIconButton
+                    v-if="channel.published"
+                    icon="copy"
+                    :tooltip="$tr('copyToken')"
+                    data-testid="copy-button"
+                    @click.stop.prevent="tokenChannelId = channel.id"
+                  />
+
+                  <ChannelStar
+                    v-if="loggedIn"
+                    :channelId="channel.id"
+                    :bookmark="channel.bookmark"
+                  />
+
+                  <KIconButton
+                    v-if="channel.source_url || channel.demo_server_url"
+                    size="small"
+                    icon="optionsVertical"
+                    appearance="flat-button"
+                    :ariaLabel="$tr('moreOptions')"
+                    @click.stop
+                  >
+                    <template #menu>
+                      <KDropdownMenu
+                        :hasIcons="true"
+                        :options="getDropdownItems(channel)"
+                        @select="option => handleDropdownSelect(option, channel)"
+                      />
+                    </template>
+                  </KIconButton>
+                </template>
+              </StudioChannelCard>
+            </KCardGrid>
+          </VFlex>
+          <VFlex
+            v-if="!loading"
+            xs12
+            class="pagination-container"
+          >
+            <VLayout justify-center>
+              <Pagination
+                :pageNumber="page.page_number"
+                :totalPages="page.total_pages"
+              />
+            </VLayout>
+          </VFlex>
+        </VLayout>
+        <BottomBar
+          v-if="selecting"
+          :appearanceOverrides="{ height: windowIsSmall ? '72px' : '56px' }"
+        >
+          <div class="mx-2">
+            {{ $tr('channelSelectionCount', { count: selectedCount }) }}
+          </div>
+          <VSpacer />
+          <div>
+            <KButton
+              :text="$tr('cancelButton')"
+              appearance="flat-button"
+              @click="setSelection(false)"
+            />
+          </div>
+          <KButton
+            :text="$tr('downloadButton')"
+            :primary="true"
+            iconAfter="dropup"
+          >
+            <KDropdownMenu
+              :primary="true"
+              :options="[
+                { label: $tr('downloadPDF'), value: 'pdf' },
+                { label: $tr('downloadCSV'), value: 'csv' },
+              ]"
+              appearance="raised-button"
+              @select="option => selectDownloadOption(option)"
+            />
+          </KButton>
+        </BottomBar>
+
+        <ChannelTokenModal
+          :value="Boolean(tokenChannel)"
+          appendToOverlay
+          data-testid="copy-modal"
+          :channel="tokenChannel"
+          @input="onTokenModalInput"
+        />
+      </VContainer>
+    </div>
   </div>
 
 </template>
@@ -140,13 +177,15 @@
   import isEqual from 'lodash/isEqual';
   import sortBy from 'lodash/sortBy';
   import union from 'lodash/union';
+  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { RouteNames } from '../../constants';
   import CatalogFilters from './CatalogFilters';
-  import ChannelItem from './ChannelItem';
-  import LoadingText from 'shared/views/LoadingText';
+  import CatalogFilterBar from './CatalogFilterBar';
+  import StudioChannelCard from './StudioChannelCard';
+  import ChannelStar from './ChannelStar';
+  import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import Pagination from 'shared/views/Pagination';
   import BottomBar from 'shared/views/BottomBar';
-  import Checkbox from 'shared/views/form/Checkbox';
   import ToolBar from 'shared/views/ToolBar';
   import OfflineText from 'shared/views/OfflineText';
   import { constantsTranslationMixin } from 'shared/mixins';
@@ -155,29 +194,43 @@
   export default {
     name: 'CatalogList',
     components: {
-      ChannelItem,
-      LoadingText,
+      StudioChannelCard,
+      ChannelStar,
+      ChannelTokenModal,
       CatalogFilters,
+      CatalogFilterBar,
       Pagination,
       BottomBar,
-      Checkbox,
       ToolBar,
       OfflineText,
     },
     mixins: [channelExportMixin, constantsTranslationMixin],
+    setup() {
+      const { windowIsSmall, windowBreakpoint } = useKResponsiveWindow();
+
+      return {
+        windowIsSmall,
+        windowBreakpoint,
+      };
+    },
     data() {
       return {
         loading: true,
         loadError: false,
         selecting: false,
+        tokenChannelId: null,
 
         /**
          * jayoshih: router guard makes it difficult to track
          * differences between previous query params and new
          * query params, so just track it manually
          */
-        previousQuery: this.$route.query,
-
+        /**
+         * MisRob: Add 'page: 1' as default to prevent it from being
+         * added later and causing redundant $router watcher call when
+         * page initially loading (fixes loading state showing twice)
+         */
+        previousQuery: { page: 1, ...this.$route.query },
         /**
          * jayoshih: using excluded logic here instead of selected
          * to account for selections across pages (some channels
@@ -188,10 +241,29 @@
     },
     computed: {
       ...mapGetters('channel', ['getChannels']),
+      ...mapGetters(['loggedIn']),
       ...mapState('channelList', ['page']),
       ...mapState({
         offline: state => !state.connection.online,
       }),
+      skeletonsConfig() {
+        return [
+          {
+            breakpoints: [0, 1, 2, 3, 4, 5, 6, 7],
+            count: 2,
+            orientation: 'vertical',
+            thumbnailDisplay: 'small',
+            thumbnailAlign: 'left',
+            thumbnailAspectRatio: '16:9',
+            minHeight: '380px',
+          },
+          {
+            breakpoints: [3, 4, 5, 6, 7],
+            orientation: 'horizontal',
+            minHeight: '230px',
+          },
+        ];
+      },
       selectAll: {
         get() {
           return this.selected.length === this.channels.length;
@@ -214,9 +286,6 @@
       debouncedSearch() {
         return debounce(this.loadCatalog, 1000);
       },
-      detailsRouteName() {
-        return RouteNames.CATALOG_DETAILS;
-      },
       channels() {
         // Sort again by the same ordering used on the backend - name.
         // Have to do this because of how we are getting the object data via getChannels.
@@ -224,6 +293,13 @@
       },
       selectedCount() {
         return this.page.count - this.excluded.length;
+      },
+      isIndeterminate() {
+        return this.selected.length > 0 && this.selected.length < this.channels.length;
+      },
+      tokenChannel() {
+        if (!this.tokenChannelId) return null;
+        return this.channels.find(c => c.id === this.tokenChannelId) || null;
       },
     },
     watch: {
@@ -243,11 +319,61 @@
         this.previousQuery = { ...to.query };
       },
     },
-    mounted() {
+    created() {
       this.loadCatalog();
     },
     methods: {
       ...mapActions('channelList', ['searchCatalog']),
+      onTokenModalInput(val) {
+        if (!val) this.tokenChannelId = null;
+      },
+      getDropdownItems(channel) {
+        const items = [];
+        if (channel.source_url) {
+          items.push({ label: this.$tr('goToWebsite'), icon: 'openNewTab', value: 'source-url' });
+        }
+        if (channel.demo_server_url) {
+          items.push({ label: this.$tr('viewContent'), icon: 'openNewTab', value: 'demo-url' });
+        }
+        return items;
+      },
+      handleDropdownSelect(option, channel) {
+        if (option.value === 'source-url') {
+          window.open(channel.source_url, '_blank');
+        } else if (option.value === 'demo-url') {
+          window.open(channel.demo_server_url, '_blank');
+        }
+      },
+      getChannelDetailsRoute(channel) {
+        return {
+          name: RouteNames.CATALOG_DETAILS,
+          query: {
+            ...this.$route.query,
+            last: this.$route.name,
+          },
+          params: {
+            channelId: channel.id,
+          },
+        };
+      },
+      onCardClick(channel) {
+        if (this.loggedIn) {
+          window.location.assign(window.Urls.channel(channel.id));
+        } else {
+          this.$router.push(this.getChannelDetailsRoute(channel));
+        }
+      },
+      isChannelSelected(channel) {
+        return this.selected.includes(channel.id);
+      },
+      handleSelectionToggle(channelId) {
+        const currentlySelected = this.selected;
+        if (currentlySelected.includes(channelId)) {
+          this.selected = currentlySelected.filter(id => id !== channelId);
+        } else {
+          this.selected = [...currentlySelected, channelId];
+        }
+      },
       loadCatalog() {
         this.loading = true;
         const params = {
@@ -286,8 +412,16 @@
         this.setSelection(false);
         return this.downloadChannelsPDF(params);
       },
+      selectDownloadOption(option) {
+        if (option.value === 'pdf') {
+          this.downloadPDF();
+        } else if (option.value === 'csv') {
+          this.downloadCSV();
+        }
+      },
     },
     $trs: {
+      title: 'Content library',
       resultsText: '{count, plural,\n =1 {# result found}\n other {# results found}}',
       selectChannels: 'Download a summary of selected channels',
       cancelButton: 'Cancel',
@@ -298,6 +432,10 @@
       channelSelectionCount:
         '{count, plural,\n =1 {# channel selected}\n other {# channels selected}}',
       selectAll: 'Select all',
+      copyToken: 'Copy channel token',
+      moreOptions: 'More options',
+      goToWebsite: 'Go to source website',
+      viewContent: 'View channel on Kolibri',
     },
   };
 
@@ -306,9 +444,54 @@
 
 <style lang="scss" scoped>
 
+  .catalog-page-wrapper {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+  }
+
+  .catalog-sidebar {
+    width: 300px;
+  }
+
+  .catalog-main-content {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    overflow: auto;
+  }
+
   .list-wrapper {
     max-width: 1080px;
     margin: 0 auto;
+  }
+
+  .catalog-page-wrapper--small {
+    flex-direction: column;
+
+    .catalog-main-content {
+      // Let parent component to manage overflow in small mode
+      overflow: visible;
+    }
+  }
+
+  .catalog-sidebar--small {
+    width: 100%;
+  }
+
+  .results-text {
+    margin-bottom: 8px;
+    font-size: 20px;
+  }
+
+  .results-text,
+  .download-link-wrapper {
+    min-height: 30px; // prevent layout shifts when loading state changes
+  }
+
+  .pagination-container {
+    padding-bottom: 72px;
+    margin-top: 32px;
   }
 
 </style>

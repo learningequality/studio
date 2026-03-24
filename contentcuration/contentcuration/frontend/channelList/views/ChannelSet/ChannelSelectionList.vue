@@ -37,13 +37,13 @@
             <Checkbox
               v-model="selectedChannels"
               color="primary"
-              :data-test="`checkbox-${channel.id}`"
+              :data-testid="`checkbox-${channel.id}`"
               :value="channel.id"
               class="channel ma-0"
             />
             <ChannelItem
               :channelId="channel.id"
-              :data-test="`channel-item-${channel.id}`"
+              :data-testid="`channel-item-${channel.id}`"
               @click="handleSelectChannel"
             />
           </VLayout>

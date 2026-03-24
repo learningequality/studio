@@ -34,12 +34,22 @@ import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
 from contentcuration.views import pwa
 from contentcuration.viewsets.assessmentitem import AssessmentItemViewSet
+from contentcuration.viewsets.audited_special_permissions_license import (
+    AuditedSpecialPermissionsLicenseViewSet,
+)
 from contentcuration.viewsets.bookmark import BookmarkViewSet
 from contentcuration.viewsets.channel import AdminChannelViewSet
 from contentcuration.viewsets.channel import CatalogViewSet
+from contentcuration.viewsets.channel import ChannelVersionViewSet
 from contentcuration.viewsets.channel import ChannelViewSet
 from contentcuration.viewsets.channelset import ChannelSetViewSet
 from contentcuration.viewsets.clipboard import ClipboardViewSet
+from contentcuration.viewsets.community_library_submission import (
+    AdminCommunityLibrarySubmissionViewSet,
+)
+from contentcuration.viewsets.community_library_submission import (
+    CommunityLibrarySubmissionViewSet,
+)
 from contentcuration.viewsets.contentnode import ContentNodeViewSet
 from contentcuration.viewsets.feedback import FlagFeedbackEventViewSet
 from contentcuration.viewsets.feedback import RecommendationsEventViewSet
@@ -86,6 +96,26 @@ router.register(
     r"events/recommendationsinteraction",
     RecommendationsInteractionEventViewSet,
     basename="recommendations-interaction-events",
+)
+router.register(
+    r"communitylibrary_submission",
+    CommunityLibrarySubmissionViewSet,
+    basename="community-library-submission",
+)
+router.register(
+    r"admin_communitylibrary_submission",
+    AdminCommunityLibrarySubmissionViewSet,
+    basename="admin-community-library-submission",
+)
+router.register(
+    r"audited-special-permissions-license",
+    AuditedSpecialPermissionsLicenseViewSet,
+    basename="audited-special-permissions-license",
+)
+router.register(
+    r"channelversion",
+    ChannelVersionViewSet,
+    basename="channelversion",
 )
 
 urlpatterns = [

@@ -500,6 +500,114 @@ class ContentNodeAPITestCase(ContentNodeAPIBase, APITestCase):
             with_filter_response.data[0]["name"], self.channel_data["name"]
         )
 
+    def test_channelmetadata_public_filter_default_true(self):
+        community_channel = models.ContentNode.objects.create(
+            pk=uuid.uuid4().hex,
+            channel_id=uuid.uuid4().hex,
+            content_id=uuid.uuid4().hex,
+            kind="topic",
+            title="community channel",
+        )
+        models.ChannelMetadata.objects.create(
+            id=uuid.uuid4().hex,
+            name="community channel metadata",
+            root=community_channel,
+            # community channel
+            public=False,
+        )
+
+        # By default, only public channels should be returned
+        response = self.client.get(reverse("publicchannel-list"))
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["name"], self.channel_data["name"])
+        self.assertTrue(response.data[0]["public"])
+
+    def test_channelmetadata_public_filter_explicit_true(self):
+        community_channel = models.ContentNode.objects.create(
+            pk=uuid.uuid4().hex,
+            channel_id=uuid.uuid4().hex,
+            content_id=uuid.uuid4().hex,
+            kind="topic",
+            title="community channel 2",
+        )
+        models.ChannelMetadata.objects.create(
+            id=uuid.uuid4().hex,
+            name="community channel metadata 2",
+            root=community_channel,
+            public=False,
+        )
+
+        # Explicitly request only public channels
+        response = self.client.get(reverse("publicchannel-list"), {"public": True})
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["name"], self.channel_data["name"])
+        self.assertTrue(response.data[0]["public"])
+
+    def test_channelmetadata_public_filter_explicit_false(self):
+        community_channel = models.ContentNode.objects.create(
+            pk=uuid.uuid4().hex,
+            channel_id=uuid.uuid4().hex,
+            content_id=uuid.uuid4().hex,
+            kind="topic",
+            title="community channel 3",
+        )
+        community_metadata = models.ChannelMetadata.objects.create(
+            id=uuid.uuid4().hex,
+            name="community channel metadata 3",
+            root=community_channel,
+            public=False,
+        )
+
+        # Explicitly request only community channels
+        response = self.client.get(reverse("publicchannel-list"), {"public": False})
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["name"], community_metadata.name)
+        self.assertFalse(response.data[0]["public"])
+
+    def test_channelmetadata_public_filter_mixed_channels(self):
+        community_channel1 = models.ContentNode.objects.create(
+            pk=uuid.uuid4().hex,
+            channel_id=uuid.uuid4().hex,
+            content_id=uuid.uuid4().hex,
+            kind="topic",
+            title="community channel 4",
+        )
+        models.ChannelMetadata.objects.create(
+            id=uuid.uuid4().hex,
+            name="community channel metadata 4",
+            root=community_channel1,
+            public=False,
+        )
+
+        community_channel2 = models.ContentNode.objects.create(
+            pk=uuid.uuid4().hex,
+            channel_id=uuid.uuid4().hex,
+            content_id=uuid.uuid4().hex,
+            kind="topic",
+            title="community channel 5",
+        )
+        models.ChannelMetadata.objects.create(
+            id=uuid.uuid4().hex,
+            name="community channel metadata 5",
+            root=community_channel2,
+            public=False,
+        )
+
+        # Test public filter
+        public_response = self.client.get(
+            reverse("publicchannel-list"), {"public": True}
+        )
+        self.assertEqual(len(public_response.data), 1)
+        self.assertTrue(public_response.data[0]["public"])
+
+        # Test community filter
+        community_response = self.client.get(
+            reverse("publicchannel-list"), {"public": False}
+        )
+        self.assertEqual(len(community_response.data), 2)
+        for channel in community_response.data:
+            self.assertFalse(channel["public"])
+
     def test_filtering_coach_content_anon(self):
         response = self.client.get(
             reverse("publiccontentnode-list"),

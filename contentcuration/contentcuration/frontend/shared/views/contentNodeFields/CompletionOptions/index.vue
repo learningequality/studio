@@ -131,7 +131,8 @@
     getDurationValidators,
     translateValidator,
   } from 'shared/utils/validation';
-  import { metadataStrings, metadataTranslationMixin } from 'shared/mixins';
+  import { metadataTranslationMixin } from 'shared/mixins';
+  import { metadataStrings } from 'shared/strings/metadataStrings';
   import ExpandableSelect from 'shared/views/form/ExpandableSelect';
 
   const DEFAULT_SHORT_ACTIVITY = 600;

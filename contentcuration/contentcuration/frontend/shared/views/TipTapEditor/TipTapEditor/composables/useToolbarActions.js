@@ -1,8 +1,26 @@
 import { computed, inject } from 'vue';
 import { getTipTapEditorStrings } from '../TipTapEditorStrings';
+import { sanitizePastedHTML } from '../utils/markdown';
 
-export function useToolbarActions() {
+export function useToolbarActions(emit) {
   const editor = inject('editor', null);
+
+  // helper
+  const getEffectiveAlignment = editorInstance => {
+    if (!editorInstance) return 'left';
+
+    const isLeftAligned = editorInstance.isActive({ textAlign: 'left' });
+    const isRightAligned = editorInstance.isActive({ textAlign: 'right' });
+
+    if (isLeftAligned) return 'left';
+    if (isRightAligned) return 'right';
+
+    const { from } = editorInstance.state.selection;
+    const dom = editorInstance.view.domAtPos(from).node;
+    const el = dom.nodeType === 1 ? dom : dom.parentElement;
+
+    return el ? window.getComputedStyle(el).textAlign : 'left';
+  };
 
   const {
     undo$,
@@ -20,6 +38,8 @@ export function useToolbarActions() {
     mathFormula$,
     codeBlock$,
     clipboardAccessFailed$,
+    alignLeft$,
+    alignRight$,
   } = getTipTapEditorStrings();
 
   // Action handlers
@@ -135,36 +155,61 @@ export function useToolbarActions() {
   };
 
   const handlePaste = async () => {
-    if (editor.value) {
-      try {
-        // Try HTML first
-        const clipboardData = await navigator.clipboard.read();
-        const htmlType = clipboardData[0].types.find(type => type === 'text/html');
+    if (!editor.value) return;
 
-        if (htmlType) {
-          const htmlBlob = await clipboardData[0].getType('text/html');
-          const html = await htmlBlob.text();
-          editor.value.chain().focus().insertContent(html).run();
-        } else {
-          // Fall back to plain text
-          handlePasteNoFormat();
+    try {
+      if (navigator.clipboard?.read) {
+        const items = await navigator.clipboard.read();
+
+        for (const item of items) {
+          if (item.types.includes('text/html')) {
+            const htmlBlob = await item.getType('text/html');
+            const html = await htmlBlob.text();
+            const cleaned = sanitizePastedHTML(html);
+
+            editor.value.chain().focus().insertContent(cleaned).run();
+            return;
+          }
+          if (item.types.includes('text/plain')) {
+            const textBlob = await item.getType('text/plain');
+            const text = await textBlob.text();
+
+            editor.value.chain().focus().insertContent(text).run();
+            return;
+          }
         }
-      } catch (err) {
-        editor.value.chain().focus().insertContent(clipboardAccessFailed$()).run();
       }
+    } catch (err) {
+      editor.value.chain().focus().insertContent(clipboardAccessFailed$()).run();
     }
   };
 
   const handlePasteNoFormat = async () => {
-    if (editor.value) {
-      try {
-        // Read plain text from clipboard
-        const text = await navigator.clipboard.readText();
-        editor.value.chain().focus().insertContent(text).run();
-      } catch (err) {
-        editor.value.chain().focus().insertContent(clipboardAccessFailed$()).run();
-      }
+    if (!editor.value) return;
+
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text) return;
+
+      // Note: Genereted this regex with the help of LLM.
+      const normalized = text.replace(/\r\n/g, '\n');
+
+      editor.value.chain().focus().insertContent(normalized).run();
+    } catch (err) {
+      editor.value.chain().focus().insertContent(clipboardAccessFailed$()).run();
     }
+  };
+
+  const handleToggleAlign = () => {
+    if (!editor?.value) return;
+
+    const align = getEffectiveAlignment(editor.value);
+
+    editor.value
+      .chain()
+      .focus()
+      .setTextAlign(align === 'right' ? 'left' : 'right')
+      .run();
   };
 
   const handleBulletList = () => {
@@ -191,16 +236,16 @@ export function useToolbarActions() {
     }
   };
 
-  const handleInsertImage = () => {
-    // placeholder
+  const handleInsertImage = target => {
+    emit('insert-image', target);
   };
 
   const handleInsertLink = () => {
-    // placeholder
+    emit('insert-link');
   };
 
   const handleMath = () => {
-    // TipTap math formula logic may be added here
+    emit('insert-math', event.currentTarget);
   };
 
   const handleCodeBlock = () => {
@@ -239,6 +284,10 @@ export function useToolbarActions() {
     if (editor?.value) {
       editor.value.chain().focus().unsetAllMarks().run();
     }
+  };
+
+  const handleMinimize = () => {
+    emit('minimize');
   };
 
   // Helper function to check if a mark is active
@@ -393,6 +442,30 @@ export function useToolbarActions() {
     },
   ]);
 
+  const minimizeAction = {
+    name: 'minimize',
+    title: 'Minimize Toolbar',
+    icon: require('../../assets/icon-unfold.svg'),
+    handler: handleMinimize,
+  };
+
+  const alignAction = computed(() => {
+    const editorInstance = editor?.value;
+    const effectiveAlign = getEffectiveAlignment(editorInstance);
+    const effectiveRight = effectiveAlign === 'right';
+
+    return {
+      name: 'toggleAlign',
+      title: effectiveRight ? alignLeft$() : alignRight$(),
+      icon: effectiveRight
+        ? require('../../assets/icon-alignLeft.svg')
+        : require('../../assets/icon-alignRight.svg'),
+      handler: handleToggleAlign,
+      isActive: false,
+      isAvailable: !isMarkActive('codeBlock'),
+    };
+  });
+
   return {
     // Individual handlers
     handleUndo,
@@ -404,6 +477,7 @@ export function useToolbarActions() {
     handleCopy,
     handlePaste,
     handlePasteNoFormat,
+    handleToggleAlign,
     handleBulletList,
     handleNumberList,
     handleSubscript,
@@ -419,8 +493,10 @@ export function useToolbarActions() {
     // Action arrays
     historyActions,
     textActions,
+    alignAction,
     listActions,
     scriptActions,
     insertTools,
+    minimizeAction,
   };
 }

@@ -25,11 +25,12 @@
             :disabled="!isEditable"
             :label="$tr('authorLabel')"
             class="input-textbox"
+            aria-describedby="tooltip-author"
           />
           <HelpTooltip
             :text="$tr('authorToolTip')"
-            top
-            :small="false"
+            tooltipId="tooltip-author"
+            maxWidth="300px"
             class="input-tooltip"
           />
         </div>
@@ -49,12 +50,13 @@
             :disabled="!isEditable"
             :label="$tr('providerLabel')"
             class="input-textbox"
+            aria-describedby="tooltip-provider"
           />
           <HelpTooltip
             :text="$tr('providerToolTip')"
-            top
-            :small="false"
+            maxWidth="300px"
             class="input-tooltip"
+            tooltipId="tooltip-provider"
           />
         </div>
       </div>
@@ -67,12 +69,13 @@
             :disabled="!isEditable"
             :label="$tr('aggregatorLabel')"
             class="input-textbox"
+            aria-describedby="tooltip-aggregator"
           />
           <HelpTooltip
             :text="$tr('aggregatorToolTip')"
-            top
-            :small="false"
+            maxWidth="300px"
             class="input-tooltip"
+            tooltipId="tooltip-aggregator"
           />
         </div>
       </div>
@@ -355,12 +358,13 @@
 
       .input-tooltip {
         position: absolute;
-        right: 12px;
-        margin: 14px 0 0 8px;
+        top: 2px;
+        right: 0;
+        margin-left: 20px;
       }
 
       /deep/ input {
-        padding-right: 40px;
+        padding-right: 44px;
       }
     }
   }

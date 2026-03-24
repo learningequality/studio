@@ -5,18 +5,18 @@
       {{ `${$formatNumber(count)} ${count === 1 ? 'channel' : 'channels'}` }}
     </h1>
     <VLayout
-      rowwrap
+      wrap
       class="mb-2"
     >
       <VFlex
         xs12
-        sm4
-        xl3
+        sm6
+        md3
         class="px-3"
       >
         <VSelect
-          v-model="filter"
-          :items="filters"
+          v-model="channelTypeFilter"
+          :items="channelTypeOptions"
           item-text="label"
           item-value="key"
           label="Channel Type"
@@ -26,20 +26,37 @@
       </VFlex>
       <VFlex
         xs12
-        sm4
-        xl3
+        sm6
+        md3
+        clearable
         class="px-3"
       >
-        <LanguageDropdown
-          v-model="language"
-          item-id="id"
-          item-text="readable_name"
+        <VSelect
+          v-model="channelStatusFilter"
+          :items="channelStatusOptions"
+          item-text="label"
+          item-value="key"
+          label="Channel Status"
+          box
+          :disabled="!channelTypeFilter"
+          :menu-props="{ offsetY: true }"
         />
       </VFlex>
       <VFlex
         xs12
-        sm4
-        xl3
+        sm6
+        md3
+        class="px-3"
+      >
+        <LanguageDropdown
+          ref="languageDropdown"
+          v-model="languageFilter"
+        />
+      </VFlex>
+      <VFlex
+        xs12
+        sm6
+        md3
         class="px-3"
       >
         <VTextField
@@ -124,26 +141,38 @@
 <script>
 
   import { mapGetters, mapActions } from 'vuex';
-  import { RouteNames, rowsPerPageItems } from '../../constants';
-  import { tableMixin, generateFilterMixin } from '../../mixins';
+  import { getCurrentInstance, onMounted, ref, computed, watch } from 'vue';
+  import transform from 'lodash/transform';
+  import { ChannelTypeFilter, RouteNames, rowsPerPageItems } from '../../constants';
+  import { useTable } from '../../composables/useTable';
   import ChannelItem from './ChannelItem';
+  import { useKeywordSearch } from 'shared/composables/useKeywordSearch';
+  import { useFilter } from 'shared/composables/useFilter';
   import { channelExportMixin } from 'shared/views/channel/mixins';
   import { routerMixin } from 'shared/mixins';
   import Checkbox from 'shared/views/form/Checkbox';
   import IconButton from 'shared/views/IconButton';
   import LanguageDropdown from 'shared/views/LanguageDropdown';
+  import { CommunityLibraryStatus } from 'shared/constants';
 
-  const channelFilters = {
-    live: { label: 'Live', params: { deleted: false } },
-    mychannels: { label: 'My channels', params: { edit: true, deleted: false } },
-    published: { label: 'Published', params: { published: true, deleted: false } },
-    public: { label: 'Public', params: { public: true, deleted: false } },
-    staged: { label: 'Needs review', params: { staged: true, deleted: false } },
-    cheffed: { label: 'Sushi chef', params: { cheffed: true, deleted: false } },
-    deleted: { label: 'Deleted', params: { deleted: true } },
+  const channelTypeFilterMap = {
+    [ChannelTypeFilter.ALL]: {
+      label: 'All Channels',
+      params: {},
+    },
+    [ChannelTypeFilter.KOLIBRI_LIBRARY]: {
+      label: 'Kolibri Studio Library',
+      params: { public: true, deleted: false },
+    },
+    [ChannelTypeFilter.COMMUNITY_LIBRARY]: {
+      label: 'Community Library',
+      params: { has_community_library_submission: true },
+    },
+    [ChannelTypeFilter.UNLISTED]: {
+      label: 'Unlisted Channels',
+      params: { has_community_library_submission: false, public: false },
+    },
   };
-
-  const filterMixin = generateFilterMixin(channelFilters);
 
   export default {
     name: 'ChannelTable',
@@ -153,7 +182,169 @@
       LanguageDropdown,
       IconButton,
     },
-    mixins: [tableMixin, filterMixin, channelExportMixin, routerMixin],
+    mixins: [channelExportMixin, routerMixin],
+    setup() {
+      const { proxy } = getCurrentInstance();
+      const store = proxy.$store;
+
+      const statusFilterMap = computed(() => {
+        if (channelTypeFilter.value === ChannelTypeFilter.KOLIBRI_LIBRARY) {
+          return {
+            live: { label: 'Live', params: {} },
+            cheffed: { label: 'Sushi chef', params: { cheffed: true } },
+          };
+        } else if (channelTypeFilter.value === ChannelTypeFilter.COMMUNITY_LIBRARY) {
+          return {
+            live: { label: 'Live', params: { community_library_live: true } },
+            needsReview: {
+              label: 'Needs review',
+              params: {
+                latest_community_library_submission_status: [
+                  CommunityLibraryStatus.PENDING,
+                  CommunityLibraryStatus.REJECTED,
+                ],
+              },
+            },
+            published: { label: 'Published', params: {} },
+            cheffed: { label: 'Sushi chef', params: { cheffed: true } },
+          };
+        } else if (channelTypeFilter.value === ChannelTypeFilter.UNLISTED) {
+          return {
+            live: { label: 'Live', params: { deleted: false } },
+            draft: { label: 'Draft', params: { published: false, deleted: false } },
+            published: { label: 'Published', params: { published: true, deleted: false } },
+            cheffed: { label: 'Sushi chef', params: { cheffed: true, deleted: false } },
+            deleted: { label: 'Deleted', params: { deleted: true } },
+          };
+        } else if (channelTypeFilter.value === ChannelTypeFilter.ALL) {
+          return {
+            live: { label: 'Live', params: { deleted: false } },
+            published: { label: 'Published', params: { published: true, deleted: false } },
+            draft: { label: 'Draft', params: { published: false, deleted: false } },
+            cheffed: { label: 'Sushi chef', params: { cheffed: true, deleted: false } },
+            deleted: { label: 'Deleted', params: { deleted: true } },
+          };
+        }
+        return {};
+      });
+
+      const languageDropdown = ref(null);
+      const languageFilterMap = ref({});
+
+      onMounted(() => {
+        // The languageFilterMap is built from the options in the LanguageDropdown component,
+        // so we need to wait until it's mounted to access them.
+        const languages = languageDropdown.value.languages;
+
+        languageFilterMap.value = transform(languages, (result, language) => {
+          result[language.id] = {
+            label: language.readable_name,
+            params: { languages: language.id },
+          };
+        });
+      });
+
+      const {
+        filter: _channelTypeFilter,
+        options: channelTypeOptions,
+        fetchQueryParams: channelTypeFetchQueryParams,
+      } = useFilter({
+        name: 'channelType',
+        filterMap: channelTypeFilterMap,
+        defaultValue: ChannelTypeFilter.ALL,
+      });
+
+      // Temporal wrapper, must be removed after migrating to KSelect
+      const channelTypeFilter = computed({
+        get: () => _channelTypeFilter.value.value || undefined,
+        set: value => {
+          _channelTypeFilter.value =
+            channelTypeOptions.value.find(option => option.value === value) || {};
+        },
+      });
+
+      const {
+        filter: _channelStatusFilter,
+        options: channelStatusOptions,
+        fetchQueryParams: channelStatusFetchQueryParams,
+      } = useFilter({
+        name: 'channelStatus',
+        filterMap: statusFilterMap,
+      });
+      // Temporal wrapper, must be removed after migrating to KSelect
+      const channelStatusFilter = computed({
+        get: () => _channelStatusFilter.value.value || undefined,
+        set: value => {
+          _channelStatusFilter.value =
+            channelStatusOptions.value.find(option => option.value === value) || {};
+        },
+      });
+
+      const {
+        filter: _languageFilter,
+        options: languageOptions,
+        fetchQueryParams: languageFetchQueryParams,
+      } = useFilter({
+        name: 'language',
+        filterMap: languageFilterMap,
+      });
+      // Temporal wrapper, must be removed after migrating to KSelect
+      const languageFilter = computed({
+        get: () => _languageFilter.value.value || undefined,
+        set: value => {
+          _languageFilter.value =
+            languageOptions.value.find(option => option.value === value) || {};
+        },
+      });
+
+      const {
+        keywordInput,
+        setKeywords,
+        clearSearch,
+        fetchQueryParams: keywordSearchFetchQueryParams,
+      } = useKeywordSearch();
+
+      watch(
+        channelTypeFilter,
+        () => {
+          const options = channelStatusOptions.value;
+          channelStatusFilter.value = options.length ? options[0].value : null;
+        },
+        { immediate: true },
+      );
+
+      const filterFetchQueryParams = computed(() => {
+        return {
+          ...channelTypeFetchQueryParams.value,
+          ...channelStatusFetchQueryParams.value,
+          ...languageFetchQueryParams.value,
+          ...keywordSearchFetchQueryParams.value,
+        };
+      });
+
+      function loadChannels(fetchParams) {
+        return store.dispatch('channelAdmin/loadChannels', fetchParams);
+      }
+
+      const { pagination, loading } = useTable({
+        fetchFunc: fetchParams => loadChannels(fetchParams),
+        filterFetchQueryParams,
+      });
+
+      return {
+        channelTypeFilter,
+        channelTypeOptions,
+        channelStatusFilter,
+        channelStatusOptions,
+        languageFilter,
+        languageDropdown,
+        keywordInput,
+        setKeywords,
+        clearSearch,
+        pagination,
+        loading,
+      };
+    },
     data() {
       return {
         selected: [],
@@ -177,20 +368,10 @@
           }
         },
       },
-      language: {
-        get() {
-          return this.$route.query.languages;
-        },
-        set(languages) {
-          this.updateQueryParams({
-            ...this.$route.query,
-            languages,
-            page: 1,
-          });
-        },
-      },
       headers() {
-        const firstColumn = this.$vuetify.breakpoint.smAndDown ? [{ class: 'first' }] : [];
+        const firstColumn = this.$vuetify.breakpoint.smAndDown
+          ? [{ class: 'first', sortable: false }]
+          : [];
         return firstColumn.concat([
           {
             text: 'Channel name',
@@ -198,15 +379,20 @@
             class: `${this.$vuetify.breakpoint.smAndDown ? '' : 'first'}`,
             value: 'name',
           },
-          { text: 'Token ID', value: 'primary_token' },
-          { text: 'Channel ID', value: 'id' },
+          { text: 'Token ID', value: 'primary_token', sortable: false },
+          { text: 'Channel ID', value: 'id', sortable: false },
           { text: 'Size', value: 'size', sortable: false },
           { text: 'Editors', value: 'editors_count', sortable: false },
           { text: 'Viewers', value: 'viewers_count', sortable: false },
-          { text: 'Date created', value: 'created' },
+          { text: 'Date created', value: 'created', sortable: false },
           { text: 'Last updated', value: 'modified' },
-          { text: 'Demo URL', value: 'demo_server_url' },
-          { text: 'Source URL', value: 'source_url' },
+          { text: 'Demo URL', value: 'demo_server_url', sortable: false },
+          { text: 'Source URL', value: 'source_url', sortable: false },
+          {
+            text: 'Latest community library submission',
+            value: 'latest_community_library_submission_status',
+            sortable: false,
+          },
           { text: 'Actions', sortable: false, align: 'center' },
         ]);
       },
@@ -233,15 +419,7 @@
       this.updateTabTitle('Channels - Administration');
     },
     methods: {
-      ...mapActions('channelAdmin', ['loadChannels', 'getAdminChannelListDetails']),
-      /**
-       * @public
-       * @param params
-       * @return {*}
-       */
-      fetch(params) {
-        return this.loadChannels(params);
-      },
+      ...mapActions('channelAdmin', ['getAdminChannelListDetails']),
       async downloadPDF() {
         this.$store.dispatch('showSnackbarSimple', 'Generating PDF...');
         const channelList = await this.getAdminChannelListDetails(this.selected);

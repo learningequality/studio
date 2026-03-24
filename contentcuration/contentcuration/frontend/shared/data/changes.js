@@ -439,7 +439,7 @@ export class PublishedChange extends Change {
 }
 
 export class PublishedNextChange extends Change {
-  constructor(fields) {
+  constructor({ use_staging_tree, ...fields }) {
     fields.type = CHANGE_TYPES.PUBLISHED_NEXT;
     super(fields);
     if (this.table !== TABLE_NAMES.CHANNEL) {
@@ -447,6 +447,7 @@ export class PublishedNextChange extends Change {
         `${this.changeType} is only supported by ${TABLE_NAMES.CHANNEL} table but ${this.table} was passed instead`,
       );
     }
+    this.setAndValidateBoolean(use_staging_tree, 'use_staging_tree');
     this.setChannelAndUserId({ id: this.key });
   }
 }

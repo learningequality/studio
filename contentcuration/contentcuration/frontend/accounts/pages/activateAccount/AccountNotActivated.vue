@@ -1,6 +1,6 @@
 <template>
 
-  <MessageLayout
+  <StudioMessageLayout
     :header="$tr('title')"
     :text="$tr('text')"
   >
@@ -10,19 +10,19 @@
       :to="{ name: 'RequestNewActivationLink' }"
       appearance="raised-button"
     />
-  </MessageLayout>
+  </StudioMessageLayout>
 
 </template>
 
 
 <script>
 
-  import MessageLayout from '../../components/MessageLayout';
+  import StudioMessageLayout from '../../components/StudioMessageLayout';
 
   export default {
     name: 'AccountNotActivated',
     components: {
-      MessageLayout,
+      StudioMessageLayout,
     },
     $trs: {
       title: 'Account has not been activated',

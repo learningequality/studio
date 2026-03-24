@@ -5,7 +5,6 @@ const process = require('node:process');
 const fs = require('node:fs');
 const { execSync } = require('node:child_process');
 
-const { NormalModuleReplacementPlugin } = require('webpack');
 const baseConfig = require('kolibri-tools/lib/webpack.config.base');
 const { merge } = require('webpack-merge');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
@@ -17,7 +16,12 @@ const WebpackRTLPlugin = require('kolibri-tools/lib/webpackRtlPlugin');
 
 const { InjectManifest } = require('workbox-webpack-plugin');
 
-// Function to detect if running in WSL
+const DEFAULT_WEBPACK_DEV_HOST = '127.0.0.1';
+
+/**
+ * Function to detect if running in WSL
+ * @return {boolean}
+ */
 function isWSL() {
   try {
     const version = fs.readFileSync('/proc/version', 'utf8');
@@ -27,21 +31,30 @@ function isWSL() {
   }
 }
 
-// Function to get WSL IP address
-function getWSLIP() {
+/**
+ * Get the host for the webpack dev server.
+ * @return {string}
+ */
+function getWebpackDevHost() {
+  if (process.env.WEBPACK_DEV_HOST) {
+    return process.env.WEBPACK_DEV_HOST;
+  }
+
+  if (!isWSL()) {
+    return DEFAULT_WEBPACK_DEV_HOST;
+  }
+
   try {
-    const ip = execSync('hostname -I').toString().trim().split(' ')[0];
-    return ip;
+    return execSync('hostname -I').toString().trim().split(' ')[0];
   } catch (err) {
     console.warn('Failed to get WSL IP address:', err);
-    return '127.0.0.1';
+    return DEFAULT_WEBPACK_DEV_HOST;
   }
 }
 
 const djangoProjectDir = path.resolve('contentcuration');
 const staticFilesDir = path.resolve(djangoProjectDir, 'contentcuration', 'static');
 const srcDir = path.resolve(djangoProjectDir, 'contentcuration', 'frontend');
-const dummyModule = path.resolve(srcDir, 'shared', 'styles', 'modulePlaceholder.js')
 
 const bundleOutputDir = path.resolve(staticFilesDir, 'studio');
 
@@ -62,11 +75,8 @@ module.exports = (env = {}) => {
   const pnpmNodeModules = path.join(rootDir, 'node_modules', '.pnpm', 'node_modules');
 
   // Determine the appropriate dev server host and public path based on environment
-  const isWSLEnvironment = isWSL();
-  const devServerHost = isWSLEnvironment ? '0.0.0.0' : '127.0.0.1';
-  const devPublicPath = isWSLEnvironment ?
-    `http://${getWSLIP()}:4000/dist/` :
-    'http://127.0.0.1:4000/dist/';
+  const devServerHost = getWebpackDevHost();
+  const devPublicPath = `http://${devServerHost}:4000/dist/`;
 
   const workboxPlugin = new InjectManifest({
     swSrc: path.resolve(srcDir, 'serviceWorker/index.js'),
@@ -122,10 +132,8 @@ module.exports = (env = {}) => {
       allowedHosts: [
         '127.0.0.1',
         'localhost',
-      ].concat(
-        // For WSL, allow the WSL IP address
-        isWSLEnvironment ? [getWSLIP()] : []
-      ),
+        getWebpackDevHost(),
+      ]
     },
     module: {
       rules: [
@@ -186,15 +194,5 @@ module.exports = (env = {}) => {
     ],
     stats: 'normal',
   });
-  if (dev) {
-    config.entry.editorDev = './editorDev/index.js';
-  } else {
-    config.plugins.push(
-      new NormalModuleReplacementPlugin(
-        /styl$/,
-        dummyModule
-      ),
-    )
-  }
   return config;
 };

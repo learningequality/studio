@@ -20,6 +20,7 @@ from contentcuration.tasks import apply_channel_changes_task
 from contentcuration.tasks import apply_user_changes_task
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import CREATED
+from contentcuration.viewsets.sync.constants import SERVER_ONLY_CHANGES
 
 
 CHANGE_RETURN_LIMIT = 200
@@ -72,7 +73,11 @@ class SyncView(APIView):
             # Changes that cannot be made
             disallowed_changes = []
             for c in changes:
-                if c.get("channel_id") is None and c.get("user_id") == request.user.id:
+                if c.get("type") in SERVER_ONLY_CHANGES:
+                    disallowed_changes.append(c)
+                elif (
+                    c.get("channel_id") is None and c.get("user_id") == request.user.id
+                ):
                     user_only_changes.append(c)
                 elif c.get("channel_id") in allowed_ids:
                     channel_changes.append(c)

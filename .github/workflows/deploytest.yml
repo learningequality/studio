@@ -27,11 +27,11 @@ jobs:
     if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Use pnpm
       uses: pnpm/action-setup@v4
     - name: Use Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: '20.x'
         cache: 'pnpm'
@@ -47,29 +47,21 @@ jobs:
     if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v5
+    - uses: actions/checkout@v6
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
       with:
         python-version: '3.10'
-    - name: pip cache
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pyprod-${{ hashFiles('requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pyprod-
-    - name: Install pip-tools and python dependencies
+        activate-environment: "true"
+        enable-cache: "true"
+    - name: Install python dependencies with uv
       run: |
-        # Pin pip to 25.2 to avoid incompatibility with pip-tools and 25.3
-        # see https://github.com/jazzband/pip-tools/issues/2252
-        python -m pip install pip==25.2
-        pip install pip-tools
-        pip-sync requirements.txt
+        # Use uv to install dependencies directly from requirements files
+        uv pip sync requirements.txt
     - name: Use pnpm
       uses: pnpm/action-setup@v4
     - name: Use Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: '20.x'
         cache: 'pnpm'

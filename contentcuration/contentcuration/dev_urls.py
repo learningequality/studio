@@ -8,7 +8,6 @@ from django.http.response import HttpResponseRedirect
 from django.urls import include
 from django.urls import path
 from django.urls import re_path
-from django.views.generic import TemplateView
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
@@ -75,11 +74,4 @@ urlpatterns = urlpatterns + [
     ),
     re_path(r"^api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     re_path(r"^content/(?P<storage_path>.+)$", file_server),
-]
-
-urlpatterns += [
-    re_path(
-        r"^editor-dev(?:/.*)?$",
-        TemplateView.as_view(template_name="contentcuration/editor_dev.html"),
-    ),
 ]

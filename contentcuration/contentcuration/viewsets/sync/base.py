@@ -12,6 +12,7 @@ from contentcuration.viewsets.contentnode import ContentNodeViewSet
 from contentcuration.viewsets.contentnode import PrerequisitesUpdateHandler
 from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
+from contentcuration.viewsets.sync.constants import ADDED_TO_COMMUNITY_LIBRARY
 from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
 from contentcuration.viewsets.sync.constants import BOOKMARK
 from contentcuration.viewsets.sync.constants import CHANNEL
@@ -98,6 +99,7 @@ event_handlers = {
     DEPLOYED: "deploy_from_changes",
     UPDATED_DESCENDANTS: "update_descendants_from_changes",
     PUBLISHED_NEXT: "publish_next_from_changes",
+    ADDED_TO_COMMUNITY_LIBRARY: "add_to_community_library_from_changes",
 }
 
 

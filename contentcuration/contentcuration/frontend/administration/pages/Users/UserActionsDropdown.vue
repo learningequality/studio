@@ -1,42 +1,49 @@
 <template>
 
   <div>
-    <ConfirmationDialog
-      v-model="deleteDialog"
+    <KModal
+      v-if="deleteDialog"
       title="Delete user"
-      :text="`Are you sure you want to permanently delete ${user.name}'s account?`"
-      confirmButtonText="Delete"
+      submitText="Delete"
+      cancelText="Cancel"
       data-test="confirm-delete"
-      @confirm="deleteHandler"
-    />
-    <ConfirmationDialog
-      v-model="deactivateDialog"
+      @submit="deleteHandler"
+      @cancel="deleteDialog = false"
+    >
+      <p>Are you sure you want to permanently delete {{ user.name }}'s account?</p>
+    </KModal>
+
+    <KModal
+      v-if="deactivateDialog"
       title="Deactivate user"
-      :text="
-        `Deactivating ${user.name}'s account will block them from ` +
-          `accessing their account. Are you sure you want to continue?`
-      "
-      confirmButtonText="Deactivate"
+      submitText="Deactivate"
+      cancelText="Cancel"
       data-test="confirm-deactivate"
-      @confirm="deactivateHandler"
-    />
+      @submit="deactivateHandler"
+      @cancel="deactivateDialog = false"
+    >
+      <p>
+        Deactivating {{ user.name }}'s account will block them from accessing their account. Are you
+        sure you want to continue?
+      </p>
+    </KModal>
     <UserPrivilegeModal
       v-model="addAdminPrivilegeDialog"
-      header="Add admin privileges"
+      title="Add admin privileges"
       :text="`Are you sure you want to add admin privileges to user '${user.name}'?`"
       confirmText="Add privileges"
       :confirmAction="addAdminHandler"
     />
     <UserPrivilegeModal
       v-model="removeAdminPrivilegeDialog"
-      header="Remove admin privileges"
+      title="Remove admin privileges"
       :text="`Are you sure you want to remove admin privileges from user '${user.name}'?`"
       confirmText="Remove privileges"
       :confirmAction="removeAdminHandler"
     />
     <EmailUsersDialog
       v-model="emailDialog"
-      :query="{ ids: [userId] }"
+      :initialRecipients="[userId]"
     />
     <BaseMenu>
       <template #activator="{ on }">
@@ -60,6 +67,7 @@
             <VListTile
               v-if="user.is_admin"
               data-test="removeadmin"
+              @click.stop
               @click="removeAdminPrivilegeDialog = true"
             >
               <VListTileTitle>Remove admin privileges</VListTileTitle>
@@ -67,6 +75,7 @@
             <VListTile
               v-else
               data-test="addadmin"
+              @click.stop
               @click="addAdminPrivilegeDialog = true"
             >
               <VListTileTitle>Add admin privileges</VListTileTitle>
@@ -106,14 +115,13 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
-  import ConfirmationDialog from '../../components/ConfirmationDialog';
+
   import EmailUsersDialog from './EmailUsersDialog';
   import UserPrivilegeModal from './UserPrivilegeModal';
 
   export default {
     name: 'UserActionsDropdown',
     components: {
-      ConfirmationDialog,
       EmailUsersDialog,
       UserPrivilegeModal,
     },

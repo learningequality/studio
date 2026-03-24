@@ -4,12 +4,13 @@
     ref="form"
     @submit.prevent="submit"
   >
-    <Banner
-      :value="Boolean(errorCount())"
+    <StudioBanner
+      v-if="Boolean(errorCount())"
       error
-      :text="errorText()"
-      class="my-2"
-    />
+      class="studio-banner"
+    >
+      {{ errorText() }}
+    </StudioBanner>
 
     <!-- Nature of content -->
     <h3>{{ $tr('natureOfYourContentLabel') }}</h3>
@@ -262,11 +263,12 @@
 
   import sortBy from 'lodash/sortBy';
   import { mapActions, mapState } from 'vuex';
+  import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
   import { generateFormMixin, constantsTranslationMixin } from 'shared/mixins';
   import { LicensesList } from 'shared/leUtils/Licenses';
   import CountryField from 'shared/views/form/CountryField';
   import MultiSelect from 'shared/views/form/MultiSelect';
-  import Banner from 'shared/views/Banner';
+  import StudioBanner from 'shared/views/StudioBanner';
   import InfoModal from 'shared/views/InfoModal';
 
   const formMixin = generateFormMixin({
@@ -318,10 +320,14 @@
     components: {
       CountryField,
       MultiSelect,
-      Banner,
+      StudioBanner,
       InfoModal,
     },
     mixins: [constantsTranslationMixin, formMixin],
+    setup() {
+      const { sendPoliteMessage } = useKLiveRegion();
+      return { sendPoliteMessage };
+    },
     computed: {
       ...mapState('settings', ['channels']),
       orgSelected() {
@@ -394,6 +400,7 @@
         if (this.$refs.form.scrollIntoView) {
           this.$refs.form.scrollIntoView({ behavior: 'smooth' });
         }
+        this.sendPoliteMessage(this.errorText());
       },
 
       // eslint-disable-next-line kolibri/vue-no-unused-methods, vue/no-unused-properties
@@ -516,14 +523,14 @@
     font-size: 14px;
   }
 
-  /* fixes unintended margin caused by KDS styles */
-  .license-link ::v-deep span {
-    margin-left: 0 !important;
-  }
-
   .license-description {
     margin-bottom: 8px;
     line-height: 1.5;
+  }
+
+  .studio-banner {
+    margin-top: 8px;
+    margin-bottom: 8px;
   }
 
 </style>

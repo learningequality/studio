@@ -53,7 +53,7 @@
         </KRouterLink>
       </VToolbarItems>
       <VSpacer />
-      <SavingIndicator v-if="!offline" />
+      <SavingIndicator v-if="!offline && !isDraftPublishing" />
       <OfflineText indicator />
       <ProgressModal />
       <div
@@ -84,6 +84,38 @@
         >
           {{ $tr('apiGenerated') }}
         </span>
+        <BaseMenu v-if="canShareChannel">
+          <template #activator="{ on }">
+            <KButton
+              hasDropdown
+              class="share-button"
+              v-on="on"
+            >
+              {{ $tr('shareMenuButton') }}
+            </KButton>
+          </template>
+          <VList>
+            <VListTile
+              v-if="canSubmitToCommunityLibrary"
+              @click="showSubmitToCommunityLibrarySidePanel = true"
+            >
+              <VListTileTitle>{{ $tr('submitToCommunityLibrary') }}</VListTileTitle>
+            </VListTile>
+            <VListTile
+              v-if="canManage"
+              :to="shareChannelLink"
+              @click="trackClickEvent('Share channel')"
+            >
+              <VListTileTitle>{{ $tr('inviteCollaborators') }}</VListTileTitle>
+            </VListTile>
+            <VListTile
+              v-if="isPublished"
+              @click="showTokenModal = true"
+            >
+              <VListTileTitle>{{ $tr('shareToken') }}</VListTileTitle>
+            </VListTile>
+          </VList>
+        </BaseMenu>
         <VTooltip
           v-if="!loading && canManage"
           bottom
@@ -161,6 +193,12 @@
               </VListTile>
             </template>
             <VListTile
+              v-if="currentChannel && currentChannel.draft_token"
+              @click="showPreviewDraftModal = true"
+            >
+              <VListTileTitle>{{ getDraftTokenAction$() }}</VListTileTitle>
+            </VListTile>
+            <VListTile
               v-if="isPublished"
               @click="showTokenModal = true"
             >
@@ -207,9 +245,22 @@
     />
     <slot></slot>
 
-    <PublishModal
-      v-if="showPublishModal"
-      v-model="showPublishModal"
+    <PublishSidePanel
+      v-if="showPublishSidePanel"
+      @close="showPublishSidePanel = false"
+      @showResubmitCommunityLibraryModal="handleShowResubmitToCommunityLibraryModal"
+    />
+    <SubmitToCommunityLibrarySidePanel
+      v-if="showSubmitToCommunityLibrarySidePanel"
+      :channel="currentChannel"
+      @close="showSubmitToCommunityLibrarySidePanel = false"
+    />
+    <ResubmitToCommunityLibraryModal
+      v-if="resubmitToCommunityLibraryModalData"
+      :channel="resubmitToCommunityLibraryModalData.channel"
+      :latestSubmissionVersion="resubmitToCommunityLibraryModalData.latestSubmissionVersion"
+      @resubmit="handleResubmitToCommunityLibrary"
+      @close="handleDismissResubmitToCommunityLibrary"
     />
     <template v-if="isPublished">
       <ChannelTokenModal
@@ -224,29 +275,19 @@
       @syncing="syncInProgress"
     />
     <QuickEditModal />
-    <MessageDialog
-      v-model="showDeleteModal"
-      :header="$tr('deleteTitle')"
-    >
-      {{ $tr('deletePrompt') }}
-      <template #buttons="{ close }">
-        <VSpacer />
-        <VBtn
-          color="primary"
-          flat
-          @click="close"
-        >
-          {{ $tr('cancel') }}
-        </VBtn>
-        <VBtn
-          color="primary"
-          data-test="delete"
-          @click="handleDelete"
-        >
-          {{ $tr('deleteChannelButton') }}
-        </VBtn>
-      </template>
-    </MessageDialog>
+    <RemoveChannelModal
+      v-if="showDeleteModal && currentChannel"
+      :channel-id="currentChannel.id"
+      :can-edit="canEdit"
+      data-test="delete-modal"
+      @delete="handleDelete"
+      @close="showDeleteModal = false"
+    />
+    <PreviewDraftChannelModal
+      v-if="showPreviewDraftModal && currentChannel"
+      :channel="currentChannel"
+      @close="showPreviewDraftModal = false"
+    />
     <VSpeedDial
       v-if="showClipboardSpeedDial"
       v-model="showClipboard"
@@ -310,24 +351,30 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
+  import PreviewDraftChannelModal from '../../components/modals/PreviewDraftChannelModal.vue';
   import Clipboard from '../../components/Clipboard';
   import SyncResourcesModal from '../sync/SyncResourcesModal';
   import ProgressModal from '../progress/ProgressModal';
-  import PublishModal from '../../components/publish/PublishModal';
+
   import QuickEditModal from '../../components/QuickEditModal';
   import SavingIndicator from '../../components/edit/SavingIndicator';
   import { DraggableRegions, DraggableUniverses, RouteNames } from '../../constants';
+  import PublishSidePanel from '../../components/sidePanels/PublishSidePanel';
+  import SubmitToCommunityLibrarySidePanel from '../../components/sidePanels/SubmitToCommunityLibrarySidePanel';
+  import ResubmitToCommunityLibraryModal from '../../components/modals/ResubmitToCommunityLibraryModal';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import ToolBar from 'shared/views/ToolBar';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
+  import RemoveChannelModal from 'shared/views/channel/RemoveChannelModal';
   import OfflineText from 'shared/views/OfflineText';
   import ContentNodeIcon from 'shared/views/ContentNodeIcon';
-  import MessageDialog from 'shared/views/MessageDialog';
   import { RouteNames as ChannelRouteNames } from 'frontend/channelList/constants';
   import { titleMixin } from 'shared/mixins';
   import DraggableRegion from 'shared/views/draggable/DraggableRegion';
   import { DropEffect } from 'shared/mixins/draggable/constants';
   import DraggablePlaceholder from 'shared/views/draggable/DraggablePlaceholder';
+  import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
+  import { commonStrings } from 'shared/strings/commonStrings';
 
   export default {
     name: 'TreeViewBase',
@@ -335,19 +382,28 @@
       DraggableRegion,
       MainNavigationDrawer,
       ToolBar,
-      PublishModal,
+      PublishSidePanel,
+      SubmitToCommunityLibrarySidePanel,
+      ResubmitToCommunityLibraryModal,
       ProgressModal,
       ChannelTokenModal,
+      RemoveChannelModal,
       SyncResourcesModal,
       Clipboard,
       OfflineText,
       ContentNodeIcon,
       DraggablePlaceholder,
-      MessageDialog,
       SavingIndicator,
       QuickEditModal,
+      PreviewDraftChannelModal,
     },
     mixins: [titleMixin],
+    setup() {
+      const { getDraftTokenAction$ } = communityChannelsStrings;
+      return {
+        getDraftTokenAction$,
+      };
+    },
     props: {
       loading: {
         type: Boolean,
@@ -357,12 +413,15 @@
     data() {
       return {
         drawer: false,
-        showPublishModal: false,
+        showPublishSidePanel: false,
+        showSubmitToCommunityLibrarySidePanel: false,
         showTokenModal: false,
         showSyncModal: false,
         showClipboard: false,
         showDeleteModal: false,
+        showPreviewDraftModal: false,
         syncing: false,
+        resubmitToCommunityLibraryModalData: null,
       };
     },
     computed: {
@@ -389,9 +448,16 @@
       isRicecooker() {
         return Boolean(this.currentChannel.ricecooker_version);
       },
+      isDraftPublishing() {
+        return (
+          this.currentChannel &&
+          this.currentChannel.publishing &&
+          this.currentChannel.publishing_draft
+        );
+      },
       disablePublish() {
         return (
-          this.currentChannel.publishing ||
+          (this.currentChannel.publishing && !this.currentChannel.publishing_draft) ||
           !this.isChanged ||
           !this.currentChannel.language ||
           (this.rootNode && !this.rootNode.resource_count)
@@ -412,6 +478,15 @@
         return (
           !this.loading && (this.$vuetify.breakpoint.xsOnly || this.canManage || this.isPublished)
         );
+      },
+      canShareChannel() {
+        return this.canManage || this.isPublished;
+      },
+      canSubmitToCommunityLibrary() {
+        if (!this.currentChannel) {
+          return false;
+        }
+        return this.canManage && this.isPublished && !this.currentChannel.public;
       },
       viewChannelDetailsLink() {
         return {
@@ -480,6 +555,22 @@
         },
         immediate: true,
       },
+      isDraftPublishing(newVal, oldVal) {
+        if (!newVal && oldVal) {
+          const { draftPublishedNotice$ } = communityChannelsStrings;
+          const { previewAction$ } = commonStrings;
+          const snackbarData = {
+            text: draftPublishedNotice$(),
+          };
+          if (this.currentChannel.draft_token) {
+            snackbarData.actionText = previewAction$();
+            snackbarData.actionCallback = () => {
+              this.showPreviewDraftModal = true;
+            };
+          }
+          this.$store.dispatch('showSnackbar', snackbarData);
+        }
+      },
     },
     methods: {
       ...mapActions('channel', ['deleteChannel']),
@@ -502,8 +593,20 @@
         this.trackClickEvent('Delete channel');
       },
       publishChannel() {
-        this.showPublishModal = true;
+        this.showPublishSidePanel = true;
         this.trackClickEvent('Publish');
+      },
+      handleResubmitToCommunityLibrary() {
+        this.showSubmitToCommunityLibrarySidePanel = true;
+      },
+      handleDismissResubmitToCommunityLibrary() {
+        this.resubmitToCommunityLibraryModalData = null;
+      },
+      handleShowResubmitToCommunityLibraryModal(resubmitData) {
+        if (resubmitData?.latestSubmissionVersion == null) {
+          return;
+        }
+        this.resubmitToCommunityLibraryModalData = resubmitData;
       },
       trackClickEvent(eventLabel) {
         this.$analytics.trackClick('channel_editor_toolbar', eventLabel);
@@ -527,11 +630,12 @@
       incompleteDescendantsText:
         '{count, number, integer} {count, plural, one {resource is incomplete and cannot be published} other {resources are incomplete and cannot be published}}',
 
-      // Delete channel section
-      deleteChannelButton: 'Delete channel',
-      deleteTitle: 'Delete this channel',
-      deletePrompt: 'This channel will be permanently deleted. This cannot be undone.',
-      cancel: 'Cancel',
+      // Share menu section
+      shareMenuButton: 'Share',
+      submitToCommunityLibrary: 'Submit to community library',
+      inviteCollaborators: 'Invite collaborators',
+      shareToken: 'Share token',
+
       channelDeletedSnackbar: 'Channel deleted',
     },
   };
@@ -567,6 +671,11 @@
       width: 400px;
       max-width: 400px;
     }
+  }
+
+  .share-button {
+    margin-right: 8px;
+    margin-left: 8px;
   }
 
   .clipboard-fab.dragging-over.in-draggable-universe {

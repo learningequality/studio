@@ -19,6 +19,7 @@ module.exports = {
     'shared/urls': path.resolve(__dirname, './globalMocks/urls.js'),
     '^dexie$': require.resolve('dexie'),
     '^mathlive$': 'identity-obj-proxy',
+    '^@tiptap/extension-code-block-lowlight$': '<rootDir>/node_modules/@tiptap/extension-code-block-lowlight/dist/index.js',
   },
   testEnvironment: 'jsdom',
   testMatch: ['**/?(*.)+(spec|test).[jt]s?(x)'],
@@ -30,7 +31,7 @@ module.exports = {
     '.*\\.(vue)$': '<rootDir>/node_modules/vue-jest',
   },
   transformIgnorePatterns: [
-    '/node_modules/.pnpm/(?!(vuetify|epubjs|kolibri-design-system|kolibri-constants|axios|lowlight|@tiptap|tiptap|prosemirror-.*|unified|unist-.*|hast-.*|bail|trough|vfile.*|remark-.*|rehype-.*|mdast-.*|devlop))',
+    '/node_modules/.pnpm/(?!(vuetify|epubjs|kolibri-design-system|kolibri-constants|axios|lowlight|@tiptap|tiptap|prosemirror-.*|unified|unist-.*|hast-.*|bail|trough|vfile.*|remark-.*|rehype-.*|mdast-.*|devlop|marked))',
   ],
   snapshotSerializers: ['<rootDir>/node_modules/jest-serializer-vue'],
   setupFilesAfterEnv: ['<rootDir>/jest_config/setup.js'],

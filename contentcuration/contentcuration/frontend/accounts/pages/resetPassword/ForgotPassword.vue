@@ -14,6 +14,7 @@
         :value="error"
         error
         class="mb-4"
+        data-testid="error-banner"
       />
       <EmailField
         v-model="email"

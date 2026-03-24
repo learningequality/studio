@@ -1,28 +1,27 @@
 <template>
 
-  <MessageLayout :header="$tr('accountCreatedTitle')">
+  <StudioMessageLayout :header="$tr('accountCreatedTitle')">
     <template #back>
-      <VBtn
-        color="primary"
+      <KRouterLink
         :to="{ name: 'Main' }"
-        large
-      >
-        {{ $tr('backToLogin') }}
-      </VBtn>
+        :text="$tr('backToLogin')"
+        :primary="true"
+        appearance="raised-button"
+      />
     </template>
-  </MessageLayout>
+  </StudioMessageLayout>
 
 </template>
 
 
 <script>
 
-  import MessageLayout from '../../components/MessageLayout';
+  import StudioMessageLayout from '../../components/StudioMessageLayout';
 
   export default {
     name: 'AccountCreated',
     components: {
-      MessageLayout,
+      StudioMessageLayout,
     },
     $trs: {
       accountCreatedTitle: 'Account successfully created',

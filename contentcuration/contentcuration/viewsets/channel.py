@@ -8,6 +8,7 @@ from typing import Union
 from django.conf import settings
 from django.db import IntegrityError
 from django.db.models import Exists
+from django.db.models import FilteredRelation
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Subquery
@@ -21,6 +22,9 @@ from django.views.decorators.cache import cache_page
 from django_cte import With
 from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
+from kolibri_public.utils.export_channel_to_kolibri_public import (
+    export_channel_to_kolibri_public,
+)
 from le_utils.constants import content_kinds
 from le_utils.constants import roles
 from rest_framework import serializers
@@ -39,16 +43,23 @@ from search.models import ContentNodeFullTextSearch
 from search.utils import get_fts_search_query
 
 import contentcuration.models as models
+from contentcuration.constants import (
+    community_library_submission as community_library_submission_constants,
+)
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Change
 from contentcuration.models import Channel
+from contentcuration.models import ChannelVersion
+from contentcuration.models import CommunityLibrarySubmission
 from contentcuration.models import ContentNode
+from contentcuration.models import Country
 from contentcuration.models import File
 from contentcuration.models import generate_storage_url
 from contentcuration.models import SecretToken
 from contentcuration.models import User
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.utils.pagination import CachedListPagination
+from contentcuration.utils.pagination import ValuesViewsetCursorPagination
 from contentcuration.utils.pagination import ValuesViewsetPageNumberPagination
 from contentcuration.utils.publish import ChannelIncompleteError
 from contentcuration.utils.publish import publish_channel
@@ -84,6 +95,12 @@ class CatalogListPagination(CachedListPagination):
     page_size = None
     page_size_query_param = "page_size"
     max_page_size = 1000
+
+
+class ChannelVersionListPagination(ValuesViewsetCursorPagination):
+    ordering = "-version"
+    page_size_query_param = "max_results"
+    max_page_size = 100
 
 
 primary_token_subquery = Subquery(
@@ -437,7 +454,12 @@ class ChannelViewSet(ValuesViewset):
     ordering = "-modified"
 
     field_map = channel_field_map
-    values = base_channel_values + ("edit", "view", "unpublished_changes")
+    values = base_channel_values + (
+        "edit",
+        "view",
+        "unpublished_changes",
+        "draft_token",
+    )
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -493,6 +515,14 @@ class ChannelViewSet(ValuesViewset):
             view=Exists(user_queryset.filter(view_only_channels=OuterRef("id"))),
         )
 
+    def _annotate_draft_token(self, queryset):
+        draft_token_subquery = Subquery(
+            ChannelVersion.objects.filter(channel=OuterRef("id"), version=None).values(
+                "secret_token__token"
+            )[:1]
+        )
+        return queryset.annotate(draft_token=draft_token_subquery)
+
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(primary_token=primary_token_subquery)
         channel_main_tree_nodes = ContentNode.objects.filter(
@@ -513,6 +543,8 @@ class ChannelViewSet(ValuesViewset):
         queryset = queryset.annotate(
             unpublished_changes=Exists(_unpublished_changes_query(OuterRef("id")))
         )
+
+        queryset = self._annotate_draft_token(queryset)
 
         return queryset
 
@@ -564,7 +596,9 @@ class ChannelViewSet(ValuesViewset):
                             {
                                 "published": True,
                                 "publishing": False,
+                                "version": channel.version,
                                 "primary_token": channel.get_human_token().token,
+                                "draft_token": None,
                                 "last_published": channel.last_published,
                                 "unpublished_changes": _unpublished_changes_query(
                                     channel
@@ -606,28 +640,27 @@ class ChannelViewSet(ValuesViewset):
                 raise
 
     def publish_next_from_changes(self, changes):
+
         errors = []
         for publish in changes:
             try:
-                self.publish_next(publish["key"])
+                self.publish_next(
+                    publish["key"],
+                    use_staging_tree=publish.get("use_staging_tree", False),
+                )
             except Exception as e:
                 log_sync_exception(e, user=self.request.user, change=publish)
                 publish["errors"] = [str(e)]
                 errors.append(publish)
         return errors
 
-    def publish_next(self, pk):
+    def publish_next(self, pk, use_staging_tree=False):
         logging.debug("Entering the publish staging channel endpoint")
 
         channel = self.get_edit_queryset().get(pk=pk)
 
         if channel.deleted:
             raise ValidationError("Cannot publish a deleted channel")
-        elif channel.staging_tree.publishing:
-            raise ValidationError("Channel staging tree is already publishing")
-
-        channel.staging_tree.publishing = True
-        channel.staging_tree.save()
 
         with create_change_tracker(
             pk, CHANNEL, channel.id, self.request.user, "export-channel-staging-tree"
@@ -637,15 +670,19 @@ class ChannelViewSet(ValuesViewset):
                     self.request.user.pk,
                     channel.id,
                     progress_tracker=progress_tracker,
-                    use_staging_tree=True,
+                    is_draft_version=True,
+                    use_staging_tree=use_staging_tree,
                 )
+                draft_token = channel.get_draft_token()
                 Change.create_changes(
                     [
                         generate_update_event(
                             channel.id,
                             CHANNEL,
                             {
-                                "primary_token": channel.get_human_token().token,
+                                "draft_token": draft_token.token
+                                if draft_token
+                                else None,
                             },
                             channel_id=channel.id,
                         ),
@@ -653,12 +690,8 @@ class ChannelViewSet(ValuesViewset):
                     applied=True,
                 )
             except ChannelIncompleteError:
-                channel.staging_tree.publishing = False
-                channel.staging_tree.save()
                 raise ValidationError("Channel is not ready to be published")
             except Exception:
-                channel.staging_tree.publishing = False
-                channel.staging_tree.save()
                 raise
 
     def sync_from_changes(self, changes):
@@ -768,6 +801,65 @@ class ChannelViewSet(ValuesViewset):
             created_by_id=user.id,
         )
 
+    def add_to_community_library_from_changes(self, changes):
+        errors = []
+        for change in changes:
+            try:
+                self.add_to_community_library(
+                    channel_id=change["key"],
+                    channel_version=change["channel_version"],
+                    categories=change["categories"],
+                    country_codes=change["country_codes"],
+                )
+            except Exception as e:
+                log_sync_exception(e, user=self.request.user, change=change)
+                change["errors"] = [str(e)]
+                errors.append(change)
+        return errors
+
+    def add_to_community_library(
+        self, channel_id, channel_version, categories, country_codes
+    ):
+        # Note: The `categories` field should contain a _dict_, with the category IDs as keys
+        # and `True` as a value. This is to match the representation
+        # of sets in the changes architecture.
+
+        # The change to add a channel to the community library can only
+        # be created server-side, so in theory we should not be getting
+        # malformed requests here. However, just to be safe, we still
+        # do basic checks.
+
+        channel = self.get_edit_queryset().get(pk=channel_id)
+        countries = Country.objects.filter(code__in=country_codes)
+
+        if channel.public:
+            raise ValidationError(
+                "Public channels cannot be added to the community library"
+            )
+        if channel_version <= 0 or channel_version > channel.version:
+            raise ValidationError("Invalid channel version")
+
+        # Because of changes architecture, the categories are passed as a dict
+        # with the category IDs as keys and `True` as a value. At this point,
+        # we are no longer working with changes, so we switch to the more
+        # convenient representation as a list.
+        categories_list = [key for key, val in categories.items() if val]
+
+        export_channel_to_kolibri_public(
+            channel_id=channel_id,
+            channel_version=channel_version,
+            public=False,  # Community library
+            categories=categories_list,
+            countries=countries,
+        )
+
+        new_live_submission = CommunityLibrarySubmission.objects.get(
+            channel_id=channel_id,
+            channel_version=channel_version,
+            status=community_library_submission_constants.STATUS_APPROVED,
+        )
+        new_live_submission.mark_live()
+
     @action(
         detail=True,
         methods=["get"],
@@ -813,6 +905,62 @@ class ChannelViewSet(ValuesViewset):
         main_tree_id = channel_details.get("main_tree_id")
         langs_in_content = self._get_channel_content_languages(pk, main_tree_id)
         return JsonResponse({"languages": langs_in_content})
+
+    @action(
+        detail=True,
+        methods=["get"],
+        url_path="version_detail",
+        url_name="version-detail",
+    )
+    def get_version_detail(self, request, pk=None) -> Response:
+        """
+        Get the version detail for a channel.
+
+        :param request: The request object
+        :param pk: The ID of the channel
+        :return: Response with the version detail of the channel
+        :rtype: Response
+        """
+        channel = self.get_edit_object()
+
+        if not channel.version_info:
+            return Response({})
+
+        version_data = (
+            ChannelVersion.objects.filter(id=channel.version_info.id)
+            .values(
+                "id",
+                "version",
+                "resource_count",
+                "kind_count",
+                "size",
+                "date_published",
+                "version_notes",
+                "included_languages",
+                "included_licenses",
+                "included_categories",
+                "non_distributable_licenses_included",
+            )
+            .first()
+        )
+
+        if not version_data:
+            return Response({})
+
+        return Response(version_data)
+
+    @action(
+        detail=True,
+        methods=["get"],
+        url_path="has_community_library_submission",
+        url_name="has-community-library-submission",
+    )
+    def has_community_library_submission(self, request, pk=None) -> Response:
+        channel = self.get_object()
+        has_submission = CommunityLibrarySubmission.objects.filter(
+            channel_id=channel.id
+        ).exists()
+        return Response({"has_community_library_submission": has_submission})
 
     def _channel_exists(self, channel_id) -> bool:
         """
@@ -902,6 +1050,38 @@ class ChannelViewSet(ValuesViewset):
         return unique_lang_ids
 
 
+class ChannelVersionFilter(RequiredFilterSet):
+    class Meta:
+        model = ChannelVersion
+        fields = {
+            "channel": ["exact"],
+            "version": ["exact", "gte", "lte"],
+        }
+
+
+class ChannelVersionViewSet(ReadOnlyValuesViewset):
+    queryset = ChannelVersion.objects.all()
+    permission_classes = [IsAuthenticated]
+    pagination_class = ChannelVersionListPagination
+    filterset_class = ChannelVersionFilter
+    ordering_fields = ["version"]
+    ordering = "-version"
+
+    values = (
+        "id",
+        "channel",
+        "version",
+        "size",
+        "resource_count",
+        "kind_count",
+        "date_published",
+        "version_notes",
+        "included_languages",
+        "included_licenses",
+        "included_categories",
+    )
+
+
 @method_decorator(
     cache_page(
         settings.PUBLIC_CHANNELS_CACHE_DURATION, key_prefix="public_catalog_list"
@@ -965,6 +1145,17 @@ class CatalogViewSet(ReadOnlyValuesViewset):
 
 
 class AdminChannelFilter(BaseChannelFilter):
+
+    latest_community_library_submission_status = CharFilter(
+        method="filter_latest_community_library_submission_status"
+    )
+    community_library_live = BooleanFilter(
+        method="filter_community_library_live",
+    )
+    has_community_library_submission = BooleanFilter(
+        method="filter_has_community_library_submission",
+    )
+
     def filter_keywords(self, queryset, name, value):
         keywords = value.split(" ")
         editors_first_name = reduce(
@@ -981,6 +1172,20 @@ class AdminChannelFilter(BaseChannelFilter):
             | (editors_first_name & editors_last_name)
             | editors_email
         )
+
+    def filter_latest_community_library_submission_status(self, queryset, name, value):
+        values = self.request.query_params.getlist(name)
+        if values:
+            return queryset.filter(
+                latest_community_library_submission__status__in=values
+            )
+        return queryset
+
+    def filter_community_library_live(self, queryset, name, value):
+        return queryset.filter(has_any_live_community_library_submission=value)
+
+    def filter_has_community_library_submission(self, queryset, name, value):
+        return queryset.filter(latest_community_library_submission__isnull=(not value))
 
 
 class AdminChannelSerializer(ChannelSerializer):
@@ -1002,6 +1207,15 @@ class AdminChannelSerializer(ChannelSerializer):
         list_serializer_class = BulkListSerializer
         nested_writes = True
 
+    def validate_public(self, value):
+        if value and hasattr(self, "instance") and self.instance:
+            if self.instance.is_community_channel():
+                raise ValidationError(
+                    "This channel has been added to the Community Library and cannot be marked public.",
+                    code="public_community_conflict",
+                )
+        return value
+
 
 class AdminChannelViewSet(ChannelViewSet, RESTUpdateModelMixin, RESTDestroyModelMixin):
     pagination_class = CatalogListPagination
@@ -1013,6 +1227,8 @@ class AdminChannelViewSet(ChannelViewSet, RESTUpdateModelMixin, RESTDestroyModel
         "created": "main_tree__created",
         "source_url": format_source_url,
         "demo_server_url": format_demo_server_url,
+        "latest_community_library_submission_id": "latest_community_library_submission__id",
+        "latest_community_library_submission_status": "latest_community_library_submission__status",
     }
 
     values = (
@@ -1032,6 +1248,9 @@ class AdminChannelViewSet(ChannelViewSet, RESTUpdateModelMixin, RESTDestroyModel
         "source_url",
         "demo_server_url",
         "primary_token",
+        "latest_community_library_submission__id",
+        "latest_community_library_submission__status",
+        "has_any_live_community_library_submission",
     )
 
     def perform_destroy(self, instance):
@@ -1061,11 +1280,28 @@ class AdminChannelViewSet(ChannelViewSet, RESTUpdateModelMixin, RESTDestroyModel
         channel_main_tree_nodes = ContentNode.objects.filter(
             tree_id=OuterRef("main_tree__tree_id")
         )
+        latest_community_library_submission_id = Subquery(
+            CommunityLibrarySubmission.objects.filter(channel_id=OuterRef("id"))
+            .order_by("-date_created")
+            .values("id")[:1]
+        )
         queryset = Channel.objects.all().annotate(
             modified=Subquery(
                 channel_main_tree_nodes.values("modified").order_by("-modified")[:1]
             ),
             primary_token=primary_token_subquery,
+            latest_community_library_submission=FilteredRelation(
+                "community_library_submissions",
+                condition=Q(
+                    community_library_submissions__id=latest_community_library_submission_id,
+                ),
+            ),
+            has_any_live_community_library_submission=Exists(
+                CommunityLibrarySubmission.objects.filter(
+                    channel_id=OuterRef("id"),
+                    status=community_library_submission_constants.STATUS_LIVE,
+                )
+            ),
         )
         return queryset
 

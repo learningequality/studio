@@ -56,7 +56,11 @@ export function publishChannel(context, version_notes) {
 }
 
 export function publishDraftChannel(context) {
-  return Channel.publishDraft(context.state.currentChannelId);
+  return Channel.publishDraft(context.state.currentChannelId, { use_staging_tree: false });
+}
+
+export function publishStagingChannel(context) {
+  return Channel.publishDraft(context.state.currentChannelId, { use_staging_tree: true });
 }
 
 export function channelLanguageExistsInResources(context) {

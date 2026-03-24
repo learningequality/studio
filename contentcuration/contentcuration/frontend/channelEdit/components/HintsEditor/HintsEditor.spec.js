@@ -4,8 +4,7 @@ import { AssessmentItemToolbarActions } from '../../constants';
 
 import HintsEditor from './HintsEditor';
 
-jest.mock('shared/views/MarkdownEditor/MarkdownEditor/MarkdownEditor.vue');
-jest.mock('shared/views/MarkdownEditor/MarkdownViewer/MarkdownViewer.vue');
+jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue');
 
 const clickNewHintBtn = async wrapper => {
   await wrapper.findComponent('[data-test=newHintBtn]').find('button').trigger('click');
@@ -65,11 +64,13 @@ describe('HintsEditor', () => {
       },
     });
 
-    const hints = wrapper.findAll('[data-test="hint"]');
+    // Find all instances of your new RichTextEditor component
+    const editors = wrapper.findAllComponents({ name: 'RichTextEditor' });
+    expect(editors.length).toBe(2);
 
-    expect(hints.length).toBe(2);
-    expect(hints.at(0).html()).toContain('First hint');
-    expect(hints.at(1).html()).toContain('Second hint');
+    // Instead of checking the raw HTML, we check the `value` prop passed to each editor.
+    expect(editors.at(0).props('value')).toBe('First hint');
+    expect(editors.at(1).props('value')).toBe('Second hint');
   });
 
   describe('on hint text update', () => {
@@ -84,8 +85,8 @@ describe('HintsEditor', () => {
         },
       });
 
-      // only one editor is rendered at a time => "wrapper.find"
-      wrapper.findComponent({ name: 'MarkdownEditor' }).vm.$emit('update', 'Updated hint');
+      const editors = wrapper.findAllComponents({ name: 'RichTextEditor' });
+      editors.at(1).vm.$emit('update', 'Updated hint');
     });
 
     it('emits update event with a payload containing updated hints', () => {

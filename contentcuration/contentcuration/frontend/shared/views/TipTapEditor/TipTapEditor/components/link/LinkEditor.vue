@@ -138,8 +138,8 @@
   .link-editor-popover {
     display: flex;
     flex-direction: column;
-    width: 539px;
-    padding: 16px;
+    width: 25rem;
+    padding: 1rem;
     font-family:
       'Noto Sans',
       -apple-system,
@@ -148,16 +148,16 @@
       sans-serif;
     background: white;
     border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 0.25rem;
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.15);
   }
 
   .modal-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-top: 12px;
-    padding-bottom: 12px;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
   }
 
   .modal-header h3 {
@@ -185,7 +185,7 @@
   .form-group label {
     position: absolute;
     top: 4px;
-    left: 12px;
+    left: 0.75rem;
     font-size: 0.625rem;
     color: #757575;
   }

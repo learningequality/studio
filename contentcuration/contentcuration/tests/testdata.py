@@ -16,7 +16,11 @@ from le_utils.constants import format_presets
 from PIL import Image
 
 from contentcuration import models as cc
+from contentcuration.constants import (
+    community_library_submission as community_library_submission_constants,
+)
 from contentcuration.tests.utils import mixer
+
 
 pytestmark = pytest.mark.django_db
 
@@ -204,6 +208,27 @@ def node(data, parent=None):  # noqa: C901
             new_node.save()
 
     return new_node
+
+
+def country(name="Test Country", code="TC"):
+    return mixer.blend(cc.Country, name=name, code=code)
+
+
+def community_library_submission():
+    channel_obj = channel(name=random_string())
+    user_obj = user(email=random_string())
+    channel_obj.editors.add(user_obj)
+    channel_obj.version = 1
+    channel_obj.save()
+
+    return mixer.blend(
+        cc.CommunityLibrarySubmission,
+        channel=channel_obj,
+        author=user_obj,
+        status=community_library_submission_constants.STATUS_PENDING,
+        categories=list(),
+        channel_version=1,
+    )
 
 
 def tree(parent=None):

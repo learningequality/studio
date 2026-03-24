@@ -1,10 +1,13 @@
 from importlib import import_module
+from urllib.parse import urlencode
 
 import mock
 from celery import states
+from django.urls import reverse
 from django_celery_results.models import TaskResult
 from search.models import ContentNodeFullTextSearch
 
+from contentcuration.celery import app
 from contentcuration.models import ContentNode
 
 
@@ -53,3 +56,43 @@ def mock_class_instance(target):
             return mock.Mock(spec_set=cls)
 
     return MockClass()
+
+
+def reverse_with_query(
+    viewname, urlconf=None, args=None, kwargs=None, current_app=None, query=None
+):
+    """
+    This helper wraps the Django `reverse` function to support the `query` argument.
+    This argument is supported natively since Django 5.2, so when Django is updated
+    above this version, this helper can be removed.
+    """
+    url = reverse(
+        viewname, urlconf=urlconf, args=args, kwargs=kwargs, current_app=current_app
+    )
+    if query:
+        return f"{url}?{urlencode(query)}"
+    return url
+
+
+class EagerTasksTestMixin(object):
+    """
+    Mixin to make Celery tasks run synchronously during the tests.
+    """
+
+    celery_task_always_eager = None
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        # update celery so tasks are always eager for this test, meaning they'll execute synchronously
+        cls.celery_task_always_eager = app.conf.task_always_eager
+        app.conf.update(task_always_eager=True)
+
+    def setUp(self):
+        super().setUp()
+        clear_tasks()
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        app.conf.update(task_always_eager=cls.celery_task_always_eager)

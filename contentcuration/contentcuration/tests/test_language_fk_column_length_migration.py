@@ -48,26 +48,49 @@ class TestLanguageForeignKeyLengthMigration(TransactionTestCase):
     to the M2M junction table column.
     """
 
+    def _get_latest_migration(self):
+        """Return the latest leaf migration for contentcuration."""
+        executor = MigrationExecutor(connection)
+        leaf_nodes = [
+            key
+            for key in executor.loader.graph.leaf_nodes()
+            if key[0] == "contentcuration"
+        ]
+        return leaf_nodes[-1] if leaf_nodes else None
+
     def test_migration_fixes_varchar7_column(self):
-        # First, shrink column back to varchar(7) to simulate bad state
-        set_column_to_varchar7(TABLE_NAME, COLUMN_NAME)
-        # Verify the column is now varchar(7)
-        self.assertEqual(
-            get_column_max_length(TABLE_NAME, COLUMN_NAME),
-            7,
-            f"{TABLE_NAME}.{COLUMN_NAME} should be varchar(7) before migration",
-        )
+        latest = self._get_latest_migration()
 
-        # Run migration 0155
-        executor = MigrationExecutor(connection)
-        executor.migrate([("contentcuration", "0154_alter_assessmentitem_type")])
-        executor = MigrationExecutor(connection)
-        executor.loader.build_graph()
-        executor.migrate([("contentcuration", "0155_fix_language_foreign_key_length")])
+        try:
+            # First, roll back to just before 0155 to simulate bad state
+            executor = MigrationExecutor(connection)
+            executor.migrate([("contentcuration", "0154_alter_assessmentitem_type")])
 
-        # Verify column is now varchar(14)
-        self.assertEqual(
-            get_column_max_length(TABLE_NAME, COLUMN_NAME),
-            14,
-            f"{TABLE_NAME}.{COLUMN_NAME} should be varchar(14) after migration",
-        )
+            # Shrink column back to varchar(7) to simulate bad production state
+            set_column_to_varchar7(TABLE_NAME, COLUMN_NAME)
+            # Verify the column is now varchar(7)
+            self.assertEqual(
+                get_column_max_length(TABLE_NAME, COLUMN_NAME),
+                7,
+                f"{TABLE_NAME}.{COLUMN_NAME} should be varchar(7) before migration",
+            )
+
+            # Run migration 0155
+            executor = MigrationExecutor(connection)
+            executor.loader.build_graph()
+            executor.migrate(
+                [("contentcuration", "0155_fix_language_foreign_key_length")]
+            )
+
+            # Verify column is now varchar(14)
+            self.assertEqual(
+                get_column_max_length(TABLE_NAME, COLUMN_NAME),
+                14,
+                f"{TABLE_NAME}.{COLUMN_NAME} should be varchar(14) after migration",
+            )
+        finally:
+            # Re-apply all migrations so subsequent tests see the full schema
+            if latest:
+                executor = MigrationExecutor(connection)
+                executor.loader.build_graph()
+                executor.migrate([latest])

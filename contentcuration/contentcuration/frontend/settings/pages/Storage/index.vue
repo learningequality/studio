@@ -13,8 +13,13 @@
       }}
     </div>
 
+    <!-- Set minHeight to prevent from content shifting after loaded -->
+    <StudioLargeLoader
+      v-if="show('storageUse', !storageUseByKind, 500)"
+      :style="{ minHeight: '370px' }"
+    />
     <KFixedGrid
-      v-if="storageUseByKind !== null"
+      v-else
       numCols="8"
       gutter="10"
     >
@@ -47,12 +52,6 @@
         </KFixedGridItem>
       </template>
     </KFixedGrid>
-    <div
-      v-else
-      class="circular-loader"
-    >
-      <KCircularLoader size="70" />
-    </div>
 
     <div class="storage-request">
       <h2 ref="requestheader">
@@ -111,15 +110,24 @@
 <script>
 
   import { mapGetters } from 'vuex';
+  import useKShow from 'kolibri-design-system/lib/composables/useKShow';
   import RequestForm from './RequestForm';
   import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
   import { ContentKindsList, ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import theme from 'shared/vuetify/theme';
+  import StudioLargeLoader from 'shared/views/StudioLargeLoader';
 
   export default {
     name: 'Storage',
-    components: { RequestForm },
+    components: {
+      RequestForm,
+      StudioLargeLoader,
+    },
     mixins: [fileSizeMixin, constantsTranslationMixin],
+    setup() {
+      const { show } = useKShow();
+      return { show };
+    },
     data() {
       return {
         showRequestForm: false,

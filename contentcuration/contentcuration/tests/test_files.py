@@ -9,6 +9,7 @@ from django.core.files.storage import default_storage
 from django.db.models import Exists
 from django.db.models import OuterRef
 from le_utils.constants import content_kinds
+from le_utils.constants import file_formats
 from mock import patch
 
 from .base import BaseAPITestCase
@@ -232,3 +233,57 @@ class StagedChannelSpaceTestCase(StudioTestCase):
         ) as get_available_staged_space:
             get_available_staged_space.return_value = 0
             self.assertTrue(self.user.check_staged_space(100, f.checksum))
+
+    def test_check_channel_space_ignores_perseus_exports(self):
+        with mock.patch("contentcuration.utils.user.calculate_user_storage"):
+            self.node_file.file_format_id = file_formats.PERSEUS
+            self.node_file.file_size = self.user.disk_space + 1
+            self.node_file.checksum = uuid4().hex
+            self.node_file.uploaded_by = self.user
+            self.node_file.save(set_by_file_on_disk=False)
+
+        try:
+            self.user.check_channel_space(self.staged_channel)
+        except PermissionDenied:
+            self.fail("Perseus exports should not count against staging space")
+
+
+class UserStorageUsageTestCase(StudioTestCase):
+    def setUp(self):
+        super().setUpBase()
+        self.contentnode = (
+            self.channel.main_tree.get_descendants(include_self=True)
+            .filter(files__isnull=False)
+            .first()
+        )
+        self.assertIsNotNone(self.contentnode)
+        self.base_file = self.contentnode.files.first()
+        self.assertIsNotNone(self.base_file)
+
+    def _create_file(self, *, file_format, size):
+        file_record = File(
+            contentnode=self.contentnode,
+            checksum=uuid4().hex,
+            file_format_id=file_format,
+            file_size=size,
+            uploaded_by=self.user,
+        )
+        file_record.save(set_by_file_on_disk=False)
+        return file_record
+
+    def test_get_space_used_excludes_perseus_exports(self):
+        baseline_usage = self.user.get_space_used()
+
+        perseus_size = 125
+        with mock.patch("contentcuration.utils.user.calculate_user_storage"):
+            self._create_file(file_format=file_formats.PERSEUS, size=perseus_size)
+        self.assertEqual(self.user.get_space_used(), baseline_usage)
+
+        non_perseus_size = 275
+        with mock.patch("contentcuration.utils.user.calculate_user_storage"):
+            self._create_file(
+                file_format=self.base_file.file_format_id, size=non_perseus_size
+            )
+
+        expected_usage = baseline_usage + non_perseus_size
+        self.assertEqual(self.user.get_space_used(), expected_usage)

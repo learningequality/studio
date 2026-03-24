@@ -110,7 +110,7 @@ export function deleteFile(context, file) {
   });
 }
 
-function hexToBase64(str) {
+export function hexToBase64(str) {
   return btoa(
     String.fromCharCode.apply(
       null,

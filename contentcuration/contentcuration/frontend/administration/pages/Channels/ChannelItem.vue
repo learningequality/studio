@@ -197,6 +197,14 @@
       </VEditDialog>
       <span v-else>Deleted</span>
     </td>
+    <td data-test="community-library-status">
+      <CommunityLibraryStatusButton
+        v-if="communityLibraryStatus"
+        :status="communityLibraryStatus"
+        @click="onCommunityLibraryButtonClick"
+      />
+      <KEmptyPlaceholder v-else />
+    </td>
     <td class="text-xs-center">
       <ChannelActionsDropdown
         :channelId="channelId"
@@ -212,10 +220,12 @@
 
   import { mapGetters, mapActions } from 'vuex';
   import ClipboardChip from '../../components/ClipboardChip';
+  import CommunityLibraryStatusButton from '../../components/CommunityLibraryStatusButton.vue';
   import { RouteNames } from '../../constants';
   import ChannelActionsDropdown from './ChannelActionsDropdown';
   import { fileSizeMixin } from 'shared/mixins';
   import Checkbox from 'shared/views/form/Checkbox';
+  import { getUiSubmissionStatus } from 'shared/utils/communityLibrary';
 
   export default {
     name: 'ChannelItem',
@@ -223,6 +233,7 @@
       ChannelActionsDropdown,
       ClipboardChip,
       Checkbox,
+      CommunityLibraryStatusButton,
     },
     mixins: [fileSizeMixin],
     props: {
@@ -274,6 +285,9 @@
           },
         };
       },
+      communityLibraryStatus() {
+        return getUiSubmissionStatus(this.channel.latest_community_library_submission_status);
+      },
     },
     methods: {
       ...mapActions('channelAdmin', ['updateChannel']),
@@ -291,6 +305,15 @@
           source_url: this.channel.source_url,
         }).then(() => {
           this.$store.dispatch('showSnackbarSimple', 'Source URL saved');
+        });
+      },
+      onCommunityLibraryButtonClick() {
+        this.$router.push({
+          name: RouteNames.COMMUNITY_LIBRARY_SUBMISSION,
+          params: {
+            channelId: this.channelId,
+            submissionId: this.channel.latest_community_library_submission_id.toString(),
+          },
         });
       },
     },

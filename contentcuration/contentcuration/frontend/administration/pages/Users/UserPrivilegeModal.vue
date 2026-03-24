@@ -1,43 +1,26 @@
 <template>
 
-  <MessageDialog
-    v-model="dialog"
-    :header="header"
-    :text="text"
+  <KModal
+    v-if="dialog"
+    :title="title"
+    :submitText="confirmText"
+    cancelText="Cancel"
+    @submit="submit"
+    @cancel="close"
   >
-    <VForm
-      ref="form"
-      lazy-validation
-      @submit.prevent="confirm"
-    >
-      <p>Enter your email address to continue</p>
-      <VTextField
-        v-model="emailConfirm"
-        box
-        maxlength="100"
-        counter
-        required
-        :rules="emailRules"
-        label="Email address"
-        @input="resetValidation"
-      />
-    </VForm>
-    <template #buttons>
-      <VBtn
-        flat
-        data-test="cancel"
-        @click="close"
-      >
-        Cancel
-      </VBtn>
-      <VBtn
-        color="primary"
-        @click="confirm"
-      >
-        {{ confirmText }}
-      </VBtn>
-    </template>
-  </MessageDialog>
+    <p>{{ text }}</p>
+
+    <p>Enter your email address to continue</p>
+
+    <KTextbox
+      v-model="emailConfirm"
+      :maxlength="100"
+      label="Email address"
+      :invalid="errors.emailConfirm"
+      invalidText="Email does not match your account email"
+      :showInvalidText="true"
+    />
+  </KModal>
 
 </template>
 
@@ -45,19 +28,26 @@
 <script>
 
   import { mapState } from 'vuex';
-  import MessageDialog from 'shared/views/MessageDialog';
+  import { generateFormMixin } from 'shared/mixins';
+
+  const formMixin = generateFormMixin({
+    emailConfirm: {
+      required: true,
+      validator: (value, vm) => {
+        return value === vm.currentEmail;
+      },
+    },
+  });
 
   export default {
     name: 'UserPrivilegeModal',
-    components: {
-      MessageDialog,
-    },
+    mixins: [formMixin],
     props: {
       value: {
         type: Boolean,
         default: false,
       },
-      header: {
+      title: {
         type: String,
         required: true,
       },
@@ -74,13 +64,9 @@
         required: true,
       },
     },
-    data() {
-      return {
-        emailConfirm: '',
-      };
-    },
     computed: {
       ...mapState({
+        // eslint-disable-next-line kolibri/vue-no-unused-vuex-properties, vue/no-unused-properties
         currentEmail: state => state.session.currentUser.email,
       }),
       dialog: {
@@ -91,28 +77,26 @@
           this.$emit('input', value);
         },
       },
-      emailRules() {
-        return [
-          v => Boolean(v) || 'Field is required',
-          v => v === this.currentEmail || 'Email does not match your account email',
-        ];
+    },
+    watch: {
+      value(val) {
+        if (val) {
+          this.reset();
+        }
       },
     },
     methods: {
       close() {
-        this.emailConfirm = '';
-        this.resetValidation();
-        this.dialog = false;
+        this.$emit('input', false);
       },
-      resetValidation() {
-        this.$refs.form.resetValidation();
-      },
-      confirm() {
-        if (this.$refs.form.validate()) {
-          return this.confirmAction();
-        } else {
-          return Promise.resolve();
-        }
+
+      // This is called from formMixin
+      // eslint-disable-next-line kolibri/vue-no-unused-methods, vue/no-unused-properties
+      onSubmit() {
+        return Promise.resolve(this.confirmAction()).then(result => {
+          this.dialog = false;
+          return result;
+        });
       },
     },
   };

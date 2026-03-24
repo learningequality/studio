@@ -1,6 +1,6 @@
 <template>
 
-  <MessageLayout
+  <StudioMessageLayout
     :header="$tr('header')"
     :text="$tr('text')"
   />
@@ -10,12 +10,12 @@
 
 <script>
 
-  import MessageLayout from '../../components/MessageLayout';
+  import StudioMessageLayout from '../../components/StudioMessageLayout';
 
   export default {
     name: 'ActivationSent',
     components: {
-      MessageLayout,
+      StudioMessageLayout,
     },
     $trs: {
       header: 'Activation link sent',

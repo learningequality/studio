@@ -25,7 +25,10 @@ def send_custom_email(request):
     data = json.loads(request.body)
     try:
         sendcustomemails_task.enqueue(
-            request.user, data["subject"], data["message"], data["query"]
+            request.user,
+            subject=data["subject"],
+            message=data["message"],
+            query=data["query"],
         )
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))

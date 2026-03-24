@@ -5,19 +5,25 @@ import pytest
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
+from django.core.management import call_command
 from django.db.models import Q
 from django.db.utils import IntegrityError
 from django.utils import timezone
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
+from le_utils.constants.labels import subjects
 
 from contentcuration.constants import channel_history
+from contentcuration.constants import community_library_submission
 from contentcuration.constants import user_history
 from contentcuration.models import AssessmentItem
+from contentcuration.models import AuditedSpecialPermissionsLicense
 from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import ChannelHistory
 from contentcuration.models import ChannelSet
+from contentcuration.models import ChannelVersion
+from contentcuration.models import CommunityLibrarySubmission
 from contentcuration.models import ContentNode
 from contentcuration.models import CONTENTNODE_TREE_ID_CACHE_KEY
 from contentcuration.models import File
@@ -25,6 +31,7 @@ from contentcuration.models import FILE_DURATION_CONSTRAINT
 from contentcuration.models import FlagFeedbackEvent
 from contentcuration.models import generate_object_storage_name
 from contentcuration.models import Invitation
+from contentcuration.models import License
 from contentcuration.models import object_storage_name
 from contentcuration.models import RecommendationsEvent
 from contentcuration.models import RecommendationsInteractionEvent
@@ -32,6 +39,7 @@ from contentcuration.models import User
 from contentcuration.models import UserHistory
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioTestCase
+from contentcuration.tests.helpers import EagerTasksTestMixin
 from contentcuration.viewsets.sync.constants import DELETED
 
 
@@ -545,6 +553,269 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
         self.assertEqual(original_node_old_content_id, original_node.content_id)
         # Assert copied node's content_id changes.
         self.assertNotEqual(copied_node_old_content_id, copied_node.content_id)
+
+
+class CommunityLibrarySubmissionTestCase(
+    EagerTasksTestMixin, PermissionQuerysetTestCase
+):
+    @property
+    def base_queryset(self):
+        return CommunityLibrarySubmission.objects.all()
+
+    def test_create_submission(self):
+        # Smoke test
+        channel = testdata.channel()
+        author = testdata.user()
+        channel.editors.add(author)
+        channel.version = 1
+        channel.save()
+
+        country = testdata.country()
+
+        submission = CommunityLibrarySubmission.objects.create(
+            description="Test submission",
+            channel=channel,
+            channel_version=1,
+            author=author,
+            categories=["test_category"],
+            status=community_library_submission.STATUS_PENDING,
+        )
+        submission.countries.add(country)
+
+        submission.full_clean()
+        submission.save()
+
+    def test_save__author_not_editor(self):
+        submission = testdata.community_library_submission()
+        user = testdata.user("some@email.com")
+        submission.author = user
+        with self.assertRaises(ValidationError):
+            submission.save()
+
+    def test_save__nonpositive_channel_version(self):
+        submission = testdata.community_library_submission()
+        submission.channel_version = 0
+        with self.assertRaises(ValidationError):
+            submission.save()
+
+    def test_save__matching_channel_version(self):
+        submission = testdata.community_library_submission()
+        submission.channel.version = 5
+        submission.channel.save()
+        submission.channel_version = 5
+        submission.save()
+
+    def test_save__impossibly_high_channel_version(self):
+        submission = testdata.community_library_submission()
+        submission.channel.version = 5
+        submission.channel.save()
+        submission.channel_version = 6
+        with self.assertRaises(ValidationError):
+            submission.save()
+
+    def test_filter_view_queryset__anonymous(self):
+        _ = testdata.community_library_submission()
+
+        queryset = CommunityLibrarySubmission.filter_view_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
+        self.assertFalse(queryset.exists())
+
+    def test_filter_view_queryset__forbidden_user(self):
+        _ = testdata.community_library_submission()
+
+        queryset = CommunityLibrarySubmission.filter_view_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
+        self.assertFalse(queryset.exists())
+
+    def test_filter_view_queryset__channel_editor(self):
+        submission_a = testdata.community_library_submission()
+        submission_b = testdata.community_library_submission()
+
+        user = testdata.user()
+        submission_a.channel.editors.add(user)
+        submission_a.save()
+
+        queryset = CommunityLibrarySubmission.filter_view_queryset(
+            self.base_queryset, user=user
+        )
+        self.assertQuerysetContains(queryset, pk=submission_a.id)
+        self.assertQuerysetDoesNotContain(queryset, pk=submission_b.id)
+
+    def test_filter_view_queryset__admin(self):
+        submission_a = testdata.community_library_submission()
+
+        queryset = CommunityLibrarySubmission.filter_view_queryset(
+            self.base_queryset, user=self.admin_user
+        )
+        self.assertQuerysetContains(queryset, pk=submission_a.id)
+
+    def test_filter_edit_queryset__anonymous(self):
+        _ = testdata.community_library_submission()
+
+        queryset = CommunityLibrarySubmission.filter_edit_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
+        self.assertFalse(queryset.exists())
+
+    def test_filter_edit_queryset__forbidden_user(self):
+        _ = testdata.community_library_submission()
+
+        queryset = CommunityLibrarySubmission.filter_edit_queryset(
+            self.base_queryset, user=self.forbidden_user
+        )
+        self.assertFalse(queryset.exists())
+
+    def test_filter_edit_queryset__channel_editor(self):
+        submission = testdata.community_library_submission()
+
+        user = testdata.user()
+        submission.channel.editors.add(user)
+        submission.save()
+
+        queryset = CommunityLibrarySubmission.filter_edit_queryset(
+            self.base_queryset, user=user
+        )
+        self.assertFalse(queryset.exists())
+
+    def test_filter_edit_queryset__author(self):
+        submission_a = testdata.community_library_submission()
+        submission_b = testdata.community_library_submission()
+
+        queryset = CommunityLibrarySubmission.filter_edit_queryset(
+            self.base_queryset, user=submission_a.author
+        )
+        self.assertQuerysetContains(queryset, pk=submission_a.id)
+        self.assertQuerysetDoesNotContain(queryset, pk=submission_b.id)
+
+    def test_filter_edit_queryset__admin(self):
+        submission_a = testdata.community_library_submission()
+
+        queryset = CommunityLibrarySubmission.filter_edit_queryset(
+            self.base_queryset, user=self.admin_user
+        )
+        self.assertQuerysetContains(queryset, pk=submission_a.id)
+
+    def test_mark_live(self):
+        submission_a = testdata.community_library_submission()
+        submission_b = testdata.community_library_submission()
+
+        channel = submission_a.channel
+        channel.version = 2
+        submission_b.channel = channel
+
+        submission_a.channel_version = 1
+        submission_a.status = community_library_submission.STATUS_LIVE
+        submission_a.save()
+
+        submission_b.channel_version = 2
+        submission_b.author = submission_a.author
+        submission_b.status = community_library_submission.STATUS_APPROVED
+        submission_b.save()
+
+        submission_other_channel = testdata.community_library_submission()
+        submission_other_channel.status = community_library_submission.STATUS_LIVE
+        submission_other_channel.save()
+
+        submission_b.mark_live()
+
+        submission_a.refresh_from_db()
+        submission_b.refresh_from_db()
+        submission_other_channel.refresh_from_db()
+
+        self.assertEqual(
+            submission_a.status, community_library_submission.STATUS_APPROVED
+        )
+        self.assertEqual(submission_b.status, community_library_submission.STATUS_LIVE)
+        self.assertEqual(
+            submission_other_channel.status,
+            community_library_submission.STATUS_LIVE,
+        )
+
+    def test_cannot_create_multiple_submissions_same_channel_same_version(self):
+        from django.db import IntegrityError, transaction
+
+        channel = testdata.channel()
+        author = testdata.user()
+        channel.editors.add(author)
+        channel.version = 1
+        channel.save()
+
+        country = testdata.country()
+
+        submission1 = CommunityLibrarySubmission.objects.create(
+            description="First submission",
+            channel=channel,
+            channel_version=1,
+            author=author,
+            categories=["test_category"],
+            status=community_library_submission.STATUS_PENDING,
+        )
+        submission1.countries.add(country)
+
+        with transaction.atomic():
+            with self.assertRaises(IntegrityError):
+                submission2 = CommunityLibrarySubmission.objects.create(
+                    description="Second submission",
+                    channel=channel,
+                    channel_version=1,
+                    author=author,
+                    categories=["test_category"],
+                    status=community_library_submission.STATUS_PENDING,
+                )
+                submission2.countries.add(country)
+
+        submissions = CommunityLibrarySubmission.objects.filter(
+            channel=channel, channel_version=1
+        )
+        self.assertEqual(submissions.count(), 1)
+        self.assertEqual(submission1.channel, channel)
+        self.assertEqual(submission1.channel_version, 1)
+
+    def test_can_create_submission_for_new_version_when_previous_pending(self):
+        channel = testdata.channel()
+        author = testdata.user()
+        channel.editors.add(author)
+        channel.version = 1
+        channel.save()
+
+        country = testdata.country()
+
+        submission_v1 = CommunityLibrarySubmission.objects.create(
+            description="Pending submission for version 1",
+            channel=channel,
+            channel_version=1,
+            author=author,
+            categories=["test_category"],
+            status=community_library_submission.STATUS_PENDING,
+        )
+        submission_v1.countries.add(country)
+
+        channel.version = 2
+        channel.save()
+
+        submission_v2 = CommunityLibrarySubmission.objects.create(
+            description="New submission for version 2",
+            channel=channel,
+            channel_version=2,
+            author=author,
+            categories=["test_category"],
+            status=community_library_submission.STATUS_PENDING,
+        )
+        submission_v2.countries.add(country)
+
+        submissions_v1 = CommunityLibrarySubmission.objects.filter(
+            channel=channel, channel_version=1
+        )
+        submissions_v2 = CommunityLibrarySubmission.objects.filter(
+            channel=channel, channel_version=2
+        )
+
+        self.assertEqual(submissions_v1.count(), 1)
+        self.assertEqual(submissions_v2.count(), 1)
+        self.assertEqual(submission_v1.channel_version, 1)
+        self.assertEqual(submission_v2.channel_version, 2)
 
 
 class AssessmentItemTestCase(PermissionQuerysetTestCase):
@@ -1282,3 +1553,264 @@ class FeedbackModelTests(StudioTestCase):
         )
         self.assertEqual(len(recommendations_event.content), 1)
         self.assertEqual(recommendations_event.content[0]["score"], 4)
+
+
+class AuditedSpecialPermissionsLicenseTestCase(StudioTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = testdata.user()
+
+    def test_create_audited_special_permissions_license(self):
+        """Test creating an AuditedSpecialPermissionsLicense instance"""
+        description = "This is all rights reserved, but can be distributed for Kolibri"
+        audited_license = AuditedSpecialPermissionsLicense.objects.create(
+            description=description
+        )
+
+        self.assertIsNotNone(audited_license.id)
+        self.assertEqual(audited_license.description, description)
+        self.assertFalse(audited_license.distributable)
+
+    def test_audited_special_permissions_license_unique_description(self):
+        """Test that description field is unique"""
+        description = "Unique description"
+        AuditedSpecialPermissionsLicense.objects.create(description=description)
+
+        with self.assertRaises(IntegrityError):
+            AuditedSpecialPermissionsLicense.objects.create(description=description)
+
+    def test_audited_special_permissions_license_get_or_create(self):
+        """Test get_or_create functionality"""
+        description = "Test description for get_or_create"
+        (
+            audited_license,
+            created,
+        ) = AuditedSpecialPermissionsLicense.objects.get_or_create(
+            description=description, defaults={"distributable": False}
+        )
+
+        self.assertTrue(created)
+        self.assertEqual(audited_license.description, description)
+        self.assertFalse(audited_license.distributable)
+
+        (
+            audited_license2,
+            created2,
+        ) = AuditedSpecialPermissionsLicense.objects.get_or_create(
+            description=description, defaults={"distributable": False}
+        )
+
+        self.assertFalse(created2)
+        self.assertEqual(audited_license.id, audited_license2.id)
+
+    def test_audited_special_permissions_license_str(self):
+        """Test __str__ method"""
+        short_description = "Short description"
+        audited_license = AuditedSpecialPermissionsLicense.objects.create(
+            description=short_description
+        )
+        self.assertEqual(str(audited_license), short_description)
+
+        long_description = "A" * 150
+        audited_license2 = AuditedSpecialPermissionsLicense.objects.create(
+            description=long_description
+        )
+        self.assertEqual(len(str(audited_license2)), 100)
+        self.assertEqual(str(audited_license2), "A" * 100)
+
+
+class ChannelVersionValidationTestCase(StudioTestCase):
+    """Test validations for ChannelVersion model."""
+
+    def setUp(self):
+        super().setUp()
+        self.channel = testdata.channel()
+        self.channel.version = 10
+        self.channel.save()
+
+    def test_kind_count_valid_schema(self):
+        """Test that kind_count accepts valid schema."""
+        valid_kind_count = [{"kind_id": "video", "count": 5}]
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=1,
+            kind_count=valid_kind_count,
+        )
+        cv.full_clean()
+        cv.save()
+        self.assertEqual(cv.kind_count, valid_kind_count)
+
+        valid_kind_count_multi = [
+            {"kind_id": "video", "count": 5},
+            {"kind_id": "exercise", "count": 10},
+        ]
+        cv2 = ChannelVersion(
+            channel=self.channel,
+            version=2,
+            kind_count=valid_kind_count_multi,
+        )
+        cv2.full_clean()
+        cv2.save()
+        self.assertEqual(cv2.kind_count, valid_kind_count_multi)
+
+    def test_kind_count_invalid_schema_missing_required_fields(self):
+        """Test that kind_count rejects items missing required fields."""
+        invalid_kind_count = [{"kind_id": "video"}]
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=1,
+            kind_count=invalid_kind_count,
+        )
+        with self.assertRaises(ValidationError):
+            cv.full_clean()
+
+    def test_kind_count_invalid_schema_negative_count(self):
+        """Test that kind_count rejects negative counts."""
+        invalid_kind_count = [{"kind_id": "video", "count": -1}]
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=1,
+            kind_count=invalid_kind_count,
+        )
+        with self.assertRaises(ValidationError):
+            cv.full_clean()
+
+    def test_kind_count_invalid_schema_additional_properties(self):
+        """Test that kind_count rejects items with additional properties."""
+        invalid_kind_count = [{"kind_id": "video", "count": 5, "extra": "field"}]
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=1,
+            kind_count=invalid_kind_count,
+        )
+        with self.assertRaises(ValidationError):
+            cv.full_clean()
+
+    def test_included_languages_valid_codes(self):
+        """Test that included_languages accepts valid language codes."""
+        valid_language_code = "en"
+
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=1,
+            included_languages=[valid_language_code],
+        )
+        cv.full_clean()
+        cv.save()
+        self.assertEqual(cv.included_languages, [valid_language_code])
+
+    def test_included_languages_invalid_code(self):
+        """Test that included_languages rejects invalid language codes."""
+        invalid_language_code = "invalid_lang_code"
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=1,
+            included_languages=[invalid_language_code],
+        )
+        with self.assertRaises(ValidationError) as context:
+            cv.full_clean()
+        self.assertIn(invalid_language_code, str(context.exception))
+
+    def test_included_licenses_valid_choices(self):
+        """Test that included_licenses accepts valid license IDs."""
+        from django.core.management import call_command
+        from contentcuration.models import License
+
+        call_command("loadconstants")
+        valid_license = License.objects.first()
+        self.assertIsNotNone(
+            valid_license, "No licenses found. Ensure loadconstants has been run."
+        )
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=1,
+            included_licenses=[valid_license.id],
+        )
+        cv.full_clean()
+        cv.save()
+        self.assertEqual(cv.included_licenses, [valid_license.id])
+
+    def test_included_licenses_invalid_choice(self):
+        """Test that included_licenses rejects invalid license IDs."""
+        invalid_license_id = 99999
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=1,
+            included_licenses=[invalid_license_id],
+        )
+        with self.assertRaises(ValidationError):
+            cv.full_clean()
+
+    def test_included_categories_valid_choices(self):
+        """Test that included_categories accepts valid category names."""
+        valid_category = subjects.SUBJECTSLIST[0]
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=1,
+            included_categories=[valid_category],
+        )
+        cv.full_clean()
+        cv.save()
+        self.assertEqual(cv.included_categories, [valid_category])
+
+    def test_included_categories_invalid_choice(self):
+        """Test that included_categories rejects invalid category names."""
+        invalid_category = "InvalidCategory"
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=1,
+            included_categories=[invalid_category],
+        )
+        with self.assertRaises(ValidationError):
+            cv.full_clean()
+
+    def test_non_distributable_licenses_included_valid_choices(self):
+        """Test that non_distributable_licenses_included accepts valid license IDs."""
+
+        call_command("loadconstants")
+        valid_license = License.objects.first()
+        self.assertIsNotNone(
+            valid_license, "No licenses found. Ensure loadconstants has been run."
+        )
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=1,
+            non_distributable_licenses_included=[valid_license.id],
+        )
+        cv.full_clean()
+        cv.save()
+        self.assertEqual(cv.non_distributable_licenses_included, [valid_license.id])
+
+    def test_non_distributable_licenses_included_invalid_choice(self):
+        """Test that non_distributable_licenses_included rejects invalid license IDs."""
+        invalid_license_id = 99999
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=1,
+            non_distributable_licenses_included=[invalid_license_id],
+        )
+        with self.assertRaises(ValidationError):
+            cv.full_clean()
+
+    def test_full_clean_called_on_save(self):
+        """Test that full_clean is automatically called on save."""
+        invalid_language_code = "invalid_lang_code"
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=1,
+            included_languages=[invalid_language_code],
+        )
+        with self.assertRaises(ValidationError):
+            cv.save()
+
+    def test_version_cannot_exceed_channel_version(self):
+        """Test that version cannot be greater than channel version."""
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=11,
+        )
+        with self.assertRaises(ValidationError) as context:
+            cv.save()
+        self.assertIn(
+            "Version cannot be greater than channel version", str(context.exception)
+        )

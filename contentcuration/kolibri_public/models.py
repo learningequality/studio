@@ -1,12 +1,15 @@
 from django.db import models
-from django.db.models import F
 from kolibri_content import base_models
 from kolibri_content.fields import JSONField
-from kolibri_public.search import bitmask_fieldnames
-from kolibri_public.search import metadata_bitmasks
+from kolibri_public.search import channelmetadata_bitmask_fieldnames
+from kolibri_public.search import channelmetadata_metadata_bitmasks
+from kolibri_public.search import contentnode_bitmask_fieldnames
+from kolibri_public.search import contentnode_metadata_bitmasks
+from kolibri_public.search import has_all_labels
 from mptt.managers import TreeManager
 from mptt.querysets import TreeQuerySet
 
+from contentcuration.models import Country
 from contentcuration.models import Language
 
 
@@ -16,31 +19,7 @@ class ContentTag(base_models.ContentTag):
 
 class ContentNodeQueryset(TreeQuerySet):
     def has_all_labels(self, field_name, labels):
-        bitmasks = metadata_bitmasks[field_name]
-        bits = {}
-        for label in labels:
-            if label in bitmasks:
-                bitmask_fieldname = bitmasks[label]["bitmask_field_name"]
-                if bitmask_fieldname not in bits:
-                    bits[bitmask_fieldname] = 0
-                bits[bitmask_fieldname] += bitmasks[label]["bits"]
-
-        filters = {}
-        annotations = {}
-        for bitmask_fieldname, bits in bits.items():
-            annotation_fieldname = "{}_{}".format(bitmask_fieldname, "masked")
-            # To get the correct result, i.e. an AND that all the labels are present,
-            # we need to check that the aggregated value is euqal to the bits.
-            # If we wanted an OR (which would check for any being present),
-            # we would have to use GREATER THAN 0 here.
-            filters[annotation_fieldname] = bits
-            # This ensures that the annotated value is the result of the AND operation
-            # so if all the values are present, the result will be the same as the bits
-            # but if any are missing, it will not be equal to the bits, but will only be
-            # 0 if none of the bits are present.
-            annotations[annotation_fieldname] = F(bitmask_fieldname).bitand(bits)
-
-        return self.annotate(**annotations).filter(**filters)
+        return has_all_labels(self, contentnode_metadata_bitmasks, field_name, labels)
 
 
 class ContentNodeManager(
@@ -78,7 +57,7 @@ class ContentNode(base_models.ContentNode):
     objects = ContentNodeManager()
 
 
-for field_name in bitmask_fieldnames:
+for field_name in contentnode_bitmask_fieldnames:
     field = models.BigIntegerField(default=0, null=True, blank=True)
     field.contribute_to_class(ContentNode, field_name)
 
@@ -95,7 +74,20 @@ class AssessmentMetaData(base_models.AssessmentMetaData):
     pass
 
 
+class ChannelMetadataQueryset(models.QuerySet):
+    def has_all_labels(self, field_name, labels):
+        return has_all_labels(
+            self, channelmetadata_metadata_bitmasks, field_name, labels
+        )
+
+
+class ChannelMetadataManager(models.Manager.from_queryset(ChannelMetadataQueryset)):
+    pass
+
+
 class ChannelMetadata(base_models.ChannelMetadata):
+    # Note: The `categories` field should contain a _list_, NOT a _dict_.
+
     # precalculated fields during annotation/migration
     published_size = models.BigIntegerField(default=0, null=True, blank=True)
     total_resource_count = models.IntegerField(default=0, null=True, blank=True)
@@ -104,6 +96,15 @@ class ChannelMetadata(base_models.ChannelMetadata):
     )
     order = models.PositiveIntegerField(default=0, null=True, blank=True)
     public = models.BooleanField()
+    categories = models.JSONField(null=True, blank=True)
+    countries = models.ManyToManyField(Country, related_name="public_channels")
+
+    objects = ChannelMetadataManager()
+
+
+for field_name in channelmetadata_bitmask_fieldnames:
+    field = models.BigIntegerField(default=0, null=True, blank=True)
+    field.contribute_to_class(ChannelMetadata, field_name)
 
 
 class MPTTTreeIDManager(models.Model):

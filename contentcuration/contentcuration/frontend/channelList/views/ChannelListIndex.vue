@@ -63,9 +63,8 @@
       </template>
     </AppBar>
     <VContent>
-      <OfflineText
+      <StudioOfflineAlert
         v-if="!isCatalogPage"
-        toolbar
         :offset="toolbarHeight"
       />
       <VContainer
@@ -75,36 +74,9 @@
       >
         <VContainer
           fluid
+          class="h-100"
           :class="isCatalogPage ? 'pa-0' : 'pa-4'"
         >
-          <VLayout
-            row
-            wrap
-            justify-center
-          >
-            <VFlex
-              xs12
-              sm10
-              md8
-              lg6
-            >
-              <VCard
-                v-if="invitationList.length"
-                v-show="isChannelList"
-              >
-                <VList subheader>
-                  <VSubheader>
-                    {{ $tr('invitations', { count: invitationList.length }) }}
-                  </VSubheader>
-                  <ChannelInvitation
-                    v-for="invitation in invitationList"
-                    :key="invitation.id"
-                    :invitationID="invitation.id"
-                  />
-                </VList>
-              </VCard>
-            </VFlex>
-          </VLayout>
           <ChannelListAppError
             v-if="fullPageError"
             :error="fullPageError"
@@ -123,19 +95,13 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
-  import {
-    RouteNames,
-    ChannelInvitationMapping,
-    ListTypeToRouteMapping,
-    RouteToListTypeMapping,
-  } from '../constants';
+  import { RouteNames, ChannelInvitationMapping, ListTypeToRouteMapping } from '../constants';
   import ChannelListAppError from './ChannelListAppError';
-  import ChannelInvitation from './Channel/ChannelInvitation';
   import { ChannelListTypes } from 'shared/constants';
   import { constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
   import AppBar from 'shared/views/AppBar';
-  import OfflineText from 'shared/views/OfflineText';
+  import StudioOfflineAlert from 'shared/views/StudioOfflineAlert.vue';
   import PolicyModals from 'shared/views/policies/PolicyModals';
 
   const CATALOG_PAGES = [
@@ -157,11 +123,10 @@
     name: 'ChannelListIndex',
     components: {
       AppBar,
-      ChannelInvitation,
       ChannelListAppError,
       GlobalSnackbar,
       PolicyModals,
-      OfflineText,
+      StudioOfflineAlert,
     },
     mixins: [constantsTranslationMixin, routerMixin],
     computed: {
@@ -182,9 +147,6 @@
       isCatalogPage() {
         return this.$route.name === RouteNames.CATALOG_ITEMS;
       },
-      currentListType() {
-        return RouteToListTypeMapping[this.$route.name];
-      },
       toolbarHeight() {
         return this.loggedIn && !this.isFAQPage ? 112 : 64;
       },
@@ -193,14 +155,6 @@
       },
       lists() {
         return Object.values(ChannelListTypes).filter(l => l !== 'public');
-      },
-      invitationList() {
-        const invitations = this.invitations;
-        return (
-          invitations.filter(
-            i => ChannelInvitationMapping[i.share_mode] === this.currentListType,
-          ) || []
-        );
       },
       invitationsByListCounts() {
         const inviteMap = {};
@@ -217,9 +171,6 @@
       catalogLink() {
         return { name: RouteNames.CATALOG_ITEMS };
       },
-      isChannelList() {
-        return this.lists.includes(this.currentListType);
-      },
       homeLink() {
         return this.libraryMode ? window.Urls.base() : window.Urls.channels();
       },
@@ -232,8 +183,10 @@
     },
     watch: {
       $route(route) {
-        if (this.loggedIn && route.name === RouteNames.CHANNELS_EDITABLE) {
-          this.loadInvitationList();
+        if (route.name === RouteNames.CHANNELS_EDITABLE) {
+          this.loggedIn
+            ? this.loadInvitationList()
+            : this.$router.replace({ name: RouteNames.CATALOG_ITEMS });
         }
         if (this.fullPageError) {
           this.$store.dispatch('errors/clearError');
@@ -248,9 +201,7 @@
       if (this.loggedIn) {
         this.loadInvitationList();
       } else if (!CATALOG_PAGES.includes(this.$route.name)) {
-        this.$router.push({
-          name: RouteNames.CATALOG_ITEMS,
-        });
+        this.$router.replace({ name: RouteNames.CATALOG_ITEMS });
       }
     },
     mounted() {
@@ -292,7 +243,6 @@
     $trs: {
       channelSets: 'Collections',
       catalog: 'Content Library',
-      invitations: 'You have {count, plural,\n =1 {# invitation}\n other {# invitations}}',
       libraryTitle: 'Kolibri Content Library Catalog',
       frequentlyAskedQuestions: 'Frequently asked questions',
     },
@@ -335,6 +285,10 @@
 
   .main-container {
     overflow: auto;
+  }
+
+  .h-100 {
+    height: 100%;
   }
 
 </style>

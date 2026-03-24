@@ -42,9 +42,13 @@ describe('channelInvitation', () => {
   });
 
   it('clicking on the decline button should decline the invitation', async () => {
+    await wrapper.find('[data-test="decline"]').trigger('click');
     const declineInvitation = jest.spyOn(wrapper.vm, 'declineInvitation');
     declineInvitation.mockImplementation(() => Promise.resolve());
-    await wrapper.find('[data-test="decline-close"]').trigger('click');
+    await wrapper
+      .findComponent('[data-testid="channel-invitation-modal"]')
+      .find('form')
+      .trigger('submit');
     expect(declineInvitation).toHaveBeenCalledWith(invitationID);
   });
 });

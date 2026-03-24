@@ -1,189 +1,311 @@
-import { mount } from '@vue/test-utils';
-import { factory } from '../../../store';
-import router from '../../../router';
+import { render, screen, within, waitFor } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
+import VueRouter from 'vue-router';
+import { Store } from 'vuex';
+import CatalogList from '../CatalogList.vue';
 import { RouteNames } from '../../../constants';
-import CatalogList from '../CatalogList';
 
-const store = factory();
+const originalLocation = window.location;
 
-router.push({ name: RouteNames.CATALOG_ITEMS });
+const CHANNELS = [
+  {
+    id: 'channel-1',
+    name: 'Channel title 1',
+    description: 'Test channel 1',
+    language: 'en',
+    modified: new Date('2024-01-15'),
+    last_published: new Date('2024-01-10'),
+    published: true,
+    primary_token: 'abc12-3def4',
+    source_url: 'https://source.example.com',
+    demo_server_url: 'https://demo.example.com',
+  },
+  {
+    id: 'channel-2',
+    name: 'Channel title 2',
+    description: 'Test channel 2',
+    language: 'en',
+    modified: new Date('2024-01-20'),
+    last_published: new Date('2024-01-18'),
+    published: false,
+  },
+];
 
-const results = ['channel-1', 'channel-2'];
+const CHANNEL_IDS = CHANNELS.map(c => c.id);
 
-function makeWrapper(computed = {}) {
-  const loadCatalog = jest.spyOn(CatalogList.methods, 'loadCatalog');
-  loadCatalog.mockImplementation(() => Promise.resolve());
+const router = new VueRouter({
+  routes: [
+    { name: RouteNames.CHANNEL_DETAILS, path: '/:channelId/details' },
+    { name: RouteNames.CATALOG_ITEMS, path: '/catalog' },
+    { name: RouteNames.CATALOG_DETAILS, path: '/catalog/:channelId' },
+  ],
+});
 
-  const downloadCSV = jest.spyOn(CatalogList.methods, 'downloadCSV');
+const mockSearchCatalog = jest.fn(() => Promise.resolve());
 
-  const wrapper = mount(CatalogList, {
-    router,
-    store,
-    computed: {
-      page() {
-        return {
-          count: results.length,
-          results,
-        };
+function createStore({ loggedIn = true } = {}) {
+  return new Store({
+    state: {
+      connection: { online: true },
+      session: {
+        currentUser: { id: 'user-id' },
       },
-      ...computed,
     },
-    stubs: {
-      CatalogFilters: true,
+    getters: {
+      loggedIn: () => loggedIn,
+    },
+    modules: {
+      channel: {
+        namespaced: true,
+        state: {
+          channelsMap: Object.fromEntries(CHANNELS.map(c => [c.id, c])),
+        },
+        getters: {
+          getChannels: state => ids => ids.map(id => state.channelsMap[id]).filter(Boolean),
+          getChannel: state => id => state.channelsMap[id],
+        },
+      },
+      channelList: {
+        namespaced: true,
+        state: {
+          page: {
+            count: CHANNEL_IDS.length,
+            results: CHANNEL_IDS,
+          },
+        },
+        actions: {
+          searchCatalog: mockSearchCatalog,
+        },
+      },
     },
   });
-  return [wrapper, { loadCatalog, downloadCSV }];
 }
 
-describe('catalogFilterBar', () => {
-  let wrapper, mocks;
+const store = createStore();
 
-  beforeEach(async () => {
-    [wrapper, mocks] = makeWrapper();
-    await wrapper.setData({ loading: false });
+function renderComponent({ storeOverrides } = {}) {
+  return render(CatalogList, {
+    store: storeOverrides || store,
+    routes: router,
+    stubs: { CatalogFilters: true },
+  });
+}
+
+describe('CatalogList', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    router.push({ name: RouteNames.CATALOG_ITEMS }).catch(() => {});
   });
 
-  it('should call loadCatalog on mount', () => {
-    [wrapper, mocks] = makeWrapper();
-    expect(mocks.loadCatalog).toHaveBeenCalled();
+  afterEach(() => {
+    window.location = originalLocation;
   });
 
-  describe('on query change', () => {
-    const searchCatalogMock = jest.fn();
-
-    beforeEach(() => {
-      router.replace({ query: {} }).catch(() => {});
-      searchCatalogMock.mockReset();
-      [wrapper, mocks] = makeWrapper({
-        debouncedSearch() {
-          return searchCatalogMock;
-        },
-      });
-    });
-
-    it('should call debouncedSearch', async () => {
-      const keywords = 'search catalog test';
-      router.push({ query: { keywords } }).catch(() => {});
-      await wrapper.vm.$nextTick();
-      expect(searchCatalogMock).toHaveBeenCalled();
-    });
-
-    it('should reset excluded if a filter changed', async () => {
-      const keywords = 'search reset test';
-      await wrapper.setData({ excluded: ['item 1'] });
-      router.push({ query: { keywords } }).catch(() => {});
-      await wrapper.vm.$nextTick();
-      expect(wrapper.vm.excluded).toEqual([]);
-    });
-
-    it('should keep excluded if page number changed', async () => {
-      await wrapper.setData({ excluded: ['item 1'] });
-      router
-        .push({
-          query: {
-            ...wrapper.vm.$route.query,
-            page: 2,
-          },
-        })
-        .catch(() => {});
-      await wrapper.vm.$nextTick();
-      expect(wrapper.vm.excluded).toEqual(['item 1']);
+  it('calls the searchCatalog action on mount', async () => {
+    renderComponent();
+    await waitFor(() => {
+      expect(mockSearchCatalog).toHaveBeenCalled();
     });
   });
 
-  describe('download workflow', () => {
-    describe('toggling selection mode', () => {
-      it('checkboxes and toolbar should be hidden if selecting is false', () => {
-        expect(wrapper.findComponent('[data-test="checkbox"]').exists()).toBe(false);
-        expect(wrapper.findComponent('[data-test="toolbar"]').exists()).toBe(false);
-      });
+  it('shows results found', async () => {
+    renderComponent();
+    await waitFor(() => {
+      expect(screen.getByText(/results found/i)).toBeInTheDocument();
+    });
+  });
 
-      it('should activate when select button is clicked', async () => {
-        await wrapper.findComponent('[data-test="select"]').trigger('click');
-        expect(wrapper.vm.selecting).toBe(true);
-      });
+  it('shows the selection link', async () => {
+    renderComponent();
 
-      it('clicking cancel should exit selection mode', async () => {
-        await wrapper.setData({ selecting: true });
-        await wrapper.findComponent('[data-test="cancel"]').trigger('click');
-        expect(wrapper.vm.selecting).toBe(false);
-      });
+    await waitFor(() => {
+      expect(screen.getByText('Download a summary of selected channels')).toBeInTheDocument();
+    });
+  });
 
-      it('excluded should reset when selection mode is exited', async () => {
-        await wrapper.setData({ selecting: true, excluded: ['item-1', 'item-2'] });
-        wrapper.vm.setSelection(false);
-        expect(wrapper.vm.excluded).toHaveLength(0);
+  it('shows the visually hidden title and all channel cards in correct semantic structure', async () => {
+    renderComponent();
+
+    const title = await screen.findByRole('heading', { name: /content library/i });
+    expect(title).toBeInTheDocument();
+    expect(title.tagName).toBe('H1');
+    expect(title).toHaveClass('visuallyhidden');
+
+    const cards = await screen.findAllByTestId('channel-card');
+    expect(cards).toHaveLength(CHANNELS.length);
+    expect(cards[0]).toHaveTextContent('Channel title 1');
+    expect(cards[0].querySelector('h2')).toBeInTheDocument();
+    expect(cards[1]).toHaveTextContent('Channel title 2');
+    expect(cards[1].querySelector('h2')).toBeInTheDocument();
+  });
+
+  it('navigates to channel via window.location when logged in and card is clicked', async () => {
+    delete window.location;
+    window.location = { ...originalLocation, assign: jest.fn() };
+
+    renderComponent({ storeOverrides: createStore({ loggedIn: true }) });
+    const cards = await screen.findAllByTestId('channel-card');
+    await userEvent.click(cards[0]);
+
+    expect(window.location.assign).toHaveBeenCalledWith('channel');
+  });
+
+  it('navigates to catalog details via router when not logged in and card is clicked', async () => {
+    renderComponent({ storeOverrides: createStore({ loggedIn: false }) });
+    const cards = await screen.findAllByTestId('channel-card');
+    await userEvent.click(cards[0]);
+
+    await waitFor(() => {
+      expect(router.currentRoute.name).toBe(RouteNames.CATALOG_DETAILS);
+      expect(router.currentRoute.params.channelId).toBe('channel-1');
+    });
+  });
+
+  describe('cards footer actions', () => {
+    it('shows copy token button only for published channels', async () => {
+      renderComponent();
+      const cards = await screen.findAllByTestId('channel-card');
+      expect(within(cards[0]).getByTestId('copy-button')).toBeInTheDocument();
+      expect(within(cards[1]).queryByTestId('copy-button')).not.toBeInTheDocument();
+    });
+
+    it('opens copy token modal when copy button is clicked', async () => {
+      renderComponent();
+      const cards = await screen.findAllByTestId('channel-card');
+      const copyButton = within(cards[0]).getByTestId('copy-button');
+      await userEvent.click(copyButton);
+      await waitFor(() => {
+        expect(
+          screen.getByText('Paste this token into Kolibri to import this channel'),
+        ).toBeInTheDocument();
       });
     });
 
-    describe('selecting channels', () => {
-      const excluded = ['item-1'];
+    it('shows bookmark button when logged in', async () => {
+      renderComponent({ storeOverrides: createStore({ loggedIn: true }) });
+      const cards = await screen.findAllByTestId('channel-card');
+      expect(
+        within(cards[0]).getByRole('button', { name: /starred channels/i }),
+      ).toBeInTheDocument();
+      expect(
+        within(cards[1]).getByRole('button', { name: /starred channels/i }),
+      ).toBeInTheDocument();
+    });
 
-      beforeEach(async () => {
-        await wrapper.setData({
-          selecting: true,
-          excluded,
-        });
-      });
+    it('does not show bookmark button when logged out', async () => {
+      renderComponent({ storeOverrides: createStore({ loggedIn: false }) });
+      const cards = await screen.findAllByTestId('channel-card');
+      expect(
+        within(cards[0]).queryByRole('button', { name: /starred channels/i }),
+      ).not.toBeInTheDocument();
+      expect(
+        within(cards[1]).queryByRole('button', { name: /starred channels/i }),
+      ).not.toBeInTheDocument();
+    });
 
-      it('selecting all should select all items on the page', async () => {
-        await wrapper.setData({ excluded: excluded.concat(results) });
-        wrapper.vm.selectAll = true;
-        expect(wrapper.vm.excluded).toEqual(excluded);
-        expect(wrapper.vm.selected).toEqual(results);
-      });
+    it('does not show dropdown button when channel has no source or demo urls', async () => {
+      renderComponent();
+      const cards = await screen.findAllByTestId('channel-card');
+      expect(within(cards[0]).getByRole('button', { name: 'More options' })).toBeInTheDocument();
+      expect(
+        within(cards[1]).queryByRole('button', { name: 'More options' }),
+      ).not.toBeInTheDocument();
+    });
 
-      it('deselecting all should select all items on the page', () => {
-        wrapper.vm.selectAll = false;
-        expect(wrapper.vm.excluded).toEqual(excluded.concat(results));
-        expect(wrapper.vm.selected).toEqual([]);
-      });
+    it('shows dropdown with source or demo options when available', async () => {
+      renderComponent();
+      const cards = await screen.findAllByTestId('channel-card');
+      const dropdownButton = within(cards[0]).getByRole('button', { name: 'More options' });
+      await userEvent.click(dropdownButton);
+      const menu = screen.getByRole('menu');
+      expect(within(menu).getByText('Go to source website')).toBeInTheDocument();
+      expect(within(menu).getByText('View channel on Kolibri')).toBeInTheDocument();
+    });
 
-      it('selecting a channel should remove it from excluded', async () => {
-        await wrapper.setData({ excluded: excluded.concat(results) });
-        wrapper.vm.selected = [results[0]];
-        expect(wrapper.vm.excluded).toEqual(excluded.concat([results[1]]));
-        expect(wrapper.vm.selected).toEqual([results[0]]);
-      });
+    it('opens source URL in new tab when source website option is clicked', async () => {
+      window.open = jest.fn();
+      renderComponent();
+      const cards = await screen.findAllByTestId('channel-card');
+      const dropdownButton = within(cards[0]).getByRole('button', { name: 'More options' });
+      await userEvent.click(dropdownButton);
+      const menu = screen.getByRole('menu');
+      await userEvent.click(within(menu).getByText('Go to source website'));
+      expect(window.open).toHaveBeenCalledWith('https://source.example.com', '_blank');
+    });
 
-      it('deselecting a channel should add it to excluded', () => {
-        wrapper.vm.selected = [results[0]];
-        expect(wrapper.vm.excluded).toEqual(excluded.concat([results[1]]));
-        expect(wrapper.vm.selected).toEqual([results[0]]);
+    it('opens demo URL in new tab when view on Kolibri is clicked', async () => {
+      window.open = jest.fn();
+      renderComponent();
+      const cards = await screen.findAllByTestId('channel-card');
+      const dropdownButton = within(cards[0]).getByRole('button', { name: 'More options' });
+      await userEvent.click(dropdownButton);
+      const menu = screen.getByRole('menu');
+      await userEvent.click(within(menu).getByText('View channel on Kolibri'));
+      expect(window.open).toHaveBeenCalledWith('https://demo.example.com', '_blank');
+    });
+  });
+
+  describe('selection', () => {
+    it('hides checkboxes and selection text initially', async () => {
+      renderComponent();
+      await waitFor(() => screen.getByText('Download a summary of selected channels'));
+
+      expect(screen.queryByRole('checkbox', { name: /select all/i })).not.toBeInTheDocument();
+      expect(screen.queryByText(/channels selected/i)).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /cancel/i })).not.toBeInTheDocument();
+    });
+
+    it('shows checkboxes, selection text, and cancel button when selecting', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      const selectButton = await waitFor(() =>
+        screen.getByText('Download a summary of selected channels'),
+      );
+      await user.click(selectButton);
+
+      await waitFor(() => {
+        expect(screen.queryByRole('checkbox', { name: /select all/i })).toBeInTheDocument();
+        expect(screen.queryByText(/channels selected/i)).toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: /cancel/i })).toBeInTheDocument();
       });
     });
 
-    describe('download csv', () => {
-      let downloadChannelsCSV;
-      const excluded = ['item-1', 'item-2'];
+    it('exits selection when cancel button is clicked', async () => {
+      const user = userEvent.setup();
+      renderComponent();
 
-      beforeEach(async () => {
-        await wrapper.setData({ selecting: true, excluded });
-        downloadChannelsCSV = jest.spyOn(wrapper.vm, 'downloadChannelsCSV');
-        downloadChannelsCSV.mockImplementation(() => Promise.resolve());
+      const selectButton = await waitFor(() =>
+        screen.getByText('Download a summary of selected channels'),
+      );
+      await user.click(selectButton);
+      const cancelButton = await waitFor(() => screen.getByRole('button', { name: /cancel/i }));
+
+      await user.click(cancelButton);
+
+      await waitFor(() => {
+        expect(screen.queryByRole('checkbox', { name: /select all/i })).not.toBeInTheDocument();
+        expect(screen.queryByText(/channels selected/i)).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: /cancel/i })).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('search', () => {
+    it('calls the searchCatalog action when query parameters change', async () => {
+      renderComponent();
+
+      await waitFor(() => screen.getByText(/results found/i));
+
+      const initialCalls = mockSearchCatalog.mock.calls.length;
+
+      await router.push({
+        name: RouteNames.CATALOG_ITEMS,
+        query: { keywords: 'search test' },
       });
 
-      it('clicking download CSV should call downloadCSV', async () => {
-        mocks.downloadCSV.mockImplementationOnce(() => Promise.resolve());
-        await wrapper.findComponent('[data-test="download-csv"]').trigger('click');
-        expect(mocks.downloadCSV).toHaveBeenCalled();
-      });
-
-      it('downloadCSV should call downloadChannelsCSV with current parameters', async () => {
-        const keywords = 'Download csv keywords test';
-        router.replace({ query: { keywords } });
-        await wrapper.vm.downloadCSV();
-        expect(downloadChannelsCSV.mock.calls[0][0].keywords).toBe(keywords);
-      });
-
-      it('downloadCSV should call downloadChannelsCSV with list of excluded items', async () => {
-        await wrapper.vm.downloadCSV();
-        expect(downloadChannelsCSV.mock.calls[0][0].excluded).toEqual(excluded);
-      });
-
-      it('downloadCSV should exit selection mode', async () => {
-        await wrapper.vm.downloadCSV();
-        expect(wrapper.vm.selecting).toBe(false);
+      await waitFor(() => {
+        expect(mockSearchCatalog.mock.calls.length).toBeGreaterThan(initialCalls);
       });
     });
   });

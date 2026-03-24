@@ -39,7 +39,6 @@
 <style scoped>
 
   .editor-content {
-    min-height: 200px;
     padding: 16px;
     padding-inline: 24px;
     margin-inline: 0 auto;
@@ -55,7 +54,6 @@
 <style>
 
   .ProseMirror {
-    min-height: 200px;
     padding: 0;
     padding-inline: 0;
     margin-inline: 0;

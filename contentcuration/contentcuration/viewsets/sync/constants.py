@@ -9,6 +9,7 @@ SYNCED = 7
 DEPLOYED = 8
 UPDATED_DESCENDANTS = 9
 PUBLISHED_NEXT = 10
+ADDED_TO_COMMUNITY_LIBRARY = 11
 
 
 ALL_CHANGES = set(
@@ -23,6 +24,13 @@ ALL_CHANGES = set(
         DEPLOYED,
         UPDATED_DESCENDANTS,
         PUBLISHED_NEXT,
+        ADDED_TO_COMMUNITY_LIBRARY,
+    ]
+)
+
+SERVER_ONLY_CHANGES = set(
+    [
+        ADDED_TO_COMMUNITY_LIBRARY,
     ]
 )
 
@@ -40,6 +48,7 @@ EDITOR_M2M = "editor_m2m"
 VIEWER_M2M = "viewer_m2m"
 SAVEDSEARCH = "savedsearch"
 CLIPBOARD = "clipboard"
+SESSION = "session"
 
 
 ALL_TABLES = set(
@@ -54,6 +63,10 @@ ALL_TABLES = set(
         FILE,
         INVITATION,
         USER,
+        # SESSION is not a real backend model/viewset, but the frontend
+        # does have a SESSION table, so adding this here enables us to
+        # sync changes to this SESSION table
+        SESSION,
         SAVEDSEARCH,
         EDITOR_M2M,
         VIEWER_M2M,

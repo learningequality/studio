@@ -211,7 +211,7 @@
     gap: 8px;
     align-items: center;
     justify-content: space-between;
-    min-width: 80px;
+    min-width: 100px;
     padding: 6px 8px;
     font-size: 14px;
     color: #495057;
@@ -253,6 +253,13 @@
     border: 1px solid #e1e5e9;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  @media screen and (max-width: 600px) {
+    .format-dropdown {
+      width: 80px;
+      min-width: 0;
+    }
   }
 
   .dropdown-item {

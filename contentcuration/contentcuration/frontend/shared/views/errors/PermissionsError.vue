@@ -1,6 +1,6 @@
 <template>
 
-  <AppError>
+  <StudioAppError>
     <template #header>
       {{ $tr('permissionDeniedHeader') }}
     </template>
@@ -8,24 +8,26 @@
       {{ details }}
     </template>
     <template #actions>
-      <ActionLink
+      <KRouterLink
         v-bind="backHomeLink"
-        :text="$tr('goToHomePageAction')"
+        :text="$tr('backToHome')"
+        appearance="raised-button"
+        primary
       />
     </template>
-  </AppError>
+  </StudioAppError>
 
 </template>
 
 
 <script>
 
-  import AppError from './AppError';
+  import StudioAppError from './StudioAppError';
 
   export default {
     name: 'PermissionsError',
     components: {
-      AppError,
+      StudioAppError,
     },
     props: {
       backHomeLink: {
@@ -40,7 +42,7 @@
     },
     $trs: {
       permissionDeniedHeader: 'Did you forget to sign in?',
-      goToHomePageAction: 'Go to home page',
+      backToHome: 'Back to home',
     },
   };
 

@@ -35,6 +35,7 @@ from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
+from le_utils.constants import licenses
 from le_utils.constants import modalities
 from le_utils.constants import roles
 from search.models import ChannelFullTextSearch
@@ -145,20 +146,24 @@ def create_content_database(
     user_id,
     force_exercises,
     progress_tracker=None,
+    is_draft_version=False,
     use_staging_tree=False,
 ):
     """
     :type progress_tracker: contentcuration.utils.celery.ProgressTracker|None
     """
+    if not is_draft_version and use_staging_tree:
+        raise ValueError("Staging tree is only supported for draft versions")
+
     if not channel.language:
         raise ChannelIncompleteError("Channel must have a language set to be published")
 
-    if not use_staging_tree and not force:
+    if not is_draft_version and not force:
         raise_if_nodes_are_all_unchanged(channel)
     fh, tempdb = tempfile.mkstemp(suffix=".sqlite3")
 
     with using_content_database(tempdb):
-        if not use_staging_tree and not channel.main_tree.publishing:
+        if not is_draft_version and not channel.main_tree.publishing:
             channel.mark_publishing(user_id)
 
         call_command(
@@ -184,11 +189,11 @@ def create_content_database(
             progress_tracker.track(90)
         map_prerequisites(base_tree)
         # Need to save as version being published, not current version
-        version = "next" if use_staging_tree else channel.version + 1
+        version = "next" if is_draft_version else channel.version + 1
         save_export_database(
             channel.pk,
             version,
-            use_staging_tree,
+            is_draft_version,
         )
         if channel.public:
             mapper = ChannelMapper(kolibri_channel)
@@ -208,8 +213,22 @@ def create_kolibri_license_object(ccnode):
 
 
 def increment_channel_version(channel):
+
     channel.version += 1
     channel.save()
+
+
+def create_draft_channel_version(channel):
+
+    channel_version, created = ccmodels.ChannelVersion.objects.get_or_create(
+        channel=channel,
+        version=None,
+    )
+
+    if created:
+        channel_version.new_token()
+
+    return channel_version
 
 
 def assign_license_to_contentcuration_nodes(channel, license):
@@ -870,17 +889,19 @@ def mark_all_nodes_as_published(tree):
     logging.info("Marked all nodes as published.")
 
 
-def save_export_database(channel_id, version, use_staging_tree=False):
+def get_content_db_path(channel_id, version=None):
+    if version is not None:
+        return os.path.join(settings.DB_ROOT, f"{channel_id}-{version}.sqlite3")
+    return os.path.join(settings.DB_ROOT, f"{channel_id}.sqlite3")
+
+
+def save_export_database(channel_id, version, is_draft_version=False):
     logging.debug("Saving export database")
     current_export_db_location = get_active_content_database()
-    target_paths = [
-        os.path.join(settings.DB_ROOT, "{}-{}.sqlite3".format(channel_id, version))
-    ]
-    # Only create non-version path if not using the staging tree
-    if not use_staging_tree:
-        target_paths.append(
-            os.path.join(settings.DB_ROOT, "{id}.sqlite3".format(id=channel_id))
-        )
+    target_paths = [get_content_db_path(channel_id, version)]
+    # Only create non-version path if not is_draft_version
+    if not is_draft_version:
+        target_paths.append(get_content_db_path(channel_id))
 
     for target_export_db_location in target_paths:
         with open(current_export_db_location, "rb") as currentf:
@@ -920,12 +941,33 @@ def fill_published_fields(channel, version_notes):
     node_languages = published_nodes.exclude(language=None).values_list(
         "language", flat=True
     )
-    file_languages = published_nodes.values_list("files__language", flat=True)
+    file_languages = published_nodes.exclude(files__language=None).values_list(
+        "files__language", flat=True
+    )
     language_list = list(set(chain(node_languages, file_languages)))
 
     for lang in language_list:
         if lang:
             channel.included_languages.add(lang)
+
+    included_licenses = published_nodes.exclude(license=None).values_list(
+        "license", flat=True
+    )
+    license_list = sorted(set(included_licenses))
+
+    included_categories_dicts = published_nodes.exclude(categories=None).values_list(
+        "categories", flat=True
+    )
+    category_list = sorted(
+        set(
+            chain.from_iterable(
+                (
+                    node_categories_dict.keys()
+                    for node_categories_dict in included_categories_dicts
+                )
+            )
+        )
+    )
 
     # TODO: Eventually, consolidate above operations to just use this field for storing historical data
     channel.published_data.update(
@@ -939,9 +981,83 @@ def fill_published_fields(channel, version_notes):
                 ),
                 "version_notes": version_notes,
                 "included_languages": language_list,
+                "included_licenses": license_list,
+                "included_categories": category_list,
             }
         }
     )
+
+    # Calculate non-distributable licenses (All Rights Reserved)
+    all_rights_reserved_id = (
+        ccmodels.License.objects.filter(license_name=licenses.ALL_RIGHTS_RESERVED)
+        .values_list("id", flat=True)
+        .first()
+    )
+
+    non_distributable_licenses_included = (
+        [all_rights_reserved_id]
+        if all_rights_reserved_id and all_rights_reserved_id in license_list
+        else []
+    )
+
+    # records for each unique description so reviewers can approve/reject them individually.
+    # This allows centralized tracking of custom licenses across all channels.
+    special_permissions_id = (
+        ccmodels.License.objects.filter(license_name=licenses.SPECIAL_PERMISSIONS)
+        .values_list("id", flat=True)
+        .first()
+    )
+
+    special_perms_descriptions = None
+    if special_permissions_id and special_permissions_id in license_list:
+        special_perms_descriptions = list(
+            published_nodes.filter(license_id=special_permissions_id)
+            .exclude(license_description__isnull=True)
+            .exclude(license_description="")
+            .values_list("license_description", flat=True)
+            .distinct()
+        )
+
+        if special_perms_descriptions:
+            new_licenses = [
+                ccmodels.AuditedSpecialPermissionsLicense(
+                    description=description, distributable=False
+                )
+                for description in special_perms_descriptions
+            ]
+
+            ccmodels.AuditedSpecialPermissionsLicense.objects.bulk_create(
+                new_licenses, ignore_conflicts=True
+            )
+
+    if channel.version_info:
+        channel.version_info.resource_count = channel.total_resource_count
+        channel.version_info.kind_count = kind_counts
+        channel.version_info.size = int(channel.published_size)
+        channel.version_info.date_published = channel.last_published
+        channel.version_info.version_notes = version_notes
+        channel.version_info.included_languages = language_list
+        channel.version_info.included_licenses = license_list
+        channel.version_info.included_categories = category_list
+        channel.version_info.non_distributable_licenses_included = (
+            non_distributable_licenses_included
+        )
+        channel.version_info.save()
+
+        if special_perms_descriptions:
+            channel.version_info.special_permissions_included.set(
+                ccmodels.AuditedSpecialPermissionsLicense.objects.filter(
+                    description__in=special_perms_descriptions
+                )
+            )
+        else:
+            channel.version_info.special_permissions_included.clear()
+
+        if channel.public:
+            ccmodels.AuditedSpecialPermissionsLicense.mark_channel_version_as_distributable(
+                channel.version_info.id
+            )
+
     channel.save()
 
 
@@ -1019,6 +1135,7 @@ def publish_channel(  # noqa: C901
     send_email=False,
     progress_tracker=None,
     language=settings.LANGUAGE_CODE,
+    is_draft_version=False,
     use_staging_tree=False,
 ):
     """
@@ -1039,23 +1156,32 @@ def publish_channel(  # noqa: C901
             user_id,
             force_exercises,
             progress_tracker=progress_tracker,
+            is_draft_version=is_draft_version,
             use_staging_tree=use_staging_tree,
         )
         add_tokens_to_channel(channel)
-        if not use_staging_tree:
+        if is_draft_version:
+            create_draft_channel_version(channel)
+        else:
             increment_channel_version(channel)
+        if not is_draft_version:
+            ccmodels.ChannelVersion.objects.filter(
+                channel=channel, version=None
+            ).delete()
+            draft_db_path = get_content_db_path(channel_id, "next")
+            if storage.exists(draft_db_path):
+                storage.delete(draft_db_path)
+
             sync_contentnode_and_channel_tsvectors(channel_id=channel.id)
             mark_all_nodes_as_published(base_tree)
             fill_published_fields(channel, version_notes)
-
-        # Attributes not getting set for some reason, so just save it here
-        base_tree.publishing = False
-        base_tree.changed = False
-        base_tree.published = True
-        base_tree.save()
+            base_tree.publishing = False
+            base_tree.changed = False
+            base_tree.published = True
+            base_tree.save()
 
         # Delete public channel cache.
-        if not use_staging_tree and channel.public:
+        if not is_draft_version and channel.public:
             delete_public_channel_cache_keys()
 
         if send_email:
@@ -1077,8 +1203,9 @@ def publish_channel(  # noqa: C901
     finally:
         if kolibri_temp_db and os.path.exists(kolibri_temp_db):
             os.remove(kolibri_temp_db)
-        base_tree.publishing = False
-        base_tree.save()
+        if not is_draft_version:
+            base_tree.publishing = False
+            base_tree.save()
 
     elapsed = time.time() - start
 
@@ -1090,3 +1217,36 @@ def publish_channel(  # noqa: C901
         except SlowPublishError as e:
             report_exception(e)
     return channel
+
+
+def ensure_versioned_database_exists(channel_id, channel_version):
+    """
+    Ensures that the versioned database exists, and if not, copies the unversioned database to the versioned path.
+    This happens if the channel was published back when versioned databases were not used.
+    """
+    if channel_version == 0:
+        raise ValueError("An unpublished channel cannot have a versioned database.")
+
+    unversioned_db_storage_path = get_content_db_path(channel_id)
+    versioned_db_storage_path = get_content_db_path(channel_id, channel_version)
+
+    if not storage.exists(versioned_db_storage_path):
+        if not storage.exists(unversioned_db_storage_path):
+            # This should never happen, a published channel should always have an unversioned database
+            raise FileNotFoundError(
+                f"Neither unversioned nor versioned database found for channel {channel_id}."
+            )
+
+        # NOTE: This should not result in a race condition in the case that a newer
+        # version of the channel is published before the task running this function
+        # is executed. In that case, the publishing logic would have already created
+        # the versioned database. The only case where this could be problematic is
+        # if this happens between the check above this comment and the commands below
+        # it. However, this is EXTREMELY unlikely, and could probably only be solved
+        # by introducing a locking mechanism for the database storage objects.
+        with storage.open(unversioned_db_storage_path, "rb") as unversioned_db_file:
+            storage.save(versioned_db_storage_path, unversioned_db_file)
+
+        logging.info(
+            f"Versioned database for channel {channel_id} did not exist, copied the unversioned database to {versioned_db_storage_path}."
+        )

@@ -1,6 +1,6 @@
 <template>
 
-  <MessageLayout
+  <StudioMessageLayout
     :header="$tr('resetExpiredTitle')"
     :text="$tr('resetExpiredText')"
   >
@@ -10,19 +10,19 @@
       :to="{ name: 'ForgotPassword' }"
       appearance="raised-button"
     />
-  </MessageLayout>
+  </StudioMessageLayout>
 
 </template>
 
 
 <script>
 
-  import MessageLayout from '../../components/MessageLayout';
+  import StudioMessageLayout from '../../components/StudioMessageLayout';
 
   export default {
     name: 'ResetLinkExpired',
     components: {
-      MessageLayout,
+      StudioMessageLayout,
     },
     $trs: {
       resetExpiredTitle: 'Reset link expired',

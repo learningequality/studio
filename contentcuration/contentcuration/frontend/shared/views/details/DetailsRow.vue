@@ -16,14 +16,15 @@
         <label
           class="body-1 font-weight-bold"
           :style="{ color: $vuetify.theme.darkGrey }"
+          :aria-describedby="`tooltip-${_uid}`"
         >
           {{ label }}
         </label>
         <HelpTooltip
           v-if="definition"
+          class="help-icon"
           :text="definition"
-          bottom
-          class="mx-1"
+          :tooltipId="`tooltip-${_uid}`"
         />
       </div>
     </VFlex>
@@ -89,8 +90,15 @@
   }
 
   .label-container {
-    display: flex;
-    align-items: center;
+    position: relative;
+    display: inline-block;
+    padding-right: 44px; // space for the help icon
+  }
+
+  .help-icon {
+    position: absolute;
+    top: -12px;
+    right: 0;
   }
 
   label {

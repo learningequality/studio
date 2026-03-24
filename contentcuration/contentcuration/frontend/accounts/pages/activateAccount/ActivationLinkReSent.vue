@@ -1,6 +1,6 @@
 <template>
 
-  <MessageLayout
+  <StudioMessageLayout
     :header="$tr('activationReSentTitle')"
     :text="$tr('activationReSentText')"
   />
@@ -10,12 +10,12 @@
 
 <script>
 
-  import MessageLayout from '../../components/MessageLayout';
+  import StudioMessageLayout from '../../components/StudioMessageLayout';
 
   export default {
     name: 'ActivationLinkReSent',
     components: {
-      MessageLayout,
+      StudioMessageLayout,
     },
     $trs: {
       activationReSentTitle: 'Instructions sent. Thank you!',
