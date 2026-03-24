@@ -42,6 +42,8 @@ from rest_framework.response import Response
 
 from contentcuration.middleware.locale import locale_exempt
 from contentcuration.middleware.session import session_exempt
+from contentcuration.models import Channel
+from contentcuration.models import ChannelVersion
 from contentcuration.models import Country
 from contentcuration.models import generate_storage_url
 from contentcuration.utils.pagination import ValuesViewsetCursorPagination
@@ -176,14 +178,167 @@ class ChannelMetadataViewSet(ReadOnlyValuesViewset):
         "lang_name": "root__lang__native_name",
     }
 
+    def get_queryset_from_token(self, token):
+        """
+        Retrieve channel data based on a token.
+
+        This method checks both Channel.secret_tokens and ChannelVersion.secret_token
+        to find matching channels. It returns an annotated Channel queryset from the
+        contentcuration models.
+        """
+        normalized_token = token.replace("-", "").strip()
+
+        channels = Channel.objects.filter(
+            secret_tokens__token=normalized_token,
+            deleted=False,
+            main_tree__published=True,
+        )
+
+        if channels.exists():
+            return channels, None
+
+        channel_versions = ChannelVersion.objects.filter(
+            secret_token__token=normalized_token
+        ).select_related("channel__main_tree__language")
+
+        if channel_versions.exists():
+            channel_ids = [cv.channel_id for cv in channel_versions]
+
+            version_data = {}
+            for cv in channel_versions:
+                version_data[str(cv.channel_id)] = {
+                    "published_size": cv.size,
+                    "total_resource_count": cv.resource_count,
+                    "last_updated": cv.date_published,
+                    "included_languages": cv.included_languages or [],
+                    "categories": cv.included_categories or [],
+                    "version": cv.version,
+                }
+
+            channels = Channel.objects.filter(
+                id__in=channel_ids,
+                deleted=False,
+            )
+
+            return channels, version_data
+
+        return Channel.objects.none(), None
+
+    def _serialize_token_queryset(self, queryset):
+
+        channels_data = []
+        for channel in queryset.select_related("main_tree__language"):
+            item = {
+                "id": str(channel.id),
+                "name": channel.name,
+                "description": channel.description,
+                "tagline": channel.tagline,
+                "author": "",
+                "version": channel.version,
+                "thumbnail": channel.thumbnail_encoding or "",
+                "last_updated": channel.last_published,
+                "root": channel.main_tree.node_id,
+                "root__lang__lang_code": channel.main_tree.language.lang_code
+                if channel.main_tree.language
+                else None,
+                "root__lang__native_name": channel.main_tree.language.lang_name
+                if channel.main_tree.language
+                else None,
+                "root__available": True,
+                "root__num_coach_contents": 0,
+                "public": channel.public,
+                "total_resource_count": channel.total_resource_count,
+                "published_size": channel.published_size,
+                "categories": [],
+            }
+            channels_data.append(item)
+
+        return channels_data
+
+    def _consolidate_token_items(self, items, version_data):
+        for item in items:
+            channel_id = str(item["id"])
+            data = version_data.get(channel_id)
+            if data:
+                if data["published_size"] is not None:
+                    item["published_size"] = data["published_size"]
+                if data["total_resource_count"] is not None:
+                    item["total_resource_count"] = data["total_resource_count"]
+                if data["last_updated"] is not None:
+                    item["last_updated"] = data["last_updated"]
+                if data["categories"]:
+                    item["categories"] = data["categories"]
+                item["included_languages"] = data["included_languages"] or []
+            else:
+                item["included_languages"] = []
+            item["last_published"] = item["last_updated"]
+            item["countries"] = []
+        return items
+
+    def serialize(self, queryset):
+
+        if queryset.model == Channel:
+            items = self._serialize_token_queryset(queryset)
+            version_data = getattr(self, "_version_data", None)
+            if version_data:
+                items = self._consolidate_token_items(items, version_data)
+            else:
+                for item in items:
+                    item["included_languages"] = []
+                    item["last_published"] = item["last_updated"]
+                    item["countries"] = []
+            return items
+
+        return super().serialize(queryset)
+
     def get_queryset(self):
+        """
+        Get the base queryset for the viewset.
+
+        If a 'token' query parameter is present, this will return channels
+        matching that token from the contentcuration models. Otherwise, returns all channels.
+        """
+        token = self.request.query_params.get("token")
+        if token:
+            self._token_queryset, self._version_data = self.get_queryset_from_token(
+                token
+            )
+            return self._token_queryset
+        self._version_data = None
         return models.ChannelMetadata.objects.all()
 
-    def consolidate(self, items, queryset):
-        # Only keep a single item for every channel ID, to get rid of possible
-        # duplicates caused by filtering
-        items = list(OrderedDict((item["id"], item) for item in items).values())
+    def filter_queryset(self, queryset):
+        """
+        Filter the queryset.
 
+        If a 'token' query parameter is present, all other filters are disabled
+        and the queryset is returned unfiltered. Otherwise, applies the normal
+        filter behavior.
+        """
+        token = self.request.query_params.get("token")
+        if token:
+            return queryset
+        return super().filter_queryset(queryset)
+
+    def consolidate(self, items, queryset):
+        """
+        Consolidate items for serialization.
+
+        When using token-based access, items are already consolidated in serialize(),
+        so we just return them as-is for Channel querysets.
+        """
+        # For Channel querysets from token-based access, items are already consolidated
+        if queryset.model == Channel:
+            return items
+
+        # For ChannelMetadata querysets, use the default consolidation
+        items = list(OrderedDict((item["id"], item) for item in items).values())
+        version_data = getattr(self, "_version_data", None)
+        if version_data:
+            return self._consolidate_token_items(items, version_data)
+        return self._consolidate_regular_items(items, queryset)
+
+    def _consolidate_regular_items(self, items, queryset):
         included_languages = {}
         for (
             channel_id,
@@ -196,9 +351,6 @@ class ChannelMetadataViewSet(ReadOnlyValuesViewset):
             if channel_id not in included_languages:
                 included_languages[channel_id] = []
             included_languages[channel_id].append(language_id)
-        for item in items:
-            item["included_languages"] = included_languages.get(item["id"], [])
-            item["last_published"] = item["last_updated"]
 
         countries = {}
         for (channel_id, country_code) in Country.objects.filter(
@@ -209,8 +361,9 @@ class ChannelMetadataViewSet(ReadOnlyValuesViewset):
             countries[channel_id].append(country_code)
 
         for item in items:
+            item["included_languages"] = included_languages.get(item["id"], [])
+            item["last_published"] = item["last_updated"]
             item["countries"] = countries.get(item["id"], [])
-
         return items
 
 

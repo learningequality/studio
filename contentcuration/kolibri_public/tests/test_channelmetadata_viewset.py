@@ -4,7 +4,11 @@ from kolibri_public.models import ChannelMetadata
 from kolibri_public.tests.utils.mixer import KolibriPublicMixer
 from le_utils.constants.labels.subjects import SUBJECTSLIST
 
+from contentcuration.models import Channel
+from contentcuration.models import ChannelVersion
+from contentcuration.models import ContentNode
 from contentcuration.models import Country
+from contentcuration.models import SecretToken
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.tests.helpers import reverse_with_query
@@ -159,3 +163,193 @@ class ChannelMetadataFilterTestCase(StudioAPITestCase):
 
         self.assertCountEqual(response1["countries"], ["C1", "C3"])
         self.assertCountEqual(response2["countries"], ["C1", "C2", "C3"])
+
+
+class ChannelMetadataTokenFilterTestCase(StudioAPITestCase):
+    """
+    Test cases for token-based filtering in ChannelMetadataViewSet.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.user = testdata.user("any@user.com")
+        self.client.force_authenticate(self.user)
+        self.categories = [
+            SUBJECTSLIST[0],
+            SUBJECTSLIST[1],
+        ]
+
+    def _create_channel_with_main_tree(self, mixer):
+        """
+        Helper method to create a Channel with a published main_tree.
+        """
+        root_node = ContentNode.objects.create(published=True)
+        channel = Channel.objects.create(
+            actor_id=self.user.id,
+            deleted=False,
+            public=False,
+            main_tree=root_node,
+        )
+        public_root_node = mixer.blend("kolibri_public.ContentNode")
+        return channel, public_root_node
+
+    def test_filter_by_channel_token(self):
+        """
+        Test that filtering by a channel's secret_token returns the correct channel.
+        """
+        mixer = KolibriPublicMixer()
+
+        channel, public_root_node = self._create_channel_with_main_tree(mixer)
+        token = SecretToken.objects.create(token="testchanneltokenabc", is_primary=True)
+        channel.secret_tokens.add(token)
+
+        metadata = mixer.blend(
+            ChannelMetadata, id=channel.id, root=public_root_node, public=False
+        )
+
+        response = self.client.get(
+            reverse_with_query(
+                "publicchannel-list",
+                query={"token": "testchanneltokenabc"},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(UUID(response.data[0]["id"]), UUID(metadata.id))
+        self.assertEqual(response.data[0]["countries"], [])
+
+    def test_filter_by_channel_version_token(self):
+        """
+        Test that filtering by a ChannelVersion's secret_token returns the correct channel
+        with version-specific data.
+        """
+        mixer = KolibriPublicMixer()
+
+        channel, public_root_node = self._create_channel_with_main_tree(mixer)
+        channel.version = 5
+        channel.save()
+
+        token = SecretToken.objects.create(
+            token="testversiontokenxyz", is_primary=False
+        )
+        ChannelVersion.objects.create(
+            channel=channel,
+            version=3,
+            secret_token=token,
+            size=123456789,
+            resource_count=100,
+            included_languages=["en", "es"],
+            included_categories=self.categories,
+        )
+
+        metadata = mixer.blend(
+            ChannelMetadata,
+            id=channel.id,
+            root=public_root_node,
+            published_size=999999999,
+            total_resource_count=200,
+            public=False,
+        )
+
+        response = self.client.get(
+            reverse_with_query(
+                "publicchannel-list",
+                query={"token": "testversiontokenxyz"},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(UUID(response.data[0]["id"]), UUID(metadata.id))
+        self.assertEqual(response.data[0]["published_size"], 123456789)
+        self.assertEqual(response.data[0]["total_resource_count"], 100)
+        self.assertCountEqual(response.data[0]["included_languages"], ["en", "es"])
+        self.assertCountEqual(response.data[0]["categories"], self.categories)
+        self.assertEqual(response.data[0]["countries"], [])
+
+    def test_token_filter_disabled_when_token_not_provided(self):
+        """
+        Test that regular filters still work when no token is provided.
+        """
+        mixer = KolibriPublicMixer()
+
+        metadata1 = mixer.blend(ChannelMetadata, public=True)
+        mixer.blend(ChannelMetadata, public=False)
+
+        response = self.client.get(
+            reverse_with_query(
+                "publicchannel-list",
+                query={"public": "true"},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(str(UUID(response.data[0]["id"])), str(metadata1.id))
+
+    def test_token_filter_disables_other_filters(self):
+        """
+        Test that when a token is provided, other query parameters are ignored.
+        """
+        mixer = KolibriPublicMixer()
+
+        channel, public_root_node = self._create_channel_with_main_tree(mixer)
+        token = SecretToken.objects.create(
+            token="testignorefilterstoken", is_primary=True
+        )
+        channel.secret_tokens.add(token)
+
+        metadata = mixer.blend(
+            ChannelMetadata, id=channel.id, root=public_root_node, public=False
+        )
+
+        response = self.client.get(
+            reverse_with_query(
+                "publicchannel-list",
+                query={"token": "testignorefilterstoken", "public": "true"},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(UUID(response.data[0]["id"]), UUID(metadata.id))
+
+    def test_token_normalization_removes_dashes(self):
+        """
+        Test that tokens are normalized by removing dashes.
+        """
+        mixer = KolibriPublicMixer()
+
+        channel, public_root_node = self._create_channel_with_main_tree(mixer)
+        token = SecretToken.objects.create(token="abcd1234efgh5678", is_primary=True)
+        channel.secret_tokens.add(token)
+
+        metadata = mixer.blend(
+            ChannelMetadata, id=channel.id, root=public_root_node, public=False
+        )
+
+        response = self.client.get(
+            reverse_with_query(
+                "publicchannel-list",
+                query={"token": "abcd-1234-efgh-5678"},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(UUID(response.data[0]["id"]), UUID(metadata.id))
+
+    def test_nonexistent_token_returns_empty_list(self):
+        """
+        Test that a non-existent token returns an empty list.
+        """
+        response = self.client.get(
+            reverse_with_query(
+                "publicchannel-list",
+                query={"token": "nonexistent-token-12345"},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(len(response.data), 0)
