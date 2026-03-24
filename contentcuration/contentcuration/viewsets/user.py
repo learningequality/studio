@@ -43,7 +43,7 @@ from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.constants import EDITOR_M2M
 from contentcuration.viewsets.sync.constants import VIEWER_M2M
-
+import uuid
 
 class IsAdminUser(BasePermission):
     """
@@ -311,6 +311,10 @@ class ChannelUserViewSet(ReadOnlyValuesViewset):
 
         if not channel_id:
             return HttpResponseBadRequest("Channel ID is required.")
+        try:
+            uuid.UUID(channel_id)
+        except ValueError:
+            return HttpResponseBadRequest("Invalid channel ID")
 
         try:
             channel = Channel.objects.get(id=channel_id)
