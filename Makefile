@@ -1,5 +1,6 @@
 # standalone install method
 DOCKER_COMPOSE ?= docker-compose
+CELERY = cd contentcuration/ && celery -A contentcuration worker -l info --concurrency=3 --task-events
 
 # support new plugin installation for docker-compose
 ifeq (, $(shell command -v docker-compose 2>/dev/null))
@@ -16,7 +17,7 @@ altprodserver: collectstatic compilemessages
 	cd contentcuration/ && gunicorn contentcuration.wsgi:application --timeout=4000 --error-logfile=/var/log/gunicorn-error.log --workers=${NUM_PROCS} --threads=${NUM_THREADS} --bind=0.0.0.0:8081 --pid=/tmp/contentcuration.pid --log-level=debug || sleep infinity
 
 prodceleryworkers:
-	cd contentcuration/ && celery -A contentcuration worker -l info --concurrency=3 --task-events
+	$(CELERY)
 
 collectstatic:
 	python contentcuration/manage.py collectstatic --noinput
@@ -147,7 +148,7 @@ purge-postgres: .docker/pgpass
 destroy-and-recreate-database: purge-postgres setup
 
 devceleryworkers:
-	$(MAKE) -e DJANGO_SETTINGS_MODULE=contentcuration.dev_settings prodceleryworkers
+	DJANGO_SETTINGS_MODULE=contentcuration.dev_settings $(CELERY) --pool=threads
 
 run-services:
 	$(MAKE) -j 2 dcservicesup devceleryworkers
