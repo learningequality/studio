@@ -149,8 +149,20 @@ export function convertContentNodeResponse(id, root_id, parent, publicNode) {
  * @param {String} channelId
  * @return {Promise<PublicChannelMetadata>}
  */
-export function getChannel(channelId) {
-  return client.get(urls.publicchannel_detail(channelId)).then(response => response.data);
+export function getChannel(channelId, params = {}) {
+  return client
+    .get(urls.publicchannel_detail(channelId), { params })
+    .then(response => response.data);
+}
+
+/**
+ * List channels from ChannelMetadataViewSet (Kolibri public API v2).
+ *
+ * @param {Object} params
+ * @return {Promise<Object[]|{results: Object[]}>}
+ */
+export function listPublicChannels(params = {}) {
+  return client.get(urls.publicchannel_list(), { params }).then(response => response.data);
 }
 
 /**

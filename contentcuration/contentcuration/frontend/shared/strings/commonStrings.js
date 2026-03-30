@@ -38,4 +38,8 @@ export const commonStrings = createTranslator('CommonStrings', {
     message: 'Dismiss',
     context: 'A label for an action that dismisses a notification or message',
   },
+  copyChannelTokenAction: {
+    message: 'Copy channel token',
+    context: 'A label for an action that copies the channel token to the clipboard',
+  },
 });

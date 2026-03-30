@@ -37,13 +37,16 @@ from kolibri_public.search import get_contentnode_available_metadata_labels
 from kolibri_public.stopwords import stopwords_set
 from le_utils.constants import content_kinds
 from rest_framework import status
+from rest_framework.filters import SearchFilter
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from contentcuration.middleware.locale import locale_exempt
 from contentcuration.middleware.session import session_exempt
+from contentcuration.models import ChannelVersion
 from contentcuration.models import Country
 from contentcuration.models import generate_storage_url
+from contentcuration.utils.pagination import CachedListPagination
 from contentcuration.utils.pagination import ValuesViewsetCursorPagination
 from contentcuration.viewsets.base import BaseValuesViewset
 from contentcuration.viewsets.base import ReadOnlyValuesViewset
@@ -116,10 +119,20 @@ class ChannelMetadataFilter(FilterSet):
     categories = CharFilter(method=bitmask_contains_and, label="Categories")
     countries = CharInFilter(field_name="countries", label="Countries")
     public = BooleanFilter(field_name="public", label="Public", initial=True)
+    languages = CharInFilter(
+        field_name="included_languages__lang_code", label="Languages"
+    )
 
     class Meta:
         model = models.ChannelMetadata
-        fields = ("available", "has_exercise", "categories", "countries", "public")
+        fields = (
+            "available",
+            "has_exercise",
+            "categories",
+            "countries",
+            "public",
+            "languages",
+        )
 
     def filter_has_exercise(self, queryset, name, value):
         queryset = queryset.annotate(
@@ -138,11 +151,22 @@ class ChannelMetadataFilter(FilterSet):
         return queryset.filter(root__available=value)
 
 
+class ChannelMetadataListPagination(CachedListPagination):
+    page_size = None
+    page_size_query_param = "page_size"
+    max_page_size = 1000
+
+
 @method_decorator(metadata_cache, name="dispatch")
 class ChannelMetadataViewSet(ReadOnlyValuesViewset):
-    filter_backends = (DjangoFilterBackend,)
+    filter_backends = (
+        SearchFilter,
+        DjangoFilterBackend,
+    )
     # Update from filter_class to filterset_class for newer version of Django Filters
     filterset_class = ChannelMetadataFilter
+    pagination_class = ChannelMetadataListPagination
+    search_fields = ("name",)
     # Add an explicit allow any permission class to override the Studio default
     permission_classes = (AllowAny,)
 
@@ -196,9 +220,24 @@ class ChannelMetadataViewSet(ReadOnlyValuesViewset):
             if channel_id not in included_languages:
                 included_languages[channel_id] = []
             included_languages[channel_id].append(language_id)
-        for item in items:
-            item["included_languages"] = included_languages.get(item["id"], [])
-            item["last_published"] = item["last_updated"]
+
+        channel_versions_q = Q()
+
+        # Getting channel tokens in the consolidate method instead of doing it in the annotate method
+        # to make invisible the difference in the representation between public and private models UUIDFields
+        for channel in items:
+            channel_versions_q |= Q(
+                channel_id=channel["id"], version=channel["version"]
+            )
+
+        channel_tokens = {}
+
+        for channel_version in ChannelVersion.objects.filter(channel_versions_q).values(
+            "channel_id", "secret_token__token"
+        ):
+            channel_tokens[channel_version["channel_id"]] = channel_version[
+                "secret_token__token"
+            ]
 
         countries = {}
         for (channel_id, country_code) in Country.objects.filter(
@@ -209,7 +248,10 @@ class ChannelMetadataViewSet(ReadOnlyValuesViewset):
             countries[channel_id].append(country_code)
 
         for item in items:
+            item["included_languages"] = included_languages.get(item["id"], [])
             item["countries"] = countries.get(item["id"], [])
+            item["token"] = channel_tokens.get(item["id"])
+            item["last_published"] = item["last_updated"]
 
         return items
 

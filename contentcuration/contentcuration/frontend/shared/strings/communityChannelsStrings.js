@@ -524,4 +524,96 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Draft token',
     context: 'Label for the draft token field in the draft preview instructions modal',
   },
+
+  // Community Library List page strings
+  communityLibraryDescription: {
+    message:
+      'Browse community-submitted channels approved for discovery in Studio. Copy a token to use a channel in Kolibri.',
+    context: 'Description for the Community Library List page',
+  },
+  whatIsCommunityLibrary: {
+    message: 'What is community library?',
+    context:
+      'Label for the section explaining what the Community Library is on the Community Library List page',
+  },
+  resultsText: {
+    message: '{count, plural, =1 {# result found} other {# results found}}',
+    context: 'Text showing number of results',
+  },
+  noResultsWithFilters: {
+    message: 'No channels match the selected filters.',
+    context: 'Message shown when no channels are found with the applied filters',
+  },
+  noCommunityChannels: {
+    message: 'No channels have been published to the Community Library yet.',
+    context: 'Message shown when there are no channels in the Community Library',
+  },
+  loadError: {
+    message: 'There was an error loading channels.',
+    context: 'Error message when loading channels fails',
+  },
+  filterLabel: {
+    message: 'Filter',
+    context: 'Button label to show filters on mobile',
+  },
+  searchLabel: {
+    message: 'Search',
+    context: 'Label for the search input',
+  },
+  clearAll: {
+    message: 'Clear all',
+    context: 'Button to clear all filters',
+  },
+  needKolibriVersionToImport: {
+    message: 'You will need Kolibri version 0.19.4 or higher to import community channels.',
+    context:
+      'Message shown in the Community Library List page informing users that they need a certain Kolibri version to import channels from the Community Library',
+  },
+  communityLibraryCTATitle: {
+    message: 'Help grow the Community Library',
+    context:
+      'Title for the call to action section in the Community Library List page encouraging users to contribute to the Community Library',
+  },
+  communityLibraryCTADescription: {
+    message:
+      'Have a channel worth sharing with educators and learners? Submit it for review through the Share menu so it can be discovered in Studio.',
+    context:
+      'Description for the call to action section in the Community Library List page encouraging users to contribute to the Community Library',
+  },
+  goToMyChannelsAction: {
+    message: 'Go to My channels',
+    context: 'Button text for the action to navigate to the My Channels page',
+  },
+
+  // about community library modal
+  aboutCommunityLibraryTitle: {
+    message: 'About Community Library',
+    context: 'Title for the modal that explains what the Community Library is',
+  },
+  aboutCommunityLibraryDescription: {
+    message:
+      'Community library contains channels submitted by the community and approved for discovery in Studio.',
+    context: 'Description for the modal that explains what the Community Library is',
+  },
+  whatCanYouDoHere: {
+    message: 'What you can do here',
+    context:
+      'Label for the section before listing the things users can do in the Community Library',
+  },
+  whatCanYouDoHereItem1: {
+    message: 'Browse channels by country, category, and language',
+    context: 'First item in the list of things users can do in the Community Library',
+  },
+  whatCanYouDoHereItem2: {
+    message: 'Copy a channel token to use in Kolibri',
+    context: 'Second item in the list of things users can do in the Community Library',
+  },
+  whatCanYouDoHereItem3: {
+    message: 'View channel details including description and metadata',
+    context: 'Third item in the list of things users can do in the Community Library',
+  },
+  gotItLabel: {
+    message: 'Got it',
+    context: 'Button text to dismiss the about Community Library modal',
+  },
 });

@@ -58,6 +58,9 @@
           <span>
             {{ language }}
           </span>
+          <span v-if="country">
+            {{ country }}
+          </span>
         </div>
         <div
           class="desc notranslate"
@@ -133,6 +136,8 @@
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { RouteNames } from '../../../constants';
   import Languages from 'shared/leUtils/Languages';
+  import countriesUtil from 'shared/utils/countries';
+  import { currentLanguage } from 'shared/i18n';
 
   export default {
     name: 'StudioChannelCard',
@@ -229,6 +234,17 @@
         }
         return this.$tr('channelLanguageNotSetIndicator');
       },
+      country() {
+        const countries = this.channel.countries || [];
+        if (countries.length === 0) {
+          return null;
+        }
+        if (countries.length === 1) {
+          const [lang] = currentLanguage.split('-');
+          return countriesUtil.getName(countries[0], lang);
+        }
+        return this.$tr('multipleCountries');
+      },
       hasUnpublishedChanges() {
         return !this.channel.last_published || this.channel.modified > this.channel.last_published;
       },
@@ -246,6 +262,7 @@
       details: 'Details',
       selectChannel: 'Select {name}',
       channelLanguageNotSetIndicator: 'No language set',
+      multipleCountries: 'Multiple countries',
     },
   };
 
@@ -263,7 +280,7 @@
   }
 
   .resource {
-    span:first-child::after {
+    span:not(:last-child)::after {
       margin: 0 8px;
       content: '•';
     }

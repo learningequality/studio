@@ -18,6 +18,8 @@ import { useQueryParams } from './useQueryParams';
 /**
  * @param {Object} params
  * @param {string} [params.name='keywords'] The name of the query parameter to sync with.
+ * @param {string} [params.queryParam='keywords'] The name of the query parameter to use in
+ *                                                fetch params.
  *
  * Composable for managing the state keyword search input. The search input
  * value is synchronized with a URL query parameter named `name` (default: "keywords").
@@ -25,7 +27,7 @@ import { useQueryParams } from './useQueryParams';
  * returned as `fetchQueryParams`.
  * @returns {UseKeywordSearchReturn}
  */
-export function useKeywordSearch({ name = 'keywords' } = {}) {
+export function useKeywordSearch({ name = 'keywords', queryParam = 'keywords' } = {}) {
   const keywordInput = ref('');
   const route = useRoute();
 
@@ -65,8 +67,14 @@ export function useKeywordSearch({ name = 'keywords' } = {}) {
     keywordInput.value = keywords.value;
   });
 
+  watch(keywordInput, () => {
+    if (!keywordInput.value) {
+      clearSearch();
+    }
+  });
+
   const fetchQueryParams = computed(() => {
-    return keywords.value ? { keywords: keywords.value } : {};
+    return keywords.value ? { [queryParam]: keywords.value } : {};
   });
 
   return {

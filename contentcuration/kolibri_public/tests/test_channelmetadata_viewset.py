@@ -5,6 +5,7 @@ from kolibri_public.tests.utils.mixer import KolibriPublicMixer
 from le_utils.constants.labels.subjects import SUBJECTSLIST
 
 from contentcuration.models import Country
+from contentcuration.models import Language
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.tests.helpers import reverse_with_query
@@ -159,3 +160,136 @@ class ChannelMetadataFilterTestCase(StudioAPITestCase):
 
         self.assertCountEqual(response1["countries"], ["C1", "C3"])
         self.assertCountEqual(response2["countries"], ["C1", "C2", "C3"])
+
+
+class ChannelMetadataSearchFilterTestCase(StudioAPITestCase):
+    def setUp(self):
+        super().setUp()
+
+        mixer = KolibriPublicMixer()
+        self.user = testdata.user("search@user.com")
+
+        self.channel_alpha = mixer.blend(
+            ChannelMetadata,
+            name="Alpha Mathematics Course",
+            description="A course about algebra and calculus",
+            tagline="",
+            public=False,
+        )
+        self.channel_beta = mixer.blend(
+            ChannelMetadata,
+            name="Beta Science Module",
+            description="Covers physics and chemistry",
+            tagline="Learn science today",
+            public=False,
+        )
+        self.channel_gamma = mixer.blend(
+            ChannelMetadata,
+            name="Gamma History",
+            description="World history overview",
+            tagline="",
+            public=False,
+        )
+
+    def _list(self, query):
+        self.client.force_authenticate(self.user)
+        return self.client.get(reverse_with_query("publicchannel-list", query=query))
+
+    def test_search_by_name(self):
+        response = self._list({"search": "Mathematics", "public": "false"})
+        self.assertEqual(response.status_code, 200, response.content)
+        ids = [UUID(item["id"]) for item in response.data]
+        self.assertIn(UUID(self.channel_alpha.id), ids)
+        self.assertNotIn(UUID(self.channel_beta.id), ids)
+        self.assertNotIn(UUID(self.channel_gamma.id), ids)
+
+    def test_search_case_insensitive(self):
+        response = self._list({"search": "mathematics", "public": "false"})
+        self.assertEqual(response.status_code, 200, response.content)
+        ids = [UUID(item["id"]) for item in response.data]
+        self.assertIn(UUID(self.channel_alpha.id), ids)
+
+    def test_search_no_results(self):
+        response = self._list({"search": "zzznomatch999", "public": "false"})
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(len(response.data), 0)
+
+    def test_search_combined_with_countries(self):
+        country, _ = Country.objects.get_or_create(
+            code="MX", defaults={"name": "Mexico"}
+        )
+        self.channel_alpha.countries.add(country)
+
+        response = self._list(
+            {"search": "Mathematics", "countries": "MX", "public": "false"}
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        ids = [UUID(item["id"]) for item in response.data]
+        self.assertIn(UUID(self.channel_alpha.id), ids)
+        self.assertNotIn(UUID(self.channel_gamma.id), ids)
+
+
+class ChannelMetadataLanguageFilterTestCase(StudioAPITestCase):
+    def setUp(self):
+        super().setUp()
+
+        mixer = KolibriPublicMixer()
+        self.user = testdata.user("lang@user.com")
+
+        self.lang_en = Language.objects.get_or_create(
+            id="en", defaults={"lang_code": "en", "readable_name": "English"}
+        )[0]
+        self.lang_fr = Language.objects.get_or_create(
+            id="fr", defaults={"lang_code": "fr", "readable_name": "French"}
+        )[0]
+        self.lang_ar = Language.objects.get_or_create(
+            id="ar", defaults={"lang_code": "ar", "readable_name": "Arabic"}
+        )[0]
+
+        # channel_en: primary language English
+        self.channel_en = mixer.blend(ChannelMetadata, public=False)
+        self.channel_en.root.lang = self.lang_en
+        self.channel_en.root.save()
+        self.channel_en.included_languages.add(self.lang_en)
+
+        # channel_fr: primary language French, also includes Arabic
+        self.channel_fr = mixer.blend(ChannelMetadata, public=False)
+        self.channel_fr.root.lang = self.lang_fr
+        self.channel_fr.root.save()
+        self.channel_fr.included_languages.add(self.lang_ar, self.lang_fr)
+
+        # channel_multi: no primary language, but includes English and French
+        self.channel_multi = mixer.blend(ChannelMetadata, public=False)
+        self.channel_multi.included_languages.add(self.lang_en, self.lang_fr)
+
+    def _list(self, query):
+        self.client.force_authenticate(self.user)
+        return self.client.get(reverse_with_query("publicchannel-list", query=query))
+
+    def test_filter_by_included_language(self):
+        response = self._list({"languages": "ar", "public": "false"})
+        self.assertEqual(response.status_code, 200, response.content)
+        ids = [UUID(item["id"]) for item in response.data]
+        self.assertIn(UUID(self.channel_fr.id), ids)
+        self.assertNotIn(UUID(self.channel_en.id), ids)
+        self.assertNotIn(UUID(self.channel_multi.id), ids)
+
+    def test_filter_by_multiple_languages(self):
+        response = self._list({"languages": "en,fr", "public": "false"})
+        self.assertEqual(response.status_code, 200, response.content)
+        ids = [UUID(item["id"]) for item in response.data]
+        self.assertIn(UUID(self.channel_en.id), ids)
+        self.assertIn(UUID(self.channel_fr.id), ids)
+        self.assertIn(UUID(self.channel_multi.id), ids)
+
+    def test_filter_languages_combined_with_search(self):
+        self.channel_en.name = "English Math Channel"
+        self.channel_en.save()
+        self.channel_multi.name = "English Science Channel"
+        self.channel_multi.save()
+
+        response = self._list({"languages": "en", "search": "Math", "public": "false"})
+        self.assertEqual(response.status_code, 200, response.content)
+        ids = [UUID(item["id"]) for item in response.data]
+        self.assertIn(UUID(self.channel_en.id), ids)
+        self.assertNotIn(UUID(self.channel_multi.id), ids)

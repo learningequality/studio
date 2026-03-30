@@ -55,6 +55,12 @@
           {{ $tr('catalog') }}
         </VTab>
         <VTab
+          :to="communityLibraryLink"
+          @click="communityLibraryTabClick"
+        >
+          {{ communityLibraryLabel$() }}
+        </VTab>
+        <VTab
           :to="channelSetLink"
           @click="channelSetsTabClick"
         >
@@ -75,7 +81,7 @@
         <VContainer
           fluid
           class="h-100"
-          :class="isCatalogPage ? 'pa-0' : 'pa-4'"
+          :class="isCatalogPage || isCommunityLibraryPage ? 'pa-0' : 'pa-4'"
         >
           <ChannelListAppError
             v-if="fullPageError"
@@ -103,6 +109,7 @@
   import AppBar from 'shared/views/AppBar';
   import StudioOfflineAlert from 'shared/views/StudioOfflineAlert.vue';
   import PolicyModals from 'shared/views/policies/PolicyModals';
+  import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 
   const CATALOG_PAGES = [
     RouteNames.CATALOG_ITEMS,
@@ -129,6 +136,12 @@
       StudioOfflineAlert,
     },
     mixins: [constantsTranslationMixin, routerMixin],
+    setup() {
+      const { communityLibraryLabel$ } = communityChannelsStrings;
+      return {
+        communityLibraryLabel$,
+      };
+    },
     computed: {
       ...mapState({
         offline: state => !state.connection.online,
@@ -146,6 +159,9 @@
       },
       isCatalogPage() {
         return this.$route.name === RouteNames.CATALOG_ITEMS;
+      },
+      isCommunityLibraryPage() {
+        return this.$route.name === RouteNames.COMMUNITY_LIBRARY_ITEMS;
       },
       toolbarHeight() {
         return this.loggedIn && !this.isFAQPage ? 112 : 64;
@@ -171,11 +187,17 @@
       catalogLink() {
         return { name: RouteNames.CATALOG_ITEMS };
       },
+      communityLibraryLink() {
+        return { name: RouteNames.COMMUNITY_LIBRARY_ITEMS };
+      },
       homeLink() {
         return this.libraryMode ? window.Urls.base() : window.Urls.channels();
       },
       publicTabClick() {
         return this.trackTabClick.bind(this, ChannelListTypes.PUBLIC);
+      },
+      communityLibraryTabClick() {
+        return this.trackTabClick.bind(this, 'COMMUNITY_LIBRARY');
       },
       channelSetsTabClick() {
         return this.trackTabClick.bind(this, CHANNEL_SETS);
