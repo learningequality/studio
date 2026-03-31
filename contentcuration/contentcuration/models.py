@@ -1574,7 +1574,7 @@ class ChannelVersion(models.Model):
         SecretToken, on_delete=models.SET_NULL, null=True, blank=True
     )
     version_notes = models.TextField(null=True, blank=True)
-    size = models.PositiveIntegerField(null=True, blank=True)
+    size = models.FloatField(default=0)
     date_published = models.DateTimeField(null=True, blank=True)
     resource_count = models.PositiveIntegerField(null=True, blank=True)
     kind_count = ArrayField(
