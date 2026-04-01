@@ -33,10 +33,12 @@ from django_filters.rest_framework import FilterSet
 from django_filters.rest_framework import NumberFilter
 from django_filters.rest_framework import UUIDFilter
 from kolibri_public import models
+from kolibri_public.search import get_channel_available_metadata_labels
 from kolibri_public.search import get_contentnode_available_metadata_labels
 from kolibri_public.stopwords import stopwords_set
 from le_utils.constants import content_kinds
 from rest_framework import status
+from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -254,6 +256,16 @@ class ChannelMetadataViewSet(ReadOnlyValuesViewset):
             item["last_published"] = item["last_updated"]
 
         return items
+
+    @action(detail=False, methods=["get"])
+    def labels(self, request):
+        """
+        Returns available filter option values for the channel list.
+        The response is an object with keys for each filterable field, each
+        containing the set of values present across the filtered queryset.
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+        return Response(get_channel_available_metadata_labels(queryset))
 
 
 contentnode_filter_fields = [

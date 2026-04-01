@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from django.urls import reverse
 from kolibri_public.models import ChannelMetadata
 from kolibri_public.tests.utils.mixer import KolibriPublicMixer
 from le_utils.constants.labels.subjects import SUBJECTSLIST
@@ -293,3 +294,96 @@ class ChannelMetadataLanguageFilterTestCase(StudioAPITestCase):
         ids = [UUID(item["id"]) for item in response.data]
         self.assertIn(UUID(self.channel_en.id), ids)
         self.assertNotIn(UUID(self.channel_multi.id), ids)
+
+
+class ChannelMetadataLabelsActionTestCase(StudioAPITestCase):
+    def setUp(self):
+        super().setUp()
+
+        mixer = KolibriPublicMixer()
+        self.user = testdata.user("labels@user.com")
+
+        self.categories = [SUBJECTSLIST[0], SUBJECTSLIST[1]]
+
+        self.lang_en = Language.objects.get_or_create(
+            id="en", defaults={"lang_code": "en", "readable_name": "English"}
+        )[0]
+        self.lang_fr = Language.objects.get_or_create(
+            id="fr", defaults={"lang_code": "fr", "readable_name": "French"}
+        )[0]
+
+        self.country_us = Country.objects.get_or_create(
+            code="US", defaults={"name": "United States"}
+        )[0]
+        self.country_mx = Country.objects.get_or_create(
+            code="MX", defaults={"name": "Mexico"}
+        )[0]
+        # Country not associated with any channel
+        self.country_br = Country.objects.get_or_create(
+            code="BR", defaults={"name": "Brazil"}
+        )[0]
+
+        self.channel1 = mixer.blend(
+            ChannelMetadata,
+            categories_bitmask_0=1 | 2,  # SUBJECTSLIST[0] and [1]
+            public=False,
+        )
+        self.channel1.included_languages.add(self.lang_en)
+        self.channel1.countries.add(self.country_us)
+
+        self.channel2 = mixer.blend(
+            ChannelMetadata,
+            categories_bitmask_0=2,  # SUBJECTSLIST[1] only
+            public=False,
+        )
+        self.channel2.included_languages.add(self.lang_fr)
+        self.channel2.countries.add(self.country_mx)
+
+    def _labels(self, query=None):
+        self.client.force_authenticate(self.user)
+        url = reverse("publicchannel-labels")
+        return self.client.get(url, query or {})
+
+    def test_labels_returns_200(self):
+        response = self._labels({"public": "false"})
+        self.assertEqual(response.status_code, 200, response.content)
+
+    def test_labels_returns_available_languages(self):
+        response = self._labels({"public": "false"})
+        language_ids = [lang["id"] for lang in response.data["languages"]]
+        self.assertIn("en", language_ids)
+        self.assertIn("fr", language_ids)
+
+    def test_labels_returns_available_countries(self):
+        response = self._labels({"public": "false"})
+        country_codes = [c["code"] for c in response.data["countries"]]
+        self.assertIn("US", country_codes)
+        self.assertIn("MX", country_codes)
+        # Country not linked to any channel should not appear
+        self.assertNotIn("BR", country_codes)
+
+    def test_labels_returns_available_categories(self):
+        response = self._labels({"public": "false"})
+        categories = response.data.get("categories", [])
+        self.assertIn(self.categories[0], categories)
+        self.assertIn(self.categories[1], categories)
+
+    def test_labels_respects_filter_params(self):
+        # When filtering to only channel1's language, only channel1's country should appear
+        response = self._labels({"public": "false", "languages": "en"})
+        self.assertEqual(response.status_code, 200, response.content)
+        country_codes = [c["code"] for c in response.data["countries"]]
+        self.assertIn("US", country_codes)
+        self.assertNotIn("MX", country_codes)
+
+    def test_labels_country_objects_have_code_and_name(self):
+        response = self._labels({"public": "false"})
+        for country in response.data["countries"]:
+            self.assertIn("code", country)
+            self.assertIn("name", country)
+
+    def test_labels_language_objects_have_id_and_lang_name(self):
+        response = self._labels({"public": "false"})
+        for lang in response.data["languages"]:
+            self.assertIn("id", lang)
+            self.assertIn("lang_name", lang)

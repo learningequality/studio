@@ -203,7 +203,7 @@
 
 <script>
 
-  import { computed, ref, watch } from 'vue';
+  import { computed, onMounted, ref, watch } from 'vue';
   import { useRoute, useRouter } from 'vue-router/composables';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { themeTokens } from 'kolibri-design-system/lib/styles/theme';
@@ -214,7 +214,7 @@
   import useCommunityChannelsFilters from './useCommunityChannelsFilters';
   import AboutCommunityLibraryModal from './AboutCommunityLibraryModal.vue';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
-  import { listPublicChannels } from 'shared/data/public';
+  import { listPublicChannels, getPublicChannelLabels } from 'shared/data/public';
   import useStore from 'shared/composables/useStore';
   import StudioChip from 'shared/views/StudioChip';
   import Pagination from 'shared/views/Pagination';
@@ -277,6 +277,8 @@
       } = communityChannelsStrings;
       const { copyChannelTokenAction$ } = commonStrings;
 
+      const availableLabels = ref(null);
+
       const {
         countriesFilter,
         categoriesFilter,
@@ -285,9 +287,11 @@
         keywordInput,
         clearSearch,
         removeFilterValue,
-      } = useCommunityChannelsFilters();
+      } = useCommunityChannelsFilters({ availableLabels });
 
-      const loading = ref(false);
+      const loadingChannels = ref(false);
+      const loadingLabels = ref(false);
+      const loading = computed(() => loadingChannels.value || loadingLabels.value);
       const loadError = ref(false);
       const channels = ref([]);
       const showFiltersSidePanel = ref(false);
@@ -328,7 +332,7 @@
       });
 
       async function loadCommunityLibrary() {
-        loading.value = true;
+        loadingChannels.value = true;
         loadError.value = false;
         try {
           const response = await listPublicChannels(fetchQueryParams.value);
@@ -343,7 +347,7 @@
           totalPages.value = 0;
           store.dispatch('errors/handleAxiosError', error);
         } finally {
-          loading.value = false;
+          loadingChannels.value = false;
         }
       }
 
@@ -438,6 +442,18 @@
         },
         { immediate: true, deep: true },
       );
+
+      onMounted(async () => {
+        loadingLabels.value = true;
+        try {
+          availableLabels.value = await getPublicChannelLabels({ public: false });
+        } catch {
+          // Silently ignore: filter options will show all values rather than
+          // restricting to those that have channels.
+        } finally {
+          loadingLabels.value = false;
+        }
+      });
 
       return {
         windowIsSmall,

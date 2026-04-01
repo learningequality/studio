@@ -1,4 +1,4 @@
-import { computed, inject, provide } from 'vue';
+import { computed, inject, provide, unref } from 'vue';
 import { useFilter } from 'shared/composables/useFilter';
 import { useKeywordSearch } from 'shared/composables/useKeywordSearch';
 import countriesUtil from 'shared/utils/countries';
@@ -19,43 +19,46 @@ const FILTERS_QUERY_PARAMS = Symbol('filtersQueryParams');
 const REMOVE_FILTER_VALUE = Symbol('removeFilterValue');
 const CLEAR_SEARCH = Symbol('clearSearch');
 
-export default function useCommunityChannelsFilters() {
+export default function useCommunityChannelsFilters({ availableLabels } = {}) {
   const countryFilterMap = computed(() => {
     const [lang] = currentLanguage.split('-');
     const allCountries = countriesUtil.getNames(lang);
+    const _availableLabels = unref(availableLabels);
+    const availableCodes = _availableLabels?.countries
+      ? new Set(_availableLabels.countries.map(c => c.code))
+      : null;
     return Object.fromEntries(
-      Object.entries(allCountries).map(([code, name]) => [
-        code,
-        {
-          label: name,
-          params: { countries: code },
-        },
-      ]),
+      Object.entries(allCountries)
+        .filter(([code]) => !availableCodes || availableCodes.has(code))
+        .map(([code, name]) => [code, { label: name, params: { countries: code } }]),
     );
   });
 
   const languageFilterMap = computed(() => {
+    const _availableLabels = unref(availableLabels);
+    const availableIds = _availableLabels?.languages
+      ? new Set(_availableLabels.languages.map(l => l.id))
+      : null;
     return Object.fromEntries(
-      LanguagesList.map(lang => [
-        lang.id,
-        {
-          label: lang.readable_name,
-          params: { languages: lang.id },
-        },
-      ]),
+      LanguagesList.filter(lang => !availableIds || availableIds.has(lang.id))
+        .sort((a, b) => a.readable_name.localeCompare(b.readable_name))
+        .map(lang => [lang.id, { label: lang.readable_name, params: { languages: lang.id } }]),
     );
   });
 
   const categoryFilterMap = computed(() => {
     const sortedCategories = getSortedCategories();
+    const _availableLabels = unref(availableLabels);
+    const availableCategories = _availableLabels?.categories
+      ? new Set(_availableLabels.categories)
+      : null;
     return Object.fromEntries(
-      Object.entries(sortedCategories).map(([value, name]) => [
-        value,
-        {
-          label: translateMetadataString(name),
-          params: { categories: value },
-        },
-      ]),
+      Object.entries(sortedCategories)
+        .filter(([value]) => !availableCategories || availableCategories.has(value))
+        .map(([value, name]) => [
+          value,
+          { label: translateMetadataString(name), params: { categories: value } },
+        ]),
     );
   });
 
@@ -67,14 +70,9 @@ export default function useCommunityChannelsFilters() {
 
   const {
     filter: languagesFilter,
-    options: _languageOptions,
+    options: languageOptions,
     fetchQueryParams: languagesFetchQueryParams,
   } = useFilter({ name: 'languages', filterMap: languageFilterMap, multi: true });
-
-  const languageOptions = computed(() => {
-    // Sort language options alphabetically by label
-    return _languageOptions.value.sort((a, b) => a.label.localeCompare(b.label));
-  });
 
   const {
     filter: categoriesFilter,

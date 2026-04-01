@@ -166,6 +166,22 @@ export function listPublicChannels(params = {}) {
 }
 
 /**
+ * Get available filter label options for the public channel list.
+ * Returns an object with available values for each filterable field
+ * (categories, languages, countries).
+ *
+ * @param {Object} params
+ * @return {Promise<{
+ *   categories: string[],
+ *   languages: Array<{id: string, lang_name: string}>,
+ *   countries: Array<{code: string, name: string}>
+ * }>}
+ */
+export function getPublicChannelLabels(params = {}) {
+  return client.get(urls.publicchannel_labels(), { params }).then(response => response.data);
+}
+
+/**
  * Get a content node from the public API
  * @param {String} nodeId
  * @return {Promise<PublicContentNode>}
