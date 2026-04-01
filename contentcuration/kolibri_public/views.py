@@ -201,7 +201,7 @@ class ChannelMetadataViewSet(ReadOnlyValuesViewset):
     }
 
     def get_queryset(self):
-        return models.ChannelMetadata.objects.all()
+        return models.ChannelMetadata.objects.all().order_by("name")
 
     def consolidate(self, items, queryset):
         # Only keep a single item for every channel ID, to get rid of possible

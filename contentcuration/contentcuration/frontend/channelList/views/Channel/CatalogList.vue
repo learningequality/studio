@@ -330,10 +330,18 @@
       getDropdownItems(channel) {
         const items = [];
         if (channel.source_url) {
-          items.push({ label: this.$tr('goToWebsite'), icon: 'openNewTab', value: 'source-url' });
+          items.push({
+            label: this.$tr('goToWebsite'),
+            icon: 'openNewTab',
+            value: 'source-url',
+          });
         }
         if (channel.demo_server_url) {
-          items.push({ label: this.$tr('viewContent'), icon: 'openNewTab', value: 'demo-url' });
+          items.push({
+            label: this.$tr('viewContent'),
+            icon: 'openNewTab',
+            value: 'demo-url',
+          });
         }
         return items;
       },
@@ -421,7 +429,7 @@
       },
     },
     $trs: {
-      title: 'Content library',
+      title: 'Kolibri library',
       resultsText: '{count, plural,\n =1 {# result found}\n other {# results found}}',
       selectChannels: 'Download a summary of selected channels',
       cancelButton: 'Cancel',

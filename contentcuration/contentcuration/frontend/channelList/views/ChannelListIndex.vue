@@ -251,6 +251,8 @@
           title = this.translateConstant('bookmark');
         } else if (routeName === RouteNames.CHANNELS_EDITABLE) {
           title = this.translateConstant('edit');
+        } else if (routeName === RouteNames.COMMUNITY_LIBRARY_ITEMS) {
+          title = this.communityLibraryLabel$();
         }
         // Title changes for other routes are handled by other components, since
         // we can access $tr messages only from within the component.
@@ -264,7 +266,7 @@
     },
     $trs: {
       channelSets: 'Collections',
-      catalog: 'Content Library',
+      catalog: 'Kolibri Library',
       libraryTitle: 'Kolibri Content Library Catalog',
       frequentlyAskedQuestions: 'Frequently asked questions',
     },

@@ -118,10 +118,10 @@
             />
           </div>
         </div>
-        <div class="list-wrapper">
+        <div>
           <div class="results-header">
             <p
-              v-if="!loading"
+              v-if="!loading && activeFilters.length > 0"
               class="results-text"
             >
               {{ resultsText$({ count }) }}
@@ -543,16 +543,13 @@
   }
 
   .content-container {
+    max-width: 1080px;
     padding: 16px;
+    margin: 0 auto;
 
     p {
       margin: 8px 0;
     }
-  }
-
-  .list-wrapper {
-    max-width: 1080px;
-    margin: 0 auto;
   }
 
   .results-header {
