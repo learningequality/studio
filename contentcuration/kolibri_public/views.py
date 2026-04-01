@@ -121,9 +121,7 @@ class ChannelMetadataFilter(FilterSet):
     categories = CharFilter(method=bitmask_contains_and, label="Categories")
     countries = CharInFilter(field_name="countries", label="Countries")
     public = BooleanFilter(field_name="public", label="Public", initial=True)
-    languages = CharInFilter(
-        field_name="included_languages__lang_code", label="Languages"
-    )
+    languages = CharInFilter(field_name="included_languages__id", label="Languages")
 
     class Meta:
         model = models.ChannelMetadata
