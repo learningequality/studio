@@ -16,6 +16,7 @@
       v-model="countriesFilter"
       :label="countryLabel$()"
       :options="countryOptions"
+      :disabled="disabled || !countryOptions.length"
       multiple
       clearable
     />
@@ -24,6 +25,7 @@
       v-model="languagesFilter"
       :label="languagesLabel$()"
       :options="languageOptions"
+      :disabled="disabled || !languageOptions.length"
       multiple
       clearable
     />
@@ -32,6 +34,7 @@
       v-model="categoriesFilter"
       :label="categoriesLabel$()"
       :options="categoryOptions"
+      :disabled="disabled || !categoryOptions.length"
       multiple
       clearable
     />

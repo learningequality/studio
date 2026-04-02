@@ -89,7 +89,7 @@ export const fileStatusMixin = {
 export const constantStrings = createTranslator('ConstantStrings', {
   [ChannelListTypes.EDITABLE]: 'My channels',
   [ChannelListTypes.VIEW_ONLY]: 'View-only',
-  [ChannelListTypes.PUBLIC]: 'Content library',
+  [ChannelListTypes.PUBLIC]: 'Kolibri library',
   [ChannelListTypes.STARRED]: 'Starred',
   do_all: 'Goal: 100% correct',
   num_correct_in_a_row_10: 'Goal: 10 in a row',

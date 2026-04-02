@@ -195,7 +195,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
       'Description of warning shown in the "Submit to Community Library" panel when the channel is not published',
   },
   publicWarningTitle: {
-    message: 'This channel is currently public in the Content Library.',
+    message: 'This channel is currently public in the Kolibri Library.',
     context:
       'Title of warning shown in the "Submit to Community Library" panel when the channel is public',
   },

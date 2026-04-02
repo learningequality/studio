@@ -6,7 +6,7 @@ import StudioViewOnlyChannels from './views/Channel/StudioViewOnlyChannels';
 import StudioCollectionsTable from './views/ChannelSet/StudioCollectionsTable';
 import ChannelSetModal from './views/ChannelSet/ChannelSetModal';
 import CatalogList from './views/Channel/CatalogList';
-import CommunityLibraryList from './views/Channel/CommunityLibraryList';
+import CommunityLibraryList from './views/Channel/CommunityLibraryList/index.vue';
 import { RouteNames } from './constants';
 import CatalogFAQ from './views/Channel/CatalogFAQ';
 import SubmissionDetailsModal from 'shared/views/communityLibrary/SubmissionDetailsModal/index.vue';

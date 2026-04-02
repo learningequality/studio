@@ -126,7 +126,7 @@ describe('CatalogList', () => {
   it('shows the visually hidden title and all channel cards in correct semantic structure', async () => {
     renderComponent();
 
-    const title = await screen.findByRole('heading', { name: /content library/i });
+    const title = await screen.findByRole('heading', { name: /kolibri library/i });
     expect(title).toBeInTheDocument();
     expect(title.tagName).toBe('H1');
     expect(title).toHaveClass('visuallyhidden');
