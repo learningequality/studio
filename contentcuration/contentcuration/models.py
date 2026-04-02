@@ -549,6 +549,17 @@ class User(AbstractBaseUser, PermissionsMixin):
             kind_dict[item["preset__kind_id"]] = item["space"]
         return kind_dict
 
+    def get_effective_disk_space(self):
+        """
+        Returns total disk space including any active subscription bonus.
+        Subscription space is additive to preserve admin-granted quotas.
+        """
+        base = self.disk_space
+        subscription = getattr(self, "subscription", None)
+        if subscription and subscription.is_active:
+            return base + subscription.subscription_disk_space
+        return base
+
     def email_user(self, subject, message, from_email=None, **kwargs):
         try:
             # msg = EmailMultiAlternatives(subject, message, from_email, [self.email])
@@ -718,6 +729,39 @@ class User(AbstractBaseUser, PermissionsMixin):
             ],
             applied=True,
         )
+
+
+class UserSubscription(models.Model):
+    """
+    Tracks Stripe subscription data for a user.
+    Kept separate from User model for clean separation of payment concerns.
+    """
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="subscription",
+    )
+    stripe_customer_id = models.CharField(max_length=255, blank=True, db_index=True)
+    stripe_subscription_id = models.CharField(max_length=255, blank=True, db_index=True)
+    stripe_subscription_status = models.CharField(max_length=50, blank=True)
+    subscription_disk_space = models.BigIntegerField(
+        default=0, help_text="Additional bytes granted by subscription"
+    )
+    cancel_at_period_end = models.BooleanField(default=False)
+    current_period_end = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "contentcuration_usersubscription"
+
+    @property
+    def is_active(self):
+        return self.stripe_subscription_status in ("active", "trialing")
+
+    def __str__(self):
+        return f"Subscription for {self.user.email}: {self.stripe_subscription_status}"
 
 
 class UUIDField(models.CharField):

@@ -433,3 +433,13 @@ LANGUAGE_COOKIE_AGE = 3600 * 24 * 14
 
 # Curriculum Automation Settings
 CURRICULUM_AUTOMATION_API_URL = os.getenv("CURRICULUM_AUTOMATION_API_URL")
+
+# Stripe configuration
+# Production (BRANCH_ENVIRONMENT=master) uses STRIPE_LIVE_* env vars.
+# All other environments use STRIPE_TEST_* (safe — no real charges possible).
+STRIPE_API_VERSION = "2026-03-25.dahlia"
+_stripe_is_production = os.getenv("BRANCH_ENVIRONMENT") == "master"
+_stripe_prefix = "STRIPE_LIVE" if _stripe_is_production else "STRIPE_TEST"
+STRIPE_SECRET_KEY = os.getenv(f"{_stripe_prefix}_SECRET_KEY", "")
+STRIPE_WEBHOOK_SECRET = os.getenv(f"{_stripe_prefix}_WEBHOOK_SECRET", "")
+STRIPE_PRICE_ID = os.getenv(f"{_stripe_prefix}_PRICE_ID", "")

@@ -30,6 +30,7 @@ import contentcuration.views.base as views
 import contentcuration.views.internal as internal_views
 import contentcuration.views.nodes as node_views
 import contentcuration.views.settings as settings_views
+import contentcuration.views.subscription as subscription_views
 import contentcuration.views.users as registration_views
 import contentcuration.views.zip as zip_views
 from contentcuration.views import pwa
@@ -306,6 +307,30 @@ urlpatterns += [
         r"^api/send_custom_email/$",
         admin_views.send_custom_email,
         name="send_custom_email",
+    ),
+]
+
+# Add Stripe subscription endpoints
+urlpatterns += [
+    re_path(
+        r"^api/stripe/create-checkout-session/$",
+        subscription_views.CreateCheckoutSessionView.as_view(),
+        name="stripe_create_checkout_session",
+    ),
+    re_path(
+        r"^api/stripe/create-portal-session/$",
+        subscription_views.CreatePortalSessionView.as_view(),
+        name="stripe_create_portal_session",
+    ),
+    re_path(
+        r"^api/stripe/subscription-status/$",
+        subscription_views.SubscriptionStatusView.as_view(),
+        name="stripe_subscription_status",
+    ),
+    re_path(
+        r"^api/stripe/webhook/$",
+        subscription_views.stripe_webhook,
+        name="stripe_webhook",
     ),
 ]
 

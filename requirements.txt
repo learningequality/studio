@@ -254,6 +254,7 @@ requests==2.33.0
     #   -r requirements.in
     #   google-api-core
     #   google-cloud-storage
+    #   stripe
 rpds-py==0.30.0
     # via
     #   jsonschema
@@ -264,6 +265,11 @@ s3transfer==0.4.2
     # via boto3
 sentry-sdk==2.48.0
     # via -r requirements.in
+setuptools==80.9.0
+    # via
+    #   google-api-core
+    #   google-auth
+    #   marisa-trie
 six==1.16.0
     # via
     #   click-repl
@@ -271,6 +277,8 @@ six==1.16.0
     #   python-dateutil
 sqlparse==0.4.1
     # via django
+stripe==5.5.0
+    # via -r requirements.in
 typing-extensions==4.15.0
     # via
     #   cryptography
