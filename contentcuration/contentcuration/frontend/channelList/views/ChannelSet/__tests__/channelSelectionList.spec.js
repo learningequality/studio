@@ -5,6 +5,13 @@ import { Store } from 'vuex';
 import ChannelSelectionList from '../ChannelSelectionList';
 import { ChannelListTypes } from 'shared/constants';
 
+jest.mock('kolibri-design-system/lib/composables/useKShow', () => ({
+  __esModule: true,
+  default: () => ({
+    show: (_id, loading) => loading,
+  }),
+}));
+
 const searchWord = 'search test';
 
 const editChannel = {
@@ -82,6 +89,21 @@ describe('ChannelSelectionList', () => {
     expect(screen.getByText(editChannel.name)).toBeInTheDocument();
     expect(screen.getByText(editChannel2.name)).toBeInTheDocument();
     expect(screen.queryByText(publicChannel.name)).not.toBeInTheDocument();
+  });
+
+  it('shows loader while the channel list is loading', async () => {
+    let resolveLoad;
+    const loadingPromise = new Promise(resolve => {
+      resolveLoad = resolve;
+    });
+    mockActions.loadChannelList.mockReturnValueOnce(loadingPromise);
+
+    await renderComponent();
+
+    expect(screen.getByTestId('loader')).toBeInTheDocument();
+
+    resolveLoad();
+    expect(await screen.findByLabelText('Search for a channel')).toBeInTheDocument();
   });
 
   it('filters the channel list when the user types in the search box', async () => {
