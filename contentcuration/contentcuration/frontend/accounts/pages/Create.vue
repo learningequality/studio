@@ -509,7 +509,8 @@
           this.form.locations.length > 0 &&
           Boolean(this.form.source && this.form.source.value);
 
-        // acceptedAgreement must be checked explicitly here as it is not included in mixin validation.
+        // acceptedAgreement must be checked explicitly here as it is not included in
+        // mixin validation.
         if (this.valid && this.acceptedAgreement) {
           this.submitting = true;
           const cleanedData = this.cleanFormData(this.form);
