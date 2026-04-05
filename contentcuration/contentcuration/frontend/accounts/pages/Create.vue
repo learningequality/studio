@@ -44,47 +44,37 @@
           {{ $tr('basicInformationHeader') }}
         </h2>
         <KTextbox
-          v-model="form.first_name"
+          v-model="first_name"
           :maxlength="100"
           :autofocus="true"
           :label="$tr('firstNameLabel')"
-          :invalid="Boolean(errors.first_name.length)"
-          :invalidText="errors.first_name.length ? errors.first_name[0] : ''"
+          :invalid="Boolean(errors.first_name)"
+          :invalidText="fieldRequiredText"
           :showInvalidText="true"
-          @input="resetErrors('first_name')"
-          @blur="validateField('first_name')"
         />
         <KTextbox
-          v-model="form.last_name"
+          v-model="last_name"
           :maxlength="100"
           :label="$tr('lastNameLabel')"
-          :invalid="Boolean(errors.last_name.length)"
-          :invalidText="errors.last_name.length ? errors.last_name[0] : ''"
+          :invalid="Boolean(errors.last_name)"
+          :invalidText="fieldRequiredText"
           :showInvalidText="true"
-          @input="resetErrors('last_name')"
-          @blur="validateField('last_name')"
         />
         <StudioEmailField
-          v-model="form.email"
+          v-model="email"
           :maxlength="100"
           :disabled="Boolean($route.query.email)"
-          :errorMessages="errors.email"
-          @input="resetErrors('email')"
-          @blur="validateField('email')"
+          :errorMessages="errors.email ? [emailErrorText] : []"
         />
         <StudioPasswordField
-          v-model="form.password1"
+          v-model="password1"
           :label="$tr('passwordLabel')"
-          :errorMessages="errors.password1"
-          @input="resetErrors('password1')"
-          @blur="validateField('password1')"
+          :errorMessages="errors.password1 ? [password1ErrorText] : []"
         />
         <StudioPasswordField
-          v-model="form.password2"
+          v-model="password2"
           :label="$tr('confirmPasswordLabel')"
-          :errorMessages="errors.password2"
-          @input="resetErrors('password2')"
-          @blur="validateField('password2')"
+          :errorMessages="errors.password2 ? [password2ErrorText] : []"
         />
 
         <!-- Usage -->
@@ -116,12 +106,11 @@
               :label="$tr('otherUsagePlaceholder')"
               :textArea="true"
               :maxlength="500"
-              :invalid="Boolean(errors.other_use.length)"
-              :invalidText="errors.other_use.length ? errors.other_use[0] : ''"
+              :invalid="otherUseError"
+              :invalidText="fieldRequiredText"
               :showInvalidText="true"
               class="conditional-field-textarea"
-              @input="resetErrors('other_use')"
-              @blur="validateField('other_use')"
+              @input="otherUseError = false"
             />
           </KTransition>
         </div>
@@ -243,15 +232,39 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
-  import { uses, sources } from '../constants';
-  import StudioEmailField from '../components/form/StudioEmailField';
-  import StudioPasswordField from '../components/form/StudioPasswordField';
   import CountryField from 'shared/views/form/CountryField';
   import PolicyModals from 'shared/views/policies/PolicyModals';
   import StudioImmersiveModal from 'shared/views/StudioImmersiveModal';
   import StudioBanner from 'shared/views/StudioBanner';
   import { policies } from 'shared/constants';
   import commonStrings from 'shared/translator';
+  import { generateFormMixin } from 'shared/mixins';
+  import { uses, sources } from '../constants';
+  import StudioEmailField from '../components/form/StudioEmailField';
+  import StudioPasswordField from '../components/form/StudioPasswordField';
+
+  const formMixin = generateFormMixin({
+    first_name: {
+      required: true,
+      validator: v => Boolean(v && v.trim()),
+    },
+    last_name: {
+      required: true,
+      validator: v => Boolean(v && v.trim()),
+    },
+    email: {
+      required: true,
+      validator: v => Boolean(v && v.trim()) && /\S+@\S+\.\S+/.test(v),
+    },
+    password1: {
+      required: true,
+      validator: v => Boolean(v) && v.length >= 8,
+    },
+    password2: {
+      required: true,
+      validator: (v, vm) => Boolean(v) && v === vm.form.password1,
+    },
+  });
 
   export default {
     name: 'Create',
@@ -263,17 +276,15 @@
       PolicyModals,
       StudioBanner,
     },
+    mixins: [formMixin],
     data() {
       return {
         valid: true,
         registrationFailed: false,
         submitting: false,
+        serverErrors: {},
+        otherUseError: false,
         form: {
-          first_name: '',
-          last_name: '',
-          email: '',
-          password1: '',
-          password2: '',
           uses: [],
           storage: '',
           other_use: '',
@@ -284,14 +295,6 @@
           other_source: '',
           accepted_policy: false,
           accepted_tos: false,
-        },
-        errors: {
-          first_name: [],
-          last_name: [],
-          email: [],
-          password1: [],
-          other_use: [],
-          password2: [],
         },
       };
     },
@@ -356,6 +359,20 @@
         /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
         return commonStrings.$tr('fieldRequired');
       },
+      emailErrorText() {
+        if (this.serverErrors.email) return this.serverErrors.email;
+        if (!this.email || !this.email.trim()) return this.fieldRequiredText;
+        return this.$tr('emailValidationMessage');
+      },
+      password1ErrorText() {
+        if (this.serverErrors.password1) return this.serverErrors.password1;
+        if (!this.password1) return this.fieldRequiredText;
+        return this.$tr('passwordValidationMessage');
+      },
+      password2ErrorText() {
+        if (!this.password2) return this.fieldRequiredText;
+        return this.$tr('passwordMatchMessage');
+      },
       sourceOptions() {
         return [
           {
@@ -400,57 +417,6 @@
           },
         ];
       },
-      clean() {
-        return data => {
-          const cleanedData = { ...data, policies: {} };
-          Object.keys(cleanedData).forEach(key => {
-            if (key === 'source') {
-              const sourceValue =
-                cleanedData[key] && cleanedData[key].value != null
-                  ? cleanedData[key].value
-                  : typeof cleanedData[key] === 'string'
-                    ? cleanedData[key]
-                    : '';
-              if (sourceValue === sources.ORGANIZATION) {
-                cleanedData[key] = `${cleanedData.organization} (organization)`;
-              } else if (sourceValue === sources.CONFERENCE) {
-                cleanedData[key] = `${cleanedData.conference} (conference)`;
-              } else if (sourceValue === sources.OTHER) {
-                cleanedData[key] = `${cleanedData.other_source} (other)`;
-              } else {
-                cleanedData[key] = sourceValue.trim();
-              }
-            } else if (typeof cleanedData[key] === 'string') {
-              cleanedData[key] = cleanedData[key].trim();
-            } else if (key === 'locations') {
-              cleanedData[key] = cleanedData[key].join('|');
-            } else if (key === 'uses') {
-              cleanedData[key] = cleanedData[key]
-                .map(use => {
-                  if (use === uses.OTHER) {
-                    return `${cleanedData.other_use} (other)`;
-                  } else if (use === uses.STORING) {
-                    return `storage (${cleanedData.storage})`;
-                  }
-                  return use;
-                })
-                .join('|');
-            } else if (key === 'accepted_policy') {
-              cleanedData.policies = {
-                ...cleanedData.policies,
-                ...this.getPolicyAcceptedData(policies.PRIVACY),
-              };
-            } else if (key === 'accepted_tos') {
-              cleanedData.policies = {
-                ...cleanedData.policies,
-                ...this.getPolicyAcceptedData(policies.TERMS_OF_SERVICE),
-              };
-            }
-          });
-          cleanedData.policies = JSON.stringify(cleanedData.policies);
-          return cleanedData;
-        };
-      },
     },
     beforeMount() {
       this.form.email = this.$route.query.email || '';
@@ -474,106 +440,79 @@
       showOtherField(id) {
         return id === uses.OTHER && this.form.uses.includes(id);
       },
-      // Custom validation is used (not generateFormMixin) because KTextbox requires
-      // field-specific error message strings via :invalidText, which generateFormMixin
-      // does not support (it stores only boolean errors per field).
-      validateField(field) {
-        switch (field) {
-          case 'first_name':
-            if (!this.form.first_name || this.form.first_name.trim() === '') {
-              /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
-              this.errors.first_name = [commonStrings.$tr('fieldRequired')];
+      cleanFormData(data) {
+        const cleanedData = { ...data, policies: {} };
+        Object.keys(cleanedData).forEach(key => {
+          if (key === 'source') {
+            const sourceValue =
+              cleanedData[key] && cleanedData[key].value != null
+                ? cleanedData[key].value
+                : typeof cleanedData[key] === 'string'
+                  ? cleanedData[key]
+                  : '';
+            if (sourceValue === sources.ORGANIZATION) {
+              cleanedData[key] = `${cleanedData.organization} (organization)`;
+            } else if (sourceValue === sources.CONFERENCE) {
+              cleanedData[key] = `${cleanedData.conference} (conference)`;
+            } else if (sourceValue === sources.OTHER) {
+              cleanedData[key] = `${cleanedData.other_source} (other)`;
             } else {
-              this.errors.first_name = [];
+              cleanedData[key] = sourceValue.trim();
             }
-            break;
-          case 'last_name':
-            if (!this.form.last_name || this.form.last_name.trim() === '') {
-              /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
-              this.errors.last_name = [commonStrings.$tr('fieldRequired')];
-            } else {
-              this.errors.last_name = [];
-            }
-            break;
-          case 'email':
-            if (!this.form.email || this.form.email.trim() === '') {
-              /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
-              this.errors.email = [commonStrings.$tr('fieldRequired')];
-            } else if (!/\S+@\S+\.\S+/.test(this.form.email)) {
-              this.errors.email = [this.$tr('emailValidationMessage')];
-            } else {
-              this.errors.email = [];
-            }
-            break;
-          case 'password1':
-            if (!this.form.password1) {
-              /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
-              this.errors.password1 = [commonStrings.$tr('fieldRequired')];
-            } else if (this.form.password1.length < 8) {
-              this.errors.password1 = [this.$tr('passwordValidationMessage')];
-            } else {
-              this.errors.password1 = [];
-            }
-            break;
-          case 'password2':
-            if (!this.form.password2) {
-              /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
-              this.errors.password2 = [commonStrings.$tr('fieldRequired')];
-            } else if (this.form.password1 !== this.form.password2) {
-              this.errors.password2 = [this.$tr('passwordMatchMessage')];
-            } else {
-              this.errors.password2 = [];
-            }
-            break;
-          case 'other_use':
-            if (
-              this.form.uses.includes(uses.OTHER) &&
-              (!this.form.other_use || this.form.other_use.trim() === '')
-            ) {
-              /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
-              this.errors.other_use = [commonStrings.$tr('fieldRequired')];
-            } else {
-              this.errors.other_use = [];
-            }
-            break;
-        }
-      },
-      validateForm() {
-        let isValid = true;
-
-        ['first_name', 'last_name', 'email', 'password1', 'password2', 'other_use'].forEach(
-          field => {
-            this.validateField(field);
-            if (this.errors[field].length > 0) {
-              isValid = false;
-            }
-          },
-        );
-
-        if (!this.form.uses || this.form.uses.length === 0) {
-          isValid = false;
-        }
-        if (!this.form.locations || this.form.locations.length === 0) {
-          isValid = false;
-        }
-        if (!this.form.source || !this.form.source.value) {
-          isValid = false;
-        }
-
-        this.valid = isValid;
-        return isValid;
+          } else if (typeof cleanedData[key] === 'string') {
+            cleanedData[key] = cleanedData[key].trim();
+          } else if (key === 'locations') {
+            cleanedData[key] = cleanedData[key].join('|');
+          } else if (key === 'uses') {
+            cleanedData[key] = cleanedData[key]
+              .map(use => {
+                if (use === uses.OTHER) {
+                  return `${cleanedData.other_use} (other)`;
+                } else if (use === uses.STORING) {
+                  return `storage (${cleanedData.storage})`;
+                }
+                return use;
+              })
+              .join('|');
+          } else if (key === 'accepted_policy') {
+            cleanedData.policies = {
+              ...cleanedData.policies,
+              ...this.getPolicyAcceptedData(policies.PRIVACY),
+            };
+          } else if (key === 'accepted_tos') {
+            cleanedData.policies = {
+              ...cleanedData.policies,
+              ...this.getPolicyAcceptedData(policies.TERMS_OF_SERVICE),
+            };
+          }
+        });
+        cleanedData.policies = JSON.stringify(cleanedData.policies);
+        return cleanedData;
       },
       submit() {
-        // acceptedAgreement must be checked explicitly
-        // here as it is not included in validateForm().
-        if (this.validateForm() && this.acceptedAgreement) {
-          // Prevent double submission
-          if (this.submitting) {
-            return Promise.resolve();
-          }
+        this.serverErrors = {};
 
+        if (this.submitting) return Promise.resolve();
+
+        // Validate mixin-managed fields (first_name, last_name, email, password1, password2)
+        const isMixinValid = this.validate(this.form);
+
+        // Validate non-mixin fields manually
+        const isOtherUseValid =
+          !this.form.uses.includes(uses.OTHER) || Boolean(this.form.other_use.trim());
+        this.otherUseError = !isOtherUseValid;
+
+        this.valid =
+          isMixinValid &&
+          isOtherUseValid &&
+          this.form.uses.length > 0 &&
+          this.form.locations.length > 0 &&
+          Boolean(this.form.source && this.form.source.value);
+
+        // acceptedAgreement must be checked explicitly here as it is not included in mixin validation.
+        if (this.valid && this.acceptedAgreement) {
           this.submitting = true;
-          const cleanedData = this.clean(this.form);
+          const cleanedData = this.cleanFormData(this.form);
           return this.register(cleanedData)
             .then(() => {
               this.$router.push({ name: 'ActivationSent' });
@@ -582,26 +521,22 @@
               if (error.message === 'Network Error') {
                 this.$refs.top.scrollIntoView({ behavior: 'smooth' });
               } else if (error.response.status === 400) {
+                const mixinFields = ['first_name', 'last_name', 'email', 'password1', 'password2'];
                 for (const field of error.response.data) {
-                  if (!Object.prototype.hasOwnProperty.call(this.errors, field)) {
-                    continue;
-                  }
-                  let message = '';
-                  switch (field) {
-                    case 'password1':
-                      message = this.$tr('passwordValidationMessage');
-                      break;
-                    default:
-                      /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
-                      message = commonStrings.$tr('fieldHasError');
-                      break;
-                  }
-                  this.errors[field] = [message];
+                  if (!mixinFields.includes(field)) continue;
+                  const message =
+                    field === 'password1'
+                      ? this.$tr('passwordValidationMessage')
+                      : /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+                        commonStrings.$tr('fieldHasError');
+                  this.$set(this.serverErrors, field, message);
+                  this.$set(this.errors, field, true);
                 }
                 this.registrationFailed = true;
                 this.valid = false;
               } else if (error.response.status === 403) {
-                this.errors.email = [this.$tr('emailExistsMessage')];
+                this.$set(this.serverErrors, 'email', this.$tr('emailExistsMessage'));
+                this.$set(this.errors, 'email', true);
               } else if (error.response.status === 405) {
                 this.$router.push({ name: 'AccountNotActivated' });
               } else {
@@ -612,13 +547,10 @@
             .finally(() => {
               this.submitting = false;
             });
-        } else if (this.$refs.top.scrollIntoView) {
+        } else if (this.$refs.top && this.$refs.top.scrollIntoView) {
           this.$refs.top.scrollIntoView({ behavior: 'smooth' });
         }
         return Promise.resolve();
-      },
-      resetErrors(field) {
-        this.errors[field] = [];
       },
     },
 
