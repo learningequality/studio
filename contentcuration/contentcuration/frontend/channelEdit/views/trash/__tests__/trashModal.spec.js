@@ -17,8 +17,7 @@ const testChildren = [
   { id: 'test2', title: 'Item', kind: 'audio', modified: new Date(2020, 2, 1) },
   { id: 'test3', title: 'Topic', kind: 'topic', modified: new Date(2020, 1, 1) },
 ];
-
-async function makeWrapper(items = testChildren, isLoading = false, stubOverrides = {}) {
+async function makeWrapper(items = testChildren, isLoading = false) {
   const loadContentNodesSpy = jest.spyOn(TrashModal.methods, 'loadContentNodes').mockResolvedValue({});
   jest.spyOn(TrashModal.methods, 'loadAncestors').mockResolvedValue();
   jest.spyOn(TrashModal.methods, 'removeContentNodes').mockResolvedValue();
@@ -59,9 +58,20 @@ async function makeWrapper(items = testChildren, isLoading = false, stubOverride
         counts: () => ({ topicCount: 0, resourceCount: 0 }),
       },
       stubs: {
-        MoveModal: true,
         ResourceDrawer: true,
-        ...stubOverrides,
+        OfflineText: true,
+        MoveModal: {
+          template: `
+            <div>
+              <button data-test="move-target" @click="$emit('target', 'target-node-id'); $emit('input', false)">
+                Confirm move
+              </button>
+            </div>
+          `,
+          methods: {
+            moveComplete() {} 
+          }
+        },
         FullscreenModal: {
           template: `
             <div>
@@ -71,7 +81,6 @@ async function makeWrapper(items = testChildren, isLoading = false, stubOverride
             </div>
           `,
         },
-        OfflineText: true,
       },
     },
     localVue => {
@@ -248,47 +257,32 @@ describe('TrashModal', () => {
       await user.click(selectAll);
       await user.click(screen.getByTestId('restore'));
 
-      await waitFor(() => {
-        expect(document.querySelector('movemodal-stub')).toBeInTheDocument();
-      });
+      // Checks for the fake button from our clean MoveModal stub
+      expect(await screen.findByTestId('move-target')).toBeInTheDocument();
     });
 
     it('restoring items clears selection and closes the preview', async () => {
-    jest.spyOn(TrashModal.methods, 'moveContentNodes').mockResolvedValue();
-    const { user } = await makeWrapper(testChildren, false, {
-      MoveModal: {
-        methods: {
-          moveComplete() {},
-        },
-        template: `
-          <div>
-            <button
-              data-test="move-target"
-              @click="$emit('target', 'target-node-id'); $emit('input', false)"
-            >
-              Confirm move
-            </button>
-          </div>
-        `,
-      },
-    });
+      jest.spyOn(TrashModal.methods, 'moveContentNodes').mockResolvedValue();
+      const { user } = await makeWrapper(); // CLEAN: No stubOverrides needed!
 
-    await user.click(screen.getAllByTestId('item')[0]);
-    await waitFor(() => {
-      expect(document.querySelector('resourcedrawer-stub')).toHaveAttribute('nodeid', testChildren[0].id);
-    });
-
-    await user.click(screen.getAllByRole('checkbox')[0]);
-    await user.click(screen.getByTestId('restore'));
-    await user.click(screen.getByTestId('move-target'));
-
-    await waitFor(() => {
-      screen.getAllByRole('checkbox').slice(1).forEach(cb => {
-        expect(cb).not.toBeChecked();
+      await user.click(screen.getAllByTestId('item')[0]);
+      await waitFor(() => {
+        expect(document.querySelector('resourcedrawer-stub')).toHaveAttribute('nodeid', testChildren[0].id);
       });
-      expect(document.querySelector('resourcedrawer-stub')).not.toHaveAttribute('nodeid', testChildren[0].id);
+
+      await user.click(screen.getAllByRole('checkbox')[0]);
+      await user.click(screen.getByTestId('restore'));
+      
+      // Click the fake move button
+      await user.click(screen.getByTestId('move-target'));
+
+      await waitFor(() => {
+        screen.getAllByRole('checkbox').slice(1).forEach(cb => {
+          expect(cb).not.toBeChecked();
+        });
+        expect(document.querySelector('resourcedrawer-stub')).not.toHaveAttribute('nodeid', testChildren[0].id);
+      });
     });
-  });
   });
 
   describe('selection count', () => {
