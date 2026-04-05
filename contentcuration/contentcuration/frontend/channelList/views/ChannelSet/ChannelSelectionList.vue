@@ -171,8 +171,8 @@
   }
 
   .channel-checkbox {
-    margin: 0;
     padding-inline-end: 4px;
+    margin: 0;
   }
 
   .list-card-hover {
