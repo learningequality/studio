@@ -13,7 +13,7 @@
       />
       <p
         v-if="!listChannels.length"
-        class="grey--text no-channels-found"
+        class="no-channels-found"
       >
         {{ $tr('noChannelsFound') }}
       </p>
@@ -159,6 +159,7 @@
   .no-channels-found {
     margin-top: 16px;
     margin-bottom: 0;
+    color: v-bind('$themeTokens.annotation');
   }
 
   .selection-card {
