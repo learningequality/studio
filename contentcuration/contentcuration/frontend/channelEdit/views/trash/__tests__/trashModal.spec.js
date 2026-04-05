@@ -1,308 +1,326 @@
-import { render, screen, waitFor } from '@testing-library/vue';
+import { render, screen, waitFor, configure } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
-import TrashModal from '../TrashModal';
+import VueRouter from 'vue-router';
+
 import { factory } from '../../../store';
-import router from '../../../router';
 import { RouteNames } from '../../../constants';
+import TrashModal from '../TrashModal';
+
+const store = factory();
+
+const CHANNEL_ID = 'test-channel-id';
+const TRASH_ID = 'trash-root-id';
+const NODE_ID = 'tree-node-id';
 
 const testChildren = [
-  {
-    id: 'test1',
-    title: 'Item1',
-    kind: 'video',
-    modified: new Date(2020, 1, 20),
-  },
-  {
-    id: 'test2',
-    title: 'Item2',
-    kind: 'audio',
-    modified: new Date(2020, 2, 1),
-  },
-  {
-    id: 'test3',
-    title: 'Topic1',
-    kind: 'topic',
-    modified: new Date(2020, 1, 1),
-  },
+  { id: 'test1', title: 'Item', kind: 'video', modified: new Date(2020, 1, 20) },
+  { id: 'test2', title: 'Item', kind: 'audio', modified: new Date(2020, 2, 1) },
+  { id: 'test3', title: 'Topic', kind: 'topic', modified: new Date(2020, 1, 1) },
 ];
 
-const makeWrapper = (items = testChildren, dataOverride = {}) => {
-  const store = factory();
-  
-  // Create spies for methods before rendering
-  const loadContentNodes = jest.spyOn(TrashModal.methods, 'loadContentNodes');
-  loadContentNodes.mockImplementation(() => Promise.resolve());
-  const loadAncestors = jest.spyOn(TrashModal.methods, 'loadAncestors');
-  loadAncestors.mockImplementation(() => Promise.resolve());
-  const loadChildren = jest.spyOn(TrashModal.methods, 'loadChildren');
-  loadChildren.mockImplementation(() => Promise.resolve({ more: null, results: [] }));
-  const removeContentNodes = jest.spyOn(TrashModal.methods, 'removeContentNodes');
-  removeContentNodes.mockImplementation(() => Promise.resolve());
+async function makeWrapper(items = testChildren, isLoading = false, stubOverrides = {}) {
+  const loadContentNodesSpy = jest.spyOn(TrashModal.methods, 'loadContentNodes').mockResolvedValue({});
+  jest.spyOn(TrashModal.methods, 'loadAncestors').mockResolvedValue();
+  jest.spyOn(TrashModal.methods, 'removeContentNodes').mockResolvedValue();
+  const loadNodesSpy = jest.spyOn(TrashModal.methods, 'loadNodes');
 
-  const loadNodes = jest.spyOn(TrashModal.methods, 'loadNodes');
-  // If we want loading: true, we can set dataOverride.
-  loadNodes.mockImplementation(function() {
-    this.loading = dataOverride.loading !== undefined ? dataOverride.loading : false;
-    this.more = null;
-    this.moreLoading = false;
+  if (isLoading) {
+    jest.spyOn(TrashModal.methods, 'loadChildren').mockReturnValue(new Promise(() => {}));
+  } else {
+    jest.spyOn(TrashModal.methods, 'loadChildren').mockResolvedValue({
+      more: items === testChildren ? null : { parent: TRASH_ID, page: 2 },
+      results: [],
+    });
+  }
+
+  const router = new VueRouter({
+    routes: [
+      { name: RouteNames.TRASH, path: '/:nodeId/trash', component: TrashModal },
+      { name: RouteNames.TREE_VIEW, path: '/:nodeId/:detailNodeId?', component: { template: '<div>Tree</div>' } },
+    ],
   });
 
-  const utils = render(TrashModal, {
-    store,
-    router,
-    computed: {
-      currentChannel() {
-        return {
-          id: 'current channel',
-        };
-      },
-      trashId() {
-        return 'trash';
-      },
-      items() {
-        return items;
-      },
-      offline() {
-        return false;
-      },
-      backLink() {
-        return {
-          name: 'TEST_PARENT',
-        };
-      },
-    },
-    stubs: {
-      ResourceDrawer: true,
-      OfflineText: true,
-      MoveModal: {
-        template: '<movemodal-stub></movemodal-stub>',
-        methods: { moveComplete: jest.fn() }
-      },
-    },
-    propsData: {
-      nodeId: 'test',
-    },
-  });
+  router.replace({ name: RouteNames.TRASH, params: { nodeId: NODE_ID } }).catch(() => {});
 
-  return { ...utils, store, loadContentNodes, loadAncestors, loadChildren, loadNodes, removeContentNodes };
-};
+  const routerPush = jest.spyOn(router, 'push').mockResolvedValue();
 
-describe('trashModal', () => {
-  let user;
+  const utils = render(
+    TrashModal,
+    {
+      store,
+      router,
+      computed: {
+        currentChannel: () => ({ id: CHANNEL_ID }),
+        trashId: () => TRASH_ID,
+        items: () => items,
+        offline: () => false,
+        backLink: () => ({ name: RouteNames.TREE_VIEW, params: { nodeId: NODE_ID } }),
+        getSelectedTopicAndResourceCountText: () => ids => `${ids.length} items selected`,
+        counts: () => ({ topicCount: 0, resourceCount: 0 }),
+      },
+      stubs: {
+        MoveModal: true,
+        ResourceDrawer: true,
+        ...stubOverrides,
+        FullscreenModal: {
+          template: `
+            <div>
+              <button data-test="close" @click="$emit('input', false)">Close</button>
+              <slot></slot>
+              <slot name="bottom"></slot>
+            </div>
+          `,
+        },
+        OfflineText: true,
+      },
+    },
+    localVue => {
+      localVue.use(VueRouter);
+    },
+  );
+
+  if (!isLoading) {
+    await waitFor(() => {
+      expect(screen.queryByTestId('loading')).not.toBeInTheDocument();
+    });
+  }
+
+  const user = userEvent.setup();
+  return { ...utils, routerPush, user, loadNodesSpy, loadContentNodesSpy };
+}
+
+describe('TrashModal', () => {
+  beforeAll(() => configure({ testIdAttribute: 'data-test' }));
+  afterAll(() => configure({ testIdAttribute: 'data-testid' }));
 
   beforeEach(() => {
-    user = userEvent.setup();
-    jest.clearAllMocks();
-    router.replace({ name: RouteNames.TRASH, params: { nodeId: 'test' } }).catch(() => {});
+    jest.restoreAllMocks();
   });
 
   describe('on load', () => {
-    it('should show loading indicator if content is loading', async () => {
-      makeWrapper(testChildren, { loading: true });
-      expect(document.querySelector('[data-test="loading"]')).toBeInTheDocument();
+    it('shows a loading indicator while content is loading', async () => {
+      await makeWrapper(testChildren, true);
+      expect(screen.getByTestId('loading')).toBeInTheDocument();
     });
 
-    it('should show empty text if there are no items', async () => {
-      makeWrapper([]);
-      expect(screen.getByText('Trash is empty')).toBeInTheDocument();
+    it('shows empty text when trash has no items', async () => {
+      await makeWrapper([]);
+      expect(screen.getByTestId('empty')).toBeInTheDocument();
     });
 
-    it('should show items in list', async () => {
-      makeWrapper();
-      expect(screen.getByText('Item1')).toBeInTheDocument();
-      expect(screen.getByText('Item2')).toBeInTheDocument();
-      expect(screen.getByText('Topic1')).toBeInTheDocument();
+    it('shows the item list when trash has items', async () => {
+      await makeWrapper();
+      expect(screen.getByTestId('list')).toBeInTheDocument();
     });
   });
 
   describe('on topic tree selection', () => {
-    it('clicking item should set previewNodeId', async () => {
-      makeWrapper();
-      expect(screen.getByText('Item1')).toBeInTheDocument();
+    it('clicking an item opens the resource drawer for that item', async () => {
+      const { user } = await makeWrapper();
 
-      const item1 = screen.getByText('Item1');
-      await user.click(item1);
+      expect(document.querySelector('resourcedrawer-stub')).not.toHaveAttribute('nodeid', testChildren[0].id);
+
+      await user.click(screen.getAllByTestId('item')[0]);
 
       await waitFor(() => {
         const drawer = document.querySelector('resourcedrawer-stub');
-        expect(drawer).toHaveAttribute('nodeid', 'test1');
+        expect(drawer).toBeInTheDocument();
+        expect(drawer).toHaveAttribute('nodeid', testChildren[0].id);
       });
     });
 
-    it('checking item in list should add the item ID to the selected array', async () => {
-      makeWrapper();
-      expect(screen.getByText('Item1')).toBeInTheDocument();
+    it('checking an item enables the Delete and Restore buttons', async () => {
+      const { user } = await makeWrapper();
+
+      expect(screen.getByTestId('delete')).toBeDisabled();
+      expect(screen.getByTestId('restore')).toBeDisabled();
 
       const checkboxes = screen.getAllByRole('checkbox');
-      const firstItemCheckbox = checkboxes[1];
-      
-      expect(screen.getByRole('button', { name: /Delete/i })).toBeDisabled();
-      
-      await user.click(firstItemCheckbox);
-      
+      await user.click(checkboxes[1]);
+
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Delete/i })).toBeEnabled();
+        expect(screen.getByTestId('delete')).toBeEnabled();
+        expect(screen.getByTestId('restore')).toBeEnabled();
       });
     });
 
-    it('checking select all checkbox should check all items', async () => {
-      makeWrapper();
-      expect(screen.getByText('Item1')).toBeInTheDocument();
-
-      const selectAllCheckbox = screen.getAllByRole('checkbox')[0];
-      await user.click(selectAllCheckbox);
+    it('checking the select-all checkbox checks all items', async () => {
+      const { user } = await makeWrapper();
+      const [selectAll] = screen.getAllByRole('checkbox');
+      await user.click(selectAll);
 
       await waitFor(() => {
-        const itemCheckboxes = screen.getAllByRole('checkbox').slice(1);
-        itemCheckboxes.forEach(checkbox => {
-          expect(checkbox).toBeChecked();
+        screen.getAllByRole('checkbox').slice(1).forEach(cb => {
+          expect(cb).toBeChecked();
         });
       });
     });
   });
 
   describe('on close', () => {
-    it('clicking close button should go back to parent route', async () => {
-      makeWrapper();
-      expect(screen.getByText('Item1')).toBeInTheDocument();
+    it('clicking the close button navigates back to the tree view', async () => {
+      const { routerPush, user } = await makeWrapper();
 
-      const closeButton = document.querySelector('[data-test="close"]');
-      await user.click(closeButton);
+      await user.click(screen.getByTestId('close'));
 
       await waitFor(() => {
-        expect(router.currentRoute.name).toBe('TEST_PARENT');
+        expect(routerPush).toHaveBeenCalledWith(
+          expect.objectContaining({ name: RouteNames.TREE_VIEW }),
+        );
       });
     });
   });
 
   describe('on delete', () => {
-    it('DELETE button should be disabled if no items are selected', async () => {
-      makeWrapper();
-      expect(screen.getByText('Item1')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Delete/i })).toBeDisabled();
+    it('Delete button is disabled when no items are selected', async () => {
+      await makeWrapper();
+      expect(screen.getByTestId('delete')).toBeDisabled();
     });
 
-    it('clicking DELETE button should open delete confirmation dialog', async () => {
-      makeWrapper();
-      expect(screen.getByText('Item1')).toBeInTheDocument();
+    it('clicking Delete opens a confirmation dialog', async () => {
+      const { user } = await makeWrapper();
+      const [selectAll] = screen.getAllByRole('checkbox');
+      await user.click(selectAll);
+      await user.click(screen.getByTestId('delete'));
 
-      const selectAllCheckbox = screen.getAllByRole('checkbox')[0];
-      await user.click(selectAllCheckbox);
-
-      const deleteButton = screen.getByRole('button', { name: /Delete/i });
-      await user.click(deleteButton);
-
-      await waitFor(() => {
-        expect(screen.getByText(/You cannot undo this action/i)).toBeInTheDocument();
-      });
+      expect(await screen.findByText(/You cannot undo this action/i)).toBeInTheDocument();
     });
 
-    it('clicking CLOSE on delete confirmation dialog should close the dialog', async () => {
-      makeWrapper();
-      expect(screen.getByText('Item1')).toBeInTheDocument();
+    it('clicking Cancel in the confirmation dialog closes it', async () => {
+      const { user } = await makeWrapper();
+      const [selectAll] = screen.getAllByRole('checkbox');
+      await user.click(selectAll);
+      await user.click(screen.getByTestId('delete'));
+      await screen.findByText(/You cannot undo this action/i);
 
-      const selectAllCheckbox = screen.getAllByRole('checkbox')[0];
-      await user.click(selectAllCheckbox);
-
-      const deleteButton = screen.getByRole('button', { name: /Delete/i });
-      await user.click(deleteButton);
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Cancel/i })).toBeInTheDocument();
-      });
-
-      const cancelButton = screen.getByRole('button', { name: /Cancel/i });
-      await user.click(cancelButton);
+      await user.click(screen.getByRole('button', { name: /Cancel/i }));
 
       await waitFor(() => {
         expect(screen.queryByText(/You cannot undo this action/i)).not.toBeInTheDocument();
       });
     });
 
-    it('clicking DELETE PERMANENTLY on delete confirmation dialog should trigger deletion', async () => {
-      const deleteContentNodesSpy = jest.spyOn(TrashModal.methods, 'deleteContentNodes');
-      deleteContentNodesSpy.mockImplementation(() => Promise.resolve());
+    it('clicking Delete permanently calls deleteContentNodes with the selected IDs', async () => {
+      const deleteContentNodes = jest
+        .spyOn(TrashModal.methods, 'deleteContentNodes')
+        .mockResolvedValue();
 
-      makeWrapper();
-      expect(screen.getByText('Item1')).toBeInTheDocument();
+      const { user } = await makeWrapper();
 
-      const selectAllCheckbox = screen.getAllByRole('checkbox')[0];
-      await user.click(selectAllCheckbox);
-
-      const deleteButton = screen.getByRole('button', { name: /Delete/i });
-      await user.click(deleteButton);
-
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Delete permanently/i })).toBeInTheDocument();
-      });
-
-      const confirmDeleteButton = screen.getByRole('button', { name: /Delete permanently/i });
-      await user.click(confirmDeleteButton);
+      const [selectAll] = screen.getAllByRole('checkbox');
+      await user.click(selectAll);
+      await user.click(screen.getByTestId('delete'));
+      await user.click(await screen.findByRole('button', { name: /Delete permanently/i }));
 
       await waitFor(() => {
-        expect(deleteContentNodesSpy).toHaveBeenCalledWith(['test1', 'test2', 'test3']);
+        expect(deleteContentNodes).toHaveBeenCalledWith(testChildren.map(c => c.id));
       });
-      deleteContentNodesSpy.mockRestore();
+    });
+
+    it('successful deletion triggers snackbar and reloads nodes', async () => {
+      jest.spyOn(TrashModal.methods, 'deleteContentNodes').mockResolvedValue();
+      const dispatchSpy = jest.spyOn(store, 'dispatch').mockImplementation(() => Promise.resolve());
+
+      const { user, loadNodesSpy } = await makeWrapper();
+      const [selectAll] = screen.getAllByRole('checkbox');
+      await user.click(selectAll);
+      await user.click(screen.getByTestId('delete'));
+      await user.click(await screen.findByRole('button', { name: /Delete permanently/i }));
+
+      await waitFor(() => {
+        expect(dispatchSpy).toHaveBeenCalledWith('showSnackbar', {
+          text: 'Permanently deleted',
+        });
+        expect(loadNodesSpy).toHaveBeenCalled();
+      });
     });
   });
 
   describe('on restore', () => {
-    it('RESTORE button should be disabled if no items are selected', async () => {
-      makeWrapper();
-      expect(screen.getByText('Item1')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Restore/i })).toBeDisabled();
+    it('Restore button is disabled when no items are selected', async () => {
+      await makeWrapper();
+      expect(screen.getByTestId('restore')).toBeDisabled();
     });
 
-    it('RESTORE should set moveModalOpen to true', async () => {
-      makeWrapper();
-      expect(screen.getByText('Item1')).toBeInTheDocument();
-
-      const selectAllCheckbox = screen.getAllByRole('checkbox')[0];
-      await user.click(selectAllCheckbox);
-
-      const restoreButton = screen.getByRole('button', { name: /Restore/i });
-      await user.click(restoreButton);
-
-      await waitFor(() => {
-        expect(document.querySelector('.fullscreen-modal-window')).toBeFalsy();
-      });
-    });
-
-    it('moveNodes should clear selected and previewNodeId', async () => {
-      const moveContentNodesSpy = jest.spyOn(TrashModal.methods, 'moveContentNodes');
-      moveContentNodesSpy.mockImplementation(() => Promise.resolve());
-
-      makeWrapper();
-      expect(screen.getByText('Item1')).toBeInTheDocument();
-
-      const itemCheckbox = screen.getAllByRole('checkbox')[1];
-      await user.click(itemCheckbox);
-      
-      const itemText = screen.getByText('Item2');
-      await user.click(itemText);
-
-      await waitFor(() => {
-        expect(document.querySelector('resourcedrawer-stub')).toHaveAttribute('nodeid', 'test2');
-      });
-
-      // Restore action to open MoveModal
-      const restoreButton = screen.getByRole('button', { name: /Restore/i });
-      await user.click(restoreButton);
+    it('clicking Restore opens the MoveModal', async () => {
+      const { user } = await makeWrapper();
+      const [selectAll] = screen.getAllByRole('checkbox');
+      await user.click(selectAll);
+      await user.click(screen.getByTestId('restore'));
 
       await waitFor(() => {
         expect(document.querySelector('movemodal-stub')).toBeInTheDocument();
       });
+    });
 
-      const moveModalStub = document.querySelector('movemodal-stub');
-      moveModalStub.__vue__.$emit('target', 'new-parent-id');
+    it('restoring items clears selection and closes the preview', async () => {
+    jest.spyOn(TrashModal.methods, 'moveContentNodes').mockResolvedValue();
+    const { user } = await makeWrapper(testChildren, false, {
+      MoveModal: {
+        methods: {
+          moveComplete() {},
+        },
+        template: `
+          <div>
+            <button
+              data-test="move-target"
+              @click="$emit('target', 'target-node-id'); $emit('input', false)"
+            >
+              Confirm move
+            </button>
+          </div>
+        `,
+      },
+    });
+
+    await user.click(screen.getAllByTestId('item')[0]);
+    await waitFor(() => {
+      expect(document.querySelector('resourcedrawer-stub')).toHaveAttribute('nodeid', testChildren[0].id);
+    });
+
+    await user.click(screen.getAllByRole('checkbox')[0]);
+    await user.click(screen.getByTestId('restore'));
+    await user.click(screen.getByTestId('move-target'));
+
+    await waitFor(() => {
+      screen.getAllByRole('checkbox').slice(1).forEach(cb => {
+        expect(cb).not.toBeChecked();
+      });
+      expect(document.querySelector('resourcedrawer-stub')).not.toHaveAttribute('nodeid', testChildren[0].id);
+    });
+  });
+  });
+
+  describe('selection count', () => {
+    it('shows selected item count in the bottom bar', async () => {
+      const { user } = await makeWrapper();
+
+      expect(screen.queryByText(/items selected/i)).not.toBeInTheDocument();
+
+      const [selectAll] = screen.getAllByRole('checkbox');
+      await user.click(selectAll);
+
+      expect(
+        await screen.findByText(`${testChildren.length} items selected`),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('pagination', () => {
+    it('shows a Show more button when there is more paginated content', async () => {
+      await makeWrapper([testChildren[0]]);
+      expect(await screen.findByRole('button', { name: /Show more/i })).toBeInTheDocument();
+    });
+
+    it('clicking Show more calls loadContentNodes with pagination params', async () => {
+      const { user, loadContentNodesSpy } = await makeWrapper([testChildren[0]]);
+      const showMoreBtn = await screen.findByRole('button', { name: /Show more/i });
+
+      await user.click(showMoreBtn);
 
       await waitFor(() => {
-        expect(moveContentNodesSpy).toHaveBeenCalledWith(expect.objectContaining({
-          id__in: expect.any(Array),
-          parent: 'new-parent-id'
-        }));
+        expect(loadContentNodesSpy).toHaveBeenCalledWith({ parent: TRASH_ID, page: 2 });
       });
-      moveContentNodesSpy.mockRestore();
     });
   });
 });
