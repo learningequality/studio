@@ -232,6 +232,9 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
+  import { uses, sources } from '../constants';
+  import StudioEmailField from '../components/form/StudioEmailField';
+  import StudioPasswordField from '../components/form/StudioPasswordField';
   import CountryField from 'shared/views/form/CountryField';
   import PolicyModals from 'shared/views/policies/PolicyModals';
   import StudioImmersiveModal from 'shared/views/StudioImmersiveModal';
@@ -239,9 +242,6 @@
   import { policies } from 'shared/constants';
   import commonStrings from 'shared/translator';
   import { generateFormMixin } from 'shared/mixins';
-  import { uses, sources } from '../constants';
-  import StudioEmailField from '../components/form/StudioEmailField';
-  import StudioPasswordField from '../components/form/StudioPasswordField';
 
   const formMixin = generateFormMixin({
     first_name: {
