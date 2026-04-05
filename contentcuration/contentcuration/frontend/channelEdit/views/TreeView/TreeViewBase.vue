@@ -138,6 +138,7 @@
           <template #menu>
             <KDropdownMenu
               :options="channelMenuOptions"
+              :hasIcons="true"
               @select="handleChannelMenuSelect"
             />
           </template>
@@ -410,6 +411,9 @@
         }
         return this.canManage && this.isPublished && !this.currentChannel.public;
       },
+      canShareChannel() {
+        return this.canManage || this.isPublished;
+      },
       viewChannelDetailsLink() {
         return {
           name: ChannelRouteNames.CHANNEL_DETAILS,
@@ -466,6 +470,7 @@
         return DropEffect.COPY;
       },
       shareMenuOptions() {
+        if (!this.canShareChannel) return [];
         const options = [];
         if (this.canSubmitToCommunityLibrary) {
           options.push({
@@ -503,32 +508,32 @@
             value: ChannelMenuOptions.VIEW_DETAILS,
           });
           if (this.canEdit) {
-            let label = this.$tr('editChannel');
+            const editOption = {
+              label: this.$tr('editChannel'),
+              value: ChannelMenuOptions.EDIT_CHANNEL,
+            };
             if (!this.currentChannel.language) {
-              label = `${label} ⚠️`;
+              editOption.icon = 'warningIncomplete';
             }
-            options.push({
-              label,
-              value: 'edit-channel',
-            });
+            options.push(editOption);
           }
 
           if (this.canSubmitToCommunityLibrary) {
             options.push({
               label: this.$tr('submitToCommunityLibrary'),
-              value: 'submit-to-library',
+              value: ShareMenuOptions.SUBMIT_TO_LIBRARY,
             });
           }
           if (this.canManage) {
             options.push({
               label: this.$tr('inviteCollaborators'),
-              value: 'invite-collaborators',
+              value: ShareMenuOptions.INVITE_COLLABORATORS,
             });
           }
           if (this.isPublished) {
             options.push({
               label: this.$tr('shareToken'),
-              value: 'share-token',
+              value: ShareMenuOptions.SHARE_TOKEN,
             });
           }
         } else {
