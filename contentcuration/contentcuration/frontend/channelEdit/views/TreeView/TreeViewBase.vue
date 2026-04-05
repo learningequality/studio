@@ -130,7 +130,7 @@
       </template>
       <VToolbarItems>
         <KIconButton
-          v-if="channelMenuOptions.length"
+          v-if="!loading && channelMenuOptions.length"
           class="toolbar-icon-btn"
           icon="optionsHorizontal"
           :tooltip="$tr('moreOptions')"
@@ -501,6 +501,12 @@
               label: this.$tr('publishButton'),
               value: ChannelMenuOptions.PUBLISH,
               disabled: this.disablePublish,
+            });
+          }
+          if (this.currentChannel && this.currentChannel.draft_token) {
+            options.push({
+              label: this.getDraftTokenAction$(),
+              value: ChannelMenuOptions.PREVIEW_DRAFT,
             });
           }
           options.push({
