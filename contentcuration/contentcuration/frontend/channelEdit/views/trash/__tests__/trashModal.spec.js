@@ -8,9 +8,7 @@ import TrashModal from '../TrashModal';
 
 const store = factory();
 
-const CHANNEL_ID = 'test-channel-id';
 const TRASH_ID = 'trash-root-id';
-const NODE_ID = 'tree-node-id';
 
 const testChildren = [
   { id: 'test1', title: 'Item', kind: 'video', modified: new Date(2020, 1, 20) },
@@ -46,7 +44,7 @@ async function makeWrapper(items = testChildren, isLoading = false) {
     ],
   });
 
-  router.replace({ name: RouteNames.TRASH, params: { nodeId: NODE_ID } }).catch(() => {});
+  router.replace({ name: RouteNames.TRASH, params: { nodeId: 'test' } }).catch(() => {});
 
   const routerPush = jest.spyOn(router, 'push').mockResolvedValue();
 
@@ -60,11 +58,11 @@ async function makeWrapper(items = testChildren, isLoading = false) {
         OfflineText: true,
       },
       computed: {
-        currentChannel: () => ({ id: CHANNEL_ID }),
+        currentChannel: () => ({ id: 'test-channel-id' }),
         trashId: () => TRASH_ID,
         items: () => items,
         offline: () => false,
-        backLink: () => ({ name: RouteNames.TREE_VIEW, params: { nodeId: NODE_ID } }),
+        backLink: () => ({ name: RouteNames.TREE_VIEW, params: { nodeId: 'test' } }),
         getSelectedTopicAndResourceCountText: () => ids => `${ids.length} items selected`,
         counts: () => ({ topicCount: 0, resourceCount: 0 }),
       },
