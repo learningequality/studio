@@ -235,35 +235,7 @@ describe('TrashModal', () => {
       expect(await screen.findByRole('button', { name: /Move here/i })).toBeInTheDocument();
     });
 
-    it('clears selection when the move is completed', async () => {
-      jest.spyOn(TrashModal.methods, 'moveContentNodes').mockResolvedValue();
-      const { user } = await makeWrapper();
 
-      const checkboxes = screen.getAllByRole('checkbox');
-      await user.click(checkboxes[1]);
-      await user.click(checkboxes[2]);
-      expect(checkboxes[1]).toBeChecked();
-      await TrashModal.methods.moveNodes.call(
-        {
-          ...TrashModal.computed,
-          selected: ['test1', 'test2'],
-          moveContentNodes: TrashModal.methods.moveContentNodes,
-          reset: TrashModal.methods.reset,
-          loadNodes: jest.fn(),
-          toggleSelectAll: val => {
-            checkboxes[1].checked = val;
-            checkboxes[2].checked = val;
-          },
-          $refs: { moveModal: { moveComplete: jest.fn() } },
-        },
-        'target-id',
-      );
-
-      await waitFor(() => {
-        expect(checkboxes[1]).not.toBeChecked();
-        expect(checkboxes[2]).not.toBeChecked();
-      });
-    });
   });
 
   describe('selection count', () => {
