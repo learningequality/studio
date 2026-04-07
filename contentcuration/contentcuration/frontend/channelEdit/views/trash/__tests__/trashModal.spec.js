@@ -232,8 +232,6 @@ describe('TrashModal', () => {
       await user.click(screen.getByTestId('restore'));
       expect(await screen.findByRole('button', { name: /Move here/i })).toBeInTheDocument();
     });
-
-
   });
 
   describe('selection count', () => {
