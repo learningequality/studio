@@ -114,8 +114,7 @@ describe('TrashModal', () => {
       expect(screen.getByTestId('delete')).toBeDisabled();
       expect(screen.getByTestId('restore')).toBeDisabled();
 
-      const checkboxes = screen.getAllByRole('checkbox');
-      await user.click(checkboxes[1]);
+      await user.click(screen.getAllByRole('checkbox')[1]);
 
       await waitFor(() => {
         expect(screen.getByTestId('delete')).toBeEnabled();
@@ -125,8 +124,7 @@ describe('TrashModal', () => {
 
     it('checking the select-all checkbox checks all items', async () => {
       const { user } = await makeWrapper();
-      const [selectAll] = screen.getAllByRole('checkbox');
-      await user.click(selectAll);
+      await user.click(screen.getByTestId('selectall'));
 
       await waitFor(() => {
         screen
@@ -162,8 +160,7 @@ describe('TrashModal', () => {
 
     it('clicking Delete opens a confirmation dialog', async () => {
       const { user } = await makeWrapper();
-      const [selectAll] = screen.getAllByRole('checkbox');
-      await user.click(selectAll);
+      await user.click(screen.getByTestId('selectall'));
       await user.click(screen.getByTestId('delete'));
 
       expect(await screen.findByText(/You cannot undo this action/i)).toBeInTheDocument();
@@ -171,8 +168,7 @@ describe('TrashModal', () => {
 
     it('clicking Cancel in the confirmation dialog closes it', async () => {
       const { user } = await makeWrapper();
-      const [selectAll] = screen.getAllByRole('checkbox');
-      await user.click(selectAll);
+      await user.click(screen.getByTestId('selectall'));
       await user.click(screen.getByTestId('delete'));
       await screen.findByText(/You cannot undo this action/i);
 
@@ -190,8 +186,7 @@ describe('TrashModal', () => {
 
       const { user } = await makeWrapper();
 
-      const [selectAll] = screen.getAllByRole('checkbox');
-      await user.click(selectAll);
+      await user.click(screen.getByTestId('selectall'));
       await user.click(screen.getByTestId('delete'));
       await user.click(await screen.findByRole('button', { name: /Delete permanently/i }));
 
@@ -205,8 +200,7 @@ describe('TrashModal', () => {
       const dispatchSpy = jest.spyOn(store, 'dispatch').mockImplementation(() => Promise.resolve());
 
       const { user, loadNodesSpy } = await makeWrapper();
-      const [selectAll] = screen.getAllByRole('checkbox');
-      await user.click(selectAll);
+      await user.click(screen.getByTestId('selectall'));
       await user.click(screen.getByTestId('delete'));
       await user.click(await screen.findByRole('button', { name: /Delete permanently/i }));
 
@@ -227,8 +221,7 @@ describe('TrashModal', () => {
 
     it('clicking Restore opens the MoveModal', async () => {
       const { user } = await makeWrapper();
-      const [selectAll] = screen.getAllByRole('checkbox');
-      await user.click(selectAll);
+      await user.click(screen.getByTestId('selectall'));
       await user.click(screen.getByTestId('restore'));
       expect(await screen.findByRole('button', { name: /Move here/i })).toBeInTheDocument();
     });
@@ -240,8 +233,7 @@ describe('TrashModal', () => {
 
       expect(screen.queryByText(/items selected/i)).not.toBeInTheDocument();
 
-      const [selectAll] = screen.getAllByRole('checkbox');
-      await user.click(selectAll);
+      await user.click(screen.getByTestId('selectall'));
 
       expect(await screen.findByText(`${testChildren.length} items selected`)).toBeInTheDocument();
     });
