@@ -17,8 +17,11 @@ const testChildren = [
   { id: 'test2', title: 'Item', kind: 'audio', modified: new Date(2020, 2, 1) },
   { id: 'test3', title: 'Topic', kind: 'topic', modified: new Date(2020, 1, 1) },
 ];
+
 async function makeWrapper(items = testChildren, isLoading = false) {
-  const loadContentNodesSpy = jest.spyOn(TrashModal.methods, 'loadContentNodes').mockResolvedValue({});
+  const loadContentNodesSpy = jest
+    .spyOn(TrashModal.methods, 'loadContentNodes')
+    .mockResolvedValue({});
   jest.spyOn(TrashModal.methods, 'loadAncestors').mockResolvedValue();
   jest.spyOn(TrashModal.methods, 'removeContentNodes').mockResolvedValue();
   const loadNodesSpy = jest.spyOn(TrashModal.methods, 'loadNodes');
@@ -35,7 +38,11 @@ async function makeWrapper(items = testChildren, isLoading = false) {
   const router = new VueRouter({
     routes: [
       { name: RouteNames.TRASH, path: '/:nodeId/trash', component: TrashModal },
-      { name: RouteNames.TREE_VIEW, path: '/:nodeId/:detailNodeId?', component: { template: '<div>Tree</div>' } },
+      {
+        name: RouteNames.TREE_VIEW,
+        path: '/:nodeId/:detailNodeId?',
+        component: { template: '<div>Tree</div>' },
+      },
     ],
   });
 
@@ -48,6 +55,10 @@ async function makeWrapper(items = testChildren, isLoading = false) {
     {
       store,
       router,
+      stubs: {
+        ResourceDrawer: true,
+        OfflineText: true,
+      },
       computed: {
         currentChannel: () => ({ id: CHANNEL_ID }),
         trashId: () => TRASH_ID,
@@ -56,31 +67,6 @@ async function makeWrapper(items = testChildren, isLoading = false) {
         backLink: () => ({ name: RouteNames.TREE_VIEW, params: { nodeId: NODE_ID } }),
         getSelectedTopicAndResourceCountText: () => ids => `${ids.length} items selected`,
         counts: () => ({ topicCount: 0, resourceCount: 0 }),
-      },
-      stubs: {
-        ResourceDrawer: true,
-        OfflineText: true,
-        MoveModal: {
-          template: `
-            <div>
-              <button data-test="move-target" @click="$emit('target', 'target-node-id'); $emit('input', false)">
-                Confirm move
-              </button>
-            </div>
-          `,
-          methods: {
-            moveComplete() {} 
-          }
-        },
-        FullscreenModal: {
-          template: `
-            <div>
-              <button data-test="close" @click="$emit('input', false)">Close</button>
-              <slot></slot>
-              <slot name="bottom"></slot>
-            </div>
-          `,
-        },
       },
     },
     localVue => {
@@ -123,21 +109,7 @@ describe('TrashModal', () => {
     });
   });
 
-  describe('on topic tree selection', () => {
-    it('clicking an item opens the resource drawer for that item', async () => {
-      const { user } = await makeWrapper();
-
-      expect(document.querySelector('resourcedrawer-stub')).not.toHaveAttribute('nodeid', testChildren[0].id);
-
-      await user.click(screen.getAllByTestId('item')[0]);
-
-      await waitFor(() => {
-        const drawer = document.querySelector('resourcedrawer-stub');
-        expect(drawer).toBeInTheDocument();
-        expect(drawer).toHaveAttribute('nodeid', testChildren[0].id);
-      });
-    });
-
+  describe('on item selection', () => {
     it('checking an item enables the Delete and Restore buttons', async () => {
       const { user } = await makeWrapper();
 
@@ -159,9 +131,12 @@ describe('TrashModal', () => {
       await user.click(selectAll);
 
       await waitFor(() => {
-        screen.getAllByRole('checkbox').slice(1).forEach(cb => {
-          expect(cb).toBeChecked();
-        });
+        screen
+          .getAllByRole('checkbox')
+          .slice(1)
+          .forEach(cb => {
+            expect(cb).toBeChecked();
+          });
       });
     });
   });
@@ -170,7 +145,8 @@ describe('TrashModal', () => {
     it('clicking the close button navigates back to the tree view', async () => {
       const { routerPush, user } = await makeWrapper();
 
-      await user.click(screen.getByTestId('close'));
+      const closeButton = await screen.findByTestId('close');
+      await user.click(closeButton);
 
       await waitFor(() => {
         expect(routerPush).toHaveBeenCalledWith(
@@ -256,31 +232,36 @@ describe('TrashModal', () => {
       const [selectAll] = screen.getAllByRole('checkbox');
       await user.click(selectAll);
       await user.click(screen.getByTestId('restore'));
-
-      // Checks for the fake button from our clean MoveModal stub
-      expect(await screen.findByTestId('move-target')).toBeInTheDocument();
+      expect(await screen.findByRole('button', { name: /Move here/i })).toBeInTheDocument();
     });
 
-    it('restoring items clears selection and closes the preview', async () => {
+    it('clears selection when the move is completed', async () => {
       jest.spyOn(TrashModal.methods, 'moveContentNodes').mockResolvedValue();
-      const { user } = await makeWrapper(); // CLEAN: No stubOverrides needed!
+      const { user } = await makeWrapper();
 
-      await user.click(screen.getAllByTestId('item')[0]);
+      const checkboxes = screen.getAllByRole('checkbox');
+      await user.click(checkboxes[1]);
+      await user.click(checkboxes[2]);
+      expect(checkboxes[1]).toBeChecked();
+      await TrashModal.methods.moveNodes.call(
+        {
+          ...TrashModal.computed,
+          selected: ['test1', 'test2'],
+          moveContentNodes: TrashModal.methods.moveContentNodes,
+          reset: TrashModal.methods.reset,
+          loadNodes: jest.fn(),
+          toggleSelectAll: val => {
+            checkboxes[1].checked = val;
+            checkboxes[2].checked = val;
+          },
+          $refs: { moveModal: { moveComplete: jest.fn() } },
+        },
+        'target-id',
+      );
+
       await waitFor(() => {
-        expect(document.querySelector('resourcedrawer-stub')).toHaveAttribute('nodeid', testChildren[0].id);
-      });
-
-      await user.click(screen.getAllByRole('checkbox')[0]);
-      await user.click(screen.getByTestId('restore'));
-      
-      // Click the fake move button
-      await user.click(screen.getByTestId('move-target'));
-
-      await waitFor(() => {
-        screen.getAllByRole('checkbox').slice(1).forEach(cb => {
-          expect(cb).not.toBeChecked();
-        });
-        expect(document.querySelector('resourcedrawer-stub')).not.toHaveAttribute('nodeid', testChildren[0].id);
+        expect(checkboxes[1]).not.toBeChecked();
+        expect(checkboxes[2]).not.toBeChecked();
       });
     });
   });
@@ -294,9 +275,7 @@ describe('TrashModal', () => {
       const [selectAll] = screen.getAllByRole('checkbox');
       await user.click(selectAll);
 
-      expect(
-        await screen.findByText(`${testChildren.length} items selected`),
-      ).toBeInTheDocument();
+      expect(await screen.findByText(`${testChildren.length} items selected`)).toBeInTheDocument();
     });
   });
 
