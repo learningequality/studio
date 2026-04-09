@@ -80,7 +80,7 @@ describe('PublishSidePanel', () => {
 
     // Headers and default texts
     expect(screen.getByText(communityChannelsStrings.publishChannel$())).toBeVisible();
-    expect(screen.getByText(communityChannelsStrings.modeLive$())).toBeVisible();
+    expect(screen.getByText(communityChannelsStrings.publishChannelMode$())).toBeVisible();
 
     expect(
       screen.getByText(communityChannelsStrings.publishingInfo$({ version: 2 })),

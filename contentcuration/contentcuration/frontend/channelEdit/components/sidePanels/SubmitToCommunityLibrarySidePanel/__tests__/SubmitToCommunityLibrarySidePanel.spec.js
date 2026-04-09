@@ -32,7 +32,7 @@ const store = factory();
 
 const {
   nonePrimaryInfo$,
-  flaggedPrimaryInfo$,
+  needsChangesPrimaryInfo$,
   approvedPrimaryInfo$,
   submittedPrimaryInfo$,
   moreDetails$,
@@ -201,7 +201,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
 
       const infoSection = wrapper.find('.info-section');
       expect(infoSection.exists()).toBe(true);
-      expect(infoSection.text()).toContain(flaggedPrimaryInfo$());
+      expect(infoSection.text()).toContain(needsChangesPrimaryInfo$());
     });
 
     it('when the previous submission was approved', async () => {

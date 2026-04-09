@@ -16,10 +16,10 @@
           <component :is="showDraftMode ? 'KRadioButtonGroup' : 'div'">
             <KRadioButton
               v-if="showDraftMode"
-              :label="modeLive$()"
+              :label="publishChannelMode$()"
               :buttonValue="PublishModes.LIVE"
               :currentValue="mode"
-              :description="modeLiveDescription$()"
+              :description="publishChannelDescription$()"
               @input="mode = PublishModes.LIVE"
             />
 
@@ -53,7 +53,7 @@
                       showInvalidText
                       :label="versionDescriptionLabel$()"
                       :invalid="isVersionNotesBlurred && !isVersionNotesValid"
-                      :invalidText="versionNotesRequiredMessage$()"
+                      :invalidText="fieldRequired$()"
                       textArea
                       :maxlength="250"
                       :appearanceOverrides="{ maxWidth: 'none' }"
@@ -70,7 +70,7 @@
                       v-model="newChannelLanguage"
                       :label="languageLabel$()"
                       :invalid="isLanguageSelectBlurred && !isNewLanguageValid"
-                      :invalidText="languageRequiredMessage$()"
+                      :invalidText="fieldRequired$()"
                       :options="languageOptions"
                       @blur="isLanguageSelectBlurred = true"
                     />
@@ -112,15 +112,6 @@
                     >
                       {{ incompleteResourcesDescription1$() }}
                     </div>
-                    <div
-                      class="warning-description"
-                      :style="{
-                        color: $themePalette.grey.v_800,
-                        marginTop: '16px',
-                      }"
-                    >
-                      {{ incompleteResourcesDescription2$() }}
-                    </div>
                   </div>
                 </div>
               </div>
@@ -128,10 +119,10 @@
 
             <KRadioButton
               v-if="showDraftMode"
-              :label="modeDraft$()"
+              :label="publishDraftMode$()"
               :buttonValue="PublishModes.DRAFT"
               :currentValue="mode"
-              :description="modeDraftDescription$()"
+              :description="publishDraftDescription$()"
               @input="mode = PublishModes.DRAFT"
             />
           </component>
@@ -166,6 +157,7 @@
   import { Channel, CommunityLibrarySubmission } from 'shared/data/resources';
   import { forceServerSync } from 'shared/data/serverSync';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
+  import commonStrings from 'shared/translator';
   import { LanguagesList } from 'shared/leUtils/Languages';
   import logging from 'shared/logging';
   import { FeatureFlagKeys } from 'shared/constants';
@@ -205,22 +197,21 @@
         publishChannel$,
         publishAction$,
         saveDraft$,
-        modeLive$,
-        modeDraft$,
+        publishChannelMode$,
+        publishDraftMode$,
         versionNotesLabel$,
-        modeLiveDescription$,
-        modeDraftDescription$,
+        publishChannelDescription$,
+        publishDraftDescription$,
         publishingInfo$,
         versionDescriptionLabel$,
         incompleteResourcesWarning$,
         incompleteResourcesDescription1$,
-        incompleteResourcesDescription2$,
         cancelAction$,
         languageLabel$,
-        languageRequiredMessage$,
         draftBeingPublishedNotice$,
-        versionNotesRequiredMessage$,
       } = communityChannelsStrings;
+
+      const { fieldRequired$ } = commonStrings;
 
       const currentChannel = computed(() => store.getters['currentChannel/currentChannel']);
       const getContentNode = computed(() => store.getters['contentNode/getContentNode']);
@@ -416,21 +407,19 @@
         isVersionNotesValid,
         submitText,
 
-        modeLive$,
-        modeDraft$,
+        publishChannelMode$,
+        publishDraftMode$,
         publishChannel$,
         versionNotesLabel$,
-        modeLiveDescription$,
-        modeDraftDescription$,
+        publishChannelDescription$,
+        publishDraftDescription$,
         publishingInfo$,
         versionDescriptionLabel$,
         incompleteResourcesWarning$,
         incompleteResourcesDescription1$,
-        incompleteResourcesDescription2$,
         cancelAction$,
         languageLabel$,
-        languageRequiredMessage$,
-        versionNotesRequiredMessage$,
+        fieldRequired$,
 
         onClose,
         submit,
