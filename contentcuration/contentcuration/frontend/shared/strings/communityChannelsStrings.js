@@ -40,7 +40,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   },
   publishDraftDescription: {
     message:
-      'Your channel will be saved as a draft, allowing you to review or conduct quality checks without altering the version Kolibri users can access. To see your channel in Kolibri, import using the draft channel token.',
+      'Your channel will be saved as a draft, allowing you to review and do quality checks on the draft, without altering the current version available for Kolibri users. To see this draft channel in Kolibri, import using the draft channel token.',
     context: 'Description for the draft publishing mode',
   },
   publishingInfo: {
@@ -148,7 +148,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   },
   needsChangesPrimaryInfo: {
     message:
-      'Your previously submitted version needs changes. Make sure you have addressed all feedback before resubmitting.',
+      'Your previously submitted version needs changes. Make sure you have addressed all comments before resubmitting.',
     context:
       'Information shown in the "Submit to Community Library" panel when a previous version was not approved by an admin and requires changes.',
   },
@@ -284,7 +284,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     context: 'Label for the channel information checklist item in the channel fit checklist',
   },
   channelFitChecklistIntro: {
-    message: 'Is your channel a good fit?',
+    message: 'Criteria for submitting to the Community Library',
     context:
       'Introductory text before a checklist of criteria for submitting a channel to the Community Library',
   },
@@ -563,7 +563,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     context: 'Description for the channel token field in the draft preview instructions modal',
   },
   getDraftTokenAction: {
-    message: 'Get draft token',
+    message: 'Copy token for draft channel',
     context:
       'Button text for the action to retrieve the draft token in the draft preview instructions modal',
   },
