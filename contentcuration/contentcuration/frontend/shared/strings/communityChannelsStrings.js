@@ -164,7 +164,8 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
       'Information shown in the "Submit to Community Library" panel when a previous version was flagged',
   },
   nonePrimaryInfo: {
-    message: 'Your published channel will be added to the Community Library review queue.',
+    message:
+      "We're inviting members of the Kolibri community to submit channels they've created for offline learning in low-resource settings. ",
     context:
       'Information shown in the "Submit to Community Library" panel when there are no previous submissions',
   },
@@ -180,9 +181,14 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   },
   moreDetails: {
     message:
-      "The Kolibri Community Library features channels created by the community. Share your openly licensed work for review, and once it's approved, it will be available to users in your selected region or language.",
+      "After your submission is approved, the channel will be available to other Kolibri Studio users on the 'Community Library' page.",
     context:
       'Detailed description of the Community Library shown in the "Submit to Community Library" panel',
+  },
+  countriesInfoText: {
+    message:
+      'Select one or more countries to tag your channels submission with. For example, if your channel contains materials aligned to a national curriculum or regionally-specific content, selecting the relevant countries will help users find it. Otherwise, leave this blank.',
+    context: 'Help text for the country selection field in the "Submit to Community Library" panel',
   },
   notPublishedWarningTitle: {
     message: "This channel isn't published to Kolibri Studio yet",
@@ -216,7 +222,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
       'Description of warning shown in the "Submit to Community Library" panel when the current version is already submitted',
   },
   descriptionLabel: {
-    message: "Describe what's new in this submission",
+    message: "Describe what's included in this submission",
     context:
       'Label for the submission description field in the "Submit to Community Library" panel',
   },
@@ -272,6 +278,63 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Internal notes',
     context:
       'Label for the notes that admins can add to a submission in the Community Library for themselves',
+  },
+  channelFitLicenseLabel: {
+    message: 'License',
+    context: 'Label for the license checklist item in the channel fit checklist',
+  },
+  channelFitOfflineUseLabel: {
+    message: 'Offline use',
+    context: 'Label for the offline use checklist item in the channel fit checklist',
+  },
+  channelFitAttributionLabel: {
+    message: 'Attribution',
+    context: 'Label for the attribution checklist item in the channel fit checklist',
+  },
+  channelFitQualityLabel: {
+    message: 'Quality',
+    context: 'Label for the quality checklist item in the channel fit checklist',
+  },
+  channelFitChannelInfoLabel: {
+    message: 'Channel information',
+    context: 'Label for the channel information checklist item in the channel fit checklist',
+  },
+  channelFitChecklistIntro: {
+    message: 'Is your channel a good fit?',
+    context:
+      'Introductory text before a checklist of criteria for submitting a channel to the Community Library',
+  },
+  viewCriteriaAction: {
+    message: 'View criteria',
+    context: 'Button text to view the channel fit checklist criteria',
+  },
+  hideCriteriaAction: {
+    message: 'Hide criteria',
+    context: 'Button text to hide the channel fit checklist criteria',
+  },
+  channelFitChecklistLicense: {
+    message: 'Is your content openly licensed or in the public domain?',
+    context:
+      'License checklist item asking whether the channel content uses open or public domain licenses',
+  },
+  channelFitChecklistOfflineUse: {
+    message: 'Does your channel work without an internet connection?',
+    context: 'Offline use checklist item asking whether the channel works offline',
+  },
+  channelFitChecklistAttribution: {
+    message: 'Does each piece of content have an author listed?',
+    context: 'Attribution checklist item asking whether content items have authors listed',
+  },
+  channelFitChecklistQuality: {
+    message:
+      'Has anyone on your team or in your organization reviewed it and found it useful for learners?',
+    context:
+      'Quality checklist item asking whether the channel has been reviewed and validated by someone on the team',
+  },
+  channelFitChecklistChannelInfo: {
+    message:
+      "Is your channel's basic information filled in — title, description, thumbnail, language, subject, and level?",
+    context: 'Channel information checklist item asking whether the channel metadata is complete',
   },
   confirmReplacementText: {
     message: 'I understand this will replace my earlier submission on the review queue',

@@ -30,8 +30,14 @@ jest.mock('shared/data/resources', () => ({
 
 const store = factory();
 
-const { nonePrimaryInfo$, flaggedPrimaryInfo$, approvedPrimaryInfo$, submittedPrimaryInfo$ } =
-  communityChannelsStrings;
+const {
+  nonePrimaryInfo$,
+  flaggedPrimaryInfo$,
+  approvedPrimaryInfo$,
+  submittedPrimaryInfo$,
+  moreDetails$,
+  countriesInfoText$,
+} = communityChannelsStrings;
 
 async function makeWrapper({ channel, publishedData, latestSubmission }) {
   const isLoading = ref(true);
@@ -246,23 +252,51 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       expect(moreDetailsButton.exists()).toBe(false);
     });
 
-    it('when clicked, shows additional info', async () => {
+    it('when clicked, shows additional info and a hide button', async () => {
       const wrapper = await makeWrapper({
         channel: publishedNonPublicChannel,
         publishedData,
         latestSubmission: null,
       });
 
-      const infoText = wrapper.find('.info-text');
-      expect(infoText.text()).not.toContain('The Kolibri Community Library features channels');
-
       const moreDetailsButton = wrapper.find('[data-test="more-details-button"]');
+      expect(wrapper.text()).not.toContain(moreDetails$());
       await moreDetailsButton.trigger('click');
 
-      expect(infoText.text()).toContain('The Kolibri Community Library features channels');
+      expect(wrapper.text()).toContain(moreDetails$());
 
       const lessDetailsButton = wrapper.find('[data-test="less-details-button"]');
       expect(lessDetailsButton.exists()).toBe(true);
+    });
+  });
+
+  describe('show more country info button', () => {
+    it('is always displayed', async () => {
+      const wrapper = await makeWrapper({
+        channel: publishedNonPublicChannel,
+        publishedData,
+        latestSubmission: { channel_version: 1, status: CommunityLibraryStatus.APPROVED },
+      });
+
+      const moreCountryInfoButton = wrapper.find('[data-test="more-country-info-button"]');
+      expect(moreCountryInfoButton.exists()).toBe(true);
+    });
+
+    it('when clicked, shows country info and a hide button', async () => {
+      const wrapper = await makeWrapper({
+        channel: publishedNonPublicChannel,
+        publishedData,
+        latestSubmission: null,
+      });
+
+      const moreCountryInfoButton = wrapper.find('[data-test="more-country-info-button"]');
+      expect(wrapper.text()).not.toContain(countriesInfoText$());
+      await moreCountryInfoButton.trigger('click');
+
+      expect(wrapper.text()).toContain(countriesInfoText$());
+
+      const lessCountryInfoButton = wrapper.find('[data-test="less-country-info-button"]');
+      expect(lessCountryInfoButton.exists()).toBe(true);
     });
   });
 
