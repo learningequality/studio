@@ -90,22 +90,17 @@
                   @select="(item, event) => handleUserMenuSelect(item, event)"
                 >
                   <template #option="{ option }">
-                    <div style="display: flex; align-items: center; padding: 0 16px">
-                      <WithNotificationIndicator
-                        v-if="option.value === 'notifications'"
-                        style="margin-right: 16px"
-                      >
+                    <div style="display: flex; align-items: center; height: 48px; padding: 0 16px">
+                      <WithNotificationIndicator v-if="option.value === 'notifications'">
                         <KIcon
                           :icon="option.icon"
-                          :color="$themeTokens.text"
-                          style="font-size: 20px"
+                          style="min-width: 56px; font-size: 20px"
                         />
                       </WithNotificationIndicator>
                       <KIcon
                         v-else
                         :icon="option.icon"
-                        :color="$themeTokens.text"
-                        style="margin-right: 16px; font-size: 18px"
+                        style="min-width: 56px; font-size: 20px"
                       />
                       <span style="font-size: 16px">{{ option.label }}</span>
                     </div>
