@@ -98,7 +98,6 @@
     name: 'ChannelListIndex',
     components: {
       StudioNavigation,
-      ChannelInvitation,
       ChannelListAppError,
       GlobalSnackbar,
       PolicyModals,
@@ -139,6 +138,14 @@
           to: this.catalogLink,
           badgeValue: 0,
           analyticsLabel: ChannelListTypes.PUBLIC,
+        });
+
+        tabs.push({
+          id: 'communityLibrary',
+          label: this.communityLibraryLabel$(),
+          to: this.communityLibraryLink,
+          badgeValue: 0,
+          analyticsLabel: 'COMMUNITY_LIBRARY',
         });
 
         tabs.push({
@@ -196,15 +203,6 @@
       },
       homeLink() {
         return this.libraryMode ? window.Urls.base() : window.Urls.channels();
-      },
-      publicTabClick() {
-        return this.trackTabClick.bind(this, ChannelListTypes.PUBLIC);
-      },
-      communityLibraryTabClick() {
-        return this.trackTabClick.bind(this, 'COMMUNITY_LIBRARY');
-      },
-      channelSetsTabClick() {
-        return this.trackTabClick.bind(this, CHANNEL_SETS);
       },
     },
     watch: {
