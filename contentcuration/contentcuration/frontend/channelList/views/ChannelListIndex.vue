@@ -27,47 +27,41 @@
         {{ isFAQPage ? $tr('frequentlyAskedQuestions') : $tr('libraryTitle') }}
       </VToolbarTitle>
     </VToolbar>
-    <AppBar v-else>
+    <StudioNavigation v-else>
       <template
         v-if="loggedIn"
         #tabs
       >
-        <VTab
+        <StudioNavigationTab
           v-for="listType in lists"
           :key="listType.id"
           :to="getChannelLink(listType)"
+          :badge-value="invitationsByListCounts[listType]"
           @click="trackTabClick(listType)"
         >
-          <VBadge
-            :value="invitationsByListCounts[listType]"
-            color="black"
-          >
-            <template #badge>
-              <span>{{ $formatNumber(invitationsByListCounts[listType]) }}</span>
-            </template>
-            <span>{{ translateConstant(listType) }}</span>
-          </VBadge>
-        </VTab>
-        <VTab
+          {{ translateConstant(listType) }}
+        </StudioNavigationTab>
+
+        <StudioNavigationTab
           :to="catalogLink"
           @click="publicTabClick"
         >
           {{ $tr('catalog') }}
-        </VTab>
-        <VTab
+        </StudioNavigationTab>
+        <StudioNavigationTab
           :to="communityLibraryLink"
           @click="communityLibraryTabClick"
         >
           {{ communityLibraryLabel$() }}
-        </VTab>
-        <VTab
+        </StudioNavigationTab>
+        <StudioNavigationTab
           :to="channelSetLink"
           @click="channelSetsTabClick"
         >
           {{ $tr('channelSets') }}
-        </VTab>
+        </StudioNavigationTab>
       </template>
-    </AppBar>
+    </StudioNavigation>
     <VContent>
       <StudioOfflineAlert
         v-if="!isCatalogPage"
@@ -106,7 +100,7 @@
   import { ChannelListTypes } from 'shared/constants';
   import { constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
-  import AppBar from 'shared/views/AppBar';
+
   import StudioOfflineAlert from 'shared/views/StudioOfflineAlert.vue';
   import PolicyModals from 'shared/views/policies/PolicyModals';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
@@ -129,7 +123,6 @@
   export default {
     name: 'ChannelListIndex',
     components: {
-      AppBar,
       ChannelListAppError,
       GlobalSnackbar,
       PolicyModals,
