@@ -41,6 +41,26 @@
             />
 
             <StudioSideNavOption
+              :label="notificationsLabel$()"
+              icon="bell"
+              @click="showNotificationsModal"
+              @keydown.native.enter="showNotificationsModal"
+            >
+              <template #default>
+                <WithNotificationIndicator>
+                  <KIcon
+                    icon="bell"
+                    class="menu-icon"
+                    :color="$themeTokens.text"
+                  />
+                </WithNotificationIndicator>
+                <span class="option-label">
+                  {{ notificationsLabel$() }}
+                </span>
+              </template>
+            </StudioSideNavOption>
+
+            <StudioSideNavOption
               :label="$tr('settings')"
               :link="settingsLink"
               icon="settings"
@@ -94,6 +114,7 @@
         </div>
       </div>
     </template>
+    <NotificationsModal />
   </SidePanelModal>
 
 </template>
@@ -103,13 +124,25 @@
 
   import { mapState } from 'vuex';
   import SidePanelModal from '../SidePanelModal';
+  import WithNotificationIndicator from '../WithNotificationIndicator.vue';
   import StudioSideNavOption from './StudioSideNavOption.vue';
+  import { Modals } from 'shared/constants';
+  import NotificationsModal from 'shared/views/NotificationsModal/index.vue';
+  import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 
   export default {
     name: 'StudioNavigationSidePanel',
     components: {
+      NotificationsModal,
       SidePanelModal,
       StudioSideNavOption,
+      WithNotificationIndicator,
+    },
+    setup() {
+      const { notificationsLabel$ } = communityChannelsStrings;
+      return {
+        notificationsLabel$,
+      };
     },
     props: {
       isOpen: {
@@ -158,6 +191,18 @@
       handleLogout() {
         this.$emit('close');
         this.$emit('logout');
+      },
+      showNotificationsModal() {
+        this.$emit('close');
+        this.$router.push({
+          query: {
+            ...this.$route.query,
+            modal: Modals.NOTIFICATIONS,
+          },
+        });
+        if (this.$analytics) {
+          this.$analytics.trackClick('general', 'User dropdown - Notifications');
+        }
       },
     },
     $trs: {
