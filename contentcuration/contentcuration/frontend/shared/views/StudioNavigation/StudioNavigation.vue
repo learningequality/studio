@@ -70,10 +70,10 @@
                   })
                 "
               >
-                <WithNotificationIndicator>
+                <WithNotificationIndicator style="margin: 8px">
                   <KIcon
                     icon="person"
-                    style="margin: 8px; font-size: 22px"
+                    style="font-size: 22px"
                   />
                 </WithNotificationIndicator>
                 <span class="mx-2 notranslate subheading">
@@ -91,17 +91,21 @@
                 >
                   <template #option="{ option }">
                     <div style="display: flex; align-items: center; height: 48px; padding: 0 16px">
-                      <WithNotificationIndicator v-if="option.value === 'notifications'">
+                      <div style="display: flex; align-items: center; min-width: 56px">
+                        <WithNotificationIndicator v-if="option.value === 'notifications'">
+                          <KIcon
+                            :icon="option.icon"
+                            style="font-size: 20px"
+                          />
+                        </WithNotificationIndicator>
+
                         <KIcon
+                          v-else
                           :icon="option.icon"
-                          style="min-width: 56px; font-size: 20px"
+                          style="font-size: 20px"
                         />
-                      </WithNotificationIndicator>
-                      <KIcon
-                        v-else
-                        :icon="option.icon"
-                        style="min-width: 56px; font-size: 20px"
-                      />
+                      </div>
+
                       <span style="font-size: 16px">{{ option.label }}</span>
                     </div>
                   </template>
