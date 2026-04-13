@@ -90,27 +90,25 @@
                   @select="(item, event) => handleUserMenuSelect(item, event)"
                 >
                   <template #option="{ option }">
-                    <template v-if="option.value === 'notifications'">
-                      <div style="display: flex; align-items: center; width: 100%">
-                        <WithNotificationIndicator style="margin-right: 16px">
-                          <KIcon
-                            :icon="option.icon"
-                            :color="$themeTokens.text"
-                          />
-                        </WithNotificationIndicator>
-                        <span>{{ option.label }}</span>
-                      </div>
-                    </template>
-                    <template v-else>
-                      <div style="display: flex; align-items: center; width: 100%">
+                    <div style="display: flex; align-items: center; padding: 0 16px">
+                      <WithNotificationIndicator
+                        v-if="option.value === 'notifications'"
+                        style="margin-right: 16px"
+                      >
                         <KIcon
                           :icon="option.icon"
-                          style="margin-right: 16px"
                           :color="$themeTokens.text"
+                          style="font-size: 20px"
                         />
-                        <span>{{ option.label }}</span>
-                      </div>
-                    </template>
+                      </WithNotificationIndicator>
+                      <KIcon
+                        v-else
+                        :icon="option.icon"
+                        :color="$themeTokens.text"
+                        style="margin-right: 16px; font-size: 18px"
+                      />
+                      <span style="font-size: 16px">{{ option.label }}</span>
+                    </div>
                   </template>
                 </KDropdownMenu>
               </button>
