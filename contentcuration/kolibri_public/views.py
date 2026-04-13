@@ -37,6 +37,7 @@ from kolibri_public.search import get_channel_available_metadata_labels
 from kolibri_public.search import get_contentnode_available_metadata_labels
 from kolibri_public.stopwords import stopwords_set
 from le_utils.constants import content_kinds
+from le_utils.constants import library as library_constants
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
@@ -252,6 +253,13 @@ class ChannelMetadataViewSet(ReadOnlyValuesViewset):
             item["countries"] = countries.get(item["id"], [])
             item["token"] = channel_tokens.get(item["id"])
             item["last_published"] = item["last_updated"]
+            # v2 non-public channels are always community library channels (unlike v1
+            # channel tokens, which return null for non-public channels).
+            item["library"] = (
+                library_constants.KOLIBRI
+                if item["public"]
+                else library_constants.COMMUNITY
+            )
 
         return items
 
