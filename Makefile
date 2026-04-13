@@ -188,6 +188,29 @@ dcshell:
 	# bash shell inside the (running!) studio-app container
 	$(DOCKER_COMPOSE) exec studio-app /usr/bin/fish
 
+devserver-stripe:
+	# Start stripe CLI listener and dev server with webhook secret auto-configured.
+	# Requires: stripe CLI installed and authenticated (stripe login).
+	# The listener output is teed to a temp file so we can extract the signing secret.
+	@STRIPE_LOG=$$(mktemp); \
+	stripe listen --api-key $$STRIPE_TEST_SECRET_KEY --forward-to localhost:8080/api/stripe/webhook/ > "$$STRIPE_LOG" 2>&1 & \
+	STRIPE_PID=$$!; \
+	trap "kill $$STRIPE_PID 2>/dev/null; rm -f $$STRIPE_LOG" EXIT; \
+	echo "Waiting for Stripe CLI..."; \
+	for i in 1 2 3 4 5 6 7 8 9 10; do \
+		WEBHOOK_SECRET=$$(grep -o 'whsec_[a-zA-Z0-9_]*' "$$STRIPE_LOG" | head -1); \
+		[ -n "$$WEBHOOK_SECRET" ] && break; \
+		sleep 1; \
+	done; \
+	if [ -z "$$WEBHOOK_SECRET" ]; then \
+		echo "ERROR: Could not extract webhook secret from Stripe CLI"; \
+		exit 1; \
+	fi; \
+	echo "Stripe webhook secret: $$WEBHOOK_SECRET"; \
+	tail -f "$$STRIPE_LOG" & \
+	export STRIPE_TEST_WEBHOOK_SECRET=$$WEBHOOK_SECRET; \
+	pnpm devserver
+
 dcpsql: .docker/pgpass
 	PGPASSFILE=.docker/pgpass psql --host localhost --port 5432 --username learningequality --dbname "kolibri-studio"
 

@@ -21,8 +21,8 @@ const sizeStrings = createTranslator('BytesForHumansStrings', {
   fileSizeInBytes: '{n, number, integer} B',
   fileSizeInKilobytes: '{n, number, integer} KB',
   fileSizeInMegabytes: '{n, number, integer} MB',
-  fileSizeInGigabytes: '{n, number, integer} GB',
-  fileSizeInTerabytes: '{n, number, integer} TB',
+  fileSizeInGigabytes: '{n, number} GB',
+  fileSizeInTerabytes: '{n, number} TB',
 });
 
 const stringMap = {
@@ -33,10 +33,21 @@ const stringMap = {
   [ONE_TB]: 'fileSizeInTerabytes',
 };
 
+const decimalsMap = {
+  [ONE_GB]: 1,
+  [ONE_TB]: 2,
+};
+
+function _roundTo(value, unit) {
+  const decimals = decimalsMap[unit] ?? 0;
+  const factor = 10 ** decimals;
+  return Math.round(value / (unit / factor)) / factor;
+}
+
 export default function bytesForHumans(bytes) {
   bytes = bytes || 0;
   const unit = [ONE_TB, ONE_GB, ONE_MB, ONE_KB].find(x => bytes >= x) || ONE_B;
-  return sizeStrings.$tr(stringMap[unit], { n: Math.round(bytes / unit) });
+  return sizeStrings.$tr(stringMap[unit], { n: _roundTo(bytes, unit) });
 }
 
 export const fileSizeMixin = {

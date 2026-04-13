@@ -54,6 +54,8 @@
     </KFixedGrid>
 
     <div class="storage-request">
+      <SubscriptionCard />
+
       <h2 ref="requestheader">
         {{ $tr('requestMoreSpaceHeading') }}
       </h2>
@@ -112,6 +114,7 @@
   import { mapGetters } from 'vuex';
   import useKShow from 'kolibri-design-system/lib/composables/useKShow';
   import RequestForm from './RequestForm';
+  import SubscriptionCard from './SubscriptionCard';
   import { fileSizeMixin, constantsTranslationMixin } from 'shared/mixins';
   import { ContentKindsList, ContentKindsNames } from 'shared/leUtils/ContentKinds';
   import theme from 'shared/vuetify/theme';
@@ -122,6 +125,7 @@
     components: {
       RequestForm,
       StudioLargeLoader,
+      SubscriptionCard,
     },
     mixins: [fileSizeMixin, constantsTranslationMixin],
     setup() {
