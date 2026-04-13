@@ -387,3 +387,45 @@ class ChannelMetadataLabelsActionTestCase(StudioAPITestCase):
         for lang in response.data["languages"]:
             self.assertIn("id", lang)
             self.assertIn("lang_name", lang)
+
+
+class ChannelMetadataLibraryFieldTestCase(StudioAPITestCase):
+    def setUp(self):
+        super().setUp()
+        self.mixer = KolibriPublicMixer()
+        self.user = testdata.user("library@test.com")
+        self.client.force_authenticate(self.user)
+
+    def test_public_channel_returns_library_kolibri(self):
+        """
+        A public channel in the v2 API returns library: "KOLIBRI".
+        """
+        channel = self.mixer.blend(ChannelMetadata, public=True)
+
+        response = self.client.get(
+            reverse_with_query(
+                "publicchannel-detail",
+                args=[channel.id],
+                query={"public": "true"},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.data["library"], "KOLIBRI")
+
+    def test_non_public_channel_returns_library_community(self):
+        """
+        A non-public channel in the v2 API returns library: "COMMUNITY".
+        """
+        channel = self.mixer.blend(ChannelMetadata, public=False)
+
+        response = self.client.get(
+            reverse_with_query(
+                "publicchannel-detail",
+                args=[channel.id],
+                query={"public": "false"},
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.data["library"], "COMMUNITY")

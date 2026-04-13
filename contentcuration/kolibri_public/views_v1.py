@@ -11,6 +11,7 @@ from django.utils.html import escape
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import cache_page
 from kolibri_content.constants.schema_versions import MIN_CONTENT_SCHEMA_VERSION
+from le_utils.constants import library as library_constants
 from le_utils.uuidv5 import generate_ecosystem_namespaced_uuid
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
@@ -18,6 +19,7 @@ from rest_framework.decorators import permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from contentcuration.constants import community_library_submission as cls_constants
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Channel
 from contentcuration.models import ChannelVersion
@@ -45,6 +47,16 @@ def get_thumbnail_encoding(channel_version):
     return None
 
 
+def _get_channel_version_library(channel_version):
+    channel = channel_version.channel
+    if channel.community_library_submissions.filter(
+        channel_version=channel_version.version,
+        status__in=[cls_constants.STATUS_APPROVED, cls_constants.STATUS_LIVE],
+    ).exists():
+        return library_constants.COMMUNITY
+    return None
+
+
 def _serialize_channel_version(channel_version_qs):
     channel_version = channel_version_qs.first()
     if not channel_version or not channel_version.channel:
@@ -69,6 +81,7 @@ def _serialize_channel_version(channel_version_qs):
             "matching_tokens": [channel_version.secret_token.token]
             if channel_version.secret_token
             else [],
+            "library": _get_channel_version_library(channel_version),
         }
     ]
 
@@ -86,9 +99,10 @@ def _get_channel_list_v1(params, identifier=None):
         if not channels.exists():
             channels = Channel.objects.filter(pk=identifier)
 
-        if not channels.exists():
-            # If channels doesnt exist with the given token, check if this is a token of
-            # a channel version.
+        if not channels.exists() and params.get("channel_versions") == "true":
+            # Only resolve ChannelVersion tokens when the caller explicitly opts in.
+            # This prevents older Kolibri clients from accidentally retrieving data
+            # they cannot parse correctly.
             channel_version = ChannelVersion.objects.select_related(
                 "secret_token", "channel"
             ).filter(
