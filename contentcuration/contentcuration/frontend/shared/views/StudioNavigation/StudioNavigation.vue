@@ -70,10 +70,12 @@
                   })
                 "
               >
-                <KIcon
-                  icon="person"
-                  style="margin: 8px; margin-top: 0; font-size: 22px"
-                />
+                <WithNotificationIndicator>
+                  <KIcon
+                    icon="person"
+                    style="margin: 8px; margin-top: 0; font-size: 22px"
+                  />
+                </WithNotificationIndicator>
                 <span class="mx-2 notranslate subheading">
                   {{ user.first_name }}
                 </span>
@@ -86,7 +88,31 @@
                   :options="userMenuItems"
                   :hasIcons="true"
                   @select="handleUserMenuSelect"
-                />
+                >
+                  <template #option="{ option }">
+                    <template v-if="option.value === 'notifications'">
+                      <div style="display: flex; align-items: center; width: 100%">
+                        <WithNotificationIndicator style="margin-right: 16px">
+                          <KIcon
+                            :icon="option.icon"
+                            :color="$themeTokens.text"
+                          />
+                        </WithNotificationIndicator>
+                        <span>{{ option.label }}</span>
+                      </div>
+                    </template>
+                    <template v-else>
+                      <div style="display: flex; align-items: center; width: 100%">
+                        <KIcon
+                          :icon="option.icon"
+                          style="margin-right: 16px"
+                          :color="$themeTokens.text"
+                        />
+                        <span>{{ option.label }}</span>
+                      </div>
+                    </template>
+                  </template>
+                </KDropdownMenu>
               </button>
             </template>
 
@@ -189,14 +215,18 @@
   import { mapActions, mapState, mapGetters } from 'vuex';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import debounce from 'lodash/debounce';
+  import WithNotificationIndicator from '../WithNotificationIndicator.vue';
   import LanguageSwitcherModal from '../../languageSwitcher/LanguageSwitcherModal.vue';
   import SkipNavigationLink from './SkipNavigationLink.vue';
 
   import StudioNavigationTab from './StudioNavigationTab.vue';
   import StudioNavigationSidePanel from './StudioNavigationSidePanel.vue';
+  import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
+  import { Modals } from 'shared/constants';
 
   const MenuOptions = {
     ADMINISTRATION: 'administration',
+    NOTIFICATIONS: 'notifications',
     SETTINGS: 'settings',
     CHANGE_LANGUAGE: 'change-language',
     HELP: 'help',
@@ -211,12 +241,15 @@
       SkipNavigationLink,
       LanguageSwitcherModal,
       StudioNavigationTab,
+      WithNotificationIndicator,
     },
     setup() {
       const { windowBreakpoint, windowWidth } = useKResponsiveWindow();
+      const { notificationsLabel$ } = communityChannelsStrings;
       return {
         windowBreakpoint,
         windowWidth,
+        notificationsLabel$,
       };
     },
     props: {
@@ -272,6 +305,12 @@
             icon: 'people',
           });
         }
+
+        items.push({
+          label: this.notificationsLabel$(),
+          value: MenuOptions.NOTIFICATIONS,
+          icon: 'bell',
+        });
 
         items.push(
           {
@@ -414,6 +453,9 @@
               this.navigateToAdministration();
             }
             break;
+          case MenuOptions.NOTIFICATIONS:
+            this.showNotificationsModal();
+            break;
           case MenuOptions.SETTINGS:
             this.navigateToSettings();
             break;
@@ -437,6 +479,15 @@
             this.showLanguageModal = true;
             break;
         }
+      },
+      showNotificationsModal() {
+        this.$router.push({
+          query: {
+            ...this.$route.query,
+            modal: Modals.NOTIFICATIONS,
+          },
+        });
+        this.trackClick('Notifications');
       },
       trackClick(label) {
         if (this.$analytics) {
