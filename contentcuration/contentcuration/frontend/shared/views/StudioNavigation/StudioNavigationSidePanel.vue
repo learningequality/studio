@@ -47,15 +47,15 @@
               @keydown.native.enter="showNotificationsModal"
             >
               <template #default>
-                <WithNotificationIndicator style="margin-right: 16px">
-                  <KIcon
-                    icon="bell"
-                    :color="$themeTokens.text"
-                  />
-                </WithNotificationIndicator>
-                <span style="flex: 1">
-                  {{ notificationsLabel$() }}
-                </span>
+                <div style="display: flex; gap: 16px">
+                  <WithNotificationIndicator>
+                    <KIcon icon="bell" />
+                  </WithNotificationIndicator>
+
+                  <span>
+                    {{ notificationsLabel$() }}
+                  </span>
+                </div>
               </template>
             </StudioSideNavOption>
 
