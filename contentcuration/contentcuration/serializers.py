@@ -1,6 +1,7 @@
 import json
 from collections import OrderedDict
 
+from le_utils.constants import library as library_constants
 from rest_framework import serializers
 
 from contentcuration.models import Channel
@@ -47,6 +48,7 @@ class PublicChannelSerializer(serializers.ModelSerializer):
     matching_tokens = serializers.SerializerMethodField("match_tokens")
     icon_encoding = serializers.SerializerMethodField("get_thumbnail_encoding")
     version_notes = serializers.SerializerMethodField("sort_published_data")
+    library = serializers.SerializerMethodField()
 
     def match_tokens(self, channel):
         tokens = json.loads(channel.tokens) if hasattr(channel, "tokens") else []
@@ -66,6 +68,9 @@ class PublicChannelSerializer(serializers.ModelSerializer):
         data = {int(k): v["version_notes"] for k, v in channel.published_data.items()}
         return OrderedDict(sorted(data.items()))
 
+    def get_library(self, channel):
+        return library_constants.KOLIBRI if channel.public else None
+
     class Meta:
         model = Channel
         fields = (
@@ -83,6 +88,7 @@ class PublicChannelSerializer(serializers.ModelSerializer):
             "matching_tokens",
             "public",
             "version_notes",
+            "library",
         )
 
 
