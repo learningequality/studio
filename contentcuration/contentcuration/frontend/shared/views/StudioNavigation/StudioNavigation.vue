@@ -73,7 +73,7 @@
                 <WithNotificationIndicator>
                   <KIcon
                     icon="person"
-                    style="margin: 8px; margin-top: 0; font-size: 22px"
+                    style="margin: 8px; font-size: 22px"
                   />
                 </WithNotificationIndicator>
                 <span class="mx-2 notranslate subheading">
@@ -87,7 +87,7 @@
                 <KDropdownMenu
                   :options="userMenuItems"
                   :hasIcons="true"
-                  @select="handleUserMenuSelect"
+                  @select="(item, event) => handleUserMenuSelect(item, event)"
                 >
                   <template #option="{ option }">
                     <template v-if="option.value === 'notifications'">
@@ -138,7 +138,7 @@
                 <KDropdownMenu
                   :options="guestMenuItems"
                   :hasIcons="true"
-                  @select="handleGuestMenuSelect"
+                  @select="(item, event) => handleGuestMenuSelect(item, event)"
                 />
               </button>
             </template>
@@ -205,6 +205,7 @@
       v-if="showLanguageModal"
       @cancel="showLanguageModal = false"
     />
+    <NotificationsModal />
   </div>
 
 </template>
@@ -221,6 +222,7 @@
 
   import StudioNavigationTab from './StudioNavigationTab.vue';
   import StudioNavigationSidePanel from './StudioNavigationSidePanel.vue';
+  import NotificationsModal from 'shared/views/NotificationsModal/index.vue';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
   import { Modals } from 'shared/constants';
 
@@ -242,6 +244,7 @@
       LanguageSwitcherModal,
       StudioNavigationTab,
       WithNotificationIndicator,
+      NotificationsModal,
     },
     setup() {
       const { windowBreakpoint, windowWidth } = useKResponsiveWindow();
@@ -446,7 +449,10 @@
         this.trackClick('Settings');
         this.closeSidePanelAndNavigate(this.settingsLink);
       },
-      handleUserMenuSelect(item) {
+      handleUserMenuSelect(item, event) {
+        if (event) {
+          event.preventDefault();
+        }
         switch (item.value) {
           case MenuOptions.ADMINISTRATION:
             if (this.user && this.user.is_admin) {
@@ -470,7 +476,10 @@
             break;
         }
       },
-      handleGuestMenuSelect(item) {
+      handleGuestMenuSelect(item, event) {
+        if (event) {
+          event.preventDefault();
+        }
         switch (item.value) {
           case MenuOptions.LOGIN:
             window.location.href = '/accounts/';

@@ -115,6 +115,7 @@
   }
 
   .menu-icon {
+    top: 0;
     margin-right: 16px;
   }
 
