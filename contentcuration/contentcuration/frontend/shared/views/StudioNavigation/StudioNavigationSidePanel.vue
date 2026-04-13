@@ -47,14 +47,13 @@
               @keydown.native.enter="showNotificationsModal"
             >
               <template #default>
-                <WithNotificationIndicator>
+                <WithNotificationIndicator style="margin-right: 16px">
                   <KIcon
                     icon="bell"
-                    class="menu-icon"
                     :color="$themeTokens.text"
                   />
                 </WithNotificationIndicator>
-                <span class="option-label">
+                <span style="flex: 1">
                   {{ notificationsLabel$() }}
                 </span>
               </template>
@@ -113,7 +112,6 @@
           />
         </div>
       </div>
-      <NotificationsModal />
     </template>
   </SidePanelModal>
 
@@ -127,13 +125,11 @@
   import WithNotificationIndicator from '../WithNotificationIndicator.vue';
   import StudioSideNavOption from './StudioSideNavOption.vue';
   import { Modals } from 'shared/constants';
-  import NotificationsModal from 'shared/views/NotificationsModal/index.vue';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 
   export default {
     name: 'StudioNavigationSidePanel',
     components: {
-      NotificationsModal,
       SidePanelModal,
       StudioSideNavOption,
       WithNotificationIndicator,
