@@ -113,8 +113,8 @@
           />
         </div>
       </div>
+      <NotificationsModal />
     </template>
-    <NotificationsModal />
   </SidePanelModal>
 
 </template>
