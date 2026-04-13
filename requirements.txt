@@ -48,7 +48,7 @@ click-repl==0.2.0
     # via celery
 confusable-homoglyphs==3.2.0
     # via django-registration
-cryptography==46.0.6
+cryptography==46.0.7
     # via google-auth
 django==3.2.24
     # via
@@ -265,11 +265,6 @@ s3transfer==0.4.2
     # via boto3
 sentry-sdk==2.48.0
     # via -r requirements.in
-setuptools==80.9.0
-    # via
-    #   google-api-core
-    #   google-auth
-    #   marisa-trie
 six==1.16.0
     # via
     #   click-repl
