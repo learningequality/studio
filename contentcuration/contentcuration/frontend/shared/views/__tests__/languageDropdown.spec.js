@@ -81,4 +81,15 @@ describe('languageDropdown', () => {
     const item = { native_name: '', id: 'de' };
     expect(wrapper.vm.languageText(item)).toBe(' (de)');
   });
+
+  it('returns empty string when called with an array (multiple mode VAutocomplete internal call)', () => {
+    const wrapper = shallowMount(LanguageDropdown, {
+      mocks: {
+        $tr: (key, params) => `${params.language} (${params.code})`,
+      },
+    });
+    // VAutocomplete eagerly evaluates getText(internalValue) as a fallback to getValue.
+    // In multiple mode, internalValue is an Array, so languageText receives the array.
+    expect(wrapper.vm.languageText(['en', 'fr'])).toBe('');
+  });
 });
