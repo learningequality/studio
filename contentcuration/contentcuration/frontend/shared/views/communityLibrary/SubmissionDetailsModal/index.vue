@@ -59,7 +59,7 @@
             v-if="liveSubmission && submission.id !== liveSubmission.id"
             class="live-version"
           >
-            <span>{{ liveVersionLabel$() }}</span>
+            <span>{{ publishedVersionLabel$() }}</span>
             <KButton
               appearance="basic-link"
               :text="
@@ -285,7 +285,7 @@
     communityLibrarySubmissionLabel$,
     channelVersion$,
     channelVersionTokenLabel$,
-    liveVersionLabel$,
+    publishedVersionLabel$,
     reviewAction$,
   } = communityChannelsStrings;
 

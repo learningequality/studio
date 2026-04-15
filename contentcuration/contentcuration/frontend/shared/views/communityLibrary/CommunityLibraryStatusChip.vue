@@ -37,7 +37,7 @@
 
   const theme = themePalette();
 
-  const { pendingStatus$, supersededStatus$, approvedStatus$, flaggedStatus$, liveStatus$ } =
+  const { pendingStatus$, supersededStatus$, approvedStatus$, flaggedStatus$, availableStatus$ } =
     communityChannelsStrings;
 
   const configChoices = {
@@ -63,7 +63,7 @@
       icon: 'circleCheckmark',
     },
     [CommunityLibraryStatus.LIVE]: {
-      text: liveStatus$(),
+      text: availableStatus$(),
       backgroundColor: theme.green.v_100,
       labelColor: theme.green.v_600,
       borderColor: theme.green.v_400,

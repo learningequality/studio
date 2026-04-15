@@ -231,7 +231,7 @@
               v-model="description"
               :disabled="!canBeEdited"
               :invalid="description.length < 1"
-              :invalidText="descriptionRequired$()"
+              :invalidText="fieldRequired$()"
               textArea
               :label="descriptionLabel$()"
               :maxlength="250"
@@ -296,6 +296,7 @@
   import { translateMetadataString } from 'shared/utils/metadataStringsTranslation';
   import countriesUtil from 'shared/utils/countries';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
+  import commonStrings from 'shared/translator';
   import { CommunityLibrarySubmission } from 'shared/data/resources';
 
   import SidePanelModal from 'shared/views/SidePanelModal';
@@ -333,7 +334,6 @@
         countryLabel$,
         countriesInfoText$,
         descriptionLabel$,
-        descriptionRequired$,
         notPublishedWarningTitle$,
         notPublishedWarningDescription$,
         publicWarningTitle$,
@@ -342,9 +342,8 @@
         alreadySubmittedWarningDescription$,
         submitButton$,
         cancelAction$,
-        submittedPrimaryInfo$,
         approvedPrimaryInfo$,
-        flaggedPrimaryInfo$,
+        needsChangesPrimaryInfo$,
         nonePrimaryInfo$,
         channelVersion$,
         submittedSnackbar$,
@@ -366,6 +365,8 @@
         viewCriteriaAction$,
         hideCriteriaAction$,
       } = communityChannelsStrings;
+
+      const { fieldRequired$ } = commonStrings;
 
       const annotationColor = computed(() => tokensTheme.annotation);
       const infoTextColor = computed(() => paletteTheme.grey.v_700);
@@ -415,17 +416,13 @@
         if (!latestSubmissionIsFinished.value) return undefined;
 
         switch (latestSubmissionStatus.value) {
-          case CommunityLibraryStatus.PENDING:
-            return {
-              primaryText: submittedPrimaryInfo$(),
-            };
           case CommunityLibraryStatus.APPROVED:
             return {
               primaryText: approvedPrimaryInfo$(),
             };
           case CommunityLibraryStatus.REJECTED:
             return {
-              primaryText: flaggedPrimaryInfo$(),
+              primaryText: needsChangesPrimaryInfo$(),
             };
           case null:
             return {
@@ -647,7 +644,7 @@
         countryLabel$,
         countriesInfoText$,
         descriptionLabel$,
-        descriptionRequired$,
+        fieldRequired$,
         channelVersion$,
         notPublishedWarningTitle$,
         notPublishedWarningDescription$,
