@@ -93,6 +93,7 @@ jest.setTimeout(10000); // 10 sec
 
 Object.defineProperty(window, 'scrollTo', { value: () => {}, writable: true });
 
+
 resetJestGlobal();
 
 setupSchema();

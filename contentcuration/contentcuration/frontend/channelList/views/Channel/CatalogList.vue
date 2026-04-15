@@ -185,6 +185,7 @@
   import ChannelStar from './ChannelStar';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import Pagination from 'shared/views/Pagination';
+  import { redirectBrowser } from 'shared/utils/navigation';
   import BottomBar from 'shared/views/BottomBar';
   import ToolBar from 'shared/views/ToolBar';
   import OfflineText from 'shared/views/OfflineText';
@@ -366,7 +367,7 @@
       },
       onCardClick(channel) {
         if (this.loggedIn) {
-          window.location.assign(window.Urls.channel(channel.id));
+          redirectBrowser(window.Urls.channel(channel.id));
         } else {
           this.$router.push(this.getChannelDetailsRoute(channel));
         }

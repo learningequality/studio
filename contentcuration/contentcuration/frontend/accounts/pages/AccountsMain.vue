@@ -129,6 +129,7 @@
   import PolicyModals from 'shared/views/policies/PolicyModals';
   import { policies } from 'shared/constants';
   import LanguageSwitcherList from 'shared/languageSwitcher/LanguageSwitcherList';
+  import { redirectBrowser } from 'shared/utils/navigation';
 
   export default {
     name: 'AccountsMain',
@@ -176,7 +177,7 @@
             .then(() => {
               this.loginFailedOffline = false;
               this.loginFailed = false;
-              window.location.assign(this.nextParam || window.Urls.channels());
+              redirectBrowser(this.nextParam || window.Urls.channels());
             })
             .catch(err => {
               this.busy = false;

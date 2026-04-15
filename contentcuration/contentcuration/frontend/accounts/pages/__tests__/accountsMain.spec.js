@@ -2,12 +2,15 @@ import { render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import VueRouter from 'vue-router';
 import AccountsMain from '../AccountsMain.vue';
+import { redirectBrowser } from 'shared/utils/navigation';
+
+jest.mock('shared/utils/navigation', () => ({
+  redirectBrowser: jest.fn(),
+}));
 
 window.Urls = {
   channels: () => '/channels/',
 };
-
-const originalLocation = window.location;
 
 const createRouter = () => {
   return new VueRouter({
@@ -28,12 +31,9 @@ const createRouter = () => {
 function makeWrapper({ loginMock = jest.fn(), online = true, nextParam = null } = {}) {
   const router = createRouter();
 
-  delete window.location;
-  window.location = {
-    ...originalLocation,
-    search: nextParam ? `?next=${nextParam}` : '',
-    assign: jest.fn(),
-  };
+  // Use pushState to set search params without triggering jsdom navigation
+  const url = nextParam ? `http://studio.time/?next=${nextParam}` : 'http://studio.time/';
+  window.history.pushState({}, '', url);
 
   return {
     ...render(AccountsMain, {
@@ -64,7 +64,8 @@ describe('AccountsMain', () => {
   });
 
   afterEach(() => {
-    window.location = originalLocation;
+    jest.clearAllMocks();
+    window.history.pushState({}, '', 'http://studio.time/');
   });
 
   it('should render sign-in form with email, password fields and sign in button', () => {
@@ -112,7 +113,7 @@ describe('AccountsMain', () => {
 
     // User is redirected to channels page
     await waitFor(() => {
-      expect(window.location.assign).toHaveBeenCalledWith('/channels/');
+      expect(redirectBrowser).toHaveBeenCalledWith('/channels/');
     });
   });
 
@@ -133,7 +134,7 @@ describe('AccountsMain', () => {
 
     // User is redirected to next URL
     await waitFor(() => {
-      expect(window.location.assign).toHaveBeenCalledWith(nextUrl);
+      expect(redirectBrowser).toHaveBeenCalledWith(nextUrl);
     });
   });
 
