@@ -1,8 +1,10 @@
 # minimum number of minutes
 minimumReleaseAge: 10080
 minimumReleaseAgeExclude:
+  - kolibri-build
   - kolibri-constants
   - kolibri-design-system
-  - kolibri-logging
   - kolibri-format
-  - kolibri-tools
+  - kolibri-glob
+  - kolibri-i18n
+  - kolibri-logging
