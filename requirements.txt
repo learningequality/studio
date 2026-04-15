@@ -125,7 +125,7 @@ google-cloud-kms==2.24.2
     # via -r requirements.in
 google-cloud-logging==2.7.1
     # via google-cloud-error-reporting
-google-cloud-storage==2.19.0
+google-cloud-storage==3.10.1
     # via -r requirements.in
 google-crc32c==1.8.0
     # via
