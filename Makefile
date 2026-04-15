@@ -83,29 +83,39 @@ i18n-django-compilemessages:
 	# finds only the .po files nested there.
 	cd contentcuration && python manage.py compilemessages
 
+CROWDIN_BRANCH ?= unstable
+
 i18n-upload: i18n-extract
-	python node_modules/kolibri-tools/lib/i18n/crowdin.py upload-sources ${branch}
+	pnpm exec crowdin upload sources --branch ${CROWDIN_BRANCH}
 
 i18n-pretranslate:
-	python node_modules/kolibri-tools/lib/i18n/crowdin.py pretranslate ${branch}
+	pnpm exec crowdin pre-translate --branch ${CROWDIN_BRANCH} --translate-untranslated-only --method=tm
 
 i18n-pretranslate-approve-all:
-	python node_modules/kolibri-tools/lib/i18n/crowdin.py pretranslate ${branch} --approve-all
+	pnpm exec crowdin pre-translate --branch ${CROWDIN_BRANCH} --translate-untranslated-only --method=tm --auto-approve-option=all
 
-i18n-download-translations:
-	python node_modules/kolibri-tools/lib/i18n/crowdin.py rebuild-translations ${branch}
-	python node_modules/kolibri-tools/lib/i18n/crowdin.py download-translations ${branch}
-	pnpm exec kolibri-tools i18n-code-gen -- --output-dir ./contentcuration/contentcuration/frontend/shared/i18n
+i18n-download-translations: i18n-extract-frontend
+	touch contentcuration/locale/.crowdin-download-marker
+	pnpm exec crowdin download --branch ${CROWDIN_BRANCH}
+	@if [ -z "$$(find contentcuration/locale/*/LC_MESSAGES -type f \( -name '*.po' -o -name '*.csv' \) -newer contentcuration/locale/.crowdin-download-marker 2>/dev/null)" ]; then \
+		echo "❌ ERROR: No translation files were downloaded - Crowdin download may have failed silently"; \
+		echo "Check the output above for errors during the download process"; \
+		rm -f contentcuration/locale/.crowdin-download-marker; \
+		exit 1; \
+	fi
+	@echo "✅ Translation files downloaded successfully"
+	rm -f contentcuration/locale/.crowdin-download-marker
+	pnpm exec kolibri-i18n code-gen --output-dir ./contentcuration/contentcuration/frontend/shared/i18n
 	$(MAKE) i18n-django-compilemessages
-	pnpm exec kolibri-tools i18n-create-message-files -- --namespace contentcuration --searchPath ./contentcuration/contentcuration/frontend
+	pnpm exec kolibri-i18n create-message-files --namespace contentcuration --searchPath ./contentcuration/contentcuration/frontend
 
 i18n-download: i18n-download-translations
 
 i18n-download-glossary:
-	python node_modules/kolibri-tools/lib/i18n/crowdin.py download-glossary
+	pnpm exec crowdin glossary download
 
 i18n-upload-glossary:
-	python node_modules/kolibri-tools/lib/i18n/crowdin.py upload-glossary
+	pnpm exec crowdin glossary upload
 
 ###############################################################
 # END I18N COMMANDS ###########################################
