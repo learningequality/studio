@@ -87,8 +87,8 @@ importers:
         specifier: 5.6.0
         version: 5.6.0
       lodash:
-        specifier: ^4.17.23
-        version: 4.17.23
+        specifier: ^4.18.1
+        version: 4.18.1
       lowlight:
         specifier: ^3.3.0
         version: 3.3.0
@@ -341,7 +341,7 @@ importers:
         version: 3.0.7(babel-core@7.0.0-bridge.0(@babel/core@7.29.0))(vue-template-compiler@2.7.16)(vue@2.7.16)
       vue-loader:
         specifier: 15.11.1
-        version: 15.11.1(babel-core@7.0.0-bridge.0(@babel/core@7.29.0))(css-loader@7.1.2(webpack@5.104.1))(ejs@3.1.10)(lodash@4.17.23)(vue-template-compiler@2.7.16)(webpack@5.104.1)
+        version: 15.11.1(babel-core@7.0.0-bridge.0(@babel/core@7.29.0))(css-loader@7.1.2(webpack@5.104.1))(ejs@3.1.10)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.104.1)
       vue-style-loader:
         specifier: ^4.1.3
         version: 4.1.3
@@ -5512,6 +5512,9 @@ packages:
   lodash@4.17.23:
     resolution: {integrity: sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w==}
 
+  lodash@4.18.1:
+    resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
+
   loglevel@1.9.2:
     resolution: {integrity: sha512-HgMmCqIJSAKqo68l0rS2AanEWfkxaZ5wNiEFb5ggm08lDs9Xl2KxBlX3PTcaD2chBM1gXAYf491/M2Rv8Jwayg==}
     engines: {node: '>= 0.6.0'}
@@ -10038,7 +10041,7 @@ snapshots:
       chalk: 3.0.0
       css.escape: 1.5.1
       dom-accessibility-api: 0.6.3
-      lodash: 4.17.23
+      lodash: 4.18.1
       redent: 3.0.0
 
   '@testing-library/user-event@14.6.1(@testing-library/dom@9.3.4)':
@@ -10641,9 +10644,9 @@ snapshots:
     optionalDependencies:
       prettier: 2.8.8
 
-  '@vue/component-compiler-utils@3.3.0(babel-core@7.0.0-bridge.0(@babel/core@7.29.0))(ejs@3.1.10)(lodash@4.17.23)':
+  '@vue/component-compiler-utils@3.3.0(babel-core@7.0.0-bridge.0(@babel/core@7.29.0))(ejs@3.1.10)(lodash@4.18.1)':
     dependencies:
-      consolidate: 0.15.1(babel-core@7.0.0-bridge.0(@babel/core@7.29.0))(ejs@3.1.10)(lodash@4.17.23)
+      consolidate: 0.15.1(babel-core@7.0.0-bridge.0(@babel/core@7.29.0))(ejs@3.1.10)(lodash@4.18.1)
       hash-sum: 1.0.2
       lru-cache: 4.1.5
       merge-source-map: 1.1.0
@@ -10711,7 +10714,7 @@ snapshots:
   '@vue/test-utils@1.3.6(vue-template-compiler@2.7.16)(vue@2.7.16)':
     dependencies:
       dom-event-types: 1.1.0
-      lodash: 4.17.23
+      lodash: 4.18.1
       pretty: 2.0.0
       vue: 2.7.16
       vue-template-compiler: 2.7.16
@@ -11291,7 +11294,7 @@ snapshots:
       babel-traverse: 6.26.0
       babel-types: 6.26.0
       babylon: 6.18.0
-      lodash: 4.17.23
+      lodash: 4.18.1
     transitivePeerDependencies:
       - supports-color
 
@@ -11305,7 +11308,7 @@ snapshots:
       debug: 2.6.9
       globals: 9.18.0
       invariant: 2.2.4
-      lodash: 4.17.23
+      lodash: 4.18.1
     transitivePeerDependencies:
       - supports-color
 
@@ -11313,7 +11316,7 @@ snapshots:
     dependencies:
       babel-runtime: 6.26.0
       esutils: 2.0.3
-      lodash: 4.17.23
+      lodash: 4.18.1
       to-fast-properties: 1.0.3
 
   babylon@6.18.0: {}
@@ -11733,13 +11736,13 @@ snapshots:
 
   console-control-strings@1.1.0: {}
 
-  consolidate@0.15.1(babel-core@7.0.0-bridge.0(@babel/core@7.29.0))(ejs@3.1.10)(lodash@4.17.23):
+  consolidate@0.15.1(babel-core@7.0.0-bridge.0(@babel/core@7.29.0))(ejs@3.1.10)(lodash@4.18.1):
     dependencies:
       bluebird: 3.7.2
     optionalDependencies:
       babel-core: 7.0.0-bridge.0(@babel/core@7.29.0)
       ejs: 3.1.10
-      lodash: 4.17.23
+      lodash: 4.18.1
 
   content-disposition@0.5.4:
     dependencies:
@@ -12268,7 +12271,7 @@ snapshots:
       event-emitter: 0.3.5
       jszip: 3.10.1
       localforage: 1.10.0
-      lodash: 4.17.23
+      lodash: 4.18.1
       marks-pane: 1.0.9
       path-webpack: 0.0.3
 
@@ -12500,7 +12503,7 @@ snapshots:
       interpret: 1.4.0
       is-core-module: 2.16.1
       is-regex: 1.2.1
-      lodash: 4.17.23
+      lodash: 4.18.1
       resolve: 2.0.0-next.5
       semver: 5.7.2
       webpack: 5.104.1(webpack-cli@6.0.1)
@@ -13243,7 +13246,7 @@ snapshots:
   globule@1.3.4:
     dependencies:
       glob: 7.1.7
-      lodash: 4.17.23
+      lodash: 4.18.1
       minimatch: 3.0.8
 
   gonzales-pe@4.3.0:
@@ -14832,7 +14835,7 @@ snapshots:
       kolibri: 0.18.0
       kolibri-format: 1.0.1(@testing-library/dom@9.3.4)(eslint-import-resolver-webpack@0.13.10)(jest@29.7.0(@types/node@25.5.2))(postcss@8.5.6)(typescript@5.8.3)
       launch-editor-middleware: 2.10.0
-      lodash: 4.17.23
+      lodash: 4.18.1
       mini-css-extract-plugin: 2.9.4(webpack@5.104.1)
       node-sass: 9.0.0
       postcss-loader: 8.1.1(postcss@8.5.6)(typescript@5.8.3)(webpack@5.104.1)
@@ -14851,7 +14854,7 @@ snapshots:
       toml: 3.0.0
       url-loader: 4.1.1(file-loader@6.2.0(webpack@5.104.1))(webpack@5.104.1)
       vue-jest: 3.0.7(babel-core@7.0.0-bridge.0(@babel/core@7.29.0))(vue-template-compiler@2.7.16)(vue@2.7.16)
-      vue-loader: 15.11.1(babel-core@7.0.0-bridge.0(@babel/core@7.29.0))(css-loader@7.1.2(webpack@5.104.1))(ejs@3.1.10)(lodash@4.17.23)(vue-template-compiler@2.7.16)(webpack@5.104.1)
+      vue-loader: 15.11.1(babel-core@7.0.0-bridge.0(@babel/core@7.29.0))(css-loader@7.1.2(webpack@5.104.1))(ejs@3.1.10)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.104.1)
       vue-sfc-descriptor-to-string: 1.0.0
       vue-style-loader: 4.1.3
       vue-template-compiler: 2.7.16
@@ -14957,7 +14960,7 @@ snapshots:
       kolibri-constants: 0.2.9
       kolibri-design-system: 5.0.1
       lockr: 0.8.5
-      lodash: 4.17.23
+      lodash: 4.18.1
       path-to-regexp: 1.9.0
       ua-parser-js: 1.0.40
       vue: 2.7.16
@@ -15071,6 +15074,8 @@ snapshots:
   lodash@4.17.21: {}
 
   lodash@4.17.23: {}
+
+  lodash@4.18.1: {}
 
   loglevel@1.9.2: {}
 
@@ -15416,7 +15421,7 @@ snapshots:
   node-cache@4.2.1:
     dependencies:
       clone: 2.1.2
-      lodash: 4.17.23
+      lodash: 4.18.1
 
   node-fetch@2.7.0(encoding@0.1.13):
     dependencies:
@@ -15461,7 +15466,7 @@ snapshots:
       gaze: 1.1.3
       get-stdin: 4.0.1
       glob: 7.2.3
-      lodash: 4.17.23
+      lodash: 4.18.1
       make-fetch-happen: 10.2.1
       meow: 9.0.0
       nan: 2.22.2
@@ -16230,7 +16235,7 @@ snapshots:
   query-ast@1.0.5:
     dependencies:
       invariant: 2.2.4
-      lodash: 4.17.23
+      lodash: 4.18.1
 
   querystringify@2.2.0: {}
 
@@ -16565,7 +16570,7 @@ snapshots:
   sass-graph@4.0.1:
     dependencies:
       glob: 7.2.3
-      lodash: 4.17.23
+      lodash: 4.18.1
       scss-tokenizer: 0.4.3
       yargs: 17.7.2
 
@@ -17699,7 +17704,7 @@ snapshots:
       eslint-visitor-keys: 3.4.3
       espree: 9.6.1
       esquery: 1.6.0
-      lodash: 4.17.23
+      lodash: 4.18.1
       semver: 7.7.2
     transitivePeerDependencies:
       - supports-color
@@ -17733,9 +17738,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  vue-loader@15.11.1(babel-core@7.0.0-bridge.0(@babel/core@7.29.0))(css-loader@7.1.2(webpack@5.104.1))(ejs@3.1.10)(lodash@4.17.23)(vue-template-compiler@2.7.16)(webpack@5.104.1):
+  vue-loader@15.11.1(babel-core@7.0.0-bridge.0(@babel/core@7.29.0))(css-loader@7.1.2(webpack@5.104.1))(ejs@3.1.10)(lodash@4.18.1)(vue-template-compiler@2.7.16)(webpack@5.104.1):
     dependencies:
-      '@vue/component-compiler-utils': 3.3.0(babel-core@7.0.0-bridge.0(@babel/core@7.29.0))(ejs@3.1.10)(lodash@4.17.23)
+      '@vue/component-compiler-utils': 3.3.0(babel-core@7.0.0-bridge.0(@babel/core@7.29.0))(ejs@3.1.10)(lodash@4.18.1)
       css-loader: 7.1.2(webpack@5.104.1)
       hash-sum: 1.0.2
       loader-utils: 1.4.2
@@ -18131,7 +18136,7 @@ snapshots:
       fast-json-stable-stringify: 2.1.0
       fs-extra: 9.1.0
       glob: 11.1.0
-      lodash: 4.17.23
+      lodash: 4.18.1
       pretty-bytes: 5.6.0
       rollup: 2.79.2
       source-map: 0.8.0-beta.0
