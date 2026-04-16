@@ -1182,9 +1182,9 @@ def publish_channel(  # noqa: C901
             base_tree.published = True
             base_tree.save()
 
-        # Delete public channel cache.
-        if not is_draft_version and channel.public:
-            delete_public_channel_cache_keys()
+            # Delete public channel cache.
+            if channel.public:
+                delete_public_channel_cache_keys()
 
         if send_email:
             with override(language):
