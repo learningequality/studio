@@ -115,5 +115,6 @@ export function useTable({ fetchFunc, filterFetchQueryParams }) {
   return {
     pagination,
     loading,
+    loadItems,
   };
 }
