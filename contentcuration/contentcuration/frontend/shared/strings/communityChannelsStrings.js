@@ -176,7 +176,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   },
   countriesInfoText: {
     message:
-      'Select one or more countries to tag your channels submission with. For example, if your channel contains materials aligned to a national curriculum or regionally-specific content, selecting the relevant countries will help users find it. Otherwise, leave this blank.',
+      'Select one or more countries to label your channel submission with. For example, if your channel contains materials aligned to a national curriculum or regionally-specific content, selecting the relevant countries will help users find it. Otherwise, leave this blank.',
     context: 'Help text for the country selection field in the "Submit to Community Library" panel',
   },
   notPublishedWarningTitle: {
@@ -297,27 +297,26 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     context: 'Button text to hide the channel fit checklist criteria',
   },
   channelFitChecklistLicense: {
-    message: 'Is your content openly licensed or in the public domain?',
+    message: 'Are the resources in your channel openly licensed or in the public domain?',
     context:
       'License checklist item asking whether the channel content uses open or public domain licenses',
   },
   channelFitChecklistOfflineUse: {
-    message: 'Does your channel work without an internet connection?',
+    message: 'Do the resources in your channel work without an Internet connection?',
     context: 'Offline use checklist item asking whether the channel works offline',
   },
   channelFitChecklistAttribution: {
-    message: 'Does each piece of content have an author listed?',
+    message: 'Does each resource have an author listed?',
     context: 'Attribution checklist item asking whether content items have authors listed',
   },
   channelFitChecklistQuality: {
-    message:
-      'Has anyone on your team or in your organization reviewed it and found it useful for learners?',
+    message: 'Has anyone on your team or in your organization reviewed the channel?',
     context:
       'Quality checklist item asking whether the channel has been reviewed and validated by someone on the team',
   },
   channelFitChecklistChannelInfo: {
     message:
-      "Is your channel's basic information filled in — title, description, thumbnail, language, subject, and level?",
+      "Is your channel's basic information filled in — title, description, thumbnail, language, category, and level?",
     context: 'Channel information checklist item asking whether the channel metadata is complete',
   },
   confirmReplacementText: {
@@ -384,7 +383,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     context: 'Title shown when special permissions licenses are detected in the channel',
   },
   confirmDistributionRights: {
-    message: 'Please confirm you have the right to distribute this content via Kolibri.',
+    message: 'Please confirm you have the right to distribute these resources via Kolibri.',
     context:
       'Message asking user to confirm they have distribution rights for special permissions content',
   },
@@ -460,7 +459,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
       'Notification message shown to the user when their submission to the Community Library is successful',
   },
   flaggedNotification: {
-    message: 'Changes required for {channelVersion}',
+    message: 'Changes required for version {channelVersion}',
     context: 'Notification message shown when a user flags a channel version for review',
   },
   submissionNotification: {
@@ -579,7 +578,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     context: 'Description for the Community Library List page',
   },
   whatIsCommunityLibrary: {
-    message: 'What is community library?',
+    message: 'What is the Community Library?',
     context:
       'Label for the section explaining what the Community Library is on the Community Library List page',
   },
@@ -612,7 +611,8 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     context: 'Button to clear all filters',
   },
   needKolibriVersionToImport: {
-    message: 'You will need Kolibri version 0.19.4 or higher to import community channels.',
+    message:
+      'You will need Kolibri version 0.19.4 or higher to import channels from the Community Library.',
     context:
       'Message shown in the Community Library List page informing users that they need a certain Kolibri version to import channels from the Community Library',
   },
@@ -623,7 +623,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   },
   communityLibraryCTADescription: {
     message:
-      'Have a channel worth sharing with educators and learners? Submit it for review through the Share menu so it can be discovered in Studio.',
+      'Have a channel worth sharing with other educators and learners? Submit it for review through the Share menu so it can be discovered in Studio.',
     context:
       'Description for the call to action section in the Community Library List page encouraging users to contribute to the Community Library',
   },
@@ -659,8 +659,9 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'View channel details including description and metadata',
     context: 'Third item in the list of things users can do in the Community Library',
   },
-  gotItLabel: {
-    message: 'Got it',
-    context: 'Button text to dismiss the about Community Library modal',
-  },
+  // gotItLabel: {
+  //   message: 'Got it',
+  //   context: 'Button text to dismiss the about Community Library modal',
+  // },
+  // use CLOSE ACTION INSTEAD OF GOT IT TO BE CONSISTENT WITH OTHER MODALS
 });
