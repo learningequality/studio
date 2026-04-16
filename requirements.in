@@ -5,8 +5,8 @@ djangorestframework==3.15.1
 psycopg2-binary==2.9.11
 django-js-reverse==0.10.2
 django-registration==3.4
-le-utils>=0.2.12
-gunicorn==23.0.0
+le-utils==0.2.17
+gunicorn==25.1.0
 django-postmark==0.1.6
 jsonfield==3.1.0
 celery==5.6.0
@@ -28,7 +28,7 @@ django-redis
 django-prometheus
 sentry-sdk
 html5lib==1.1
-pillow==12.1.1
+pillow==12.2.0
 python-dateutil>=2.8.1
 jsonschema>=3.2.0
 django-celery-results
@@ -38,3 +38,4 @@ langcodes==3.5.1
 pydantic==2.12.5
 latex2mathml==3.78.1
 markdown-it-py==4.0.0
+stripe>=5.0.0,<6.0.0

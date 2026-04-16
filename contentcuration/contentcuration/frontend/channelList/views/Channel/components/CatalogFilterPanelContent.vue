@@ -31,7 +31,7 @@
       />
 
       <!-- Starred -->
-      <Checkbox
+      <KCheckbox
         v-if="loggedIn"
         v-model="bookmark"
         :label="$tr('starredLabel')"
@@ -46,7 +46,7 @@
       </div>
 
       <div class="checkbox-with-tooltip">
-        <Checkbox
+        <KCheckbox
           v-model="coach"
           aria-describedby="tooltip-coach"
           :label="$tr('coachLabel')"
@@ -58,7 +58,7 @@
         />
       </div>
 
-      <Checkbox
+      <KCheckbox
         v-model="subtitles"
         :label="$tr('subtitlesLabel')"
       />
@@ -104,7 +104,6 @@
   import LanguageFilter from './LanguageFilter.vue';
   import MultiSelect from 'shared/views/form/MultiSelect';
   import { constantsTranslationMixin } from 'shared/mixins';
-  import Checkbox from 'shared/views/form/Checkbox';
   import HelpTooltip from 'shared/views/HelpTooltip';
   import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
@@ -114,7 +113,6 @@
     name: 'CatalogFilterPanelContent',
     components: {
       LanguageFilter,
-      Checkbox,
       HelpTooltip,
       MultiSelect,
     },

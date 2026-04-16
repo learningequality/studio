@@ -7,11 +7,13 @@
       backgroundColor: error ? $themePalette.red.v_100 : '',
     }"
   >
-    <KIcon
-      v-if="error"
-      class="icon"
-      icon="error"
-    />
+    <slot name="icon">
+      <KIcon
+        v-if="error"
+        class="icon"
+        icon="error"
+      />
+    </slot>
     <slot>
       {{ text }}
     </slot>

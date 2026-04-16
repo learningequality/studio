@@ -18,29 +18,29 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Save draft',
     context: 'The action button to save a channel as a draft',
   },
-  modeLive: {
-    message: 'Live',
+  publishChannelMode: {
+    message: 'Publish channel',
     context: 'Label to select live publishing mode',
   },
-  modeDraft: {
-    message: 'Draft (staging)',
+  publishDraftMode: {
+    message: 'Publish draft channel',
     context: 'Label to select draft publishing mode',
   },
   versionNotesLabel: {
-    message: "Describe what's new in this channel version",
+    message: "Describe what's included in this channel version",
     context: 'Label for the version notes text area',
   },
   versionDescriptionLabel: {
     message: 'Version description',
     context: 'Label for the version description text area',
   },
-  modeLiveDescription: {
-    message: 'This edition will be accessible in Kolibri through a channel token.',
+  publishChannelDescription: {
+    message: 'To see your channel in Kolibri, import using the channel token.',
     context: 'Description for the live publishing mode',
   },
-  modeDraftDescription: {
+  publishDraftDescription: {
     message:
-      'Your channel will be saved as a draft, allowing you to review or conduct quality checks without altering the published version on Kolibri public library.',
+      'Your channel will be saved as a draft, allowing you to review and do quality checks on the draft, without altering the current version available for Kolibri users. To see this draft channel in Kolibri, import using the draft channel token.',
     context: 'Description for the draft publishing mode',
   },
   publishingInfo: {
@@ -61,10 +61,6 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
       'Incomplete resources will not be published and made available for download in Kolibri.',
     context: 'Description for incomplete resources',
   },
-  incompleteResourcesDescription2: {
-    message: "Click 'Publish' to confirm that you would like to publish anyway.",
-    context: 'Confirmation message for publishing incomplete resources',
-  },
   cancelAction: {
     message: 'Cancel',
     context: 'The action button to cancel an ongoing operation',
@@ -72,14 +68,6 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   languageLabel: {
     message: 'Language',
     context: 'Label for the language selection dropdown',
-  },
-  versionNotesRequiredMessage: {
-    message: 'Version notes are required',
-    context: 'Error message when version notes are required but not provided',
-  },
-  languageRequiredMessage: {
-    message: 'Language is required',
-    context: 'Error message when language selection is required but not provided',
   },
   // Channel version history strings
   seeAllVersions: {
@@ -116,24 +104,25 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   },
   pendingStatus: {
     message: 'Submitted',
-    context: 'Status indicating that an Community Library submission is pending',
+    context: 'Status indicating that a Community Library submission is pending',
   },
   supersededStatus: {
     message: 'Superseded',
     context:
-      'Status indicating that an Community Library submission is superseded by a newer submission',
+      'Status indicating that a Community Library submission is superseded by a newer submission',
   },
   approvedStatus: {
     message: 'Approved',
-    context: 'Status indicating that an Community Library submission is approved',
+    context: 'Status indicating that a Community Library submission is approved',
   },
   flaggedStatus: {
-    message: 'Flagged',
-    context: 'Status indicating that an Community Library submission is rejected',
+    message: 'Needs changes',
+    context: 'Status indicating that a Community Library submission is rejected',
   },
-  liveStatus: {
-    message: 'Live',
-    context: 'Status indicating that an Community Library submission is live',
+  availableStatus: {
+    message: 'Available in Community Library',
+    context:
+      'Status indicating that a Community Library submission is now available in the Community Library',
   },
   // Submit to Community Library panel strings
   submitToCommunityLibrary: {
@@ -147,7 +136,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   },
   submittedPrimaryInfo: {
     message:
-      'A previous version is still pending review. Reviewers will see the latest submission first.',
+      'A previous version is still pending review. Reviewers will see the most recent submission by default.',
     context:
       'Information shown in the "Submit to Community Library" panel when a previous version is pending review',
   },
@@ -157,14 +146,15 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     context:
       'Information shown in the "Submit to Community Library" panel when a previous version is approved and live',
   },
-  flaggedPrimaryInfo: {
+  needsChangesPrimaryInfo: {
     message:
-      'A previous version was flagged for review. Ensure you have fixed all highlighted issues before submitting.',
+      'Your previously submitted version needs changes. Make sure you have addressed all comments before resubmitting.',
     context:
-      'Information shown in the "Submit to Community Library" panel when a previous version was flagged',
+      'Information shown in the "Submit to Community Library" panel when a previous version was not approved by an admin and requires changes.',
   },
   nonePrimaryInfo: {
-    message: 'Your published channel will be added to the Community Library review queue.',
+    message:
+      "We're inviting members of the Kolibri community to submit channels they've created for offline learning in low-resource settings. ",
     context:
       'Information shown in the "Submit to Community Library" panel when there are no previous submissions',
   },
@@ -174,15 +164,20 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
       'Button in the "Submit to Community Library" panel to show more details about the Community Library',
   },
   lessDetailsButton: {
-    message: 'Less details',
+    message: 'Hide details',
     context:
       'Button in the "Submit to Community Library" panel to hide details about the Community Library',
   },
   moreDetails: {
     message:
-      "The Kolibri Community Library features channels created by the community. Share your openly licensed work for review, and once it's approved, it will be available to users in your selected region or language.",
+      "After your submission is approved, the channel will be available to other Kolibri Studio users on the 'Community Library' page.",
     context:
       'Detailed description of the Community Library shown in the "Submit to Community Library" panel',
+  },
+  countriesInfoText: {
+    message:
+      'Select one or more countries to tag your channels submission with. For example, if your channel contains materials aligned to a national curriculum or regionally-specific content, selecting the relevant countries will help users find it. Otherwise, leave this blank.',
+    context: 'Help text for the country selection field in the "Submit to Community Library" panel',
   },
   notPublishedWarningTitle: {
     message: "This channel isn't published to Kolibri Studio yet",
@@ -195,7 +190,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
       'Description of warning shown in the "Submit to Community Library" panel when the channel is not published',
   },
   publicWarningTitle: {
-    message: 'This channel is currently public in the Content Library.',
+    message: 'This channel is currently public in the Kolibri Library.',
     context:
       'Title of warning shown in the "Submit to Community Library" panel when the channel is public',
   },
@@ -211,19 +206,14 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   },
   alreadySubmittedWarningDescription: {
     message:
-      'Please wait for review or make changes and publish a new version before submitting again.',
+      'Please wait for the channel to be reviewed. You will see a notification in your Studio account after the review is complete.',
     context:
       'Description of warning shown in the "Submit to Community Library" panel when the current version is already submitted',
   },
   descriptionLabel: {
-    message: "Describe what's new in this submission",
+    message: "Describe what's included in this submission",
     context:
       'Label for the submission description field in the "Submit to Community Library" panel',
-  },
-  descriptionRequired: {
-    message: 'Description is required',
-    context:
-      'Error message shown in the "Submit to Community Library" panel when description is required but empty',
   },
   submitButton: {
     message: 'Submit for review',
@@ -264,14 +254,71 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     context: 'Label for the notes the editor can add to their submission to the Community Library',
   },
   feedbackNotesLabel: {
-    message: 'Feedback notes',
+    message: 'Notes from the reviewer',
     context:
       'Label for the feedback notes that reviewers can add to a submission in the Community Library ',
   },
   internalNotesLabel: {
-    message: 'Internal notes',
+    message: 'Admin notes (internal use only)',
     context:
       'Label for the notes that admins can add to a submission in the Community Library for themselves',
+  },
+  channelFitLicenseLabel: {
+    message: 'License',
+    context: 'Label for the license checklist item in the channel fit checklist',
+  },
+  channelFitOfflineUseLabel: {
+    message: 'Offline use',
+    context: 'Label for the offline use checklist item in the channel fit checklist',
+  },
+  channelFitAttributionLabel: {
+    message: 'Attribution',
+    context: 'Label for the attribution checklist item in the channel fit checklist',
+  },
+  channelFitQualityLabel: {
+    message: 'Quality',
+    context: 'Label for the quality checklist item in the channel fit checklist',
+  },
+  channelFitChannelInfoLabel: {
+    message: 'Channel information',
+    context: 'Label for the channel information checklist item in the channel fit checklist',
+  },
+  channelFitChecklistIntro: {
+    message: 'Criteria for submitting to the Community Library',
+    context:
+      'Introductory text before a checklist of criteria for submitting a channel to the Community Library',
+  },
+  viewCriteriaAction: {
+    message: 'View criteria',
+    context: 'Button text to view the channel fit checklist criteria',
+  },
+  hideCriteriaAction: {
+    message: 'Hide criteria',
+    context: 'Button text to hide the channel fit checklist criteria',
+  },
+  channelFitChecklistLicense: {
+    message: 'Is your content openly licensed or in the public domain?',
+    context:
+      'License checklist item asking whether the channel content uses open or public domain licenses',
+  },
+  channelFitChecklistOfflineUse: {
+    message: 'Does your channel work without an internet connection?',
+    context: 'Offline use checklist item asking whether the channel works offline',
+  },
+  channelFitChecklistAttribution: {
+    message: 'Does each piece of content have an author listed?',
+    context: 'Attribution checklist item asking whether content items have authors listed',
+  },
+  channelFitChecklistQuality: {
+    message:
+      'Has anyone on your team or in your organization reviewed it and found it useful for learners?',
+    context:
+      'Quality checklist item asking whether the channel has been reviewed and validated by someone on the team',
+  },
+  channelFitChecklistChannelInfo: {
+    message:
+      "Is your channel's basic information filled in — title, description, thumbnail, language, subject, and level?",
+    context: 'Channel information checklist item asking whether the channel metadata is complete',
   },
   confirmReplacementText: {
     message: 'I understand this will replace my earlier submission on the review queue',
@@ -289,7 +336,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   },
   resubmitModalBodySecond: {
     message:
-      'Would you like to resubmit this version with your changes for community library review?',
+      'Would you like to resubmit this version with your changes for Community Library review?',
     context:
       'Second sentence of the body text of the modal shown after publishing a channel that already has Community Library submissions',
   },
@@ -302,7 +349,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     context: 'Action in the resubmit modal to dismiss the modal',
   },
   licenseCheckPassed: {
-    message: 'License check passed',
+    message: 'License check passed.',
     context: 'Title shown when license audit passes (no invalid licenses found)',
   },
   allLicensesCompatible: {
@@ -310,11 +357,11 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     context: 'Message shown after listing compatible licenses when license check passes',
   },
   incompatibleLicensesDetected: {
-    message: 'Incompatible licenses detected',
+    message: 'Incompatible licenses detected.',
     context: 'Title shown when invalid licenses are detected in the channel',
   },
   channelCannotBeDistributed: {
-    message: 'this channel cannot be distributed via Kolibri.',
+    message: 'This channel cannot be distributed via Kolibri.',
     context: 'Message explaining that channels with incompatible licenses cannot be distributed',
   },
   fixLicensingBeforeSubmission: {
@@ -323,7 +370,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   },
   incompatibleLicensesDescription: {
     message:
-      '"{licenseNames}" - this channel cannot be distributed via Kolibri. Please fix licensing before submitting a new version.',
+      '"{licenseNames}" - this channel cannot be distributed via Kolibri.  If you cannot change the license, remove all resources with "{licenseNames}"  before submitting again.',
     context:
       'Description shown when incompatible licenses are detected, includes the license names and explanation',
   },
@@ -413,7 +460,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
       'Notification message shown to the user when their submission to the Community Library is successful',
   },
   flaggedNotification: {
-    message: '{author} ({userType}) flagged {channelVersion}',
+    message: 'Changes required for {channelVersion}',
     context: 'Notification message shown when a user flags a channel version for review',
   },
   submissionNotification: {
@@ -457,8 +504,8 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'Channel version token',
     context: 'Label for the channel version token included in submission details page',
   },
-  liveVersionLabel: {
-    message: 'Live version:',
+  publishedVersionLabel: {
+    message: 'Published version:',
     context: 'Label indicating the live version of a channel',
   },
   activityHistoryLabel: {
@@ -512,16 +559,108 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
   },
   channelTokenDescription: {
     message:
-      'To preview your draft channel right away, simply copy the unique draft channel token. This is the sole method to access the channel.',
+      'You can use this token to import and preview the draft channel in Kolibri. Please note that the token for the final published channel will be different.',
     context: 'Description for the channel token field in the draft preview instructions modal',
   },
   getDraftTokenAction: {
-    message: 'Get draft token',
+    message: 'Copy token for draft channel',
     context:
       'Button text for the action to retrieve the draft token in the draft preview instructions modal',
   },
   draftTokenLabel: {
     message: 'Draft token',
     context: 'Label for the draft token field in the draft preview instructions modal',
+  },
+
+  // Community Library List page strings
+  communityLibraryDescription: {
+    message:
+      'Browse community-submitted channels approved for discovery in Studio. Copy a token to use a channel in Kolibri.',
+    context: 'Description for the Community Library List page',
+  },
+  whatIsCommunityLibrary: {
+    message: 'What is community library?',
+    context:
+      'Label for the section explaining what the Community Library is on the Community Library List page',
+  },
+  resultsText: {
+    message: '{count, plural, =1 {# result found} other {# results found}}',
+    context: 'Text showing number of results',
+  },
+  noResultsWithFilters: {
+    message: 'No channels match the selected filters.',
+    context: 'Message shown when no channels are found with the applied filters',
+  },
+  noCommunityChannels: {
+    message: 'No channels have been published to the Community Library yet.',
+    context: 'Message shown when there are no channels in the Community Library',
+  },
+  loadError: {
+    message: 'There was an error loading channels.',
+    context: 'Error message when loading channels fails',
+  },
+  filterLabel: {
+    message: 'Filter',
+    context: 'Button label to show filters on mobile',
+  },
+  searchLabel: {
+    message: 'Search',
+    context: 'Label for the search input',
+  },
+  clearAll: {
+    message: 'Clear all',
+    context: 'Button to clear all filters',
+  },
+  needKolibriVersionToImport: {
+    message: 'You will need Kolibri version 0.19.4 or higher to import community channels.',
+    context:
+      'Message shown in the Community Library List page informing users that they need a certain Kolibri version to import channels from the Community Library',
+  },
+  communityLibraryCTATitle: {
+    message: 'Help grow the Community Library',
+    context:
+      'Title for the call to action section in the Community Library List page encouraging users to contribute to the Community Library',
+  },
+  communityLibraryCTADescription: {
+    message:
+      'Have a channel worth sharing with educators and learners? Submit it for review through the Share menu so it can be discovered in Studio.',
+    context:
+      'Description for the call to action section in the Community Library List page encouraging users to contribute to the Community Library',
+  },
+  goToMyChannelsAction: {
+    message: 'Go to My channels',
+    context: 'Button text for the action to navigate to the My Channels page',
+  },
+
+  // about community library modal
+  aboutCommunityLibraryTitle: {
+    message: 'About Community Library',
+    context: 'Title for the modal that explains what the Community Library is',
+  },
+  aboutCommunityLibraryDescription: {
+    message:
+      'Community library contains channels submitted by the community and approved for discovery in Studio.',
+    context: 'Description for the modal that explains what the Community Library is',
+  },
+  whatCanYouDoHere: {
+    message: 'What you can do here',
+    context:
+      'Label for the section before listing the things users can do in the Community Library',
+  },
+  whatCanYouDoHereItem1: {
+    message: 'Browse channels by country, category, and language',
+    context: 'First item in the list of things users can do in the Community Library',
+  },
+  whatCanYouDoHereItem2: {
+    message: 'Copy a channel token to use in Kolibri',
+    context: 'Second item in the list of things users can do in the Community Library',
+  },
+  whatCanYouDoHereItem3: {
+    message: 'View channel details including description and metadata',
+    context: 'Third item in the list of things users can do in the Community Library',
+  },
+  gotItLabel: {
+    message: 'Got it',
+    context: 'Button text to dismiss the about Community Library modal',
   },
 });

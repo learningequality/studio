@@ -10,7 +10,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from contentcuration.utils.automation_manager import AutomationManager
-from contentcuration.viewsets.user import IsAIFeatureEnabledForUser
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +22,6 @@ class RecommendationView(APIView):
 
     permission_classes = [
         IsAuthenticated,
-        IsAIFeatureEnabledForUser,
     ]
     manager = AutomationManager()
 

@@ -22,24 +22,22 @@
         bottom
         lazy
       >
-        <template #activator="{ on }">
-          <VChip
-            class="ma-1"
-            v-on="on"
-          >
+        <template>
+          <StudioChip class="ma-1">
             <div class="text-truncate">
               {{ item.name }}
             </div>
-          </VChip>
+          </StudioChip>
         </template>
         <span>{{ item.name }}</span>
       </VTooltip>
     </template>
     <template #item="{ item }">
-      <Checkbox
+      <KCheckbox
         :key="item.id"
         :ref="'checkbox-' + item.id"
         v-model="languages"
+        :presentational="true"
         :value="item.id"
         class="mb-0 mt-1 scroll-margin"
         :labelDir="null"
@@ -59,7 +57,7 @@
           </template>
           <span>{{ item.name }}</span>
         </VTooltip>
-      </Checkbox>
+      </KCheckbox>
     </template>
   </VAutocomplete>
 
@@ -68,8 +66,8 @@
 
 <script>
 
-  import Checkbox from 'shared/views/form/Checkbox';
   import LanguagesMap, { LanguagesList } from 'shared/leUtils/Languages';
+  import StudioChip from 'shared/views/StudioChip.vue';
 
   const publicLanguages = Object.entries(window.publicLanguages || {}).map(([langId, count]) => {
     const baseLanguage = LanguagesMap.get(langId);
@@ -86,7 +84,7 @@
   export default {
     name: 'LanguageFilter',
     components: {
-      Checkbox,
+      StudioChip,
     },
     props: {
       value: {

@@ -51,6 +51,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django_cte import CTEManager
+from django_cte import CTEQuerySet
 from django_cte import With
 from le_utils import proquint
 from le_utils.constants import content_kinds
@@ -59,6 +60,7 @@ from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from le_utils.constants import languages
 from le_utils.constants import licenses
+from le_utils.constants import modalities
 from le_utils.constants import roles
 from le_utils.constants.labels import subjects
 from model_utils import FieldTracker
@@ -547,6 +549,17 @@ class User(AbstractBaseUser, PermissionsMixin):
             kind_dict[item["preset__kind_id"]] = item["space"]
         return kind_dict
 
+    def get_effective_disk_space(self):
+        """
+        Returns total disk space including any active subscription bonus.
+        Subscription space is additive to preserve admin-granted quotas.
+        """
+        base = self.disk_space
+        subscription = getattr(self, "subscription", None)
+        if subscription and subscription.is_active:
+            return base + subscription.subscription_disk_space
+        return base
+
     def email_user(self, subject, message, from_email=None, **kwargs):
         try:
             # msg = EmailMultiAlternatives(subject, message, from_email, [self.email])
@@ -716,6 +729,39 @@ class User(AbstractBaseUser, PermissionsMixin):
             ],
             applied=True,
         )
+
+
+class UserSubscription(models.Model):
+    """
+    Tracks Stripe subscription data for a user.
+    Kept separate from User model for clean separation of payment concerns.
+    """
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="subscription",
+    )
+    stripe_customer_id = models.CharField(max_length=255, blank=True, db_index=True)
+    stripe_subscription_id = models.CharField(max_length=255, blank=True, db_index=True)
+    stripe_subscription_status = models.CharField(max_length=50, blank=True)
+    subscription_disk_space = models.BigIntegerField(
+        default=0, help_text="Additional bytes granted by subscription"
+    )
+    cancel_at_period_end = models.BooleanField(default=False)
+    current_period_end = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "contentcuration_usersubscription"
+
+    @property
+    def is_active(self):
+        return self.stripe_subscription_status in ("active", "trialing")
+
+    def __str__(self):
+        return f"Subscription for {self.user.email}: {self.stripe_subscription_status}"
 
 
 class UUIDField(models.CharField):
@@ -975,7 +1021,7 @@ class PermissionCTE(With):
         return Exists(self.queryset().filter(*filters).values("user_id"))
 
 
-class ChannelModelQuerySet(models.QuerySet):
+class ChannelModelQuerySet(CTEQuerySet):
     def create(self, **kwargs):
         """
         Create a new object with the given kwargs, saving it to the database
@@ -999,6 +1045,12 @@ class ChannelModelQuerySet(models.QuerySet):
     def update_or_create(self, defaults=None, **kwargs):
         self._actor_id = kwargs.pop("actor_id", None)
         return super().update_or_create(defaults, **kwargs)
+
+
+class ChannelModelManager(models.Manager.from_queryset(ChannelModelQuerySet)):
+    """Custom Channel models manager with CTE support"""
+
+    pass
 
 
 class Channel(models.Model):
@@ -1139,7 +1191,7 @@ class Channel(models.Model):
         ]
     )
 
-    objects = ChannelModelQuerySet.as_manager()
+    objects = ChannelModelManager()
 
     @classmethod
     def get_editable(cls, user, channel_id):
@@ -1566,7 +1618,7 @@ class ChannelVersion(models.Model):
         SecretToken, on_delete=models.SET_NULL, null=True, blank=True
     )
     version_notes = models.TextField(null=True, blank=True)
-    size = models.PositiveIntegerField(null=True, blank=True)
+    size = models.FloatField(default=0)
     date_published = models.DateTimeField(null=True, blank=True)
     resource_count = models.PositiveIntegerField(null=True, blank=True)
     kind_count = ArrayField(
@@ -1599,14 +1651,37 @@ class ChannelVersion(models.Model):
         blank=True,
     )
 
+    # Snapshot of the channel info at the time of creation.
+    channel_name = models.CharField(max_length=200, blank=True, null=True)
+    channel_description = models.CharField(max_length=400, blank=True, null=True)
+    channel_tagline = models.CharField(max_length=150, blank=True, null=True)
+    channel_thumbnail_encoding = JSONField(default=dict, blank=True)
+    channel_language = models.ForeignKey(
+        "Language",
+        null=True,
+        blank=True,
+        related_name="+",
+        on_delete=models.SET_NULL,
+    )
+
     class Meta:
         unique_together = ("channel", "version")
 
     def save(self, *args, **kwargs):
         if self.version is not None and self.version > self.channel.version:
             raise ValidationError("Version cannot be greater than channel version")
+
+        if self._state.adding and self.version == self.channel.version:
+            # When creating a new ChannelVersion for current channel version,
+            # snapshot the current channel info
+            self.channel_name = self.channel.name
+            self.channel_description = self.channel.description
+            self.channel_tagline = self.channel.tagline
+            self.channel_thumbnail_encoding = self.channel.thumbnail_encoding
+            self.channel_language = self.channel.language
+
         self.full_clean()
-        super(ChannelVersion, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     def new_token(self):
         if not self.secret_token:
@@ -2591,22 +2666,23 @@ class ContentNode(MPTTModel, models.Model):
                 )
                 if not (self.extra_fields.get("mastery_model") or criterion):
                     errors.append("Missing mastery criterion")
-                if criterion:
-                    try:
-                        completion_criteria.validate(
-                            criterion, kind=content_kinds.EXERCISE
-                        )
-                    except completion_criteria.ValidationError:
-                        errors.append("Mastery criterion is defined but is invalid")
-            else:
-                criterion = self.extra_fields and self.extra_fields.get(
-                    "options", {}
-                ).get("completion_criteria", {})
-                if criterion:
-                    try:
-                        completion_criteria.validate(criterion, kind=self.kind_id)
-                    except completion_criteria.ValidationError:
-                        errors.append("Completion criterion is defined but is invalid")
+        options = self.extra_fields and self.extra_fields.get("options", {}) or {}
+        criterion = options.get("completion_criteria", {})
+        modality = options.get("modality")
+        # UNIT modality topics must have completion criteria
+        if (
+            self.kind_id == content_kinds.TOPIC
+            and modality == modalities.UNIT
+            and not criterion
+        ):
+            errors.append("UNIT modality topics must have completion criteria")
+        if criterion:
+            try:
+                completion_criteria.validate(
+                    criterion, kind=self.kind_id, modality=modality
+                )
+            except completion_criteria.ValidationError:
+                errors.append("Completion criterion is defined but is invalid")
         self.complete = not errors
         return errors
 

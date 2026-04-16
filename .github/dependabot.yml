@@ -20,6 +20,13 @@ updates:
       time: "00:00"
     cooldown:
       default-days: 7
+      exclude:
+        - kolibri-build
+        - kolibri-constants
+        - kolibri-design-system
+        - kolibri-format
+        - kolibri-i18n
+        - kolibri-logging
     groups:
       babel:
         patterns:

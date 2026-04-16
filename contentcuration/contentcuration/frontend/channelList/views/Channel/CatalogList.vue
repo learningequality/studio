@@ -185,6 +185,7 @@
   import ChannelStar from './ChannelStar';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import Pagination from 'shared/views/Pagination';
+  import { redirectBrowser } from 'shared/utils/navigation';
   import BottomBar from 'shared/views/BottomBar';
   import ToolBar from 'shared/views/ToolBar';
   import OfflineText from 'shared/views/OfflineText';
@@ -330,10 +331,18 @@
       getDropdownItems(channel) {
         const items = [];
         if (channel.source_url) {
-          items.push({ label: this.$tr('goToWebsite'), icon: 'openNewTab', value: 'source-url' });
+          items.push({
+            label: this.$tr('goToWebsite'),
+            icon: 'openNewTab',
+            value: 'source-url',
+          });
         }
         if (channel.demo_server_url) {
-          items.push({ label: this.$tr('viewContent'), icon: 'openNewTab', value: 'demo-url' });
+          items.push({
+            label: this.$tr('viewContent'),
+            icon: 'openNewTab',
+            value: 'demo-url',
+          });
         }
         return items;
       },
@@ -358,7 +367,7 @@
       },
       onCardClick(channel) {
         if (this.loggedIn) {
-          window.location.assign(window.Urls.channel(channel.id));
+          redirectBrowser(window.Urls.channel(channel.id));
         } else {
           this.$router.push(this.getChannelDetailsRoute(channel));
         }
@@ -421,7 +430,7 @@
       },
     },
     $trs: {
-      title: 'Content library',
+      title: 'Kolibri library',
       resultsText: '{count, plural,\n =1 {# result found}\n other {# results found}}',
       selectChannels: 'Download a summary of selected channels',
       cancelButton: 'Cancel',

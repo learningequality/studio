@@ -1,5 +1,6 @@
 # standalone install method
 DOCKER_COMPOSE ?= docker-compose
+CELERY = cd contentcuration/ && celery -A contentcuration worker -l info --concurrency=3 --task-events
 
 # support new plugin installation for docker-compose
 ifeq (, $(shell command -v docker-compose 2>/dev/null))
@@ -16,7 +17,7 @@ altprodserver: collectstatic compilemessages
 	cd contentcuration/ && gunicorn contentcuration.wsgi:application --timeout=4000 --error-logfile=/var/log/gunicorn-error.log --workers=${NUM_PROCS} --threads=${NUM_THREADS} --bind=0.0.0.0:8081 --pid=/tmp/contentcuration.pid --log-level=debug || sleep infinity
 
 prodceleryworkers:
-	cd contentcuration/ && celery -A contentcuration worker -l info --concurrency=3 --task-events
+	$(CELERY)
 
 collectstatic:
 	python contentcuration/manage.py collectstatic --noinput
@@ -82,29 +83,39 @@ i18n-django-compilemessages:
 	# finds only the .po files nested there.
 	cd contentcuration && python manage.py compilemessages
 
+CROWDIN_BRANCH ?= unstable
+
 i18n-upload: i18n-extract
-	python node_modules/kolibri-tools/lib/i18n/crowdin.py upload-sources ${branch}
+	pnpm exec crowdin upload sources --branch ${CROWDIN_BRANCH}
 
 i18n-pretranslate:
-	python node_modules/kolibri-tools/lib/i18n/crowdin.py pretranslate ${branch}
+	pnpm exec crowdin pre-translate --branch ${CROWDIN_BRANCH} --translate-untranslated-only --method=tm
 
 i18n-pretranslate-approve-all:
-	python node_modules/kolibri-tools/lib/i18n/crowdin.py pretranslate ${branch} --approve-all
+	pnpm exec crowdin pre-translate --branch ${CROWDIN_BRANCH} --translate-untranslated-only --method=tm --auto-approve-option=all
 
-i18n-download-translations:
-	python node_modules/kolibri-tools/lib/i18n/crowdin.py rebuild-translations ${branch}
-	python node_modules/kolibri-tools/lib/i18n/crowdin.py download-translations ${branch}
-	pnpm exec kolibri-tools i18n-code-gen -- --output-dir ./contentcuration/contentcuration/frontend/shared/i18n
+i18n-download-translations: i18n-extract-frontend
+	touch contentcuration/locale/.crowdin-download-marker
+	pnpm exec crowdin download --branch ${CROWDIN_BRANCH}
+	@if [ -z "$$(find contentcuration/locale/*/LC_MESSAGES -type f \( -name '*.po' -o -name '*.csv' \) -newer contentcuration/locale/.crowdin-download-marker 2>/dev/null)" ]; then \
+		echo "❌ ERROR: No translation files were downloaded - Crowdin download may have failed silently"; \
+		echo "Check the output above for errors during the download process"; \
+		rm -f contentcuration/locale/.crowdin-download-marker; \
+		exit 1; \
+	fi
+	@echo "✅ Translation files downloaded successfully"
+	rm -f contentcuration/locale/.crowdin-download-marker
+	pnpm exec kolibri-i18n code-gen --output-dir ./contentcuration/contentcuration/frontend/shared/i18n
 	$(MAKE) i18n-django-compilemessages
-	pnpm exec kolibri-tools i18n-create-message-files -- --namespace contentcuration --searchPath ./contentcuration/contentcuration/frontend
+	pnpm exec kolibri-i18n create-message-files --namespace contentcuration --searchPath ./contentcuration/contentcuration/frontend
 
 i18n-download: i18n-download-translations
 
 i18n-download-glossary:
-	python node_modules/kolibri-tools/lib/i18n/crowdin.py download-glossary
+	pnpm exec crowdin glossary download
 
 i18n-upload-glossary:
-	python node_modules/kolibri-tools/lib/i18n/crowdin.py upload-glossary
+	pnpm exec crowdin glossary upload
 
 ###############################################################
 # END I18N COMMANDS ###########################################
@@ -147,7 +158,7 @@ purge-postgres: .docker/pgpass
 destroy-and-recreate-database: purge-postgres setup
 
 devceleryworkers:
-	$(MAKE) -e DJANGO_SETTINGS_MODULE=contentcuration.dev_settings prodceleryworkers
+	DJANGO_SETTINGS_MODULE=contentcuration.dev_settings $(CELERY) --pool=threads
 
 run-services:
 	$(MAKE) -j 2 dcservicesup devceleryworkers
@@ -186,6 +197,29 @@ dcclean:
 dcshell:
 	# bash shell inside the (running!) studio-app container
 	$(DOCKER_COMPOSE) exec studio-app /usr/bin/fish
+
+devserver-stripe:
+	# Start stripe CLI listener and dev server with webhook secret auto-configured.
+	# Requires: stripe CLI installed and authenticated (stripe login).
+	# The listener output is teed to a temp file so we can extract the signing secret.
+	@STRIPE_LOG=$$(mktemp); \
+	stripe listen --api-key $$STRIPE_TEST_SECRET_KEY --forward-to localhost:8080/api/stripe/webhook/ > "$$STRIPE_LOG" 2>&1 & \
+	STRIPE_PID=$$!; \
+	trap "kill $$STRIPE_PID 2>/dev/null; rm -f $$STRIPE_LOG" EXIT; \
+	echo "Waiting for Stripe CLI..."; \
+	for i in 1 2 3 4 5 6 7 8 9 10; do \
+		WEBHOOK_SECRET=$$(grep -o 'whsec_[a-zA-Z0-9_]*' "$$STRIPE_LOG" | head -1); \
+		[ -n "$$WEBHOOK_SECRET" ] && break; \
+		sleep 1; \
+	done; \
+	if [ -z "$$WEBHOOK_SECRET" ]; then \
+		echo "ERROR: Could not extract webhook secret from Stripe CLI"; \
+		exit 1; \
+	fi; \
+	echo "Stripe webhook secret: $$WEBHOOK_SECRET"; \
+	tail -f "$$STRIPE_LOG" & \
+	export STRIPE_TEST_WEBHOOK_SECRET=$$WEBHOOK_SECRET; \
+	pnpm devserver
 
 dcpsql: .docker/pgpass
 	PGPASSFILE=.docker/pgpass psql --host localhost --port 5432 --username learningequality --dbname "kolibri-studio"

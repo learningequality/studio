@@ -270,7 +270,7 @@ describe('AssessmentEditor', () => {
 
     it('emits delete item event with a correct key', () => {
       expect(listeners.deleteItem).toHaveBeenCalledWith(ITEM2);
-      expect(listeners.updateItems).toBeCalledTimes(1);
+      expect(listeners.updateItems).toHaveBeenCalledTimes(1);
     });
 
     it('emits update item events with updated order of items after the deleted item', () => {
@@ -288,7 +288,7 @@ describe('AssessmentEditor', () => {
           order: 2,
         },
       ]);
-      expect(listeners.updateItems).toBeCalledTimes(1);
+      expect(listeners.updateItems).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -300,7 +300,7 @@ describe('AssessmentEditor', () => {
     });
 
     it('emits add item event with a new item with a correct order', () => {
-      expect(listeners.addItem).toBeCalledWith({
+      expect(listeners.addItem).toHaveBeenCalledWith({
         contentnode: NODE_ID,
         question: '',
         type: AssessmentItemTypes.SINGLE_SELECTION,
@@ -330,7 +330,7 @@ describe('AssessmentEditor', () => {
           order: 4,
         },
       ]);
-      expect(listeners.updateItems).toBeCalledTimes(1);
+      expect(listeners.updateItems).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -351,7 +351,7 @@ describe('AssessmentEditor', () => {
         order: 2,
         [DELAYED_VALIDATION]: true,
       });
-      expect(listeners.addItem).toBeCalledTimes(1);
+      expect(listeners.addItem).toHaveBeenCalledTimes(1);
     });
 
     it('emits update item events with updated order of items below the new item', () => {
@@ -373,7 +373,7 @@ describe('AssessmentEditor', () => {
           order: 4,
         },
       ]);
-      expect(listeners.updateItems).toBeCalledTimes(1);
+      expect(listeners.updateItems).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -395,7 +395,7 @@ describe('AssessmentEditor', () => {
           order: 1,
         },
       ]);
-      expect(listeners.updateItems).toBeCalledTimes(1);
+      expect(listeners.updateItems).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -417,7 +417,7 @@ describe('AssessmentEditor', () => {
           order: 1,
         },
       ]);
-      expect(listeners.updateItems).toBeCalledTimes(1);
+      expect(listeners.updateItems).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -427,7 +427,7 @@ describe('AssessmentEditor', () => {
     });
 
     it('emits add item event with a new item with a correct order', () => {
-      expect(listeners.addItem).toBeCalledWith({
+      expect(listeners.addItem).toHaveBeenCalledWith({
         contentnode: NODE_ID,
         question: '',
         type: AssessmentItemTypes.SINGLE_SELECTION,

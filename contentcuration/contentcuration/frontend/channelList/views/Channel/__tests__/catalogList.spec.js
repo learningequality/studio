@@ -4,8 +4,11 @@ import VueRouter from 'vue-router';
 import { Store } from 'vuex';
 import CatalogList from '../CatalogList.vue';
 import { RouteNames } from '../../../constants';
+import { redirectBrowser } from 'shared/utils/navigation';
 
-const originalLocation = window.location;
+jest.mock('shared/utils/navigation', () => ({
+  redirectBrowser: jest.fn(),
+}));
 
 const CHANNELS = [
   {
@@ -98,7 +101,7 @@ describe('CatalogList', () => {
   });
 
   afterEach(() => {
-    window.location = originalLocation;
+    jest.restoreAllMocks();
   });
 
   it('calls the searchCatalog action on mount', async () => {
@@ -126,7 +129,7 @@ describe('CatalogList', () => {
   it('shows the visually hidden title and all channel cards in correct semantic structure', async () => {
     renderComponent();
 
-    const title = await screen.findByRole('heading', { name: /content library/i });
+    const title = await screen.findByRole('heading', { name: /kolibri library/i });
     expect(title).toBeInTheDocument();
     expect(title.tagName).toBe('H1');
     expect(title).toHaveClass('visuallyhidden');
@@ -140,14 +143,11 @@ describe('CatalogList', () => {
   });
 
   it('navigates to channel via window.location when logged in and card is clicked', async () => {
-    delete window.location;
-    window.location = { ...originalLocation, assign: jest.fn() };
-
     renderComponent({ storeOverrides: createStore({ loggedIn: true }) });
     const cards = await screen.findAllByTestId('channel-card');
     await userEvent.click(cards[0]);
 
-    expect(window.location.assign).toHaveBeenCalledWith('channel');
+    expect(redirectBrowser).toHaveBeenCalledWith('channel');
   });
 
   it('navigates to catalog details via router when not logged in and card is clicked', async () => {

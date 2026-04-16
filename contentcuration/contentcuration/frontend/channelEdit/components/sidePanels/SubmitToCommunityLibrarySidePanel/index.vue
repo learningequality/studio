@@ -152,6 +152,43 @@
               :channel-version-id="channelVersionId"
               @update:allChecked="allSpecialPermissionsChecked = $event"
             />
+            <hr >
+            <div class="info-text">
+              <p class="checklist-intro">
+                {{ channelFitChecklistIntro$() }}
+              </p>
+              <ul
+                v-if="showingCriteria"
+                class="checklist"
+              >
+                <li>
+                  <strong>{{ channelFitLicenseLabel$() }}:</strong>
+                  {{ channelFitChecklistLicense$() }}
+                </li>
+                <li>
+                  <strong>{{ channelFitOfflineUseLabel$() }}:</strong>
+                  {{ channelFitChecklistOfflineUse$() }}
+                </li>
+                <li>
+                  <strong>{{ channelFitAttributionLabel$() }}:</strong>
+                  {{ channelFitChecklistAttribution$() }}
+                </li>
+                <li>
+                  <strong>{{ channelFitQualityLabel$() }}:</strong>
+                  {{ channelFitChecklistQuality$() }}
+                </li>
+                <li>
+                  <strong>{{ channelFitChannelInfoLabel$() }}:</strong>
+                  {{ channelFitChecklistChannelInfo$() }}
+                </li>
+              </ul>
+              <KButton
+                appearance="basic-link"
+                @click="showingCriteria = !showingCriteria"
+              >
+                {{ showingCriteria ? hideCriteriaAction$() : viewCriteriaAction$() }}
+              </KButton>
+            </div>
             <div class="country-area">
               <KTransition kind="component-fade-out-in">
                 <div
@@ -171,11 +208,30 @@
                 />
               </KTransition>
             </div>
+            <div v-if="showingCountriesInfo">
+              <div class="info-text">{{ countriesInfoText$() }}</div>
+              <KButton
+                appearance="basic-link"
+                data-test="less-country-info-button"
+                @click="showingCountriesInfo = false"
+              >
+                {{ lessDetailsButton$() }}
+              </KButton>
+            </div>
+            <div v-else>
+              <KButton
+                appearance="basic-link"
+                data-test="more-country-info-button"
+                @click="showingCountriesInfo = true"
+              >
+                {{ moreDetailsButton$() }}
+              </KButton>
+            </div>
             <KTextbox
               v-model="description"
               :disabled="!canBeEdited"
               :invalid="description.length < 1"
-              :invalidText="descriptionRequired$()"
+              :invalidText="fieldRequired$()"
               textArea
               :label="descriptionLabel$()"
               :maxlength="250"
@@ -240,6 +296,7 @@
   import { translateMetadataString } from 'shared/utils/metadataStringsTranslation';
   import countriesUtil from 'shared/utils/countries';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
+  import commonStrings from 'shared/translator';
   import { CommunityLibrarySubmission } from 'shared/data/resources';
 
   import SidePanelModal from 'shared/views/SidePanelModal';
@@ -275,8 +332,8 @@
         moreDetailsButton$,
         lessDetailsButton$,
         countryLabel$,
+        countriesInfoText$,
         descriptionLabel$,
-        descriptionRequired$,
         notPublishedWarningTitle$,
         notPublishedWarningDescription$,
         publicWarningTitle$,
@@ -285,9 +342,8 @@
         alreadySubmittedWarningDescription$,
         submitButton$,
         cancelAction$,
-        submittedPrimaryInfo$,
         approvedPrimaryInfo$,
-        flaggedPrimaryInfo$,
+        needsChangesPrimaryInfo$,
         nonePrimaryInfo$,
         channelVersion$,
         submittedSnackbar$,
@@ -295,12 +351,29 @@
         submittingSnackbar$,
         publishingMessage$,
         confirmReplacementText$,
+        channelFitChecklistIntro$,
+        channelFitLicenseLabel$,
+        channelFitChecklistLicense$,
+        channelFitOfflineUseLabel$,
+        channelFitChecklistOfflineUse$,
+        channelFitAttributionLabel$,
+        channelFitChecklistAttribution$,
+        channelFitQualityLabel$,
+        channelFitChecklistQuality$,
+        channelFitChannelInfoLabel$,
+        channelFitChecklistChannelInfo$,
+        viewCriteriaAction$,
+        hideCriteriaAction$,
       } = communityChannelsStrings;
+
+      const { fieldRequired$ } = commonStrings;
 
       const annotationColor = computed(() => tokensTheme.annotation);
       const infoTextColor = computed(() => paletteTheme.grey.v_700);
 
       const showingMoreDetails = ref(false);
+      const showingCriteria = ref(false);
+      const showingCountriesInfo = ref(false);
       const countries = ref([]);
       const description = ref('');
       const isPublishing = computed(() => props.channel?.publishing === true);
@@ -343,17 +416,13 @@
         if (!latestSubmissionIsFinished.value) return undefined;
 
         switch (latestSubmissionStatus.value) {
-          case CommunityLibraryStatus.PENDING:
-            return {
-              primaryText: submittedPrimaryInfo$(),
-            };
           case CommunityLibraryStatus.APPROVED:
             return {
               primaryText: approvedPrimaryInfo$(),
             };
           case CommunityLibraryStatus.REJECTED:
             return {
-              primaryText: flaggedPrimaryInfo$(),
+              primaryText: needsChangesPrimaryInfo$(),
             };
           case null:
             return {
@@ -542,6 +611,8 @@
         annotationColor,
         infoTextColor,
         showingMoreDetails,
+        showingCriteria,
+        showingCountriesInfo,
         countries,
         description,
         replacementConfirmed,
@@ -571,8 +642,9 @@
         moreDetailsButton$,
         lessDetailsButton$,
         countryLabel$,
+        countriesInfoText$,
         descriptionLabel$,
-        descriptionRequired$,
+        fieldRequired$,
         channelVersion$,
         notPublishedWarningTitle$,
         notPublishedWarningDescription$,
@@ -587,6 +659,19 @@
         confirmReplacementText$,
         checkedSpecialPermissions,
         allSpecialPermissionsChecked,
+        channelFitChecklistIntro$,
+        channelFitLicenseLabel$,
+        channelFitChecklistLicense$,
+        channelFitOfflineUseLabel$,
+        channelFitChecklistOfflineUse$,
+        channelFitAttributionLabel$,
+        channelFitChecklistAttribution$,
+        channelFitQualityLabel$,
+        channelFitChecklistQuality$,
+        channelFitChannelInfoLabel$,
+        channelFitChecklistChannelInfo$,
+        viewCriteriaAction$,
+        hideCriteriaAction$,
       };
     },
     props: {
@@ -626,6 +711,14 @@
   .metadata-line {
     font-size: 14px;
     color: v-bind('annotationColor');
+  }
+
+  .checklist {
+    padding-bottom: 12px;
+  }
+
+  .checklist-intro {
+    font-weight: 600;
   }
 
   .content {

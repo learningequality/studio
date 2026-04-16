@@ -1,4 +1,5 @@
 import json
+from collections import OrderedDict
 
 from django.conf import settings
 from django.contrib.sites.models import Site
@@ -10,6 +11,7 @@ from django.utils.html import escape
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import cache_page
 from kolibri_content.constants.schema_versions import MIN_CONTENT_SCHEMA_VERSION
+from le_utils.constants import library as library_constants
 from le_utils.uuidv5 import generate_ecosystem_namespaced_uuid
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
@@ -17,8 +19,10 @@ from rest_framework.decorators import permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from contentcuration.constants import community_library_submission as cls_constants
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Channel
+from contentcuration.models import ChannelVersion
 from contentcuration.serializers import PublicChannelSerializer
 
 
@@ -26,6 +30,60 @@ def _get_channel_list(version, params, identifier=None):
     if version == "v1":
         return _get_channel_list_v1(params, identifier=identifier)
     raise LookupError()
+
+
+def _get_version_notes(channel, channel_version):
+    data = {
+        int(k): v["version_notes"]
+        for k, v in channel.published_data.items()
+        if channel_version.version is None or int(k) <= channel_version.version
+    }
+    return OrderedDict(sorted(data.items()))
+
+
+def get_thumbnail_encoding(channel_version):
+    if channel_version.channel_thumbnail_encoding:
+        return channel_version.channel_thumbnail_encoding.get("base64")
+    return None
+
+
+def _get_channel_version_library(channel_version):
+    channel = channel_version.channel
+    if channel.community_library_submissions.filter(
+        channel_version=channel_version.version,
+        status__in=[cls_constants.STATUS_APPROVED, cls_constants.STATUS_LIVE],
+    ).exists():
+        return library_constants.COMMUNITY
+    return None
+
+
+def _serialize_channel_version(channel_version_qs):
+    channel_version = channel_version_qs.first()
+    if not channel_version or not channel_version.channel:
+        return []
+
+    channel = channel_version.channel
+    return [
+        {
+            "id": channel_version.channel_id,
+            "name": channel_version.channel_name,
+            "language": channel_version.channel_language_id,
+            "public": channel.public,
+            "description": channel_version.channel_description,
+            "icon_encoding": get_thumbnail_encoding(channel_version),
+            "version_notes": _get_version_notes(channel, channel_version),
+            "version": channel_version.version,
+            "kind_count": channel_version.kind_count,
+            "included_languages": channel_version.included_languages,
+            "total_resource_count": channel_version.resource_count,
+            "published_size": channel_version.size,
+            "last_published": channel_version.date_published,
+            "matching_tokens": [channel_version.secret_token.token]
+            if channel_version.secret_token
+            else [],
+            "library": _get_channel_version_library(channel_version),
+        }
+    ]
 
 
 def _get_channel_list_v1(params, identifier=None):
@@ -40,6 +98,21 @@ def _get_channel_list_v1(params, identifier=None):
         )
         if not channels.exists():
             channels = Channel.objects.filter(pk=identifier)
+
+        if not channels.exists() and params.get("channel_versions") == "true":
+            # Only resolve ChannelVersion tokens when the caller explicitly opts in.
+            # This prevents older Kolibri clients from accidentally retrieving data
+            # they cannot parse correctly.
+            channel_version = ChannelVersion.objects.select_related(
+                "secret_token", "channel"
+            ).filter(
+                secret_token__token=identifier,
+                channel__deleted=False,
+                channel__main_tree__published=True,
+            )
+            if channel_version.exists():
+                # return early as we won't need to apply the other filters for channel version tokens
+                return channel_version
     else:
         channels = Channel.objects.prefetch_related("secret_tokens").filter(
             Q(public=True) | Q(secret_tokens__token__in=token_list)
@@ -96,7 +169,12 @@ def get_public_channel_lookup(request, version, identifier):
         return HttpResponseNotFound(
             _("No channel matching {} found").format(escape(identifier))
         )
-    return Response(PublicChannelSerializer(channel_list, many=True).data)
+
+    if channel_list.model == ChannelVersion:
+        channel_list = _serialize_channel_version(channel_list)
+        return Response(channel_list)
+    else:
+        return Response(PublicChannelSerializer(channel_list, many=True).data)
 
 
 @api_view(["GET"])

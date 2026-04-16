@@ -84,6 +84,7 @@
   import DeleteChannelModal from '../DeleteChannelModal';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import { ChannelListTypes } from 'shared/constants';
+  import { redirectBrowser } from 'shared/utils/navigation';
 
   export default {
     name: 'StudioMyChannels',
@@ -138,7 +139,7 @@
         });
       },
       onCardClick(channel) {
-        window.location.assign(window.Urls.channel(channel.id));
+        redirectBrowser(window.Urls.channel(channel.id));
       },
       getDropdownItems(channel) {
         const items = [

@@ -5,14 +5,14 @@ const process = require('node:process');
 const fs = require('node:fs');
 const { execSync } = require('node:child_process');
 
-const baseConfig = require('kolibri-tools/lib/webpack.config.base');
+const baseConfig = require('kolibri-build/src/webpack.config.base');
 const { merge } = require('webpack-merge');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
-const BundleTracker = require('kolibri-tools/lib/webpackBundleTracker');
+const BundleTracker = require('kolibri-build/src/webpackBundleTracker');
 const CircularDependencyPlugin = require('circular-dependency-plugin');
 
-const WebpackRTLPlugin = require('kolibri-tools/lib/webpackRtlPlugin');
+const WebpackRTLPlugin = require('kolibri-build/src/webpackRtlPlugin');
 
 const { InjectManifest } = require('workbox-webpack-plugin');
 
@@ -106,11 +106,12 @@ module.exports = (env = {}) => {
     context: srcDir,
     entry: {
       // Use arrays for every entry to allow for hot reloading.
-      channel_edit: ['./channelEdit/index.js'],
-      channel_list: ['./channelList/index.js'],
-      settings: ['./settings/index.js'],
-      accounts: ['./accounts/index.js'],
-      administration: ['./administration/index.js'],
+      // The rtlcss-stub must come first to set up the window global before any CSS chunk loading.
+      channel_edit: ['./shared/rtlcss-stub.js', './channelEdit/index.js'],
+      channel_list: ['./shared/rtlcss-stub.js', './channelList/index.js'],
+      settings: ['./shared/rtlcss-stub.js', './settings/index.js'],
+      accounts: ['./shared/rtlcss-stub.js', './accounts/index.js'],
+      administration: ['./shared/rtlcss-stub.js', './administration/index.js'],
       // A simple code sandbox to play with components in
       pdfJSWorker: ['pdfjs-dist/build/pdf.worker.entry.js'],
       // Utility for taking screenshots inside an iframe sandbox

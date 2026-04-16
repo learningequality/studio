@@ -34,6 +34,7 @@
     <StudioDetailsRow
       v-if="_details.published && _details.primary_token"
       :label="$tr('tokenHeading')"
+      :definition="tokenDefinition"
     >
       <template #default>
         <StudioCopyToken
@@ -85,6 +86,7 @@
     <StudioLargeLoader v-if="loading" />
     <template v-else-if="hasDetails">
       <StudioDetailsRow
+        v-if="createdDate"
         :label="$tr('creationHeading')"
         :text="createdDate"
       />
@@ -241,6 +243,20 @@
           <ExpandableList
             :noItemsText="defaultText"
             :items="_details.accessible_languages"
+            :printing="printing"
+            inline
+          />
+        </template>
+      </StudioDetailsRow>
+
+      <StudioDetailsRow
+        v-if="countries"
+        :label="countryLabel$()"
+      >
+        <template #default>
+          <ExpandableList
+            :noItemsText="defaultText"
+            :items="countries"
             :printing="printing"
             inline
           />
@@ -439,6 +455,8 @@
   import StudioCopyToken from 'shared/views/StudioCopyToken';
   import useToken from 'shared/composables/useToken';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
+  import countriesUtil from 'shared/utils/countries';
+  import { currentLanguage } from 'shared/i18n';
 
   const DEFAULT_DETAILS = {
     name: '',
@@ -493,10 +511,11 @@
     ],
     setup() {
       const { hyphenateToken } = useToken();
-      const { draftTokenLabel$ } = communityChannelsStrings;
+      const { draftTokenLabel$, countryLabel$ } = communityChannelsStrings;
       return {
         hyphenateToken,
         draftTokenLabel$,
+        countryLabel$,
       };
     },
     props: {
@@ -515,6 +534,10 @@
       hideChannelHeader: {
         type: Boolean,
         default: false,
+      },
+      tokenDefinition: {
+        type: String,
+        default: null,
       },
     },
     computed: {
@@ -550,6 +573,9 @@
         return orderBy(this._details.kind_count, ['count', 'kind_id'], ['desc', 'asc']);
       },
       createdDate() {
+        if (!this._details.created) {
+          return null;
+        }
         return this.$formatDate(this._details.created, {
           year: 'numeric',
           month: 'long',
@@ -616,6 +642,16 @@
       },
       categoriesPrintable() {
         return this.categories?.join(', ') || this.defaultText;
+      },
+      countries() {
+        // Countries is only relevant for channels from public models,
+        // regular channels do not have this field. Didn't want to add this field to the
+        // default details, since it's not relevant for most uses of this component.
+        if (!this._details.countries?.length) {
+          return null;
+        }
+        const [lang] = currentLanguage.split('-');
+        return this._details.countries.map(countryCode => countriesUtil.getName(countryCode, lang));
       },
     },
     methods: {

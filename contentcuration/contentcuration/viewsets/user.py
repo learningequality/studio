@@ -57,27 +57,6 @@ class IsAdminUser(BasePermission):
             return False
 
 
-class IsAIFeatureEnabledForUser(BasePermission):
-    """
-    Permission to check if the AI feature is enabled for a user.
-    """
-
-    def _can_user_access_feature(self, request):
-        try:
-            if request.user.is_admin:
-                return True
-            else:
-                return request.user.check_feature_flag("ai_feature")
-        except AttributeError:
-            return False
-
-    def has_permission(self, request, view):
-        return self._can_user_access_feature(request)
-
-    def has_object_permission(self, request, view, obj):
-        return self._can_user_access_feature(request)
-
-
 class UserListPagination(ValuesViewsetPageNumberPagination):
     page_size = None
     page_size_query_param = "page_size"
@@ -333,8 +312,9 @@ class ChannelUserViewSet(ReadOnlyValuesViewset):
         if not channel_id:
             return HttpResponseBadRequest("Channel ID is required.")
 
-        channel = Channel.objects.get(id=channel_id)
-        if not channel:
+        try:
+            channel = Channel.objects.get(id=channel_id)
+        except Channel.DoesNotExist:
             return HttpResponseNotFound("Channel not found {}".format(channel_id))
 
         if request.user != user and not request.user.can_edit(channel_id):

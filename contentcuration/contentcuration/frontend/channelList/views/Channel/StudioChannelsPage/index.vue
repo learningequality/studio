@@ -1,6 +1,7 @@
 <template>
 
   <div class="channels-page">
+    <AiRecommendationsBanner class="recommendations-announcement" />
     <StudioRaisedBox
       v-if="invitations.length"
       class="invitations"
@@ -56,12 +57,14 @@
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import ChannelInvitation from '../ChannelInvitation';
   import StudioRaisedBox from 'shared/views/StudioRaisedBox';
+  import AiRecommendationsBanner from 'shared/views/AiRecommendationsBanner';
 
   export default {
     name: 'StudioChannelsPage',
     components: {
       ChannelInvitation,
       StudioRaisedBox,
+      AiRecommendationsBanner,
     },
     setup() {
       const { windowBreakpoint } = useKResponsiveWindow();
@@ -129,6 +132,7 @@
 
   .channels-page {
     padding-bottom: 24px;
+    margin: auto;
   }
 
   .channels,
@@ -138,6 +142,7 @@
   }
 
   .invitations {
+    margin-top: 24px; // added for space between search recs announcement and invitations box
     margin-bottom: 24px;
   }
 
@@ -147,6 +152,11 @@
 
   .cards {
     margin-top: 16px;
+  }
+
+  .recommendations-announcement {
+    max-width: 900px;
+    margin: auto;
   }
 
 </style>

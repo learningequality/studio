@@ -1,0 +1,87 @@
+name: Download translations from Crowdin
+
+on:
+  workflow_dispatch:
+
+jobs:
+  download:
+    name: Download translations and update files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: '3.10'
+          activate-environment: "true"
+          enable-cache: "true"
+
+      - name: Install Python dependencies
+        run: uv pip sync requirements.txt
+
+      - name: Use pnpm
+        uses: pnpm/action-setup@v5
+
+      - name: Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20.x'
+          cache: 'pnpm'
+
+      - name: Setup Java for crowdin-cli
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install gettext
+        run: sudo apt-get update && sudo apt-get install -y gettext
+
+      - name: Install JavaScript dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download translations
+        env:
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_API_KEY }}
+        run: make i18n-download
+
+      - name: Generate App Token
+        id: generate-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.LE_BOT_APP_ID }}
+          private-key: ${{ secrets.LE_BOT_PRIVATE_KEY }}
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          commit-message: |
+            Update translations from Crowdin
+
+            This includes:
+            - Updated translation files (.po and .json)
+            - Compiled Django messages (.mo files)
+            - Updated frontend i18n files
+          branch: i18n-update-${{ github.ref_name }}
+          base: ${{ github.ref_name }}
+          delete-branch: true
+          title: 'Update translations from Crowdin for ${{ github.ref_name }}'
+          body: |
+            ## Summary of changes
+
+            This PR updates translations downloaded from Crowdin.
+
+            ### Changes included:
+            - Updated translation files (`.po` and `.json`)
+            - Compiled Django messages (`.mo` files)
+            - Updated frontend i18n files
+
+            ### Testing checklist:
+            - [ ] Verify that translations are not obviously empty or untranslated in the message files
+            - [ ] Switch to a few different languages and navigate the app
+          labels: |
+            i18n
+            TAG: user strings

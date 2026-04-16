@@ -26,7 +26,7 @@ celery==5.6.0
     # via
     #   -r requirements.in
     #   django-celery-results
-certifi==2020.12.5
+certifi==2026.2.25
     # via
     #   requests
     #   sentry-sdk
@@ -48,7 +48,7 @@ click-repl==0.2.0
     # via celery
 confusable-homoglyphs==3.2.0
     # via django-registration
-cryptography==46.0.5
+cryptography==46.0.7
     # via google-auth
 django==3.2.24
     # via
@@ -144,7 +144,7 @@ grpc-google-iam-v1==0.12.4
     # via
     #   google-cloud-kms
     #   google-cloud-logging
-grpcio==1.78.1
+grpcio==1.78.0
     # via
     #   google-api-core
     #   google-cloud-appengine-logging
@@ -153,7 +153,7 @@ grpcio==1.78.1
     #   grpcio-status
 grpcio-status==1.62.3
     # via google-api-core
-gunicorn==23.0.0
+gunicorn==25.1.0
     # via -r requirements.in
 html5lib==1.1
     # via -r requirements.in
@@ -177,7 +177,7 @@ langcodes==3.5.1
     # via -r requirements.in
 latex2mathml==3.78.1
     # via -r requirements.in
-le-utils==0.2.12
+le-utils==0.2.17
     # via -r requirements.in
 markdown-it-py==4.0.0
     # via -r requirements.in
@@ -190,7 +190,7 @@ packaging==26.0
     #   google-cloud-error-reporting
     #   gunicorn
     #   kombu
-pillow==12.1.1
+pillow==12.2.0
     # via -r requirements.in
 prometheus-client==0.10.1
     # via django-prometheus
@@ -220,7 +220,7 @@ pyasn1==0.4.8
     #   rsa
 pyasn1-modules==0.2.8
     # via google-auth
-pycountry==24.6.1
+pycountry==26.2.16
     # via -r requirements.in
 pycparser==3.0
     # via cffi
@@ -249,11 +249,12 @@ referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.5
+requests==2.33.0
     # via
     #   -r requirements.in
     #   google-api-core
     #   google-cloud-storage
+    #   stripe
 rpds-py==0.30.0
     # via
     #   jsonschema
@@ -271,6 +272,8 @@ six==1.16.0
     #   python-dateutil
 sqlparse==0.4.1
     # via django
+stripe==5.5.0
+    # via -r requirements.in
 typing-extensions==4.15.0
     # via
     #   cryptography

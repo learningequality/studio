@@ -4,8 +4,11 @@ import VueRouter from 'vue-router';
 import { Store } from 'vuex';
 import StudioViewOnlyChannels from '../index';
 import { ChannelListTypes } from 'shared/constants';
+import { redirectBrowser } from 'shared/utils/navigation';
 
-const originalLocation = window.location;
+jest.mock('shared/utils/navigation', () => ({
+  redirectBrowser: jest.fn(),
+}));
 
 const router = new VueRouter({
   routes: [
@@ -103,7 +106,7 @@ describe('StudioViewOnlyChannels', () => {
   });
 
   afterEach(() => {
-    window.location = originalLocation;
+    jest.restoreAllMocks();
   });
 
   it('calls the load channel list action with correct parameters on mount', () => {
@@ -135,14 +138,11 @@ describe('StudioViewOnlyChannels', () => {
   });
 
   it('navigates to channel via window.location when card clicked', async () => {
-    delete window.location;
-    window.location = { ...originalLocation, assign: jest.fn() };
-
     renderComponent();
     const cards = await screen.findAllByTestId('channel-card');
     await userEvent.click(cards[0]);
 
-    expect(window.location.assign).toHaveBeenCalledWith('channel');
+    expect(redirectBrowser).toHaveBeenCalledWith('channel');
   });
 
   describe('cards footer actions', () => {

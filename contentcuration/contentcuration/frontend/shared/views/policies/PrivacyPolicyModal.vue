@@ -19,7 +19,7 @@
         {{ $untranslated('introductionP1Part1') }}
         <KRouterLink
           :text="$untranslated('introductionP1TC')"
-          :to="{ query: { showPolicy: policies.COMMUNITY_STANDARDS } }"
+          :to="{ query: { showPolicy: policies.TERMS_OF_SERVICE } }"
         />
         {{ $untranslated('introductionP1Part2') }}
         <b>{{ $untranslated('introductionP1TU') }}</b>
@@ -286,7 +286,7 @@
           {{ $untranslated('cookiesP2') }}
           <KExternalLink
             :text="$untranslated('cookieLink')"
-            href="https://learningequality.org/cookies/"
+            href="https://learningequality.org/cookie-policy/"
             :openInNewTab="true"
           />
         </p>

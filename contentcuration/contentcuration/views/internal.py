@@ -53,6 +53,7 @@ from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.utils.nodes import map_files_to_assessment_item
 from contentcuration.utils.nodes import map_files_to_node
 from contentcuration.utils.nodes import map_files_to_slideshow_slide_item
+from contentcuration.utils.nodes import migrate_extra_fields
 from contentcuration.utils.sentry import report_exception
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.utils import generate_publish_event
@@ -835,11 +836,18 @@ def create_node(node_data, parent_node, sort_order):  # noqa: C901
     if isinstance(extra_fields, str):
         extra_fields = json.loads(extra_fields)
 
+    # Migrate old-style extra_fields (top-level mastery_model, m, n)
+    # to new-style options.completion_criteria format
+    if node_data["kind"] == content_kinds.EXERCISE:
+        extra_fields = migrate_extra_fields(extra_fields)
+
     # validate completion criteria
     if "options" in extra_fields and "completion_criteria" in extra_fields["options"]:
         try:
             completion_criteria.validate(
-                extra_fields["options"]["completion_criteria"], kind=node_data["kind"]
+                extra_fields["options"]["completion_criteria"],
+                kind=node_data["kind"],
+                modality=extra_fields["options"].get("modality"),
             )
         except completion_criteria.ValidationError:
             raise NodeValidationError(

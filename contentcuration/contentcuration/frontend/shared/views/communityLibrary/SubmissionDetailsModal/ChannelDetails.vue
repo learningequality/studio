@@ -208,10 +208,10 @@
     };
   });
   const countriesString = computed(() => {
+    const [lang] = currentLanguage.split('-');
     return (
-      props.submission.countries
-        ?.map(code => countriesUtil.getName(code, currentLanguage))
-        .join(', ') || DEFAULT_TEXT
+      props.submission.countries?.map(code => countriesUtil.getName(code, lang)).join(', ') ||
+      DEFAULT_TEXT
     );
   });
 

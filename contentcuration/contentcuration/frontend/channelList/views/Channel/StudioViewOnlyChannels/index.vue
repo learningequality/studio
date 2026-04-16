@@ -73,6 +73,7 @@
   import RemoveChannelFromListModal from '../RemoveChannelFromListModal';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import { ChannelListTypes } from 'shared/constants';
+  import { redirectBrowser } from 'shared/utils/navigation';
 
   export default {
     name: 'StudioViewOnlyChannels',
@@ -120,7 +121,7 @@
         if (!val) this.tokenChannelId = null;
       },
       onCardClick(channel) {
-        window.location.assign(window.Urls.channel(channel.id));
+        redirectBrowser(window.Urls.channel(channel.id));
       },
       getDropdownItems(channel) {
         const items = [{ label: this.$tr('removeChannel'), icon: 'trash', value: 'remove' }];

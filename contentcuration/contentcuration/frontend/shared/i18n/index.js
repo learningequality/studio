@@ -190,7 +190,7 @@ export function crossComponentTranslator(Component) {
   return new Translator(Component.name, Component.$trs);
 }
 
-function _setUpVueIntl() {
+async function _setUpVueIntl() {
   /**
    * Use the vue-intl plugin.
    *
@@ -213,7 +213,12 @@ function _setUpVueIntl() {
   if (window.ALL_MESSAGES) {
     Vue.registerMessages(currentLanguage, window.ALL_MESSAGES);
   }
-  importVueIntlLocaleData().forEach(localeData => VueIntl.addLocaleData(localeData));
+
+  // Load vue-intl locale data asynchronously for current language
+  const vueIntlLanguageCode = languageIdToCode(currentLanguage);
+  const module = await importVueIntlLocaleData(vueIntlLanguageCode);
+  const localeData = module.default || module;
+  VueIntl.addLocaleData(localeData);
 
   _i18nReady = true;
 }
@@ -229,7 +234,7 @@ export function updateTabTitle(title) {
   }
 }
 
-export function i18nSetup(skipPolyfill = false) {
+export async function i18nSetup(skipPolyfill = false) {
   /**
    * Load fonts, app strings, and Intl polyfills
    **/
@@ -250,38 +255,18 @@ export function i18nSetup(skipPolyfill = false) {
 
   // If the browser doesn't support the Intl polyfill, we retrieve that and
   // the modules need to wait until that happens.
-  return new Promise((resolve, reject) => {
-    if (Object.prototype.hasOwnProperty.call(global, 'Intl') || skipPolyfill) {
-      _setUpVueIntl();
-      resolve();
-    } else {
-      Promise.all([
-        new Promise(res => {
-          require.ensure(
-            ['intl'],
-            require => {
-              res(() => require('intl'));
-            },
-            'intl',
-          );
-        }),
-        importIntlLocale(currentLanguage),
-      ]).then(
-        // eslint-disable-line
-        ([requireIntl, requireIntlLocaleData]) => {
-          requireIntl(); // requireIntl must run before requireIntlLocaleData
-          requireIntlLocaleData();
-          _setUpVueIntl();
-          resolve();
-        },
-        error => {
-          // eslint-disable-next-line no-console
-          console.error('An error occurred trying to setup Internationalization', error);
-          reject();
-        },
-      );
+  if (Object.prototype.hasOwnProperty.call(global, 'Intl') || skipPolyfill) {
+    await _setUpVueIntl();
+  } else {
+    try {
+      await Promise.all([import('intl'), importIntlLocale(currentLanguage)]);
+      await _setUpVueIntl();
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('An error occurred trying to setup Internationalization', error);
+      throw error;
     }
-  });
+  }
 }
 
 /**

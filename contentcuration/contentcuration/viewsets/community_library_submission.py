@@ -29,6 +29,7 @@ from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.viewsets.base import RESTCreateModelMixin
 from contentcuration.viewsets.base import RESTDestroyModelMixin
 from contentcuration.viewsets.base import RESTUpdateModelMixin
+from contentcuration.viewsets.base import ValuesViewsetOrderingFilter
 from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
 from contentcuration.viewsets.sync.utils import (
     generate_added_to_community_library_event,
@@ -244,11 +245,14 @@ class CommunityLibrarySubmissionViewSetMixin:
         "resolved_by_name": get_resolved_by_name,
         "channel_name": lambda item: item.get("channel__name"),
     }
-    queryset = CommunityLibrarySubmission.objects.all().order_by("-date_updated")
-    filter_backends = [DjangoFilterBackend, SearchFilter]
+    queryset = CommunityLibrarySubmission.objects.all()
+    filter_backends = [DjangoFilterBackend, SearchFilter, ValuesViewsetOrderingFilter]
     filterset_class = CommunityLibrarySubmissionFilterSet
     search_fields = ["channel__name"]
     pagination_class = CommunityLibrarySubmissionPagination
+
+    ordering_fields = ["date_updated", "date_created"]
+    ordering = "-date_updated"
 
     def consolidate(self, items, queryset):
         countries = {}
@@ -316,7 +320,8 @@ class AdminCommunityLibrarySubmissionViewSet(
                 categories=submission.categories,
                 country_codes=country_codes,
             ),
-            created_by_id=submission.resolved_by_id,
+            # This change is not publishable and should not trigger publish-related logic
+            unpublishable=True,
         )
         apply_channel_changes_task.fetch_or_enqueue(
             submission.resolved_by,
