@@ -1013,9 +1013,7 @@ def fill_published_fields(channel, version_notes, draft_channel_version=None):
         channel.published_kind_count = json.dumps(kind_counts)
         channel.published_size = published_size
 
-        for lang in language_list:
-            if lang:
-                channel.included_languages.add(lang)
+        channel.included_languages.set([lang for lang in language_list if lang])
 
         # TODO: Eventually, consolidate above operations to just use this field for storing historical data
         channel.published_data.update(
