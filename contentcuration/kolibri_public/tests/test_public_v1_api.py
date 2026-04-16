@@ -477,3 +477,45 @@ class PublicAPITestCase(BaseAPITestCase):
         response = self.client.get(lookup_url)
         self.assertEqual(response.status_code, 200)
         self.assertIsNone(response.data[0]["library"])
+
+    def test_channel_version_with_none_version_returns_all_version_notes(self):
+        """
+        When a ChannelVersion has version=None, _get_version_notes must not raise
+        TypeError and must return all entries from channel.published_data.
+        """
+        self.channel.main_tree.published = True
+        self.channel.main_tree.save()
+
+        self.channel.published_data = {
+            "1": {"version_notes": "v1 notes"},
+            "3": {"version_notes": "v3 notes"},
+        }
+        # Set channel.version so Channel.on_update() auto-creates ChannelVersion(version=3).
+        self.channel.version = 3
+        self.channel.save()
+
+        # Manually create a ChannelVersion with version=None to reproduce the Sentry bug.
+        channel_version, _created = ChannelVersion.objects.get_or_create(
+            channel=self.channel,
+            version=None,
+            defaults={
+                "kind_count": [],
+                "included_languages": [],
+                "resource_count": 0,
+                "size": 0,
+            },
+        )
+        version_token = channel_version.new_token().token
+
+        lookup_url = reverse(
+            "get_public_channel_lookup",
+            kwargs={"version": "v1", "identifier": version_token},
+        )
+        response = self.client.get(lookup_url + "?channel_versions=true")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(
+            response.data[0]["version_notes"],
+            {1: "v1 notes", 3: "v3 notes"},
+        )
