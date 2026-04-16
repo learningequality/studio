@@ -1169,7 +1169,6 @@ def publish_channel(  # noqa: C901
             )
         else:
             increment_channel_version(channel)
-        if not is_draft_version:
             ccmodels.ChannelVersion.objects.filter(
                 channel=channel, version=None
             ).delete()
