@@ -632,7 +632,7 @@
 
       // Share menu section
       shareMenuButton: 'Share',
-      submitToCommunityLibrary: 'Submit to community library',
+      submitToCommunityLibrary: 'Submit to Community Library',
       inviteCollaborators: 'Invite collaborators',
       shareToken: 'Share token',
 
