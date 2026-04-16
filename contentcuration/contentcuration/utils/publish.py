@@ -1007,7 +1007,6 @@ def fill_published_fields(channel, version_notes, draft_channel_version=None):
                 new_licenses, ignore_conflicts=True
             )
 
-    # Channel-level writes: only for non-draft publishes.
     if not is_draft:
         channel.last_published = date_now
         channel.total_resource_count = total_resource_count
@@ -1035,8 +1034,6 @@ def fill_published_fields(channel, version_notes, draft_channel_version=None):
         )
         channel.save()
 
-    # ChannelVersion-level writes: draft uses draft_channel_version,
-    # non-draft uses channel.version_info.
     version_obj = draft_channel_version if is_draft else channel.version_info
     if version_obj is not None:
         version_obj.resource_count = total_resource_count
@@ -1061,7 +1058,6 @@ def fill_published_fields(channel, version_notes, draft_channel_version=None):
         else:
             version_obj.special_permissions_included.clear()
 
-        # Only mark as distributable for public non-draft channel publishes.
         if not is_draft and channel.public:
             ccmodels.AuditedSpecialPermissionsLicense.mark_channel_version_as_distributable(
                 version_obj.id

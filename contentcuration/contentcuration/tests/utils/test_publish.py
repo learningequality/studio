@@ -202,7 +202,6 @@ class FillPublishedFieldsDraftTestCase(StudioTestCase):
         increment_channel_version(self.channel)
         self.channel.refresh_from_db()
 
-        # Snapshot channel state before any draft publish.
         self.original_total_resource_count = self.channel.total_resource_count
         self.original_published_size = self.channel.published_size
         self.original_published_data = dict(self.channel.published_data)
@@ -210,12 +209,7 @@ class FillPublishedFieldsDraftTestCase(StudioTestCase):
             self.channel.version_info.id if self.channel.version_info else None
         )
 
-        # Create the draft ChannelVersion (version=None).
         self.draft_version = create_draft_channel_version(self.channel)
-
-    # ------------------------------------------------------------------
-    # Test 1: draft ChannelVersion metadata fields are populated
-    # ------------------------------------------------------------------
 
     def test_draft_channel_version_fields_are_populated(self):
         """
@@ -242,10 +236,6 @@ class FillPublishedFieldsDraftTestCase(StudioTestCase):
         self.assertEqual(self.draft_version.included_categories, [])
         self.assertEqual(self.draft_version.non_distributable_licenses_included, [])
 
-    # ------------------------------------------------------------------
-    # Test 2: channel-level fields are NOT touched
-    # ------------------------------------------------------------------
-
     def test_channel_fields_not_modified_during_draft_publish(self):
         """
         A draft publish must not change channel.total_resource_count,
@@ -267,10 +257,6 @@ class FillPublishedFieldsDraftTestCase(StudioTestCase):
         )
         self.assertEqual(current_version_info_id, self.original_version_info_id)
 
-    # ------------------------------------------------------------------
-    # Test 3: second draft publish replaces special_permissions_included
-    # ------------------------------------------------------------------
-
     def test_second_draft_publish_replaces_special_permissions_included(self):
         """
         On a second consecutive draft publish, special_permissions_included on the
@@ -281,7 +267,6 @@ class FillPublishedFieldsDraftTestCase(StudioTestCase):
         fresh fill_published_fields (which finds no special-permissions nodes in
         testdata.channel(), so it calls .clear()), and assert the M2M is empty.
         """
-        # Simulate a previous draft publish that recorded a special-perms license.
         stale_license = ccmodels.AuditedSpecialPermissionsLicense.objects.create(
             description="Stale license from previous draft publish",
             distributable=False,
@@ -301,10 +286,6 @@ class FillPublishedFieldsDraftTestCase(StudioTestCase):
             0,
             "special_permissions_included should be fully replaced on each draft publish",
         )
-
-    # ------------------------------------------------------------------
-    # Test 4: mark_channel_version_as_distributable not called for draft
-    # ------------------------------------------------------------------
 
     def test_mark_channel_version_as_distributable_not_called_during_draft_publish(
         self,
