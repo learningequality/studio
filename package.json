@@ -111,7 +111,7 @@
     "@babel/core": "^7.29.0",
     "@babel/plugin-syntax-import-assertions": "^7.28.6",
     "@babel/plugin-transform-runtime": "^7.29.0",
-    "@babel/preset-env": "^7.29.0",
+    "@babel/preset-env": "^7.29.2",
     "@crowdin/cli": "^4.14.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/user-event": "^14.6.1",
