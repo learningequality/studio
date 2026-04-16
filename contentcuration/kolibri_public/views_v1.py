@@ -36,7 +36,7 @@ def _get_version_notes(channel, channel_version):
     data = {
         int(k): v["version_notes"]
         for k, v in channel.published_data.items()
-        if int(k) <= channel_version.version
+        if channel_version.version is None or int(k) <= channel_version.version
     }
     return OrderedDict(sorted(data.items()))
 
