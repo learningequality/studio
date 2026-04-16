@@ -1,12 +1,10 @@
-import { render, screen, waitFor, configure } from '@testing-library/vue';
+import { render, screen, waitFor, configure, within } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import VueRouter from 'vue-router';
 
 import { factory } from '../../../store';
 import { RouteNames } from '../../../constants';
 import TrashModal from '../TrashModal';
-
-const store = factory();
 
 const TRASH_ID = 'trash-root-id';
 
@@ -16,19 +14,23 @@ const testChildren = [
   { id: 'test3', title: 'Topic', kind: 'topic', modified: new Date(2020, 1, 1) },
 ];
 
-async function makeWrapper(items = testChildren, isLoading = false) {
+async function makeWrapper(items = testChildren, { isLoading = false, hasMore = false } = {}) {
+  const store = factory();
+
   const loadContentNodesSpy = jest
     .spyOn(TrashModal.methods, 'loadContentNodes')
     .mockResolvedValue({});
   jest.spyOn(TrashModal.methods, 'loadAncestors').mockResolvedValue();
   jest.spyOn(TrashModal.methods, 'removeContentNodes').mockResolvedValue();
+  // loadNodes is not mocked intentionally: we let the real implementation run so that
+  // the loading state and `more` data are exercised through the mocked loadChildren below.
   const loadNodesSpy = jest.spyOn(TrashModal.methods, 'loadNodes');
 
   if (isLoading) {
     jest.spyOn(TrashModal.methods, 'loadChildren').mockReturnValue(new Promise(() => {}));
   } else {
     jest.spyOn(TrashModal.methods, 'loadChildren').mockResolvedValue({
-      more: items === testChildren ? null : { parent: TRASH_ID, page: 2 },
+      more: hasMore ? { parent: TRASH_ID, page: 2 } : null,
       results: [],
     });
   }
@@ -79,7 +81,7 @@ async function makeWrapper(items = testChildren, isLoading = false) {
   }
 
   const user = userEvent.setup();
-  return { ...utils, routerPush, user, loadNodesSpy, loadContentNodesSpy };
+  return { ...utils, routerPush, user, loadNodesSpy, loadContentNodesSpy, store };
 }
 
 describe('TrashModal', () => {
@@ -92,7 +94,7 @@ describe('TrashModal', () => {
 
   describe('on load', () => {
     it('shows a loading indicator while content is loading', async () => {
-      await makeWrapper(testChildren, true);
+      await makeWrapper(testChildren, { isLoading: true });
       expect(screen.getByTestId('loading')).toBeInTheDocument();
     });
 
@@ -114,7 +116,7 @@ describe('TrashModal', () => {
       expect(screen.getByTestId('delete')).toBeDisabled();
       expect(screen.getByTestId('restore')).toBeDisabled();
 
-      await user.click(screen.getAllByRole('checkbox')[1]);
+      await user.click(within(screen.getAllByTestId('checkbox')[0]).getByRole('checkbox'));
 
       await waitFor(() => {
         expect(screen.getByTestId('delete')).toBeEnabled();
@@ -127,12 +129,23 @@ describe('TrashModal', () => {
       await user.click(screen.getByTestId('selectall'));
 
       await waitFor(() => {
-        screen
-          .getAllByRole('checkbox')
-          .slice(1)
-          .forEach(cb => {
-            expect(cb).toBeChecked();
-          });
+        screen.getAllByTestId('checkbox').forEach(container => {
+          expect(within(container).getByRole('checkbox')).toBeChecked();
+        });
+      });
+    });
+
+    it('clicking an item link sets previewNodeId, opening the ResourceDrawer', async () => {
+      const { user } = await makeWrapper();
+
+      const itemLinks = screen.getAllByTestId('item');
+      await user.click(itemLinks[0]);
+
+      await waitFor(() => {
+        expect(document.querySelector('resourcedrawer-stub')).toHaveAttribute(
+          'nodeid',
+          testChildren[0].id,
+        );
       });
     });
   });
@@ -197,9 +210,10 @@ describe('TrashModal', () => {
 
     it('successful deletion triggers snackbar and reloads nodes', async () => {
       jest.spyOn(TrashModal.methods, 'deleteContentNodes').mockResolvedValue();
+
+      const { user, loadNodesSpy, store } = await makeWrapper();
       const dispatchSpy = jest.spyOn(store, 'dispatch').mockImplementation(() => Promise.resolve());
 
-      const { user, loadNodesSpy } = await makeWrapper();
       await user.click(screen.getByTestId('selectall'));
       await user.click(screen.getByTestId('delete'));
       await user.click(await screen.findByRole('button', { name: /Delete permanently/i }));
@@ -225,6 +239,32 @@ describe('TrashModal', () => {
       await user.click(screen.getByTestId('restore'));
       expect(await screen.findByRole('button', { name: /Move here/i })).toBeInTheDocument();
     });
+
+    it('successful restore clears selection and previewNodeId, and reloads nodes', async () => {
+      jest.spyOn(TrashModal.methods, 'moveContentNodes').mockResolvedValue();
+
+      const { user, loadNodesSpy } = await makeWrapper();
+
+      await user.click(screen.getByTestId('selectall'));
+
+      const itemLinks = screen.getAllByTestId('item');
+      await user.click(itemLinks[0]);
+
+      await user.click(screen.getByTestId('restore'));
+
+      await user.click(await screen.findByRole('button', { name: /Move here/i }));
+
+      await waitFor(() => {
+        expect(loadNodesSpy).toHaveBeenCalled();
+
+        screen.getAllByTestId('checkbox').forEach(container => {
+          expect(within(container).getByRole('checkbox')).not.toBeChecked();
+        });
+
+        const drawer = document.querySelector('resourcedrawer-stub');
+        expect(drawer).not.toHaveAttribute('nodeid');
+      });
+    });
   });
 
   describe('selection count', () => {
@@ -241,18 +281,18 @@ describe('TrashModal', () => {
 
   describe('pagination', () => {
     it('shows a Show more button when there is more paginated content', async () => {
-      await makeWrapper([testChildren[0]]);
+      await makeWrapper([testChildren[0]], { hasMore: true });
       expect(await screen.findByRole('button', { name: /Show more/i })).toBeInTheDocument();
     });
 
     it('clicking Show more calls loadContentNodes with pagination params', async () => {
-      const { user, loadContentNodesSpy } = await makeWrapper([testChildren[0]]);
+      const { user, loadContentNodesSpy } = await makeWrapper([testChildren[0]], { hasMore: true });
       const showMoreBtn = await screen.findByRole('button', { name: /Show more/i });
 
       await user.click(showMoreBtn);
 
       await waitFor(() => {
-        expect(loadContentNodesSpy).toHaveBeenCalledWith({ parent: TRASH_ID, page: 2 });
+        expect(loadContentNodesSpy).toHaveBeenLastCalledWith({ parent: TRASH_ID, page: 2 });
       });
     });
   });
