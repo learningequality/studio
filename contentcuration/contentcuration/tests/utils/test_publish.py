@@ -211,11 +211,11 @@ class DraftPublishChannelTestCase(StudioTestCase):
         super().setUp()
         self.channel = testdata.channel()
 
-        # Create a Special Permissions license for use in tests.
-        self.special_perms_license = ccmodels.License.objects.create(
-            license_name=licenses.SPECIAL_PERMISSIONS,
-            license_description="Special Permissions",
-            license_url="",
+        # Fetch the Special Permissions license loaded by loadconstants.
+        # Do NOT call create() — loadconstants inserts licenses with explicit PKs
+        # so the PK sequence is still at 1, and create() would collide with id=1.
+        self.special_perms_license = ccmodels.License.objects.get(
+            license_name=licenses.SPECIAL_PERMISSIONS
         )
 
         # Give the channel an existing published version so version_info is set.
