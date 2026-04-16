@@ -915,23 +915,22 @@ def add_tokens_to_channel(channel):
         channel.make_token()
 
 
-def fill_published_fields(channel, version_notes):
-    channel.last_published = timezone.now()
+def fill_published_fields(channel, version_notes, draft_channel_version=None):
+    is_draft = draft_channel_version is not None
+    date_now = timezone.now()
+
     published_nodes = (
         channel.main_tree.get_descendants()
         .filter(published=True)
         .prefetch_related("files")
     )
-    channel.total_resource_count = published_nodes.exclude(
-        kind_id=content_kinds.TOPIC
-    ).count()
+    total_resource_count = published_nodes.exclude(kind_id=content_kinds.TOPIC).count()
     kind_counts = list(
         published_nodes.values("kind_id")
         .annotate(count=Count("kind_id"))
         .order_by("kind_id")
     )
-    channel.published_kind_count = json.dumps(kind_counts)
-    channel.published_size = (
+    published_size = (
         published_nodes.values("files__checksum", "files__file_size")
         .distinct()
         .aggregate(resource_size=Sum("files__file_size"))["resource_size"]
@@ -945,10 +944,6 @@ def fill_published_fields(channel, version_notes):
         "files__language", flat=True
     )
     language_list = list(set(chain(node_languages, file_languages)))
-
-    for lang in language_list:
-        if lang:
-            channel.included_languages.add(lang)
 
     included_licenses = published_nodes.exclude(license=None).values_list(
         "license", flat=True
@@ -967,24 +962,6 @@ def fill_published_fields(channel, version_notes):
                 )
             )
         )
-    )
-
-    # TODO: Eventually, consolidate above operations to just use this field for storing historical data
-    channel.published_data.update(
-        {
-            channel.version: {
-                "resource_count": channel.total_resource_count,
-                "kind_count": kind_counts,
-                "size": channel.published_size,
-                "date_published": channel.last_published.strftime(
-                    settings.DATE_TIME_FORMAT
-                ),
-                "version_notes": version_notes,
-                "included_languages": language_list,
-                "included_licenses": license_list,
-                "included_categories": category_list,
-            }
-        }
     )
 
     # Calculate non-distributable licenses (All Rights Reserved)
@@ -1030,35 +1007,65 @@ def fill_published_fields(channel, version_notes):
                 new_licenses, ignore_conflicts=True
             )
 
-    if channel.version_info:
-        channel.version_info.resource_count = channel.total_resource_count
-        channel.version_info.kind_count = kind_counts
-        channel.version_info.size = int(channel.published_size)
-        channel.version_info.date_published = channel.last_published
-        channel.version_info.version_notes = version_notes
-        channel.version_info.included_languages = language_list
-        channel.version_info.included_licenses = license_list
-        channel.version_info.included_categories = category_list
-        channel.version_info.non_distributable_licenses_included = (
+    # Channel-level writes: only for non-draft publishes.
+    if not is_draft:
+        channel.last_published = date_now
+        channel.total_resource_count = total_resource_count
+        channel.published_kind_count = json.dumps(kind_counts)
+        channel.published_size = published_size
+
+        for lang in language_list:
+            if lang:
+                channel.included_languages.add(lang)
+
+        # TODO: Eventually, consolidate above operations to just use this field for storing historical data
+        channel.published_data.update(
+            {
+                channel.version: {
+                    "resource_count": total_resource_count,
+                    "kind_count": kind_counts,
+                    "size": published_size,
+                    "date_published": date_now.strftime(settings.DATE_TIME_FORMAT),
+                    "version_notes": version_notes,
+                    "included_languages": language_list,
+                    "included_licenses": license_list,
+                    "included_categories": category_list,
+                }
+            }
+        )
+        channel.save()
+
+    # ChannelVersion-level writes: draft uses draft_channel_version,
+    # non-draft uses channel.version_info.
+    version_obj = draft_channel_version if is_draft else channel.version_info
+    if version_obj is not None:
+        version_obj.resource_count = total_resource_count
+        version_obj.kind_count = kind_counts
+        version_obj.size = int(published_size)
+        version_obj.date_published = date_now
+        version_obj.version_notes = version_notes
+        version_obj.included_languages = language_list
+        version_obj.included_licenses = license_list
+        version_obj.included_categories = category_list
+        version_obj.non_distributable_licenses_included = (
             non_distributable_licenses_included
         )
-        channel.version_info.save()
+        version_obj.save()
 
         if special_perms_descriptions:
-            channel.version_info.special_permissions_included.set(
+            version_obj.special_permissions_included.set(
                 ccmodels.AuditedSpecialPermissionsLicense.objects.filter(
                     description__in=special_perms_descriptions
                 )
             )
         else:
-            channel.version_info.special_permissions_included.clear()
+            version_obj.special_permissions_included.clear()
 
-        if channel.public:
+        # Only mark as distributable for public non-draft channel publishes.
+        if not is_draft and channel.public:
             ccmodels.AuditedSpecialPermissionsLicense.mark_channel_version_as_distributable(
-                channel.version_info.id
+                version_obj.id
             )
-
-    channel.save()
 
 
 def sync_contentnode_and_channel_tsvectors(channel_id):
@@ -1161,7 +1168,10 @@ def publish_channel(  # noqa: C901
         )
         add_tokens_to_channel(channel)
         if is_draft_version:
-            create_draft_channel_version(channel)
+            draft_channel_version = create_draft_channel_version(channel)
+            fill_published_fields(
+                channel, version_notes, draft_channel_version=draft_channel_version
+            )
         else:
             increment_channel_version(channel)
         if not is_draft_version:

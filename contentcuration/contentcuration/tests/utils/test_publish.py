@@ -5,6 +5,7 @@ from unittest import mock
 
 from django.conf import settings
 
+import contentcuration.models as ccmodels
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioTestCase
 from contentcuration.tests.utils.restricted_filesystemstorage import (
@@ -12,6 +13,7 @@ from contentcuration.tests.utils.restricted_filesystemstorage import (
 )
 from contentcuration.utils.publish import create_draft_channel_version
 from contentcuration.utils.publish import ensure_versioned_database_exists
+from contentcuration.utils.publish import fill_published_fields
 from contentcuration.utils.publish import increment_channel_version
 
 
@@ -176,3 +178,150 @@ class IncrementChannelVersionTestCase(StudioTestCase):
         self.assertIsNotNone(self.channel.version_info)
         self.assertEqual(self.channel.version_info.version, 1)
         self.assertIsNone(self.channel.version_info.secret_token)
+
+
+class FillPublishedFieldsDraftTestCase(StudioTestCase):
+    """
+    Tests for fill_published_fields behaviour during draft publishes.
+
+    Uses testdata.channel() which has a main_tree with no *published* nodes,
+    so resource counts, sizes, and language/license/category lists will all be
+    empty/zero — that is fine; we are testing that the right objects are written,
+    not the computed values themselves.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.channel = testdata.channel()
+        # Give the channel an existing published version so version_info is set.
+        # increment_channel_version calls channel.save(), which triggers
+        # Channel.on_update() (models.py ~line 1392). on_update() runs
+        # ChannelVersion.objects.get_or_create(channel=self, version=self.version)
+        # and assigns the result to self.version_info — so after this call,
+        # channel.version_info is a real ChannelVersion, not None.
+        increment_channel_version(self.channel)
+        self.channel.refresh_from_db()
+
+        # Snapshot channel state before any draft publish.
+        self.original_total_resource_count = self.channel.total_resource_count
+        self.original_published_size = self.channel.published_size
+        self.original_published_data = dict(self.channel.published_data)
+        self.original_version_info_id = (
+            self.channel.version_info.id if self.channel.version_info else None
+        )
+
+        # Create the draft ChannelVersion (version=None).
+        self.draft_version = create_draft_channel_version(self.channel)
+
+    # ------------------------------------------------------------------
+    # Test 1: draft ChannelVersion metadata fields are populated
+    # ------------------------------------------------------------------
+
+    def test_draft_channel_version_fields_are_populated(self):
+        """
+        After a draft publish, the draft ChannelVersion has its metadata fields set.
+
+        testdata.channel() has no *published* nodes, so counts are 0 and lists are [].
+        We assert specific values rather than assertIsNotNone to avoid vacuous passes
+        (e.g. assertIsNotNone(0) always passes even if the field was never written).
+        date_published is the only field we can only check for non-None, since its
+        exact value is non-deterministic.
+        """
+        fill_published_fields(
+            self.channel, "draft notes", draft_channel_version=self.draft_version
+        )
+        self.draft_version.refresh_from_db()
+
+        self.assertEqual(self.draft_version.resource_count, 0)
+        self.assertEqual(self.draft_version.size, 0)
+        self.assertEqual(self.draft_version.kind_count, [])
+        self.assertIsNotNone(self.draft_version.date_published)
+        self.assertEqual(self.draft_version.version_notes, "draft notes")
+        self.assertEqual(self.draft_version.included_languages, [])
+        self.assertEqual(self.draft_version.included_licenses, [])
+        self.assertEqual(self.draft_version.included_categories, [])
+        self.assertEqual(self.draft_version.non_distributable_licenses_included, [])
+
+    # ------------------------------------------------------------------
+    # Test 2: channel-level fields are NOT touched
+    # ------------------------------------------------------------------
+
+    def test_channel_fields_not_modified_during_draft_publish(self):
+        """
+        A draft publish must not change channel.total_resource_count,
+        channel.published_size, channel.published_data, or channel.version_info.
+        """
+        fill_published_fields(
+            self.channel, "draft notes", draft_channel_version=self.draft_version
+        )
+        self.channel.refresh_from_db()
+
+        self.assertEqual(
+            self.channel.total_resource_count, self.original_total_resource_count
+        )
+        self.assertEqual(self.channel.published_size, self.original_published_size)
+        self.assertEqual(self.channel.published_data, self.original_published_data)
+
+        current_version_info_id = (
+            self.channel.version_info.id if self.channel.version_info else None
+        )
+        self.assertEqual(current_version_info_id, self.original_version_info_id)
+
+    # ------------------------------------------------------------------
+    # Test 3: second draft publish replaces special_permissions_included
+    # ------------------------------------------------------------------
+
+    def test_second_draft_publish_replaces_special_permissions_included(self):
+        """
+        On a second consecutive draft publish, special_permissions_included on the
+        draft ChannelVersion reflects only the current publish — licenses from the
+        previous draft publish that are no longer present are removed.
+
+        We simulate 'previous' licenses by pre-loading the M2M, then running a
+        fresh fill_published_fields (which finds no special-permissions nodes in
+        testdata.channel(), so it calls .clear()), and assert the M2M is empty.
+        """
+        # Simulate a previous draft publish that recorded a special-perms license.
+        stale_license = ccmodels.AuditedSpecialPermissionsLicense.objects.create(
+            description="Stale license from previous draft publish",
+            distributable=False,
+        )
+        self.draft_version.special_permissions_included.add(stale_license)
+        self.assertEqual(self.draft_version.special_permissions_included.count(), 1)
+
+        # Second draft publish: testdata.channel() has no special-perms nodes,
+        # so fill_published_fields should clear the M2M entirely.
+        fill_published_fields(
+            self.channel, "second draft", draft_channel_version=self.draft_version
+        )
+        self.draft_version.refresh_from_db()
+
+        self.assertEqual(
+            self.draft_version.special_permissions_included.count(),
+            0,
+            "special_permissions_included should be fully replaced on each draft publish",
+        )
+
+    # ------------------------------------------------------------------
+    # Test 4: mark_channel_version_as_distributable not called for draft
+    # ------------------------------------------------------------------
+
+    def test_mark_channel_version_as_distributable_not_called_during_draft_publish(
+        self,
+    ):
+        """
+        Even when channel.public is True, mark_channel_version_as_distributable
+        must not be called during a draft publish.
+        """
+        self.channel.public = True
+        self.channel.save()
+
+        with mock.patch.object(
+            ccmodels.AuditedSpecialPermissionsLicense,
+            "mark_channel_version_as_distributable",
+        ) as mock_mark:
+            fill_published_fields(
+                self.channel, "draft notes", draft_channel_version=self.draft_version
+            )
+
+        mock_mark.assert_not_called()
