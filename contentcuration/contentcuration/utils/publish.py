@@ -1034,17 +1034,18 @@ def fill_published_fields(channel, version_notes, draft_channel_version=None):
 
     version_obj = draft_channel_version if is_draft else channel.version_info
     if version_obj is not None:
-        ccmodels.ChannelVersion.objects.filter(pk=version_obj.pk).update(
-            resource_count=total_resource_count,
-            kind_count=kind_counts,
-            size=int(published_size),
-            date_published=date_now,
-            version_notes=version_notes,
-            included_languages=language_list,
-            included_licenses=license_list,
-            included_categories=category_list,
-            non_distributable_licenses_included=non_distributable_licenses_included,
+        version_obj.resource_count = total_resource_count
+        version_obj.kind_count = kind_counts
+        version_obj.size = int(published_size)
+        version_obj.date_published = date_now
+        version_obj.version_notes = version_notes
+        version_obj.included_languages = language_list
+        version_obj.included_licenses = license_list
+        version_obj.included_categories = category_list
+        version_obj.non_distributable_licenses_included = (
+            non_distributable_licenses_included
         )
+        version_obj.save()
 
         if special_perms_descriptions:
             version_obj.special_permissions_included.set(
