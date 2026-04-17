@@ -123,6 +123,7 @@
         <UserItem
           v-model="selected"
           :userId="item"
+          @deleted="loadItems"
         />
       </template>
     </VDataTable>
@@ -246,7 +247,7 @@
         return store.dispatch('userAdmin/loadUsers', fetchParams);
       }
 
-      const { pagination, loading } = useTable({
+      const { pagination, loading, loadItems } = useTable({
         fetchFunc: fetchParams => loadUsers(fetchParams),
         filterFetchQueryParams,
       });
@@ -261,6 +262,7 @@
         clearSearch,
         pagination,
         loading,
+        loadItems,
         filterFetchQueryParams,
       };
     },
