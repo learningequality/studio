@@ -1,20 +1,11 @@
-import Vue from 'vue';
 // the new home for analytics
 import { Analytics } from 'shared/composables/useAnalytics';
 
 /**
  * @param Vue
- * @param {Object} options
- * @param {Array} options.dataLayer
  */
-export default function AnalyticsPlugin(Vue, options = {}) {
-  const analytics = new Analytics(options.dataLayer);
-
-  // Merge in old dataLayer
-  if (Vue.$analytics) {
-    analytics.dataLayer.push(...Vue.$analytics.dataLayer);
-    Vue.$analytics.destroy();
-  }
+export default function AnalyticsPlugin(Vue) {
+  const analytics = Analytics.getInstance();
 
   Vue.$analytics = analytics;
   Vue.mixin({
@@ -24,6 +15,3 @@ export default function AnalyticsPlugin(Vue, options = {}) {
     },
   });
 }
-
-// Initialize with empty dataLayer
-AnalyticsPlugin(Vue, { dataLayer: [] });

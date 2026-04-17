@@ -27,7 +27,6 @@ describe('Studio Analytics Utilities', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
-    Analytics.destroyInstance();
     resetIntervals = 0;
   });
 
