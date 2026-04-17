@@ -196,6 +196,7 @@
       "deasync",
       "es5-ext",
       "node-sass",
+      "unrs-resolver",
       "vue-demi"
     ]
   }
