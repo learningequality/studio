@@ -720,12 +720,12 @@ class AdminViewSetTestCase(StudioAPITestCase):
         self.assertEqual(resolved_submission.resolved_by, self.admin_user)
         self.assertEqual(resolved_submission.date_updated, self.resolved_time)
 
-        self.assertTrue(
-            Change.objects.filter(
-                channel=self.submission.channel,
-                change_type=ADDED_TO_COMMUNITY_LIBRARY,
-            ).exists()
+        change = Change.objects.get(
+            channel=self.submission.channel,
+            change_type=ADDED_TO_COMMUNITY_LIBRARY,
         )
+        self.assertEqual(change.created_by_id, self.admin_user.id)
+        self.assertTrue(change.unpublishable)
         apply_task_mock.fetch_or_enqueue.assert_called_once_with(
             self.admin_user,
             channel_id=self.submission.channel.id,

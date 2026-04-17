@@ -3817,6 +3817,7 @@ class Change(models.Model):
                 "channel_id": get_attribute(change, ["channel_id"]),
                 "user_id": get_attribute(change, ["user_id"]),
                 "created_by_id": get_attribute(change, ["created_by_id"]),
+                "unpublishable": get_attribute(change, ["unpublishable"]),
             }
         )
         return datum
