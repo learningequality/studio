@@ -2,7 +2,7 @@
 
   <KModal
     :title="aboutCommunityLibraryTitle$()"
-    :cancelText="gotItLabel$()"
+    :cancelText="closeAction$()"
     @cancel="$emit('close')"
   >
     <p>{{ aboutCommunityLibraryDescription$() }}</p>
@@ -28,6 +28,7 @@
 <script setup>
 
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
+  import { commonStrings } from 'shared/strings/commonStrings';
 
   const {
     aboutCommunityLibraryTitle$,
@@ -36,8 +37,9 @@
     whatCanYouDoHereItem1$,
     whatCanYouDoHereItem2$,
     whatCanYouDoHereItem3$,
-    gotItLabel$,
     needKolibriVersionToImport$,
   } = communityChannelsStrings;
+
+  const { closeAction$ } = commonStrings;
 
 </script>

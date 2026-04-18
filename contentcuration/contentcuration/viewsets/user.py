@@ -431,7 +431,7 @@ class AdminUserViewSet(
         "edit_count",
         "view_count",
     )
-    queryset = User.objects.all()
+    queryset = User.objects.filter(deleted=False)
 
     def annotate_queryset(self, queryset):
         edit_channel_query = (

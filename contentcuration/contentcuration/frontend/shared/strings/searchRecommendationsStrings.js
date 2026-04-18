@@ -7,7 +7,7 @@ export const searchRecommendationsStrings = createTranslator('SearchRecommendati
   },
   trySearchRecommendationsText: {
     message:
-      "Based on the title and descriptions of your folders, we'll suggest content from the Kolibri Library. Choose 'Import from channels' in any channel folder to see your recommendations.",
+      "Based on the title and description of the folder you are working on, we'll suggest relevant resources from the Kolibri Library. Choose 'Import from channels' in any folder of your channels to see the recommendations.",
     context: 'Body text for a banner announcing the new recommendations feature',
   },
   viewRecommendationsButton: {

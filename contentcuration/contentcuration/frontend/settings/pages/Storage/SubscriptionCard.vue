@@ -225,22 +225,22 @@
       };
     },
     $trs: {
-      instantUpgrade: 'Instant Storage Upgrade',
+      instantUpgrade: 'Upgrade storage now',
       upgradeDescription: 'Purchase additional storage at $15/GB per year.',
-      upgradeNow: 'Upgrade Now',
+      upgradeNow: 'Upgrade now',
       storageAmount: 'Storage (GB)',
       storageRange: 'Enter a value between 1 and 50',
       annualPrice: '${price, number}/year',
-      subscriptionActive: 'Storage Subscription Active',
-      subscriptionCanceling: 'Subscription Canceling',
+      subscriptionActive: 'Storage subscription active',
+      subscriptionCanceling: 'Subscription cancelled',
       cancelNotice:
         'Your subscription will expire on {date, date, medium}. Storage will be removed after that.',
       renewalNotice: 'Your subscription will automatically renew on {date, date, medium}.',
-      storageIncluded: '{size} included with your subscription',
-      manageSubscription: 'Manage Subscription',
+      storageIncluded: '{size} included in your subscription',
+      manageSubscription: 'Manage subscription',
       upgradeSuccess: 'Storage increased to {size}',
       dismiss: 'Dismiss',
-      genericError: 'There was a problem connecting to our payment provider. Please try again.',
+      genericError: 'There was a problem connecting to the payment provider. Please try again.',
     },
   };
 
