@@ -489,21 +489,28 @@
         cleanedData.policies = JSON.stringify(cleanedData.policies);
         return cleanedData;
       },
-      submit() {
+      // eslint-disable-next-line kolibri/vue-no-unused-methods, vue/no-unused-properties
+      onValidationFailed() {
+        // Also validate non-mixin fields so all errors appear at once
+        const isOtherUseValid =
+          !this.form.uses.includes(uses.OTHER) || Boolean(this.form.other_use.trim());
+        this.otherUseError = !isOtherUseValid;
+        this.valid = false;
+        if (this.$refs.top && this.$refs.top.scrollIntoView) {
+          this.$refs.top.scrollIntoView({ behavior: 'smooth' });
+        }
+      },
+      // eslint-disable-next-line kolibri/vue-no-unused-methods, vue/no-unused-properties
+      onSubmit() {
         this.serverErrors = {};
+        if (this.submitting) return;
 
-        if (this.submitting) return Promise.resolve();
-
-        // Validate mixin-managed fields (first_name, last_name, email, password1, password2)
-        const isMixinValid = this.validate(this.form);
-
-        // Validate non-mixin fields manually
+        // Validate non-mixin fields (uses, locations, source, and conditional other_use)
         const isOtherUseValid =
           !this.form.uses.includes(uses.OTHER) || Boolean(this.form.other_use.trim());
         this.otherUseError = !isOtherUseValid;
 
         this.valid =
-          isMixinValid &&
           isOtherUseValid &&
           this.form.uses.length > 0 &&
           this.form.locations.length > 0 &&
@@ -511,47 +518,49 @@
 
         // acceptedAgreement must be checked explicitly here as it is not included in
         // mixin validation.
-        if (this.valid && this.acceptedAgreement) {
-          this.submitting = true;
-          const cleanedData = this.cleanFormData(this.form);
-          return this.register(cleanedData)
-            .then(() => {
-              this.$router.push({ name: 'ActivationSent' });
-            })
-            .catch(error => {
-              if (error.message === 'Network Error') {
-                this.$refs.top.scrollIntoView({ behavior: 'smooth' });
-              } else if (error.response.status === 400) {
-                const mixinFields = ['first_name', 'last_name', 'email', 'password1', 'password2'];
-                for (const field of error.response.data) {
-                  if (!mixinFields.includes(field)) continue;
-                  const message =
-                    field === 'password1'
-                      ? this.$tr('passwordValidationMessage')
-                      : /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
-                        commonStrings.$tr('fieldHasError');
-                  this.$set(this.serverErrors, field, message);
-                  this.$set(this.errors, field, true);
-                }
-                this.registrationFailed = true;
-                this.valid = false;
-              } else if (error.response.status === 403) {
-                this.$set(this.serverErrors, 'email', this.$tr('emailExistsMessage'));
-                this.$set(this.errors, 'email', true);
-              } else if (error.response.status === 405) {
-                this.$router.push({ name: 'AccountNotActivated' });
-              } else {
-                this.registrationFailed = true;
-                this.valid = false;
-              }
-            })
-            .finally(() => {
-              this.submitting = false;
-            });
-        } else if (this.$refs.top && this.$refs.top.scrollIntoView) {
-          this.$refs.top.scrollIntoView({ behavior: 'smooth' });
+        if (!this.valid || !this.acceptedAgreement) {
+          if (this.$refs.top && this.$refs.top.scrollIntoView) {
+            this.$refs.top.scrollIntoView({ behavior: 'smooth' });
+          }
+          return;
         }
-        return Promise.resolve();
+
+        this.submitting = true;
+        const cleanedData = this.cleanFormData(this.form);
+        return this.register(cleanedData)
+          .then(() => {
+            this.$router.push({ name: 'ActivationSent' });
+          })
+          .catch(error => {
+            if (error.message === 'Network Error') {
+              this.$refs.top.scrollIntoView({ behavior: 'smooth' });
+            } else if (error.response.status === 400) {
+              const mixinFields = ['first_name', 'last_name', 'email', 'password1', 'password2'];
+              for (const field of error.response.data) {
+                if (!mixinFields.includes(field)) continue;
+                const message =
+                  field === 'password1'
+                    ? this.$tr('passwordValidationMessage')
+                    : /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+                      commonStrings.$tr('fieldHasError');
+                this.$set(this.serverErrors, field, message);
+                this.$set(this.errors, field, true);
+              }
+              this.registrationFailed = true;
+              this.valid = false;
+            } else if (error.response.status === 403) {
+              this.$set(this.serverErrors, 'email', this.$tr('emailExistsMessage'));
+              this.$set(this.errors, 'email', true);
+            } else if (error.response.status === 405) {
+              this.$router.push({ name: 'AccountNotActivated' });
+            } else {
+              this.registrationFailed = true;
+              this.valid = false;
+            }
+          })
+          .finally(() => {
+            this.submitting = false;
+          });
       },
     },
 
