@@ -7,6 +7,7 @@
     :invalid="hasError"
     :invalidText="errorText"
     :showInvalidText="hasError"
+    v-bind="$attrs"
     @input="$emit('input', $event)"
     @blur="$emit('blur')"
   />

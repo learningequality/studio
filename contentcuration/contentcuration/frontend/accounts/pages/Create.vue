@@ -51,6 +51,7 @@
           :invalid="Boolean(errors.first_name)"
           :invalidText="fieldRequiredText"
           :showInvalidText="true"
+          :appearanceOverrides="{ maxWidth: '100%' }"
         />
         <KTextbox
           v-model="last_name"
@@ -59,22 +60,26 @@
           :invalid="Boolean(errors.last_name)"
           :invalidText="fieldRequiredText"
           :showInvalidText="true"
+          :appearanceOverrides="{ maxWidth: '100%' }"
         />
         <StudioEmailField
           v-model="email"
           :maxlength="100"
           :disabled="Boolean($route.query.email)"
           :errorMessages="errors.email ? [emailErrorText] : []"
+          :appearanceOverrides="{ maxWidth: '100%' }"
         />
         <StudioPasswordField
           v-model="password1"
           :label="$tr('passwordLabel')"
           :errorMessages="errors.password1 ? [password1ErrorText] : []"
+          :appearanceOverrides="{ maxWidth: '100%' }"
         />
         <StudioPasswordField
           v-model="password2"
           :label="$tr('confirmPasswordLabel')"
           :errorMessages="errors.password2 ? [password2ErrorText] : []"
+          :appearanceOverrides="{ maxWidth: '100%' }"
         />
 
         <!-- Usage -->
@@ -96,6 +101,7 @@
               :label="$tr('storingUsagePlaceholder')"
               :placeholder="$tr('storingUsageExample')"
               class="conditional-field"
+              :appearanceOverrides="{ maxWidth: '100%' }"
             />
           </KTransition>
           <KTransition kind="component-vertical-slide-out-in">
@@ -110,6 +116,7 @@
               :invalidText="fieldRequiredText"
               :showInvalidText="true"
               class="conditional-field-textarea"
+              :appearanceOverrides="{ maxWidth: '100%' }"
               @input="otherUseError = false"
             />
           </KTransition>
@@ -150,6 +157,7 @@
             v-model="form.organization"
             :label="$tr('organizationSourcePlaceholder')"
             :textArea="true"
+            :appearanceOverrides="{ maxWidth: '100%' }"
           />
           <KTextbox
             v-else-if="form.source && form.source.value === sources.CONFERENCE"
@@ -157,6 +165,7 @@
             v-model="form.conference"
             :label="$tr('conferenceSourcePlaceholder')"
             :textArea="true"
+            :appearanceOverrides="{ maxWidth: '100%' }"
           />
           <KTextbox
             v-else-if="form.source && form.source.value === sources.OTHER"
@@ -164,6 +173,7 @@
             v-model="form.other_source"
             :label="$tr('otherSourcePlaceholder')"
             :textArea="true"
+            :appearanceOverrides="{ maxWidth: '100%' }"
           />
         </KTransition>
         <div
