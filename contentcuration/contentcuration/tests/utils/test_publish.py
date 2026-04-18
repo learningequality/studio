@@ -379,3 +379,63 @@ class DraftPublishChannelTestCase(StudioTestCase):
                 license_obj.distributable,
                 "distributable must stay False for draft publishes",
             )
+
+    def test_draft_publish_populates_channel_snapshot_fields(self):
+        """
+        After the first draft publish, channel_name, channel_description,
+        channel_thumbnail_encoding, and channel_language on the draft
+        ChannelVersion reflect the channel's state at publish time.
+        """
+        self.channel.name = "Snapshot Channel"
+        self.channel.description = "Snapshot description"
+        self.channel.thumbnail_encoding = {"base64": "abc123"}
+        self.channel.save()
+
+        self._run_draft_publish()
+        draft_version = self._get_draft_version()
+
+        self.assertEqual(draft_version.channel_name, "Snapshot Channel")
+        self.assertEqual(draft_version.channel_description, "Snapshot description")
+        self.assertEqual(draft_version.channel_thumbnail_encoding, {"base64": "abc123"})
+        self.assertEqual(draft_version.channel_language_id, self.channel.language_id)
+
+    def test_second_draft_publish_refreshes_channel_snapshot_fields(self):
+        """
+        A second draft publish after mutating channel metadata must overwrite
+        the stale snapshot values on the existing draft ChannelVersion row —
+        for all four snapshot fields.
+
+        channel.language is changed from "en" to "fr" to confirm the refresh
+        is not vacuous (the language snapshot must change to the new value).
+        """
+        self.channel.name = "Old Name"
+        self.channel.description = "Old description"
+        self.channel.thumbnail_encoding = {"base64": "old_thumb"}
+        # language is already "en" from testdata.channel(); no need to set it
+        self.channel.save()
+
+        self._run_draft_publish()
+        draft_version = self._get_draft_version()
+
+        self.assertEqual(draft_version.channel_name, "Old Name")
+        self.assertEqual(
+            draft_version.channel_thumbnail_encoding, {"base64": "old_thumb"}
+        )
+        self.assertEqual(draft_version.channel_language_id, "en")
+
+        # Mutate all four fields; language changes from "en" to "fr"
+        self.channel.name = "New Name"
+        self.channel.description = "New description"
+        self.channel.thumbnail_encoding = {"base64": "new_thumb"}
+        self.channel.language_id = "fr"
+        self.channel.save()
+
+        self._run_draft_publish()
+        draft_version.refresh_from_db()
+
+        self.assertEqual(draft_version.channel_name, "New Name")
+        self.assertEqual(draft_version.channel_description, "New description")
+        self.assertEqual(
+            draft_version.channel_thumbnail_encoding, {"base64": "new_thumb"}
+        )
+        self.assertEqual(draft_version.channel_language_id, "fr")

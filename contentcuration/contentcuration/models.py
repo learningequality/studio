@@ -1671,9 +1671,12 @@ class ChannelVersion(models.Model):
         if self.version is not None and self.version > self.channel.version:
             raise ValidationError("Version cannot be greater than channel version")
 
-        if self._state.adding and self.version == self.channel.version:
-            # When creating a new ChannelVersion for current channel version,
-            # snapshot the current channel info
+        if self.version is None or (
+            self._state.adding and self.version == self.channel.version
+        ):
+            # Snapshot channel info when creating a versioned ChannelVersion for the
+            # current channel version, or on every save for draft (version=None) rows
+            # so that repeated draft publishes always reflect the latest channel state.
             self.channel_name = self.channel.name
             self.channel_description = self.channel.description
             self.channel_tagline = self.channel.tagline
