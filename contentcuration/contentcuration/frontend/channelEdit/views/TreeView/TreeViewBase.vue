@@ -677,7 +677,7 @@
         // Handle channel-specific options
         switch (option.value) {
           case ChannelMenuOptions.PUBLISH:
-            this.showPublishSidePanel = true;
+            this.publishChannel();
             break;
           case ChannelMenuOptions.VIEW_DETAILS:
             this.$router.push(this.viewChannelDetailsLink);
