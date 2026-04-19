@@ -4,6 +4,8 @@ import uuid
 from unittest import mock
 
 from django.conf import settings
+from kolibri_content import models as kolibrimodels
+from kolibri_content.router import using_content_database
 from le_utils.constants import licenses
 
 import contentcuration.models as ccmodels
@@ -12,6 +14,7 @@ from contentcuration.tests.base import StudioTestCase
 from contentcuration.tests.utils.restricted_filesystemstorage import (
     RestrictedFileSystemStorage,
 )
+from contentcuration.utils.publish import create_content_database
 from contentcuration.utils.publish import create_draft_channel_version
 from contentcuration.utils.publish import ensure_versioned_database_exists
 from contentcuration.utils.publish import increment_channel_version
@@ -439,3 +442,45 @@ class DraftPublishChannelTestCase(StudioTestCase):
             draft_version.channel_thumbnail_encoding, {"base64": "new_thumb"}
         )
         self.assertEqual(draft_version.channel_language_id, "fr")
+
+
+class MapChannelToKolibriChannelTestCase(StudioTestCase):
+    def setUp(self):
+        super().setUp()
+        self.channel = testdata.channel()
+        # icon_encoding must not be None — the kolibri content DB thumbnail column is NOT NULL.
+        # publish_channel calls set_channel_icon_encoding before create_content_database;
+        # since we call create_content_database directly we set it here instead.
+        self.channel.icon_encoding = ""
+        self.channel.save()
+        # increment_channel_version + refresh_from_db gives channel.version > 0,
+        # so channel.version + 1 is distinguishable from the draft value of 0.
+        increment_channel_version(self.channel)
+        self.channel.refresh_from_db()
+
+    def _get_channel_metadata_version(self, is_draft_version):
+        with mock.patch("contentcuration.utils.publish.save_export_database"):
+            tempdb = create_content_database(
+                self.channel,
+                force=True,
+                user_id=self.admin_user.id,
+                force_exercises=False,
+                is_draft_version=is_draft_version,
+            )
+        try:
+            with using_content_database(tempdb):
+                return kolibrimodels.ChannelMetadata.objects.get(
+                    id=self.channel.id
+                ).version
+        finally:
+            if os.path.exists(tempdb):
+                os.remove(tempdb)
+
+    def test_draft_publish_sets_version_zero(self):
+        self.assertEqual(self._get_channel_metadata_version(is_draft_version=True), 0)
+
+    def test_non_draft_publish_sets_version_plus_one(self):
+        self.assertEqual(
+            self._get_channel_metadata_version(is_draft_version=False),
+            self.channel.version + 1,
+        )

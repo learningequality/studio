@@ -183,7 +183,9 @@ def create_content_database(
             inherit_metadata=bool(channel.ricecooker_version),
         )
         tree_mapper.map_nodes()
-        kolibri_channel = map_channel_to_kolibri_channel(channel, use_staging_tree)
+        kolibri_channel = map_channel_to_kolibri_channel(
+            channel, use_staging_tree, is_draft_version=is_draft_version
+        )
         # It should be at this percent already, but just in case.
         if progress_tracker:
             progress_tracker.track(90)
@@ -796,7 +798,9 @@ def map_prerequisites(root_node):
             )
 
 
-def map_channel_to_kolibri_channel(channel, use_staging_tree=False):
+def map_channel_to_kolibri_channel(
+    channel, use_staging_tree=False, is_draft_version=False
+):
     logging.debug("Generating the channel metadata.")
     base_tree = channel.staging_tree if use_staging_tree else channel.main_tree
     kolibri_channel = kolibrimodels.ChannelMetadata.objects.create(
@@ -804,8 +808,7 @@ def map_channel_to_kolibri_channel(channel, use_staging_tree=False):
         name=channel.name,
         description=channel.description,
         tagline=channel.tagline,
-        version=channel.version
-        + 1,  # Need to save as version being published, not current version
+        version=0 if is_draft_version else channel.version + 1,
         thumbnail=channel.icon_encoding,
         root_pk=base_tree.node_id,
         root_id=base_tree.node_id,
