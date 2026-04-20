@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kolibri-studio\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-03 19:45+0000\n"
-"PO-Revision-Date: 2025-09-12 13:59\n"
+"POT-Creation-Date: 2026-04-16 00:57+0000\n"
+"PO-Revision-Date: 2026-04-20 19:33\n"
 "Last-Translator: \n"
 "Language-Team: Portuguese, Brazilian\n"
 "Language: pt_BR\n"
@@ -14,8 +14,8 @@ msgstr ""
 "X-Crowdin-Project: kolibri-studio\n"
 "X-Crowdin-Project-ID: 286000\n"
 "X-Crowdin-Language: pt-BR\n"
-"X-Crowdin-File: /search-recommendations-closed-beta/django.po\n"
-"X-Crowdin-File-ID: 4886\n"
+"X-Crowdin-File: /unstable/django.po\n"
+"X-Crowdin-File-ID: 4322\n"
 
 #: contentcuration/catalog_settings.py:4 contentcuration/sandbox_settings.py:8
 #: contentcuration/settings.py:271
@@ -26,25 +26,25 @@ msgstr "Árabe"
 msgid "The site is currently in read-only mode. Please try again later."
 msgstr "No momento, o site está em modo somente leitura. Por favor, tente novamente mais tarde."
 
-#: contentcuration/models.py:342
+#: contentcuration/models.py:356
 msgid "Not enough space. Check your storage under Settings page."
 msgstr "Espaço insuficiente. Verifique seu armazenamento na página Configurações."
 
-#: contentcuration/models.py:374 contentcuration/models.py:386
+#: contentcuration/models.py:440 contentcuration/models.py:452
 msgid "Out of storage! Request more space under Settings > Storage."
 msgstr "Sem armazenamento! Solicite mais espaço em Configurações > Armazenamento."
 
-#: contentcuration/models.py:2155
+#: contentcuration/models.py:2531
 msgid " (Original)"
 msgstr " (Original)"
 
-#: contentcuration/models.py:3297
+#: contentcuration/models.py:3848
 msgid "Created DateTime"
-msgstr "Data/Hora de criação"
+msgstr ""
 
-#: contentcuration/models.py:3299
+#: contentcuration/models.py:3850
 msgid "Datetime field when the custom_metadata for task was created in UTC"
-msgstr "Campo data-hora quando o metadado personalizado para tarefa foi criado em UTC"
+msgstr ""
 
 #: contentcuration/settings.py:269
 msgid "English"
@@ -719,7 +719,7 @@ msgstr "Estamos com problemas com um serviço de terceiros. Isso significa que o
 msgid "We are encountering issues with our data center. This means you may encounter networking problems while using Studio. We appreciate your patience while these issues are being resolved. To check the status of this service, please visit <a target='_blank' href='https://status.cloud.google.com/'>here</a>"
 msgstr "Estamos com problemas com o nosso centro de dados. Isso significa que você pode ter problemas de conexão enquanto usa o Studio. Agradecemos pela paciência enquanto esses problemas são resolvidos. Para saber o status do serviço, por favor visite <a target='_blank' href='https://status.cloud.google.com/'>aqui</a>"
 
-#: contentcuration/utils/publish.py:101
+#: contentcuration/utils/publish.py:103
 msgid "Kolibri Studio Channel Published"
 msgstr "Canal do Kolibri Studio publicado"
 
@@ -731,14 +731,15 @@ msgstr "Relatório de problemas do Kolibri Studio"
 msgid "Kolibri Studio account deleted"
 msgstr "Conta do Kolibri Studio excluída"
 
-#: kolibri_public/views.py:223
+#: kolibri_public/views.py:323
 msgid "Resource"
 msgstr "Conteúdo"
 
-#: kolibri_public/views_v1.py:79 kolibri_public/views_v1.py:94
+#: kolibri_public/views_v1.py:152 kolibri_public/views_v1.py:167
 msgid "API version is unavailable"
 msgstr "A versão da API está indisponível"
 
-#: kolibri_public/views_v1.py:97
+#: kolibri_public/views_v1.py:170
 msgid "No channel matching {} found"
 msgstr "Nenhum canal correspondente a {} encontrado"
+
