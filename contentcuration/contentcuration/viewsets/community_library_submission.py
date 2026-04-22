@@ -320,6 +320,7 @@ class AdminCommunityLibrarySubmissionViewSet(
                 categories=submission.categories,
                 country_codes=country_codes,
             ),
+            created_by_id=submission.resolved_by_id,
             # This change is not publishable and should not trigger publish-related logic
             unpublishable=True,
         )

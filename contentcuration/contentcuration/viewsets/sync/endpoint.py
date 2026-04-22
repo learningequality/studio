@@ -155,6 +155,7 @@ class SyncView(APIView):
                 "table",
                 "change_type",
                 "kwargs",
+                "unpublishable",
             )
             .order_by("server_rev")[:CHANGE_RETURN_LIMIT]
         )
