@@ -351,7 +351,7 @@
         // state more accurately to the developer in case of debugging.
         // UI code should rely on XXXIsLoading and XXXIsFinished instead.
         if (!languageCodes) return undefined;
-        if (languageCodes.length === 0) return null;
+        if (!languageCodes?.length) return null;
 
         return languageCodes.map(code => LanguagesMap.get(code).readable_name).join(', ');
       });
@@ -362,7 +362,7 @@
 
       const categoriesString = computed(() => {
         if (!channelVersionIsFinished.value) return undefined;
-        if (channelVersionData.value.included_categories.length === 0) return null;
+        if (!channelVersionData.value.included_categories?.length) return null;
 
         return channelVersionData.value.included_categories
           .map(categoryId => categoryIdToName(categoryId))
@@ -371,7 +371,7 @@
 
       const licensesString = computed(() => {
         if (!channelVersionIsFinished.value) return undefined;
-        if (channelVersionData.value.included_licenses.length === 0) return null;
+        if (!channelVersionData.value.included_licenses?.length) return null;
 
         return channelVersionData.value.included_licenses
           .map(licenseId => LicensesMap.get(licenseId).license_name)
