@@ -108,7 +108,6 @@ def _get_channel_list_v1(params, identifier=None):
             ).filter(
                 secret_token__token=identifier,
                 channel__deleted=False,
-                channel__main_tree__published=True,
             )
             if channel_version.exists():
                 # return early as we won't need to apply the other filters for channel version tokens
