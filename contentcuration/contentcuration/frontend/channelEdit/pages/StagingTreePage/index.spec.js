@@ -20,6 +20,7 @@ const GETTERS = {
   global: {
     isCompactViewMode: jest.fn(),
     appendChannelName: () => () => jest.fn(),
+    hasFeatureEnabled: () => () => false,
   },
   currentChannel: {
     rootId: () => ROOT_ID,
