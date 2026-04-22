@@ -740,4 +740,3 @@ msgstr "La version de l’API est indisponible"
 #: kolibri_public/views_v1.py:170
 msgid "No channel matching {} found"
 msgstr "Aucune chaîne correspondant à {} trouvée"
-
