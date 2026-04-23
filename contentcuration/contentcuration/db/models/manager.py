@@ -9,6 +9,7 @@ from django.db.models import Q
 from django.db.utils import OperationalError
 from django_cte import CTEQuerySet
 from le_utils.constants import content_kinds
+from le_utils.constants import modalities
 from mptt.managers import TreeManager
 from mptt.signals import node_moved
 
@@ -359,6 +360,15 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
                 )
             )
         source_copy_id_map[source.id] = copy["id"]
+
+        if self._is_unit_topic(source.kind_id, copy.get("extra_fields")):
+            copy["extra_fields"] = {
+                **copy["extra_fields"],
+                "options": self._remap_unit_options(
+                    copy["extra_fields"]["options"], source_copy_id_map
+                ),
+            }
+
         return copy
 
     def _all_nodes_to_copy(self, node, excluded_descendants):
@@ -394,7 +404,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         if progress_tracker:
             progress_tracker.set_total(total_nodes)
 
-        return self._copy(
+        nodes, _ = self._copy(
             node,
             target,
             position,
@@ -406,6 +416,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             batch_size,
             progress_tracker=progress_tracker,
         )
+        return nodes
 
     def _copy(
         self,
@@ -424,7 +435,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         :type progress_tracker: contentcuration.utils.celery.ProgressTracker|None
         """
         if node.rght - node.lft < batch_size:
-            copied_nodes = self._deep_copy(
+            copied_nodes, node_map = self._deep_copy(
                 node,
                 target,
                 position,
@@ -436,7 +447,7 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
             )
             if progress_tracker:
                 progress_tracker.increment(len(copied_nodes))
-            return copied_nodes
+            return copied_nodes, node_map
         node_copy = self._shallow_copy(
             node,
             target,
@@ -451,8 +462,9 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
         children = node.get_children().order_by("lft")
         if excluded_descendants:
             children = children.exclude(node_id__in=excluded_descendants.keys())
+        combined_map = {node.id: node_copy.id}
         for child in children:
-            self._copy(
+            _, child_map = self._copy(
                 child,
                 node_copy,
                 "last-child",
@@ -464,7 +476,19 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
                 batch_size,
                 progress_tracker=progress_tracker,
             )
-        return [node_copy]
+            combined_map.update(child_map)
+
+        if self._is_unit_topic(node.kind_id, node.extra_fields):
+            remapped_extra_fields = {
+                **node_copy.extra_fields,
+                "options": self._remap_unit_options(
+                    node.extra_fields["options"], combined_map
+                ),
+            }
+            self.filter(pk=node_copy.pk).update(extra_fields=remapped_extra_fields)
+            node_copy.extra_fields = remapped_extra_fields
+
+        return [node_copy], combined_map
 
     def _copy_tags(self, source_copy_id_map):
         from contentcuration.models import ContentTag
@@ -582,6 +606,35 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
 
         self._copy_tags(source_copy_id_map)
 
+    @staticmethod
+    def _is_unit_topic(kind_id, extra_fields):
+        return (
+            kind_id == content_kinds.TOPIC
+            and isinstance(extra_fields, dict)
+            and extra_fields.get("options", {}).get("modality") == modalities.UNIT
+        )
+
+    @staticmethod
+    def _remap_unit_options(options, source_copy_id_map):
+        remapped = dict(options)
+
+        if "lesson_objectives" in remapped:
+            remapped["lesson_objectives"] = {
+                source_copy_id_map[old_id]: objectives
+                for old_id, objectives in remapped["lesson_objectives"].items()
+                if old_id in source_copy_id_map
+            }
+
+        for key in ("pre_test", "post_test"):
+            if key in remapped:
+                new_id = source_copy_id_map.get(remapped[key])
+                if new_id is not None:
+                    remapped[key] = new_id
+                else:
+                    remapped.pop(key)
+
+        return remapped
+
     def _shallow_copy(
         self,
         node,
@@ -665,4 +718,4 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
 
         self._copy_associated_objects(source_copy_id_map)
 
-        return new_nodes
+        return new_nodes, source_copy_id_map
