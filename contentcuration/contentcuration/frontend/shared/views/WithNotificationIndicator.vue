@@ -37,8 +37,8 @@
 
   .notification-indicator {
     position: absolute;
-    top: 8px;
-    right: 9px;
+    top: 0;
+    right: 0;
     width: 11px;
     height: 11px;
     background-color: v-bind('$themePalette.red.v_500');
