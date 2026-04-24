@@ -7,7 +7,7 @@ repos:
         exclude: '^.+?\.ttf$'
       - id: debug-statements
       - id: end-of-file-fixer
-        exclude: '^.+?\.json.+?\.yml$'
+        exclude: '^.+?(\.json|\.po)$'
   - repo: https://github.com/PyCQA/flake8
     rev: 7.1.2
     hooks:
