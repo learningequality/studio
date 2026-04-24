@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: kolibri-studio\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-04-16 00:57+0000\n"
-"PO-Revision-Date: 2026-04-20 19:33\n"
+"PO-Revision-Date: 2026-04-24 16:20\n"
 "Last-Translator: \n"
 "Language-Team: Portuguese, Brazilian\n"
 "Language: pt_BR\n"
@@ -742,3 +742,4 @@ msgstr "A versão da API está indisponível"
 #: kolibri_public/views_v1.py:170
 msgid "No channel matching {} found"
 msgstr "Nenhum canal correspondente a {} encontrado"
+
