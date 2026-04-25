@@ -1,24 +1,19 @@
 <template>
 
-  <VContainer
-    fluid
-    class="pa-0 pb-5"
-  >
-    <LoadingText
-      v-if="loading"
-      class="pt-4"
+  <div class="selection-list">
+    <StudioLargeLoader
+      v-if="show(loaderKey, loading, 400)"
+      class="selection-loader"
     />
     <template v-else>
-      <VTextField
+      <KTextbox
         v-model="search"
-        style="max-width: 350px"
-        class="mt-4"
-        box
+        class="search-input"
         :label="$tr('searchText')"
       />
       <p
         v-if="!listChannels.length"
-        class="grey--text mb-0 mt-4"
+        class="no-channels-found"
       >
         {{ $tr('noChannelsFound') }}
       </p>
@@ -28,29 +23,25 @@
           :key="channel.id"
           flat
           hover
-          class="list-card-hover px-3"
+          class="list-card-hover selection-card"
         >
-          <VLayout
-            align-center
-            row
-          >
-            <Checkbox
-              v-model="selectedChannels"
-              color="primary"
+          <div class="selection-row">
+            <KCheckbox
+              :checked="selectedChannels.includes(channel.id)"
               :data-testid="`checkbox-${channel.id}`"
-              :value="channel.id"
-              class="channel ma-0"
+              class="channel-checkbox"
+              @change="handleSelectChannel(channel.id)"
             />
             <ChannelItem
               :channelId="channel.id"
               :data-testid="`channel-item-${channel.id}`"
               @click="handleSelectChannel"
             />
-          </VLayout>
+          </div>
         </VCard>
       </template>
     </template>
-  </VContainer>
+  </div>
 
 </template>
 
@@ -58,11 +49,11 @@
 <script>
 
   import sortBy from 'lodash/sortBy';
+  import useKShow from 'kolibri-design-system/lib/composables/useKShow';
   import { mapGetters, mapActions } from 'vuex';
   import ChannelItem from './ChannelItem';
   import { ChannelListTypes } from 'shared/constants';
-  import Checkbox from 'shared/views/form/Checkbox';
-  import LoadingText from 'shared/views/LoadingText';
+  import StudioLargeLoader from 'shared/views/StudioLargeLoader';
 
   function listTypeValidator(value) {
     // The value must match one of the ListTypes
@@ -72,9 +63,12 @@
   export default {
     name: 'ChannelSelectionList',
     components: {
-      Checkbox,
       ChannelItem,
-      LoadingText,
+      StudioLargeLoader,
+    },
+    setup() {
+      const { show } = useKShow();
+      return { show };
     },
     props: {
       value: {
@@ -117,6 +111,9 @@
           'name',
         );
       },
+      loaderKey() {
+        return `channel-selection-list-${this.listType}`;
+      },
     },
     mounted() {
       this.loading = true;
@@ -146,12 +143,37 @@
 
 <style lang="scss" scoped>
 
-  .add-channel-button {
-    margin: 0;
+  .selection-list {
+    padding-bottom: 20px;
   }
 
-  .channel /deep/ .k-checkbox {
-    vertical-align: middle;
+  .selection-loader {
+    padding-top: 16px;
+  }
+
+  .search-input {
+    max-width: 350px;
+    margin-top: 16px;
+  }
+
+  .no-channels-found {
+    margin-top: 16px;
+    margin-bottom: 0;
+    color: v-bind('$themeTokens.annotation');
+  }
+
+  .selection-card {
+    padding-inline: 12px;
+  }
+
+  .selection-row {
+    display: flex;
+    align-items: center;
+  }
+
+  .channel-checkbox {
+    padding-inline-end: 4px;
+    margin: 0;
   }
 
   .list-card-hover {
