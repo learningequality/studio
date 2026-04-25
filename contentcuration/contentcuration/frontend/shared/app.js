@@ -252,7 +252,7 @@ Vue.use(Vuetify, {
 Vue.use(KThemePlugin);
 
 // Register analytics plugin with dataLayer that should already be defined
-Vue.use(AnalyticsPlugin, { dataLayer: window.dataLayer });
+Vue.use(AnalyticsPlugin);
 
 // Register global components
 Vue.component('ActionLink', ActionLink);
