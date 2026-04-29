@@ -625,14 +625,6 @@ class CustomContentNodeTreeManager(TreeManager.from_queryset(CustomTreeQuerySet)
                 if old_id in source_copy_id_map
             }
 
-        for key in ("pre_test", "post_test"):
-            if key in remapped:
-                new_id = source_copy_id_map.get(remapped[key])
-                if new_id is not None:
-                    remapped[key] = new_id
-                else:
-                    remapped.pop(key)
-
         return remapped
 
     def _shallow_copy(

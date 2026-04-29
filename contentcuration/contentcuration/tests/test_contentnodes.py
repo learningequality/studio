@@ -1882,7 +1882,7 @@ class UnitCopyExtraFieldsTestCase(StudioTestCase):
     # helpers
     # ------------------------------------------------------------------ #
 
-    def _make_unit_extra_fields(self, lesson_ids, pre_test_id=None, post_test_id=None):
+    def _make_unit_extra_fields(self, lesson_ids):
         """Return a full extra_fields dict for a UNIT topic."""
         lo_id = "a" * 32
         assessment_id = "b" * 32
@@ -1903,21 +1903,12 @@ class UnitCopyExtraFieldsTestCase(StudioTestCase):
             "assessment_objectives": {assessment_id: [lo_id]},
             "lesson_objectives": {lesson_id: [lo_id] for lesson_id in lesson_ids},
         }
-        if pre_test_id is not None:
-            options["pre_test"] = pre_test_id
-        if post_test_id is not None:
-            options["post_test"] = post_test_id
         return {"options": options}
 
-    def _make_course_unit_lessons(
-        self,
-        num_lessons=2,
-        with_pre_test=False,
-        with_post_test=False,
-    ):
+    def _make_course_unit_lessons(self, num_lessons=2):
         """
         Build: channel.main_tree > course > unit > [lesson_1, lesson_2, ...]
-        Returns (course, unit, lessons, pre_test_node_or_None, post_test_node_or_None).
+        Returns (course, unit, lessons).
         unit.extra_fields is set after lesson nodes are created so it can reference their PKs.
         """
         course = ContentNode.objects.create(
@@ -1941,29 +1932,11 @@ class UnitCopyExtraFieldsTestCase(StudioTestCase):
             )
             lessons.append(lesson)
 
-        pre_test_node = None
-        if with_pre_test:
-            pre_test_node = ContentNode.objects.create(
-                title="PreTest",
-                kind_id=content_kinds.TOPIC,
-                parent=unit,
-            )
-
-        post_test_node = None
-        if with_post_test:
-            post_test_node = ContentNode.objects.create(
-                title="PostTest",
-                kind_id=content_kinds.TOPIC,
-                parent=unit,
-            )
-
         unit.extra_fields = self._make_unit_extra_fields(
             lesson_ids=[lesson.id for lesson in lessons],
-            pre_test_id=pre_test_node.id if pre_test_node else None,
-            post_test_id=post_test_node.id if post_test_node else None,
         )
         unit.save()
-        return course, unit, lessons, pre_test_node, post_test_node
+        return course, unit, lessons
 
     # ------------------------------------------------------------------ #
     # deep-copy integration tests
@@ -1971,7 +1944,7 @@ class UnitCopyExtraFieldsTestCase(StudioTestCase):
 
     def test_deep_copy_unit_remaps_lesson_objectives(self):
         """Deep copy: lesson_objectives keys point at cloned lessons with correct LO values."""
-        course, unit, lessons, _, _ = self._make_course_unit_lessons(num_lessons=2)
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=2)
         source_lesson_objectives = unit.extra_fields["options"]["lesson_objectives"]
         course.copy_to(self.target_channel.main_tree, batch_size=10000)
 
@@ -1999,29 +1972,9 @@ class UnitCopyExtraFieldsTestCase(StudioTestCase):
                 "Original lesson PK still present in lesson_objectives",
             )
 
-    def test_deep_copy_unit_remaps_pre_post_test(self):
-        """Deep copy: pre_test and post_test values point at cloned nodes."""
-        course, unit, lessons, pre_test, post_test = self._make_course_unit_lessons(
-            num_lessons=1, with_pre_test=True, with_post_test=True
-        )
-        course.copy_to(self.target_channel.main_tree, batch_size=10000)
-
-        copied_course = self.target_channel.main_tree.get_children().last()
-        copied_unit = copied_course.get_children().first()
-        copied_unit.refresh_from_db()
-        options = copied_unit.extra_fields["options"]
-
-        copied_children_ids = set(
-            copied_unit.get_descendants().values_list("id", flat=True)
-        )
-        self.assertIn(options["pre_test"], copied_children_ids)
-        self.assertIn(options["post_test"], copied_children_ids)
-        self.assertNotEqual(options["pre_test"], pre_test.id)
-        self.assertNotEqual(options["post_test"], post_test.id)
-
     def test_deep_copy_non_unit_extra_fields_unchanged(self):
         """Deep copy: extra_fields on Lesson and Course topics is copied verbatim."""
-        course, unit, lessons, _, _ = self._make_course_unit_lessons(num_lessons=1)
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=1)
         course.copy_to(self.target_channel.main_tree, batch_size=10000)
 
         copied_course = self.target_channel.main_tree.get_children().last()
@@ -2039,7 +1992,7 @@ class UnitCopyExtraFieldsTestCase(StudioTestCase):
 
     def test_shallow_copy_unit_remaps_lesson_objectives(self):
         """Shallow copy: lesson_objectives keys point at cloned lessons with correct LO values."""
-        course, unit, lessons, _, _ = self._make_course_unit_lessons(num_lessons=2)
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=2)
         source_lesson_objectives = unit.extra_fields["options"]["lesson_objectives"]
         course.copy_to(self.target_channel.main_tree, batch_size=1)
 
@@ -2059,29 +2012,9 @@ class UnitCopyExtraFieldsTestCase(StudioTestCase):
         for original_lesson in lessons:
             self.assertNotIn(original_lesson.id, lesson_objectives)
 
-    def test_shallow_copy_unit_remaps_pre_post_test(self):
-        """Shallow copy: pre_test and post_test values point at cloned nodes."""
-        course, unit, lessons, pre_test, post_test = self._make_course_unit_lessons(
-            num_lessons=1, with_pre_test=True, with_post_test=True
-        )
-        course.copy_to(self.target_channel.main_tree, batch_size=1)
-
-        copied_course = self.target_channel.main_tree.get_children().last()
-        copied_unit = copied_course.get_children().first()
-        copied_unit.refresh_from_db()
-        options = copied_unit.extra_fields["options"]
-
-        copied_children_ids = set(
-            copied_unit.get_descendants().values_list("id", flat=True)
-        )
-        self.assertIn(options["pre_test"], copied_children_ids)
-        self.assertIn(options["post_test"], copied_children_ids)
-        self.assertNotEqual(options["pre_test"], pre_test.id)
-        self.assertNotEqual(options["post_test"], post_test.id)
-
     def test_shallow_copy_non_unit_extra_fields_unchanged(self):
         """Shallow copy: extra_fields on Lesson and Course topics is copied verbatim."""
-        course, unit, lessons, _, _ = self._make_course_unit_lessons(num_lessons=1)
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=1)
         course.copy_to(self.target_channel.main_tree, batch_size=1)
 
         copied_course = self.target_channel.main_tree.get_children().last()
@@ -2102,7 +2035,7 @@ class UnitCopyExtraFieldsTestCase(StudioTestCase):
         Deep copy: when a lesson is excluded, its entry is dropped from
         the cloned Unit's lesson_objectives.
         """
-        course, unit, lessons, _, _ = self._make_course_unit_lessons(num_lessons=2)
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=2)
         excluded_lesson = lessons[0]
         kept_lesson = lessons[1]
         source_lesson_objectives = unit.extra_fields["options"]["lesson_objectives"]
@@ -2131,7 +2064,7 @@ class UnitCopyExtraFieldsTestCase(StudioTestCase):
         """
         Shallow copy: same behaviour as deep copy when a lesson is excluded.
         """
-        course, unit, lessons, _, _ = self._make_course_unit_lessons(num_lessons=2)
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=2)
         excluded_lesson = lessons[0]
         kept_lesson = lessons[1]
         source_lesson_objectives = unit.extra_fields["options"]["lesson_objectives"]
@@ -2161,7 +2094,7 @@ class UnitCopyExtraFieldsTestCase(StudioTestCase):
         Deep copy: when the Unit itself is excluded from a Course copy, the Unit is
         absent from the clone and no remap runs (no error, Course copy succeeds).
         """
-        course, unit, lessons, _, _ = self._make_course_unit_lessons(num_lessons=2)
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=2)
 
         course.copy_to(
             self.target_channel.main_tree,
@@ -2178,7 +2111,7 @@ class UnitCopyExtraFieldsTestCase(StudioTestCase):
         itself), the lesson's entry in lesson_objectives is preserved with the
         cloned lesson's PK.
         """
-        course, unit, lessons, _, _ = self._make_course_unit_lessons(num_lessons=1)
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=1)
         lesson = lessons[0]
         source_lesson_objectives = unit.extra_fields["options"]["lesson_objectives"]
 
@@ -2218,7 +2151,7 @@ class UnitCopyExtraFieldsTestCase(StudioTestCase):
         itself), the lesson's entry in lesson_objectives is preserved with the
         cloned lesson's PK.
         """
-        course, unit, lessons, _, _ = self._make_course_unit_lessons(num_lessons=1)
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=1)
         lesson = lessons[0]
         source_lesson_objectives = unit.extra_fields["options"]["lesson_objectives"]
 
@@ -2261,7 +2194,7 @@ class UnitCopyExtraFieldsTestCase(StudioTestCase):
         assessment_objectives keys (assessment_ids) are not node PKs and must
         be preserved verbatim on the cloned Unit.
         """
-        course, unit, lessons, _, _ = self._make_course_unit_lessons(num_lessons=1)
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=1)
         source_assessment_objectives = unit.extra_fields["options"][
             "assessment_objectives"
         ]
@@ -2282,7 +2215,7 @@ class UnitCopyExtraFieldsTestCase(StudioTestCase):
         learning_objectives list (LO IDs, not node IDs) is preserved verbatim
         on the cloned Unit.
         """
-        course, unit, lessons, _, _ = self._make_course_unit_lessons(num_lessons=1)
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=1)
         source_lo_list = unit.extra_fields["options"]["learning_objectives"]
 
         course.copy_to(self.target_channel.main_tree, batch_size=10000)
@@ -2301,7 +2234,7 @@ class UnitCopyExtraFieldsTestCase(StudioTestCase):
         completion_criteria (containing assessment_item_ids) is preserved
         verbatim on the cloned Unit — assessment_ids are not node PKs.
         """
-        course, unit, lessons, _, _ = self._make_course_unit_lessons(num_lessons=1)
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=1)
         source_cc = unit.extra_fields["options"]["completion_criteria"]
 
         course.copy_to(self.target_channel.main_tree, batch_size=10000)
@@ -2321,7 +2254,7 @@ class UnitCopyExtraFieldsTestCase(StudioTestCase):
         children travel with it in the same copy operation and their IDs are
         remapped correctly in lesson_objectives.
         """
-        course, unit, lessons, _, _ = self._make_course_unit_lessons(num_lessons=2)
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=2)
         source_lesson_objectives = unit.extra_fields["options"]["lesson_objectives"]
 
         unit.copy_to(self.target_channel.main_tree, batch_size=10000)
