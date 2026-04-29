@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  kolibri-design-system: github:nucleogenesis/kolibri-design-system-1#studio/5258-rte--dynamic-width/klistwithoverflow-wrap-fix
+
 importers:
 
   .:
@@ -84,8 +87,8 @@ importers:
         specifier: ^0.2.12
         version: 0.2.12
       kolibri-design-system:
-        specifier: 5.6.0
-        version: 5.6.0
+        specifier: github:nucleogenesis/kolibri-design-system-1#studio/5258-rte--dynamic-width/klistwithoverflow-wrap-fix
+        version: https://codeload.github.com/nucleogenesis/kolibri-design-system-1/tar.gz/f7e2093f448029ed891c5c8a13170c26d9b06ae4
       lodash:
         specifier: ^4.18.1
         version: 4.18.1
@@ -5053,8 +5056,9 @@ packages:
   kolibri-constants@0.2.12:
     resolution: {integrity: sha512-ApVc/KLwEaDJohqKhQTdao4UdWmoyq2pQ5lk8ra+1rDpJvsFWsAOGVC4RTv4YEDlAYJzj2/QZlJQ91u5yUURSQ==}
 
-  kolibri-design-system@5.6.0:
-    resolution: {integrity: sha512-lKCQVnnjguUQUIzQ5rKkUyNRWOIhY4cOOtPmuW0H3gz+hv73wPvBjbI2u9kQqA+oFs/C2MsL60roiMMbQDmt4A==}
+  kolibri-design-system@https://codeload.github.com/nucleogenesis/kolibri-design-system-1/tar.gz/f7e2093f448029ed891c5c8a13170c26d9b06ae4:
+    resolution: {tarball: https://codeload.github.com/nucleogenesis/kolibri-design-system-1/tar.gz/f7e2093f448029ed891c5c8a13170c26d9b06ae4}
+    version: 5.6.2
 
   kolibri-format@1.0.1:
     resolution: {integrity: sha512-yGQpsJkBAzmRueAq6MG1UOuDl9pbhEtMWNxq9ObG5pPVkG8uhWJAS1L71GCuNAeaV1XG2IWo2565Ov4yXnudeA==}
@@ -13623,7 +13627,7 @@ snapshots:
 
   kolibri-constants@0.2.12: {}
 
-  kolibri-design-system@5.6.0:
+  kolibri-design-system@https://codeload.github.com/nucleogenesis/kolibri-design-system-1/tar.gz/f7e2093f448029ed891c5c8a13170c26d9b06ae4:
     dependencies:
       aphrodite: https://codeload.github.com/learningequality/aphrodite/tar.gz/fdc8d7be8912a5cf17f74ff10f124013c52c3e32
       autosize: 3.0.21
