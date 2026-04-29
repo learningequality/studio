@@ -1871,3 +1871,379 @@ class FixExerciseExtraFieldsTestCase(StudioTestCase):
             extra_fields["options"]["completion_criteria"],
             kind=content_kinds.EXERCISE,
         )
+
+
+class UnitCopyExtraFieldsTestCase(StudioTestCase):
+    def setUp(self):
+        super(UnitCopyExtraFieldsTestCase, self).setUpBase()
+        self.target_channel = testdata.channel()
+
+    # ------------------------------------------------------------------ #
+    # helpers
+    # ------------------------------------------------------------------ #
+
+    def _make_unit_extra_fields(self, lesson_ids):
+        """Return a full extra_fields dict for a UNIT topic."""
+        lo_id = "a" * 32
+        assessment_id = "b" * 32
+        options = {
+            "modality": modalities.UNIT,
+            "completion_criteria": {
+                "model": "mastery",
+                "threshold": {
+                    "mastery_model": "pre_post_test",
+                    "pre_post_test": {
+                        "assessment_item_ids": [assessment_id],
+                        "version_a_item_ids": [assessment_id],
+                        "version_b_item_ids": [assessment_id],
+                    },
+                },
+            },
+            "learning_objectives": [{"id": lo_id, "text": "Learn something"}],
+            "assessment_objectives": {assessment_id: [lo_id]},
+            "lesson_objectives": {lesson_id: [lo_id] for lesson_id in lesson_ids},
+        }
+        return {"options": options}
+
+    def _make_course_unit_lessons(self, num_lessons=2):
+        """
+        Build: channel.main_tree > course > unit > [lesson_1, lesson_2, ...]
+        Returns (course, unit, lessons).
+        unit.extra_fields is set after lesson nodes are created so it can reference their PKs.
+        """
+        course = ContentNode.objects.create(
+            title="Course",
+            kind_id=content_kinds.TOPIC,
+            parent=self.channel.main_tree,
+            extra_fields={"options": {"modality": modalities.COURSE}},
+        )
+        unit = ContentNode.objects.create(
+            title="Unit",
+            kind_id=content_kinds.TOPIC,
+            parent=course,
+        )
+        lessons = []
+        for i in range(num_lessons):
+            lesson = ContentNode.objects.create(
+                title="Lesson {}".format(i + 1),
+                kind_id=content_kinds.TOPIC,
+                parent=unit,
+                extra_fields={"options": {"modality": modalities.LESSON}},
+            )
+            lessons.append(lesson)
+
+        unit.extra_fields = self._make_unit_extra_fields(
+            lesson_ids=[lesson.id for lesson in lessons],
+        )
+        unit.save()
+        return course, unit, lessons
+
+    # ------------------------------------------------------------------ #
+    # deep-copy integration tests
+    # ------------------------------------------------------------------ #
+
+    def test_deep_copy_unit_remaps_lesson_objectives(self):
+        """Deep copy: lesson_objectives keys point at cloned lessons with correct LO values."""
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=2)
+        source_lesson_objectives = unit.extra_fields["options"]["lesson_objectives"]
+        course.copy_to(self.target_channel.main_tree, batch_size=10000)
+
+        copied_course = self.target_channel.main_tree.get_children().last()
+        copied_unit = copied_course.get_children().first()
+        copied_lessons = list(copied_unit.get_children().order_by("lft"))
+
+        copied_unit.refresh_from_db()
+        lesson_objectives = copied_unit.extra_fields["options"]["lesson_objectives"]
+
+        for original_lesson, copied_lesson in zip(lessons, copied_lessons):
+            self.assertIn(
+                copied_lesson.id,
+                lesson_objectives,
+                "Cloned lesson PK not found in lesson_objectives",
+            )
+            self.assertEqual(
+                lesson_objectives[copied_lesson.id],
+                source_lesson_objectives[original_lesson.id],
+            )
+        for original_lesson in lessons:
+            self.assertNotIn(
+                original_lesson.id,
+                lesson_objectives,
+                "Original lesson PK still present in lesson_objectives",
+            )
+
+    def test_deep_copy_non_unit_extra_fields_unchanged(self):
+        """Deep copy: extra_fields on Lesson and Course topics is copied verbatim."""
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=1)
+        course.copy_to(self.target_channel.main_tree, batch_size=10000)
+
+        copied_course = self.target_channel.main_tree.get_children().last()
+        copied_course.refresh_from_db()
+        copied_unit = copied_course.get_children().first()
+        copied_lesson = copied_unit.get_children().first()
+        copied_lesson.refresh_from_db()
+
+        self.assertEqual(copied_course.extra_fields, course.extra_fields)
+        self.assertEqual(copied_lesson.extra_fields, lessons[0].extra_fields)
+
+    # ------------------------------------------------------------------ #
+    # shallow-copy integration tests
+    # ------------------------------------------------------------------ #
+
+    def test_shallow_copy_unit_remaps_lesson_objectives(self):
+        """Shallow copy: lesson_objectives keys point at cloned lessons with correct LO values."""
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=2)
+        source_lesson_objectives = unit.extra_fields["options"]["lesson_objectives"]
+        course.copy_to(self.target_channel.main_tree, batch_size=1)
+
+        copied_course = self.target_channel.main_tree.get_children().last()
+        copied_unit = copied_course.get_children().first()
+        copied_lessons = list(copied_unit.get_children().order_by("lft"))
+
+        copied_unit.refresh_from_db()
+        lesson_objectives = copied_unit.extra_fields["options"]["lesson_objectives"]
+
+        for original_lesson, copied_lesson in zip(lessons, copied_lessons):
+            self.assertIn(copied_lesson.id, lesson_objectives)
+            self.assertEqual(
+                lesson_objectives[copied_lesson.id],
+                source_lesson_objectives[original_lesson.id],
+            )
+        for original_lesson in lessons:
+            self.assertNotIn(original_lesson.id, lesson_objectives)
+
+    def test_shallow_copy_non_unit_extra_fields_unchanged(self):
+        """Shallow copy: extra_fields on Lesson and Course topics is copied verbatim."""
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=1)
+        course.copy_to(self.target_channel.main_tree, batch_size=1)
+
+        copied_course = self.target_channel.main_tree.get_children().last()
+        copied_course.refresh_from_db()
+        copied_unit = copied_course.get_children().first()
+        copied_lesson = copied_unit.get_children().first()
+        copied_lesson.refresh_from_db()
+
+        self.assertEqual(copied_course.extra_fields, course.extra_fields)
+        self.assertEqual(copied_lesson.extra_fields, lessons[0].extra_fields)
+
+    # ------------------------------------------------------------------ #
+    # excluded_descendants masking tests
+    # ------------------------------------------------------------------ #
+
+    def test_excluded_lesson_entry_dropped_from_unit_deep(self):
+        """
+        Deep copy: when a lesson is excluded, its entry is dropped from
+        the cloned Unit's lesson_objectives.
+        """
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=2)
+        excluded_lesson = lessons[0]
+        kept_lesson = lessons[1]
+        source_lesson_objectives = unit.extra_fields["options"]["lesson_objectives"]
+
+        course.copy_to(
+            self.target_channel.main_tree,
+            batch_size=10000,
+            excluded_descendants={excluded_lesson.node_id: True},
+        )
+
+        copied_course = self.target_channel.main_tree.get_children().last()
+        copied_unit = copied_course.get_children().first()
+        copied_unit.refresh_from_db()
+        lesson_objectives = copied_unit.extra_fields["options"]["lesson_objectives"]
+
+        self.assertNotIn(excluded_lesson.id, lesson_objectives)
+        copied_kept = copied_unit.get_children().first()
+        self.assertIn(copied_kept.id, lesson_objectives)
+        self.assertEqual(
+            lesson_objectives[copied_kept.id],
+            source_lesson_objectives[kept_lesson.id],
+        )
+        self.assertEqual(len(lesson_objectives), 1)
+
+    def test_excluded_lesson_entry_dropped_from_unit_shallow(self):
+        """
+        Shallow copy: same behaviour as deep copy when a lesson is excluded.
+        """
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=2)
+        excluded_lesson = lessons[0]
+        kept_lesson = lessons[1]
+        source_lesson_objectives = unit.extra_fields["options"]["lesson_objectives"]
+
+        course.copy_to(
+            self.target_channel.main_tree,
+            batch_size=1,
+            excluded_descendants={excluded_lesson.node_id: True},
+        )
+
+        copied_course = self.target_channel.main_tree.get_children().last()
+        copied_unit = copied_course.get_children().first()
+        copied_unit.refresh_from_db()
+        lesson_objectives = copied_unit.extra_fields["options"]["lesson_objectives"]
+
+        self.assertNotIn(excluded_lesson.id, lesson_objectives)
+        copied_kept = copied_unit.get_children().first()
+        self.assertIn(copied_kept.id, lesson_objectives)
+        self.assertEqual(
+            lesson_objectives[copied_kept.id],
+            source_lesson_objectives[kept_lesson.id],
+        )
+        self.assertEqual(len(lesson_objectives), 1)
+
+    def test_excluded_unit_not_remapped(self):
+        """
+        Deep copy: when the Unit itself is excluded from a Course copy, the Unit is
+        absent from the clone and no remap runs (no error, Course copy succeeds).
+        """
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=2)
+
+        course.copy_to(
+            self.target_channel.main_tree,
+            batch_size=10000,
+            excluded_descendants={unit.node_id: True},
+        )
+
+        copied_course = self.target_channel.main_tree.get_children().last()
+        self.assertEqual(copied_course.get_children().count(), 0)
+
+    def test_excluded_resource_inside_lesson_preserves_lesson_entry(self):
+        """
+        Deep copy: when a resource inside a lesson is excluded (not the lesson
+        itself), the lesson's entry in lesson_objectives is preserved with the
+        cloned lesson's PK.
+        """
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=1)
+        lesson = lessons[0]
+        source_lesson_objectives = unit.extra_fields["options"]["lesson_objectives"]
+
+        license_obj = License.objects.filter(
+            copyright_holder_required=False, is_custom=False
+        ).first()
+        resource = ContentNode.objects.create(
+            title="Video",
+            kind_id=content_kinds.VIDEO,
+            parent=lesson,
+            license=license_obj,
+        )
+
+        course.copy_to(
+            self.target_channel.main_tree,
+            batch_size=10000,
+            excluded_descendants={resource.node_id: True},
+        )
+
+        copied_course = self.target_channel.main_tree.get_children().last()
+        copied_unit = copied_course.get_children().first()
+        copied_unit.refresh_from_db()
+        lesson_objectives = copied_unit.extra_fields["options"]["lesson_objectives"]
+
+        copied_lesson = copied_unit.get_children().first()
+        self.assertIn(copied_lesson.id, lesson_objectives)
+        self.assertNotIn(lesson.id, lesson_objectives)
+        self.assertEqual(
+            lesson_objectives[copied_lesson.id],
+            source_lesson_objectives[lesson.id],
+        )
+        self.assertEqual(len(lesson_objectives), 1)
+
+    def test_excluded_resource_inside_lesson_preserves_lesson_entry_shallow(self):
+        """
+        Shallow copy: when a resource inside a lesson is excluded (not the lesson
+        itself), the lesson's entry in lesson_objectives is preserved with the
+        cloned lesson's PK.
+        """
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=1)
+        lesson = lessons[0]
+        source_lesson_objectives = unit.extra_fields["options"]["lesson_objectives"]
+
+        license_obj = License.objects.filter(
+            copyright_holder_required=False, is_custom=False
+        ).first()
+        resource = ContentNode.objects.create(
+            title="Video",
+            kind_id=content_kinds.VIDEO,
+            parent=lesson,
+            license=license_obj,
+        )
+
+        course.copy_to(
+            self.target_channel.main_tree,
+            batch_size=1,
+            excluded_descendants={resource.node_id: True},
+        )
+
+        copied_course = self.target_channel.main_tree.get_children().last()
+        copied_unit = copied_course.get_children().first()
+        copied_unit.refresh_from_db()
+        lesson_objectives = copied_unit.extra_fields["options"]["lesson_objectives"]
+
+        copied_lesson = copied_unit.get_children().first()
+        self.assertIn(copied_lesson.id, lesson_objectives)
+        self.assertNotIn(lesson.id, lesson_objectives)
+        self.assertEqual(
+            lesson_objectives[copied_lesson.id],
+            source_lesson_objectives[lesson.id],
+        )
+        self.assertEqual(len(lesson_objectives), 1)
+
+    # ------------------------------------------------------------------ #
+    # regression and stability tests
+    # ------------------------------------------------------------------ #
+
+    def test_assessment_objectives_unchanged_after_copy(self):
+        """
+        assessment_objectives keys (assessment_ids) are not node PKs and must
+        be preserved verbatim on the cloned Unit.
+        """
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=1)
+        source_assessment_objectives = unit.extra_fields["options"][
+            "assessment_objectives"
+        ]
+
+        course.copy_to(self.target_channel.main_tree, batch_size=10000)
+
+        copied_course = self.target_channel.main_tree.get_children().last()
+        copied_unit = copied_course.get_children().first()
+        copied_unit.refresh_from_db()
+
+        self.assertEqual(
+            copied_unit.extra_fields["options"]["assessment_objectives"],
+            source_assessment_objectives,
+        )
+
+    def test_learning_objectives_list_unchanged_after_copy(self):
+        """
+        learning_objectives list (LO IDs, not node IDs) is preserved verbatim
+        on the cloned Unit.
+        """
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=1)
+        source_lo_list = unit.extra_fields["options"]["learning_objectives"]
+
+        course.copy_to(self.target_channel.main_tree, batch_size=10000)
+
+        copied_course = self.target_channel.main_tree.get_children().last()
+        copied_unit = copied_course.get_children().first()
+        copied_unit.refresh_from_db()
+
+        self.assertEqual(
+            copied_unit.extra_fields["options"]["learning_objectives"],
+            source_lo_list,
+        )
+
+    def test_completion_criteria_unchanged_after_copy(self):
+        """
+        completion_criteria (containing assessment_item_ids) is preserved
+        verbatim on the cloned Unit — assessment_ids are not node PKs.
+        """
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=1)
+        source_cc = unit.extra_fields["options"]["completion_criteria"]
+
+        course.copy_to(self.target_channel.main_tree, batch_size=10000)
+
+        copied_course = self.target_channel.main_tree.get_children().last()
+        copied_unit = copied_course.get_children().first()
+        copied_unit.refresh_from_db()
+
+        self.assertEqual(
+            copied_unit.extra_fields["options"]["completion_criteria"],
+            source_cc,
+        )
