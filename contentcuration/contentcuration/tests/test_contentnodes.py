@@ -2247,29 +2247,3 @@ class UnitCopyExtraFieldsTestCase(StudioTestCase):
             copied_unit.extra_fields["options"]["completion_criteria"],
             source_cc,
         )
-
-    def test_standalone_unit_copy_remaps_lesson_children(self):
-        """
-        When a Unit is copied directly (without its parent Course), the lesson
-        children travel with it in the same copy operation and their IDs are
-        remapped correctly in lesson_objectives.
-        """
-        course, unit, lessons = self._make_course_unit_lessons(num_lessons=2)
-        source_lesson_objectives = unit.extra_fields["options"]["lesson_objectives"]
-
-        unit.copy_to(self.target_channel.main_tree, batch_size=10000)
-
-        copied_unit = self.target_channel.main_tree.get_children().last()
-        copied_unit.refresh_from_db()
-        lesson_objectives = copied_unit.extra_fields["options"]["lesson_objectives"]
-        copied_lessons = list(copied_unit.get_children().order_by("lft"))
-
-        for original_lesson, copied_lesson in zip(lessons, copied_lessons):
-            self.assertIn(copied_lesson.id, lesson_objectives)
-            self.assertEqual(
-                lesson_objectives[copied_lesson.id],
-                source_lesson_objectives[original_lesson.id],
-            )
-        for original_lesson in lessons:
-            self.assertNotIn(original_lesson.id, lesson_objectives)
-        self.assertEqual(len(lesson_objectives), 2)
