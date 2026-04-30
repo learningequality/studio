@@ -2,6 +2,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from django.core.management import call_command
+from le_utils.constants import content_kinds
 
 from contentcuration.management.commands.fix_missing_import_sources import (
     LicensingFixesLookup,
@@ -116,6 +117,31 @@ class CommandTestCase(StudioTestCase):
         self.assertEqual(self.copied_node.license_id, original_license_id)
         self.assertEqual(self.copied_node.license_description, "Nothing")
         self.assertEqual(self.copied_node.copyright_holder, "Nothing")
+
+    def test_handle__skips_topic_nodes_with_missing_source(self):
+        self.original_node.delete()
+        self.copied_node.refresh_from_db()
+        self.copied_node.kind_id = content_kinds.TOPIC
+        self.copied_node.license = None
+        self.copied_node.license_description = ""
+        self.copied_node.copyright_holder = ""
+        self.copied_node.save()
+
+        with patch(
+            "contentcuration.management.commands.fix_missing_import_sources.LicensingFixesLookup"
+        ) as lookup_cls:
+            lookup = lookup_cls.return_value
+            lookup.get_info.return_value = (5, "", "Khan Academy")
+
+            call_command("fix_missing_import_sources")
+
+        lookup.get_info.assert_not_called()
+
+        self.copied_node.refresh_from_db()
+        self.assertIsNone(self.copied_node.license_id)
+        self.assertEqual(self.copied_node.kind_id, content_kinds.TOPIC)
+        self.assertEqual(self.copied_node.license_description, "")
+        self.assertEqual(self.copied_node.copyright_holder, "")
 
 
 class LicensingFixesLookupTestCase(StudioTestCase):

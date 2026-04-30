@@ -14,6 +14,7 @@ from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models.expressions import F
 from django_cte import With
+from le_utils.constants import content_kinds
 
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
@@ -215,6 +216,7 @@ class Command(BaseCommand):
                 public_channel_name=public_cte.col.name,
                 public_channel_deleted=public_cte.col.deleted,
             )
+            .exclude(kind=content_kinds.TOPIC)
             .filter(
                 Q(public_channel_deleted=True)
                 | ~Exists(
