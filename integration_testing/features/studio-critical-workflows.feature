@@ -425,6 +425,34 @@ Feature: Kolibri Studio critical workflows
 			And I can see the size of each resource types
 			And I can see the *Request more space* section
 
+	Scenario: Upgrade storage
+		When I look at the *Settings > Storage* page
+		Then I see the *Upgrade storage now* form
+			And I see a *Purchase additional storage at $15/GB per year* text
+			And I see a *Storage (GB)* field with default value of 10
+			And I see an enabled *Upgrade now* button
+		When I enter a value in the *Storage (GB)* field
+		Then I see that the price per year value is updated correctly
+		When I click the *Upgrade now* button
+		Then I am redirected to an external checkout page
+		When I complete the checkout with test card 4242 4242 4242 4242
+			And I go back to *Settings > Storage*
+		Then I see that the size of my storage is increased with the value of the purchased storage
+			And I see an info text *Storage subscription active*
+			And I see additional info about the size of storage included in my subscription and when it will renew automatically
+			And I see a *Manage subscription* link
+
+	Scenario: Cancel an active storage subscription
+		Given I have an active storage subscription
+		When I click the *Manage subscription* link
+		Then I see a page with all the details of my current subscription
+			And I see a *Cancel subscription* button
+		When I click the *Cancel subscription* button
+			And I confirm the cancellation
+		Then I am brought back to the *Settings > Storage* page
+			And I see a confirmation that the subscription is cancelled
+			And I see a message indicating when the subscription will expire and that the storage will be removed after that
+
 	Scenario: Submit more space request
 		Given I am signed-in to Kolibri Studio
 		When I fill in all the space request text fields
