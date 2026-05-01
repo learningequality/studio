@@ -198,6 +198,9 @@
       "node-sass",
       "unrs-resolver",
       "vue-demi"
-    ]
+    ],
+    "overrides": {
+      "kolibri-design-system": "github:nucleogenesis/kolibri-design-system-1#studio/5258-rte--dynamic-width/klistwithoverflow-wrap-fix"
+    }
   }
 }
