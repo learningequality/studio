@@ -62,7 +62,7 @@ Feature: Submit a channel to the Community Library
 			And I click the *Submit to Community Library* option
 		Then I see the *Submit to Community Library* side panel
 			And I see the status changed to *Needs changes*
-			And I see the following text: *Your previously submitted version needs changes. Make sure you have addressed all comments before resubmitting.* 
+			And I see the following text: *Your previously submitted version needs changes. Make sure you have addressed all comments before resubmitting.*
 			And I see the title and version of the channel
 			And I see the licensing section and info for the criteria for submitting to the Community Library
 			And I see a disabled *Countries* drop-down list
@@ -96,7 +96,7 @@ Feature: Submit a channel to the Community Library
 		Then I see a *Channel status is changing* snackbar message
 			And after a moment I see a *Submission approved* snackbar message
 		When I navigate to the *Community Library* page
-		Then I can see that the channel is shown among the other Community Library channels 
+		Then I can see that the channel is shown among the other Community Library channels
 
 	Scenario: Incompatible licenses detected.
 		Given TODO
