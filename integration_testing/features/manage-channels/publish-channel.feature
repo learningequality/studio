@@ -3,7 +3,7 @@ Feature: Publish a channel
 	Background:
 		Given I am signed in to Studio
 			And I am at the channel editor page for a channel created by me
-			And the there are unpublished resources
+			And there are unpublished resources
 
 	Scenario: Publish a channel
 		When I click the *Publish* button
