@@ -89,7 +89,7 @@ django-registration==3.4
     # via -r requirements.in
 django-s3-storage==0.15.0
     # via -r requirements.in
-django-webpack-loader==0.7.0
+django-webpack-loader==3.2.3
     # via -r requirements.in
 djangorestframework==3.15.1
     # via -r requirements.in
