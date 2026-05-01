@@ -446,3 +446,27 @@ class CRUDTestCase(StudioAPITestCase):
             ).exists()
         )
         self.assertTrue(models.Change.objects.filter(channel=self.channel).exists())
+
+    def test_accept_invitation_by_non_invitee_is_forbidden(self):
+        invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
+
+        # self.user is a channel editor, not the invited user
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("invitation-accept", kwargs={"pk": invitation.id})
+        )
+        self.assertEqual(response.status_code, 403, response.content)
+        invitation.refresh_from_db()
+        self.assertFalse(invitation.accepted)
+
+    def test_decline_invitation_by_non_invitee_is_forbidden(self):
+        invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
+
+        # self.user is a channel editor, not the invited user
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("invitation-decline", kwargs={"pk": invitation.id})
+        )
+        self.assertEqual(response.status_code, 403, response.content)
+        invitation.refresh_from_db()
+        self.assertFalse(invitation.declined)
