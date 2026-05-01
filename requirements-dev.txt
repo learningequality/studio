@@ -63,7 +63,7 @@ pytest==9.0.3
     #   -r requirements-dev.in
     #   pytest-django
     #   pytest-timeout
-pytest-django==4.11.1
+pytest-django==4.12.0
     # via -r requirements-dev.in
 pytest-timeout==2.4.0
     # via -r requirements-dev.in
