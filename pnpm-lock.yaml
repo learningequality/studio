@@ -206,7 +206,7 @@ importers:
         version: https://codeload.github.com/learningequality/aphrodite/tar.gz/fdc8d7be8912a5cf17f74ff10f124013c52c3e32
       autoprefixer:
         specifier: ^10.4.19
-        version: 10.4.21(postcss@8.5.6)
+        version: 10.4.21(postcss@8.5.10)
       babel-core:
         specifier: 7.0.0-bridge.0
         version: 7.0.0-bridge.0(@babel/core@7.29.0)
@@ -275,13 +275,13 @@ importers:
         version: 3.1.0
       kolibri-build:
         specifier: 1.0.0
-        version: 1.0.0(babel-core@7.0.0-bridge.0(@babel/core@7.29.0))(ejs@3.1.10)(file-loader@6.2.0(webpack@5.104.1))(postcss@8.5.6)(typescript@5.8.3)(vue-template-compiler@2.7.16)(webpack@5.104.1)
+        version: 1.0.0(babel-core@7.0.0-bridge.0(@babel/core@7.29.0))(ejs@3.1.10)(file-loader@6.2.0(webpack@5.104.1))(postcss@8.5.10)(typescript@5.8.3)(vue-template-compiler@2.7.16)(webpack@5.104.1)
       kolibri-format:
         specifier: 1.0.1
-        version: 1.0.1(@testing-library/dom@9.3.4)(eslint-import-resolver-webpack@0.13.10)(jest@30.3.0(@types/node@25.5.2))(postcss@8.5.6)(typescript@5.8.3)
+        version: 1.0.1(@testing-library/dom@9.3.4)(eslint-import-resolver-webpack@0.13.10)(jest@30.3.0(@types/node@25.5.2))(postcss@8.5.10)(typescript@5.8.3)
       kolibri-i18n:
         specifier: 1.0.0
-        version: 1.0.0(@testing-library/dom@9.3.4)(babel-core@7.0.0-bridge.0(@babel/core@7.29.0))(ejs@3.1.10)(eslint-import-resolver-webpack@0.13.10)(file-loader@6.2.0(webpack@5.104.1))(jest@30.3.0(@types/node@25.5.2))(postcss@8.5.6)(typescript@5.8.3)(vue-template-compiler@2.7.16)(webpack@5.104.1)
+        version: 1.0.0(@testing-library/dom@9.3.4)(babel-core@7.0.0-bridge.0(@babel/core@7.29.0))(ejs@3.1.10)(eslint-import-resolver-webpack@0.13.10)(file-loader@6.2.0(webpack@5.104.1))(jest@30.3.0(@types/node@25.5.2))(postcss@8.5.10)(typescript@5.8.3)(vue-template-compiler@2.7.16)(webpack@5.104.1)
       mini-css-extract-plugin:
         specifier: ^2.9.4
         version: 2.9.4(webpack@5.104.1)
@@ -296,16 +296,16 @@ importers:
         version: 1.8.0
       postcss-less:
         specifier: ^6.0.0
-        version: 6.0.0(postcss@8.5.6)
+        version: 6.0.0(postcss@8.5.10)
       postcss-loader:
         specifier: ^8.1.1
-        version: 8.1.1(postcss@8.5.6)(typescript@5.8.3)(webpack@5.104.1)
+        version: 8.1.1(postcss@8.5.10)(typescript@5.8.3)(webpack@5.104.1)
       postcss-sass:
         specifier: ^0.5.0
         version: 0.5.0
       postcss-scss:
         specifier: ^4.0.9
-        version: 4.0.9(postcss@8.5.6)
+        version: 4.0.9(postcss@8.5.10)
       sass-loader:
         specifier: 16.0.5
         version: 16.0.5(node-sass@9.0.0)(webpack@5.104.1)
@@ -326,10 +326,10 @@ importers:
         version: 4.6.0(stylelint@15.11.0(typescript@5.8.3))
       stylelint-config-recommended-scss:
         specifier: 14.1.0
-        version: 14.1.0(postcss@8.5.6)(stylelint@15.11.0(typescript@5.8.3))
+        version: 14.1.0(postcss@8.5.10)(stylelint@15.11.0(typescript@5.8.3))
       stylelint-config-sass-guidelines:
-        specifier: 11.1.0
-        version: 11.1.0(postcss@8.5.6)(stylelint@15.11.0(typescript@5.8.3))
+        specifier: 13.0.0
+        version: 13.0.0(postcss@8.5.10)(stylelint@15.11.0(typescript@5.8.3))
       stylelint-config-standard:
         specifier: 34.0.0
         version: 34.0.0(stylelint@15.11.0(typescript@5.8.3))
@@ -1042,6 +1042,12 @@ packages:
     peerDependencies:
       '@csstools/css-tokenizer': ^3.0.4
 
+  '@csstools/css-parser-algorithms@4.0.0':
+    resolution: {integrity: sha512-+B87qS7fIG3L5h3qwJ/IFbjoVoOe/bpOdh9hAjXbvx0o8ImEmUsGXN0inFOnk2ChCFgqkkGFQ+TpM5rbhkKe4w==}
+    engines: {node: '>=20.19.0'}
+    peerDependencies:
+      '@csstools/css-tokenizer': ^4.0.0
+
   '@csstools/css-tokenizer@2.4.1':
     resolution: {integrity: sha512-eQ9DIktFJBhGjioABJRtUucoWR2mwllurfnM8LuNGAqX3ViZXaUchqk+1s7jjtkFiT9ySdACsFEA3etErkALUg==}
     engines: {node: ^14 || ^16 || >=18}
@@ -1050,12 +1056,23 @@ packages:
     resolution: {integrity: sha512-Vd/9EVDiu6PPJt9yAh6roZP6El1xHrdvIVGjyBsHR0RYwNHgL7FJPyIIW4fANJNG6FtyZfvlRPpFI4ZM/lubvw==}
     engines: {node: '>=18'}
 
+  '@csstools/css-tokenizer@4.0.0':
+    resolution: {integrity: sha512-QxULHAm7cNu72w97JUNCBFODFaXpbDg+dP8b/oWFAZ2MTRppA3U00Y2L1HqaS4J6yBqxwa/Y3nMBaxVKbB/NsA==}
+    engines: {node: '>=20.19.0'}
+
   '@csstools/media-query-list-parser@2.1.13':
     resolution: {integrity: sha512-XaHr+16KRU9Gf8XLi3q8kDlI18d5vzKSKCY510Vrtc9iNR0NJzbY9hhTmwhzYZj/ZwGL4VmB3TA9hJW0Um2qFA==}
     engines: {node: ^14 || ^16 || >=18}
     peerDependencies:
       '@csstools/css-parser-algorithms': ^2.7.1
       '@csstools/css-tokenizer': ^2.4.1
+
+  '@csstools/media-query-list-parser@5.0.0':
+    resolution: {integrity: sha512-T9lXmZOfnam3eMERPsszjY5NK0jX8RmThmmm99FZ8b7z8yMaFZWKwLWGZuTwdO3ddRY5fy13GmmEYZXB4I98Eg==}
+    engines: {node: '>=20.19.0'}
+    peerDependencies:
+      '@csstools/css-parser-algorithms': ^4.0.0
+      '@csstools/css-tokenizer': ^4.0.0
 
   '@csstools/selector-specificity@3.1.1':
     resolution: {integrity: sha512-a7cxGcJ2wIlMFLlh8z2ONm+715QkPHiyJcxwQlKOz/03GPw1COpfhcmC9wm4xlZfp//jWHNNMwzjtqHXVWU9KA==}
@@ -1486,6 +1503,12 @@ packages:
 
   '@sinonjs/fake-timers@15.3.0':
     resolution: {integrity: sha512-m2xozxSfCIxjDdvbhIWazlP2i2aha/iUmbl94alpsIbd3iLTfeXgfBVbwyWogB6l++istyGZqamgA/EcqYf+Bg==}
+
+  '@stylistic/stylelint-plugin@5.1.0':
+    resolution: {integrity: sha512-TFvKCbJUEWUYCD+rDv45qhnStO6nRtbBngaCblS2JGh8c95S3jJi3fIotfF6EDo4IVM15UPa65WP+kp6GNvXRA==}
+    engines: {node: '>=20.19.0'}
+    peerDependencies:
+      stylelint: ^17.6.0
 
   '@surma/rollup-plugin-off-main-thread@2.2.3':
     resolution: {integrity: sha512-lR8q/9W7hZpMWweNiAKU7NQerBnzQQLvi8qnTDU/fxItPhtZVMbPV3lbCwjhIlNBe9Bbr5V+KHshvWmVSG9cxQ==}
@@ -3226,6 +3249,10 @@ packages:
 
   css-tree@3.1.0:
     resolution: {integrity: sha512-0eW44TGN5SQXU1mWSkKwFstI/22X2bG1nYzZTYMAWjylYURhse752YgbE4Cx46AC+bAvI+/dYTPRk1LqSUnu6w==}
+    engines: {node: ^10 || ^12.20.0 || ^14.13.0 || >=15.0.0}
+
+  css-tree@3.2.1:
+    resolution: {integrity: sha512-X7sjQzceUhu1u7Y/ylrRZFU2FS6LRiFVp6rKLPg23y3x3c3DOKAwuXGDp+PAGjh6CSnCjYeAul8pcT8bAl+lSA==}
     engines: {node: ^10 || ^12.20.0 || ^14.13.0 || >=15.0.0}
 
   css-what@6.2.2:
@@ -5042,6 +5069,9 @@ packages:
   known-css-properties@0.36.0:
     resolution: {integrity: sha512-A+9jP+IUmuQsNdsLdcg6Yt7voiMF/D4K83ew0OpJtpu+l34ef7LaohWV0Rc6KNvzw6ZDizkqfyB5JznZnzuKQA==}
 
+  known-css-properties@0.37.0:
+    resolution: {integrity: sha512-JCDrsP4Z1Sb9JwG0aJ8Eo2r7k4Ou5MwmThS/6lcIe1ICyb7UBJKGRIUUdqc2ASdE/42lgz6zFUnzAIhtXnBVrQ==}
+
   kolibri-build@1.0.0:
     resolution: {integrity: sha512-CjMFxPwpMKWzc70hqal11HBP0s92qtTkVAh6zXO4N6O2vnV9t4grOYPuXuGGQyxjAUglnGFo5zDOXq20lXBaYw==}
     engines: {node: '>= 20.19.0', npm: '>= 8'}
@@ -5277,6 +5307,12 @@ packages:
 
   mdn-data@2.22.0:
     resolution: {integrity: sha512-IwcXqjPl4kgZbQH1WLb97/Pjt7XwPDSHnXsjENPhwx68bBf/Dw1/PwM8paXnFq974V1d8qP4o9ViVQqZuPAlCw==}
+
+  mdn-data@2.27.1:
+    resolution: {integrity: sha512-9Yubnt3e8A0OKwxYSXyhLymGW4sCufcLG6VdiDdUGVkPhpqLxlvP5vl1983gQjJl3tqbrM731mjaZaP68AgosQ==}
+
+  mdn-data@2.28.0:
+    resolution: {integrity: sha512-uy9AS1yt+wW5eUEefgE3lOpqPghanUttycV0GXKbiXyBjwvbeE8XPj4u1C+voRfz7dEjwU4NDHTMfZ/s/JtZrQ==}
 
   mdurl@2.0.0:
     resolution: {integrity: sha512-Lf+9+2r+Tdp5wXDXC4PcIBjTDtq4UKjCPMQhKIuzpJNW0b96kVqSwW0bT7FhRSfmAiFYgP+SCRvdrDozfh0U5w==}
@@ -6098,6 +6134,10 @@ packages:
     resolution: {integrity: sha512-8sLjZwK0R+JlxlYcTuVnyT2v+htpdrjDOKuMcOVdYjt52Lh8hWRYpxBPoKx/Zg+bcjc3wx6fmQevMmUztS/ccA==}
     engines: {node: '>=4'}
 
+  postcss-selector-parser@7.1.1:
+    resolution: {integrity: sha512-orRsuYpJVw8LdAwqqLykBj9ecS5/cRHlI5+nvTo8LcCKmzDmqVORXtOIYEEQuL9D4BxtA1lm5isAqzQZCoQ6Eg==}
+    engines: {node: '>=4'}
+
   postcss-sorting@8.0.2:
     resolution: {integrity: sha512-M9dkSrmU00t/jK7rF6BZSZauA5MAaBW4i5EnJXspMwt4iqTh/L9j6fgMnbElEOfyRyfLfVbIHj/R52zHzAPe1Q==}
     peerDependencies:
@@ -6121,6 +6161,10 @@ packages:
   postcss@7.0.39:
     resolution: {integrity: sha512-yioayjNbHn6z1/Bywyb2Y4s3yvDAeXGOyxqD+LnVOinq6Mdmd++SW2wUNVzavyyHxd6+DxzWGIuosg6P1Rj8uA==}
     engines: {node: '>=6.0.0'}
+
+  postcss@8.5.10:
+    resolution: {integrity: sha512-pMMHxBOZKFU6HgAZ4eyGnwXF/EvPGGqUr0MnZ5+99485wwW41kW91A4LOGxSHhgugZmSChL5AlElNdwlNgcnLQ==}
+    engines: {node: ^10 || ^12 || >=14}
 
   postcss@8.5.6:
     resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
@@ -7031,6 +7075,13 @@ packages:
       postcss: ^8.4.21
       stylelint: ^16.1.0
 
+  stylelint-config-sass-guidelines@13.0.0:
+    resolution: {integrity: sha512-YJT0X8h0OqyEo7ys3EycV5CGWt2rrkEYE8sHSN6sFnrxbXvHiy4KJFHDOWfyb3eWR6wtYpM+yIyvR2Plc8+pCg==}
+    engines: {node: '>=20.19.0'}
+    peerDependencies:
+      postcss: ^8.4.21
+      stylelint: ^17.1.0
+
   stylelint-config-standard@34.0.0:
     resolution: {integrity: sha512-u0VSZnVyW9VSryBG2LSO+OQTjN7zF9XJaAJRX/4EwkmU0R2jYwmBSN10acqZisDitS0CLiEiGjX7+Hrq8TAhfQ==}
     engines: {node: ^14.13.1 || >=16.0.0}
@@ -7058,6 +7109,18 @@ packages:
     engines: {node: '>=18.12.0'}
     peerDependencies:
       stylelint: ^16.0.2
+
+  stylelint-scss@6.14.0:
+    resolution: {integrity: sha512-ZKmHMZolxeuYsnB+PCYrTpFce0/QWX9i9gh0hPXzp73WjuIMqUpzdQaBCrKoLWh6XtCFSaNDErkMPqdjy1/8aA==}
+    engines: {node: '>=18.12.0'}
+    peerDependencies:
+      stylelint: ^16.8.2
+
+  stylelint-scss@7.0.0:
+    resolution: {integrity: sha512-H88kCC+6Vtzj76NsC8rv6x/LW8slBzIbyeSjsKVlS+4qaEJoDrcJR4L+8JdrR2ORdTscrBzYWiiT2jq6leYR1Q==}
+    engines: {node: '>=20.19.0'}
+    peerDependencies:
+      stylelint: ^16.8.2 || ^17.0.0
 
   stylelint@15.11.0:
     resolution: {integrity: sha512-78O4c6IswZ9TzpcIiQJIN49K3qNoXTM8zEJzhaTE/xRTCZswaovSEVIa/uwbOltZrk16X4jAxjaOhzz/hTm1Kw==}
@@ -7479,11 +7542,12 @@ packages:
 
   uuid@3.4.0:
     resolution: {integrity: sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A==}
-    deprecated: Please upgrade  to version 7 or higher.  Older versions may use Math.random() in certain circumstances, which is known to be problematic.  See https://v8.dev/blog/math-random for details.
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
+    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   v8-to-istanbul@9.3.0:
@@ -8766,14 +8830,25 @@ snapshots:
     dependencies:
       '@csstools/css-tokenizer': 3.0.4
 
+  '@csstools/css-parser-algorithms@4.0.0(@csstools/css-tokenizer@4.0.0)':
+    dependencies:
+      '@csstools/css-tokenizer': 4.0.0
+
   '@csstools/css-tokenizer@2.4.1': {}
 
   '@csstools/css-tokenizer@3.0.4': {}
+
+  '@csstools/css-tokenizer@4.0.0': {}
 
   '@csstools/media-query-list-parser@2.1.13(@csstools/css-parser-algorithms@2.7.1(@csstools/css-tokenizer@2.4.1))(@csstools/css-tokenizer@2.4.1)':
     dependencies:
       '@csstools/css-parser-algorithms': 2.7.1(@csstools/css-tokenizer@2.4.1)
       '@csstools/css-tokenizer': 2.4.1
+
+  '@csstools/media-query-list-parser@5.0.0(@csstools/css-parser-algorithms@4.0.0(@csstools/css-tokenizer@4.0.0))(@csstools/css-tokenizer@4.0.0)':
+    dependencies:
+      '@csstools/css-parser-algorithms': 4.0.0(@csstools/css-tokenizer@4.0.0)
+      '@csstools/css-tokenizer': 4.0.0
 
   '@csstools/selector-specificity@3.1.1(postcss-selector-parser@6.1.2)':
     dependencies:
@@ -9363,6 +9438,17 @@ snapshots:
   '@sinonjs/fake-timers@15.3.0':
     dependencies:
       '@sinonjs/commons': 3.0.1
+
+  '@stylistic/stylelint-plugin@5.1.0(stylelint@15.11.0(typescript@5.8.3))':
+    dependencies:
+      '@csstools/css-parser-algorithms': 4.0.0(@csstools/css-tokenizer@4.0.0)
+      '@csstools/css-tokenizer': 4.0.0
+      '@csstools/media-query-list-parser': 5.0.0(@csstools/css-parser-algorithms@4.0.0(@csstools/css-tokenizer@4.0.0))(@csstools/css-tokenizer@4.0.0)
+      postcss: 8.5.10
+      postcss-selector-parser: 7.1.1
+      postcss-value-parser: 4.2.0
+      style-search: 0.1.0
+      stylelint: 15.11.0(typescript@5.8.3)
 
   '@surma/rollup-plugin-off-main-thread@2.2.3':
     dependencies:
@@ -10446,23 +10532,23 @@ snapshots:
 
   atob@2.1.2: {}
 
-  autoprefixer@10.4.21(postcss@8.5.6):
+  autoprefixer@10.4.21(postcss@8.5.10):
     dependencies:
       browserslist: 4.25.1
       caniuse-lite: 1.0.30001726
       fraction.js: 4.3.7
       normalize-range: 0.1.2
       picocolors: 1.1.1
-      postcss: 8.5.6
+      postcss: 8.5.10
       postcss-value-parser: 4.2.0
 
-  autoprefixer@10.4.23(postcss@8.5.6):
+  autoprefixer@10.4.23(postcss@8.5.10):
     dependencies:
       browserslist: 4.28.1
       caniuse-lite: 1.0.30001769
       fraction.js: 5.3.4
       picocolors: 1.1.1
-      postcss: 8.5.6
+      postcss: 8.5.10
       postcss-value-parser: 4.2.0
 
   autosize@3.0.21: {}
@@ -11256,6 +11342,11 @@ snapshots:
   css-tree@3.1.0:
     dependencies:
       mdn-data: 2.12.2
+      source-map-js: 1.2.1
+
+  css-tree@3.2.1:
+    dependencies:
+      mdn-data: 2.27.1
       source-map-js: 1.2.1
 
   css-what@6.2.2: {}
@@ -13508,13 +13599,15 @@ snapshots:
 
   known-css-properties@0.36.0: {}
 
-  kolibri-build@1.0.0(babel-core@7.0.0-bridge.0(@babel/core@7.29.0))(ejs@3.1.10)(file-loader@6.2.0(webpack@5.104.1))(postcss@8.5.6)(typescript@5.8.3)(vue-template-compiler@2.7.16)(webpack@5.104.1):
+  known-css-properties@0.37.0: {}
+
+  kolibri-build@1.0.0(babel-core@7.0.0-bridge.0(@babel/core@7.29.0))(ejs@3.1.10)(file-loader@6.2.0(webpack@5.104.1))(postcss@8.5.10)(typescript@5.8.3)(vue-template-compiler@2.7.16)(webpack@5.104.1):
     dependencies:
       '@babel/core': 7.29.0
       '@babel/plugin-syntax-import-assertions': 7.28.6(@babel/core@7.29.0)
       '@babel/plugin-transform-runtime': 7.29.0(@babel/core@7.29.0)
       '@babel/preset-env': 7.29.2(@babel/core@7.29.0)
-      autoprefixer: 10.4.23(postcss@8.5.6)
+      autoprefixer: 10.4.23(postcss@8.5.10)
       babel-loader: 10.1.1(@babel/core@7.29.0)(webpack@5.104.1)
       browserslist-config-kolibri: 0.18.0
       commander: 14.0.3
@@ -13528,7 +13621,7 @@ snapshots:
       lodash: 4.18.1
       mini-css-extract-plugin: 2.9.4(webpack@5.104.1)
       node-sass: 9.0.0
-      postcss-loader: 8.2.1(postcss@8.5.6)(typescript@5.8.3)(webpack@5.104.1)
+      postcss-loader: 8.2.1(postcss@8.5.10)(typescript@5.8.3)(webpack@5.104.1)
       process: 0.11.10
       rtlcss: 4.3.0
       sass-loader: 16.0.7(node-sass@9.0.0)(webpack@5.104.1)
@@ -13642,7 +13735,7 @@ snapshots:
       vue2-teleport: 1.1.4
       xstate: 4.38.3
 
-  kolibri-format@1.0.1(@testing-library/dom@9.3.4)(eslint-import-resolver-webpack@0.13.10)(jest@30.3.0(@types/node@25.5.2))(postcss@8.5.6)(typescript@5.8.3):
+  kolibri-format@1.0.1(@testing-library/dom@9.3.4)(eslint-import-resolver-webpack@0.13.10)(jest@30.3.0(@types/node@25.5.2))(postcss@8.5.10)(typescript@5.8.3):
     dependencies:
       chalk: 4.1.2
       commander: 13.1.0
@@ -13656,16 +13749,16 @@ snapshots:
       fast-glob: 3.3.3
       kolibri-logging: 1.0.0
       postcss-html: 1.8.0
-      postcss-less: 6.0.0(postcss@8.5.6)
+      postcss-less: 6.0.0(postcss@8.5.10)
       postcss-sass: 0.5.0
-      postcss-scss: 4.0.9(postcss@8.5.6)
+      postcss-scss: 4.0.9(postcss@8.5.10)
       prettier: 3.6.2
       stylelint: 15.11.0(typescript@5.8.3)
       stylelint-config-html: 1.1.0(postcss-html@1.8.0)(stylelint@15.11.0(typescript@5.8.3))
       stylelint-config-prettier: 9.0.5(stylelint@15.11.0(typescript@5.8.3))
       stylelint-config-recess-order: 4.6.0(stylelint@15.11.0(typescript@5.8.3))
-      stylelint-config-recommended-scss: 14.1.0(postcss@8.5.6)(stylelint@15.11.0(typescript@5.8.3))
-      stylelint-config-sass-guidelines: 11.1.0(postcss@8.5.6)(stylelint@15.11.0(typescript@5.8.3))
+      stylelint-config-recommended-scss: 14.1.0(postcss@8.5.10)(stylelint@15.11.0(typescript@5.8.3))
+      stylelint-config-sass-guidelines: 11.1.0(postcss@8.5.10)(stylelint@15.11.0(typescript@5.8.3))
       stylelint-config-standard: 34.0.0(stylelint@15.11.0(typescript@5.8.3))
       stylelint-csstree-validator: 3.0.0(stylelint@15.11.0(typescript@5.8.3))
       stylelint-scss: 5.3.2(stylelint@15.11.0(typescript@5.8.3))
@@ -13684,7 +13777,7 @@ snapshots:
     dependencies:
       fast-glob: 3.3.3
 
-  kolibri-i18n@1.0.0(@testing-library/dom@9.3.4)(babel-core@7.0.0-bridge.0(@babel/core@7.29.0))(ejs@3.1.10)(eslint-import-resolver-webpack@0.13.10)(file-loader@6.2.0(webpack@5.104.1))(jest@30.3.0(@types/node@25.5.2))(postcss@8.5.6)(typescript@5.8.3)(vue-template-compiler@2.7.16)(webpack@5.104.1):
+  kolibri-i18n@1.0.0(@testing-library/dom@9.3.4)(babel-core@7.0.0-bridge.0(@babel/core@7.29.0))(ejs@3.1.10)(eslint-import-resolver-webpack@0.13.10)(file-loader@6.2.0(webpack@5.104.1))(jest@30.3.0(@types/node@25.5.2))(postcss@8.5.10)(typescript@5.8.3)(vue-template-compiler@2.7.16)(webpack@5.104.1):
     dependencies:
       ast-traverse: 0.1.1
       cli-table: 0.3.11
@@ -13694,8 +13787,8 @@ snapshots:
       del: 6.1.1
       enhanced-resolve: 5.20.1
       ini: 6.0.0
-      kolibri-build: 1.0.0(babel-core@7.0.0-bridge.0(@babel/core@7.29.0))(ejs@3.1.10)(file-loader@6.2.0(webpack@5.104.1))(postcss@8.5.6)(typescript@5.8.3)(vue-template-compiler@2.7.16)(webpack@5.104.1)
-      kolibri-format: 1.0.1(@testing-library/dom@9.3.4)(eslint-import-resolver-webpack@0.13.10)(jest@30.3.0(@types/node@25.5.2))(postcss@8.5.6)(typescript@5.8.3)
+      kolibri-build: 1.0.0(babel-core@7.0.0-bridge.0(@babel/core@7.29.0))(ejs@3.1.10)(file-loader@6.2.0(webpack@5.104.1))(postcss@8.5.10)(typescript@5.8.3)(vue-template-compiler@2.7.16)(webpack@5.104.1)
+      kolibri-format: 1.0.1(@testing-library/dom@9.3.4)(eslint-import-resolver-webpack@0.13.10)(jest@30.3.0(@types/node@25.5.2))(postcss@8.5.10)(typescript@5.8.3)
       kolibri-glob: 1.0.0
       kolibri-logging: 1.0.0
       lodash: 4.18.1
@@ -14016,6 +14109,10 @@ snapshots:
   mdn-data@2.12.2: {}
 
   mdn-data@2.22.0: {}
+
+  mdn-data@2.27.1: {}
+
+  mdn-data@2.28.0: {}
 
   mdurl@2.0.0: {}
 
@@ -14595,7 +14692,7 @@ snapshots:
   postcss-calc@10.1.1(postcss@8.5.6):
     dependencies:
       postcss: 8.5.6
-      postcss-selector-parser: 7.1.0
+      postcss-selector-parser: 7.1.1
       postcss-value-parser: 4.2.0
 
   postcss-colormin@7.0.3(postcss@8.5.6):
@@ -14615,7 +14712,7 @@ snapshots:
   postcss-discard-comments@7.0.4(postcss@8.5.6):
     dependencies:
       postcss: 8.5.6
-      postcss-selector-parser: 7.1.0
+      postcss-selector-parser: 7.1.1
 
   postcss-discard-duplicates@7.0.2(postcss@8.5.6):
     dependencies:
@@ -14636,26 +14733,26 @@ snapshots:
       postcss: 8.5.6
       postcss-safe-parser: 6.0.0(postcss@8.5.6)
 
-  postcss-less@6.0.0(postcss@8.5.6):
+  postcss-less@6.0.0(postcss@8.5.10):
     dependencies:
-      postcss: 8.5.6
+      postcss: 8.5.10
 
-  postcss-loader@8.1.1(postcss@8.5.6)(typescript@5.8.3)(webpack@5.104.1):
+  postcss-loader@8.1.1(postcss@8.5.10)(typescript@5.8.3)(webpack@5.104.1):
     dependencies:
       cosmiconfig: 9.0.0(typescript@5.8.3)
       jiti: 1.21.7
-      postcss: 8.5.6
+      postcss: 8.5.10
       semver: 7.7.2
     optionalDependencies:
       webpack: 5.104.1(webpack-cli@6.0.1)
     transitivePeerDependencies:
       - typescript
 
-  postcss-loader@8.2.1(postcss@8.5.6)(typescript@5.8.3)(webpack@5.104.1):
+  postcss-loader@8.2.1(postcss@8.5.10)(typescript@5.8.3)(webpack@5.104.1):
     dependencies:
       cosmiconfig: 9.0.0(typescript@5.8.3)
       jiti: 2.6.1
-      postcss: 8.5.6
+      postcss: 8.5.10
       semver: 7.7.4
     optionalDependencies:
       webpack: 5.104.1(webpack-cli@6.0.1)
@@ -14676,7 +14773,7 @@ snapshots:
       caniuse-api: 3.0.0
       cssnano-utils: 5.0.1(postcss@8.5.6)
       postcss: 8.5.6
-      postcss-selector-parser: 7.1.0
+      postcss-selector-parser: 7.1.1
 
   postcss-minify-font-values@7.0.1(postcss@8.5.6):
     dependencies:
@@ -14701,7 +14798,7 @@ snapshots:
     dependencies:
       cssesc: 3.0.0
       postcss: 8.5.6
-      postcss-selector-parser: 7.1.0
+      postcss-selector-parser: 7.1.1
 
   postcss-modules-extract-imports@3.1.0(postcss@8.5.6):
     dependencies:
@@ -14797,9 +14894,9 @@ snapshots:
       gonzales-pe: 4.3.0
       postcss: 8.5.6
 
-  postcss-scss@4.0.9(postcss@8.5.6):
+  postcss-scss@4.0.9(postcss@8.5.10):
     dependencies:
-      postcss: 8.5.6
+      postcss: 8.5.10
 
   postcss-selector-parser@6.1.2:
     dependencies:
@@ -14807,6 +14904,11 @@ snapshots:
       util-deprecate: 1.0.2
 
   postcss-selector-parser@7.1.0:
+    dependencies:
+      cssesc: 3.0.0
+      util-deprecate: 1.0.2
+
+  postcss-selector-parser@7.1.1:
     dependencies:
       cssesc: 3.0.0
       util-deprecate: 1.0.2
@@ -14824,7 +14926,7 @@ snapshots:
   postcss-unique-selectors@7.0.4(postcss@8.5.6):
     dependencies:
       postcss: 8.5.6
-      postcss-selector-parser: 7.1.0
+      postcss-selector-parser: 7.1.1
 
   postcss-value-parser@4.2.0: {}
 
@@ -14832,6 +14934,12 @@ snapshots:
     dependencies:
       picocolors: 0.2.1
       source-map: 0.6.1
+
+  postcss@8.5.10:
+    dependencies:
+      nanoid: 3.3.11
+      picocolors: 1.1.1
+      source-map-js: 1.2.1
 
   postcss@8.5.6:
     dependencies:
@@ -15825,7 +15933,7 @@ snapshots:
     dependencies:
       browserslist: 4.28.2
       postcss: 8.5.6
-      postcss-selector-parser: 7.1.0
+      postcss-selector-parser: 7.1.1
 
   stylelint-config-html@1.1.0(postcss-html@1.8.0)(stylelint@15.11.0(typescript@5.8.3)):
     dependencies:
@@ -15841,14 +15949,14 @@ snapshots:
       stylelint: 15.11.0(typescript@5.8.3)
       stylelint-order: 6.0.4(stylelint@15.11.0(typescript@5.8.3))
 
-  stylelint-config-recommended-scss@14.1.0(postcss@8.5.6)(stylelint@15.11.0(typescript@5.8.3)):
+  stylelint-config-recommended-scss@14.1.0(postcss@8.5.10)(stylelint@15.11.0(typescript@5.8.3)):
     dependencies:
-      postcss-scss: 4.0.9(postcss@8.5.6)
+      postcss-scss: 4.0.9(postcss@8.5.10)
       stylelint: 15.11.0(typescript@5.8.3)
       stylelint-config-recommended: 14.0.1(stylelint@15.11.0(typescript@5.8.3))
       stylelint-scss: 6.12.1(stylelint@15.11.0(typescript@5.8.3))
     optionalDependencies:
-      postcss: 8.5.6
+      postcss: 8.5.10
 
   stylelint-config-recommended@13.0.0(stylelint@15.11.0(typescript@5.8.3)):
     dependencies:
@@ -15858,12 +15966,20 @@ snapshots:
     dependencies:
       stylelint: 15.11.0(typescript@5.8.3)
 
-  stylelint-config-sass-guidelines@11.1.0(postcss@8.5.6)(stylelint@15.11.0(typescript@5.8.3)):
+  stylelint-config-sass-guidelines@11.1.0(postcss@8.5.10)(stylelint@15.11.0(typescript@5.8.3)):
     dependencies:
-      postcss: 8.5.6
-      postcss-scss: 4.0.9(postcss@8.5.6)
+      postcss: 8.5.10
+      postcss-scss: 4.0.9(postcss@8.5.10)
       stylelint: 15.11.0(typescript@5.8.3)
-      stylelint-scss: 6.12.1(stylelint@15.11.0(typescript@5.8.3))
+      stylelint-scss: 6.14.0(stylelint@15.11.0(typescript@5.8.3))
+
+  stylelint-config-sass-guidelines@13.0.0(postcss@8.5.10)(stylelint@15.11.0(typescript@5.8.3)):
+    dependencies:
+      '@stylistic/stylelint-plugin': 5.1.0(stylelint@15.11.0(typescript@5.8.3))
+      postcss: 8.5.10
+      postcss-scss: 4.0.9(postcss@8.5.10)
+      stylelint: 15.11.0(typescript@5.8.3)
+      stylelint-scss: 7.0.0(stylelint@15.11.0(typescript@5.8.3))
 
   stylelint-config-standard@34.0.0(stylelint@15.11.0(typescript@5.8.3)):
     dependencies:
@@ -15899,6 +16015,30 @@ snapshots:
       postcss-media-query-parser: 0.2.3
       postcss-resolve-nested-selector: 0.1.6
       postcss-selector-parser: 7.1.0
+      postcss-value-parser: 4.2.0
+      stylelint: 15.11.0(typescript@5.8.3)
+
+  stylelint-scss@6.14.0(stylelint@15.11.0(typescript@5.8.3)):
+    dependencies:
+      css-tree: 3.2.1
+      is-plain-object: 5.0.0
+      known-css-properties: 0.37.0
+      mdn-data: 2.28.0
+      postcss-media-query-parser: 0.2.3
+      postcss-resolve-nested-selector: 0.1.6
+      postcss-selector-parser: 7.1.1
+      postcss-value-parser: 4.2.0
+      stylelint: 15.11.0(typescript@5.8.3)
+
+  stylelint-scss@7.0.0(stylelint@15.11.0(typescript@5.8.3)):
+    dependencies:
+      css-tree: 3.2.1
+      is-plain-object: 5.0.0
+      known-css-properties: 0.37.0
+      mdn-data: 2.28.0
+      postcss-media-query-parser: 0.2.3
+      postcss-resolve-nested-selector: 0.1.6
+      postcss-selector-parser: 7.1.1
       postcss-value-parser: 4.2.0
       stylelint: 15.11.0(typescript@5.8.3)
 
