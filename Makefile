@@ -39,7 +39,7 @@ migrate:
 # 4) Remove the management command from this `deploy-migrate` recipe
 # 5) Repeat!
 deploy-migrate:
-	echo "Nothing to do here!"
+	python contentcuration/manage.py ensure_versioned_databases_exist & python contentcuration/manage.py create_channel_versions & wait
 
 contentnodegc:
 	python contentcuration/manage.py garbage_collect
