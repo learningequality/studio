@@ -9,6 +9,15 @@ import storeFactory from 'shared/vuex/baseStore';
 import DraggablePlugin from 'shared/vuex/draggablePlugin';
 import { RouteNames as ChannelRouteNames } from 'frontend/channelList/constants';
 
+// Mock useKResponsiveWindow composable
+jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+
+const useKResponsiveWindow =
+  require('kolibri-design-system/lib/composables/useKResponsiveWindow').default;
+
 const localVue = createLocalVue();
 localVue.use(Vuex);
 localVue.use(VueRouter);
@@ -55,8 +64,18 @@ const initWrapper = ({
   getters = GETTERS,
   actions = ACTIONS,
   channelOverrides = {},
-  breakpoint = { smAndUp: true },
+  windowIsSmall = false,
 } = {}) => {
+  // Mock the responsive window composable - return plain values
+  useKResponsiveWindow.mockReturnValue({
+    windowIsSmall,
+    windowIsMedium: false,
+    windowIsLarge: !windowIsSmall,
+    windowHeight: 768,
+    windowWidth: windowIsSmall ? 360 : 1024,
+    windowBreakpoint: windowIsSmall ? 0 : 4,
+  });
+
   const router = new VueRouter({
     routes: [
       {
@@ -113,13 +132,6 @@ const initWrapper = ({
     propsData: {
       loading: false,
     },
-    mocks: {
-      $vuetify: {
-        breakpoint: {
-          smAndUp: breakpoint.smAndUp,
-        },
-      },
-    },
     stubs: {
       ToolBar: {
         template: '<div><slot /><slot name="extension" /></div>',
@@ -127,46 +139,23 @@ const initWrapper = ({
       MainNavigationDrawer: true,
       PublishSidePanel: true,
       SubmitToCommunityLibrarySidePanel: true,
+      ResubmitToCommunityLibraryModal: true,
       ProgressModal: true,
       ChannelTokenModal: true,
+      RemoveChannelModal: true,
       SyncResourcesModal: true,
       Clipboard: true,
       OfflineText: true,
       ContentNodeIcon: true,
       DraggablePlaceholder: true,
-      MessageDialog: true,
       SavingIndicator: true,
       QuickEditModal: true,
-      BaseMenu: {
-        name: 'BaseMenu',
-        template:
-          '<div><slot name="activator" :on="{}" /><div class="menu-content"><slot /></div></div>',
-      },
     },
   });
 };
 
 const getShareButton = wrapper => {
-  const allBaseMenus = wrapper.findAllComponents({ name: 'BaseMenu' });
-  for (let i = 0; i < allBaseMenus.length; i++) {
-    const baseMenu = allBaseMenus.at(i);
-    const shareButton = baseMenu.find('.share-button');
-    if (shareButton.exists()) {
-      return shareButton;
-    }
-  }
-  return { exists: () => false };
-};
-const getShareMenuItems = wrapper => {
-  const allBaseMenus = wrapper.findAllComponents({ name: 'BaseMenu' });
-  for (let i = 0; i < allBaseMenus.length; i++) {
-    const baseMenu = allBaseMenus.at(i);
-    const shareButton = baseMenu.find('.share-button');
-    if (shareButton.exists()) {
-      return baseMenu.findAll('.v-list__tile');
-    }
-  }
-  return { length: 0, wrappers: [] };
+  return wrapper.find('.share-button');
 };
 
 describe('TreeViewBase', () => {
@@ -292,7 +281,7 @@ describe('TreeViewBase', () => {
       getters.currentChannel.canManage = () => true;
       getters.currentChannel.currentChannel = () => createChannel({ published: true });
 
-      const wrapper = initWrapper({ getters, breakpoint: { smAndUp: false } });
+      const wrapper = initWrapper({ getters, windowIsSmall: true });
       expect(getShareButton(wrapper).exists()).toBe(false);
     });
   });
@@ -305,11 +294,10 @@ describe('TreeViewBase', () => {
         createChannel({ published: true, public: false });
 
       const wrapper = initWrapper({ getters });
-      const menuItems = getShareMenuItems(wrapper);
-      const submitItem = menuItems.wrappers.find(item =>
-        item.text().includes('Submit to Community Library'),
-      );
+      const menuOptions = wrapper.vm.shareMenuOptions;
+      const submitItem = menuOptions.find(item => item.value === 'submit-to-library');
       expect(submitItem).toBeDefined();
+      expect(submitItem.label).toContain('Submit to Community Library');
     });
 
     it('hides submit to community library when user cannot submit', () => {
@@ -319,10 +307,8 @@ describe('TreeViewBase', () => {
         createChannel({ published: true, public: false });
 
       const wrapper = initWrapper({ getters });
-      const menuItems = getShareMenuItems(wrapper);
-      const submitItem = menuItems.wrappers.find(item =>
-        item.text().includes('Submit to Community Library'),
-      );
+      const menuOptions = wrapper.vm.shareMenuOptions;
+      const submitItem = menuOptions.find(item => item.value === 'submit-to-library');
       expect(submitItem).toBeUndefined();
     });
 
@@ -333,10 +319,8 @@ describe('TreeViewBase', () => {
         createChannel({ published: true, public: true });
 
       const wrapper = initWrapper({ getters });
-      const menuItems = getShareMenuItems(wrapper);
-      const submitItem = menuItems.wrappers.find(item =>
-        item.text().includes('Submit to Community Library'),
-      );
+      const menuOptions = wrapper.vm.shareMenuOptions;
+      const submitItem = menuOptions.find(item => item.value === 'submit-to-library');
       expect(submitItem).toBeUndefined();
     });
 
@@ -346,11 +330,10 @@ describe('TreeViewBase', () => {
       getters.currentChannel.currentChannel = () => createChannel({ published: false });
 
       const wrapper = initWrapper({ getters });
-      const menuItems = getShareMenuItems(wrapper);
-      const inviteItem = menuItems.wrappers.find(item =>
-        item.text().includes('Invite collaborators'),
-      );
+      const menuOptions = wrapper.vm.shareMenuOptions;
+      const inviteItem = menuOptions.find(item => item.value === 'invite-collaborators');
       expect(inviteItem).toBeDefined();
+      expect(inviteItem.label).toContain('Invite collaborators');
     });
 
     it('hides invite collaborators when user cannot manage', () => {
@@ -359,10 +342,8 @@ describe('TreeViewBase', () => {
       getters.currentChannel.currentChannel = () => createChannel({ published: true });
 
       const wrapper = initWrapper({ getters });
-      const menuItems = getShareMenuItems(wrapper);
-      const inviteItem = menuItems.wrappers.find(item =>
-        item.text().includes('Invite collaborators'),
-      );
+      const menuOptions = wrapper.vm.shareMenuOptions;
+      const inviteItem = menuOptions.find(item => item.value === 'invite-collaborators');
       expect(inviteItem).toBeUndefined();
     });
 
@@ -372,9 +353,10 @@ describe('TreeViewBase', () => {
       getters.currentChannel.currentChannel = () => createChannel({ published: true });
 
       const wrapper = initWrapper({ getters });
-      const menuItems = getShareMenuItems(wrapper);
-      const tokenItem = menuItems.wrappers.find(item => item.text().includes('Share token'));
+      const menuOptions = wrapper.vm.shareMenuOptions;
+      const tokenItem = menuOptions.find(item => item.value === 'share-token');
       expect(tokenItem).toBeDefined();
+      expect(tokenItem.label).toContain('Share token');
     });
 
     it('hides share token when channel is not published', () => {
@@ -383,8 +365,8 @@ describe('TreeViewBase', () => {
       getters.currentChannel.currentChannel = () => createChannel({ published: false });
 
       const wrapper = initWrapper({ getters });
-      const menuItems = getShareMenuItems(wrapper);
-      const tokenItem = menuItems.wrappers.find(item => item.text().includes('Share token'));
+      const menuOptions = wrapper.vm.shareMenuOptions;
+      const tokenItem = menuOptions.find(item => item.value === 'share-token');
       expect(tokenItem).toBeUndefined();
     });
 
@@ -395,15 +377,11 @@ describe('TreeViewBase', () => {
         createChannel({ published: true, public: false });
 
       const wrapper = initWrapper({ getters });
-      const menuItems = getShareMenuItems(wrapper);
-      expect(menuItems.length).toBe(3);
-      expect(
-        menuItems.wrappers.some(item => item.text().includes('Submit to Community Library')),
-      ).toBe(true);
-      expect(menuItems.wrappers.some(item => item.text().includes('Invite collaborators'))).toBe(
-        true,
-      );
-      expect(menuItems.wrappers.some(item => item.text().includes('Share token'))).toBe(true);
+      const menuOptions = wrapper.vm.shareMenuOptions;
+      expect(menuOptions.length).toBe(3);
+      expect(menuOptions.some(item => item.value === 'submit-to-library')).toBe(true);
+      expect(menuOptions.some(item => item.value === 'invite-collaborators')).toBe(true);
+      expect(menuOptions.some(item => item.value === 'share-token')).toBe(true);
     });
   });
 });
