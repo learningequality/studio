@@ -52,9 +52,7 @@ Vue.use(Vuetify, {
 });
 // Register kolibri-design-system plugin
 Vue.use(KThemePlugin);
-
-// Register analytics plugin with plain array
-Vue.use(AnalyticsPlugin, { dataLayer: [] });
+Vue.use(AnalyticsPlugin);
 
 // Register global components
 Vue.component('ActionLink', ActionLink);
