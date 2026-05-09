@@ -4,12 +4,19 @@ import userEvent from '@testing-library/user-event';
 import { AssessmentItemToolbarActions } from '../../constants';
 import HintsEditor from './HintsEditor';
 
-configure({
-  testIdAttribute: 'data-test',
-});
-
-const MockTipTapEditor = {
+// Mock the TipTapEditor component
+jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue', () => ({
   name: 'TipTapEditor',
+  template: `
+    <div>
+      <textarea
+        v-model="value"
+        :aria-label="mode === 'edit' ? 'Hint text' : 'Hint text (read only)'"
+        :readonly="mode !== 'edit'"
+        @input="$emit('update', $event.target.value)"
+      />
+    </div>
+  `,
   props: {
     value: {
       type: String,
@@ -20,27 +27,15 @@ const MockTipTapEditor = {
       default: 'view',
     },
   },
-  template: `
-    <div>
-      <p v-if="value">{{ value }}</p>
-      <button
-        v-if="mode === 'edit'"
-        type="button"
-        aria-label="Update hint text"
-        @click="$emit('update', 'Updated hint')"
-      >
-        Update hint text
-      </button>
-    </div>
-  `,
-};
+}));
+
+configure({
+  testIdAttribute: 'data-test',
+});
 
 const renderComponent = props => {
   return render(HintsEditor, {
     routes: [],
-    stubs: {
-      TipTapEditor: MockTipTapEditor,
-    },
     props: {
       hints: [],
       ...props,
@@ -62,7 +57,7 @@ describe('HintsEditor', () => {
   it('smoke test', () => {
     renderComponent();
 
-    expect(screen.getByRole('button', { name: 'New hint' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: HintsEditor.$trs.newHintBtnLabel })).toBeInTheDocument();
   });
 
   it('shows an empty-state message when a question has no hints', () => {
@@ -70,7 +65,7 @@ describe('HintsEditor', () => {
       hints: [],
     });
 
-    expect(screen.getByText('Question has no hints')).toBeInTheDocument();
+    expect(screen.getByText(HintsEditor.$trs.noHintsPlaceholder)).toBeInTheDocument();
   });
 
   it('shows hints in the same order as the question', () => {
