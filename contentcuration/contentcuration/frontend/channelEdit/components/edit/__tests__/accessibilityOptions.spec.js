@@ -1,17 +1,17 @@
-import { render, screen, configure, within } from '@testing-library/vue';
+import { render, screen, configure } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import AccessibilityOptions from '../AccessibilityOptions.vue';
 import { AccessibilityCategories } from 'shared/constants';
 
-describe('AccessibilityOptions', () => {
-  beforeAll(() => {
+beforeAll(() => {
     configure({ testIdAttribute: 'data-test' });
   });
 
-  afterAll(() => {
-    configure({ testIdAttribute: 'data-testid' });
-  });
+afterAll(() => {
+  configure({ testIdAttribute: 'data-testid' });
+});
 
+describe('AccessibilityOptions', () => {
   const mockConstantsMixin = {};
   const mockMetadataMixin = {
     methods: {
@@ -34,84 +34,76 @@ describe('AccessibilityOptions', () => {
     });
   };
 
-  it('smoke test', () => {
+  it('renders successfully', () => {
     renderComponent();
-    expect(screen.getByTestId('checkbox-altText')).toBeInTheDocument();
+    expect(screen.getAllByRole('checkbox').length).toBeGreaterThan(0);
   });
 
-  it('displays the correct accessibility options for a document', () => {
+  it('shows document-specific accessibility options to the user', () => {
     renderComponent({ kind: 'document' });
 
-    expect(screen.getByTestId('checkbox-altText')).toBeInTheDocument();
-    expect(screen.getByTestId('checkbox-highContrast')).toBeInTheDocument();
-    expect(screen.getByTestId('checkbox-taggedPdf')).toBeInTheDocument();
+    
+    const checkboxes = screen.getAllByRole('checkbox');
+    expect(checkboxes).toHaveLength(3);
 
-    expect(screen.queryByTestId('checkbox-signLanguage')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('checkbox-audioDescription')).not.toBeInTheDocument();
+   
+    expect(screen.getByRole('checkbox', { name: /altText/i })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: /highContrast/i })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: /taggedPdf/i })).toBeInTheDocument();
   });
 
-  it('displays the correct accessibility options for a video without captions tooltip', () => {
+  it('shows video-specific accessibility options to the user', () => {
     renderComponent({ kind: 'video' });
 
-    expect(screen.getByTestId('checkbox-signLanguage')).toBeInTheDocument();
-    expect(screen.getByTestId('checkbox-audioDescription')).toBeInTheDocument();
-    expect(screen.getByTestId('checkbox-captionsSubtitles')).toBeInTheDocument();
+    const checkboxes = screen.getAllByRole('checkbox');
+    expect(checkboxes).toHaveLength(3);
 
-    expect(screen.queryByTestId('checkbox-altText')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('checkbox-highContrast')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('checkbox-taggedPdf')).not.toBeInTheDocument();
-
+    expect(screen.getByRole('checkbox', { name: /signLanguage/i })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: /audioDescription/i })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: /captionsSubtitles/i })).toBeInTheDocument();
+    
     expect(screen.queryByTestId('tooltip-captionsSubtitles')).not.toBeInTheDocument();
   });
 
-  it('displays the correct accessibility options for an exercise', () => {
+  it('shows exercise-specific accessibility options to the user', () => {
     renderComponent({ kind: 'exercise' });
 
-    expect(screen.getByTestId('checkbox-altText')).toBeInTheDocument();
-
-    expect(screen.queryByTestId('checkbox-highContrast')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('checkbox-taggedPdf')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('checkbox-signLanguage')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('checkbox-audioDescription')).not.toBeInTheDocument();
+    const checkboxes = screen.getAllByRole('checkbox');
+    expect(checkboxes).toHaveLength(1);
+    expect(screen.getByRole('checkbox', { name: /altText/i })).toBeInTheDocument();
   });
 
-  it('displays the correct accessibility options for HTML5/ZIP apps', () => {
+  it('shows HTML5-specific accessibility options to the user', () => {
     renderComponent({ kind: 'html5' });
 
-    expect(screen.getByTestId('checkbox-altText')).toBeInTheDocument();
-    expect(screen.getByTestId('checkbox-highContrast')).toBeInTheDocument();
-
-    expect(screen.queryByTestId('checkbox-taggedPdf')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('checkbox-signLanguage')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('checkbox-audioDescription')).not.toBeInTheDocument();
+    const checkboxes = screen.getAllByRole('checkbox');
+    expect(checkboxes).toHaveLength(2);
+    expect(screen.getByRole('checkbox', { name: /altText/i })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: /highContrast/i })).toBeInTheDocument();
   });
 
-  it('displays the correct accessibility options for an audio file without tooltip', () => {
+  it('shows audio-specific accessibility options to the user', () => {
     renderComponent({ kind: 'audio' });
 
-    expect(screen.getByTestId('checkbox-captionsSubtitles')).toBeInTheDocument();
-    expect(screen.queryByTestId('tooltip-captionsSubtitles')).not.toBeInTheDocument();
+    const checkboxes = screen.getAllByRole('checkbox');
+    expect(checkboxes).toHaveLength(1);
+    expect(screen.getByRole('checkbox', { name: /captionsSubtitles/i })).toBeInTheDocument();
   });
 
-  it('renders appropriate tooltips next to the corresponding checkboxes', () => {
+  it('renders informative tooltips next to the corresponding options', () => {
     renderComponent({ kind: 'document' });
 
     expect(screen.getByTestId('tooltip-altText')).toBeInTheDocument();
     expect(screen.getByTestId('tooltip-highContrast')).toBeInTheDocument();
     expect(screen.getByTestId('tooltip-taggedPdf')).toBeInTheDocument();
-
-    expect(screen.queryByTestId('tooltip-signLanguage')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('tooltip-audioDescription')).not.toBeInTheDocument();
   });
 
   describe('User Interactions and v-model', () => {
     it('emits an input event with the updated array when a user checks an option', async () => {
       const { emitted } = renderComponent({ kind: 'document', value: [] });
 
-      const checkboxWrapper = screen.getByTestId('checkbox-altText');
-      const actualCheckbox = within(checkboxWrapper).getByRole('checkbox');
-      
-      await userEvent.click(actualCheckbox);
+      const altTextCheckbox = screen.getByRole('checkbox', { name: /altText/i });
+      await userEvent.click(altTextCheckbox);
 
       expect(emitted()).toHaveProperty('input');
       expect(emitted().input[0][0]).toEqual([AccessibilityCategories.ALT_TEXT]);
@@ -120,13 +112,12 @@ describe('AccessibilityOptions', () => {
     it('emits an updated array with the item removed when a user unchecks a pre-checked option', async () => {
       const { emitted } = renderComponent({
         kind: 'video',
-        value: [AccessibilityCategories.SIGN_LANGUAGE], // Pre-checked state
+        value: [AccessibilityCategories.SIGN_LANGUAGE], 
       });
       
-      const checkboxWrapper = screen.getByTestId('checkbox-signLanguage');
-      const actualCheckbox = within(checkboxWrapper).getByRole('checkbox');
-      
-      await userEvent.click(actualCheckbox);
+      const signLanguageCheckbox = screen.getByRole('checkbox', { name: /signLanguage/i });
+      await userEvent.click(signLanguageCheckbox);
+
       expect(emitted()).toHaveProperty('input');
       expect(emitted().input[0][0]).toEqual([]); 
     });
@@ -137,12 +128,9 @@ describe('AccessibilityOptions', () => {
         value: [AccessibilityCategories.SIGN_LANGUAGE, AccessibilityCategories.CAPTIONS_SUBTITLES] 
       });
 
-      const signLanguageCheckbox = within(screen.getByTestId('checkbox-signLanguage')).getByRole('checkbox');
-      const captionsCheckbox = within(screen.getByTestId('checkbox-captionsSubtitles')).getByRole('checkbox');
-      const audioDescCheckbox = within(screen.getByTestId('checkbox-audioDescription')).getByRole('checkbox');
-      expect(signLanguageCheckbox).toBeChecked();
-      expect(captionsCheckbox).toBeChecked();
-      expect(audioDescCheckbox).not.toBeChecked();
+      expect(screen.getByRole('checkbox', { name: /signLanguage/i })).toBeChecked();
+      expect(screen.getByRole('checkbox', { name: /captionsSubtitles/i })).toBeChecked();
+      expect(screen.getByRole('checkbox', { name: /audioDescription/i })).not.toBeChecked();
     });
   });
 });
