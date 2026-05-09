@@ -4,8 +4,8 @@ import AccessibilityOptions from '../AccessibilityOptions.vue';
 import { AccessibilityCategories } from 'shared/constants';
 
 beforeAll(() => {
-    configure({ testIdAttribute: 'data-test' });
-  });
+  configure({ testIdAttribute: 'data-test' });
+});
 
 afterAll(() => {
   configure({ testIdAttribute: 'data-testid' });
@@ -15,22 +15,22 @@ describe('AccessibilityOptions', () => {
   const mockConstantsMixin = {};
   const mockMetadataMixin = {
     methods: {
-      translateMetadataString: (str) => str,
-    }
+      translateMetadataString: str => str,
+    },
   };
 
   const renderComponent = props => {
     return render(AccessibilityOptions, {
       props: {
         kind: 'document',
-        value: [], 
+        value: [],
         ...props,
       },
       routes: [],
       mixins: [mockConstantsMixin, mockMetadataMixin],
       mocks: {
-        $tr: (key) => key,
-      }
+        $tr: key => key,
+      },
     });
   };
 
@@ -42,11 +42,9 @@ describe('AccessibilityOptions', () => {
   it('shows document-specific accessibility options to the user', () => {
     renderComponent({ kind: 'document' });
 
-    
     const checkboxes = screen.getAllByRole('checkbox');
     expect(checkboxes).toHaveLength(3);
 
-   
     expect(screen.getByRole('checkbox', { name: /altText/i })).toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: /highContrast/i })).toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: /taggedPdf/i })).toBeInTheDocument();
@@ -61,7 +59,7 @@ describe('AccessibilityOptions', () => {
     expect(screen.getByRole('checkbox', { name: /signLanguage/i })).toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: /audioDescription/i })).toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: /captionsSubtitles/i })).toBeInTheDocument();
-    
+
     expect(screen.queryByTestId('tooltip-captionsSubtitles')).not.toBeInTheDocument();
   });
 
@@ -112,20 +110,20 @@ describe('AccessibilityOptions', () => {
     it('emits an updated array with the item removed when a user unchecks a pre-checked option', async () => {
       const { emitted } = renderComponent({
         kind: 'video',
-        value: [AccessibilityCategories.SIGN_LANGUAGE], 
+        value: [AccessibilityCategories.SIGN_LANGUAGE],
       });
-      
+
       const signLanguageCheckbox = screen.getByRole('checkbox', { name: /signLanguage/i });
       await userEvent.click(signLanguageCheckbox);
 
       expect(emitted()).toHaveProperty('input');
-      expect(emitted().input[0][0]).toEqual([]); 
+      expect(emitted().input[0][0]).toEqual([]);
     });
 
     it('renders correctly when accessibility options are pre-checked via v-model', () => {
-      renderComponent({ 
-        kind: 'video', 
-        value: [AccessibilityCategories.SIGN_LANGUAGE, AccessibilityCategories.CAPTIONS_SUBTITLES] 
+      renderComponent({
+        kind: 'video',
+        value: [AccessibilityCategories.SIGN_LANGUAGE, AccessibilityCategories.CAPTIONS_SUBTITLES],
       });
 
       expect(screen.getByRole('checkbox', { name: /signLanguage/i })).toBeChecked();
