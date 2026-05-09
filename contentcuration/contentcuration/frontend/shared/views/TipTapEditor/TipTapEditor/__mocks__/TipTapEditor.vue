@@ -1,4 +1,5 @@
 <template>
+
   <div>
     <p v-if="value">{{ value }}</p>
     <button
@@ -10,20 +11,24 @@
       Update hint text
     </button>
   </div>
+
 </template>
 
+
 <script>
-export default {
-  name: 'TipTapEditor',
-  props: {
-    value: {
-      type: String,
-      default: '',
+
+  export default {
+    name: 'TipTapEditor',
+    props: {
+      value: {
+        type: String,
+        default: '',
+      },
+      mode: {
+        type: String,
+        default: 'view',
+      },
     },
-    mode: {
-      type: String,
-      default: 'view',
-    },
-  },
-};
+  };
+
 </script>

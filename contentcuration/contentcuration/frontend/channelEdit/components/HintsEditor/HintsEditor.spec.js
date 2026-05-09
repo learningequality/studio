@@ -57,7 +57,9 @@ describe('HintsEditor', () => {
   it('smoke test', () => {
     renderComponent();
 
-    expect(screen.getByRole('button', { name: HintsEditor.$trs.newHintBtnLabel })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: HintsEditor.$trs.newHintBtnLabel }),
+    ).toBeInTheDocument();
   });
 
   it('shows an empty-state message when a question has no hints', () => {
