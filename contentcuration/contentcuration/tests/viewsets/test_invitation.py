@@ -446,3 +446,63 @@ class CRUDTestCase(StudioAPITestCase):
             ).exists()
         )
         self.assertTrue(models.Change.objects.filter(channel=self.channel).exists())
+
+    def test_accept_invitation_by_channel_editor_is_forbidden(self):
+        """
+        self.user is a channel editor (not the invited user).
+        filter_edit_queryset allows editors to view the invitation, but
+        _ensure_invitee must prevent them from accepting it (403).
+        """
+        invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("invitation-accept", kwargs={"pk": invitation.id})
+        )
+        self.assertEqual(response.status_code, 403, response.content)
+        invitation.refresh_from_db()
+        self.assertFalse(invitation.accepted)
+
+    def test_decline_invitation_by_channel_editor_is_forbidden(self):
+        """
+        self.user is a channel editor (not the invited user).
+        filter_edit_queryset allows editors to view the invitation, but
+        _ensure_invitee must prevent them from declining it (403).
+        """
+        invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("invitation-decline", kwargs={"pk": invitation.id})
+        )
+        self.assertEqual(response.status_code, 403, response.content)
+        invitation.refresh_from_db()
+        self.assertFalse(invitation.declined)
+
+    def test_accept_invitation_by_unrelated_user_is_not_found(self):
+        """
+        A completely unrelated user (not the invitee, sender, or channel editor)
+        cannot even retrieve the invitation from get_edit_object() — they get 404.
+        """
+        invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
+        unrelated_user = testdata.user("unrelated@example.com")
+        self.client.force_authenticate(user=unrelated_user)
+        response = self.client.post(
+            reverse("invitation-accept", kwargs={"pk": invitation.id})
+        )
+        self.assertEqual(response.status_code, 404, response.content)
+        invitation.refresh_from_db()
+        self.assertFalse(invitation.accepted)
+
+    def test_decline_invitation_by_unrelated_user_is_not_found(self):
+        """
+        A completely unrelated user (not the invitee, sender, or channel editor)
+        cannot even retrieve the invitation from get_edit_object() — they get 404.
+        """
+        invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
+        unrelated_user = testdata.user("unrelated@example.com")
+        self.client.force_authenticate(user=unrelated_user)
+        response = self.client.post(
+            reverse("invitation-decline", kwargs={"pk": invitation.id})
+        )
+        self.assertEqual(response.status_code, 404, response.content)
+        invitation.refresh_from_db()
+        self.assertFalse(invitation.declined)
