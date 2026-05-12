@@ -139,10 +139,6 @@ class InvitationViewSet(ValuesViewset):
         instance.save()
 
     def _ensure_invitee(self, request, invitation):
-        """
-        Raise PermissionDenied unless the requesting user is the invited user
-        (matched by email, case-insensitively) or a site admin.
-        """
         if request.user.is_admin:
             return
         if (request.user.email or "").lower() != (invitation.email or "").lower():
