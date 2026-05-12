@@ -16,13 +16,15 @@
     >
       <span class="studio-navigation-tab-content">
         <slot></slot>
-        <span
-          v-if="showBadge"
-          class="studio-navigation-tab-badge"
-          :style="badgeStyles"
-        >
-          {{ $formatNumber(badgeValue) }}
-        </span>
+        <KTransition kind="component-fade-out-in">
+          <span
+            v-if="showBadge"
+            class="studio-navigation-tab-badge"
+            :style="badgeStyles"
+          >
+            {{ $formatNumber(badgeValue) }}
+          </span>
+        </KTransition>
       </span>
       <span
         v-if="isActive"
