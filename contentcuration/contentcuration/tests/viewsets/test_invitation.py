@@ -492,3 +492,31 @@ class CRUDTestCase(StudioAPITestCase):
         self.assertEqual(response.status_code, 404, response.content)
         invitation.refresh_from_db()
         self.assertFalse(invitation.declined)
+
+    def test_accept_invitation_by_admin_succeeds(self):
+        invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
+        admin_user = testdata.user("admin@example.com")
+        admin_user.is_admin = True
+        admin_user.save()
+
+        self.client.force_authenticate(user=admin_user)
+        response = self.client.post(
+            reverse("invitation-accept", kwargs={"pk": invitation.id})
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        invitation.refresh_from_db()
+        self.assertTrue(invitation.accepted)
+
+    def test_decline_invitation_by_admin_succeeds(self):
+        invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
+        admin_user = testdata.user("admin@example.com")
+        admin_user.is_admin = True
+        admin_user.save()
+
+        self.client.force_authenticate(user=admin_user)
+        response = self.client.post(
+            reverse("invitation-decline", kwargs={"pk": invitation.id})
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        invitation.refresh_from_db()
+        self.assertTrue(invitation.declined)
