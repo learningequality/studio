@@ -93,9 +93,7 @@ describe('HintsEditor', () => {
       ],
     });
 
-    await user.click(
-      screen.getByRole('button', { name: HintsEditor.$trs.newHintBtnLabel }),
-    );
+    await user.click(screen.getByRole('button', { name: HintsEditor.$trs.newHintBtnLabel }));
 
     expect(emitted().update).toHaveLength(1);
     expect(emitted().update[0][0]).toEqual([

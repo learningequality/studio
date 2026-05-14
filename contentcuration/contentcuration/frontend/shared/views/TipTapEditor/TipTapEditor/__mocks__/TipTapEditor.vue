@@ -6,7 +6,7 @@
       v-if="mode === 'edit'"
       :value="value"
       @input="$emit('update', $event.target.value)"
-    />
+    ></textarea>
   </div>
 
 </template>
