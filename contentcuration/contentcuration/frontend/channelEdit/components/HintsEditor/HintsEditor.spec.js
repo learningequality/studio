@@ -4,30 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { AssessmentItemToolbarActions } from '../../constants';
 import HintsEditor from './HintsEditor';
 
-// Mock the TipTapEditor component
-jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue', () => ({
-  name: 'TipTapEditor',
-  template: `
-    <div>
-      <textarea
-        v-model="value"
-        :aria-label="mode === 'edit' ? 'Hint text' : 'Hint text (read only)'"
-        :readonly="mode !== 'edit'"
-        @input="$emit('update', $event.target.value)"
-      />
-    </div>
-  `,
-  props: {
-    value: {
-      type: String,
-      default: '',
-    },
-    mode: {
-      type: String,
-      default: 'view',
-    },
-  },
-}));
+jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue');
 
 configure({
   testIdAttribute: 'data-test',
@@ -49,7 +26,7 @@ const getHintCards = () => {
 
 const clickToolbarAction = async ({ action, hintIdx, user }) => {
   const buttons = screen.getAllByTestId(`toolbarIcon-${action}`);
-  expect(buttons[hintIdx]).toBeDefined();
+  expect(buttons[hintIdx]).toBeInTheDocument();
   await user.click(buttons[hintIdx]);
 };
 
@@ -93,10 +70,14 @@ describe('HintsEditor', () => {
       openHintIdx: 1,
     });
 
-    await user.click(screen.getByRole('button', { name: 'Update hint text' }));
+    const hintCards = getHintCards();
+    const hintTextField = within(hintCards[1]).getByRole('textbox');
 
-    expect(emitted().update).toHaveLength(1);
-    expect(emitted().update[0][0]).toEqual([
+    await user.clear(hintTextField);
+    await user.type(hintTextField, 'Updated hint');
+
+    const updateEvents = emitted().update;
+    expect(updateEvents[updateEvents.length - 1][0]).toEqual([
       { hint: 'First hint', order: 1 },
       { hint: 'Updated hint', order: 2 },
     ]);
@@ -112,7 +93,9 @@ describe('HintsEditor', () => {
       ],
     });
 
-    await user.click(screen.getByRole('button', { name: 'New hint' }));
+    await user.click(
+      screen.getByRole('button', { name: HintsEditor.$trs.newHintBtnLabel }),
+    );
 
     expect(emitted().update).toHaveLength(1);
     expect(emitted().update[0][0]).toEqual([

@@ -2,14 +2,11 @@
 
   <div>
     <p v-if="value">{{ value }}</p>
-    <button
+    <textarea
       v-if="mode === 'edit'"
-      type="button"
-      aria-label="Update hint text"
-      @click="$emit('update', 'Updated hint')"
-    >
-      Update hint text
-    </button>
+      :value="value"
+      @input="$emit('update', $event.target.value)"
+    />
   </div>
 
 </template>
@@ -18,7 +15,7 @@
 <script>
 
   export default {
-    name: 'TipTapEditor',
+    name: 'RichTextEditor',
     props: {
       value: {
         type: String,
