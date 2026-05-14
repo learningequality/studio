@@ -623,7 +623,7 @@
 
   .dropdown-option {
     display: flex;
-    gap: 16px;
+    gap: 32px;
     align-items: center;
     height: 48px;
     padding: 0 16px;
