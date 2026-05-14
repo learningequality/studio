@@ -495,18 +495,13 @@
       channelMenuOptions() {
         const options = [];
 
+        // On small screens, prepend the actions that are hidden from the toolbar
         if (this.windowIsSmall) {
           if (this.canManage) {
             options.push({
               label: this.$tr('publishButton'),
               value: ChannelMenuOptions.PUBLISH,
               disabled: this.disablePublish,
-            });
-          }
-          if (this.currentChannel && this.currentChannel.draft_token) {
-            options.push({
-              label: this.getDraftTokenAction$(),
-              value: ChannelMenuOptions.PREVIEW_DRAFT,
             });
           }
           options.push({
@@ -523,47 +518,27 @@
             }
             options.push(editOption);
           }
-
-          if (this.canSubmitToCommunityLibrary) {
-            options.push({
-              label: this.$tr('submitToCommunityLibrary'),
-              value: ShareMenuOptions.SUBMIT_TO_LIBRARY,
-            });
-          }
-          if (this.canManage) {
-            options.push({
-              label: this.$tr('inviteCollaborators'),
-              value: ShareMenuOptions.INVITE_COLLABORATORS,
-            });
-          }
-          if (this.isPublished) {
-            options.push({
-              label: this.$tr('shareToken'),
-              value: ShareMenuOptions.SHARE_TOKEN,
-            });
-          }
-        } else {
-          // Desktop view - show different options
-          if (this.currentChannel && this.currentChannel.draft_token) {
-            options.push({
-              label: this.getDraftTokenAction$(),
-              value: ChannelMenuOptions.PREVIEW_DRAFT,
-            });
-          }
-          if (this.isPublished) {
-            options.push({
-              label: this.$tr('getToken'),
-              value: ChannelMenuOptions.GET_TOKEN,
-            });
-          }
-          if (this.canManage) {
-            options.push({
-              label: this.$tr('shareChannel'),
-              value: ChannelMenuOptions.SHARE_CHANNEL,
-            });
-          }
         }
 
+        // Common options shown on all screen sizes
+        if (this.currentChannel && this.currentChannel.draft_token) {
+          options.push({
+            label: this.getDraftTokenAction$(),
+            value: ChannelMenuOptions.PREVIEW_DRAFT,
+          });
+        }
+        if (this.isPublished) {
+          options.push({
+            label: this.$tr('getToken'),
+            value: ChannelMenuOptions.GET_TOKEN,
+          });
+        }
+        if (this.canManage) {
+          options.push({
+            label: this.$tr('shareChannel'),
+            value: ChannelMenuOptions.SHARE_CHANNEL,
+          });
+        }
         if (this.canEdit) {
           options.push({
             label: this.$tr('syncChannel'),
