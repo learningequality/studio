@@ -33,8 +33,7 @@
           <KExternalLink
             v-else
             :href="homeLink"
-            class="studio-navigation-logo-link"
-            style="padding-top: 8px"
+            class="nav-logo-link-padding studio-navigation-logo-link"
           >
             <KLogo
               altText="Kolibri Logo with background"
@@ -44,10 +43,7 @@
         </template>
 
         <template #default>
-          <div
-            class="studio-navigation-title-container"
-            style="flex: 1; min-width: 0"
-          >
+          <div class="studio-navigation-title-container">
             <KTextTruncator
               :text="title || $tr('title')"
               :maxLines="1"
@@ -56,10 +52,7 @@
         </template>
 
         <template #actions>
-          <div
-            ref="studioNavigationActions"
-            class="studio-navigation-actions"
-          >
+          <div class="studio-navigation-actions">
             <template v-if="loggedIn">
               <button
                 class="studio-navigation-dropdown-button"
@@ -70,10 +63,10 @@
                   })
                 "
               >
-                <WithNotificationIndicator style="margin: 8px">
+                <WithNotificationIndicator class="nav-user-icon-wrapper">
                   <KIcon
                     icon="person"
-                    style="font-size: 22px"
+                    class="nav-user-icon"
                   />
                 </WithNotificationIndicator>
                 <span class="mx-2 notranslate subheading">
@@ -81,32 +74,30 @@
                 </span>
                 <KIcon
                   icon="dropdown"
-                  style="margin: 8px; margin-top: 0; font-size: 22px"
+                  class="nav-dropdown-icon"
                 />
 
                 <KDropdownMenu
                   :options="userMenuItems"
                   :hasIcons="true"
-                  @select="(item, event) => handleUserMenuSelect(item, event)"
+                  @select="handleUserMenuSelect"
                 >
                   <template #option="{ option }">
-                    <div style="display: flex; align-items: center; height: 48px; padding: 0 16px">
-                      <div style="display: flex; align-items: center; min-width: 56px">
-                        <WithNotificationIndicator v-if="option.value === 'notifications'">
-                          <KIcon
-                            :icon="option.icon"
-                            style="font-size: 20px"
-                          />
-                        </WithNotificationIndicator>
-
+                    <div class="dropdown-option">
+                      <WithNotificationIndicator v-if="option.value === 'notifications'">
                         <KIcon
-                          v-else
                           :icon="option.icon"
-                          style="font-size: 20px"
+                          class="dropdown-option-icon"
                         />
-                      </div>
+                      </WithNotificationIndicator>
 
-                      <span style="font-size: 16px">{{ option.label }}</span>
+                      <KIcon
+                        v-else
+                        :icon="option.icon"
+                        class="dropdown-option-icon"
+                      />
+
+                      <span class="dropdown-option-label">{{ option.label }}</span>
                     </div>
                   </template>
                 </KDropdownMenu>
@@ -125,17 +116,17 @@
               >
                 <KIcon
                   icon="person"
-                  style="margin: 8px; margin-top: 0; font-size: 22px"
+                  class="nav-dropdown-icon"
                 />
                 <KIcon
                   icon="dropdown"
-                  style="margin: 8px; margin-top: 0; font-size: 22px"
+                  class="nav-dropdown-icon"
                 />
 
                 <KDropdownMenu
                   :options="guestMenuItems"
                   :hasIcons="true"
-                  @select="(item, event) => handleGuestMenuSelect(item, event)"
+                  @select="handleGuestMenuSelect"
                 />
               </button>
             </template>
@@ -544,7 +535,27 @@
     border-radius: 8px;
   }
 
+  .nav-logo-link-padding {
+    padding-top: 8px;
+  }
+
+  .nav-user-icon-wrapper {
+    margin: 8px;
+  }
+
+  .nav-user-icon {
+    font-size: 22px;
+  }
+
+  .nav-dropdown-icon {
+    margin: 8px;
+    margin-top: 0;
+    font-size: 22px;
+  }
+
   .studio-navigation-title-container {
+    flex: 1;
+    min-width: 0;
     padding-inline-start: 20px;
     padding-top: 8px;
     //Given to remove the bottom spacing due to inline-block nature of KTextTruncator
@@ -608,6 +619,22 @@
     &:hover {
       background-color: rgba(0, 0, 0, 0.1);
     }
+  }
+
+  .dropdown-option {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    height: 48px;
+    padding: 0 16px;
+  }
+
+  .dropdown-option-icon {
+    font-size: 20px;
+  }
+
+  .dropdown-option-label {
+    font-size: 16px;
   }
 
 </style>

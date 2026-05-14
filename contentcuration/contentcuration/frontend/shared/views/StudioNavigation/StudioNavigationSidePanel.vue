@@ -42,12 +42,10 @@
 
             <StudioSideNavOption
               :label="notificationsLabel$()"
-              icon="bell"
               @click="showNotificationsModal"
-              @keydown.native.enter="showNotificationsModal"
             >
               <template #default>
-                <div style="display: flex; gap: 16px">
+                <div class="notification-option-content">
                   <WithNotificationIndicator>
                     <KIcon icon="bell" />
                   </WithNotificationIndicator>
@@ -70,19 +68,19 @@
             <StudioSideNavOption
               :label="$tr('changeLanguage')"
               icon="language"
-              @select="handleLanguageChange"
+              @click="handleLanguageChange"
             />
 
             <StudioSideNavOption
               :label="$tr('help')"
               icon="openNewTab"
-              @select="handleHelp"
+              @click="handleHelp"
             />
 
             <StudioSideNavOption
               :label="$tr('signOut')"
               icon="logout"
-              @select="handleLogout"
+              @click="handleLogout"
             />
           </ul>
         </nav>
@@ -243,6 +241,11 @@
     padding: 8px 12px;
     margin: 0;
     list-style: none;
+  }
+
+  .notification-option-content {
+    display: flex;
+    gap: 16px;
   }
 
   .navigation-menu-footer {

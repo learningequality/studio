@@ -2,7 +2,6 @@
 
   <li>
     <a
-      ref="menuItem"
       :href="link"
       class="studio-sidenav-option"
       role="menuitem"
@@ -47,7 +46,8 @@
       },
       icon: {
         type: String,
-        required: true,
+        required: false,
+        default: null,
       },
       active: {
         type: Boolean,
@@ -81,9 +81,11 @@
     },
     methods: {
       handleClick(event) {
+        if (this.link && event.type === 'keydown') {
+          return;
+        }
         if (!this.link) {
           event.preventDefault();
-          this.$emit('select');
         }
         this.$emit('click', event);
       },
@@ -108,10 +110,6 @@
     border-radius: $radius;
     outline-offset: -1px;
     transition: background-color $core-time ease;
-
-    &:hover {
-      outline-offset: -1px;
-    }
   }
 
   .menu-icon {
