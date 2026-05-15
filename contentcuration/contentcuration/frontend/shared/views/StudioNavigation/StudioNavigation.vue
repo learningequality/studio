@@ -318,8 +318,6 @@
             label: this.$tr('help'),
             value: MenuOptions.HELP,
             icon: 'openNewTab',
-            href: this.helpLink,
-            target: '_blank',
           },
           {
             label: this.$tr('signOut'),
@@ -458,6 +456,7 @@
             break;
           case MenuOptions.HELP:
             this.trackClick('Help');
+            window.open(this.helpLink, '_blank', 'noopener,noreferrer');
             break;
           case MenuOptions.LOGOUT:
             this.logout();

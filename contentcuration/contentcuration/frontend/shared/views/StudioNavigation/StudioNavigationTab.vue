@@ -125,10 +125,9 @@
     user-select: none;
     background: transparent;
     outline: none;
-    transition: 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
   }
 
-  .studio-navigation-tab:not(.studio-navigation-tab-active) {
+  .studio-navigation-tab:not(.studio-navigation-tab-active) > .studio-navigation-tab-content {
     opacity: 0.7;
   }
 
