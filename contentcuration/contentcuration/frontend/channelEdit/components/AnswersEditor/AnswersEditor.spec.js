@@ -3,6 +3,7 @@ import { shallowMount, mount } from '@vue/test-utils';
 import { AssessmentItemToolbarActions } from '../../constants';
 import AnswersEditor from './AnswersEditor';
 import { AssessmentItemTypes } from 'shared/constants';
+import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue';
 
 jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue');
 
@@ -260,12 +261,12 @@ describe('AnswersEditor', () => {
     });
 
     it('passes autofocus=true to the open answer editor', () => {
-      const editors = wrapper.findAllComponents({ name: 'RichTextEditor' });
+      const editors = wrapper.findAllComponents(TipTapEditor);
       expect(editors.at(1).props('autofocus')).toBe(true);
     });
 
     it('passes autofocus=false to closed answer editors', () => {
-      const editors = wrapper.findAllComponents({ name: 'RichTextEditor' });
+      const editors = wrapper.findAllComponents(TipTapEditor);
       expect(editors.at(0).props('autofocus')).toBe(false);
     });
   });
@@ -339,7 +340,7 @@ describe('AnswersEditor', () => {
         },
       });
 
-      const editors = wrapper.findAllComponents({ name: 'RichTextEditor' });
+      const editors = wrapper.findAllComponents(TipTapEditor);
       editors.at(1).vm.$emit('update', 'European butter');
 
       await wrapper.vm.$nextTick();

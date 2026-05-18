@@ -3,6 +3,7 @@ import { shallowMount, mount } from '@vue/test-utils';
 import { AssessmentItemToolbarActions } from '../../constants';
 
 import HintsEditor from './HintsEditor';
+import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue';
 
 jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue');
 
@@ -65,7 +66,7 @@ describe('HintsEditor', () => {
     });
 
     // Find all instances of your new RichTextEditor component
-    const editors = wrapper.findAllComponents({ name: 'RichTextEditor' });
+    const editors = wrapper.findAllComponents(TipTapEditor);
     expect(editors.length).toBe(2);
 
     // Instead of checking the raw HTML, we check the `value` prop passed to each editor.
@@ -85,7 +86,7 @@ describe('HintsEditor', () => {
         },
       });
 
-      const editors = wrapper.findAllComponents({ name: 'RichTextEditor' });
+      const editors = wrapper.findAllComponents(TipTapEditor);
       editors.at(1).vm.$emit('update', 'Updated hint');
     });
 
@@ -145,12 +146,12 @@ describe('HintsEditor', () => {
     });
 
     it('passes autofocus=true to the open hint editor', () => {
-      const editors = wrapper.findAllComponents({ name: 'RichTextEditor' });
+      const editors = wrapper.findAllComponents(TipTapEditor);
       expect(editors.at(0).props('autofocus')).toBe(true);
     });
 
     it('passes autofocus=false to closed hint editors', () => {
-      const editors = wrapper.findAllComponents({ name: 'RichTextEditor' });
+      const editors = wrapper.findAllComponents(TipTapEditor);
       expect(editors.at(1).props('autofocus')).toBe(false);
     });
   });
