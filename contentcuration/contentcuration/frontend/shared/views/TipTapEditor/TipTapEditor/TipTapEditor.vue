@@ -207,7 +207,7 @@
           }
           if (newMode === 'edit' && editor.value && props.autofocus) {
             nextTick(() => {
-              editor.value.commands.focus('end');
+              editor.value?.commands.focus('end');
             });
           }
         },
