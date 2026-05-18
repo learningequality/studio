@@ -131,6 +131,30 @@ describe('HintsEditor', () => {
     });
   });
 
+  describe('autofocus on the open hint editor', () => {
+    beforeEach(() => {
+      wrapper = mount(HintsEditor, {
+        propsData: {
+          hints: [
+            { hint: 'First hint', order: 1 },
+            { hint: 'Second hint', order: 2 },
+          ],
+          openHintIdx: 0,
+        },
+      });
+    });
+
+    it('passes autofocus=true to the open hint editor', () => {
+      const editors = wrapper.findAllComponents({ name: 'RichTextEditor' });
+      expect(editors.at(0).props('autofocus')).toBe(true);
+    });
+
+    it('passes autofocus=false to closed hint editors', () => {
+      const editors = wrapper.findAllComponents({ name: 'RichTextEditor' });
+      expect(editors.at(1).props('autofocus')).toBe(false);
+    });
+  });
+
   describe('on hint click', () => {
     beforeEach(async () => {
       wrapper = mount(HintsEditor, {
