@@ -318,7 +318,7 @@
     justify-content: space-between;
     min-height: 76px;
     padding: 16px 28px;
-    border-bottom: 1px solid #dedede;
+    border-bottom: 1px solid var(--v-grey-lighten4);
   }
 
   .question-card-title {

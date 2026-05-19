@@ -521,7 +521,7 @@
   }
 
   .question-text {
-    border: 1px solid #b4b4b4;
+    border: 1px solid var(--v-grey-lighten4);
     transition: 0.7s;
 
     &:hover {
