@@ -113,20 +113,20 @@ describe('TrashModal', () => {
     it('checking an item enables the Delete and Restore buttons', async () => {
       const { user } = await makeWrapper();
 
-      expect(screen.getByTestId('delete')).toBeDisabled();
-      expect(screen.getByTestId('restore')).toBeDisabled();
+      expect(screen.getByRole('button', { name: /Delete/i })).toBeDisabled();
+      expect(screen.getByRole('button', { name: /Restore/i })).toBeDisabled();
 
       await user.click(within(screen.getAllByTestId('checkbox')[0]).getByRole('checkbox'));
 
       await waitFor(() => {
-        expect(screen.getByTestId('delete')).toBeEnabled();
-        expect(screen.getByTestId('restore')).toBeEnabled();
+        expect(screen.getByRole('button', { name: /Delete/i })).toBeEnabled();
+        expect(screen.getByRole('button', { name: /Restore/i })).toBeEnabled();
       });
     });
 
     it('checking the select-all checkbox checks all items', async () => {
       const { user } = await makeWrapper();
-      await user.click(screen.getByTestId('selectall'));
+      await user.click(within(screen.getByTestId('selectall')).getByRole('checkbox'));
 
       await waitFor(() => {
         screen.getAllByTestId('checkbox').forEach(container => {
@@ -168,21 +168,21 @@ describe('TrashModal', () => {
   describe('on delete', () => {
     it('Delete button is disabled when no items are selected', async () => {
       await makeWrapper();
-      expect(screen.getByTestId('delete')).toBeDisabled();
+      expect(screen.getByRole('button', { name: /Delete/i })).toBeDisabled();
     });
 
     it('clicking Delete opens a confirmation dialog', async () => {
       const { user } = await makeWrapper();
-      await user.click(screen.getByTestId('selectall'));
-      await user.click(screen.getByTestId('delete'));
+      await user.click(within(screen.getByTestId('selectall')).getByRole('checkbox'));
+      await user.click(screen.getByRole('button', { name: /Delete/i }));
 
       expect(await screen.findByText(/You cannot undo this action/i)).toBeInTheDocument();
     });
 
     it('clicking Cancel in the confirmation dialog closes it', async () => {
       const { user } = await makeWrapper();
-      await user.click(screen.getByTestId('selectall'));
-      await user.click(screen.getByTestId('delete'));
+      await user.click(within(screen.getByTestId('selectall')).getByRole('checkbox'));
+      await user.click(screen.getByRole('button', { name: /Delete/i }));
       await screen.findByText(/You cannot undo this action/i);
 
       await user.click(screen.getByRole('button', { name: /Cancel/i }));
@@ -199,8 +199,8 @@ describe('TrashModal', () => {
 
       const { user } = await makeWrapper();
 
-      await user.click(screen.getByTestId('selectall'));
-      await user.click(screen.getByTestId('delete'));
+      await user.click(within(screen.getByTestId('selectall')).getByRole('checkbox'));
+      await user.click(screen.getByRole('button', { name: /Delete/i }));
       await user.click(await screen.findByRole('button', { name: /Delete permanently/i }));
 
       await waitFor(() => {
@@ -214,8 +214,8 @@ describe('TrashModal', () => {
       const { user, loadNodesSpy, store } = await makeWrapper();
       const dispatchSpy = jest.spyOn(store, 'dispatch').mockImplementation(() => Promise.resolve());
 
-      await user.click(screen.getByTestId('selectall'));
-      await user.click(screen.getByTestId('delete'));
+      await user.click(within(screen.getByTestId('selectall')).getByRole('checkbox'));
+      await user.click(screen.getByRole('button', { name: /Delete/i }));
       await user.click(await screen.findByRole('button', { name: /Delete permanently/i }));
 
       await waitFor(() => {
@@ -230,13 +230,13 @@ describe('TrashModal', () => {
   describe('on restore', () => {
     it('Restore button is disabled when no items are selected', async () => {
       await makeWrapper();
-      expect(screen.getByTestId('restore')).toBeDisabled();
+      expect(screen.getByRole('button', { name: /Restore/i })).toBeDisabled();
     });
 
     it('clicking Restore opens the MoveModal', async () => {
       const { user } = await makeWrapper();
-      await user.click(screen.getByTestId('selectall'));
-      await user.click(screen.getByTestId('restore'));
+      await user.click(within(screen.getByTestId('selectall')).getByRole('checkbox'));
+      await user.click(screen.getByRole('button', { name: /Restore/i }));
       expect(await screen.findByRole('button', { name: /Move here/i })).toBeInTheDocument();
     });
 
@@ -245,12 +245,12 @@ describe('TrashModal', () => {
 
       const { user, loadNodesSpy } = await makeWrapper();
 
-      await user.click(screen.getByTestId('selectall'));
+      await user.click(within(screen.getByTestId('selectall')).getByRole('checkbox'));
 
       const itemLinks = screen.getAllByTestId('item');
       await user.click(itemLinks[0]);
 
-      await user.click(screen.getByTestId('restore'));
+      await user.click(screen.getByRole('button', { name: /Restore/i }));
 
       await user.click(await screen.findByRole('button', { name: /Move here/i }));
 
@@ -273,7 +273,7 @@ describe('TrashModal', () => {
 
       expect(screen.queryByText(/items selected/i)).not.toBeInTheDocument();
 
-      await user.click(screen.getByTestId('selectall'));
+      await user.click(within(screen.getByTestId('selectall')).getByRole('checkbox'));
 
       expect(await screen.findByText(`${testChildren.length} items selected`)).toBeInTheDocument();
     });
