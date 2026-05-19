@@ -2,72 +2,43 @@
 
   <VContainer fluid>
     <template v-if="sortedItems && sortedItems.length">
-      <Checkbox
-        v-model="displayAnswersPreview"
-        :label="$tr('showAnswers')"
-        class="mb-4"
-        data-test="showAnswersCheckbox"
-        style="font-size: 16px"
-      />
+      <KPageContainer
+        class="show-answers-container"
+        :topMargin="0"
+      >
+        <Checkbox
+          v-model="displayAnswersPreview"
+          :label="$tr('showAnswers')"
+          class="ma-0"
+          data-test="showAnswersCheckbox"
+          style="font-size: 16px"
+        />
+      </KPageContainer>
 
       <transition-group
         name="list-complete"
         tag="div"
       >
-        <VCard
-          v-for="(item, idx) in sortedItems"
-          ref="questionCardRef"
-          :key="`question-${item.assessment_id}`"
-          pa-1
-          class="elevation-4 list-complete-item"
-          :class="itemClasses(item)"
-          data-test="item"
-          @click="onItemClick($event, item)"
-        >
-          <VCardText>
-            <VLayout align-start>
-              <VFlex
-                :style="{ 'margin-right': '1.5rem' }"
-                shrink
-                mt-2
-              >
-                {{ idx + 1 }}
-              </VFlex>
-
-              <VFlex
-                v-if="!isItemActive(item)"
-                xs10
-              >
-                <AssessmentItemPreview
-                  :item="item"
-                  :detailed="displayAnswersPreview"
-                />
-              </VFlex>
-
-              <VFlex
-                v-else
-                xs11
-              >
-                <AssessmentItemEditor
-                  :item="item"
-                  :errors="itemErrors(item)"
-                  :openDialog="openDialog"
-                  :nodeId="nodeId"
-                  data-test="editor"
-                  @update="onItemUpdate"
-                  @close="closeActiveItem"
-                />
-              </VFlex>
-
-              <VSpacer />
-
-              <VLayout
-                align-center
-                class="toolbar"
-              >
-                <VFlex
-                  v-if="!isItemActive(item) && !isItemValid(item)"
-                  mr-2
+        <template v-for="(item, idx) in sortedItems">
+          <AssessmentItemPreview
+            v-if="!isItemActive(item)"
+            ref="questionCardRef"
+            :key="`question-preview-${item.assessment_id}`"
+            :item="item"
+            :detailed="displayAnswersPreview"
+            :questionIndex="idx"
+            :questionCount="sortedItems.length"
+            renderCard
+            class="list-complete-item"
+            :class="itemClasses(item)"
+            data-test="item"
+            @click.native="onItemClick($event, item)"
+          >
+            <template #actions>
+              <div class="question-card-actions toolbar">
+                <div
+                  v-if="!isItemValid(item)"
+                  class="incomplete-indicator"
                 >
                   <template v-if="$vuetify.breakpoint.lgAndUp">
                     <Icon icon="error" />
@@ -88,38 +59,78 @@
                       {{ $tr('incompleteItemIndicatorLabel') }}
                     </KTooltip>
                   </template>
-                </VFlex>
+                </div>
 
-                <VFlex>
-                  <AssessmentItemToolbar
-                    :iconActionsConfig="itemToolbarIconActions(item)"
-                    :displayMenu="true"
-                    :menuActionsConfig="itemToolbarMenuActions"
-                    :canEdit="!isPerseusItem(item)"
-                    :canMoveUp="!isItemFirst(item)"
-                    :canMoveDown="!isItemLast(item)"
-                    :collapse="!$vuetify.breakpoint.mdAndUp"
-                    :itemLabel="$tr('toolbarItemLabel')"
-                    analyticsLabel="Question"
-                    @click="onItemToolbarClick($event, item)"
-                  />
-                </VFlex>
-              </VLayout>
-            </VLayout>
+                <AssessmentItemToolbar
+                  :iconActionsConfig="itemToolbarIconActions()"
+                  :displayMenu="true"
+                  :menuActionsConfig="itemToolbarMenuActions(item)"
+                  :canEdit="!isPerseusItem(item)"
+                  :canMoveUp="!isItemFirst(item)"
+                  :canMoveDown="!isItemLast(item)"
+                  :collapse="!$vuetify.breakpoint.mdAndUp"
+                  :itemLabel="$tr('toolbarItemLabel')"
+                  analyticsLabel="Question"
+                  @click="onItemToolbarClick($event, item)"
+                />
+              </div>
+            </template>
+          </AssessmentItemPreview>
 
-            <VLayout
-              v-if="isItemActive(item)"
-              justify-end
-            >
+          <KPageContainer
+            v-else
+            ref="questionCardRef"
+            :key="`question-editor-${item.assessment_id}`"
+            noPadding
+            :topMargin="0"
+            class="list-complete-item question-card"
+            :class="itemClasses(item)"
+            data-test="item"
+            @click.native="onItemClick($event, item)"
+          >
+            <div class="question-card-header">
+              <h3 class="question-card-title">
+                {{ questionNumberLabel(idx) }}
+              </h3>
+
+              <div class="question-card-actions toolbar">
+                <AssessmentItemToolbar
+                  :iconActionsConfig="itemToolbarIconActions()"
+                  :displayMenu="true"
+                  :menuActionsConfig="itemToolbarMenuActions(item)"
+                  :canEdit="!isPerseusItem(item)"
+                  :canMoveUp="!isItemFirst(item)"
+                  :canMoveDown="!isItemLast(item)"
+                  :collapse="!$vuetify.breakpoint.mdAndUp"
+                  :itemLabel="$tr('toolbarItemLabel')"
+                  analyticsLabel="Question"
+                  @click="onItemToolbarClick($event, item)"
+                />
+              </div>
+            </div>
+
+            <div class="question-card-body">
+              <AssessmentItemEditor
+                :item="item"
+                :errors="itemErrors(item)"
+                :openDialog="openDialog"
+                :nodeId="nodeId"
+                data-test="editor"
+                @update="onItemUpdate"
+                @close="closeActiveItem"
+              />
+            </div>
+
+            <div class="question-card-footer">
               <KButton
                 :text="$tr('closeBtnLabel')"
                 class="close-item-btn"
                 data-test="closeBtn"
                 @click="closeActiveItem"
               />
-            </VLayout>
-          </VCardText>
-        </VCard>
+            </div>
+          </KPageContainer>
+        </template>
       </transition-group>
     </template>
 
@@ -204,11 +215,6 @@
       return {
         activeItem: null,
         displayAnswersPreview: false,
-        itemToolbarMenuActions: [
-          AssessmentItemToolbarActions.ADD_ITEM_ABOVE,
-          AssessmentItemToolbarActions.ADD_ITEM_BELOW,
-          AssessmentItemToolbarActions.DELETE_ITEM,
-        ],
       };
     },
     computed: {
@@ -246,6 +252,12 @@
       },
       itemIdx(item) {
         return this.sortedItems.findIndex(i => areItemsEqual(i, item));
+      },
+      questionNumberLabel(idx) {
+        return this.$tr('questionNumberLabel', {
+          number: idx + 1,
+          total: this.sortedItems.length,
+        });
       },
       openItem(item) {
         if (!this.isPerseusItem(item)) {
@@ -293,14 +305,21 @@
 
         return classes;
       },
-      itemToolbarIconActions(item) {
-        const actions = [
+      itemToolbarIconActions() {
+        return [
           [AssessmentItemToolbarActions.MOVE_ITEM_UP, { collapse: true }],
           [AssessmentItemToolbarActions.MOVE_ITEM_DOWN, { collapse: true }],
         ];
+      },
+      itemToolbarMenuActions(item) {
+        const actions = [
+          AssessmentItemToolbarActions.ADD_ITEM_ABOVE,
+          AssessmentItemToolbarActions.ADD_ITEM_BELOW,
+          AssessmentItemToolbarActions.DELETE_ITEM,
+        ];
 
-        if (!this.isItemActive(item)) {
-          actions.unshift([AssessmentItemToolbarActions.EDIT_ITEM, { collapse: false }]);
+        if (!this.isItemActive(item) && !this.isPerseusItem(item)) {
+          actions.unshift(AssessmentItemToolbarActions.EDIT_ITEM);
         }
 
         return actions;
@@ -459,6 +478,7 @@
       closeBtnLabel: 'Close',
       newQuestionBtnLabel: 'New question',
       showAnswers: 'Show answers',
+      questionNumberLabel: 'Question {number} of {total}',
     },
   };
 
@@ -467,21 +487,53 @@
 
 <style lang="scss" scoped>
 
-  .item {
+  .show-answers-container,
+  .question-card {
+    margin-bottom: 16px;
+  }
+
+  .question-card {
     position: relative;
     min-height: 75px;
-    margin: 8px -4px;
-
-    .toolbar {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-    }
+    padding: 0;
 
     &.closed {
-      margin: 0 4px;
       cursor: pointer;
     }
+  }
+
+  .question-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 76px;
+    padding: 16px 28px;
+    border-bottom: 1px solid #dedede;
+  }
+
+  .question-card-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .question-card-actions {
+    display: flex;
+    align-items: center;
+  }
+
+  .incomplete-indicator {
+    margin-right: 8px;
+  }
+
+  .question-card-body {
+    padding: 16px 28px 12px;
+  }
+
+  .question-card-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 28px 20px;
   }
 
 </style>

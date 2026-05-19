@@ -2,25 +2,23 @@
 
   <div>
     <VLayout>
-      <DropdownWrapper
-        component="VFlex"
+      <VFlex
         xs7
         lg5
+        class="kind-select-container"
       >
-        <template #default="{ attach, menuProps }">
-          <VSelect
-            :key="kindSelectKey"
-            :items="kindSelectItems"
-            :value="kind"
-            :label="$tr('questionTypeLabel')"
-            data-test="kindSelect"
-            :menu-props="menuProps"
-            :attach="attach"
-            box
-            @input="onKindUpdate"
-          />
-        </template>
-      </DropdownWrapper>
+        <div class="field-label">
+          {{ $tr('typeLabel') }}
+        </div>
+        <KSelect
+          :key="kindSelectKey"
+          v-model="selectedKind"
+          :options="kindSelectItems"
+          :label="$tr('questionTypeLabel')"
+          class="kind-select"
+          data-test="kindSelect"
+        />
+      </VFlex>
     </VLayout>
 
     <VLayout>
@@ -41,6 +39,7 @@
               v-if="isQuestionOpen"
               v-model="question"
               mode="edit"
+              class="question-editor"
               :autofocus="shouldAutofocusQuestion"
               :imageProcessor="EditorImageProcessor"
               @update="onQuestionUpdate"
@@ -104,8 +103,9 @@
           @close="closeAnswer"
         />
 
+        <VDivider class="hints-divider" />
+
         <HintsEditor
-          class="mt-4"
           :hints="hints"
           :openHintIdx="openHintIdx"
           @update="onHintsUpdate"
@@ -136,13 +136,11 @@
     FeatureFlagKeys,
   } from 'shared/constants';
   import ErrorList from 'shared/views/ErrorList/ErrorList';
-  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue';
 
   export default {
     name: 'AssessmentItemEditor',
     components: {
-      DropdownWrapper,
       ErrorList,
       AnswersEditor,
       HintsEditor,
@@ -234,19 +232,19 @@
         const items = [
           {
             value: AssessmentItemTypes.SINGLE_SELECTION,
-            text: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.SINGLE_SELECTION]),
+            label: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.SINGLE_SELECTION]),
           },
           {
             value: AssessmentItemTypes.MULTIPLE_SELECTION,
-            text: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.MULTIPLE_SELECTION]),
+            label: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.MULTIPLE_SELECTION]),
           },
           {
             value: AssessmentItemTypes.INPUT_QUESTION,
-            text: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.INPUT_QUESTION]),
+            label: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.INPUT_QUESTION]),
           },
           {
             value: AssessmentItemTypes.TRUE_FALSE,
-            text: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.TRUE_FALSE]),
+            label: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.TRUE_FALSE]),
           },
         ];
 
@@ -256,11 +254,26 @@
         ) {
           items.push({
             value: AssessmentItemTypes.FREE_RESPONSE,
-            text: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.FREE_RESPONSE]),
+            label: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.FREE_RESPONSE]),
           });
         }
 
         return items;
+      },
+      selectedKind: {
+        get() {
+          return (
+            this.kindSelectItems.find(option => option.value === this.kind) ||
+            this.kindSelectItems[0]
+          );
+        },
+        set(option) {
+          const newKind = option && option.value ? option.value : option;
+          if (!newKind) {
+            return;
+          }
+          this.onKindUpdate(newKind);
+        },
       },
       answers() {
         if (!this.item || !this.item.answers) {
@@ -344,7 +357,7 @@
           answers: newAnswers,
         });
       },
-      // question type VSelect needs to be rerended when confirmation dialog
+      // question type KSelect needs to be rerendered when confirmation dialog
       // cancelled to display a correct, previous, value that has changed
       // in the select but has not been changed in data storage actually
       // because of cancel action
@@ -460,6 +473,7 @@
       },
     },
     $trs: {
+      typeLabel: 'Type',
       questionTypeLabel: 'Response type',
       questionLabel: 'Question',
       dialogTitle: 'Changing question type',
@@ -479,6 +493,32 @@
 
 
 <style lang="scss" scoped>
+
+  .kind-select-container {
+    margin-bottom: 16px;
+  }
+
+  .field-label {
+    margin-bottom: 8px;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .kind-select {
+    max-width: 440px;
+  }
+
+  .question-editor {
+    min-height: 112px;
+  }
+
+  ::v-deep .question-editor.editor-container {
+    min-height: 112px;
+  }
+
+  .hints-divider {
+    margin: 16px -28px 0;
+  }
 
   .question-text {
     border: 1px solid #b4b4b4;

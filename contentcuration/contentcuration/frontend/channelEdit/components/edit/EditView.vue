@@ -158,6 +158,7 @@
               :key="tabs.QUESTIONS"
               ref="questionwindow"
               :value="tabs.QUESTIONS"
+              :style="questionsTabStyles"
               lazy
             >
               <AssessmentTab :nodeId="nodeIds[0]" />
@@ -291,6 +292,15 @@
         }
 
         return this.getAssessmentItemsCount(this.nodeIds[0]);
+      },
+      questionsTabStyles() {
+        if (this.currentTab === this.tabs.QUESTIONS) {
+          return {
+            backgroundColor: this.$themePalette.grey.v_100,
+          };
+        }
+
+        return {};
       },
       relatedResourcesCount() {
         if (!this.oneSelected) {
