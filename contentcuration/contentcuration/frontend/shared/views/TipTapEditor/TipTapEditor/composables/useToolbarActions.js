@@ -383,6 +383,7 @@ export function useToolbarActions(emit) {
       icon: require('../../assets/icon-bulletList.svg'),
       handler: handleBulletList,
       isActive: isMarkActive('bulletList'),
+      shouldFlipInRtl: true,
     },
     {
       name: 'numberList',

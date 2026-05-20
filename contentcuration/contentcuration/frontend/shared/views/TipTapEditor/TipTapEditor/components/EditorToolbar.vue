@@ -40,117 +40,29 @@
       class="overflow-list"
     >
       <template #item="{ item }">
-        <!-- Text formatting -->
         <div
-          v-if="item.name === 'textFormat'"
-          role="group"
-          :aria-label="item.ariaLabel"
+          :role="item.role"
+          :aria-label="item.label"
           class="toolbar-group"
         >
-          <ToolbarButton
-            v-for="action in textActions"
-            :key="action.name"
-            :title="action.title"
-            :icon="action.icon"
-            :is-active="action.isActive"
-            @click="action.handler"
-          />
-        </div>
-
-        <!-- Copy/Paste -->
-        <div
-          v-else-if="item.name === 'clipboard'"
-          role="group"
-          :aria-label="item.ariaLabel"
-          class="toolbar-group"
-        >
-          <ToolbarButton
-            :title="copy$()"
-            :icon="require('../../assets/icon-copy.svg')"
-            @click="handleCopy"
-          />
-          <PasteDropdown />
-        </div>
-
-        <!-- Text Alignment -->
-        <div
-          v-else-if="item.name === 'align'"
-          class="toolbar-group"
-        >
-          <ToolbarButton
-            :title="alignAction.title"
-            :icon="alignAction.icon"
-            :is-active="alignAction.isActive"
-            :is-available="alignAction.isAvailable"
-            @click="alignAction.handler"
-          />
-        </div>
-
-        <!-- Clear Format -->
-        <div
-          v-else-if="item.name === 'clearFormat'"
-          class="toolbar-group"
-        >
-          <ToolbarButton
-            :title="clearFormatting$()"
-            :icon="require('../../assets/icon-clearFormat.svg')"
-            :is-available="canClearFormat"
-            @click="handleClearFormat"
-          />
-        </div>
-
-        <!-- Lists -->
-        <div
-          v-else-if="item.name === 'lists'"
-          role="group"
-          :aria-label="item.ariaLabel"
-          class="toolbar-group"
-        >
-          <ToolbarButton
-            v-for="list in listActions"
-            :key="list.name"
-            :title="list.title"
-            :icon="list.icon"
-            :rtl-icon="list.rtlIcon"
-            :should-flip-in-rtl="list.name === 'bulletList'"
-            :is-active="list.isActive"
-            @click="list.handler"
-          />
-        </div>
-
-        <!-- Script formatting -->
-        <div
-          v-else-if="item.name === 'script'"
-          role="group"
-          :aria-label="item.ariaLabel"
-          class="toolbar-group"
-        >
-          <ToolbarButton
-            v-for="script in scriptActions"
-            :key="script.name"
-            :title="script.title"
-            :icon="script.icon"
-            :rtl-icon="script.rtlIcon"
-            :is-active="script.isActive"
-            @click="script.handler"
-          />
-        </div>
-
-        <!-- Insert tools -->
-        <div
-          v-else-if="item.name === 'insert'"
-          role="group"
-          :aria-label="item.ariaLabel"
-          class="toolbar-group"
-        >
-          <ToolbarButton
-            v-for="tool in insertTools"
-            :key="tool.name"
-            :title="tool.title"
-            :icon="tool.icon"
-            :is-active="tool.isActive"
-            @click="onToolClick(tool, $event)"
-          />
+          <template v-for="action in item.groupActions">
+            <component
+              :is="action.component"
+              v-if="action.component"
+              :key="`component-${action.name}`"
+            />
+            <ToolbarButton
+              v-else
+              :key="`button-${action.name}`"
+              :title="action.title"
+              :icon="action.icon"
+              :is-active="action.isActive"
+              :isAvailable="action.isAvailable"
+              :rtlIcon="action.rtlIcon"
+              :shouldFlipInRtl="action.shouldFlipInRtl"
+              @click="action.handler"
+            />
+          </template>
         </div>
       </template>
 
@@ -410,29 +322,11 @@
         textStyleFormatting$,
         copyAndPasteActions$,
         listFormatting$,
-        scriptFormatting$,
+        // scriptFormatting$,
         insertTools$,
         clearFormatting$,
         moreButtonText$,
       } = getTipTapEditorStrings();
-
-      // Toolbar groups in visual order (left-to-right).
-      // KListWithOverflow will collapse items from the end first.
-      // Note: Don't include dividers here - KListWithOverflow renders
-      // them automatically via #divider slot.
-      const toolbarGroups = computed(() => [
-        { name: 'textFormat', ariaLabel: textStyleFormatting$() },
-        { name: 'clipboard', ariaLabel: copyAndPasteActions$() },
-        // Perseus flavoured markdown does not support alignment,
-        // so we disable this for now until we stop using markdown as the primary target
-        // { name: 'align' },
-        { name: 'clearFormat' },
-        { name: 'lists', ariaLabel: listFormatting$() },
-        // Perseus flavoured markdown does not support super and sub script,
-        // so we disable this for now until we stop using markdown as the primary target
-        { name: 'script', ariaLabel: scriptFormatting$() },
-        { name: 'insert', ariaLabel: insertTools$() },
-      ]);
 
       const onToolClick = (tool, event) => {
         isMoreDropdownOpen.value = false;
@@ -453,6 +347,84 @@
           tool.handler();
         }
       };
+
+      // Toolbar groups in visual order (left-to-right).
+      // KListWithOverflow will collapse items from the end first.
+      // Note: Don't include dividers here - KListWithOverflow renders
+      // them automatically via #divider slot.
+      //
+      // Each group describes its actions via `groupActions`. A `label` makes
+      // the wrapper a role="group"; omitting it renders a plain div (for
+      // single-action groups that don't need grouping semantics).
+      // Actions with a `component` key render that component instead of a
+      // ToolbarButton (e.g. PasteDropdown). Actions with an `onClick` key
+      // receive the click event; otherwise `handler()` is called.
+      const toolbarGroups = computed(() => [
+        {
+          name: 'textFormat',
+          role: 'group',
+          label: textStyleFormatting$(),
+          groupActions: textActions.value,
+        },
+        {
+          name: 'clipboard',
+          role: 'group',
+          label: copyAndPasteActions$(),
+          groupActions: [
+            {
+              name: 'copy',
+              title: copy$(),
+              icon: require('../../assets/icon-copy.svg'),
+              handler: handleCopy,
+            },
+            {
+              name: 'pasteDropdown',
+              component: PasteDropdown,
+            },
+          ],
+        },
+        // Perseus flavoured markdown does not support alignment,
+        // so we disable this for now until we stop using markdown as the primary target
+        // {
+        //   name: 'align',
+        //   groupActions: [alignAction.value]
+        // },
+        {
+          name: 'clearFormat',
+          groupActions: [
+            {
+              name: 'clearFormat',
+              title: clearFormatting$(),
+              icon: require('../../assets/icon-clearFormat.svg'),
+              isAvailable: canClearFormat.value,
+              handler: handleClearFormat,
+            },
+          ],
+        },
+        {
+          name: 'lists',
+          role: 'group',
+          label: listFormatting$(),
+          groupActions: listActions.value,
+        },
+        // Perseus flavoured markdown does not support super and sub script,
+        // so we disable this for now until we stop using markdown as the primary target
+        // {
+        //   name: 'script',
+        //   role: 'group',
+        //   label: scriptFormatting$(),
+        //   groupActions: scriptActions.value
+        // },
+        {
+          name: 'insert',
+          role: 'group',
+          label: insertTools$(),
+          groupActions: insertTools.value.map(tool => ({
+            ...tool,
+            handler: e => onToolClick(tool, e),
+          })),
+        },
+      ]);
 
       const toggleMoreDropdown = () => {
         isMoreDropdownOpen.value = !isMoreDropdownOpen.value;
