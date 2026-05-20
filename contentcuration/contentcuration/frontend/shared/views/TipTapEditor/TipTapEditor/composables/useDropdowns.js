@@ -93,7 +93,7 @@ export function useDropdowns() {
   };
 
   onMounted(() => {
-    document.addEventListener('click', handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     // Setup editor listener when component mounts
     setupEditorListener();
     // Initial format detection
@@ -101,7 +101,7 @@ export function useDropdowns() {
   });
 
   onUnmounted(() => {
-    document.removeEventListener('click', handleClickOutside);
+    document.removeEventListener('mousedown', handleClickOutside);
     if (offTransaction) offTransaction();
   });
 
