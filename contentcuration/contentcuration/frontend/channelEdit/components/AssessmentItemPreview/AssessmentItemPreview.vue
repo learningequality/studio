@@ -312,6 +312,10 @@
     cursor: pointer;
   }
 
+  // NOTE: .question-card-header and .question-card-title are intentionally
+  // duplicated from AssessmentEditor.vue. Because styles are scoped, sharing
+  // them is not straightforward today. When a shared QuestionCard component is
+  // eventually built, these are the styles to extract into it.
   .question-card-header {
     display: flex;
     align-items: center;
