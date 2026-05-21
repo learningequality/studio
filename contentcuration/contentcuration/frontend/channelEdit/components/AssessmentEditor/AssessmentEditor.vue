@@ -26,20 +26,32 @@
         tag="div"
       >
         <template v-for="(item, idx) in sortedItems">
-          <AssessmentItemPreview
-            v-if="!isItemActive(item)"
+          <KPageContainer
             ref="questionCardRef"
-            :key="`question-preview-${item.assessment_id}`"
-            :item="item"
-            :detailed="displayAnswersPreview"
-            :questionIndex="idx"
-            :questionCount="sortedItems.length"
-            renderCard
+            :key="itemCardKey(item)"
+            noPadding
+            :topMargin="0"
+            class="question-card"
             :class="itemClasses(item)"
             data-test="item"
             @click.native="onItemClick($event, item)"
           >
-            <template #actions>
+            <div
+              class="question-card-header"
+              :style="{ borderBottom: `1px solid ${$themePalette.grey.v_200}` }"
+            >
+              <h3
+                class="question-card-title"
+                :style="{ color: $themePalette.grey.v_800 }"
+              >
+                <template v-if="isItemActive(item)">
+                  {{ questionNumberLabel(idx) }}
+                </template>
+                <template v-else>
+                  {{ questionNumberAndTypeLabel(item, idx) }}
+                </template>
+              </h3>
+
               <div class="question-card-actions toolbar">
                 <div v-if="!isItemValid(item)">
                   <template v-if="$vuetify.breakpoint.lgAndUp">
@@ -76,49 +88,11 @@
                   @click="onItemToolbarClick($event, item)"
                 />
               </div>
-            </template>
-          </AssessmentItemPreview>
-
-          <KPageContainer
-            v-else
-            ref="questionCardRef"
-            :key="`question-editor-${item.assessment_id}`"
-            noPadding
-            :topMargin="0"
-            class="question-card"
-            :class="itemClasses(item)"
-            data-test="item"
-            @click.native="onItemClick($event, item)"
-          >
-            <div
-              class="question-card-header"
-              :style="{ borderBottom: `1px solid ${$themePalette.grey.v_200}` }"
-            >
-              <h3
-                class="question-card-title"
-                :style="{ color: $themePalette.grey.v_800 }"
-              >
-                {{ questionNumberLabel(idx) }}
-              </h3>
-
-              <div class="question-card-actions toolbar">
-                <AssessmentItemToolbar
-                  :iconActionsConfig="itemToolbarIconActions()"
-                  :displayMenu="true"
-                  :menuActionsConfig="itemToolbarMenuActions(item)"
-                  :canEdit="!isPerseusItem(item)"
-                  :canMoveUp="!isItemFirst(item)"
-                  :canMoveDown="!isItemLast(item)"
-                  :collapse="!$vuetify.breakpoint.mdAndUp"
-                  :itemLabel="$tr('toolbarItemLabel')"
-                  analyticsLabel="Question"
-                  @click="onItemToolbarClick($event, item)"
-                />
-              </div>
             </div>
 
             <div class="question-card-body">
               <AssessmentItemEditor
+                v-if="isItemActive(item)"
                 :item="item"
                 :errors="itemErrors(item)"
                 :openDialog="openDialog"
@@ -127,9 +101,17 @@
                 @update="onItemUpdate"
                 @close="closeActiveItem"
               />
+              <AssessmentItemPreview
+                v-else
+                :item="item"
+                :detailed="displayAnswersPreview"
+              />
             </div>
 
-            <div class="question-card-footer">
+            <div
+              v-if="isItemActive(item)"
+              class="question-card-footer"
+            >
               <KButton
                 :text="$tr('closeBtnLabel')"
                 class="close-item-btn"
@@ -160,8 +142,9 @@
 <script>
 
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
-  import { AssessmentItemToolbarActions } from '../../constants';
+  import { AssessmentItemToolbarActions, AssessmentItemTypeLabels } from '../../constants';
   import { assessmentItemKey } from '../../utils';
+  import translator from '../../translator';
 
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
   import AssessmentItemEditor from '../AssessmentItemEditor/AssessmentItemEditor';
@@ -290,6 +273,22 @@
       },
       isItemActive(item) {
         return areItemsEqual(this.activeItem, item);
+      },
+      itemCardKey(item) {
+        const prefix = this.isItemActive(item) ? 'question-editor' : 'question-preview';
+        return `${prefix}-${item.assessment_id}`;
+      },
+      questionNumberAndTypeLabel(item, idx) {
+        const kind = item && item.type ? item.type : '';
+        const kindLabel =
+          kind && AssessmentItemTypeLabels[kind]
+            ? translator.$tr(AssessmentItemTypeLabels[kind])
+            : '';
+        return this.$tr('questionNumberAndTypeLabel', {
+          number: idx + 1,
+          total: this.sortedItems.length,
+          type: kindLabel,
+        });
       },
       isPerseusItem(item) {
         return item && item.type === AssessmentItemTypes.PERSEUS_QUESTION;
@@ -488,6 +487,7 @@
       newQuestionBtnLabel: 'New question',
       showAnswers: 'Show answers',
       questionNumberLabel: 'Question {number} of {total}',
+      questionNumberAndTypeLabel: 'Question {number} of {total} — {type}',
     },
   };
 
