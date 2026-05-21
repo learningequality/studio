@@ -78,8 +78,7 @@
                 <AssessmentItemToolbar
                   :iconActionsConfig="itemToolbarIconActions()"
                   :displayMenu="true"
-                  :menuActionsConfig="itemToolbarMenuActions(item)"
-                  :canEdit="!isPerseusItem(item)"
+                  :menuActionsConfig="itemToolbarMenuActions()"
                   :canMoveUp="!isItemFirst(item)"
                   :canMoveDown="!isItemLast(item)"
                   :collapse="!$vuetify.breakpoint.mdAndUp"
@@ -324,13 +323,11 @@
         ];
       },
       itemToolbarMenuActions() {
-        const actions = [
+        return [
           AssessmentItemToolbarActions.ADD_ITEM_ABOVE,
           AssessmentItemToolbarActions.ADD_ITEM_BELOW,
           AssessmentItemToolbarActions.DELETE_ITEM,
         ];
-
-        return actions;
       },
       onItemUpdate(item) {
         this.$emit('updateItem', item);

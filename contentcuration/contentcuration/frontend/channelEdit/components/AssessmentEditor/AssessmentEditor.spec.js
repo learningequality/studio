@@ -92,12 +92,6 @@ const clickClose = async assessmentItemWrapper => {
   await assessmentItemWrapper.findComponent('[data-test="closeBtn"]').trigger('click');
 };
 
-const clickEdit = async assessmentItemWrapper => {
-  await assessmentItemWrapper
-    .findComponent(`[data-test="toolbarMenuItem-${AssessmentItemToolbarActions.EDIT_ITEM}"]`)
-    .trigger('click');
-};
-
 const clickDelete = async assessmentItemWrapper => {
   await assessmentItemWrapper
     .findComponent(`[data-test="toolbarMenuItem-${AssessmentItemToolbarActions.DELETE_ITEM}"]`)
@@ -242,17 +236,6 @@ describe('AssessmentEditor', () => {
   it('opens an item on item click', async () => {
     const items = getItems(wrapper);
     await items.at(1).trigger('click');
-    const updatedItems = getItems(wrapper);
-
-    expect(isItemOpen(updatedItems.at(0))).toBe(false);
-    expect(isItemOpen(updatedItems.at(1))).toBe(true);
-    expect(isItemOpen(updatedItems.at(2))).toBe(false);
-    expect(isItemOpen(updatedItems.at(3))).toBe(false);
-  });
-
-  it('opens an item on toolbar edit menu click', async () => {
-    const items = getItems(wrapper);
-    await clickEdit(items.at(1));
     const updatedItems = getItems(wrapper);
 
     expect(isItemOpen(updatedItems.at(0))).toBe(false);

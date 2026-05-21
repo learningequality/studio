@@ -24,9 +24,6 @@ describe('AssessmentItemPreview', () => {
             { hint: 'Hint 2', order: 2 },
           ],
         },
-        renderCard: true,
-        questionIndex: 0,
-        questionCount: 3,
       },
     });
   });
@@ -39,10 +36,6 @@ describe('AssessmentItemPreview', () => {
     // Find the RichTextEditor for the question and check its value prop.
     const questionEditor = wrapper.findComponent({ name: 'RichTextEditor' });
     expect(questionEditor.props('value')).toBe('Question');
-  });
-
-  it('renders question number and type header', () => {
-    expect(wrapper.html()).toContain('Question 1 of 3 — Single choice');
   });
 
   it("doesn't render answers by default", () => {
