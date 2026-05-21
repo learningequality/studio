@@ -1,18 +1,24 @@
 <template>
 
-  <VContainer fluid>
+  <VContainer
+    fluid
+    :style="containerStyle"
+  >
     <template v-if="sortedItems && sortedItems.length">
       <KPageContainer
         class="show-answers-container"
         :topMargin="0"
+        noPadding
       >
-        <Checkbox
-          v-model="displayAnswersPreview"
-          :label="$tr('showAnswers')"
-          class="ma-0"
-          data-test="showAnswersCheckbox"
-          style="font-size: 16px"
-        />
+        <div class="show-answers-inner">
+          <Checkbox
+            v-model="displayAnswersPreview"
+            :label="$tr('showAnswers')"
+            class="ma-0"
+            data-test="showAnswersCheckbox"
+            style="font-size: 16px"
+          />
+        </div>
       </KPageContainer>
 
       <transition-group
@@ -29,17 +35,13 @@
             :questionIndex="idx"
             :questionCount="sortedItems.length"
             renderCard
-            class="list-complete-item"
             :class="itemClasses(item)"
             data-test="item"
             @click.native="onItemClick($event, item)"
           >
             <template #actions>
               <div class="question-card-actions toolbar">
-                <div
-                  v-if="!isItemValid(item)"
-                  class="incomplete-indicator"
-                >
+                <div v-if="!isItemValid(item)">
                   <template v-if="$vuetify.breakpoint.lgAndUp">
                     <Icon icon="error" />
                     <span class="font-weight-bold red--text">
@@ -83,13 +85,19 @@
             :key="`question-editor-${item.assessment_id}`"
             noPadding
             :topMargin="0"
-            class="list-complete-item question-card"
+            class="question-card"
             :class="itemClasses(item)"
             data-test="item"
             @click.native="onItemClick($event, item)"
           >
-            <div class="question-card-header">
-              <h3 class="question-card-title">
+            <div
+              class="question-card-header"
+              :style="{ borderBottom: `1px solid ${$themePalette.grey.v_200}` }"
+            >
+              <h3
+                class="question-card-title"
+                :style="{ color: $themePalette.grey.v_800 }"
+              >
                 {{ questionNumberLabel(idx) }}
               </h3>
 
@@ -151,6 +159,7 @@
 
 <script>
 
+  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { AssessmentItemToolbarActions } from '../../constants';
   import { assessmentItemKey } from '../../utils';
 
@@ -229,6 +238,10 @@
       },
       lastItem() {
         return this.sortedItems.length ? this.sortedItems[this.sortedItems.length - 1] : null;
+      },
+      containerStyle() {
+        const { windowIsSmall } = useKResponsiveWindow();
+        return windowIsSmall.value ? {} : { maxWidth: '80%', margin: '0 auto' };
       },
     },
     watch: {
@@ -311,16 +324,12 @@
           [AssessmentItemToolbarActions.MOVE_ITEM_DOWN, { collapse: true }],
         ];
       },
-      itemToolbarMenuActions(item) {
+      itemToolbarMenuActions() {
         const actions = [
           AssessmentItemToolbarActions.ADD_ITEM_ABOVE,
           AssessmentItemToolbarActions.ADD_ITEM_BELOW,
           AssessmentItemToolbarActions.DELETE_ITEM,
         ];
-
-        if (!this.isItemActive(item) && !this.isPerseusItem(item)) {
-          actions.unshift(AssessmentItemToolbarActions.EDIT_ITEM);
-        }
 
         return actions;
       },
@@ -492,6 +501,12 @@
     margin-bottom: 16px;
   }
 
+  .show-answers-inner {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+  }
+
   .question-card {
     position: relative;
     min-height: 75px;
@@ -506,34 +521,29 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    min-height: 76px;
-    padding: 16px 28px;
-    border-bottom: 1px solid var(--v-grey-lighten4);
+    padding: 12px 20px;
   }
 
   .question-card-title {
     margin: 0;
-    font-size: 16px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 600;
   }
 
   .question-card-actions {
     display: flex;
+    gap: 8px;
     align-items: center;
   }
 
-  .incomplete-indicator {
-    margin-right: 8px;
-  }
-
   .question-card-body {
-    padding: 16px 28px 12px;
+    padding: 10px 20px;
   }
 
   .question-card-footer {
     display: flex;
     justify-content: flex-end;
-    padding: 0 28px 20px;
+    padding: 0 20px 20px;
   }
 
 </style>

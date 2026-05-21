@@ -114,7 +114,10 @@
             </VTab>
           </Tabs>
         </ToolBar>
-        <VContainer fluid>
+        <VContainer
+          fluid
+          :style="questionsTabStyles"
+        >
           <VTabsItems v-model="currentTab">
             <VTabItem
               :key="tabs.DETAILS"
@@ -158,7 +161,6 @@
               :key="tabs.QUESTIONS"
               ref="questionwindow"
               :value="tabs.QUESTIONS"
-              :style="questionsTabStyles"
               lazy
             >
               <AssessmentTab :nodeId="nodeIds[0]" />

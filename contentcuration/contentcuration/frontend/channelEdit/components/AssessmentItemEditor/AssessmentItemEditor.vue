@@ -7,7 +7,10 @@
         lg5
         class="kind-select-container"
       >
-        <div class="field-label">
+        <div
+          class="field-label"
+          :style="{ color: $themePalette.grey.v_800 }"
+        >
           {{ $tr('typeLabel') }}
         </div>
         <KSelect
@@ -40,6 +43,7 @@
               v-model="question"
               mode="edit"
               class="question-editor"
+              minHeight="80px"
               :autofocus="shouldAutofocusQuestion"
               :imageProcessor="EditorImageProcessor"
               @update="onQuestionUpdate"
@@ -49,6 +53,7 @@
             <div
               v-else
               class="pb-3 pl-2 pr-2 pt-3 question-text"
+              :style="{ border: `1px solid ${$themePalette.grey.v_300}` }"
               data-test="questionText"
               @click="openQuestion"
             >
@@ -268,7 +273,7 @@
           );
         },
         set(option) {
-          const newKind = option && option.value ? option.value : option;
+          const newKind = option?.value;
           if (!newKind) {
             return;
           }
@@ -500,30 +505,22 @@
 
   .field-label {
     margin-bottom: 8px;
-    font-size: 16px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 600;
   }
 
   .kind-select {
     max-width: 440px;
   }
 
-  .question-editor {
-    min-height: 112px;
-  }
-
-  ::v-deep .question-editor.editor-container {
-    min-height: 112px;
-  }
-
   .hints-divider {
-    // The -28px matches the 28px horizontal padding of .question-card-body
+    max-width: none !important;
+    // The -20px matches the 20px horizontal padding of .question-card-body
     // in AssessmentEditor.vue. If that padding changes, update this value too.
-    margin: 16px -28px 0;
+    margin: 16px -20px 0;
   }
 
   .question-text {
-    border: 1px solid var(--v-grey-lighten4);
     transition: 0.7s;
 
     &:hover {

@@ -8,8 +8,12 @@
     <div
       v-if="renderCard"
       class="question-card-header"
+      :style="{ borderBottom: `1px solid ${$themePalette.grey.v_200}` }"
     >
-      <h3 class="question-card-title">
+      <h3
+        class="question-card-title"
+        :style="{ color: $themePalette.grey.v_800 }"
+      >
         {{ questionNumberAndTypeLabel }}
       </h3>
 
@@ -322,13 +326,12 @@
     justify-content: space-between;
     min-height: 76px;
     padding: 16px 28px;
-    border-bottom: 1px solid var(--v-grey-lighten4);
   }
 
   .question-card-title {
     margin: 0;
-    font-size: 16px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 600;
   }
 
   .question-card-body {
