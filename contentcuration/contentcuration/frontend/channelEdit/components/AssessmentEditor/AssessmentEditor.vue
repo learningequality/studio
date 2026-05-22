@@ -25,101 +25,100 @@
         name="list-complete"
         tag="div"
       >
-        <template v-for="(item, idx) in sortedItems">
-          <KPageContainer
-            ref="questionCardRef"
-            :key="itemCardKey(item)"
-            noPadding
-            :topMargin="0"
-            class="question-card"
-            :class="itemClasses(item)"
-            data-test="item"
-            @click.native="onItemClick($event, item)"
+        <KPageContainer
+          v-for="(item, idx) in sortedItems"
+          :key="itemCardKey(item)"
+          ref="questionCardRef"
+          noPadding
+          :topMargin="0"
+          class="question-card"
+          :class="itemClasses(item)"
+          data-test="item"
+          @click.native="onItemClick($event, item)"
+        >
+          <div
+            class="question-card-header"
+            :style="{ borderBottom: `1px solid ${$themePalette.grey.v_200}` }"
           >
-            <div
-              class="question-card-header"
-              :style="{ borderBottom: `1px solid ${$themePalette.grey.v_200}` }"
+            <h3
+              class="question-card-title"
+              :style="{ color: $themePalette.grey.v_800 }"
             >
-              <h3
-                class="question-card-title"
-                :style="{ color: $themePalette.grey.v_800 }"
-              >
-                <template v-if="isItemActive(item)">
-                  {{ questionNumberLabel(idx) }}
+              <template v-if="isItemActive(item)">
+                {{ questionNumberLabel(idx) }}
+              </template>
+              <template v-else>
+                {{ questionNumberAndTypeLabel(item, idx) }}
+              </template>
+            </h3>
+
+            <div class="question-card-actions toolbar">
+              <div v-if="!isItemValid(item)">
+                <template v-if="$vuetify.breakpoint.lgAndUp">
+                  <Icon icon="error" />
+                  <span class="font-weight-bold red--text">
+                    {{ $tr('incompleteItemIndicatorLabel') }}
+                  </span>
                 </template>
                 <template v-else>
-                  {{ questionNumberAndTypeLabel(item, idx) }}
+                  <Icon
+                    ref="incompleteError"
+                    icon="error"
+                  />
+                  <KTooltip
+                    reference="incompleteError"
+                    placement="bottom"
+                    :refs="$refs"
+                  >
+                    {{ $tr('incompleteItemIndicatorLabel') }}
+                  </KTooltip>
                 </template>
-              </h3>
-
-              <div class="question-card-actions toolbar">
-                <div v-if="!isItemValid(item)">
-                  <template v-if="$vuetify.breakpoint.lgAndUp">
-                    <Icon icon="error" />
-                    <span class="font-weight-bold red--text">
-                      {{ $tr('incompleteItemIndicatorLabel') }}
-                    </span>
-                  </template>
-                  <template v-else>
-                    <Icon
-                      ref="incompleteError"
-                      icon="error"
-                    />
-                    <KTooltip
-                      reference="incompleteError"
-                      placement="bottom"
-                      :refs="$refs"
-                    >
-                      {{ $tr('incompleteItemIndicatorLabel') }}
-                    </KTooltip>
-                  </template>
-                </div>
-
-                <AssessmentItemToolbar
-                  :iconActionsConfig="itemToolbarIconActions()"
-                  :displayMenu="true"
-                  :menuActionsConfig="itemToolbarMenuActions()"
-                  :canMoveUp="!isItemFirst(item)"
-                  :canMoveDown="!isItemLast(item)"
-                  :collapse="!$vuetify.breakpoint.mdAndUp"
-                  :itemLabel="$tr('toolbarItemLabel')"
-                  analyticsLabel="Question"
-                  @click="onItemToolbarClick($event, item)"
-                />
               </div>
-            </div>
 
-            <div class="question-card-body">
-              <AssessmentItemEditor
-                v-if="isItemActive(item)"
-                :item="item"
-                :errors="itemErrors(item)"
-                :openDialog="openDialog"
-                :nodeId="nodeId"
-                data-test="editor"
-                @update="onItemUpdate"
-                @close="closeActiveItem"
-              />
-              <AssessmentItemPreview
-                v-else
-                :item="item"
-                :detailed="displayAnswersPreview"
+              <AssessmentItemToolbar
+                :iconActionsConfig="itemToolbarIconActions()"
+                :displayMenu="true"
+                :menuActionsConfig="itemToolbarMenuActions()"
+                :canMoveUp="!isItemFirst(item)"
+                :canMoveDown="!isItemLast(item)"
+                :collapse="!$vuetify.breakpoint.mdAndUp"
+                :itemLabel="$tr('toolbarItemLabel')"
+                analyticsLabel="Question"
+                @click="onItemToolbarClick($event, item)"
               />
             </div>
+          </div>
 
-            <div
+          <div class="question-card-body">
+            <AssessmentItemEditor
               v-if="isItemActive(item)"
-              class="question-card-footer"
-            >
-              <KButton
-                :text="$tr('closeBtnLabel')"
-                class="close-item-btn"
-                data-test="closeBtn"
-                @click="closeActiveItem"
-              />
-            </div>
-          </KPageContainer>
-        </template>
+              :item="item"
+              :errors="itemErrors(item)"
+              :openDialog="openDialog"
+              :nodeId="nodeId"
+              data-test="editor"
+              @update="onItemUpdate"
+              @close="closeActiveItem"
+            />
+            <AssessmentItemPreview
+              v-else
+              :item="item"
+              :detailed="displayAnswersPreview"
+            />
+          </div>
+
+          <div
+            v-if="isItemActive(item)"
+            class="question-card-footer"
+          >
+            <KButton
+              :text="$tr('closeBtnLabel')"
+              class="close-item-btn"
+              data-test="closeBtn"
+              @click="closeActiveItem"
+            />
+          </div>
+        </KPageContainer>
       </transition-group>
     </template>
 
@@ -505,6 +504,8 @@
   }
 
   .question-card {
+    --question-card-horizontal-padding: 20px;
+
     position: relative;
     min-height: 75px;
     padding: 0;
@@ -518,7 +519,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 20px;
+    padding: 12px var(--question-card-horizontal-padding);
   }
 
   .question-card-title {
@@ -534,13 +535,13 @@
   }
 
   .question-card-body {
-    padding: 10px 20px;
+    padding: 10px var(--question-card-horizontal-padding);
   }
 
   .question-card-footer {
     display: flex;
     justify-content: flex-end;
-    padding: 0 20px 20px;
+    padding: 0 var(--question-card-horizontal-padding) var(--question-card-horizontal-padding);
   }
 
 </style>

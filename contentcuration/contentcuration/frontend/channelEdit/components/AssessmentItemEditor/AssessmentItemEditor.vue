@@ -515,9 +515,8 @@
 
   .hints-divider {
     max-width: none !important;
-    // The -20px matches the 20px horizontal padding of .question-card-body
-    // in AssessmentEditor.vue. If that padding changes, update this value too.
-    margin: 16px -20px 0;
+    // Negative margin to match the horizontal padding of the parent container
+    margin: 16px calc(-1 * var(--question-card-horizontal-padding, 20px)) 0;
   }
 
   .question-text {
