@@ -104,6 +104,7 @@
               v-else
               :item="item"
               :detailed="displayAnswersPreview"
+              :showTypeLabel="false"
             />
           </div>
 

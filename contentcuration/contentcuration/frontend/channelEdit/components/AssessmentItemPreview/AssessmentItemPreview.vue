@@ -6,7 +6,11 @@
       justify-space-between
     >
       <VFlex>
-        <div class="caption grey--text mb-2">
+        <div
+          v-if="showTypeLabel"
+          class="caption grey--text mb-2"
+          data-test="type-label"
+        >
           {{ kindLabel }}
         </div>
         <TipTapEditor
@@ -167,6 +171,10 @@
       detailed: {
         type: Boolean,
         default: false,
+      },
+      showTypeLabel: {
+        type: Boolean,
+        default: true,
       },
     },
     data() {
