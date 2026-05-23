@@ -140,7 +140,6 @@
 
 <script>
 
-  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { AssessmentItemToolbarActions, AssessmentItemTypeLabels } from '../../constants';
   import { assessmentItemKey } from '../../utils';
   import translator from '../../translator';
@@ -201,6 +200,10 @@
         type: Function,
         default: () => {},
       },
+      windowIsSmall: {
+        type: Boolean,
+        default: false,
+      },
     },
     data() {
       return {
@@ -222,8 +225,7 @@
         return this.sortedItems.length ? this.sortedItems[this.sortedItems.length - 1] : null;
       },
       containerStyle() {
-        const { windowIsSmall } = useKResponsiveWindow();
-        return windowIsSmall.value ? {} : { maxWidth: '80%', margin: '0 auto' };
+        return this.windowIsSmall ? {} : { maxWidth: '85%', margin: '0 auto' };
       },
     },
     watch: {
@@ -274,11 +276,10 @@
         return areItemsEqual(this.activeItem, item);
       },
       itemCardKey(item) {
-        const prefix = this.isItemActive(item) ? 'question-editor' : 'question-preview';
-        return `${prefix}-${item.assessment_id}`;
+        return `question-card-${item.assessment_id}`;
       },
       questionNumberAndTypeLabel(item, idx) {
-        const kind = item && item.type ? item.type : '';
+        const kind = item?.type || '';
         const kindLabel =
           kind && AssessmentItemTypeLabels[kind]
             ? translator.$tr(AssessmentItemTypeLabels[kind])
@@ -536,13 +537,14 @@
   }
 
   .question-card-body {
+    min-width: 0;
     padding: 10px var(--question-card-horizontal-padding);
   }
 
   .question-card-footer {
     display: flex;
     justify-content: flex-end;
-    padding: 0 var(--question-card-horizontal-padding) var(--question-card-horizontal-padding);
+    padding: 0 var(--question-card-horizontal-padding) 20px;
   }
 
 </style>

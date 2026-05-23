@@ -2,10 +2,9 @@
 
   <div>
     <VLayout>
-      <VFlex
-        xs7
-        lg5
+      <div
         class="kind-select-container"
+        style="width: 100%"
       >
         <div
           class="field-label"
@@ -21,7 +20,7 @@
           class="kind-select"
           data-test="kindSelect"
         />
-      </VFlex>
+      </div>
     </VLayout>
 
     <VLayout>
@@ -42,7 +41,6 @@
               v-if="isQuestionOpen"
               v-model="question"
               mode="edit"
-              class="question-editor"
               minHeight="80px"
               :autofocus="shouldAutofocusQuestion"
               :imageProcessor="EditorImageProcessor"
@@ -510,7 +508,8 @@
   }
 
   .kind-select {
-    max-width: 440px;
+    width: 100%;
+    max-width: 314px;
   }
 
   .hints-divider {

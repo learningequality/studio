@@ -2,8 +2,8 @@
 
   <div class="assessment-item-toolbar">
     <KIconButton
-      v-for="(action, idx) in iconActions"
-      :key="`${action}-${idx}`"
+      v-for="action in iconActions"
+      :key="action"
       :icon="config[action].icon"
       :tooltip="config[action].label"
       :disabled="!isIconClickable(action)"
