@@ -1,16 +1,18 @@
 <template>
 
   <div class="assessment-item-toolbar">
-    <KIconButton
-      v-for="action in iconActions"
-      :key="action"
-      :icon="config[action].icon"
-      :tooltip="config[action].label"
-      :disabled="!isIconClickable(action)"
-      :color="iconColor(action)"
-      :data-test="`toolbarIcon-${action}`"
-      @click="clickItem(action)"
-    />
+    <div class="icon-actions-wrapper">
+      <KIconButton
+        v-for="action in iconActions"
+        :key="action"
+        :icon="config[action].icon"
+        :tooltip="config[action].label"
+        :disabled="!isIconClickable(action)"
+        :color="iconColor(action)"
+        :data-test="`toolbarIcon-${action}`"
+        @click="clickItem(action)"
+      />
+    </div>
 
     <BaseMenu
       v-if="displayMenu"
@@ -299,6 +301,12 @@
     gap: 16px;
     align-items: center;
     justify-content: flex-end;
+  }
+
+  .icon-actions-wrapper {
+    display: flex;
+    gap: 16px;
+    align-items: center;
   }
 
 </style>
