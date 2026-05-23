@@ -12,7 +12,6 @@ afterAll(() => {
 });
 
 describe('AccessibilityOptions', () => {
-  const mockConstantsMixin = {};
   const mockMetadataMixin = {
     methods: {
       translateMetadataString: str => str,
@@ -27,7 +26,7 @@ describe('AccessibilityOptions', () => {
         ...props,
       },
       routes: [],
-      mixins: [mockConstantsMixin, mockMetadataMixin],
+      mixins: [mockMetadataMixin],
       mocks: {
         $tr: key => key,
       },
@@ -86,6 +85,7 @@ describe('AccessibilityOptions', () => {
     const checkboxes = screen.getAllByRole('checkbox');
     expect(checkboxes).toHaveLength(1);
     expect(screen.getByRole('checkbox', { name: /captionsSubtitles/i })).toBeInTheDocument();
+    expect(screen.queryByTestId('tooltip-captionsSubtitles')).not.toBeInTheDocument();
   });
 
   it('renders informative tooltips next to the corresponding options', () => {
@@ -96,7 +96,7 @@ describe('AccessibilityOptions', () => {
     expect(screen.getByTestId('tooltip-taggedPdf')).toBeInTheDocument();
   });
 
-  describe('User Interactions and v-model', () => {
+  describe('User Interactions', () => {
     it('emits an input event with the updated array when a user checks an option', async () => {
       const { emitted } = renderComponent({ kind: 'document', value: [] });
 
