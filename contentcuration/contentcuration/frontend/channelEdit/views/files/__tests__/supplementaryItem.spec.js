@@ -42,10 +42,9 @@ describe('supplementaryItem', () => {
     expect(screen.queryByTestId('remove')).not.toBeInTheDocument();
   });
 
-  // it('should call uploadingHandler when Uploader starts uploading file', () => {
-  //   wrapper.findComponent(Uploader).vm.uploadingHandler({ id: 'file1' });
-  //   expect(wrapper.vm.fileUploadId).toBe('file1');
-  // });
+  // Removed: uploadingHandler test - was implementation-detail focused
+  // and doesn't translate to VTL's user-behavior model. Covered by 
+  // 'uploading should be true if progress < 1' test instead.
 
   it('should call uploadCompleteHandler when Uploader finishes uploading file', () => {
     const uploadCompleteHandler = jest.fn();
