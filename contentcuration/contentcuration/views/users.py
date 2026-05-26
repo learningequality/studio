@@ -107,8 +107,9 @@ def send_invitation_email(request):
         message = render_to_string("permissions/permissions_email.txt", ctx_dict)
         send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user_email])
     except KeyError:
+        logger.warning("send_invitation_email missing required field", exc_info=True)
         return HttpResponseBadRequest(
-            "Missing attribute from data: {}".format(request.data)
+            "Missing attribute from data", content_type="text/plain"
         )
 
     return Response(InvitationSerializer(invitation).data)

@@ -60,6 +60,8 @@ from contentcuration.viewsets.sync.utils import generate_publish_event
 from contentcuration.viewsets.sync.utils import generate_update_event
 
 
+logger = logging.getLogger(__name__)
+
 VersionStatus = namedtuple("VersionStatus", ["version", "status", "message"])
 VERSION_OK = VersionStatus(
     version=rc.VERSION_OK, status=0, message=rc.VERSION_OK_MESSAGE
@@ -138,7 +140,10 @@ def check_version(request):
             }
         )
     except Exception as e:
-        return HttpResponseServerError(content=str(e), reason=str(e))
+        handle_server_error(e, request)
+        return HttpResponseServerError(
+            "Internal server error", content_type="text/plain"
+        )
 
 
 @api_view(["POST"])
@@ -163,7 +168,10 @@ def file_diff(request):
 
         return Response(to_return)
     except Exception as e:
-        return HttpResponseServerError(content=str(e), reason=str(e))
+        handle_server_error(e, request)
+        return HttpResponseServerError(
+            "Internal server error", content_type="text/plain"
+        )
 
 
 @api_view(["POST"])
@@ -180,12 +188,14 @@ def api_file_upload(request):
         try:
             request.user.check_staged_space(fobj.size, checksum)
         except Exception as e:
-            return HttpResponseForbidden(str(e))
+            handle_server_error(e, request)
+            return HttpResponseForbidden("Permission denied", content_type="text/plain")
 
         try:
             write_file_to_storage(fobj, check_valid=True)
-        except SuspiciousOperation as e:
-            return HttpResponseBadRequest(str(e))
+        except SuspiciousOperation:
+            logger.warning("SuspiciousOperation in api_file_upload", exc_info=True)
+            return HttpResponseBadRequest("Invalid file", content_type="text/plain")
 
         StagedFile.objects.get_or_create(
             checksum=checksum, file_size=fobj.size, uploaded_by=request.user
@@ -196,7 +206,9 @@ def api_file_upload(request):
         return HttpResponseBadRequest("Invalid file upload request")
     except Exception as e:
         handle_server_error(e, request)
-        return HttpResponseServerError(content=str(e), reason=str(e))
+        return HttpResponseServerError(
+            "Internal server error", content_type="text/plain"
+        )
 
 
 @api_view(["POST"])
@@ -222,13 +234,18 @@ def api_create_channel_endpoint(request):
                 "channel_id": obj.pk,
             }
         )
-    except KeyError as e:
+    except KeyError:
+        logger.warning(
+            "api_create_channel_endpoint missing required field", exc_info=True
+        )
         return HttpResponseBadRequest(
-            "Required attribute missing from data | {}".format(str(e))
+            "Required attribute missing from data", content_type="text/plain"
         )
     except Exception as e:
         handle_server_error(e, request)
-        return HttpResponseServerError(content=str(e), reason=str(e))
+        return HttpResponseServerError(
+            "Internal server error", content_type="text/plain"
+        )
 
 
 @api_view(["POST"])
@@ -294,14 +311,17 @@ def api_commit_channel(request):
             }
         )
     except (Channel.DoesNotExist, PermissionDenied):
-        return HttpResponseNotFound("No channel matching: {}".format(channel_id))
-    except KeyError as e:
+        return HttpResponseNotFound("Channel not found", content_type="text/plain")
+    except KeyError:
+        logger.warning("api_commit_channel missing required field", exc_info=True)
         return HttpResponseBadRequest(
-            "Required attribute missing from data | {}".format(str(e))
+            "Required attribute missing from data", content_type="text/plain"
         )
     except Exception as e:
         handle_server_error(e, request)
-        return HttpResponseServerError(content=str(e), reason=str(e))
+        return HttpResponseServerError(
+            "Internal server error", content_type="text/plain"
+        )
 
 
 @api_view(["POST"])
@@ -349,18 +369,23 @@ def api_add_nodes_to_tree(request):
             }
         )
     except ContentNode.DoesNotExist:
-        return HttpResponseNotFound("No content matching: {}".format(parent_id))
-    except ValidationError as e:
-        return HttpResponseBadRequest(content=str(e))
-    except KeyError as e:
+        return HttpResponseNotFound("Content not found", content_type="text/plain")
+    except ValidationError:
+        logger.warning("api_add_nodes_to_tree ValidationError", exc_info=True)
+        return HttpResponseBadRequest("Validation error", content_type="text/plain")
+    except KeyError:
+        logger.warning("api_add_nodes_to_tree missing required field", exc_info=True)
         return HttpResponseBadRequest(
-            "Required attribute missing from data | {}".format(str(e))
+            "Required attribute missing from data", content_type="text/plain"
         )
-    except NodeValidationError as e:
-        return HttpResponseBadRequest(str(e))
+    except NodeValidationError:
+        logger.warning("api_add_nodes_to_tree NodeValidationError", exc_info=True)
+        return HttpResponseBadRequest("Invalid node data", content_type="text/plain")
     except Exception as e:
         handle_server_error(e, request)
-        return HttpResponseServerError(content=str(e), reason=str(e))
+        return HttpResponseServerError(
+            "Internal server error", content_type="text/plain"
+        )
 
 
 @api_view(["POST"])
@@ -395,10 +420,12 @@ def api_publish_channel(request):
             }
         )
     except (KeyError, Channel.DoesNotExist):
-        return HttpResponseNotFound("No channel matching: {}".format(data))
+        return HttpResponseNotFound("Channel not found", content_type="text/plain")
     except Exception as e:
         handle_server_error(e, request)
-        return HttpResponseServerError(content=str(e), reason=str(e))
+        return HttpResponseServerError(
+            "Internal server error", content_type="text/plain"
+        )
 
 
 @api_view(["POST"])
@@ -418,10 +445,12 @@ def check_user_is_editor(request):
             Channel.get_editable(request.user, channel_id)
             return Response({"success": True})
         except Channel.DoesNotExist:
-            return HttpResponseNotFound("Channel not found {}".format(channel_id))
+            return HttpResponseNotFound("Channel not found", content_type="text/plain")
 
     except KeyError:
-        raise HttpResponseBadRequest("Missing attribute from data: {}".format(data))
+        return HttpResponseBadRequest(
+            "Missing attribute from data", content_type="text/plain"
+        )
 
 
 @api_view(["POST"])
@@ -452,12 +481,14 @@ def get_tree_data(request):
         children_data = tree_data.get("children", [])
         return Response({"success": True, "tree": children_data})
     except (Channel.DoesNotExist, PermissionDenied):
-        return HttpResponseNotFound("No channel matching: {}".format(channel_id))
+        return HttpResponseNotFound("Channel not found", content_type="text/plain")
     except ValueError:
-        return HttpResponseNotFound("No tree name matching: {}".format(tree_name))
+        return HttpResponseNotFound("Invalid tree name", content_type="text/plain")
     except Exception as e:
         handle_server_error(e, request)
-        return HttpResponseServerError(content=str(e), reason=str(e))
+        return HttpResponseServerError(
+            "Internal server error", content_type="text/plain"
+        )
 
 
 @api_view(["POST"])
@@ -499,10 +530,12 @@ def get_node_tree_data(request):
         }
         return Response(response_data)
     except Channel.DoesNotExist:
-        return HttpResponseNotFound("No channel matching: {}".format(channel_id))
+        return HttpResponseNotFound("Channel not found", content_type="text/plain")
     except Exception as e:
         handle_server_error(e, request)
-        return HttpResponseServerError(content=str(e), reason=str(e))
+        return HttpResponseServerError(
+            "Internal server error", content_type="text/plain"
+        )
 
 
 @api_view(["POST"])
@@ -529,14 +562,14 @@ def get_channel_status_bulk(request):
 
         return Response({"success": True, "statuses": statuses})
     except (Channel.DoesNotExist, PermissionDenied):
-        return HttpResponseNotFound(
-            "No complete set of channels matching: {}".format(",".join(channel_ids))
-        )
+        return HttpResponseNotFound("Channel not found", content_type="text/plain")
     except KeyError:
         raise ObjectDoesNotExist("Missing attribute from data: {}".format(data))
     except Exception as e:
         handle_server_error(e, request)
-        return HttpResponseServerError(content=str(e), reason=str(e))
+        return HttpResponseServerError(
+            "Internal server error", content_type="text/plain"
+        )
 
 
 def get_status(channel_id):

@@ -1,3 +1,4 @@
+import logging
 from functools import reduce
 
 from django.db import IntegrityError
@@ -43,6 +44,9 @@ from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.constants import EDITOR_M2M
 from contentcuration.viewsets.sync.constants import VIEWER_M2M
+
+
+logger = logging.getLogger(__name__)
 
 
 class IsAdminUser(BasePermission):
@@ -284,9 +288,10 @@ class ChannelUserViewSet(ReadOnlyValuesViewset):
         # In Django 2.2 add ignore_conflicts to make this fool proof
         try:
             self._execute_changes(table, change_type, data)
-        except IntegrityError as e:
+        except IntegrityError:
+            logger.exception("_handle_relationship_changes IntegrityError")
             for change in valid_changes:
-                change.update({"errors": str(e)})
+                change.update({"errors": ["Internal server error"]})
                 errors.append(change)
 
         for change in invalid_changes:
