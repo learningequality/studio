@@ -1,6 +1,7 @@
 <template>
 
   <div
+    ref="containerRef"
     class="dropdown-container paste-button-container"
     @keydown="handleContainerKeydown"
   >
@@ -78,6 +79,7 @@
         pasteOptions,
         showPasteDropdown: isOpen,
         togglePasteDropdown: toggleDropdown,
+        containerRef,
       } = useDropdowns();
 
       const { handlePaste } = useToolbarActions();
@@ -214,6 +216,7 @@
         paste$,
         pasteOptions$,
         pasteOptionsMenu$,
+        containerRef,
       };
     },
   });

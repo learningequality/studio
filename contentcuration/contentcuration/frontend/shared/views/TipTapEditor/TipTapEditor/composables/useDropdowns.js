@@ -77,19 +77,13 @@ export function useDropdowns() {
     selectedFormat.value = format.label;
   };
 
+  const containerRef = ref(null);
+
   const handleClickOutside = event => {
-    const dropdownContainers = document.querySelectorAll('.dropdown-container');
-    let isOutside = true;
-
-    dropdownContainers.forEach(container => {
-      if (container.contains(event.target)) {
-        isOutside = false;
-      }
-    });
-
-    if (isOutside) {
-      closeAllDropdowns();
+    if (!containerRef.value || containerRef.value.contains(event.target)) {
+      return;
     }
+    closeAllDropdowns();
   };
 
   onMounted(() => {
@@ -149,5 +143,6 @@ export function useDropdowns() {
     togglePasteDropdown,
     selectFormat,
     updateSelectedFormat,
+    containerRef,
   };
 }
