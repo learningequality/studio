@@ -4,6 +4,7 @@
     ref="editorContainer"
     class="editor-container"
     :class="{ 'view-mode': editorMode === 'view' }"
+    :style="minHeight && editorMode !== 'view' ? { minHeight } : {}"
     :tabindex="tabindex"
     role="textbox"
     :aria-label="editorMode === 'edit' ? TipTapEditorLabel$() : TipTapViewerLabel$()"
@@ -302,6 +303,10 @@
       imageProcessor: {
         type: Object,
         default: () => ({}),
+      },
+      minHeight: {
+        type: String,
+        default: null,
       },
     },
     emits: ['update', 'minimize', 'open-editor'],

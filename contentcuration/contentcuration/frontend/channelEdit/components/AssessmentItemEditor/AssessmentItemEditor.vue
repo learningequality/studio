@@ -2,25 +2,25 @@
 
   <div>
     <VLayout>
-      <DropdownWrapper
-        component="VFlex"
-        xs7
-        lg5
+      <div
+        class="kind-select-container"
+        style="width: 100%"
       >
-        <template #default="{ attach, menuProps }">
-          <VSelect
-            :key="kindSelectKey"
-            :items="kindSelectItems"
-            :value="kind"
-            :label="$tr('questionTypeLabel')"
-            data-test="kindSelect"
-            :menu-props="menuProps"
-            :attach="attach"
-            box
-            @input="onKindUpdate"
-          />
-        </template>
-      </DropdownWrapper>
+        <div
+          class="field-label"
+          :style="{ color: $themePalette.grey.v_800 }"
+        >
+          {{ $tr('typeLabel') }}
+        </div>
+        <KSelect
+          :key="kindSelectKey"
+          v-model="selectedKind"
+          :options="kindSelectItems"
+          :label="$tr('questionTypeLabel')"
+          class="kind-select"
+          data-test="kindSelect"
+        />
+      </div>
     </VLayout>
 
     <VLayout>
@@ -41,6 +41,7 @@
               v-if="isQuestionOpen"
               v-model="question"
               mode="edit"
+              minHeight="80px"
               :autofocus="shouldAutofocusQuestion"
               :imageProcessor="EditorImageProcessor"
               @update="onQuestionUpdate"
@@ -50,6 +51,7 @@
             <div
               v-else
               class="pb-3 pl-2 pr-2 pt-3 question-text"
+              :style="{ border: `1px solid ${$themePalette.grey.v_300}` }"
               data-test="questionText"
               @click="openQuestion"
             >
@@ -104,8 +106,9 @@
           @close="closeAnswer"
         />
 
+        <VDivider class="hints-divider" />
+
         <HintsEditor
-          class="mt-4"
           :hints="hints"
           :openHintIdx="openHintIdx"
           @update="onHintsUpdate"
@@ -136,13 +139,11 @@
     FeatureFlagKeys,
   } from 'shared/constants';
   import ErrorList from 'shared/views/ErrorList/ErrorList';
-  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue';
 
   export default {
     name: 'AssessmentItemEditor',
     components: {
-      DropdownWrapper,
       ErrorList,
       AnswersEditor,
       HintsEditor,
@@ -234,19 +235,19 @@
         const items = [
           {
             value: AssessmentItemTypes.SINGLE_SELECTION,
-            text: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.SINGLE_SELECTION]),
+            label: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.SINGLE_SELECTION]),
           },
           {
             value: AssessmentItemTypes.MULTIPLE_SELECTION,
-            text: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.MULTIPLE_SELECTION]),
+            label: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.MULTIPLE_SELECTION]),
           },
           {
             value: AssessmentItemTypes.INPUT_QUESTION,
-            text: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.INPUT_QUESTION]),
+            label: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.INPUT_QUESTION]),
           },
           {
             value: AssessmentItemTypes.TRUE_FALSE,
-            text: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.TRUE_FALSE]),
+            label: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.TRUE_FALSE]),
           },
         ];
 
@@ -256,11 +257,26 @@
         ) {
           items.push({
             value: AssessmentItemTypes.FREE_RESPONSE,
-            text: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.FREE_RESPONSE]),
+            label: translator.$tr(AssessmentItemTypeLabels[AssessmentItemTypes.FREE_RESPONSE]),
           });
         }
 
         return items;
+      },
+      selectedKind: {
+        get() {
+          return (
+            this.kindSelectItems.find(option => option.value === this.kind) ||
+            this.kindSelectItems[0]
+          );
+        },
+        set(option) {
+          const newKind = option?.value;
+          if (!newKind) {
+            return;
+          }
+          this.onKindUpdate(newKind);
+        },
       },
       answers() {
         if (!this.item || !this.item.answers) {
@@ -344,7 +360,7 @@
           answers: newAnswers,
         });
       },
-      // question type VSelect needs to be rerended when confirmation dialog
+      // question type KSelect needs to be rerendered when confirmation dialog
       // cancelled to display a correct, previous, value that has changed
       // in the select but has not been changed in data storage actually
       // because of cancel action
@@ -460,6 +476,7 @@
       },
     },
     $trs: {
+      typeLabel: 'Type',
       questionTypeLabel: 'Response type',
       questionLabel: 'Question',
       dialogTitle: 'Changing question type',
@@ -480,8 +497,28 @@
 
 <style lang="scss" scoped>
 
+  .kind-select-container {
+    margin-bottom: 16px;
+  }
+
+  .field-label {
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .kind-select {
+    width: 100%;
+    max-width: 314px;
+  }
+
+  .hints-divider {
+    max-width: none !important;
+    // Negative margin to match the horizontal padding of the parent container
+    margin: 16px calc(-1 * var(--question-card-horizontal-padding, 20px)) 0;
+  }
+
   .question-text {
-    border: 1px solid #b4b4b4;
     transition: 0.7s;
 
     &:hover {

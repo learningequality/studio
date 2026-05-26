@@ -38,16 +38,15 @@ const updateQuestion = async (wrapper, newQuestionText) => {
 };
 
 const selectKind = async (wrapper, kind) => {
-  const input = wrapper.findComponent('[data-test="kindSelect"]');
-  await input.setValue(kind);
-  await input.trigger('input', kind);
+  wrapper.vm.onKindUpdate(kind);
+  await wrapper.vm.$nextTick();
 };
 
 describe('AssessmentItemEditor', () => {
   let wrapper;
 
   it('smoke test', () => {
-    const wrapper = shallowMount(AssessmentItemEditor);
+    const wrapper = shallowMount(AssessmentItemEditor, { store });
 
     expect(wrapper.exists()).toBe(true);
   });
@@ -71,6 +70,19 @@ describe('AssessmentItemEditor', () => {
     // Check that the child editor components also exist.
     expect(wrapper.findComponent({ name: 'AnswersEditor' }).exists()).toBe(true);
     expect(wrapper.findComponent({ name: 'HintsEditor' }).exists()).toBe(true);
+  });
+
+  it('renders the type label and hints divider', () => {
+    wrapper = mount(AssessmentItemEditor, {
+      store,
+      propsData: {
+        item: ITEM,
+      },
+      listeners,
+    });
+
+    expect(wrapper.find('.field-label').text()).toBe('Type');
+    expect(wrapper.find('.hints-divider').exists()).toBe(true);
   });
 
   describe('on question text update', () => {
