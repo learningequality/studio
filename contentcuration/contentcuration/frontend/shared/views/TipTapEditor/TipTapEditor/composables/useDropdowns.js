@@ -79,6 +79,8 @@ export function useDropdowns() {
 
   const containerRef = ref(null);
 
+  // Each instance checks only its own container so
+  // clicking one dropdown's trigger closes the other.
   const handleClickOutside = event => {
     if (!containerRef.value || containerRef.value.contains(event.target)) {
       return;
