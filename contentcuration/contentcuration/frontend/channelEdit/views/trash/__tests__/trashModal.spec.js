@@ -259,6 +259,10 @@ describe('TrashModal', () => {
 
     it('successful restore clears selection and previewNodeId, and reloads nodes', async () => {
       jest.spyOn(TrashModal.methods, 'moveContentNodes').mockResolvedValue();
+      jest.spyOn(MoveModal.methods, 'moveComplete').mockImplementation(function () {
+        this.dialog = false;
+        this.moveNodesInProgress = false;
+      });
 
       const { user, loadNodesSpy } = await makeWrapper();
 
