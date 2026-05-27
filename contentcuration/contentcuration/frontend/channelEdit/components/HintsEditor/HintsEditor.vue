@@ -51,6 +51,7 @@
                     <TipTapEditor
                       v-model="hint.hint"
                       :mode="isHintOpen(hintIdx) ? 'edit' : 'view'"
+                      :autofocus="isHintOpen(hintIdx)"
                       :image-processor="EditorImageProcessor"
                       @update="updateHintText($event, hintIdx)"
                       @minimize="emitClose"
@@ -79,10 +80,11 @@
                     <TipTapEditor
                       v-model="hint.hint"
                       :mode="isHintOpen(hintIdx) ? 'edit' : 'view'"
+                      :autofocus="isHintOpen(hintIdx)"
                       :image-processor="EditorImageProcessor"
                       @update="updateHintText($event, hintIdx)"
                       @minimize="emitClose"
-                      @open-editor="emitOpen(answerIdx)"
+                      @open-editor="emitOpen(hintIdx)"
                     />
                   </keep-alive>
                 </transition>

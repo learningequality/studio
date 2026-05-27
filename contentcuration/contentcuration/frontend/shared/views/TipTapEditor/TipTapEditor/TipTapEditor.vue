@@ -205,6 +205,11 @@
           if (editor.value && editor.value.isEditable !== (newMode === 'edit')) {
             editor.value.setEditable(newMode === 'edit');
           }
+          if (newMode === 'edit' && editor.value && props.autofocus) {
+            nextTick(() => {
+              editor.value?.commands.focus('end');
+            });
+          }
         },
       );
 
