@@ -271,4 +271,26 @@ describe('HintsEditor', () => {
     expect(emitted().open).toHaveLength(1);
     expect(emitted().open[0][0]).toBe(0);
   });
+
+  it('toggles the hints section open and closed when clicking the header button', async () => {
+    const user = userEvent.setup();
+    renderComponent({
+      hints: [{ hint: 'First hint', order: 1 }],
+    });
+
+    // The header button acts as an accordion trigger with correct initial attributes
+    const headerButton = screen.getByRole('button', { name: HintsEditor.$trs.hintsLabel });
+    expect(headerButton).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByTestId('hint')).not.toBeInTheDocument();
+
+    // Click to open the section
+    await user.click(headerButton);
+    expect(headerButton).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByTestId('hint')).toBeInTheDocument();
+
+    // Click to close the section
+    await user.click(headerButton);
+    expect(headerButton).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByTestId('hint')).not.toBeInTheDocument();
+  });
 });

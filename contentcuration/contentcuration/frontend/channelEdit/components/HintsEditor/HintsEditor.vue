@@ -1,11 +1,15 @@
 <template>
 
   <div>
-    <div
-      class="hints-header"
-      @click="sectionOpen = !sectionOpen"
-    >
-      <div class="hints-header-content">
+    <div class="hints-header">
+      <button
+        id="hints-section-button"
+        class="hints-header-button"
+        :aria-expanded="sectionOpen.toString()"
+        aria-controls="hints-section-content"
+        :class="$computedClass(coreOutlineFocus)"
+        @click="sectionOpen = !sectionOpen"
+      >
         <span class="hints-label">
           {{ $tr('hintsLabel') }}
         </span>
@@ -14,145 +18,116 @@
           class="hints-chevron"
           :style="{ transform: sectionOpen ? 'rotate(180deg)' : 'rotate(0deg)', fontSize: '24px' }"
         />
-      </div>
-      <VDivider class="full-width-divider" />
+      </button>
+      <div
+        class="full-width-divider"
+        :style="{ borderTop: `1px solid ${$themeTokens.fineLine}` }"
+      ></div>
     </div>
 
     <div
       v-if="sectionOpen"
-      class="mt-4"
+      id="hints-section-content"
+      role="region"
+      aria-labelledby="hints-section-button"
+      class="hints-section"
     >
-      <div>
+      <div class="hints-list">
         <div
           v-if="!hints || !hints.length"
-          class="card-border-light pa-3"
+          class="hint-border no-hints-placeholder"
+          :style="{ borderColor: $themeTokens.fineLine }"
         >
           {{ $tr('noHintsPlaceholder') }}
         </div>
         <div
           v-for="(hint, hintIdx) in hints"
           :key="hintIdx"
-          class="card-border-light"
+          class="hint-border"
+          :style="{ borderColor: $themeTokens.fineLine }"
           data-test="hint"
           @click="onHintClick($event, hintIdx)"
         >
-          <VCard
-            flat
-            :class="hintClasses(hintIdx)"
-          >
-            <VCardText :class="{ 'pt-0 pb-0': !isHintOpen(hintIdx) }">
-              <!-- Touch device & desktop layout with toolbar above -->
-              <template v-if="isTouchDevice || screenSizeLevel <= 3">
-                <VLayout class="mb-2">
-                  <VSpacer />
-                  <VFlex shrink>
-                    <AssessmentItemToolbar
-                      :iconActionsConfig="toolbarIconActions"
-                      :canMoveUp="!isHintFirst(hintIdx)"
-                      :canMoveDown="!isHintLast(hintIdx)"
-                      class="toolbar"
-                      analyticsLabel="Hint"
-                      @click="onToolbarClick($event, hintIdx)"
-                    />
-                  </VFlex>
-                </VLayout>
-                <VLayout>
-                  <VFlex xs12>
-                    <!-- View mode: plain text-input-like display -->
-                    <div
-                      v-if="!isHintOpen(hintIdx)"
-                      class="hint-view-text"
-                    >
-                      <span :style="isHintEmpty(hint) ? hintPlaceholderStyle : {}">
-                        {{ hintDisplayText(hint, hintIdx) }}
-                      </span>
-                    </div>
-                    <!-- Edit mode: TipTapEditor -->
-                    <keep-alive
-                      v-else
-                      :max="5"
-                    >
-                      <TipTapEditor
-                        v-model="hint.hint"
-                        mode="edit"
-                        :image-processor="EditorImageProcessor"
-                        minHeight="80px"
-                        @update="updateHintText($event, hintIdx)"
-                        @minimize="emitClose"
-                      />
-                    </keep-alive>
-                  </VFlex>
-                </VLayout>
-              </template>
-
-              <!-- Desktop layout -->
-              <VLayout
-                v-else
-                align-top
+          <div :class="hintClasses(hintIdx)">
+            <div
+              class="hint-card-text"
+              :class="{ 'is-closed': !isHintOpen(hintIdx), 'small-screen': isSmallScreen }"
+            >
+              <div
+                class="hint-layout"
+                :class="{ 'is-open': isHintOpen(hintIdx), 'small-screen': isSmallScreen }"
               >
-                <VFlex xs10>
-                  <transition name="fade">
-                    <!-- View mode: plain text-input-like display -->
-                    <div
-                      v-if="!isHintOpen(hintIdx)"
-                      class="hint-view-text"
-                      :style="hintViewTextStyle"
+                <div class="hint-content">
+                  <!-- View mode: TipTapEditor in view mode to render Markdown properly -->
+                  <div
+                    v-if="!isHintOpen(hintIdx)"
+                    class="hint-view-text"
+                  >
+                    <span
+                      v-if="isHintEmpty(hint)"
+                      :style="hintPlaceholderStyle"
                     >
-                      <span :style="isHintEmpty(hint) ? hintPlaceholderStyle : {}">
-                        {{ hintDisplayText(hint, hintIdx) }}
-                      </span>
-                    </div>
-                    <!-- Edit mode: TipTapEditor -->
-                    <keep-alive
+                      {{ hintDisplayText(hint, hintIdx) }}
+                    </span>
+                    <div
                       v-else
-                      :max="5"
+                      class="hint-view-editor"
                     >
                       <TipTapEditor
                         v-model="hint.hint"
-                        mode="edit"
+                        mode="view"
                         :image-processor="EditorImageProcessor"
-                        minHeight="80px"
-                        @update="updateHintText($event, hintIdx)"
-                        @minimize="emitClose"
                       />
-                    </keep-alive>
-                  </transition>
-                </VFlex>
+                    </div>
+                  </div>
+                  <!-- Edit mode: TipTapEditor -->
+                  <keep-alive
+                    v-else
+                    :max="5"
+                  >
+                    <TipTapEditor
+                      v-model="hint.hint"
+                      mode="edit"
+                      :image-processor="EditorImageProcessor"
+                      minHeight="80px"
+                      @update="updateHintText($event, hintIdx)"
+                      @minimize="emitClose"
+                    />
+                  </keep-alive>
+                </div>
 
-                <VSpacer />
-
-                <VFlex>
+                <div class="hint-actions">
                   <AssessmentItemToolbar
                     :iconActionsConfig="toolbarIconActions"
+                    :collapse="isSmallScreen"
+                    :displayMenu="isSmallScreen"
                     :canMoveUp="!isHintFirst(hintIdx)"
                     :canMoveDown="!isHintLast(hintIdx)"
                     class="toolbar"
                     analyticsLabel="Hint"
                     @click="onToolbarClick($event, hintIdx)"
                   />
-                </VFlex>
-              </VLayout>
-            </VCardText>
-          </VCard>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       <KButton
-        :text="$tr('newHintBtnLabel')"
         class="hint-editor-button"
-        :style="{ border: `1px dashed ${$themePalette.grey.v_400}` }"
         data-test="newHintBtn"
         appearance="flat-button"
         :appearanceOverrides="buttonAppearanceOverrides"
         @click="addNewHint"
       >
-        <template #icon>
+        <div class="add-hint-btn-content">
           <KIcon
             icon="plus"
             :color="$themePalette.grey.v_700"
-            class="add-hint-icon"
           />
-        </template>
+          <span>{{ $tr('newHintBtnLabel') }}</span>
+        </div>
       </KButton>
     </div>
   </div>
@@ -167,8 +142,6 @@
   import { AssessmentItemToolbarActions } from '../../constants';
   import { swapElements } from 'shared/utils/helpers';
   import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
-  import { isTouchDevice } from 'shared/utils/browserInfo';
-
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue';
 
   const updateHintsOrder = hints => {
@@ -204,22 +177,33 @@
       return {
         sectionOpen: false,
         toolbarIconActions: [
-          AssessmentItemToolbarActions.MOVE_ITEM_UP,
-          AssessmentItemToolbarActions.MOVE_ITEM_DOWN,
+          [AssessmentItemToolbarActions.MOVE_ITEM_UP, { collapse: true }],
+          [AssessmentItemToolbarActions.MOVE_ITEM_DOWN, { collapse: true }],
           AssessmentItemToolbarActions.DELETE_ITEM,
         ],
         EditorImageProcessor,
-        isTouchDevice,
       };
     },
     computed: {
+      coreOutlineFocus() {
+        return {
+          ':focus': {
+            ...this.$coreOutline,
+            outlineOffset: '-2px',
+          },
+        };
+      },
       screenSizeLevel() {
         const { windowBreakpoint } = useKResponsiveWindow();
         return windowBreakpoint.value ?? 0;
       },
+      isSmallScreen() {
+        return this.screenSizeLevel <= 1;
+      },
       buttonAppearanceOverrides() {
         return {
           backgroundColor: this.$themePalette.grey.v_50,
+          border: `1px dashed ${this.$themeTokens.fineLine}`,
           color: `${this.$themePalette.grey.v_700} !important`,
           fontSize: '14px',
           fontWeight: '600',
@@ -231,7 +215,7 @@
       },
       hintPlaceholderStyle() {
         return {
-          color: this.$themePalette.grey.v_600,
+          color: this.$themePalette.grey.v_300,
         };
       },
     },
@@ -403,15 +387,18 @@
   }
 
   .hints-header {
-    cursor: pointer;
     user-select: none;
   }
 
-  .hints-header-content {
+  .hints-header-button {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    width: 100%;
     padding: 15px 0;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
   }
 
   .hints-label {
@@ -424,13 +411,80 @@
     transition: transform 0.2s ease;
   }
 
-  .card-border-light {
-    /* stylelint-disable-next-line custom-property-pattern */
-    border: 1px solid var(--v-greyBorder-lighten1);
+  .hints-section {
+    margin-top: 10px;
+  }
 
-    &:not(:first-child) {
-      border-top: 0;
+  .hints-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .hint-border {
+    border: 1px solid;
+    border-radius: 4px;
+  }
+
+  .no-hints-placeholder {
+    padding: 16px;
+  }
+
+  .hint-card-text {
+    padding: 16px;
+
+    &.small-screen {
+      padding: 8px;
     }
+
+    &.is-closed {
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+  }
+
+  .hint-layout {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    &.is-open {
+      align-items: flex-start;
+    }
+
+    &.small-screen {
+      .hint-actions {
+        margin-left: 4px;
+
+        ::v-deep .assessment-item-toolbar,
+        ::v-deep .icon-actions-wrapper {
+          gap: 4px;
+        }
+      }
+
+      &.is-open {
+        flex-direction: column-reverse;
+
+        .hint-actions {
+          display: flex;
+          justify-content: flex-end;
+          width: 100%;
+          margin-bottom: 8px;
+          margin-left: 0;
+        }
+      }
+    }
+  }
+
+  .hint-content {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .hint-actions {
+    flex-shrink: 0;
+    margin-left: 16px;
   }
 
   .hint {
@@ -444,22 +498,35 @@
   }
 
   .hint-view-text {
-    min-height: 52px;
-    padding: 10px 4px;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 52px;
+    padding: 0 4px;
+    overflow: hidden;
     border-radius: 4px;
+  }
+
+  .hint-view-editor {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
   }
 
   .hint-editor-button {
     justify-content: center;
     width: 100%;
+    padding: 11px 16px !important;
     margin-top: 10px;
+    line-height: unset !important;
+    border-radius: 4px !important;
   }
 
-  .add-hint-icon {
-    position: relative;
-    top: 0;
-    font-size: 14px;
-    font-weight: 600;
+  .add-hint-btn-content {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
   }
 
 </style>
