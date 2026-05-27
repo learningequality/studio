@@ -5,6 +5,15 @@ import VueRouter from 'vue-router';
 import { factory } from '../../../store';
 import { RouteNames } from '../../../constants';
 import TrashModal from '../TrashModal';
+import MoveModal from '../../../components/move/MoveModal';
+import NodePanel from '../../NodePanel';
+import { createTranslator } from 'shared/i18n';
+
+const tr = createTranslator('TrashModal', TrashModal.$trs);
+const moveTr = createTranslator('MoveModal', MoveModal.$trs);
+const nodePanelTr = createTranslator('NodePanel', NodePanel.$trs);
+
+configure({ testIdAttribute: 'data-test' });
 
 const TRASH_ID = 'trash-root-id';
 
@@ -21,6 +30,9 @@ async function makeWrapper(items = testChildren, { isLoading = false, hasMore = 
     .spyOn(TrashModal.methods, 'loadContentNodes')
     .mockResolvedValue({});
   jest.spyOn(TrashModal.methods, 'loadAncestors').mockResolvedValue();
+  // removeContentNodes is called inside loadNodes() before loadChildren — mock it
+  // to prevent real store calls. loadNodes itself runs the real implementation so
+  // the loading state and `more` data are exercised through mocked loadChildren.
   jest.spyOn(TrashModal.methods, 'removeContentNodes').mockResolvedValue();
   // loadNodes is not mocked intentionally: we let the real implementation run so that
   // the loading state and `more` data are exercised through the mocked loadChildren below.
@@ -85,9 +97,6 @@ async function makeWrapper(items = testChildren, { isLoading = false, hasMore = 
 }
 
 describe('TrashModal', () => {
-  beforeAll(() => configure({ testIdAttribute: 'data-test' }));
-  afterAll(() => configure({ testIdAttribute: 'data-testid' }));
-
   beforeEach(() => {
     jest.restoreAllMocks();
   });
@@ -100,12 +109,12 @@ describe('TrashModal', () => {
 
     it('shows empty text when trash has no items', async () => {
       await makeWrapper([]);
-      expect(screen.getByTestId('empty')).toBeInTheDocument();
+      expect(screen.getByText(tr.$tr('trashEmptyText'))).toBeInTheDocument();
     });
 
     it('shows the item list when trash has items', async () => {
       await makeWrapper();
-      expect(screen.getByTestId('list')).toBeInTheDocument();
+      expect(screen.getAllByTestId('item')).toHaveLength(testChildren.length);
     });
   });
 
@@ -113,14 +122,14 @@ describe('TrashModal', () => {
     it('checking an item enables the Delete and Restore buttons', async () => {
       const { user } = await makeWrapper();
 
-      expect(screen.getByRole('button', { name: /Delete/i })).toBeDisabled();
-      expect(screen.getByRole('button', { name: /Restore/i })).toBeDisabled();
+      expect(screen.getByRole('button', { name: tr.$tr('deleteButton') })).toBeDisabled();
+      expect(screen.getByRole('button', { name: tr.$tr('restoreButton') })).toBeDisabled();
 
       await user.click(within(screen.getAllByTestId('checkbox')[0]).getByRole('checkbox'));
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /Delete/i })).toBeEnabled();
-        expect(screen.getByRole('button', { name: /Restore/i })).toBeEnabled();
+        expect(screen.getByRole('button', { name: tr.$tr('deleteButton') })).toBeEnabled();
+        expect(screen.getByRole('button', { name: tr.$tr('restoreButton') })).toBeEnabled();
       });
     });
 
@@ -168,27 +177,29 @@ describe('TrashModal', () => {
   describe('on delete', () => {
     it('Delete button is disabled when no items are selected', async () => {
       await makeWrapper();
-      expect(screen.getByRole('button', { name: /Delete/i })).toBeDisabled();
+      expect(screen.getByRole('button', { name: tr.$tr('deleteButton') })).toBeDisabled();
     });
 
     it('clicking Delete opens a confirmation dialog', async () => {
       const { user } = await makeWrapper();
       await user.click(within(screen.getByTestId('selectall')).getByRole('checkbox'));
-      await user.click(screen.getByRole('button', { name: /Delete/i }));
+      await user.click(screen.getByRole('button', { name: tr.$tr('deleteButton') }));
 
-      expect(await screen.findByText(/You cannot undo this action/i)).toBeInTheDocument();
+      expect(await screen.findByText(tr.$tr('deleteConfirmationText'))).toBeInTheDocument();
     });
 
     it('clicking Cancel in the confirmation dialog closes it', async () => {
       const { user } = await makeWrapper();
       await user.click(within(screen.getByTestId('selectall')).getByRole('checkbox'));
-      await user.click(screen.getByRole('button', { name: /Delete/i }));
-      await screen.findByText(/You cannot undo this action/i);
+      await user.click(screen.getByRole('button', { name: tr.$tr('deleteButton') }));
+      await screen.findByText(tr.$tr('deleteConfirmationText'));
 
-      await user.click(screen.getByRole('button', { name: /Cancel/i }));
+      await user.click(
+        screen.getByRole('button', { name: tr.$tr('deleteConfirmationCancelButton') }),
+      );
 
       await waitFor(() => {
-        expect(screen.queryByText(/You cannot undo this action/i)).not.toBeInTheDocument();
+        expect(screen.queryByText(tr.$tr('deleteConfirmationText'))).not.toBeInTheDocument();
       });
     });
 
@@ -200,8 +211,10 @@ describe('TrashModal', () => {
       const { user } = await makeWrapper();
 
       await user.click(within(screen.getByTestId('selectall')).getByRole('checkbox'));
-      await user.click(screen.getByRole('button', { name: /Delete/i }));
-      await user.click(await screen.findByRole('button', { name: /Delete permanently/i }));
+      await user.click(screen.getByRole('button', { name: tr.$tr('deleteButton') }));
+      await user.click(
+        await screen.findByRole('button', { name: tr.$tr('deleteConfirmationDeleteButton') }),
+      );
 
       await waitFor(() => {
         expect(deleteContentNodes).toHaveBeenCalledWith(testChildren.map(c => c.id));
@@ -215,12 +228,14 @@ describe('TrashModal', () => {
       const dispatchSpy = jest.spyOn(store, 'dispatch').mockImplementation(() => Promise.resolve());
 
       await user.click(within(screen.getByTestId('selectall')).getByRole('checkbox'));
-      await user.click(screen.getByRole('button', { name: /Delete/i }));
-      await user.click(await screen.findByRole('button', { name: /Delete permanently/i }));
+      await user.click(screen.getByRole('button', { name: tr.$tr('deleteButton') }));
+      await user.click(
+        await screen.findByRole('button', { name: tr.$tr('deleteConfirmationDeleteButton') }),
+      );
 
       await waitFor(() => {
         expect(dispatchSpy).toHaveBeenCalledWith('showSnackbar', {
-          text: 'Permanently deleted',
+          text: tr.$tr('deleteSuccessMessage'),
         });
         expect(loadNodesSpy).toHaveBeenCalled();
       });
@@ -230,14 +245,16 @@ describe('TrashModal', () => {
   describe('on restore', () => {
     it('Restore button is disabled when no items are selected', async () => {
       await makeWrapper();
-      expect(screen.getByRole('button', { name: /Restore/i })).toBeDisabled();
+      expect(screen.getByRole('button', { name: tr.$tr('restoreButton') })).toBeDisabled();
     });
 
     it('clicking Restore opens the MoveModal', async () => {
       const { user } = await makeWrapper();
       await user.click(within(screen.getByTestId('selectall')).getByRole('checkbox'));
-      await user.click(screen.getByRole('button', { name: /Restore/i }));
-      expect(await screen.findByRole('button', { name: /Move here/i })).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: tr.$tr('restoreButton') }));
+      expect(
+        await screen.findByRole('button', { name: moveTr.$tr('moveHere') }),
+      ).toBeInTheDocument();
     });
 
     it('successful restore clears selection and previewNodeId, and reloads nodes', async () => {
@@ -250,9 +267,9 @@ describe('TrashModal', () => {
       const itemLinks = screen.getAllByTestId('item');
       await user.click(itemLinks[0]);
 
-      await user.click(screen.getByRole('button', { name: /Restore/i }));
+      await user.click(screen.getByRole('button', { name: tr.$tr('restoreButton') }));
 
-      await user.click(await screen.findByRole('button', { name: /Move here/i }));
+      await user.click(await screen.findByRole('button', { name: moveTr.$tr('moveHere') }));
 
       await waitFor(() => {
         expect(loadNodesSpy).toHaveBeenCalled();
@@ -282,12 +299,14 @@ describe('TrashModal', () => {
   describe('pagination', () => {
     it('shows a Show more button when there is more paginated content', async () => {
       await makeWrapper([testChildren[0]], { hasMore: true });
-      expect(await screen.findByRole('button', { name: /Show more/i })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('button', { name: nodePanelTr.$tr('showMore') }),
+      ).toBeInTheDocument();
     });
 
     it('clicking Show more calls loadContentNodes with pagination params', async () => {
       const { user, loadContentNodesSpy } = await makeWrapper([testChildren[0]], { hasMore: true });
-      const showMoreBtn = await screen.findByRole('button', { name: /Show more/i });
+      const showMoreBtn = await screen.findByRole('button', { name: nodePanelTr.$tr('showMore') });
 
       await user.click(showMoreBtn);
 
