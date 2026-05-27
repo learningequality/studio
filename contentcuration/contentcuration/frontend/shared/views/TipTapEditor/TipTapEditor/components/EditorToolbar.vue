@@ -36,7 +36,7 @@
 
     <!-- Collapsible toolbar groups -->
     <KListWithOverflow
-      :items="toolbarGroups"
+      :items="toolbarGroupsWithDividers"
       class="overflow-list"
     >
       <template #item="{ item }">
@@ -67,7 +67,9 @@
       </template>
 
       <template #divider>
-        <ToolbarDivider />
+        <div class="list-with-overflow-divider">
+          <ToolbarDivider />
+        </div>
       </template>
 
       <template #more="{ overflowItems }">
@@ -266,6 +268,10 @@
         });
 
         for (const group of overflowItems) {
+          if (group.type === 'divider') {
+            options.push(group);
+            continue;
+          }
           for (const action of group.groupActions) {
             if (action.dropdownActions) {
               for (const dropdownAction of action.dropdownActions) {
@@ -280,6 +286,17 @@
         return options;
       };
 
+      const toolbarGroupsWithDividers = computed(() => {
+        const groups = [];
+        toolbarGroups.value.forEach((group, index) => {
+          groups.push(group);
+          if (index < toolbarGroups.value.length - 1) {
+            groups.push({ type: 'divider' });
+          }
+        });
+        return groups;
+      });
+
       const onOverflowSelect = (option, event) => {
         event.stopPropagation();
         option.handler(event, { fromOverflow: true });
@@ -287,7 +304,7 @@
 
       return {
         toolbarRef,
-        toolbarGroups,
+        toolbarGroupsWithDividers,
         flatOverflowOptions,
         historyActions,
         minimizeAction,
@@ -387,6 +404,10 @@
       color: #3730a3;
       background-color: #e0e7ff;
     }
+  }
+
+  .list-with-overflow-divider {
+    padding: 0 6px;
   }
 
 </style>
