@@ -1,6 +1,7 @@
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import FilterSet
 from rest_framework import serializers
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
@@ -148,6 +149,11 @@ class InvitationViewSet(ValuesViewset):
     def accept(self, request, pk=None):
         invitation = self.get_edit_object()
         self._ensure_invitee(request, invitation)
+        if invitation.revoked:
+            return Response(
+                "Invitation has been revoked",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         invitation.accept()
         invitation.accepted = True
         invitation.save()

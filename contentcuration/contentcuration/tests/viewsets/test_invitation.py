@@ -493,11 +493,15 @@ class CRUDTestCase(StudioAPITestCase):
         invitation.refresh_from_db()
         self.assertFalse(invitation.declined)
 
+    def _make_admin(self, email="admin@example.com"):
+        user = testdata.user(email)
+        user.is_admin = True
+        user.save()
+        return user
+
     def test_accept_invitation_by_admin_succeeds(self):
         invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
-        admin_user = testdata.user("admin@example.com")
-        admin_user.is_admin = True
-        admin_user.save()
+        admin_user = self._make_admin()
 
         self.client.force_authenticate(user=admin_user)
         response = self.client.post(
@@ -509,9 +513,7 @@ class CRUDTestCase(StudioAPITestCase):
 
     def test_decline_invitation_by_admin_succeeds(self):
         invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
-        admin_user = testdata.user("admin@example.com")
-        admin_user.is_admin = True
-        admin_user.save()
+        admin_user = self._make_admin()
 
         self.client.force_authenticate(user=admin_user)
         response = self.client.post(
@@ -520,3 +522,17 @@ class CRUDTestCase(StudioAPITestCase):
         self.assertEqual(response.status_code, 200, response.content)
         invitation.refresh_from_db()
         self.assertTrue(invitation.declined)
+
+    def test_accept_revoked_invitation_returns_400(self):
+        invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
+        invitation.revoked = True
+        invitation.save()
+
+        self.client.force_authenticate(user=self.invited_user)
+        response = self.client.post(
+            reverse("invitation-accept", kwargs={"pk": invitation.id})
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+        invitation.refresh_from_db()
+        self.assertFalse(invitation.accepted)
+        self.assertFalse(self.channel.editors.filter(pk=self.invited_user.id).exists())
