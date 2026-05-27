@@ -141,12 +141,19 @@
         :text="$tr('newHintBtnLabel')"
         class="hint-editor-button"
         :style="{ border: `1px dashed ${$themePalette.grey.v_400}` }"
-        icon="plus"
         data-test="newHintBtn"
         appearance="flat-button"
         :appearanceOverrides="buttonAppearanceOverrides"
         @click="addNewHint"
-      />
+      >
+        <template #icon>
+          <KIcon
+            icon="plus"
+            :color="$themePalette.grey.v_700"
+            class="add-hint-icon"
+          />
+        </template>
+      </KButton>
     </div>
   </div>
 
@@ -443,8 +450,16 @@
   }
 
   .hint-editor-button {
+    justify-content: center;
     width: 100%;
     margin-top: 10px;
+  }
+
+  .add-hint-icon {
+    position: relative;
+    top: 0;
+    font-size: 14px;
+    font-weight: 600;
   }
 
 </style>
