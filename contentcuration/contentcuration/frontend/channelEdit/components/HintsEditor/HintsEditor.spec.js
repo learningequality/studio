@@ -20,6 +20,10 @@ const renderComponent = props => {
   });
 };
 
+const openHintsSection = async user => {
+  await user.click(screen.getByText(HintsEditor.$trs.hintsLabel));
+};
+
 const getHintCards = () => {
   return screen.getAllByTestId('hint');
 };
@@ -31,29 +35,35 @@ const clickToolbarAction = async ({ action, hintIdx, user }) => {
 };
 
 describe('HintsEditor', () => {
-  it('smoke test', () => {
+  it('smoke test', async () => {
+    const user = userEvent.setup();
     renderComponent();
+    await openHintsSection(user);
 
     expect(
       screen.getByRole('button', { name: HintsEditor.$trs.newHintBtnLabel }),
     ).toBeInTheDocument();
   });
 
-  it('shows an empty-state message when a question has no hints', () => {
+  it('shows an empty-state message when a question has no hints', async () => {
+    const user = userEvent.setup();
     renderComponent({
       hints: [],
     });
+    await openHintsSection(user);
 
     expect(screen.getByText(HintsEditor.$trs.noHintsPlaceholder)).toBeInTheDocument();
   });
 
-  it('shows hints in the same order as the question', () => {
+  it('shows hints in the same order as the question', async () => {
+    const user = userEvent.setup();
     renderComponent({
       hints: [
         { hint: 'First hint', order: 1 },
         { hint: 'Second hint', order: 2 },
       ],
     });
+    await openHintsSection(user);
 
     const hintCards = getHintCards();
     expect(within(hintCards[0]).getByText('First hint')).toBeInTheDocument();
@@ -69,6 +79,7 @@ describe('HintsEditor', () => {
       ],
       openHintIdx: 1,
     });
+    await openHintsSection(user);
 
     const hintCards = getHintCards();
     const hintTextField = within(hintCards[1]).getByRole('textbox');
@@ -92,6 +103,7 @@ describe('HintsEditor', () => {
         { hint: 'Third hint', order: 3 },
       ],
     });
+    await openHintsSection(user);
 
     await user.click(screen.getByRole('button', { name: HintsEditor.$trs.newHintBtnLabel }));
 
@@ -114,6 +126,7 @@ describe('HintsEditor', () => {
       ],
       openHintIdx: 0,
     });
+    await openHintsSection(user);
 
     const hintCards = getHintCards();
     await user.click(hintCards[1]);
@@ -131,6 +144,7 @@ describe('HintsEditor', () => {
       ],
       openHintIdx: 1,
     });
+    await openHintsSection(user);
 
     await clickToolbarAction({
       action: AssessmentItemToolbarActions.MOVE_ITEM_UP,
@@ -156,6 +170,7 @@ describe('HintsEditor', () => {
       ],
       openHintIdx: 0,
     });
+    await openHintsSection(user);
 
     await clickToolbarAction({
       action: AssessmentItemToolbarActions.MOVE_ITEM_UP,
@@ -176,6 +191,7 @@ describe('HintsEditor', () => {
       ],
       openHintIdx: 0,
     });
+    await openHintsSection(user);
 
     await clickToolbarAction({
       action: AssessmentItemToolbarActions.MOVE_ITEM_DOWN,
@@ -201,6 +217,7 @@ describe('HintsEditor', () => {
       ],
       openHintIdx: 1,
     });
+    await openHintsSection(user);
 
     await clickToolbarAction({
       action: AssessmentItemToolbarActions.MOVE_ITEM_DOWN,
@@ -221,6 +238,7 @@ describe('HintsEditor', () => {
       ],
       openHintIdx: 0,
     });
+    await openHintsSection(user);
 
     await clickToolbarAction({
       action: AssessmentItemToolbarActions.DELETE_ITEM,
@@ -242,6 +260,7 @@ describe('HintsEditor', () => {
       ],
       openHintIdx: 1,
     });
+    await openHintsSection(user);
 
     await clickToolbarAction({
       action: AssessmentItemToolbarActions.DELETE_ITEM,
