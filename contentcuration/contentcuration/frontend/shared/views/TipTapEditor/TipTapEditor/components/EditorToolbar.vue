@@ -141,10 +141,12 @@
         handleClearFormat,
         canClearFormat,
         historyActions,
+        alignAction,
         textActions,
         listActions,
         insertTools,
         minimizeAction,
+        scriptActions,
       } = useToolbarActions(emit);
 
       const { pasteOptions } = useDropdowns();
@@ -157,7 +159,7 @@
         textStyleFormatting$,
         copyAndPasteActions$,
         listFormatting$,
-        // scriptFormatting$,
+        scriptFormatting$,
         insertTools$,
         clearFormatting$,
         moreButtonText$,
@@ -212,12 +214,13 @@
             },
           ],
         },
-        // Perseus flavoured markdown does not support alignment,
-        // so we disable this for now until we stop using markdown as the primary target
-        // {
-        //   name: 'align',
-        //   groupActions: [alignAction.value]
-        // },
+        {
+          name: 'align',
+          groupActions: [alignAction.value],
+          // Perseus flavoured markdown does not support alignment,
+          // so we disable this for now until we stop using markdown as the primary target
+          hide: true,
+        },
         {
           name: 'clearFormat',
           groupActions: [
@@ -236,14 +239,15 @@
           label: listFormatting$(),
           groupActions: listActions.value,
         },
-        // Perseus flavoured markdown does not support super and sub script,
-        // so we disable this for now until we stop using markdown as the primary target
-        // {
-        //   name: 'script',
-        //   role: 'group',
-        //   label: scriptFormatting$(),
-        //   groupActions: scriptActions.value
-        // },
+        {
+          name: 'script',
+          role: 'group',
+          label: scriptFormatting$(),
+          groupActions: scriptActions.value,
+          // Perseus flavoured markdown does not support super and sub script,
+          // so we disable this for now until we stop using markdown as the primary target
+          hide: true,
+        },
         {
           name: 'insert',
           role: 'group',
@@ -289,6 +293,9 @@
       const toolbarGroupsWithDividers = computed(() => {
         const groups = [];
         toolbarGroups.value.forEach((group, index) => {
+          if (group.hide) {
+            return;
+          }
           groups.push(group);
           if (index < toolbarGroups.value.length - 1) {
             groups.push({ type: 'divider' });
