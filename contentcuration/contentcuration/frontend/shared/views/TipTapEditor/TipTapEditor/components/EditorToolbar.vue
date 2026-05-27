@@ -71,193 +71,32 @@
       </template>
 
       <template #more="{ overflowItems }">
-        <div
-          ref="moreDropdownContainer"
-          class="more-dropdown-container"
-          role="group"
-          :aria-label="'More options'"
-        >
-          <button
-            ref="moreButton"
-            class="more-button"
-            :title="'More options'"
-            :class="{ active: isMoreDropdownOpen }"
-            :aria-expanded="isMoreDropdownOpen"
-            aria-haspopup="menu"
-            aria-controls="more-options-menu"
-            @click="toggleMoreDropdown"
+        <button class="more-button">
+          <span>{{ moreButtonText$() }}</span>
+          <img
+            :src="require('../../assets/icon-chevron-down.svg')"
+            aria-hidden="true"
+            class="more-button-icon"
           >
-            <span>{{ moreButtonText$() }}</span>
-            <img
-              :src="require('../../assets/icon-chevron-down.svg')"
-              aria-hidden="true"
-              class="more-button-icon"
-              :class="{ rotated: isMoreDropdownOpen }"
-            >
-          </button>
-
-          <div
-            v-show="isMoreDropdownOpen"
-            id="more-options-menu"
-            ref="moreDropdown"
-            class="more-dropdown"
-            role="menu"
-            :aria-label="'Additional formatting options'"
-            @click.stop="isMoreDropdownOpen = false"
-            @keydown="handleMenuKeydown"
+          <KDropdownMenu
+            :options="flatOverflowOptions(overflowItems)"
+            @select="onOverflowSelect"
           >
-            <!-- Overflow Text Formatting -->
-            <template v-if="overflowItems.some(i => i.name === 'textFormat')">
-              <button
-                v-for="action in textActions"
-                :key="action.name"
-                class="dropdown-item"
-                :class="{ active: action.isActive }"
-                role="menuitem"
-                @click="action.handler"
-              >
-                <img
-                  :src="action.icon"
-                  class="dropdown-item-icon"
-                  alt=""
-                  aria-hidden="true"
-                >
-                <span class="dropdown-item-text">{{ action.title }}</span>
-              </button>
-            </template>
-
-            <!-- Overflow Clipboard -->
-            <template v-if="overflowItems.some(i => i.name === 'clipboard')">
-              <button
-                class="dropdown-item"
-                role="menuitem"
-                @click="handleCopy"
-              >
-                <img
-                  :src="require('../../assets/icon-copy.svg')"
-                  class="dropdown-item-icon"
-                  alt=""
-                  aria-hidden="true"
-                >
-                <span class="dropdown-item-text">{{ copy$() }}</span>
-              </button>
-              <button
-                v-for="option in pasteOptions"
-                :key="option.name"
-                class="dropdown-item"
-                role="menuitem"
-                @click="option.handler"
+            <template #option="{ option }">
+              <div
+                class="overflow-item"
+                :class="{ active: option.isActive }"
               >
                 <img
                   :src="option.icon"
                   class="dropdown-item-icon"
-                  alt=""
                   aria-hidden="true"
                 >
-                <span class="dropdown-item-text">{{ option.title }}</span>
-              </button>
+                <span>{{ option.label }}</span>
+              </div>
             </template>
-
-            <!-- Overflow Text Alignment -->
-            <template v-if="overflowItems.some(i => i.name === 'align')">
-              <button
-                class="dropdown-item"
-                :class="{ active: alignAction.isActive }"
-                role="menuitem"
-                :disabled="!alignAction.isAvailable"
-                @click="alignAction.handler"
-              >
-                <img
-                  :src="alignAction.icon"
-                  class="dropdown-item-icon"
-                  alt=""
-                  aria-hidden="true"
-                >
-                <span class="dropdown-item-text">{{ alignAction.title }}</span>
-              </button>
-            </template>
-
-            <!-- Overflow Clear Format -->
-            <template v-if="overflowItems.some(i => i.name === 'clearFormat')">
-              <button
-                class="dropdown-item"
-                role="menuitem"
-                :disabled="!canClearFormat"
-                @click="handleClearFormat"
-              >
-                <img
-                  :src="require('../../assets/icon-clearFormat.svg')"
-                  class="dropdown-item-icon"
-                  alt=""
-                  aria-hidden="true"
-                >
-                <span class="dropdown-item-text">{{ clearFormatting$() }}</span>
-              </button>
-            </template>
-
-            <!-- Overflow Lists -->
-            <template v-if="overflowItems.some(i => i.name === 'lists')">
-              <button
-                v-for="list in listActions"
-                :key="list.name"
-                class="dropdown-item"
-                role="menuitem"
-                :class="{ active: list.isActive }"
-                :aria-pressed="list.isActive"
-                @click="list.handler"
-              >
-                <img
-                  :src="list.icon"
-                  class="dropdown-item-icon"
-                  alt=""
-                  aria-hidden="true"
-                >
-                <span class="dropdown-item-text">{{ list.title }}</span>
-              </button>
-            </template>
-
-            <!-- Overflow Script -->
-            <template v-if="overflowItems.some(i => i.name === 'script')">
-              <button
-                v-for="script in scriptActions"
-                :key="script.name"
-                class="dropdown-item"
-                role="menuitem"
-                :class="{ active: script.isActive }"
-                :aria-pressed="script.isActive"
-                @click="script.handler"
-              >
-                <img
-                  :src="script.icon"
-                  class="dropdown-item-icon"
-                  alt=""
-                  aria-hidden="true"
-                >
-                <span class="dropdown-item-text">{{ script.title }}</span>
-              </button>
-            </template>
-
-            <!-- Overflow Insert Tools -->
-            <template v-if="overflowItems.some(i => i.name === 'insert')">
-              <button
-                v-for="tool in insertTools"
-                :key="tool.name"
-                class="dropdown-item"
-                role="menuitem"
-                :class="{ active: tool.isActive }"
-                @click="onToolClick(tool, $event)"
-              >
-                <img
-                  :src="tool.icon"
-                  class="dropdown-item-icon"
-                  alt=""
-                  aria-hidden="true"
-                >
-                <span class="dropdown-item-text">{{ tool.title }}</span>
-              </button>
-            </template>
-          </div>
-        </div>
+          </KDropdownMenu>
+        </button>
       </template>
     </KListWithOverflow>
 
@@ -273,7 +112,7 @@
 
 <script>
 
-  import { defineComponent, ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
+  import { defineComponent, ref, computed } from 'vue';
   import KListWithOverflow from 'kolibri-design-system/lib/KListWithOverflow.vue';
   import { useToolbarActions } from '../composables/useToolbarActions';
   import { getTipTapEditorStrings } from '../TipTapEditorStrings';
@@ -294,10 +133,6 @@
     },
     setup(props, { emit }) {
       const toolbarRef = ref(null);
-      const moreButton = ref(null);
-      const moreDropdown = ref(null);
-      const moreDropdownContainer = ref(null);
-      const isMoreDropdownOpen = ref(false);
 
       const {
         handleCopy,
@@ -305,9 +140,7 @@
         canClearFormat,
         historyActions,
         textActions,
-        alignAction,
         listActions,
-        scriptActions,
         insertTools,
         minimizeAction,
       } = useToolbarActions(emit);
@@ -328,14 +161,8 @@
         moreButtonText$,
       } = getTipTapEditorStrings();
 
-      const onToolClick = (tool, event) => {
-        isMoreDropdownOpen.value = false;
-        let target = event.currentTarget;
-
-        // If the tool is in the overflow menu (clicked from dropdown), center the modal
-        const isFromOverflow = moreDropdown.value?.contains(event.target);
-        if (isFromOverflow) target = null;
-
+      const onToolClick = (tool, event, { fromOverflow } = {}) => {
+        const target = fromOverflow ? null : event.currentTarget;
         if (tool.name === 'image') {
           emit('insert-image', target);
         } else if (tool.name === 'link') {
@@ -343,7 +170,6 @@
         } else if (tool.name === 'math') {
           emit('insert-math', target);
         } else {
-          // For all other buttons, call their original handler
           tool.handler();
         }
       };
@@ -380,6 +206,7 @@
             {
               name: 'pasteDropdown',
               component: PasteDropdown,
+              dropdownActions: pasteOptions.value,
             },
           ],
         },
@@ -421,81 +248,53 @@
           label: insertTools$(),
           groupActions: insertTools.value.map(tool => ({
             ...tool,
-            handler: e => onToolClick(tool, e),
+            handler: (e, { fromOverflow } = {}) => onToolClick(tool, e, { fromOverflow }),
           })),
         },
       ]);
 
-      const toggleMoreDropdown = () => {
-        isMoreDropdownOpen.value = !isMoreDropdownOpen.value;
-      };
+      // Flattens the visible overflow groups into a KDropdownMenu-compatible
+      // options array. Maps `title` → `label` and `isAvailable` → `disabled`.
+      // Actions with `dropdownActions` (e.g. PasteDropdown) are expanded into
+      // their constituent items; other component-only actions are skipped.
+      const flatOverflowOptions = overflowItems => {
+        const options = [];
+        const toOption = a => ({
+          ...a,
+          label: a.title,
+          disabled: a.isAvailable !== undefined ? !a.isAvailable : false,
+        });
 
-      // Handle keyboard navigation in dropdown menu
-      const handleMenuKeydown = async event => {
-        if (event.key === 'Escape') {
-          isMoreDropdownOpen.value = false;
-          // Return focus to the more button
-          await nextTick();
-          moreButton.value?.focus();
-        } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-          event.preventDefault();
-          const menuItems = Array.from(
-            moreDropdown.value?.querySelectorAll('[role="menuitem"]:not(:disabled)') || [],
-          );
-          const currentIndex = menuItems.indexOf(document.activeElement);
-
-          let nextIndex;
-          if (event.key === 'ArrowDown') {
-            nextIndex = currentIndex < menuItems.length - 1 ? currentIndex + 1 : 0;
-          } else {
-            nextIndex = currentIndex > 0 ? currentIndex - 1 : menuItems.length - 1;
+        for (const group of overflowItems) {
+          for (const action of group.groupActions) {
+            if (action.dropdownActions) {
+              for (const dropdownAction of action.dropdownActions) {
+                options.push(toOption(dropdownAction));
+              }
+            } else {
+              options.push(toOption(action));
+            }
           }
-
-          menuItems[nextIndex]?.focus();
         }
+
+        return options;
       };
 
-      // Close dropdown when clicking outside
-      const handleClickOutside = event => {
-        if (moreDropdownContainer.value && !moreDropdownContainer.value.contains(event.target)) {
-          isMoreDropdownOpen.value = false;
-        }
+      const onOverflowSelect = (option, event) => {
+        event.stopPropagation();
+        option.handler(event, { fromOverflow: true });
       };
-
-      onMounted(() => {
-        document.addEventListener('mousedown', handleClickOutside, { passive: true });
-      });
-
-      onUnmounted(() => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      });
 
       return {
         toolbarRef,
-        moreButton,
-        moreDropdown,
-        moreDropdownContainer,
-        isMoreDropdownOpen,
         toolbarGroups,
-        handleCopy,
-        handleClearFormat,
-        onToolClick,
-        toggleMoreDropdown,
-        handleMenuKeydown,
-        canClearFormat,
+        flatOverflowOptions,
         historyActions,
-        textActions,
-        alignAction,
-        listActions,
-        scriptActions,
-        insertTools,
         minimizeAction,
-        pasteOptions,
-        copy$,
+        onOverflowSelect,
         textFormattingToolbar$,
         historyActions$,
         textFormattingOptions$,
-        clearFormatting$,
         moreButtonText$,
       };
     },
@@ -504,7 +303,7 @@
 </script>
 
 
-<style scoped>
+<style lang="scss" scoped>
 
   .toolbar {
     position: relative;
@@ -532,79 +331,16 @@
     min-width: 0;
   }
 
-  /* Temporary workaround: clip the brief wrap-flicker in KListWithOverflow
-     during resize recalculation. Remove this block (and stop reaching into
-     KDS internals via ::v-deep) once learningequality/kolibri-design-system#1246
-     is released and the KDS version pinned in package.json is bumped. */
-  .overflow-list ::v-deep .list {
-    overflow: hidden;
-  }
-
   .toolbar-group {
     display: flex;
     gap: 2px;
     align-items: center;
   }
 
-  .more-dropdown-container {
-    position: relative;
-  }
-
-  .more-dropdown {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    z-index: 1000;
-    min-width: 220px;
-    max-height: 400px;
-    padding: 4px 0;
-    margin-top: 4px;
-    overflow-y: auto;
-    background: white;
-    border: 1px solid #e1e5e9;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-
-  .dropdown-item {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    padding: 8px 12px;
-    font-size: 1.2rem;
-    color: #374151;
-    text-align: left;
-    cursor: pointer;
-    background: none;
-    border: 0;
-    transition: background-color 0.15s ease;
-  }
-
-  .dropdown-item:hover,
-  .dropdown-item:focus {
-    background-color: #f3f4f6;
-    outline: none;
-  }
-
-  .dropdown-item.active {
-    color: #3730a3;
-    background-color: #e0e7ff;
-  }
-
   .dropdown-item-icon {
     flex-shrink: 0;
     width: 20px;
     height: 20px;
-    margin-right: 12px;
-  }
-
-  .dropdown-item:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
-  }
-
-  .dropdown-item:disabled:hover {
-    background-color: transparent;
   }
 
   .more-button {
@@ -623,7 +359,7 @@
     outline: 2px solid #0097f2;
   }
 
-  .more-button.active {
+  .more-button[aria-expanded='true'] {
     color: #4368f5;
     background: #d9e1fd;
   }
@@ -635,15 +371,21 @@
     transition: transform 0.15s ease;
   }
 
-  .more-button-icon.rotated {
+  .more-button[aria-expanded='true'] .more-button-icon {
     transform: rotate(180deg);
   }
 
-  /* Ensure dropdown stays on screen */
-  @media (max-width: 300px) {
-    .more-dropdown {
-      right: auto;
-      left: 0;
+  .overflow-item {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 8px 12px;
+    font-size: 1.2rem;
+    line-height: 140%;
+
+    &.active {
+      color: #3730a3;
+      background-color: #e0e7ff;
     }
   }
 

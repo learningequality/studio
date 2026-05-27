@@ -183,12 +183,11 @@
       };
 
       onMounted(() => {
-        // capture
-        document.addEventListener('click', handleClickOutside, true);
+        document.addEventListener('click', handleClickOutside);
       });
 
       onUnmounted(() => {
-        document.removeEventListener('click', handleClickOutside, true);
+        document.removeEventListener('click', handleClickOutside);
       });
 
       const getMarkdownContent = () => {
