@@ -4,11 +4,16 @@
     ref="toolbarRef"
     class="toolbar"
     role="toolbar"
+    :style="{
+      backgroundColor: $themePalette.grey.v_50,
+      borderBottom: `1px solid ${$themeTokens.fineLine}`,
+    }"
     :aria-label="textFormattingToolbar$()"
   >
     <!-- History buttons -->
     <div
       role="group"
+      class="toolbar-group"
       :aria-label="historyActions$()"
     >
       <ToolbarButton
@@ -27,6 +32,7 @@
     <!-- Format dropdown -->
     <div
       role="group"
+      class="toolbar-group"
       :aria-label="textFormattingOptions$()"
     >
       <FormatDropdown />
@@ -73,7 +79,17 @@
       </template>
 
       <template #more="{ overflowItems }">
-        <button class="more-button">
+        <button
+          class="more-button"
+          :class="
+            $computedClass({
+              ':is([aria-expanded=\'true\'])': {
+                color: $themePalette.blue.v_600,
+                background: $themePalette.blue.v_100,
+              },
+            })
+          "
+        >
           <span>{{ moreButtonText$() }}</span>
           <img
             :src="require('../../assets/icon-chevron-down.svg')"
@@ -87,7 +103,14 @@
             <template #option="{ option }">
               <div
                 class="overflow-item"
-                :class="{ active: option.isActive }"
+                :style="
+                  option.isActive
+                    ? {
+                      color: $themePalette.blue.v_600,
+                      backgroundColor: $themePalette.blue.v_100,
+                    }
+                    : null
+                "
               >
                 <img
                   :src="option.icon"
@@ -103,6 +126,7 @@
     </KListWithOverflow>
 
     <ToolbarButton
+      class="minimize-button"
       :title="minimizeAction.title"
       :icon="minimizeAction.icon"
       @click="minimizeAction.handler"
@@ -114,8 +138,7 @@
 
 <script>
 
-  import { defineComponent, ref, computed } from 'vue';
-  import KListWithOverflow from 'kolibri-design-system/lib/KListWithOverflow.vue';
+  import { ref, computed } from 'vue';
   import { useToolbarActions } from '../composables/useToolbarActions';
   import { getTipTapEditorStrings } from '../TipTapEditorStrings';
   import { useDropdowns } from '../composables/useDropdowns';
@@ -124,10 +147,9 @@
   import PasteDropdown from './toolbar/PasteDropdown.vue';
   import ToolbarDivider from './toolbar/ToolbarDivider.vue';
 
-  export default defineComponent({
+  export default {
     name: 'EditorToolbar',
     components: {
-      KListWithOverflow,
       ToolbarButton,
       FormatDropdown,
       PasteDropdown,
@@ -165,7 +187,7 @@
         moreButtonText$,
       } = getTipTapEditorStrings();
 
-      const onToolClick = (tool, event, { fromOverflow } = {}) => {
+      const onInsertToolClick = (tool, event, { fromOverflow } = {}) => {
         const target = fromOverflow ? null : event.currentTarget;
         if (tool.name === 'image') {
           emit('insert-image', target);
@@ -180,15 +202,13 @@
 
       // Toolbar groups in visual order (left-to-right).
       // KListWithOverflow will collapse items from the end first.
-      // Note: Don't include dividers here - KListWithOverflow renders
-      // them automatically via #divider slot.
-      //
+      // Note: Don't include dividers here - this will be the source of truth.
+
       // Each group describes its actions via `groupActions`. A `label` makes
       // the wrapper a role="group"; omitting it renders a plain div (for
       // single-action groups that don't need grouping semantics).
       // Actions with a `component` key render that component instead of a
-      // ToolbarButton (e.g. PasteDropdown). Actions with an `onClick` key
-      // receive the click event; otherwise `handler()` is called.
+      // ToolbarButton (e.g. PasteDropdown).
       const toolbarGroups = computed(() => [
         {
           name: 'textFormat',
@@ -254,7 +274,7 @@
           label: insertTools$(),
           groupActions: insertTools.value.map(tool => ({
             ...tool,
-            handler: (e, { fromOverflow } = {}) => onToolClick(tool, e, { fromOverflow }),
+            handler: (e, { fromOverflow } = {}) => onInsertToolClick(tool, e, { fromOverflow }),
           })),
         },
       ]);
@@ -290,6 +310,11 @@
         return options;
       };
 
+      /**
+       * Place a divider element between toolbar groups in the overflow menu.
+       * This is necessary to tell KListWithOverflow where to render dividers
+       * between groups.
+       */
       const toolbarGroupsWithDividers = computed(() => {
         const groups = [];
         toolbarGroups.value.forEach((group, index) => {
@@ -305,6 +330,9 @@
       });
 
       const onOverflowSelect = (option, event) => {
+        // Stop propagation to avoid triggering RTE on outside click handler that
+        // minimizes the editor because KDropdownMenu is attached to an overlay layer,
+        // i.e. not a descendant of the editor.
         event.stopPropagation();
         option.handler(event, { fromOverflow: true });
       };
@@ -322,7 +350,7 @@
         moreButtonText$,
       };
     },
-  });
+  };
 
 </script>
 
@@ -335,19 +363,12 @@
     gap: 6px;
     align-items: center;
     padding: 8px;
-    background: #f8f9fa;
-    border-bottom: 1px solid #e1e5e9;
     border-radius: 8px 8px 0 0;
   }
 
-  .toolbar > :last-child {
+  .minimize-button {
+    /* Push the minimize button to the far right. */
     margin-left: auto;
-  }
-
-  [role='group'] {
-    display: flex;
-    gap: 2px;
-    align-items: center;
   }
 
   .overflow-list {
@@ -383,11 +404,6 @@
     outline: 2px solid #0097f2;
   }
 
-  .more-button[aria-expanded='true'] {
-    color: #4368f5;
-    background: #d9e1fd;
-  }
-
   .more-button-icon {
     width: 16px;
     height: 16px;
@@ -406,11 +422,6 @@
     padding: 8px 12px;
     font-size: 1.2rem;
     line-height: 140%;
-
-    &.active {
-      color: #3730a3;
-      background-color: #e0e7ff;
-    }
   }
 
   .list-with-overflow-divider {
