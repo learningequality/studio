@@ -298,14 +298,14 @@
 
   .assessment-item-toolbar {
     display: flex;
-    gap: 16px;
+    gap: 4px;
     align-items: center;
     justify-content: flex-end;
   }
 
   .icon-actions-wrapper {
     display: flex;
-    gap: 16px;
+    gap: 4px;
     align-items: center;
   }
 

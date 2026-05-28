@@ -101,6 +101,7 @@
                     :iconActionsConfig="toolbarIconActions"
                     :collapse="isSmallScreen"
                     :displayMenu="isSmallScreen"
+                    :canEdit="!isHintOpen(hintIdx)"
                     :canMoveUp="!isHintFirst(hintIdx)"
                     :canMoveDown="!isHintLast(hintIdx)"
                     class="toolbar"
@@ -177,6 +178,7 @@
       return {
         sectionOpen: false,
         toolbarIconActions: [
+          [AssessmentItemToolbarActions.EDIT_ITEM, { collapse: true }],
           [AssessmentItemToolbarActions.MOVE_ITEM_UP, { collapse: true }],
           [AssessmentItemToolbarActions.MOVE_ITEM_DOWN, { collapse: true }],
           AssessmentItemToolbarActions.DELETE_ITEM,
@@ -189,7 +191,7 @@
         return {
           ':focus': {
             ...this.$coreOutline,
-            outlineOffset: '-2px',
+            outlineOffset: '0px',
           },
         };
       },
@@ -323,6 +325,10 @@
       },
       onToolbarClick(action, hintIdx) {
         switch (action) {
+          case AssessmentItemToolbarActions.EDIT_ITEM:
+            this.emitOpen(hintIdx);
+            break;
+
           case AssessmentItemToolbarActions.MOVE_ITEM_UP:
             this.moveHintUp(hintIdx);
             break;
@@ -402,7 +408,6 @@
   }
 
   .hints-label {
-    /* stylelint-disable-next-line declaration-property-value-disallowed-list */
     font-size: 12px;
     font-weight: 600;
   }
@@ -455,11 +460,6 @@
     &.small-screen {
       .hint-actions {
         margin-left: 4px;
-
-        ::v-deep .assessment-item-toolbar,
-        ::v-deep .icon-actions-wrapper {
-          gap: 4px;
-        }
       }
 
       &.is-open {
@@ -501,7 +501,7 @@
     display: flex;
     align-items: center;
     width: 100%;
-    height: 52px;
+    min-height: 52px;
     padding: 0 4px;
     overflow: hidden;
     border-radius: 4px;
