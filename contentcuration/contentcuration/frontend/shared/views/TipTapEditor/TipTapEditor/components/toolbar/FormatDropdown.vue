@@ -1,6 +1,7 @@
 <template>
 
   <div
+    ref="containerRef"
     class="dropdown-container"
     @keydown="handleContainerKeydown"
   >
@@ -65,6 +66,7 @@
         showHeadersDropdown: isOpen,
         toggleHeadersDropdown: toggleDropdown,
         selectFormat,
+        containerRef,
       } = useDropdowns();
 
       const { handleFormatChange } = useToolbarActions();
@@ -193,6 +195,7 @@
         handleContainerKeydown,
         textFormatOptions$,
         formatOptions$,
+        containerRef,
       };
     },
   });
