@@ -106,7 +106,10 @@
           @close="closeAnswer"
         />
 
-        <VDivider class="hints-divider" />
+        <div
+          class="hints-divider"
+          :style="{ borderTop: `1px solid ${$themeTokens.fineLine}` }"
+        ></div>
 
         <HintsEditor
           :hints="hints"
