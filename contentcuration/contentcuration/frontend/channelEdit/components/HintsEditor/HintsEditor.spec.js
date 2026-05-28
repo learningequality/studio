@@ -5,6 +5,11 @@ import { AssessmentItemToolbarActions } from '../../constants';
 import HintsEditor from './HintsEditor';
 
 jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue');
+jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
+  return function useKResponsiveWindow() {
+    return { windowBreakpoint: { value: 4 } };
+  };
+});
 
 configure({
   testIdAttribute: 'data-test',
