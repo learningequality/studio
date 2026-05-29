@@ -45,6 +45,15 @@ jobs:
         pnpm rebuild node-sass
     - name: Build frontend
       run: pnpm run build
+    - name: Upload frontend bundle
+      uses: actions/upload-artifact@v7
+      with:
+        name: studio-frontend-bundle
+        path: |
+          contentcuration/contentcuration/static/studio/
+          contentcuration/build/webpack-stats.json
+        if-no-files-found: error
+        retention-days: 1
   make_messages:
     name: Build all message files
     needs: pre_job
@@ -79,3 +88,146 @@ jobs:
         sudo apt-get install -y gettext
     - name: Test Django makemessages
       run: python contentcuration/manage.py makemessages --all
+  browser_smoke_test:
+    name: Browser smoke test
+    needs: [pre_job, build_assets]
+    if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: learningequality
+          POSTGRES_PASSWORD: kolibri
+          POSTGRES_DB: kolibri-studio
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      redis:
+        image: redis:6.0.9
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    env:
+      DJANGO_SETTINGS_MODULE: contentcuration.settings
+      DATA_DB_HOST: localhost
+      AWS_S3_ENDPOINT_URL: http://localhost:9000
+      AWS_BUCKET_NAME: content
+      CELERY_BROKER_ENDPOINT: localhost
+      CELERY_REDIS_DB: "0"
+      CELERY_REDIS_PASSWORD: ""
+      # generate_storage_url() only handles k8s / docker-compose / unset — an
+      # unrecognized value leaves the URL unbound (500). MinIO runs on :9000
+      # here, which is exactly the docker-compose path.
+      RUN_MODE: docker-compose
+      SMOKE_EMAIL: smokeadmin@example.com
+      SMOKE_PASSWORD: smokepass1234
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up MinIO
+        run: |
+          docker run -d -p 9000:9000 --name minio \
+            -e "MINIO_ROOT_USER=development" \
+            -e "MINIO_ROOT_PASSWORD=development" \
+            -e "MINIO_DEFAULT_BUCKETS=content:public" \
+            bitnamilegacy/minio:2024.5.28
+      - name: Install gettext (for compilemessages)
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y gettext
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: '3.10'
+          activate-environment: "true"
+          enable-cache: "true"
+      - name: Install python dependencies
+        run: |
+          uv pip sync requirements.txt
+          # WhiteNoise lets gunicorn serve /static/ without nginx (see
+          # integration_testing/smoke_wsgi.py). Smoke-test-only, so not in
+          # requirements.txt.
+          uv pip install "whitenoise<7"
+      - name: Download frontend bundle
+        uses: actions/download-artifact@v8
+        with:
+          name: studio-frontend-bundle
+          # upload-artifact strips the least-common-ancestor of the uploaded
+          # paths (here contentcuration/), so extract back under it: the bundle
+          # must land at contentcuration/contentcuration/static/studio/ and the
+          # stats file at contentcuration/build/webpack-stats.json (STATS_FILE).
+          path: contentcuration
+      - name: Cache Playwright browsers
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-v1
+      - name: Install Chromium and system deps
+        run: uvx --from "playwright<2" playwright install --with-deps chromium
+      - name: Prepare database
+        run: |
+          python contentcuration/manage.py migrate --noinput
+          python contentcuration/manage.py loadconstants
+      - name: Create smoke test user
+        shell: python
+        run: |
+          import os
+          import sys
+          # contentcuration package lives one level down; put it on sys.path
+          # so django.setup() can import contentcuration.settings.
+          sys.path.insert(0, "contentcuration")
+          import django
+          django.setup()
+          from django.contrib.auth import get_user_model
+          # Studio's custom User model: create_superuser(email, first_name, last_name, password).
+          # is_active defaults to False, so we have to flip it explicitly —
+          # otherwise the user exists but can't log in.
+          u = get_user_model().objects.create_superuser(
+              os.environ["SMOKE_EMAIL"],
+              "Smoke",
+              "Admin",
+              password=os.environ["SMOKE_PASSWORD"],
+          )
+          u.is_active = True
+          u.save()
+      - name: Prepare static and translations
+        run: |
+          python contentcuration/manage.py collectstatic --noinput
+          cd contentcuration && python manage.py compilemessages
+      - name: Start gunicorn (WhiteNoise serves /static/, no nginx)
+        run: |
+          nohup gunicorn integration_testing.smoke_wsgi:application \
+            --pythonpath . \
+            --timeout=120 --workers=1 --threads=1 \
+            --bind=0.0.0.0:8080 --log-level=info \
+            > "${{ runner.temp }}/gunicorn.log" 2>&1 &
+          echo "gunicorn started in background"
+      - name: Run browser smoke test
+        # SCREENSHOT_DIR uses the runner context, which is only available in a
+        # step env — not the job-level env.
+        env:
+          SCREENSHOT_DIR: ${{ runner.temp }}/smoke_test_screenshots
+        run: uv run --script integration_testing/smoke_test.py
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: smoke_test_screenshots
+          path: ${{ runner.temp }}/smoke_test_screenshots
+          if-no-files-found: ignore
+      - name: Upload gunicorn log on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: smoke_test_gunicorn_log
+          path: ${{ runner.temp }}/gunicorn.log
+          if-no-files-found: ignore
