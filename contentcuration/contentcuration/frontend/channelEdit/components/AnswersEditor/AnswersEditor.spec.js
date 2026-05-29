@@ -3,6 +3,7 @@ import { shallowMount, mount } from '@vue/test-utils';
 import { AssessmentItemToolbarActions } from '../../constants';
 import AnswersEditor from './AnswersEditor';
 import { AssessmentItemTypes } from 'shared/constants';
+import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue';
 
 jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue');
 
@@ -245,6 +246,31 @@ describe('AnswersEditor', () => {
     });
   });
 
+  describe('autofocus on the open answer editor', () => {
+    beforeEach(() => {
+      wrapper = mount(AnswersEditor, {
+        propsData: {
+          questionKind: AssessmentItemTypes.SINGLE_SELECTION,
+          answers: [
+            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+            { answer: 'Peanut butter', correct: false, order: 2 },
+          ],
+          openAnswerIdx: 1,
+        },
+      });
+    });
+
+    it('passes autofocus=true to the open answer editor', () => {
+      const editors = wrapper.findAllComponents(TipTapEditor);
+      expect(editors.at(1).props('autofocus')).toBe(true);
+    });
+
+    it('passes autofocus=false to closed answer editors', () => {
+      const editors = wrapper.findAllComponents(TipTapEditor);
+      expect(editors.at(0).props('autofocus')).toBe(false);
+    });
+  });
+
   describe('on an answer click', () => {
     beforeEach(async () => {
       wrapper = mount(AnswersEditor, {
@@ -314,7 +340,7 @@ describe('AnswersEditor', () => {
         },
       });
 
-      const editors = wrapper.findAllComponents({ name: 'RichTextEditor' });
+      const editors = wrapper.findAllComponents(TipTapEditor);
       editors.at(1).vm.$emit('update', 'European butter');
 
       await wrapper.vm.$nextTick();

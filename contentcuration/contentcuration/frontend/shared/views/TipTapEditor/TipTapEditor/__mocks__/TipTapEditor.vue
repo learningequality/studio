@@ -5,6 +5,7 @@
     <textarea
       v-if="mode === 'edit'"
       :value="value"
+      :data-autofocus="autofocus"
       @input="$emit('update', $event.target.value)"
     ></textarea>
   </div>
@@ -24,6 +25,10 @@
       mode: {
         type: String,
         default: 'view',
+      },
+      autofocus: {
+        type: Boolean,
+        default: false,
       },
     },
   };

@@ -99,6 +99,24 @@ describe('HintsEditor', () => {
     ]);
   });
 
+  it('autofocuses the editor of the open hint', async () => {
+    const user = userEvent.setup();
+    renderComponent({
+      hints: [
+        { hint: 'First hint', order: 1 },
+        { hint: 'Second hint', order: 2 },
+      ],
+      openHintIdx: 0,
+    });
+    await openHintsSection(user);
+
+    const hintCards = getHintCards();
+    // The open hint renders an editable textbox that should request autofocus.
+    expect(within(hintCards[0]).getByRole('textbox')).toHaveAttribute('data-autofocus', 'true');
+    // Closed hints render in view mode, so they have no editable textbox to focus.
+    expect(within(hintCards[1]).queryByRole('textbox')).not.toBeInTheDocument();
+  });
+
   it('adds a new hint and removes existing empty hints when the user clicks New hint', async () => {
     const user = userEvent.setup();
     const { emitted } = renderComponent({

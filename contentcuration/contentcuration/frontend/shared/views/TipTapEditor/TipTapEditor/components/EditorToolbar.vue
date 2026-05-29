@@ -535,7 +535,7 @@
           window.addEventListener('resize', handleWindowResize, { passive: true });
         }
 
-        document.addEventListener('click', handleClickOutside, { passive: true });
+        document.addEventListener('mousedown', handleClickOutside, { passive: true });
       });
 
       onUnmounted(() => {
@@ -544,7 +544,7 @@
         } else {
           window.removeEventListener('resize', handleWindowResize);
         }
-        document.removeEventListener('click', handleClickOutside);
+        document.removeEventListener('mousedown', handleClickOutside);
       });
 
       return {

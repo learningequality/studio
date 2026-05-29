@@ -58,12 +58,12 @@
 
   .studio-page-outer {
     width: 100%;
-    margin-bottom: 16px;
     overflow-y: auto;
   }
 
   .studio-page-inner {
     width: 100%;
+    padding-bottom: 16px;
   }
 
 </style>
