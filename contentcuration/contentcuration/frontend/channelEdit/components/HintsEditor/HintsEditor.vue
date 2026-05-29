@@ -88,6 +88,7 @@
                     <TipTapEditor
                       v-model="hint.hint"
                       mode="edit"
+                      :autofocus="isHintOpen(hintIdx)"
                       :image-processor="EditorImageProcessor"
                       minHeight="80px"
                       @update="updateHintText($event, hintIdx)"

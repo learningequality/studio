@@ -77,23 +77,19 @@ export function useDropdowns() {
     selectedFormat.value = format.label;
   };
 
+  const containerRef = ref(null);
+
+  // Each instance checks only its own container so
+  // clicking one dropdown's trigger closes the other.
   const handleClickOutside = event => {
-    const dropdownContainers = document.querySelectorAll('.dropdown-container');
-    let isOutside = true;
-
-    dropdownContainers.forEach(container => {
-      if (container.contains(event.target)) {
-        isOutside = false;
-      }
-    });
-
-    if (isOutside) {
-      closeAllDropdowns();
+    if (!containerRef.value || containerRef.value.contains(event.target)) {
+      return;
     }
+    closeAllDropdowns();
   };
 
   onMounted(() => {
-    document.addEventListener('click', handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     // Setup editor listener when component mounts
     setupEditorListener();
     // Initial format detection
@@ -101,7 +97,7 @@ export function useDropdowns() {
   });
 
   onUnmounted(() => {
-    document.removeEventListener('click', handleClickOutside);
+    document.removeEventListener('mousedown', handleClickOutside);
     if (offTransaction) offTransaction();
   });
 
@@ -149,5 +145,6 @@ export function useDropdowns() {
     togglePasteDropdown,
     selectFormat,
     updateSelectedFormat,
+    containerRef,
   };
 }
