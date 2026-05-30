@@ -1,187 +1,128 @@
 <template>
 
   <div>
-    <div class="grey--text mb-3 text--darken-1">
-      {{ $tr('answersLabel') }}
+    <div
+      class="answers-label"
+      :style="{ color: $themeTokens.annotation }"
+    >
+      {{ answersLabel }}
     </div>
-    <div>
+    <div
+      class="answers-list"
+      :class="{ 'small-screen': isSmallScreen }"
+    >
       <div
         v-if="!answers || !answers.length"
-        class="card-border-light pa-3"
+        class="answer-border no-answers-placeholder"
+        :style="{ borderColor: $themeTokens.fineLine }"
       >
         {{ $tr('noAnswersPlaceholder') }}
       </div>
       <div
         v-for="(answer, answerIdx) in answers"
         :key="answerIdx"
-        class="card-border-light"
+        class="answer-border"
+        :style="{
+          borderColor: answer.correct ? $themeTokens.correct : $themeTokens.fineLine,
+          backgroundColor: answer.correct ? $themePalette.green.v_100 : 'transparent',
+        }"
+        data-test="answer"
         @click="onAnswerClick($event, answerIdx)"
       >
-        <VCard
-          :class="answerClasses(answerIdx)"
-          flat
-          data-test="answer"
-        >
-          <div :class="indicatorClasses(answer)"></div>
-          <VCardText :class="{ 'pb-0': !isAnswerOpen(answerIdx) }">
-            <!-- Touch device & desktop layout with toolbar above -->
-            <template v-if="isTouchDevice || screenSizeLevel <= 3">
-              <!-- Toolbar row for touch devices -->
-              <VLayout class="mb-2">
-                <!-- Selection controls -->
-                <VFlex shrink>
-                  <VRadioGroup
-                    v-if="shouldHaveOneCorrectAnswer"
-                    :value="correctAnswersIndices"
-                    @change="onCorrectAnswersIndicesUpdate"
-                  >
-                    <VRadio
-                      :value="answerIdx"
-                      data-test="answerRadio"
-                      color="primary"
-                    />
-                  </VRadioGroup>
-
-                  <Checkbox
-                    v-if="isMultipleSelection"
-                    :key="answerIdx"
-                    :value="answerIdx"
-                    :inputValue="correctAnswersIndices"
-                    @input="onCorrectAnswersIndicesUpdate"
-                  />
-                </VFlex>
-
-                <VSpacer />
-
-                <!-- Toolbar -->
-                <VFlex shrink>
-                  <AssessmentItemToolbar
-                    :iconActionsConfig="toolbarIconActions"
-                    :canMoveUp="!isAnswerFirst(answerIdx)"
-                    :canMoveDown="!isAnswerLast(answerIdx)"
-                    class="toolbar"
-                    analyticsLabel="Answer"
-                    data-test="toolbar"
-                    @click="onToolbarClick($event, answerIdx)"
-                  />
-                </VFlex>
-              </VLayout>
-
-              <!-- Content row for touch devices -->
-              <VLayout align-top>
-                <VFlex xs12>
-                  <!-- Answer content component -->
-                  <keep-alive :max="5">
-                    <div v-if="isInputQuestion">
-                      <VTextField
-                        v-if="isAnswerOpen(answerIdx)"
-                        v-model="answer.answer"
-                        class="answer-number"
-                        type="number"
-                        :rules="[numericRule]"
-                        @change="updateAnswerText($event, answerIdx)"
-                      />
-                      <VTextField
-                        v-else
-                        :value="answer.answer"
-                        class="no-border"
-                        type="number"
-                      />
-                    </div>
-
-                    <div v-else>
-                      <TipTapEditor
-                        v-model="answer.answer"
-                        class="editor"
-                        :mode="isAnswerOpen(answerIdx) ? 'edit' : 'view'"
-                        minHeight="80px"
-                        :autofocus="isAnswerOpen(answerIdx)"
-                        :imageProcessor="EditorImageProcessor"
-                        @update="updateAnswerText($event, answerIdx)"
-                        @minimize="emitClose"
-                      />
-                    </div>
-                  </keep-alive>
-                </VFlex>
-              </VLayout>
-            </template>
-
-            <!-- Desktop layout -->
-            <VLayout
-              v-else
-              align-top
+        <div :class="answerClasses(answerIdx)">
+          <div
+            class="answer-card-text"
+            :class="{ 'is-closed': !isAnswerOpen(answerIdx), 'small-screen': isSmallScreen }"
+          >
+            <div
+              class="answer-layout"
+              :class="{ 'is-open': isAnswerOpen(answerIdx), 'small-screen': isSmallScreen }"
             >
               <!-- Selection controls -->
-              <VFlex shrink>
-                <!--
-                  VRadio cannot be used without VRadioGroup like VCheckbox but it can
-                  be solved by wrapping each VRadio to VRadioGroup
-                  https://github.com/vuetifyjs/vuetify/issues/2345
-                -->
-                <VRadioGroup
-                  v-if="shouldHaveOneCorrectAnswer"
-                  :value="correctAnswersIndices"
-                  @change="onCorrectAnswersIndicesUpdate"
-                >
-                  <VRadio
-                    :value="answerIdx"
-                    data-test="answerRadio"
-                    color="primary"
-                  />
-                </VRadioGroup>
-
-                <Checkbox
-                  v-if="isMultipleSelection"
-                  :key="answerIdx"
-                  :value="answerIdx"
-                  :inputValue="correctAnswersIndices"
-                  @input="onCorrectAnswersIndicesUpdate"
+              <div
+                v-if="!isInputQuestion"
+                class="answer-selection"
+              >
+                <KCheckbox
+                  :checked="answer.correct"
+                  @change="toggleCorrectAnswer(answerIdx, $event)"
                 />
-              </VFlex>
+              </div>
 
               <!-- Answer content -->
-              <VFlex xs10>
-                <keep-alive :max="5">
-                  <!-- Input question shows a text field with type of `number` -->
-                  <div v-if="isInputQuestion">
-                    <VTextField
-                      v-if="isAnswerOpen(answerIdx)"
-                      v-model="answer.answer"
-                      class="answer-number"
-                      type="number"
-                      :rules="[numericRule]"
-                      @change="updateAnswerText($event, answerIdx)"
-                    />
-                    <VTextField
-                      v-else
-                      :value="answer.answer"
-                      class="no-border"
-                      type="number"
-                    />
+              <div class="answer-content">
+                <!-- Input question shows a text field with type of `number` -->
+                <div v-if="isInputQuestion">
+                  <input
+                    v-if="isAnswerOpen(answerIdx)"
+                    :value="answer.answer"
+                    class="answer-number"
+                    :class="answerNumberClasses"
+                    type="number"
+                    :placeholder="$tr('enterNumberPlaceholder')"
+                    @input="updateAnswerText($event.target.value, answerIdx)"
+                  >
+                  <div
+                    v-else
+                    class="answer-view-text"
+                  >
+                    <div class="answer-view-editor">
+                      <span
+                        v-if="!answer.answer"
+                        :style="{ color: $themePalette.grey.v_500 }"
+                      >
+                        {{ $tr('enterNumberPlaceholder') }}
+                      </span>
+                      <template v-else>
+                        {{ answer.answer }}
+                      </template>
+                    </div>
                   </div>
+                </div>
 
-                  <div v-else>
-                    <!-- ?? analyticsLabel="Answer" -->
+                <div v-else>
+                  <!-- View mode: TipTapEditor in view mode to render Markdown properly -->
+                  <div
+                    v-if="!isAnswerOpen(answerIdx)"
+                    class="answer-view-text"
+                  >
+                    <div class="answer-view-editor">
+                      <TipTapEditor
+                        v-model="answer.answer"
+                        mode="view"
+                        :image-processor="EditorImageProcessor"
+                      />
+                    </div>
+                  </div>
+                  <!-- Edit mode: TipTapEditor -->
+                  <keep-alive
+                    v-else
+                    :max="5"
+                  >
                     <TipTapEditor
                       v-model="answer.answer"
-                      class="editor"
-                      :mode="isAnswerOpen(answerIdx) ? 'edit' : 'view'"
+                      class="editor is-open"
+                      :style="{ backgroundColor: $themePalette.white }"
+                      mode="edit"
                       minHeight="80px"
-                      :autofocus="isAnswerOpen(answerIdx)"
-                      :imageProcessor="EditorImageProcessor"
+                      :autofocus="true"
+                      :image-processor="EditorImageProcessor"
                       @update="updateAnswerText($event, answerIdx)"
                       @minimize="emitClose"
-                      @open-editor="emitOpen(answerIdx)"
                     />
-                  </div>
-                </keep-alive>
-              </VFlex>
+                  </keep-alive>
+                </div>
+              </div>
 
-              <VSpacer />
-
-              <VFlex shrink>
+              <div
+                v-if="toolbarIconActions.length > 0"
+                class="answer-actions"
+              >
                 <AssessmentItemToolbar
                   :iconActionsConfig="toolbarIconActions"
+                  :collapse="isSmallScreen"
+                  :displayMenu="isSmallScreen"
+                  :canEdit="!isAnswerOpen(answerIdx)"
                   :canMoveUp="!isAnswerFirst(answerIdx)"
                   :canMoveDown="!isAnswerLast(answerIdx)"
                   class="toolbar"
@@ -189,20 +130,29 @@
                   data-test="toolbar"
                   @click="onToolbarClick($event, answerIdx)"
                 />
-              </VFlex>
-            </VLayout>
-          </VCardText>
-        </VCard>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
     <KButton
       v-if="isEditingAllowed"
-      :text="$tr('newAnswerBtnLabel')"
-      class="ml-0 mt-3"
+      class="answer-editor-button mt-3"
       data-test="newAnswerBtn"
+      appearance="flat-button"
+      :appearanceOverrides="buttonAppearanceOverrides"
       @click="addNewAnswer"
-    />
+    >
+      <div class="add-answer-btn-content">
+        <KIcon
+          icon="plus"
+          :color="$themeTokens.primary"
+        />
+        <span>{{ $tr('newAnswerBtnLabel') }}</span>
+      </div>
+    </KButton>
   </div>
 
 </template>
@@ -213,14 +163,12 @@
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import AssessmentItemToolbar from '../AssessmentItemToolbar';
   import { AssessmentItemToolbarActions } from '../../constants';
-  import { floatOrIntRegex, getCorrectAnswersIndices, mapCorrectAnswers } from '../../utils';
+  import { getCorrectAnswersIndices, mapCorrectAnswers } from '../../utils';
   import { AssessmentItemTypes } from 'shared/constants';
   import { swapElements } from 'shared/utils/helpers';
-  import Checkbox from 'shared/views/form/Checkbox';
   import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
 
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue';
-  import { isTouchDevice } from 'shared/utils/browserInfo';
 
   const updateAnswersOrder = answers => {
     return answers.map((answer, idx) => {
@@ -235,7 +183,6 @@
     name: 'AnswersEditor',
     components: {
       AssessmentItemToolbar,
-      Checkbox,
       TipTapEditor,
     },
     model: {
@@ -263,8 +210,6 @@
       return {
         EditorImageProcessor, // Make it available in the template
         correctAnswersIndices: getCorrectAnswersIndices(this.questionKind, this.answers),
-        numericRule: val => floatOrIntRegex.test(val) || this.$tr('numberFieldErrorLabel'),
-        isTouchDevice,
       };
     },
     computed: {
@@ -286,17 +231,33 @@
       isEditingAllowed() {
         return !this.isTrueFalse;
       },
+      answersLabel() {
+        if (this.isSingleSelection || this.isTrueFalse) {
+          return this.$tr('answersLabelSingleChoice');
+        } else if (this.isMultipleSelection) {
+          return this.$tr('answersLabelMultipleChoice');
+        } else if (this.isInputQuestion) {
+          return this.$tr('answersLabelNumeric');
+        }
+        return this.$tr('answersLabel');
+      },
       toolbarIconActions() {
+        // On small screens, collapse ALL actions into the ⋮ menu so only
+        // one icon renders, giving the answer text room to breathe.
+        const deleteAction = this.isSmallScreen
+          ? [AssessmentItemToolbarActions.DELETE_ITEM, { collapse: true }]
+          : AssessmentItemToolbarActions.DELETE_ITEM;
+
         if (this.isSingleSelection || this.isMultipleSelection) {
           return [
-            AssessmentItemToolbarActions.MOVE_ITEM_UP,
-            AssessmentItemToolbarActions.MOVE_ITEM_DOWN,
-            AssessmentItemToolbarActions.DELETE_ITEM,
+            [AssessmentItemToolbarActions.MOVE_ITEM_UP, { collapse: true }],
+            [AssessmentItemToolbarActions.MOVE_ITEM_DOWN, { collapse: true }],
+            deleteAction,
           ];
         }
 
         if (this.isInputQuestion) {
-          return [AssessmentItemToolbarActions.DELETE_ITEM];
+          return [deleteAction];
         }
 
         return [];
@@ -304,6 +265,31 @@
       screenSizeLevel() {
         const { windowBreakpoint } = useKResponsiveWindow();
         return windowBreakpoint.value ?? 0;
+      },
+      isSmallScreen() {
+        return this.screenSizeLevel <= 1;
+      },
+      buttonAppearanceOverrides() {
+        return {
+          backgroundColor: this.$themeBrand.primary.v_50,
+          border: `1px dashed ${this.$themeBrand.primary.v_200}`,
+          color: `${this.$themeTokens.primary} !important`,
+          fontSize: '14px',
+          fontWeight: '600',
+          textTransform: 'none',
+          ':hover': {
+            backgroundColor: this.$themeBrand.primary.v_100,
+          },
+        };
+      },
+      answerNumberClasses() {
+        return this.$computedClass({
+          backgroundColor: this.$themePalette.white,
+          border: `1px solid ${this.$themePalette.grey.v_300}`,
+          ':focus': {
+            borderColor: this.$themePalette.grey.v_500,
+          },
+        });
       },
     },
     watch: {
@@ -324,32 +310,35 @@
       answerClasses(answerIdx) {
         const classes = ['answer'];
 
-        if (this.isEditingAllowed) {
-          classes.push('editable');
-        }
-
         if (!this.isAnswerOpen(answerIdx)) {
           classes.push('closed');
-        }
-
-        if (this.answers[answerIdx].correct) {
-          classes.push('answer-correct');
-        } else {
-          classes.push('answer-wrong');
+          classes.push(
+            this.$computedClass({
+              cursor: 'pointer',
+              ':hover': {
+                backgroundColor: this.$themePalette.grey.v_100,
+              },
+            }),
+          );
         }
 
         return classes;
       },
-      indicatorClasses(answer) {
-        const classes = ['indicator'];
-
-        if (answer.correct) {
-          classes.push('correct');
+      toggleCorrectAnswer(answerIdx, isChecked) {
+        if (this.shouldHaveOneCorrectAnswer) {
+          if (isChecked) {
+            this.onCorrectAnswersIndicesUpdate(answerIdx);
+          }
         } else {
-          classes.push('wrong');
+          // multiple selection
+          let indices = [...this.correctAnswersIndices];
+          if (isChecked && !indices.includes(answerIdx)) {
+            indices.push(answerIdx);
+          } else if (!isChecked && indices.includes(answerIdx)) {
+            indices = indices.filter(idx => idx !== answerIdx);
+          }
+          this.onCorrectAnswersIndicesUpdate(indices);
         }
-
-        return classes;
       },
       onCorrectAnswersIndicesUpdate(newIndices) {
         // indices can be an array or a single value - depends on question type
@@ -441,10 +430,10 @@
           return;
         }
 
-        // do not open on checkbox or radio click
+        // do not open on checkbox click
         if (
-          event.target.classList.contains('v-label') ||
-          event.target.classList.contains('v-input--selection-controls__ripple')
+          event.target.tagName.toLowerCase() === 'input' ||
+          event.target.closest('.answer-selection') !== null
         ) {
           return;
         }
@@ -495,9 +484,12 @@
     },
     $trs: {
       answersLabel: 'Answers',
+      answersLabelSingleChoice: 'Answer options — select one correct answer',
+      answersLabelMultipleChoice: 'Answer options — select all correct answers',
+      answersLabelNumeric: 'Answer options — enter all acceptable spellings or formats',
       noAnswersPlaceholder: 'Question has no answer options',
-      newAnswerBtnLabel: 'New answer',
-      numberFieldErrorLabel: 'Answer must be a number',
+      newAnswerBtnLabel: 'Add option',
+      enterNumberPlaceholder: 'Enter number',
     },
   };
 
@@ -506,57 +498,158 @@
 
 <style lang="scss" scoped>
 
-  $exercise-answer-correct: #4caf50;
-  $exercise-answer-wrong: #ef5350;
+  .answers-label {
+    margin-bottom: 5px;
+    font-size: 12px;
+    font-weight: 600;
+  }
 
-  .card-border-light {
-    /* stylelint-disable-next-line custom-property-pattern */
-    border: 1px solid var(--v-greyBorder-lighten1);
+  .answers-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
 
-    &:not(:first-child) {
-      border-top: 0;
+  .answer-border {
+    border: 1px solid;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+  }
+
+  .no-answers-placeholder {
+    padding: 16px;
+  }
+
+  .answer-card-text {
+    padding: 7.5px;
+
+    &.small-screen {
+      &.is-closed {
+        font-size: 10px;
+      }
     }
+
+    &.is-closed {
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+  }
+
+  .answer-layout {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    &.is-open {
+      align-items: flex-start;
+    }
+
+    &.small-screen {
+      .answer-actions {
+        margin-left: 4px;
+      }
+
+      &.is-open {
+        flex-direction: column-reverse;
+
+        .answer-actions {
+          display: flex;
+          justify-content: flex-end;
+          width: 100%;
+          margin-bottom: 8px;
+          margin-left: 0;
+        }
+      }
+    }
+  }
+
+  .answer-selection {
+    flex-shrink: 0;
+    margin-right: 16px;
+
+    .small-screen & {
+      margin-right: 6px;
+    }
+  }
+
+  .answer-content {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .answer-view-text {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 42px;
+    padding: 0 4px;
+    overflow: hidden;
+    border-radius: 4px;
+
+    .small-screen.is-closed & {
+      min-height: 36px;
+    }
+  }
+
+  .answer-view-editor {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+
+    .small-screen.is-closed & {
+      font-size: 12px;
+    }
+  }
+
+  .answer-number {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+    border-radius: 4px;
+    outline: none;
+
+    .small-screen & {
+      padding: 7px 8px;
+      font-size: 13px;
+    }
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      margin: 0;
+      appearance: none;
+    }
+
+    &[type='number'] {
+      appearance: textfield;
+    }
+  }
+
+  .answer-actions {
+    flex-shrink: 0;
+    margin-left: 16px;
   }
 
   .answer {
-    position: relative;
-    transition: 0.7s;
-
-    &.closed.editable {
+    &.closed:hover {
       cursor: pointer;
     }
-
-    &.closed.answer-correct:hover {
-      background-color: rgba($exercise-answer-correct, 0.15);
-    }
-
-    &.closed.answer-wrong:hover {
-      background-color: rgba($exercise-answer-wrong, 0.15);
-    }
-
-    .indicator {
-      position: absolute;
-      width: 4px;
-      height: 100%;
-
-      &.correct {
-        background-color: $exercise-answer-correct;
-      }
-
-      &.wrong {
-        background-color: $exercise-answer-wrong;
-      }
-    }
   }
 
-  .v-input--selection-controls {
-    margin-top: 6px;
+  .answer-editor-button {
+    justify-content: center;
+    width: 100%;
+    padding: 11px 16px !important;
+    margin-top: 10px;
+    line-height: unset !important;
+    border-radius: 4px !important;
   }
 
-  /* Remove the underline on text fields that are not focused */
-  ::v-deep .no-border.v-text-field > .v-input__control > .v-input__slot::before,
-  ::v-deep .no-border.v-text-field > .v-input__control > .v-input__slot::after {
-    border-style: none;
+  .add-answer-btn-content {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
   }
 
 </style>

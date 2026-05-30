@@ -7,6 +7,12 @@ import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vu
 
 jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue');
 
+jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
+  return function useKResponsiveWindow() {
+    return { windowBreakpoint: { value: 4 } };
+  };
+});
+
 const clickNewAnswerBtn = async wrapper => {
   await wrapper.findComponent('[data-test="newAnswerBtn"]').trigger('click');
 };
@@ -16,7 +22,7 @@ const rendersNewAnswerBtn = wrapper => {
 };
 
 const clickAnswer = async (wrapper, answerIdx) => {
-  await wrapper.findAllComponents('[data-test="answer"]').at(answerIdx).trigger('click');
+  await wrapper.findAll('[data-test="answer"]').at(answerIdx).trigger('click');
 };
 
 const clickMoveAnswerUp = async (wrapper, answerIdx) => {
@@ -59,6 +65,24 @@ describe('AnswersEditor', () => {
     expect(wrapper.html()).toContain('Question has no answer options');
   });
 
+  describe('answers label', () => {
+    it.each([
+      [AssessmentItemTypes.SINGLE_SELECTION, AnswersEditor.$trs.answersLabelSingleChoice],
+      [AssessmentItemTypes.TRUE_FALSE, AnswersEditor.$trs.answersLabelSingleChoice],
+      [AssessmentItemTypes.MULTIPLE_SELECTION, AnswersEditor.$trs.answersLabelMultipleChoice],
+      [AssessmentItemTypes.INPUT_QUESTION, AnswersEditor.$trs.answersLabelNumeric],
+    ])('renders the correct label for %s questions', (questionKind, expectedLabel) => {
+      wrapper = shallowMount(AnswersEditor, {
+        propsData: {
+          questionKind,
+          answers: [],
+        },
+      });
+
+      expect(wrapper.text()).toContain(expectedLabel);
+    });
+  });
+
   describe('for a single selection question', () => {
     beforeEach(() => {
       wrapper = mount(AnswersEditor, {
@@ -72,12 +96,12 @@ describe('AnswersEditor', () => {
       });
     });
 
-    it('renders answers as radio selects', () => {
+    it('renders answers as checkbox controls', () => {
       const inputs = wrapper.findAll('input');
 
       expect(inputs.length).toBe(2);
       for (const n in [0, 1]) {
-        expect(inputs.at(n).attributes()['type']).toBe('radio');
+        expect(inputs.at(n).attributes()['type']).toBe('checkbox');
       }
     });
 
@@ -88,8 +112,36 @@ describe('AnswersEditor', () => {
       expect(inputs.at(1).element.checked).toBe(false);
     });
 
+    it('marks correct answer rows with the selected visual state', () => {
+      const answerRows = wrapper.findAll('[data-test="answer"]');
+
+      expect(answerRows.at(0).attributes('style')).toContain('border-color');
+      expect(answerRows.at(0).attributes('style')).toContain('background-color');
+      expect(answerRows.at(1).attributes('style')).toContain('border-color');
+      expect(answerRows.at(1).attributes('style')).toContain('transparent');
+    });
+
+    it('renders all possible answers', () => {
+      // First answer is open by default (openAnswerIdx=0) — edit mode TipTapEditor
+      // Second answer is closed — view mode TipTapEditor
+      const editors = wrapper.findAllComponents(TipTapEditor);
+
+      // Closed answer uses view mode to safely render rich text
+      const viewEditor = editors.filter(e => e.props('mode') === 'view').at(0);
+      expect(viewEditor.exists()).toBe(true);
+      expect(viewEditor.props('value')).toBe('Peanut butter');
+
+      // Open answer uses edit mode
+      const editEditor = editors.filter(e => e.props('mode') === 'edit').at(0);
+      expect(editEditor.exists()).toBe(true);
+      expect(editEditor.props('value')).toBe('Mayonnaise (I mean you can, but...)');
+    });
+
     it('renders new answer button', () => {
       expect(rendersNewAnswerBtn(wrapper)).toBe(true);
+      expect(wrapper.findComponent('[data-test="newAnswerBtn"]').text()).toContain(
+        AnswersEditor.$trs.newAnswerBtnLabel,
+      );
     });
 
     describe('on new answer button click', () => {
@@ -140,6 +192,21 @@ describe('AnswersEditor', () => {
       expect(inputs.at(2).element.checked).toBe(true);
     });
 
+    it('renders all possible answers', () => {
+      // First answer is open by default (openAnswerIdx=0) — edit mode TipTapEditor
+      // Remaining answers are closed — each gets a view mode TipTapEditor
+      const editors = wrapper.findAllComponents(TipTapEditor);
+
+      const viewEditors = editors.filter(e => e.props('mode') === 'view');
+      expect(viewEditors.length).toBe(2);
+      expect(viewEditors.at(0).props('value')).toBe('Peanut butter');
+      expect(viewEditors.at(1).props('value')).toBe('Jelly');
+
+      const editEditor = editors.filter(e => e.props('mode') === 'edit').at(0);
+      expect(editEditor.exists()).toBe(true);
+      expect(editEditor.props('value')).toBe('Mayonnaise (I mean you can, but...)');
+    });
+
     it('renders new answer button', () => {
       expect(rendersNewAnswerBtn(wrapper)).toBe(true);
     });
@@ -175,12 +242,12 @@ describe('AnswersEditor', () => {
       });
     });
 
-    it('renders answers as radio selects', () => {
+    it('renders answers as checkbox controls', () => {
       const inputs = wrapper.findAll('input');
 
       expect(inputs.length).toBe(2);
       for (const n in [0, 1]) {
-        expect(inputs.at(n).attributes()['type']).toBe('radio');
+        expect(inputs.at(n).attributes()['type']).toBe('checkbox');
       }
     });
 
@@ -202,27 +269,17 @@ describe('AnswersEditor', () => {
         propsData: {
           questionKind: AssessmentItemTypes.INPUT_QUESTION,
           answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: true, order: 2 },
+            { answer: '1.5', correct: true, order: 1 },
+            { answer: '2', correct: true, order: 2 },
           ],
         },
       });
     });
 
-    it('renders all possible answers', () => {
-      // The answer text won't render when `mount()` is used so we override
-      // and use shallowMount here
-      wrapper = shallowMount(AnswersEditor, {
-        propsData: {
-          questionKind: AssessmentItemTypes.INPUT_QUESTION,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: true, order: 2 },
-          ],
-        },
-      });
-      expect(wrapper.html()).toContain('Mayonnaise (I mean you can, but...)');
-      expect(wrapper.html()).toContain('Peanut butter');
+    it('renders open answer as a number input and closed answer as plain text', () => {
+      expect(wrapper.find('input[type="number"]').element.value).toBe('1.5');
+
+      expect(wrapper.html()).toContain('2');
     });
 
     it('renders new answer button', () => {
@@ -238,8 +295,8 @@ describe('AnswersEditor', () => {
         expect(wrapper.emitted().update).toBeTruthy();
         expect(wrapper.emitted().update.length).toBe(1);
         expect(wrapper.emitted().update[0][0]).toEqual([
-          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-          { answer: 'Peanut butter', correct: true, order: 2 },
+          { answer: '1.5', correct: true, order: 1 },
+          { answer: '2', correct: true, order: 2 },
           { answer: '', correct: true, order: 3 },
         ]);
       });
@@ -260,14 +317,13 @@ describe('AnswersEditor', () => {
       });
     });
 
-    it('passes autofocus=true to the open answer editor', () => {
+    it('passes autofocus=true to the open (edit-mode) answer editor', () => {
+      // In the new architecture, only the open answer mounts an edit-mode
+      // TipTapEditor with autofocus. Closed answers use a separate view-mode
+      // TipTapEditor. The edit-mode editor is the only one with autofocus=true.
       const editors = wrapper.findAllComponents(TipTapEditor);
-      expect(editors.at(1).props('autofocus')).toBe(true);
-    });
-
-    it('passes autofocus=false to closed answer editors', () => {
-      const editors = wrapper.findAllComponents(TipTapEditor);
-      expect(editors.at(0).props('autofocus')).toBe(false);
+      const editModeEditor = editors.filter(e => e.props('mode') === 'edit').at(0);
+      expect(editModeEditor.props('autofocus')).toBe(true);
     });
   });
 
@@ -373,7 +429,7 @@ describe('AnswersEditor', () => {
       });
 
       await wrapper.vm.$nextTick();
-      await wrapper.findAll('input[type="radio"]').at(1).setChecked();
+      await wrapper.findAll('.answer-selection input[type="checkbox"]').at(1).trigger('click');
     });
 
     it('emits update event with a payload containing updated answers', () => {
