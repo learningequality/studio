@@ -22,6 +22,7 @@
         v-for="(answer, answerIdx) in answers"
         :key="answerIdx"
         class="answer-border"
+        :class="answerClasses(answerIdx)"
         :style="{
           borderColor: answer.correct ? $themeTokens.correct : $themeTokens.fineLine,
           backgroundColor: answer.correct ? $themePalette.green.v_100 : 'transparent',
@@ -29,108 +30,110 @@
         data-test="answer"
         @click="onAnswerClick($event, answerIdx)"
       >
-        <div :class="answerClasses(answerIdx)">
+        <div
+          class="answer-card-text"
+          :class="{ 'is-closed': !isAnswerOpen(answerIdx), 'small-screen': isSmallScreen }"
+        >
           <div
-            class="answer-card-text"
-            :class="{ 'is-closed': !isAnswerOpen(answerIdx), 'small-screen': isSmallScreen }"
+            class="answer-layout"
+            :class="{ 'is-open': isAnswerOpen(answerIdx), 'small-screen': isSmallScreen }"
           >
+            <!-- Selection controls -->
             <div
-              class="answer-layout"
-              :class="{ 'is-open': isAnswerOpen(answerIdx), 'small-screen': isSmallScreen }"
+              v-if="!isInputQuestion"
+              class="answer-selection"
             >
-              <!-- Selection controls -->
-              <div
-                v-if="!isInputQuestion"
-                class="answer-selection"
-              >
-                <KCheckbox
-                  :checked="answer.correct"
-                  @change="toggleCorrectAnswer(answerIdx, $event)"
-                />
-              </div>
+              <KCheckbox
+                :checked="answer.correct"
+                :style="{
+                  marginTop: !isAnswerOpen(answerIdx) ? 0 : '',
+                  marginBottom: !isAnswerOpen(answerIdx) ? 0 : '',
+                }"
+                @change="toggleCorrectAnswer(answerIdx, $event)"
+              />
+            </div>
 
-              <!-- Answer content -->
-              <div class="answer-content">
-                <!-- Input question shows a text field with type of `number` -->
-                <div v-if="isInputQuestion">
-                  <input
-                    v-if="isAnswerOpen(answerIdx)"
-                    :value="answer.answer"
-                    class="answer-number"
-                    :class="answerNumberClasses"
-                    type="number"
-                    :placeholder="$tr('enterNumberPlaceholder')"
-                    @input="updateAnswerText($event.target.value, answerIdx)"
-                  >
-                  <div
-                    v-else
-                    class="answer-view-text"
-                  >
-                    <div class="answer-view-editor">
-                      <span
-                        v-if="!answer.answer"
-                        :style="{ color: $themePalette.grey.v_500 }"
-                      >
-                        {{ $tr('enterNumberPlaceholder') }}
-                      </span>
-                      <template v-else>
-                        {{ answer.answer }}
-                      </template>
-                    </div>
+            <!-- Answer content -->
+            <div class="answer-content">
+              <!-- Input question shows a text field with type of `number` -->
+              <div v-if="isInputQuestion">
+                <input
+                  v-if="isAnswerOpen(answerIdx)"
+                  :value="answer.answer"
+                  class="answer-number"
+                  :class="answerNumberClasses"
+                  type="number"
+                  :placeholder="$tr('enterNumberPlaceholder')"
+                  @input="updateAnswerText($event.target.value, answerIdx)"
+                >
+                <div
+                  v-else
+                  class="answer-view-text"
+                >
+                  <div class="answer-view-editor">
+                    <span
+                      v-if="!answer.answer"
+                      :style="{ color: $themePalette.grey.v_500 }"
+                    >
+                      {{ $tr('enterNumberPlaceholder') }}
+                    </span>
+                    <template v-else>
+                      {{ answer.answer }}
+                    </template>
                   </div>
                 </div>
+              </div>
 
-                <div v-else>
-                  <!-- View mode: TipTapEditor in view mode to render Markdown properly -->
-                  <div
-                    v-if="!isAnswerOpen(answerIdx)"
-                    class="answer-view-text"
-                  >
-                    <div class="answer-view-editor">
-                      <TipTapEditor
-                        v-model="answer.answer"
-                        mode="view"
-                        :image-processor="EditorImageProcessor"
-                      />
-                    </div>
-                  </div>
-                  <!-- Edit mode: TipTapEditor -->
-                  <keep-alive
-                    v-else
-                    :max="5"
-                  >
+              <div v-else>
+                <!-- View mode: TipTapEditor in view mode to render Markdown properly -->
+                <div
+                  v-if="!isAnswerOpen(answerIdx)"
+                  class="answer-view-text"
+                >
+                  <div class="answer-view-editor">
                     <TipTapEditor
                       v-model="answer.answer"
-                      class="editor is-open"
-                      :style="{ backgroundColor: $themePalette.white }"
-                      mode="edit"
-                      minHeight="80px"
-                      :autofocus="true"
+                      mode="view"
                       :image-processor="EditorImageProcessor"
-                      @update="updateAnswerText($event, answerIdx)"
-                      @minimize="emitClose"
                     />
-                  </keep-alive>
+                  </div>
                 </div>
+                <!-- Edit mode: TipTapEditor -->
+                <keep-alive
+                  v-else
+                  :max="5"
+                >
+                  <TipTapEditor
+                    v-model="answer.answer"
+                    class="editor is-open"
+                    :style="{ backgroundColor: $themePalette.white }"
+                    mode="edit"
+                    minHeight="80px"
+                    :autofocus="true"
+                    :image-processor="EditorImageProcessor"
+                    @update="updateAnswerText($event, answerIdx)"
+                    @minimize="emitClose"
+                  />
+                </keep-alive>
               </div>
+            </div>
 
-              <div
-                v-if="toolbarIconActions.length > 0"
-                class="answer-actions"
-              >
-                <AssessmentItemToolbar
-                  :iconActionsConfig="toolbarIconActions"
-                  :collapse="isSmallScreen"
-                  :displayMenu="isSmallScreen"
-                  :canEdit="!isAnswerOpen(answerIdx)"
-                  :canMoveUp="!isAnswerFirst(answerIdx)"
-                  :canMoveDown="!isAnswerLast(answerIdx)"
-                  class="toolbar"
-                  analyticsLabel="Answer"
-                  data-test="toolbar"
-                  @click="onToolbarClick($event, answerIdx)"
-                />
-              </div>
+            <div
+              v-if="toolbarIconActions.length > 0"
+              class="answer-actions"
+            >
+              <AssessmentItemToolbar
+                :iconActionsConfig="toolbarIconActions"
+                :collapse="isSmallScreen"
+                :displayMenu="isSmallScreen"
+                :canEdit="!isAnswerOpen(answerIdx)"
+                :canMoveUp="!isAnswerFirst(answerIdx)"
+                :canMoveDown="!isAnswerLast(answerIdx)"
+                class="toolbar"
+                analyticsLabel="Answer"
+                data-test="toolbar"
+                @click="onToolbarClick($event, answerIdx)"
+              />
             </div>
           </div>
         </div>
@@ -139,7 +142,7 @@
 
     <KButton
       v-if="isEditingAllowed"
-      class="answer-editor-button mt-3"
+      class="answer-editor-button"
       data-test="newAnswerBtn"
       appearance="flat-button"
       :appearanceOverrides="buttonAppearanceOverrides"
@@ -236,10 +239,8 @@
           return this.$tr('answersLabelSingleChoice');
         } else if (this.isMultipleSelection) {
           return this.$tr('answersLabelMultipleChoice');
-        } else if (this.isInputQuestion) {
-          return this.$tr('answersLabelNumeric');
         }
-        return this.$tr('answersLabel');
+        return this.$tr('answersLabelNumeric');
       },
       toolbarIconActions() {
         // On small screens, collapse ALL actions into the ⋮ menu so only
@@ -312,14 +313,18 @@
 
         if (!this.isAnswerOpen(answerIdx)) {
           classes.push('closed');
-          classes.push(
-            this.$computedClass({
-              cursor: 'pointer',
-              ':hover': {
-                backgroundColor: this.$themePalette.grey.v_100,
-              },
-            }),
-          );
+
+          const hoverConfig = {
+            cursor: 'pointer',
+          };
+
+          if (!this.answers[answerIdx].correct) {
+            hoverConfig[':hover'] = {
+              backgroundColor: this.$themePalette.grey.v_100,
+            };
+          }
+
+          classes.push(this.$computedClass(hoverConfig));
         }
 
         return classes;
@@ -483,7 +488,6 @@
       },
     },
     $trs: {
-      answersLabel: 'Answers',
       answersLabelSingleChoice: 'Answer options — select one correct answer',
       answersLabelMultipleChoice: 'Answer options — select all correct answers',
       answersLabelNumeric: 'Answer options — enter all acceptable spellings or formats',
