@@ -9,7 +9,8 @@ jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue');
 
 jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
   return function useKResponsiveWindow() {
-    return { windowBreakpoint: { value: 4 } };
+    const { ref } = require('vue');
+    return { windowIsSmall: ref(false) };
   };
 });
 
@@ -140,7 +141,7 @@ describe('AnswersEditor', () => {
     it('renders new answer button', () => {
       expect(rendersNewAnswerBtn(wrapper)).toBe(true);
       expect(wrapper.findComponent('[data-test="newAnswerBtn"]').text()).toContain(
-        AnswersEditor.$trs.newAnswerBtnLabel,
+        AnswersEditor.$trs.addOptionBtnLabel,
       );
     });
 
@@ -209,6 +210,9 @@ describe('AnswersEditor', () => {
 
     it('renders new answer button', () => {
       expect(rendersNewAnswerBtn(wrapper)).toBe(true);
+      expect(wrapper.findComponent('[data-test="newAnswerBtn"]').text()).toContain(
+        AnswersEditor.$trs.addOptionBtnLabel,
+      );
     });
 
     describe('on new answer button click', () => {
@@ -284,6 +288,9 @@ describe('AnswersEditor', () => {
 
     it('renders new answer button', () => {
       expect(rendersNewAnswerBtn(wrapper)).toBe(true);
+      expect(wrapper.findComponent('[data-test="newAnswerBtn"]').text()).toContain(
+        AnswersEditor.$trs.newAnswerBtnLabel,
+      );
     });
 
     describe('on new answer button click', () => {

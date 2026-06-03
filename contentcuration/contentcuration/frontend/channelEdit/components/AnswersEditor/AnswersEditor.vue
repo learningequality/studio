@@ -24,7 +24,7 @@
         class="answer-border"
         :class="answerClasses(answerIdx)"
         :style="{
-          borderColor: answer.correct ? $themeTokens.correct : $themeTokens.fineLine,
+          borderColor: answer.correct ? $themePalette.green.v_500 : $themeTokens.fineLine,
           backgroundColor: answer.correct ? $themePalette.green.v_100 : 'transparent',
         }"
         data-test="answer"
@@ -49,7 +49,7 @@
                   marginTop: !isAnswerOpen(answerIdx) ? 0 : '',
                   marginBottom: !isAnswerOpen(answerIdx) ? 0 : '',
                 }"
-                @change="toggleCorrectAnswer(answerIdx, $event)"
+                @change="setCorrectAnswer(answerIdx, $event)"
               />
             </div>
 
@@ -73,7 +73,7 @@
                   <div class="answer-view-editor">
                     <span
                       v-if="!answer.answer"
-                      :style="{ color: $themePalette.grey.v_500 }"
+                      :style="{ color: $themePalette.grey.v_400 }"
                     >
                       {{ $tr('enterNumberPlaceholder') }}
                     </span>
@@ -109,7 +109,7 @@
                     :style="{ backgroundColor: $themePalette.white }"
                     mode="edit"
                     minHeight="80px"
-                    :autofocus="true"
+                    autofocus
                     :image-processor="EditorImageProcessor"
                     @update="updateAnswerText($event, answerIdx)"
                     @minimize="emitClose"
@@ -151,9 +151,9 @@
       <div class="add-answer-btn-content">
         <KIcon
           icon="plus"
-          :color="$themeTokens.primary"
+          :color="$themePalette.blue.v_500"
         />
-        <span>{{ $tr('newAnswerBtnLabel') }}</span>
+        <span>{{ isInputQuestion ? $tr('newAnswerBtnLabel') : $tr('addOptionBtnLabel') }}</span>
       </div>
     </KButton>
   </div>
@@ -187,6 +187,12 @@
     components: {
       AssessmentItemToolbar,
       TipTapEditor,
+    },
+    setup() {
+      const { windowIsSmall } = useKResponsiveWindow();
+      return {
+        windowIsSmall,
+      };
     },
     model: {
       prop: 'answers',
@@ -263,23 +269,19 @@
 
         return [];
       },
-      screenSizeLevel() {
-        const { windowBreakpoint } = useKResponsiveWindow();
-        return windowBreakpoint.value ?? 0;
-      },
       isSmallScreen() {
-        return this.screenSizeLevel <= 1;
+        return this.windowIsSmall;
       },
       buttonAppearanceOverrides() {
         return {
-          backgroundColor: this.$themeBrand.primary.v_50,
-          border: `1px dashed ${this.$themeBrand.primary.v_200}`,
-          color: `${this.$themeTokens.primary} !important`,
+          backgroundColor: this.$themePalette.blue.v_50,
+          border: `1px dashed ${this.$themePalette.blue.v_200}`,
+          color: `${this.$themePalette.blue.v_500} !important`,
           fontSize: '14px',
           fontWeight: '600',
           textTransform: 'none',
           ':hover': {
-            backgroundColor: this.$themeBrand.primary.v_100,
+            backgroundColor: this.$themePalette.blue.v_100,
           },
         };
       },
@@ -314,22 +316,21 @@
         if (!this.isAnswerOpen(answerIdx)) {
           classes.push('closed');
 
-          const hoverConfig = {
-            cursor: 'pointer',
-          };
+          const hoverStyles = this.answers[answerIdx].correct
+            ? {}
+            : { ':hover': { backgroundColor: this.$themePalette.grey.v_100 } };
 
-          if (!this.answers[answerIdx].correct) {
-            hoverConfig[':hover'] = {
-              backgroundColor: this.$themePalette.grey.v_100,
-            };
-          }
-
-          classes.push(this.$computedClass(hoverConfig));
+          classes.push(
+            this.$computedClass({
+              cursor: 'pointer',
+              ...hoverStyles,
+            }),
+          );
         }
 
         return classes;
       },
-      toggleCorrectAnswer(answerIdx, isChecked) {
+      setCorrectAnswer(answerIdx, isChecked) {
         if (this.shouldHaveOneCorrectAnswer) {
           if (isChecked) {
             this.onCorrectAnswersIndicesUpdate(answerIdx);
@@ -492,7 +493,8 @@
       answersLabelMultipleChoice: 'Answer options — select all correct answers',
       answersLabelNumeric: 'Answer options — enter all acceptable spellings or formats',
       noAnswersPlaceholder: 'Question has no answer options',
-      newAnswerBtnLabel: 'Add option',
+      newAnswerBtnLabel: 'Add answer',
+      addOptionBtnLabel: 'Add option',
       enterNumberPlaceholder: 'Enter number',
     },
   };
@@ -527,12 +529,6 @@
   .answer-card-text {
     padding: 7.5px;
 
-    &.small-screen {
-      &.is-closed {
-        font-size: 10px;
-      }
-    }
-
     &.is-closed {
       padding-top: 0;
       padding-bottom: 0;
@@ -549,19 +545,27 @@
     }
 
     &.small-screen {
-      .answer-actions {
-        margin-left: 4px;
-      }
-
       &.is-open {
-        flex-direction: column-reverse;
+        flex-wrap: wrap;
+        align-items: center;
+
+        .answer-selection {
+          flex: 0 0 auto;
+          order: 0;
+          margin-bottom: 4px;
+        }
 
         .answer-actions {
-          display: flex;
-          justify-content: flex-end;
-          width: 100%;
-          margin-bottom: 8px;
-          margin-left: 0;
+          flex: 0 0 auto;
+          order: 1;
+          margin-bottom: 4px;
+          margin-left: auto;
+        }
+
+        .answer-content {
+          flex: 0 0 100%;
+          order: 2;
+          min-width: 0;
         }
       }
     }
@@ -594,6 +598,11 @@
     .small-screen.is-closed & {
       min-height: 36px;
     }
+  }
+
+  .editor.is-open {
+    // Fills parent so the toolbar's ResizeObserver measures the correct width.
+    width: 100%;
   }
 
   .answer-view-editor {

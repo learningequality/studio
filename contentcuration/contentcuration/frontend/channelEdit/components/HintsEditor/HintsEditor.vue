@@ -102,7 +102,6 @@
                     :iconActionsConfig="toolbarIconActions"
                     :collapse="isSmallScreen"
                     :displayMenu="isSmallScreen"
-                    :canEdit="!isHintOpen(hintIdx)"
                     :canMoveUp="!isHintFirst(hintIdx)"
                     :canMoveDown="!isHintLast(hintIdx)"
                     class="toolbar"
@@ -161,6 +160,12 @@
       AssessmentItemToolbar,
       TipTapEditor,
     },
+    setup() {
+      const { windowIsSmall } = useKResponsiveWindow();
+      return {
+        windowIsSmall,
+      };
+    },
     model: {
       prop: 'hints',
       event: 'update',
@@ -195,12 +200,8 @@
           },
         };
       },
-      screenSizeLevel() {
-        const { windowBreakpoint } = useKResponsiveWindow();
-        return windowBreakpoint.value ?? 0;
-      },
       isSmallScreen() {
-        return this.screenSizeLevel <= 1;
+        return this.windowIsSmall;
       },
       buttonAppearanceOverrides() {
         return {
