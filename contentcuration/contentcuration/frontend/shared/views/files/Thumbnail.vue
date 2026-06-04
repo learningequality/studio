@@ -25,7 +25,7 @@
         <KIcon
           :icon="icon"
           class="icon-thumbnail"
-          :style="{ fill: $themeTokens.textInverted }"
+          :color="$themeTokens.textInverted"
         />
       </VFlex>
       <VFlex shrink>
@@ -48,7 +48,6 @@
       <KIcon
         class="icon-thumbnail"
         :icon="icon"
-        capture-as-image
       />
     </div>
 
@@ -59,7 +58,7 @@
       <KIcon
         :icon="icon"
         class="icon-thumbnail"
-        :style="{ fill: $themeTokens.textInverted }"
+        :color="$themeTokens.textInverted"
       />
     </div>
     <div
@@ -69,7 +68,8 @@
       <KIcon
         icon="image"
         class="icon-thumbnail"
-        :style="{ fill: $themePalette.grey.v_400, width: '40%', height: '50px' }"
+        :color="$themePalette.grey.v_400"
+        :style="{ width: '40%', height: '50px' }"
       />
     </div>
   </figure>
