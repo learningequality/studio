@@ -25,7 +25,7 @@
         :class="answerClasses(answerIdx)"
         :style="{
           borderColor: answer.correct ? $themePalette.green.v_500 : $themeTokens.fineLine,
-          backgroundColor: answer.correct ? $themePalette.green.v_100 : 'transparent',
+          backgroundColor: answer.correct ? $themePalette.green.v_50 : 'transparent',
         }"
         data-test="answer"
         @click="onAnswerClick($event, answerIdx)"
