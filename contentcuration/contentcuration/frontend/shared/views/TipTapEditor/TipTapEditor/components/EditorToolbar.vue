@@ -32,7 +32,7 @@
     <!-- Format dropdown -->
     <div
       role="group"
-      class="toolbar-group"
+      class="formatting-group toolbar-group"
       :aria-label="textFormattingOptions$()"
     >
       <FormatDropdown />
@@ -366,11 +366,6 @@
     border-radius: 8px 8px 0 0;
   }
 
-  .minimize-button {
-    /* Push the minimize button to the far right. */
-    margin-left: auto;
-  }
-
   .overflow-list {
     flex: 1;
     min-width: 0;
@@ -380,6 +375,12 @@
     display: flex;
     gap: 2px;
     align-items: center;
+  }
+
+  .formatting-group {
+    /* Let it shrink if possible */
+    flex: 1;
+    flex-grow: 0;
   }
 
   .dropdown-item-icon {
