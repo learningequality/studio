@@ -7,7 +7,8 @@
     >
       {{ answersLabel }}
     </div>
-    <div
+    <component
+      :is="shouldHaveOneCorrectAnswer ? 'KRadioButtonGroup' : 'div'"
       class="answers-list"
       :class="{ 'small-screen': isSmallScreen }"
     >
@@ -133,7 +134,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </component>
 
     <KButton
       v-if="isEditingAllowed"
