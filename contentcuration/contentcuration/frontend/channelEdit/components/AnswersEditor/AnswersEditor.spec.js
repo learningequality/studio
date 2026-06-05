@@ -97,12 +97,12 @@ describe('AnswersEditor', () => {
       });
     });
 
-    it('renders answers as checkbox controls', () => {
+    it('renders answers as radio controls', () => {
       const inputs = wrapper.findAll('input');
 
       expect(inputs.length).toBe(2);
       for (const n in [0, 1]) {
-        expect(inputs.at(n).attributes()['type']).toBe('checkbox');
+        expect(inputs.at(n).attributes()['type']).toBe('radio');
       }
     });
 
@@ -116,10 +116,12 @@ describe('AnswersEditor', () => {
     it('marks correct answer rows with the selected visual state', () => {
       const answerRows = wrapper.findAll('[data-test="answer"]');
 
+      // Correct row has both border-color and background-color applied
       expect(answerRows.at(0).attributes('style')).toContain('border-color');
       expect(answerRows.at(0).attributes('style')).toContain('background-color');
+      // Incorrect row has border-color but no inline background-color (null omits it)
       expect(answerRows.at(1).attributes('style')).toContain('border-color');
-      expect(answerRows.at(1).attributes('style')).toContain('transparent');
+      expect(answerRows.at(1).attributes('style')).not.toContain('background-color');
     });
 
     it('renders all possible answers', () => {
@@ -246,12 +248,12 @@ describe('AnswersEditor', () => {
       });
     });
 
-    it('renders answers as checkbox controls', () => {
+    it('renders answers as radio controls', () => {
       const inputs = wrapper.findAll('input');
 
       expect(inputs.length).toBe(2);
       for (const n in [0, 1]) {
-        expect(inputs.at(n).attributes()['type']).toBe('checkbox');
+        expect(inputs.at(n).attributes()['type']).toBe('radio');
       }
     });
 
@@ -325,9 +327,8 @@ describe('AnswersEditor', () => {
     });
 
     it('passes autofocus=true to the open (edit-mode) answer editor', () => {
-      // In the new architecture, only the open answer mounts an edit-mode
-      // TipTapEditor with autofocus. Closed answers use a separate view-mode
-      // TipTapEditor. The edit-mode editor is the only one with autofocus=true.
+      // A single TipTapEditor per answer switches mode reactively.
+      // The editor for openAnswerIdx has mode='edit' and autofocus=true.
       const editors = wrapper.findAllComponents(TipTapEditor);
       const editModeEditor = editors.filter(e => e.props('mode') === 'edit').at(0);
       expect(editModeEditor.props('autofocus')).toBe(true);
@@ -436,7 +437,7 @@ describe('AnswersEditor', () => {
       });
 
       await wrapper.vm.$nextTick();
-      await wrapper.findAll('.answer-selection input[type="checkbox"]').at(1).trigger('click');
+      await wrapper.findAll('.answer-selection input[type="radio"]').at(1).trigger('click');
     });
 
     it('emits update event with a payload containing updated answers', () => {

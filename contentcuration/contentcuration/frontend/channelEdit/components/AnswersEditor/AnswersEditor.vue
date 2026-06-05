@@ -25,7 +25,7 @@
         :class="answerClasses(answerIdx)"
         :style="{
           borderColor: answer.correct ? $themePalette.green.v_500 : $themeTokens.fineLine,
-          backgroundColor: answer.correct ? $themePalette.green.v_50 : 'transparent',
+          backgroundColor: answer.correct ? $themePalette.green.v_50 : null,
         }"
         data-test="answer"
         @click="onAnswerClick($event, answerIdx)"
@@ -43,7 +43,20 @@
               v-if="!isInputQuestion"
               class="answer-selection"
             >
+              <KRadioButton
+                v-if="shouldHaveOneCorrectAnswer"
+                :currentValue="correctAnswersIndices"
+                :buttonValue="answerIdx"
+                :showLabel="false"
+                :style="{
+                  width: 'auto',
+                  marginTop: !isAnswerOpen(answerIdx) ? 0 : '',
+                  marginBottom: !isAnswerOpen(answerIdx) ? 0 : '',
+                }"
+                @input="onCorrectAnswersIndicesUpdate"
+              />
               <KCheckbox
+                v-else
                 :checked="answer.correct"
                 :style="{
                   marginTop: !isAnswerOpen(answerIdx) ? 0 : '',
@@ -85,36 +98,18 @@
               </div>
 
               <div v-else>
-                <!-- View mode: TipTapEditor in view mode to render Markdown properly -->
-                <div
-                  v-if="!isAnswerOpen(answerIdx)"
-                  class="answer-view-text"
-                >
-                  <div class="answer-view-editor">
-                    <TipTapEditor
-                      v-model="answer.answer"
-                      mode="view"
-                      :image-processor="EditorImageProcessor"
-                    />
-                  </div>
-                </div>
-                <!-- Edit mode: TipTapEditor -->
-                <keep-alive
-                  v-else
-                  :max="5"
-                >
-                  <TipTapEditor
-                    v-model="answer.answer"
-                    class="editor is-open"
-                    :style="{ backgroundColor: $themePalette.white }"
-                    mode="edit"
-                    minHeight="80px"
-                    autofocus
-                    :image-processor="EditorImageProcessor"
-                    @update="updateAnswerText($event, answerIdx)"
-                    @minimize="emitClose"
-                  />
-                </keep-alive>
+                <TipTapEditor
+                  v-model="answer.answer"
+                  class="editor"
+                  :mode="isAnswerOpen(answerIdx) ? 'edit' : 'view'"
+                  :style="isAnswerOpen(answerIdx) ? { backgroundColor: $themePalette.white } : {}"
+                  minHeight="80px"
+                  :autofocus="isAnswerOpen(answerIdx)"
+                  :image-processor="EditorImageProcessor"
+                  @update="updateAnswerText($event, answerIdx)"
+                  @minimize="emitClose"
+                  @open-editor="emitOpen(answerIdx)"
+                />
               </div>
             </div>
 
@@ -530,8 +525,13 @@
     padding: 7.5px;
 
     &.is-closed {
+      min-height: 42px;
       padding-top: 0;
       padding-bottom: 0;
+
+      .small-screen & {
+        min-height: 36px;
+      }
     }
   }
 
@@ -559,7 +559,6 @@
           flex: 0 0 auto;
           order: 1;
           margin-bottom: 4px;
-          margin-left: auto;
         }
 
         .answer-content {
@@ -600,7 +599,7 @@
     }
   }
 
-  .editor.is-open {
+  .editor {
     // Fills parent so the toolbar's ResizeObserver measures the correct width.
     width: 100%;
   }
