@@ -7,7 +7,8 @@ import HintsEditor from './HintsEditor';
 jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue');
 jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
   return function useKResponsiveWindow() {
-    return { windowBreakpoint: { value: 4 } };
+    const { ref } = require('vue');
+    return { windowIsSmall: ref(false) };
   };
 });
 

@@ -102,7 +102,6 @@
                     :iconActionsConfig="toolbarIconActions"
                     :collapse="isSmallScreen"
                     :displayMenu="isSmallScreen"
-                    :canEdit="!isHintOpen(hintIdx)"
                     :canMoveUp="!isHintFirst(hintIdx)"
                     :canMoveDown="!isHintLast(hintIdx)"
                     class="toolbar"
@@ -126,7 +125,7 @@
         <div class="add-hint-btn-content">
           <KIcon
             icon="plus"
-            :color="$themePalette.grey.v_700"
+            :color="$themeTokens.primary"
           />
           <span>{{ $tr('newHintBtnLabel') }}</span>
         </div>
@@ -161,6 +160,12 @@
       AssessmentItemToolbar,
       TipTapEditor,
     },
+    setup() {
+      const { windowIsSmall } = useKResponsiveWindow();
+      return {
+        windowIsSmall,
+      };
+    },
     model: {
       prop: 'hints',
       event: 'update',
@@ -179,7 +184,6 @@
       return {
         sectionOpen: false,
         toolbarIconActions: [
-          [AssessmentItemToolbarActions.EDIT_ITEM, { collapse: true }],
           [AssessmentItemToolbarActions.MOVE_ITEM_UP, { collapse: true }],
           [AssessmentItemToolbarActions.MOVE_ITEM_DOWN, { collapse: true }],
           AssessmentItemToolbarActions.DELETE_ITEM,
@@ -196,23 +200,19 @@
           },
         };
       },
-      screenSizeLevel() {
-        const { windowBreakpoint } = useKResponsiveWindow();
-        return windowBreakpoint.value ?? 0;
-      },
       isSmallScreen() {
-        return this.screenSizeLevel <= 1;
+        return this.windowIsSmall;
       },
       buttonAppearanceOverrides() {
         return {
-          backgroundColor: this.$themePalette.grey.v_50,
-          border: `1px dashed ${this.$themeTokens.fineLine}`,
-          color: `${this.$themePalette.grey.v_700} !important`,
+          backgroundColor: this.$themeBrand.primary.v_50,
+          border: `1px dashed ${this.$themeBrand.primary.v_200}`,
+          color: `${this.$themeTokens.primary} !important`,
           fontSize: '14px',
           fontWeight: '600',
           textTransform: 'none',
           ':hover': {
-            backgroundColor: this.$themePalette.grey.v_100,
+            backgroundColor: this.$themeBrand.primary.v_100,
           },
         };
       },
@@ -254,6 +254,13 @@
 
         if (!this.isHintOpen(hintIdx)) {
           classes.push('closed');
+          classes.push(
+            this.$computedClass({
+              ':hover': {
+                backgroundColor: this.$themePalette.grey.v_100,
+              },
+            }),
+          );
         }
 
         return classes;
@@ -326,10 +333,6 @@
       },
       onToolbarClick(action, hintIdx) {
         switch (action) {
-          case AssessmentItemToolbarActions.EDIT_ITEM:
-            this.emitOpen(hintIdx);
-            break;
-
           case AssessmentItemToolbarActions.MOVE_ITEM_UP:
             this.moveHintUp(hintIdx);
             break;
@@ -493,8 +496,6 @@
 
     &.closed:hover {
       cursor: pointer;
-      /* stylelint-disable-next-line custom-property-pattern */
-      background-color: var(--v-greyBackground-lighten1);
     }
   }
 
@@ -502,7 +503,7 @@
     display: flex;
     align-items: center;
     width: 100%;
-    min-height: 52px;
+    min-height: 42px;
     padding: 0 4px;
     overflow: hidden;
     border-radius: 4px;
