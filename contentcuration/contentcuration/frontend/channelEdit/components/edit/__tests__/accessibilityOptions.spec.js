@@ -1,7 +1,7 @@
 import { render, screen, within, configure } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
-import AccessibilityOptions from '../AccessibilityOptions.vue';
 import VueRouter from 'vue-router';
+import AccessibilityOptions from '../AccessibilityOptions.vue';
 import { AccessibilityCategories } from 'shared/constants';
 import { metadataStrings } from 'shared/strings/metadataStrings';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
