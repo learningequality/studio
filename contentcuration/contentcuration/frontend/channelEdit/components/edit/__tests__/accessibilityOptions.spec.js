@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import AccessibilityOptions from '../AccessibilityOptions.vue';
 import { AccessibilityCategories } from 'shared/constants';
 import { metadataStrings } from 'shared/strings/metadataStrings';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
 configure({ testIdAttribute: 'data-test' });
 
@@ -10,7 +11,7 @@ describe('AccessibilityOptions', () => {
   const renderComponent = props => {
     return render(AccessibilityOptions, {
       props: {
-        kind: 'document',
+        kind: ContentKindsNames.DOCUMENT,
         value: [],
         ...props,
       },
