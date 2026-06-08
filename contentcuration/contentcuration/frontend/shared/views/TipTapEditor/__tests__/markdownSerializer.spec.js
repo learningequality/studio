@@ -177,14 +177,32 @@ describe('createCustomMarkdownSerializer', () => {
       expect(getMarkdown()).toBe('- Item 1\n  - Nested 1.1\n- Item 2');
     });
 
-    it('should place two newlines between block elements', () => {
+    it('should use a hard break between consecutive paragraphs so Perseus renders them as <br>', () => {
       const docContent = [
         { type: 'paragraph', content: [{ type: 'text', text: 'First paragraph.' }] },
         { type: 'paragraph', content: [{ type: 'text', text: 'Second paragraph.' }] },
       ];
       const mockEditor = createMockEditor(docContent);
       const getMarkdown = createCustomMarkdownSerializer(mockEditor);
-      expect(getMarkdown()).toBe('First paragraph.\n\nSecond paragraph.');
+      expect(getMarkdown()).toBe('First paragraph.  \nSecond paragraph.');
+    });
+
+    it('should use two newlines between a paragraph and a non-paragraph block', () => {
+      const docContent = [
+        { type: 'paragraph', content: [{ type: 'text', text: 'Intro.' }] },
+        {
+          type: 'bulletList',
+          content: [
+            {
+              type: 'listItem',
+              content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Item A' }] }],
+            },
+          ],
+        },
+      ];
+      const mockEditor = createMockEditor(docContent);
+      const getMarkdown = createCustomMarkdownSerializer(mockEditor);
+      expect(getMarkdown()).toBe('Intro.\n\n- Item A');
     });
   });
 
@@ -209,7 +227,7 @@ describe('createCustomMarkdownSerializer', () => {
       expect(getMarkdown()).toBe('*' + '**bold and italic**' + '*');
     });
 
-    it('should serialize an underlined node with a <u> tag', () => {
+    it('should serialize an underlined node with __ delimiters (Perseus syntax)', () => {
       const docContent = [
         {
           type: 'paragraph',
@@ -224,7 +242,7 @@ describe('createCustomMarkdownSerializer', () => {
       ];
       const mockEditor = createMockEditor(docContent);
       const getMarkdown = createCustomMarkdownSerializer(mockEditor);
-      expect(getMarkdown()).toBe('<u>underlined</u>');
+      expect(getMarkdown()).toBe('__underlined__');
     });
 
     it('should serialize a link node correctly', () => {
@@ -405,7 +423,7 @@ describe('createCustomMarkdownSerializer', () => {
     const mockEditor = createMockEditor(docContent);
     const getMarkdown = createCustomMarkdownSerializer(mockEditor);
     expect(getMarkdown()).toBe(
-      '<p style="text-align: center">Centered</p>\n\nNormal\n\n<p style="text-align: right">Right</p>',
+      '<p style="text-align: center">Centered</p>  \nNormal  \n<p style="text-align: right">Right</p>',
     );
   });
 

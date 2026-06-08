@@ -14,6 +14,7 @@ from rest_framework.views import APIView
 
 from contentcuration.models import User
 from contentcuration.models import UserSubscription
+from contentcuration.utils.urls import canonical_url
 
 BYTES_PER_GB = 10 ** 9
 MIN_STORAGE_GB = 1
@@ -52,10 +53,10 @@ class CreateCheckoutSessionView(APIView):
         storage_gb = serializer.validated_data["storage_gb"]
 
         try:
-            success_url = request.build_absolute_uri(
-                "/settings/#/storage?upgrade=success"
+            success_url = canonical_url(
+                "/settings/#/storage?upgrade=success", request=request
             )
-            cancel_url = request.build_absolute_uri("/settings/#/storage")
+            cancel_url = canonical_url("/settings/#/storage", request=request)
 
             checkout_session_params = {
                 "mode": "subscription",
@@ -79,9 +80,9 @@ class CreateCheckoutSessionView(APIView):
 
             return Response({"checkout_url": session.url})
 
-        except stripe.error.StripeError as e:
-            logger.error(f"Stripe error creating checkout session: {e}")
-            return Response({"error": str(e)}, status=400)
+        except stripe.error.StripeError:
+            logger.exception("Stripe error creating checkout session")
+            return Response({"error": "Unable to create checkout session"}, status=400)
 
 
 class CreatePortalSessionView(APIView):
@@ -101,13 +102,13 @@ class CreatePortalSessionView(APIView):
         try:
             session = stripe.billing_portal.Session.create(
                 customer=subscription.stripe_customer_id,
-                return_url=request.build_absolute_uri("/settings/#/storage"),
+                return_url=canonical_url("/settings/#/storage", request=request),
             )
             return Response({"portal_url": session.url})
 
-        except stripe.error.StripeError as e:
-            logger.error(f"Stripe error creating portal session: {e}")
-            return Response({"error": str(e)}, status=400)
+        except stripe.error.StripeError:
+            logger.exception("Stripe error creating portal session")
+            return Response({"error": "Unable to create portal session"}, status=400)
 
 
 class SubscriptionStatusView(APIView):

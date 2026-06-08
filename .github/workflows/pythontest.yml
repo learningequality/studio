@@ -8,6 +8,10 @@ on:
     - master
   pull_request:
 
+permissions:
+  contents: read
+  actions: read
+
 jobs:
   pre_job:
     name: Path match check

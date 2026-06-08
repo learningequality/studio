@@ -4,6 +4,7 @@
     ref="editorContainer"
     class="editor-container"
     :class="{ 'view-mode': editorMode === 'view' }"
+    :style="minHeight && editorMode !== 'view' ? { minHeight } : {}"
     :tabindex="tabindex"
     role="textbox"
     :aria-label="editorMode === 'edit' ? TipTapEditorLabel$() : TipTapViewerLabel$()"
@@ -205,6 +206,11 @@
           if (editor.value && editor.value.isEditable !== (newMode === 'edit')) {
             editor.value.setEditable(newMode === 'edit');
           }
+          if (newMode === 'edit' && editor.value && props.autofocus) {
+            nextTick(() => {
+              editor.value?.commands.focus('end');
+            });
+          }
         },
       );
 
@@ -302,6 +308,10 @@
       imageProcessor: {
         type: Object,
         default: () => ({}),
+      },
+      minHeight: {
+        type: String,
+        default: null,
       },
     },
     emits: ['update', 'minimize', 'open-editor'],

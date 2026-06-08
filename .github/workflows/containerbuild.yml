@@ -10,6 +10,10 @@ on:
     - 'v*'
   pull_request:
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   pre_postgres:
     name: Path match check - postgres

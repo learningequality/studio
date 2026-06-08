@@ -10,6 +10,7 @@ import { CodeBlockSyntaxHighlight } from '../extensions/CodeBlockSyntaxHighlight
 import { CustomLink } from '../extensions/Link';
 import { Math } from '../extensions/Math';
 import { createCustomMarkdownSerializer } from '../utils/markdownSerializer';
+import { transformPastedHTML } from '../utils/pasteTransform';
 
 export function useEditor() {
   const editor = ref(null);
@@ -42,6 +43,7 @@ export function useEditor() {
           class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none',
           dir: 'auto',
         },
+        transformPastedHTML: html => transformPastedHTML(html),
       },
       onCreate: () => {
         isReady.value = true;

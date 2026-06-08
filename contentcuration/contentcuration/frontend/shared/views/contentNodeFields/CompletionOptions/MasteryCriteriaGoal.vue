@@ -36,7 +36,10 @@
     translateValidator,
     getInvalidText,
   } from 'shared/utils/validation';
-  import MasteryModels, { MasteryModelsList } from 'shared/leUtils/MasteryModels';
+  import MasteryModels, {
+    MasteryModelsList,
+    MasteryModelsNames,
+  } from 'shared/leUtils/MasteryModels';
   import { constantsTranslationMixin } from 'shared/mixins';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
 
@@ -84,10 +87,13 @@
         },
       },
       masteryCriteria() {
-        return MasteryModelsList.map(model => ({
-          text: this.translateConstant(model),
-          value: model,
-        }));
+        // temporarily exclude pre/post test until the creation/editing UI is done
+        return MasteryModelsList.filter(model => model !== MasteryModelsNames.PRE_POST_TEST).map(
+          model => ({
+            text: this.translateConstant(model),
+            value: model,
+          }),
+        );
       },
       masteryRules() {
         return this.required ? getMasteryModelValidators().map(translateValidator) : [];

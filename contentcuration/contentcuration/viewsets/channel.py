@@ -468,8 +468,9 @@ class ChannelViewSet(ValuesViewset):
         try:
             self.perform_create(serializer)
 
-        except IntegrityError as e:
-            return Response({"error": str(e)}, status=409)
+        except IntegrityError:
+            logging.exception("Integrity error creating channel")
+            return Response({"error": "Channel could not be created"}, status=409)
         instance = serializer.instance
         Change.create_change(
             generate_create_event(
@@ -560,7 +561,7 @@ class ChannelViewSet(ValuesViewset):
                 )
             except Exception as e:
                 log_sync_exception(e, user=self.request.user, change=publish)
-                publish["errors"] = [str(e)]
+                publish["errors"] = ["Internal server error"]
                 errors.append(publish)
         return errors
 
@@ -648,9 +649,14 @@ class ChannelViewSet(ValuesViewset):
                     publish["key"],
                     use_staging_tree=publish.get("use_staging_tree", False),
                 )
+            except ValidationError as e:
+                log_sync_exception(e, user=self.request.user, change=publish)
+                detail = e.detail
+                publish["errors"] = detail if isinstance(detail, list) else [detail]
+                errors.append(publish)
             except Exception as e:
                 log_sync_exception(e, user=self.request.user, change=publish)
-                publish["errors"] = [str(e)]
+                publish["errors"] = ["Internal server error"]
                 errors.append(publish)
         return errors
 
@@ -708,7 +714,7 @@ class ChannelViewSet(ValuesViewset):
                 )
             except Exception as e:
                 log_sync_exception(e, user=self.request.user, change=sync)
-                sync["errors"] = [str(e)]
+                sync["errors"] = ["Internal server error"]
                 errors.append(sync)
         return errors
 
@@ -759,7 +765,7 @@ class ChannelViewSet(ValuesViewset):
                 self.deploy(self.request.user, deploy["key"])
             except Exception as e:
                 log_sync_exception(e, user=self.request.user, change=deploy)
-                deploy["errors"] = [str(e)]
+                deploy["errors"] = ["Internal server error"]
                 errors.append(deploy)
         return errors
 
@@ -813,7 +819,7 @@ class ChannelViewSet(ValuesViewset):
                 )
             except Exception as e:
                 log_sync_exception(e, user=self.request.user, change=change)
-                change["errors"] = [str(e)]
+                change["errors"] = ["Internal server error"]
                 errors.append(change)
         return errors
 

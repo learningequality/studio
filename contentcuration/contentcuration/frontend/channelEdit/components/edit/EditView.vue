@@ -114,7 +114,10 @@
             </VTab>
           </Tabs>
         </ToolBar>
-        <VContainer fluid>
+        <VContainer
+          fluid
+          :style="questionsTabStyles"
+        >
           <VTabsItems v-model="currentTab">
             <VTabItem
               :key="tabs.DETAILS"
@@ -291,6 +294,15 @@
         }
 
         return this.getAssessmentItemsCount(this.nodeIds[0]);
+      },
+      questionsTabStyles() {
+        if (this.currentTab === this.tabs.QUESTIONS) {
+          return {
+            backgroundColor: this.$themePalette.grey.v_100,
+          };
+        }
+
+        return {};
       },
       relatedResourcesCount() {
         if (!this.oneSelected) {

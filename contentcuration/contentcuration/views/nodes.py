@@ -49,7 +49,7 @@ def get_node_details(request, node_id):
     node = ContentNode.objects.get(pk=node_id)
     channel = node.get_channel()
     if channel and not channel.public:
-        return HttpResponseNotFound("No topic found for {}".format(node_id))
+        return HttpResponseNotFound("Node not found", content_type="text/plain")
     data = get_node_details_cached(request.user, node, channel)
     return HttpResponse(json.dumps(data))
 

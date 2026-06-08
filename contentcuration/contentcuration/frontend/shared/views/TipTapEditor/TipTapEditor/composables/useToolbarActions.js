@@ -1,6 +1,6 @@
 import { computed, inject } from 'vue';
 import { getTipTapEditorStrings } from '../TipTapEditorStrings';
-import { sanitizePastedHTML } from '../utils/markdown';
+import { transformPastedHTML } from '../utils/pasteTransform';
 
 export function useToolbarActions(emit) {
   const editor = inject('editor', null);
@@ -165,7 +165,7 @@ export function useToolbarActions(emit) {
           if (item.types.includes('text/html')) {
             const htmlBlob = await item.getType('text/html');
             const html = await htmlBlob.text();
-            const cleaned = sanitizePastedHTML(html);
+            const cleaned = transformPastedHTML(html);
 
             editor.value.chain().focus().insertContent(cleaned).run();
             return;

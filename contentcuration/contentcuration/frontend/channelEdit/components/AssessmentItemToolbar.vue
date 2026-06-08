@@ -1,66 +1,45 @@
 <template>
 
-  <VLayout justify-end>
-    <VFlex
-      v-for="(action, idx) in iconActions"
-      :key="`${action}-${idx}`"
-      class="toolbar-item"
-    >
-      <VTooltip
-        top
-        lazy
-      >
-        <template #activator="{ on }">
-          <VBtn
-            icon
-            :disabled="!isIconClickable(action)"
-            :data-test="`toolbarIcon-${action}`"
-            v-on="on"
-            @click="clickItem(action)"
-          >
-            <Icon
-              v-if="config[action] && config[action].icon"
-              :icon="config[action].icon"
-              style="font-size: 20px"
-              :color="iconColor(action)"
-            />
-          </VBtn>
-        </template>
-        <span>{{ config[action].label }}</span>
-      </VTooltip>
-    </VFlex>
+  <div class="assessment-item-toolbar">
+    <div class="icon-actions-wrapper">
+      <KIconButton
+        v-for="action in iconActions"
+        :key="action"
+        :icon="config[action].icon"
+        :tooltip="config[action].label"
+        :disabled="!isIconClickable(action)"
+        :color="iconColor(action)"
+        :data-test="`toolbarIcon-${action}`"
+        @click="clickItem(action)"
+      />
+    </div>
 
-    <VFlex
+    <BaseMenu
       v-if="displayMenu"
-      class="toolbar-item"
+      bottom
     >
-      <BaseMenu bottom>
-        <template #activator="{ on }">
-          <VBtn
-            icon
-            v-on="on"
-          >
-            <Icon
-              icon="optionsVertical"
-              :color="$themePalette.grey.v_800"
-            />
-          </VBtn>
-        </template>
+      <template #activator="{ on }">
+        <KIconButton
+          icon="optionsVertical"
+          :color="$themePalette.grey.v_800"
+          :tooltip="$tr('options')"
+          v-on="on"
+        />
+      </template>
 
-        <VList
-          v-for="(action, idx) in menuActions"
-          :key="idx"
+      <VList
+        v-for="(action, idx) in menuActions"
+        :key="idx"
+      >
+        <VListTile
+          :data-test="`toolbarMenuItem-${action}`"
+          @click="clickItem(action)"
         >
-          <VListTile
-            :data-test="`toolbarMenuItem-${action}`"
-            @click="clickItem(action)"
-          >
-            <VListTileTitle>{{ config[action].label }}</VListTileTitle>
-          </VListTile>
-        </VList>
-      </BaseMenu>
-    </VFlex>
-  </VLayout>
+          <VListTileTitle>{{ config[action].label }}</VListTileTitle>
+        </VListTile>
+      </VList>
+    </BaseMenu>
+  </div>
 
 </template>
 
@@ -290,9 +269,6 @@
       },
       clickItem(action) {
         this.$emit('click', action);
-        document.querySelectorAll('.v-tooltip__content').forEach(tooltip => {
-          tooltip.style.display = 'none';
-        });
         this.trackAnalyticsEvent(action);
       },
       trackAnalyticsEvent(action) {
@@ -311,6 +287,7 @@
       toolbarLabelDelete: 'Delete',
       toolbarLabelAddAbove: 'Add {itemLabel} above',
       toolbarLabelAddBelow: 'Add {itemLabel} below',
+      options: 'Options',
     },
   };
 
@@ -319,8 +296,17 @@
 
 <style lang="scss" scoped>
 
-  .toolbar-item {
-    max-width: 50px;
+  .assessment-item-toolbar {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .icon-actions-wrapper {
+    display: flex;
+    gap: 4px;
+    align-items: center;
   }
 
 </style>

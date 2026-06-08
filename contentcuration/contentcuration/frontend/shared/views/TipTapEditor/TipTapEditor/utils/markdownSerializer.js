@@ -24,7 +24,7 @@ export const createCustomMarkdownSerializer = editor => {
             trimmedText = `*${trimmedText}*`;
             break;
           case 'underline':
-            trimmedText = `<u>${trimmedText}</u>`;
+            trimmedText = `__${trimmedText}__`;
             break;
           case 'strike':
             trimmedText = `~~${trimmedText}~~`;
@@ -57,14 +57,25 @@ export const createCustomMarkdownSerializer = editor => {
       switch (node.type.name) {
         case 'doc': {
           const parts = [];
-          // Process all children
           if (node.content && node.content.size > 0) {
             for (let i = 0; i < node.content.size; i++) {
               const child = node.content.content[i];
-              if (child) parts.push(serializeNode(child, null, depth));
+              if (child)
+                parts.push({ type: child.type?.name, md: serializeNode(child, null, depth) });
             }
           }
-          return parts.join('\n\n');
+          // Use a hard break (  \n) between consecutive plain paragraphs so Perseus
+          // renders them as <br> (inline-safe). All other block transitions keep \n\n
+          // so marked still parses lists, headings, etc. correctly.
+          return parts
+            .map((part, idx) => {
+              if (idx === 0) return part.md;
+              const prev = parts[idx - 1];
+              const separator =
+                prev.type === 'paragraph' && part.type === 'paragraph' ? '  \n' : '\n\n';
+              return separator + part.md;
+            })
+            .join('');
         }
 
         case 'paragraph': {

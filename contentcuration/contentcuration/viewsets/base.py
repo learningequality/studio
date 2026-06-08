@@ -1,4 +1,5 @@
 import json
+import logging
 import traceback
 import uuid
 from contextlib import contextmanager
@@ -36,6 +37,9 @@ from contentcuration.viewsets.common import MissingRequiredParamsException
 from contentcuration.viewsets.sync.constants import TASK_ID
 from contentcuration.viewsets.sync.utils import generate_update_event
 from contentcuration.viewsets.sync.utils import log_sync_exception
+
+
+logger = logging.getLogger(__name__)
 
 
 class SimpleReprMixin(object):
@@ -709,7 +713,7 @@ class CreateModelMixin(object):
                     errors.append(change)
             except Exception as e:
                 log_sync_exception(e, user=self.request.user, change=change)
-                change["errors"] = [str(e)]
+                change["errors"] = ["Internal server error"]
                 errors.append(change)
 
         return errors
@@ -723,8 +727,9 @@ class RESTCreateModelMixin(CreateModelMixin):
         try:
             self.perform_create(serializer)
 
-        except IntegrityError as e:
-            return Response({"error": str(e)}, status=409)
+        except IntegrityError:
+            logger.exception("RESTCreateModelMixin.create IntegrityError")
+            return Response({"error": "Internal server error"}, status=409)
         instance = serializer.instance
         return Response(self.serialize_object(pk=instance.pk), status=HTTP_201_CREATED)
 
@@ -754,7 +759,7 @@ class DestroyModelMixin(object):
                 pass
             except Exception as e:
                 log_sync_exception(e, user=self.request.user, change=change)
-                change["errors"] = [str(e)]
+                change["errors"] = ["Internal server error"]
                 errors.append(change)
         return errors
 
@@ -796,7 +801,7 @@ class UpdateModelMixin(object):
                 errors.append(change)
             except Exception as e:
                 log_sync_exception(e, user=self.request.user, change=change)
-                change["errors"] = [str(e)]
+                change["errors"] = ["Internal server error"]
                 errors.append(change)
         return errors
 
@@ -836,7 +841,7 @@ class BulkCreateMixin(CreateModelMixin):
             except Exception as e:
                 log_sync_exception(e, user=self.request.user, changes=changes)
                 for change in changes:
-                    change["errors"] = [str(e)]
+                    change["errors"] = ["Internal server error"]
                 errors.extend(changes)
         else:
             valid_data = []
@@ -875,7 +880,7 @@ class BulkUpdateMixin(UpdateModelMixin):
             except Exception as e:
                 log_sync_exception(e, user=self.request.user, changes=changes)
                 for change in changes:
-                    change["errors"] = [str(e)]
+                    change["errors"] = ["Internal server error"]
                 errors.extend(changes)
             if serializer.missing_keys:
                 # add errors for any changes that were specified but no object

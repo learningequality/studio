@@ -81,6 +81,15 @@ repos:
           contentcuration/kolibri_public/migrations/0004_auto_20240612_1847.py|
           contentcuration/kolibri_public/migrations/0006_auto_20250417_1516.py|
           )$
+  # Only checks the root Makefile. Extend if nested Makefiles get added.
+  - repo: local
+    hooks:
+      - id: makefile-syntax
+        name: Makefile syntax check
+        entry: make -n
+        language: system
+        files: ^Makefile$
+        pass_filenames: false
   # Always keep black as the final hook so it reformats any other reformatting.
   - repo: https://github.com/python/black
     rev: 20.8b1

@@ -1,318 +1,320 @@
-import { shallowMount, mount } from '@vue/test-utils';
+import { render, screen, within, configure } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
 
 import { AssessmentItemToolbarActions } from '../../constants';
-
 import HintsEditor from './HintsEditor';
 
 jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue');
+jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
+  return function useKResponsiveWindow() {
+    const { ref } = require('vue');
+    return { windowIsSmall: ref(false) };
+  };
+});
 
-const clickNewHintBtn = async wrapper => {
-  await wrapper.findComponent('[data-test=newHintBtn]').find('button').trigger('click');
+configure({
+  testIdAttribute: 'data-test',
+});
+
+const renderComponent = props => {
+  return render(HintsEditor, {
+    routes: [],
+    props: {
+      hints: [],
+      ...props,
+    },
+  });
 };
 
-const clickHint = async (wrapper, hintIdx) => {
-  await wrapper.findAll('[data-test=hint]').at(hintIdx).trigger('click');
+const openHintsSection = async user => {
+  await user.click(screen.getByText(HintsEditor.$trs.hintsLabel));
 };
 
-const clickMoveHintUp = async (wrapper, hintIdx) => {
-  await wrapper
-    .findAllComponents(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.MOVE_ITEM_UP}"]`)
-    .at(hintIdx)
-    .trigger('click');
+const getHintCards = () => {
+  return screen.getAllByTestId('hint');
 };
 
-const clickMoveHintDown = async (wrapper, hintIdx) => {
-  await wrapper
-    .findAllComponents(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.MOVE_ITEM_DOWN}"]`)
-    .at(hintIdx)
-    .trigger('click');
-};
-
-const clickDeleteHint = async (wrapper, hintIdx) => {
-  await wrapper
-    .findAllComponents(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.DELETE_ITEM}"]`)
-    .at(hintIdx)
-    .trigger('click');
+const clickToolbarAction = async ({ action, hintIdx, user }) => {
+  const buttons = screen.getAllByTestId(`toolbarIcon-${action}`);
+  expect(buttons[hintIdx]).toBeInTheDocument();
+  await user.click(buttons[hintIdx]);
 };
 
 describe('HintsEditor', () => {
-  let wrapper;
+  it('smoke test', async () => {
+    const user = userEvent.setup();
+    renderComponent();
+    await openHintsSection(user);
 
-  it('smoke test', () => {
-    const wrapper = shallowMount(HintsEditor);
-
-    expect(wrapper.exists()).toBe(true);
+    expect(
+      screen.getByRole('button', { name: HintsEditor.$trs.newHintBtnLabel }),
+    ).toBeInTheDocument();
   });
 
-  it('renders a placeholder when there are no hints', () => {
-    wrapper = mount(HintsEditor, {
-      propsData: {
-        hints: [],
-      },
+  it('shows an empty-state message when a question has no hints', async () => {
+    const user = userEvent.setup();
+    renderComponent({
+      hints: [],
     });
+    await openHintsSection(user);
 
-    expect(wrapper.html()).toContain('Question has no hints');
+    expect(screen.getByText(HintsEditor.$trs.noHintsPlaceholder)).toBeInTheDocument();
   });
 
-  it('renders all hints in a correct order', () => {
-    wrapper = mount(HintsEditor, {
-      propsData: {
-        hints: [
-          { hint: 'First hint', order: 1 },
-          { hint: 'Second hint', order: 2 },
-        ],
-      },
-    });
-
-    // Find all instances of your new RichTextEditor component
-    const editors = wrapper.findAllComponents({ name: 'RichTextEditor' });
-    expect(editors.length).toBe(2);
-
-    // Instead of checking the raw HTML, we check the `value` prop passed to each editor.
-    expect(editors.at(0).props('value')).toBe('First hint');
-    expect(editors.at(1).props('value')).toBe('Second hint');
-  });
-
-  describe('on hint text update', () => {
-    beforeEach(() => {
-      wrapper = mount(HintsEditor, {
-        propsData: {
-          hints: [
-            { hint: 'First hint', order: 1 },
-            { hint: 'Second hint', order: 2 },
-          ],
-          openHintIdx: 1,
-        },
-      });
-
-      const editors = wrapper.findAllComponents({ name: 'RichTextEditor' });
-      editors.at(1).vm.$emit('update', 'Updated hint');
-    });
-
-    it('emits update event with a payload containing updated hints', () => {
-      expect(wrapper.emitted().update).toBeTruthy();
-      expect(wrapper.emitted().update.length).toBe(1);
-      expect(wrapper.emitted().update[0][0]).toEqual([
+  it('shows hints in the same order as the question', async () => {
+    const user = userEvent.setup();
+    renderComponent({
+      hints: [
         { hint: 'First hint', order: 1 },
-        { hint: 'Updated hint', order: 2 },
-      ]);
+        { hint: 'Second hint', order: 2 },
+      ],
     });
+    await openHintsSection(user);
+
+    const hintCards = getHintCards();
+    expect(within(hintCards[0]).getByText('First hint')).toBeInTheDocument();
+    expect(within(hintCards[1]).getByText('Second hint')).toBeInTheDocument();
   });
 
-  describe('on new hint button click', () => {
-    beforeEach(async () => {
-      wrapper = mount(HintsEditor, {
-        propsData: {
-          hints: [
-            { hint: 'First hint', order: 1 },
-            { hint: '', order: 2 },
-            { hint: 'Third hint', order: 3 },
-          ],
-        },
-      });
-
-      await clickNewHintBtn(wrapper);
-    });
-
-    it('emits update event with a payload containing all non-empty hints and one new empty hint', () => {
-      expect(wrapper.emitted().update).toBeTruthy();
-      expect(wrapper.emitted().update.length).toBe(1);
-      expect(wrapper.emitted().update[0][0]).toEqual([
+  it('lets the user update the text of the currently open hint', async () => {
+    const user = userEvent.setup();
+    const { emitted } = renderComponent({
+      hints: [
         { hint: 'First hint', order: 1 },
-        { hint: 'Third hint', order: 2 },
-        { hint: '', order: 3 },
-      ]);
+        { hint: 'Second hint', order: 2 },
+      ],
+      openHintIdx: 1,
     });
+    await openHintsSection(user);
 
-    it('emits open event with a new hint idx', () => {
-      expect(wrapper.emitted().open).toBeTruthy();
-      expect(wrapper.emitted().open.length).toBe(1);
-      expect(wrapper.emitted().open[0][0]).toBe(2);
-    });
+    const hintCards = getHintCards();
+    const hintTextField = within(hintCards[1]).getByRole('textbox');
+
+    await user.clear(hintTextField);
+    await user.type(hintTextField, 'Updated hint');
+
+    const updateEvents = emitted().update;
+    expect(updateEvents[updateEvents.length - 1][0]).toEqual([
+      { hint: 'First hint', order: 1 },
+      { hint: 'Updated hint', order: 2 },
+    ]);
   });
 
-  describe('on hint click', () => {
-    beforeEach(async () => {
-      wrapper = mount(HintsEditor, {
-        propsData: {
-          hints: [
-            { hint: 'First hint', order: 1 },
-            { hint: 'Second hint', order: 2 },
-          ],
-        },
-      });
-
-      await clickHint(wrapper, 1);
+  it('autofocuses the editor of the open hint', async () => {
+    const user = userEvent.setup();
+    renderComponent({
+      hints: [
+        { hint: 'First hint', order: 1 },
+        { hint: 'Second hint', order: 2 },
+      ],
+      openHintIdx: 0,
     });
+    await openHintsSection(user);
 
-    it('emits open event with a correct hint idx', () => {
-      expect(wrapper.emitted().open).toBeTruthy();
-      expect(wrapper.emitted().open.length).toBe(1);
-      expect(wrapper.emitted().open[0][0]).toBe(1);
-    });
+    const hintCards = getHintCards();
+    // The open hint renders an editable textbox that should request autofocus.
+    expect(within(hintCards[0]).getByRole('textbox')).toHaveAttribute('data-autofocus', 'true');
+    // Closed hints render in view mode, so they have no editable textbox to focus.
+    expect(within(hintCards[1]).queryByRole('textbox')).not.toBeInTheDocument();
   });
 
-  describe('on move hint up click', () => {
-    beforeEach(() => {
-      wrapper = mount(HintsEditor, {
-        propsData: {
-          hints: [
-            { hint: 'First hint', order: 1 },
-            { hint: 'Second hint', order: 2 },
-          ],
-        },
-      });
+  it('adds a new hint and removes existing empty hints when the user clicks New hint', async () => {
+    const user = userEvent.setup();
+    const { emitted } = renderComponent({
+      hints: [
+        { hint: 'First hint', order: 1 },
+        { hint: '', order: 2 },
+        { hint: 'Third hint', order: 3 },
+      ],
     });
+    await openHintsSection(user);
 
-    it('emits update event with a payload containing updated and properly ordered hints', async () => {
-      await clickMoveHintUp(wrapper, 1);
+    await user.click(screen.getByRole('button', { name: HintsEditor.$trs.newHintBtnLabel }));
 
-      expect(wrapper.emitted().update).toBeTruthy();
-      expect(wrapper.emitted().update.length).toBe(1);
-      expect(wrapper.emitted().update[0][0]).toEqual([
-        { hint: 'Second hint', order: 1 },
-        { hint: 'First hint', order: 2 },
-      ]);
-    });
-
-    describe('if moved hint was open', () => {
-      beforeEach(async () => {
-        await wrapper.setProps({
-          openHintIdx: 1,
-        });
-
-        await clickMoveHintUp(wrapper, 1);
-      });
-
-      it('emits open event with updated hint index', () => {
-        expect(wrapper.emitted().open).toBeTruthy();
-        expect(wrapper.emitted().open.length).toBe(1);
-        expect(wrapper.emitted().open[0][0]).toBe(0);
-      });
-    });
-
-    describe('if a hint above a moved hint was open', () => {
-      beforeEach(async () => {
-        await wrapper.setProps({
-          openHintIdx: 0,
-        });
-
-        await clickMoveHintUp(wrapper, 1);
-      });
-
-      it('emits open event with updated, originally open, hint index', () => {
-        expect(wrapper.emitted().open).toBeTruthy();
-        expect(wrapper.emitted().open.length).toBe(1);
-        expect(wrapper.emitted().open[0][0]).toBe(1);
-      });
-    });
+    expect(emitted().update).toHaveLength(1);
+    expect(emitted().update[0][0]).toEqual([
+      { hint: 'First hint', order: 1 },
+      { hint: 'Third hint', order: 2 },
+      { hint: '', order: 3 },
+    ]);
+    expect(emitted().open).toHaveLength(1);
+    expect(emitted().open[0][0]).toBe(2);
   });
 
-  describe('on move hint down click', () => {
-    beforeEach(() => {
-      wrapper = mount(HintsEditor, {
-        propsData: {
-          hints: [
-            { hint: 'First hint', order: 1 },
-            { hint: 'Second hint', order: 2 },
-          ],
-        },
-      });
+  it('opens a different hint when the user clicks that hint card', async () => {
+    const user = userEvent.setup();
+    const { emitted } = renderComponent({
+      hints: [
+        { hint: 'First hint', order: 1 },
+        { hint: 'Second hint', order: 2 },
+      ],
+      openHintIdx: 0,
     });
+    await openHintsSection(user);
 
-    it('emits update event with a payload containing updated and properly ordered hints', async () => {
-      await clickMoveHintDown(wrapper, 0);
+    const hintCards = getHintCards();
+    await user.click(hintCards[1]);
 
-      expect(wrapper.emitted().update).toBeTruthy();
-      expect(wrapper.emitted().update.length).toBe(1);
-      expect(wrapper.emitted().update[0][0]).toEqual([
-        { hint: 'Second hint', order: 1 },
-        { hint: 'First hint', order: 2 },
-      ]);
-    });
-
-    describe('if moved hint was open', () => {
-      beforeEach(async () => {
-        await wrapper.setProps({
-          openHintIdx: 0,
-        });
-
-        await clickMoveHintDown(wrapper, 0);
-      });
-
-      it('emits open event with updated hint index', () => {
-        expect(wrapper.emitted().open).toBeTruthy();
-        expect(wrapper.emitted().open.length).toBe(1);
-        expect(wrapper.emitted().open[0][0]).toBe(1);
-      });
-    });
-
-    describe('if a hint below a moved hint was open', () => {
-      beforeEach(async () => {
-        await wrapper.setProps({
-          openHintIdx: 1,
-        });
-
-        await clickMoveHintDown(wrapper, 0);
-      });
-
-      it('emits open event with updated, originally open, hint index', () => {
-        expect(wrapper.emitted().open).toBeTruthy();
-        expect(wrapper.emitted().open.length).toBe(1);
-        expect(wrapper.emitted().open[0][0]).toBe(0);
-      });
-    });
+    expect(emitted().open).toHaveLength(1);
+    expect(emitted().open[0][0]).toBe(1);
   });
 
-  describe('on delete hint click', () => {
-    beforeEach(() => {
-      wrapper = mount(HintsEditor, {
-        propsData: {
-          hints: [
-            { hint: 'First hint', order: 1 },
-            { hint: 'Second hint', order: 2 },
-          ],
-        },
-      });
+  it('moves a hint up and keeps the same hint open after moving', async () => {
+    const user = userEvent.setup();
+    const { emitted } = renderComponent({
+      hints: [
+        { hint: 'First hint', order: 1 },
+        { hint: 'Second hint', order: 2 },
+      ],
+      openHintIdx: 1,
+    });
+    await openHintsSection(user);
+
+    await clickToolbarAction({
+      action: AssessmentItemToolbarActions.MOVE_ITEM_UP,
+      hintIdx: 1,
+      user,
     });
 
-    it('emits update event with a payload containing updated and properly ordered hints', async () => {
-      await clickDeleteHint(wrapper, 0);
+    expect(emitted().update).toHaveLength(1);
+    expect(emitted().update[0][0]).toEqual([
+      { hint: 'Second hint', order: 1 },
+      { hint: 'First hint', order: 2 },
+    ]);
+    expect(emitted().open).toHaveLength(1);
+    expect(emitted().open[0][0]).toBe(0);
+  });
 
-      expect(wrapper.emitted().update).toBeTruthy();
-      expect(wrapper.emitted().update.length).toBe(1);
-      expect(wrapper.emitted().update[0][0]).toEqual([{ hint: 'Second hint', order: 1 }]);
+  it('keeps track of the open hint when the user moves the hint below it upward', async () => {
+    const user = userEvent.setup();
+    const { emitted } = renderComponent({
+      hints: [
+        { hint: 'First hint', order: 1 },
+        { hint: 'Second hint', order: 2 },
+      ],
+      openHintIdx: 0,
+    });
+    await openHintsSection(user);
+
+    await clickToolbarAction({
+      action: AssessmentItemToolbarActions.MOVE_ITEM_UP,
+      hintIdx: 1,
+      user,
     });
 
-    describe('if deleted hint was open', () => {
-      beforeEach(async () => {
-        await wrapper.setProps({
-          openHintIdx: 0,
-        });
+    expect(emitted().open).toHaveLength(1);
+    expect(emitted().open[0][0]).toBe(1);
+  });
 
-        await clickDeleteHint(wrapper, 0);
-      });
+  it('moves a hint down and keeps the same hint open after moving', async () => {
+    const user = userEvent.setup();
+    const { emitted } = renderComponent({
+      hints: [
+        { hint: 'First hint', order: 1 },
+        { hint: 'Second hint', order: 2 },
+      ],
+      openHintIdx: 0,
+    });
+    await openHintsSection(user);
 
-      it('emits close event', () => {
-        expect(wrapper.emitted().close).toBeTruthy();
-        expect(wrapper.emitted().close.length).toBe(1);
-      });
+    await clickToolbarAction({
+      action: AssessmentItemToolbarActions.MOVE_ITEM_DOWN,
+      hintIdx: 0,
+      user,
     });
 
-    describe('if a hint below a deleted hint was open', () => {
-      beforeEach(async () => {
-        await wrapper.setProps({
-          openHintIdx: 1,
-        });
+    expect(emitted().update).toHaveLength(1);
+    expect(emitted().update[0][0]).toEqual([
+      { hint: 'Second hint', order: 1 },
+      { hint: 'First hint', order: 2 },
+    ]);
+    expect(emitted().open).toHaveLength(1);
+    expect(emitted().open[0][0]).toBe(1);
+  });
 
-        await clickDeleteHint(wrapper, 0);
-      });
-
-      it('emits open event with updated, originally open, hint index', () => {
-        expect(wrapper.emitted().open).toBeTruthy();
-        expect(wrapper.emitted().open.length).toBe(1);
-        expect(wrapper.emitted().open[0][0]).toBe(0);
-      });
+  it('keeps track of the open hint when the user moves the hint above it downward', async () => {
+    const user = userEvent.setup();
+    const { emitted } = renderComponent({
+      hints: [
+        { hint: 'First hint', order: 1 },
+        { hint: 'Second hint', order: 2 },
+      ],
+      openHintIdx: 1,
     });
+    await openHintsSection(user);
+
+    await clickToolbarAction({
+      action: AssessmentItemToolbarActions.MOVE_ITEM_DOWN,
+      hintIdx: 0,
+      user,
+    });
+
+    expect(emitted().open).toHaveLength(1);
+    expect(emitted().open[0][0]).toBe(0);
+  });
+
+  it('deletes a hint and closes the editor when that hint was open', async () => {
+    const user = userEvent.setup();
+    const { emitted } = renderComponent({
+      hints: [
+        { hint: 'First hint', order: 1 },
+        { hint: 'Second hint', order: 2 },
+      ],
+      openHintIdx: 0,
+    });
+    await openHintsSection(user);
+
+    await clickToolbarAction({
+      action: AssessmentItemToolbarActions.DELETE_ITEM,
+      hintIdx: 0,
+      user,
+    });
+
+    expect(emitted().update).toHaveLength(1);
+    expect(emitted().update[0][0]).toEqual([{ hint: 'Second hint', order: 1 }]);
+    expect(emitted().close).toHaveLength(1);
+  });
+
+  it('keeps track of the open hint when the user deletes a hint above it', async () => {
+    const user = userEvent.setup();
+    const { emitted } = renderComponent({
+      hints: [
+        { hint: 'First hint', order: 1 },
+        { hint: 'Second hint', order: 2 },
+      ],
+      openHintIdx: 1,
+    });
+    await openHintsSection(user);
+
+    await clickToolbarAction({
+      action: AssessmentItemToolbarActions.DELETE_ITEM,
+      hintIdx: 0,
+      user,
+    });
+
+    expect(emitted().open).toHaveLength(1);
+    expect(emitted().open[0][0]).toBe(0);
+  });
+
+  it('toggles the hints section open and closed when clicking the header button', async () => {
+    const user = userEvent.setup();
+    renderComponent({
+      hints: [{ hint: 'First hint', order: 1 }],
+    });
+
+    // The header button acts as an accordion trigger with correct initial attributes
+    const headerButton = screen.getByRole('button', { name: HintsEditor.$trs.hintsLabel });
+    expect(headerButton).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByTestId('hint')).not.toBeInTheDocument();
+
+    // Click to open the section
+    await user.click(headerButton);
+    expect(headerButton).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByTestId('hint')).toBeInTheDocument();
+
+    // Click to close the section
+    await user.click(headerButton);
+    expect(headerButton).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByTestId('hint')).not.toBeInTheDocument();
   });
 });
