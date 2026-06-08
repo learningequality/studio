@@ -16,5 +16,7 @@ Feature: Create a channel
 		Then I am at the channel editor view
 			And I see the title of the channel to the left
 			And I see a disabled *Publish* button
-			And I see *Click "ADD" to start building your channel Create, upload, or import resources from other channels*
+			And I see a *Share* drop-down to the left of it
+			And I see a grayed out *Unpublished* label to the left of it
 			And I see a blue *Add* button
+			And I see the following info text: *Click "ADD" to start building your channel Create, upload, or import resources from other channels*

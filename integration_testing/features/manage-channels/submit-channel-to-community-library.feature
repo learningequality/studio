@@ -98,5 +98,10 @@ Feature: Submit a channel to the Community Library
 		When I navigate to the *Community Library* page
 		Then I can see that the channel is shown among the other Community Library channels
 
-	Scenario: Incompatible licenses detected.
-		Given TODO
+	Scenario: Incompatible licenses detected
+		Given I have published a channel containing resources which cannot be distributed via Kolibri e.g. *All Rights Reserved*
+		When I click the *Share* drop-down button
+			And I click the *Submit to Community Library* option
+		Then I see the *Submit to Community Library* side panel
+			And I see a red *Incompatible licenses detected* banner informing me that the channel cannot be submitted to the Community Library
+			And I see that the *Submit for review* button is disabled
