@@ -1,8 +1,11 @@
-import { render, screen } from '@testing-library/vue';
+import { render, screen, configure } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
+import VueRouter from 'vue-router';
 import SupplementaryItem from '../supplementaryLists/SupplementaryItem';
 import { factory } from '../../../store';
-import VueRouter from 'vue-router';
+
+configure({ testIdAttribute: 'data-test' });
+
 const router = new VueRouter();
 
 function renderComponent(props = {}) {
@@ -14,7 +17,7 @@ function renderComponent(props = {}) {
     props: {
       fileId: 'test',
       presetID: 'video_subtitle',
-      ...props
+      ...props,
     },
     computed: {
       file() {
@@ -42,20 +45,9 @@ describe('supplementaryItem', () => {
     expect(screen.queryByTestId('remove')).not.toBeInTheDocument();
   });
 
-  // Removed: uploadingHandler test - was implementation-detail focused
-  // and doesn't translate to VTL's user-behavior model. Covered by 
-  // 'uploading should be true if progress < 1' test instead.
-
-  it('should call uploadCompleteHandler when Uploader finishes uploading file', () => {
-    const uploadCompleteHandler = jest.fn();
-    renderComponent({ uploadCompleteHandler });
-    uploadCompleteHandler({ id: 'file1' });
-    expect(uploadCompleteHandler).toHaveBeenCalledWith({ id: 'file1' });
-  });
-
-  it('uploading should be true if progress < 1', () => {
+  it('shows an upload status indicator while a file is uploading', () => {
     renderComponent({ progress: 0.5 });
-    expect(document.querySelector('[data-test="uploading"]')).toBeInTheDocument();
+    expect(screen.queryByTestId('uploading')).toBeInTheDocument();
   });
 
   it('should disable ability to upload other files during a file upload', () => {
@@ -66,7 +58,7 @@ describe('supplementaryItem', () => {
   it('clicking remove button should emit remove event with file id', async () => {
     const user = userEvent.setup();
     const { emitted } = renderComponent({ id: 'test-remove' });
-    await user.click(document.querySelector('[data-test="remove"]'));
+    await user.click(screen.getByTestId('remove'));
     expect(emitted().remove[0][0]).toBe('test-remove');
   });
 });
