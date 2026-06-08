@@ -2,22 +2,11 @@ import { render, screen, configure } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import AccessibilityOptions from '../AccessibilityOptions.vue';
 import { AccessibilityCategories } from 'shared/constants';
+import { metadataStrings } from 'shared/strings/metadataStrings';
 
-beforeAll(() => {
-  configure({ testIdAttribute: 'data-test' });
-});
-
-afterAll(() => {
-  configure({ testIdAttribute: 'data-testid' });
-});
+configure({ testIdAttribute: 'data-test' });
 
 describe('AccessibilityOptions', () => {
-  const mockMetadataMixin = {
-    methods: {
-      translateMetadataString: str => str,
-    },
-  };
-
   const renderComponent = props => {
     return render(AccessibilityOptions, {
       props: {
@@ -25,18 +14,8 @@ describe('AccessibilityOptions', () => {
         value: [],
         ...props,
       },
-      routes: [],
-      mixins: [mockMetadataMixin],
-      mocks: {
-        $tr: key => key,
-      },
     });
   };
-
-  it('renders successfully', () => {
-    renderComponent();
-    expect(screen.getAllByRole('checkbox').length).toBeGreaterThan(0);
-  });
 
   it('shows document-specific accessibility options to the user', () => {
     renderComponent({ kind: 'document' });
@@ -44,9 +23,9 @@ describe('AccessibilityOptions', () => {
     const checkboxes = screen.getAllByRole('checkbox');
     expect(checkboxes).toHaveLength(3);
 
-    expect(screen.getByRole('checkbox', { name: /altText/i })).toBeInTheDocument();
-    expect(screen.getByRole('checkbox', { name: /highContrast/i })).toBeInTheDocument();
-    expect(screen.getByRole('checkbox', { name: /taggedPdf/i })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: metadataStrings.$tr('altText') })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: metadataStrings.$tr('highContrast') })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: metadataStrings.$tr('taggedPdf') })).toBeInTheDocument();
   });
 
   it('shows video-specific accessibility options to the user', () => {
@@ -55,9 +34,9 @@ describe('AccessibilityOptions', () => {
     const checkboxes = screen.getAllByRole('checkbox');
     expect(checkboxes).toHaveLength(3);
 
-    expect(screen.getByRole('checkbox', { name: /signLanguage/i })).toBeInTheDocument();
-    expect(screen.getByRole('checkbox', { name: /audioDescription/i })).toBeInTheDocument();
-    expect(screen.getByRole('checkbox', { name: /captionsSubtitles/i })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: metadataStrings.$tr('signLanguage') })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: metadataStrings.$tr('audioDescription') })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: metadataStrings.$tr('captionsSubtitles') })).toBeInTheDocument();
 
     expect(screen.queryByTestId('tooltip-captionsSubtitles')).not.toBeInTheDocument();
   });
@@ -67,7 +46,7 @@ describe('AccessibilityOptions', () => {
 
     const checkboxes = screen.getAllByRole('checkbox');
     expect(checkboxes).toHaveLength(1);
-    expect(screen.getByRole('checkbox', { name: /altText/i })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: metadataStrings.$tr('altText') })).toBeInTheDocument();
   });
 
   it('shows HTML5-specific accessibility options to the user', () => {
@@ -75,8 +54,8 @@ describe('AccessibilityOptions', () => {
 
     const checkboxes = screen.getAllByRole('checkbox');
     expect(checkboxes).toHaveLength(2);
-    expect(screen.getByRole('checkbox', { name: /altText/i })).toBeInTheDocument();
-    expect(screen.getByRole('checkbox', { name: /highContrast/i })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: metadataStrings.$tr('altText') })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: metadataStrings.$tr('highContrast') })).toBeInTheDocument();
   });
 
   it('shows audio-specific accessibility options to the user', () => {
@@ -84,7 +63,7 @@ describe('AccessibilityOptions', () => {
 
     const checkboxes = screen.getAllByRole('checkbox');
     expect(checkboxes).toHaveLength(1);
-    expect(screen.getByRole('checkbox', { name: /captionsSubtitles/i })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: metadataStrings.$tr('captionsSubtitles') })).toBeInTheDocument();
     expect(screen.queryByTestId('tooltip-captionsSubtitles')).not.toBeInTheDocument();
   });
 
@@ -100,7 +79,7 @@ describe('AccessibilityOptions', () => {
     it('emits an input event with the updated array when a user checks an option', async () => {
       const { emitted } = renderComponent({ kind: 'document', value: [] });
 
-      const altTextCheckbox = screen.getByRole('checkbox', { name: /altText/i });
+      const altTextCheckbox = screen.getByRole('checkbox', { name: metadataStrings.$tr('altText') });
       await userEvent.click(altTextCheckbox);
 
       expect(emitted()).toHaveProperty('input');
@@ -113,7 +92,7 @@ describe('AccessibilityOptions', () => {
         value: [AccessibilityCategories.SIGN_LANGUAGE],
       });
 
-      const signLanguageCheckbox = screen.getByRole('checkbox', { name: /signLanguage/i });
+      const signLanguageCheckbox = screen.getByRole('checkbox', { name: metadataStrings.$tr('signLanguage') });
       await userEvent.click(signLanguageCheckbox);
 
       expect(emitted()).toHaveProperty('input');
@@ -126,9 +105,9 @@ describe('AccessibilityOptions', () => {
         value: [AccessibilityCategories.SIGN_LANGUAGE, AccessibilityCategories.CAPTIONS_SUBTITLES],
       });
 
-      expect(screen.getByRole('checkbox', { name: /signLanguage/i })).toBeChecked();
-      expect(screen.getByRole('checkbox', { name: /captionsSubtitles/i })).toBeChecked();
-      expect(screen.getByRole('checkbox', { name: /audioDescription/i })).not.toBeChecked();
+      expect(screen.getByRole('checkbox', { name: metadataStrings.$tr('signLanguage') })).toBeChecked();
+      expect(screen.getByRole('checkbox', { name: metadataStrings.$tr('captionsSubtitles') })).toBeChecked();
+      expect(screen.getByRole('checkbox', { name: metadataStrings.$tr('audioDescription') })).not.toBeChecked();
     });
   });
 });
