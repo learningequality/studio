@@ -17,7 +17,7 @@ const searchWord = 'search test';
 const editChannel = {
   id: 'editchannel',
   name: searchWord,
-  description: '',
+  description: 'A curated collection of math resources',
   edit: true,
   published: true,
 };
@@ -25,7 +25,7 @@ const editChannel = {
 const editChannel2 = {
   id: 'editchannel2',
   name: 'Another Channel',
-  description: '',
+  description: 'Science and nature topics for all ages',
   edit: true,
   published: true,
 };
@@ -86,9 +86,9 @@ describe('ChannelSelectionList', () => {
     // Specific wait avoids wrapping the whole block in waitFor
     expect(await screen.findByLabelText('Search for a channel')).toBeInTheDocument();
 
-    expect(screen.getByText(editChannel.name)).toBeInTheDocument();
-    expect(screen.getByText(editChannel2.name)).toBeInTheDocument();
-    expect(screen.queryByText(publicChannel.name)).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: editChannel.name })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: editChannel2.name })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: publicChannel.name })).not.toBeInTheDocument();
   });
 
   it('shows loader while the channel list is loading', async () => {
@@ -111,23 +111,23 @@ describe('ChannelSelectionList', () => {
     await renderComponent();
 
     // Wait for data load
-    expect(await screen.findByText(editChannel.name)).toBeInTheDocument();
-    expect(screen.getByText(editChannel2.name)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: editChannel.name })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: editChannel2.name })).toBeInTheDocument();
 
     const searchInput = screen.getByLabelText('Search for a channel');
     await user.clear(searchInput);
     await user.type(searchInput, editChannel.name);
 
     // Verify filter happened
-    expect(await screen.findByText(editChannel.name)).toBeInTheDocument();
-    expect(screen.queryByText(editChannel2.name)).not.toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: editChannel.name })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: editChannel2.name })).not.toBeInTheDocument();
   });
 
   it('selects a channel when the user clicks the checkbox', async () => {
     const user = userEvent.setup();
     const { emitted } = await renderComponent();
 
-    await screen.findByText(editChannel.name);
+    await screen.findByRole('heading', { name: editChannel.name });
 
     // Using getByTestId because the component doesn't expose unique
     // accessible roles for individual channel checkboxes
@@ -149,7 +149,7 @@ describe('ChannelSelectionList', () => {
     // Initialize with the channel already selected
     const { emitted } = await renderComponent({ value: [editChannel.id] });
 
-    await screen.findByText(editChannel.name);
+    await screen.findByRole('heading', { name: editChannel.name });
 
     // Using getByTestId because the component doesn't expose unique
     // accessible roles for individual channel checkboxes
@@ -168,7 +168,7 @@ describe('ChannelSelectionList', () => {
     const user = userEvent.setup();
     const { emitted } = await renderComponent();
 
-    await screen.findByText(editChannel.name);
+    await screen.findByRole('heading', { name: editChannel.name });
 
     // Using getByTestId because the component doesn't expose accessible
     // roles for channel cards
@@ -186,7 +186,7 @@ describe('ChannelSelectionList', () => {
     // Initialize with the channel already selected
     const { emitted } = await renderComponent({ value: [editChannel.id] });
 
-    await screen.findByText(editChannel.name);
+    await screen.findByRole('heading', { name: editChannel.name });
 
     // Using getByTestId because the component doesn't expose accessible
     // roles for channel cards
@@ -196,5 +196,14 @@ describe('ChannelSelectionList', () => {
     expect(emitted()).toHaveProperty('input');
     expect(emitted().input).toHaveLength(1);
     expect(emitted().input[0][0]).toEqual([]);
+  });
+
+  it('each checkbox has an accessible name matching its channel name', async () => {
+    await renderComponent();
+
+    // KCheckbox renders a visually-hidden <label for="id"> associated with the input,
+    // so getByRole resolves the accessible name correctly for screen readers
+    expect(await screen.findByRole('checkbox', { name: editChannel.name })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: editChannel2.name })).toBeInTheDocument();
   });
 });

@@ -28,6 +28,8 @@
           <div class="selection-row">
             <KCheckbox
               :checked="selectedChannels.includes(channel.id)"
+              :label="channel.name"
+              :showLabel="false"
               :data-testid="`checkbox-${channel.id}`"
               class="channel-checkbox"
               @change="handleSelectChannel(channel.id)"
