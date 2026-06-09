@@ -1,0 +1,24 @@
+services:
+  studio-app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.prod
+    image: learningequality/studio-app-prod
+    ports:
+      - "8080:8081"
+    volumes:
+      - .:/src
+    environment:
+      MPLBACKEND: ps
+      SHELL: /bin/bash
+      AWS_S3_ENDPOINT_URL: http://minio:9000
+      AWS_BUCKET_NAME: content
+      DATA_DB_HOST: postgres
+      DJANGO_SETTINGS_MODULE: contentcuration.settings
+      RUN_MODE: docker-compose
+      CELERY_TIMEZONE: America/Los_Angeles
+      CELERY_REDIS_DB: 0
+      CELERY_BROKER_ENDPOINT: redis
+      CELERY_RESULT_BACKEND_ENDPOINT: redis
+      CELERY_REDIS_PASSWORD: ""
+      REMAP_SIGTERM: "SIGQUIT"

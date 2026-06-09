@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils';
 import MasteryCriteriaGoal from '../CompletionOptions/MasteryCriteriaGoal';
 import TestForm from 'shared/views/__tests__/TestForm';
 import { constantStrings } from 'shared/mixins';
-import MasteryModels from 'shared/leUtils/MasteryModels';
+import MasteryModels, { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
 
 describe('MasteryCriteriaGoal', () => {});
 async function makeWrapper(propsData = {}) {
@@ -28,9 +28,15 @@ describe('masteryCriteriaGoal', () => {
 
   describe('on load', () => {
     MasteryModels.forEach(model => {
-      it(`${model} mastery option should be an option to select`, () => {
-        expect(wrapper.findComponent('.v-list').text()).toContain(constantStrings.$tr(model));
-      });
+      if (model === MasteryModelsNames.PRE_POST_TEST) {
+        it(`${model} mastery option should not be an option to select (not yet implemented)`, () => {
+          expect(wrapper.findComponent('.v-list').text()).not.toContain(constantStrings.$tr(model));
+        });
+      } else {
+        it(`${model} mastery option should be an option to select`, () => {
+          expect(wrapper.findComponent('.v-list').text()).toContain(constantStrings.$tr(model));
+        });
+      }
     });
     it('should render according to masteryModel prop', async () => {
       for (const model of MasteryModels) {

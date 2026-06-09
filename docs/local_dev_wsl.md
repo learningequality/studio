@@ -53,7 +53,7 @@ git clone https://github.com/$USERNAME/studio.git
 Replace `$USERNAME` with your GitHub username.
 
 ## Install Prerequisites
-For detailed instructions on installing and configuring Volta, pyenv, and pyenv-virtualenv, please see the [Prerequisites](./local_dev_host.md#prerequisites) section in our Local Development with host guide.
+For detailed instructions on installing and configuring Volta and uv, please see the [Prerequisites](./local_dev_host.md#prerequisites) section in our Local Development with host guide.
 
 ## Install System Dependencies and Services
 
@@ -171,7 +171,7 @@ Now that you have your project open in VS Code, you can run the same commands yo
 2. **Activate the Python Virtual Environment**:
 
    ```sh
-   pyenv activate studio-py3.10
+   source .venv/bin/activate
    ```
 3. **Run the Services**:
 

@@ -3,7 +3,9 @@ from jsonschema import RefResolver
 from jsonschema.validators import validator_for
 from le_utils.constants import completion_criteria
 from le_utils.constants import content_kinds
+from le_utils.constants import exercises
 from le_utils.constants import mastery_criteria
+from le_utils.constants import modalities
 
 
 def _build_validator():
@@ -52,10 +54,11 @@ ALLOWED_MODELS_PER_KIND = {
         completion_criteria.APPROX_TIME,
         completion_criteria.REFERENCE,
     },
+    content_kinds.TOPIC: {completion_criteria.MASTERY},
 }
 
 
-def check_model_for_kind(data, kind):
+def check_model_for_kind(data, kind, modality=None):
     model = data.get("model")
     if kind is None or model is None or kind not in ALLOWED_MODELS_PER_KIND:
         return
@@ -68,11 +71,37 @@ def check_model_for_kind(data, kind):
             )
         )
 
+    if kind == content_kinds.TOPIC:
+        check_topic_completion_criteria(data, modality)
 
-def validate(data, kind=None):
+
+def check_topic_completion_criteria(data, modality):
+    """
+    Validates topic-specific completion criteria rules:
+    - Topics can only have completion criteria if modality is UNIT
+    - Topics can only use PRE_POST_TEST mastery model
+    """
+    # Topics can only have completion criteria with UNIT modality
+    if modality != modalities.UNIT:
+        raise ValidationError(
+            "Topics can only have completion criteria with UNIT modality"
+        )
+
+    # Topics can only use PRE_POST_TEST mastery model
+    threshold = data.get("threshold", {})
+    mastery_model = threshold.get("mastery_model")
+    if mastery_model is not None and mastery_model != exercises.PRE_POST_TEST:
+        raise ValidationError(
+            "mastery_model '{}' is invalid for topic content kind; "
+            "only '{}' is allowed".format(mastery_model, exercises.PRE_POST_TEST)
+        )
+
+
+def validate(data, kind=None, modality=None):
     """
     :param data: Dictionary of data to validate
     :param kind: A str of the node content kind
+    :param modality: A str of the node modality (required for topics with completion criteria)
     :raises: ValidationError: When invalid
     """
     # empty dicts are okay
@@ -104,4 +133,4 @@ def validate(data, kind=None):
         e.error_list.extend(error_descriptions)
         raise e
 
-    check_model_for_kind(data, kind)
+    check_model_for_kind(data, kind, modality)

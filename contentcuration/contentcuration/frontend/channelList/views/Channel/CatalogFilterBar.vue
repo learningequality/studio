@@ -1,26 +1,30 @@
 <template>
 
-  <VContainer class="pa-4">
-    <div v-if="currentFilters.length">
-      <VChip
+  <div class="catalog-filter-bar">
+    <div
+      v-if="currentFilters.length"
+      class="catalog-filter-bar-content"
+    >
+      <StudioChip
         v-for="(filter, index) in currentFilters"
         :key="`catalog-filter-${index}`"
         close
-        class="ma-1"
-        @input="filter.onclose"
+        class="catalog-filter-chip"
+        :data-test="`filter-chip-${index}`"
+        @close="filter.onclose"
       >
         {{ filter.text }}
-      </VChip>
+      </StudioChip>
       <KButton
         v-if="currentFilters.length"
         class="clear-link"
         :text="$tr('clearAll')"
         appearance="basic-link"
-        data-test="clear"
+        data-testid="clear"
         @click="clearFilters"
       />
     </div>
-  </VContainer>
+  </div>
 
 </template>
 
@@ -29,6 +33,7 @@
 
   import flatten from 'lodash/flatten'; // Tests fail with native Array.flat() method
   import { catalogFilterMixin } from './mixins';
+  import StudioChip from 'shared/views/StudioChip';
   import { constantsTranslationMixin } from 'shared/mixins';
 
   /**
@@ -44,6 +49,9 @@
 
   export default {
     name: 'CatalogFilterBar',
+    components: {
+      StudioChip,
+    },
     mixins: [constantsTranslationMixin, catalogFilterMixin],
     computed: {
       currentFilters() {
@@ -128,17 +136,20 @@
     width: 100%;
   }
 
-  .container {
+  .catalog-filter-bar {
     max-width: 1128px;
+    padding: 16px;
     margin: 0 auto;
   }
 
-  .v-card {
-    cursor: pointer;
+  .catalog-filter-bar-content {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+  }
 
-    &:hover {
-      background-color: var(--v-grey-lighten4);
-    }
+  .catalog-filter-chip {
+    margin: 4px;
   }
 
   .clear-link {

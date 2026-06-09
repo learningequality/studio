@@ -70,7 +70,28 @@ describe('preprocessMarkdown', () => {
     });
   });
 
-  // 4: Standard Markdown Passthrough
+  // 4: Perseus Underline Handling
+  // Perseus's simple-markdown treats __text__ as <u>, but `marked` (CommonMark)
+  // treats it as <strong>. We must rewrite __text__ -> <u>text</u> before marked
+  // sees it, so the round-trip preserves underline instead of turning it into bold.
+  describe('Perseus Underline Handling', () => {
+    it('should rewrite __text__ to <u>text</u> before passing to marked', () => {
+      preprocessMarkdown('This is __underlined__ text.');
+      expect(marked).toHaveBeenCalledWith('This is <u>underlined</u> text.');
+    });
+
+    it('should rewrite multiple __ runs on the same line independently', () => {
+      preprocessMarkdown('__one__ and __two__');
+      expect(marked).toHaveBeenCalledWith('<u>one</u> and <u>two</u>');
+    });
+
+    it('should rewrite __ spanning multiple words', () => {
+      preprocessMarkdown('__multi word underline__');
+      expect(marked).toHaveBeenCalledWith('<u>multi word underline</u>');
+    });
+  });
+
+  // 5: Standard Markdown Passthrough
   describe('Standard Markdown Passthrough', () => {
     it('should pass non-custom syntax through to the marked library', () => {
       const standardMd = 'Here is **bold** and a [link](url).';

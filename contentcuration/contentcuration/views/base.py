@@ -76,6 +76,8 @@ user_fields = (
     "clipboard_tree_id",
     "policies",
     "feature_flags",
+    "newest_notification_date",
+    "last_read_notification_date",
 )
 
 
@@ -85,6 +87,7 @@ def current_user_for_context(user):
 
     user_data = {field: getattr(user, field) for field in user_fields}
 
+    user_data["disk_space"] = user.get_effective_disk_space()
     user_data["user_rev"] = user.get_server_rev()
 
     return json_for_parse_from_data(user_data)
@@ -106,7 +109,7 @@ def base(request):
 def health(request):
     c = Channel.objects.first()
     if c:
-        return HttpResponse(c.name)
+        return HttpResponse(c.name, content_type="text/plain")
     return HttpResponse("No channels created yet!")
 
 
@@ -401,13 +404,17 @@ def set_language(request):
     next_url_split = urlsplit(next_url) if next_url else None
     if next_url and not is_valid_path(next_url_split.path):
         next_url = translate_url(reverse("base"), lang_code)
-    response = HttpResponse(next_url) if next_url else HttpResponse(status=204)
+    response = (
+        HttpResponse(next_url, content_type="text/plain")
+        if next_url
+        else HttpResponse(status=204)
+    )
     if request.method == "POST":
         if lang_code and check_for_language(lang_code):
             if next_url:
                 next_trans = translate_url(next_url, lang_code)
                 if next_trans != next_url:
-                    response = HttpResponse(next_trans)
+                    response = HttpResponse(next_trans, content_type="text/plain")
             if hasattr(request, "session"):
                 # Storing the language in the session is deprecated.
                 # (RemovedInDjango40Warning)

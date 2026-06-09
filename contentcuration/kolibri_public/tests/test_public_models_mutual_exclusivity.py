@@ -1,5 +1,3 @@
-from unittest import mock
-
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.urls import reverse
@@ -196,11 +194,6 @@ class CommunityLibrarySubmissionMutualExclusivityAPITestCase(StudioAPITestCase):
     def setUp(self):
         super().setUp()
 
-        self.ensure_db_exists_patcher = mock.patch(
-            "contentcuration.utils.publish.ensure_versioned_database_exists"
-        )
-        self.ensure_db_exists_patcher.start()
-
         self.user = testdata.user()
         self.channel = testdata.channel()
         self.channel.public = False
@@ -209,7 +202,6 @@ class CommunityLibrarySubmissionMutualExclusivityAPITestCase(StudioAPITestCase):
         self.channel.save()
 
     def tearDown(self):
-        self.ensure_db_exists_patcher.stop()
         super().tearDown()
 
     def test_api_prevents_public_channel_submission_to_community_library(self):

@@ -105,18 +105,16 @@ describe('Create account page', () => {
   // NOTE:
   // Full form submission tests are intentionally skipped here.
   //
-  // This page still relies on Vuetify components (v-select / v-autocomplete)
-  // for required fields such as "locations" and "source".
-  // These components do not reliably update their v-model state when interacted
-  // with via Vue Testing Library’s userEvent APIs, which prevents a fully
-  // user-centric submission flow from being exercised.
+  // The "locations" field uses CountryField, which internally uses VAutocomplete
+  // (a Vuetify component). VAutocomplete does not reliably update its v-model
+  // state when interacted with via Vue Testing Library's userEvent APIs, which
+  // prevents a fully user-centric submission flow from being exercised.
   //
-  // The previous Vue Test Utils tests worked around this by directly mutating
-  // component data (setData), which is intentionally avoided when using
-  // Testing Library.
+  // The "source" field has been migrated to KSelect (KDS) and no longer has
+  // this limitation, but "locations" remains the blocker.
   //
-  // These tests will be re-enabled once this page is migrated to the
-  // Kolibri Design System as part of the Vuetify removal effort .
+  // These tests will be re-enabled once CountryField is migrated away from
+  // VAutocomplete as part of the ongoing Vuetify removal effort.
   it.skip('creates an account when the user submits valid information', async () => {
     await renderComponent();
 
@@ -143,7 +141,7 @@ describe('Create account page', () => {
     });
   });
 
-  // Skipped for the same reason as above
+  // Skipped for the same reason as above — CountryField (VAutocomplete) blocker
   it.skip('shows an offline error when the user is offline', async () => {
     await renderComponent({ offline: true });
 

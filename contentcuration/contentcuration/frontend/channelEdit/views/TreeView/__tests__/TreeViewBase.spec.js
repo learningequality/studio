@@ -307,7 +307,7 @@ describe('TreeViewBase', () => {
       const wrapper = initWrapper({ getters });
       const menuItems = getShareMenuItems(wrapper);
       const submitItem = menuItems.wrappers.find(item =>
-        item.text().includes('Submit to community library'),
+        item.text().includes('Submit to Community Library'),
       );
       expect(submitItem).toBeDefined();
     });
@@ -321,7 +321,7 @@ describe('TreeViewBase', () => {
       const wrapper = initWrapper({ getters });
       const menuItems = getShareMenuItems(wrapper);
       const submitItem = menuItems.wrappers.find(item =>
-        item.text().includes('Submit to community library'),
+        item.text().includes('Submit to Community Library'),
       );
       expect(submitItem).toBeUndefined();
     });
@@ -335,7 +335,7 @@ describe('TreeViewBase', () => {
       const wrapper = initWrapper({ getters });
       const menuItems = getShareMenuItems(wrapper);
       const submitItem = menuItems.wrappers.find(item =>
-        item.text().includes('Submit to community library'),
+        item.text().includes('Submit to Community Library'),
       );
       expect(submitItem).toBeUndefined();
     });
@@ -398,7 +398,7 @@ describe('TreeViewBase', () => {
       const menuItems = getShareMenuItems(wrapper);
       expect(menuItems.length).toBe(3);
       expect(
-        menuItems.wrappers.some(item => item.text().includes('Submit to community library')),
+        menuItems.wrappers.some(item => item.text().includes('Submit to Community Library')),
       ).toBe(true);
       expect(menuItems.wrappers.some(item => item.text().includes('Invite collaborators'))).toBe(
         true,

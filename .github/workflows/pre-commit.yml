@@ -12,6 +12,9 @@ on:
     - hotfixes
     - master
 
+permissions:
+  contents: read
+
 jobs:
   pre_job:
     name: Path match check
@@ -32,11 +35,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v6
-    - uses: actions/setup-python@v6
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
       with:
         python-version: '3.10'
+        ignore-nothing-to-cache: 'true'
     - name: Use pnpm
-      uses: pnpm/action-setup@v4
+      uses: pnpm/action-setup@v6.0.8
     - name: Use Node.js
       uses: actions/setup-node@v6
       with:

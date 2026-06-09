@@ -27,47 +27,21 @@
         {{ isFAQPage ? $tr('frequentlyAskedQuestions') : $tr('libraryTitle') }}
       </VToolbarTitle>
     </VToolbar>
-    <AppBar v-else>
-      <template
-        v-if="loggedIn"
-        #tabs
-      >
-        <VTab
-          v-for="listType in lists"
-          :key="listType.id"
-          :to="getChannelLink(listType)"
-          @click="trackTabClick(listType)"
-        >
-          <VBadge
-            :value="invitationsByListCounts[listType]"
-            color="black"
-          >
-            <template #badge>
-              <span>{{ $formatNumber(invitationsByListCounts[listType]) }}</span>
-            </template>
-            <span>{{ translateConstant(listType) }}</span>
-          </VBadge>
-        </VTab>
-        <VTab
-          :to="catalogLink"
-          @click="publicTabClick"
-        >
-          {{ $tr('catalog') }}
-        </VTab>
-        <VTab
-          :to="channelSetLink"
-          @click="channelSetsTabClick"
-        >
-          {{ $tr('channelSets') }}
-        </VTab>
-      </template>
-    </AppBar>
+
+    <StudioNavigation
+      v-else
+      :tabs="navigationTabs"
+    />
+
     <VContent>
       <StudioOfflineAlert
         v-if="!isCatalogPage"
         :offset="toolbarHeight"
       />
       <VContainer
+        id="main"
+        role="main"
+        tabindex="-1"
         fluid
         class="main-container pa-0"
         :style="`height: calc(100vh - ${contentOffset}px); margin-top: ${offline ? 48 : 0}px;`"
@@ -75,38 +49,8 @@
         <VContainer
           fluid
           class="h-100"
-          :class="isCatalogPage ? 'pa-0' : 'pa-4'"
+          :class="isCatalogPage || isCommunityLibraryPage ? 'pa-0' : 'pa-4'"
         >
-          <VLayout
-            row
-            wrap
-            justify-center
-          >
-            <VFlex
-              xs12
-              sm10
-              md8
-              lg6
-            >
-              <StudioRaisedBox
-                v-if="invitationList.length"
-                v-show="isChannelList"
-              >
-                <template #header>
-                  {{ $tr('invitations', { count: invitationList.length }) }}
-                </template>
-                <template #main>
-                  <ul class="invitation-list">
-                    <ChannelInvitation
-                      v-for="invitation in invitationList"
-                      :key="invitation.id"
-                      :invitationID="invitation.id"
-                    />
-                  </ul>
-                </template>
-              </StudioRaisedBox>
-            </VFlex>
-          </VLayout>
           <ChannelListAppError
             v-if="fullPageError"
             :error="fullPageError"
@@ -125,21 +69,15 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
-  import {
-    RouteNames,
-    ChannelInvitationMapping,
-    ListTypeToRouteMapping,
-    RouteToListTypeMapping,
-  } from '../constants';
+  import { RouteNames, ChannelInvitationMapping, ListTypeToRouteMapping } from '../constants';
   import ChannelListAppError from './ChannelListAppError';
-  import ChannelInvitation from './Channel/ChannelInvitation';
-  import StudioRaisedBox from 'shared/views/StudioRaisedBox.vue';
   import { ChannelListTypes } from 'shared/constants';
   import { constantsTranslationMixin, routerMixin } from 'shared/mixins';
   import GlobalSnackbar from 'shared/views/GlobalSnackbar';
-  import AppBar from 'shared/views/AppBar';
+  import StudioNavigation from 'shared/views/StudioNavigation/StudioNavigation.vue';
   import StudioOfflineAlert from 'shared/views/StudioOfflineAlert.vue';
   import PolicyModals from 'shared/views/policies/PolicyModals';
+  import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 
   const CATALOG_PAGES = [
     RouteNames.CATALOG_ITEMS,
@@ -159,21 +97,68 @@
   export default {
     name: 'ChannelListIndex',
     components: {
-      AppBar,
-      ChannelInvitation,
+      StudioNavigation,
       ChannelListAppError,
       GlobalSnackbar,
       PolicyModals,
       StudioOfflineAlert,
-      StudioRaisedBox,
     },
     mixins: [constantsTranslationMixin, routerMixin],
+    setup() {
+      const { communityLibraryLabel$ } = communityChannelsStrings;
+      return {
+        communityLibraryLabel$,
+      };
+    },
     computed: {
       ...mapState({
         offline: state => !state.connection.online,
       }),
       ...mapGetters(['loggedIn']),
       ...mapGetters('channelList', ['invitations']),
+
+      navigationTabs() {
+        if (!this.loggedIn) return [];
+
+        const tabs = [];
+
+        this.lists.forEach(listType => {
+          tabs.push({
+            id: listType,
+            label: this.translateConstant(listType),
+            to: this.getChannelLink(listType),
+            badgeValue: this.invitationsByListCounts[listType] || 0,
+            analyticsLabel: ListTypeToAnalyticsLabel[listType],
+          });
+        });
+
+        tabs.push({
+          id: 'catalog',
+          label: this.$tr('catalog'),
+          to: this.catalogLink,
+          badgeValue: 0,
+          analyticsLabel: ChannelListTypes.PUBLIC,
+        });
+
+        tabs.push({
+          id: 'communityLibrary',
+          label: this.communityLibraryLabel$(),
+          to: this.communityLibraryLink,
+          badgeValue: 0,
+          analyticsLabel: 'COMMUNITY_LIBRARY',
+        });
+
+        tabs.push({
+          id: CHANNEL_SETS,
+          label: this.$tr('channelSets'),
+          to: this.channelSetLink,
+          badgeValue: 0,
+          analyticsLabel: CHANNEL_SETS,
+        });
+
+        return tabs;
+      },
+
       fullPageError() {
         return this.$store.state.errors.fullPageError;
       },
@@ -186,8 +171,8 @@
       isCatalogPage() {
         return this.$route.name === RouteNames.CATALOG_ITEMS;
       },
-      currentListType() {
-        return RouteToListTypeMapping[this.$route.name];
+      isCommunityLibraryPage() {
+        return this.$route.name === RouteNames.COMMUNITY_LIBRARY_ITEMS;
       },
       toolbarHeight() {
         return this.loggedIn && !this.isFAQPage ? 112 : 64;
@@ -197,14 +182,6 @@
       },
       lists() {
         return Object.values(ChannelListTypes).filter(l => l !== 'public');
-      },
-      invitationList() {
-        const invitations = this.invitations;
-        return (
-          invitations.filter(
-            i => ChannelInvitationMapping[i.share_mode] === this.currentListType,
-          ) || []
-        );
       },
       invitationsByListCounts() {
         const inviteMap = {};
@@ -221,17 +198,11 @@
       catalogLink() {
         return { name: RouteNames.CATALOG_ITEMS };
       },
-      isChannelList() {
-        return this.lists.includes(this.currentListType);
+      communityLibraryLink() {
+        return { name: RouteNames.COMMUNITY_LIBRARY_ITEMS };
       },
       homeLink() {
         return this.libraryMode ? window.Urls.base() : window.Urls.channels();
-      },
-      publicTabClick() {
-        return this.trackTabClick.bind(this, ChannelListTypes.PUBLIC);
-      },
-      channelSetsTabClick() {
-        return this.trackTabClick.bind(this, CHANNEL_SETS);
       },
     },
     watch: {
@@ -282,6 +253,8 @@
           title = this.translateConstant('bookmark');
         } else if (routeName === RouteNames.CHANNELS_EDITABLE) {
           title = this.translateConstant('edit');
+        } else if (routeName === RouteNames.COMMUNITY_LIBRARY_ITEMS) {
+          title = this.communityLibraryLabel$();
         }
         // Title changes for other routes are handled by other components, since
         // we can access $tr messages only from within the component.
@@ -289,14 +262,10 @@
           this.updateTabTitle(title);
         }
       },
-      trackTabClick(list) {
-        this.$analytics.trackClick('channel_list', ListTypeToAnalyticsLabel[list]);
-      },
     },
     $trs: {
       channelSets: 'Collections',
-      catalog: 'Content Library',
-      invitations: 'You have {count, plural,\n =1 {# invitation}\n other {# invitations}}',
+      catalog: 'Kolibri Library',
       libraryTitle: 'Kolibri Content Library Catalog',
       frequentlyAskedQuestions: 'Frequently asked questions',
     },
@@ -339,10 +308,6 @@
 
   .main-container {
     overflow: auto;
-  }
-
-  .invitation-list {
-    padding: 0;
   }
 
   .h-100 {

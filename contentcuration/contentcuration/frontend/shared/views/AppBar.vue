@@ -40,11 +40,13 @@
                 style="text-transform: none"
                 v-on="on"
               >
-                <KIconButton
-                  :disabled="true"
-                  icon="person"
-                  color="black"
-                />
+                <WithNotificationIndicator>
+                  <KIconButton
+                    :disabled="true"
+                    icon="person"
+                    color="black"
+                  />
+                </WithNotificationIndicator>
                 <span class="mx-2 subheading">{{ user.first_name }}</span>
                 <KIconButton
                   :disabled="true"
@@ -65,6 +67,17 @@
                   />
                 </VListTileAction>
                 <VListTileTitle v-text="$tr('administration')" />
+              </VListTile>
+              <VListTile @click="showNotificationsModal">
+                <VListTileAction>
+                  <WithNotificationIndicator>
+                    <KIconButton
+                      :disabled="true"
+                      icon="bell"
+                    />
+                  </WithNotificationIndicator>
+                </VListTileAction>
+                <VListTileTitle v-text="notificationsLabel$()" />
               </VListTile>
               <VListTile :href="settingsLink">
                 <VListTileAction>
@@ -163,9 +176,12 @@
 <script>
 
   import { mapActions, mapState, mapGetters } from 'vuex';
+  import WithNotificationIndicator from './WithNotificationIndicator.vue';
   import Tabs from 'shared/views/Tabs';
   import MainNavigationDrawer from 'shared/views/MainNavigationDrawer';
   import LanguageSwitcherModal from 'shared/languageSwitcher/LanguageSwitcherModal';
+  import { Modals } from 'shared/constants';
+  import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 
   export default {
     name: 'AppBar',
@@ -173,6 +189,13 @@
       LanguageSwitcherModal,
       MainNavigationDrawer,
       Tabs,
+      WithNotificationIndicator,
+    },
+    setup() {
+      const { notificationsLabel$ } = communityChannelsStrings;
+      return {
+        notificationsLabel$,
+      };
     },
     props: {
       title: {
@@ -204,6 +227,15 @@
     },
     methods: {
       ...mapActions(['logout']),
+      showNotificationsModal() {
+        this.$router.push({
+          query: {
+            ...this.$route.query,
+            modal: Modals.NOTIFICATIONS,
+          },
+        });
+        this.$analytics.trackClick('general', `Notifications`);
+      },
     },
     $trs: {
       title: 'Kolibri Studio',

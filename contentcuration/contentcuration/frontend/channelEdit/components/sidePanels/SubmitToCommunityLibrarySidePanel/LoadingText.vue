@@ -6,12 +6,11 @@
       class="loader-wrapper"
     >
       <KCircularLoader :size="16" />
-      {{ $tr('checking') }}
     </div>
     <div v-else-if="finishedLoading">
       <slot></slot>
     </div>
-    <div v-else>{{ $tr('error') }}</div>
+    <div v-else>{{ communityChannelsStrings.$tr('loadError') }}</div>
   </div>
   <div v-else><KEmptyPlaceholder /></div>
 
@@ -19,6 +18,8 @@
 
 
 <script setup>
+
+  import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 
   defineProps({
     loading: {
@@ -35,18 +36,6 @@
       default: false,
     },
   });
-
-</script>
-
-
-<script>
-
-  export default {
-    $trs: {
-      checking: 'Checking...',
-      error: 'Error loading data.',
-    },
-  };
 
 </script>
 

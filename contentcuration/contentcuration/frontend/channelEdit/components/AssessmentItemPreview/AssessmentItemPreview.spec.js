@@ -89,4 +89,17 @@ describe('AssessmentItemPreview', () => {
       expect(editors.at(5).props('value')).toBe('Hint 2');
     });
   });
+
+  describe('showTypeLabel property', () => {
+    it('should render type label by default', () => {
+      expect(wrapper.find('[data-test="type-label"]').exists()).toBe(true);
+    });
+
+    it('should hide type label when showTypeLabel is false', async () => {
+      await wrapper.setProps({
+        showTypeLabel: false,
+      });
+      expect(wrapper.find('[data-test="type-label"]').exists()).toBe(false);
+    });
+  });
 });

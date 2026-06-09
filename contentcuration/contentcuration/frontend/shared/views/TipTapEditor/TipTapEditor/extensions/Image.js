@@ -18,6 +18,19 @@ export const Image = Node.create({
       alt: { default: null },
       width: { default: null },
       height: { default: null },
+      textAlign: {
+        default: 'left',
+        parseHTML: element => {
+          const align = element.style.textAlign || element.getAttribute('data-text-align');
+          return align || 'left';
+        },
+        renderHTML: attributes => {
+          if (!attributes.textAlign || attributes.textAlign === 'left') {
+            return {};
+          }
+          return { 'data-text-align': attributes.textAlign };
+        },
+      },
     };
   },
 

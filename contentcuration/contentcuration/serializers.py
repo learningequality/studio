@@ -1,6 +1,7 @@
 import json
 from collections import OrderedDict
 
+from le_utils.constants import library as library_constants
 from rest_framework import serializers
 
 from contentcuration.models import Channel
@@ -22,6 +23,22 @@ serializers.ListSerializer.__repr__ = no_field_eval_repr
 serializers.ModelSerializer.__repr__ = no_field_eval_repr
 
 
+def get_thumbnail_encoding(channel):
+    """
+    Historically, we did not set channel.icon_encoding in the Studio database. We
+    only set it in the exported Kolibri sqlite db. So when Kolibri asks for the channel
+    information, fall back to the channel thumbnail data if icon_encoding is not set.
+    """
+    if channel.icon_encoding:
+        return channel.icon_encoding
+    if channel.thumbnail_encoding:
+        base64 = channel.thumbnail_encoding.get("base64")
+        if base64:
+            return base64
+
+    return None
+
+
 class PublicChannelSerializer(serializers.ModelSerializer):
     """
     Called by the public API, primarily used by Kolibri. Contains information more specific to Kolibri's needs.
@@ -31,6 +48,7 @@ class PublicChannelSerializer(serializers.ModelSerializer):
     matching_tokens = serializers.SerializerMethodField("match_tokens")
     icon_encoding = serializers.SerializerMethodField("get_thumbnail_encoding")
     version_notes = serializers.SerializerMethodField("sort_published_data")
+    library = serializers.SerializerMethodField()
 
     def match_tokens(self, channel):
         tokens = json.loads(channel.tokens) if hasattr(channel, "tokens") else []
@@ -41,19 +59,7 @@ class PublicChannelSerializer(serializers.ModelSerializer):
         )
 
     def get_thumbnail_encoding(self, channel):
-        """
-        Historically, we did not set channel.icon_encoding in the Studio database. We
-        only set it in the exported Kolibri sqlite db. So when Kolibri asks for the channel
-        information, fall back to the channel thumbnail data if icon_encoding is not set.
-        """
-        if channel.icon_encoding:
-            return channel.icon_encoding
-        if channel.thumbnail_encoding:
-            base64 = channel.thumbnail_encoding.get("base64")
-            if base64:
-                return base64
-
-        return None
+        return get_thumbnail_encoding(channel)
 
     def generate_kind_count(self, channel):
         return channel.published_kind_count and json.loads(channel.published_kind_count)
@@ -61,6 +67,9 @@ class PublicChannelSerializer(serializers.ModelSerializer):
     def sort_published_data(self, channel):
         data = {int(k): v["version_notes"] for k, v in channel.published_data.items()}
         return OrderedDict(sorted(data.items()))
+
+    def get_library(self, channel):
+        return library_constants.KOLIBRI if channel.public else None
 
     class Meta:
         model = Channel
@@ -79,6 +88,7 @@ class PublicChannelSerializer(serializers.ModelSerializer):
             "matching_tokens",
             "public",
             "version_notes",
+            "library",
         )
 
 

@@ -101,6 +101,58 @@ def _get_available_channels(base_queryset):
     )
 
 
+def _get_available_channel_languages(base_queryset):
+    from contentcuration.models import Language
+
+    return list(
+        Language.objects.filter(public_channels__in=base_queryset)
+        .values("id", lang_name=F("native_name"))
+        .distinct()
+    )
+
+
+def _get_available_countries(base_queryset):
+    from contentcuration.models import Country
+
+    return list(
+        Country.objects.filter(public_channels__in=base_queryset)
+        .values("code", "name")
+        .distinct()
+    )
+
+
+def get_channel_available_metadata_labels(base_queryset):
+    from kolibri_public.models import ChannelMetadata
+
+    content_cache_key = str(
+        ChannelMetadata.objects.all().aggregate(updated=Max("last_updated"))["updated"]
+    )
+    cache_key = "channel-labels:{}:{}".format(
+        content_cache_key,
+        hashlib.md5(str(base_queryset.query).encode("utf8")).hexdigest(),
+    )
+    if cache_key not in cache:
+        base_queryset = base_queryset.order_by()
+        aggregates = {}
+        for field in channelmetadata_bitmask_fieldnames:
+            field_agg = field + "_agg"
+            aggregates[field_agg] = BitOr(field)
+        output = {}
+        if aggregates:
+            agg = base_queryset.aggregate(**aggregates)
+            for field, values in channelmetadata_bitmask_fieldnames.items():
+                bit_value = agg[field + "_agg"]
+                for value in values:
+                    if value["field_name"] not in output:
+                        output[value["field_name"]] = []
+                    if bit_value is not None and bit_value & value["bits"]:
+                        output[value["field_name"]].append(value["label"])
+        output["languages"] = _get_available_channel_languages(base_queryset)
+        output["countries"] = _get_available_countries(base_queryset)
+        cache.set(cache_key, output, timeout=None)
+    return cache.get(cache_key)
+
+
 # Remove the SQLite Bitwise OR definition as not needed.
 
 

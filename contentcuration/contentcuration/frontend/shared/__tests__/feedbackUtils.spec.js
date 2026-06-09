@@ -104,7 +104,7 @@ describe('FeedBackUtility Tests', () => {
 
     it('should throw an error when endpoint is not defined', () => {
       flagFeedbackEvent.endpoint = undefined;
-      expect(() => flagFeedbackEvent.getUrl()).toThrowError(
+      expect(() => flagFeedbackEvent.getUrl()).toThrow(
         'Resource is not defined for the FeedBack Object.',
       );
     });
@@ -130,7 +130,7 @@ describe('FeedBackUtility Tests', () => {
 
     it.skip('should handle errors when sending a request using sendRequest function', async () => {
       client.post.mockRejectedValue(new Error('Mocked API Error'));
-      await expect(sendRequest(flagFeedbackEvent)).rejects.toThrowError('Mocked API Error');
+      await expect(sendRequest(flagFeedbackEvent)).rejects.toThrow('Mocked API Error');
       expect(client.post).toHaveBeenCalledWith(
         flagFeedbackEvent.getUrl(),
         flagFeedbackEvent.getData(),
@@ -160,7 +160,7 @@ describe('FeedBackUtility Tests', () => {
 
     it('should throw an error when endpoint is not defined', () => {
       recommendationsEvent.endpoint = undefined;
-      expect(() => recommendationsEvent.getUrl()).toThrowError(
+      expect(() => recommendationsEvent.getUrl()).toThrow(
         'Resource is not defined for the FeedBack Object.',
       );
     });
@@ -219,7 +219,7 @@ describe('FeedBackUtility Tests', () => {
         recommendationsEvent = setupRecommendationsEvent({
           method: 'post',
         });
-        await expect(sendRequest(recommendationsEvent)).rejects.toThrowError('Mocked API Error');
+        await expect(sendRequest(recommendationsEvent)).rejects.toThrow('Mocked API Error');
         expect(client.post).toHaveBeenCalledWith(
           recommendationsEvent.getUrl(),
           recommendationsEvent.getData(),
@@ -232,7 +232,7 @@ describe('FeedBackUtility Tests', () => {
           method: 'put',
           eventId: uuidv4(),
         });
-        await expect(sendRequest(recommendationsEvent)).rejects.toThrowError('Mocked API Error');
+        await expect(sendRequest(recommendationsEvent)).rejects.toThrow('Mocked API Error');
         expect(client.put).toHaveBeenCalledWith(
           recommendationsEvent.getUrl(),
           recommendationsEvent.getData(),
@@ -245,7 +245,7 @@ describe('FeedBackUtility Tests', () => {
           method: 'patch',
           eventId: uuidv4(),
         });
-        await expect(sendRequest(recommendationsEvent)).rejects.toThrowError('Mocked API Error');
+        await expect(sendRequest(recommendationsEvent)).rejects.toThrow('Mocked API Error');
         expect(client.patch).toHaveBeenCalledWith(
           recommendationsEvent.getUrl(),
           recommendationsEvent.getData(),
@@ -257,7 +257,7 @@ describe('FeedBackUtility Tests', () => {
           method: 'delete',
           eventId: uuidv4(),
         });
-        await expect(sendRequest(recommendationsEvent)).rejects.toThrowError(
+        await expect(sendRequest(recommendationsEvent)).rejects.toThrow(
           'Unsupported HTTP method: delete',
         );
       });
@@ -267,7 +267,7 @@ describe('FeedBackUtility Tests', () => {
           method: 'get',
           eventId: uuidv4(),
         });
-        await expect(sendRequest(recommendationsEvent)).rejects.toThrowError(
+        await expect(sendRequest(recommendationsEvent)).rejects.toThrow(
           'Unsupported HTTP method: get',
         );
       });
@@ -295,7 +295,7 @@ describe('FeedBackUtility Tests', () => {
           dataOverride: null,
           override: true,
         }),
-      ).toThrowError('The data property cannot be null or undefined');
+      ).toThrow('The data property cannot be null or undefined');
     });
 
     it('should throw an error when data is an array but method is not a POST', () => {
@@ -307,7 +307,7 @@ describe('FeedBackUtility Tests', () => {
           override: true,
           eventId: uuidv4(),
         }),
-      ).toThrowError("Array 'data' is only allowed for 'post' requests");
+      ).toThrow("Array 'data' is only allowed for 'post' requests");
     });
 
     it('should throw an error when data is an empty array and method is a POST', () => {
@@ -318,7 +318,7 @@ describe('FeedBackUtility Tests', () => {
           dataOverride: [],
           override: true,
         }),
-      ).toThrowError("The 'data' array cannot be empty");
+      ).toThrow("The 'data' array cannot be empty");
     });
 
     it('should throw an error when data is any of any type other than array or object', () => {
@@ -329,7 +329,7 @@ describe('FeedBackUtility Tests', () => {
           dataOverride: 'invalid data type',
           override: true,
         }),
-      ).toThrowError("The 'data' must be either a non-null object or an array of objects");
+      ).toThrow("The 'data' must be either a non-null object or an array of objects");
     });
 
     it('should throw an error when submitted data has missing fields', () => {
@@ -340,7 +340,7 @@ describe('FeedBackUtility Tests', () => {
           dataOverride: {},
           override: true,
         }),
-      ).toThrowError(/The 'data' object is missing required property: \w+/);
+      ).toThrow(/The 'data' object is missing required property: \w+/);
     });
 
     it('should throw an error when submitted data array has invalid data', () => {
@@ -351,7 +351,7 @@ describe('FeedBackUtility Tests', () => {
           dataOverride: [null],
           override: true,
         }),
-      ).toThrowError(/Item at position \w+ in 'data' is not a valid object/);
+      ).toThrow(/Item at position \w+ in 'data' is not a valid object/);
     });
 
     it('should throw an error when submitted data array has valid data but with missing fields', () => {
@@ -362,12 +362,12 @@ describe('FeedBackUtility Tests', () => {
           dataOverride: [{}],
           override: true,
         }),
-      ).toThrowError(/Missing required property in 'data': \w+ at position: \w+/);
+      ).toThrow(/Missing required property in 'data': \w+ at position: \w+/);
     });
 
     it('should throw an error when endpoint is not defined', () => {
       recommendationsInteractionEvent.endpoint = undefined;
-      expect(() => recommendationsInteractionEvent.getUrl()).toThrowError(
+      expect(() => recommendationsInteractionEvent.getUrl()).toThrow(
         'Resource is not defined for the FeedBack Object.',
       );
     });
@@ -440,7 +440,7 @@ describe('FeedBackUtility Tests', () => {
         recommendationsInteractionEvent = setupRecommendationsInteractionEvent({
           method: 'post',
         });
-        await expect(sendRequest(recommendationsInteractionEvent)).rejects.toThrowError(
+        await expect(sendRequest(recommendationsInteractionEvent)).rejects.toThrow(
           'Mocked API Error',
         );
         expect(client.post).toHaveBeenCalledWith(
@@ -455,7 +455,7 @@ describe('FeedBackUtility Tests', () => {
           method: 'put',
           eventId: uuidv4(),
         });
-        await expect(sendRequest(recommendationsInteractionEvent)).rejects.toThrowError(
+        await expect(sendRequest(recommendationsInteractionEvent)).rejects.toThrow(
           'Mocked API Error',
         );
         expect(client.put).toHaveBeenCalledWith(
@@ -470,7 +470,7 @@ describe('FeedBackUtility Tests', () => {
           method: 'patch',
           eventId: uuidv4(),
         });
-        await expect(sendRequest(recommendationsInteractionEvent)).rejects.toThrowError(
+        await expect(sendRequest(recommendationsInteractionEvent)).rejects.toThrow(
           'Mocked API Error',
         );
         expect(client.patch).toHaveBeenCalledWith(
@@ -483,7 +483,7 @@ describe('FeedBackUtility Tests', () => {
         recommendationsInteractionEvent = setupRecommendationsInteractionEvent({
           method: 'delete',
         });
-        await expect(sendRequest(recommendationsInteractionEvent)).rejects.toThrowError(
+        await expect(sendRequest(recommendationsInteractionEvent)).rejects.toThrow(
           'Unsupported HTTP method: delete',
         );
       });
@@ -493,7 +493,7 @@ describe('FeedBackUtility Tests', () => {
           method: 'get',
           id: uuidv4(),
         });
-        await expect(sendRequest(recommendationsInteractionEvent)).rejects.toThrowError(
+        await expect(sendRequest(recommendationsInteractionEvent)).rejects.toThrow(
           'Unsupported HTTP method: get',
         );
       });

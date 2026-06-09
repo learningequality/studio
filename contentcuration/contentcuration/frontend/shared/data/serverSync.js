@@ -175,7 +175,12 @@ function handleMaxRevs(response, userId) {
     maxRevs[`${MAX_REV_KEY}.${channelId}`] = channelChanges[0].server_rev;
     const lastChannelEditIndex = findLastIndex(
       channelChanges,
-      c => !c.errors && !c.user_id && c.created_by_id && c.type !== CHANGE_TYPES.PUBLISHED,
+      c =>
+        !c.errors &&
+        !c.user_id &&
+        c.created_by_id &&
+        c.type !== CHANGE_TYPES.PUBLISHED &&
+        !c.unpublishable,
     );
     const lastPublishIndex = findLastIndex(
       channelChanges,

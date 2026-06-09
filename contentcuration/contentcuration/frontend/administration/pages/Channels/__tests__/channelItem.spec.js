@@ -1,6 +1,5 @@
 import { mount } from '@vue/test-utils';
 import CommunityLibraryStatusButton from '../../../components/CommunityLibraryStatusButton.vue';
-import ReviewSubmissionSidePanel from '../../../components/sidePanels/ReviewSubmissionSidePanel';
 import router from '../../../router';
 import { factory } from '../../../store';
 import { RouteNames } from '../../../constants';
@@ -185,10 +184,11 @@ describe('channelItem', () => {
     const statusCell = wrapper.find('[data-test="community-library-status"]');
     const statusButton = statusCell.findComponent(CommunityLibraryStatusButton);
 
-    expect(wrapper.findComponent(ReviewSubmissionSidePanel).exists()).toBe(false);
-
     await statusButton.trigger('click');
+    await wrapper.vm.$nextTick();
 
-    expect(wrapper.findComponent(ReviewSubmissionSidePanel).exists()).toBe(true);
+    // assert that page is redirected to PageNames.COMMUNITY_LIBRARY_SUBMISSION
+    expect(wrapper.vm.$route.name).toEqual(RouteNames.COMMUNITY_LIBRARY_SUBMISSION);
+    expect(wrapper.vm.$route.params.submissionId).toEqual(submissionId);
   });
 });

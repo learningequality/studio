@@ -53,11 +53,14 @@ def sync_node(
     sync_assessment_items=False,
 ):
     original_node = node.get_original_node()
+    if not original_node.complete:
+        logging.warning(
+            f"Refusing to sync node {node.pk} from incomplete source node: {original_node.pk}"
+        )
+        return node
     if original_node.node_id != node.node_id:  # Only update if node is not original
         logging.info(
-            "----- Syncing: {} from {}".format(
-                node.title, original_node.get_channel().name
-            )
+            f"----- Syncing: {node.title} from {original_node.get_channel().name}"
         )
         if sync_titles_and_descriptions:
             fields = [

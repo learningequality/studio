@@ -11,6 +11,15 @@
         :text="`Email ${$formatNumber(count)} ${count === 1 ? 'user' : 'users'}`"
         @click="showMassEmailDialog = true"
       />
+      <IconButton
+        icon="download"
+        class="ma-0"
+        :color="$themeTokens.primary"
+        text="Download CSV"
+        data-test="csv"
+        :disabled="!count"
+        @click="onDownloadCSV"
+      />
     </h1>
     <EmailUsersDialog
       v-model="showMassEmailDialog"
@@ -31,7 +40,7 @@
       >
         <VSelect
           v-model="userTypeFilter"
-          :items="userTypeFilters"
+          :items="userTypeOptions"
           item-text="label"
           item-value="key"
           label="User Type"
@@ -69,6 +78,65 @@
           persistent-hint
           @input="setKeywords"
           @click:clear="clearSearch"
+        />
+      </VFlex>
+    </VLayout>
+    <VLayout
+      wrap
+      class="mb-2"
+    >
+      <VFlex
+        xs12
+        sm6
+        md3
+        class="px-3"
+      >
+        <VSelect
+          v-model="joinedWithinFilter"
+          :items="joinedWithinOptions"
+          item-text="label"
+          item-value="value"
+          label="Joined within"
+          box
+          :menu-props="{ offsetY: true }"
+        />
+      </VFlex>
+      <VFlex
+        xs12
+        sm6
+        md3
+        class="px-3"
+      >
+        <VSelect
+          v-model="activeWithinFilter"
+          :items="activeWithinOptions"
+          item-text="label"
+          item-value="value"
+          label="Active within"
+          box
+          :menu-props="{ offsetY: true }"
+        />
+      </VFlex>
+      <VFlex
+        xs12
+        sm6
+        md3
+        class="align-center d-flex px-3"
+      >
+        <Checkbox
+          v-model="hasPublishedFilter"
+          label="Has published a channel"
+        />
+      </VFlex>
+      <VFlex
+        xs12
+        sm6
+        md3
+        class="align-center d-flex px-3"
+      >
+        <Checkbox
+          v-model="hasEditsFilter"
+          label="Has Studio edits"
         />
       </VFlex>
     </VLayout>
@@ -123,6 +191,7 @@
         <UserItem
           v-model="selected"
           :userId="item"
+          @deleted="loadItems"
         />
       </template>
     </VDataTable>
@@ -140,12 +209,14 @@
   import { ref, onMounted, computed, getCurrentInstance } from 'vue';
   import { mapGetters } from 'vuex';
   import transform from 'lodash/transform';
+  import { saveAs } from 'file-saver';
   import { useTable } from '../../composables/useTable';
-  import { useKeywordSearch } from '../../composables/useKeywordSearch';
-  import { useFilter } from '../../composables/useFilter';
   import { RouteNames, rowsPerPageItems } from '../../constants';
   import EmailUsersDialog from './EmailUsersDialog';
   import UserItem from './UserItem';
+  import client from 'shared/client';
+  import { useFilter } from 'shared/composables/useFilter';
+  import { useKeywordSearch } from 'shared/composables/useKeywordSearch';
   import { routerMixin } from 'shared/mixins';
   import IconButton from 'shared/views/IconButton';
   import Checkbox from 'shared/views/form/Checkbox';
@@ -158,6 +229,64 @@
     administrator: { label: 'Administrators', params: { is_admin: true } },
     sushichef: { label: 'Sushi chef', params: { chef: true } },
   };
+
+  const DATE_WINDOWS = [
+    { key: 'any', label: 'Any time', months: null },
+    { key: '1mo', label: 'Last month', months: 1 },
+    { key: '3mo', label: 'Last 3 months', months: 3 },
+    { key: '6mo', label: 'Last 6 months', months: 6 },
+    { key: '1yr', label: 'Last year', months: 12 },
+  ];
+
+  function buildDateWindowFilterMap(paramName) {
+    const map = {};
+    for (const window of DATE_WINDOWS) {
+      if (window.months === null) {
+        map[window.key] = { label: window.label, params: {} };
+      } else {
+        const cutoff = new Date();
+        cutoff.setMonth(cutoff.getMonth() - window.months);
+        const iso = cutoff.toISOString().slice(0, 10);
+        map[window.key] = { label: window.label, params: { [paramName]: iso } };
+      }
+    }
+    return map;
+  }
+
+  function useDateWindowFilter({ name, paramName }) {
+    const { filter, options, fetchQueryParams } = useFilter({
+      name,
+      filterMap: buildDateWindowFilterMap(paramName),
+      defaultValue: 'any',
+    });
+    const wrapped = computed({
+      get: () => filter.value.value || 'any',
+      set: value => {
+        filter.value = options.value.find(o => o.value === value) || {};
+      },
+    });
+    return { filter: wrapped, options, fetchQueryParams };
+  }
+
+  function useBooleanFilter({ name, label, paramName }) {
+    const filterMap = {
+      no: { label: 'Any', params: {} },
+      yes: { label, params: { [paramName]: true } },
+    };
+    const { filter, options, fetchQueryParams } = useFilter({
+      name,
+      filterMap,
+      defaultValue: 'no',
+    });
+    const wrapped = computed({
+      get: () => filter.value.value === 'yes',
+      set: value => {
+        const targetKey = value ? 'yes' : 'no';
+        filter.value = options.value.find(o => o.value === targetKey) || {};
+      },
+    });
+    return { filter: wrapped, fetchQueryParams };
+  }
 
   export default {
     name: 'UserTable',
@@ -174,12 +303,20 @@
       const store = proxy.$store;
 
       const {
-        filter: userTypeFilter,
-        filters: userTypeFilters,
+        filter: _userTypeFilter,
+        options: userTypeOptions,
         fetchQueryParams: userTypeFetchQueryParams,
       } = useFilter({
         name: 'userType',
         filterMap: userTypeFilterMap,
+      });
+      // Temporal wrapper, must be removed after migrating to KSelect
+      const userTypeFilter = computed({
+        get: () => _userTypeFilter.value.value || undefined,
+        set: value => {
+          _userTypeFilter.value =
+            userTypeOptions.value.find(option => option.value === value) || {};
+        },
       });
 
       const {
@@ -192,10 +329,48 @@
       const locationFilterMap = ref({});
       const locationDropdown = ref(null);
 
-      const { filter: locationFilter, fetchQueryParams: locationFetchQueryParams } = useFilter({
+      const {
+        filter: _locationFilter,
+        options: locationOptions,
+        fetchQueryParams: locationFetchQueryParams,
+      } = useFilter({
         name: 'location',
         filterMap: locationFilterMap,
       });
+      // Temporal wrapper, must be removed after migrating to KSelect
+      const locationFilter = computed({
+        get: () => _locationFilter.value.value || undefined,
+        set: value => {
+          _locationFilter.value =
+            locationOptions.value.find(option => option.value === value) || {};
+        },
+      });
+
+      const {
+        filter: joinedWithinFilter,
+        options: joinedWithinOptions,
+        fetchQueryParams: joinedWithinFetchQueryParams,
+      } = useDateWindowFilter({ name: 'joinedWithin', paramName: 'joined_since' });
+
+      const {
+        filter: activeWithinFilter,
+        options: activeWithinOptions,
+        fetchQueryParams: activeWithinFetchQueryParams,
+      } = useDateWindowFilter({ name: 'activeWithin', paramName: 'active_since' });
+
+      const { filter: hasPublishedFilter, fetchQueryParams: hasPublishedFetchQueryParams } =
+        useBooleanFilter({
+          name: 'hasPublished',
+          label: 'Has published a channel',
+          paramName: 'published_channel',
+        });
+
+      const { filter: hasEditsFilter, fetchQueryParams: hasEditsFetchQueryParams } =
+        useBooleanFilter({
+          name: 'hasEdits',
+          label: 'Has Studio edits',
+          paramName: 'has_edits',
+        });
 
       onMounted(() => {
         // The locationFilterMap is built from the options in the CountryField component,
@@ -219,6 +394,10 @@
           ...userTypeFetchQueryParams.value,
           ...locationFetchQueryParams.value,
           ...keywordSearchFetchQueryParams.value,
+          ...joinedWithinFetchQueryParams.value,
+          ...activeWithinFetchQueryParams.value,
+          ...hasPublishedFetchQueryParams.value,
+          ...hasEditsFetchQueryParams.value,
         };
       });
 
@@ -226,21 +405,28 @@
         return store.dispatch('userAdmin/loadUsers', fetchParams);
       }
 
-      const { pagination, loading } = useTable({
+      const { pagination, loading, loadItems } = useTable({
         fetchFunc: fetchParams => loadUsers(fetchParams),
         filterFetchQueryParams,
       });
 
       return {
         userTypeFilter,
-        userTypeFilters,
+        userTypeOptions,
         locationDropdown,
         locationFilter,
         keywordInput,
         setKeywords,
         clearSearch,
+        joinedWithinFilter,
+        joinedWithinOptions,
+        activeWithinFilter,
+        activeWithinOptions,
+        hasPublishedFilter,
+        hasEditsFilter,
         pagination,
         loading,
+        loadItems,
         filterFetchQueryParams,
       };
     },
@@ -310,6 +496,29 @@
     },
     mounted() {
       this.updateTabTitle('Users - Administration');
+    },
+    methods: {
+      async onDownloadCSV() {
+        this.$store.dispatch('showSnackbarSimple', 'Generating CSV...');
+        try {
+          const response = await client.get(window.Urls.admin_users_download_csv(), {
+            params: this.filterFetchQueryParams,
+            responseType: 'blob',
+          });
+          const filename = `studio_users_${new Date().toISOString().slice(0, 10)}.csv`;
+          saveAs(response.data, filename);
+        } catch (error) {
+          const status = error.response && error.response.status;
+          if (status === 412) {
+            this.$store.dispatch(
+              'showSnackbarSimple',
+              'No filters applied. Pick at least one filter and try again.',
+            );
+          } else {
+            this.$store.dispatch('showSnackbarSimple', 'CSV download failed. Try again.');
+          }
+        }
+      },
     },
   };
 

@@ -1,15 +1,22 @@
 <template>
 
   <div>
-    <VAlert
-      :value="!areAssessmentItemsValid"
-      icon="error"
-      type="error"
-      outline
-      data-test="alert"
+    <VContainer
+      v-show="!areAssessmentItemsValid"
+      fluid
+      class="pb-0"
+      :style="alertStyle"
     >
-      <span class="font-weight-bold red--text">{{ invalidItemsErrorMessage }}</span>
-    </VAlert>
+      <VAlert
+        :value="true"
+        icon="error"
+        type="error"
+        outline
+        data-test="alert"
+      >
+        <span class="font-weight-bold red--text">{{ invalidItemsErrorMessage }}</span>
+      </VAlert>
+    </VContainer>
 
     <AssessmentEditor
       ref="assessmentEditor"
@@ -17,6 +24,7 @@
       :items="assessmentItems"
       :itemsErrors="assessmentItemsErrors"
       :openDialog="openDialog"
+      :windowIsSmall="windowIsSmall"
       @addItem="onAddAssessmentItem"
       @updateItem="onUpdateAssessmentItem"
       @updateItems="onUpdateAssessmentItems"
@@ -41,6 +49,7 @@
 <script>
 
   import { mapGetters, mapActions } from 'vuex';
+  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
 
   import AssessmentEditor from '../AssessmentEditor/AssessmentEditor';
 
@@ -48,6 +57,10 @@
     name: 'AssessmentTab',
     components: {
       AssessmentEditor,
+    },
+    setup() {
+      const { windowIsSmall } = useKResponsiveWindow();
+      return { windowIsSmall };
     },
     props: {
       nodeId: {
@@ -75,6 +88,9 @@
         'getAssessmentItemsAreValid',
         'getInvalidAssessmentItemsCount',
       ]),
+      alertStyle() {
+        return this.windowIsSmall ? {} : { maxWidth: '85%', margin: '0 auto' };
+      },
       assessmentItems() {
         return this.getAssessmentItems(this.nodeId);
       },

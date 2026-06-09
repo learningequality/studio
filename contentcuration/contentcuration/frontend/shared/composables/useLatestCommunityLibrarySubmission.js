@@ -6,7 +6,11 @@ export function useLatestCommunityLibrarySubmission({ channelId, admin = false }
 
   function fetchLatestSubmission() {
     // Submissions are ordered by most recent first in the backend
-    return Resource.fetchCollection({ channel: channelId, max_results: 1 }).then(response => {
+    return Resource.fetchCollection({
+      channel: channelId,
+      max_results: 1,
+      ordering: '-date_created',
+    }).then(response => {
       if (response.results.length > 0) {
         return response.results[0];
       }

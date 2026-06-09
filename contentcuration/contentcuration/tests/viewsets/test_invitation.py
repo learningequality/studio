@@ -446,3 +446,93 @@ class CRUDTestCase(StudioAPITestCase):
             ).exists()
         )
         self.assertTrue(models.Change.objects.filter(channel=self.channel).exists())
+
+    def test_accept_invitation_by_channel_editor_is_forbidden(self):
+        invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("invitation-accept", kwargs={"pk": invitation.id})
+        )
+        self.assertEqual(response.status_code, 403, response.content)
+        invitation.refresh_from_db()
+        self.assertFalse(invitation.accepted)
+
+    def test_decline_invitation_by_channel_editor_is_forbidden(self):
+        invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("invitation-decline", kwargs={"pk": invitation.id})
+        )
+        self.assertEqual(response.status_code, 403, response.content)
+        invitation.refresh_from_db()
+        self.assertFalse(invitation.declined)
+
+    def test_accept_invitation_by_unrelated_user_is_not_found(self):
+        invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
+        unrelated_user = testdata.user("unrelated@example.com")
+
+        self.client.force_authenticate(user=unrelated_user)
+        response = self.client.post(
+            reverse("invitation-accept", kwargs={"pk": invitation.id})
+        )
+        self.assertEqual(response.status_code, 404, response.content)
+        invitation.refresh_from_db()
+        self.assertFalse(invitation.accepted)
+
+    def test_decline_invitation_by_unrelated_user_is_not_found(self):
+        invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
+        unrelated_user = testdata.user("unrelated@example.com")
+
+        self.client.force_authenticate(user=unrelated_user)
+        response = self.client.post(
+            reverse("invitation-decline", kwargs={"pk": invitation.id})
+        )
+        self.assertEqual(response.status_code, 404, response.content)
+        invitation.refresh_from_db()
+        self.assertFalse(invitation.declined)
+
+    def _make_admin(self, email="admin@example.com"):
+        user = testdata.user(email)
+        user.is_admin = True
+        user.save()
+        return user
+
+    def test_accept_invitation_by_admin_succeeds(self):
+        invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
+        admin_user = self._make_admin()
+
+        self.client.force_authenticate(user=admin_user)
+        response = self.client.post(
+            reverse("invitation-accept", kwargs={"pk": invitation.id})
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        invitation.refresh_from_db()
+        self.assertTrue(invitation.accepted)
+
+    def test_decline_invitation_by_admin_succeeds(self):
+        invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
+        admin_user = self._make_admin()
+
+        self.client.force_authenticate(user=admin_user)
+        response = self.client.post(
+            reverse("invitation-decline", kwargs={"pk": invitation.id})
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        invitation.refresh_from_db()
+        self.assertTrue(invitation.declined)
+
+    def test_accept_revoked_invitation_returns_400(self):
+        invitation = models.Invitation.objects.create(**self.invitation_db_metadata)
+        invitation.revoked = True
+        invitation.save()
+
+        self.client.force_authenticate(user=self.invited_user)
+        response = self.client.post(
+            reverse("invitation-accept", kwargs={"pk": invitation.id})
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+        invitation.refresh_from_db()
+        self.assertFalse(invitation.accepted)
+        self.assertFalse(self.channel.editors.filter(pk=self.invited_user.id).exists())

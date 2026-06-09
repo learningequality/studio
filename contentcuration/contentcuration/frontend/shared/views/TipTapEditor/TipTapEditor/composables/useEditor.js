@@ -3,20 +3,23 @@ import { Editor } from '@tiptap/vue-2';
 import StarterKitExtension from '@tiptap/starter-kit';
 import { Superscript } from '@tiptap/extension-superscript';
 import { Subscript } from '@tiptap/extension-subscript';
+import { TextAlign } from '@tiptap/extension-text-align';
 import { Small } from '../extensions/SmallTextExtension';
 import { Image } from '../extensions/Image';
 import { CodeBlockSyntaxHighlight } from '../extensions/CodeBlockSyntaxHighlight';
 import { CustomLink } from '../extensions/Link';
 import { Math } from '../extensions/Math';
 import { createCustomMarkdownSerializer } from '../utils/markdownSerializer';
+import { transformPastedHTML } from '../utils/pasteTransform';
 
 export function useEditor() {
   const editor = ref(null);
   const isReady = ref(false);
   const isFocused = ref(false);
 
-  const initializeEditor = (content, mode = 'edit') => {
+  const initializeEditor = (content, mode = 'edit', { autofocus = false } = {}) => {
     editor.value = new Editor({
+      autofocus,
       editable: mode === 'edit',
       extensions: [
         StarterKitExtension.configure({
@@ -30,6 +33,9 @@ export function useEditor() {
         Image,
         CustomLink, // Use our custom Link extension
         Math,
+        TextAlign.configure({
+          types: ['heading', 'paragraph', 'image', 'small'],
+        }),
       ],
       content: content || '<p></p>',
       editorProps: {
@@ -37,6 +43,7 @@ export function useEditor() {
           class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none',
           dir: 'auto',
         },
+        transformPastedHTML: html => transformPastedHTML(html),
       },
       onCreate: () => {
         isReady.value = true;

@@ -1,9 +1,9 @@
 import { queueChange, debouncedSyncChanges } from '../serverSync';
 import { CreatedChange } from '../changes';
 import db from '../db';
-import { Session, Task } from 'shared/data/resources';
+import { Channel, Session, Task } from 'shared/data/resources';
 import client from 'shared/client';
-import { CHANGES_TABLE, CURRENT_USER, TABLE_NAMES } from 'shared/data/constants';
+import { CHANGE_TYPES, CHANGES_TABLE, CURRENT_USER, TABLE_NAMES } from 'shared/data/constants';
 import { mockChannelScope, resetMockChannelScope } from 'shared/utils/testing';
 
 async function makeChange(key, server_rev) {
@@ -224,5 +224,38 @@ describe('ServerSync tests', () => {
       const dbTask = await Task.get(task.task_id);
       expect(dbTask.status).toEqual(task.status);
     }
+  });
+
+  it('should not set unpublished_changes when response contains only unpublishable changes', async () => {
+    const channelId = 'test-channel-unpublishable';
+    await Channel.table.put({ id: channelId });
+
+    client.post.mockResolvedValue({
+      data: {
+        disallowed: [],
+        allowed: [],
+        returned: [],
+        errors: [],
+        successes: [
+          {
+            channel_id: channelId,
+            server_rev: 100,
+            created_by_id: 'some-user-id',
+            type: CHANGE_TYPES.UPDATED,
+            unpublishable: true,
+          },
+        ],
+        maxRevs: [],
+        tasks: [],
+      },
+    });
+
+    await debouncedSyncChanges();
+
+    const channel = await Channel.table.get(channelId);
+    expect(channel.unpublished_changes).not.toBe(true);
+
+    // Manual clean up
+    await Channel.table.delete(channelId);
   });
 });

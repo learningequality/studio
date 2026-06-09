@@ -1,4 +1,5 @@
 import json
+import logging
 from functools import partial
 from functools import reduce
 
@@ -80,6 +81,8 @@ from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.utils import generate_update_event
 from contentcuration.viewsets.sync.utils import log_sync_exception
+
+logger = logging.getLogger(__name__)
 
 channel_query = Channel.objects.filter(main_tree__tree_id=OuterRef("tree_id"))
 
@@ -477,7 +480,7 @@ class ContentNodeSerializer(BulkModelSerializer):
                     completion_criteria, kind
                 )
         except DjangoValidationError as e:
-            raise ValidationError(e)
+            raise ValidationError("Invalid completion criteria") from e
 
     def _ensure_complete(self, instance):
         """
@@ -713,9 +716,10 @@ class PrerequisitesUpdateHandler(ValuesViewset):
         # In Django 2.2 add ignore_conflicts to make this fool proof
         try:
             self._execute_changes(change_type, data)
-        except IntegrityError as e:
+        except IntegrityError:
+            logger.exception("_handle_relationship_changes IntegrityError")
             for change in valid_changes:
-                change.update({"errors": str(e)})
+                change.update({"errors": ["Relationship already exists"]})
                 errors.append(change)
 
         return errors or None
@@ -1067,8 +1071,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
         try:
             contentnode = self.get_edit_queryset().get(pk=pk)
         except ContentNode.DoesNotExist:
-            error = ValidationError("Specified node does not exist")
-            return str(error)
+            return "Specified node does not exist"
 
         try:
             target, position = self.validate_targeting_args(target, position)
@@ -1079,8 +1082,9 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
             )
 
             return None
-        except ValidationError as e:
-            return str(e)
+        except ValidationError:
+            logger.exception("move validation error for pk=%s", pk)
+            return "Validation error"
 
     def copy_from_changes(self, changes):
         errors = []
@@ -1091,7 +1095,7 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
                 self.copy(copy["key"], **copy)
             except Exception as e:
                 log_sync_exception(e, user=self.request.user, change=copy)
-                copy["errors"] = [str(e)]
+                copy["errors"] = ["Internal server error"]
                 errors.append(copy)
                 failed_copy_node = self.get_queryset().filter(pk=copy["key"]).first()
                 if failed_copy_node is not None:
@@ -1196,6 +1200,6 @@ class ContentNodeViewSet(BulkUpdateMixin, ValuesViewset):
                 errors += change_errors
             except Exception as e:
                 log_sync_exception(e, user=self.request.user, change=change)
-                change["errors"] = [str(e)]
+                change["errors"] = ["Internal server error"]
                 errors.append(change)
         return errors

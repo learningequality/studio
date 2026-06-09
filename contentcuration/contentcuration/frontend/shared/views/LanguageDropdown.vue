@@ -113,6 +113,13 @@
     },
     methods: {
       languageText(item) {
+        // VAutocomplete eagerly evaluates getText(internalValue) as a fallback arg to
+        // getValue, even when that fallback isn't needed. In multiple mode, internalValue
+        // is an Array, so languageText receives the array directly. Return early to avoid
+        // calling .split() on undefined.
+        if (Array.isArray(item)) {
+          return '';
+        }
         const firstNativeName = item.native_name.split(',')[0].trim();
         return this.$tr('languageItemText', { language: firstNativeName, code: item.id });
       },

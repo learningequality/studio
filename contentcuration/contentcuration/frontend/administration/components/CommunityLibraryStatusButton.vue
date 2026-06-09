@@ -48,8 +48,8 @@
           icon: 'circleCheckmark',
         },
         [CommunityLibraryStatus.REJECTED]: {
-          text: 'Flagged',
-          tooltip: 'Review flagged submission',
+          text: 'Needs changes',
+          tooltip: 'Submission requires changes before approval',
           color: theme.red.v_100,
           darkColor: theme.red.v_200,
           labelColor: theme.red.v_600,

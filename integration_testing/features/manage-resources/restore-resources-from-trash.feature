@@ -2,7 +2,7 @@ Feature: Restore resources from trash
 
 	Background:
 		Given I am signed in to Studio
-			And I am at the channel editing page
+			And I am at the channel editor page
 			And I have already removed some resources
 			And I have opened the trash page
 

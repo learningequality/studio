@@ -41,6 +41,8 @@ from django.db.models import UUIDField as DjangoUUIDField
 from django.db.models import Value
 from django.db.models.expressions import ExpressionList
 from django.db.models.expressions import RawSQL
+from django.db.models.functions import Coalesce
+from django.db.models.functions import Greatest
 from django.db.models.functions import Lower
 from django.db.models.indexes import IndexExpression
 from django.db.models.query_utils import DeferredAttribute
@@ -49,6 +51,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django_cte import CTEManager
+from django_cte import CTEQuerySet
 from django_cte import With
 from le_utils import proquint
 from le_utils.constants import content_kinds
@@ -57,6 +60,7 @@ from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from le_utils.constants import languages
 from le_utils.constants import licenses
+from le_utils.constants import modalities
 from le_utils.constants import roles
 from le_utils.constants.labels import subjects
 from model_utils import FieldTracker
@@ -86,6 +90,8 @@ from contentcuration.viewsets.sync.constants import ALL_CHANGES
 from contentcuration.viewsets.sync.constants import ALL_TABLES
 from contentcuration.viewsets.sync.constants import PUBLISHABLE_CHANGE_TABLES
 from contentcuration.viewsets.sync.constants import PUBLISHED
+from contentcuration.viewsets.sync.constants import SESSION
+from contentcuration.viewsets.sync.utils import generate_update_event
 
 EDIT_ACCESS = "edit"
 VIEW_ACCESS = "view"
@@ -233,6 +239,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     feature_flags = JSONField(default=dict, null=True)
 
     deleted = models.BooleanField(default=False, db_index=True)
+
+    newest_notification_date = models.DateTimeField(null=True, blank=True)
+    last_read_notification_date = models.DateTimeField(null=True, blank=True)
 
     _field_updates = FieldTracker(
         fields=[
@@ -540,6 +549,17 @@ class User(AbstractBaseUser, PermissionsMixin):
             kind_dict[item["preset__kind_id"]] = item["space"]
         return kind_dict
 
+    def get_effective_disk_space(self):
+        """
+        Returns total disk space including any active subscription bonus.
+        Subscription space is additive to preserve admin-granted quotas.
+        """
+        base = self.disk_space
+        subscription = getattr(self, "subscription", None)
+        if subscription and subscription.is_active:
+            return base + subscription.subscription_disk_space
+        return base
+
     def email_user(self, subject, message, from_email=None, **kwargs):
         try:
             # msg = EmailMultiAlternatives(subject, message, from_email, [self.email])
@@ -606,6 +626,14 @@ class User(AbstractBaseUser, PermissionsMixin):
             .order_by("-server_rev")
             .first()
         ) or 0
+
+    def mark_notifications_read(self, timestamp):
+        # Greatest between last read and timestamp
+        self.last_read_notification_date = Greatest(
+            Coalesce(F("last_read_notification_date"), Value(timestamp)),
+            Value(timestamp),
+        )
+        self.save(update_fields=["last_read_notification_date"])
 
     class Meta:
         verbose_name = "User"
@@ -676,6 +704,64 @@ class User(AbstractBaseUser, PermissionsMixin):
         if deleted is not None:
             user_qs = user_qs.filter(deleted=deleted)
         return user_qs.filter(**filters).order_by("-is_active", "-id").first()
+
+    @classmethod
+    def notify_users(cls, users_queryset, date):
+        users_queryset.update(
+            newest_notification_date=Greatest(
+                Coalesce(F("newest_notification_date"), Value(date)), Value(date)
+            )
+        )
+        # refresh to get the latest newest_notification_date values after the update
+        refreshed_qs = cls.objects.filter(
+            pk__in=users_queryset.values_list("pk", flat=True)
+        )
+
+        Change.create_changes(
+            [
+                generate_update_event(
+                    "CURRENT_USER",
+                    SESSION,
+                    {"newest_notification_date": user.newest_notification_date},
+                    user_id=user.pk,
+                )
+                for user in refreshed_qs
+            ],
+            applied=True,
+        )
+
+
+class UserSubscription(models.Model):
+    """
+    Tracks Stripe subscription data for a user.
+    Kept separate from User model for clean separation of payment concerns.
+    """
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="subscription",
+    )
+    stripe_customer_id = models.CharField(max_length=255, blank=True, db_index=True)
+    stripe_subscription_id = models.CharField(max_length=255, blank=True, db_index=True)
+    stripe_subscription_status = models.CharField(max_length=50, blank=True)
+    subscription_disk_space = models.BigIntegerField(
+        default=0, help_text="Additional bytes granted by subscription"
+    )
+    cancel_at_period_end = models.BooleanField(default=False)
+    current_period_end = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "contentcuration_usersubscription"
+
+    @property
+    def is_active(self):
+        return self.stripe_subscription_status in ("active", "trialing")
+
+    def __str__(self):
+        return f"Subscription for {self.user.email}: {self.stripe_subscription_status}"
 
 
 class UUIDField(models.CharField):
@@ -935,7 +1021,7 @@ class PermissionCTE(With):
         return Exists(self.queryset().filter(*filters).values("user_id"))
 
 
-class ChannelModelQuerySet(models.QuerySet):
+class ChannelModelQuerySet(CTEQuerySet):
     def create(self, **kwargs):
         """
         Create a new object with the given kwargs, saving it to the database
@@ -959,6 +1045,12 @@ class ChannelModelQuerySet(models.QuerySet):
     def update_or_create(self, defaults=None, **kwargs):
         self._actor_id = kwargs.pop("actor_id", None)
         return super().update_or_create(defaults, **kwargs)
+
+
+class ChannelModelManager(models.Manager.from_queryset(ChannelModelQuerySet)):
+    """Custom Channel models manager with CTE support"""
+
+    pass
 
 
 class Channel(models.Model):
@@ -1099,7 +1191,7 @@ class Channel(models.Model):
         ]
     )
 
-    objects = ChannelModelQuerySet.as_manager()
+    objects = ChannelModelManager()
 
     @classmethod
     def get_editable(cls, user, channel_id):
@@ -1348,6 +1440,12 @@ class Channel(models.Model):
     def get_human_token(self):
         return self.secret_tokens.get(is_primary=True)
 
+    def get_draft_token(self):
+        draft_version = self.channel_versions.filter(version=None).first()
+        if not draft_version:
+            return None
+        return draft_version.secret_token
+
     def get_channel_id_token(self):
         return self.secret_tokens.get(token=self.id)
 
@@ -1520,7 +1618,7 @@ class ChannelVersion(models.Model):
         SecretToken, on_delete=models.SET_NULL, null=True, blank=True
     )
     version_notes = models.TextField(null=True, blank=True)
-    size = models.PositiveIntegerField(null=True, blank=True)
+    size = models.FloatField(default=0)
     date_published = models.DateTimeField(null=True, blank=True)
     resource_count = models.PositiveIntegerField(null=True, blank=True)
     kind_count = ArrayField(
@@ -1553,14 +1651,40 @@ class ChannelVersion(models.Model):
         blank=True,
     )
 
+    # Snapshot of the channel info at the time of creation.
+    channel_name = models.CharField(max_length=200, blank=True, null=True)
+    channel_description = models.CharField(max_length=400, blank=True, null=True)
+    channel_tagline = models.CharField(max_length=150, blank=True, null=True)
+    channel_thumbnail_encoding = JSONField(default=dict, blank=True)
+    channel_language = models.ForeignKey(
+        "Language",
+        null=True,
+        blank=True,
+        related_name="+",
+        on_delete=models.SET_NULL,
+    )
+
     class Meta:
         unique_together = ("channel", "version")
 
     def save(self, *args, **kwargs):
         if self.version is not None and self.version > self.channel.version:
             raise ValidationError("Version cannot be greater than channel version")
+
+        if self.version is None or (
+            self._state.adding and self.version == self.channel.version
+        ):
+            # Snapshot channel info when creating a versioned ChannelVersion for the
+            # current channel version, or on every save for draft (version=None) rows
+            # so that repeated draft publishes always reflect the latest channel state.
+            self.channel_name = self.channel.name
+            self.channel_description = self.channel.description
+            self.channel_tagline = self.channel.tagline
+            self.channel_thumbnail_encoding = self.channel.thumbnail_encoding
+            self.channel_language = self.channel.language
+
         self.full_clean()
-        super(ChannelVersion, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     def new_token(self):
         if not self.secret_token:
@@ -2545,22 +2669,23 @@ class ContentNode(MPTTModel, models.Model):
                 )
                 if not (self.extra_fields.get("mastery_model") or criterion):
                     errors.append("Missing mastery criterion")
-                if criterion:
-                    try:
-                        completion_criteria.validate(
-                            criterion, kind=content_kinds.EXERCISE
-                        )
-                    except completion_criteria.ValidationError:
-                        errors.append("Mastery criterion is defined but is invalid")
-            else:
-                criterion = self.extra_fields and self.extra_fields.get(
-                    "options", {}
-                ).get("completion_criteria", {})
-                if criterion:
-                    try:
-                        completion_criteria.validate(criterion, kind=self.kind_id)
-                    except completion_criteria.ValidationError:
-                        errors.append("Completion criterion is defined but is invalid")
+        options = self.extra_fields and self.extra_fields.get("options", {}) or {}
+        criterion = options.get("completion_criteria", {})
+        modality = options.get("modality")
+        # UNIT modality topics must have completion criteria
+        if (
+            self.kind_id == content_kinds.TOPIC
+            and modality == modalities.UNIT
+            and not criterion
+        ):
+            errors.append("UNIT modality topics must have completion criteria")
+        if criterion:
+            try:
+                completion_criteria.validate(
+                    criterion, kind=self.kind_id, modality=modality
+                )
+            except completion_criteria.ValidationError:
+                errors.append("Completion criterion is defined but is invalid")
         self.complete = not errors
         return errors
 
@@ -2856,9 +2981,6 @@ class CommunityLibrarySubmission(models.Model):
     internal_notes = models.TextField(blank=True, null=True)
 
     def save(self, *args, **kwargs):
-        # Not a top-level import to avoid circular import issues
-        from contentcuration.tasks import ensure_versioned_database_exists_task
-
         # Validate on save that the submission author is an editor of the channel
         # and that the version is not greater than the current channel version.
         # These cannot be expressed as constraints because traversing
@@ -2887,15 +3009,8 @@ class CommunityLibrarySubmission(models.Model):
                 code="public_channel_submission",
             )
 
-        if self.pk is None:
-            # When creating a new submission, ensure the channel has a versioned database
-            # (it might not have if the channel was published before versioned databases
-            # were introduced).
-            ensure_versioned_database_exists_task.fetch_or_enqueue(
-                user=self.author,
-                channel_id=self.channel.id,
-                channel_version=self.channel.version,
-            )
+        is_adding = self._state.adding
+        if is_adding:
             # Create a ChannelVersion and token for this submission
             channel_version, _ = ChannelVersion.objects.get_or_create(
                 channel=self.channel, version=self.channel_version
@@ -2903,6 +3018,10 @@ class CommunityLibrarySubmission(models.Model):
             channel_version.new_token()
 
         super().save(*args, **kwargs)
+
+        if is_adding:
+            # When a new submission is created, notify channel editors
+            self.notify_update_to_channel_editors(exclude_user_id=self.author_id)
 
     def mark_live(self):
         """
@@ -2918,6 +3037,16 @@ class CommunityLibrarySubmission(models.Model):
 
         self.status = community_library_submission.STATUS_LIVE
         self.save()
+
+    def notify_update_to_channel_editors(self, exclude_user_id=None):
+        """
+        Notify channel editors that a submission has been updated.
+        """
+        editors = self.channel.editors
+        if exclude_user_id:
+            editors = editors.exclude(id=exclude_user_id)
+
+        User.notify_users(editors, date=self.date_updated)
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):
@@ -2959,6 +3088,12 @@ class AuditedSpecialPermissionsLicense(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     description = models.TextField(unique=True, db_index=True)
     distributable = models.BooleanField(default=False)
+
+    @classmethod
+    def mark_channel_version_as_distributable(cls, channel_version_id):
+        return cls.objects.filter(channel_versions__id=channel_version_id).update(
+            distributable=True
+        )
 
     def __str__(self):
         return (
@@ -3685,6 +3820,7 @@ class Change(models.Model):
                 "channel_id": get_attribute(change, ["channel_id"]),
                 "user_id": get_attribute(change, ["user_id"]),
                 "created_by_id": get_attribute(change, ["created_by_id"]),
+                "unpublishable": get_attribute(change, ["unpublishable"]),
             }
         )
         return datum

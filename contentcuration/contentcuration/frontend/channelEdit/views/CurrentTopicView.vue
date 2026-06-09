@@ -5,6 +5,22 @@
     fluid
     class="ma-0 main pa-0 panel"
   >
+    <AiRecommendationsBanner
+      v-if="canEdit"
+      :dismissible="true"
+      class="recommendations-announcement"
+    >
+      <KRouterLink
+        appearance="flat-button"
+        :primary="true"
+        :to="importFromChannelsRoute"
+        class="recommendations-announcement-cta"
+        @click="trackClickEvent('View recommendations')"
+      >
+        {{ searchRecommendationsStrings.viewRecommendationsButton$() }}
+      </KRouterLink>
+    </AiRecommendationsBanner>
+
     <!-- Breadcrumbs -->
     <VToolbar
       dense
@@ -306,6 +322,8 @@
   import { DraggableTypes, DropEffect } from 'shared/mixins/draggable/constants';
   import { DraggableFlags } from 'shared/vuex/draggablePlugin/module/constants';
   import DraggableRegion from 'shared/views/draggable/DraggableRegion';
+  import { searchRecommendationsStrings } from 'shared/strings/searchRecommendationsStrings';
+  import AiRecommendationsBanner from 'shared/views/AiRecommendationsBanner';
 
   export default {
     name: 'CurrentTopicView',
@@ -320,8 +338,12 @@
       MoveModal,
       DraggableRegion,
       InheritAncestorMetadataModal,
+      AiRecommendationsBanner,
     },
     mixins: [titleMixin, routerMixin],
+    setup() {
+      return { searchRecommendationsStrings };
+    },
     props: {
       topicId: {
         type: String,
@@ -1073,6 +1095,14 @@
 
   .no-shrink {
     flex-shrink: 0;
+  }
+
+  .recommendations-announcement {
+    margin: 24px 36px;
+  }
+
+  .recommendations-announcement-cta {
+    margin-top: 12px;
   }
 
 </style>

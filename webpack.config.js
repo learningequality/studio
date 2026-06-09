@@ -5,18 +5,23 @@ const process = require('node:process');
 const fs = require('node:fs');
 const { execSync } = require('node:child_process');
 
-const baseConfig = require('kolibri-tools/lib/webpack.config.base');
+const baseConfig = require('kolibri-build/src/webpack.config.base');
 const { merge } = require('webpack-merge');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
-const BundleTracker = require('kolibri-tools/lib/webpackBundleTracker');
+const BundleTracker = require('kolibri-build/src/webpackBundleTracker');
 const CircularDependencyPlugin = require('circular-dependency-plugin');
 
-const WebpackRTLPlugin = require('kolibri-tools/lib/webpackRtlPlugin');
+const WebpackRTLPlugin = require('kolibri-build/src/webpackRtlPlugin');
 
 const { InjectManifest } = require('workbox-webpack-plugin');
 
-// Function to detect if running in WSL
+const DEFAULT_WEBPACK_DEV_HOST = '127.0.0.1';
+
+/**
+ * Function to detect if running in WSL
+ * @return {boolean}
+ */
 function isWSL() {
   try {
     const version = fs.readFileSync('/proc/version', 'utf8');
@@ -26,14 +31,24 @@ function isWSL() {
   }
 }
 
-// Function to get WSL IP address
-function getWSLIP() {
+/**
+ * Get the host for the webpack dev server.
+ * @return {string}
+ */
+function getWebpackDevHost() {
+  if (process.env.WEBPACK_DEV_HOST) {
+    return process.env.WEBPACK_DEV_HOST;
+  }
+
+  if (!isWSL()) {
+    return DEFAULT_WEBPACK_DEV_HOST;
+  }
+
   try {
-    const ip = execSync('hostname -I').toString().trim().split(' ')[0];
-    return ip;
+    return execSync('hostname -I').toString().trim().split(' ')[0];
   } catch (err) {
     console.warn('Failed to get WSL IP address:', err);
-    return '127.0.0.1';
+    return DEFAULT_WEBPACK_DEV_HOST;
   }
 }
 
@@ -60,11 +75,8 @@ module.exports = (env = {}) => {
   const pnpmNodeModules = path.join(rootDir, 'node_modules', '.pnpm', 'node_modules');
 
   // Determine the appropriate dev server host and public path based on environment
-  const isWSLEnvironment = isWSL();
-  const devServerHost = isWSLEnvironment ? '0.0.0.0' : '127.0.0.1';
-  const devPublicPath = isWSLEnvironment ?
-    `http://${getWSLIP()}:4000/dist/` :
-    'http://127.0.0.1:4000/dist/';
+  const devServerHost = getWebpackDevHost();
+  const devPublicPath = `http://${devServerHost}:4000/dist/`;
 
   const workboxPlugin = new InjectManifest({
     swSrc: path.resolve(srcDir, 'serviceWorker/index.js'),
@@ -94,11 +106,12 @@ module.exports = (env = {}) => {
     context: srcDir,
     entry: {
       // Use arrays for every entry to allow for hot reloading.
-      channel_edit: ['./channelEdit/index.js'],
-      channel_list: ['./channelList/index.js'],
-      settings: ['./settings/index.js'],
-      accounts: ['./accounts/index.js'],
-      administration: ['./administration/index.js'],
+      // The rtlcss-stub must come first to set up the window global before any CSS chunk loading.
+      channel_edit: ['./shared/rtlcss-stub.js', './channelEdit/index.js'],
+      channel_list: ['./shared/rtlcss-stub.js', './channelList/index.js'],
+      settings: ['./shared/rtlcss-stub.js', './settings/index.js'],
+      accounts: ['./shared/rtlcss-stub.js', './accounts/index.js'],
+      administration: ['./shared/rtlcss-stub.js', './administration/index.js'],
       // A simple code sandbox to play with components in
       pdfJSWorker: ['pdfjs-dist/build/pdf.worker.entry.js'],
       // Utility for taking screenshots inside an iframe sandbox
@@ -120,10 +133,8 @@ module.exports = (env = {}) => {
       allowedHosts: [
         '127.0.0.1',
         'localhost',
-      ].concat(
-        // For WSL, allow the WSL IP address
-        isWSLEnvironment ? [getWSLIP()] : []
-      ),
+        getWebpackDevHost(),
+      ]
     },
     module: {
       rules: [

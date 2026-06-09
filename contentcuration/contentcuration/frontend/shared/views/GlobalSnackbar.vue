@@ -5,6 +5,7 @@
     :key="key"
     :timeout="snackbarOptions.duration"
     left
+    multi-line
     :value="snackbarIsVisible"
     @input="visibilityToggled"
   >

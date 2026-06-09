@@ -113,6 +113,7 @@
       <UserActionsDropdown
         :userId="userId"
         flat
+        @deleted="$emit('deleted')"
       />
     </td>
   </tr>

@@ -53,6 +53,22 @@
           </VListTileContent>
         </VListTile>
         <VListTile
+          :tabindex="handleclickTab"
+          @click="showNotificationsModal"
+        >
+          <VListTileAction>
+            <WithNotificationIndicator>
+              <KIconButton
+                :disabled="true"
+                icon="bell"
+              />
+            </WithNotificationIndicator>
+          </VListTileAction>
+          <VListTileContent class="subheading">
+            <VListTileTitle>{{ notificationsLabel$() }}</VListTileTitle>
+          </VListTileContent>
+        </VListTile>
+        <VListTile
           :href="settingsLink"
           :tabindex="handleclickTab"
           @click="trackClick('Settings')"
@@ -134,6 +150,8 @@
       :style="{ color: $themeTokens.text }"
       @cancel="showLanguageModal = false"
     />
+
+    <NotificationsModal />
   </div>
 
 </template>
@@ -142,12 +160,24 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
+  import WithNotificationIndicator from './WithNotificationIndicator.vue';
   import LanguageSwitcherModal from 'shared/languageSwitcher/LanguageSwitcherModal';
+  import { Modals } from 'shared/constants';
+  import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
+  import NotificationsModal from 'shared/views/NotificationsModal/index.vue';
 
   export default {
     name: 'MainNavigationDrawer',
     components: {
       LanguageSwitcherModal,
+      NotificationsModal,
+      WithNotificationIndicator,
+    },
+    setup() {
+      const { notificationsLabel$ } = communityChannelsStrings;
+      return {
+        notificationsLabel$,
+      };
     },
     props: {
       value: {
@@ -204,6 +234,16 @@
       openLanguageModal() {
         this.drawer = false;
         this.showLanguageModal = true;
+      },
+      showNotificationsModal() {
+        this.drawer = false;
+        this.$router.push({
+          query: {
+            ...this.$route.query,
+            modal: Modals.NOTIFICATIONS,
+          },
+        });
+        this.trackClick('Notifications');
       },
     },
     $trs: {

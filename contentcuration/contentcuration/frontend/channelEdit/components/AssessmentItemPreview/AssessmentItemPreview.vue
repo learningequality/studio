@@ -5,8 +5,12 @@
       align-top
       justify-space-between
     >
-      <VFlex mt-2>
-        <div class="caption grey--text mb-2">
+      <VFlex>
+        <div
+          v-if="showTypeLabel"
+          class="caption grey--text mb-2"
+          data-test="type-label"
+        >
           {{ kindLabel }}
         </div>
         <TipTapEditor
@@ -84,9 +88,9 @@
 
         <div class="my-1">
           <!--
-            class="hints-preview" is needed for precise click
-            target detection in AssessmentView.vue
-          -->
+          class="hints-preview" is needed for precise click
+          target detection in AssessmentView.vue
+        -->
           <div
             v-if="hintsCount"
             class="hints-preview"
@@ -168,6 +172,10 @@
         type: Boolean,
         default: false,
       },
+      showTypeLabel: {
+        type: Boolean,
+        default: true,
+      },
     },
     data() {
       return {
@@ -207,6 +215,10 @@
         return sortBy(this.item.hints, 'order');
       },
       kindLabel() {
+        if (!this.kind || !AssessmentItemTypeLabels[this.kind]) {
+          return '';
+        }
+
         return translator.$tr(AssessmentItemTypeLabels[this.kind]);
       },
       isSingleSelection() {

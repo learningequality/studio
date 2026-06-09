@@ -1,6 +1,19 @@
 import { createTranslator } from 'shared/i18n';
 
 export const searchRecommendationsStrings = createTranslator('SearchRecommendationsStrings', {
+  trySearchRecommendationsHeader: {
+    message: "Try our new 'Recommendations' feature!",
+    context: 'Header for a banner announcing the new recommendations feature',
+  },
+  trySearchRecommendationsText: {
+    message:
+      "Based on the title and description of the folder you are working on, we'll suggest relevant resources from the Kolibri Library. Choose 'Import from channels' in any folder of your channels to see the recommendations.",
+    context: 'Body text for a banner announcing the new recommendations feature',
+  },
+  viewRecommendationsButton: {
+    message: 'View recommendations',
+    context: 'Label for a button that takes the user to the recommendations feature',
+  },
   aboutRecommendationsText: {
     message: 'About recommendations',
     context: 'A title that introduces how the recommendation system works',

@@ -31,6 +31,7 @@ from contentcuration.models import FILE_DURATION_CONSTRAINT
 from contentcuration.models import FlagFeedbackEvent
 from contentcuration.models import generate_object_storage_name
 from contentcuration.models import Invitation
+from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.models import object_storage_name
 from contentcuration.models import RecommendationsEvent
@@ -555,10 +556,6 @@ class ContentNodeTestCase(PermissionQuerysetTestCase):
         self.assertNotEqual(copied_node_old_content_id, copied_node.content_id)
 
 
-@mock.patch(
-    "contentcuration.tasks.ensure_versioned_database_exists_task.fetch_or_enqueue",
-    return_value=None,
-)
 class CommunityLibrarySubmissionTestCase(
     EagerTasksTestMixin, PermissionQuerysetTestCase
 ):
@@ -566,7 +563,7 @@ class CommunityLibrarySubmissionTestCase(
     def base_queryset(self):
         return CommunityLibrarySubmission.objects.all()
 
-    def test_create_submission(self, mock_ensure_db_exists_task_fetch_or_enqueue):
+    def test_create_submission(self):
         # Smoke test
         channel = testdata.channel()
         author = testdata.user()
@@ -589,33 +586,27 @@ class CommunityLibrarySubmissionTestCase(
         submission.full_clean()
         submission.save()
 
-    def test_save__author_not_editor(self, mock_ensure_db_exists):
+    def test_save__author_not_editor(self):
         submission = testdata.community_library_submission()
         user = testdata.user("some@email.com")
         submission.author = user
         with self.assertRaises(ValidationError):
             submission.save()
 
-    def test_save__nonpositive_channel_version(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_save__nonpositive_channel_version(self):
         submission = testdata.community_library_submission()
         submission.channel_version = 0
         with self.assertRaises(ValidationError):
             submission.save()
 
-    def test_save__matching_channel_version(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_save__matching_channel_version(self):
         submission = testdata.community_library_submission()
         submission.channel.version = 5
         submission.channel.save()
         submission.channel_version = 5
         submission.save()
 
-    def test_save__impossibly_high_channel_version(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_save__impossibly_high_channel_version(self):
         submission = testdata.community_library_submission()
         submission.channel.version = 5
         submission.channel.save()
@@ -623,31 +614,7 @@ class CommunityLibrarySubmissionTestCase(
         with self.assertRaises(ValidationError):
             submission.save()
 
-    def test_save__ensure_versioned_database_exists_on_create(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
-        submission = testdata.community_library_submission()
-
-        mock_ensure_db_exists_task_fetch_or_enqueue.assert_called_once_with(
-            user=submission.author,
-            channel_id=submission.channel.id,
-            channel_version=submission.channel.version,
-        )
-
-    def test_save__dont_ensure_versioned_database_exists_on_update(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
-        submission = testdata.community_library_submission()
-        mock_ensure_db_exists_task_fetch_or_enqueue.reset_mock()
-
-        submission.description = "Updated description"
-        submission.save()
-
-        mock_ensure_db_exists_task_fetch_or_enqueue.assert_not_called()
-
-    def test_filter_view_queryset__anonymous(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_filter_view_queryset__anonymous(self):
         _ = testdata.community_library_submission()
 
         queryset = CommunityLibrarySubmission.filter_view_queryset(
@@ -655,9 +622,7 @@ class CommunityLibrarySubmissionTestCase(
         )
         self.assertFalse(queryset.exists())
 
-    def test_filter_view_queryset__forbidden_user(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_filter_view_queryset__forbidden_user(self):
         _ = testdata.community_library_submission()
 
         queryset = CommunityLibrarySubmission.filter_view_queryset(
@@ -665,9 +630,7 @@ class CommunityLibrarySubmissionTestCase(
         )
         self.assertFalse(queryset.exists())
 
-    def test_filter_view_queryset__channel_editor(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_filter_view_queryset__channel_editor(self):
         submission_a = testdata.community_library_submission()
         submission_b = testdata.community_library_submission()
 
@@ -681,9 +644,7 @@ class CommunityLibrarySubmissionTestCase(
         self.assertQuerysetContains(queryset, pk=submission_a.id)
         self.assertQuerysetDoesNotContain(queryset, pk=submission_b.id)
 
-    def test_filter_view_queryset__admin(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_filter_view_queryset__admin(self):
         submission_a = testdata.community_library_submission()
 
         queryset = CommunityLibrarySubmission.filter_view_queryset(
@@ -691,9 +652,7 @@ class CommunityLibrarySubmissionTestCase(
         )
         self.assertQuerysetContains(queryset, pk=submission_a.id)
 
-    def test_filter_edit_queryset__anonymous(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_filter_edit_queryset__anonymous(self):
         _ = testdata.community_library_submission()
 
         queryset = CommunityLibrarySubmission.filter_edit_queryset(
@@ -701,9 +660,7 @@ class CommunityLibrarySubmissionTestCase(
         )
         self.assertFalse(queryset.exists())
 
-    def test_filter_edit_queryset__forbidden_user(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_filter_edit_queryset__forbidden_user(self):
         _ = testdata.community_library_submission()
 
         queryset = CommunityLibrarySubmission.filter_edit_queryset(
@@ -711,9 +668,7 @@ class CommunityLibrarySubmissionTestCase(
         )
         self.assertFalse(queryset.exists())
 
-    def test_filter_edit_queryset__channel_editor(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_filter_edit_queryset__channel_editor(self):
         submission = testdata.community_library_submission()
 
         user = testdata.user()
@@ -725,9 +680,7 @@ class CommunityLibrarySubmissionTestCase(
         )
         self.assertFalse(queryset.exists())
 
-    def test_filter_edit_queryset__author(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_filter_edit_queryset__author(self):
         submission_a = testdata.community_library_submission()
         submission_b = testdata.community_library_submission()
 
@@ -737,9 +690,7 @@ class CommunityLibrarySubmissionTestCase(
         self.assertQuerysetContains(queryset, pk=submission_a.id)
         self.assertQuerysetDoesNotContain(queryset, pk=submission_b.id)
 
-    def test_filter_edit_queryset__admin(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_filter_edit_queryset__admin(self):
         submission_a = testdata.community_library_submission()
 
         queryset = CommunityLibrarySubmission.filter_edit_queryset(
@@ -747,7 +698,7 @@ class CommunityLibrarySubmissionTestCase(
         )
         self.assertQuerysetContains(queryset, pk=submission_a.id)
 
-    def test_mark_live(self, mock_ensure_db_exists_task_fetch_or_enqueue):
+    def test_mark_live(self):
         submission_a = testdata.community_library_submission()
         submission_b = testdata.community_library_submission()
 
@@ -783,9 +734,7 @@ class CommunityLibrarySubmissionTestCase(
             community_library_submission.STATUS_LIVE,
         )
 
-    def test_cannot_create_multiple_submissions_same_channel_same_version(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_cannot_create_multiple_submissions_same_channel_same_version(self):
         from django.db import IntegrityError, transaction
 
         channel = testdata.channel()
@@ -825,9 +774,7 @@ class CommunityLibrarySubmissionTestCase(
         self.assertEqual(submission1.channel, channel)
         self.assertEqual(submission1.channel_version, 1)
 
-    def test_can_create_submission_for_new_version_when_previous_pending(
-        self, mock_ensure_db_exists_task_fetch_or_enqueue
-    ):
+    def test_can_create_submission_for_new_version_when_previous_pending(self):
         channel = testdata.channel()
         author = testdata.user()
         channel.editors.add(author)
@@ -1868,3 +1815,105 @@ class ChannelVersionValidationTestCase(StudioTestCase):
         self.assertIn(
             "Version cannot be greater than channel version", str(context.exception)
         )
+
+    def test_save_snapshots_channel_info_when_version_matches_channel_version(self):
+        """Creating a ChannelVersion whose version equals channel.version should
+        automatically snapshot the channel's current name, description, tagline,
+        thumbnail_encoding, and language."""
+        lang = Language.objects.first()
+        # Use a queryset update to set channel fields without triggering on_update
+        # (which would call get_or_create and collide with the ChannelVersion we're
+        # about to create ourselves).
+        Channel.objects.filter(id=self.channel.id).update(
+            name="Snapshot Channel",
+            description="A channel to snapshot",
+            tagline="Learn something new",
+            thumbnail_encoding={"base64": "abc123"},
+            language=lang,
+        )
+        self.channel.refresh_from_db()
+
+        # setUp's self.channel.save() already auto-created a ChannelVersion for
+        # version 10 via on_update. Delete it so we can create a fresh one and
+        # observe the snapshot logic.
+        ChannelVersion.objects.filter(
+            channel=self.channel, version=self.channel.version
+        ).delete()
+
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=self.channel.version,
+        )
+        cv.save()
+
+        cv.refresh_from_db()
+        self.assertEqual(cv.channel_name, self.channel.name)
+        self.assertEqual(cv.channel_description, self.channel.description)
+        self.assertEqual(cv.channel_tagline, self.channel.tagline)
+        self.assertEqual(cv.channel_thumbnail_encoding, self.channel.thumbnail_encoding)
+        self.assertEqual(cv.channel_language, self.channel.language)
+
+    def test_save_does_not_snapshot_when_version_differs_from_channel_version(self):
+        """Creating a ChannelVersion for an older version should NOT populate
+        the snapshot fields automatically."""
+        self.channel.name = "Current Name"
+        self.channel.save()
+
+        # version 5 is less than channel.version (10)
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=5,
+        )
+        cv.save()
+
+        cv.refresh_from_db()
+        self.assertIsNone(cv.channel_name)
+        self.assertIsNone(cv.channel_description)
+        self.assertIsNone(cv.channel_tagline)
+        self.assertIsNone(cv.channel_language)
+
+    def test_save_does_not_re_snapshot_on_update(self):
+        """Updating an existing ChannelVersion (not adding) should NOT overwrite
+        the snapshot fields even if the channel info has changed."""
+        # setUp's self.channel.save() already created a ChannelVersion for version 10
+        # via on_update -> get_or_create. Reuse that existing object so we're
+        # testing a genuine update (not insert) path.
+        cv = ChannelVersion.objects.get(
+            channel=self.channel, version=self.channel.version
+        )
+        original_name = cv.channel_name
+
+        # Change the channel name via a queryset update so on_update is not called
+        # (avoiding a second get_or_create for the same version).
+        Channel.objects.filter(id=self.channel.id).update(name="Updated Channel Name")
+        self.channel.refresh_from_db()
+
+        cv.version_notes = "some notes"
+        cv.save()
+
+        cv.refresh_from_db()
+        # The snapshot should still reflect the name captured when cv was first created.
+        self.assertEqual(cv.channel_name, original_name)
+        self.assertNotEqual(cv.channel_name, "Updated Channel Name")
+
+    def test_save_snapshots_null_language_when_channel_has_no_language(self):
+        """When the channel has no language set, channel_language on the snapshot
+        should remain None."""
+        # Ensure no language on the channel via queryset update (bypasses on_update).
+        Channel.objects.filter(id=self.channel.id).update(language=None)
+        self.channel.refresh_from_db()
+
+        # Delete the ChannelVersion auto-created during setUp so we can insert a
+        # fresh one and observe the snapshot logic.
+        ChannelVersion.objects.filter(
+            channel=self.channel, version=self.channel.version
+        ).delete()
+
+        cv = ChannelVersion(
+            channel=self.channel,
+            version=self.channel.version,
+        )
+        cv.save()
+
+        cv.refresh_from_db()
+        self.assertIsNone(cv.channel_language)

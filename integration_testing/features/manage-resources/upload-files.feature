@@ -15,7 +15,7 @@ Feature: Upload files
 		Then I see a file explorer window
 		When I select a supported file for upload
 			And I click the *Open* button
-		Then I see the *Edit files* modal
+		Then I see the *Edit files* modal #if I am uploading resources to a folder with metadata then I will first see the *Apply details from the folder <folder_name>*
 		When I fill in all the required fields
 			And I click the *Finish* button
 		Then I am returned to the main topic tree view
@@ -27,7 +27,7 @@ Feature: Upload files
 		Then I see a file explorer window
 		When I select several supported files for upload
 			And I click the *Open* button
-		Then I see the *Edit files* modal
+		Then I see the *Edit files* modal #if I am uploading resources to a folder with metadata then I will first see the *Apply details from the folder <folder_name>*
 		When I fill in all the required fields for each file
 			And I click the *Finish* button
 		Then I am returned to the main topic tree view
@@ -39,7 +39,7 @@ Feature: Upload files
 		Then I see a file explorer window
 		When I select several supported files for upload
 			And I click the *Open* button
-		Then I see the *Edit files* modal
+		Then I see the *Edit files* modal #if I am uploading resources to a folder with metadata then I will first see the *Apply details from the folder <folder_name>*
 		When I fill in all the required fields for each file
 			And I click the *Finish* button
 		Then I am returned to the main topic tree view
@@ -48,7 +48,7 @@ Feature: Upload files
 	Scenario: Upload more files by drag and drop
 		Given I am at the *Edit files* modal after having imported some files
 		When I drag and drop files
-		Then I see the *Edit files* modal
+		Then I see the *Edit files* modal with the newly uploaded files #if I am uploading resources to a folder with metadata then I will first see the *Apply details from the folder <folder_name>*
 		When I fill in all the required fields for each file
 			And I click the *Finish* button
 		Then I am returned to the main topic tree view

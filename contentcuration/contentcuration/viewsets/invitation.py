@@ -1,7 +1,9 @@
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import FilterSet
 from rest_framework import serializers
+from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -137,9 +139,21 @@ class InvitationViewSet(ValuesViewset):
         instance = serializer.save()
         instance.save()
 
+    def _ensure_invitee(self, request, invitation):
+        if request.user.is_admin:
+            return
+        if (request.user.email or "").lower() != (invitation.email or "").lower():
+            raise PermissionDenied("Only the invited user may perform this action.")
+
     @action(detail=True, methods=["post"])
     def accept(self, request, pk=None):
-        invitation = self.get_object()
+        invitation = self.get_edit_object()
+        self._ensure_invitee(request, invitation)
+        if invitation.revoked:
+            return Response(
+                "Invitation has been revoked",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         invitation.accept()
         invitation.accepted = True
         invitation.save()
@@ -157,7 +171,8 @@ class InvitationViewSet(ValuesViewset):
 
     @action(detail=True, methods=["post"])
     def decline(self, request, pk=None):
-        invitation = self.get_object()
+        invitation = self.get_edit_object()
+        self._ensure_invitee(request, invitation)
         invitation.declined = True
         invitation.save()
         Change.create_change(

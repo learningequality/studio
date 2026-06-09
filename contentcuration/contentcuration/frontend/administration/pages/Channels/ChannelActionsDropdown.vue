@@ -22,16 +22,13 @@
 
     <BaseMenu>
       <template #activator="{ on }">
-        <VBtn
-          v-bind="$attrs"
+        <KButton
+          hasDropdown
+          :primary="primary"
           v-on="on"
         >
           Actions
-          <Icon
-            icon="dropdown"
-            class="ml-1"
-          />
-        </VBtn>
+        </KButton>
       </template>
       <VList>
         <template v-if="channel.deleted">
@@ -114,6 +111,10 @@
       channelId: {
         type: String,
         required: true,
+      },
+      primary: {
+        type: Boolean,
+        default: false,
       },
     },
     data: () => ({

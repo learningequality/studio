@@ -21,6 +21,7 @@ export function useImageHandling(editor) {
     modalInitialData.value = {};
     editingNodePos.value = null;
     closeModalBase();
+    editor.value?.commands.focus();
   };
 
   setupClickOutside('.image-upload-modal', closeModal);

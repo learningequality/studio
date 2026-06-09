@@ -77,7 +77,6 @@ describe('SearchOrBrowseWindow', () => {
     getters = {
       'currentChannel/currentChannel': () => ({ language: 'en' }),
       'importFromChannels/savedSearchesExist': () => true,
-      isAIFeatureEnabled: () => true,
       'contentNode/getContentNodeAncestors': () => () => [{ id: 'node-1', title: 'Test folder' }],
     };
 
@@ -132,9 +131,7 @@ describe('SearchOrBrowseWindow', () => {
       actions: {
         showSnackbar: actions.showSnackbar,
       },
-      getters: {
-        isAIFeatureEnabled: getters.isAIFeatureEnabled,
-      },
+      getters: {},
     });
 
     const routes = [

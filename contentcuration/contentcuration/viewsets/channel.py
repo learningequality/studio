@@ -59,6 +59,7 @@ from contentcuration.models import SecretToken
 from contentcuration.models import User
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.utils.pagination import CachedListPagination
+from contentcuration.utils.pagination import ValuesViewsetCursorPagination
 from contentcuration.utils.pagination import ValuesViewsetPageNumberPagination
 from contentcuration.utils.publish import ChannelIncompleteError
 from contentcuration.utils.publish import publish_channel
@@ -96,10 +97,10 @@ class CatalogListPagination(CachedListPagination):
     max_page_size = 1000
 
 
-class ChannelVersionListPagination(ValuesViewsetPageNumberPagination):
-    page_size = None
-    page_size_query_param = "page_size"
-    max_page_size = 1000
+class ChannelVersionListPagination(ValuesViewsetCursorPagination):
+    ordering = "-version"
+    page_size_query_param = "max_results"
+    max_page_size = 100
 
 
 primary_token_subquery = Subquery(
@@ -453,7 +454,12 @@ class ChannelViewSet(ValuesViewset):
     ordering = "-modified"
 
     field_map = channel_field_map
-    values = base_channel_values + ("edit", "view", "unpublished_changes")
+    values = base_channel_values + (
+        "edit",
+        "view",
+        "unpublished_changes",
+        "draft_token",
+    )
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -462,8 +468,9 @@ class ChannelViewSet(ValuesViewset):
         try:
             self.perform_create(serializer)
 
-        except IntegrityError as e:
-            return Response({"error": str(e)}, status=409)
+        except IntegrityError:
+            logging.exception("Integrity error creating channel")
+            return Response({"error": "Channel could not be created"}, status=409)
         instance = serializer.instance
         Change.create_change(
             generate_create_event(
@@ -509,6 +516,14 @@ class ChannelViewSet(ValuesViewset):
             view=Exists(user_queryset.filter(view_only_channels=OuterRef("id"))),
         )
 
+    def _annotate_draft_token(self, queryset):
+        draft_token_subquery = Subquery(
+            ChannelVersion.objects.filter(channel=OuterRef("id"), version=None).values(
+                "secret_token__token"
+            )[:1]
+        )
+        return queryset.annotate(draft_token=draft_token_subquery)
+
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(primary_token=primary_token_subquery)
         channel_main_tree_nodes = ContentNode.objects.filter(
@@ -530,6 +545,8 @@ class ChannelViewSet(ValuesViewset):
             unpublished_changes=Exists(_unpublished_changes_query(OuterRef("id")))
         )
 
+        queryset = self._annotate_draft_token(queryset)
+
         return queryset
 
     def publish_from_changes(self, changes):
@@ -544,7 +561,7 @@ class ChannelViewSet(ValuesViewset):
                 )
             except Exception as e:
                 log_sync_exception(e, user=self.request.user, change=publish)
-                publish["errors"] = [str(e)]
+                publish["errors"] = ["Internal server error"]
                 errors.append(publish)
         return errors
 
@@ -582,6 +599,7 @@ class ChannelViewSet(ValuesViewset):
                                 "publishing": False,
                                 "version": channel.version,
                                 "primary_token": channel.get_human_token().token,
+                                "draft_token": None,
                                 "last_published": channel.last_published,
                                 "unpublished_changes": _unpublished_changes_query(
                                     channel
@@ -631,9 +649,14 @@ class ChannelViewSet(ValuesViewset):
                     publish["key"],
                     use_staging_tree=publish.get("use_staging_tree", False),
                 )
+            except ValidationError as e:
+                log_sync_exception(e, user=self.request.user, change=publish)
+                detail = e.detail
+                publish["errors"] = detail if isinstance(detail, list) else [detail]
+                errors.append(publish)
             except Exception as e:
                 log_sync_exception(e, user=self.request.user, change=publish)
-                publish["errors"] = [str(e)]
+                publish["errors"] = ["Internal server error"]
                 errors.append(publish)
         return errors
 
@@ -656,13 +679,16 @@ class ChannelViewSet(ValuesViewset):
                     is_draft_version=True,
                     use_staging_tree=use_staging_tree,
                 )
+                draft_token = channel.get_draft_token()
                 Change.create_changes(
                     [
                         generate_update_event(
                             channel.id,
                             CHANNEL,
                             {
-                                "primary_token": channel.get_human_token().token,
+                                "draft_token": draft_token.token
+                                if draft_token
+                                else None,
                             },
                             channel_id=channel.id,
                         ),
@@ -688,7 +714,7 @@ class ChannelViewSet(ValuesViewset):
                 )
             except Exception as e:
                 log_sync_exception(e, user=self.request.user, change=sync)
-                sync["errors"] = [str(e)]
+                sync["errors"] = ["Internal server error"]
                 errors.append(sync)
         return errors
 
@@ -739,7 +765,7 @@ class ChannelViewSet(ValuesViewset):
                 self.deploy(self.request.user, deploy["key"])
             except Exception as e:
                 log_sync_exception(e, user=self.request.user, change=deploy)
-                deploy["errors"] = [str(e)]
+                deploy["errors"] = ["Internal server error"]
                 errors.append(deploy)
         return errors
 
@@ -793,7 +819,7 @@ class ChannelViewSet(ValuesViewset):
                 )
             except Exception as e:
                 log_sync_exception(e, user=self.request.user, change=change)
-                change["errors"] = [str(e)]
+                change["errors"] = ["Internal server error"]
                 errors.append(change)
         return errors
 
@@ -1051,6 +1077,9 @@ class ChannelVersionViewSet(ReadOnlyValuesViewset):
         "id",
         "channel",
         "version",
+        "size",
+        "resource_count",
+        "kind_count",
         "date_published",
         "version_notes",
         "included_languages",

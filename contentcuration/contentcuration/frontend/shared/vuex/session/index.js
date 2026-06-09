@@ -6,7 +6,6 @@ import { Session, User } from 'shared/data/resources';
 import { forceServerSync } from 'shared/data/serverSync';
 import translator from 'shared/translator';
 import { applyMods } from 'shared/data/applyRemoteChanges';
-import { FeatureFlagKeys } from 'shared/constants';
 
 function langCode(language) {
   // Turns a Django language name (en-gb) into an ISO language code (en-GB)
@@ -47,8 +46,8 @@ export default {
         ...data,
       };
     },
-    UPDATE_SESSION_FROM_INDEXEDDB(state, { id, ...mods }) {
-      if (id === state.currentUser.id) {
+    UPDATE_SESSION_FROM_INDEXEDDB(state, { CURRENT_USER, ...mods }) {
+      if (CURRENT_USER === 'CURRENT_USER') {
         state.currentUser = { ...applyMods(state.currentUser, mods) };
       }
     },
@@ -95,11 +94,18 @@ export default {
         return getters.isAdmin || Boolean(getters.featureFlags[flag]);
       };
     },
-    isAIFeatureEnabled(state, getters) {
-      if (getters.loggedIn) {
-        return getters.hasFeatureEnabled(FeatureFlagKeys.ai_feature);
+    hasNewNotifications(state) {
+      const {
+        newest_notification_date: newestNotificationDate,
+        last_read_notification_date: lastReadNotificationDate,
+      } = state.currentUser || {};
+      if (!newestNotificationDate) {
+        return false;
       }
-      return false;
+      if (!lastReadNotificationDate) {
+        return true;
+      }
+      return new Date(newestNotificationDate) > new Date(lastReadNotificationDate);
     },
   },
   actions: {
@@ -145,6 +151,10 @@ export default {
         });
       });
     }, 500),
+    async markNotificationsRead(context, timestamp) {
+      await User.markNotificationsRead(timestamp);
+      context.commit('UPDATE_SESSION', { last_read_notification_date: timestamp });
+    },
   },
   listeners: {
     [TABLE_NAMES.SESSION]: {

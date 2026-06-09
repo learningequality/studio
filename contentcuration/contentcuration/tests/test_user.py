@@ -13,10 +13,13 @@ from django.test import TransactionTestCase
 from django.urls import reverse_lazy
 
 from .base import BaseAPITestCase
+from .base import StudioTestCase
 from .testdata import fileobj_video
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
 from contentcuration.models import Invitation
 from contentcuration.models import User
+from contentcuration.models import UserSubscription
+from contentcuration.tests import testdata
 from contentcuration.tests.utils import mixer
 from contentcuration.utils.csv_writer import _format_size
 from contentcuration.utils.csv_writer import write_user_csv
@@ -159,3 +162,34 @@ class UserAccountTestCase(BaseAPITestCase):
                         self.assertIn(videos[index - 1].original_filename, row)
                         self.assertIn(_format_size(videos[index - 1].file_size), row)
             self.assertEqual(index, len(videos))
+
+
+class UserEffectiveDiskSpaceTest(StudioTestCase):
+    def setUp(self):
+        self.user = testdata.user(email="diskspace@test.com")
+        # Set a known disk_space value
+        self.user.disk_space = 500 * 1024 * 1024  # 500MB
+        self.user.save()
+
+    def test_effective_disk_space_without_subscription(self):
+        """User without subscription gets base disk_space."""
+        self.assertEqual(self.user.get_effective_disk_space(), 500 * 1024 * 1024)
+
+    def test_effective_disk_space_with_active_subscription(self):
+        """User with active subscription gets base + subscription space."""
+        UserSubscription.objects.create(
+            user=self.user,
+            stripe_subscription_status="active",
+            subscription_disk_space=50 * 1024 * 1024 * 1024,  # 50GB
+        )
+        expected = 500 * 1024 * 1024 + 50 * 1024 * 1024 * 1024
+        self.assertEqual(self.user.get_effective_disk_space(), expected)
+
+    def test_effective_disk_space_with_canceled_subscription(self):
+        """User with canceled subscription only gets base space."""
+        UserSubscription.objects.create(
+            user=self.user,
+            stripe_subscription_status="canceled",
+            subscription_disk_space=50 * 1024 * 1024 * 1024,
+        )
+        self.assertEqual(self.user.get_effective_disk_space(), 500 * 1024 * 1024)

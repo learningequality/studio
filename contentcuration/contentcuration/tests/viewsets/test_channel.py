@@ -551,11 +551,8 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.assertEqual(len(response.json()["allowed"]), 0, response.content)
         self.assertEqual(len(response.json()["disallowed"]), 1, response.content)
 
-    @mock.patch("contentcuration.utils.publish.ensure_versioned_database_exists")
     @mock.patch("contentcuration.viewsets.channel.export_channel_to_kolibri_public")
-    def test_process_added_to_community_library_change(
-        self, mock_export_func, mock_ensure_db_exists
-    ):
+    def test_process_added_to_community_library_change(self, mock_export_func):
         # Creating the change on the backend should be supported
         self.client.force_authenticate(self.admin_user)
 
@@ -933,6 +930,45 @@ class CRUDTestCase(StudioAPITestCase):
             1,
             channel.history.filter(actor=user, action=channel_history.RECOVERY).count(),
         )
+
+    def test_channel_detail_includes_draft_token_when_draft_version_exists(self):
+        """Test that the channel API response includes draft_token when a draft ChannelVersion exists."""
+        user = testdata.user()
+        channel = models.Channel.objects.create(
+            actor_id=user.id, **self.channel_metadata
+        )
+        channel.editors.add(user)
+
+        # Create a draft ChannelVersion (version=None) with a token
+        draft_version = ChannelVersion.objects.create(
+            channel=channel,
+            version=None,
+        )
+        token = draft_version.new_token()
+
+        self.client.force_authenticate(user=user)
+        response = self.client.get(
+            reverse("channel-detail", kwargs={"pk": channel.id}),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.data["draft_token"], token.token)
+
+    def test_channel_detail_draft_token_is_none_when_no_draft_version(self):
+        """Test that the channel API response has draft_token=None when no draft version exists."""
+        user = testdata.user()
+        channel = models.Channel.objects.create(
+            actor_id=user.id, **self.channel_metadata
+        )
+        channel.editors.add(user)
+
+        self.client.force_authenticate(user=user)
+        response = self.client.get(
+            reverse("channel-detail", kwargs={"pk": channel.id}),
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertIsNone(response.data["draft_token"])
 
 
 class UnpublishedChangesQueryTestCase(StudioAPITestCase):

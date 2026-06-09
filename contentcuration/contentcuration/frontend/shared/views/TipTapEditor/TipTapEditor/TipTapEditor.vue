@@ -4,6 +4,7 @@
     ref="editorContainer"
     class="editor-container"
     :class="{ 'view-mode': editorMode === 'view' }"
+    :style="minHeight && editorMode !== 'view' ? { minHeight } : {}"
     :tabindex="tabindex"
     role="textbox"
     :aria-label="editorMode === 'edit' ? TipTapEditorLabel$() : TipTapViewerLabel$()"
@@ -205,6 +206,11 @@
           if (editor.value && editor.value.isEditable !== (newMode === 'edit')) {
             editor.value.setEditable(newMode === 'edit');
           }
+          if (newMode === 'edit' && editor.value && props.autofocus) {
+            nextTick(() => {
+              editor.value?.commands.focus('end');
+            });
+          }
         },
       );
 
@@ -215,7 +221,9 @@
           const processedContent = preprocessMarkdown(newValue);
 
           if (!editor.value) {
-            initializeEditor(processedContent, props.mode);
+            initializeEditor(processedContent, props.mode, {
+              autofocus: props.autofocus,
+            });
             return;
           }
 
@@ -289,6 +297,10 @@
         type: String,
         default: 'edit', // 'edit' or 'view'
       },
+      autofocus: {
+        type: Boolean,
+        default: false,
+      },
       tabindex: {
         type: [String, Number],
         default: 0,
@@ -296,6 +308,10 @@
       imageProcessor: {
         type: Object,
         default: () => ({}),
+      },
+      minHeight: {
+        type: String,
+        default: null,
       },
     },
     emits: ['update', 'minimize', 'open-editor'],
@@ -404,6 +420,7 @@
   }
 
   .editor-container small {
+    display: block;
     margin: 4px 0;
     font-size: 12px;
   }

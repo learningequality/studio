@@ -112,6 +112,7 @@
   import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
   import { useMathLiveLocale } from '../../composables/useMathLiveLocale';
   import { getFormulasStrings } from './FormulasStrings';
+  import { useMathLiveA11yAnnounce } from './useMathLiveA11yAnnounce';
   import symbolsData from './symbols.json';
 
   export default defineComponent({
@@ -251,6 +252,10 @@
 
       const currentLocale = ref(navigator.language || 'en');
       useMathLiveLocale(currentLocale);
+
+      // TEMPORARY WORKAROUND: Localize mathlive screen reader announcements
+      // Remove when upstream fix lands: https://github.com/arnog/mathlive/issues/2948
+      useMathLiveA11yAnnounce(mathfieldEl);
 
       return {
         rootEl,

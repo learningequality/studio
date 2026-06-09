@@ -12,13 +12,14 @@
       </template>
 
       <template #default>
-        <div>
-          <KRadioButtonGroup>
+        <div style="padding: 24px 32px 16px">
+          <component :is="showDraftMode ? 'KRadioButtonGroup' : 'div'">
             <KRadioButton
-              :label="modeLive$()"
+              v-if="showDraftMode"
+              :label="publishChannelMode$()"
               :buttonValue="PublishModes.LIVE"
               :currentValue="mode"
-              :description="modeLiveDescription$()"
+              :description="publishChannelDescription$()"
               @input="mode = PublishModes.LIVE"
             />
 
@@ -26,7 +27,7 @@
             <div
               v-if="mode === PublishModes.LIVE"
               class="live-mode-content"
-              style="margin-top: 16px; margin-left: 24px"
+              :style="showDraftMode ? { marginLeft: '24px', marginTop: '16px' } : {}"
             >
               <div class="live-publish-info">
                 <KIcon
@@ -52,7 +53,7 @@
                       showInvalidText
                       :label="versionDescriptionLabel$()"
                       :invalid="isVersionNotesBlurred && !isVersionNotesValid"
-                      :invalidText="versionNotesRequiredMessage$()"
+                      :invalidText="fieldRequired$()"
                       textArea
                       :maxlength="250"
                       :appearanceOverrides="{ maxWidth: 'none' }"
@@ -69,11 +70,16 @@
                       v-model="newChannelLanguage"
                       :label="languageLabel$()"
                       :invalid="isLanguageSelectBlurred && !isNewLanguageValid"
-                      :invalidText="languageRequiredMessage$()"
+                      :invalidText="fieldRequired$()"
                       :options="languageOptions"
                       @blur="isLanguageSelectBlurred = true"
                     />
                   </div>
+
+                  <ChannelVersionHistory
+                    v-if="currentChannel && currentChannel.version > 0"
+                    :channelId="currentChannel.id"
+                  />
                 </div>
               </div>
 
@@ -106,28 +112,20 @@
                     >
                       {{ incompleteResourcesDescription1$() }}
                     </div>
-                    <div
-                      class="warning-description"
-                      :style="{
-                        color: $themePalette.grey.v_800,
-                        marginTop: '16px',
-                      }"
-                    >
-                      {{ incompleteResourcesDescription2$() }}
-                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
             <KRadioButton
-              :label="modeDraft$()"
+              v-if="showDraftMode"
+              :label="publishDraftMode$()"
               :buttonValue="PublishModes.DRAFT"
               :currentValue="mode"
-              :description="modeDraftDescription$()"
+              :description="publishDraftDescription$()"
               @input="mode = PublishModes.DRAFT"
             />
-          </KRadioButtonGroup>
+          </component>
         </div>
       </template>
 
@@ -154,17 +152,21 @@
 <script>
 
   import { ref, computed, getCurrentInstance } from 'vue';
+  import ChannelVersionHistory from './ChannelVersionHistory.vue';
   import SidePanelModal from 'shared/views/SidePanelModal';
   import { Channel, CommunityLibrarySubmission } from 'shared/data/resources';
   import { forceServerSync } from 'shared/data/serverSync';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
+  import commonStrings from 'shared/translator';
   import { LanguagesList } from 'shared/leUtils/Languages';
   import logging from 'shared/logging';
+  import { FeatureFlagKeys } from 'shared/constants';
 
   export default {
     name: 'PublishSidePanel',
     components: {
       SidePanelModal,
+      ChannelVersionHistory,
     },
     setup(props, { emit }) {
       const PublishModes = {
@@ -195,25 +197,26 @@
         publishChannel$,
         publishAction$,
         saveDraft$,
-        modeLive$,
-        modeDraft$,
+        publishChannelMode$,
+        publishDraftMode$,
         versionNotesLabel$,
-        modeLiveDescription$,
-        modeDraftDescription$,
+        publishChannelDescription$,
+        publishDraftDescription$,
         publishingInfo$,
         versionDescriptionLabel$,
         incompleteResourcesWarning$,
         incompleteResourcesDescription1$,
-        incompleteResourcesDescription2$,
         cancelAction$,
         languageLabel$,
-        languageRequiredMessage$,
-        versionNotesRequiredMessage$,
+        draftBeingPublishedNotice$,
       } = communityChannelsStrings;
+
+      const { fieldRequired$ } = commonStrings;
 
       const currentChannel = computed(() => store.getters['currentChannel/currentChannel']);
       const getContentNode = computed(() => store.getters['contentNode/getContentNode']);
       const areAllChangesSaved = computed(() => store.getters['areAllChangesSaved']);
+      const hasFeatureEnabled = computed(() => store.getters['hasFeatureEnabled']);
 
       const incompleteResourcesCount = computed(() => {
         if (!currentChannel.value) return 0;
@@ -251,6 +254,8 @@
         }
         return true;
       });
+
+      const showDraftMode = computed(() => hasFeatureEnabled.value(FeatureFlagKeys.draft_channels));
 
       const submitText = computed(() => {
         return mode.value === PublishModes.DRAFT ? saveDraft$() : publishAction$();
@@ -354,7 +359,10 @@
           }
 
           if (mode.value === PublishModes.DRAFT) {
-            await Channel.publishDraft(currentChannel.value.id, { use_staging_tree: false });
+            await Channel.publishDraft(currentChannel.value.id, {
+              use_staging_tree: false,
+            });
+            store.dispatch('showSnackbarSimple', draftBeingPublishedNotice$());
             emit('close');
           } else {
             // `newChannelLanguage.value` is a KSelect option { value, label }, so we need to
@@ -383,6 +391,7 @@
         isChannelLanguageLoading,
         PublishModes,
         mode,
+        showDraftMode,
         version_notes,
         submitting,
         languageOptions,
@@ -398,21 +407,19 @@
         isVersionNotesValid,
         submitText,
 
-        modeLive$,
-        modeDraft$,
+        publishChannelMode$,
+        publishDraftMode$,
         publishChannel$,
         versionNotesLabel$,
-        modeLiveDescription$,
-        modeDraftDescription$,
+        publishChannelDescription$,
+        publishDraftDescription$,
         publishingInfo$,
         versionDescriptionLabel$,
         incompleteResourcesWarning$,
         incompleteResourcesDescription1$,
-        incompleteResourcesDescription2$,
         cancelAction$,
         languageLabel$,
-        languageRequiredMessage$,
-        versionNotesRequiredMessage$,
+        fieldRequired$,
 
         onClose,
         submit,

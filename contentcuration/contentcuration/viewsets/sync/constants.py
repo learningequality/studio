@@ -48,6 +48,7 @@ EDITOR_M2M = "editor_m2m"
 VIEWER_M2M = "viewer_m2m"
 SAVEDSEARCH = "savedsearch"
 CLIPBOARD = "clipboard"
+SESSION = "session"
 
 
 ALL_TABLES = set(
@@ -62,6 +63,10 @@ ALL_TABLES = set(
         FILE,
         INVITATION,
         USER,
+        # SESSION is not a real backend model/viewset, but the frontend
+        # does have a SESSION table, so adding this here enables us to
+        # sync changes to this SESSION table
+        SESSION,
         SAVEDSEARCH,
         EDITOR_M2M,
         VIEWER_M2M,

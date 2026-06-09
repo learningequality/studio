@@ -4,29 +4,37 @@
     :class="{ printing }"
     data-testid="details-panel"
   >
-    <StudioThumbnail
-      :src="_details.thumbnail_url"
-      :encoding="_details.thumbnail_encoding"
-      :style="{ maxWidth: '300px' }"
-    />
-    <br >
-    <h1
-      class="notranslate"
-      dir="auto"
-    >
-      {{ _details.name }}
-    </h1>
-    <p
-      class="notranslate"
-      dir="auto"
-    >
-      {{ _details.description }}
-    </p>
-    <br >
-
+    <template v-if="!hideChannelHeader">
+      <!--
+      whenever modifying thumbnail styles,
+      check if pdf channel summary still fine
+    -->
+      <StudioThumbnail
+        :src="_details.thumbnail_url"
+        :encoding="_details.thumbnail_encoding"
+        :style="{ maxWidth: '300px' }"
+        :printing="printing"
+        :printIconStyle="{ paddingLeft: '20px' }"
+      />
+      <br >
+      <h1
+        class="notranslate"
+        dir="auto"
+      >
+        {{ _details.name }}
+      </h1>
+      <p
+        class="notranslate"
+        dir="auto"
+      >
+        {{ _details.description }}
+      </p>
+      <br >
+    </template>
     <StudioDetailsRow
       v-if="_details.published && _details.primary_token"
       :label="$tr('tokenHeading')"
+      :definition="tokenDefinition"
     >
       <template #default>
         <StudioCopyToken
@@ -37,7 +45,23 @@
           :showLabel="false"
         />
         <span v-else>
-          {{ _details.primary_token.slice(0, 5) + '-' + _details.primary_token.slice(5) }}
+          {{ hyphenateToken(_details.primary_token) }}
+        </span>
+      </template>
+    </StudioDetailsRow>
+    <StudioDetailsRow
+      v-if="_details.draft_token"
+      :label="draftTokenLabel$()"
+    >
+      <template #default>
+        <StudioCopyToken
+          v-if="!printing"
+          :token="_details.draft_token"
+          :style="{ maxWidth: 'max-content' }"
+          :showLabel="false"
+        />
+        <span v-else>
+          {{ hyphenateToken(_details.draft_token) }}
         </span>
       </template>
     </StudioDetailsRow>
@@ -60,8 +84,9 @@
     />
 
     <StudioLargeLoader v-if="loading" />
-    <div v-else-if="hasDetails">
+    <template v-else-if="hasDetails">
       <StudioDetailsRow
+        v-if="createdDate"
         :label="$tr('creationHeading')"
         :text="createdDate"
       />
@@ -97,7 +122,10 @@
           </dl>
         </template>
       </StudioDetailsRow>
-      <StudioDetailsRow :label="$tr('levelsHeading')">
+      <StudioDetailsRow
+        v-if="levels"
+        :label="$tr('levelsHeading')"
+      >
         <template #default>
           <div v-if="!levels.length">
             {{ defaultText }}
@@ -115,7 +143,10 @@
           </span>
         </template>
       </StudioDetailsRow>
-      <StudioDetailsRow :label="$tr('categoriesHeading')">
+      <StudioDetailsRow
+        v-if="categories"
+        :label="$tr('categoriesHeading')"
+      >
         <template #default>
           <div v-if="!categories.length">
             {{ defaultText }}
@@ -133,7 +164,10 @@
           </span>
         </template>
       </StudioDetailsRow>
-      <StudioDetailsRow :label="$tr('containsHeading')">
+      <StudioDetailsRow
+        v-if="_details.includes"
+        :label="$tr('containsHeading')"
+      >
         <template
           v-if="!printing"
           #default
@@ -162,11 +196,15 @@
         </template>
       </StudioDetailsRow>
       <StudioDetailsRow
+        v-if="_details.includes"
         :label="$tr('coachHeading')"
         :text="$formatNumber(_details.includes.coach_content)"
         :definition="!printing ? $tr('coachDescription') : ''"
       />
-      <StudioDetailsRow :label="$tr('tagsHeading')">
+      <StudioDetailsRow
+        v-if="_details.tags"
+        :label="$tr('tagsHeading')"
+      >
         <template #default>
           <div v-if="!sortedTags.length">
             {{ defaultText }}
@@ -184,7 +222,10 @@
           </span>
         </template>
       </StudioDetailsRow>
-      <StudioDetailsRow :label="$tr('languagesHeading')">
+      <StudioDetailsRow
+        v-if="_details.languages"
+        :label="$tr('languagesHeading')"
+      >
         <template #default>
           <ExpandableList
             :noItemsText="defaultText"
@@ -194,7 +235,10 @@
           />
         </template>
       </StudioDetailsRow>
-      <StudioDetailsRow :label="$tr('subtitlesHeading')">
+      <StudioDetailsRow
+        v-if="_details.accessible_languages"
+        :label="$tr('subtitlesHeading')"
+      >
         <template #default>
           <ExpandableList
             :noItemsText="defaultText"
@@ -206,6 +250,21 @@
       </StudioDetailsRow>
 
       <StudioDetailsRow
+        v-if="countries"
+        :label="countryLabel$()"
+      >
+        <template #default>
+          <ExpandableList
+            :noItemsText="defaultText"
+            :items="countries"
+            :printing="printing"
+            inline
+          />
+        </template>
+      </StudioDetailsRow>
+
+      <StudioDetailsRow
+        v-if="_details.authors"
         :label="$tr('authorsLabel')"
         :definition="!printing ? $tr('authorToolTip') : ''"
       >
@@ -219,6 +278,7 @@
         </template>
       </StudioDetailsRow>
       <StudioDetailsRow
+        v-if="_details.providers"
         :label="$tr('providersLabel')"
         :definition="!printing ? $tr('providerToolTip') : ''"
       >
@@ -232,6 +292,7 @@
         </template>
       </StudioDetailsRow>
       <StudioDetailsRow
+        v-if="_details.aggregators"
         :label="$tr('aggregatorsLabel')"
         :definition="!printing ? $tr('aggregatorToolTip') : ''"
       >
@@ -245,7 +306,10 @@
         </template>
       </StudioDetailsRow>
 
-      <StudioDetailsRow :label="$tr('licensesLabel')">
+      <StudioDetailsRow
+        v-if="_details.licenses"
+        :label="$tr('licensesLabel')"
+      >
         <template #default>
           <template v-if="!printing">
             <span
@@ -272,7 +336,10 @@
           </span>
         </template>
       </StudioDetailsRow>
-      <StudioDetailsRow :label="$tr('copyrightHoldersLabel')">
+      <StudioDetailsRow
+        v-if="_details.copyright_holders"
+        :label="$tr('copyrightHoldersLabel')"
+      >
         <template #default>
           <ExpandableList
             :items="_details.copyright_holders"
@@ -293,9 +360,15 @@
             :key="channel.id"
             class="preview-row"
           >
+            <!--
+              whenever modifying thumbnail styles,
+              check if pdf channel summary still fine
+            -->
             <StudioThumbnail
               class="source-thumbnail"
               :src="channel.thumbnail"
+              :printing="printing"
+              :style="{ maxWidth: printing ? '160px' : 'unset' }"
             />
             <div
               v-if="printing"
@@ -314,36 +387,45 @@
         </template>
       </StudioDetailsRow>
 
-      <h2
-        v-if="_details.sample_nodes.length"
-        class="sample-heading"
+      <div
+        v-if="_details.sample_nodes && _details.sample_nodes.length"
+        class="sample-wrapper"
       >
-        {{ $tr('sampleFromChannelHeading') }}
-      </h2>
-      <KGrid
-        gutter="0"
-        class="sample-nodes"
-      >
-        <KGridItem
-          v-for="node in _details.sample_nodes"
-          :key="node.node_id"
-          :layout12="{ span: 3 }"
-          :layout8="{ span: 4 }"
-          :layout4="{ span: printing ? 1 : 4 }"
+        <h2 class="sample-heading">
+          {{ $tr('sampleFromChannelHeading') }}
+        </h2>
+        <KGrid
+          gutter="0"
+          class="sample-nodes"
         >
-          <StudioThumbnail
-            :src="node.thumbnail"
-            :kind="node.kind"
-          />
-          <p
-            dir="auto"
-            class="sample-node-title"
+          <KGridItem
+            v-for="node in _details.sample_nodes"
+            :key="node.node_id"
+            :layout12="{ span: 3 }"
+            :layout8="{ span: 4 }"
+            :layout4="{ span: printing ? 1 : 4 }"
           >
-            {{ getTitle(node) }}
-          </p>
-        </KGridItem>
-      </KGrid>
-    </div>
+            <!--
+            whenever modifying thumbnail styles,
+            check if pdf channel summary still fine
+          -->
+            <StudioThumbnail
+              :src="node.thumbnail"
+              :kind="node.kind"
+              :printing="printing"
+              :printIconStyle="{ paddingLeft: '48px' }"
+              :style="{ maxWidth: printing ? '160px' : 'unset' }"
+            />
+            <p
+              dir="auto"
+              class="sample-node-title"
+            >
+              {{ getTitle(node) }}
+            </p>
+          </KGridItem>
+        </KGrid>
+      </div>
+    </template>
   </div>
 
 </template>
@@ -371,6 +453,10 @@
   import StudioDetailsRow from './StudioDetailsRow';
   import StudioThumbnail from 'shared/views/files/StudioThumbnail';
   import StudioCopyToken from 'shared/views/StudioCopyToken';
+  import useToken from 'shared/composables/useToken';
+  import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
+  import countriesUtil from 'shared/utils/countries';
+  import { currentLanguage } from 'shared/i18n';
 
   const DEFAULT_DETAILS = {
     name: '',
@@ -423,6 +509,15 @@
       titleMixin,
       metadataTranslationMixin,
     ],
+    setup() {
+      const { hyphenateToken } = useToken();
+      const { draftTokenLabel$, countryLabel$ } = communityChannelsStrings;
+      return {
+        hyphenateToken,
+        draftTokenLabel$,
+        countryLabel$,
+      };
+    },
     props: {
       // Object matching that returned by the channel details and
       // node details API endpoints, see backend for details of the
@@ -435,6 +530,14 @@
       loading: {
         type: Boolean,
         default: true,
+      },
+      hideChannelHeader: {
+        type: Boolean,
+        default: false,
+      },
+      tokenDefinition: {
+        type: String,
+        default: null,
       },
     },
     computed: {
@@ -470,6 +573,9 @@
         return orderBy(this._details.kind_count, ['count', 'kind_id'], ['desc', 'asc']);
       },
       createdDate() {
+        if (!this._details.created) {
+          return null;
+        }
         return this.$formatDate(this._details.created, {
           year: 'numeric',
           month: 'long',
@@ -483,6 +589,9 @@
         return orderBy(this._details.tags, ['count'], ['desc']);
       },
       includesPrintable() {
+        if (!this._details.includes) {
+          return this.defaultText;
+        }
         const includes = [];
         if (this._details.includes.coach_content) {
           includes.push(this.$tr('coachHeading'));
@@ -495,12 +604,15 @@
         return includes.length ? includes.join(', ') : this.defaultText;
       },
       licensesPrintable() {
-        return this._details.licenses.map(this.translateConstant).join(', ');
+        return this._details.licenses?.map(this.translateConstant).join(', ') || this.defaultText;
       },
       tagPrintable() {
         return this.sortedTags.map(tag => tag.tag_name).join(', ');
       },
       levels() {
+        if (!this._details.levels) {
+          return null;
+        }
         return this._details.levels.map(level => {
           level = LevelsLookup[level];
           let translationKey;
@@ -517,16 +629,29 @@
         });
       },
       levelsPrintable() {
-        return this.levels.join(', ');
+        return this.levels?.join(', ') || this.defaultText;
       },
       categories() {
+        if (!this._details.categories) {
+          return null;
+        }
         return this._details.categories.map(category => {
           category = CategoriesLookup[category];
           return this.translateMetadataString(camelCase(category));
         });
       },
       categoriesPrintable() {
-        return this.categories.join(', ');
+        return this.categories?.join(', ') || this.defaultText;
+      },
+      countries() {
+        // Countries is only relevant for channels from public models,
+        // regular channels do not have this field. Didn't want to add this field to the
+        // default details, since it's not relevant for most uses of this component.
+        if (!this._details.countries?.length) {
+          return null;
+        }
+        const [lang] = currentLanguage.split('-');
+        return this._details.countries.map(countryCode => countriesUtil.getName(countryCode, lang));
       },
     },
     methods: {
@@ -628,21 +753,21 @@
   }
 
   .sample-heading {
-    margin-top: 28px;
-    margin-bottom: 8px;
+    padding-top: 48px;
+    padding-bottom: 26px;
     font-size: 16px;
     font-weight: bold;
   }
 
-  .sample-nodes {
-    margin-top: 28px;
-  }
-
   .sample-node-title {
     margin-top: 12px;
-    margin-bottom: 42px;
+    margin-bottom: 36px;
     font-weight: bold;
     word-break: break-word;
+  }
+
+  .sample-wrapper {
+    grid-column: 1 / -1;
   }
 
 </style>

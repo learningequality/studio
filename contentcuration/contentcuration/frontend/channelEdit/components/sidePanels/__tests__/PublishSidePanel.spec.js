@@ -8,6 +8,7 @@ import PublishSidePanel from '../PublishSidePanel.vue';
 import { Channel, CommunityLibrarySubmission } from 'shared/data/resources';
 import { forceServerSync } from 'shared/data/serverSync';
 import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
+import commonStrings from 'shared/translator';
 
 const localVue = createLocalVue();
 localVue.use(Vuex);
@@ -51,6 +52,7 @@ const renderComponent = (props = {}) => {
   store.commit('channel/ADD_CHANNEL', currentChannel);
   store.commit('contentNode/ADD_CONTENTNODE', rootNode);
   store.commit('SET_UNSAVED_CHANGES', props.areAllChangesSaved === false);
+  store.commit('UPDATE_SESSION', { is_admin: true });
 
   const router = new VueRouter();
 
@@ -78,8 +80,10 @@ describe('PublishSidePanel', () => {
     renderComponent();
 
     // Headers and default texts
-    expect(screen.getByText(communityChannelsStrings.publishChannel$())).toBeVisible();
-    expect(screen.getByText(communityChannelsStrings.modeLive$())).toBeVisible();
+    expect(
+      screen.getByRole('heading', { name: communityChannelsStrings.publishChannel$() }),
+    ).toBeVisible();
+    expect(screen.getAllByText(communityChannelsStrings.publishChannelMode$())[0]).toBeVisible();
 
     expect(
       screen.getByText(communityChannelsStrings.publishingInfo$({ version: 2 })),
@@ -88,8 +92,8 @@ describe('PublishSidePanel', () => {
     // Default button text
     expect(screen.getByText(communityChannelsStrings.publishAction$())).toBeVisible();
 
-    // Live mode selected by default
-    const liveRadio = screen.getByRole('radio', { name: /Live/ });
+    // Live mode selected by default (first radio in the group)
+    const [liveRadio] = screen.getAllByRole('radio');
     expect(liveRadio).toBeChecked();
   });
 
@@ -105,7 +109,7 @@ describe('PublishSidePanel', () => {
 
     // Touch field to trigger validation visible
     await fireEvent.blur(notesInput);
-    expect(screen.getByText('Version notes are required')).toBeVisible();
+    expect(screen.getByText(commonStrings.fieldRequired$())).toBeVisible();
 
     // Type notes
     await fireEvent.update(notesInput, 'My version notes');
@@ -113,7 +117,7 @@ describe('PublishSidePanel', () => {
 
     // Validation error should disappear
     await waitFor(() =>
-      expect(screen.queryByText('Version notes are required')).not.toBeInTheDocument(),
+      expect(screen.queryByText(commonStrings.fieldRequired$())).not.toBeInTheDocument(),
     );
     await waitFor(() => expect(publishBtn).toBeEnabled());
   });
@@ -390,5 +394,10 @@ describe('PublishSidePanel', () => {
     const cancelBtn = screen.getByText(communityChannelsStrings.cancelAction$());
     await fireEvent.click(cancelBtn);
     expect(emitted().close).toBeTruthy();
+  });
+
+  it('renders ChannelVersionHistory component', () => {
+    renderComponent();
+    expect(screen.getByText(communityChannelsStrings.seeAllVersions$())).toBeInTheDocument();
   });
 });

@@ -4,6 +4,7 @@ import ChannelTable from './pages/Channels/ChannelTable';
 import ChannelDetails from './pages/Channels/ChannelDetails';
 import UserTable from './pages/Users/UserTable';
 import UserDetails from './pages/Users/UserDetails';
+import SubmissionDetailsModal from 'shared/views/communityLibrary/SubmissionDetailsModal/index.vue';
 
 const router = new VueRouter({
   routes: [
@@ -28,6 +29,16 @@ const router = new VueRouter({
       path: '/users/:userId',
       props: true,
       component: UserDetails,
+    },
+    {
+      name: RouteNames.COMMUNITY_LIBRARY_SUBMISSION,
+      path: '/community-library/:channelId/:submissionId',
+      component: SubmissionDetailsModal,
+      props: route => ({
+        channelId: route.params.channelId,
+        submissionId: route.params.submissionId,
+        adminReview: true,
+      }),
     },
     // Catch-all redirect to channels tab
     {

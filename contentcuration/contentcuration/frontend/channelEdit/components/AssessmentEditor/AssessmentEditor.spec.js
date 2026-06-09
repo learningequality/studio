@@ -92,12 +92,6 @@ const clickClose = async assessmentItemWrapper => {
   await assessmentItemWrapper.findComponent('[data-test="closeBtn"]').trigger('click');
 };
 
-const clickEdit = async assessmentItemWrapper => {
-  await assessmentItemWrapper
-    .findComponent(`[data-test="toolbarIcon-${AssessmentItemToolbarActions.EDIT_ITEM}"]`)
-    .trigger('click');
-};
-
 const clickDelete = async assessmentItemWrapper => {
   await assessmentItemWrapper
     .findComponent(`[data-test="toolbarMenuItem-${AssessmentItemToolbarActions.DELETE_ITEM}"]`)
@@ -210,6 +204,15 @@ describe('AssessmentEditor', () => {
     expect(wrapper.findComponent('[data-test="showAnswersCheckbox"]').exists()).toBe(true);
   });
 
+  it("wraps 'Show answers' checkbox in a page container", () => {
+    expect(wrapper.find('.show-answers-container').exists()).toBe(true);
+  });
+
+  it('renders question card headers', () => {
+    expect(wrapper.html()).toContain('Question 1 of 4 — Numeric input');
+    expect(wrapper.html()).toContain('Question 2 of 4 — Single choice');
+  });
+
   it("doesn't render answers preview by default", () => {
     const items = getItems(wrapper);
 
@@ -233,32 +236,25 @@ describe('AssessmentEditor', () => {
   it('opens an item on item click', async () => {
     const items = getItems(wrapper);
     await items.at(1).trigger('click');
+    const updatedItems = getItems(wrapper);
 
-    expect(isItemOpen(items.at(0))).toBe(false);
-    expect(isItemOpen(items.at(1))).toBe(true);
-    expect(isItemOpen(items.at(2))).toBe(false);
-    expect(isItemOpen(items.at(3))).toBe(false);
-  });
-
-  it('opens an item on toolbar edit icon click', async () => {
-    const items = getItems(wrapper);
-    await clickEdit(items.at(1));
-
-    expect(isItemOpen(items.at(0))).toBe(false);
-    expect(isItemOpen(items.at(1))).toBe(true);
-    expect(isItemOpen(items.at(2))).toBe(false);
-    expect(isItemOpen(items.at(3))).toBe(false);
+    expect(isItemOpen(updatedItems.at(0))).toBe(false);
+    expect(isItemOpen(updatedItems.at(1))).toBe(true);
+    expect(isItemOpen(updatedItems.at(2))).toBe(false);
+    expect(isItemOpen(updatedItems.at(3))).toBe(false);
   });
 
   it('closes an item on close button click', async () => {
     // open an item at first
     const items = getItems(wrapper);
     await items.at(1).trigger('click');
-    expect(isItemOpen(items.at(1))).toBe(true);
+    let updatedItems = getItems(wrapper);
+    expect(isItemOpen(updatedItems.at(1))).toBe(true);
 
     // now close it
-    await clickClose(items.at(1));
-    expect(isItemOpen(items.at(1))).toBe(false);
+    await clickClose(updatedItems.at(1));
+    updatedItems = getItems(wrapper);
+    expect(isItemOpen(updatedItems.at(1))).toBe(false);
   });
 
   describe('on "Delete" click', () => {
@@ -270,7 +266,7 @@ describe('AssessmentEditor', () => {
 
     it('emits delete item event with a correct key', () => {
       expect(listeners.deleteItem).toHaveBeenCalledWith(ITEM2);
-      expect(listeners.updateItems).toBeCalledTimes(1);
+      expect(listeners.updateItems).toHaveBeenCalledTimes(1);
     });
 
     it('emits update item events with updated order of items after the deleted item', () => {
@@ -288,7 +284,7 @@ describe('AssessmentEditor', () => {
           order: 2,
         },
       ]);
-      expect(listeners.updateItems).toBeCalledTimes(1);
+      expect(listeners.updateItems).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -300,7 +296,7 @@ describe('AssessmentEditor', () => {
     });
 
     it('emits add item event with a new item with a correct order', () => {
-      expect(listeners.addItem).toBeCalledWith({
+      expect(listeners.addItem).toHaveBeenCalledWith({
         contentnode: NODE_ID,
         question: '',
         type: AssessmentItemTypes.SINGLE_SELECTION,
@@ -330,7 +326,7 @@ describe('AssessmentEditor', () => {
           order: 4,
         },
       ]);
-      expect(listeners.updateItems).toBeCalledTimes(1);
+      expect(listeners.updateItems).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -351,7 +347,7 @@ describe('AssessmentEditor', () => {
         order: 2,
         [DELAYED_VALIDATION]: true,
       });
-      expect(listeners.addItem).toBeCalledTimes(1);
+      expect(listeners.addItem).toHaveBeenCalledTimes(1);
     });
 
     it('emits update item events with updated order of items below the new item', () => {
@@ -373,7 +369,7 @@ describe('AssessmentEditor', () => {
           order: 4,
         },
       ]);
-      expect(listeners.updateItems).toBeCalledTimes(1);
+      expect(listeners.updateItems).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -395,7 +391,7 @@ describe('AssessmentEditor', () => {
           order: 1,
         },
       ]);
-      expect(listeners.updateItems).toBeCalledTimes(1);
+      expect(listeners.updateItems).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -417,7 +413,7 @@ describe('AssessmentEditor', () => {
           order: 1,
         },
       ]);
-      expect(listeners.updateItems).toBeCalledTimes(1);
+      expect(listeners.updateItems).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -427,7 +423,7 @@ describe('AssessmentEditor', () => {
     });
 
     it('emits add item event with a new item with a correct order', () => {
-      expect(listeners.addItem).toBeCalledWith({
+      expect(listeners.addItem).toHaveBeenCalledWith({
         contentnode: NODE_ID,
         question: '',
         type: AssessmentItemTypes.SINGLE_SELECTION,

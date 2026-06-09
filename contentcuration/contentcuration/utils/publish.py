@@ -36,6 +36,7 @@ from le_utils.constants import exercises
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from le_utils.constants import licenses
+from le_utils.constants import modalities
 from le_utils.constants import roles
 from search.models import ChannelFullTextSearch
 from search.models import ContentNodeFullTextSearch
@@ -182,7 +183,9 @@ def create_content_database(
             inherit_metadata=bool(channel.ricecooker_version),
         )
         tree_mapper.map_nodes()
-        kolibri_channel = map_channel_to_kolibri_channel(channel, use_staging_tree)
+        kolibri_channel = map_channel_to_kolibri_channel(
+            channel, use_staging_tree, is_draft_version=is_draft_version
+        )
         # It should be at this percent already, but just in case.
         if progress_tracker:
             progress_tracker.track(90)
@@ -244,6 +247,22 @@ inheritable_map_fields = [
 inheritable_simple_value_fields = [
     "language",
 ]
+
+
+def has_assessments(node):
+    """Check if a node should have its assessment items published.
+
+    Returns True for EXERCISE nodes and TOPIC nodes with UNIT modality
+    that have assessment items.
+    """
+    if node.kind_id == content_kinds.EXERCISE:
+        return True
+    if node.kind_id == content_kinds.TOPIC:
+        options = node.extra_fields.get("options", {}) if node.extra_fields else {}
+        if options.get("modality") == modalities.UNIT:
+            # Only return True if the UNIT has assessment items
+            return node.assessment_items.filter(deleted=False).exists()
+    return False
 
 
 class TreeMapper:
@@ -315,9 +334,10 @@ class TreeMapper:
 
         # Only process nodes that are either non-topics or have non-topic descendants
         if node.is_publishable():
-            # early validation to make sure we don't have any exercises without mastery models
-            # which should be unlikely when the node is complete, but just in case
-            if node.kind_id == content_kinds.EXERCISE:
+            # early validation to make sure we don't have any nodes with assessments
+            # without mastery models, which should be unlikely when the node is complete,
+            # but just in case
+            if has_assessments(node):
                 try:
                     # migrates and extracts the mastery model from the exercise
                     _, mastery_model = parse_assessment_metadata(node)
@@ -325,8 +345,8 @@ class TreeMapper:
                         raise ValueError("Exercise does not have a mastery model")
                 except Exception as e:
                     logging.warning(
-                        "Unable to parse exercise {id} mastery model: {error}".format(
-                            id=node.pk, error=str(e)
+                        "Unable to parse exercise {id} {title} mastery model: {error}".format(
+                            id=node.pk, title=node.title, error=str(e)
                         )
                     )
                     return
@@ -341,7 +361,7 @@ class TreeMapper:
                 metadata,
             )
 
-            if node.kind_id == content_kinds.EXERCISE:
+            if has_assessments(node):
                 exercise_data = process_assessment_metadata(node)
                 any_free_response = any(
                     t == exercises.FREE_RESPONSE
@@ -378,10 +398,16 @@ class TreeMapper:
                     )
                     generator.create_exercise_archive()
 
-                create_kolibri_assessment_metadata(node, kolibrinode)
+                # Only create assessment metadata for exercises, not UNIT topics
+                # UNIT topics store their assessment config in options/completion_criteria
+                if node.kind_id == content_kinds.EXERCISE:
+                    create_kolibri_assessment_metadata(node, kolibrinode)
             elif node.kind_id == content_kinds.SLIDESHOW:
                 create_slideshow_manifest(node, user_id=self.user_id)
-            elif node.kind_id == content_kinds.TOPIC:
+
+            # TOPIC nodes need to recurse into children, including UNIT topics
+            # that also had their assessments processed above
+            if node.kind_id == content_kinds.TOPIC:
                 for child in node.children.all():
                     self.recurse_nodes(child, metadata)
             create_associated_file_objects(kolibrinode, node)
@@ -772,7 +798,9 @@ def map_prerequisites(root_node):
             )
 
 
-def map_channel_to_kolibri_channel(channel, use_staging_tree=False):
+def map_channel_to_kolibri_channel(
+    channel, use_staging_tree=False, is_draft_version=False
+):
     logging.debug("Generating the channel metadata.")
     base_tree = channel.staging_tree if use_staging_tree else channel.main_tree
     kolibri_channel = kolibrimodels.ChannelMetadata.objects.create(
@@ -780,8 +808,7 @@ def map_channel_to_kolibri_channel(channel, use_staging_tree=False):
         name=channel.name,
         description=channel.description,
         tagline=channel.tagline,
-        version=channel.version
-        + 1,  # Need to save as version being published, not current version
+        version=0 if is_draft_version else channel.version + 1,
         thumbnail=channel.icon_encoding,
         root_pk=base_tree.node_id,
         root_id=base_tree.node_id,
@@ -891,23 +918,22 @@ def add_tokens_to_channel(channel):
         channel.make_token()
 
 
-def fill_published_fields(channel, version_notes):
-    channel.last_published = timezone.now()
+def fill_published_fields(channel, version_notes, draft_channel_version=None):
+    is_draft = draft_channel_version is not None
+    date_now = timezone.now()
+
     published_nodes = (
         channel.main_tree.get_descendants()
         .filter(published=True)
         .prefetch_related("files")
     )
-    channel.total_resource_count = published_nodes.exclude(
-        kind_id=content_kinds.TOPIC
-    ).count()
+    total_resource_count = published_nodes.exclude(kind_id=content_kinds.TOPIC).count()
     kind_counts = list(
         published_nodes.values("kind_id")
         .annotate(count=Count("kind_id"))
         .order_by("kind_id")
     )
-    channel.published_kind_count = json.dumps(kind_counts)
-    channel.published_size = (
+    published_size = (
         published_nodes.values("files__checksum", "files__file_size")
         .distinct()
         .aggregate(resource_size=Sum("files__file_size"))["resource_size"]
@@ -921,10 +947,6 @@ def fill_published_fields(channel, version_notes):
         "files__language", flat=True
     )
     language_list = list(set(chain(node_languages, file_languages)))
-
-    for lang in language_list:
-        if lang:
-            channel.included_languages.add(lang)
 
     included_licenses = published_nodes.exclude(license=None).values_list(
         "license", flat=True
@@ -943,24 +965,6 @@ def fill_published_fields(channel, version_notes):
                 )
             )
         )
-    )
-
-    # TODO: Eventually, consolidate above operations to just use this field for storing historical data
-    channel.published_data.update(
-        {
-            channel.version: {
-                "resource_count": channel.total_resource_count,
-                "kind_count": kind_counts,
-                "size": channel.published_size,
-                "date_published": channel.last_published.strftime(
-                    settings.DATE_TIME_FORMAT
-                ),
-                "version_notes": version_notes,
-                "included_languages": language_list,
-                "included_licenses": license_list,
-                "included_categories": category_list,
-            }
-        }
     )
 
     # Calculate non-distributable licenses (All Rights Reserved)
@@ -1006,30 +1010,59 @@ def fill_published_fields(channel, version_notes):
                 new_licenses, ignore_conflicts=True
             )
 
-    if channel.version_info:
-        channel.version_info.resource_count = channel.total_resource_count
-        channel.version_info.kind_count = kind_counts
-        channel.version_info.size = int(channel.published_size)
-        channel.version_info.date_published = channel.last_published
-        channel.version_info.version_notes = version_notes
-        channel.version_info.included_languages = language_list
-        channel.version_info.included_licenses = license_list
-        channel.version_info.included_categories = category_list
-        channel.version_info.non_distributable_licenses_included = (
+    if not is_draft:
+        channel.last_published = date_now
+        channel.total_resource_count = total_resource_count
+        channel.published_kind_count = json.dumps(kind_counts)
+        channel.published_size = published_size
+
+        channel.included_languages.set([lang for lang in language_list if lang])
+
+        # TODO: Eventually, consolidate above operations to just use this field for storing historical data
+        channel.published_data.update(
+            {
+                channel.version: {
+                    "resource_count": total_resource_count,
+                    "kind_count": kind_counts,
+                    "size": published_size,
+                    "date_published": date_now.strftime(settings.DATE_TIME_FORMAT),
+                    "version_notes": version_notes,
+                    "included_languages": language_list,
+                    "included_licenses": license_list,
+                    "included_categories": category_list,
+                }
+            }
+        )
+        channel.save()
+
+    version_obj = draft_channel_version if is_draft else channel.version_info
+    if version_obj is not None:
+        version_obj.resource_count = total_resource_count
+        version_obj.kind_count = kind_counts
+        version_obj.size = int(published_size)
+        version_obj.date_published = date_now
+        version_obj.version_notes = version_notes
+        version_obj.included_languages = language_list
+        version_obj.included_licenses = license_list
+        version_obj.included_categories = category_list
+        version_obj.non_distributable_licenses_included = (
             non_distributable_licenses_included
         )
-        channel.version_info.save()
+        version_obj.save()
 
         if special_perms_descriptions:
-            channel.version_info.special_permissions_included.set(
+            version_obj.special_permissions_included.set(
                 ccmodels.AuditedSpecialPermissionsLicense.objects.filter(
                     description__in=special_perms_descriptions
                 )
             )
         else:
-            channel.version_info.special_permissions_included.clear()
+            version_obj.special_permissions_included.clear()
 
-    channel.save()
+        if not is_draft and channel.public:
+            ccmodels.AuditedSpecialPermissionsLicense.mark_channel_version_as_distributable(
+                version_obj.id
+            )
 
 
 def sync_contentnode_and_channel_tsvectors(channel_id):
@@ -1132,10 +1165,19 @@ def publish_channel(  # noqa: C901
         )
         add_tokens_to_channel(channel)
         if is_draft_version:
-            create_draft_channel_version(channel)
+            draft_channel_version = create_draft_channel_version(channel)
+            fill_published_fields(
+                channel, version_notes, draft_channel_version=draft_channel_version
+            )
         else:
             increment_channel_version(channel)
-        if not is_draft_version:
+            ccmodels.ChannelVersion.objects.filter(
+                channel=channel, version=None
+            ).delete()
+            draft_db_path = get_content_db_path(channel_id, "next")
+            if storage.exists(draft_db_path):
+                storage.delete(draft_db_path)
+
             sync_contentnode_and_channel_tsvectors(channel_id=channel.id)
             mark_all_nodes_as_published(base_tree)
             fill_published_fields(channel, version_notes)
@@ -1144,9 +1186,9 @@ def publish_channel(  # noqa: C901
             base_tree.published = True
             base_tree.save()
 
-        # Delete public channel cache.
-        if not is_draft_version and channel.public:
-            delete_public_channel_cache_keys()
+            # Delete public channel cache.
+            if channel.public:
+                delete_public_channel_cache_keys()
 
         if send_email:
             with override(language):

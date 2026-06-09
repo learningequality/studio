@@ -1,3 +1,6 @@
+import csv
+import logging
+from datetime import date
 from functools import reduce
 
 from django.db import IntegrityError
@@ -6,17 +9,21 @@ from django.db.models import CharField
 from django.db.models import Exists
 from django.db.models import F
 from django.db.models import IntegerField
+from django.db.models import Max
 from django.db.models import OuterRef
 from django.db.models import Q
 from django.db.models import Value
 from django.db.models.functions import Cast
 from django.db.models.functions import Concat
 from django.http import HttpResponseBadRequest
+from django.http import StreamingHttpResponse
 from django.http.response import HttpResponseForbidden
 from django.http.response import HttpResponseNotFound
 from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
+from django_filters.rest_framework import DateFilter
 from django_filters.rest_framework import FilterSet
+from rest_framework import serializers
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import BasePermission
@@ -26,7 +33,9 @@ from rest_framework.status import HTTP_204_NO_CONTENT
 
 from contentcuration.constants import feature_flags
 from contentcuration.models import boolean_val
+from contentcuration.models import Change
 from contentcuration.models import Channel
+from contentcuration.models import Country
 from contentcuration.models import User
 from contentcuration.utils.pagination import ValuesViewsetPageNumberPagination
 from contentcuration.viewsets.base import BulkListSerializer
@@ -44,6 +53,27 @@ from contentcuration.viewsets.sync.constants import EDITOR_M2M
 from contentcuration.viewsets.sync.constants import VIEWER_M2M
 
 
+logger = logging.getLogger(__name__)
+
+
+# Shared at module scope so filter methods and the CSV action's annotate()
+# call agree on semantics.
+USER_HAS_PUBLISHED_CHANNEL = Exists(
+    Channel.objects.filter(
+        editors=OuterRef("id"),
+        last_published__isnull=False,
+        deleted=False,
+    )
+)
+USER_HAS_EDITABLE_CHANNELS = Exists(
+    Channel.objects.filter(editors=OuterRef("id"), deleted=False)
+)
+USER_HAS_VIEWABLE_CHANNELS = Exists(
+    Channel.objects.filter(viewers=OuterRef("id"), deleted=False)
+)
+USER_HAS_STUDIO_EDITS = Exists(Change.objects.filter(created_by=OuterRef("id")))
+
+
 class IsAdminUser(BasePermission):
     """
     Our custom permission to check admin authorization.
@@ -54,27 +84,6 @@ class IsAdminUser(BasePermission):
             return request.user and request.user.is_admin
         except AttributeError:
             return False
-
-
-class IsAIFeatureEnabledForUser(BasePermission):
-    """
-    Permission to check if the AI feature is enabled for a user.
-    """
-
-    def _can_user_access_feature(self, request):
-        try:
-            if request.user.is_admin:
-                return True
-            else:
-                return request.user.check_feature_flag("ai_feature")
-        except AttributeError:
-            return False
-
-    def has_permission(self, request, view):
-        return self._can_user_access_feature(request)
-
-    def has_object_permission(self, request, view, obj):
-        return self._can_user_access_feature(request)
 
 
 class UserListPagination(ValuesViewsetPageNumberPagination):
@@ -130,6 +139,13 @@ class UserFilter(FilterSet):
         fields = ("ids",)
 
 
+class MarkNotificationsReadSerializer(serializers.Serializer):
+    timestamp = serializers.DateTimeField(
+        required=True,
+        help_text="Timestamp of the last read notification.",
+    )
+
+
 class UserSerializer(BulkModelSerializer):
     class Meta:
         model = User
@@ -169,6 +185,24 @@ class UserViewSet(ReadOnlyValuesViewset):
     @action(detail=False, methods=["get"])
     def refresh_storage_used(self, request):
         return Response(request.user.set_space_used())
+
+    @action(
+        detail=False,
+        methods=["post"],
+        serializer_class=MarkNotificationsReadSerializer,
+    )
+    def mark_notifications_read(self, request):
+        """
+        Allows a user to mark the timestamp of their last read notification.
+        """
+        user = request.user
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        timestamp = serializer.validated_data["timestamp"]
+        user.mark_notifications_read(timestamp)
+        return Response(status=HTTP_204_NO_CONTENT)
 
     def annotate_queryset(self, queryset):
         queryset = queryset.annotate(
@@ -279,9 +313,10 @@ class ChannelUserViewSet(ReadOnlyValuesViewset):
         # In Django 2.2 add ignore_conflicts to make this fool proof
         try:
             self._execute_changes(table, change_type, data)
-        except IntegrityError as e:
+        except IntegrityError:
+            logger.exception("_handle_relationship_changes IntegrityError")
             for change in valid_changes:
-                change.update({"errors": str(e)})
+                change.update({"errors": ["Internal server error"]})
                 errors.append(change)
 
         for change in invalid_changes:
@@ -307,8 +342,9 @@ class ChannelUserViewSet(ReadOnlyValuesViewset):
         if not channel_id:
             return HttpResponseBadRequest("Channel ID is required.")
 
-        channel = Channel.objects.get(id=channel_id)
-        if not channel:
+        try:
+            channel = Channel.objects.get(id=channel_id)
+        except Channel.DoesNotExist:
             return HttpResponseNotFound("Channel not found {}".format(channel_id))
 
         if request.user != user and not request.user.can_edit(channel_id):
@@ -330,6 +366,10 @@ class AdminUserFilter(FilterSet):
     chef = BooleanFilter(method="filter_chef")
     location = CharFilter(method="filter_location")
     ids = CharFilter(method="filter_ids")
+    published_channel = BooleanFilter(method="filter_published_channel")
+    has_edits = BooleanFilter(method="filter_has_edits")
+    active_since = DateFilter(field_name="last_login", lookup_expr="gte")
+    joined_since = DateFilter(field_name="date_joined", lookup_expr="gte")
 
     def filter_ids(self, queryset, name, value):
         try:
@@ -368,9 +408,131 @@ class AdminUserFilter(FilterSet):
     def filter_location(self, queryset, name, value):
         return queryset.filter(information__locations__contains=value)
 
+    def filter_published_channel(self, queryset, name, value):
+        if not value:
+            return queryset
+        return queryset.filter(USER_HAS_PUBLISHED_CHANNEL)
+
+    def filter_has_edits(self, queryset, name, value):
+        if not value:
+            return queryset
+        return queryset.filter(USER_HAS_STUDIO_EDITS)
+
     class Meta:
         model = User
-        fields = ("keywords", "is_active", "is_admin", "chef", "location")
+        fields = (
+            "keywords",
+            "is_active",
+            "is_admin",
+            "chef",
+            "location",
+            "published_channel",
+            "has_edits",
+            "active_since",
+            "joined_since",
+        )
+
+
+class AdminUserCSVFilter(AdminUserFilter, RequiredFilterSet):
+    """Reject CSV requests with no filter params.
+
+    Replaces a row-count cap: an unfiltered CSV export could pull the entire
+    user table. `RequiredFiltersFilterBackend` sets `required=True` on this
+    filterset because the action is `detail=False`, which makes
+    `RequiredFilterSet.qs` raise `MissingRequiredParamsException` (412) when
+    no filter is supplied.
+    """
+
+
+CSV_HEADERS = [
+    "First name",
+    "Last name",
+    "Email",
+    "Is active",
+    "Is admin",
+    "Date joined",
+    "Last active",
+    "Disk space (bytes)",
+    "Disk space used (bytes)",
+    "Has editable channels",
+    "Has viewable channels",
+    "Has published a channel",
+    "Most recent publish date",
+    "Has Studio edits",
+    "Locations (country names)",
+    "Primary location",
+    "Location count",
+    "Storage needed",
+    "Heard from",
+]
+
+CSV_VALUES_COLUMNS = (
+    "first_name",
+    "last_name",
+    "email",
+    "is_active",
+    "is_admin",
+    "date_joined",
+    "last_login",
+    "disk_space",
+    "disk_space_used",
+    "has_editable_channels",
+    "has_viewable_channels",
+    "has_published_channel",
+    "most_recent_publish",
+    "has_studio_edits",
+    "information",
+)
+
+
+def _yes_no(value):
+    return "Yes" if value else "No"
+
+
+def _iso_date(value):
+    if value is None:
+        return ""
+    return value.date().isoformat() if hasattr(value, "date") else value.isoformat()
+
+
+def _build_csv_row(values, country_names):
+    """Translate one user .values() dict to a CSV row.
+
+    `country_names` is a dict mapping alpha-2 codes to display names, built once
+    per request.
+    """
+    info = values.get("information") or {}
+    location_codes = info.get("locations") or []
+    location_names = [country_names.get(c, c) for c in location_codes]
+
+    return [
+        values["first_name"],
+        values["last_name"],
+        values["email"],
+        _yes_no(values["is_active"]),
+        _yes_no(values["is_admin"]),
+        _iso_date(values["date_joined"]),
+        _iso_date(values["last_login"]),
+        values["disk_space"],
+        values["disk_space_used"],
+        _yes_no(values["has_editable_channels"]),
+        _yes_no(values["has_viewable_channels"]),
+        _yes_no(values["has_published_channel"]),
+        _iso_date(values["most_recent_publish"]),
+        _yes_no(values["has_studio_edits"]),
+        ", ".join(location_names),
+        location_names[0] if location_names else "",
+        len(location_codes),
+        info.get("space_needed") or "",
+        info.get("heard_from") or "",
+    ]
+
+
+class _Echo:
+    """File-like stub that returns whatever is written to it (streaming CSV pattern)."""
+
+    def write(self, value):
+        return value
 
 
 class AdminUserSerializer(UserSerializer):
@@ -425,7 +587,7 @@ class AdminUserViewSet(
         "edit_count",
         "view_count",
     )
-    queryset = User.objects.all()
+    queryset = User.objects.filter(deleted=False)
 
     def annotate_queryset(self, queryset):
         edit_channel_query = (
@@ -467,3 +629,38 @@ class AdminUserViewSet(
             }
         )
         return Response(information)
+
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="download_csv",
+        url_name="download-csv",
+        filterset_class=AdminUserCSVFilter,
+    )
+    def download_csv(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        queryset = queryset.annotate(
+            has_editable_channels=USER_HAS_EDITABLE_CHANNELS,
+            has_viewable_channels=USER_HAS_VIEWABLE_CHANNELS,
+            has_published_channel=USER_HAS_PUBLISHED_CHANNEL,
+            most_recent_publish=Max(
+                "editable_channels__last_published",
+                filter=Q(editable_channels__deleted=False),
+            ),
+            has_studio_edits=USER_HAS_STUDIO_EDITS,
+        )
+
+        country_names = {c.code: c.name for c in Country.objects.all()}
+        writer = csv.writer(_Echo())
+
+        def stream():
+            yield writer.writerow(CSV_HEADERS)
+            rows = queryset.values(*CSV_VALUES_COLUMNS).iterator(chunk_size=2000)
+            for values in rows:
+                yield writer.writerow(_build_csv_row(values, country_names))
+
+        response = StreamingHttpResponse(stream(), content_type="text/csv")
+        response[
+            "Content-Disposition"
+        ] = f'attachment; filename="studio_users_{date.today().isoformat()}.csv"'
+        return response

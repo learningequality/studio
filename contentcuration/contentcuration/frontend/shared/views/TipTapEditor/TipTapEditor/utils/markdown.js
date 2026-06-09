@@ -5,7 +5,8 @@ import { storageUrl } from '../../../../vuex/file/utils';
 
 // --- Image Translation ---
 export const IMAGE_PLACEHOLDER = '${☣ CONTENTSTORAGE}';
-export const IMAGE_REGEX = /!\[([^\]]*)\]\(([^/]+\/[^\s=)]+)(?:\s*=\s*([0-9.]+)x([0-9.]+))?\)/g;
+export const IMAGE_REGEX =
+  /!\[([^\]]*)\]\(([^/]+\/[^\s=)]+)(?:\s*=\s*([0-9.]+)x([0-9.]+))?(?:\s+align=(\w+))?\)/g;
 
 export const imageMdToParams = markdown => {
   // Reset regex state before executing to ensure it works on all matches
@@ -13,7 +14,7 @@ export const imageMdToParams = markdown => {
   const match = IMAGE_REGEX.exec(markdown);
   if (!match) return null;
 
-  const [, alt, fullPath, width, height] = match;
+  const [, alt, fullPath, width, height, align] = match;
 
   // Extract just the filename from the full path
   const checksumWithExt = fullPath.split('/').pop();
@@ -24,18 +25,24 @@ export const imageMdToParams = markdown => {
   const checksum = parts.join('.');
 
   // Return the data with the correct property names that the rest of the system expects.
-  return { checksum, extension, alt: alt || '', width, height };
+  return { checksum, extension, alt: alt || '', width, height, align };
 };
 
-export const paramsToImageMd = ({ src, alt, width, height, permanentSrc }) => {
+export const paramsToImageMd = ({ src, alt, width, height, permanentSrc, textAlign }) => {
   const sourceToSave = permanentSrc || src;
 
   const fileName = sourceToSave.split('/').pop();
+  const alignSuffix = textAlign && textAlign !== 'left' ? ` align=${textAlign.trim()}` : '';
   if (Number.isFinite(+width) && Number.isFinite(+height)) {
-    return `![${alt || ''}](${IMAGE_PLACEHOLDER}/${fileName} =${width}x${height})`;
+    return `![${alt || ''}](${IMAGE_PLACEHOLDER}/${fileName} =${width}x${height}${alignSuffix})`;
   }
-  return `![${alt || ''}](${IMAGE_PLACEHOLDER}/${fileName})`;
+  return `![${alt || ''}](${IMAGE_PLACEHOLDER}/${fileName}${alignSuffix})`;
 };
+
+// --- Underline Translation ---
+// Perseus simple-markdown treats __text__ as <u>; marked treats it as <strong>.
+// Rewrite before marked runs so the round-trip preserves underline.
+export const UNDERLINE_REGEX = /__([\s\S]+?)__(?!_)/g;
 
 // --- Math/Formula Translation ---
 export const MATH_REGEX = /\$\$([^$]+)\$\$/g;
@@ -50,67 +57,6 @@ export const mathMdToParams = markdown => {
 export const paramsToMathMd = ({ latex }) => {
   return `$$${latex || ''}$$`;
 };
-
-export function sanitizePastedHTML(html) {
-  if (!html) return '';
-  // This code ine 55 to 66 is geneted with the help of LLM with the prompt
-  // "Create a function that sanitizes HTML pasted from Microsoft
-  // Word by removing Word-specific tags, styles, and classes while preserving other formatting."
-  let cleaned = html;
-  cleaned = cleaned.replace(/<!--\[if.*?endif\]-->/gis, '');
-  cleaned = cleaned.replace(/<\/?(w|m|o|v):[^>]*>/gis, '');
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(cleaned, 'text/html');
-  doc.querySelectorAll('*').forEach(el => {
-    if (el.hasAttribute('style')) {
-      const style = el.getAttribute('style') || '';
-      const filtered = style
-        .split(';')
-        .map(s => s.trim())
-        .filter(s => s && !s.toLowerCase().startsWith('mso-'))
-        .join('; ');
-      if (filtered) {
-        el.setAttribute('style', filtered);
-      } else {
-        el.removeAttribute('style');
-      }
-    }
-    if (el.hasAttribute('class')) {
-      const cls = el
-        .getAttribute('class')
-        .split(/\s+/)
-        .filter(c => c && !/^Mso/i.test(c))
-        .join(' ');
-      if (cls) {
-        el.setAttribute('class', cls);
-      } else {
-        el.removeAttribute('class');
-      }
-    }
-  });
-  const strikeElements = doc.querySelectorAll('s, strike, del');
-  strikeElements.forEach(el => {
-    const nestedLists = el.querySelectorAll('ul, ol');
-    if (nestedLists.length > 0) {
-      nestedLists.forEach(list => {
-        el.parentNode.insertBefore(list, el.nextSibling);
-      });
-    }
-  });
-  const lists = doc.querySelectorAll('ul, ol');
-  lists.forEach(list => {
-    const items = list.querySelectorAll(':scope > li');
-    items.forEach(item => {
-      const nestedLists = Array.from(item.children).filter(
-        child => child.tagName === 'UL' || child.tagName === 'OL',
-      );
-      nestedLists.forEach(nestedList => {
-        item.appendChild(nestedList);
-      });
-    });
-  });
-  return doc.body.innerHTML;
-}
 
 /**
  * Pre-processes a raw Markdown string to convert custom syntax into HTML tags
@@ -134,12 +80,13 @@ export function preprocessMarkdown(markdown) {
     // 2. The permanentSrc is just the checksum + extension.
     const permanentSrc = `${params.checksum}.${params.extension}`;
 
-    // 3. Create attributes string for width and height only if they exist
+    // 3. Create attributes string for width, height, and alignment only if they exist
     const widthAttr = params.width ? ` width="${params.width}"` : '';
     const heightAttr = params.height ? ` height="${params.height}"` : '';
+    const alignAttr = params.align ? ` style="text-align: ${params.align}"` : '';
 
     // 4. Create an <img> tag with the REAL display URL in `src`.
-    return `<img src="${displayUrl}" permanentSrc="${permanentSrc}" alt="${params.alt}"${widthAttr}${heightAttr} />`;
+    return `<img src="${displayUrl}" permanentSrc="${permanentSrc}" alt="${params.alt}"${widthAttr}${heightAttr}${alignAttr} />`;
   });
 
   processedMarkdown = processedMarkdown.replace(MATH_REGEX, match => {
@@ -147,6 +94,8 @@ export function preprocessMarkdown(markdown) {
     if (!params) return match;
     return `<span data-latex="${params.latex}"></span>`;
   });
+
+  processedMarkdown = processedMarkdown.replace(UNDERLINE_REGEX, '<u>$1</u>');
 
   return marked(processedMarkdown);
 }

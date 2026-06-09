@@ -68,6 +68,20 @@
 
     <ToolbarDivider v-if="visibleCategories.includes('clipboard')" />
 
+    <!-- Text Alignment -->
+    <ToolbarButton
+      v-if="visibleCategories.includes('align')"
+      :title="alignAction.title"
+      :icon="alignAction.icon"
+      :is-active="alignAction.isActive"
+      :is-available="alignAction.isAvailable"
+      @click="alignAction.handler"
+    />
+
+    <ToolbarDivider v-if="visibleCategories.includes('align')" />
+
+    <!-- Clear Formatting -->
+
     <ToolbarButton
       v-if="visibleCategories.includes('clearFormat')"
       :title="clearFormatting$()"
@@ -221,6 +235,25 @@
           </button>
         </template>
 
+        <!-- Overflow Text Alignment -->
+        <template v-if="overflowCategories.includes('align')">
+          <button
+            class="dropdown-item"
+            :class="{ active: alignAction.isActive }"
+            role="menuitem"
+            :disabled="!alignAction.isAvailable"
+            @click="alignAction.handler"
+          >
+            <img
+              :src="alignAction.icon"
+              class="dropdown-item-icon"
+              alt=""
+              aria-hidden="true"
+            >
+            <span class="dropdown-item-text">{{ alignAction.title }}</span>
+          </button>
+        </template>
+
         <!-- Overflow Clear Format -->
         <template v-if="overflowCategories.includes('clearFormat')">
           <button
@@ -345,6 +378,7 @@
         script: 710,
         lists: 650,
         clearFormat: 560,
+        align: 530,
         clipboard: 500,
         textFormat: 400,
       };
@@ -352,9 +386,14 @@
       // Categories that can overflow (in order of overflow priority)
       const OVERFLOW_CATEGORIES = [
         'insert',
-        'script',
+        // Perseus flavoured markdown does not support super and sub script,
+        // so we disable this for now until we stop using markdown as the primary target
+        // 'script',
         'lists',
         'clearFormat',
+        // Perseus flavoured markdown does not support alignment,
+        // so we disable this for now until we stop using markdown as the primary target
+        // 'align',
         'clipboard',
         'textFormat',
       ];
@@ -365,6 +404,7 @@
         canClearFormat,
         historyActions,
         textActions,
+        alignAction,
         listActions,
         scriptActions,
         insertTools,
@@ -495,7 +535,7 @@
           window.addEventListener('resize', handleWindowResize, { passive: true });
         }
 
-        document.addEventListener('click', handleClickOutside, { passive: true });
+        document.addEventListener('mousedown', handleClickOutside, { passive: true });
       });
 
       onUnmounted(() => {
@@ -504,7 +544,7 @@
         } else {
           window.removeEventListener('resize', handleWindowResize);
         }
-        document.removeEventListener('click', handleClickOutside);
+        document.removeEventListener('mousedown', handleClickOutside);
       });
 
       return {
@@ -523,6 +563,7 @@
         canClearFormat,
         historyActions,
         textActions,
+        alignAction,
         listActions,
         scriptActions,
         insertTools,

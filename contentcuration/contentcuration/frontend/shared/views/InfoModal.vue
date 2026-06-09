@@ -66,7 +66,7 @@
       };
     },
     $trs: {
-      open: 'Open help dialog',
+      open: 'More information about licenses',
       close: 'Close',
     },
   };

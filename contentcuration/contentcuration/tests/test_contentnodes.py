@@ -1,3 +1,4 @@
+import json
 import random
 import string
 import time
@@ -10,12 +11,17 @@ from le_utils.constants import completion_criteria
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import format_presets
+from le_utils.constants import modalities
 from mixer.backend.django import mixer
 from mock import patch
 
 from . import testdata
 from .base import StudioTestCase
 from .testdata import create_studio_file
+from contentcuration.constants import completion_criteria as studio_completion_criteria
+from contentcuration.management.commands.fix_exercise_extra_fields import (
+    Command as FixExerciseExtraFieldsCommand,
+)
 from contentcuration.models import AssessmentItem
 from contentcuration.models import Channel
 from contentcuration.models import ContentKind
@@ -28,6 +34,7 @@ from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.utils.db_tools import TreeBuilder
 from contentcuration.utils.files import create_thumbnail_from_base64
+from contentcuration.utils.nodes import migrate_extra_fields
 from contentcuration.utils.sync import sync_node
 
 
@@ -817,6 +824,27 @@ class SyncNodesOperationTestCase(StudioTestCase):
         )
         self._assert_same_files(orig_video, cloned_video)
 
+    def test_sync_but_incomplete(self):
+        orig_video, cloned_video = self._setup_original_and_deriative_nodes()
+        orig_video.license_id = None
+        orig_video.mark_complete()
+        self.assertFalse(orig_video.complete)
+        orig_video.save()
+
+        self.assertTrue(cloned_video.complete)
+
+        sync_node(
+            cloned_video,
+            sync_titles_and_descriptions=True,
+            sync_resource_details=True,
+            sync_files=True,
+            sync_assessment_items=True,
+        )
+
+        self.assertIsNotNone(cloned_video.license_id)
+        cloned_video.mark_complete()
+        self.assertTrue(cloned_video.complete)
+
     def test_sync_with_subs(self):
         orig_video, cloned_video = self._setup_original_and_deriative_nodes()
         self._add_subs_to_video_node(orig_video, "fr")
@@ -861,6 +889,13 @@ class SyncNodesOperationTestCase(StudioTestCase):
             node_id="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         )
         video_node = testdata.node(data, parent=parent)
+        video_node.license_id = 9  # Special Permissions
+        video_node.license_description = "Special permissions for testing"
+        video_node.copyright_holder = "LE"
+        # ensure the node is complete according to our logic
+        video_node.mark_complete()
+        self.assertTrue(video_node.complete)
+        video_node.save()
 
         if withsubs:
             self._add_subs_to_video_node(video_node, "fr")
@@ -1422,6 +1457,53 @@ class NodeCompletionTestCase(StudioTestCase):
         new_obj.mark_complete()
         self.assertTrue(new_obj.complete)
 
+    def test_migrate_extra_fields_do_all_with_non_null_m_n(self):
+        """Migrated do_all exercises with non-null m/n must pass completion criteria validation."""
+        extra_fields = {
+            "mastery_model": exercises.DO_ALL,
+            "m": 0,
+            "n": 0,
+            "randomize": False,
+        }
+        result = migrate_extra_fields(extra_fields)
+        criterion = result["options"]["completion_criteria"]
+        # Should not raise
+        studio_completion_criteria.validate(criterion, kind=content_kinds.EXERCISE)
+
+    def test_migrate_extra_fields_num_correct_in_a_row_with_non_null_m_n(self):
+        """Migrated num_correct_in_a_row exercises with leftover m/n must pass validation."""
+        for mastery_model in (
+            exercises.NUM_CORRECT_IN_A_ROW_2,
+            exercises.NUM_CORRECT_IN_A_ROW_3,
+            exercises.NUM_CORRECT_IN_A_ROW_5,
+            exercises.NUM_CORRECT_IN_A_ROW_10,
+        ):
+            extra_fields = {
+                "mastery_model": mastery_model,
+                "m": 5,
+                "n": 10,
+                "randomize": False,
+            }
+            result = migrate_extra_fields(extra_fields)
+            criterion = result["options"]["completion_criteria"]
+            # Should not raise
+            studio_completion_criteria.validate(criterion, kind=content_kinds.EXERCISE)
+
+    def test_migrate_extra_fields_m_of_n_preserves_m_n(self):
+        """Migrated m_of_n exercises must preserve m and n values."""
+        extra_fields = {
+            "mastery_model": exercises.M_OF_N,
+            "m": 3,
+            "n": 5,
+            "randomize": False,
+        }
+        result = migrate_extra_fields(extra_fields)
+        criterion = result["options"]["completion_criteria"]
+        self.assertEqual(criterion["threshold"]["m"], 3)
+        self.assertEqual(criterion["threshold"]["n"], 5)
+        # Should not raise
+        studio_completion_criteria.validate(criterion, kind=content_kinds.EXERCISE)
+
     def test_create_exercise_bad_new_extra_fields(self):
         licenses = list(
             License.objects.filter(
@@ -1481,3 +1563,715 @@ class NodeCompletionTestCase(StudioTestCase):
             new_obj.mark_complete()
         except AttributeError:
             self.fail("Null extra_fields not handled")
+
+    def _make_preposttest_extra_fields(self, modality):
+        """Helper to create extra_fields with valid pre_post_test completion criteria."""
+        uuid_a = "a" * 32
+        uuid_b = "b" * 32
+        return {
+            "options": {
+                "modality": modality,
+                "completion_criteria": {
+                    "model": completion_criteria.MASTERY,
+                    "threshold": {
+                        "mastery_model": exercises.PRE_POST_TEST,
+                        "pre_post_test": {
+                            "assessment_item_ids": [uuid_a, uuid_b],
+                            "version_a_item_ids": [uuid_a],
+                            "version_b_item_ids": [uuid_b],
+                        },
+                    },
+                },
+            }
+        }
+
+    def test_create_topic_unit_modality_valid_preposttest_complete(self):
+        """Topic with UNIT modality and valid PRE_POST_TEST completion criteria should be complete."""
+        channel = testdata.channel()
+        new_obj = ContentNode(
+            title="Unit Topic",
+            kind_id=content_kinds.TOPIC,
+            parent=channel.main_tree,
+            extra_fields=self._make_preposttest_extra_fields(modalities.UNIT),
+        )
+        new_obj.save()
+        new_obj.mark_complete()
+        self.assertTrue(new_obj.complete)
+
+    def test_create_topic_unit_modality_wrong_mastery_model_incomplete(self):
+        """Topic with UNIT modality but M_OF_N mastery model should be incomplete."""
+        channel = testdata.channel()
+        new_obj = ContentNode(
+            title="Unit Topic",
+            kind_id=content_kinds.TOPIC,
+            parent=channel.main_tree,
+            extra_fields={
+                "options": {
+                    "modality": modalities.UNIT,
+                    "completion_criteria": {
+                        "model": completion_criteria.MASTERY,
+                        "threshold": {
+                            "mastery_model": exercises.M_OF_N,
+                            "m": 3,
+                            "n": 5,
+                        },
+                    },
+                }
+            },
+        )
+        new_obj.save()
+        new_obj.mark_complete()
+        self.assertFalse(new_obj.complete)
+
+    def test_create_topic_lesson_modality_with_completion_criteria_incomplete(self):
+        """Topic with LESSON modality should not have completion criteria."""
+        channel = testdata.channel()
+        new_obj = ContentNode(
+            title="Lesson Topic",
+            kind_id=content_kinds.TOPIC,
+            parent=channel.main_tree,
+            extra_fields=self._make_preposttest_extra_fields(modalities.LESSON),
+        )
+        new_obj.save()
+        new_obj.mark_complete()
+        self.assertFalse(new_obj.complete)
+
+    def test_create_topic_no_modality_with_completion_criteria_incomplete(self):
+        """Topic with no modality should not have completion criteria."""
+        channel = testdata.channel()
+        extra_fields = self._make_preposttest_extra_fields(modalities.UNIT)
+        # Remove the modality
+        del extra_fields["options"]["modality"]
+        new_obj = ContentNode(
+            title="Topic Without Modality",
+            kind_id=content_kinds.TOPIC,
+            parent=channel.main_tree,
+            extra_fields=extra_fields,
+        )
+        new_obj.save()
+        new_obj.mark_complete()
+        self.assertFalse(new_obj.complete)
+
+    def test_create_topic_unit_modality_without_completion_criteria_incomplete(
+        self,
+    ):
+        """Topic with UNIT modality MUST have completion criteria - it's not optional."""
+        channel = testdata.channel()
+        new_obj = ContentNode(
+            title="Unit Topic Without Criteria",
+            kind_id=content_kinds.TOPIC,
+            parent=channel.main_tree,
+            extra_fields={
+                "options": {
+                    "modality": modalities.UNIT,
+                    # No completion_criteria
+                }
+            },
+        )
+        new_obj.save()
+        new_obj.mark_complete()
+        self.assertFalse(new_obj.complete)
+
+
+class FixExerciseExtraFieldsTestCase(StudioTestCase):
+    def setUp(self):
+        super(FixExerciseExtraFieldsTestCase, self).setUpBase()
+        self.licenses = list(
+            License.objects.filter(
+                copyright_holder_required=False, is_custom=False
+            ).values_list("pk", flat=True)
+        )
+        self.channel = testdata.channel()
+
+    def _create_exercise(self, extra_fields, with_assessment=True):
+        node = ContentNode(
+            title="Exercise",
+            kind_id=content_kinds.EXERCISE,
+            parent=self.channel.main_tree,
+            license_id=self.licenses[0],
+            extra_fields=extra_fields,
+        )
+        node.save()
+        if with_assessment:
+            AssessmentItem.objects.create(
+                contentnode=node,
+                question="A question",
+                answers='[{"correct": true, "text": "answer"}]',
+            )
+        return node
+
+    def test_fixes_migrated_do_all_with_non_null_m_n(self):
+        """Command should null out m/n for already-migrated do_all exercises."""
+        node = self._create_exercise(
+            {
+                "options": {
+                    "completion_criteria": {
+                        "threshold": {
+                            "mastery_model": exercises.DO_ALL,
+                            "m": 0,
+                            "n": 0,
+                        },
+                        "model": completion_criteria.MASTERY,
+                    }
+                },
+            }
+        )
+        node.mark_complete()
+        node.save()
+
+        command = FixExerciseExtraFieldsCommand()
+        command.handle()
+
+        node.refresh_from_db()
+        threshold = node.extra_fields["options"]["completion_criteria"]["threshold"]
+        self.assertIsNone(threshold["m"])
+        self.assertIsNone(threshold["n"])
+        self.assertEqual(threshold["mastery_model"], exercises.DO_ALL)
+        # Should now pass schema validation
+        studio_completion_criteria.validate(
+            node.extra_fields["options"]["completion_criteria"],
+            kind=content_kinds.EXERCISE,
+        )
+
+    def test_fixes_migrated_num_correct_in_a_row_with_non_null_m_n(self):
+        """Command should null out m/n for num_correct_in_a_row exercises."""
+        node = self._create_exercise(
+            {
+                "options": {
+                    "completion_criteria": {
+                        "threshold": {
+                            "mastery_model": exercises.NUM_CORRECT_IN_A_ROW_5,
+                            "m": 5,
+                            "n": 10,
+                        },
+                        "model": completion_criteria.MASTERY,
+                    }
+                },
+            }
+        )
+        node.mark_complete()
+        node.save()
+
+        command = FixExerciseExtraFieldsCommand()
+        command.handle()
+
+        node.refresh_from_db()
+        threshold = node.extra_fields["options"]["completion_criteria"]["threshold"]
+        self.assertIsNone(threshold["m"])
+        self.assertIsNone(threshold["n"])
+        self.assertEqual(threshold["mastery_model"], exercises.NUM_CORRECT_IN_A_ROW_5)
+
+    def test_does_not_touch_m_of_n(self):
+        """Command should leave m_of_n exercises untouched."""
+        node = self._create_exercise(
+            {
+                "options": {
+                    "completion_criteria": {
+                        "threshold": {
+                            "mastery_model": exercises.M_OF_N,
+                            "m": 3,
+                            "n": 5,
+                        },
+                        "model": completion_criteria.MASTERY,
+                    }
+                },
+            }
+        )
+        node.mark_complete()
+        node.save()
+
+        command = FixExerciseExtraFieldsCommand()
+        command.handle()
+
+        node.refresh_from_db()
+        threshold = node.extra_fields["options"]["completion_criteria"]["threshold"]
+        self.assertEqual(threshold["m"], 3)
+        self.assertEqual(threshold["n"], 5)
+
+    def test_migrates_old_style_extra_fields(self):
+        """Command should migrate old-style top-level mastery_model to new format."""
+        node = self._create_exercise(
+            {
+                "mastery_model": exercises.DO_ALL,
+                "m": 0,
+                "n": 0,
+                "randomize": False,
+            }
+        )
+
+        command = FixExerciseExtraFieldsCommand()
+        command.handle()
+
+        node.refresh_from_db()
+        # Should have new-style structure
+        criterion = node.extra_fields["options"]["completion_criteria"]
+        self.assertEqual(criterion["model"], completion_criteria.MASTERY)
+        self.assertEqual(criterion["threshold"]["mastery_model"], exercises.DO_ALL)
+        # m and n should be null for do_all
+        self.assertIsNone(criterion["threshold"]["m"])
+        self.assertIsNone(criterion["threshold"]["n"])
+        # Old keys should be gone
+        self.assertNotIn("mastery_model", node.extra_fields)
+        self.assertNotIn("m", node.extra_fields)
+        self.assertNotIn("n", node.extra_fields)
+        # randomize should be preserved
+        self.assertFalse(node.extra_fields["randomize"])
+
+    def test_dry_run_does_not_modify(self):
+        """Dry run should report counts but not modify data."""
+        node = self._create_exercise(
+            {
+                "options": {
+                    "completion_criteria": {
+                        "threshold": {
+                            "mastery_model": exercises.DO_ALL,
+                            "m": 0,
+                            "n": 0,
+                        },
+                        "model": completion_criteria.MASTERY,
+                    }
+                },
+            }
+        )
+        node.mark_complete()
+        node.save()
+
+        command = FixExerciseExtraFieldsCommand()
+        command.handle(dry_run=True)
+
+        node.refresh_from_db()
+        threshold = node.extra_fields["options"]["completion_criteria"]["threshold"]
+        # Should still have the invalid values
+        self.assertEqual(threshold["m"], 0)
+        self.assertEqual(threshold["n"], 0)
+
+    def test_incomplete_node_with_valid_fields_gets_marked_complete(self):
+        """An incomplete exercise with valid extra_fields should be marked complete."""
+        node = self._create_exercise(
+            {
+                "options": {
+                    "completion_criteria": {
+                        "threshold": {
+                            "mastery_model": exercises.DO_ALL,
+                            "m": None,
+                            "n": None,
+                        },
+                        "model": completion_criteria.MASTERY,
+                    }
+                },
+            }
+        )
+        # Force incomplete status even though fields are valid
+        node.complete = False
+        node.save()
+
+        command = FixExerciseExtraFieldsCommand()
+        command.handle()
+
+        node.refresh_from_db()
+        self.assertTrue(node.complete)
+
+    def test_migrates_string_extra_fields(self):
+        """Command should parse and migrate extra_fields stored as a JSON string."""
+        node = self._create_exercise(
+            json.dumps(
+                {
+                    "mastery_model": exercises.DO_ALL,
+                    "m": 0,
+                    "n": 0,
+                    "randomize": False,
+                }
+            ),
+        )
+
+        command = FixExerciseExtraFieldsCommand()
+        command.handle()
+
+        node.refresh_from_db()
+        extra_fields = node.extra_fields
+        # Should now be a dict, not a string
+        self.assertIsInstance(extra_fields, dict)
+        threshold = extra_fields["options"]["completion_criteria"]["threshold"]
+        self.assertIsNone(threshold["m"])
+        self.assertIsNone(threshold["n"])
+        self.assertEqual(threshold["mastery_model"], exercises.DO_ALL)
+        studio_completion_criteria.validate(
+            extra_fields["options"]["completion_criteria"],
+            kind=content_kinds.EXERCISE,
+        )
+
+
+class UnitCopyExtraFieldsTestCase(StudioTestCase):
+    def setUp(self):
+        super(UnitCopyExtraFieldsTestCase, self).setUpBase()
+        self.target_channel = testdata.channel()
+
+    # ------------------------------------------------------------------ #
+    # helpers
+    # ------------------------------------------------------------------ #
+
+    def _make_unit_extra_fields(self, lesson_ids):
+        """Return a full extra_fields dict for a UNIT topic."""
+        lo_id = "a" * 32
+        assessment_id = "b" * 32
+        options = {
+            "modality": modalities.UNIT,
+            "completion_criteria": {
+                "model": "mastery",
+                "threshold": {
+                    "mastery_model": "pre_post_test",
+                    "pre_post_test": {
+                        "assessment_item_ids": [assessment_id],
+                        "version_a_item_ids": [assessment_id],
+                        "version_b_item_ids": [assessment_id],
+                    },
+                },
+            },
+            "learning_objectives": [{"id": lo_id, "text": "Learn something"}],
+            "assessment_objectives": {assessment_id: [lo_id]},
+            "lesson_objectives": {lesson_id: [lo_id] for lesson_id in lesson_ids},
+        }
+        return {"options": options}
+
+    def _make_course_unit_lessons(self, num_lessons=2):
+        """
+        Build: channel.main_tree > course > unit > [lesson_1, lesson_2, ...]
+        Returns (course, unit, lessons).
+        unit.extra_fields is set after lesson nodes are created so it can reference their PKs.
+        """
+        course = ContentNode.objects.create(
+            title="Course",
+            kind_id=content_kinds.TOPIC,
+            parent=self.channel.main_tree,
+            extra_fields={"options": {"modality": modalities.COURSE}},
+        )
+        unit = ContentNode.objects.create(
+            title="Unit",
+            kind_id=content_kinds.TOPIC,
+            parent=course,
+        )
+        lessons = []
+        for i in range(num_lessons):
+            lesson = ContentNode.objects.create(
+                title="Lesson {}".format(i + 1),
+                kind_id=content_kinds.TOPIC,
+                parent=unit,
+                extra_fields={"options": {"modality": modalities.LESSON}},
+            )
+            lessons.append(lesson)
+
+        unit.extra_fields = self._make_unit_extra_fields(
+            lesson_ids=[lesson.id for lesson in lessons],
+        )
+        unit.save()
+        return course, unit, lessons
+
+    # ------------------------------------------------------------------ #
+    # deep-copy integration tests
+    # ------------------------------------------------------------------ #
+
+    def test_deep_copy_unit_remaps_lesson_objectives(self):
+        """Deep copy: lesson_objectives keys point at cloned lessons with correct LO values."""
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=2)
+        source_lesson_objectives = unit.extra_fields["options"]["lesson_objectives"]
+        course.copy_to(self.target_channel.main_tree, batch_size=10000)
+
+        copied_course = self.target_channel.main_tree.get_children().last()
+        copied_unit = copied_course.get_children().first()
+        copied_lessons = list(copied_unit.get_children().order_by("lft"))
+
+        copied_unit.refresh_from_db()
+        lesson_objectives = copied_unit.extra_fields["options"]["lesson_objectives"]
+
+        for original_lesson, copied_lesson in zip(lessons, copied_lessons):
+            self.assertIn(
+                copied_lesson.id,
+                lesson_objectives,
+                "Cloned lesson PK not found in lesson_objectives",
+            )
+            self.assertEqual(
+                lesson_objectives[copied_lesson.id],
+                source_lesson_objectives[original_lesson.id],
+            )
+        for original_lesson in lessons:
+            self.assertNotIn(
+                original_lesson.id,
+                lesson_objectives,
+                "Original lesson PK still present in lesson_objectives",
+            )
+
+    def test_deep_copy_non_unit_extra_fields_unchanged(self):
+        """Deep copy: extra_fields on Lesson and Course topics is copied verbatim."""
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=1)
+        course.copy_to(self.target_channel.main_tree, batch_size=10000)
+
+        copied_course = self.target_channel.main_tree.get_children().last()
+        copied_course.refresh_from_db()
+        copied_unit = copied_course.get_children().first()
+        copied_lesson = copied_unit.get_children().first()
+        copied_lesson.refresh_from_db()
+
+        self.assertEqual(copied_course.extra_fields, course.extra_fields)
+        self.assertEqual(copied_lesson.extra_fields, lessons[0].extra_fields)
+
+    # ------------------------------------------------------------------ #
+    # shallow-copy integration tests
+    # ------------------------------------------------------------------ #
+
+    def test_shallow_copy_unit_remaps_lesson_objectives(self):
+        """Shallow copy: lesson_objectives keys point at cloned lessons with correct LO values."""
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=2)
+        source_lesson_objectives = unit.extra_fields["options"]["lesson_objectives"]
+        course.copy_to(self.target_channel.main_tree, batch_size=1)
+
+        copied_course = self.target_channel.main_tree.get_children().last()
+        copied_unit = copied_course.get_children().first()
+        copied_lessons = list(copied_unit.get_children().order_by("lft"))
+
+        copied_unit.refresh_from_db()
+        lesson_objectives = copied_unit.extra_fields["options"]["lesson_objectives"]
+
+        for original_lesson, copied_lesson in zip(lessons, copied_lessons):
+            self.assertIn(copied_lesson.id, lesson_objectives)
+            self.assertEqual(
+                lesson_objectives[copied_lesson.id],
+                source_lesson_objectives[original_lesson.id],
+            )
+        for original_lesson in lessons:
+            self.assertNotIn(original_lesson.id, lesson_objectives)
+
+    def test_shallow_copy_non_unit_extra_fields_unchanged(self):
+        """Shallow copy: extra_fields on Lesson and Course topics is copied verbatim."""
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=1)
+        course.copy_to(self.target_channel.main_tree, batch_size=1)
+
+        copied_course = self.target_channel.main_tree.get_children().last()
+        copied_course.refresh_from_db()
+        copied_unit = copied_course.get_children().first()
+        copied_lesson = copied_unit.get_children().first()
+        copied_lesson.refresh_from_db()
+
+        self.assertEqual(copied_course.extra_fields, course.extra_fields)
+        self.assertEqual(copied_lesson.extra_fields, lessons[0].extra_fields)
+
+    # ------------------------------------------------------------------ #
+    # excluded_descendants masking tests
+    # ------------------------------------------------------------------ #
+
+    def test_excluded_lesson_entry_dropped_from_unit_deep(self):
+        """
+        Deep copy: when a lesson is excluded, its entry is dropped from
+        the cloned Unit's lesson_objectives.
+        """
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=2)
+        excluded_lesson = lessons[0]
+        kept_lesson = lessons[1]
+        source_lesson_objectives = unit.extra_fields["options"]["lesson_objectives"]
+
+        course.copy_to(
+            self.target_channel.main_tree,
+            batch_size=10000,
+            excluded_descendants={excluded_lesson.node_id: True},
+        )
+
+        copied_course = self.target_channel.main_tree.get_children().last()
+        copied_unit = copied_course.get_children().first()
+        copied_unit.refresh_from_db()
+        lesson_objectives = copied_unit.extra_fields["options"]["lesson_objectives"]
+
+        self.assertNotIn(excluded_lesson.id, lesson_objectives)
+        copied_kept = copied_unit.get_children().first()
+        self.assertIn(copied_kept.id, lesson_objectives)
+        self.assertEqual(
+            lesson_objectives[copied_kept.id],
+            source_lesson_objectives[kept_lesson.id],
+        )
+        self.assertEqual(len(lesson_objectives), 1)
+
+    def test_excluded_lesson_entry_dropped_from_unit_shallow(self):
+        """
+        Shallow copy: same behaviour as deep copy when a lesson is excluded.
+        """
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=2)
+        excluded_lesson = lessons[0]
+        kept_lesson = lessons[1]
+        source_lesson_objectives = unit.extra_fields["options"]["lesson_objectives"]
+
+        course.copy_to(
+            self.target_channel.main_tree,
+            batch_size=1,
+            excluded_descendants={excluded_lesson.node_id: True},
+        )
+
+        copied_course = self.target_channel.main_tree.get_children().last()
+        copied_unit = copied_course.get_children().first()
+        copied_unit.refresh_from_db()
+        lesson_objectives = copied_unit.extra_fields["options"]["lesson_objectives"]
+
+        self.assertNotIn(excluded_lesson.id, lesson_objectives)
+        copied_kept = copied_unit.get_children().first()
+        self.assertIn(copied_kept.id, lesson_objectives)
+        self.assertEqual(
+            lesson_objectives[copied_kept.id],
+            source_lesson_objectives[kept_lesson.id],
+        )
+        self.assertEqual(len(lesson_objectives), 1)
+
+    def test_excluded_unit_not_remapped(self):
+        """
+        Deep copy: when the Unit itself is excluded from a Course copy, the Unit is
+        absent from the clone and no remap runs (no error, Course copy succeeds).
+        """
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=2)
+
+        course.copy_to(
+            self.target_channel.main_tree,
+            batch_size=10000,
+            excluded_descendants={unit.node_id: True},
+        )
+
+        copied_course = self.target_channel.main_tree.get_children().last()
+        self.assertEqual(copied_course.get_children().count(), 0)
+
+    def test_excluded_resource_inside_lesson_preserves_lesson_entry(self):
+        """
+        Deep copy: when a resource inside a lesson is excluded (not the lesson
+        itself), the lesson's entry in lesson_objectives is preserved with the
+        cloned lesson's PK.
+        """
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=1)
+        lesson = lessons[0]
+        source_lesson_objectives = unit.extra_fields["options"]["lesson_objectives"]
+
+        license_obj = License.objects.filter(
+            copyright_holder_required=False, is_custom=False
+        ).first()
+        resource = ContentNode.objects.create(
+            title="Video",
+            kind_id=content_kinds.VIDEO,
+            parent=lesson,
+            license=license_obj,
+        )
+
+        course.copy_to(
+            self.target_channel.main_tree,
+            batch_size=10000,
+            excluded_descendants={resource.node_id: True},
+        )
+
+        copied_course = self.target_channel.main_tree.get_children().last()
+        copied_unit = copied_course.get_children().first()
+        copied_unit.refresh_from_db()
+        lesson_objectives = copied_unit.extra_fields["options"]["lesson_objectives"]
+
+        copied_lesson = copied_unit.get_children().first()
+        self.assertIn(copied_lesson.id, lesson_objectives)
+        self.assertNotIn(lesson.id, lesson_objectives)
+        self.assertEqual(
+            lesson_objectives[copied_lesson.id],
+            source_lesson_objectives[lesson.id],
+        )
+        self.assertEqual(len(lesson_objectives), 1)
+
+    def test_excluded_resource_inside_lesson_preserves_lesson_entry_shallow(self):
+        """
+        Shallow copy: when a resource inside a lesson is excluded (not the lesson
+        itself), the lesson's entry in lesson_objectives is preserved with the
+        cloned lesson's PK.
+        """
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=1)
+        lesson = lessons[0]
+        source_lesson_objectives = unit.extra_fields["options"]["lesson_objectives"]
+
+        license_obj = License.objects.filter(
+            copyright_holder_required=False, is_custom=False
+        ).first()
+        resource = ContentNode.objects.create(
+            title="Video",
+            kind_id=content_kinds.VIDEO,
+            parent=lesson,
+            license=license_obj,
+        )
+
+        course.copy_to(
+            self.target_channel.main_tree,
+            batch_size=1,
+            excluded_descendants={resource.node_id: True},
+        )
+
+        copied_course = self.target_channel.main_tree.get_children().last()
+        copied_unit = copied_course.get_children().first()
+        copied_unit.refresh_from_db()
+        lesson_objectives = copied_unit.extra_fields["options"]["lesson_objectives"]
+
+        copied_lesson = copied_unit.get_children().first()
+        self.assertIn(copied_lesson.id, lesson_objectives)
+        self.assertNotIn(lesson.id, lesson_objectives)
+        self.assertEqual(
+            lesson_objectives[copied_lesson.id],
+            source_lesson_objectives[lesson.id],
+        )
+        self.assertEqual(len(lesson_objectives), 1)
+
+    # ------------------------------------------------------------------ #
+    # regression and stability tests
+    # ------------------------------------------------------------------ #
+
+    def test_assessment_objectives_unchanged_after_copy(self):
+        """
+        assessment_objectives keys (assessment_ids) are not node PKs and must
+        be preserved verbatim on the cloned Unit.
+        """
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=1)
+        source_assessment_objectives = unit.extra_fields["options"][
+            "assessment_objectives"
+        ]
+
+        course.copy_to(self.target_channel.main_tree, batch_size=10000)
+
+        copied_course = self.target_channel.main_tree.get_children().last()
+        copied_unit = copied_course.get_children().first()
+        copied_unit.refresh_from_db()
+
+        self.assertEqual(
+            copied_unit.extra_fields["options"]["assessment_objectives"],
+            source_assessment_objectives,
+        )
+
+    def test_learning_objectives_list_unchanged_after_copy(self):
+        """
+        learning_objectives list (LO IDs, not node IDs) is preserved verbatim
+        on the cloned Unit.
+        """
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=1)
+        source_lo_list = unit.extra_fields["options"]["learning_objectives"]
+
+        course.copy_to(self.target_channel.main_tree, batch_size=10000)
+
+        copied_course = self.target_channel.main_tree.get_children().last()
+        copied_unit = copied_course.get_children().first()
+        copied_unit.refresh_from_db()
+
+        self.assertEqual(
+            copied_unit.extra_fields["options"]["learning_objectives"],
+            source_lo_list,
+        )
+
+    def test_completion_criteria_unchanged_after_copy(self):
+        """
+        completion_criteria (containing assessment_item_ids) is preserved
+        verbatim on the cloned Unit — assessment_ids are not node PKs.
+        """
+        course, unit, lessons = self._make_course_unit_lessons(num_lessons=1)
+        source_cc = unit.extra_fields["options"]["completion_criteria"]
+
+        course.copy_to(self.target_channel.main_tree, batch_size=10000)
+
+        copied_course = self.target_channel.main_tree.get_children().last()
+        copied_unit = copied_course.get_children().first()
+        copied_unit.refresh_from_db()
+
+        self.assertEqual(
+            copied_unit.extra_fields["options"]["completion_criteria"],
+            source_cc,
+        )

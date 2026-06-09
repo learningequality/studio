@@ -400,7 +400,6 @@
       ...mapGetters('contentNode', ['getContentNodeAncestors']),
       ...mapGetters('currentChannel', ['currentChannel']),
       ...mapGetters('importFromChannels', ['savedSearchesExist']),
-      ...mapGetters(['isAIFeatureEnabled']),
       ...mapState('importFromChannels', ['selected']),
       isBrowsing() {
         return this.$route.name === RouteNames.IMPORT_FROM_CHANNELS_BROWSE;
@@ -432,10 +431,6 @@
         };
       },
       shouldShowRecommendations() {
-        if (!this.isAIFeatureEnabled) {
-          return false;
-        }
-
         if (this.embedTopicRequest === null) {
           return false;
         }
