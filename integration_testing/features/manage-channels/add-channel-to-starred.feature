@@ -3,13 +3,13 @@ Feature: Add a channel to the *Starred* tab
 
 	Background:
 		Given I am signed in to Studio
-			And I am on any of the tabs (*My Channels*, *Starred*, *View-only*, or *Content Library*)
-			And I see a channel that is not starred (white star)
+			And I am on any of the tabs (*My Channels*, *Starred*, *View-only*, or *Kolibri Library*)
+			And there is a channel which is not starred (white star)
 
-	Scenario: Add channel to the *Starred* tab
+	Scenario: Add a channel to the *Starred* tab
 		When I click the *Add to starred channels* button for the desired channel
-		Then I see that the channel's *Add to starred channels* button is now black
-			And I see a message that the channel was added to the starred channels
+		Then I see a snackbar message that the channel was added to the starred channels
+			And I see that the channel's *Add to starred channels* button is now black and the tooltip message is now *Remove from starred channels*
 		When I click and open the *Starred* tab
 		Then I see that the channel is displayed among the starred channels
 
@@ -28,9 +28,9 @@ Feature: Add a channel to the *Starred* tab
 		When I click the *Remove from starred channels* button for the channel
 		Then I don't see the removed channel any more
 
-	Scenario: Remove a starred channel form the *Content Library* tab with *Starred* filter on
-		Given I am on the *Content Library* tab
+	Scenario: Remove a starred channel form the *Kolibri Library* tab with *Starred* filter on
+		Given I am on the *Kolibri Library* tab
 			And I've selected the *Starred* checkbox
-		When I click on the star button of a starred channel.
+		When I click on the star button of a starred channel
 		Then I see a message that the channel was removed from the starred channels
 			And the channel is no longer displayed in the list with the filtered channels

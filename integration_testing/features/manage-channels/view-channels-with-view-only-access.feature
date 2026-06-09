@@ -2,8 +2,16 @@ Feature: View channels with view-only access
 
 	Background:
 		Given I am signed in to Studio
-			And I am at the channel editor page
-			And I have view-only permissions for the channel
+			And I am at the channel editor page with view-only permissions for the channel
+
+	Scenario: View a channel with view-only access
+		When I look at the channel editor page
+		Then I see the title of the channel to the left
+			And I see a disabled *View-only* button
+			And I see a *Share* drop-down to the left of it
+			And I see a grayed out info text when the channel was last published
+			And I see a blue *Add* button
+			And I see the channel topic tree and contents
 
 	Scenario: Navigate by using the topic tree sidebar
 		When I click on a folder with subfolders and resources

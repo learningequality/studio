@@ -90,8 +90,10 @@ Feature: Kolibri Studio critical workflows
 		Then I am at the channel editor page
 			And I see the title of the channel to the left
 			And I see a disabled *Publish* button
-			And I see *Click "ADD" to start building your channel Create, upload, or import resources from other channels*
+			And I see a *Share* drop-down to the left of it
+			And I see a grayed out *Unpublished* label to the left of it
 			And I see a blue *Add* button
+			And I see the following info text: *Click "ADD" to start building your channel Create, upload, or import resources from other channels*
 
 	Scenario: Edit channel details
 		Given I am signed in to Studio
@@ -228,15 +230,41 @@ Feature: Kolibri Studio critical workflows
 			And I am at the channel editor page
 			And I have write access to the channel
 			And the channel contains unpublished resources or edits
-		When I click the *Publish* button at the top right corner
-		Then the *Publish modal* appears
-			And I see the *Describe what's new in this channel version* field and the *Language* drop-down
-		When I fill in the required fields
-			And I click *Publish*
-		Then I see the *Publishing channel* progress indicator at the top right
+		When I click the *Publish* button
+		Then I see the *Publish channel* side panel
+			And I see a checked *Publish channel* radio button
+			And I see *You are publishing: Version N*
+			And I see a *Version description* field and a *Language* drop-down with a prefilled language
+			And I see a unchecked *Publish draft channel* radio button
+		When I enter a version description
+			And I click the *Publish* button
+		Then the side panel closes
+			And I see the *Publishing channel 0%* progress indicator to the left of the *Share* drop-down
 		When the channel has been published successfully
-		Then I see the *Published N seconds ago* text
-			And I receive a confirmation email that the channel has been published successfully
+		Then the progress indicator text changes to *Published NN seconds ago*
+			And the *Publish* button remains disabled
+		When after a period of time I check my email
+		Then I see that I have received a confirmation email that the channel has been published successfully
+
+	Scenario: Publish a draft channel
+		Given I am at the *Publish channel* side panel
+		When I check the *Publish draft channel* radio-button
+			And I click the *Save draft* button
+		Then the side panel closes
+			And I see a *Draft version is being published* snackbar message
+		When the draft channel has been published successfully
+		Then the snackbar message changes to *Draft published successfully PREVIEW*
+		When I click the *Preview* button
+		Then I see the *Preview your draft channel in Kolibri* modal
+			And I see a draft token field with the draft token and a copy button to the right
+			And I see the following text: *You can use this token to import and preview the draft channel in Kolibri. Please note that the token for the final published channel will be different.*
+		When I click the *Dismiss* button
+		Then the modal closes
+		When I click the *...* button next to the *Publish* button
+		Then I see a *Copy token for draft channel*
+		When I click on *Copy token for draft channel*
+		Then I see the *Preview your draft channel in Kolibri* modal
+			And I can copy the token
 
 	Scenario: Publish a channel with incomplete resources
 		Given I am signed in to Studio
@@ -424,6 +452,34 @@ Feature: Kolibri Studio critical workflows
 		Then I can see the percentage of storage used
 			And I can see the size of each resource types
 			And I can see the *Request more space* section
+
+	Scenario: Upgrade storage
+		When I look at the *Settings > Storage* page
+		Then I see the *Upgrade storage now* form
+			And I see a *Purchase additional storage at $15/GB per year* text
+			And I see a *Storage (GB)* field with default value of 10
+			And I see an enabled *Upgrade now* button
+		When I enter a value in the *Storage (GB)* field
+		Then I see that the price per year value is updated correctly
+		When I click the *Upgrade now* button
+		Then I am redirected to an external checkout page
+		When I complete the checkout with test card 4242 4242 4242 4242
+			And I go back to *Settings > Storage*
+		Then I see that the size of my storage is increased with the value of the purchased storage
+			And I see an info text *Storage subscription active*
+			And I see additional info about the size of storage included in my subscription and when it will renew automatically
+			And I see a *Manage subscription* link
+
+	Scenario: Cancel an active storage subscription
+		Given I have an active storage subscription
+		When I click the *Manage subscription* link
+		Then I see a page with all the details of my current subscription
+			And I see a *Cancel subscription* button
+		When I click the *Cancel subscription* button
+			And I confirm the cancellation
+		Then I am brought back to the *Settings > Storage* page
+			And I see a confirmation that the subscription is cancelled
+			And I see a message indicating when the subscription will expire and that the storage will be removed after that
 
 	Scenario: Submit more space request
 		Given I am signed-in to Kolibri Studio
