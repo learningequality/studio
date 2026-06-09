@@ -1,101 +1,127 @@
-import { shallowMount, mount } from '@vue/test-utils';
+import { render, screen, within, configure } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
+import VueRouter from 'vue-router';
 import AccessibilityOptions from '../AccessibilityOptions.vue';
+import { AccessibilityCategories } from 'shared/constants';
+import { metadataStrings } from 'shared/strings/metadataStrings';
+import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
+
+configure({ testIdAttribute: 'data-test' });
 
 describe('AccessibilityOptions', () => {
-  it('smoke test', () => {
-    const wrapper = shallowMount(AccessibilityOptions, {
-      propsData: {
-        kind: 'document',
+  const renderComponent = props => {
+    return render(AccessibilityOptions, {
+      props: {
+        kind: ContentKindsNames.DOCUMENT,
+        value: [],
+        ...props,
       },
+      routes: new VueRouter(),
     });
-    expect(wrapper.exists()).toBe(true);
+  };
+
+  it('shows document-specific accessibility options to the user', () => {
+    renderComponent({ kind: ContentKindsNames.DOCUMENT });
+
+    const checkboxes = screen.getAllByRole('checkbox');
+    expect(checkboxes).toHaveLength(3);
+
+    expect(screen.getByText(metadataStrings.$tr('altText'))).toBeInTheDocument();
+    expect(screen.getByText(metadataStrings.$tr('highContrast'))).toBeInTheDocument();
+    expect(screen.getByText(metadataStrings.$tr('taggedPdf'))).toBeInTheDocument();
   });
 
-  it('should display the correct list of accessibility options if resource is a document', () => {
-    const wrapper = mount(AccessibilityOptions, {
-      propsData: {
-        kind: 'document',
-      },
-    });
+  it('shows video-specific accessibility options to the user', () => {
+    renderComponent({ kind: ContentKindsNames.VIDEO });
 
-    expect(wrapper.findComponent('[data-test="checkbox-altText"]').exists()).toBe(true);
-    expect(wrapper.findComponent('[data-test="checkbox-highContrast"]').exists()).toBe(true);
-    expect(wrapper.findComponent('[data-test="checkbox-taggedPdf"]').exists()).toBe(true);
-    expect(wrapper.findComponent('[data-test="checkbox-signLanguage"]').exists()).toBe(false);
-    expect(wrapper.findComponent('[data-test="checkbox-audioDescription"]').exists()).toBe(false);
+    const checkboxes = screen.getAllByRole('checkbox');
+    expect(checkboxes).toHaveLength(3);
+
+    expect(screen.getByText(metadataStrings.$tr('signLanguage'))).toBeInTheDocument();
+    expect(screen.getByText(metadataStrings.$tr('audioDescription'))).toBeInTheDocument();
+    expect(screen.getByText(metadataStrings.$tr('captionsSubtitles'))).toBeInTheDocument();
+
+    expect(screen.queryByTestId('tooltip-captionsSubtitles')).not.toBeInTheDocument();
   });
 
-  it('should display the correct list of accessibility options if resource is a video', () => {
-    const wrapper = mount(AccessibilityOptions, {
-      propsData: {
-        kind: 'video',
-      },
-    });
+  it('shows exercise-specific accessibility options to the user', () => {
+    renderComponent({ kind: ContentKindsNames.EXERCISE });
 
-    expect(wrapper.findComponent('[data-test="checkbox-altText"]').exists()).toBe(false);
-    expect(wrapper.findComponent('[data-test="checkbox-highContrast"]').exists()).toBe(false);
-    expect(wrapper.findComponent('[data-test="checkbox-taggedPdf"]').exists()).toBe(false);
-    expect(wrapper.findComponent('[data-test="checkbox-signLanguage"]').exists()).toBe(true);
-    expect(wrapper.findComponent('[data-test="checkbox-audioDescription"]').exists()).toBe(true);
-    expect(wrapper.findComponent('[data-test="checkbox-captionsSubtitles"]').exists()).toBe(true);
-    expect(wrapper.findComponent('[data-test="tooltip-captionsSubtitles"]').exists()).toBe(false);
+    const checkboxes = screen.getAllByRole('checkbox');
+    expect(checkboxes).toHaveLength(1);
+
+    expect(screen.getByText(metadataStrings.$tr('altText'))).toBeInTheDocument();
   });
 
-  it('should display the correct list of accessibility options if resource is an exercise/practice', () => {
-    const wrapper = mount(AccessibilityOptions, {
-      propsData: {
-        kind: 'exercise',
-      },
-    });
+  it('shows HTML5-specific accessibility options to the user', () => {
+    renderComponent({ kind: ContentKindsNames.HTML5 });
 
-    expect(wrapper.findComponent('[data-test="checkbox-altText"]').exists()).toBe(true);
-    expect(wrapper.findComponent('[data-test="checkbox-highContrast"]').exists()).toBe(false);
-    expect(wrapper.findComponent('[data-test="checkbox-taggedPdf"]').exists()).toBe(false);
-    expect(wrapper.findComponent('[data-test="checkbox-signLanguage"]').exists()).toBe(false);
-    expect(wrapper.findComponent('[data-test="checkbox-audioDescription"]').exists()).toBe(false);
+    const checkboxes = screen.getAllByRole('checkbox');
+    expect(checkboxes).toHaveLength(2);
+
+    expect(screen.getByText(metadataStrings.$tr('altText'))).toBeInTheDocument();
+    expect(screen.getByText(metadataStrings.$tr('highContrast'))).toBeInTheDocument();
   });
 
-  it('should display the correct list of accessibility options if resource is html5/zip', () => {
-    const wrapper = mount(AccessibilityOptions, {
-      propsData: {
-        kind: 'html5',
-      },
-    });
+  it('shows audio-specific accessibility options to the user', () => {
+    renderComponent({ kind: ContentKindsNames.AUDIO });
 
-    expect(wrapper.findComponent('[data-test="checkbox-altText"]').exists()).toBe(true);
-    expect(wrapper.findComponent('[data-test="checkbox-highContrast"]').exists()).toBe(true);
-    expect(wrapper.findComponent('[data-test="checkbox-taggedPdf"]').exists()).toBe(false);
-    expect(wrapper.findComponent('[data-test="checkbox-signLanguage"]').exists()).toBe(false);
-    expect(wrapper.findComponent('[data-test="checkbox-audioDescription"]').exists()).toBe(false);
+    const checkboxes = screen.getAllByRole('checkbox');
+    expect(checkboxes).toHaveLength(1);
+
+    expect(screen.getByText(metadataStrings.$tr('captionsSubtitles'))).toBeInTheDocument();
+    expect(screen.queryByTestId('tooltip-captionsSubtitles')).not.toBeInTheDocument();
   });
 
-  it('should display the correct list of accessibility options if resource is an audio', () => {
-    const wrapper = mount(AccessibilityOptions, {
-      propsData: {
-        kind: 'audio',
-      },
-    });
+  it('renders informative tooltips next to the corresponding options', () => {
+    renderComponent({ kind: ContentKindsNames.DOCUMENT });
 
-    expect(wrapper.findComponent('[data-test="checkbox-captionsSubtitles"]').exists()).toBe(true);
-    expect(wrapper.findComponent('[data-test="tooltip-captionsSubtitles"]').exists()).toBe(false);
+    expect(screen.getByTestId('tooltip-altText')).toBeInTheDocument();
+    expect(screen.getByTestId('tooltip-highContrast')).toBeInTheDocument();
+    expect(screen.getByTestId('tooltip-taggedPdf')).toBeInTheDocument();
   });
 
-  it('should render appropriate tooltips along with the checkbox', () => {
-    const wrapper = mount(AccessibilityOptions, {
-      propsData: {
-        kind: 'document',
-      },
+  describe('User Interactions', () => {
+    it('emits an input event with the updated array when a user checks an option', async () => {
+      const { emitted } = renderComponent({ kind: ContentKindsNames.DOCUMENT, value: [] });
+
+      const altTextCheckbox = within(screen.getByTestId('checkbox-altText')).getByRole('checkbox');
+      await userEvent.click(altTextCheckbox);
+
+      expect(emitted()).toHaveProperty('input');
+      expect(emitted().input[0][0]).toEqual([AccessibilityCategories.ALT_TEXT]);
     });
 
-    expect(wrapper.findComponent('[data-test="checkbox-altText"]').exists()).toBe(true);
-    expect(wrapper.findComponent('[data-test="tooltip-altText"]').exists()).toBe(true);
-    expect(wrapper.findComponent('[data-test="checkbox-highContrast"]').exists()).toBe(true);
-    expect(wrapper.findComponent('[data-test="tooltip-highContrast"]').exists()).toBe(true);
-    expect(wrapper.findComponent('[data-test="checkbox-taggedPdf"]').exists()).toBe(true);
-    expect(wrapper.findComponent('[data-test="tooltip-taggedPdf"]').exists()).toBe(true);
-    expect(wrapper.findComponent('[data-test="checkbox-signLanguage"]').exists()).toBe(false);
-    expect(wrapper.findComponent('[data-test="tooltip-signLanguage"]').exists()).toBe(false);
-    expect(wrapper.findComponent('[data-test="checkbox-audioDescription"]').exists()).toBe(false);
-    expect(wrapper.findComponent('[data-test="tooltip-audioDescription"]').exists()).toBe(false);
+    it('emits an updated array with the item removed when a user unchecks a pre-checked option', async () => {
+      const { emitted } = renderComponent({
+        kind: ContentKindsNames.VIDEO,
+        value: [AccessibilityCategories.SIGN_LANGUAGE],
+      });
+
+      const signLanguageCheckbox = within(screen.getByTestId('checkbox-signLanguage')).getByRole(
+        'checkbox',
+      );
+      await userEvent.click(signLanguageCheckbox);
+
+      expect(emitted()).toHaveProperty('input');
+      expect(emitted().input[0][0]).toEqual([]);
+    });
+
+    it('renders correctly when accessibility options are pre-checked via v-model', () => {
+      renderComponent({
+        kind: ContentKindsNames.VIDEO,
+        value: [AccessibilityCategories.SIGN_LANGUAGE, AccessibilityCategories.CAPTIONS_SUBTITLES],
+      });
+
+      expect(
+        within(screen.getByTestId('checkbox-signLanguage')).getByRole('checkbox'),
+      ).toBeChecked();
+      expect(
+        within(screen.getByTestId('checkbox-captionsSubtitles')).getByRole('checkbox'),
+      ).toBeChecked();
+      expect(
+        within(screen.getByTestId('checkbox-audioDescription')).getByRole('checkbox'),
+      ).not.toBeChecked();
+    });
   });
 });
