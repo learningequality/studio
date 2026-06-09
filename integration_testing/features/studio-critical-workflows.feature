@@ -74,8 +74,6 @@ Feature: Kolibri Studio critical workflows
     Then I don't see the user menu anymore
 
 	Scenario: Create a new channel
-		Given I am signed in to Studio
-			And I am at *My Channels* tab
 		When I click the *New channel* button
 		Then I see the *New channel* page
 		When I upload an image file as a channel thumbnail (optional)
@@ -87,8 +85,10 @@ Feature: Kolibri Studio critical workflows
 		Then I am at the channel editor view
 			And I see the title of the channel to the left
 			And I see a disabled *Publish* button
-			And I see *Click "ADD" to start building your channel Create, upload, or import resources from other channels*
+			And I see a *Share* drop-down to the left of it
+			And I see a grayed out *Unpublished* label to the left of it
 			And I see a blue *Add* button
+			And I see the following info text: *Click "ADD" to start building your channel Create, upload, or import resources from other channels*
 
 	Scenario: Edit channel details
 		Given I am signed in to Studio
@@ -173,15 +173,41 @@ Feature: Kolibri Studio critical workflows
 			And I am at the channel editor page
 			And I have write access to the channel
 			And the channel contains unpublished resources or edits
-		When I click the *Publish* button at the top right corner
-		Then the *Publish modal* appears
-			And I see the *Describe what's new in this channel version* field and the *Language* drop-down
-		When I fill in the required fields
-			And I click *Publish*
-		Then I see the *Publishing channel* progress indicator at the top right
-		When the the channel has been published successfully
-		Then I see the *Published N seconds ago* text
-			And I receive a confirmation email that the channel has been published successfully
+		When I click the *Publish* button
+		Then I see the *Publish channel* side panel
+			And I see a checked *Publish channel* radio button
+			And I see *You are publishing: Version N*
+			And I see a *Version description* field and a *Language* drop-down with a prefilled language
+			And I see a unchecked *Publish draft channel* radio button
+		When I enter a version description
+			And I click the *Publish* button
+		Then the side panel closes
+			And I see the *Publishing channel 0%* progress indicator to the left of the *Share* drop-down
+		When the channel has been published successfully
+		Then the progress indicator text changes to *Published NN seconds ago*
+			And the *Publish* button remains disabled
+		When after a period of time I check my email
+		Then I see that I have received a confirmation email that the channel has been published successfully
+
+	Scenario: Publish a draft channel
+		Given I am at the *Publish channel* side panel
+		When I check the *Publish draft channel* radio-button
+			And I click the *Save draft* button
+		Then the side panel closes
+			And I see a *Draft version is being published* snackbar message
+		When the draft channel has been published successfully
+		Then the snackbar message changes to *Draft published successfully PREVIEW*
+		When I click the *Preview* button
+		Then I see the *Preview your draft channel in Kolibri* modal
+			And I see a draft token field with the draft token and a copy button to the right
+			And I see the following text: *You can use this token to import and preview the draft channel in Kolibri. Please note that the token for the final published channel will be different.*
+		When I click the *Dismiss* button
+		Then the modal closes
+		When I click the *...* button next to the *Publish* button
+		Then I see a *Copy token for draft channel*
+		When I click on *Copy token for draft channel*
+		Then I see the *Preview your draft channel in Kolibri* modal
+			And I can copy the token
 
 	Scenario: Invite collaborators with *Can edit* permissions
 		Given I am signed in to Studio
