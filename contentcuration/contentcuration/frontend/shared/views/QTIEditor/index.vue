@@ -10,49 +10,44 @@
         <div class="show-answers-inner">
           <Checkbox
             v-model="displayAnswersPreview"
-            :label="showAnswersLabel"
+            :label="showAnswers$()"
             class="ma-0"
-            data-test="showAnswersCheckbox"
+            data-testid="showAnswersCheckbox"
             style="font-size: 16px"
           />
         </div>
       </KPageContainer>
 
-      <transition-group
-        name="list-complete"
-        tag="div"
-        class="question-list"
-      >
+      <div class="question-list">
         <QTIItemEditor
           v-for="(item, idx) in items"
           :key="item.id"
           :item="item"
-          :index="idx + 1"
+          :index="idx"
           :total="items.length"
           :mode="activeId === item.id ? 'edit' : 'view'"
           :displayAnswersPreview="displayAnswersPreview"
-          data-test="item"
+          data-testid="item"
           @close="closeItem"
         >
           <template #toolbarActions>
             <CollapsibleToolbar
               :actions="getToolbarActions(item, idx)"
-              :optionsLabel="optionsLabel"
-              data-test="toolbar"
+              data-testid="toolbar"
             />
           </template>
         </QTIItemEditor>
-      </transition-group>
+      </div>
     </template>
 
     <div v-else>
-      {{ noQuestionsPlaceholder }}
+      {{ noQuestionsPlaceholder$() }}
     </div>
 
     <KButton
-      :text="newQuestionBtnLabel"
+      :text="newQuestionBtnLabel$()"
       style="margin-top: 16px; margin-left: 0"
-      data-test="newQuestionBtn"
+      data-testid="newQuestionBtn"
       @click="addItem()"
     />
   </div>
@@ -62,26 +57,26 @@
 
 <script>
 
-  import { ref, computed, defineComponent } from 'vue';
-  import { v4 as uuidv4 } from 'uuid';
+  import { ref, computed } from 'vue';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { qtiEditorStrings } from './qtiEditorStrings';
   import { QtiInteraction } from './constants';
   import QTIItemEditor from './components/QTIItemEditor/index';
   import CollapsibleToolbar from './components/CollapsibleToolbar/index.vue';
   import useQTIEditorActions from './useQTIEditorActions';
+  import { uuid4 } from 'shared/data/resources';
   import Checkbox from 'shared/views/form/Checkbox';
 
   /** Creates a blank item with a stable UUID and the default interaction type. */
   function createBlankItem() {
     return {
-      id: uuidv4(),
+      id: uuid4(),
       type: QtiInteraction.CHOICE,
       title: '',
     };
   }
 
-  export default defineComponent({
+  export default {
     name: 'QTIEditor',
 
     components: { QTIItemEditor, CollapsibleToolbar, Checkbox },
@@ -156,13 +151,9 @@
         deleteItem,
       });
 
-      const { noQuestionsPlaceholder$, newQuestionBtnLabel$, showAnswers$, options$ } =
-        qtiEditorStrings;
+      const { noQuestionsPlaceholder$, newQuestionBtnLabel$, showAnswers$ } = qtiEditorStrings;
 
       return {
-        noQuestionsPlaceholder: noQuestionsPlaceholder$(),
-        newQuestionBtnLabel: newQuestionBtnLabel$(),
-        showAnswersLabel: showAnswers$(),
         containerStyle,
         items,
         activeId,
@@ -170,7 +161,9 @@
         closeItem,
         addItem,
         getToolbarActions,
-        optionsLabel: options$(),
+        noQuestionsPlaceholder$,
+        newQuestionBtnLabel$,
+        showAnswers$,
       };
     },
 
@@ -191,7 +184,7 @@
     },
 
     emits: ['update'],
-  });
+  };
 
 </script>
 
@@ -206,22 +199,6 @@
     display: flex;
     align-items: center;
     padding: 12px;
-  }
-
-  /* Transition Group Animations */
-  .list-complete-enter-active,
-  .list-complete-leave-active {
-    transition: all 0.3s ease;
-  }
-
-  .list-complete-enter,
-  .list-complete-leave-to {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-
-  .list-complete-move {
-    transition: transform 0.3s ease;
   }
 
   .question-list {

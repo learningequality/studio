@@ -18,8 +18,8 @@
       v-if="collapsedMenuActions.length > 0"
       icon="optionsVertical"
       :color="$themePalette.grey.v_800"
-      :tooltip="optionsLabel"
-      :ariaLabel="optionsLabel"
+      :tooltip="optionsLabel || optionsLabel$()"
+      :ariaLabel="optionsLabel || optionsLabel$()"
     >
       <template #menu>
         <KDropdownMenu
@@ -35,12 +35,14 @@
 
 <script>
 
-  import { computed, defineComponent } from 'vue';
+  import { computed } from 'vue';
+  import { commonStrings } from 'shared/strings/commonStrings';
 
-  export default defineComponent({
+  export default {
     name: 'CollapsibleToolbar',
 
     setup(props) {
+      const { optionsLabel$ } = commonStrings;
       /** Actions with an icon that are not explicitly collapsed */
       const visibleIconActions = computed(() => {
         return props.actions.filter(a => !a.collapsed && Boolean(a.icon));
@@ -71,6 +73,7 @@
         collapsedMenuActions,
         dropdownOptions,
         handleSelect,
+        optionsLabel$,
       };
     },
 
@@ -101,10 +104,10 @@
       /** Tooltip text for the generic options menu icon */
       optionsLabel: {
         type: String,
-        default: 'Options',
+        default: null,
       },
     },
-  });
+  };
 
 </script>
 

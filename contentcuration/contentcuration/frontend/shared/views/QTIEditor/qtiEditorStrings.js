@@ -77,8 +77,4 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Add question below',
     context: 'Action to add a new question below the current one',
   },
-  options: {
-    message: 'Options',
-    context: 'Tooltip for the options menu icon',
-  },
 });

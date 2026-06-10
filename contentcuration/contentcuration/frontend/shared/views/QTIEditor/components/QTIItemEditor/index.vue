@@ -4,7 +4,6 @@
     noPadding
     :topMargin="0"
     class="item question-card"
-    data-test="item"
   >
     <div
       class="question-card-header"
@@ -32,7 +31,7 @@
       class="question-card-body"
     >
       <p :style="{ color: $themePalette.grey.v_500, margin: 0, fontStyle: 'italic' }">
-        {{ questionContentPlaceholder }}
+        {{ questionContentPlaceholder$() }}
       </p>
     </div>
 
@@ -41,9 +40,8 @@
       class="question-card-footer"
     >
       <KButton
-        :text="closeBtnLabel"
+        :text="closeBtnLabel$()"
         class="close-item-btn"
-        data-test="closeBtn"
         @click="$emit('close')"
       />
     </div>
@@ -54,7 +52,7 @@
 
 <script>
 
-  import { computed, defineComponent } from 'vue';
+  import { computed } from 'vue';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { QtiInteraction } from '../../constants';
 
@@ -67,7 +65,7 @@
     [QtiInteraction.EXTENDED_TEXT]: 'interactionTypeExtendedText',
   };
 
-  export default defineComponent({
+  export default {
     name: 'QTIItemEditor',
 
     setup(props) {
@@ -81,7 +79,7 @@
 
       const questionNumberLabel = computed(() =>
         questionNumberLabel$({
-          number: props.index,
+          number: props.index + 1,
           total: props.total,
         }),
       );
@@ -90,20 +88,17 @@
         const typeKey = INTERACTION_TYPE_STRING_KEY[props.item.type];
         const typeLabel = typeKey ? qtiEditorStrings[`${typeKey}$`]() : interactionTypeUnknown$();
         return questionNumberAndTypeLabel$({
-          number: props.index,
+          number: props.index + 1,
           total: props.total,
           type: typeLabel,
         });
       });
 
-      const closeBtnLabel = closeBtnLabel$();
-      const questionContentPlaceholder = questionContentPlaceholder$();
-
       return {
         questionNumberLabel,
         questionNumberAndTypeLabel,
-        closeBtnLabel,
-        questionContentPlaceholder,
+        closeBtnLabel$,
+        questionContentPlaceholder$,
       };
     },
 
@@ -113,7 +108,7 @@
         type: Object,
         required: true,
       },
-      /** 1-based position in the list */
+      /** 0-based position in the list */
       index: {
         type: Number,
         required: true,
@@ -135,8 +130,9 @@
         default: false,
       },
     },
+
     emits: ['close'],
-  });
+  };
 
 </script>
 

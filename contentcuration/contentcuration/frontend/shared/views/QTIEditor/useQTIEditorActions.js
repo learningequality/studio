@@ -26,35 +26,32 @@ export default function useQTIEditorActions({
     const result = [];
     const isEditMode = activeId.value === item.id;
 
-    if (!isEditMode) {
-      result.push({
-        id: 'edit',
-        icon: 'edit',
-        label: toolbarLabelEdit$(),
-        handler: () => openItem(item.id),
-        collapsed: false,
-      });
-    }
+    result.push({
+      id: 'edit',
+      icon: 'edit',
+      label: toolbarLabelEdit$(),
+      handler: () => openItem(item.id),
+      collapsed: false,
+      disabled: isEditMode,
+    });
 
-    if (idx > 0) {
-      result.push({
-        id: 'move-up',
-        icon: 'chevronUp',
-        label: toolbarLabelMoveUp$(),
-        handler: () => moveItemUp(idx),
-        collapsed: windowIsSmall.value,
-      });
-    }
+    result.push({
+      id: 'move-up',
+      icon: 'chevronUp',
+      label: toolbarLabelMoveUp$(),
+      handler: () => moveItemUp(idx),
+      collapsed: windowIsSmall.value,
+      disabled: idx === 0,
+    });
 
-    if (idx < items.value.length - 1) {
-      result.push({
-        id: 'move-down',
-        icon: 'chevronDown',
-        label: toolbarLabelMoveDown$(),
-        handler: () => moveItemDown(idx),
-        collapsed: windowIsSmall.value,
-      });
-    }
+    result.push({
+      id: 'move-down',
+      icon: 'chevronDown',
+      label: toolbarLabelMoveDown$(),
+      handler: () => moveItemDown(idx),
+      collapsed: windowIsSmall.value,
+      disabled: idx === items.value.length - 1,
+    });
 
     result.push(
       {
