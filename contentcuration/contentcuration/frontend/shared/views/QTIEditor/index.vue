@@ -1,6 +1,6 @@
 <template>
 
-  <div :style="[containerStyle, { padding: '16px' }]">
+  <div :style="containerStyle">
     <template v-if="items && items.length">
       <KPageContainer
         class="show-answers-container"
@@ -21,6 +21,7 @@
       <transition-group
         name="list-complete"
         tag="div"
+        class="question-list"
       >
         <QTIItemEditor
           v-for="(item, idx) in items"
@@ -28,13 +29,19 @@
           :item="item"
           :index="idx + 1"
           :total="items.length"
-          :isOpen="activeId === item.id"
+          :mode="activeId === item.id ? 'edit' : 'view'"
           :displayAnswersPreview="displayAnswersPreview"
           data-test="item"
-          @open="openItem(item.id)"
           @close="closeItem"
-          @action="onItemAction($event, item, idx)"
-        />
+        >
+          <template #toolbarActions>
+            <CollapsibleToolbar
+              :actions="getToolbarActions(item, idx)"
+              :optionsLabel="optionsLabel"
+              data-test="toolbar"
+            />
+          </template>
+        </QTIItemEditor>
       </transition-group>
     </template>
 
@@ -58,11 +65,12 @@
   import { ref, computed, defineComponent } from 'vue';
   import { v4 as uuidv4 } from 'uuid';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
-  import { useQTIStr } from './qtiEditorStrings';
+  import { qtiEditorStrings } from './qtiEditorStrings';
   import { QtiInteraction } from './constants';
   import QTIItemEditor from './components/QTIItemEditor/index';
+  import CollapsibleToolbar from './components/CollapsibleToolbar/index.vue';
+  import useQTIEditorActions from './useQTIEditorActions';
   import Checkbox from 'shared/views/form/Checkbox';
-  import { AssessmentItemToolbarActions } from 'frontend/channelEdit/constants';
 
   /** Creates a blank item with a stable UUID and the default interaction type. */
   function createBlankItem() {
@@ -76,14 +84,16 @@
   export default defineComponent({
     name: 'QTIEditor',
 
-    components: { QTIItemEditor, Checkbox },
+    components: { QTIItemEditor, CollapsibleToolbar, Checkbox },
 
     setup(props, { emit }) {
       const { windowIsSmall } = useKResponsiveWindow();
 
-      const containerStyle = computed(() =>
-        windowIsSmall.value ? {} : { maxWidth: '85%', margin: '0 auto' },
-      );
+      const containerStyle = computed(() => ({
+        maxWidth: '1200px',
+        margin: '0 auto',
+        padding: windowIsSmall.value ? '16px' : '32px',
+      }));
 
       const items = computed(() => props.assessments);
 
@@ -98,8 +108,6 @@
         activeId.value = null;
       }
 
-      const cloneList = () => [...props.assessments];
-
       /**
        * Add a blank item.
        * @param {Object} [opts]
@@ -107,73 +115,62 @@
        */
       function addItem({ atIndex } = {}) {
         const newItem = createBlankItem();
-        const list = cloneList();
+        const list = [...props.assessments];
         const pos = atIndex !== undefined ? atIndex : list.length;
         list.splice(pos, 0, newItem);
         emit('update', list);
-        // Open the newly created card on the next tick
-        setTimeout(() => {
-          activeId.value = newItem.id;
-        }, 0);
+        // open the newly created card
+        activeId.value = newItem.id;
       }
 
       function deleteItem(item) {
         if (activeId.value === item.id) closeItem();
         emit(
           'update',
-          cloneList().filter(i => i.id !== item.id),
+          props.assessments.filter(i => i.id !== item.id),
         );
       }
 
       function moveItemUp(idx) {
         if (idx === 0) return;
-        const list = cloneList();
+        const list = [...props.assessments];
         [list[idx - 1], list[idx]] = [list[idx], list[idx - 1]];
         emit('update', list);
       }
 
       function moveItemDown(idx) {
         if (idx === props.assessments.length - 1) return;
-        const list = cloneList();
+        const list = [...props.assessments];
         [list[idx], list[idx + 1]] = [list[idx + 1], list[idx]];
         emit('update', list);
       }
 
-      function onItemAction(action, item, idx) {
-        switch (action) {
-          case AssessmentItemToolbarActions.EDIT_ITEM:
-            openItem(item.id);
-            break;
-          case AssessmentItemToolbarActions.DELETE_ITEM:
-            deleteItem(item);
-            break;
-          case AssessmentItemToolbarActions.ADD_ITEM_ABOVE:
-            addItem({ atIndex: idx });
-            break;
-          case AssessmentItemToolbarActions.ADD_ITEM_BELOW:
-            addItem({ atIndex: idx + 1 });
-            break;
-          case AssessmentItemToolbarActions.MOVE_ITEM_UP:
-            moveItemUp(idx);
-            break;
-          case AssessmentItemToolbarActions.MOVE_ITEM_DOWN:
-            moveItemDown(idx);
-            break;
-        }
-      }
+      const { getToolbarActions } = useQTIEditorActions({
+        items,
+        activeId,
+        windowIsSmall,
+        openItem,
+        moveItemUp,
+        moveItemDown,
+        addItem,
+        deleteItem,
+      });
+
+      const { noQuestionsPlaceholder$, newQuestionBtnLabel$, showAnswers$, options$ } =
+        qtiEditorStrings;
 
       return {
-        noQuestionsPlaceholder: useQTIStr('noQuestionsPlaceholder'),
-        newQuestionBtnLabel: useQTIStr('newQuestionBtnLabel'),
-        showAnswersLabel: useQTIStr('showAnswers'),
+        noQuestionsPlaceholder: noQuestionsPlaceholder$(),
+        newQuestionBtnLabel: newQuestionBtnLabel$(),
+        showAnswersLabel: showAnswers$(),
         containerStyle,
         items,
         activeId,
         displayAnswersPreview,
-        openItem,
         closeItem,
         addItem,
-        onItemAction,
+        getToolbarActions,
+        optionsLabel: options$(),
       };
     },
 
@@ -209,6 +206,28 @@
     display: flex;
     align-items: center;
     padding: 12px;
+  }
+
+  /* Transition Group Animations */
+  .list-complete-enter-active,
+  .list-complete-leave-active {
+    transition: all 0.3s ease;
+  }
+
+  .list-complete-enter,
+  .list-complete-leave-to {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  .list-complete-move {
+    transition: transform 0.3s ease;
+  }
+
+  .question-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
   }
 
 </style>

@@ -18,7 +18,6 @@ export const RouteNames = {
   TRASH: 'TRASH',
   ADD_PREVIOUS_STEPS: 'ADD_PREVIOUS_STEPS',
   ADD_NEXT_STEPS: 'ADD_NEXT_STEPS',
-  QTI_DEMO: 'QTI_DEMO',
 };
 
 export const viewModes = {

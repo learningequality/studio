@@ -246,7 +246,7 @@ const router = new VueRouter({
       },
     },
     {
-      name: RouteNames.QTI_DEMO,
+      name: 'QTI_DEMO',
       path: '/qti-demo',
       component: QTIDemoPage,
     },

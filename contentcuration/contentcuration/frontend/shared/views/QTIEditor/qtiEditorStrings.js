@@ -1,8 +1,6 @@
 import { createTranslator } from 'shared/i18n';
 
-const NAMESPACE = 'QTIEditorStrings';
-
-const MESSAGES = {
+export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
   noQuestionsPlaceholder: {
     message: 'No questions yet',
     context: 'Shown when the question list is empty',
@@ -18,10 +16,6 @@ const MESSAGES = {
   questionNumberAndTypeLabel: {
     message: 'Question {number} of {total} \u2014 {type}',
     context: 'Card header when card is closed, e.g. "Question 1 of 3 \u2014 Choice"',
-  },
-  toolbarItemLabel: {
-    message: 'question',
-    context: 'Noun used by the toolbar for accessible action labels',
   },
   closeBtnLabel: {
     message: 'Close',
@@ -59,10 +53,32 @@ const MESSAGES = {
     message: 'Unknown type',
     context: 'Fallback when an item has an unrecognised interaction type',
   },
-};
-
-export const qtiEditorStrings = createTranslator(NAMESPACE, MESSAGES);
-
-export function useQTIStr(key, args) {
-  return qtiEditorStrings.$tr(key, args);
-}
+  toolbarLabelEdit: {
+    message: 'Edit',
+    context: 'Action to edit the item',
+  },
+  toolbarLabelMoveUp: {
+    message: 'Move up',
+    context: 'Action to move the item up',
+  },
+  toolbarLabelMoveDown: {
+    message: 'Move down',
+    context: 'Action to move the item down',
+  },
+  toolbarLabelDelete: {
+    message: 'Delete',
+    context: 'Action to delete the item',
+  },
+  toolbarLabelAddAbove: {
+    message: 'Add question above',
+    context: 'Action to add a new question above the current one',
+  },
+  toolbarLabelAddBelow: {
+    message: 'Add question below',
+    context: 'Action to add a new question below the current one',
+  },
+  options: {
+    message: 'Options',
+    context: 'Tooltip for the options menu icon',
+  },
+});
