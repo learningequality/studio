@@ -1,5 +1,6 @@
 import csv
 import logging
+import uuid
 from datetime import date
 from functools import reduce
 
@@ -51,7 +52,7 @@ from contentcuration.viewsets.sync.constants import CREATED
 from contentcuration.viewsets.sync.constants import DELETED
 from contentcuration.viewsets.sync.constants import EDITOR_M2M
 from contentcuration.viewsets.sync.constants import VIEWER_M2M
-import uuid
+
 
 logger = logging.getLogger(__name__)
 
@@ -342,7 +343,7 @@ class ChannelUserViewSet(ReadOnlyValuesViewset):
         if not channel_id:
             return HttpResponseBadRequest("Channel ID is required.")
         try:
-            uuid.UUID(channel_id)
+            channel_id = uuid.UUID(channel_id).hex
         except ValueError:
             return HttpResponseBadRequest("Invalid channel ID")
 
@@ -350,8 +351,6 @@ class ChannelUserViewSet(ReadOnlyValuesViewset):
             channel = Channel.objects.get(id=channel_id)
         except Channel.DoesNotExist:
             return HttpResponseNotFound("Channel not found {}".format(channel_id))
-        except ValueError:
-            return HttpResponseBadRequest("Invalid channel ID: {}".format(channel_id))
 
         if request.user != user and not request.user.can_edit(channel_id):
             return HttpResponseForbidden(
