@@ -218,6 +218,27 @@ class UserAccountTestCase(BaseAPITestCase):
         self.assertEqual(staged_row["File Size"], _format_size(2048))
         self.assertEqual(staged_row["URL"], "")
 
+    def test_user_csv_export_includes_files_without_contentnode(self):
+        file_without_contentnode = fileobj_video()
+        self.assertIsNone(file_without_contentnode.contentnode_id)
+        file_without_contentnode.uploaded_by = self.user
+        file_without_contentnode.original_filename = "no-contentnode.mp4"
+        file_without_contentnode.save()
+
+        with tempfile.NamedTemporaryFile(suffix=".csv") as tempf:
+            write_user_csv(self.user, path=tempf.name)
+
+            with io.open(tempf.name, "r", encoding="utf-8") as csv_file:
+                rows = list(csv.DictReader(csv_file, delimiter=","))
+
+        row = next(
+            row
+            for row in rows
+            if row["Filename"] == file_without_contentnode.original_filename
+        )
+        self.assertEqual(row["Title"], "No resource")
+        self.assertEqual(row["Channel"], "No Channel")
+
 
 class UserEffectiveDiskSpaceTest(StudioTestCase):
     def setUp(self):
