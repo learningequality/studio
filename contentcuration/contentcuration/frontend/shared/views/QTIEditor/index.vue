@@ -8,7 +8,7 @@
         noPadding
       >
         <div class="show-answers-inner">
-          <Checkbox
+          <KCheckbox
             v-model="displayAnswersPreview"
             :label="showAnswers$()"
             class="ma-0"
@@ -57,6 +57,7 @@
 
 <script>
 
+  import { v4 as uuidv4 } from 'uuid';
   import { ref, computed } from 'vue';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { qtiEditorStrings } from './qtiEditorStrings';
@@ -64,8 +65,11 @@
   import QTIItemEditor from './components/QTIItemEditor/index';
   import CollapsibleToolbar from './components/CollapsibleToolbar/index.vue';
   import useQTIEditorActions from './useQTIEditorActions';
-  import { uuid4 } from 'shared/data/resources';
-  import Checkbox from 'shared/views/form/Checkbox';
+
+  // Custom uuid4 function to match our dashless uuids on the server side
+  function uuid4() {
+    return uuidv4().replace(/-/g, '');
+  }
 
   /** Creates a blank item with a stable UUID and the default interaction type. */
   function createBlankItem() {
@@ -79,7 +83,7 @@
   export default {
     name: 'QTIEditor',
 
-    components: { QTIItemEditor, CollapsibleToolbar, Checkbox },
+    components: { QTIItemEditor, CollapsibleToolbar },
 
     setup(props, { emit }) {
       const { windowIsSmall } = useKResponsiveWindow();
