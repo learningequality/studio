@@ -258,13 +258,6 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
-  @media screen and (max-width: 600px) {
-    .format-dropdown {
-      width: 80px;
-      min-width: 0;
-    }
-  }
-
   .dropdown-item {
     display: flex;
     gap: 8px;
@@ -277,7 +270,6 @@
       'Segoe UI',
       sans-serif;
     font-size: 14px;
-    line-height: 140%;
     color: #000000;
     cursor: pointer;
   }
