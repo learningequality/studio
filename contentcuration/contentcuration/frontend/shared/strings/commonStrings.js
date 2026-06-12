@@ -42,4 +42,8 @@ export const commonStrings = createTranslator('CommonStrings', {
     message: 'Copy channel token',
     context: 'A label for an action that copies the channel token to the clipboard',
   },
+  optionsLabel: {
+    message: 'Options',
+    context: 'Tooltip for the generic options menu icon',
+  },
 });

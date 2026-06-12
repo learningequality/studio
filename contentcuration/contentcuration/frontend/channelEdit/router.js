@@ -9,6 +9,7 @@ import TrashModal from './views/trash/TrashModal';
 import SearchOrBrowseWindow from './views/ImportFromChannels/SearchOrBrowseWindow';
 import ReviewSelectionsPage from './views/ImportFromChannels/ReviewSelectionsPage';
 import EditModal from './components/edit/EditModal';
+import QTIDemoPage from './pages/QTIDemoPage';
 import ChannelDetailsModal from 'shared/views/channel/ChannelDetailsModal';
 import ChannelModal from 'shared/views/channel/ChannelModal';
 import { RouteNames as ChannelRouteNames } from 'frontend/channelList/constants';
@@ -243,6 +244,11 @@ const router = new VueRouter({
             });
           });
       },
+    },
+    {
+      name: 'QTI_DEMO',
+      path: '/qti-demo',
+      component: QTIDemoPage,
     },
     {
       name: RouteNames.TREE_VIEW,
