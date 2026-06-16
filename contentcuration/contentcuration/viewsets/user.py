@@ -1,5 +1,6 @@
 import csv
 import logging
+import uuid
 from datetime import date
 from functools import reduce
 
@@ -341,6 +342,10 @@ class ChannelUserViewSet(ReadOnlyValuesViewset):
 
         if not channel_id:
             return HttpResponseBadRequest("Channel ID is required.")
+        try:
+            channel_id = uuid.UUID(channel_id).hex
+        except ValueError:
+            return HttpResponseBadRequest("Invalid channel ID")
 
         try:
             channel = Channel.objects.get(id=channel_id)

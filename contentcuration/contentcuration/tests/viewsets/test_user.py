@@ -6,6 +6,7 @@ from django.utils import timezone
 from contentcuration.models import Change
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
+from contentcuration.tests.helpers import reverse_with_query
 from contentcuration.tests.viewsets.base import generate_create_event
 from contentcuration.tests.viewsets.base import generate_delete_event
 from contentcuration.tests.viewsets.base import SyncTestMixin
@@ -366,6 +367,28 @@ class ChannelUserCRUDTestCase(StudioAPITestCase):
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(response.json(), [])
+
+    def test_remove_self_with_invalid_channel_id_returns_bad_request(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.delete(
+            reverse_with_query(
+                "channeluser-remove-self",
+                kwargs={"pk": self.user.id},
+                query={"channel_id": "not-a-valid-uuid"},
+            )
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+
+    def test_remove_self_with_missing_channel_returns_not_found(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.delete(
+            reverse_with_query(
+                "channeluser-remove-self",
+                kwargs={"pk": self.user.id},
+                query={"channel_id": "00000000-0000-0000-0000-000000000000"},
+            )
+        )
+        self.assertEqual(response.status_code, 404, response.content)
 
 
 class MarkReadNotificationsTimestampTestCase(StudioAPITestCase):
