@@ -28,9 +28,9 @@ const renderComponent = (props = {}, slots = {}) => {
 
 describe('QTIItemEditor', () => {
   describe('view mode', () => {
-    test('does not show the card body', () => {
+    test('shows the card body (placeholder) even in view mode', () => {
       renderComponent({ mode: 'view' });
-      expect(screen.queryByText(questionContentPlaceholder$())).not.toBeInTheDocument();
+      expect(screen.getByText(questionContentPlaceholder$())).toBeInTheDocument();
     });
 
     test('does not show the close button', () => {

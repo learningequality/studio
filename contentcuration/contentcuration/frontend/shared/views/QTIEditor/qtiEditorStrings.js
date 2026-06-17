@@ -29,9 +29,13 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Show answers',
     context: 'Checkbox label to toggle displaying answers/previews',
   },
-  interactionTypeChoice: {
-    message: 'Choice',
-    context: 'Display name for choiceInteraction',
+  interactionTypeSingleChoice: {
+    message: 'Single Choice',
+    context: 'Display name for single-select choice interaction',
+  },
+  interactionTypeMultipleChoice: {
+    message: 'Multiple Choice',
+    context: 'Display name for multi-select choice interaction',
   },
   interactionTypeOrder: {
     message: 'Order',
@@ -76,5 +80,14 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
   toolbarLabelAddBelow: {
     message: 'Add question below',
     context: 'Action to add a new question below the current one',
+  },
+  choiceInteractionLabel: {
+    message: 'Choice',
+    context: 'Label for the choice interaction plugin, shown in the type selector',
+  },
+  choiceEditorPlaceholder: {
+    message: 'Choice interaction editor — {questionType} (coming soon)',
+    context:
+      'Placeholder inside the choice interaction editor card while the real editor is being built',
   },
 });
