@@ -8,6 +8,7 @@ import {
   CHOICE_NO_PROMPT_XML,
   mockInteractionBlock as block,
 } from '../../../utils/testingFixtures';
+import { QuestionType } from '../../../constants';
 
 const renderEditor = (props = {}) =>
   render(ChoiceInteractionEditor, {
@@ -22,32 +23,47 @@ const renderEditor = (props = {}) =>
 describe('ChoiceInteractionEditor', () => {
   describe('prompt rendering', () => {
     it('renders the prompt text from the XML', () => {
-      renderEditor({ block: block(CHOICE_SINGLE_SELECT_XML), questionType: 'singleSelect' });
+      renderEditor({
+        interaction: block(CHOICE_SINGLE_SELECT_XML),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
       expect(screen.getByText('Which planet is closest to the Sun?')).toBeInTheDocument();
     });
 
     it('renders no prompt element when the XML has no <qti-prompt>', () => {
-      renderEditor({ block: block(CHOICE_NO_PROMPT_XML), questionType: 'singleSelect' });
+      renderEditor({
+        interaction: block(CHOICE_NO_PROMPT_XML),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
       expect(screen.queryByText('Which planet is closest to the Sun?')).not.toBeInTheDocument();
     });
   });
 
   describe('singleSelect (KRadioButton)', () => {
     it('renders a radio button for each choice', () => {
-      renderEditor({ block: block(CHOICE_SINGLE_SELECT_XML), questionType: 'singleSelect' });
+      renderEditor({
+        interaction: block(CHOICE_SINGLE_SELECT_XML),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
       const radios = screen.getAllByRole('radio');
       expect(radios).toHaveLength(3);
     });
 
     it('renders the correct choice labels', () => {
-      renderEditor({ block: block(CHOICE_SINGLE_SELECT_XML), questionType: 'singleSelect' });
+      renderEditor({
+        interaction: block(CHOICE_SINGLE_SELECT_XML),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
       expect(screen.getByText('Mercury')).toBeInTheDocument();
       expect(screen.getByText('Venus')).toBeInTheDocument();
       expect(screen.getByText('Earth')).toBeInTheDocument();
     });
 
     it('allows selecting a radio button', async () => {
-      renderEditor({ block: block(CHOICE_SINGLE_SELECT_XML), questionType: 'singleSelect' });
+      renderEditor({
+        interaction: block(CHOICE_SINGLE_SELECT_XML),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
       const mercury = screen.getByRole('radio', { name: 'Mercury' });
       expect(mercury).not.toBeChecked();
       await fireEvent.click(mercury);
@@ -57,20 +73,29 @@ describe('ChoiceInteractionEditor', () => {
 
   describe('multiSelect (KCheckbox)', () => {
     it('renders a checkbox for each choice', () => {
-      renderEditor({ block: block(CHOICE_MULTI_SELECT_XML), questionType: 'multiSelect' });
+      renderEditor({
+        interaction: block(CHOICE_MULTI_SELECT_XML),
+        questionType: QuestionType.MULTI_SELECT,
+      });
       const checkboxes = screen.getAllByRole('checkbox');
       expect(checkboxes).toHaveLength(3);
     });
 
     it('renders the correct choice labels', () => {
-      renderEditor({ block: block(CHOICE_MULTI_SELECT_XML), questionType: 'multiSelect' });
+      renderEditor({
+        interaction: block(CHOICE_MULTI_SELECT_XML),
+        questionType: QuestionType.MULTI_SELECT,
+      });
       expect(screen.getByText('Option A')).toBeInTheDocument();
       expect(screen.getByText('Option B')).toBeInTheDocument();
       expect(screen.getByText('Option C')).toBeInTheDocument();
     });
 
     it('allows checking multiple checkboxes independently', async () => {
-      renderEditor({ block: block(CHOICE_MULTI_SELECT_XML), questionType: 'multiSelect' });
+      renderEditor({
+        interaction: block(CHOICE_MULTI_SELECT_XML),
+        questionType: QuestionType.MULTI_SELECT,
+      });
       const [checkA, checkB] = screen.getAllByRole('checkbox');
       await fireEvent.click(checkA);
       await fireEvent.click(checkB);
@@ -79,7 +104,7 @@ describe('ChoiceInteractionEditor', () => {
     });
 
     it('allows unchecking a checked checkbox', async () => {
-      renderEditor({ block: block(CHOICE_MULTI_SELECT_XML), questionType: 'multiSelect' });
+      renderEditor({ interaction: block(CHOICE_MULTI_SELECT_XML), questionType: 'multiSelect' });
       const [checkA] = screen.getAllByRole('checkbox');
       await fireEvent.click(checkA);
       expect(checkA).toBeChecked();
@@ -96,12 +121,12 @@ describe('ChoiceInteractionEditor', () => {
     });
 
     it('renders nothing interactive when block.bodyXml is an empty string', () => {
-      renderEditor({ block: block(''), questionType: 'singleSelect' });
+      renderEditor({ interaction: block(''), questionType: 'singleSelect' });
       expect(screen.queryByRole('radio')).not.toBeInTheDocument();
     });
 
     it('renders nothing interactive when XML is malformed', () => {
-      renderEditor({ block: block('<unclosed'), questionType: 'singleSelect' });
+      renderEditor({ interaction: block('<unclosed'), questionType: 'singleSelect' });
       expect(screen.queryByRole('radio')).not.toBeInTheDocument();
     });
   });

@@ -5,7 +5,6 @@
 const REQUIRED_KEYS = [
   'type',
   'placement',
-  'label',
   'editorComponent',
   'convertsFrom',
   'matches',

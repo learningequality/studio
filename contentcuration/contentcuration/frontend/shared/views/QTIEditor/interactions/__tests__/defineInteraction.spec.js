@@ -4,7 +4,6 @@ import defineInteraction from '../defineInteraction';
 const makeValidDescriptor = (overrides = {}) => ({
   type: 'test',
   placement: 'block',
-  label: 'Test',
   editorComponent: {},
   convertsFrom: [],
   matches: () => false,
@@ -23,7 +22,6 @@ describe('defineInteraction', () => {
   const REQUIRED_KEYS = [
     'type',
     'placement',
-    'label',
     'editorComponent',
     'convertsFrom',
     'matches',

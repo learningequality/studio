@@ -1,3 +1,5 @@
+import { AssessmentItemTypes } from 'shared/views/QTIEditor/constants';
+
 /**
  * Demo item 1: a real choice interaction XML so the full load path can
  * be verified end-to-end (parseItem → useQtiItem → InteractionSection →
@@ -74,3 +76,26 @@ export const MULTI_CHOICE_ITEM_XML = `<?xml version="1.0" encoding="UTF-8"?>
     </qti-choice-interaction>
   </qti-item-body>
 </qti-assessment-item>`;
+
+/**
+ * Hardcoded items covering different states:
+ *  - item-1: has raw_data (real QTI XML) → exercises the full load path
+ *  - item-2: no raw_data → shows placeholder (blank new item state)
+ *  - item-3: no raw_data → shows placeholder
+ */
+export const INITIAL_ASSESSMENTS = [
+  {
+    assessment_id: 'demo-item-1',
+    type: AssessmentItemTypes.QTI,
+    raw_data: CHOICE_ITEM_XML,
+  },
+  {
+    assessment_id: 'demo-item-2',
+    type: AssessmentItemTypes.QTI,
+    raw_data: MULTI_CHOICE_ITEM_XML,
+  },
+  {
+    assessment_id: 'demo-item-3',
+    type: AssessmentItemTypes.QTI,
+  },
+];

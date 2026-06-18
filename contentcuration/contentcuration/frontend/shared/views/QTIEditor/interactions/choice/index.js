@@ -1,6 +1,5 @@
 import defineInteraction from '../defineInteraction';
-import { QtiInteraction } from '../../constants';
-import { qtiEditorStrings } from '../../qtiEditorStrings';
+import { QtiInteraction, QuestionType } from '../../constants';
 import ChoiceInteractionEditor from './ChoiceInteractionEditor.vue';
 
 /**
@@ -13,11 +12,6 @@ export default defineInteraction({
 
   /** Block-level interaction: occupies its own paragraph in the item body. */
   placement: 'block',
-
-  /** Display label used by the (future) type selector UI. */
-  get label() {
-    return qtiEditorStrings.choiceInteractionLabel$();
-  },
 
   /** Vue component rendered inside InteractionSection when this descriptor owns the block. */
   editorComponent: ChoiceInteractionEditor,
@@ -38,12 +32,14 @@ export default defineInteraction({
 
   /**
    * Derives the UI-facing question type from the interaction element.
-   * Reads max-choices: '1' → 'singleSelect', anything else → 'multiSelect'.
+   * Reads max-choices: '1' → singleSelect, anything else → multiSelect.
    * @param {Element} el
-   * @returns {'singleSelect' | 'multiSelect'}
+   * @returns {string} One of QuestionType
    */
   getQuestionType(el) {
-    return el.getAttribute('max-choices') === '1' ? 'singleSelect' : 'multiSelect';
+    return el.getAttribute('max-choices') === '1'
+      ? QuestionType.SINGLE_SELECT
+      : QuestionType.MULTI_SELECT;
   },
 
   /**

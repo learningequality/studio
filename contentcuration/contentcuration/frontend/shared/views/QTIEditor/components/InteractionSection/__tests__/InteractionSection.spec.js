@@ -5,7 +5,7 @@ import InteractionSection from '../index.vue';
 import {
   CHOICE_SINGLE_SELECT_XML,
   UNKNOWN_INTERACTION_XML,
-  mockInteractionBlock as block,
+  mockInteractionBlock as interactionBlock,
 } from '../../../utils/testingFixtures';
 
 const renderSection = (props = {}) =>
@@ -21,18 +21,18 @@ const renderSection = (props = {}) =>
 describe('InteractionSection', () => {
   describe('choice interaction', () => {
     it('renders the prompt from the XML via ChoiceInteractionEditor', () => {
-      renderSection({ block: block(CHOICE_SINGLE_SELECT_XML) });
+      renderSection({ interaction: interactionBlock(CHOICE_SINGLE_SELECT_XML) });
       expect(screen.getByText('Which planet is closest to the Sun?')).toBeInTheDocument();
     });
 
     it('renders radio buttons for a single-select choice interaction', () => {
-      renderSection({ block: block(CHOICE_SINGLE_SELECT_XML) });
+      renderSection({ interaction: interactionBlock(CHOICE_SINGLE_SELECT_XML) });
       const radios = screen.getAllByRole('radio');
       expect(radios).toHaveLength(3);
     });
 
     it('renders the choice labels', () => {
-      renderSection({ block: block(CHOICE_SINGLE_SELECT_XML) });
+      renderSection({ interaction: interactionBlock(CHOICE_SINGLE_SELECT_XML) });
       expect(screen.getByText('Mercury')).toBeInTheDocument();
       expect(screen.getByText('Venus')).toBeInTheDocument();
     });
@@ -40,7 +40,7 @@ describe('InteractionSection', () => {
 
   describe('parse error handling', () => {
     it('shows a parse error message and no interaction when XML is malformed', () => {
-      renderSection({ block: block('not-xml<{{') });
+      renderSection({ interaction: interactionBlock('not-xml<{{') });
       expect(screen.queryByRole('radio')).not.toBeInTheDocument();
       // At minimum no interactive elements render
       expect(screen.queryByRole('radio')).not.toBeInTheDocument();
@@ -51,7 +51,9 @@ describe('InteractionSection', () => {
   describe('unknown interaction type', () => {
     it('falls back silently when the interaction tag is unrecognized', () => {
       // Should not throw — just renders the fallback component
-      expect(() => renderSection({ block: block(UNKNOWN_INTERACTION_XML) })).not.toThrow();
+      expect(() =>
+        renderSection({ interaction: interactionBlock(UNKNOWN_INTERACTION_XML) }),
+      ).not.toThrow();
     });
   });
 });

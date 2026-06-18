@@ -15,7 +15,7 @@ const defaultProps = {
   index: 0,
   total: 5,
   mode: 'view',
-  displayAnswersPreview: false,
+  showAnswers: false,
 };
 
 const renderComponent = (props = {}, slots = {}) => {
@@ -57,14 +57,14 @@ describe('QTIItemEditor', () => {
     });
   });
 
-  describe('displayAnswersPreview', () => {
-    test('shows the card body in view mode when displayAnswersPreview is true', () => {
-      renderComponent({ mode: 'view', displayAnswersPreview: true });
+  describe('showAnswers', () => {
+    test('shows the card body in view mode when showAnswers is true', () => {
+      renderComponent({ mode: 'view', showAnswers: true });
       expect(screen.getByText(questionContentPlaceholder$())).toBeInTheDocument();
     });
 
-    test('does not show the close button even when displayAnswersPreview is true', () => {
-      renderComponent({ mode: 'view', displayAnswersPreview: true });
+    test('does not show the close button even when showAnswers is true', () => {
+      renderComponent({ mode: 'view', showAnswers: true });
       expect(screen.queryByRole('button', { name: closeBtnLabel$() })).not.toBeInTheDocument();
     });
   });

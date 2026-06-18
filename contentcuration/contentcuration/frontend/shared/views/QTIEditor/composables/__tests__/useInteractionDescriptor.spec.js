@@ -2,7 +2,7 @@ import { render } from '@testing-library/vue';
 import { defineComponent, ref, nextTick } from 'vue';
 import VueRouter from 'vue-router';
 import useInteractionDescriptor from '../useInteractionDescriptor';
-import { QtiInteraction } from '../../constants';
+import { QtiInteraction, QuestionType } from '../../constants';
 
 import {
   CHOICE_SINGLE_SELECT_XML,
@@ -45,12 +45,12 @@ describe('useInteractionDescriptor', () => {
 
     it('resolves questionType as singleSelect when max-choices is 1', () => {
       const { result } = renderDescriptor(CHOICE_SINGLE_SELECT_XML);
-      expect(result.questionType.value).toBe('singleSelect');
+      expect(result.questionType.value).toBe(QuestionType.SINGLE_SELECT);
     });
 
     it('resolves questionType as multiSelect when max-choices > 1', () => {
       const { result } = renderDescriptor(CHOICE_MULTI_SELECT_XML);
-      expect(result.questionType.value).toBe('multiSelect');
+      expect(result.questionType.value).toBe(QuestionType.MULTI_SELECT);
     });
 
     it('returns null parseError for valid XML', () => {
@@ -114,19 +114,19 @@ describe('useInteractionDescriptor', () => {
       bodyXmlRef.value = CHOICE_SINGLE_SELECT_XML;
       await nextTick();
 
-      expect(result.questionType.value).toBe('singleSelect');
+      expect(result.questionType.value).toBe(QuestionType.SINGLE_SELECT);
     });
 
     it('recomputes questionType when switching from single-select to multi-select', async () => {
       const { result, bodyXmlRef } = renderDescriptor(CHOICE_SINGLE_SELECT_XML);
       await nextTick();
 
-      expect(result.questionType.value).toBe('singleSelect');
+      expect(result.questionType.value).toBe(QuestionType.SINGLE_SELECT);
 
       bodyXmlRef.value = CHOICE_MULTI_SELECT_XML;
       await nextTick();
 
-      expect(result.questionType.value).toBe('multiSelect');
+      expect(result.questionType.value).toBe(QuestionType.MULTI_SELECT);
     });
   });
 });

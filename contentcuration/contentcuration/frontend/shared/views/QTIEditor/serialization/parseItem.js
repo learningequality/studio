@@ -1,6 +1,7 @@
 import { QTI_INTERACTION_TAGS } from '../constants';
 
 const serializer = new XMLSerializer();
+const parser = new DOMParser();
 
 /**
  * Parses a QTI XML string into a validated XML Document.
@@ -10,7 +11,7 @@ const serializer = new XMLSerializer();
  * @throws {Error} If the XML is malformed or contains a parsererror
  */
 export function parseXML(xmlString) {
-  const doc = new DOMParser().parseFromString(xmlString, 'text/xml');
+  const doc = parser.parseFromString(xmlString, 'text/xml');
 
   // DOMParser never throws — it signals failure via a <parsererror> node.
   const error = doc.querySelector('parsererror');
@@ -40,9 +41,9 @@ export function parseItem(rawData) {
   const doc = parseXML(rawData);
 
   const root = doc.querySelector('qti-assessment-item');
-  const identifier = root ? (root.getAttribute('identifier') ?? '') : '';
-  const title = root ? (root.getAttribute('title') ?? '') : '';
-  const language = root ? (root.getAttribute('xml:lang') ?? '') : '';
+  const identifier = root?.getAttribute('identifier') ?? '';
+  const title = root?.getAttribute('title') ?? '';
+  const language = root?.getAttribute('xml:lang') ?? '';
 
   const body = doc.querySelector('qti-item-body');
 

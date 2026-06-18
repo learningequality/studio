@@ -30,7 +30,7 @@
   import { ref, defineComponent } from 'vue';
   import { CHOICE_ITEM_XML, MULTI_CHOICE_ITEM_XML } from './qtiDemoData';
   import QTIEditor from 'shared/views/QTIEditor/index';
-  import { QtiInteraction } from 'shared/views/QTIEditor/constants';
+  import { AssessmentItemTypes } from 'shared/views/QTIEditor/constants';
 
   /**
    * Hardcoded items covering different states:
@@ -40,26 +40,22 @@
    */
   const INITIAL_ASSESSMENTS = [
     {
-      id: 'demo-item-1',
-      type: QtiInteraction.CHOICE,
-      title: 'Which planet is closest to the Sun?',
+      assessment_id: 'demo-item-1',
+      type: AssessmentItemTypes.QTI,
       raw_data: CHOICE_ITEM_XML,
     },
     {
-      id: 'demo-item-2',
-      type: QtiInteraction.CHOICE,
-      title: 'Select all the prime numbers.',
+      assessment_id: 'demo-item-2',
+      type: AssessmentItemTypes.QTI,
       raw_data: MULTI_CHOICE_ITEM_XML,
     },
     {
-      id: 'demo-item-3',
-      type: QtiInteraction.EXTENDED_TEXT,
-      title: 'Describe the water cycle in your own words.',
+      assessment_id: 'demo-item-3',
+      type: AssessmentItemTypes.QTI,
     },
     {
-      id: 'demo-item-4',
-      type: QtiInteraction.ORDER,
-      title: 'Arrange these events in chronological order.',
+      assessment_id: 'demo-item-4',
+      type: AssessmentItemTypes.QTI,
     },
   ];
 

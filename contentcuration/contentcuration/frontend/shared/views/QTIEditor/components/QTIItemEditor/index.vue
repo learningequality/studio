@@ -29,9 +29,10 @@
     <div class="question-card-body">
       <InteractionSection
         v-if="interactions.length > 0"
-        :block="interactions[0]"
+        :interaction="interactions[0]"
         :mode="mode"
-        :displayAnswersPreview="displayAnswersPreview"
+        :showAnswers="showAnswers"
+        @update:questionType="type => (currentQuestionType = type)"
       />
       <p
         v-else
@@ -58,22 +59,11 @@
 
 <script>
 
-  import { computed } from 'vue';
+  import { computed, ref } from 'vue';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
-  import { QtiInteraction } from '../../constants';
-  import useInteractionDescriptor from '../../composables/useInteractionDescriptor';
+  import { AssessmentItemTypes, QuestionType } from '../../constants';
   import useQtiItem from '../../composables/useQtiItem';
   import InteractionSection from '../InteractionSection/index.vue';
-
-  // QTI interaction tag name → i18n string key, used for closed-card labels
-  // on items that have no raw_data yet (blank new items).
-  const INTERACTION_TYPE_STRING_KEY = {
-    [QtiInteraction.CHOICE]: 'interactionTypeSingleChoice', // defaults to single choice if no XML yet
-    [QtiInteraction.ORDER]: 'interactionTypeOrder',
-    [QtiInteraction.MATCH]: 'interactionTypeMatch',
-    [QtiInteraction.TEXT_ENTRY]: 'interactionTypeTextEntry',
-    [QtiInteraction.EXTENDED_TEXT]: 'interactionTypeExtendedText',
-  };
 
   export default {
     name: 'QTIItemEditor',
@@ -98,28 +88,16 @@
         }),
       );
 
-      const firstBlockXml = computed(() =>
-        interactions.value.length > 0 ? interactions.value[0].bodyXml : null,
-      );
-      const { descriptor, questionType } = useInteractionDescriptor(firstBlockXml);
+      const currentQuestionType = ref(props.item.type || AssessmentItemTypes.QTI);
 
-      /**
-       * Derives the type label for the closed-card header.
-       * When raw_data is present: parses the first interaction's bodyXml and uses
-       * the matching descriptor's label — this is the source of truth from the XML.
-       * When raw_data is absent (blank new items): falls back to item.type enum lookup.
-       */
       const interactionTypeLabel = computed(() => {
-        if (firstBlockXml.value) {
-          if (descriptor.value?.type === QtiInteraction.CHOICE) {
-            return questionType.value === 'singleSelect'
-              ? qtiEditorStrings.interactionTypeSingleChoice$()
-              : qtiEditorStrings.interactionTypeMultipleChoice$();
-          }
-          return descriptor.value ? descriptor.value.label : interactionTypeUnknown$();
+        if (currentQuestionType.value === QuestionType.SINGLE_SELECT) {
+          return qtiEditorStrings.interactionTypeSingleChoice$();
         }
-        const typeKey = INTERACTION_TYPE_STRING_KEY[props.item.type];
-        return typeKey ? qtiEditorStrings[`${typeKey}$`]() : interactionTypeUnknown$();
+        if (currentQuestionType.value === QuestionType.MULTI_SELECT) {
+          return qtiEditorStrings.interactionTypeMultipleChoice$();
+        }
+        return interactionTypeUnknown$();
       });
 
       const questionNumberAndTypeLabel = computed(() =>
@@ -131,6 +109,7 @@
       );
 
       return {
+        currentQuestionType,
         interactions,
         questionNumberLabel,
         questionNumberAndTypeLabel,
@@ -141,7 +120,7 @@
 
     props: {
       /**
-       * Assessment item: { id, type (QtiInteraction value), title, raw_data? }
+       * Assessment item: { assessment_id, type, raw_data? }
        * raw_data is the full QTI XML string; absent on blank newly-created items.
        */
       item: {
@@ -165,7 +144,7 @@
         validator: val => ['view', 'edit'].includes(val),
       },
       /** Whether to show answer previews for closed items */
-      displayAnswersPreview: {
+      showAnswers: {
         type: Boolean,
         default: false,
       },

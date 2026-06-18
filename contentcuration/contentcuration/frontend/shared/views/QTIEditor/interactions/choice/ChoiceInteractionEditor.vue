@@ -10,10 +10,10 @@
       {{ prompt }}
     </p>
 
-    <!-- Choices (hidden in view mode) -->
-    <template v-if="mode === 'edit'">
+    <!-- Choices (shown in edit mode, or when showAnswers is true in view mode) -->
+    <template v-if="mode === 'edit' || showAnswers">
       <!-- Single-select choices — KRadioButton -->
-      <template v-if="questionType === 'singleSelect'">
+      <template v-if="questionType === QuestionType.SINGLE_SELECT">
         <KRadioButton
           v-for="choice in choices"
           :key="choice.identifier"
@@ -42,6 +42,7 @@
 <script>
 
   import { computed, ref } from 'vue';
+  import { QuestionType } from '../../constants';
   import { parseXML } from '../../serialization/parseItem';
 
   export default {
@@ -62,11 +63,11 @@
       }
 
       const parsed = computed(() => {
-        if (!props.block || !props.block.bodyXml) {
+        if (!props.interaction || !props.interaction.bodyXml) {
           return { prompt: '', choices: [] };
         }
         try {
-          const doc = parseXML(props.block.bodyXml);
+          const doc = parseXML(props.interaction.bodyXml);
           const root = doc.documentElement;
 
           const promptEl = root.querySelector('qti-prompt');
@@ -87,7 +88,7 @@
       const prompt = computed(() => parsed.value.prompt);
       const choices = computed(() => parsed.value.choices);
 
-      return { prompt, choices, selectedValue, selectedValues, toggleValue };
+      return { prompt, choices, selectedValue, selectedValues, toggleValue, QuestionType };
     },
 
     props: {
@@ -95,11 +96,11 @@
        * The raw interaction block — shape: { bodyXml: string, responseDeclarations: string[] }.
        * Parsed here to extract the prompt and simple-choice elements.
        */
-      block: {
+      interaction: {
         type: Object,
         default: null,
       },
-      /** 'singleSelect' | 'multiSelect' — derived from max-choices by the registry. */
+      /** One of QuestionType derived from max-choices by the registry. */
       questionType: {
         type: String,
         default: null,
@@ -108,6 +109,11 @@
       mode: {
         type: String,
         default: 'view',
+      },
+      /** Whether to display correct answers (used in view mode previews) */
+      showAnswers: {
+        type: Boolean,
+        default: false,
       },
     },
   };

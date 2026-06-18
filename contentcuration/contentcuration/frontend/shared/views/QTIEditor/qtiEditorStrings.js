@@ -81,13 +81,4 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Add question below',
     context: 'Action to add a new question below the current one',
   },
-  choiceInteractionLabel: {
-    message: 'Choice',
-    context: 'Label for the choice interaction plugin, shown in the type selector',
-  },
-  choiceEditorPlaceholder: {
-    message: 'Choice interaction editor — {questionType} (coming soon)',
-    context:
-      'Placeholder inside the choice interaction editor card while the real editor is being built',
-  },
 });
