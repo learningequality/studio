@@ -2,20 +2,19 @@ import { render, screen, fireEvent } from '@testing-library/vue';
 import VueRouter from 'vue-router';
 import QTIItemEditor from '../index.vue';
 import { qtiEditorStrings } from '../../../qtiEditorStrings';
-import { QtiInteraction } from '../../../constants';
+import { AssessmentItemTypes } from '../../../constants';
 
 const { closeBtnLabel$, questionContentPlaceholder$ } = qtiEditorStrings;
 
 const defaultProps = {
   item: {
-    id: 'test-item-id',
-    type: QtiInteraction.CHOICE,
-    title: 'Test Choice Interaction',
+    assessment_id: 'test-item-id',
+    type: AssessmentItemTypes.QTI,
   },
   index: 0,
   total: 5,
   mode: 'view',
-  displayAnswersPreview: false,
+  showAnswers: false,
 };
 
 const renderComponent = (props = {}, slots = {}) => {
@@ -28,9 +27,9 @@ const renderComponent = (props = {}, slots = {}) => {
 
 describe('QTIItemEditor', () => {
   describe('view mode', () => {
-    test('does not show the card body', () => {
+    test('shows the card body (placeholder) even in view mode', () => {
       renderComponent({ mode: 'view' });
-      expect(screen.queryByText(questionContentPlaceholder$())).not.toBeInTheDocument();
+      expect(screen.getByText(questionContentPlaceholder$())).toBeInTheDocument();
     });
 
     test('does not show the close button', () => {
@@ -57,14 +56,14 @@ describe('QTIItemEditor', () => {
     });
   });
 
-  describe('displayAnswersPreview', () => {
-    test('shows the card body in view mode when displayAnswersPreview is true', () => {
-      renderComponent({ mode: 'view', displayAnswersPreview: true });
+  describe('showAnswers', () => {
+    test('shows the card body in view mode when showAnswers is true', () => {
+      renderComponent({ mode: 'view', showAnswers: true });
       expect(screen.getByText(questionContentPlaceholder$())).toBeInTheDocument();
     });
 
-    test('does not show the close button even when displayAnswersPreview is true', () => {
-      renderComponent({ mode: 'view', displayAnswersPreview: true });
+    test('does not show the close button even when showAnswers is true', () => {
+      renderComponent({ mode: 'view', showAnswers: true });
       expect(screen.queryByRole('button', { name: closeBtnLabel$() })).not.toBeInTheDocument();
     });
   });

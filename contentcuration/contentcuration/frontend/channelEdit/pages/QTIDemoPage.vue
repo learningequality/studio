@@ -3,13 +3,13 @@
   <div>
     <div style="padding: 16px 24px 0">
       <div
-        style="
-  padding: 16px;
-  color: #2196f3;
-  background-color: transparent;
-  border: 1px solid #2196f3;
-  border-radius: 4px;
-        "
+        :style="{
+          padding: '16px',
+          color: $themePalette.blue.v_600,
+          backgroundColor: 'transparent',
+          border: `1px solid ${$themePalette.blue.v_600}`,
+          borderRadius: '4px',
+        }"
       >
         <strong>QTI Editor — Dev Demo</strong>
         &nbsp;Hardcoded items. Changes are local only and not persisted.
@@ -28,28 +28,34 @@
 <script>
 
   import { ref, defineComponent } from 'vue';
+  import { CHOICE_ITEM_XML, MULTI_CHOICE_ITEM_XML } from './qtiDemoData';
   import QTIEditor from 'shared/views/QTIEditor/index';
-  import { QtiInteraction } from 'shared/views/QTIEditor/constants';
+  import { AssessmentItemTypes } from 'shared/views/QTIEditor/constants';
 
   /**
-   * Hardcoded items covering three interaction types so the closed-card
-   * type label can be visually verified.
+   * Hardcoded items covering different states:
+   *  - item-1: has raw_data (real QTI XML) → exercises the full load path
+   *  - item-2: no raw_data → shows placeholder (blank new item state)
+   *  - item-3: no raw_data → shows placeholder
    */
   const INITIAL_ASSESSMENTS = [
     {
-      id: 'demo-item-1',
-      type: QtiInteraction.CHOICE,
-      title: 'Which planet is closest to the Sun?',
+      assessment_id: 'demo-item-1',
+      type: AssessmentItemTypes.QTI,
+      raw_data: CHOICE_ITEM_XML,
     },
     {
-      id: 'demo-item-2',
-      type: QtiInteraction.EXTENDED_TEXT,
-      title: 'Describe the water cycle in your own words.',
+      assessment_id: 'demo-item-2',
+      type: AssessmentItemTypes.QTI,
+      raw_data: MULTI_CHOICE_ITEM_XML,
     },
     {
-      id: 'demo-item-3',
-      type: QtiInteraction.ORDER,
-      title: 'Arrange these events in chronological order.',
+      assessment_id: 'demo-item-3',
+      type: AssessmentItemTypes.QTI,
+    },
+    {
+      assessment_id: 'demo-item-4',
+      type: AssessmentItemTypes.QTI,
     },
   ];
 

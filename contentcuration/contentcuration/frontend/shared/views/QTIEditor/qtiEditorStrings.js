@@ -29,29 +29,33 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Show answers',
     context: 'Checkbox label to toggle displaying answers/previews',
   },
-  interactionTypeChoice: {
-    message: 'Choice',
-    context: 'Display name for choiceInteraction',
+  singleChoiceLabel: {
+    message: 'Single Choice',
+    context: 'Display name for a single-select question type',
   },
-  interactionTypeOrder: {
+  multipleChoiceLabel: {
+    message: 'Multiple Choice',
+    context: 'Display name for a multiple-select question type',
+  },
+  orderLabel: {
     message: 'Order',
-    context: 'Display name for orderInteraction',
+    context: 'Display name for an order question type',
   },
-  interactionTypeMatch: {
+  matchLabel: {
     message: 'Match',
-    context: 'Display name for matchInteraction',
+    context: 'Display name for a match question type',
   },
-  interactionTypeTextEntry: {
+  textEntryLabel: {
     message: 'Text entry',
-    context: 'Display name for textEntryInteraction',
+    context: 'Display name for a text entry question type',
   },
-  interactionTypeExtendedText: {
+  extendedTextLabel: {
     message: 'Extended text',
-    context: 'Display name for extendedTextInteraction',
+    context: 'Display name for an extended text question type',
   },
-  interactionTypeUnknown: {
+  unknownTypeLabel: {
     message: 'Unknown type',
-    context: 'Fallback when an item has an unrecognised interaction type',
+    context: 'Fallback when an item has an unrecognised question type',
   },
   toolbarLabelEdit: {
     message: 'Edit',

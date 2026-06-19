@@ -26,11 +26,18 @@
       </div>
     </div>
 
-    <div
-      v-if="mode === 'edit' || displayAnswersPreview"
-      class="question-card-body"
-    >
-      <p :style="{ color: $themePalette.grey.v_500, margin: 0, fontStyle: 'italic' }">
+    <div class="question-card-body">
+      <InteractionSection
+        v-if="interactions.length > 0"
+        :interaction="interactions[0]"
+        :mode="mode"
+        :showAnswers="showAnswers"
+        @update:questionType="type => (currentQuestionType = type)"
+      />
+      <p
+        v-else
+        :style="{ color: $themePalette.grey.v_500, margin: 0, fontStyle: 'italic' }"
+      >
         {{ questionContentPlaceholder$() }}
       </p>
     </div>
@@ -52,21 +59,16 @@
 
 <script>
 
-  import { computed } from 'vue';
+  import { computed, ref } from 'vue';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
-  import { QtiInteraction } from '../../constants';
-
-  // QTI XML element name → i18n string key, used to build closed-card labels.
-  const INTERACTION_TYPE_STRING_KEY = {
-    [QtiInteraction.CHOICE]: 'interactionTypeChoice',
-    [QtiInteraction.ORDER]: 'interactionTypeOrder',
-    [QtiInteraction.MATCH]: 'interactionTypeMatch',
-    [QtiInteraction.TEXT_ENTRY]: 'interactionTypeTextEntry',
-    [QtiInteraction.EXTENDED_TEXT]: 'interactionTypeExtendedText',
-  };
+  import { QuestionType } from '../../constants';
+  import useQtiItem from '../../composables/useQtiItem';
+  import InteractionSection from '../InteractionSection/index.vue';
 
   export default {
     name: 'QTIItemEditor',
+
+    components: { InteractionSection },
 
     setup(props) {
       const {
@@ -74,8 +76,10 @@
         questionNumberAndTypeLabel$,
         closeBtnLabel$,
         questionContentPlaceholder$,
-        interactionTypeUnknown$,
+        unknownTypeLabel$,
       } = qtiEditorStrings;
+
+      const { interactions } = useQtiItem(props.item.raw_data);
 
       const questionNumberLabel = computed(() =>
         questionNumberLabel$({
@@ -84,17 +88,37 @@
         }),
       );
 
-      const questionNumberAndTypeLabel = computed(() => {
-        const typeKey = INTERACTION_TYPE_STRING_KEY[props.item.type];
-        const typeLabel = typeKey ? qtiEditorStrings[`${typeKey}$`]() : interactionTypeUnknown$();
-        return questionNumberAndTypeLabel$({
+      /**
+       * Tracks the current question type (a QuestionType value).
+       * Initialized to null — populated via the update:questionType event
+       * emitted by InteractionSection once the XML is parsed on mount.
+       */
+      const currentQuestionType = ref(null);
+
+      /**
+       * Maps each QuestionType to its localized display label.
+       * Add new entries here as more question types are introduced.
+       */
+      const QUESTION_TYPE_LABELS = {
+        [QuestionType.SINGLE_SELECT]: () => qtiEditorStrings.singleChoiceLabel$(),
+        [QuestionType.MULTI_SELECT]: () => qtiEditorStrings.multipleChoiceLabel$(),
+      };
+
+      const interactionTypeLabel = computed(
+        () => QUESTION_TYPE_LABELS[currentQuestionType.value]?.() ?? unknownTypeLabel$(),
+      );
+
+      const questionNumberAndTypeLabel = computed(() =>
+        questionNumberAndTypeLabel$({
           number: props.index + 1,
           total: props.total,
-          type: typeLabel,
-        });
-      });
+          type: interactionTypeLabel.value,
+        }),
+      );
 
       return {
+        currentQuestionType,
+        interactions,
         questionNumberLabel,
         questionNumberAndTypeLabel,
         closeBtnLabel$,
@@ -103,7 +127,10 @@
     },
 
     props: {
-      /** Assessment item: { id, type (QtiInteraction value), title } */
+      /**
+       * Assessment item: { assessment_id, type, raw_data? }
+       * raw_data is the full QTI XML string; absent on blank newly-created items.
+       */
       item: {
         type: Object,
         required: true,
@@ -124,8 +151,8 @@
         default: 'view',
         validator: val => ['view', 'edit'].includes(val),
       },
-      /** Whether to show answers previews for closed items */
-      displayAnswersPreview: {
+      /** Whether to show answer previews for closed items */
+      showAnswers: {
         type: Boolean,
         default: false,
       },
