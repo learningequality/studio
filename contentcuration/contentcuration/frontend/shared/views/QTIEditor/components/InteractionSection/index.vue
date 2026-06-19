@@ -45,15 +45,20 @@
     },
 
     props: {
-      /** The raw XML block representing an interaction and its response declarations */
+      /**
+       * The raw interaction block.
+       * Expected shape: { bodyXml: string, responseDeclarations: string[] }
+       */
       interaction: {
         type: Object,
         required: true,
+        validator: val => typeof val.bodyXml === 'string',
       },
       /** View or edit mode */
       mode: {
         type: String,
         default: 'view',
+        validator: val => ['view', 'edit'].includes(val),
       },
       /** Whether to display correct answers (used in view mode previews) */
       showAnswers: {

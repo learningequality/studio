@@ -54,17 +54,22 @@ export const QtiInteraction = Object.freeze({
 
 export const QTI_INTERACTION_TAGS = Object.freeze(Object.values(QtiInteraction));
 
+/**
+ * Assessment item types as stored in the database.
+ * Within the QTI Editor, all authored items will have type QTI.
+ * The other legacy values are kept here for reference but are handled
+ * by the broader Studio assessment system, not by this editor.
+ */
 export const AssessmentItemTypes = Object.freeze({
-  SINGLE_SELECTION: 'single_selection',
-  MULTIPLE_SELECTION: 'multiple_selection',
-  TRUE_FALSE: 'true_false',
-  INPUT_QUESTION: 'input_question',
-  PERSEUS_QUESTION: 'perseus_question',
-  FREE_RESPONSE: 'free_response',
   QTI: 'qti',
 });
 
+/**
+ * UI-facing question type values — what the type selector shows to authors.
+ * These are distinct from AssessmentItemTypes (database) and QtiInteraction (XML tags).
+ * One QtiInteraction can map to multiple QuestionTypes (e.g. choice → singleSelect | multiSelect).
+ */
 export const QuestionType = Object.freeze({
-  SINGLE_SELECT: 'single_selection',
-  MULTI_SELECT: 'multiple_selection',
+  SINGLE_SELECT: 'singleSelect',
+  MULTI_SELECT: 'multiSelect',
 });

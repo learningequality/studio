@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/vue';
+import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
 import InteractionSection from '../index.vue';
 
@@ -25,8 +26,9 @@ describe('InteractionSection', () => {
       expect(screen.getByText('Which planet is closest to the Sun?')).toBeInTheDocument();
     });
 
-    it('renders radio buttons for a single-select choice interaction', () => {
+    it('renders radio buttons for a single-select choice interaction', async () => {
       renderSection({ interaction: interactionBlock(CHOICE_SINGLE_SELECT_XML) });
+      await nextTick();
       const radios = screen.getAllByRole('radio');
       expect(radios).toHaveLength(3);
     });

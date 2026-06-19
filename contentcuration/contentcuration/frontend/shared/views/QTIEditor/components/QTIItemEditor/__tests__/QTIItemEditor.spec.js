@@ -2,15 +2,14 @@ import { render, screen, fireEvent } from '@testing-library/vue';
 import VueRouter from 'vue-router';
 import QTIItemEditor from '../index.vue';
 import { qtiEditorStrings } from '../../../qtiEditorStrings';
-import { QtiInteraction } from '../../../constants';
+import { AssessmentItemTypes } from '../../../constants';
 
 const { closeBtnLabel$, questionContentPlaceholder$ } = qtiEditorStrings;
 
 const defaultProps = {
   item: {
-    id: 'test-item-id',
-    type: QtiInteraction.CHOICE,
-    title: 'Test Choice Interaction',
+    assessment_id: 'test-item-id',
+    type: AssessmentItemTypes.QTI,
   },
   index: 0,
   total: 5,

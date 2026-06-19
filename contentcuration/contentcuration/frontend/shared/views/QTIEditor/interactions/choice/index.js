@@ -13,12 +13,18 @@ export default defineInteraction({
   /** Block-level interaction: occupies its own paragraph in the item body. */
   placement: 'block',
 
+  /**
+   * All QuestionType values this descriptor can render.
+   * Allows the registry to resolve a descriptor from a selected question type
+   * without re-parsing XML.
+   */
+  questionTypes: [QuestionType.SINGLE_SELECT, QuestionType.MULTI_SELECT],
+
   /** Vue component rendered inside InteractionSection when this descriptor owns the block. */
   editorComponent: ChoiceInteractionEditor,
 
   /**
    * Types this plugin can absorb when the author switches interaction type.
-   * Populated in a future task — empty for now.
    */
   convertsFrom: [],
 

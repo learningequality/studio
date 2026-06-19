@@ -61,7 +61,7 @@
 
   import { computed, ref } from 'vue';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
-  import { AssessmentItemTypes, QuestionType } from '../../constants';
+  import { QuestionType } from '../../constants';
   import useQtiItem from '../../composables/useQtiItem';
   import InteractionSection from '../InteractionSection/index.vue';
 
@@ -76,7 +76,7 @@
         questionNumberAndTypeLabel$,
         closeBtnLabel$,
         questionContentPlaceholder$,
-        interactionTypeUnknown$,
+        unknownTypeLabel$,
       } = qtiEditorStrings;
 
       const { interactions } = useQtiItem(props.item.raw_data);
@@ -88,17 +88,25 @@
         }),
       );
 
-      const currentQuestionType = ref(props.item.type || AssessmentItemTypes.QTI);
+      /**
+       * Tracks the current question type (a QuestionType value).
+       * Initialized to null — populated via the update:questionType event
+       * emitted by InteractionSection once the XML is parsed on mount.
+       */
+      const currentQuestionType = ref(null);
 
-      const interactionTypeLabel = computed(() => {
-        if (currentQuestionType.value === QuestionType.SINGLE_SELECT) {
-          return qtiEditorStrings.interactionTypeSingleChoice$();
-        }
-        if (currentQuestionType.value === QuestionType.MULTI_SELECT) {
-          return qtiEditorStrings.interactionTypeMultipleChoice$();
-        }
-        return interactionTypeUnknown$();
-      });
+      /**
+       * Maps each QuestionType to its localized display label.
+       * Add new entries here as more question types are introduced.
+       */
+      const QUESTION_TYPE_LABELS = {
+        [QuestionType.SINGLE_SELECT]: () => qtiEditorStrings.singleChoiceLabel$(),
+        [QuestionType.MULTI_SELECT]: () => qtiEditorStrings.multipleChoiceLabel$(),
+      };
+
+      const interactionTypeLabel = computed(
+        () => QUESTION_TYPE_LABELS[currentQuestionType.value]?.() ?? unknownTypeLabel$(),
+      );
 
       const questionNumberAndTypeLabel = computed(() =>
         questionNumberAndTypeLabel$({

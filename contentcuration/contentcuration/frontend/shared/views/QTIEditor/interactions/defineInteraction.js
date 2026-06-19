@@ -5,6 +5,7 @@
 const REQUIRED_KEYS = [
   'type',
   'placement',
+  'questionTypes',
   'editorComponent',
   'convertsFrom',
   'matches',
