@@ -190,10 +190,10 @@
         document.removeEventListener('click', handleClickOutside);
       });
 
-      const getMarkdownContent = () => {
-        if (!editor.value || !isReady.value || !editor.value.storage?.markdown) {
-          return '';
-        }
+      const getContent = () => {
+        if (!editor.value || !isReady.value) return '';
+        if (props.format === 'html') return editor.value.getHTML();
+        if (!editor.value.storage?.markdown) return '';
         return editor.value.storage.markdown.getMarkdown();
       };
 
@@ -217,7 +217,8 @@
       watch(
         () => props.value,
         newValue => {
-          const processedContent = preprocessMarkdown(newValue);
+          const processedContent =
+            props.format === 'html' ? newValue : preprocessMarkdown(newValue);
 
           if (!editor.value) {
             initializeEditor(processedContent, props.mode, {
@@ -226,8 +227,7 @@
             return;
           }
 
-          const editorContent = getMarkdownContent();
-          if (editorContent !== newValue) {
+          if (getContent() !== newValue) {
             isUpdatingFromOutside = true;
             editor.value.commands.setContent(processedContent, false);
             nextTick(() => {
@@ -242,18 +242,11 @@
       watch(
         () => editor.value?.state,
         () => {
-          if (
-            !editor.value ||
-            !isReady.value ||
-            isUpdatingFromOutside ||
-            !editor.value.storage?.markdown
-          ) {
-            return;
-          }
+          if (!editor.value || !isReady.value || isUpdatingFromOutside) return;
 
-          const markdown = getMarkdownContent();
-          if (markdown !== props.value) {
-            emit('update', markdown);
+          const content = getContent();
+          if (content !== props.value) {
+            emit('update', content);
           }
         },
         { deep: true },
@@ -311,6 +304,11 @@
       minHeight: {
         type: String,
         default: null,
+      },
+      format: {
+        type: String,
+        default: 'markdown',
+        validator: v => ['markdown', 'html'].includes(v),
       },
     },
     emits: ['update', 'minimize', 'open-editor'],
