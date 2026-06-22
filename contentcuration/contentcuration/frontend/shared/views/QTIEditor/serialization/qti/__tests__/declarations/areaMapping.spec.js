@@ -27,7 +27,7 @@ describe('AreaMapping', () => {
   describe('constructor', () => {
     it('stores the provided data', () => {
       const data = { defaultValue: 0, lowerBound: null, upperBound: null, entries: [] };
-      const am = new AreaMapping(data);
+      const am = new AreaMapping(data, makeDeclaration());
       expect(am.get()).toEqual(data);
     });
   });
@@ -93,7 +93,7 @@ describe('AreaMapping', () => {
   describe('getXML', () => {
     it('produces a qti-area-mapping element', () => {
       const data = { defaultValue: 0, lowerBound: null, upperBound: null, entries: [] };
-      expect(new AreaMapping(data).getXML().tagName).toBe('qti-area-mapping');
+      expect(new AreaMapping(data, makeDeclaration()).getXML().tagName).toBe('qti-area-mapping');
     });
 
     it('emits qti-area-map-entry children', () => {
@@ -103,7 +103,7 @@ describe('AreaMapping', () => {
         upperBound: null,
         entries: [{ shape: 'circle', coords: '100,100,50', mappedValue: 1 }],
       };
-      const node = new AreaMapping(data).getXML();
+      const node = new AreaMapping(data, makeDeclaration()).getXML();
       const entry = node.querySelector('qti-area-map-entry');
       expect(entry.getAttribute('shape')).toBe('circle');
       expect(entry.getAttribute('coords')).toBe('100,100,50');

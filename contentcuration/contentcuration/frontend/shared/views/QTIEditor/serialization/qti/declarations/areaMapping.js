@@ -20,9 +20,11 @@ export default class AreaMapping {
    *   upperBound: number|null,
    *   entries: Array<{ shape: string, coords: string, mappedValue: number }>
    * }} data
+   * @param {import('../QTIDeclaration.js').QTIDeclaration} declaration
    */
-  constructor(data) {
+  constructor(data, declaration) {
     this._data = data;
+    declaration.registerCapability(CAPABILITY.AREA_MAPPING, this);
   }
 
   /**
@@ -41,23 +43,7 @@ export default class AreaMapping {
       mappedValue: parseFloat(entry.getAttribute('mapped-value')),
     }));
 
-    const instance = new AreaMapping({ ...bounds, entries });
-    declaration.registerCapability(CAPABILITY.AREA_MAPPING, instance);
-    return instance;
-  }
-
-  /**
-   * Build from plain JS data and register on the parent declaration.
-   *
-   * @param {{ defaultValue: number, lowerBound: number|null,
-   *            upperBound: number|null, entries: Array }} data
-   * @param {import('../QTIDeclaration.js').QTIDeclaration} declaration
-   * @returns {AreaMapping}
-   */
-  static fromPlain(data, declaration) {
-    const instance = new AreaMapping(data);
-    declaration.registerCapability(CAPABILITY.AREA_MAPPING, instance);
-    return instance;
+    return new AreaMapping({ ...bounds, entries }, declaration);
   }
 
   /**

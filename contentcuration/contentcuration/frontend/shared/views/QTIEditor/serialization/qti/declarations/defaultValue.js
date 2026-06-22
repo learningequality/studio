@@ -1,9 +1,9 @@
 /**
  * DefaultValue declaration strategy.
  *
- * Parses a <qti-default-value> element into an array of raw trimmed strings
- * and re-serializes it on demand. Included for declaration round-trip fidelity;
- * the authoring editor does not evaluate or coerce default values at runtime.
+ * Parses a <qti-default-value> element and coerces each <qti-value> text
+ * to its native JS type (number, boolean, or string) based on the parent
+ * declaration's base-type. Re-serializes values back to XML strings on demand.
  *
  * @module declarations/defaultValue
  */
@@ -11,10 +11,15 @@ import { buildXmlNode } from '../../assembleItem.js';
 import { CAPABILITY } from './capabilities.js';
 
 export default class DefaultValue {
-  /** @param {string[]} values - Default values as raw strings */
-  constructor(values) {
-    /** @type {string[]} */
+  /**
+   * @param {Array<string|number|boolean>} values   - Default values (native JS types)
+   * @param {import('../QTIDeclaration.js').QTIDeclaration} declaration
+   */
+  constructor(values, declaration) {
+    /** @type {Array<string|number|boolean>} */
     this._values = values;
+    this._declaration = declaration;
+    declaration.registerCapability(CAPABILITY.DEFAULT_VALUE, this);
   }
 
   /**
@@ -25,27 +30,12 @@ export default class DefaultValue {
    * @returns {DefaultValue}
    */
   static fromXML(xmlNode, declaration) {
-    const values = [...xmlNode.querySelectorAll('qti-value')].map(v => v.textContent.trim());
-    const instance = new DefaultValue(values);
-    declaration.registerCapability(CAPABILITY.DEFAULT_VALUE, instance);
-    return instance;
+    const rawStrings = [...xmlNode.querySelectorAll('qti-value')].map(v => v.textContent.trim());
+    return new DefaultValue(declaration.coerceValues(rawStrings), declaration);
   }
 
   /**
-   * Build from plain JS data and register on the parent declaration.
-   *
-   * @param {string[]} values
-   * @param {import('../QTIDeclaration.js').QTIDeclaration} declaration
-   * @returns {DefaultValue}
-   */
-  static fromPlain(values, declaration) {
-    const instance = new DefaultValue(values);
-    declaration.registerCapability(CAPABILITY.DEFAULT_VALUE, instance);
-    return instance;
-  }
-
-  /**
-   * @returns {string[]}
+   * @returns {Array<string|number|boolean>}
    */
   get() {
     return this._values;
@@ -57,7 +47,9 @@ export default class DefaultValue {
   getXML() {
     return buildXmlNode({
       tag: 'qti-default-value',
-      children: this._values.map(v => buildXmlNode({ tag: 'qti-value', children: [v] })),
+      children: this._declaration
+        .formatValues(this._values)
+        .map(v => buildXmlNode({ tag: 'qti-value', children: [v] })),
     });
   }
 }

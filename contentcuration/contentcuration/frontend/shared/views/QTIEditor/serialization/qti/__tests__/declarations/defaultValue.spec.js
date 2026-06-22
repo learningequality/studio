@@ -25,7 +25,7 @@ function parseDefaultValue(xmlString) {
 describe('DefaultValue', () => {
   describe('constructor', () => {
     it('stores values', () => {
-      const dv = new DefaultValue(['0']);
+      const dv = new DefaultValue(['0'], makeDeclaration());
       expect(dv.get()).toEqual(['0']);
     });
   });
@@ -40,7 +40,7 @@ describe('DefaultValue', () => {
         </qti-response-declaration>
       `);
       const dv = DefaultValue.fromXML(xmlNode, makeDeclaration());
-      expect(dv.get()).toEqual(['0.5']);
+      expect(dv.get()).toEqual([0.5]);
     });
 
     it('registers itself as DEFAULT_VALUE capability', () => {
@@ -54,18 +54,20 @@ describe('DefaultValue', () => {
       const declaration = makeDeclaration();
       DefaultValue.fromXML(xmlNode, declaration);
       expect(declaration._capabilities[CAPABILITY.DEFAULT_VALUE]).toBeDefined();
-      expect(declaration.defaultValue).toEqual(['1']);
+      expect(declaration.defaultValue).toEqual([1]);
     });
   });
 
   describe('getXML', () => {
     it('produces a qti-default-value element', () => {
-      expect(new DefaultValue(['0']).getXML().tagName).toBe('qti-default-value');
+      expect(new DefaultValue(['0'], makeDeclaration()).getXML().tagName).toBe('qti-default-value');
     });
 
     it('contains a qti-value for each value', () => {
       const values = [
-        ...new DefaultValue(['true', 'false']).getXML().querySelectorAll('qti-value'),
+        ...new DefaultValue(['true', 'false'], makeDeclaration())
+          .getXML()
+          .querySelectorAll('qti-value'),
       ].map(n => n.textContent);
       expect(values).toEqual(['true', 'false']);
     });
@@ -87,22 +89,22 @@ describe('DefaultValue', () => {
 
   describe('full XML output (QTI compatibility)', () => {
     it('serializes to well-formed XML that re-parses without error', () => {
-      expect(() => reparse(new DefaultValue(['0.5']).getXML())).not.toThrow();
+      expect(() => reparse(new DefaultValue(['0.5'], makeDeclaration()).getXML())).not.toThrow();
     });
 
     it('re-parsed XML has qti-default-value root tag', () => {
-      const reparsed = reparse(new DefaultValue(['0.5']).getXML());
+      const reparsed = reparse(new DefaultValue(['0.5'], makeDeclaration()).getXML());
       expect(reparsed.tagName).toBe('qti-default-value');
     });
 
     it('re-parsed XML preserves qti-value text content', () => {
-      const reparsed = reparse(new DefaultValue(['3.14']).getXML());
+      const reparsed = reparse(new DefaultValue(['3.14'], makeDeclaration()).getXML());
       expect(reparsed.querySelector('qti-value').textContent).toBe('3.14');
     });
 
     // DefaultValue can hold non-ASCII strings (e.g. CJK default text in i18n items)
     it('correctly encodes non-ASCII value content (i18n)', () => {
-      const reparsed = reparse(new DefaultValue(['默认值']).getXML());
+      const reparsed = reparse(new DefaultValue(['默认值'], makeDeclaration()).getXML());
       expect(reparsed.querySelector('qti-value').textContent).toBe('默认值');
     });
   });

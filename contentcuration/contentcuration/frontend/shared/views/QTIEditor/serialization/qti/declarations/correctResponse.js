@@ -1,9 +1,9 @@
 /**
  * CorrectResponse declaration strategy.
  *
- * Parses a <qti-correct-response> element into an array of raw trimmed strings
- * and re-serializes it on demand. Values are kept as strings because the
- * authoring editor has no runtime value state and performs no type coercion.
+ * Parses a <qti-correct-response> element and coerces each <qti-value> text
+ * to its native JS type (number, boolean, or string) based on the parent
+ * declaration's base-type. Re-serializes values back to XML strings on demand.
  *
  * @module declarations/correctResponse
  */
@@ -11,10 +11,15 @@ import { buildXmlNode } from '../../assembleItem.js';
 import { CAPABILITY } from './capabilities.js';
 
 export default class CorrectResponse {
-  /** @param {string[]} values - Correct response values as raw strings */
-  constructor(values) {
-    /** @type {string[]} */
+  /**
+   * @param {Array<string|number|boolean>} values   - Correct response values (native JS types)
+   * @param {import('../QTIDeclaration.js').QTIDeclaration} declaration
+   */
+  constructor(values, declaration) {
+    /** @type {Array<string|number|boolean>} */
     this._values = values;
+    this._declaration = declaration;
+    declaration.registerCapability(CAPABILITY.CORRECT_RESPONSE, this);
   }
 
   /**
@@ -27,28 +32,12 @@ export default class CorrectResponse {
    * @returns {CorrectResponse}
    */
   static fromXML(xmlNode, declaration) {
-    const values = [...xmlNode.querySelectorAll('qti-value')].map(v => v.textContent.trim());
-    const instance = new CorrectResponse(values);
-    declaration.registerCapability(CAPABILITY.CORRECT_RESPONSE, instance);
-    return instance;
+    const rawStrings = [...xmlNode.querySelectorAll('qti-value')].map(v => v.textContent.trim());
+    return new CorrectResponse(declaration.coerceValues(rawStrings), declaration);
   }
 
   /**
-   * Build from plain JS data and register on the parent declaration.
-   * Used by QTIDeclaration.convertTo() to carry forward values without XML serialization.
-   *
-   * @param {string[]} values
-   * @param {import('../QTIDeclaration.js').QTIDeclaration} declaration
-   * @returns {CorrectResponse}
-   */
-  static fromPlain(values, declaration) {
-    const instance = new CorrectResponse(values);
-    declaration.registerCapability(CAPABILITY.CORRECT_RESPONSE, instance);
-    return instance;
-  }
-
-  /**
-   * @returns {string[]}
+   * @returns {Array<string|number|boolean>}
    */
   get() {
     return this._values;
@@ -60,7 +49,9 @@ export default class CorrectResponse {
   getXML() {
     return buildXmlNode({
       tag: 'qti-correct-response',
-      children: this._values.map(v => buildXmlNode({ tag: 'qti-value', children: [v] })),
+      children: this._declaration
+        .formatValues(this._values)
+        .map(v => buildXmlNode({ tag: 'qti-value', children: [v] })),
     });
   }
 }

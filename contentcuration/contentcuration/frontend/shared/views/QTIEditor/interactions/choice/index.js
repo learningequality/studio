@@ -1,5 +1,5 @@
 import defineInteraction from '../defineInteraction';
-import { QtiInteraction, QuestionType } from '../../constants';
+import { QtiInteraction, QuestionType, BaseType, Cardinality } from '../../constants';
 import ChoiceInteractionEditor from './ChoiceInteractionEditor.vue';
 
 /**
@@ -46,6 +46,21 @@ export default defineInteraction({
     return el.getAttribute('max-choices') === '1'
       ? QuestionType.SINGLE_SELECT
       : QuestionType.MULTI_SELECT;
+  },
+
+  /**
+   * Defines the structural schema for the response declaration of this interaction.
+   * Returns baseType and cardinality, which can depend on the selected questionType.
+   *
+   * @param {string} questionType
+   * @returns {{ baseType: string, cardinality: string }}
+   */
+  getDeclarationSchema(questionType) {
+    return {
+      baseType: BaseType.IDENTIFIER,
+      cardinality:
+        questionType === QuestionType.SINGLE_SELECT ? Cardinality.SINGLE : Cardinality.MULTIPLE,
+    };
   },
 
   /**

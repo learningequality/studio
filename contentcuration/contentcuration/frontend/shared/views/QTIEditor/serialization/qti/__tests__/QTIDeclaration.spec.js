@@ -42,6 +42,12 @@ describe('QTIDeclaration constructor', () => {
     expect(d.cardinality).toBe('single');
   });
 
+  it('throws an error if cardinality is "record"', () => {
+    expect(() => {
+      new QTIDeclaration({ identifier: 'X', cardinality: 'record' });
+    }).toThrow('cardinality="record" is not yet supported');
+  });
+
   it('starts with no capabilities', () => {
     const d = new QTIDeclaration({ identifier: 'X' });
     expect(d.correctResponse).toBeNull();

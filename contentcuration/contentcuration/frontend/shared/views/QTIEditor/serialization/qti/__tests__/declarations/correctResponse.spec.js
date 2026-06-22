@@ -35,12 +35,12 @@ function reparse(node) {
 describe('CorrectResponse', () => {
   describe('constructor', () => {
     it('stores values', () => {
-      const cr = new CorrectResponse(['A', 'B']);
+      const cr = new CorrectResponse(['A', 'B'], makeDeclaration());
       expect(cr.get()).toEqual(['A', 'B']);
     });
 
     it('stores an empty array', () => {
-      const cr = new CorrectResponse([]);
+      const cr = new CorrectResponse([], makeDeclaration());
       expect(cr.get()).toEqual([]);
     });
   });
@@ -110,18 +110,24 @@ describe('CorrectResponse', () => {
 
   describe('getXML', () => {
     it('produces a qti-correct-response element', () => {
-      expect(new CorrectResponse(['ChoiceA']).getXML().tagName).toBe('qti-correct-response');
+      expect(new CorrectResponse(['ChoiceA'], makeDeclaration()).getXML().tagName).toBe(
+        'qti-correct-response',
+      );
     });
 
     it('contains a qti-value child for each value', () => {
       const values = [
-        ...new CorrectResponse(['ChoiceA', 'ChoiceC']).getXML().querySelectorAll('qti-value'),
+        ...new CorrectResponse(['ChoiceA', 'ChoiceC'], makeDeclaration())
+          .getXML()
+          .querySelectorAll('qti-value'),
       ].map(n => n.textContent);
       expect(values).toEqual(['ChoiceA', 'ChoiceC']);
     });
 
     it('produces an empty qti-correct-response when values is empty', () => {
-      expect(new CorrectResponse([]).getXML().querySelectorAll('qti-value').length).toBe(0);
+      expect(
+        new CorrectResponse([], makeDeclaration()).getXML().querySelectorAll('qti-value').length,
+      ).toBe(0);
     });
 
     it('round-trips: qti-value child carries correct text', () => {
@@ -158,29 +164,33 @@ describe('CorrectResponse', () => {
 
   describe('full XML output (QTI compatibility)', () => {
     it('serializes to well-formed XML that re-parses without error', () => {
-      const cr = new CorrectResponse(['ChoiceA', 'ChoiceC']);
+      const cr = new CorrectResponse(['ChoiceA', 'ChoiceC'], makeDeclaration());
       expect(() => reparse(cr.getXML())).not.toThrow();
     });
 
     it('re-parsed XML has the correct qti-correct-response root tag', () => {
-      const reparsed = reparse(new CorrectResponse(['ChoiceA']).getXML());
+      const reparsed = reparse(new CorrectResponse(['ChoiceA'], makeDeclaration()).getXML());
       expect(reparsed.tagName).toBe('qti-correct-response');
     });
 
     it('re-parsed XML has the correct number of qti-value children', () => {
-      const reparsed = reparse(new CorrectResponse(['ChoiceA', 'ChoiceC']).getXML());
+      const reparsed = reparse(
+        new CorrectResponse(['ChoiceA', 'ChoiceC'], makeDeclaration()).getXML(),
+      );
       expect(reparsed.querySelectorAll('qti-value').length).toBe(2);
     });
 
     it('re-parsed XML qti-value text content is preserved exactly', () => {
-      const reparsed = reparse(new CorrectResponse(['ChoiceA', 'ChoiceC']).getXML());
+      const reparsed = reparse(
+        new CorrectResponse(['ChoiceA', 'ChoiceC'], makeDeclaration()).getXML(),
+      );
       const values = [...reparsed.querySelectorAll('qti-value')].map(n => n.textContent);
       expect(values).toEqual(['ChoiceA', 'ChoiceC']);
     });
 
     // QTI values can be non-ASCII (e.g. Arabic/CJK choice identifiers authored by i18n users)
     it('correctly encodes non-ASCII value content (i18n)', () => {
-      const cr = new CorrectResponse(['选择甲', 'اختيار_أ']);
+      const cr = new CorrectResponse(['选择甲', 'اختيار_أ'], makeDeclaration());
       const reparsed = reparse(cr.getXML());
       const values = [...reparsed.querySelectorAll('qti-value')].map(n => n.textContent);
       expect(values).toEqual(['选择甲', 'اختيار_أ']);
@@ -189,7 +199,7 @@ describe('CorrectResponse', () => {
     // XML special characters in values must be entity-escaped by the serializer
     it('correctly escapes XML special characters in values', () => {
       // Ampersand is a common edge case in authored content (e.g. "A & B")
-      const cr = new CorrectResponse(['A & B']);
+      const cr = new CorrectResponse(['A & B'], makeDeclaration());
       const reparsed = reparse(cr.getXML());
       expect(reparsed.querySelector('qti-value').textContent).toBe('A & B');
     });

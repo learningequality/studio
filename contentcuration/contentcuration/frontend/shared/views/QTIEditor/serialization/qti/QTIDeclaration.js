@@ -2,17 +2,15 @@
  * QTIDeclaration — authoring-side structural model of a QTI declaration element.
  *
  * Reads identifier, base-type, cardinality and capability children (correctResponse,
- * defaultValue, mapping, areaMapping) from XML, holds them as plain JS data,
+ * defaultValue, mapping, areaMapping) from XML, holds them as plain JS data with
+ * native JS types (number, boolean, string) based on the declaration's base-type,
  * and serializes back to XML on demand. Carries no runtime value state or scoring logic.
  *
  */
 import { buildXmlNode } from '../assembleItem.js';
+import { getDescriptorForQuestionType } from '../../interactions/index.js';
+import { BaseType, Cardinality } from '../../constants.js';
 import { declarationParsers, CAPABILITY } from './declarations/index.js';
-import { getSchemaForType } from './interactionSchema.js';
-import CorrectResponse from './declarations/correctResponse.js';
-import Mapping from './declarations/mapping.js';
-import AreaMapping from './declarations/areaMapping.js';
-import { QTISanitizer } from './QTISanitizer.js';
 
 export class QTIDeclaration {
   /**
@@ -28,6 +26,42 @@ export class QTIDeclaration {
     cardinality = 'single',
     tag = 'qti-response-declaration',
   }) {
+    const IDENTIFIER_RE = /^[\p{L}_][\p{L}\p{N}_.-]*$/u;
+    if (!identifier || !IDENTIFIER_RE.test(identifier)) {
+      throw new Error(
+        `QTIDeclaration: invalid identifier "${identifier}". ` +
+          `Must start with a letter or underscore and contain only word characters, hyphens, or dots.`,
+      );
+    }
+
+    if (cardinality === 'record') {
+      throw new Error('cardinality="record" is not yet supported');
+    }
+
+    const validCardinalities = new Set(
+      Object.values(Cardinality).filter(c => c !== Cardinality.RECORD),
+    );
+    if (!validCardinalities.has(cardinality)) {
+      throw new Error(
+        `QTIDeclaration: invalid cardinality "${cardinality}". ` +
+          `Must be one of: ${[...validCardinalities].join(', ')}.`,
+      );
+    }
+
+    if (baseType !== null && !Object.values(BaseType).includes(baseType)) {
+      throw new Error(
+        `QTIDeclaration: invalid base-type "${baseType}". ` +
+          `Must be one of: ${Object.values(BaseType).join(', ')}.`,
+      );
+    }
+
+    if (tag !== 'qti-response-declaration' && tag !== 'qti-outcome-declaration') {
+      throw new Error(
+        `QTIDeclaration: invalid tag "${tag}". ` +
+          `Must be 'qti-response-declaration' or 'qti-outcome-declaration'.`,
+      );
+    }
+
     this.tag = tag;
     this.identifier = identifier;
     this.baseType = baseType;
@@ -56,12 +90,12 @@ export class QTIDeclaration {
   // Convenience getters
   // ---------------------------------------------------------------------------
 
-  /** @type {string[]|null} */
+  /** @type {Array<string|number|boolean>|null} */
   get correctResponse() {
     return this._capabilities[CAPABILITY.CORRECT_RESPONSE]?.get() ?? null;
   }
 
-  /** @type {string[]|null} */
+  /** @type {Array<string|number|boolean>|null} */
   get defaultValue() {
     return this._capabilities[CAPABILITY.DEFAULT_VALUE]?.get() ?? null;
   }
@@ -74,6 +108,71 @@ export class QTIDeclaration {
   /** @type {object|null} */
   get areaMapping() {
     return this._capabilities[CAPABILITY.AREA_MAPPING]?.get() ?? null;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Value coercion and formatting
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Coerce a raw XML string value to its native JS type based on a QTI base-type.
+   *
+   * QTI stores all values as text nodes in XML. This method converts the raw
+   * string to the appropriate JS primitive so the editor works with native types.
+   *
+   * @param {string} raw      - Raw text from a <qti-value> element
+   * @param {string} baseType - One of BaseType.* (or null)
+   * @returns {string|number|boolean}
+   */
+  static coerceValue(raw, baseType) {
+    switch (baseType) {
+      case BaseType.INTEGER: {
+        const n = parseInt(raw, 10);
+        return Number.isNaN(n) ? raw : n;
+      }
+      case BaseType.FLOAT: {
+        const n = parseFloat(raw);
+        return Number.isNaN(n) ? raw : n;
+      }
+      case BaseType.BOOLEAN:
+        return raw === 'true';
+      default:
+        // identifier, string, point, pair, directedPair, duration, file, uri
+        return raw;
+    }
+  }
+
+  /**
+   * Format a native JS value back to its QTI XML string representation.
+   *
+   * This is the inverse of coerceValue — safe to call on any JS primitive.
+   *
+   * @param {string|number|boolean} value
+   * @returns {string}
+   */
+  static formatValue(value) {
+    if (typeof value === 'boolean') return value ? 'true' : 'false';
+    return String(value ?? '');
+  }
+
+  /**
+   * Coerce an array of raw XML strings using this declaration's baseType.
+   *
+   * @param {string[]} rawStrings
+   * @returns {Array<string|number|boolean>}
+   */
+  coerceValues(rawStrings) {
+    return rawStrings.map(v => QTIDeclaration.coerceValue(v, this.baseType));
+  }
+
+  /**
+   * Format an array of native JS values to QTI XML strings.
+   *
+   * @param {Array<string|number|boolean>} values
+   * @returns {string[]}
+   */
+  formatValues(values) {
+    return values.map(QTIDeclaration.formatValue);
   }
 
   // ---------------------------------------------------------------------------
@@ -120,10 +219,6 @@ export class QTIDeclaration {
    * @returns {Element}
    */
   getXML() {
-    QTISanitizer.validateIdentifier(this.identifier);
-    QTISanitizer.validateCardinality(this.cardinality);
-    QTISanitizer.validateBaseType(this.baseType);
-
     const attrs = {
       identifier: this.identifier,
       cardinality: this.cardinality,
@@ -144,15 +239,17 @@ export class QTIDeclaration {
 
   /**
    * Create a blank QTIDeclaration shaped for the given question type.
-   * Reads base-type and cardinality from the interaction schema.
+   * Delegates to the factory registered by each interaction module.
    *
-   * @param {string} questionType - One of QuestionType.* (must exist in INTERACTION_SCHEMA)
+   * @param {string} questionType - One of QuestionType.* (must have a registered factory)
    * @param {string} [identifier] - Response identifier, defaults to 'RESPONSE'
+   * @param {*}      [itemData]   - Optional item data forwarded to the factory
    * @returns {QTIDeclaration}
    */
-  static forType(questionType, identifier = 'RESPONSE') {
-    const schema = getSchemaForType(questionType);
-    if (!schema) throw new Error(`Unknown question type: ${questionType}`);
+  static forType(questionType, identifier = 'RESPONSE', itemData = null) {
+    const descriptor = getDescriptorForQuestionType(questionType);
+    if (!descriptor) throw new Error(`Unknown question type: ${questionType}`);
+    const schema = descriptor.getDeclarationSchema(questionType, itemData);
     return new QTIDeclaration({
       identifier,
       baseType: schema.baseType,
@@ -160,92 +257,4 @@ export class QTIDeclaration {
       tag: 'qti-response-declaration',
     });
   }
-
-  /**
-   * Convert this declaration to match a different question type.
-   * Returns a new QTIDeclaration — this instance is never mutated.
-   *
-   * Conversion rules:
-   *   - Same base-type: correctResponse values are migrated with cardinality
-   *     rules applied (wrap on upgrade, truncate on downgrade). Mapping is
-   *     carried forward when the target schema supports it.
-   *   - Different base-type: correctResponse and mapping are dropped (the
-   *     stored keys/values would be invalid for the new type).
-   *   - defaultValue is always dropped (type-specific, unlikely to remain valid).
-   *
-   * @param {string}  newQuestionType - Target QuestionType.*
-   * @param {object}  [opts]
-   * @param {boolean} [opts.keepFirst=true] - On multiple/ordered→single downgrade,
-   *   retain the first value instead of dropping all.
-   * @returns {QTIDeclaration}
-   */
-  convertTo(newQuestionType, { keepFirst = true } = {}) {
-    const schema = getSchemaForType(newQuestionType);
-    if (!schema) throw new Error(`Unknown question type: ${newQuestionType}`);
-
-    const newDecl = new QTIDeclaration({
-      identifier: this.identifier,
-      baseType: schema.baseType,
-      cardinality: schema.cardinality,
-      tag: this.tag,
-    });
-
-    const baseTypeChanged = schema.baseType !== this.baseType;
-
-    const currentCR = this.correctResponse;
-    if (
-      currentCR !== null &&
-      !baseTypeChanged &&
-      schema.capabilities.includes(CAPABILITY.CORRECT_RESPONSE)
-    ) {
-      const migrated = migrateValues(currentCR, this.cardinality, schema.cardinality, keepFirst);
-      if (migrated.length > 0) {
-        CorrectResponse.fromPlain(migrated, newDecl);
-      }
-    }
-
-    const currentMapping = this.mapping;
-    if (
-      currentMapping !== null &&
-      !baseTypeChanged &&
-      schema.capabilities.includes(CAPABILITY.MAPPING)
-    ) {
-      Mapping.fromPlain(currentMapping, newDecl);
-    }
-
-    const currentAreaMapping = this.areaMapping;
-    if (
-      currentAreaMapping !== null &&
-      !baseTypeChanged &&
-      schema.capabilities.includes(CAPABILITY.AREA_MAPPING)
-    ) {
-      AreaMapping.fromPlain(currentAreaMapping, newDecl);
-    }
-
-    return newDecl;
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Module-private helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Migrate correctResponse values across a cardinality change.
- *
- * @param {string[]} values    - Current values
- * @param {string}   fromCard  - Source cardinality
- * @param {string}   toCard    - Target cardinality
- * @param {boolean}  keepFirst - On downgrade to single, keep the first value
- * @returns {string[]}
- */
-function migrateValues(values, fromCard, toCard, keepFirst) {
-  const arr = Array.isArray(values) ? values : [values];
-
-  if (toCard === 'single') {
-    return keepFirst && arr.length > 0 ? [arr[0]] : [];
-  }
-
-  // single → multiple/ordered, or multiple ↔ ordered: values transfer unchanged.
-  return arr;
 }

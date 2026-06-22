@@ -31,7 +31,7 @@ describe('Mapping', () => {
   describe('constructor', () => {
     it('stores the provided data', () => {
       const data = { defaultValue: 0, lowerBound: null, upperBound: null, entries: [] };
-      const m = new Mapping(data);
+      const m = new Mapping(data, makeDeclaration());
       expect(m.get()).toEqual(data);
     });
   });
@@ -120,24 +120,32 @@ describe('Mapping', () => {
   describe('getXML', () => {
     it('produces a qti-mapping element', () => {
       const data = { defaultValue: 0, lowerBound: null, upperBound: null, entries: [] };
-      expect(new Mapping(data).getXML().tagName).toBe('qti-mapping');
+      expect(new Mapping(data, makeDeclaration()).getXML().tagName).toBe('qti-mapping');
     });
 
     it('emits default-value attribute', () => {
       const data = { defaultValue: -1, lowerBound: null, upperBound: null, entries: [] };
-      expect(new Mapping(data).getXML().getAttribute('default-value')).toBe('-1');
+      expect(new Mapping(data, makeDeclaration()).getXML().getAttribute('default-value')).toBe(
+        '-1',
+      );
     });
 
     it('emits lower-bound only when not null', () => {
       const withBound = { defaultValue: 0, lowerBound: -2, upperBound: null, entries: [] };
       const withoutBound = { defaultValue: 0, lowerBound: null, upperBound: null, entries: [] };
-      expect(new Mapping(withBound).getXML().getAttribute('lower-bound')).toBe('-2');
-      expect(new Mapping(withoutBound).getXML().hasAttribute('lower-bound')).toBe(false);
+      expect(new Mapping(withBound, makeDeclaration()).getXML().getAttribute('lower-bound')).toBe(
+        '-2',
+      );
+      expect(
+        new Mapping(withoutBound, makeDeclaration()).getXML().hasAttribute('lower-bound'),
+      ).toBe(false);
     });
 
     it('emits upper-bound only when not null', () => {
       const withBound = { defaultValue: 0, lowerBound: null, upperBound: 5, entries: [] };
-      expect(new Mapping(withBound).getXML().getAttribute('upper-bound')).toBe('5');
+      expect(new Mapping(withBound, makeDeclaration()).getXML().getAttribute('upper-bound')).toBe(
+        '5',
+      );
     });
 
     it('produces qti-map-entry children', () => {
@@ -150,7 +158,7 @@ describe('Mapping', () => {
           { mapKey: 'ChoiceB', mappedValue: -0.5, caseSensitive: true },
         ],
       };
-      const node = new Mapping(data).getXML();
+      const node = new Mapping(data, makeDeclaration()).getXML();
       const entries = [...node.querySelectorAll('qti-map-entry')];
       expect(entries).toHaveLength(2);
       expect(entries[0].getAttribute('map-key')).toBe('ChoiceA');
@@ -167,7 +175,9 @@ describe('Mapping', () => {
           { mapKey: 'b', mappedValue: 1, caseSensitive: true },
         ],
       };
-      const entries = [...new Mapping(data).getXML().querySelectorAll('qti-map-entry')];
+      const entries = [
+        ...new Mapping(data, makeDeclaration()).getXML().querySelectorAll('qti-map-entry'),
+      ];
       expect(entries[0].getAttribute('case-sensitive')).toBe('false');
       expect(entries[1].hasAttribute('case-sensitive')).toBe(false);
     });
@@ -230,7 +240,7 @@ describe('Mapping', () => {
         upperBound: null,
         entries: [{ mapKey: '选择甲', mappedValue: 1, caseSensitive: true }],
       };
-      const reparsed = reparse(new Mapping(data).getXML());
+      const reparsed = reparse(new Mapping(data, makeDeclaration()).getXML());
       expect(reparsed.querySelector('qti-map-entry').getAttribute('map-key')).toBe('选择甲');
     });
   });

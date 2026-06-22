@@ -10,6 +10,7 @@
  *
  * @module declarations/mapping
  */
+import { QTIDeclaration } from '../QTIDeclaration.js';
 import { buildXmlNode } from '../../assembleItem.js';
 import { CAPABILITY } from './capabilities.js';
 
@@ -42,11 +43,14 @@ export default class Mapping {
    *   defaultValue: number,
    *   lowerBound: number|null,
    *   upperBound: number|null,
-   *   entries: Array<{ mapKey: string, mappedValue: number, caseSensitive: boolean }>
+   *   entries: Array<{ mapKey: string|number|boolean, mappedValue: number,
+   *                    caseSensitive: boolean }>
    * }} data
+   * @param {import('../QTIDeclaration.js').QTIDeclaration} declaration
    */
-  constructor(data) {
+  constructor(data, declaration) {
     this._data = data;
+    declaration.registerCapability(CAPABILITY.MAPPING, this);
   }
 
   /**
@@ -60,30 +64,13 @@ export default class Mapping {
     const bounds = parseScoringAttrs(xmlNode);
 
     const entries = [...xmlNode.querySelectorAll('qti-map-entry')].map(entry => ({
-      mapKey: entry.getAttribute('map-key'),
+      mapKey: QTIDeclaration.coerceValue(entry.getAttribute('map-key'), declaration.baseType),
       mappedValue: parseFloat(entry.getAttribute('mapped-value')),
       // Per QTI spec, case-sensitive defaults to true; only false when explicitly set.
       caseSensitive: entry.getAttribute('case-sensitive') !== 'false',
     }));
 
-    const instance = new Mapping({ ...bounds, entries });
-    declaration.registerCapability(CAPABILITY.MAPPING, instance);
-    return instance;
-  }
-
-  /**
-   * Build from plain JS data and register on the parent declaration.
-   * Used by QTIDeclaration.convertTo() when base-type is unchanged across a type conversion.
-   *
-   * @param {{ defaultValue: number, lowerBound: number|null,
-   *            upperBound: number|null, entries: Array }} data
-   * @param {import('../QTIDeclaration.js').QTIDeclaration} declaration
-   * @returns {Mapping}
-   */
-  static fromPlain(data, declaration) {
-    const instance = new Mapping(data);
-    declaration.registerCapability(CAPABILITY.MAPPING, instance);
-    return instance;
+    return new Mapping({ ...bounds, entries }, declaration);
   }
 
   /**
@@ -106,7 +93,7 @@ export default class Mapping {
 
     const children = entries.map(entry => {
       const entryAttrs = {
-        'map-key': entry.mapKey,
+        'map-key': QTIDeclaration.formatValue(entry.mapKey),
         'mapped-value': entry.mappedValue,
       };
       // Omit case-sensitive when true — it is the spec default.
