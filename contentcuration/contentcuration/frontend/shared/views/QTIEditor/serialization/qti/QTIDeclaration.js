@@ -12,6 +12,7 @@ import { getSchemaForType } from './interactionSchema.js';
 import CorrectResponse from './declarations/correctResponse.js';
 import Mapping from './declarations/mapping.js';
 import AreaMapping from './declarations/areaMapping.js';
+import { QTISanitizer } from './QTISanitizer.js';
 
 export class QTIDeclaration {
   /**
@@ -119,6 +120,10 @@ export class QTIDeclaration {
    * @returns {Element}
    */
   getXML() {
+    QTISanitizer.validateIdentifier(this.identifier);
+    QTISanitizer.validateCardinality(this.cardinality);
+    QTISanitizer.validateBaseType(this.baseType);
+
     const attrs = {
       identifier: this.identifier,
       cardinality: this.cardinality,
