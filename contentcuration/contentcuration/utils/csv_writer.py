@@ -6,13 +6,17 @@ import sys
 
 from django.conf import settings
 from django.contrib.sites.models import Site
+from django.db.models import Exists
+from django.db.models import F
 from django.db.models import OuterRef
-from django.db.models import Q
 from django.db.models import Subquery
+from django.db.models.sql.constants import LOUTER
 from django.utils.translation import gettext as _
 from le_utils.constants import content_kinds
 
+from contentcuration.db.models.query import With
 from contentcuration.models import Channel
+from contentcuration.models import ContentNode
 from contentcuration.models import generate_storage_url
 
 if not os.path.exists(settings.CSV_ROOT):
@@ -43,29 +47,24 @@ def generate_user_csv_filename(user):
 
 
 def _write_user_row(file, writer, domain):
-    filename = "{}.{}".format(file["checksum"], file["file_format__extension"])
+    filename = "{}.{}".format(file["checksum"], file["file_extension"])
     writer.writerow(
         [
             file["channel_name"] or _("No Channel"),
-            file["contentnode__title"] or _("No resource"),
+            file["node_title"] or _("No resource"),
             next(
-                (
-                    k[1]
-                    for k in content_kinds.choices
-                    if k[0] == file["contentnode__kind_id"]
-                ),
+                (k[1] for k in content_kinds.choices if k[0] == file["node_kind_id"]),
                 "",
             ),
             file["original_filename"],
             _format_size(file["file_size"] or 0),
             generate_storage_url(filename),
-            file["contentnode__description"],
-            file["contentnode__author"],
-            file["language__readable_name"]
-            or file["contentnode__language__readable_name"],
-            file["contentnode__license__license_name"],
-            file["contentnode__license_description"],
-            file["contentnode__copyright_holder"],
+            file["node_description"],
+            file["node_author"],
+            file["file_language"] or file["node_language"],
+            file["node_license_name"],
+            file["node_license_description"],
+            file["node_copyright_holder"],
         ]
     )
 
@@ -100,34 +99,105 @@ def write_user_csv(user, path=None):
 
         domain = Site.objects.get(pk=1).domain
 
-        # Get all user files
-        channel_query = Channel.objects.filter(
-            Q(main_tree__tree_id=OuterRef("contentnode__tree_id"))
-            | Q(trash_tree__tree_id=OuterRef("contentnode__tree_id"))
+        # Build CTEs so we first reduce to this user's files, then resolve only
+        # needed content node and channel fields.
+        user_files_cte = With(
+            user.files.values(
+                "id",
+                "contentnode_id",
+                "original_filename",
+                "file_size",
+                "checksum",
+                file_extension=F("file_format__extension"),
+                file_language=F("language__readable_name"),
+            ),
+            name="user_files",
+        )
+
+        content_nodes_cte = With(
+            user_files_cte.join(
+                ContentNode.objects.all(),
+                id=user_files_cte.col.contentnode_id,
+            )
+            .values(
+                "id",
+                "tree_id",
+                node_title=F("title"),
+                node_kind_id=F("kind_id"),
+                node_description=F("description"),
+                node_author=F("author"),
+                node_language=F("language__readable_name"),
+                node_license_name=F("license__license_name"),
+                node_license_description=F("license_description"),
+                node_copyright_holder=F("copyright_holder"),
+            )
+            .distinct(),
+            name="content_nodes",
+        )
+
+        main_channel_names = Channel.objects.filter(
+            Exists(
+                content_nodes_cte.queryset().filter(
+                    tree_id=OuterRef("main_tree__tree_id")
+                )
+            )
+        ).values(
+            tree_id=F("main_tree__tree_id"),
+            channel_name=F("name"),
+        )
+        trash_channel_names = Channel.objects.filter(
+            Exists(
+                content_nodes_cte.queryset().filter(
+                    tree_id=OuterRef("trash_tree__tree_id")
+                )
+            )
+        ).values(
+            tree_id=F("trash_tree__tree_id"),
+            channel_name=F("name"),
+        )
+        channel_names_cte = With(
+            main_channel_names.union(trash_channel_names), name="channel_names"
         )
 
         user_files = (
-            user.files.select_related("language", "contentnode", "file_format")
+            content_nodes_cte.join(
+                user_files_cte.queryset(),
+                contentnode_id=content_nodes_cte.col.id,
+                _join_type=LOUTER,
+            )
+            .with_cte(user_files_cte)
+            .with_cte(content_nodes_cte)
+            .with_cte(channel_names_cte)
             .annotate(
-                channel_name=Subquery(channel_query.values_list("name", flat=True)[:1])
+                channel_name=Subquery(
+                    channel_names_cte.queryset()
+                    .filter(tree_id=content_nodes_cte.col.tree_id)
+                    .values("channel_name")[:1]
+                ),
+                node_title=content_nodes_cte.col.node_title,
+                node_kind_id=content_nodes_cte.col.node_kind_id,
+                node_description=content_nodes_cte.col.node_description,
+                node_author=content_nodes_cte.col.node_author,
+                node_language=content_nodes_cte.col.node_language,
+                node_license_name=content_nodes_cte.col.node_license_name,
+                node_license_description=content_nodes_cte.col.node_license_description,
+                node_copyright_holder=content_nodes_cte.col.node_copyright_holder,
             )
             .values(
                 "channel_name",
                 "original_filename",
                 "file_size",
                 "checksum",
-                "file_format__extension",
-                "language__readable_name",
-                "contentnode__title",
-                "contentnode__language__readable_name",
-                "contentnode__license__license_name",
-                "contentnode__kind_id",
-                "contentnode__description",
-                "contentnode__author",
-                "contentnode__provider",
-                "contentnode__aggregator",
-                "contentnode__license_description",
-                "contentnode__copyright_holder",
+                "file_extension",
+                "file_language",
+                "node_title",
+                "node_kind_id",
+                "node_description",
+                "node_author",
+                "node_language",
+                "node_license_name",
+                "node_license_description",
+                "node_copyright_holder",
             )
         )
         for file in user_files:
