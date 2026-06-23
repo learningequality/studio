@@ -62,6 +62,8 @@ jobs:
           - 6379:6379
     steps:
     - uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
     - name: Set up minio
       run: |
         docker run -d -p 9000:9000 --name minio \
@@ -79,6 +81,17 @@ jobs:
       run: |
         # Use uv to install dependencies directly from requirements files
         uv pip sync requirements.txt requirements-dev.txt
+    - name: Lint new migrations for unsafe operations
+      if: github.event_name == 'pull_request'
+      env:
+        BASE_REF: ${{ github.base_ref }}
+        DJANGO_SETTINGS_MODULE: contentcuration.not_production_settings
+      run: |
+        set -euo pipefail
+        git fetch --no-tags origin "$BASE_REF"
+        base="$(git merge-base "origin/$BASE_REF" HEAD)"
+        test -n "$base"
+        python contentcuration/manage.py lintmigrations --git-commit-id "$base" --no-cache --warnings-as-errors
     - name: Test pytest
       run: |
         sh -c './contentcuration/manage.py makemigrations --check'
