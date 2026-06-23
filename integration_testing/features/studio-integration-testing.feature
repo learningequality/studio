@@ -1,5 +1,5 @@
-Feature: Kolibri Studio critical workflows
-  This is a test suite of the main Kolibri Studio workflows.
+Feature: Kolibri Studio integration testing scenarios
+  This is an integration testing suite for Kolibri Studio.
 
   Background:
     Given Kolibri Studio is accessible at https://studio.learningequality.org/ or any of the test environments
@@ -24,6 +24,20 @@ Feature: Kolibri Studio critical workflows
 			And I click the *Sign in* button
 		Then I am able to sign in successfully
 			And I am at *My channels* page
+
+	Scenario: Sign in to Studio using valid credentials
+		Given I am at Kolibri Studio's sign-in page
+		When I fill in my email
+      And I fill in my password
+      And I click the *Sign in* button
+    Then I am signed in
+    	And I am at *My channels* page
+
+  Scenario: See error notification for incorrect email or password
+    Given I am at Kolibri Studio's sign-in page
+    When I fill in an incorrect email or password
+    	And I click the *Sign in* button
+    Then I see the following validation message above the form: *Email or password is incorrect*
 
 	Scenario: Reset my password
 		Given I've requested and received an email with a link to reset my password
@@ -520,3 +534,11 @@ Feature: Kolibri Studio critical workflows
 	  Then I am at Kolibri Studio's sign-in page
 	  When I click the browser's *Back* button
 	  Then I can't access any of the pages I've visited as a signed-in user
+
+	Scenario: Browse through the available pages in all supported browsers
+    When I visit each Kolibri Studio page in the following browsers and operating systems
+      - Firefox/Chrome/Edge on Windows
+      - Firefox/Chrome on Linux
+      - Firefox/Chrome/Safari on Mac OS
+    Then I can see that each page is displayed correctly
+      And I can interact with all of the available options and features of each page
