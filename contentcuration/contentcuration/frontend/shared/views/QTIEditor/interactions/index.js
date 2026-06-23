@@ -21,3 +21,13 @@ export const descriptors = [choiceDescriptor];
  * @type {Object.<string, import('./defineInteraction').InteractionDescriptor>}
  */
 export const registry = Object.fromEntries(descriptors.map(d => [d.type, d]));
+
+/**
+ * Find the interaction descriptor that supports a given question type.
+ *
+ * @param {string} questionType
+ * @returns {import('./defineInteraction').InteractionDescriptor|undefined}
+ */
+export function getDescriptorForQuestionType(questionType) {
+  return descriptors.find(d => d.questionTypes.includes(questionType));
+}

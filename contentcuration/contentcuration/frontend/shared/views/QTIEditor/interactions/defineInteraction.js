@@ -10,6 +10,7 @@ const REQUIRED_KEYS = [
   'convertsFrom',
   'matches',
   'getQuestionType',
+  'getDeclarationSchema',
   'parse',
   'validate',
 ];

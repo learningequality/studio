@@ -9,6 +9,7 @@ const makeValidDescriptor = (overrides = {}) => ({
   convertsFrom: [],
   matches: () => false,
   getQuestionType: () => null,
+  getDeclarationSchema: () => ({ baseType: 'string', cardinality: 'single' }),
   parse: () => ({}),
   validate: () => [],
   ...overrides,
@@ -28,6 +29,7 @@ describe('defineInteraction', () => {
     'convertsFrom',
     'matches',
     'getQuestionType',
+    'getDeclarationSchema',
     'parse',
     'validate',
   ];
