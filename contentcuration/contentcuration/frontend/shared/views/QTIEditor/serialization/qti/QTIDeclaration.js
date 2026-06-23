@@ -12,6 +12,13 @@ import { getDescriptorForQuestionType } from '../../interactions/index.js';
 import { BaseType, Cardinality } from '../../constants.js';
 import { declarationParsers, CAPABILITY } from './declarations/index.js';
 
+/**
+ * Base types whose single-cardinality values are represented as 2-element arrays
+ * in JS (e.g., point [100, 200], pair ["A", "B"], directedPair ["A", "B"]).
+ * Distinguished from container arrays (multiple/ordered cardinality, N elements).
+ */
+const COMPOUND_VALUE_TYPES = new Set([BaseType.POINT, BaseType.PAIR, BaseType.DIRECTED_PAIR]);
+
 export class QTIDeclaration {
   /**
    * @param {object}      options
@@ -23,7 +30,7 @@ export class QTIDeclaration {
   constructor({
     identifier,
     baseType = null,
-    cardinality = 'single',
+    cardinality = Cardinality.SINGLE,
     tag = 'qti-response-declaration',
   }) {
     const IDENTIFIER_RE = /^[\p{L}_][\p{L}\p{N}_.-]*$/u;
@@ -34,7 +41,7 @@ export class QTIDeclaration {
       );
     }
 
-    if (cardinality === 'record') {
+    if (cardinality === Cardinality.RECORD) {
       throw new Error('cardinality="record" is not yet supported');
     }
 
@@ -77,7 +84,7 @@ export class QTIDeclaration {
 
   /**
    * Register a named capability on this declaration.
-   * Called as a side-effect by declaration strategy classes during fromXML/fromPlain.
+   * Called as a side-effect by declaration strategy classes during their constructors.
    *
    * @param {string} name - One of the CAPABILITY constants
    * @param {{ get(): *, getXML(): Element }} declarationObject
@@ -115,29 +122,101 @@ export class QTIDeclaration {
   // ---------------------------------------------------------------------------
 
   /**
-   * Coerce a raw XML string value to its native JS type based on a QTI base-type.
+   * Whether this declaration's base-type uses a 2-element array as its
+   * native JS representation (point, pair, directedPair).
    *
-   * QTI stores all values as text nodes in XML. This method converts the raw
-   * string to the appropriate JS primitive so the editor works with native types.
+   * Useful for callers that need to distinguish compound values from containers.
    *
-   * @param {string} raw      - Raw text from a <qti-value> element
-   * @param {string} baseType - One of BaseType.* (or null)
-   * @returns {string|number|boolean}
+   * @returns {boolean}
+   */
+  get isCompoundType() {
+    return COMPOUND_VALUE_TYPES.has(this.baseType);
+  }
+
+  /**
+   * Coerce a single raw XML string value to its native JS type.
+   *
+   * Follows the Kolibri QTI implementation — each base-type maps to a
+   * specific JS primitive or 2-element array (point/pair/directedPair).
+   * Returns null for empty, null, undefined, or 'NULL' inputs.
+   *
+   * @param {string|null|undefined} raw  - Raw text from a <qti-value> element
+   * @param {string|null}           baseType - One of BaseType.* constants
+   * @returns {string|number|boolean|Array|null}
+   * @throws {TypeError} If the raw value is structurally incompatible with baseType
    */
   static coerceValue(raw, baseType) {
+    // QTI treats empty / null as NULL — see qti-is-null spec
+    if (raw === null || raw === undefined || raw === '' || raw === 'NULL') {
+      return null;
+    }
+
     switch (baseType) {
+      case BaseType.BOOLEAN:
+        if (raw !== 'true' && raw !== 'false') {
+          throw new TypeError(`QTIDeclaration: cannot coerce "${raw}" to boolean`);
+        }
+        return raw === 'true';
+
       case BaseType.INTEGER: {
         const n = parseInt(raw, 10);
-        return Number.isNaN(n) ? raw : n;
+        if (Number.isNaN(n)) {
+          throw new TypeError(`QTIDeclaration: cannot coerce "${raw}" to integer`);
+        }
+        return n;
       }
+
       case BaseType.FLOAT: {
         const n = parseFloat(raw);
-        return Number.isNaN(n) ? raw : n;
+        if (Number.isNaN(n)) {
+          throw new TypeError(`QTIDeclaration: cannot coerce "${raw}" to float`);
+        }
+        return n;
       }
-      case BaseType.BOOLEAN:
-        return raw === 'true';
+
+      case BaseType.POINT: {
+        const parts = Array.isArray(raw)
+          ? raw.map(v => parseInt(v, 10))
+          : raw
+              .trim()
+              .split(/\s+/)
+              .map(v => parseInt(v, 10));
+        if (parts.length !== 2 || parts.some(Number.isNaN)) {
+          throw new TypeError(`QTIDeclaration: cannot coerce "${raw}" to point`);
+        }
+        return parts;
+      }
+
+      case BaseType.PAIR:
+      case BaseType.DIRECTED_PAIR: {
+        const parts = Array.isArray(raw) ? raw.map(String) : raw.trim().split(/\s+/);
+        if (parts.length !== 2) {
+          throw new TypeError(`QTIDeclaration: cannot coerce "${raw}" to ${baseType}`);
+        }
+        return parts;
+      }
+
+      case BaseType.DURATION: {
+        const n = parseFloat(raw);
+        if (Number.isNaN(n) || n < 0) {
+          throw new TypeError(`QTIDeclaration: cannot coerce "${raw}" to duration`);
+        }
+        return n;
+      }
+
+      case BaseType.STRING:
+      case BaseType.IDENTIFIER:
+      case BaseType.URI:
+        if (typeof raw !== 'string') {
+          throw new TypeError(`QTIDeclaration: cannot coerce "${raw}" to ${baseType}`);
+        }
+        return raw;
+
+      case BaseType.FILE:
+        // In the authoring editor, files are stored as raw strings (e.g. base64/URI).
+        return raw;
+
       default:
-        // identifier, string, point, pair, directedPair, duration, file, uri
         return raw;
     }
   }
@@ -146,33 +225,57 @@ export class QTIDeclaration {
    * Format a native JS value back to its QTI XML string representation.
    *
    * This is the inverse of coerceValue — safe to call on any JS primitive.
+   * Compound types (point, pair, directedPair) stored as 2-element arrays
+   * are joined with a space, matching the QTI XML format (e.g. "100 200").
    *
-   * @param {string|number|boolean} value
+   * @param {string|number|boolean|Array|null} value
    * @returns {string}
    */
   static formatValue(value) {
+    if (value === null || value === undefined) return '';
     if (typeof value === 'boolean') return value ? 'true' : 'false';
-    return String(value ?? '');
+    if (Array.isArray(value)) return value.join(' '); // point / pair / directedPair
+    return String(value);
+  }
+
+  /**
+   * Coerce a raw XML string value to its native JS type based on this declaration's baseType.
+   *
+   * @param {string|null|undefined} raw
+   * @returns {string|number|boolean|Array|null}
+   */
+  coerceValue(raw) {
+    return QTIDeclaration.coerceValue(raw, this.baseType);
+  }
+
+  /**
+   * Format a native JS value back to its QTI XML string representation.
+   *
+   * @param {string|number|boolean|Array|null} value
+   * @returns {string}
+   */
+  formatValue(value) {
+    return QTIDeclaration.formatValue(value);
   }
 
   /**
    * Coerce an array of raw XML strings using this declaration's baseType.
    *
    * @param {string[]} rawStrings
-   * @returns {Array<string|number|boolean>}
+   * @returns {Array<string|number|boolean|Array|null>}
    */
   coerceValues(rawStrings) {
-    return rawStrings.map(v => QTIDeclaration.coerceValue(v, this.baseType));
+    return rawStrings.map(v => this.coerceValue(v));
   }
 
   /**
    * Format an array of native JS values to QTI XML strings.
    *
-   * @param {Array<string|number|boolean>} values
+   * @param {Array<string|number|boolean|Array|null>} values
    * @returns {string[]}
    */
   formatValues(values) {
-    return values.map(QTIDeclaration.formatValue);
+    return values.map(v => this.formatValue(v));
   }
 
   // ---------------------------------------------------------------------------
@@ -192,7 +295,7 @@ export class QTIDeclaration {
   static fromXML(xmlNode) {
     const identifier = xmlNode.getAttribute('identifier') ?? '';
     const baseType = xmlNode.getAttribute('base-type') ?? null;
-    const cardinality = xmlNode.getAttribute('cardinality') ?? 'single';
+    const cardinality = xmlNode.getAttribute('cardinality') ?? Cardinality.SINGLE;
     const tag = xmlNode.tagName.toLowerCase();
 
     const declaration = new QTIDeclaration({ identifier, baseType, cardinality, tag });

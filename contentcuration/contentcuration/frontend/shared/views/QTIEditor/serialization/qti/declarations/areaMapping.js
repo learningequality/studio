@@ -5,8 +5,6 @@
  * The coords attribute is stored as an opaque string to prevent floating-point
  * formatting changes on re-serialization. Geometry evaluation is out of scope
  * for the authoring editor.
- *
- * @module declarations/areaMapping
  */
 import { buildXmlNode } from '../../assembleItem.js';
 import { CAPABILITY } from './capabilities.js';
@@ -24,6 +22,7 @@ export default class AreaMapping {
    */
   constructor(data, declaration) {
     this._data = data;
+    this._declaration = declaration;
     declaration.registerCapability(CAPABILITY.AREA_MAPPING, this);
   }
 

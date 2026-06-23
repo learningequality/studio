@@ -8,8 +8,6 @@
  *
  * qti-interpolation-table, qti-match-table, and ruleHandlers are intentionally
  * omitted — the authoring editor has no lookup-table or response-processing support.
- *
- * @module declarations/index
  */
 import CorrectResponse from './correctResponse.js';
 import DefaultValue from './defaultValue.js';

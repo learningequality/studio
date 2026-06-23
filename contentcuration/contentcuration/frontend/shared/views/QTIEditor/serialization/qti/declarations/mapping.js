@@ -7,10 +7,7 @@
  * Scoring logic (score(), clampScore(), lookup()) and the ScoringDeclaration
  * base class from the Kolibri original are intentionally omitted — the
  * authoring editor does not evaluate responses at runtime.
- *
- * @module declarations/mapping
  */
-import { QTIDeclaration } from '../QTIDeclaration.js';
 import { buildXmlNode } from '../../assembleItem.js';
 import { CAPABILITY } from './capabilities.js';
 
@@ -50,6 +47,7 @@ export default class Mapping {
    */
   constructor(data, declaration) {
     this._data = data;
+    this._declaration = declaration;
     declaration.registerCapability(CAPABILITY.MAPPING, this);
   }
 
@@ -64,7 +62,7 @@ export default class Mapping {
     const bounds = parseScoringAttrs(xmlNode);
 
     const entries = [...xmlNode.querySelectorAll('qti-map-entry')].map(entry => ({
-      mapKey: QTIDeclaration.coerceValue(entry.getAttribute('map-key'), declaration.baseType),
+      mapKey: declaration.coerceValue(entry.getAttribute('map-key')),
       mappedValue: parseFloat(entry.getAttribute('mapped-value')),
       // Per QTI spec, case-sensitive defaults to true; only false when explicitly set.
       caseSensitive: entry.getAttribute('case-sensitive') !== 'false',
@@ -93,7 +91,7 @@ export default class Mapping {
 
     const children = entries.map(entry => {
       const entryAttrs = {
-        'map-key': QTIDeclaration.formatValue(entry.mapKey),
+        'map-key': this._declaration.formatValue(entry.mapKey),
         'mapped-value': entry.mappedValue,
       };
       // Omit case-sensitive when true — it is the spec default.

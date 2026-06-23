@@ -7,8 +7,6 @@
  *
  * SCORE and LOOKUP from the Kolibri original are intentionally omitted —
  * the authoring editor carries no runtime scoring or lookup-table logic.
- *
- * @module declarations/capabilities
  */
 
 /** @enum {string} */

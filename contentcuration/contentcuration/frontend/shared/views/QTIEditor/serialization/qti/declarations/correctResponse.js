@@ -4,8 +4,6 @@
  * Parses a <qti-correct-response> element and coerces each <qti-value> text
  * to its native JS type (number, boolean, or string) based on the parent
  * declaration's base-type. Re-serializes values back to XML strings on demand.
- *
- * @module declarations/correctResponse
  */
 import { buildXmlNode } from '../../assembleItem.js';
 import { CAPABILITY } from './capabilities.js';
