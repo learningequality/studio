@@ -17,6 +17,10 @@
 
 - [Docker + Kubernetes Studio Instance Setup](./docker_kubernetes_setup.md)
 
+## Database
+
+- [Zero-downtime migrations (expand/contract runbook)](./zero_downtime_migrations.md)
+
 ## API
 
 - [API Endpoints](./api_endpoints.md)
