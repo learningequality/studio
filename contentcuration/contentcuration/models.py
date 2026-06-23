@@ -79,6 +79,7 @@ from contentcuration.constants import completion_criteria
 from contentcuration.constants import feedback
 from contentcuration.constants import user_history
 from contentcuration.constants.contentnode import kind_activity_map
+from contentcuration.db.dual_write import mirror_field
 from contentcuration.db.models.expressions import Array
 from contentcuration.db.models.functions import ArrayRemove
 from contentcuration.db.models.functions import Unnest
@@ -3255,6 +3256,8 @@ class StagedFile(models.Model):
 
 
 FILE_DISTINCT_INDEX_NAME = "file_checksum_file_size_idx"
+# studio#5974: bigint shadow of FILE_DISTINCT_INDEX_NAME, for the file_size widening.
+FILE_DISTINCT_BIGINT_INDEX_NAME = "file_checksum_fsizebig_idx"
 FILE_MODIFIED_DESC_INDEX_NAME = "file_modified_desc_idx"
 FILE_DURATION_CONSTRAINT = "file_media_duration_int"
 MEDIA_PRESETS = [
@@ -3266,6 +3269,14 @@ MEDIA_PRESETS = [
 ]
 
 
+# studio#5974 swap (next release, after backfill completes). One migration:
+# - drop the @mirror_field decorator and the file_size_bigint field below
+# - file_size = models.BigIntegerField(blank=True, null=True)
+# - DB ops: drop the trigger + int file_size column, then RENAME file_size_bigint -> file_size
+# - wrap in SeparateDatabaseAndState so the int->bigint AlterField is state-only (no rewrite)
+# Transparent to old pods: they keep writing file_size (now bigint); only a brief metadata lock.
+# Do NOT add db_column to reach file_size_bigint first — that generation breaks at the rename.
+@mirror_field("file_size", "file_size_bigint")  # studio#5974: dual-write int->bigint
 class File(models.Model):
     """
     The bottom layer of the contentDB schema, defines the basic building brick for content.
@@ -3275,6 +3286,9 @@ class File(models.Model):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     checksum = models.CharField(max_length=400, blank=True, db_index=True)
     file_size = models.IntegerField(blank=True, null=True)
+    file_size_bigint = models.BigIntegerField(
+        blank=True, null=True
+    )  # studio#5974 shadow
     file_on_disk = models.FileField(
         upload_to=object_storage_name,
         storage=default_storage,
@@ -3484,6 +3498,11 @@ class File(models.Model):
         indexes = [
             models.Index(
                 fields=["checksum", "file_size"], name=FILE_DISTINCT_INDEX_NAME
+            ),
+            models.Index(
+                fields=["checksum", "file_size_bigint"],
+                name=FILE_DISTINCT_BIGINT_INDEX_NAME,
+                condition=Q(file_size_bigint__isnull=False),
             ),
             models.Index(fields=["-modified"], name=FILE_MODIFIED_DESC_INDEX_NAME),
         ]
