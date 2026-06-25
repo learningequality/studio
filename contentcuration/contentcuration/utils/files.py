@@ -1,4 +1,5 @@
 import base64
+import codecs
 import copy
 import mimetypes
 import os
