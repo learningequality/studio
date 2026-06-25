@@ -287,11 +287,11 @@ Feature: Kolibri Studio critical workflows
 	Scenario: Invite collaborators with *Can edit* permissions
 		Given I am signed in to Studio
 			And I am at the channel editor page
-		When I click the *...* (options) button in the topbar
-			And select the *Share channel* option
+		When I click the *Share* button
+			And select the *Invite collaborators* option #alternatively I can click the *...* (options) button in the top toolbar and select the *Share channel* option
 		Then I am at the *Sharing* tab for the channel
 		When I type the email of the person I want to invite
-			And I don't change the preselected *Can edit* option in the drop-down
+			And I don't change the default *Can edit* option in the drop-down
 			And I click the *Send invitation* button
 		Then the collaborator will be notified on their *My channels* page, where they can accept or decline the pending invitation
 			And the collaborator will receive an email allowing them to accept/decline the pending invitation
@@ -303,11 +303,7 @@ Feature: Kolibri Studio critical workflows
 			And any changes made to the channel are visible by the other collaborators
 
 	Scenario: Invite collaborators with *Can view* permissions
-		Given I am signed in to Studio
-			And I am at the channel editor page
-		When I click the *...* (options) button in the topbar
-			And select the *Share channel* option
-		Then I am at the *Sharing* tab for the channel
+		Given I am at the *Sharing* tab for the channel
 		When I type the email of the person I want to invite
 			And I select the *Can view* option from the drop-down
 			And I click the *Send invitation* button
