@@ -74,12 +74,12 @@
         </div>
         <div class="actions">
           <KButton
-            v-if="adminReview && submission.status === CommunityLibraryStatus.PENDING"
+            v-if="isAdmin && submission.status === CommunityLibraryStatus.PENDING"
             :text="reviewAction$()"
             @click="showReviewSidePanel = true"
           />
           <ChannelActionsDropdown
-            v-if="adminReview"
+            v-if="isAdmin"
             primary
             :channelId="channelId"
           />
@@ -105,7 +105,7 @@
         :channelId="channelId"
       />
       <ReviewSubmissionSidePanel
-        v-if="adminReview && showReviewSidePanel"
+        v-if="isAdmin && showReviewSidePanel"
         :submissionId="submission.id"
         :channel="channel"
         @close="showReviewSidePanel = false"
@@ -143,10 +143,6 @@
   import logging from 'shared/logging';
 
   const props = defineProps({
-    adminReview: {
-      type: Boolean,
-      default: false,
-    },
     channelId: {
       type: String,
       required: true,
@@ -163,6 +159,7 @@
   const route = useRoute();
   const router = useRouter();
   const store = useStore();
+  const isAdmin = computed(() => store.getters.isAdmin);
   const { windowBreakpoint } = useKResponsiveWindow();
 
   const isModalOpen = computed({
@@ -206,7 +203,7 @@
   } = useFetch({
     asyncFetchFunc: async () => {
       try {
-        const Resource = props.adminReview
+        const Resource = isAdmin.value
           ? AdminCommunityLibrarySubmission
           : CommunityLibrarySubmission;
         const submission = await Resource.fetchModel(props.submissionId);
