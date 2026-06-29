@@ -1,15 +1,18 @@
-import { mount } from '@vue/test-utils';
+import { render, screen, configure } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
+import { fileErrors } from 'shared/constants';
 import FileUploadItem from '../FileUploadItem';
 import { factory } from '../../../store';
-import Uploader from 'shared/views/files/Uploader';
 
 const testFile = { id: 'test' };
-function makeWrapper(props = {}, file = {}, computed = {}) {
-  const store = factory();
-  return mount(FileUploadItem, {
+configure({ testIdAttribute: 'data-test' });
+
+function renderComponent({ props = {}, file = {}, store = factory(), stubs = {} } = {}) {
+  return render(FileUploadItem, {
+    routes: [],
     store,
-    attachTo: document.body,
-    propsData: {
+    stubs,
+    props: {
       file:
         file === null
           ? null
@@ -24,81 +27,175 @@ function makeWrapper(props = {}, file = {}, computed = {}) {
       },
       ...props,
     },
-    computed,
   });
 }
 
 describe('fileUploadItem', () => {
   describe('render', () => {
-    it("'Unknown filename' should be displayed if original_filename is 'file'", () => {
-      const file = {
-        original_filename: 'file',
-      };
-      const wrapper = makeWrapper({}, file);
-      expect(wrapper.findComponent('[data-test="file-name"]').text()).toBe('Unknown filename');
+    it('shows "Unknown filename" when the uploaded file has a generic name', () => {
+      renderComponent({
+        file: {
+          original_filename: 'file',
+        },
+      });
+      expect(screen.getByText('Unknown filename')).toBeInTheDocument();
     });
 
-    it("'Unknown filename' should be displayed if original_filename is ''", () => {
-      const file = {
-        original_filename: '',
-      };
-      const wrapper = makeWrapper({}, file);
-      expect(wrapper.findComponent('[data-test="file-name"]').text()).toBe('Unknown filename');
+    it("shows 'Unknown filename' when the uploaded filename is ''", () => {
+      renderComponent({
+        file: {
+          original_filename: '',
+        },
+      });
+      expect(screen.getByText('Unknown filename')).toBeInTheDocument();
     });
 
-    it("original_filename should be displayed if its value is not 'file'", () => {
-      const file = {
+    it('shows the uploaded file name when it is available', () => {
+      renderComponent({
+        file: {
+          original_filename: 'SomeFileName',
+        },
+      });
+      expect(screen.getByText('SomeFileName')).toBeInTheDocument();
+    });
+
+    it('shows an upload error when the file upload failed', () => {
+      const store = factory();
+      store.commit('file/ADD_FILE', {
         id: 'file-1',
         original_filename: 'SomeFileName',
-      };
-      const wrapper = makeWrapper({}, file);
-      expect(wrapper.findComponent('[data-test="file-name"]').text()).toBe('SomeFileName');
+        preset: 'document',
+        checksum: 'checksum',
+        file_format: 'pdf',
+        loaded: 0,
+        total: 100,
+        error: fileErrors.UPLOAD_FAILED,
+      });
+      renderComponent({
+        store,
+        file: {
+          id: 'file-1',
+          original_filename: 'SomeFileName',
+          error: fileErrors.UPLOAD_FAILED,
+        },
+      });
+      expect(screen.getByText('Upload failed')).toBeInTheDocument();
     });
 
-    it('should show a status error if the file has an error', () => {
-      const wrapper = makeWrapper({}, { error: true });
-      expect(wrapper.findComponent('[data-test="status"]').exists()).toBe(true);
+    it('shows a Select file action when no file has been uploaded', () => {
+      renderComponent({
+        file: null,
+      });
+      expect(screen.getByText('Select file')).toBeInTheDocument();
     });
 
-    it('should show an upload button if file is null', () => {
-      const wrapper = makeWrapper({}, null);
-      expect(wrapper.findComponent('[data-test="upload-link"]').exists()).toBe(true);
-      expect(wrapper.findComponent('[data-test="radio"]').exists()).toBe(false);
+    it('shows file actions when the user opens the options menu', async () => {
+      const user = userEvent.setup();
+      renderComponent({
+        props: {
+          allowFileRemove: true,
+        },
+        file: {
+          id: 'file-1',
+          original_filename: 'SomeFileName',
+          file_size: 100,
+          url: 'file-url',
+        },
+      });
+      await user.click(screen.getByRole('button'));
+      expect(screen.getByText('Replace file')).toBeInTheDocument();
+      expect(screen.getByText('Download')).toBeInTheDocument();
+      expect(screen.getByText('Remove')).toBeInTheDocument();
     });
-    it('should show dropdown on click preview file options', async () => {
-      const wrapper = makeWrapper({ allowFileRemove: true });
-      await wrapper.findComponent('[data-test="show-file-options"]').trigger('click');
-      expect(wrapper.find('[data-test="file-options"]').isVisible()).toBe(true);
-    });
-  });
 
-  describe('methods', () => {
-    let wrapper;
-
-    beforeEach(() => {
-      wrapper = makeWrapper();
-    });
-
-    it('Uploader uploadCompleteHandler should call uploadCompleteHandler with file', async () => {
-      const file = {
-        id: 'file-1',
-      };
+    it('calls the upload complete handler when the replacement upload finishes', async () => {
+      const user = userEvent.setup();
       const uploadCompleteHandler = jest.fn();
-      await wrapper.setProps({ uploadCompleteHandler });
-      await wrapper.setData({ fileUploadId: file.id });
-      wrapper.findComponent(Uploader).vm.uploadCompleteHandler(file);
-      expect(uploadCompleteHandler).toHaveBeenCalledWith(file);
+
+      const UploaderStub = {
+        name: 'Uploader',
+        props: ['uploadingHandler', 'uploadCompleteHandler'],
+        methods: {
+          openFileDialog() {},
+          handleFiles() {},
+        },
+        template: `
+          <div>
+            <button type="button" @click="uploadingHandler({ id: 'file-1' })">
+              Start upload
+            </button>
+            <button type="button" @click="uploadCompleteHandler({ id: 'file-1' })">
+              Finish upload
+            </button>
+            <slot :openFileDialog="openFileDialog" :handleFiles="handleFiles" />
+          </div>
+        `,
+      };
+
+      renderComponent({
+        props: {
+          uploadCompleteHandler,
+        },
+        stubs: {
+          Uploader: UploaderStub,
+        },
+      });
+
+      await user.click(screen.getByRole('button', { name: 'Start upload' }));
+      await user.click(screen.getByRole('button', { name: 'Finish upload' }));
+
+      expect(uploadCompleteHandler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'file-1',
+        }),
+      );
     });
 
-    it('clicking a list item should emit a selected event if a file is available', async () => {
-      await wrapper.find('[data-test="list-item"]').trigger('click');
-      expect(wrapper.emitted('selected')).not.toBeUndefined();
+    it('selects the existing file when the user clicks the file row', async () => {
+      const user = userEvent.setup();
+      const { emitted } = renderComponent({
+        file: {
+          id: 'file-1',
+          original_filename: 'SomeFileName',
+          file_size: 100,
+        },
+      });
+
+      await user.click(screen.getByText('SomeFileName'));
+
+      expect(emitted().selected).toHaveLength(1);
     });
 
-    it('clicking a list item should open the file dialog if file is not available', async () => {
-      wrapper = makeWrapper({}, null);
-      await wrapper.find('[data-test="list-item"]').trigger('click');
-      expect(wrapper.emitted('selected')).toBeUndefined();
+    it('opens the file chooser when the user clicks an empty file row', async () => {
+      const user = userEvent.setup();
+      const openFileDialog = jest.fn();
+
+      const UploaderStub = {
+        name: 'Uploader',
+        methods: {
+          openFileDialog() {
+            openFileDialog();
+          },
+          handleFiles() {},
+        },
+        template: `
+          <div>
+            <slot :openFileDialog="openFileDialog" :handleFiles="handleFiles" />
+          </div>
+        `,
+      };
+
+      const { emitted } = renderComponent({
+        file: null,
+        stubs: {
+          Uploader: UploaderStub,
+        },
+      });
+
+      await user.click(screen.getByTestId('list-item'));
+
+      expect(openFileDialog).toHaveBeenCalled();
+      expect(emitted()).not.toHaveProperty('selected');
     });
   });
 });
