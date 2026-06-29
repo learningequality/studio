@@ -36,7 +36,7 @@ Feature: Administration - Manage users
   Scenario: See the user's details
     When I click on the name of the user
     Then I see the user's details page with the full name of the user
-      And I see an *Actions* drop-down 
+      And I see an *Actions* drop-down
       And I see the *Basic information* section with the following fields: Privileges, Email, Where do you plan to use Kolibri?, How did you hear about us?, How do you plan to use Kolibri Studio?, Signed up on, Last active
       And I see the *Disk space* section with the percentage of storage used and an option to increase the storage size
       And I see the *Feature flags* section
