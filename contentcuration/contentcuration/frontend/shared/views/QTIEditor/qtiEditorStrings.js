@@ -37,6 +37,18 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Multiple Choice',
     context: 'Display name for a multiple-select question type',
   },
+  questionLabel: {
+    message: 'Question',
+    context: 'Section header for the question prompt',
+  },
+  answersLabelSingleChoice: {
+    message: 'Answer options \u2014 select one correct answer',
+    context: 'Section header above single-choice options',
+  },
+  answersLabelMultipleChoice: {
+    message: 'Answer options \u2014 select all correct answers',
+    context: 'Section header above multiple-choice options',
+  },
   orderLabel: {
     message: 'Order',
     context: 'Display name for an order question type',
@@ -80,5 +92,53 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
   toolbarLabelAddBelow: {
     message: 'Add question below',
     context: 'Action to add a new question below the current one',
+  },
+  promptPlaceholder: {
+    message: 'Enter question prompt…',
+    context: 'Placeholder text inside the prompt rich-text editor',
+  },
+  choiceContentPlaceholder: {
+    message: 'Enter answer option…',
+    context: 'Placeholder text inside a choice rich-text editor',
+  },
+  addChoiceBtn: {
+    message: 'Add choice',
+    context: 'Button that appends a new answer choice',
+  },
+  deleteChoiceBtn: {
+    message: 'Delete choice',
+    context: 'Accessible label for the delete-choice icon button',
+  },
+  moveChoiceUpBtn: {
+    message: 'Move choice up',
+    context: 'Accessible label for the move-up icon button',
+  },
+  moveChoiceDownBtn: {
+    message: 'Move choice down',
+    context: 'Accessible label for the move-down icon button',
+  },
+  markCorrectLabel: {
+    message: 'Mark as correct answer',
+    context: 'Accessible label for radio / checkbox that marks a choice as correct',
+  },
+  errorPromptRequired: {
+    message: 'A question prompt is required.',
+    context: 'Validation error shown when the prompt is empty',
+  },
+  errorNoCorrectAnswer: {
+    message: 'At least one correct answer must be selected.',
+    context: 'Validation error when no choice is marked correct',
+  },
+  errorTooManyCorrectAnswers: {
+    message: 'Only one correct answer is allowed for single-choice questions.',
+    context: 'Validation error when multiple choices are marked correct for single-select',
+  },
+  errorEmptyChoiceContent: {
+    message: 'Each answer option must have content.',
+    context: 'Validation error when an answer option is empty',
+  },
+  errorTooFewChoices: {
+    message: 'At least two answer options are required.',
+    context: 'Validation error when fewer than two choices exist',
   },
 });
