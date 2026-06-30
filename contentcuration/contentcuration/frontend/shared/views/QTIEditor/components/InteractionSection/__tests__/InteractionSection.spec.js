@@ -9,6 +9,8 @@ import {
   mockInteractionBlock as interactionBlock,
 } from '../../../utils/testingFixtures';
 
+jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor');
+
 const renderSection = (props = {}) =>
   render(InteractionSection, {
     props: { mode: 'edit', ...props },

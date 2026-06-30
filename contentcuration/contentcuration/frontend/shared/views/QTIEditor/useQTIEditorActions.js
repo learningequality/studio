@@ -24,13 +24,13 @@ export default function useQTIEditorActions({
 
   function getToolbarActions(item, idx) {
     const result = [];
-    const isEditMode = activeId.value === item.id;
+    const isEditMode = activeId.value === item.assessment_id;
 
     result.push({
       id: 'edit',
       icon: 'edit',
       label: toolbarLabelEdit$(),
-      handler: () => openItem(item.id),
+      handler: () => openItem(item.assessment_id),
       collapsed: false,
       disabled: isEditMode,
     });

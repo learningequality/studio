@@ -29,6 +29,7 @@
           :showAnswers="showAnswers"
           data-testid="item"
           @close="closeItem"
+          @update:rawData="newXml => updateItemRawData(item.assessment_id, newXml)"
         >
           <template #toolbarActions>
             <CollapsibleToolbar
@@ -142,6 +143,17 @@
         emit('update', list);
       }
 
+      /**
+       * Patch a single item's raw_data in the assessments list.
+       * Called whenever an interaction editor emits updated XML.
+       */
+      function updateItemRawData(assessmentId, newRawData) {
+        const list = props.assessments.map(item =>
+          item.assessment_id === assessmentId ? { ...item, raw_data: newRawData } : item,
+        );
+        emit('update', list);
+      }
+
       const { getToolbarActions } = useQTIEditorActions({
         items,
         activeId,
@@ -162,6 +174,7 @@
         showAnswers,
         closeItem,
         addItem,
+        updateItemRawData,
         getToolbarActions,
         noQuestionsPlaceholder$,
         newQuestionBtnLabel$,

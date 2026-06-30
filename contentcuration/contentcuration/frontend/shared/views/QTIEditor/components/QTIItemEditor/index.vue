@@ -33,6 +33,8 @@
         :mode="mode"
         :showAnswers="showAnswers"
         @update:questionType="type => (currentQuestionType = type)"
+        @update:bodyXml="onBodyXmlUpdate"
+        @update:responseDeclarations="onResponseDeclarationsUpdate"
       />
       <p
         v-else
@@ -63,6 +65,7 @@
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { QuestionType } from '../../constants';
   import useQtiItem from '../../composables/useQtiItem';
+  import { reassembleItemXml } from '../../serialization/parseItem';
   import InteractionSection from '../InteractionSection/index.vue';
 
   export default {
@@ -70,7 +73,7 @@
 
     components: { InteractionSection },
 
-    setup(props) {
+    setup(props, { emit }) {
       const {
         questionNumberLabel$,
         questionNumberAndTypeLabel$,
@@ -79,7 +82,7 @@
         unknownTypeLabel$,
       } = qtiEditorStrings;
 
-      const { interactions } = useQtiItem(props.item.raw_data);
+      const { identifier, title, language, interactions } = useQtiItem(props.item.raw_data);
 
       const questionNumberLabel = computed(() =>
         questionNumberLabel$({
@@ -116,6 +119,38 @@
         }),
       );
 
+      /**
+       * Track the current bodyXml and responseDeclarations for the interaction.
+       * Initialized from the parsed item; updated when the editor emits changes.
+       */
+      const currentBodyXml = ref(
+        interactions.value.length > 0 ? interactions.value[0].bodyXml : '',
+      );
+      const currentResponseDeclarations = ref(
+        interactions.value.length > 0 ? interactions.value[0].responseDeclarations : [],
+      );
+
+      function onBodyXmlUpdate(xml) {
+        currentBodyXml.value = xml;
+        emitRawData();
+      }
+
+      function onResponseDeclarationsUpdate(decls) {
+        currentResponseDeclarations.value = decls;
+        emitRawData();
+      }
+
+      function emitRawData() {
+        const newRawData = reassembleItemXml({
+          identifier: identifier.value,
+          title: title.value,
+          language: language.value,
+          bodyXml: currentBodyXml.value,
+          responseDeclarations: currentResponseDeclarations.value,
+        });
+        emit('update:rawData', newRawData);
+      }
+
       return {
         currentQuestionType,
         interactions,
@@ -123,6 +158,8 @@
         questionNumberAndTypeLabel,
         closeBtnLabel$,
         questionContentPlaceholder$,
+        onBodyXmlUpdate,
+        onResponseDeclarationsUpdate,
       };
     },
 
@@ -158,7 +195,7 @@
       },
     },
 
-    emits: ['close'],
+    emits: ['close', 'update:rawData'],
   };
 
 </script>
