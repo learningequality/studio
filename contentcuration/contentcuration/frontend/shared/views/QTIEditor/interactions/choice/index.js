@@ -1,83 +1,25 @@
 import defineInteraction from '../defineInteraction';
-import { QtiInteraction, QuestionType, BaseType, Cardinality } from '../../constants';
 import ChoiceInteractionEditor from './ChoiceInteractionEditor.vue';
+import { ChoiceInteractionDescriptor } from './ChoiceInteractionDescriptor';
 
 /**
- * Choice interaction plugin — handles both single-select (max-choices="1")
- * and multi-select (max-choices > 1) via the same <qti-choice-interaction> element.
+ * @typedef {object} ChoiceAnswer
+ * @property {string}  id       - QTI identifier, e.g. "choice_xlqTuVoq"
+ * @property {string}  content  - HTML content of the <qti-simple-choice>
+ * @property {boolean} correct  - Whether this choice is in the correct response
+ * @property {boolean} fixed    - Whether this choice is fixed (round-trip only)
  */
-export default defineInteraction({
-  /** Registry key — matches the QTI 3.0 interaction element tag name. */
-  type: QtiInteraction.CHOICE,
 
-  /** Block-level interaction: occupies its own paragraph in the item body. */
-  placement: 'block',
+/**
+ * @typedef {object} ChoiceState
+ * @property {string}        prompt      - HTML content of <qti-prompt>; default ""
+ * @property {ChoiceAnswer[]} answers
+ * @property {number}        maxChoices  - From max-choices attribute (0 = unlimited)
+ * @property {number}        minChoices  - From min-choices attribute; default 0
+ * @property {boolean}       shuffle     - From shuffle attribute; default false
+ * @property {string}        orientation - From orientation attribute; default "vertical"
+ */
 
-  /**
-   * All QuestionType values this descriptor can render.
-   * Allows the registry to resolve a descriptor from a selected question type
-   * without re-parsing XML.
-   */
-  questionTypes: [QuestionType.SINGLE_SELECT, QuestionType.MULTI_SELECT],
+const descriptor = new ChoiceInteractionDescriptor({ editorComponent: ChoiceInteractionEditor });
 
-  /** Vue component rendered inside InteractionSection when this descriptor owns the block. */
-  editorComponent: ChoiceInteractionEditor,
-
-  /**
-   * Types this plugin can absorb when the author switches interaction type.
-   */
-  convertsFrom: [],
-
-  /**
-   * Returns true when this descriptor owns the given interaction element.
-   * @param {Element} el
-   */
-  matches(el) {
-    return el.tagName.toLowerCase() === QtiInteraction.CHOICE;
-  },
-
-  /**
-   * Derives the UI-facing question type from the interaction element.
-   * Reads max-choices: '1' → singleSelect, anything else → multiSelect.
-   * @param {Element} el
-   * @returns {string} One of QuestionType
-   */
-  getQuestionType(el) {
-    return el.getAttribute('max-choices') === '1'
-      ? QuestionType.SINGLE_SELECT
-      : QuestionType.MULTI_SELECT;
-  },
-
-  /**
-   * Defines the structural schema for the response declaration of this interaction.
-   * Returns baseType and cardinality, which can depend on the selected questionType.
-   *
-   * @param {string} questionType
-   * @returns {{ baseType: string, cardinality: string }}
-   */
-  getDeclarationSchema(questionType) {
-    return {
-      baseType: BaseType.IDENTIFIER,
-      cardinality:
-        questionType === QuestionType.SINGLE_SELECT ? Cardinality.SINGLE : Cardinality.MULTIPLE,
-    };
-  },
-
-  /**
-   * Extracts a structured state object from the interaction element.
-   * Stub — full parsing is a future task.
-   * @returns {object}
-   */
-  parse() {
-    return {};
-  },
-
-  /**
-   * Validates the interaction state and returns an array of error strings.
-   * Stub — full validation is a future task.
-   * @returns {string[]}
-   */
-  validate() {
-    return [];
-  },
-});
+export default defineInteraction(descriptor);
