@@ -1,8 +1,8 @@
 import { render, screen, configure } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
-import { fileErrors } from 'shared/constants';
 import FileUploadItem from '../FileUploadItem';
 import { factory } from '../../../store';
+import { fileErrors } from 'shared/constants';
 
 const testFile = { id: 'test' };
 configure({ testIdAttribute: 'data-test' });
