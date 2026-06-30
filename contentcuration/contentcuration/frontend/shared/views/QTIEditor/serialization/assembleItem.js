@@ -33,7 +33,8 @@ export function buildXmlNode({ tag, attrs = {}, children = [] }) {
     if (typeof child === 'string') {
       el.appendChild(xmlDoc.createTextNode(child));
     } else {
-      el.appendChild(child);
+      const childNode = child.ownerDocument === xmlDoc ? child : xmlDoc.importNode(child, true);
+      el.appendChild(childNode);
     }
   }
 

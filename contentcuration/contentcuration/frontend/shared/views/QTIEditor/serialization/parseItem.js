@@ -23,6 +23,20 @@ export function parseXML(xmlString) {
 }
 
 /**
+ * Extract the inner HTML of the first <qti-prompt> child of an interaction element.
+ * Returns an empty string when no prompt element is present.
+ * Using innerHTML (not textContent) preserves rich inline markup (<p>, <strong>, etc.)
+ * for round-trip fidelity.
+ *
+ * @param {Element} interactionEl - The <qti-*-interaction> root element
+ * @returns {string}
+ */
+export function getPromptHTML(interactionEl) {
+  const promptEl = interactionEl.querySelector('qti-prompt');
+  return promptEl ? promptEl.innerHTML : '';
+}
+
+/**
  * Parses a raw QTI XML string into the structured ItemModel.
  *
  * Each interaction block in the item body becomes one entry in `interactions`.
@@ -71,4 +85,45 @@ export function parseItem(rawData) {
   }
 
   return { identifier, title, language, interactions };
+}
+
+/**
+ * Reassembles a full QTI assessment-item XML string from its parsed parts.
+ *
+ * This is the write-path inverse of parseItem. Call it whenever an interaction
+ * editor emits updated bodyXml / responseDeclarations to produce the new raw_data
+ * that should be stored on the assessment item.
+ *
+ * @param {object} params
+ * @param {string} params.identifier         - Item identifier attribute
+ * @param {string} params.title              - Item title attribute
+ * @param {string} params.language           - xml:lang attribute value
+ * @param {string} params.bodyXml            - Serialized interaction element XML string
+ * @param {string[]} params.responseDeclarations - Array of serialized declaration XML strings
+ * @returns {string} Full QTI XML string
+ */
+export function reassembleItemXml({ identifier, title, language, bodyXml, responseDeclarations }) {
+  const declarations = (responseDeclarations || []).join('\n  ');
+  const lang = language || 'en';
+  const id = identifier || 'item';
+  const t = title || '';
+
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    `<qti-assessment-item`,
+    `  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"`,
+    `  identifier="${id}"`,
+    `  title="${t}"`,
+    `  adaptive="false"`,
+    `  time-dependent="false"`,
+    `  xml:lang="${lang}"`,
+    `>`,
+    declarations ? `  ${declarations}` : '',
+    `  <qti-item-body>`,
+    `    ${bodyXml}`,
+    `  </qti-item-body>`,
+    `</qti-assessment-item>`,
+  ]
+    .filter(line => line !== '')
+    .join('\n');
 }

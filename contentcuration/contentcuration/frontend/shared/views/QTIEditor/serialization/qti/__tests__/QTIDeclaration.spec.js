@@ -59,6 +59,25 @@ describe('QTIDeclaration.registerCapability', () => {
   });
 });
 
+describe('QTIDeclaration.fromInteractionDescriptor', () => {
+  it('creates a declaration from descriptor-owned schema', () => {
+    const descriptor = {
+      getDeclarationSchema: jest.fn(() => ({
+        baseType: 'identifier',
+        cardinality: 'multiple',
+      })),
+    };
+
+    const d = QTIDeclaration.fromInteractionDescriptor(descriptor, 'multiSelect', 'RESPONSE');
+
+    expect(descriptor.getDeclarationSchema).toHaveBeenCalledWith('multiSelect', null);
+    expect(d.identifier).toBe('RESPONSE');
+    expect(d.baseType).toBe('identifier');
+    expect(d.cardinality).toBe('multiple');
+    expect(d.tag).toBe('qti-response-declaration');
+  });
+});
+
 describe('QTIDeclaration.fromXML', () => {
   it('reads identifier from XML', () => {
     const d = QTIDeclaration.fromXML(parseXML(SINGLE_SELECT_DECLARATION));

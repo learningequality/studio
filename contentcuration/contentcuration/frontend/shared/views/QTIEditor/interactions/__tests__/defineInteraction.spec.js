@@ -11,6 +11,7 @@ const makeValidDescriptor = (overrides = {}) => ({
   getQuestionType: () => null,
   getDeclarationSchema: () => ({ baseType: 'string', cardinality: 'single' }),
   parse: () => ({}),
+  buildXML: () => ({ bodyXml: '', declarations: [] }),
   validate: () => [],
   ...overrides,
 });
@@ -31,6 +32,7 @@ describe('defineInteraction', () => {
     'getQuestionType',
     'getDeclarationSchema',
     'parse',
+    'buildXML',
     'validate',
   ];
 

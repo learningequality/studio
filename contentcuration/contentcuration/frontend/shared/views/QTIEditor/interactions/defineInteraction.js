@@ -12,6 +12,7 @@ const REQUIRED_KEYS = [
   'getQuestionType',
   'getDeclarationSchema',
   'parse',
+  'buildXML',
   'validate',
 ];
 

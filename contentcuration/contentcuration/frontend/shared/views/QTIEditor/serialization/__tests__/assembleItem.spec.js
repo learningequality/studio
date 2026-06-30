@@ -74,6 +74,15 @@ describe('assembleItem', () => {
       const values = [...parent.getElementsByTagName('qti-value')].map(n => n.textContent);
       expect(values).toEqual(['A', 'B']);
     });
+
+    it('imports element children from another XML document', () => {
+      const child = new DOMParser().parseFromString(
+        '<qti-value>ChoiceA</qti-value>',
+        'text/xml',
+      ).documentElement;
+      const parent = buildXmlNode({ tag: 'qti-correct-response', children: [child] });
+      expect(parent.getElementsByTagName('qti-value')[0].textContent).toBe('ChoiceA');
+    });
   });
 
   describe('mixed children', () => {

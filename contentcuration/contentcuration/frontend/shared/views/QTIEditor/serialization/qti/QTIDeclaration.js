@@ -8,7 +8,6 @@
  *
  */
 import { buildXmlNode } from '../assembleItem.js';
-import { getDescriptorForQuestionType } from '../../interactions/index.js';
 import { BaseType, Cardinality } from '../../constants.js';
 import { declarationParsers, CAPABILITY } from './declarations/index.js';
 
@@ -341,17 +340,26 @@ export class QTIDeclaration {
   // ---------------------------------------------------------------------------
 
   /**
-   * Create a blank QTIDeclaration shaped for the given question type.
-   * Delegates to the factory registered by each interaction module.
+   * Create a blank QTIDeclaration from an interaction descriptor's schema.
    *
-   * @param {string} questionType - One of QuestionType.* (must have a registered factory)
+   * QTIDeclaration deliberately does not import the interaction registry. Callers
+   * that already know the relevant descriptor can pass it in, keeping schema
+   * ownership with the interaction while preserving a one-way dependency graph.
+   *
+   * @param {{
+   *   getDeclarationSchema: function(string, *): { baseType: string, cardinality: string },
+   * }} descriptor
+   * @param {string} questionType - One of QuestionType.*
    * @param {string} [identifier] - Response identifier, defaults to 'RESPONSE'
-   * @param {*}      [itemData]   - Optional item data forwarded to the factory
+   * @param {*}      [itemData]   - Optional item data forwarded to the descriptor
    * @returns {QTIDeclaration}
    */
-  static forType(questionType, identifier = 'RESPONSE', itemData = null) {
-    const descriptor = getDescriptorForQuestionType(questionType);
-    if (!descriptor) throw new Error(`Unknown question type: ${questionType}`);
+  static fromInteractionDescriptor(
+    descriptor,
+    questionType,
+    identifier = 'RESPONSE',
+    itemData = null,
+  ) {
     const schema = descriptor.getDeclarationSchema(questionType, itemData);
     return new QTIDeclaration({
       identifier,
