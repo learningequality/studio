@@ -71,3 +71,74 @@ Feature: Administration - Manage channels
 		Then I am seeing only results matching the entered keyword
 		When there aren't any results for the entered keyword
     Then I see a *No users found* message
+
+  Scenario: View the channel details page
+  	When I click on the name of a channel
+  	Then I see the channel details page
+  		And I am at the *Channel info* tab
+  		And I can see all of the available channel metadata such as token, version, language etc.
+
+  Scenario: View the channel editors
+  	When I click the *Actions* drop-down
+  		And I select the *View editors* option
+  	Then I see the *Users* table
+  		And I can see that a search has been initiated for the specified channel
+  		And I can see all of the channel editors
+
+  Scenario: Download the PDF and CSV for a channel
+  	When I click the *Actions* drop-down
+  		And I select the *Download PDF* option
+  	Then I see the *Generating PDF* snackbar message
+  		And I can download the generated .pdf file on my device and view it
+  	When I click the *Actions* drop-down
+  		And I select the *Download CSV* option
+  	Then I see the *Generating CSV* snackbar message
+  		And I can download the generated .csv file on my device and view it
+
+  Scenario: Make a channel public
+  	When I click the *Actions* drop-down
+  		And I select the *Make public* option
+  	Then I see the *Make channel public* modal
+  	When I click the *Make public* button
+  	Then I see a *Channel changed to public* snackbar message
+  		And I see a green circle icon in front of the channel name indicating that the channel is public
+
+  Scenario: Make a channel private
+  	Given I have made a channel public
+  	When I click the *Actions* drop-down
+  		And I select the *Make private* option
+  	Then I see the *Make channel private* modal
+  	When I click the *Make private* button
+  	Then I see a *Channel changed to private* snackbar message
+  		And I no longer see a green circle icon in front of the channel name indicating that the channel is now private
+
+  Scenario: Delete a channel
+    When I click the *Actions* drop-down
+      And I select the *Delete channel* option
+    Then I see a *Delete channel* confirmation modal
+    When I click the *Delete* button
+    Then I see a *Channel deleted* snackbar message
+      And the channel's details are colored in red
+      And I see a *Deleted* label in the *Token ID* column
+    When I go to the channel's details page
+    Then I see a red banner with the following text: This channel has been deleted
+    When I click the *Actions* drop-down
+   	Then I see the following options: Restore, Delete permanently
+
+  Scenario: Restore a deleted channel
+  	Given I have deleted a channel
+  	When I click the *Actions* drop-down for the deleted channel
+      And I select the *Restore* option
+    Then I see the *Restore channel* confirmation modal
+    When I click the *Restore* button
+    Then I see a *Channel restored* snackbar message
+      And I can see that the channel is fully restored
+
+  Scenario: Permanently delete a deleted channel
+  	Given I have deleted a channel
+  	When I click the *Actions* drop-down for the deleted channel
+      And I select the *Delete permanently* option
+    Then I see the *Permanently delete channel* confirmation modal
+    When I click the *Delete permanently* button
+    Then I see a *Channel deleted permanently* snackbar message
+      And I can see that the channel is no longer listed in the *All channels* table
