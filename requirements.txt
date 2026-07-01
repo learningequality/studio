@@ -241,7 +241,7 @@ pytz==2022.1
     # via
     #   django
     #   django-postmark
-redis==7.1.0
+redis==8.0.1
     # via
     #   -r requirements.in
     #   django-redis
