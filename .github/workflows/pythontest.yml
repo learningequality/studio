@@ -65,7 +65,7 @@ jobs:
           # Maps port 6379 on service container to the host
           - 6379:6379
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Set up minio
       run: |
         docker run -d -p 9000:9000 --name minio \
