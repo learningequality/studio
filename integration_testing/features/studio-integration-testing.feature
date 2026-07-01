@@ -46,7 +46,7 @@ Feature: Kolibri Studio integration testing scenarios
 			And I fill in the *New password* field
 			And I fill in the *Confirm password* field with the same password
 			And I press the *Submit* button
-		Then I see the following message: Password reset successfully
+		Then I see the following message: *Password reset successfully*
 
 	Scenario: Explore without an account
 		Given I am not signed in to Studio
@@ -133,6 +133,20 @@ Feature: Kolibri Studio integration testing scenarios
 		Then I am back at the channel editor page
 			And I can see the newly created folder
 
+	Scenario: Create multiple folders
+		Given I am signed in to Studio
+			And I am at the channel editor page
+			And I have created an empty folder tree
+		When I click *⋮* (Options) button for a folder
+			And I click the *New folder* option
+		Then I see the *New folder* modal
+		When I fill in the required fields
+			And I click the *Add new folder* button
+		Then I can fill in the required fields for a new folder #repeat this process for as many empty folders as you need
+		When I click the *Finish* button
+		Then I am at the channel editor page
+			And I can see the created folders
+
 	Scenario: Upload all supported files
 		Given I am signed in to Studio
 			And I am at the channel editor page
@@ -147,6 +161,15 @@ Feature: Kolibri Studio integration testing scenarios
 		When I click the *Open* button
 		Then I see the *Edit files* modal
 		When I fill in all the required fields
+			And I click the *Finish* button
+		Then I am back at the channel editor page
+			And I can see the uploaded files
+
+	Scenario: Upload more files by drag and drop
+		Given I am at the *Edit files* modal after having imported some files
+		When I drag and drop files
+		Then I see the *Edit files* modal with the newly uploaded files #if I am uploading resources to a folder with metadata then I will first see the *Apply details from the folder <folder_name>*
+		When I fill in all the required fields for each file
 			And I click the *Finish* button
 		Then I am back at the channel editor page
 			And I can see the uploaded files
@@ -334,6 +357,44 @@ Feature: Kolibri Studio integration testing scenarios
 		When I navigate to the *Community Library* page
 		Then I can see that the channel is shown among the other Community Library channels
 
+	Scenario: Community Library page overview (published channels)
+		Given several channels have already been published to the Community Library
+		When I look at the page
+		Then I see the *Community Library* title
+			And I see *Browse community-submitted channels approved for discovery in Studio. Copy a token to use a channel in Kolibri. What is the Community Library?*
+			And I see a *Help grow the Community Library* banner with a *Go to my channels* button
+			And I see the cards of all of the currently published channels
+			And I see the following filters to the left of the page: *Search*, *Countries*, *Languages*, *Categories*
+
+	Scenario: Filter channels at the Community Library page
+		Given several channels have already been published to the Community Library
+		When I enter a keyword in the *Search* field
+		Then I see only the results matching the entered keyword
+		When there are no results matching the entered keyword
+		Then I see a *0 results found* text
+			And I see a *No channels match the selected filters.* message
+		When I click the *Clear all* link
+		Then I see the full list with the available cards
+		When apply any of the other available filters (*Countries*, *Languages*, *Categories*)
+		Then I see only the results matching the applied filters
+		When there are no results matching the applied filters
+		Then I see a *0 results found* text
+			And I see a *No channels match the selected filters.* message
+
+	Scenario: View the channel details and download the files with the channel summary
+			Given I am signed in to Studio
+			And I am in any of the tabs (*My Channels*, *Starred*, *View only*, or *Content Library*)
+			When I click the *i* button for the desired channel
+			Then I see a new page with the channel details
+				And I see the detailed information for the channel (token, size and resources, language, etc.)
+				And I see the *Download channel summary* button
+			When I click the *Download channel summary* button
+			Then I see the options to download the summary as a PDF or a CSV file
+			When I select the option to download as PDF
+			Then I can save and open the PDF file in my default system PDF reader application
+			When I select the option to download CSV
+			Then I can save and open the CSV file in my default system CSV application
+
 	Scenario: Invite collaborators with *Can edit* permissions
 		Given I am signed in to Studio
 			And I am at the channel editor page
@@ -419,6 +480,23 @@ Feature: Kolibri Studio integration testing scenarios
 		Then I see the toolbar options for the resource
 		When I click the *Remove* button
 		Then I can see the *Sent to trash* snackbar message
+			And I see the *Undo* button
+			And I no longer see the resource
+
+	Scenario: Remove folders and resources through the *···* (Options) menu
+		Given I am signed in to Studio
+			And I am at the channel editor page
+			And there are available resources of different types
+		When I hover over a folder
+			And I click on the *···* (Options) button
+			And I select the *Remove* option
+		Then I can see the *Sent to trash* snackbar notification
+			And I see the *Undo* button
+			And I no longer see the removed folder
+		When I hover over a resource
+			And I click on the *···* (Options) button
+			And I select the *Remove* option
+		Then I can see the *Sent to trash* snackbar notification
 			And I see the *Undo* button
 			And I no longer see the resource
 
@@ -560,6 +638,53 @@ Feature: Kolibri Studio integration testing scenarios
 		Then I see the *Collections* tab
 			And I see the newly created collection
 			And I see the number of channels in that collection
+
+	Scenario: Create a collection by searching for channels
+		Given I am signed in to Studio
+			And I am on the *Collections* tab
+		When I click the *New collection* button
+			And I click the *Select channels* button
+		Then I see the *Select channels* page
+			And I am on the *Kolibri library* tab # alternatively I can select the *My channels* or *View-only* tab
+		When I enter a search term in the *Search for a channel* field
+      And I select one or several channels
+			And I click the *Finish* button
+		Then I see the *New collection* screen with the selected channels
+			When I click the *Create* button
+		Then I see the *Collections* page
+			And I see the newly created collection
+			And I see the correct number of channels in that collection
+
+	Scenario: Edit a collection
+		Given I am signed in to Studio
+			And I am on the *Collections* tab
+			And I've already created some collections
+		When I click the *Options* drop-down for the collection I want to edit
+			And I select the *Edit collection* option
+		Then I see the collection's details
+			And I can change the collection name
+		When I click the *Select channels* button
+		Then I am on the *Kolibri library* tab # alternatively I can select the *My channels* or *View-only* tab
+		When I select one or several channels
+			And I click the *Finish* button
+		Then I see the the *New collection* screen with the selected channels
+		When I click the *Remove* button
+			Then I see a *Channel removed* snackbar message
+		When I click the *Save and close* button
+		Then I see the *Collections* page
+			And I see the edited collection
+			And I see the number of channels in that collection
+
+	Scenario: Delete a collection
+		Given I am signed in to Studio
+			And I am on the *Collections* tab
+			And I've already created some collections
+		When I click the *Options* drop-down for the collection I want to edit
+			And I select the *Delete collection* option
+		Then I see the *Delete collection* modal window
+		When I click the *Delete collection* button
+		Then I see the *Collections* page
+			And I see that the deleted collection is no longer displayed
 
 	Scenario: Explore the Content library
 		Given I am signed in to Studio
