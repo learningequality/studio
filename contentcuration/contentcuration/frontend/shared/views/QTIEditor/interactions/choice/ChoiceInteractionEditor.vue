@@ -101,22 +101,23 @@
           :key="answer.id"
           class="answer-border"
           role="listitem"
-          :class="{ 'is-clickable': mode === 'edit' && openChoiceId !== answer.id }"
+          :class="[
+            { 'is-clickable': mode === 'edit' && openChoiceId !== answer.id },
+            mode === 'edit' &&
+              openChoiceId !== answer.id &&
+              !(answer.correct && mode === 'view' && showAnswers)
+              ? $computedClass({ ':hover': { backgroundColor: $themeTokens.fineLine } })
+              : '',
+          ]"
           :style="{
             borderColor:
               answer.correct && mode === 'view' && showAnswers
                 ? $themePalette.green.v_500
                 : $themeTokens.fineLine,
             backgroundColor:
-              answer.correct && mode === 'view' && showAnswers
-                ? $themePalette.green.v_50
-                : hoveredId === answer.id
-                  ? $themeTokens.fineLine
-                  : null,
+              answer.correct && mode === 'view' && showAnswers ? $themePalette.green.v_50 : null,
           }"
           @click="onRowClick($event, answer.id)"
-          @mouseenter="hoveredId = answer.id"
-          @mouseleave="hoveredId = null"
         >
           <div
             class="answer-card-text"
@@ -269,6 +270,7 @@
 
   import { computed, ref, watch } from 'vue';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
+  import { themePalette } from 'kolibri-design-system/lib/styles/theme';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { QuestionType, ValidationError } from '../../constants';
   import { useChoiceInteraction } from '../../composables/useChoiceInteraction';
@@ -301,6 +303,19 @@
         toolbarLabelEdit$,
       } = qtiEditorStrings;
 
+      const palette = themePalette();
+      const buttonAppearanceOverrides = computed(() => ({
+        backgroundColor: palette.blue.v_50,
+        border: `1px dashed ${palette.blue.v_200}`,
+        color: `${palette.blue.v_500} !important`,
+        fontSize: '14px',
+        fontWeight: '600',
+        textTransform: 'none',
+        ':hover': {
+          backgroundColor: palette.blue.v_100,
+        },
+      }));
+
       // questionType prop is not a Ref — wrap it so useChoiceInteraction can react to changes.
       const questionTypeRef = computed(() => props.questionType);
 
@@ -329,6 +344,7 @@
 
       function closeQuestion() {
         isQuestionOpen.value = false;
+        runValidation();
       }
 
       function openChoice(id) {
@@ -338,6 +354,7 @@
 
       function closeChoice() {
         openChoiceId.value = null;
+        runValidation();
       }
 
       watch(
@@ -464,8 +481,6 @@
         ];
       }
 
-      const hoveredId = ref(null);
-
       return {
         state,
         isSingleSelect,
@@ -491,7 +506,6 @@
         onRemoveChoice,
         moveChoiceUp,
         moveChoiceDown,
-        hoveredId,
         getChoiceRowActions,
         addChoiceBtn$,
         deleteChoiceBtn$,
@@ -505,6 +519,7 @@
         errorTooFewChoices$,
         questionLabel$,
         toolbarLabelEdit$,
+        buttonAppearanceOverrides,
       };
     },
 
@@ -527,22 +542,6 @@
       showAnswers: {
         type: Boolean,
         default: false,
-      },
-    },
-
-    computed: {
-      buttonAppearanceOverrides() {
-        return {
-          backgroundColor: this.$themePalette.blue.v_50,
-          border: `1px dashed ${this.$themePalette.blue.v_200}`,
-          color: `${this.$themePalette.blue.v_500} !important`,
-          fontSize: '14px',
-          fontWeight: '600',
-          textTransform: 'none',
-          ':hover': {
-            backgroundColor: this.$themePalette.blue.v_100,
-          },
-        };
       },
     },
 

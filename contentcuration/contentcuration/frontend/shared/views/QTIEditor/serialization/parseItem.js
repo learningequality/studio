@@ -102,11 +102,20 @@ export function parseItem(rawData) {
  * @param {string[]} params.responseDeclarations - Array of serialized declaration XML strings
  * @returns {string} Full QTI XML string
  */
+function escapeXmlAttr(unsafe) {
+  return String(unsafe)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
 export function reassembleItemXml({ identifier, title, language, bodyXml, responseDeclarations }) {
   const declarations = (responseDeclarations || []).join('\n  ');
-  const lang = language || 'en';
-  const id = identifier || 'item';
-  const t = title || '';
+  const lang = escapeXmlAttr(language || 'en');
+  const id = escapeXmlAttr(identifier || 'item');
+  const t = escapeXmlAttr(title || '');
 
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
