@@ -20,7 +20,7 @@ django-s3-storage==0.15.0
 requests>=2.34.2
 google-cloud-core
 django-db-readonly==0.7.0
-google-cloud-kms==2.24.2
+google-cloud-kms==3.14.0
 google-crc32c==1.8.0
 backoff
 django-model-utils==5.0.0

@@ -106,11 +106,10 @@ google-api-core==2.30.0
 google-auth==2.48.0
     # via
     #   google-api-core
-    #   google-cloud-appengine-logging
     #   google-cloud-core
     #   google-cloud-kms
     #   google-cloud-storage
-google-cloud-appengine-logging==1.8.0
+google-cloud-appengine-logging==0.2.0
     # via google-cloud-logging
 google-cloud-audit-log==0.4.0
     # via google-cloud-logging
@@ -121,9 +120,9 @@ google-cloud-core==2.5.0
     #   google-cloud-storage
 google-cloud-error-reporting==1.4.0
     # via -r requirements.in
-google-cloud-kms==2.24.2
+google-cloud-kms==3.14.0
     # via -r requirements.in
-google-cloud-logging==2.7.1
+google-cloud-logging==2.6.0
     # via google-cloud-error-reporting
 google-cloud-storage==3.10.1
     # via -r requirements.in
@@ -134,20 +133,18 @@ google-crc32c==1.8.0
     #   google-resumable-media
 google-resumable-media==2.8.0
     # via google-cloud-storage
-googleapis-common-protos==1.57.0
+googleapis-common-protos==1.75.0
     # via
     #   google-api-core
     #   google-cloud-audit-log
     #   grpc-google-iam-v1
     #   grpcio-status
-grpc-google-iam-v1==0.12.4
-    # via
-    #   google-cloud-kms
-    #   google-cloud-logging
+grpc-google-iam-v1==0.14.4
+    # via google-cloud-kms
 grpcio==1.78.0
     # via
     #   google-api-core
-    #   google-cloud-appengine-logging
+    #   google-cloud-kms
     #   googleapis-common-protos
     #   grpc-google-iam-v1
     #   grpcio-status
@@ -187,7 +184,9 @@ packaging==26.0
     # via
     #   -r requirements.in
     #   django-js-reverse
+    #   google-cloud-appengine-logging
     #   google-cloud-error-reporting
+    #   google-cloud-logging
     #   gunicorn
     #   kombu
 pillow==12.2.0
@@ -206,10 +205,10 @@ proto-plus==1.27.1
 protobuf==4.25.8
     # via
     #   google-api-core
-    #   google-cloud-appengine-logging
     #   google-cloud-audit-log
     #   google-cloud-kms
     #   googleapis-common-protos
+    #   grpc-google-iam-v1
     #   grpcio-status
     #   proto-plus
 psycopg2-binary==2.9.11
