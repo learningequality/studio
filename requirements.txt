@@ -224,9 +224,9 @@ pycountry==26.2.16
     # via -r requirements.in
 pycparser==3.0
     # via cffi
-pydantic==2.12.5
+pydantic==2.13.4
     # via -r requirements.in
-pydantic-core==2.41.5
+pydantic-core==2.46.4
     # via pydantic
 pyparsing==2.4.7
     # via httplib2
