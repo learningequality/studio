@@ -96,6 +96,16 @@ INSTALLED_APPS = (
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 
+# redis-py 8 defaults to RESP3, whose HELLO handshake the pinned Redis v4
+# server rejects. Force RESP2 globally rather than per connection: our paths
+# (cache, native RedisCache, kombu broker) set protocol differently and kombu
+# exposes no knob for it. Remove once the Redis server is upgraded.
+import redis.connection
+import redis.utils
+
+redis.connection.DEFAULT_RESP_VERSION = 2
+redis.utils.DEFAULT_RESP_VERSION = 2
+
 REDIS_URL = "redis://:{password}@{endpoint}/".format(
     password=os.getenv("CELERY_REDIS_PASSWORD") or "",
     endpoint=os.getenv("CELERY_BROKER_ENDPOINT") or "localhost:6379",
