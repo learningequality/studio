@@ -3759,18 +3759,22 @@ class Invitation(models.Model):
             self.channel.editors.add(user)
 
     def _accept_organization_invitation(self, user):
-        organization_role = OrganizationRole.objects.create(
+        role = None
+        if self.share_mode == VIEW_ACCESS:
+            role = ORGANIZATION_VIEWER
+        elif self.share_mode == EDIT_ACCESS:
+            role = ORGANIZATION_EDITOR
+        elif self.share_mode == ADMIN_ACCESS:
+            role = ORGANIZATION_ADMIN
+        else:
+            raise ValueError(f"Invalid share_mode: {self.share_mode}")
+
+        update_create_defaults = {"role": role, "status": ORGANIZATION_ROLE_STATUS_ACTIVE}
+        OrganizationRole.objects.update_or_create(
             user=user,
             organization=self.organization,
-            status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+            defaults=update_create_defaults,
         )
-        if self.share_mode == VIEW_ACCESS:
-            organization_role.role = ORGANIZATION_VIEWER
-        elif self.share_mode == EDIT_ACCESS:
-            organization_role.role = ORGANIZATION_EDITOR
-        elif self.share_mode == ADMIN_ACCESS:
-            organization_role.role = ORGANIZATION_ADMIN
-        organization_role.save()
 
     @classmethod
     def filter_edit_queryset(cls, queryset, user):
