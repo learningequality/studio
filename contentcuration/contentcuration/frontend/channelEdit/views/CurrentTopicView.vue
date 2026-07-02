@@ -72,33 +72,19 @@
           </span>
         </template>
       </Breadcrumbs>
-      <BaseMenu
+      <KIconButton
         v-if="!loadingAncestors"
-        class="pa-1"
+        icon="list"
+        :tooltip="$tr('viewModeTooltip')"
       >
-        <template #activator="{ on }">
-          <IconButton
-            icon="list"
-            :text="$tr('viewModeTooltip')"
-            v-on="on"
+        <template #menu>
+          <KDropdownMenu
+            :options="viewModeOptions"
+            :hasIcons="true"
+            @select="handleViewModeSelect"
           />
         </template>
-        <VList>
-          <VListTile
-            v-for="mode in viewModes"
-            :key="mode"
-            @click="(setViewMode(mode), trackViewMode(mode))"
-          >
-            <VListTileAction style="min-width: 32px">
-              <Icon
-                v-if="mode === viewMode"
-                icon="check"
-              />
-            </VListTileAction>
-            <VListTileTitle>{{ $tr(mode) }}</VListTileTitle>
-          </VListTile>
-        </VList>
-      </BaseMenu>
+      </KIconButton>
     </VToolbar>
 
     <!-- Topic actions -->
@@ -164,42 +150,21 @@
       />
       <VSpacer v-if="!selected.length" />
       <VToolbarItems v-if="!loadingAncestors">
-        <BaseMenu v-if="canEdit">
-          <template #activator="{ on }">
-            <VBtn
-              color="primary"
-              class="ml-2"
-              style="height: 32px"
-              v-on="on"
-            >
-              {{ $tr('addButton') }}
-              <Icon
-                icon="dropdown"
-                :color="$themeTokens.textInverted"
-              />
-            </VBtn>
+        <KButton
+          v-if="canEdit"
+          :primary="true"
+          :text="$tr('addButton')"
+          hasDropdown
+          class="ml-2"
+          style="height: 32px"
+        >
+          <template #menu>
+            <KDropdownMenu
+              :options="addMenuOptions"
+              @select="handleAddMenuSelect"
+            />
           </template>
-          <VList>
-            <VListTile @click="newTopicNode">
-              <VListTileTitle>{{ $tr('addTopic') }}</VListTileTitle>
-            </VListTile>
-            <VListTile
-              :to="uploadFilesLink"
-              @click="trackClickEvent('Upload files')"
-            >
-              <VListTileTitle>{{ $tr('uploadFiles') }}</VListTileTitle>
-            </VListTile>
-            <VListTile @click="newExerciseNode">
-              <VListTileTitle>{{ $tr('addExercise') }}</VListTileTitle>
-            </VListTile>
-            <VListTile
-              :to="importFromChannelsRoute"
-              @click="trackClickEvent('Import from other channels')"
-            >
-              <VListTileTitle>{{ $tr('importFromChannels') }}</VListTileTitle>
-            </VListTile>
-          </VList>
-        </BaseMenu>
+        </KButton>
       </VToolbarItems>
     </ToolBar>
 
@@ -324,6 +289,13 @@
   import DraggableRegion from 'shared/views/draggable/DraggableRegion';
   import { searchRecommendationsStrings } from 'shared/strings/searchRecommendationsStrings';
   import AiRecommendationsBanner from 'shared/views/AiRecommendationsBanner';
+
+  const AddMenuOptions = {
+    ADD_TOPIC: 'add-topic',
+    UPLOAD_FILES: 'upload-files',
+    ADD_EXERCISE: 'add-exercise',
+    IMPORT_FROM_CHANNELS: 'import-from-channels',
+  };
 
   export default {
     name: 'CurrentTopicView',
@@ -566,6 +538,13 @@
       viewModes() {
         return Object.values(viewModes);
       },
+      viewModeOptions() {
+        return this.viewModes.map(mode => ({
+          label: this.$tr(mode),
+          value: mode,
+          icon: mode === this.viewMode ? 'check' : undefined,
+        }));
+      },
       importFromChannelsRoute() {
         return {
           name: RouteNames.IMPORT_FROM_CHANNELS_BROWSE,
@@ -573,6 +552,14 @@
             destNodeId: this.$route.params.nodeId,
           },
         };
+      },
+      addMenuOptions() {
+        return [
+          { label: this.$tr('addTopic'), value: AddMenuOptions.ADD_TOPIC },
+          { label: this.$tr('uploadFiles'), value: AddMenuOptions.UPLOAD_FILES },
+          { label: this.$tr('addExercise'), value: AddMenuOptions.ADD_EXERCISE },
+          { label: this.$tr('importFromChannels'), value: AddMenuOptions.IMPORT_FROM_CHANNELS },
+        ];
       },
       selectionText() {
         return this.getSelectedTopicAndResourceCountText(this.selected);
@@ -1014,6 +1001,28 @@
       },
       trackViewMode(mode) {
         this.$analytics.trackAction('general', mode);
+      },
+      handleViewModeSelect(option) {
+        this.setViewMode(option.value);
+        this.trackViewMode(option.value);
+      },
+      handleAddMenuSelect(option) {
+        switch (option.value) {
+          case AddMenuOptions.ADD_TOPIC:
+            this.newTopicNode();
+            break;
+          case AddMenuOptions.UPLOAD_FILES:
+            this.trackClickEvent('Upload files');
+            this.$router.push(this.uploadFilesLink);
+            break;
+          case AddMenuOptions.ADD_EXERCISE:
+            this.newExerciseNode();
+            break;
+          case AddMenuOptions.IMPORT_FROM_CHANNELS:
+            this.trackClickEvent('Import from other channels');
+            this.$router.push(this.importFromChannelsRoute);
+            break;
+        }
       },
       showTitleDescriptionModal(nodeId) {
         this.editTitleDescriptionModal = {
