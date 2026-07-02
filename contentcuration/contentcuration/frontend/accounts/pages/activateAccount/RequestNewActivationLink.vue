@@ -8,7 +8,7 @@
       @submit.prevent="requestActivationLink"
     >
       <StudioBanner
-        v-if="true"
+        v-if="error"
         error
         class="banner"
       >
