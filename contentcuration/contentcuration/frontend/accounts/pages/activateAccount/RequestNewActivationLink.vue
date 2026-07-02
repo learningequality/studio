@@ -1,4 +1,5 @@
 <template>
+
   <StudioMessageLayout
     :header="$tr('activationExpiredTitle')"
     :text="$tr('activationExpiredText')"
@@ -28,10 +29,12 @@
       />
     </form>
   </StudioMessageLayout>
+
 </template>
 
 
 <script>
+
   import { mapActions } from 'vuex';
   import StudioMessageLayout from '../../components/StudioMessageLayout';
   import StudioEmailField from '../../components/form/StudioEmailField';
@@ -92,10 +95,12 @@
       emailValidationMessage: 'Please enter a valid email',
     },
   };
+
 </script>
 
 
 <style lang="scss" scoped>
+
   form {
     width: 400px;
     max-width: 100%;
@@ -110,4 +115,5 @@
   .w-100 {
     width: 100%;
   }
+
 </style>
