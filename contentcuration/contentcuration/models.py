@@ -3738,22 +3738,13 @@ class Invitation(models.Model):
     class Meta:
         verbose_name = "Invitation"
         verbose_name_plural = "Invitations"
-        constraints = [
-            models.CheckConstraint(
-                name="channel_organization_exclusivity",
-                check=(
-                    Q(channel__isnull=False, organization__isnull=True) |
-                    Q(channel__isnull=True, organization__isnull=False)
-                )
-            )
-        ]
 
     def accept(self):
         user = User.objects.filter(email__iexact=self.email).first()
         if self.channel:
-            self.accept_channel_invitation(user)
+            self._accept_channel_invitation(user)
         if self.organization:
-            self.accept_organization_invitation(user)
+            self._accept_organization_invitation(user)
 
     def _accept_channel_invitation(self, user):
         if self.share_mode == VIEW_ACCESS:
