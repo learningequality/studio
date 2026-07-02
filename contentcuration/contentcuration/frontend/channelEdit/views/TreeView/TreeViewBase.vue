@@ -518,6 +518,12 @@
             }
             options.push(editOption);
           }
+          if (this.canSubmitToCommunityLibrary) {
+            options.push({
+              label: this.$tr('submitToCommunityLibrary'),
+              value: ShareMenuOptions.SUBMIT_TO_LIBRARY,
+            });
+          }
         }
 
         // Common options shown on all screen sizes

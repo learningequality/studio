@@ -384,4 +384,109 @@ describe('TreeViewBase', () => {
       expect(menuOptions.some(item => item.value === 'share-token')).toBe(true);
     });
   });
+
+  describe('channelMenuOptions computed property', () => {
+    it('includes publish, view details, and edit channel on small screens', () => {
+      const getters = cloneDeep(GETTERS);
+      getters.currentChannel.canManage = () => true;
+      getters.currentChannel.canEdit = () => true;
+
+      const wrapper = initWrapper({ getters, windowIsSmall: true });
+      const values = wrapper.vm.channelMenuOptions.map(item => item.value);
+      expect(values).toContain('publish');
+      expect(values).toContain('view-details');
+      expect(values).toContain('edit-channel');
+    });
+
+    it('omits publish, view details, and edit channel on large screens', () => {
+      const getters = cloneDeep(GETTERS);
+      getters.currentChannel.canManage = () => true;
+      getters.currentChannel.canEdit = () => true;
+
+      const wrapper = initWrapper({ getters, windowIsSmall: false });
+      const values = wrapper.vm.channelMenuOptions.map(item => item.value);
+      expect(values).not.toContain('publish');
+      expect(values).not.toContain('view-details');
+      expect(values).not.toContain('edit-channel');
+    });
+
+    it('marks the edit channel option with a warning icon when language is missing', () => {
+      const getters = cloneDeep(GETTERS);
+      getters.currentChannel.canEdit = () => true;
+      getters.currentChannel.currentChannel = () => createChannel({ language: null });
+
+      const wrapper = initWrapper({ getters, windowIsSmall: true });
+      const editOption = wrapper.vm.channelMenuOptions.find(item => item.value === 'edit-channel');
+      expect(editOption.icon).toBe('warningIncomplete');
+    });
+
+    it('includes submit to community library on small screens when the user can submit', () => {
+      const getters = cloneDeep(GETTERS);
+      getters.currentChannel.canManage = () => true;
+      getters.currentChannel.currentChannel = () =>
+        createChannel({ published: true, public: false });
+
+      const wrapper = initWrapper({ getters, windowIsSmall: true });
+      const values = wrapper.vm.channelMenuOptions.map(item => item.value);
+      expect(values).toContain('submit-to-library');
+    });
+
+    it('omits submit to community library on large screens', () => {
+      const getters = cloneDeep(GETTERS);
+      getters.currentChannel.canManage = () => true;
+      getters.currentChannel.currentChannel = () =>
+        createChannel({ published: true, public: false });
+
+      const wrapper = initWrapper({ getters, windowIsSmall: false });
+      const values = wrapper.vm.channelMenuOptions.map(item => item.value);
+      expect(values).not.toContain('submit-to-library');
+    });
+  });
+
+  describe('handleChannelMenuSelect method', () => {
+    it('opens the publish side panel for the publish option', () => {
+      const wrapper = initWrapper();
+      wrapper.vm.handleChannelMenuSelect({ value: 'publish' });
+      expect(wrapper.vm.showPublishSidePanel).toBe(true);
+    });
+
+    it('opens the delete modal for the delete option', () => {
+      const wrapper = initWrapper();
+      wrapper.vm.handleChannelMenuSelect({ value: 'delete' });
+      expect(wrapper.vm.showDeleteModal).toBe(true);
+    });
+
+    it('opens the sync modal for the sync option', () => {
+      const wrapper = initWrapper();
+      wrapper.vm.handleChannelMenuSelect({ value: 'sync' });
+      expect(wrapper.vm.showSyncModal).toBe(true);
+    });
+
+    it('navigates to the edit channel page for the edit channel option', () => {
+      const wrapper = initWrapper();
+      const push = jest.spyOn(wrapper.vm.$router, 'push').mockImplementation(() => {});
+      wrapper.vm.handleChannelMenuSelect({ value: 'edit-channel' });
+      expect(push).toHaveBeenCalledWith(wrapper.vm.editChannelLink);
+    });
+
+    it('opens the submit to community library panel for the shared submit option', () => {
+      const wrapper = initWrapper();
+      wrapper.vm.handleChannelMenuSelect({ value: 'submit-to-library' });
+      expect(wrapper.vm.showSubmitToCommunityLibrarySidePanel).toBe(true);
+    });
+  });
+
+  describe('handleShareMenuSelect method', () => {
+    it('opens the token modal for the share token option', () => {
+      const wrapper = initWrapper();
+      wrapper.vm.handleShareMenuSelect({ value: 'share-token' });
+      expect(wrapper.vm.showTokenModal).toBe(true);
+    });
+
+    it('opens the submit to community library panel for the submit option', () => {
+      const wrapper = initWrapper();
+      wrapper.vm.handleShareMenuSelect({ value: 'submit-to-library' });
+      expect(wrapper.vm.showSubmitToCommunityLibrarySidePanel).toBe(true);
+    });
+  });
 });
