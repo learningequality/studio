@@ -79,13 +79,17 @@ from contentcuration.constants import completion_criteria
 from contentcuration.constants import feedback
 from contentcuration.constants import user_history
 from contentcuration.constants.contentnode import kind_activity_map
-from contentcuration.constants.organization_roles import ORGANIZATION_ADMIN, ORGANIZATION_EDITOR, ORGANIZATION_ROLE_STATUS_ACTIVE, ORGANIZATION_VIEWER, organization_role_choices
+from contentcuration.constants.organization_roles import ORGANIZATION_ADMIN
+from contentcuration.constants.organization_roles import ORGANIZATION_EDITOR
+from contentcuration.constants.organization_roles import organization_role_choices
+from contentcuration.constants.organization_roles import ORGANIZATION_ROLE_STATUS_ACTIVE
 from contentcuration.constants.organization_roles import (
     organization_role_status_choices,
 )
 from contentcuration.constants.organization_roles import (
     ORGANIZATION_ROLE_STATUS_PENDING,
 )
+from contentcuration.constants.organization_roles import ORGANIZATION_VIEWER
 from contentcuration.db.models.expressions import Array
 from contentcuration.db.models.functions import ArrayRemove
 from contentcuration.db.models.functions import Unnest
@@ -3753,12 +3757,12 @@ class Invitation(models.Model):
         else:
             self.channel.viewers.remove(user)
             self.channel.editors.add(user)
-    
+
     def _accept_organization_invitation(self, user):
         organization_role = OrganizationRole.objects.create(
             user=user,
             organization=self.organization,
-            status=ORGANIZATION_ROLE_STATUS_ACTIVE
+            status=ORGANIZATION_ROLE_STATUS_ACTIVE,
         )
         if self.share_mode == VIEW_ACCESS:
             organization_role.role = ORGANIZATION_VIEWER
