@@ -8,11 +8,32 @@ from le_utils.constants import exercises
 from contentcuration import models
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
+from contentcuration.tests.utils.qti.test_validation import _item_xml
+from contentcuration.tests.utils.qti.test_validation import VALID_CHOICE_ITEM
 from contentcuration.tests.viewsets.base import generate_create_event
 from contentcuration.tests.viewsets.base import generate_delete_event
 from contentcuration.tests.viewsets.base import generate_update_event
 from contentcuration.tests.viewsets.base import SyncTestMixin
 from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
+
+
+QTI_ITEM_WITH_FILES = _item_xml(
+    "item_1",
+    "Sample Item",
+    '<qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">'
+    "<qti-correct-response><qti-value>choice_0</qti-value></qti-correct-response>"
+    "</qti-response-declaration>",
+    '<qti-choice-interaction response-identifier="RESPONSE" max-choices="1" '
+    'min-choices="0" orientation="vertical"><qti-prompt>Select the correct answer. '
+    '<img src="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.png" '
+    'srcset="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.png 1x, cccccccccccccccccccccccccccccccc.png 2x" '
+    'alt="diagram" /><object data="dddddddddddddddddddddddddddddddd.pdf" '
+    'type="application/pdf"></object></qti-prompt>'
+    '<qti-simple-choice identifier="choice_0" show-hide="show" fixed="false">Option A</qti-simple-choice>'
+    '<qti-simple-choice identifier="choice_1" show-hide="show" fixed="false">'
+    '<a href="bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.pdf">Option B</a></qti-simple-choice>'
+    "</qti-choice-interaction>",
+)
 
 
 class SyncTestCase(SyncTestMixin, StudioAPITestCase):
@@ -440,6 +461,226 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             "true_false",
         )
 
+    def test_update_assessmentitem_to_qti(self):
+        assessmentitem = models.AssessmentItem.objects.create(
+            **self.assessmentitem_db_metadata
+        )
+        self.client.force_authenticate(user=self.user)
+        response = self.sync_changes(
+            [
+                generate_update_event(
+                    [assessmentitem.contentnode_id, assessmentitem.assessment_id],
+                    ASSESSMENTITEM,
+                    {"type": "QTI", "raw_data": VALID_CHOICE_ITEM},
+                    channel_id=self.channel.id,
+                )
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        updated = models.AssessmentItem.objects.get(id=assessmentitem.id)
+        self.assertEqual(updated.type, "QTI")
+        self.assertEqual(updated.raw_data, VALID_CHOICE_ITEM)
+
+    def test_create_assessmentitem_preserves_raw_data_whitespace(self):
+        self.client.force_authenticate(user=self.user)
+        assessmentitem = self.assessmentitem_metadata
+        # Trailing whitespace only: a leading pad before the XML declaration
+        # would be invalid XML syntax and get rejected by QTI schema validation.
+        padded_raw_data = VALID_CHOICE_ITEM + "\n\n  "
+        assessmentitem["type"] = "QTI"
+        assessmentitem["raw_data"] = padded_raw_data
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                    channel_id=self.channel.id,
+                )
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        created = models.AssessmentItem.objects.get(
+            assessment_id=assessmentitem["assessment_id"]
+        )
+        self.assertEqual(created.raw_data, padded_raw_data)
+
+    def test_create_qti_assessmentitem_rejects_legacy_field_edits(self):
+        self.client.force_authenticate(user=self.user)
+        assessmentitem = self.assessmentitem_metadata
+        assessmentitem["type"] = "QTI"
+        assessmentitem["raw_data"] = VALID_CHOICE_ITEM
+        assessmentitem["question"] = "not allowed alongside raw_data"
+        assessmentitem["hints"] = "not a json array"
+        assessmentitem["answers"] = "also not a json array"
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                    channel_id=self.channel.id,
+                )
+            ],
+        )
+        self.assertTrue(response.json()["errors"][0]["errors"]["question"])
+        self.assertTrue(response.json()["errors"][0]["errors"]["hints"])
+        self.assertTrue(response.json()["errors"][0]["errors"]["answers"])
+        with self.assertRaises(
+            models.AssessmentItem.DoesNotExist, msg="AssessmentItem was created"
+        ):
+            models.AssessmentItem.objects.get(
+                assessment_id=assessmentitem["assessment_id"]
+            )
+
+    def test_update_qti_assessmentitem_rejects_legacy_field_edit(self):
+        assessmentitem = models.AssessmentItem.objects.create(
+            type=exercises.QTI,
+            raw_data=VALID_CHOICE_ITEM,
+            **self.assessmentitem_db_metadata,
+        )
+        self.client.force_authenticate(user=self.user)
+        response = self.sync_changes(
+            [
+                generate_update_event(
+                    [assessmentitem.contentnode_id, assessmentitem.assessment_id],
+                    ASSESSMENTITEM,
+                    {"question": "not allowed"},
+                    channel_id=self.channel.id,
+                )
+            ],
+        )
+        self.assertTrue(response.json()["errors"][0]["errors"]["question"])
+        updated = models.AssessmentItem.objects.get(id=assessmentitem.id)
+        self.assertEqual(updated.raw_data, VALID_CHOICE_ITEM)
+
+    def test_create_non_qti_assessmentitem_rejects_raw_data_edit(self):
+        self.client.force_authenticate(user=self.user)
+        assessmentitem = self.assessmentitem_metadata
+        assessmentitem["raw_data"] = VALID_CHOICE_ITEM
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                    channel_id=self.channel.id,
+                )
+            ],
+        )
+        self.assertTrue(response.json()["errors"][0]["errors"]["raw_data"])
+        with self.assertRaises(
+            models.AssessmentItem.DoesNotExist, msg="AssessmentItem was created"
+        ):
+            models.AssessmentItem.objects.get(
+                assessment_id=assessmentitem["assessment_id"]
+            )
+
+    def test_update_non_qti_assessmentitem_rejects_raw_data_edit(self):
+        assessmentitem = models.AssessmentItem.objects.create(
+            **self.assessmentitem_db_metadata
+        )
+        self.client.force_authenticate(user=self.user)
+        response = self.sync_changes(
+            [
+                generate_update_event(
+                    [assessmentitem.contentnode_id, assessmentitem.assessment_id],
+                    ASSESSMENTITEM,
+                    {"raw_data": VALID_CHOICE_ITEM},
+                    channel_id=self.channel.id,
+                )
+            ],
+        )
+        self.assertTrue(response.json()["errors"][0]["errors"]["raw_data"])
+        updated = models.AssessmentItem.objects.get(id=assessmentitem.id)
+        self.assertEqual(updated.raw_data, "")
+
+    def _create_qti_referenced_files(self, checksums):
+        for checksum, ext in zip(checksums, ["png", "png", "pdf", "pdf"]):
+            image_file = testdata.fileobj_exercise_image()
+            image_file.checksum = checksum
+            image_file.file_format_id = ext
+            image_file.uploaded_by = self.user
+            image_file.save()
+
+    def test_create_qti_assessmentitem_extracts_files(self):
+        self.client.force_authenticate(user=self.user)
+        checksums = ["a" * 32, "c" * 32, "d" * 32, "b" * 32]
+        self._create_qti_referenced_files(checksums)
+
+        assessmentitem = self.assessmentitem_metadata
+        assessmentitem["type"] = "QTI"
+        assessmentitem["raw_data"] = QTI_ITEM_WITH_FILES
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                    channel_id=self.channel.id,
+                )
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        ai = models.AssessmentItem.objects.get(
+            assessment_id=assessmentitem["assessment_id"]
+        )
+        linked_checksums = set(ai.files.values_list("checksum", flat=True))
+        self.assertEqual(linked_checksums, set(checksums))
+
+    def test_qti_assessmentitem_full_round_trip(self):
+        self.client.force_authenticate(user=self.user)
+        checksums = ["a" * 32, "c" * 32, "d" * 32, "b" * 32]
+        self._create_qti_referenced_files(checksums)
+
+        assessmentitem = self.assessmentitem_metadata
+        assessmentitem["type"] = "QTI"
+        assessmentitem["raw_data"] = QTI_ITEM_WITH_FILES
+
+        create_response = self.sync_changes(
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                    channel_id=self.channel.id,
+                )
+            ],
+        )
+        self.assertEqual(create_response.status_code, 200, create_response.content)
+        ai = models.AssessmentItem.objects.get(
+            assessment_id=assessmentitem["assessment_id"]
+        )
+        self.assertEqual(ai.raw_data, QTI_ITEM_WITH_FILES)
+        self.assertEqual(ai.type, "QTI")
+        self.assertEqual(
+            set(ai.files.values_list("checksum", flat=True)), set(checksums)
+        )
+
+        # Drop the object/data reference (checksum "d"*32) and change the title.
+        updated_raw_data = QTI_ITEM_WITH_FILES.replace(
+            '<object data="dddddddddddddddddddddddddddddddd.pdf" '
+            'type="application/pdf"></object>',
+            "",
+        ).replace('title="Sample Item"', 'title="Updated Item"')
+        update_response = self.sync_changes(
+            [
+                generate_update_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    {"raw_data": updated_raw_data},
+                    channel_id=self.channel.id,
+                )
+            ],
+        )
+        self.assertEqual(update_response.status_code, 200, update_response.content)
+        ai.refresh_from_db()
+        self.assertEqual(ai.raw_data, updated_raw_data)
+        self.assertEqual(
+            set(ai.files.values_list("checksum", flat=True)),
+            set(checksums) - {"d" * 32},
+        )
+
     def test_attempt_update_missing_assessmentitem(self):
 
         self.client.force_authenticate(user=self.user)
@@ -740,6 +981,54 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         with self.assertRaises(
             models.AssessmentItem.DoesNotExist, msg="AssessmentItem was created"
         ):
+            models.AssessmentItem.objects.get(
+                assessment_id=assessmentitem["assessment_id"]
+            )
+
+    def test_invalid_qti_assessmentitem(self):
+        self.client.force_authenticate(user=self.user)
+        assessmentitem = self.assessmentitem_metadata
+        assessmentitem["type"] = "QTI"
+        assessmentitem["raw_data"] = VALID_CHOICE_ITEM.replace(
+            'orientation="vertical"', 'orientation="sideways"'
+        )
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                    channel_id=self.channel.id,
+                ),
+            ],
+        )
+        self.assertEqual(response.json()["errors"][0]["table"], "assessmentitem")
+        self.assertTrue(response.json()["errors"][0]["errors"]["raw_data"])
+        self.assertEqual(len(response.json()["errors"]), 1)
+        with self.assertRaises(
+            models.AssessmentItem.DoesNotExist, msg="AssessmentItem was created"
+        ):
+            models.AssessmentItem.objects.get(
+                assessment_id=assessmentitem["assessment_id"]
+            )
+
+    def test_invalid_qti_xml_syntax_assessmentitem(self):
+        self.client.force_authenticate(user=self.user)
+        assessmentitem = self.assessmentitem_metadata
+        assessmentitem["type"] = "QTI"
+        assessmentitem["raw_data"] = "<qti-assessment-item><unclosed>"
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                    channel_id=self.channel.id,
+                ),
+            ],
+        )
+        self.assertTrue(response.json()["errors"][0]["errors"]["raw_data"])
+        with self.assertRaises(models.AssessmentItem.DoesNotExist):
             models.AssessmentItem.objects.get(
                 assessment_id=assessmentitem["assessment_id"]
             )
