@@ -39,7 +39,7 @@ class QTIValidationResult:
     errors: List[QTIValidationError] = field(default_factory=list)
 
 
-def _secure_parser() -> etree.XMLParser:
+def secure_parser() -> etree.XMLParser:
     # resolve_entities=False + load_dtd=False blocks XXE/entity-expansion attacks;
     # no_network=True blocks remote schemaLocation/entity fetches. QTI reaches this
     # validator from ricecooker uploads and direct sync-API writes, not just the
@@ -54,12 +54,16 @@ def _secure_parser() -> etree.XMLParser:
     )
 
 
+def parse_qti_xml(xml: bytes) -> etree._Element:
+    return etree.parse(BytesIO(xml), parser=secure_parser())
+
+
 def validate_qti_item(xml: Union[str, bytes]) -> QTIValidationResult:
     if isinstance(xml, str):
         xml = xml.encode("utf-8")
 
     try:
-        doc = etree.parse(BytesIO(xml), parser=_secure_parser())
+        doc = parse_qti_xml(xml)
     except etree.XMLSyntaxError as exc:
         return QTIValidationResult(
             is_valid=False,
