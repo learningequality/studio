@@ -1,8 +1,10 @@
 import base64
+import logging
 from dataclasses import dataclass
 from typing import Any
 from typing import Dict
 from typing import List
+from typing import Optional
 from typing import Tuple
 
 from le_utils.constants import exercises
@@ -197,7 +199,7 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
             )
         self.qti_resources.append(resource)
 
-    def _create_native_qti_item(self, assessment_item) -> tuple[str, bytes]:
+    def _create_native_qti_item(self, assessment_item) -> Optional[Tuple[str, bytes]]:
         raw_bytes = assessment_item.raw_data.encode("utf-8")
 
         result = validate_qti_item(raw_bytes)
@@ -205,10 +207,12 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
             error_messages = "; ".join(
                 f"line {e.line}, column {e.column}: {e.message}" for e in result.errors
             )
-            raise ValueError(
+            logging.error(
                 f"QTI item {assessment_item.assessment_id} on node {self.ccnode.pk} "
-                f"failed schema validation: {error_messages}"
+                f"failed schema validation and will be excluded from the package: "
+                f"{error_messages}"
             )
+            return None
 
         identifier = parse_qti_xml(raw_bytes).getroot().get("identifier")
         if not identifier:
@@ -238,23 +242,25 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
         files_by_name = {
             f"{f.checksum}.{f.file_format_id}": f for f in assessment_item.files.all()
         }
-        missing = sorted(filenames - files_by_name.keys())
+        missing = filenames - files_by_name.keys()
         if missing:
-            raise ValueError(
-                f"QTI item {assessment_item.assessment_id} references media files "
-                f"not linked to it: {', '.join(missing)}"
+            logging.error(
+                f"QTI item {assessment_item.assessment_id} on node {self.ccnode.pk} "
+                f"references media files with no matching File record linked to "
+                f"the item, so they will be omitted from the package: "
+                f"{', '.join(sorted(missing))}"
             )
 
-        sorted_filenames = sorted(filenames)
-        for filename in sorted_filenames:
+        present_filenames = sorted(filenames - missing)
+        for filename in present_filenames:
             file_obj = files_by_name[filename]
             self._add_original_image(file_obj.checksum, filename, "items")
 
-        return sorted_filenames
+        return present_filenames
 
     def create_assessment_item(
         self, assessment_item, processed_data: Dict[str, Any]
-    ) -> tuple[str, bytes]:
+    ) -> Optional[Tuple[str, bytes]]:
         """Create QTI assessment item XML."""
 
         if assessment_item.type == exercises.QTI:

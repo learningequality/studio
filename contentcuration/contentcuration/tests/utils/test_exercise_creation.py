@@ -2197,7 +2197,8 @@ class TestQTIExerciseCreation(StudioTestCase):
         manifest = zip_file.read("imsmanifest.xml").decode("utf-8")
         self.assertIn(media_filename, manifest)
 
-    def test_native_qti_item_invalid_raw_data_raises(self):
+    def test_native_qti_item_invalid_raw_data_is_skipped(self):
+        """An item that fails schema validation is logged and excluded, not fatal to publish."""
         invalid_raw_data = VALID_CHOICE_ITEM.replace(
             'orientation="vertical"', 'orientation="sideways"'
         )
@@ -2210,13 +2211,19 @@ class TestQTIExerciseCreation(StudioTestCase):
             "all_assessment_items": [item.assessment_id],
             "assessment_mapping": {item.assessment_id: exercises.QTI},
         }
-        with self.assertRaises(ValueError):
+        with self.assertLogs(level="ERROR") as logs:
             self._create_qti_zip(exercise_data)
-        self.assertFalse(
-            self.exercise_node.files.filter(preset_id=format_presets.QTI_ZIP).exists()
+        self.assertTrue(
+            any("failed schema validation" in message for message in logs.output)
+        )
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+        self.assertEqual(
+            [name for name in zip_file.namelist() if name.startswith("items/")], []
         )
 
-    def test_native_qti_item_missing_media_file_raises(self):
+    def test_native_qti_item_missing_media_file_is_logged_and_omitted(self):
+        """A dangling media reference is logged and skipped, not fatal to publish."""
         raw_data = self.NATIVE_ITEM_XML.format(checksum="b" * 32, ext="png")
         item = self._create_native_qti_item(raw_data)  # no File row linked
         exercise_data = {
@@ -2227,8 +2234,15 @@ class TestQTIExerciseCreation(StudioTestCase):
             "all_assessment_items": [item.assessment_id],
             "assessment_mapping": {item.assessment_id: exercises.QTI},
         }
-        with self.assertRaises(ValueError):
+        with self.assertLogs(level="ERROR") as logs:
             self._create_qti_zip(exercise_data)
+        self.assertTrue(
+            any("no matching File record linked" in message for message in logs.output)
+        )
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+        self.assertIn("items/native_item_1.xml", zip_file.namelist())
+        self.assertNotIn(f"items/{'b' * 32}.png", zip_file.namelist())
 
     def test_native_qti_duplicate_identifier_raises(self):
         item1 = self._create_native_qti_item(VALID_CHOICE_ITEM)
