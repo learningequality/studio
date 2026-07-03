@@ -5,6 +5,7 @@
     :text="$tr('activationExpiredText')"
   >
     <form
+      class="request-activation-form"
       novalidate
       @submit.prevent="requestActivationLink"
     >
@@ -39,12 +40,13 @@
   import StudioMessageLayout from '../../components/StudioMessageLayout';
   import StudioEmailField from '../../components/form/StudioEmailField';
   import StudioBanner from 'shared/views/StudioBanner';
+  import commonStrings from 'shared/translator';
   import { generateFormMixin } from 'shared/mixins';
 
   const formMixin = generateFormMixin({
     email: {
       required: true,
-      validator: v => Boolean(v && v.trim()) && /\S+@\S+\.\S+/.test(v),
+      validator: v => Boolean(v && v.trim()) && /.+@.+\..+/.test(v),
     },
   });
 
@@ -64,7 +66,8 @@
     computed: {
       emailErrorText() {
         if (!this.email || !this.email.trim()) {
-          return this.$tr('fieldRequiredMessage');
+          /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+          return commonStrings.$tr('fieldRequired');
         }
         return this.$tr('emailValidationMessage');
       },
@@ -91,8 +94,7 @@
       submitButton: 'Submit',
       activationRequestFailed: 'Failed to send a new activation link. Please try again.',
       emailLabel: 'Email',
-      fieldRequiredMessage: 'This field is required',
-      emailValidationMessage: 'Please enter a valid email',
+      emailValidationMessage: 'Please enter a valid email address',
     },
   };
 
@@ -100,8 +102,7 @@
 
 
 <style lang="scss" scoped>
-
-  form {
+  .request-activation-form {
     width: 400px;
     max-width: 100%;
     text-align: left;
