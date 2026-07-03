@@ -41,6 +41,7 @@ from contentcuration.utils.assessment.qti.interaction_types.text_based import (
     TextEntryInteraction,
 )
 from contentcuration.utils.assessment.qti.media import get_qti_media_references
+from contentcuration.utils.assessment.qti.media import rewrite_qti_media_paths
 from contentcuration.utils.assessment.qti.prompt import Prompt
 from contentcuration.utils.assessment.qti.validation import parse_qti_xml
 from contentcuration.utils.assessment.qti.validation import validate_qti_item
@@ -221,7 +222,7 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
             )
 
         filepath = f"items/{identifier}.xml"
-        file_dependencies = self._write_qti_media_files(assessment_item)
+        item_xml, file_dependencies = self._write_qti_media_files(assessment_item)
 
         self._add_resource(
             QTIResource(
@@ -231,12 +232,13 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
             )
         )
 
-        return filepath, raw_bytes
+        return filepath, item_xml.encode("utf-8")
 
-    def _write_qti_media_files(self, assessment_item) -> List[str]:
-        filenames = get_qti_media_references(assessment_item.raw_data)
+    def _write_qti_media_files(self, assessment_item) -> Tuple[str, List[str]]:
+        raw_data = assessment_item.raw_data
+        filenames = get_qti_media_references(raw_data)
         if not filenames:
-            return []
+            return raw_data, []
 
         # assessment_item.files is prefetched by ExerciseArchiveGenerator.create_exercise_archive
         files_by_name = {
@@ -251,12 +253,20 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
                 f"{', '.join(sorted(missing))}"
             )
 
-        present_filenames = sorted(filenames - missing)
-        for filename in present_filenames:
+        # Media files can't stay bare in items/ alongside the item XML - they're
+        # written to items/images/ (matching the legacy generator's layout) and
+        # the item XML's references are remapped to the images/ prefix that
+        # resolves to that directory relative to the item file.
+        path_by_filename = {}
+        for filename in sorted(filenames - missing):
             file_obj = files_by_name[filename]
-            self._add_original_image(file_obj.checksum, filename, "items")
+            self._add_original_image(
+                file_obj.checksum, filename, self.get_image_file_path()
+            )
+            path_by_filename[filename] = f"{self.get_image_ref_prefix()}/{filename}"
 
-        return present_filenames
+        item_xml = rewrite_qti_media_paths(raw_data, path_by_filename)
+        return item_xml, sorted(path_by_filename.values())
 
     def create_assessment_item(
         self, assessment_item, processed_data: Dict[str, Any]

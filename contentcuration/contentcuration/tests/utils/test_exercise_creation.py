@@ -2193,9 +2193,17 @@ class TestQTIExerciseCreation(StudioTestCase):
         exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
         zip_file = self._validate_qti_zip_structure(exercise_file)
         media_filename = f"{image_file.checksum}.{image_file.file_format_id}"
-        self.assertIn(f"items/{media_filename}", zip_file.namelist())
+        # Media files can't sit bare alongside the item XML in items/ - they go in
+        # items/images/, matching the legacy generator's layout.
+        self.assertIn(f"items/images/{media_filename}", zip_file.namelist())
+        self.assertNotIn(f"items/{media_filename}", zip_file.namelist())
         manifest = zip_file.read("imsmanifest.xml").decode("utf-8")
-        self.assertIn(media_filename, manifest)
+        self.assertIn(f"images/{media_filename}", manifest)
+
+        item_xml = zip_file.read("items/native_item_1.xml").decode("utf-8")
+        self.assertEqual(
+            item_xml, raw_data.replace(media_filename, f"images/{media_filename}")
+        )
 
     def test_native_qti_item_invalid_raw_data_is_skipped(self):
         """An item that fails schema validation is logged and excluded, not fatal to publish."""
