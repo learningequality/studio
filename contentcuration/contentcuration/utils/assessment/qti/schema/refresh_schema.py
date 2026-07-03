@@ -11,7 +11,9 @@ script.) Afterwards, re-run the validation test suite:
 
     pytest contentcuration/contentcuration/tests/utils/qti/test_validation.py -v
 """
+import codecs
 import socket
+import subprocess
 from pathlib import Path
 
 import requests
@@ -47,12 +49,28 @@ REWRITES = {
 }
 
 
+def _normalize_encoding(content):
+    # purl.imsglobal.org serves XInclude.xsd as UTF-16 with no XML declaration,
+    # unlike every other source file here (plain UTF-8); transcode rather than
+    # leaving it as the only non-UTF-8, non-diffable file in the vendored tree.
+    # Decoding/re-encoding (instead of round-tripping through lxml) preserves
+    # the original formatting instead of reflowing it.
+    if content.startswith(codecs.BOM_UTF16_LE) or content.startswith(
+        codecs.BOM_UTF16_BE
+    ):
+        text = content.decode("utf-16")
+        if not text.lstrip().startswith("<?xml"):
+            text = '<?xml version="1.0" encoding="UTF-8"?>\n' + text
+        return text.encode("utf-8")
+    return content
+
+
 def download():
     XSD_DIR.mkdir(parents=True, exist_ok=True)
     for filename, url in SOURCES.items():
         response = requests.get(url, timeout=30)
         response.raise_for_status()
-        (XSD_DIR / filename).write_bytes(response.content)
+        (XSD_DIR / filename).write_bytes(_normalize_encoding(response.content))
 
 
 def rewrite_schema_locations():
@@ -65,6 +83,18 @@ def rewrite_schema_locations():
             assert old in text, "%r not found in %s" % (old, filename)
             text = text.replace(old, new)
         path.write_text(text)
+
+
+def run_pre_commit():
+    # Applies the repo's trailing-whitespace/end-of-file-fixer hooks (the only
+    # hooks whose `files:` patterns match .xsd) so the vendored tree matches
+    # the same convention already applied to the committed copies. Exit code
+    # 1 just means files were modified; that's expected, not a failure.
+    subprocess.run(
+        ["pre-commit", "run", "--files"]
+        + [str(path) for path in sorted(XSD_DIR.glob("*.xsd"))],
+        check=False,
+    )
 
 
 def verify_compiles_offline():
@@ -83,6 +113,7 @@ def verify_compiles_offline():
 def main():
     download()
     rewrite_schema_locations()
+    run_pre_commit()
     verify_compiles_offline()
     print("Vendored schema refreshed in %s" % XSD_DIR)  # noqa: T201
 
