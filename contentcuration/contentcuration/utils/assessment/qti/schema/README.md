@@ -19,6 +19,11 @@ have been rewritten to local relative filenames so the schema compiles with no n
 access at runtime — required since bulk publish and ricecooker upload validate many items
 per run. Do not restore the absolute URLs.
 
-To refresh to a newer QTI point release: re-download each file above, re-apply the
-`schemaLocation` rewrites documented in `.plans/index.md` (issue #6005) or by diffing
-against the current vendored copy, then re-run the full `test_validation.py` suite.
+To refresh to a newer QTI point release, run `refresh_schema.py` (re-downloads each
+file above and re-applies the `schemaLocation` rewrites), then re-run the full
+`test_validation.py` suite:
+
+```
+python contentcuration/contentcuration/utils/assessment/qti/schema/refresh_schema.py
+pytest contentcuration/contentcuration/tests/utils/qti/test_validation.py -v
+```
