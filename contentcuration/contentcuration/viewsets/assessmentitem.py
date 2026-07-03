@@ -4,7 +4,6 @@ import re
 from django.db import transaction
 from le_utils.constants import exercises
 from le_utils.constants import format_presets
-from lxml import etree
 from rest_framework import serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.serializers import ValidationError
@@ -13,10 +12,7 @@ from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.models import generate_object_storage_name
-from contentcuration.utils.assessment.qti.fields import (
-    entry_pattern as srcset_entry_pattern,
-)
-from contentcuration.utils.assessment.qti.validation import parse_qti_xml
+from contentcuration.utils.assessment.qti.media import get_qti_media_references
 from contentcuration.utils.assessment.qti.validation import validate_qti_item
 from contentcuration.viewsets.base import BulkCreateMixin
 from contentcuration.viewsets.base import BulkListSerializer
@@ -64,32 +60,8 @@ def get_filenames_from_assessment(assessment_item):
     )
 
 
-qti_reference_attributes = ("src", "href", "data")
-qti_checksum_filename_regex = re.compile(r"^[a-f0-9]{32}\.[0-9a-z]+$")
-
-
 def get_filenames_from_qti_item(assessment_item):
-    # QTI attribute values are bare <checksum>.<ext> references, matching
-    # the TipTap editor's existing permanentSrc="<checksum>.<ext>" convention
-    # for round-tripped <img> tags -- not the markdown-only
-    # ${CONTENT_STORAGE}/<checksum>.<ext> placeholder legacy types use.
-    checksums = set()
-    try:
-        doc = parse_qti_xml(assessment_item.raw_data.encode("utf-8"))
-    except etree.XMLSyntaxError:
-        return checksums
-    for element in doc.xpath("//*[@src or @href or @data or @srcset]"):
-        for attribute in qti_reference_attributes:
-            value = element.attrib.get(attribute)
-            if value and qti_checksum_filename_regex.match(value):
-                checksums.add(value)
-        srcset = element.attrib.get("srcset")
-        if srcset:
-            for entry in re.findall(srcset_entry_pattern, srcset):
-                token = entry[0].strip()
-                if token and qti_checksum_filename_regex.match(token):
-                    checksums.add(token)
-    return checksums
+    return get_qti_media_references(assessment_item.raw_data)
 
 
 class AssessmentListSerializer(BulkListSerializer):

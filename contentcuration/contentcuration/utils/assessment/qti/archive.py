@@ -1,4 +1,5 @@
 import base64
+from dataclasses import dataclass
 from typing import Any
 from typing import Dict
 from typing import List
@@ -37,7 +38,10 @@ from contentcuration.utils.assessment.qti.interaction_types.simple import Simple
 from contentcuration.utils.assessment.qti.interaction_types.text_based import (
     TextEntryInteraction,
 )
+from contentcuration.utils.assessment.qti.media import get_qti_media_references
 from contentcuration.utils.assessment.qti.prompt import Prompt
+from contentcuration.utils.assessment.qti.validation import parse_qti_xml
+from contentcuration.utils.assessment.qti.validation import validate_qti_item
 
 
 choice_interactions = {
@@ -56,6 +60,13 @@ def hex_to_qti_id(hex_string):
     return f"K{base64.urlsafe_b64encode(bytes_data).decode('ascii').rstrip('=')}"
 
 
+@dataclass
+class QTIResource:
+    identifier: str
+    filepath: str
+    file_dependencies: List[str]
+
+
 class QTIExerciseGenerator(ExerciseArchiveGenerator):
     """
     Exercise zip generator for QTI format exercises.
@@ -67,7 +78,7 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.qti_items = []
+        self.qti_resources: List[QTIResource] = []
 
     def get_image_file_path(self) -> str:
         """Get the file path for QTI assessment items."""
@@ -179,10 +190,75 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
     def _qti_item_filepath(self, assessment_id):
         return f"items/{assessment_id}.xml"
 
+    def _add_resource(self, resource: QTIResource) -> None:
+        if any(r.identifier == resource.identifier for r in self.qti_resources):
+            raise ValueError(
+                f"Duplicate QTI item identifier '{resource.identifier}' on node {self.ccnode.pk}"
+            )
+        self.qti_resources.append(resource)
+
+    def _create_native_qti_item(self, assessment_item) -> tuple[str, bytes]:
+        raw_bytes = assessment_item.raw_data.encode("utf-8")
+
+        result = validate_qti_item(raw_bytes)
+        if not result.is_valid:
+            error_messages = "; ".join(
+                f"line {e.line}, column {e.column}: {e.message}" for e in result.errors
+            )
+            raise ValueError(
+                f"QTI item {assessment_item.assessment_id} on node {self.ccnode.pk} "
+                f"failed schema validation: {error_messages}"
+            )
+
+        identifier = parse_qti_xml(raw_bytes).getroot().get("identifier")
+        if not identifier:
+            raise ValueError(
+                f"QTI item {assessment_item.assessment_id} is missing a root identifier attribute"
+            )
+
+        filepath = f"items/{identifier}.xml"
+        file_dependencies = self._write_qti_media_files(assessment_item)
+
+        self._add_resource(
+            QTIResource(
+                identifier=identifier,
+                filepath=filepath,
+                file_dependencies=file_dependencies,
+            )
+        )
+
+        return filepath, raw_bytes
+
+    def _write_qti_media_files(self, assessment_item) -> List[str]:
+        filenames = get_qti_media_references(assessment_item.raw_data)
+        if not filenames:
+            return []
+
+        # assessment_item.files is prefetched by ExerciseArchiveGenerator.create_exercise_archive
+        files_by_name = {
+            f"{f.checksum}.{f.file_format_id}": f for f in assessment_item.files.all()
+        }
+        missing = sorted(filenames - files_by_name.keys())
+        if missing:
+            raise ValueError(
+                f"QTI item {assessment_item.assessment_id} references media files "
+                f"not linked to it: {', '.join(missing)}"
+            )
+
+        sorted_filenames = sorted(filenames)
+        for filename in sorted_filenames:
+            file_obj = files_by_name[filename]
+            self._add_original_image(file_obj.checksum, filename, "items")
+
+        return sorted_filenames
+
     def create_assessment_item(
         self, assessment_item, processed_data: Dict[str, Any]
     ) -> tuple[str, bytes]:
         """Create QTI assessment item XML."""
+
+        if assessment_item.type == exercises.QTI:
+            return self._create_native_qti_item(assessment_item)
 
         # Skip Perseus questions as they can't be easily converted
         if assessment_item.type == exercises.PERSEUS_QUESTION:
@@ -227,7 +303,7 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
         # Create the assessment item
         qti_item = AssessmentItem(
             identifier=qti_item_id,
-            title=f"{self.ccnode.title} {len(self.qti_items) + 1}",
+            title=f"{self.ccnode.title} {len(self.qti_resources) + 1}",
             language=language,
             adaptive=False,
             time_dependent=False,
@@ -237,9 +313,6 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
             response_processing=response_processing,
         )
 
-        # Store for manifest creation
-        self.qti_items.append(qti_item)
-
         # Generate XML content
         xml_content = qti_item.to_xml_string()
 
@@ -247,26 +320,30 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
         full_xml = f'<?xml version="1.0" encoding="UTF-8"?>\n{xml_content}'
 
         filename = self._qti_item_filepath(qti_item_id)
+
+        self._add_resource(
+            QTIResource(
+                identifier=qti_item.identifier,
+                filepath=filename,
+                file_dependencies=qti_item.get_file_dependencies(),
+            )
+        )
+
         return filename, full_xml.encode("utf-8")
 
     def _create_manifest_resources(self) -> List[Resource]:
         """Create manifest resources for all QTI items."""
         resources = []
 
-        for qti_item in self.qti_items:
-            # Get file dependencies (images, etc.)
-            file_dependencies = qti_item.get_file_dependencies()
-
-            # Create file entries
-            qti_item_filepath = self._qti_item_filepath(qti_item.identifier)
-            files = [ManifestFile(href=qti_item_filepath)]
-            for dep in file_dependencies:
+        for qti_resource in self.qti_resources:
+            files = [ManifestFile(href=qti_resource.filepath)]
+            for dep in qti_resource.file_dependencies:
                 files.append(ManifestFile(href=dep))
 
             resource = Resource(
-                identifier=qti_item.identifier,
+                identifier=qti_resource.identifier,
                 type_=ResourceType.ASSESSMENT_ITEM.value,
-                href=qti_item_filepath,
+                href=qti_resource.filepath,
                 files=files,
             )
             resources.append(resource)
