@@ -3767,7 +3767,7 @@ class Invitation(models.Model):
         elif self.share_mode == ADMIN_ACCESS:
             role = ORGANIZATION_ADMIN
         else:
-            raise ValueError(f"Invalid share_mode: {self.share_mode}")
+            raise ValidationError(f"Invalid share_mode: {self.share_mode}")
 
         update_create_defaults = {"role": role, "status": ORGANIZATION_ROLE_STATUS_ACTIVE}
         OrganizationRole.objects.update_or_create(
