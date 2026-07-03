@@ -154,6 +154,16 @@ class AssessmentItemSerializer(BulkModelSerializer):
         # reported as "Internal server error" for the whole batch.
         data = super(AssessmentItemSerializer, self).validate(data)
         if self._item_type == exercises.QTI:
+            legacy_fields = {"question", "answers", "hints"}.intersection(data)
+            if legacy_fields:
+                raise ValidationError(
+                    {
+                        field: [
+                            "This field cannot be edited on a QTI assessment item; use raw_data instead."
+                        ]
+                        for field in legacy_fields
+                    }
+                )
             raw_data = data.get(
                 "raw_data", self.instance.raw_data if self.instance else ""
             )
@@ -162,6 +172,14 @@ class AssessmentItemSerializer(BulkModelSerializer):
                 raise ValidationError(
                     {"raw_data": [error.message for error in result.errors]}
                 )
+        elif "raw_data" in data:
+            raise ValidationError(
+                {
+                    "raw_data": [
+                        "This field can only be edited on a QTI assessment item."
+                    ]
+                }
+            )
         return data
 
     def validate_answers(self, value):
