@@ -102,6 +102,7 @@
 
 
 <style lang="scss" scoped>
+
   .request-activation-form {
     width: 400px;
     max-width: 100%;
