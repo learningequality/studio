@@ -35,6 +35,7 @@ from .testdata import node as create_node
 from .testdata import slideshow
 from .testdata import thumbnail_bytes
 from .testdata import tree
+from .utils.qti.test_validation import VALID_CHOICE_ITEM
 from .utils.restricted_filesystemstorage import RestrictedFileSystemStorage
 from contentcuration import models as cc
 from contentcuration.models import CustomTaskMetadata
@@ -257,6 +258,75 @@ class ExportChannelTestCase(StudioTestCase):
             ai.id = None
             ai.contentnode = qti_exercise
             ai.save()
+
+        # Native QTI item, no perseus_question present -> must route to QTI packaging
+        native_qti_exercise = create_node(
+            {
+                "kind_id": "exercise",
+                "title": "Native QTI Exercise",
+                "extra_fields": qti_extra_fields,
+            }
+        )
+        native_qti_exercise.complete = True
+        native_qti_exercise.parent = current_exercise.parent
+        native_qti_exercise.save()
+        cc.AssessmentItem.objects.create(
+            contentnode=native_qti_exercise,
+            assessment_id=uuid.uuid4().hex,
+            type=exercises.QTI,
+            question="",
+            answers="[]",
+            hints="[]",
+            raw_data=VALID_CHOICE_ITEM,
+            order=1,
+            randomize=False,
+        )
+
+        # Only legacy structured-field items, no perseus_question -> must now route to QTI (was Perseus)
+        legacy_no_perseus_exercise = create_node(
+            {
+                "kind_id": "exercise",
+                "title": "Legacy No Perseus Exercise",
+                "extra_fields": qti_extra_fields,
+            }
+        )
+        legacy_no_perseus_exercise.complete = True
+        legacy_no_perseus_exercise.parent = current_exercise.parent
+        legacy_no_perseus_exercise.save()
+        cc.AssessmentItem.objects.create(
+            contentnode=legacy_no_perseus_exercise,
+            assessment_id=uuid.uuid4().hex,
+            type=exercises.SINGLE_SELECTION,
+            question="What is 2+2?",
+            answers=json.dumps([{"answer": "4", "correct": True, "order": 1}]),
+            hints=json.dumps([]),
+            raw_data="{}",
+            order=1,
+            randomize=False,
+        )
+
+        # A perseus_question item present -> must still route to Perseus packaging
+        perseus_only_exercise = create_node(
+            {
+                "kind_id": "exercise",
+                "title": "Perseus Only Exercise",
+                "extra_fields": qti_extra_fields,
+            }
+        )
+        perseus_only_exercise.complete = True
+        perseus_only_exercise.parent = current_exercise.parent
+        perseus_only_exercise.save()
+        cc.AssessmentItem.objects.create(
+            contentnode=perseus_only_exercise,
+            assessment_id=uuid.uuid4().hex,
+            type=exercises.PERSEUS_QUESTION,
+            question="",
+            answers="[]",
+            hints="[]",
+            raw_data="{}",
+            order=1,
+            randomize=False,
+        )
 
         first_topic = self.content_channel.main_tree.get_descendants().first()
 
@@ -709,6 +779,21 @@ class ExportChannelTestCase(StudioTestCase):
             "QTI file should be a zip archive",
         )
 
+    def test_native_qti_item_routes_to_qti_packaging(self):
+        node = cc.ContentNode.objects.get(title="Native QTI Exercise")
+        self.assertTrue(node.files.filter(preset_id=format_presets.QTI_ZIP).exists())
+        self.assertFalse(node.files.filter(preset_id=format_presets.EXERCISE).exists())
+
+    def test_legacy_items_without_perseus_question_route_to_qti_packaging(self):
+        node = cc.ContentNode.objects.get(title="Legacy No Perseus Exercise")
+        self.assertTrue(node.files.filter(preset_id=format_presets.QTI_ZIP).exists())
+        self.assertFalse(node.files.filter(preset_id=format_presets.EXERCISE).exists())
+
+    def test_perseus_question_item_routes_to_perseus_packaging(self):
+        node = cc.ContentNode.objects.get(title="Perseus Only Exercise")
+        self.assertTrue(node.files.filter(preset_id=format_presets.EXERCISE).exists())
+        self.assertFalse(node.files.filter(preset_id=format_presets.QTI_ZIP).exists())
+
     def test_qti_archive_contains_manifest_and_assessment_ids(self):
 
         published_qti_exercise = kolibri_models.ContentNode.objects.get(
@@ -733,15 +818,17 @@ class ExportChannelTestCase(StudioTestCase):
         attached assessment items compiled into a zip file during publishing."""
         unit_topic = cc.ContentNode.objects.get(title="Test Unit Topic")
 
-        # Assert UNIT topic has exercise file in Studio
+        # Assert UNIT topic has a QTI archive file in Studio. Its assessment
+        # items are legacy structured-field (SINGLE_SELECTION) with no
+        # perseus_question item, so they route to QTI packaging.
         unit_files = cc.File.objects.filter(
             contentnode=unit_topic,
-            preset_id=format_presets.EXERCISE,
+            preset_id=format_presets.QTI_ZIP,
         )
         self.assertEqual(
             unit_files.count(),
             1,
-            "UNIT topic should have exactly one exercise archive file",
+            "UNIT topic should have exactly one QTI archive file",
         )
 
         # Assert NO assessment metadata in Kolibri export for UNIT topics
