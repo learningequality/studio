@@ -3,88 +3,66 @@
   <div class="choice-editor">
     <!-- Prompt -->
     <div class="choice-editor__section">
+      <ValidationMessage :show="questionHasError">
+        {{ errorPromptRequired$() }}
+      </ValidationMessage>
       <div
         class="field-label"
-        :style="{ color: $themePalette.grey.v_800 }"
+        :style="{ color: $themePalette.grey.v_700 }"
       >
         {{ questionLabel$() }}
       </div>
 
-      <!-- Prompt: open (edit mode) -->
+      <!-- Prompt -->
       <div
-        v-if="mode === 'edit' && isQuestionOpen"
-        class="choice-editor__prompt-wrap"
+        :class="[
+          mode === 'edit' && isQuestionOpen ? 'choice-editor__prompt-wrap' : 'answer-border',
+        ]"
+        :style="
+          mode === 'edit' && isQuestionOpen
+            ? {}
+            : { borderColor: questionHasError ? $themeTokens.error : $themeTokens.fineLine }
+        "
       >
-        <TipTapEditor
-          :value="state.prompt"
-          mode="edit"
-          :minHeight="'80px'"
-          class="editor"
-          @update="setPrompt"
-          @minimize="closeQuestion"
-        />
-        <ValidationMessage :show="questionHasError">
-          {{ errorPromptRequired$() }}
-        </ValidationMessage>
-      </div>
-
-      <!-- Prompt: closed (view or edit-collapsed) -->
-      <div
-        v-else
-        class="answer-border"
-        :class="{ 'is-clickable': mode === 'edit' }"
-        :style="{ borderColor: $themeTokens.fineLine }"
-        @click="mode === 'edit' && openQuestion()"
-      >
-        <div class="answer-card-text is-closed">
-          <div class="answer-layout">
-            <div class="answer-content">
+        <button
+          v-if="mode === 'edit' && !isQuestionOpen"
+          class="content-overlay-trigger"
+          :aria-label="toolbarLabelEdit$()"
+          @click="openQuestion"
+        ></button>
+        <div :class="mode === 'edit' && isQuestionOpen ? '' : 'answer-card-text is-closed'">
+          <div :class="mode === 'edit' && isQuestionOpen ? '' : 'answer-layout'">
+            <div :class="mode === 'edit' && isQuestionOpen ? '' : 'answer-content'">
               <TipTapEditor
                 :value="state.prompt"
-                mode="view"
+                :mode="mode === 'edit' && isQuestionOpen ? 'edit' : 'view'"
+                :minHeight="'80px'"
+                :autofocus="mode === 'edit' && isQuestionOpen"
                 class="editor"
-              />
-            </div>
-            <div
-              v-if="mode === 'edit'"
-              class="answer-actions"
-            >
-              <KIconButton
-                icon="edit"
-                :color="$themePalette.grey.v_800"
-                :aria-label="toolbarLabelEdit$()"
-                :tooltip="toolbarLabelEdit$()"
-                size="small"
-                @click.stop="openQuestion"
+                @update="setPrompt"
+                @minimize="closeQuestion"
               />
             </div>
           </div>
         </div>
-        <ValidationMessage
-          :show="questionHasError"
-          :style="{ padding: '0 8px 8px' }"
-        >
-          {{ errorPromptRequired$() }}
-        </ValidationMessage>
       </div>
     </div>
-
-    <!-- Global interaction errors -->
-    <ValidationMessage :show="noCorrectAnswerError">
-      {{ errorNoCorrectAnswer$() }}
-    </ValidationMessage>
-    <ValidationMessage :show="tooManyCorrectError">
-      {{ errorTooManyCorrectAnswers$() }}
-    </ValidationMessage>
-    <ValidationMessage :show="tooFewChoicesError">
-      {{ errorTooFewChoices$() }}
-    </ValidationMessage>
 
     <!-- Choice list -->
     <div
       v-if="mode === 'edit' || showAnswers"
       class="choice-editor__section"
     >
+      <ValidationMessage :show="noCorrectAnswerError">
+        {{ errorNoCorrectAnswer$() }}
+      </ValidationMessage>
+      <ValidationMessage :show="tooManyCorrectError">
+        {{ errorTooManyCorrectAnswers$() }}
+      </ValidationMessage>
+      <ValidationMessage :show="tooFewChoicesError">
+        {{ errorTooFewChoices$() }}
+      </ValidationMessage>
+
       <div
         class="answers-label"
         :style="{ color: $themeTokens.annotation }"
@@ -92,88 +70,82 @@
         {{ answersLabel }}
       </div>
 
-      <div
-        class="answers-list"
-        role="list"
-      >
-        <div
+      <ol class="answers-list">
+        <li
           v-for="(answer, index) in state.answers"
           :key="answer.id"
           class="answer-border"
-          role="listitem"
-          :class="[
-            { 'is-clickable': mode === 'edit' && openChoiceId !== answer.id },
-            mode === 'edit' &&
-              openChoiceId !== answer.id &&
-              !(answer.correct && mode === 'view' && showAnswers)
-              ? $computedClass({ ':hover': { backgroundColor: $themeTokens.fineLine } })
-              : '',
-          ]"
-          :style="{
-            borderColor:
-              answer.correct && mode === 'view' && showAnswers
-                ? $themePalette.green.v_500
-                : $themeTokens.fineLine,
-            backgroundColor:
-              answer.correct && mode === 'view' && showAnswers ? $themePalette.green.v_50 : null,
-          }"
-          @click="onRowClick($event, answer.id)"
+          :class="getAnswerClasses(answer)"
+          :style="getAnswerStyle(answer)"
         >
+          <button
+            v-if="mode === 'edit' && isChoiceClosed(answer.id)"
+            class="content-overlay-trigger"
+            :aria-label="toolbarLabelEdit$()"
+            @click="onRowClick($event, answer.id)"
+          ></button>
           <div
             class="answer-card-text"
             :class="{
-              'is-closed': mode !== 'edit' || openChoiceId !== answer.id,
+              'is-closed': isChoiceClosed(answer.id),
               'small-screen': isSmallScreen,
             }"
           >
             <div
               class="answer-layout"
               :class="{
-                'is-open': mode === 'edit' && openChoiceId === answer.id,
+                'is-open': isChoiceOpen(answer.id),
                 'small-screen': isSmallScreen,
               }"
             >
               <!-- Selection control -->
               <div class="answer-selection">
-                <KRadioButton
-                  v-if="isSingleSelect"
-                  :currentValue="correctAnswerId"
-                  :buttonValue="answer.id"
-                  :label="markCorrectLabel$()"
-                  :showLabel="false"
-                  :aria-label="markCorrectLabel$()"
-                  :disabled="mode !== 'edit'"
-                  :style="{ width: 'auto' }"
-                  @change="onToggleCorrect(answer.id)"
+                <KIcon
+                  v-if="emptyChoiceIds.has(answer.id) || duplicateChoiceIds.has(answer.id)"
+                  icon="error"
+                  :color="$themeTokens.error"
+                  style="margin-top: 2px"
                 />
-                <KCheckbox
-                  v-else
-                  :checked="answer.correct"
-                  :label="markCorrectLabel$()"
-                  :showLabel="false"
-                  :aria-label="markCorrectLabel$()"
-                  :disabled="mode !== 'edit'"
-                  @change="onToggleCorrect(answer.id)"
-                />
+                <template v-else>
+                  <KRadioButton
+                    v-if="isSingleSelect"
+                    :currentValue="correctAnswerId"
+                    :buttonValue="answer.id"
+                    :label="markCorrectLabel$()"
+                    :showLabel="false"
+                    :aria-label="markCorrectLabel$()"
+                    :disabled="mode !== 'edit'"
+                    :style="{ width: 'auto' }"
+                    @change="onToggleCorrect(answer.id)"
+                  />
+                  <KCheckbox
+                    v-else
+                    :checked="answer.correct"
+                    :label="markCorrectLabel$()"
+                    :showLabel="false"
+                    :aria-label="markCorrectLabel$()"
+                    :disabled="mode !== 'edit'"
+                    @change="onToggleCorrect(answer.id)"
+                  />
+                </template>
               </div>
 
               <div class="answer-content">
                 <TipTapEditor
                   :value="answer.content"
-                  :mode="mode === 'edit' && openChoiceId === answer.id ? 'edit' : 'view'"
-                  :style="
-                    mode === 'edit' && openChoiceId === answer.id
-                      ? { backgroundColor: $themePalette.white }
-                      : {}
-                  "
+                  :mode="isChoiceOpen(answer.id) ? 'edit' : 'view'"
+                  :style="isChoiceOpen(answer.id) ? { backgroundColor: $themePalette.white } : {}"
                   :minHeight="'80px'"
-                  :autofocus="mode === 'edit' && openChoiceId === answer.id"
+                  :autofocus="isChoiceOpen(answer.id)"
                   class="editor"
                   @update="html => setChoiceContent(answer.id, html)"
                   @minimize="closeChoice"
                 />
-                <ValidationMessage :show="choiceHasError(answer.id)">
+                <ValidationMessage :show="emptyChoiceIds.has(answer.id)">
                   {{ errorEmptyChoiceContent$() }}
+                </ValidationMessage>
+                <ValidationMessage :show="duplicateChoiceIds.has(answer.id)">
+                  {{ errorDuplicateChoiceContent$() }}
                 </ValidationMessage>
               </div>
 
@@ -182,17 +154,6 @@
                 v-if="mode === 'edit' && !answer.fixed"
                 class="answer-actions toolbar"
               >
-                <KIconButton
-                  v-if="openChoiceId !== answer.id"
-                  icon="edit"
-                  :color="$themePalette.grey.v_800"
-                  :aria-label="toolbarLabelEdit$()"
-                  :tooltip="toolbarLabelEdit$()"
-                  size="small"
-                  data-test="editChoiceBtn"
-                  @click.stop="openChoice(answer.id)"
-                />
-
                 <!-- Large screen: inline up / down / delete -->
                 <template v-if="!isSmallScreen">
                   <KIconButton
@@ -240,8 +201,8 @@
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </li>
+      </ol>
 
       <!-- Add choice button (edit only) -->
       <KButton
@@ -268,7 +229,7 @@
 
 <script>
 
-  import { computed, ref, watch } from 'vue';
+  import { computed, ref, watch, getCurrentInstance } from 'vue';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { themePalette } from 'kolibri-design-system/lib/styles/theme';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
@@ -296,6 +257,7 @@
         errorNoCorrectAnswer$,
         errorTooManyCorrectAnswers$,
         errorEmptyChoiceContent$,
+        errorDuplicateChoiceContent$,
         errorTooFewChoices$,
         questionLabel$,
         answersLabelSingleChoice$,
@@ -398,6 +360,15 @@
           ),
       );
 
+      const duplicateChoiceIds = computed(
+        () =>
+          new Set(
+            errors.value
+              .filter(e => e.code === ValidationError.DUPLICATE_CHOICE_CONTENT)
+              .map(e => e.id),
+          ),
+      );
+
       const questionHasError = computed(() =>
         errorCodes.value.includes(ValidationError.PROMPT_REQUIRED),
       );
@@ -413,10 +384,6 @@
       const tooFewChoicesError = computed(
         () => errors.value.length > 0 && errorCodes.value.includes(ValidationError.TOO_FEW_CHOICES),
       );
-
-      function choiceHasError(id) {
-        return emptyChoiceIds.value.has(id);
-      }
 
       function onToggleCorrect(id) {
         toggleCorrectChoice(id);
@@ -481,6 +448,47 @@
         ];
       }
 
+      const instance = getCurrentInstance();
+
+      function isChoiceClosed(id) {
+        return props.mode !== 'edit' || openChoiceId.value !== id;
+      }
+
+      function isChoiceOpen(id) {
+        return props.mode === 'edit' && openChoiceId.value === id;
+      }
+
+      function getAnswerClasses(answer) {
+        const closed = isChoiceClosed(answer.id);
+        const clickable = props.mode === 'edit' && closed;
+        return [
+          { 'is-clickable': clickable },
+          clickable
+            ? instance.proxy.$computedClass({
+              ':hover': { backgroundColor: instance.proxy.$themeTokens.fineLine },
+            })
+            : '',
+        ];
+      }
+
+      function getAnswerStyle(answer) {
+        const isCorrectView = answer.correct && props.mode === 'view' && props.showAnswers;
+        const hasError =
+          emptyChoiceIds.value.has(answer.id) || duplicateChoiceIds.value.has(answer.id);
+
+        let borderColor = instance.proxy.$themeTokens.fineLine;
+        if (hasError) {
+          borderColor = instance.proxy.$themeTokens.error;
+        } else if (isCorrectView) {
+          borderColor = instance.proxy.$themeTokens.correct;
+        }
+
+        return {
+          borderColor,
+          backgroundColor: isCorrectView ? instance.proxy.$themePalette.green.v_50 : null,
+        };
+      }
+
       return {
         state,
         isSingleSelect,
@@ -489,8 +497,6 @@
         isQuestionOpen,
         openQuestion,
         closeQuestion,
-        openChoiceId,
-        openChoice,
         closeChoice,
         onRowClick,
         correctAnswerId,
@@ -498,7 +504,8 @@
         noCorrectAnswerError,
         tooManyCorrectError,
         tooFewChoicesError,
-        choiceHasError,
+        emptyChoiceIds,
+        duplicateChoiceIds,
         setPrompt,
         setChoiceContent,
         onToggleCorrect,
@@ -507,6 +514,10 @@
         moveChoiceUp,
         moveChoiceDown,
         getChoiceRowActions,
+        isChoiceClosed,
+        isChoiceOpen,
+        getAnswerClasses,
+        getAnswerStyle,
         addChoiceBtn$,
         deleteChoiceBtn$,
         moveChoiceUpBtn$,
@@ -516,6 +527,7 @@
         errorNoCorrectAnswer$,
         errorTooManyCorrectAnswers$,
         errorEmptyChoiceContent$,
+        errorDuplicateChoiceContent$,
         errorTooFewChoices$,
         questionLabel$,
         toolbarLabelEdit$,
@@ -580,9 +592,13 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
   }
 
   .answer-border {
+    position: relative;
     border: 1px solid;
     border-radius: 4px;
     transition: background-color 0.3s;
@@ -662,13 +678,12 @@
     margin-left: 16px;
   }
 
-  /* Fill parent — same as AnswersEditor .editor */
   .editor {
     width: 100%;
   }
 
-  /* Prompt wrapper */
   .choice-editor__prompt-wrap {
+    position: relative;
     padding: 4px 0;
   }
 
@@ -676,7 +691,23 @@
     cursor: pointer;
   }
 
-  /* Add choice button */
+  .content-overlay-trigger {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    cursor: pointer;
+    background: none;
+    border: 0;
+    outline: none;
+
+    &:focus-visible {
+      outline: 2px solid currentcolor;
+      outline-offset: -2px;
+    }
+  }
+
   .answer-editor-button {
     justify-content: center;
     width: 100%;

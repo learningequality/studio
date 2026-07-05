@@ -1,4 +1,4 @@
-import { parseXML, parseItem } from '../parseItem';
+import { parseXML, parseItem, reassembleItemXml } from '../parseItem';
 import { VALID_CHOICE_ITEM_DOCUMENT, TWO_INTERACTIONS_DOCUMENT } from '../../utils/testingFixtures';
 
 // ---------------------------------------------------------------------------
@@ -108,5 +108,65 @@ describe('parseItem — response declaration matching', () => {
     </qti-assessment-item>`;
     const model = parseItem(xml);
     expect(model.interactions[0].responseDeclarations).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// reassembleItemXml — XML attribute escaping (regression)
+// ---------------------------------------------------------------------------
+
+describe('reassembleItemXml — attribute escaping', () => {
+  const BASE = {
+    bodyXml: '<qti-choice-interaction response-identifier="RESPONSE" max-choices="1"/>',
+    responseDeclarations: [],
+  };
+
+  it('escapes & in the title so the output is well-formed XML', () => {
+    const xml = reassembleItemXml({
+      ...BASE,
+      identifier: 'item-1',
+      title: 'Math & Science',
+      language: 'en',
+    });
+    expect(xml).toContain('title="Math &amp; Science"');
+    expect(() =>
+      new DOMParser().parseFromString(xml, 'text/xml').querySelector('parsererror'),
+    ).not.toThrow();
+    expect(
+      new DOMParser().parseFromString(xml, 'text/xml').querySelector('parsererror'),
+    ).toBeNull();
+  });
+
+  it('escapes " in the title so the attribute value is not terminated early', () => {
+    const xml = reassembleItemXml({
+      ...BASE,
+      identifier: 'item-1',
+      title: 'The "Quiz"',
+      language: 'en',
+    });
+    expect(xml).toContain('title="The &quot;Quiz&quot;"');
+    expect(
+      new DOMParser().parseFromString(xml, 'text/xml').querySelector('parsererror'),
+    ).toBeNull();
+  });
+
+  it('escapes < in the identifier so the tag is not corrupted', () => {
+    const xml = reassembleItemXml({ ...BASE, identifier: 'a<b', title: 'T', language: 'en' });
+    expect(xml).toContain('identifier="a&lt;b"');
+    expect(
+      new DOMParser().parseFromString(xml, 'text/xml').querySelector('parsererror'),
+    ).toBeNull();
+  });
+
+  it('produces a round-trippable document when all fields are clean', () => {
+    const xml = reassembleItemXml({
+      ...BASE,
+      identifier: 'item-clean',
+      title: 'Plain Title',
+      language: 'en',
+    });
+    const doc = new DOMParser().parseFromString(xml, 'text/xml');
+    expect(doc.querySelector('parsererror')).toBeNull();
+    expect(doc.querySelector('qti-assessment-item')).toHaveAttribute('title', 'Plain Title');
   });
 });

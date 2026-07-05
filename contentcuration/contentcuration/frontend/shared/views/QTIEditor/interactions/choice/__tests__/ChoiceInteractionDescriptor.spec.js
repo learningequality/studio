@@ -20,18 +20,17 @@ describe('ChoiceInteractionDescriptor', () => {
     expect(descriptor.getQuestionType(el)).toBe(QuestionType.SINGLE_SELECT);
   });
 
-  it('creates single-cardinality declarations for singleSelect', () => {
+  it('returns single-cardinality schema for singleSelect', () => {
     const descriptor = new ChoiceInteractionDescriptor();
-    const declaration = descriptor.createDeclaration(QuestionType.SINGLE_SELECT, 'RESPONSE');
-    expect(declaration.identifier).toBe('RESPONSE');
-    expect(declaration.baseType).toBe(BaseType.IDENTIFIER);
-    expect(declaration.cardinality).toBe(Cardinality.SINGLE);
+    const schema = descriptor.getDeclarationSchema(QuestionType.SINGLE_SELECT);
+    expect(schema.baseType).toBe(BaseType.IDENTIFIER);
+    expect(schema.cardinality).toBe(Cardinality.SINGLE);
   });
 
-  it('creates multiple-cardinality declarations for multiSelect', () => {
+  it('returns multiple-cardinality schema for multiSelect', () => {
     const descriptor = new ChoiceInteractionDescriptor();
-    const declaration = descriptor.createDeclaration(QuestionType.MULTI_SELECT, 'RESPONSE');
-    expect(declaration.baseType).toBe(BaseType.IDENTIFIER);
-    expect(declaration.cardinality).toBe(Cardinality.MULTIPLE);
+    const schema = descriptor.getDeclarationSchema(QuestionType.MULTI_SELECT);
+    expect(schema.baseType).toBe(BaseType.IDENTIFIER);
+    expect(schema.cardinality).toBe(Cardinality.MULTIPLE);
   });
 });

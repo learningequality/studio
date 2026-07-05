@@ -1,3 +1,4 @@
+import { readonly } from 'vue';
 import { QuestionType } from '../constants';
 import { generateRandomSlug } from '../utils/generateRandomSlug';
 import { choiceInteractionDescriptor } from '../interactions/choice/ChoiceInteractionDescriptor';
@@ -104,6 +105,7 @@ export function useChoiceInteraction(interactionBlock, questionType) {
 
   return {
     ...base,
+    state: readonly(state),
     addChoice,
     removeChoice,
     moveChoiceUp,

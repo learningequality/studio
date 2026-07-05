@@ -122,11 +122,11 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     context: 'Accessible label for radio / checkbox that marks a choice as correct',
   },
   errorPromptRequired: {
-    message: 'A question prompt is required.',
+    message: 'Question is required',
     context: 'Validation error shown when the prompt is empty',
   },
   errorNoCorrectAnswer: {
-    message: 'At least one correct answer must be selected.',
+    message: 'Choose a correct answer',
     context: 'Validation error when no choice is marked correct',
   },
   errorTooManyCorrectAnswers: {
@@ -134,8 +134,12 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     context: 'Validation error when multiple choices are marked correct for single-select',
   },
   errorEmptyChoiceContent: {
-    message: 'Each answer option must have content.',
+    message: 'Answer cannot be blank',
     context: 'Validation error when an answer option is empty',
+  },
+  errorDuplicateChoiceContent: {
+    message: 'Duplicate answer options are not allowed',
+    context: 'Validation error when two or more answer options have identical content',
   },
   errorTooFewChoices: {
     message: 'At least two answer options are required.',

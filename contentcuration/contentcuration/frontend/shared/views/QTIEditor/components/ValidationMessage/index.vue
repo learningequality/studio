@@ -4,7 +4,7 @@
     v-if="show"
     class="validation-message"
     role="alert"
-    :style="{ color: $themePalette.red.v_700 }"
+    :style="{ color: $themeTokens.error }"
   >
     <slot></slot>
   </p>

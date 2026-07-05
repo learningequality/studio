@@ -33,8 +33,8 @@
         :mode="mode"
         :showAnswers="showAnswers"
         @update:questionType="type => (currentQuestionType = type)"
-        @update:bodyXml="onBodyXmlUpdate"
-        @update:responseDeclarations="onResponseDeclarationsUpdate"
+        @update:bodyXml="xml => (currentBodyXml = xml)"
+        @update:responseDeclarations="decls => (currentResponseDeclarations = decls)"
       />
       <p
         v-else
@@ -61,7 +61,7 @@
 
 <script>
 
-  import { computed, ref } from 'vue';
+  import { computed, ref, watchEffect } from 'vue';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { QuestionType } from '../../constants';
   import useQtiItem from '../../composables/useQtiItem';
@@ -130,26 +130,20 @@
         interactions.value.length > 0 ? interactions.value[0].responseDeclarations : [],
       );
 
-      function onBodyXmlUpdate(xml) {
-        currentBodyXml.value = xml;
-        emitRawData();
-      }
-
-      function onResponseDeclarationsUpdate(decls) {
-        currentResponseDeclarations.value = decls;
-        emitRawData();
-      }
-
-      function emitRawData() {
-        const newRawData = reassembleItemXml({
+      const rawData = computed(() =>
+        reassembleItemXml({
           identifier: identifier.value,
           title: title.value,
           language: language.value,
           bodyXml: currentBodyXml.value,
           responseDeclarations: currentResponseDeclarations.value,
-        });
-        emit('update:rawData', newRawData);
-      }
+        }),
+      );
+
+      // Emit only when the final assembled string actually changes
+      watchEffect(() => {
+        emit('update:rawData', rawData.value);
+      });
 
       return {
         currentQuestionType,
@@ -158,8 +152,8 @@
         questionNumberAndTypeLabel,
         closeBtnLabel$,
         questionContentPlaceholder$,
-        onBodyXmlUpdate,
-        onResponseDeclarationsUpdate,
+        currentBodyXml,
+        currentResponseDeclarations,
       };
     },
 
