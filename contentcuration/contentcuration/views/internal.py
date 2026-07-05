@@ -1,6 +1,7 @@
 import json
 import logging
 from collections import namedtuple
+from types import SimpleNamespace
 
 from distutils.version import LooseVersion
 from django.core.exceptions import ObjectDoesNotExist
@@ -8,12 +9,15 @@ from django.core.exceptions import PermissionDenied
 from django.core.exceptions import SuspiciousOperation
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Q
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
 from django.http import HttpResponseNotFound
 from django.http import HttpResponseServerError
 from django.http import JsonResponse
+from django.utils import timezone
 from le_utils.constants import content_kinds
+from le_utils.constants import exercises
 from le_utils.constants import roles
 from le_utils.constants.labels.accessibility_categories import (
     ACCESSIBILITYCATEGORIESLIST,
@@ -29,6 +33,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view
 from rest_framework.decorators import authentication_classes
 from rest_framework.decorators import permission_classes
+from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from sentry_sdk import capture_exception
@@ -37,17 +42,22 @@ from contentcuration import ricecooker_versions as rc
 from contentcuration.api import write_file_to_storage
 from contentcuration.constants import completion_criteria
 from contentcuration.decorators import delay_user_storage_calculation
-from contentcuration.models import AssessmentItem
 from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
+from contentcuration.models import File
 from contentcuration.models import License
 from contentcuration.models import SlideshowSlide
 from contentcuration.models import StagedFile
 from contentcuration.serializers import GetTreeDataSerializer
 from contentcuration.tasks import apply_channel_changes_task
 from contentcuration.tasks import generatenodediff_task
+from contentcuration.utils.assessment.qti.ingest import convert_legacy_question_to_qti
+from contentcuration.utils.assessment.qti.ingest import (
+    find_perseus_custom_interaction_path,
+)
+from contentcuration.utils.assessment.qti.ingest import read_uploaded_file_content
 from contentcuration.utils.files import get_file_diff
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.utils.nodes import map_files_to_assessment_item
@@ -55,6 +65,7 @@ from contentcuration.utils.nodes import map_files_to_node
 from contentcuration.utils.nodes import map_files_to_slideshow_slide_item
 from contentcuration.utils.nodes import migrate_extra_fields
 from contentcuration.utils.sentry import report_exception
+from contentcuration.viewsets.assessmentitem import AssessmentItemSerializer
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.utils import generate_publish_event
 from contentcuration.viewsets.sync.utils import generate_update_event
@@ -929,7 +940,8 @@ def create_node(node_data, parent_node, sort_order):  # noqa: C901
 
 
 def create_exercises(user, node, data):
-    """ Generate exercise from data """
+    """Generate exercise from data, delegating item construction and QTI schema
+    validation to AssessmentItemSerializer."""
     # First check that all assessment_ids are unique within the node
     assessment_ids = [question.get("assessment_id") for question in data]
     if len(assessment_ids) != len(set(assessment_ids)):
@@ -937,25 +949,89 @@ def create_exercises(user, node, data):
             "Duplicate assessment_ids found in node {}".format(node.node_id)
         )
 
-    with transaction.atomic():
-        order = 0
-
-        for question in data:
-            question_obj = AssessmentItem(
-                type=question.get("type"),
-                question=question.get("question"),
-                hints=question.get("hints"),
-                answers=question.get("answers"),
-                order=order,
-                contentnode=node,
-                assessment_id=question.get("assessment_id"),
-                raw_data=question.get("raw_data"),
-                source_url=question.get("source_url"),
-                randomize=question.get("randomize") or False,
+    item_dicts = []
+    perseus_paths = []
+    for order, question in enumerate(data):
+        try:
+            item_dict, perseus_path = _build_assessment_item_dict(node, question, order)
+        except ValueError as e:
+            raise NodeValidationError(
+                "Invalid question data for node {}: {}".format(node.node_id, e)
             )
-            order += 1
-            question_obj.save()
-            map_files_to_assessment_item(user, question_obj, question["files"])
+        item_dicts.append(item_dict)
+        perseus_paths.append(perseus_path)
+
+    with transaction.atomic():
+        serializer = AssessmentItemSerializer(
+            data=item_dicts,
+            many=True,
+            context={"request": SimpleNamespace(user=user)},
+        )
+        try:
+            serializer.is_valid(raise_exception=True)
+        except DRFValidationError as e:
+            raise NodeValidationError(
+                "Invalid assessment item data for node {}: {}".format(
+                    node.node_id, e.detail
+                )
+            )
+
+        # AssessmentItemSerializer.set_files() auto-creates a File row per checksum
+        # referenced in QTI raw_data (generic preset, no real metadata) since
+        # ricecooker never pre-stages one. map_files_to_assessment_item below
+        # creates the authoritative row from question["files"], so the
+        # auto-created one must be deleted - whether attached to `instances` or
+        # left orphaned (e.g. same checksum referenced by two items in this
+        # batch). File.id is a random UUID, so we can't watermark by id; use a
+        # timestamp on File.modified instead.
+        save_watermark = timezone.now()
+        instances = serializer.save()
+        File.objects.filter(
+            Q(assessment_item__in=instances)
+            | Q(
+                assessment_item__isnull=True,
+                contentnode__isnull=True,
+                uploaded_by=user,
+                modified__gte=save_watermark,
+            )
+        ).delete()
+
+        for question, instance, perseus_path in zip(data, instances, perseus_paths):
+            files = question["files"]
+            if perseus_path:
+                files = [f for f in files if f and f.get("filename") != perseus_path]
+            map_files_to_assessment_item(user, instance, files)
+
+
+def _build_assessment_item_dict(node, question, order):
+    common = {
+        "contentnode": node.pk,
+        "assessment_id": question.get("assessment_id"),
+        "order": order,
+        "source_url": question.get("source_url"),
+        "randomize": question.get("randomize") or False,
+    }
+
+    if question.get("type") == exercises.QTI:
+        raw_data = question.get("raw_data")
+        perseus_path = find_perseus_custom_interaction_path(raw_data)
+        if perseus_path:
+            item_dict = dict(
+                common,
+                type=exercises.PERSEUS_QUESTION,
+                raw_data=read_uploaded_file_content(perseus_path),
+            )
+            return item_dict, perseus_path
+        return dict(common, type=exercises.QTI, raw_data=raw_data), None
+
+    if question.get("type") == exercises.PERSEUS_QUESTION:
+        item_dict = dict(
+            common, type=exercises.PERSEUS_QUESTION, raw_data=question.get("raw_data")
+        )
+        return item_dict, None
+
+    result = convert_legacy_question_to_qti(question)
+    return dict(common, type=exercises.QTI, raw_data=result.xml), None
 
 
 def create_slides(user, node, slideshow_data):
