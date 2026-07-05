@@ -75,6 +75,19 @@ def _create_html_content_from_text(text: str) -> FlowContentList:
     return ElementTreeBase.from_string(markup)
 
 
+def _response_declaration(
+    cardinality: Cardinality, base_type: BaseType, correct_values: List[Value]
+) -> ResponseDeclaration:
+    return ResponseDeclaration(
+        identifier="RESPONSE",
+        cardinality=cardinality,
+        base_type=base_type,
+        correct_response=CorrectResponse(value=correct_values)
+        if correct_values
+        else None,
+    )
+
+
 def _create_choice_interaction_and_response(
     item: LegacyAssessmentItem,
 ) -> Tuple[ChoiceInteraction, ResponseDeclaration]:
@@ -100,13 +113,10 @@ def _create_choice_interaction_and_response(
         if answer.get("correct", False):
             correct_values.append(Value(value=choice_id))
 
-    response_declaration = ResponseDeclaration(
-        identifier="RESPONSE",
-        cardinality=Cardinality.MULTIPLE if multiple_select else Cardinality.SINGLE,
-        base_type=BaseType.IDENTIFIER,
-        correct_response=CorrectResponse(value=correct_values)
-        if correct_values
-        else None,
+    response_declaration = _response_declaration(
+        Cardinality.MULTIPLE if multiple_select else Cardinality.SINGLE,
+        BaseType.IDENTIFIER,
+        correct_values,
     )
 
     interaction = ChoiceInteraction(
@@ -148,15 +158,10 @@ def _create_text_entry_interaction_and_response(
             values_float.append(False)
     float_answer = bool(values_float) and all(values_float)
 
-    response_declaration = ResponseDeclaration(
-        identifier="RESPONSE",
-        cardinality=Cardinality.MULTIPLE
-        if len(correct_values) > 1
-        else Cardinality.SINGLE,
-        base_type=BaseType.FLOAT if float_answer else BaseType.STRING,
-        correct_response=CorrectResponse(value=correct_values)
-        if correct_values
-        else None,
+    response_declaration = _response_declaration(
+        Cardinality.MULTIPLE if len(correct_values) > 1 else Cardinality.SINGLE,
+        BaseType.FLOAT if float_answer else BaseType.STRING,
+        correct_values,
     )
     return interaction, response_declaration
 

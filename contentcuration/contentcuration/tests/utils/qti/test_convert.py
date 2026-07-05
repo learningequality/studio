@@ -22,9 +22,29 @@ def _normalize_xml(xml_string):
     return "".join(x.strip() for x in xml_string.split("\n"))
 
 
+def _make_item(
+    type,
+    question,
+    answers,
+    assessment_id,
+    randomize=False,
+    title="Test Question 1",
+    language="en-US",
+):
+    return LegacyAssessmentItem(
+        type=type,
+        question=question,
+        answers=answers,
+        randomize=randomize,
+        assessment_id=assessment_id,
+        title=title,
+        language=language,
+    )
+
+
 class ChoiceInteractionConversionTests(unittest.TestCase):
     def test_single_selection(self):
-        item = LegacyAssessmentItem(
+        item = _make_item(
             type=exercises.SINGLE_SELECTION,
             question="What is 2+2?",
             answers=[
@@ -34,8 +54,6 @@ class ChoiceInteractionConversionTests(unittest.TestCase):
             ],
             randomize=True,
             assessment_id="1234567890abcdef1234567890abcdef",
-            title="Test Question 1",
-            language="en-US",
         )
 
         result = convert_legacy_assessment_item_to_qti(item)
@@ -48,7 +66,7 @@ class ChoiceInteractionConversionTests(unittest.TestCase):
         self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
     def test_multiple_selection(self):
-        item = LegacyAssessmentItem(
+        item = _make_item(
             type=exercises.MULTIPLE_SELECTION,
             question="Select all prime numbers:",
             answers=[
@@ -59,8 +77,6 @@ class ChoiceInteractionConversionTests(unittest.TestCase):
             ],
             randomize=True,
             assessment_id="abcdef1234567890abcdef1234567890",
-            title="Test Question 1",
-            language="en-US",
         )
 
         result = convert_legacy_assessment_item_to_qti(item)
@@ -73,17 +89,14 @@ class ChoiceInteractionConversionTests(unittest.TestCase):
         self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
     def test_true_false(self):
-        item = LegacyAssessmentItem(
+        item = _make_item(
             type="true_false",
             question="Is the sky blue?",
             answers=[
                 {"answer": "True", "correct": True, "order": 1},
                 {"answer": "False", "correct": False, "order": 2},
             ],
-            randomize=False,
             assessment_id="1234567890abcdef1234567890abcdef",
-            title="Test Question 1",
-            language="en-US",
         )
 
         result = convert_legacy_assessment_item_to_qti(item)
@@ -96,7 +109,7 @@ class ChoiceInteractionConversionTests(unittest.TestCase):
         self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
     def test_media_reference_survives(self):
-        item = LegacyAssessmentItem(
+        item = _make_item(
             type=exercises.SINGLE_SELECTION,
             question="See the diagram: ![diagram](images/abc123.png)",
             answers=[
@@ -107,10 +120,8 @@ class ChoiceInteractionConversionTests(unittest.TestCase):
                 },
                 {"answer": "Wrong", "correct": False, "order": 2},
             ],
-            randomize=False,
             assessment_id="1234567890abcdef1234567890abcdef",
             title="Media Test",
-            language="en-US",
         )
 
         result = convert_legacy_assessment_item_to_qti(item)
@@ -122,7 +133,7 @@ class ChoiceInteractionConversionTests(unittest.TestCase):
         )
 
     def test_math_content_in_choice_interaction(self):
-        item = LegacyAssessmentItem(
+        item = _make_item(
             type=exercises.SINGLE_SELECTION,
             question="Solve the equation $$\\frac{x}{2} = 3$$ for x. What is the value of x?",
             answers=[
@@ -133,8 +144,6 @@ class ChoiceInteractionConversionTests(unittest.TestCase):
             ],
             randomize=True,
             assessment_id="dddddddddddddddddddddddddddddddd",
-            title="Test Question 1",
-            language="en-US",
         )
 
         result = convert_legacy_assessment_item_to_qti(item)
@@ -148,7 +157,7 @@ class ChoiceInteractionConversionTests(unittest.TestCase):
 
 class TextEntryInteractionConversionTests(unittest.TestCase):
     def test_input_question(self):
-        item = LegacyAssessmentItem(
+        item = _make_item(
             type=exercises.INPUT_QUESTION,
             question="What positive integers are less than 3?",
             answers=[
@@ -157,8 +166,6 @@ class TextEntryInteractionConversionTests(unittest.TestCase):
             ],
             randomize=True,
             assessment_id="fedcba0987654321fedcba0987654321",
-            title="Test Question 1",
-            language="en-US",
         )
 
         result = convert_legacy_assessment_item_to_qti(item)
@@ -171,7 +178,7 @@ class TextEntryInteractionConversionTests(unittest.TestCase):
         self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
     def test_free_response_question(self):
-        item = LegacyAssessmentItem(
+        item = _make_item(
             type=exercises.FREE_RESPONSE,
             question="What positive integers are less than 3?",
             answers=[
@@ -180,8 +187,6 @@ class TextEntryInteractionConversionTests(unittest.TestCase):
             ],
             randomize=True,
             assessment_id="fedcba0987654321fedcba0987654321",
-            title="Test Question 1",
-            language="en-US",
         )
 
         result = convert_legacy_assessment_item_to_qti(item)
@@ -190,14 +195,12 @@ class TextEntryInteractionConversionTests(unittest.TestCase):
         self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
     def test_free_response_no_answers(self):
-        item = LegacyAssessmentItem(
+        item = _make_item(
             type=exercises.FREE_RESPONSE,
             question="What is the capital of France?",
             answers=[],
             randomize=True,
             assessment_id="fedcba0987654321fedcba0987654321",
-            title="Test Question 1",
-            language="en-US",
         )
 
         result = convert_legacy_assessment_item_to_qti(item)
@@ -210,14 +213,12 @@ class TextEntryInteractionConversionTests(unittest.TestCase):
         self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
     def test_free_response_with_maths(self):
-        item = LegacyAssessmentItem(
+        item = _make_item(
             type=exercises.FREE_RESPONSE,
             question="$$\\sum_n^sxa^n$$\n\n What does this even mean?",
             answers=[{"answer": "Nothing", "correct": True, "order": 1}],
             randomize=True,
             assessment_id="fedcba0987654321fedcba0987654321",
-            title="Test Question 1",
-            language="en-US",
         )
 
         result = convert_legacy_assessment_item_to_qti(item)
@@ -231,14 +232,12 @@ class TextEntryInteractionConversionTests(unittest.TestCase):
 
 class UnsupportedTypeConversionTests(unittest.TestCase):
     def test_unsupported_type_raises(self):
-        item = LegacyAssessmentItem(
+        item = _make_item(
             type="NOT_A_REAL_TYPE",
             question="x",
             answers=[],
-            randomize=False,
             assessment_id="1234567890abcdef1234567890abcdef",
             title="t",
-            language="en-US",
         )
 
         with self.assertRaises(ValueError) as ctx:

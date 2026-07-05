@@ -20,6 +20,7 @@ from contentcuration.models import ContentNode
 from contentcuration.tests.base import StudioTestCase
 from contentcuration.tests.testdata import fileobj_exercise_graphie
 from contentcuration.tests.testdata import fileobj_exercise_image
+from contentcuration.tests.utils.qti.test_convert import _normalize_xml
 from contentcuration.tests.utils.qti.test_validation import _item_xml
 from contentcuration.tests.utils.qti.test_validation import VALID_CHOICE_ITEM
 from contentcuration.utils.assessment.perseus import PerseusExerciseGenerator
@@ -1319,9 +1320,6 @@ class TestQTIExerciseCreation(StudioTestCase):
         )
         return generator.create_exercise_archive()
 
-    def _normalize_xml(self, xml_string):
-        return "".join(x.strip() for x in xml_string.split("\n"))
-
     def _validate_qti_zip_structure(self, exercise_file):
         """Helper to validate basic structure of the QTI Content Package"""
         # Use Django's storage backend to read the file
@@ -1398,8 +1396,8 @@ class TestQTIExerciseCreation(StudioTestCase):
 
         # Compare normalized XML
         self.assertEqual(
-            self._normalize_xml(expected_manifest_xml),
-            self._normalize_xml(actual_manifest_xml),
+            _normalize_xml(expected_manifest_xml),
+            _normalize_xml(actual_manifest_xml),
         )
 
     def test_perseus_question_rejection(self):
@@ -1489,8 +1487,8 @@ class TestQTIExerciseCreation(StudioTestCase):
 
         # Compare normalized XML
         self.assertEqual(
-            self._normalize_xml(expected_manifest_xml),
-            self._normalize_xml(actual_manifest_xml),
+            _normalize_xml(expected_manifest_xml),
+            _normalize_xml(actual_manifest_xml),
         )
 
         self.assertEqual(exercise_file.checksum, "8df26b0c7009ae84fe148cceda8e0138")
@@ -1587,8 +1585,8 @@ class TestQTIExerciseCreation(StudioTestCase):
 
         # Compare normalized XML
         self.assertEqual(
-            self._normalize_xml(expected_item_xml),
-            self._normalize_xml(actual_item_xml),
+            _normalize_xml(expected_item_xml),
+            _normalize_xml(actual_item_xml),
         )
 
     def test_multiple_question_types_mixed(self):
@@ -1688,8 +1686,8 @@ class TestQTIExerciseCreation(StudioTestCase):
 
         # Compare normalized XML
         self.assertEqual(
-            self._normalize_xml(expected_manifest_xml),
-            self._normalize_xml(actual_manifest_xml),
+            _normalize_xml(expected_manifest_xml),
+            _normalize_xml(actual_manifest_xml),
         )
 
         self.assertEqual(exercise_file.checksum, "8e488543ef52f0b153553eaf9fb51419")
@@ -1766,8 +1764,8 @@ class TestQTIExerciseCreation(StudioTestCase):
 
         # Compare normalized XML
         self.assertEqual(
-            self._normalize_xml(expected_manifest_xml),
-            self._normalize_xml(actual_manifest_xml),
+            _normalize_xml(expected_manifest_xml),
+            _normalize_xml(actual_manifest_xml),
         )
 
     def test_native_qti_item_written_verbatim(self):
