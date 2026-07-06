@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/vue';
+import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
 import ChoiceInteractionEditor from '../ChoiceInteractionEditor.vue';
 
@@ -21,21 +22,6 @@ jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
     default: () => ({ windowIsSmall: ref(false) }),
   };
 });
-jest.mock('shared/views/QTIEditor/components/CollapsibleToolbar/index.vue', () => ({
-  name: 'CollapsibleToolbar',
-  props: ['actions'],
-  template: `
-      <div>
-        <button
-          v-for="action in actions"
-          :key="action.id"
-          :aria-label="action.label"
-          :disabled="action.disabled || false"
-          @click="action.handler"
-        >{{ action.label }}</button>
-      </div>
-    `,
-}));
 
 const renderEditor = (props = {}) =>
   render(ChoiceInteractionEditor, {
@@ -171,7 +157,7 @@ describe('ChoiceInteractionEditor', () => {
         questionType: QuestionType.SINGLE_SELECT,
       });
       await fireEvent.click(screen.getByRole('button', { name: /add choice/i }));
-      expect(screen.getAllByRole('radio')).toHaveLength(4);
+      expect(screen.getAllByRole('listitem')).toHaveLength(4);
     });
 
     it('renders move-up, move-down, and delete buttons for each non-fixed choice', () => {
@@ -279,56 +265,60 @@ describe('ChoiceInteractionEditor', () => {
     });
 
     it('shows global errors (no correct choice) after a structural mutation', async () => {
+      jest.useFakeTimers();
       // Add a choice so we have 2+ choices — then the only error is no correct choice.
       renderEditor({
         interaction: block(CHOICE_SINGLE_SELECT_XML),
         questionType: QuestionType.SINGLE_SELECT,
       });
-      // Clicking Add choice calls onAddChoice → runValidation.
+      // Clicking Add choice mutates state → debounced validate fires.
       await fireEvent.click(screen.getByRole('button', { name: /add choice/i }));
+      // Flush Vue watcher queue.
+      await nextTick();
+      // Advance past the 400ms debounce, then flush the resulting DOM update.
+      jest.advanceTimersByTime(400);
+      await nextTick();
+      jest.useRealTimers();
       // NO_CORRECT_ANSWER (and potentially others) should be shown after validation runs.
       expect(screen.getAllByRole('alert').length).toBeGreaterThan(0);
     });
 
     it('shows no-correct-choice error after toggling and running validation', async () => {
+      jest.useFakeTimers();
       renderEditor({
         interaction: blockWithDecl(CHOICE_SINGLE_SELECT_XML, SINGLE_DECL),
         questionType: QuestionType.SINGLE_SELECT,
       });
-      // Uncheck the correct choice
-      const radios = screen.getAllByRole('radio');
-      await fireEvent.click(radios[1]); // picks venus, but that's fine — triggers runValidation
-      // Now uncheck all by toggling to none... instead trigger via add-choice which runs validate
+      // Trigger validation via add-choice which mutates state → debounced validate fires.
       await fireEvent.click(screen.getByRole('button', { name: /add choice/i }));
-      // Validate fires; if no correct → error appears
+      await nextTick();
+      jest.advanceTimersByTime(400);
+      await nextTick();
+      jest.useRealTimers();
+      // Validate fires; errors should appear (e.g. empty choice content).
     });
   });
 
   describe('emits', () => {
-    it('emits update:bodyXml on mount with the rebuilt XML', () => {
+    it('emits update:interaction on mount with the rebuilt XML and declarations', () => {
       const { emitted } = renderEditor({
         interaction: block(CHOICE_SINGLE_SELECT_XML),
         questionType: QuestionType.SINGLE_SELECT,
       });
-      expect(emitted()['update:bodyXml']).toBeTruthy();
+      expect(emitted()['update:interaction']).toBeTruthy();
+      const payload = emitted()['update:interaction'][0][0];
+      expect(typeof payload.bodyXml).toBe('string');
+      expect(Array.isArray(payload.responseDeclarations)).toBe(true);
     });
 
-    it('emits update:responseDeclarations on mount', () => {
+    it('emits update:interaction after adding a choice', async () => {
       const { emitted } = renderEditor({
         interaction: block(CHOICE_SINGLE_SELECT_XML),
         questionType: QuestionType.SINGLE_SELECT,
       });
-      expect(emitted()['update:responseDeclarations']).toBeTruthy();
-    });
-
-    it('emits update:bodyXml after adding a choice', async () => {
-      const { emitted } = renderEditor({
-        interaction: block(CHOICE_SINGLE_SELECT_XML),
-        questionType: QuestionType.SINGLE_SELECT,
-      });
-      const before = emitted()['update:bodyXml'].length;
+      const before = emitted()['update:interaction'].length;
       await fireEvent.click(screen.getByRole('button', { name: /add choice/i }));
-      expect(emitted()['update:bodyXml'].length).toBeGreaterThan(before);
+      expect(emitted()['update:interaction'].length).toBeGreaterThan(before);
     });
   });
 

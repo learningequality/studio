@@ -34,7 +34,10 @@ describe('validate()', () => {
 
   it('returns an empty array for a valid multi-select state', () => {
     const state = makeState({
-      choices: [makeAnswer({ id: 'a', correct: true }), makeAnswer({ id: 'b', correct: true })],
+      choices: [
+        makeAnswer({ id: 'a', content: 'Option A', correct: true }),
+        makeAnswer({ id: 'b', content: 'Option B', correct: true }),
+      ],
     });
     expect(validate(state, QuestionType.MULTI_SELECT)).toEqual([]);
   });

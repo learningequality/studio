@@ -15,8 +15,7 @@
       :interaction="interaction"
       :mode="mode"
       :showAnswers="showAnswers"
-      @update:bodyXml="xml => $emit('update:bodyXml', xml)"
-      @update:responseDeclarations="decls => $emit('update:responseDeclarations', decls)"
+      @update:interaction="interaction => $emit('update:interaction', interaction)"
     />
   </div>
 
@@ -69,7 +68,7 @@
       },
     },
 
-    emits: ['update:questionType', 'update:bodyXml', 'update:responseDeclarations'],
+    emits: ['update:questionType', 'update:interaction'],
   };
 
 </script>

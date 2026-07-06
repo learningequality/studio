@@ -33,8 +33,12 @@
         :mode="mode"
         :showAnswers="showAnswers"
         @update:questionType="type => (currentQuestionType = type)"
-        @update:bodyXml="xml => (currentBodyXml = xml)"
-        @update:responseDeclarations="decls => (currentResponseDeclarations = decls)"
+        @update:interaction="
+          ({ bodyXml, responseDeclarations }) => {
+            currentBodyXml.value = bodyXml;
+            currentResponseDeclarations.value = responseDeclarations;
+          }
+        "
       />
       <p
         v-else
@@ -61,7 +65,7 @@
 
 <script>
 
-  import { computed, ref, watchEffect } from 'vue';
+  import { computed, ref, watch } from 'vue';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { QuestionType } from '../../constants';
   import useQtiItem from '../../composables/useQtiItem';
@@ -121,7 +125,8 @@
 
       /**
        * Track the current bodyXml and responseDeclarations for the interaction.
-       * Initialized from the parsed item; updated when the editor emits changes.
+       * Initialised from the parsed item; updated atomically when the editor
+       * emits update:interaction.
        */
       const currentBodyXml = ref(
         interactions.value.length > 0 ? interactions.value[0].bodyXml : '',
@@ -140,9 +145,9 @@
         }),
       );
 
-      // Emit only when the final assembled string actually changes
-      watchEffect(() => {
-        emit('update:rawData', rawData.value);
+      // Emit only when the assembled XML actually changes after initial mount
+      watch(rawData, newVal => {
+        emit('update:rawData', newVal);
       });
 
       return {
@@ -152,8 +157,6 @@
         questionNumberAndTypeLabel,
         closeBtnLabel$,
         questionContentPlaceholder$,
-        currentBodyXml,
-        currentResponseDeclarations,
       };
     },
 

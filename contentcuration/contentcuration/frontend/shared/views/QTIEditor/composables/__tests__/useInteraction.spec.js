@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { ref, nextTick } from 'vue';
 import { useInteraction } from '../useInteraction';
 
 // ---------------------------------------------------------------------------
@@ -135,5 +135,33 @@ describe('useInteraction', () => {
 
     expect(descriptor.buildXML).toHaveBeenCalledTimes(2);
     expect(descriptor.buildXML).toHaveBeenLastCalledWith(expect.anything(), 'multiSelect');
+  });
+
+  it('automatically runs validation (debounced) when state changes', async () => {
+    jest.useFakeTimers();
+    const validateReturn = [{ code: 'SOME_ERROR' }];
+    const descriptor = makeDescriptor({ validateReturn });
+    const questionType = ref('singleSelect');
+
+    const { state, errors } = useInteraction(
+      descriptor,
+      { bodyXml: '', responseDeclarations: [] },
+      questionType,
+    );
+
+    expect(errors.value).toEqual([]);
+    state.value = { prompt: 'updated' };
+    await nextTick(); // flush Vue watcher queue
+
+    // Before the debounce fires, errors should still be empty.
+    expect(errors.value).toEqual([]);
+
+    // Fast-forward past the 400 ms debounce window.
+    jest.advanceTimersByTime(400);
+
+    expect(descriptor.validate).toHaveBeenCalledWith({ prompt: 'updated' }, 'singleSelect');
+    expect(errors.value).toEqual(validateReturn);
+
+    jest.useRealTimers();
   });
 });
