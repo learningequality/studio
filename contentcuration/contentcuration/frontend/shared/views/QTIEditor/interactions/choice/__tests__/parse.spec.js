@@ -75,12 +75,12 @@ describe('parse()', () => {
     });
   });
 
-  describe('answers array', () => {
-    it('maps each <qti-simple-choice> to an answer with id and content', () => {
+  describe('choices array', () => {
+    it('maps each <qti-simple-choice> to an choice with id and content', () => {
       const state = parse(CHOICE_SINGLE_SELECT_XML, []);
-      expect(state.answers).toHaveLength(3);
-      expect(state.answers[0].id).toBe('mercury');
-      expect(state.answers[0].content).toContain('Mercury');
+      expect(state.choices).toHaveLength(3);
+      expect(state.choices[0].id).toBe('mercury');
+      expect(state.choices[0].content).toContain('Mercury');
     });
 
     it('generates a slug identifier when element is missing its identifier attribute', () => {
@@ -88,7 +88,7 @@ describe('parse()', () => {
         <qti-simple-choice>No id here</qti-simple-choice>
       </qti-choice-interaction>`;
       const state = parse(xml, []);
-      expect(state.answers[0].id).toMatch(/^choice_[a-z0-9]{8}$/);
+      expect(state.choices[0].id).toMatch(/^choice_[a-z0-9]{8}$/);
     });
 
     it('sets fixed: true when the fixed attribute is present', () => {
@@ -96,47 +96,47 @@ describe('parse()', () => {
         <qti-simple-choice identifier="a" fixed="true">A</qti-simple-choice>
       </qti-choice-interaction>`;
       const state = parse(xml, []);
-      expect(state.answers[0].fixed).toBe(true);
+      expect(state.choices[0].fixed).toBe(true);
     });
 
     it('sets fixed: false when the fixed attribute is absent', () => {
       const state = parse(CHOICE_SINGLE_SELECT_XML, []);
-      expect(state.answers[0].fixed).toBe(false);
+      expect(state.choices[0].fixed).toBe(false);
     });
   });
 
   describe('correct response detection', () => {
-    it('marks the correct answer for single-select', () => {
+    it('marks the correct choice for single-select', () => {
       const state = parse(CHOICE_SINGLE_SELECT_XML, [SINGLE_DECL]);
-      const mercury = state.answers.find(a => a.id === 'mercury');
-      const venus = state.answers.find(a => a.id === 'venus');
+      const mercury = state.choices.find(a => a.id === 'mercury');
+      const venus = state.choices.find(a => a.id === 'venus');
       expect(mercury.correct).toBe(true);
       expect(venus.correct).toBe(false);
     });
 
-    it('marks multiple correct answers for multi-select', () => {
+    it('marks multiple correct choices for multi-select', () => {
       const state = parse(CHOICE_MULTI_SELECT_XML, [MULTI_DECL]);
-      expect(state.answers.find(a => a.id === 'a').correct).toBe(true);
-      expect(state.answers.find(a => a.id === 'b').correct).toBe(false);
-      expect(state.answers.find(a => a.id === 'c').correct).toBe(true);
+      expect(state.choices.find(a => a.id === 'a').correct).toBe(true);
+      expect(state.choices.find(a => a.id === 'b').correct).toBe(false);
+      expect(state.choices.find(a => a.id === 'c').correct).toBe(true);
     });
 
-    it('marks all answers as not correct when no declaration provided', () => {
+    it('marks all choices as not correct when no declaration provided', () => {
       const state = parse(CHOICE_SINGLE_SELECT_XML, []);
-      expect(state.answers.every(a => !a.correct)).toBe(true);
+      expect(state.choices.every(a => !a.correct)).toBe(true);
     });
   });
 
   describe('graceful fallback', () => {
     it('returns default state for empty bodyXml', () => {
       const state = parse('', []);
-      expect(state.answers).toEqual([]);
+      expect(state.choices).toEqual([]);
       expect(state.prompt).toBe('');
     });
 
     it('returns default state for malformed XML', () => {
       const state = parse('<unclosed', []);
-      expect(state.answers).toEqual([]);
+      expect(state.choices).toEqual([]);
     });
   });
 });
@@ -144,7 +144,7 @@ describe('parse()', () => {
 describe('buildXML()', () => {
   const baseState = {
     prompt: 'Pick one.',
-    answers: [
+    choices: [
       { id: 'choice_a', content: 'Option A', correct: true, fixed: false },
       { id: 'choice_b', content: 'Option B', correct: false, fixed: false },
     ],
@@ -162,7 +162,7 @@ describe('buildXML()', () => {
   it('sets cardinality="multiple" for multiSelect', () => {
     const multiState = {
       ...baseState,
-      answers: [
+      choices: [
         { id: 'a', content: 'A', correct: true, fixed: false },
         { id: 'b', content: 'B', correct: true, fixed: false },
       ],
@@ -181,7 +181,7 @@ describe('buildXML()', () => {
   it('includes all correct identifiers for multi-select', () => {
     const multiState = {
       ...baseState,
-      answers: [
+      choices: [
         { id: 'x', content: 'X', correct: true, fixed: false },
         { id: 'y', content: 'Y', correct: true, fixed: false },
         { id: 'z', content: 'Z', correct: false, fixed: false },
@@ -204,10 +204,10 @@ describe('buildXML()', () => {
     expect(bodyXml).toContain('min-choices');
   });
 
-  it('includes one <qti-simple-choice> per answer', () => {
+  it('includes one <qti-simple-choice> per choice', () => {
     const { bodyXml } = buildXML(baseState, QuestionType.SINGLE_SELECT);
     const matches = bodyXml.match(/qti-simple-choice/g) ?? [];
-    // Each tag appears as open + close = 2 × 2 answers = 4
+    // Each tag appears as open + close = 2 × 2 choices = 4
     expect(matches.length).toBe(4);
   });
 
@@ -216,7 +216,7 @@ describe('buildXML()', () => {
       {
         ...baseState,
         prompt: '<p>Pick <strong>one</strong>.</p>',
-        answers: [
+        choices: [
           {
             id: 'choice_a',
             content: '<p>Option <em>A</em></p>',
@@ -245,8 +245,8 @@ describe('parse → buildXML → parse round-trip', () => {
     expect(reparsed.maxChoices).toBe(original.maxChoices);
     expect(reparsed.shuffle).toBe(original.shuffle);
     expect(reparsed.orientation).toBe(original.orientation);
-    expect(reparsed.answers.map(a => a.id)).toEqual(original.answers.map(a => a.id));
-    expect(reparsed.answers.map(a => a.correct)).toEqual(original.answers.map(a => a.correct));
+    expect(reparsed.choices.map(a => a.id)).toEqual(original.choices.map(a => a.id));
+    expect(reparsed.choices.map(a => a.correct)).toEqual(original.choices.map(a => a.correct));
   });
 
   it('multi-select: re-parsed state matches original', () => {
@@ -254,8 +254,8 @@ describe('parse → buildXML → parse round-trip', () => {
     const { bodyXml, declarations } = buildXML(original, QuestionType.MULTI_SELECT);
     const reparsed = parse(bodyXml, declarations);
 
-    expect(reparsed.answers.filter(a => a.correct).map(a => a.id)).toEqual(
-      original.answers.filter(a => a.correct).map(a => a.id),
+    expect(reparsed.choices.filter(a => a.correct).map(a => a.id)).toEqual(
+      original.choices.filter(a => a.correct).map(a => a.id),
     );
   });
 });

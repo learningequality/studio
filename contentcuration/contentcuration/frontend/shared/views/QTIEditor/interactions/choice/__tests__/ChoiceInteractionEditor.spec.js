@@ -81,7 +81,7 @@ describe('ChoiceInteractionEditor', () => {
       expect(screen.getByText('Earth')).toBeInTheDocument();
     });
 
-    it('pre-checks the correct answer radio', () => {
+    it('pre-checks the correct choice radio', () => {
       renderEditor({
         interaction: blockWithDecl(CHOICE_SINGLE_SELECT_XML, SINGLE_DECL),
         questionType: QuestionType.SINGLE_SELECT,
@@ -122,7 +122,7 @@ describe('ChoiceInteractionEditor', () => {
       expect(screen.getByText('Option C')).toBeInTheDocument();
     });
 
-    it('pre-checks multiple correct answers', () => {
+    it('pre-checks multiple correct choices', () => {
       renderEditor({
         interaction: blockWithDecl(CHOICE_MULTI_SELECT_XML, MULTI_DECL),
         questionType: QuestionType.MULTI_SELECT,
@@ -247,7 +247,7 @@ describe('ChoiceInteractionEditor', () => {
       expect(screen.getAllByRole('radio')).toHaveLength(3);
     });
 
-    it('disables the correct-answer control in view mode', () => {
+    it('disables the correct-choice control in view mode', () => {
       renderEditor({
         interaction: block(CHOICE_SINGLE_SELECT_XML),
         questionType: QuestionType.SINGLE_SELECT,
@@ -278,8 +278,8 @@ describe('ChoiceInteractionEditor', () => {
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     });
 
-    it('shows global errors (no correct answer) after a structural mutation', async () => {
-      // Add a choice so we have 2+ choices — then the only error is no correct answer.
+    it('shows global errors (no correct choice) after a structural mutation', async () => {
+      // Add a choice so we have 2+ choices — then the only error is no correct choice.
       renderEditor({
         interaction: block(CHOICE_SINGLE_SELECT_XML),
         questionType: QuestionType.SINGLE_SELECT,
@@ -290,12 +290,12 @@ describe('ChoiceInteractionEditor', () => {
       expect(screen.getAllByRole('alert').length).toBeGreaterThan(0);
     });
 
-    it('shows no-correct-answer error after toggling and running validation', async () => {
+    it('shows no-correct-choice error after toggling and running validation', async () => {
       renderEditor({
         interaction: blockWithDecl(CHOICE_SINGLE_SELECT_XML, SINGLE_DECL),
         questionType: QuestionType.SINGLE_SELECT,
       });
-      // Uncheck the correct answer
+      // Uncheck the correct choice
       const radios = screen.getAllByRole('radio');
       await fireEvent.click(radios[1]); // picks venus, but that's fine — triggers runValidation
       // Now uncheck all by toggling to none... instead trigger via add-choice which runs validate

@@ -16,7 +16,7 @@
       <!-- Prompt -->
       <div
         :class="[
-          mode === 'edit' && isQuestionOpen ? 'choice-editor__prompt-wrap' : 'answer-border',
+          mode === 'edit' && isQuestionOpen ? 'choice-editor__prompt-wrap' : 'choice-border',
         ]"
         :style="
           mode === 'edit' && isQuestionOpen
@@ -30,9 +30,9 @@
           :aria-label="toolbarLabelEdit$()"
           @click="openQuestion"
         ></button>
-        <div :class="mode === 'edit' && isQuestionOpen ? '' : 'answer-card-text is-closed'">
-          <div :class="mode === 'edit' && isQuestionOpen ? '' : 'answer-layout'">
-            <div :class="mode === 'edit' && isQuestionOpen ? '' : 'answer-content'">
+        <div :class="mode === 'edit' && isQuestionOpen ? '' : 'choice-card-text is-closed'">
+          <div :class="mode === 'edit' && isQuestionOpen ? '' : 'choice-layout'">
+            <div :class="mode === 'edit' && isQuestionOpen ? '' : 'choice-content'">
               <TipTapEditor
                 :value="state.prompt"
                 :mode="mode === 'edit' && isQuestionOpen ? 'edit' : 'view'"
@@ -64,44 +64,44 @@
       </ValidationMessage>
 
       <div
-        class="answers-label"
+        class="choices-label"
         :style="{ color: $themeTokens.annotation }"
       >
         {{ answersLabel }}
       </div>
 
-      <ol class="answers-list">
+      <ol class="choices-list">
         <li
-          v-for="(answer, index) in state.answers"
-          :key="answer.id"
-          class="answer-border"
-          :class="getAnswerClasses(answer)"
-          :style="getAnswerStyle(answer)"
+          v-for="(choice, index) in state.choices"
+          :key="choice.id"
+          class="choice-border"
+          :class="getChoiceClasses(choice)"
+          :style="getChoiceStyle(choice)"
         >
           <button
-            v-if="mode === 'edit' && isChoiceClosed(answer.id)"
+            v-if="mode === 'edit' && isChoiceClosed(choice.id)"
             class="content-overlay-trigger"
             :aria-label="toolbarLabelEdit$()"
-            @click="onRowClick($event, answer.id)"
+            @click="onRowClick($event, choice.id)"
           ></button>
           <div
-            class="answer-card-text"
+            class="choice-card-text"
             :class="{
-              'is-closed': isChoiceClosed(answer.id),
+              'is-closed': isChoiceClosed(choice.id),
               'small-screen': isSmallScreen,
             }"
           >
             <div
-              class="answer-layout"
+              class="choice-layout"
               :class="{
-                'is-open': isChoiceOpen(answer.id),
+                'is-open': isChoiceOpen(choice.id),
                 'small-screen': isSmallScreen,
               }"
             >
               <!-- Selection control -->
-              <div class="answer-selection">
+              <div class="choice-selection">
                 <KIcon
-                  v-if="emptyChoiceIds.has(answer.id) || duplicateChoiceIds.has(answer.id)"
+                  v-if="emptyChoiceIds.has(choice.id) || duplicateChoiceIds.has(choice.id)"
                   icon="error"
                   :color="$themeTokens.error"
                   style="margin-top: 2px"
@@ -109,50 +109,50 @@
                 <template v-else>
                   <KRadioButton
                     v-if="isSingleSelect"
-                    :currentValue="correctAnswerId"
-                    :buttonValue="answer.id"
+                    :currentValue="correctChoiceId"
+                    :buttonValue="choice.id"
                     :label="markCorrectLabel$()"
                     :showLabel="false"
                     :aria-label="markCorrectLabel$()"
                     :disabled="mode !== 'edit'"
                     :style="{ width: 'auto' }"
-                    @change="onToggleCorrect(answer.id)"
+                    @change="onToggleCorrect(choice.id)"
                   />
                   <KCheckbox
                     v-else
-                    :checked="answer.correct"
+                    :checked="choice.correct"
                     :label="markCorrectLabel$()"
                     :showLabel="false"
                     :aria-label="markCorrectLabel$()"
                     :disabled="mode !== 'edit'"
-                    @change="onToggleCorrect(answer.id)"
+                    @change="onToggleCorrect(choice.id)"
                   />
                 </template>
               </div>
 
-              <div class="answer-content">
+              <div class="choice-content">
                 <TipTapEditor
-                  :value="answer.content"
-                  :mode="isChoiceOpen(answer.id) ? 'edit' : 'view'"
-                  :style="isChoiceOpen(answer.id) ? { backgroundColor: $themePalette.white } : {}"
+                  :value="choice.content"
+                  :mode="isChoiceOpen(choice.id) ? 'edit' : 'view'"
+                  :style="isChoiceOpen(choice.id) ? { backgroundColor: $themePalette.white } : {}"
                   :minHeight="'80px'"
-                  :autofocus="isChoiceOpen(answer.id)"
+                  :autofocus="isChoiceOpen(choice.id)"
                   class="editor"
-                  @update="html => setChoiceContent(answer.id, html)"
+                  @update="html => setChoiceContent(choice.id, html)"
                   @minimize="closeChoice"
                 />
-                <ValidationMessage :show="emptyChoiceIds.has(answer.id)">
+                <ValidationMessage :show="emptyChoiceIds.has(choice.id)">
                   {{ errorEmptyChoiceContent$() }}
                 </ValidationMessage>
-                <ValidationMessage :show="duplicateChoiceIds.has(answer.id)">
+                <ValidationMessage :show="duplicateChoiceIds.has(choice.id)">
                   {{ errorDuplicateChoiceContent$() }}
                 </ValidationMessage>
               </div>
 
               <!-- Actions toolbar -->
               <div
-                v-if="mode === 'edit' && !answer.fixed"
-                class="answer-actions toolbar"
+                v-if="mode === 'edit' && !choice.fixed"
+                class="choice-actions toolbar"
               >
                 <!-- Large screen: inline up / down / delete -->
                 <template v-if="!isSmallScreen">
@@ -163,40 +163,40 @@
                     :disabled="index === 0"
                     :color="index === 0 ? $themeTokens.textDisabled : $themePalette.grey.v_800"
                     size="small"
-                    @click.stop="moveChoiceUp(answer.id)"
+                    @click.stop="moveChoiceUp(choice.id)"
                   />
                   <KIconButton
                     icon="chevronDown"
                     :aria-label="moveChoiceDownBtn$()"
                     :tooltip="moveChoiceDownBtn$()"
-                    :disabled="index === state.answers.length - 1"
+                    :disabled="index === state.choices.length - 1"
                     :color="
-                      index === state.answers.length - 1
+                      index === state.choices.length - 1
                         ? $themeTokens.textDisabled
                         : $themePalette.grey.v_800
                     "
                     size="small"
-                    @click.stop="moveChoiceDown(answer.id)"
+                    @click.stop="moveChoiceDown(choice.id)"
                   />
                   <KIconButton
                     icon="trash"
                     :aria-label="deleteChoiceBtn$()"
                     :tooltip="deleteChoiceBtn$()"
-                    :disabled="state.answers.length <= 1"
+                    :disabled="state.choices.length <= 1"
                     :color="
-                      state.answers.length <= 1
+                      state.choices.length <= 1
                         ? $themeTokens.textDisabled
                         : $themePalette.grey.v_800
                     "
                     size="small"
-                    @click.stop="onRemoveChoice(answer.id)"
+                    @click.stop="onRemoveChoice(choice.id)"
                   />
                 </template>
 
                 <!-- Small screen: CollapsibleToolbar dropdown -->
                 <CollapsibleToolbar
                   v-else
-                  :actions="getChoiceRowActions(answer.id, index)"
+                  :actions="getChoiceRowActions(choice.id, index)"
                 />
               </div>
             </div>
@@ -209,11 +209,11 @@
         v-if="mode === 'edit'"
         appearance="flat-button"
         :appearanceOverrides="buttonAppearanceOverrides"
-        class="answer-editor-button"
+        class="choice-editor-button"
         :aria-label="addChoiceBtn$()"
         @click="onAddChoice"
       >
-        <div class="add-answer-btn-content">
+        <div class="add-choice-btn-content">
           <KIcon
             icon="plus"
             :color="$themePalette.blue.v_500"
@@ -325,8 +325,8 @@
           if (newMode === 'edit') {
             if (!state.value.prompt || !state.value.prompt.trim()) {
               openQuestion();
-            } else if (state.value.answers.length > 0) {
-              openChoice(state.value.answers[0].id);
+            } else if (state.value.choices.length > 0) {
+              openChoice(state.value.choices[0].id);
             }
           } else {
             isQuestionOpen.value = false;
@@ -348,7 +348,7 @@
         isSingleSelect.value ? answersLabelSingleChoice$() : answersLabelMultipleChoice$(),
       );
 
-      const correctAnswerId = computed(() => state.value.answers.find(a => a.correct)?.id ?? null);
+      const correctChoiceId = computed(() => state.value.choices.find(a => a.correct)?.id ?? null);
 
       const errorCodes = computed(() => errors.value.map(e => e.code));
       const emptyChoiceIds = computed(
@@ -393,17 +393,17 @@
       function onAddChoice() {
         addChoice();
         runValidation();
-        openChoiceId.value = state.value.answers[state.value.answers.length - 1]?.id ?? null;
+        openChoiceId.value = state.value.choices[state.value.choices.length - 1]?.id ?? null;
       }
 
       function onRemoveChoice(id) {
-        const index = state.value.answers.findIndex(a => a.id === id);
+        const index = state.value.choices.findIndex(a => a.id === id);
         removeChoice(id);
         runValidation();
         if (openChoiceId.value === id) {
           openChoiceId.value = null;
-          const nextIdx = Math.min(index, state.value.answers.length - 1);
-          if (nextIdx >= 0) openChoiceId.value = state.value.answers[nextIdx]?.id ?? null;
+          const nextIdx = Math.min(index, state.value.choices.length - 1);
+          if (nextIdx >= 0) openChoiceId.value = state.value.choices[nextIdx]?.id ?? null;
         }
       }
 
@@ -413,7 +413,7 @@
         if (
           event.target.closest('.toolbar') ||
           event.target.closest('input') ||
-          event.target.closest('.answer-selection')
+          event.target.closest('.choice-selection')
         )
           return;
         openChoiceId.value = id;
@@ -433,7 +433,7 @@
             id: 'down',
             icon: 'chevronDown',
             label: moveChoiceDownBtn$(),
-            disabled: index === state.value.answers.length - 1,
+            disabled: index === state.value.choices.length - 1,
             handler: () => moveChoiceDown(answerId),
             collapsed: false,
           },
@@ -441,7 +441,7 @@
             id: 'delete',
             icon: 'trash',
             label: deleteChoiceBtn$(),
-            disabled: state.value.answers.length <= 1,
+            disabled: state.value.choices.length <= 1,
             handler: () => onRemoveChoice(answerId),
             collapsed: false,
           },
@@ -458,8 +458,8 @@
         return props.mode === 'edit' && openChoiceId.value === id;
       }
 
-      function getAnswerClasses(answer) {
-        const closed = isChoiceClosed(answer.id);
+      function getChoiceClasses(choice) {
+        const closed = isChoiceClosed(choice.id);
         const clickable = props.mode === 'edit' && closed;
         return [
           { 'is-clickable': clickable },
@@ -471,10 +471,10 @@
         ];
       }
 
-      function getAnswerStyle(answer) {
-        const isCorrectView = answer.correct && props.mode === 'view' && props.showAnswers;
+      function getChoiceStyle(choice) {
+        const isCorrectView = choice.correct && props.mode === 'view' && props.showAnswers;
         const hasError =
-          emptyChoiceIds.value.has(answer.id) || duplicateChoiceIds.value.has(answer.id);
+          emptyChoiceIds.value.has(choice.id) || duplicateChoiceIds.value.has(choice.id);
 
         let borderColor = instance.proxy.$themeTokens.fineLine;
         if (hasError) {
@@ -499,7 +499,7 @@
         closeQuestion,
         closeChoice,
         onRowClick,
-        correctAnswerId,
+        correctChoiceId,
         questionHasError,
         noCorrectAnswerError,
         tooManyCorrectError,
@@ -516,8 +516,8 @@
         getChoiceRowActions,
         isChoiceClosed,
         isChoiceOpen,
-        getAnswerClasses,
-        getAnswerStyle,
+        getChoiceClasses,
+        getChoiceStyle,
         addChoiceBtn$,
         deleteChoiceBtn$,
         moveChoiceUpBtn$,
@@ -577,7 +577,7 @@
     font-weight: 600;
   }
 
-  .answers-label {
+  .choices-label {
     margin-bottom: 5px;
     font-size: 12px;
     font-weight: 600;
@@ -588,7 +588,7 @@
     flex-direction: column;
   }
 
-  .answers-list {
+  .choices-list {
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -597,14 +597,14 @@
     list-style: none;
   }
 
-  .answer-border {
+  .choice-border {
     position: relative;
     border: 1px solid;
     border-radius: 4px;
     transition: background-color 0.3s;
   }
 
-  .answer-card-text {
+  .choice-card-text {
     padding: 7.5px;
 
     &.is-closed {
@@ -619,7 +619,7 @@
   }
 
   /* Flex row: [selection] [content] [actions] */
-  .answer-layout {
+  .choice-layout {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -633,19 +633,19 @@
         flex-wrap: wrap;
         align-items: center;
 
-        .answer-selection {
+        .choice-selection {
           flex: 0 0 auto;
           order: 0;
           margin-bottom: 4px;
         }
 
-        .answer-actions {
+        .choice-actions {
           flex: 0 0 auto;
           order: 1;
           margin-bottom: 4px;
         }
 
-        .answer-content {
+        .choice-content {
           flex: 0 0 100%;
           order: 2;
           min-width: 0;
@@ -654,7 +654,7 @@
     }
   }
 
-  .answer-selection {
+  .choice-selection {
     flex-shrink: 0;
     margin-right: 16px;
 
@@ -663,14 +663,14 @@
     }
   }
 
-  .answer-content {
+  .choice-content {
     position: relative;
     flex: 1;
     min-width: 0;
     overflow: hidden;
   }
 
-  .answer-actions {
+  .choice-actions {
     display: flex;
     flex-shrink: 0;
     gap: 2px;
@@ -687,7 +687,7 @@
     padding: 4px 0;
   }
 
-  .answer-border.is-clickable {
+  .choice-border.is-clickable {
     cursor: pointer;
   }
 
@@ -708,7 +708,7 @@
     }
   }
 
-  .answer-editor-button {
+  .choice-editor-button {
     justify-content: center;
     width: 100%;
     padding: 11px 16px !important;
@@ -717,7 +717,7 @@
     border-radius: 4px !important;
   }
 
-  .add-answer-btn-content {
+  .add-choice-btn-content {
     display: flex;
     gap: 10px;
     align-items: center;

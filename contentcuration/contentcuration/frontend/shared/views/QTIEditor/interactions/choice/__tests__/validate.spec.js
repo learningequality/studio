@@ -13,7 +13,7 @@ function makeAnswer(overrides = {}) {
 function makeState(overrides = {}) {
   return {
     prompt: 'What is 2 + 2?',
-    answers: [
+    choices: [
       makeAnswer({ id: 'choice_a', content: 'Four', correct: true }),
       makeAnswer({ id: 'choice_b', content: 'Five', correct: false }),
     ],
@@ -34,7 +34,7 @@ describe('validate()', () => {
 
   it('returns an empty array for a valid multi-select state', () => {
     const state = makeState({
-      answers: [makeAnswer({ id: 'a', correct: true }), makeAnswer({ id: 'b', correct: true })],
+      choices: [makeAnswer({ id: 'a', correct: true }), makeAnswer({ id: 'b', correct: true })],
     });
     expect(validate(state, QuestionType.MULTI_SELECT)).toEqual([]);
   });
@@ -66,14 +66,14 @@ describe('validate()', () => {
   });
 
   describe('TOO_FEW_CHOICES', () => {
-    it('returns error when there is only one answer', () => {
-      const state = makeState({ answers: [makeAnswer({ correct: true })] });
+    it('returns error when there is only one choice', () => {
+      const state = makeState({ choices: [makeAnswer({ correct: true })] });
       expect(errorCodes(validate(state, QuestionType.SINGLE_SELECT))).toContain(
         ValidationError.TOO_FEW_CHOICES,
       );
     });
 
-    it('does not return error when there are two or more answers', () => {
+    it('does not return error when there are two or more choices', () => {
       expect(errorCodes(validate(makeState(), QuestionType.SINGLE_SELECT))).not.toContain(
         ValidationError.TOO_FEW_CHOICES,
       );
@@ -81,9 +81,9 @@ describe('validate()', () => {
   });
 
   describe('EMPTY_CHOICE_CONTENT', () => {
-    it('returns an error for each answer with empty content', () => {
+    it('returns an error for each choice with empty content', () => {
       const state = makeState({
-        answers: [
+        choices: [
           makeAnswer({ id: 'a', content: '', correct: true }),
           makeAnswer({ id: 'b', content: '  ', correct: false }),
         ],
@@ -94,9 +94,9 @@ describe('validate()', () => {
       expect(contentErrors.map(e => e.id)).toEqual(['a', 'b']);
     });
 
-    it('does not flag answers with content wrapped in HTML tags', () => {
+    it('does not flag choices with content wrapped in HTML tags', () => {
       const state = makeState({
-        answers: [
+        choices: [
           makeAnswer({ id: 'a', content: '<strong>Yes</strong>', correct: true }),
           makeAnswer({ id: 'b', content: 'No', correct: false }),
         ],
@@ -107,18 +107,18 @@ describe('validate()', () => {
   });
 
   describe('NO_CORRECT_ANSWER', () => {
-    it('returns error for singleSelect when no answer is correct', () => {
+    it('returns error for singleSelect when no choice is correct', () => {
       const state = makeState({
-        answers: [makeAnswer({ id: 'a', correct: false }), makeAnswer({ id: 'b', correct: false })],
+        choices: [makeAnswer({ id: 'a', correct: false }), makeAnswer({ id: 'b', correct: false })],
       });
       expect(errorCodes(validate(state, QuestionType.SINGLE_SELECT))).toContain(
         ValidationError.NO_CORRECT_ANSWER,
       );
     });
 
-    it('returns error for multiSelect when no answer is correct', () => {
+    it('returns error for multiSelect when no choice is correct', () => {
       const state = makeState({
-        answers: [makeAnswer({ id: 'a', correct: false }), makeAnswer({ id: 'b', correct: false })],
+        choices: [makeAnswer({ id: 'a', correct: false }), makeAnswer({ id: 'b', correct: false })],
       });
       expect(errorCodes(validate(state, QuestionType.MULTI_SELECT))).toContain(
         ValidationError.NO_CORRECT_ANSWER,
@@ -127,18 +127,18 @@ describe('validate()', () => {
   });
 
   describe('TOO_MANY_CORRECT_ANSWERS', () => {
-    it('returns error for singleSelect when more than one answer is correct', () => {
+    it('returns error for singleSelect when more than one choice is correct', () => {
       const state = makeState({
-        answers: [makeAnswer({ id: 'a', correct: true }), makeAnswer({ id: 'b', correct: true })],
+        choices: [makeAnswer({ id: 'a', correct: true }), makeAnswer({ id: 'b', correct: true })],
       });
       expect(errorCodes(validate(state, QuestionType.SINGLE_SELECT))).toContain(
         ValidationError.TOO_MANY_CORRECT_ANSWERS,
       );
     });
 
-    it('does not return error for multiSelect when more than one answer is correct', () => {
+    it('does not return error for multiSelect when more than one choice is correct', () => {
       const state = makeState({
-        answers: [makeAnswer({ id: 'a', correct: true }), makeAnswer({ id: 'b', correct: true })],
+        choices: [makeAnswer({ id: 'a', correct: true }), makeAnswer({ id: 'b', correct: true })],
       });
       expect(errorCodes(validate(state, QuestionType.MULTI_SELECT))).not.toContain(
         ValidationError.TOO_MANY_CORRECT_ANSWERS,

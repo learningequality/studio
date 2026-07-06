@@ -27,47 +27,47 @@ export function useChoiceInteraction(interactionBlock, questionType) {
   function addChoice() {
     state.value = {
       ...state.value,
-      answers: [
-        ...state.value.answers,
+      choices: [
+        ...state.value.choices,
         { id: generateRandomSlug('choice'), content: '', correct: false, fixed: false },
       ],
     };
   }
 
   function removeChoice(id) {
-    if (state.value.answers.length <= 1) return;
+    if (state.value.choices.length <= 1) return;
     state.value = {
       ...state.value,
-      answers: state.value.answers.filter(a => a.id !== id),
+      choices: state.value.choices.filter(a => a.id !== id),
     };
   }
 
   function moveChoiceUp(id) {
-    const answers = [...state.value.answers];
-    const idx = answers.findIndex(a => a.id === id);
+    const choices = [...state.value.choices];
+    const idx = choices.findIndex(a => a.id === id);
     if (idx <= 0) return;
-    [answers[idx - 1], answers[idx]] = [answers[idx], answers[idx - 1]];
-    state.value = { ...state.value, answers };
+    [choices[idx - 1], choices[idx]] = [choices[idx], choices[idx - 1]];
+    state.value = { ...state.value, choices };
   }
 
   function moveChoiceDown(id) {
-    const answers = [...state.value.answers];
-    const idx = answers.findIndex(a => a.id === id);
-    if (idx === -1 || idx >= answers.length - 1) return;
-    [answers[idx], answers[idx + 1]] = [answers[idx + 1], answers[idx]];
-    state.value = { ...state.value, answers };
+    const choices = [...state.value.choices];
+    const idx = choices.findIndex(a => a.id === id);
+    if (idx === -1 || idx >= choices.length - 1) return;
+    [choices[idx], choices[idx + 1]] = [choices[idx + 1], choices[idx]];
+    state.value = { ...state.value, choices };
   }
 
   /**
    * Toggle the correct flag for a single choice.
    *
    * singleSelect: clears all others and sets only the target to correct.
-   * multiSelect:  toggles only the target answer's correct field.
+   * multiSelect:  toggles only the target choice's correct field.
    */
   function toggleCorrectChoice(id) {
     state.value = {
       ...state.value,
-      answers: state.value.answers.map(a => {
+      choices: state.value.choices.map(a => {
         if (questionType.value === QuestionType.SINGLE_SELECT) {
           return { ...a, correct: a.id === id };
         }
@@ -87,7 +87,7 @@ export function useChoiceInteraction(interactionBlock, questionType) {
   function setChoiceContent(id, html) {
     state.value = {
       ...state.value,
-      answers: state.value.answers.map(a => (a.id === id ? { ...a, content: html } : a)),
+      choices: state.value.choices.map(a => (a.id === id ? { ...a, content: html } : a)),
     };
   }
 

@@ -10,7 +10,7 @@ const RESPONSE_IDENTIFIER = 'RESPONSE';
 export function _defaultState() {
   return {
     prompt: '',
-    answers: [],
+    choices: [],
     maxChoices: 1,
     minChoices: 0,
     shuffle: false,
@@ -73,14 +73,14 @@ export function parseChoiceInteraction(bodyXml, responseDeclarations) {
 
   const correctIds = _extractCorrectIds(responseDeclarations);
 
-  const answers = [...root.querySelectorAll('qti-simple-choice')].map(el => ({
+  const choices = [...root.querySelectorAll('qti-simple-choice')].map(el => ({
     id: el.getAttribute('identifier') || generateRandomSlug('choice'),
     content: el.innerHTML,
     correct: correctIds.has(el.getAttribute('identifier') ?? ''),
     fixed: el.getAttribute('fixed') === 'true',
   }));
 
-  return { prompt, answers, maxChoices, minChoices, shuffle, orientation };
+  return { prompt, choices, maxChoices, minChoices, shuffle, orientation };
 }
 
 /**
@@ -92,7 +92,7 @@ export function parseChoiceInteraction(bodyXml, responseDeclarations) {
  * @returns {{ bodyXml: string, declarations: string[] }}
  */
 export function buildChoiceInteractionXML(state, questionType, declarationSchema) {
-  const { prompt, answers, maxChoices, minChoices, shuffle, orientation } = state;
+  const { prompt, choices, maxChoices, minChoices, shuffle, orientation } = state;
 
   const attrs = {
     'response-identifier': RESPONSE_IDENTIFIER,
@@ -108,14 +108,14 @@ export function buildChoiceInteractionXML(state, questionType, declarationSchema
     children.push(buildXmlNode({ tag: 'qti-prompt', children: _parseHtmlFragment(prompt) }));
   }
 
-  for (const answer of answers) {
-    const choiceAttrs = { identifier: answer.id };
-    if (answer.fixed) choiceAttrs.fixed = 'true';
+  for (const choice of choices) {
+    const choiceAttrs = { identifier: choice.id };
+    if (choice.fixed) choiceAttrs.fixed = 'true';
     children.push(
       buildXmlNode({
         tag: 'qti-simple-choice',
         attrs: choiceAttrs,
-        children: _parseHtmlFragment(answer.content),
+        children: _parseHtmlFragment(choice.content),
       }),
     );
   }
@@ -130,7 +130,7 @@ export function buildChoiceInteractionXML(state, questionType, declarationSchema
     cardinality,
     tag: 'qti-response-declaration',
   });
-  const correctIds = answers.filter(a => a.correct).map(a => a.id);
+  const correctIds = choices.filter(a => a.correct).map(a => a.id);
   new CorrectResponse(correctIds, declaration);
 
   const declarationXml = serializer.serializeToString(declaration.getXML());
