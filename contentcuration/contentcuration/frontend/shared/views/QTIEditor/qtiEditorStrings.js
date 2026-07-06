@@ -41,13 +41,17 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Question',
     context: 'Section header for the question prompt',
   },
+  answersLabel: {
+    message: 'Answer options',
+    context: 'Section header above choice options',
+  },
   answersLabelSingleChoice: {
-    message: 'Answer options \u2014 select one correct answer',
-    context: 'Section header above single-choice options',
+    message: 'Select one correct answer',
+    context: 'Instruction subtitle above single-choice options',
   },
   answersLabelMultipleChoice: {
-    message: 'Answer options \u2014 select all correct answers',
-    context: 'Section header above multiple-choice options',
+    message: 'Select all correct answers',
+    context: 'Instruction subtitle above multiple-choice options',
   },
   orderLabel: {
     message: 'Order',

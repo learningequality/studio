@@ -60,6 +60,12 @@
       </ValidationMessage>
 
       <div
+        class="answers-header field-label"
+        :style="{ color: $themePalette.grey.v_700 }"
+      >
+        {{ answersLabel$() }}
+      </div>
+      <div
         class="choices-label"
         :style="{ color: $themeTokens.annotation }"
       >
@@ -257,6 +263,7 @@
         errorDuplicateChoiceContent$,
         errorTooFewChoices$,
         questionLabel$,
+        answersLabel$,
         answersLabelSingleChoice$,
         answersLabelMultipleChoice$,
       } = qtiEditorStrings;
@@ -498,6 +505,7 @@
         state,
         isSingleSelect,
         windowIsSmall,
+        answersLabel$,
         answersLabel,
         isQuestionOpen,
         closeQuestion,
@@ -581,10 +589,14 @@
     font-weight: 600;
   }
 
+  .answers-header {
+    margin-bottom: 2px;
+  }
+
   .choices-label {
     margin-bottom: 5px;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 400;
   }
 
   .choice-editor__section {
