@@ -1,4 +1,5 @@
-import { parseXML, parseItem, reassembleItemXml } from '../parseItem';
+import { parseXML, parseItem } from '../parseItem';
+import { assembleItemXml } from '../assembleItem';
 import { VALID_CHOICE_ITEM_DOCUMENT, TWO_INTERACTIONS_DOCUMENT } from '../../utils/testingFixtures';
 
 // ---------------------------------------------------------------------------
@@ -112,17 +113,17 @@ describe('parseItem — response declaration matching', () => {
 });
 
 // ---------------------------------------------------------------------------
-// reassembleItemXml — XML attribute escaping (regression)
+// assembleItemXml — XML attribute escaping (regression)
 // ---------------------------------------------------------------------------
 
-describe('reassembleItemXml — attribute escaping', () => {
+describe('assembleItemXml — attribute escaping', () => {
   const BASE = {
     bodyXml: '<qti-choice-interaction response-identifier="RESPONSE" max-choices="1"/>',
     responseDeclarations: [],
   };
 
   it('escapes & in the title so the output is well-formed XML', () => {
-    const xml = reassembleItemXml({
+    const xml = assembleItemXml({
       ...BASE,
       identifier: 'item-1',
       title: 'Math & Science',
@@ -138,7 +139,7 @@ describe('reassembleItemXml — attribute escaping', () => {
   });
 
   it('escapes " in the title so the attribute value is not terminated early', () => {
-    const xml = reassembleItemXml({
+    const xml = assembleItemXml({
       ...BASE,
       identifier: 'item-1',
       title: 'The "Quiz"',
@@ -151,7 +152,7 @@ describe('reassembleItemXml — attribute escaping', () => {
   });
 
   it('escapes < in the identifier so the tag is not corrupted', () => {
-    const xml = reassembleItemXml({ ...BASE, identifier: 'a<b', title: 'T', language: 'en' });
+    const xml = assembleItemXml({ ...BASE, identifier: 'a<b', title: 'T', language: 'en' });
     expect(xml).toContain('identifier="a&lt;b"');
     expect(
       new DOMParser().parseFromString(xml, 'text/xml').querySelector('parsererror'),
@@ -159,7 +160,7 @@ describe('reassembleItemXml — attribute escaping', () => {
   });
 
   it('produces a round-trippable document when all fields are clean', () => {
-    const xml = reassembleItemXml({
+    const xml = assembleItemXml({
       ...BASE,
       identifier: 'item-clean',
       title: 'Plain Title',

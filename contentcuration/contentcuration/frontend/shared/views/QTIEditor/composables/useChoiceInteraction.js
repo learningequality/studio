@@ -95,14 +95,6 @@ export function useChoiceInteraction(interactionBlock, questionType) {
     state.value = { ...state.value, shuffle: val };
   }
 
-  function setOrientation(val) {
-    state.value = { ...state.value, orientation: val };
-  }
-
-  function setMaxChoices(n) {
-    state.value = { ...state.value, maxChoices: n };
-  }
-
   return {
     ...base,
     state: readonly(state),
@@ -114,7 +106,5 @@ export function useChoiceInteraction(interactionBlock, questionType) {
     setPrompt,
     setChoiceContent,
     setShuffle,
-    setOrientation,
-    setMaxChoices,
   };
 }

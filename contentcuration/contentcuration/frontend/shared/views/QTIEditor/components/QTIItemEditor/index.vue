@@ -69,7 +69,7 @@
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { QuestionType } from '../../constants';
   import useQtiItem from '../../composables/useQtiItem';
-  import { reassembleItemXml } from '../../serialization/parseItem';
+  import { assembleItemXml } from '../../serialization/assembleItem';
   import InteractionSection from '../InteractionSection/index.vue';
 
   export default {
@@ -136,7 +136,7 @@
       );
 
       const rawData = computed(() =>
-        reassembleItemXml({
+        assembleItemXml({
           identifier: identifier.value,
           title: title.value,
           language: language.value,

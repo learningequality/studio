@@ -178,20 +178,4 @@ describe('useChoiceInteraction', () => {
       expect(state.value.shuffle).toBe(true);
     });
   });
-
-  describe('setOrientation()', () => {
-    it('updates the orientation field', () => {
-      const { state, setOrientation } = setup([makeAnswer({ id: 'a' }), makeAnswer({ id: 'b' })]);
-      setOrientation('horizontal');
-      expect(state.value.orientation).toBe('horizontal');
-    });
-  });
-
-  describe('setMaxChoices()', () => {
-    it('updates the maxChoices field', () => {
-      const { state, setMaxChoices } = setup([makeAnswer({ id: 'a' }), makeAnswer({ id: 'b' })]);
-      setMaxChoices(3);
-      expect(state.value.maxChoices).toBe(3);
-    });
-  });
 });
