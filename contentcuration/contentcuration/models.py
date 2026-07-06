@@ -3769,7 +3769,10 @@ class Invitation(models.Model):
         else:
             raise ValidationError(f"Invalid share_mode: {self.share_mode}")
 
-        update_create_defaults = {"role": role, "status": ORGANIZATION_ROLE_STATUS_ACTIVE}
+        update_create_defaults = {
+            "role": role,
+            "status": ORGANIZATION_ROLE_STATUS_ACTIVE,
+        }
         OrganizationRole.objects.update_or_create(
             user=user,
             organization=self.organization,
