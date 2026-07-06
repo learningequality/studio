@@ -72,140 +72,149 @@
         {{ answersLabel }}
       </div>
 
-      <ol class="choices-list">
-        <li
+      <div class="choices-list">
+        <div
           v-for="(choice, index) in state.choices"
           :key="choice.id"
-          class="choice-border"
-          :class="getChoiceClasses(choice)"
-          :style="getChoiceStyle(choice)"
-          @click.stop="handleChoiceClick($event, choice.id)"
+          class="choice-group"
         >
+          <!-- Bordered choice card -->
           <div
-            class="choice-card-text"
-            :class="{
-              'is-closed': isChoiceClosed(choice.id),
-              'small-screen': windowIsSmall,
-            }"
+            class="choice-border"
+            :class="getChoiceClasses(choice)"
+            :style="getChoiceStyle(choice)"
+            @click.stop="handleChoiceClick($event, choice.id)"
           >
             <div
-              class="choice-layout"
+              class="choice-card-text"
               :class="{
-                'is-open': isChoiceOpen(choice.id),
+                'is-closed': isChoiceClosed(choice.id),
                 'small-screen': windowIsSmall,
               }"
             >
-              <!-- Selection control -->
               <div
-                class="choice-selection"
-                @click.stop
+                class="choice-layout"
+                :class="{
+                  'is-open': isChoiceOpen(choice.id),
+                  'small-screen': windowIsSmall,
+                }"
               >
-                <KIcon
-                  v-if="emptyChoiceIds.has(choice.id) || duplicateChoiceIds.has(choice.id)"
-                  icon="error"
-                  :color="$themeTokens.error"
-                  style="margin-top: 2px"
-                />
-                <template v-else>
-                  <KRadioButton
-                    v-if="isSingleSelect"
-                    :currentValue="correctChoiceId"
-                    :buttonValue="choice.id"
-                    :label="markCorrectLabel$()"
-                    :showLabel="false"
-                    :aria-label="markCorrectLabel$()"
-                    :disabled="mode !== 'edit'"
-                    :style="{ width: 'auto' }"
-                    :color="$themePalette.green.v_600"
-                    @change="onToggleCorrect(choice.id)"
+                <!-- Selection control -->
+                <div
+                  class="choice-selection"
+                  @click.stop
+                >
+                  <!-- Error icon replaces selection control when choice has an error -->
+                  <KIcon
+                    v-if="emptyChoiceIds.has(choice.id) || duplicateChoiceIds.has(choice.id)"
+                    icon="error"
+                    :color="$themeTokens.error"
+                    :style="{ width: '20px', height: '20px', marginTop: '2px' }"
                   />
-                  <KCheckbox
+                  <template v-else>
+                    <KRadioButton
+                      v-if="isSingleSelect"
+                      :currentValue="correctChoiceId"
+                      :buttonValue="choice.id"
+                      :label="markCorrectLabel$()"
+                      :showLabel="false"
+                      :aria-label="markCorrectLabel$()"
+                      :disabled="mode !== 'edit'"
+                      :style="{ width: 'auto' }"
+                      :color="$themePalette.green.v_600"
+                      @change="onToggleCorrect(choice.id)"
+                    />
+                    <!-- KCheckbox color prop colors the checked icon green -->
+                    <KCheckbox
+                      v-else
+                      :checked="choice.correct"
+                      :label="markCorrectLabel$()"
+                      :showLabel="false"
+                      :aria-label="markCorrectLabel$()"
+                      :disabled="mode !== 'edit'"
+                      :color="$themePalette.green.v_600"
+                      @change="onToggleCorrect(choice.id)"
+                    />
+                  </template>
+                </div>
+
+                <div class="choice-content">
+                  <TipTapEditor
+                    :value="choice.content"
+                    :mode="isChoiceOpen(choice.id) ? 'edit' : 'view'"
+                    :style="isChoiceOpen(choice.id) ? { backgroundColor: $themePalette.white } : {}"
+                    :minHeight="'80px'"
+                    :autofocus="isChoiceOpen(choice.id)"
+                    class="editor"
+                    @update="html => setChoiceContent(choice.id, html)"
+                    @minimize="closeChoice"
+                  />
+                </div>
+
+                <!-- Actions toolbar -->
+                <div
+                  v-if="mode === 'edit'"
+                  class="choice-actions toolbar"
+                  @click.stop
+                >
+                  <!-- Large screen: inline up / down / delete -->
+                  <template v-if="!windowIsSmall">
+                    <KIconButton
+                      icon="chevronUp"
+                      :aria-label="moveChoiceUpBtn$()"
+                      :tooltip="moveChoiceUpBtn$()"
+                      :disabled="index === 0"
+                      :color="index === 0 ? $themeTokens.textDisabled : $themePalette.grey.v_800"
+                      size="small"
+                      @click.stop="moveChoiceUp(choice.id)"
+                    />
+                    <KIconButton
+                      icon="chevronDown"
+                      :aria-label="moveChoiceDownBtn$()"
+                      :tooltip="moveChoiceDownBtn$()"
+                      :disabled="index === state.choices.length - 1"
+                      :color="
+                        index === state.choices.length - 1
+                          ? $themeTokens.textDisabled
+                          : $themePalette.grey.v_800
+                      "
+                      size="small"
+                      @click.stop="moveChoiceDown(choice.id)"
+                    />
+                    <KIconButton
+                      icon="close"
+                      :aria-label="deleteChoiceBtn$()"
+                      :tooltip="deleteChoiceBtn$()"
+                      :disabled="state.choices.length <= 1"
+                      :color="
+                        state.choices.length <= 1
+                          ? $themeTokens.textDisabled
+                          : $themePalette.grey.v_800
+                      "
+                      size="small"
+                      @click.stop="onRemoveChoice(choice.id)"
+                    />
+                  </template>
+
+                  <!-- Small screen: CollapsibleToolbar dropdown -->
+                  <CollapsibleToolbar
                     v-else
-                    :checked="choice.correct"
-                    :label="markCorrectLabel$()"
-                    :showLabel="false"
-                    :aria-label="markCorrectLabel$()"
-                    :disabled="mode !== 'edit'"
-                    :color="$themePalette.green.v_600"
-                    @change="onToggleCorrect(choice.id)"
+                    :actions="getChoiceRowActions(choice.id, index)"
                   />
-                </template>
-              </div>
-
-              <div class="choice-content">
-                <TipTapEditor
-                  :value="choice.content"
-                  :mode="isChoiceOpen(choice.id) ? 'edit' : 'view'"
-                  :style="isChoiceOpen(choice.id) ? { backgroundColor: $themePalette.white } : {}"
-                  :minHeight="'80px'"
-                  :autofocus="isChoiceOpen(choice.id)"
-                  class="editor"
-                  @update="html => setChoiceContent(choice.id, html)"
-                  @minimize="closeChoice"
-                />
-                <ValidationMessage :show="emptyChoiceIds.has(choice.id)">
-                  {{ errorEmptyChoiceContent$() }}
-                </ValidationMessage>
-                <ValidationMessage :show="duplicateChoiceIds.has(choice.id)">
-                  {{ errorDuplicateChoiceContent$() }}
-                </ValidationMessage>
-              </div>
-
-              <!-- Actions toolbar -->
-              <div
-                v-if="mode === 'edit'"
-                class="choice-actions toolbar"
-                @click.stop
-              >
-                <!-- Large screen: inline up / down / delete -->
-                <template v-if="!windowIsSmall">
-                  <KIconButton
-                    icon="chevronUp"
-                    :aria-label="moveChoiceUpBtn$()"
-                    :tooltip="moveChoiceUpBtn$()"
-                    :disabled="index === 0"
-                    :color="index === 0 ? $themeTokens.textDisabled : $themePalette.grey.v_800"
-                    size="small"
-                    @click.stop="moveChoiceUp(choice.id)"
-                  />
-                  <KIconButton
-                    icon="chevronDown"
-                    :aria-label="moveChoiceDownBtn$()"
-                    :tooltip="moveChoiceDownBtn$()"
-                    :disabled="index === state.choices.length - 1"
-                    :color="
-                      index === state.choices.length - 1
-                        ? $themeTokens.textDisabled
-                        : $themePalette.grey.v_800
-                    "
-                    size="small"
-                    @click.stop="moveChoiceDown(choice.id)"
-                  />
-                  <KIconButton
-                    icon="close"
-                    :aria-label="deleteChoiceBtn$()"
-                    :tooltip="deleteChoiceBtn$()"
-                    :disabled="state.choices.length <= 1"
-                    :color="
-                      state.choices.length <= 1
-                        ? $themeTokens.textDisabled
-                        : $themePalette.grey.v_800
-                    "
-                    size="small"
-                    @click.stop="onRemoveChoice(choice.id)"
-                  />
-                </template>
-
-                <!-- Small screen: CollapsibleToolbar dropdown -->
-                <CollapsibleToolbar
-                  v-else
-                  :actions="getChoiceRowActions(choice.id, index)"
-                />
+                </div>
               </div>
             </div>
           </div>
-        </li>
-      </ol>
+
+          <!-- Per-choice validation messages sit OUTSIDE the bordered card -->
+          <ValidationMessage :show="emptyChoiceIds.has(choice.id)">
+            {{ errorEmptyChoiceContent$() }}
+          </ValidationMessage>
+          <ValidationMessage :show="duplicateChoiceIds.has(choice.id)">
+            {{ errorDuplicateChoiceContent$() }}
+          </ValidationMessage>
+        </div>
+      </div>
 
       <!-- Add choice button (edit only) -->
       <KButton
@@ -610,7 +619,12 @@
     gap: 4px;
     padding: 0;
     margin: 0;
-    list-style: none;
+  }
+
+  /* Groups the bordered card with its per-choice error messages */
+  .choice-group {
+    display: flex;
+    flex-direction: column;
   }
 
   .choice-border {

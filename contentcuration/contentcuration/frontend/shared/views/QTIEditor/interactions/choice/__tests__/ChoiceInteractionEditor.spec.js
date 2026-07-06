@@ -157,7 +157,8 @@ describe('ChoiceInteractionEditor', () => {
         questionType: QuestionType.SINGLE_SELECT,
       });
       await fireEvent.click(screen.getByRole('button', { name: /add choice/i }));
-      expect(screen.getAllByRole('listitem')).toHaveLength(4);
+      // 3 original choices + 1 newly added = 4 radios (choice list uses divs, not li elements)
+      expect(screen.getAllByRole('radio')).toHaveLength(4);
     });
 
     it('renders move-up, move-down, and delete buttons for each non-fixed choice', () => {
