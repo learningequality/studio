@@ -721,23 +721,6 @@
     cursor: pointer;
   }
 
-  .content-overlay-trigger {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    padding: 0;
-    cursor: pointer;
-    background: none;
-    border: 0;
-    outline: none;
-
-    &:focus-visible {
-      outline: 2px solid currentcolor;
-      outline-offset: -2px;
-    }
-  }
-
   .choice-editor-button {
     justify-content: center;
     width: 100%;

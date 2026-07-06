@@ -1,4 +1,5 @@
 import { parseXML, parseItem } from '../parseItem';
+/* eslint-disable jest-dom/prefer-to-have-attribute, jest-dom/prefer-to-have-text-content */
 import { assembleItemXml } from '../assembleItem';
 import { VALID_CHOICE_ITEM_DOCUMENT, TWO_INTERACTIONS_DOCUMENT } from '../../utils/testingFixtures';
 
@@ -168,6 +169,8 @@ describe('assembleItemXml — attribute escaping', () => {
     });
     const doc = new DOMParser().parseFromString(xml, 'text/xml');
     expect(doc.querySelector('parsererror')).toBeNull();
-    expect(doc.querySelector('qti-assessment-item')).toHaveAttribute('title', 'Plain Title');
+    // querySelector on an XML document returns an XMLElement, not HTMLElement,
+    // so jest-dom's toHaveAttribute cannot be used here — use getAttribute instead.
+    expect(doc.querySelector('qti-assessment-item').getAttribute('title')).toBe('Plain Title');
   });
 });
