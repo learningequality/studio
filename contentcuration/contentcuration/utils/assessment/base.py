@@ -84,8 +84,8 @@ class ExerciseArchiveGenerator(ABC):
             assessment_item: The assessment item to process
             processed_data: Data processed from the assessment item
         Returns:
-            filepath: Path for the created assessment item file
-            file_content: Content of the assessment item file
+            A (filepath, file_content) tuple, or None if the item should be
+            excluded from the archive (e.g. it failed validation).
         """
         pass
 
@@ -327,7 +327,10 @@ class ExerciseArchiveGenerator(ABC):
             "hints": processed_hints,
             "randomize": assessment_item.randomize,
         }
-        filepath, file_content = self.create_assessment_item(assessment_item, context)
+        result = self.create_assessment_item(assessment_item, context)
+        if result is None:
+            return
+        filepath, file_content = result
         self.add_file_to_write(filepath, file_content)
 
     def handle_before_assessment_items(self):

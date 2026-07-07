@@ -34,14 +34,14 @@ jobs:
     if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Install uv
       uses: astral-sh/setup-uv@v7
       with:
         python-version: '3.10'
         ignore-nothing-to-cache: 'true'
     - name: Use pnpm
-      uses: pnpm/action-setup@v6.0.8
+      uses: pnpm/action-setup@v6.0.9
     - name: Use Node.js
       uses: actions/setup-node@v6
       with:

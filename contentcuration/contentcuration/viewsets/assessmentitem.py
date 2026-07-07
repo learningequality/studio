@@ -12,6 +12,8 @@ from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.models import generate_object_storage_name
+from contentcuration.utils.assessment.qti.media import get_qti_media_references
+from contentcuration.utils.assessment.qti.validation import validate_qti_item
 from contentcuration.viewsets.base import BulkCreateMixin
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
@@ -58,6 +60,10 @@ def get_filenames_from_assessment(assessment_item):
     )
 
 
+def get_filenames_from_qti_item(assessment_item):
+    return get_qti_media_references(assessment_item.raw_data)
+
+
 class AssessmentListSerializer(BulkListSerializer):
     def create(self, all_validated_data):
         with transaction.atomic():
@@ -81,6 +87,7 @@ class AssessmentItemSerializer(BulkModelSerializer):
     # to set it.
     hints = serializers.CharField(required=False)
     answers = serializers.CharField(required=False)
+    raw_data = serializers.CharField(required=False, trim_whitespace=False)
     assessment_id = UUIDRegexField()
     contentnode = UserFilteredPrimaryKeyRelatedField(
         queryset=ContentNode.objects.all(), required=False
@@ -105,7 +112,51 @@ class AssessmentItemSerializer(BulkModelSerializer):
         # Use the contentnode and assessment_id as the lookup field for updates
         update_lookup_field = ("contentnode", "assessment_id")
 
+    @property
+    def _item_type(self):
+        return self.initial_data.get(
+            "type", self.instance.type if self.instance else None
+        )
+
+    def validate(self, data):
+        # Raising here (during is_valid(), before .save()) keeps this error
+        # attributed to just this item in the sync error channel. Raising from
+        # create()/update()/set_files() instead would be caught by the broad
+        # except Exception in create_from_changes/update_from_changes and
+        # reported as "Internal server error" for the whole batch.
+        data = super(AssessmentItemSerializer, self).validate(data)
+        if self._item_type == exercises.QTI:
+            legacy_fields = {"question", "answers", "hints"}.intersection(data)
+            if legacy_fields:
+                raise ValidationError(
+                    {
+                        field: [
+                            "This field cannot be edited on a QTI assessment item; use raw_data instead."
+                        ]
+                        for field in legacy_fields
+                    }
+                )
+            raw_data = data.get(
+                "raw_data", self.instance.raw_data if self.instance else ""
+            )
+            result = validate_qti_item(raw_data)
+            if not result.is_valid:
+                raise ValidationError(
+                    {"raw_data": [error.message for error in result.errors]}
+                )
+        elif "raw_data" in data:
+            raise ValidationError(
+                {
+                    "raw_data": [
+                        "This field can only be edited on a QTI assessment item."
+                    ]
+                }
+            )
+        return data
+
     def validate_answers(self, value):
+        if self._item_type == exercises.QTI:
+            return value
         answers = json.loads(value)
         for answer in answers:
             if not type(answer) is dict:
@@ -115,6 +166,8 @@ class AssessmentItemSerializer(BulkModelSerializer):
         return value
 
     def validate_hints(self, value):
+        if self._item_type == exercises.QTI:
+            return value
         hints = json.loads(value)
         for hint in hints:
             if not type(hint) is dict:
@@ -128,25 +181,40 @@ class AssessmentItemSerializer(BulkModelSerializer):
         files_to_update = {}
         current_files_by_aitem = {}
 
-        # Create a set of assessment item ids that have had markdown fields modified.
         if all_validated_data:
             # If this is an update operation, check the validated data for which items
-            # have had these fields modified.
-            md_fields_modified = {
+            # have had these fields modified. raw_data only carries file references for
+            # QTI items, so a raw_data-only change only counts as "modified" for those.
+            item_types_by_lookup = {
+                self.id_value_lookup(ai): ai.type for ai in all_objects
+            }
+            editable_text_fields_modified = {
                 self.id_value_lookup(ai)
                 for ai in all_validated_data
-                if "question" in ai or "hints" in ai or "answers" in ai
+                if "question" in ai
+                or "hints" in ai
+                or "answers" in ai
+                or (
+                    "raw_data" in ai
+                    and item_types_by_lookup.get(self.id_value_lookup(ai))
+                    == exercises.QTI
+                )
             }
         else:
             # If this is a create operation, just check if these fields are not null.
-            md_fields_modified = {
+            editable_text_fields_modified = {
                 self.id_value_lookup(ai)
                 for ai in all_objects
-                if ai.question or ai.hints or ai.answers
+                if ai.question
+                or ai.hints
+                or ai.answers
+                or (ai.type == exercises.QTI and ai.raw_data)
             }
 
         all_objects = [
-            ai for ai in all_objects if self.id_value_lookup(ai) in md_fields_modified
+            ai
+            for ai in all_objects
+            if self.id_value_lookup(ai) in editable_text_fields_modified
         ]
 
         for file in File.objects.filter(assessment_item__in=all_objects):
@@ -156,7 +224,11 @@ class AssessmentItemSerializer(BulkModelSerializer):
 
         for aitem in all_objects:
             current_files = current_files_by_aitem.get(aitem.id, [])
-            filenames = get_filenames_from_assessment(aitem)
+            filenames = (
+                get_filenames_from_qti_item(aitem)
+                if aitem.type == exercises.QTI
+                else get_filenames_from_assessment(aitem)
+            )
             set_checksums = {filename.split(".")[0] for filename in filenames}
             current_checksums = {f.checksum for f in current_files}
 
