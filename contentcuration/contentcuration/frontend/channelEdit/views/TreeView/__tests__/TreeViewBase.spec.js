@@ -9,6 +9,15 @@ import storeFactory from 'shared/vuex/baseStore';
 import DraggablePlugin from 'shared/vuex/draggablePlugin';
 import { RouteNames as ChannelRouteNames } from 'frontend/channelList/constants';
 
+// Mock useKResponsiveWindow composable
+jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => ({
+  __esModule: true,
+  default: jest.fn(),
+}));
+
+const useKResponsiveWindow =
+  require('kolibri-design-system/lib/composables/useKResponsiveWindow').default;
+
 const localVue = createLocalVue();
 localVue.use(Vuex);
 localVue.use(VueRouter);
@@ -55,8 +64,18 @@ const initWrapper = ({
   getters = GETTERS,
   actions = ACTIONS,
   channelOverrides = {},
-  breakpoint = { smAndUp: true },
+  windowIsSmall = false,
 } = {}) => {
+  // Mock the responsive window composable - return plain values
+  useKResponsiveWindow.mockReturnValue({
+    windowIsSmall,
+    windowIsMedium: false,
+    windowIsLarge: !windowIsSmall,
+    windowHeight: 768,
+    windowWidth: windowIsSmall ? 360 : 1024,
+    windowBreakpoint: windowIsSmall ? 0 : 4,
+  });
+
   const router = new VueRouter({
     routes: [
       {
@@ -113,13 +132,6 @@ const initWrapper = ({
     propsData: {
       loading: false,
     },
-    mocks: {
-      $vuetify: {
-        breakpoint: {
-          smAndUp: breakpoint.smAndUp,
-        },
-      },
-    },
     stubs: {
       ToolBar: {
         template: '<div><slot /><slot name="extension" /></div>',
@@ -127,46 +139,23 @@ const initWrapper = ({
       MainNavigationDrawer: true,
       PublishSidePanel: true,
       SubmitToCommunityLibrarySidePanel: true,
+      ResubmitToCommunityLibraryModal: true,
       ProgressModal: true,
       ChannelTokenModal: true,
+      RemoveChannelModal: true,
       SyncResourcesModal: true,
       Clipboard: true,
       OfflineText: true,
       ContentNodeIcon: true,
       DraggablePlaceholder: true,
-      MessageDialog: true,
       SavingIndicator: true,
       QuickEditModal: true,
-      BaseMenu: {
-        name: 'BaseMenu',
-        template:
-          '<div><slot name="activator" :on="{}" /><div class="menu-content"><slot /></div></div>',
-      },
     },
   });
 };
 
 const getShareButton = wrapper => {
-  const allBaseMenus = wrapper.findAllComponents({ name: 'BaseMenu' });
-  for (let i = 0; i < allBaseMenus.length; i++) {
-    const baseMenu = allBaseMenus.at(i);
-    const shareButton = baseMenu.find('.share-button');
-    if (shareButton.exists()) {
-      return shareButton;
-    }
-  }
-  return { exists: () => false };
-};
-const getShareMenuItems = wrapper => {
-  const allBaseMenus = wrapper.findAllComponents({ name: 'BaseMenu' });
-  for (let i = 0; i < allBaseMenus.length; i++) {
-    const baseMenu = allBaseMenus.at(i);
-    const shareButton = baseMenu.find('.share-button');
-    if (shareButton.exists()) {
-      return baseMenu.findAll('.v-list__tile');
-    }
-  }
-  return { length: 0, wrappers: [] };
+  return wrapper.find('.share-button');
 };
 
 describe('TreeViewBase', () => {
@@ -292,7 +281,7 @@ describe('TreeViewBase', () => {
       getters.currentChannel.canManage = () => true;
       getters.currentChannel.currentChannel = () => createChannel({ published: true });
 
-      const wrapper = initWrapper({ getters, breakpoint: { smAndUp: false } });
+      const wrapper = initWrapper({ getters, windowIsSmall: true });
       expect(getShareButton(wrapper).exists()).toBe(false);
     });
   });
@@ -305,11 +294,10 @@ describe('TreeViewBase', () => {
         createChannel({ published: true, public: false });
 
       const wrapper = initWrapper({ getters });
-      const menuItems = getShareMenuItems(wrapper);
-      const submitItem = menuItems.wrappers.find(item =>
-        item.text().includes('Submit to Community Library'),
-      );
+      const menuOptions = wrapper.vm.shareMenuOptions;
+      const submitItem = menuOptions.find(item => item.value === 'submit-to-library');
       expect(submitItem).toBeDefined();
+      expect(submitItem.label).toContain('Submit to Community Library');
     });
 
     it('hides submit to community library when user cannot submit', () => {
@@ -319,10 +307,8 @@ describe('TreeViewBase', () => {
         createChannel({ published: true, public: false });
 
       const wrapper = initWrapper({ getters });
-      const menuItems = getShareMenuItems(wrapper);
-      const submitItem = menuItems.wrappers.find(item =>
-        item.text().includes('Submit to Community Library'),
-      );
+      const menuOptions = wrapper.vm.shareMenuOptions;
+      const submitItem = menuOptions.find(item => item.value === 'submit-to-library');
       expect(submitItem).toBeUndefined();
     });
 
@@ -333,10 +319,8 @@ describe('TreeViewBase', () => {
         createChannel({ published: true, public: true });
 
       const wrapper = initWrapper({ getters });
-      const menuItems = getShareMenuItems(wrapper);
-      const submitItem = menuItems.wrappers.find(item =>
-        item.text().includes('Submit to Community Library'),
-      );
+      const menuOptions = wrapper.vm.shareMenuOptions;
+      const submitItem = menuOptions.find(item => item.value === 'submit-to-library');
       expect(submitItem).toBeUndefined();
     });
 
@@ -346,11 +330,10 @@ describe('TreeViewBase', () => {
       getters.currentChannel.currentChannel = () => createChannel({ published: false });
 
       const wrapper = initWrapper({ getters });
-      const menuItems = getShareMenuItems(wrapper);
-      const inviteItem = menuItems.wrappers.find(item =>
-        item.text().includes('Invite collaborators'),
-      );
+      const menuOptions = wrapper.vm.shareMenuOptions;
+      const inviteItem = menuOptions.find(item => item.value === 'invite-collaborators');
       expect(inviteItem).toBeDefined();
+      expect(inviteItem.label).toContain('Invite collaborators');
     });
 
     it('hides invite collaborators when user cannot manage', () => {
@@ -359,10 +342,8 @@ describe('TreeViewBase', () => {
       getters.currentChannel.currentChannel = () => createChannel({ published: true });
 
       const wrapper = initWrapper({ getters });
-      const menuItems = getShareMenuItems(wrapper);
-      const inviteItem = menuItems.wrappers.find(item =>
-        item.text().includes('Invite collaborators'),
-      );
+      const menuOptions = wrapper.vm.shareMenuOptions;
+      const inviteItem = menuOptions.find(item => item.value === 'invite-collaborators');
       expect(inviteItem).toBeUndefined();
     });
 
@@ -372,9 +353,10 @@ describe('TreeViewBase', () => {
       getters.currentChannel.currentChannel = () => createChannel({ published: true });
 
       const wrapper = initWrapper({ getters });
-      const menuItems = getShareMenuItems(wrapper);
-      const tokenItem = menuItems.wrappers.find(item => item.text().includes('Share token'));
+      const menuOptions = wrapper.vm.shareMenuOptions;
+      const tokenItem = menuOptions.find(item => item.value === 'share-token');
       expect(tokenItem).toBeDefined();
+      expect(tokenItem.label).toContain('Share token');
     });
 
     it('hides share token when channel is not published', () => {
@@ -383,8 +365,8 @@ describe('TreeViewBase', () => {
       getters.currentChannel.currentChannel = () => createChannel({ published: false });
 
       const wrapper = initWrapper({ getters });
-      const menuItems = getShareMenuItems(wrapper);
-      const tokenItem = menuItems.wrappers.find(item => item.text().includes('Share token'));
+      const menuOptions = wrapper.vm.shareMenuOptions;
+      const tokenItem = menuOptions.find(item => item.value === 'share-token');
       expect(tokenItem).toBeUndefined();
     });
 
@@ -395,15 +377,116 @@ describe('TreeViewBase', () => {
         createChannel({ published: true, public: false });
 
       const wrapper = initWrapper({ getters });
-      const menuItems = getShareMenuItems(wrapper);
-      expect(menuItems.length).toBe(3);
-      expect(
-        menuItems.wrappers.some(item => item.text().includes('Submit to Community Library')),
-      ).toBe(true);
-      expect(menuItems.wrappers.some(item => item.text().includes('Invite collaborators'))).toBe(
-        true,
-      );
-      expect(menuItems.wrappers.some(item => item.text().includes('Share token'))).toBe(true);
+      const menuOptions = wrapper.vm.shareMenuOptions;
+      expect(menuOptions.length).toBe(3);
+      expect(menuOptions.some(item => item.value === 'submit-to-library')).toBe(true);
+      expect(menuOptions.some(item => item.value === 'invite-collaborators')).toBe(true);
+      expect(menuOptions.some(item => item.value === 'share-token')).toBe(true);
+    });
+  });
+
+  describe('channelMenuOptions computed property', () => {
+    it('includes publish, view details, and edit channel on small screens', () => {
+      const getters = cloneDeep(GETTERS);
+      getters.currentChannel.canManage = () => true;
+      getters.currentChannel.canEdit = () => true;
+
+      const wrapper = initWrapper({ getters, windowIsSmall: true });
+      const values = wrapper.vm.channelMenuOptions.map(item => item.value);
+      expect(values).toContain('publish');
+      expect(values).toContain('view-details');
+      expect(values).toContain('edit-channel');
+    });
+
+    it('omits publish, view details, and edit channel on large screens', () => {
+      const getters = cloneDeep(GETTERS);
+      getters.currentChannel.canManage = () => true;
+      getters.currentChannel.canEdit = () => true;
+
+      const wrapper = initWrapper({ getters, windowIsSmall: false });
+      const values = wrapper.vm.channelMenuOptions.map(item => item.value);
+      expect(values).not.toContain('publish');
+      expect(values).not.toContain('view-details');
+      expect(values).not.toContain('edit-channel');
+    });
+
+    it('marks the edit channel option with a warning icon when language is missing', () => {
+      const getters = cloneDeep(GETTERS);
+      getters.currentChannel.canEdit = () => true;
+      getters.currentChannel.currentChannel = () => createChannel({ language: null });
+
+      const wrapper = initWrapper({ getters, windowIsSmall: true });
+      const editOption = wrapper.vm.channelMenuOptions.find(item => item.value === 'edit-channel');
+      expect(editOption.icon).toBe('warningIncomplete');
+    });
+
+    it('includes submit to community library on small screens when the user can submit', () => {
+      const getters = cloneDeep(GETTERS);
+      getters.currentChannel.canManage = () => true;
+      getters.currentChannel.currentChannel = () =>
+        createChannel({ published: true, public: false });
+
+      const wrapper = initWrapper({ getters, windowIsSmall: true });
+      const values = wrapper.vm.channelMenuOptions.map(item => item.value);
+      expect(values).toContain('submit-to-library');
+    });
+
+    it('omits submit to community library on large screens', () => {
+      const getters = cloneDeep(GETTERS);
+      getters.currentChannel.canManage = () => true;
+      getters.currentChannel.currentChannel = () =>
+        createChannel({ published: true, public: false });
+
+      const wrapper = initWrapper({ getters, windowIsSmall: false });
+      const values = wrapper.vm.channelMenuOptions.map(item => item.value);
+      expect(values).not.toContain('submit-to-library');
+    });
+  });
+
+  describe('handleChannelMenuSelect method', () => {
+    it('opens the publish side panel for the publish option', () => {
+      const wrapper = initWrapper();
+      wrapper.vm.handleChannelMenuSelect({ value: 'publish' });
+      expect(wrapper.vm.showPublishSidePanel).toBe(true);
+    });
+
+    it('opens the delete modal for the delete option', () => {
+      const wrapper = initWrapper();
+      wrapper.vm.handleChannelMenuSelect({ value: 'delete' });
+      expect(wrapper.vm.showDeleteModal).toBe(true);
+    });
+
+    it('opens the sync modal for the sync option', () => {
+      const wrapper = initWrapper();
+      wrapper.vm.handleChannelMenuSelect({ value: 'sync' });
+      expect(wrapper.vm.showSyncModal).toBe(true);
+    });
+
+    it('navigates to the edit channel page for the edit channel option', () => {
+      const wrapper = initWrapper();
+      const push = jest.spyOn(wrapper.vm.$router, 'push').mockImplementation(() => {});
+      wrapper.vm.handleChannelMenuSelect({ value: 'edit-channel' });
+      expect(push).toHaveBeenCalledWith(wrapper.vm.editChannelLink);
+    });
+
+    it('opens the submit to community library panel for the shared submit option', () => {
+      const wrapper = initWrapper();
+      wrapper.vm.handleChannelMenuSelect({ value: 'submit-to-library' });
+      expect(wrapper.vm.showSubmitToCommunityLibrarySidePanel).toBe(true);
+    });
+  });
+
+  describe('handleShareMenuSelect method', () => {
+    it('opens the token modal for the share token option', () => {
+      const wrapper = initWrapper();
+      wrapper.vm.handleShareMenuSelect({ value: 'share-token' });
+      expect(wrapper.vm.showTokenModal).toBe(true);
+    });
+
+    it('opens the submit to community library panel for the submit option', () => {
+      const wrapper = initWrapper();
+      wrapper.vm.handleShareMenuSelect({ value: 'submit-to-library' });
+      expect(wrapper.vm.showSubmitToCommunityLibrarySidePanel).toBe(true);
     });
   });
 });
