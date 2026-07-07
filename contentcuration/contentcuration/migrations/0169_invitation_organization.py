@@ -7,7 +7,7 @@ from django.db import models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("contentcuration", "0167_add_organization"),
+        ("contentcuration", "0168_alter_assessmentitem_type"),
     ]
 
     operations = [
