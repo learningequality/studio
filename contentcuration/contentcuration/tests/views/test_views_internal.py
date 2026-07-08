@@ -296,10 +296,13 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
 
         # get our random data from mixer
         random_data = mixer.blend(SampleContentNodeDataSchema)
-        # a vanilla image file associated with question
-        self.exercise_image = fileobj_exercise_image()
+        # a vanilla image file associated with question - uploaded_by matches
+        # self.admin_client() to mirror ricecooker's real upload_url flow,
+        # where the same authenticated user stages the file before referencing
+        # it in create_exercises
+        self.exercise_image = fileobj_exercise_image(uploaded_by=self.admin_user)
         # a perseus image file associated with question
-        self.exercise_graphie = fileobj_exercise_graphie()
+        self.exercise_graphie = fileobj_exercise_graphie(uploaded_by=self.admin_user)
         self.title = random_data.title
         self.sample_data = {
             "root_id": self.root_node.id,
@@ -480,10 +483,13 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
         """
         A native QTI question (raw_data XML + declared media) is persisted
         verbatim as an exercises.QTI assessment item, and its media is mapped
-        without leaving stray/duplicate File rows behind.
+        by reusing the File row ricecooker's file_upload_url request already
+        created for it, without leaving stray/duplicate File rows behind.
         """
         assessment_id = "1" * 32
-        qti_exercise_image = fileobj_exercise_image(size=(50, 50), color="blue")
+        qti_exercise_image = fileobj_exercise_image(
+            size=(50, 50), color="blue", uploaded_by=self.admin_user
+        )
         qti_raw_data = _item_xml(
             "item_1",
             "Sample Item",
@@ -530,24 +536,16 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
         self.assertEqual(qti_item.files.count(), 1)
         attached_file = qti_item.files.first()
         self.assertEqual(attached_file.filename(), qti_exercise_image.filename())
-        self.assertEqual(attached_file.original_filename, "file")
-        # AssessmentItemSerializer.set_files() auto-creates its own File row
-        # for this checksum while saving (there's no pre-staged File to reuse,
-        # as ricecooker never stages one the way the browser editor does); that
-        # stray row must be cleaned up before map_files_to_assessment_item
-        # creates the real, correctly-attributed one. Only the untouched setUp
-        # fixture should remain unattached for this checksum.
+        # The File row is the exact one created when the image was staged
+        # (i.e. by ricecooker's file_upload_url request), not a new row - so
+        # its id and original_filename are preserved rather than overwritten.
+        self.assertEqual(attached_file.id, qti_exercise_image.id)
         self.assertEqual(
-            File.objects.filter(
-                checksum=qti_exercise_image.checksum, assessment_item__isnull=True
-            ).count(),
-            1,
+            attached_file.original_filename, qti_exercise_image.original_filename
         )
-        # Total rows for this checksum: the untouched fixture File (unattached)
-        # plus the one properly-attached row from map_files_to_assessment_item -
-        # not a stray duplicate left behind by set_files().
+        # No stray/duplicate File row is left behind for this checksum.
         self.assertEqual(
-            File.objects.filter(checksum=qti_exercise_image.checksum).count(), 2
+            File.objects.filter(checksum=qti_exercise_image.checksum).count(), 1
         )
 
     def test_legacy_multiple_selection_question_converted_to_qti_on_ingest(self):
@@ -565,12 +563,12 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
         self.assertTrue(result.is_valid, result.errors)
         self.assertIn("Which numbers are even?", item.raw_data)
         self.assertEqual(item.files.count(), 1)
-        self.assertEqual(item.files.first().filename(), self.exercise_image.filename())
-        # same set_files stray-row risk as the native-QTI test above: exactly 2
-        # rows for this checksum (the untouched setUp fixture, unattached, plus
-        # the one properly-attached row) - not a 3rd stray-attached row.
+        attached_file = item.files.first()
+        self.assertEqual(attached_file.filename(), self.exercise_image.filename())
+        # The pre-staged setUp fixture File is reused directly, not duplicated.
+        self.assertEqual(attached_file.id, self.exercise_image.id)
         self.assertEqual(
-            File.objects.filter(checksum=self.exercise_image.checksum).count(), 2
+            File.objects.filter(checksum=self.exercise_image.checksum).count(), 1
         )
 
     def test_invalid_qti_raw_data_returns_400_and_creates_nothing(self):
@@ -597,10 +595,12 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
         # from setUp must not have been persisted alongside the invalid one
         assert not ContentNode.objects.filter(title=self.title).exists()
 
-    def test_perseus_custom_interaction_unwrapped_to_raw_perseus_question(self):
+    def test_perseus_custom_interaction_in_qti_rejected(self):
         """
-        A QTI item wrapping a Perseus custom interaction is unwrapped back to
-        a raw perseus_question, reading its payload from the declared file.
+        A QTI item wrapping a Perseus custom interaction is a categorical
+        mistake on ricecooker's part (it should upload raw Perseus content as
+        a perseus_question instead) - reject it outright rather than trying
+        to unwrap it.
         """
         assessment_id = "3" * 32
         wrapped_perseus_json = self.sample_data["content_data"][0]["questions"][1][
@@ -639,15 +639,10 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
         )
 
         response = self._make_request()
-        assert response.status_code == 200, response.content
-
-        c = ContentNode.objects.get(title=self.title)
-        item = c.assessment_items.get(assessment_id=assessment_id)
-        self.assertEqual(item.type, exercises.PERSEUS_QUESTION)
-        self.assertEqual(item.raw_data, wrapped_perseus_json)
-        # the perseus-path payload file was consumed to produce raw_data, not
-        # persisted as a real file reference
-        self.assertEqual(item.files.count(), 0)
+        assert response.status_code == 400, response.content
+        # whole-request creation is atomic: the otherwise-valid node/questions
+        # from setUp must not have been persisted alongside the rejected one
+        assert not ContentNode.objects.filter(title=self.title).exists()
 
     def test_raw_perseus_question_passthrough_unchanged(self):
         """

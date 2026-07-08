@@ -9,13 +9,11 @@ from django.core.exceptions import PermissionDenied
 from django.core.exceptions import SuspiciousOperation
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Q
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseForbidden
 from django.http import HttpResponseNotFound
 from django.http import HttpResponseServerError
 from django.http import JsonResponse
-from django.utils import timezone
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import roles
@@ -46,7 +44,6 @@ from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import ContentTag
-from contentcuration.models import File
 from contentcuration.models import License
 from contentcuration.models import SlideshowSlide
 from contentcuration.models import StagedFile
@@ -57,7 +54,6 @@ from contentcuration.utils.assessment.qti.ingest import convert_legacy_question_
 from contentcuration.utils.assessment.qti.ingest import (
     find_perseus_custom_interaction_path,
 )
-from contentcuration.utils.assessment.qti.ingest import read_uploaded_file_content
 from contentcuration.utils.files import get_file_diff
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
 from contentcuration.utils.nodes import map_files_to_assessment_item
@@ -939,7 +935,7 @@ def create_node(node_data, parent_node, sort_order):  # noqa: C901
     return node
 
 
-def create_exercises(user, node, data):
+def create_exercises(user, node, data):  # noqa: C901
     """Generate exercise from data, delegating item construction and QTI schema
     validation to AssessmentItemSerializer."""
     # First check that all assessment_ids are unique within the node
@@ -950,16 +946,13 @@ def create_exercises(user, node, data):
         )
 
     item_dicts = []
-    perseus_paths = []
     for order, question in enumerate(data):
         try:
-            item_dict, perseus_path = _build_assessment_item_dict(node, question, order)
+            item_dicts.append(_build_assessment_item_dict(node, question, order))
         except ValueError as e:
             raise NodeValidationError(
                 "Invalid question data for node {}: {}".format(node.node_id, e)
             )
-        item_dicts.append(item_dict)
-        perseus_paths.append(perseus_path)
 
     with transaction.atomic():
         serializer = AssessmentItemSerializer(
@@ -976,31 +969,25 @@ def create_exercises(user, node, data):
                 )
             )
 
-        # AssessmentItemSerializer.set_files() auto-creates a File row per checksum
-        # referenced in QTI raw_data (generic preset, no real metadata) since
-        # ricecooker never pre-stages one. map_files_to_assessment_item below
-        # creates the authoritative row from question["files"], so the
-        # auto-created one must be deleted - whether attached to `instances` or
-        # left orphaned (e.g. same checksum referenced by two items in this
-        # batch). File.id is a random UUID, so we can't watermark by id; use a
-        # timestamp on File.modified instead.
-        save_watermark = timezone.now()
-        instances = serializer.save()
-        File.objects.filter(
-            Q(assessment_item__in=instances)
-            | Q(
-                assessment_item__isnull=True,
-                contentnode__isnull=True,
-                uploaded_by=user,
-                modified__gte=save_watermark,
+        try:
+            # AssessmentItemSerializer.set_files() attaches QTI media by
+            # reusing the File row ricecooker's file_upload_url request already
+            # created for each referenced checksum. A QTI item referencing a
+            # checksum nothing was ever uploaded for surfaces as a storage-layer
+            # error (FileNotFoundError locally, OSError on the S3 backend) here
+            # rather than as a DRF ValidationError.
+            instances = serializer.save()
+        except (DRFValidationError, OSError) as e:
+            raise NodeValidationError(
+                "Invalid assessment item data for node {}: {}".format(node.node_id, e)
             )
-        ).delete()
 
-        for question, instance, perseus_path in zip(data, instances, perseus_paths):
-            files = question["files"]
-            if perseus_path:
-                files = [f for f in files if f and f.get("filename") != perseus_path]
-            map_files_to_assessment_item(user, instance, files)
+        # set_files() only scans raw_data for QTI items; perseus_question raw_data
+        # is opaque JSON, so its file (declared explicitly in question["files"])
+        # is still attached here.
+        for question, instance in zip(data, instances):
+            if instance.type == exercises.PERSEUS_QUESTION:
+                map_files_to_assessment_item(user, instance, question["files"])
 
 
 def _build_assessment_item_dict(node, question, order):
@@ -1014,24 +1001,21 @@ def _build_assessment_item_dict(node, question, order):
 
     if question.get("type") == exercises.QTI:
         raw_data = question.get("raw_data")
-        perseus_path = find_perseus_custom_interaction_path(raw_data)
-        if perseus_path:
-            item_dict = dict(
-                common,
-                type=exercises.PERSEUS_QUESTION,
-                raw_data=read_uploaded_file_content(perseus_path),
+        if find_perseus_custom_interaction_path(raw_data):
+            raise ValueError(
+                "QTI item wraps a Perseus custom interaction; ricecooker must "
+                "upload raw Perseus content as a perseus_question instead of "
+                "wrapping it in QTI"
             )
-            return item_dict, perseus_path
-        return dict(common, type=exercises.QTI, raw_data=raw_data), None
+        return dict(common, type=exercises.QTI, raw_data=raw_data)
 
     if question.get("type") == exercises.PERSEUS_QUESTION:
-        item_dict = dict(
+        return dict(
             common, type=exercises.PERSEUS_QUESTION, raw_data=question.get("raw_data")
         )
-        return item_dict, None
 
     result = convert_legacy_question_to_qti(question)
-    return dict(common, type=exercises.QTI, raw_data=result.xml), None
+    return dict(common, type=exercises.QTI, raw_data=result.xml)
 
 
 def create_slides(user, node, slideshow_data):

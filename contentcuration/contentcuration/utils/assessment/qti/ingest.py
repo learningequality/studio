@@ -1,11 +1,9 @@
 import json
 from typing import Optional
 
-from django.core.files.storage import default_storage
 from le_utils.constants import exercises
 from lxml import etree
 
-from contentcuration.models import generate_object_storage_name
 from contentcuration.utils.assessment.qti.convert import (
     convert_legacy_assessment_item_to_qti,
 )
@@ -54,12 +52,3 @@ def find_perseus_custom_interaction_path(raw_data) -> Optional[str]:
     if not matches:
         return None
     return matches[0].get("data-perseus-path")
-
-
-def read_uploaded_file_content(filename: str) -> str:
-    checksum = filename.split(".")[0]
-    file_path = generate_object_storage_name(checksum, filename)
-    if not default_storage.exists(file_path):
-        raise ValueError("{} not found".format(file_path))
-    with default_storage.open(file_path, "rb") as f:
-        return f.read().decode("utf-8")
