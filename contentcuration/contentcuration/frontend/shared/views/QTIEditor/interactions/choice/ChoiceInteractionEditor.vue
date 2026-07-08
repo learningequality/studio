@@ -132,7 +132,6 @@
                   <TipTapEditor
                     :value="choice.content"
                     :mode="isChoiceOpen(choice.id) ? 'edit' : 'view'"
-                    :style="isChoiceOpen(choice.id) ? { backgroundColor: $themePalette.white } : {}"
                     format="html"
                     :minHeight="'80px'"
                     :autofocus="isChoiceOpen(choice.id)"

@@ -331,12 +331,14 @@
       'Helvetica Neue',
       Arial,
       sans-serif;
+    background-color: white;
     border: 1px solid #e1e5e9;
   }
 
   .editor-container.view-mode {
     min-height: 0;
     pointer-events: none;
+    background-color: transparent;
     border: 0;
   }
 
