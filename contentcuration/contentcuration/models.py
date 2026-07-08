@@ -79,13 +79,17 @@ from contentcuration.constants import completion_criteria
 from contentcuration.constants import feedback
 from contentcuration.constants import user_history
 from contentcuration.constants.contentnode import kind_activity_map
+from contentcuration.constants.organization_roles import ORGANIZATION_ADMIN
+from contentcuration.constants.organization_roles import ORGANIZATION_EDITOR
 from contentcuration.constants.organization_roles import organization_role_choices
+from contentcuration.constants.organization_roles import ORGANIZATION_ROLE_STATUS_ACTIVE
 from contentcuration.constants.organization_roles import (
     organization_role_status_choices,
 )
 from contentcuration.constants.organization_roles import (
     ORGANIZATION_ROLE_STATUS_PENDING,
 )
+from contentcuration.constants.organization_roles import ORGANIZATION_VIEWER
 from contentcuration.db.models.expressions import Array
 from contentcuration.db.models.functions import ArrayRemove
 from contentcuration.db.models.functions import Unnest
@@ -102,6 +106,7 @@ from contentcuration.viewsets.sync.utils import generate_update_event
 
 EDIT_ACCESS = "edit"
 VIEW_ACCESS = "view"
+ADMIN_ACCESS = "admin"
 
 DEFAULT_CONTENT_DEFAULTS = {
     "license": None,
@@ -3730,6 +3735,9 @@ class Invitation(models.Model):
     )
     first_name = models.CharField(max_length=100, blank=True)
     last_name = models.CharField(max_length=100, blank=True, null=True)
+    organization = models.ForeignKey(
+        "Organization", null=True, blank=True, on_delete=models.CASCADE
+    )
 
     class Meta:
         verbose_name = "Invitation"
@@ -3738,13 +3746,38 @@ class Invitation(models.Model):
     def accept(self):
         user = User.objects.filter(email__iexact=self.email).first()
         if self.channel:
-            # channel is a nullable field, so check that it exists.
-            if self.share_mode == VIEW_ACCESS:
-                self.channel.editors.remove(user)
-                self.channel.viewers.add(user)
-            else:
-                self.channel.viewers.remove(user)
-                self.channel.editors.add(user)
+            self._accept_channel_invitation(user)
+        if self.organization:
+            self._accept_organization_invitation(user)
+
+    def _accept_channel_invitation(self, user):
+        if self.share_mode == VIEW_ACCESS:
+            self.channel.editors.remove(user)
+            self.channel.viewers.add(user)
+        else:
+            self.channel.viewers.remove(user)
+            self.channel.editors.add(user)
+
+    def _accept_organization_invitation(self, user):
+        role = None
+        if self.share_mode == VIEW_ACCESS:
+            role = ORGANIZATION_VIEWER
+        elif self.share_mode == EDIT_ACCESS:
+            role = ORGANIZATION_EDITOR
+        elif self.share_mode == ADMIN_ACCESS:
+            role = ORGANIZATION_ADMIN
+        else:
+            raise ValidationError(f"Invalid share_mode: {self.share_mode}")
+
+        update_create_defaults = {
+            "role": role,
+            "status": ORGANIZATION_ROLE_STATUS_ACTIVE,
+        }
+        OrganizationRole.objects.update_or_create(
+            user=user,
+            organization=self.organization,
+            defaults=update_create_defaults,
+        )
 
     @classmethod
     def filter_edit_queryset(cls, queryset, user):
