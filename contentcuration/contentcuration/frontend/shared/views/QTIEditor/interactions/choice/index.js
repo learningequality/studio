@@ -1,6 +1,6 @@
 import defineInteraction from '../defineInteraction';
 import ChoiceInteractionEditor from './ChoiceInteractionEditor.vue';
-import { ChoiceInteractionDescriptor } from './ChoiceInteractionDescriptor';
+import { choiceInteractionDescriptor } from './ChoiceInteractionDescriptor';
 
 /**
  * @typedef {object} ChoiceAnswer
@@ -20,6 +20,6 @@ import { ChoiceInteractionDescriptor } from './ChoiceInteractionDescriptor';
  * @property {string}        orientation - From orientation attribute; default "vertical"
  */
 
-const descriptor = new ChoiceInteractionDescriptor({ editorComponent: ChoiceInteractionEditor });
+choiceInteractionDescriptor.editorComponent = ChoiceInteractionEditor;
 
-export default defineInteraction(descriptor);
+export default defineInteraction(choiceInteractionDescriptor);

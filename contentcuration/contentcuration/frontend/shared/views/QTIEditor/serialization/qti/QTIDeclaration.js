@@ -347,7 +347,7 @@ export class QTIDeclaration {
    * ownership with the interaction while preserving a one-way dependency graph.
    *
    * @param {{
-   *   getDeclarationSchema: function(string, *): { baseType: string, cardinality: string },
+   *   getResponseDeclarationSchema: function(string, *): { baseType: string, cardinality: string },
    * }} descriptor
    * @param {string} questionType - One of QuestionType.*
    * @param {string} [identifier] - Response identifier, defaults to 'RESPONSE'
@@ -360,7 +360,7 @@ export class QTIDeclaration {
     identifier = 'RESPONSE',
     itemData = null,
   ) {
-    const schema = descriptor.getDeclarationSchema(questionType, itemData);
+    const schema = descriptor.getResponseDeclarationSchema(questionType, itemData);
     return new QTIDeclaration({
       identifier,
       baseType: schema.baseType,

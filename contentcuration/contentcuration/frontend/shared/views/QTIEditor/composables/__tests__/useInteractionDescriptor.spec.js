@@ -16,20 +16,22 @@ import {
 // for the component to mount before checking reactive values.
 // ---------------------------------------------------------------------------
 
-function renderDescriptor(initialXml = null) {
-  const bodyXmlRef = ref(initialXml);
+function renderDescriptor(initialXml = null, declarations = []) {
+  const interactionRef = ref(
+    initialXml ? { bodyXml: initialXml, responseDeclarations: declarations } : null,
+  );
   let result;
 
   const TestWrapper = defineComponent({
     setup() {
-      result = useInteractionDescriptor(bodyXmlRef);
+      result = useInteractionDescriptor(interactionRef);
       return {};
     },
     template: '<div></div>',
   });
 
   render(TestWrapper, { routes: new VueRouter() });
-  return { result, bodyXmlRef };
+  return { result, interactionRef };
 }
 
 // ---------------------------------------------------------------------------

@@ -33,12 +33,7 @@
         :mode="mode"
         :showAnswers="showAnswers"
         @update:questionType="type => (currentQuestionType = type)"
-        @update:interaction="
-          ({ bodyXml, responseDeclarations }) => {
-            currentBodyXml.value = bodyXml;
-            currentResponseDeclarations.value = responseDeclarations;
-          }
-        "
+        @update:interaction="onUpdateInteraction"
       />
       <p
         v-else
@@ -127,6 +122,10 @@
        * Track the current bodyXml and responseDeclarations for the interaction.
        * Initialised from the parsed item; updated atomically when the editor
        * emits update:interaction.
+       *
+       * Note: We are currently using only the first interaction, but this
+       * architecture is designed to be expansible to multiple interactions
+       * per question in the future.
        */
       const currentBodyXml = ref(
         interactions.value.length > 0 ? interactions.value[0].bodyXml : '',
@@ -147,8 +146,17 @@
 
       // Emit only when the assembled XML actually changes after initial mount
       watch(rawData, newVal => {
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
+          console.log('[QTIItemEditor] assembled XML:\n', newVal);
+        }
         emit('update:rawData', newVal);
       });
+
+      function onUpdateInteraction({ bodyXml, responseDeclarations }) {
+        currentBodyXml.value = bodyXml;
+        currentResponseDeclarations.value = responseDeclarations;
+      }
 
       return {
         currentQuestionType,
@@ -157,6 +165,7 @@
         questionNumberAndTypeLabel,
         closeBtnLabel$,
         questionContentPlaceholder$,
+        onUpdateInteraction,
       };
     },
 

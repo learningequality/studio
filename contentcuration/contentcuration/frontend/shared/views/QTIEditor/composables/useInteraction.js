@@ -19,7 +19,7 @@ import debounce from 'lodash/debounce';
  * @returns {{
  *   state: import('vue').Ref<object>,
  *   bodyXml: import('vue').ComputedRef<string>,
- *   declarations: import('vue').ComputedRef<string[]>,
+ *   responseDeclarations: import('vue').ComputedRef<string[]>,
  *   errors: import('vue').Ref<Array<{ code: string, id?: string }>>,
  *   runValidation: () => void,
  * }}
@@ -33,15 +33,14 @@ export function useInteraction(descriptor, interactionBlock, questionType) {
   const state = ref(initialState);
 
   // Rebuild XML whenever state or questionType changes.
-  const built = computed(() => {
-    if (!questionType.value) return { bodyXml: '', declarations: [] };
+  const interaction = computed(() => {
+    if (!questionType.value) return { bodyXml: '', responseDeclarations: [] };
     return descriptor.buildXML(state.value, questionType.value);
   });
 
-  const bodyXml = computed(() => built.value.bodyXml);
-  const declarations = computed(() => built.value.declarations);
+  const bodyXml = computed(() => interaction.value.bodyXml);
+  const responseDeclarations = computed(() => interaction.value.responseDeclarations);
 
-  // Errors start empty — never shown automatically so authors aren't startled on first load.
   const errors = ref([]);
 
   /** Immediately validates and updates errors. Use this for explicit triggers (e.g. close). */
@@ -58,7 +57,7 @@ export function useInteraction(descriptor, interactionBlock, questionType) {
   // Cancel any pending debounce when the component is torn down.
   onUnmounted(() => debouncedValidation.cancel());
 
-  watch([state, questionType], debouncedValidation, { deep: true });
+  watch([state, questionType], debouncedValidation, { deep: true, immediate: true });
 
-  return { state, bodyXml, declarations, errors, runValidation };
+  return { state, bodyXml, responseDeclarations, errors, runValidation };
 }

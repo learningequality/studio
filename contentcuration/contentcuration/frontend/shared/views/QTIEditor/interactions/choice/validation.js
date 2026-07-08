@@ -1,5 +1,5 @@
 import { QuestionType, ValidationError } from '../../constants';
-import { stripTags } from '../../utils/html';
+import { stripTags } from './parse';
 
 /**
  * Validate ChoiceState → ValidationError[].
@@ -14,10 +14,6 @@ export function validateChoiceInteraction(state, questionType) {
 
   if (!stripTags(prompt).trim()) {
     errors.push({ code: ValidationError.PROMPT_REQUIRED });
-  }
-
-  if (choices.length < 2) {
-    errors.push({ code: ValidationError.TOO_FEW_CHOICES });
   }
 
   // Map each normalised text → the id of the first choice that had that text.

@@ -15,13 +15,20 @@ const serializer = new XMLSerializer();
  * Build an XML element node.
  *
  * @param {object} options
- * @param {string}            options.tag      - Element tag name (e.g. 'qti-response-declaration')
- * @param {Object.<string,*>} [options.attrs]    - Attribute name→value pairs;
+ * @param {string}            options.tag - Element tag name (e.g. 'qti-response-declaration')
+ * @param {Object.<string,*>}  [options.attrs]    - Attribute name→value pairs;
  *                                                  null/undefined values are skipped
- * @param {Array.<Node|string>} [options.children] - Child nodes or plain strings
+ * @param {Array.<Node|string>} [options.children] - Child nodes or plain strings; mutually
+ *                                                  exclusive with innerHTML
+ * @param {string}             [options.innerHTML] - Raw HTML/XML string to parse and append
+ *                                                  as children; mutually exclusive with children
  * @returns {Element}
  */
-export function buildXmlNode({ tag, attrs = {}, children = [] }) {
+export function buildXmlNode({ tag, attrs = {}, children, innerHTML }) {
+  if (children !== undefined && innerHTML !== undefined) {
+    throw new Error('buildXmlNode: "children" and "innerHTML" are mutually exclusive');
+  }
+
   const el = xmlDoc.createElement(tag);
 
   for (const [name, value] of Object.entries(attrs)) {
@@ -30,16 +37,26 @@ export function buildXmlNode({ tag, attrs = {}, children = [] }) {
     }
   }
 
-  for (const child of children) {
-    if (typeof child === 'string') {
-      el.appendChild(xmlDoc.createTextNode(child));
-    } else {
-      // DOM nodes created outside this module (e.g. by a separate DOMParser call
-      // or in a browser document) have a different ownerDocument. Appending a
-      // foreign node throws a HierarchyRequestError in some environments, so we
-      // adopt it into xmlDoc first via importNode.
-      const childNode = child.ownerDocument === xmlDoc ? child : xmlDoc.importNode(child, true);
-      el.appendChild(childNode);
+  if (innerHTML !== undefined) {
+    const parsed = new DOMParser().parseFromString(
+      `<qti-fragment>${innerHTML}</qti-fragment>`,
+      'text/xml',
+    );
+    for (const child of [...parsed.documentElement.childNodes]) {
+      el.appendChild(xmlDoc.importNode(child, true));
+    }
+  } else {
+    for (const child of children ?? []) {
+      if (typeof child === 'string') {
+        el.appendChild(xmlDoc.createTextNode(child));
+      } else {
+        // DOM nodes created outside this module (e.g. by a separate DOMParser call
+        // or in a browser document) have a different ownerDocument. Appending a
+        // foreign node throws a HierarchyRequestError in some environments, so we
+        // adopt it into xmlDoc first via importNode.
+        const childNode = child.ownerDocument === xmlDoc ? child : xmlDoc.importNode(child, true);
+        el.appendChild(childNode);
+      }
     }
   }
 

@@ -15,8 +15,6 @@ import { useInteraction } from './useInteraction';
  * @param {import('vue').Ref<string|null>} questionType
  */
 export function useChoiceInteraction(interactionBlock, questionType) {
-  // Use the import-safe descriptor core — it owns parse/buildXML/validate schema
-  // without depending on choice/index.js or ChoiceInteractionEditor.vue.
   const base = useInteraction(choiceInteractionDescriptor, interactionBlock, questionType);
   const { state } = base;
 
@@ -29,7 +27,7 @@ export function useChoiceInteraction(interactionBlock, questionType) {
       ...state.value,
       choices: [
         ...state.value.choices,
-        { id: generateRandomSlug('choice'), content: '', correct: false, fixed: false },
+        { id: generateRandomSlug('choice'), content: '', correct: false },
       ],
     };
   }

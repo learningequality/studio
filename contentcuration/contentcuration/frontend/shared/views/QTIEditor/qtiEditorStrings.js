@@ -45,11 +45,11 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Answer options',
     context: 'Section header above choice options',
   },
-  answersLabelSingleChoice: {
+  answersDescriptionSingleChoice: {
     message: 'Select one correct answer',
     context: 'Instruction subtitle above single-choice options',
   },
-  answersLabelMultipleChoice: {
+  answersDescriptionMultipleChoice: {
     message: 'Select all correct answers',
     context: 'Instruction subtitle above multiple-choice options',
   },
@@ -97,14 +97,6 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Add question below',
     context: 'Action to add a new question below the current one',
   },
-  promptPlaceholder: {
-    message: 'Enter question prompt…',
-    context: 'Placeholder text inside the prompt rich-text editor',
-  },
-  choiceContentPlaceholder: {
-    message: 'Enter answer option…',
-    context: 'Placeholder text inside a choice rich-text editor',
-  },
   addChoiceBtn: {
     message: 'Add choice',
     context: 'Button that appends a new answer choice',
@@ -144,9 +136,5 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
   errorDuplicateChoiceContent: {
     message: 'Duplicate answer options are not allowed',
     context: 'Validation error when two or more answer options have identical content',
-  },
-  errorTooFewChoices: {
-    message: 'At least two answer options are required.',
-    context: 'Validation error when fewer than two choices exist',
   },
 });

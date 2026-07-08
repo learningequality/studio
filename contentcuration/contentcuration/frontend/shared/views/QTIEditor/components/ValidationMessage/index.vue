@@ -1,13 +1,14 @@
 <template>
 
-  <p
-    v-if="show"
-    class="validation-message"
-    role="alert"
-    :style="{ color: $themeTokens.error }"
-  >
-    <slot></slot>
-  </p>
+  <div>
+    <p
+      class="validation-message"
+      role="alert"
+      :style="{ color: $themeTokens.error }"
+    >
+      <slot></slot>
+    </p>
+  </div>
 
 </template>
 
@@ -16,14 +17,6 @@
 
   export default {
     name: 'ValidationMessage',
-
-    props: {
-      /** Whether the message is currently visible. */
-      show: {
-        type: Boolean,
-        default: false,
-      },
-    },
   };
 
 </script>
@@ -33,7 +26,7 @@
 
   .validation-message {
     margin: 2px 0 0;
-    font-size: 12px;
+    font-size: 14px;
     line-height: 1.4;
   }
 

@@ -3,6 +3,7 @@ import { parseXML, getPromptHTML } from '../../serialization/parseItem';
 import { buildXmlNode } from '../../serialization/assembleItem';
 import CorrectResponse from '../../serialization/qti/declarations/correctResponse';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
+import { Orientation } from '../../constants';
 
 const serializer = new XMLSerializer();
 const RESPONSE_IDENTIFIER = 'RESPONSE';
@@ -14,25 +15,24 @@ export function _defaultState() {
     maxChoices: 1,
     minChoices: 0,
     shuffle: false,
-    orientation: 'vertical',
+    orientation: Orientation.VERTICAL,
   };
 }
 
 export function _extractCorrectIds(declarations) {
   const ids = new Set();
-  for (const declXml of declarations) {
-    let declEl;
-    try {
-      declEl = parseXML(declXml).documentElement;
-    } catch {
-      continue;
-    }
+  const [declXml] = declarations || [];
+  if (!declXml) return ids;
+
+  try {
+    const declEl = parseXML(declXml).documentElement;
     const declaration = QTIDeclaration.fromXML(declEl);
     const correct = declaration.correctResponse;
     if (correct) {
       for (const id of correct) ids.add(id);
-      break;
     }
+  } catch {
+    // Ignore parse errors
   }
   return ids;
 }
@@ -68,7 +68,7 @@ export function parseChoiceInteraction(bodyXml, responseDeclarations) {
   const maxChoices = parseInt(root.getAttribute('max-choices') ?? '0', 10);
   const minChoices = parseInt(root.getAttribute('min-choices') ?? '0', 10);
   const shuffle = root.getAttribute('shuffle') === 'true';
-  const orientation = root.getAttribute('orientation') ?? 'vertical';
+  const orientation = root.getAttribute('orientation') ?? Orientation.VERTICAL;
   const prompt = getPromptHTML(root);
 
   const correctIds = _extractCorrectIds(responseDeclarations);
@@ -89,7 +89,7 @@ export function parseChoiceInteraction(bodyXml, responseDeclarations) {
  * @param {object} state - ChoiceState
  * @param {string} questionType
  * @param {object} declarationSchema - { baseType: string, cardinality: string }
- * @returns {{ bodyXml: string, declarations: string[] }}
+ * @returns {{ bodyXml: string, responseDeclarations: string[] }}
  */
 export function buildChoiceInteractionXML(state, questionType, declarationSchema) {
   const { prompt, choices, maxChoices, minChoices, shuffle, orientation } = state;
@@ -105,7 +105,7 @@ export function buildChoiceInteractionXML(state, questionType, declarationSchema
   const children = [];
 
   if (prompt) {
-    children.push(buildXmlNode({ tag: 'qti-prompt', children: _parseHtmlFragment(prompt) }));
+    children.push(buildXmlNode({ tag: 'qti-prompt', innerHTML: prompt }));
   }
 
   for (const choice of choices) {
@@ -115,7 +115,7 @@ export function buildChoiceInteractionXML(state, questionType, declarationSchema
       buildXmlNode({
         tag: 'qti-simple-choice',
         attrs: choiceAttrs,
-        children: _parseHtmlFragment(choice.content),
+        innerHTML: choice.content,
       }),
     );
   }
@@ -134,5 +134,14 @@ export function buildChoiceInteractionXML(state, questionType, declarationSchema
   new CorrectResponse(correctIds, declaration);
 
   const declarationXml = serializer.serializeToString(declaration.getXML());
-  return { bodyXml, declarations: [declarationXml] };
+  return { bodyXml, responseDeclarations: [declarationXml] };
+}
+
+/**
+ * Strips HTML tags from a string.
+ * @param {string} html
+ * @returns {string}
+ */
+export function stripTags(html) {
+  return (html ?? '').replace(/<[^>]*>/g, '');
 }

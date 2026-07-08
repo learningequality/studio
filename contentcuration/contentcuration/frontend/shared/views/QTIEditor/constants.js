@@ -19,6 +19,11 @@ export const BaseType = Object.freeze({
   URI: 'uri',
 });
 
+export const Orientation = Object.freeze({
+  VERTICAL: 'vertical',
+  HORIZONTAL: 'horizontal',
+});
+
 /**
  * There are three distinct type concepts used within the QTI architecture:
  *
@@ -85,5 +90,4 @@ export const ValidationError = Object.freeze({
   TOO_MANY_CORRECT_ANSWERS: 'TOO_MANY_CORRECT_ANSWERS',
   EMPTY_CHOICE_CONTENT: 'EMPTY_CHOICE_CONTENT',
   DUPLICATE_CHOICE_CONTENT: 'DUPLICATE_CHOICE_CONTENT',
-  TOO_FEW_CHOICES: 'TOO_FEW_CHOICES',
 });

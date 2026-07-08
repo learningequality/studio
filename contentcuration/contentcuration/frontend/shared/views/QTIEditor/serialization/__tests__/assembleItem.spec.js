@@ -117,4 +117,30 @@ describe('assembleItem', () => {
       expect(xml).toContain('ChoiceA');
     });
   });
+
+  describe('innerHTML option', () => {
+    it('appends plain text via innerHTML', () => {
+      const node = buildXmlNode({ tag: 'qti-simple-choice', innerHTML: 'Mercury' });
+      expect(node.textContent).toBe('Mercury');
+    });
+
+    it('appends rich markup via innerHTML', () => {
+      const node = buildXmlNode({
+        tag: 'qti-simple-choice',
+        innerHTML: '<p>Option <strong>A</strong></p>',
+      });
+      expect(node.querySelector('strong').textContent).toBe('A');
+    });
+
+    it('handles empty innerHTML without throwing', () => {
+      const node = buildXmlNode({ tag: 'qti-simple-choice', innerHTML: '' });
+      expect(node.childNodes.length).toBe(0);
+    });
+
+    it('throws when both children and innerHTML are provided', () => {
+      expect(() =>
+        buildXmlNode({ tag: 'qti-simple-choice', children: ['x'], innerHTML: '<p>y</p>' }),
+      ).toThrow('mutually exclusive');
+    });
+  });
 });

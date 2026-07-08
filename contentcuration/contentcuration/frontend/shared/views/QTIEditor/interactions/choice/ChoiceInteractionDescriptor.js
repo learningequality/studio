@@ -20,11 +20,23 @@ export class ChoiceInteractionDescriptor {
   }
 
   /**
-   * Reads max-choices: '1' → singleSelect, anything else → multiSelect.
+   * Reads cardinality from the response declaration to determine question type.
+   *
    * @param {Element} el
+   * @param {string[]} [responseDeclarations]
    * @returns {string}
    */
-  getQuestionType(el) {
+  getQuestionType(el, responseDeclarations = []) {
+    if (responseDeclarations.length > 0) {
+      const doc = new DOMParser().parseFromString(responseDeclarations[0], 'text/xml');
+      const cardinality = doc.documentElement.getAttribute('cardinality');
+      if (cardinality) {
+        return cardinality === Cardinality.MULTIPLE
+          ? QuestionType.MULTI_SELECT
+          : QuestionType.SINGLE_SELECT;
+      }
+    }
+    // Fallback to max-choices if declarations are missing or malformed
     return el.getAttribute('max-choices') === '1'
       ? QuestionType.SINGLE_SELECT
       : QuestionType.MULTI_SELECT;
@@ -34,7 +46,7 @@ export class ChoiceInteractionDescriptor {
    * @param {string} questionType
    * @returns {{ baseType: string, cardinality: string }}
    */
-  getDeclarationSchema(questionType) {
+  getResponseDeclarationSchema(questionType) {
     return {
       baseType: BaseType.IDENTIFIER,
       cardinality:
@@ -57,10 +69,14 @@ export class ChoiceInteractionDescriptor {
    *
    * @param {object} state - ChoiceState
    * @param {string} questionType
-   * @returns {{ bodyXml: string, declarations: string[] }}
+   * @returns {{ bodyXml: string, responseDeclarations: string[] }}
    */
   buildXML(state, questionType) {
-    return buildChoiceInteractionXML(state, questionType, this.getDeclarationSchema(questionType));
+    return buildChoiceInteractionXML(
+      state,
+      questionType,
+      this.getResponseDeclarationSchema(questionType),
+    );
   }
 
   /**

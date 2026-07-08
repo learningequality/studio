@@ -11,7 +11,7 @@ import {
   CHOICE_SINGLE_DECL_XML as SINGLE_DECL,
   CHOICE_MULTI_DECL_XML as MULTI_DECL,
 } from '../../../utils/testingFixtures';
-import { QuestionType } from '../../../constants';
+import { QuestionType, Orientation } from '../../../constants';
 
 const parse = choiceInteractionDescriptor.parse.bind(choiceInteractionDescriptor);
 const buildXML = choiceInteractionDescriptor.buildXML.bind(choiceInteractionDescriptor);
@@ -36,9 +36,9 @@ describe('parse()', () => {
       expect(state.shuffle).toBe(false);
     });
 
-    it('defaults orientation to "vertical" when attribute is absent', () => {
+    it('defaults orientation to Orientation.VERTICAL when attribute is absent', () => {
       const state = parse(CHOICE_SINGLE_SELECT_XML, []);
-      expect(state.orientation).toBe('vertical');
+      expect(state.orientation).toBe(Orientation.VERTICAL);
     });
 
     it('defaults prompt to empty string when <qti-prompt> is absent', () => {
@@ -151,12 +151,12 @@ describe('buildXML()', () => {
     maxChoices: 1,
     minChoices: 0,
     shuffle: false,
-    orientation: 'vertical',
+    orientation: Orientation.VERTICAL,
   };
 
   it('sets cardinality="single" for singleSelect', () => {
-    const { declarations } = buildXML(baseState, QuestionType.SINGLE_SELECT);
-    expect(declarations[0]).toContain('cardinality="single"');
+    const { responseDeclarations } = buildXML(baseState, QuestionType.SINGLE_SELECT);
+    expect(responseDeclarations[0]).toContain('cardinality="single"');
   });
 
   it('sets cardinality="multiple" for multiSelect', () => {
@@ -168,14 +168,14 @@ describe('buildXML()', () => {
       ],
       maxChoices: 2,
     };
-    const { declarations } = buildXML(multiState, QuestionType.MULTI_SELECT);
-    expect(declarations[0]).toContain('cardinality="multiple"');
+    const { responseDeclarations } = buildXML(multiState, QuestionType.MULTI_SELECT);
+    expect(responseDeclarations[0]).toContain('cardinality="multiple"');
   });
 
   it('includes the correct identifier in <qti-value>', () => {
-    const { declarations } = buildXML(baseState, QuestionType.SINGLE_SELECT);
-    expect(declarations[0]).toContain('choice_a');
-    expect(declarations[0]).not.toContain('choice_b');
+    const { responseDeclarations } = buildXML(baseState, QuestionType.SINGLE_SELECT);
+    expect(responseDeclarations[0]).toContain('choice_a');
+    expect(responseDeclarations[0]).not.toContain('choice_b');
   });
 
   it('includes all correct identifiers for multi-select', () => {
@@ -188,10 +188,10 @@ describe('buildXML()', () => {
       ],
       maxChoices: 2,
     };
-    const { declarations } = buildXML(multiState, QuestionType.MULTI_SELECT);
-    expect(declarations[0]).toContain('x');
-    expect(declarations[0]).toContain('y');
-    expect(declarations[0]).not.toContain('z');
+    const { responseDeclarations } = buildXML(multiState, QuestionType.MULTI_SELECT);
+    expect(responseDeclarations[0]).toContain('x');
+    expect(responseDeclarations[0]).toContain('y');
+    expect(responseDeclarations[0]).not.toContain('z');
   });
 
   it('omits min-choices attribute when minChoices is 0', () => {
@@ -239,8 +239,8 @@ describe('buildXML()', () => {
 describe('parse → buildXML → parse round-trip', () => {
   it('single-select: re-parsed state matches original', () => {
     const original = parse(CHOICE_SINGLE_SELECT_XML, [SINGLE_DECL]);
-    const { bodyXml, declarations } = buildXML(original, QuestionType.SINGLE_SELECT);
-    const reparsed = parse(bodyXml, declarations);
+    const { bodyXml, responseDeclarations } = buildXML(original, QuestionType.SINGLE_SELECT);
+    const reparsed = parse(bodyXml, responseDeclarations);
 
     expect(reparsed.maxChoices).toBe(original.maxChoices);
     expect(reparsed.shuffle).toBe(original.shuffle);
@@ -251,8 +251,8 @@ describe('parse → buildXML → parse round-trip', () => {
 
   it('multi-select: re-parsed state matches original', () => {
     const original = parse(CHOICE_MULTI_SELECT_XML, [MULTI_DECL]);
-    const { bodyXml, declarations } = buildXML(original, QuestionType.MULTI_SELECT);
-    const reparsed = parse(bodyXml, declarations);
+    const { bodyXml, responseDeclarations } = buildXML(original, QuestionType.MULTI_SELECT);
+    const reparsed = parse(bodyXml, responseDeclarations);
 
     expect(reparsed.choices.filter(a => a.correct).map(a => a.id)).toEqual(
       original.choices.filter(a => a.correct).map(a => a.id),

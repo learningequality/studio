@@ -1,6 +1,6 @@
 import { choiceInteractionDescriptor } from '../ChoiceInteractionDescriptor';
 
-import { ValidationError, QuestionType } from '../../../constants';
+import { ValidationError, QuestionType, Orientation } from '../../../constants';
 
 const validate = choiceInteractionDescriptor.validate.bind(choiceInteractionDescriptor);
 
@@ -20,7 +20,7 @@ function makeState(overrides = {}) {
     maxChoices: 1,
     minChoices: 0,
     shuffle: false,
-    orientation: 'vertical',
+    orientation: Orientation.VERTICAL,
     ...overrides,
   };
 }
@@ -68,17 +68,40 @@ describe('validate()', () => {
     });
   });
 
-  describe('TOO_FEW_CHOICES', () => {
-    it('returns error when there is only one choice', () => {
-      const state = makeState({ choices: [makeAnswer({ correct: true })] });
-      expect(errorCodes(validate(state, QuestionType.SINGLE_SELECT))).toContain(
-        ValidationError.TOO_FEW_CHOICES,
+  describe('DUPLICATE_CHOICE_CONTENT', () => {
+    it('returns an error for each choice that has identical text content', () => {
+      const state = makeState({
+        choices: [
+          makeAnswer({ id: 'a', content: 'Yes', correct: true }),
+          makeAnswer({ id: 'b', content: 'Yes', correct: false }),
+          makeAnswer({ id: 'c', content: ' Yes ', correct: false }), // Whitespace is ignored
+          makeAnswer({ id: 'd', content: '<p>Yes</p>', correct: false }), // HTML is stripped
+          makeAnswer({ id: 'e', content: 'No', correct: false }),
+        ],
+      });
+      const errors = validate(state, QuestionType.SINGLE_SELECT);
+      const duplicateErrors = errors.filter(
+        e => e.code === ValidationError.DUPLICATE_CHOICE_CONTENT,
       );
+
+      expect(duplicateErrors).toHaveLength(4);
+      const errorIds = duplicateErrors.map(e => e.id);
+      expect(errorIds).toContain('a');
+      expect(errorIds).toContain('b');
+      expect(errorIds).toContain('c');
+      expect(errorIds).toContain('d');
+      expect(errorIds).not.toContain('e');
     });
 
-    it('does not return error when there are two or more choices', () => {
-      expect(errorCodes(validate(makeState(), QuestionType.SINGLE_SELECT))).not.toContain(
-        ValidationError.TOO_FEW_CHOICES,
+    it('does not return error when choices have unique text content', () => {
+      const state = makeState({
+        choices: [
+          makeAnswer({ id: 'a', content: 'Yes', correct: true }),
+          makeAnswer({ id: 'b', content: 'No', correct: false }),
+        ],
+      });
+      expect(errorCodes(validate(state, QuestionType.SINGLE_SELECT))).not.toContain(
+        ValidationError.DUPLICATE_CHOICE_CONTENT,
       );
     });
   });

@@ -3,7 +3,7 @@
   <div class="choice-editor">
     <!-- Prompt -->
     <div class="choice-editor__section">
-      <ValidationMessage :show="questionHasError">
+      <ValidationMessage v-if="questionHasError">
         {{ errorPromptRequired$() }}
       </ValidationMessage>
       <div
@@ -15,23 +15,17 @@
 
       <!-- Prompt -->
       <div
-        :class="[
-          mode === 'edit' && isQuestionOpen ? 'choice-editor__prompt-wrap' : 'choice-border',
-        ]"
-        :style="[
-          mode === 'edit' && isQuestionOpen
-            ? {}
-            : { borderColor: questionHasError ? $themeTokens.error : $themeTokens.fineLine },
-          mode === 'edit' && !isQuestionOpen ? { cursor: 'pointer' } : {},
-        ]"
-        @click.stop="handlePromptClick"
+        :class="promptWrapperClass"
+        :style="promptWrapperStyle"
+        @click="handlePromptClick"
       >
-        <div :class="mode === 'edit' && isQuestionOpen ? '' : 'choice-card-text is-closed'">
-          <div :class="mode === 'edit' && isQuestionOpen ? '' : 'choice-layout'">
-            <div :class="mode === 'edit' && isQuestionOpen ? '' : 'choice-content'">
+        <div class="choice-card-text is-closed">
+          <div class="choice-layout">
+            <div class="choice-content">
               <TipTapEditor
                 :value="state.prompt"
-                :mode="mode === 'edit' && isQuestionOpen ? 'edit' : 'view'"
+                :mode="isQuestionOpen ? mode : 'view'"
+                format="html"
                 :minHeight="'80px'"
                 :autofocus="mode === 'edit' && isQuestionOpen"
                 class="editor"
@@ -49,16 +43,12 @@
       v-if="mode === 'edit' || showAnswers"
       class="choice-editor__section"
     >
-      <ValidationMessage :show="noCorrectAnswerError">
+      <ValidationMessage v-if="noCorrectAnswerError">
         {{ errorNoCorrectAnswer$() }}
       </ValidationMessage>
-      <ValidationMessage :show="tooManyCorrectError">
+      <ValidationMessage v-if="tooManyCorrectError">
         {{ errorTooManyCorrectAnswers$() }}
       </ValidationMessage>
-      <ValidationMessage :show="tooFewChoicesError">
-        {{ errorTooFewChoices$() }}
-      </ValidationMessage>
-
       <div
         class="answers-header field-label"
         :style="{ color: $themePalette.grey.v_700 }"
@@ -69,7 +59,7 @@
         class="choices-label"
         :style="{ color: $themeTokens.annotation }"
       >
-        {{ answersLabel }}
+        {{ answersDescription }}
       </div>
 
       <div class="choices-list">
@@ -83,7 +73,7 @@
             class="choice-border"
             :class="getChoiceClasses(choice)"
             :style="getChoiceStyle(choice)"
-            @click.stop="handleChoiceClick($event, choice.id)"
+            @click="handleChoiceClick($event, choice.id)"
           >
             <div
               class="choice-card-text"
@@ -106,7 +96,7 @@
                 >
                   <!-- Error icon replaces selection control when choice has an error -->
                   <KIcon
-                    v-if="emptyChoiceIds.has(choice.id) || duplicateChoiceIds.has(choice.id)"
+                    v-if="choiceHasError(choice.id)"
                     icon="error"
                     :color="$themeTokens.error"
                     :style="{ width: '20px', height: '20px', marginTop: '2px' }"
@@ -143,6 +133,7 @@
                     :value="choice.content"
                     :mode="isChoiceOpen(choice.id) ? 'edit' : 'view'"
                     :style="isChoiceOpen(choice.id) ? { backgroundColor: $themePalette.white } : {}"
+                    format="html"
                     :minHeight="'80px'"
                     :autofocus="isChoiceOpen(choice.id)"
                     class="editor"
@@ -157,62 +148,18 @@
                   class="choice-actions toolbar"
                   @click.stop
                 >
-                  <!-- Large screen: inline up / down / delete -->
-                  <template v-if="!windowIsSmall">
-                    <KIconButton
-                      icon="chevronUp"
-                      :aria-label="moveChoiceUpBtn$()"
-                      :tooltip="moveChoiceUpBtn$()"
-                      :disabled="index === 0"
-                      :color="index === 0 ? $themeTokens.textDisabled : $themePalette.grey.v_800"
-                      size="small"
-                      @click.stop="moveChoiceUp(choice.id)"
-                    />
-                    <KIconButton
-                      icon="chevronDown"
-                      :aria-label="moveChoiceDownBtn$()"
-                      :tooltip="moveChoiceDownBtn$()"
-                      :disabled="index === state.choices.length - 1"
-                      :color="
-                        index === state.choices.length - 1
-                          ? $themeTokens.textDisabled
-                          : $themePalette.grey.v_800
-                      "
-                      size="small"
-                      @click.stop="moveChoiceDown(choice.id)"
-                    />
-                    <KIconButton
-                      icon="close"
-                      :aria-label="deleteChoiceBtn$()"
-                      :tooltip="deleteChoiceBtn$()"
-                      :disabled="state.choices.length <= 1"
-                      :color="
-                        state.choices.length <= 1
-                          ? $themeTokens.textDisabled
-                          : $themePalette.grey.v_800
-                      "
-                      size="small"
-                      @click.stop="onRemoveChoice(choice.id)"
-                    />
-                  </template>
-
-                  <!-- Small screen: CollapsibleToolbar dropdown -->
-                  <CollapsibleToolbar
-                    v-else
-                    :actions="getChoiceRowActions(choice.id, index)"
-                  />
+                  <CollapsibleToolbar :actions="getChoiceRowActions(choice.id, index)" />
                 </div>
               </div>
             </div>
+            <!-- Per-choice validation messages sit INSIDE the bordered card -->
+            <ValidationMessage v-if="emptyChoiceIds.has(choice.id)">
+              {{ errorEmptyChoiceContent$() }}
+            </ValidationMessage>
+            <ValidationMessage v-if="duplicateChoiceIds.has(choice.id)">
+              {{ errorDuplicateChoiceContent$() }}
+            </ValidationMessage>
           </div>
-
-          <!-- Per-choice validation messages sit OUTSIDE the bordered card -->
-          <ValidationMessage :show="emptyChoiceIds.has(choice.id)">
-            {{ errorEmptyChoiceContent$() }}
-          </ValidationMessage>
-          <ValidationMessage :show="duplicateChoiceIds.has(choice.id)">
-            {{ errorDuplicateChoiceContent$() }}
-          </ValidationMessage>
         </div>
       </div>
 
@@ -270,11 +217,10 @@
         errorTooManyCorrectAnswers$,
         errorEmptyChoiceContent$,
         errorDuplicateChoiceContent$,
-        errorTooFewChoices$,
         questionLabel$,
         answersLabel$,
-        answersLabelSingleChoice$,
-        answersLabelMultipleChoice$,
+        answersDescriptionSingleChoice$,
+        answersDescriptionMultipleChoice$,
       } = qtiEditorStrings;
 
       const palette = themePalette();
@@ -296,9 +242,8 @@
       const {
         state,
         bodyXml,
-        declarations,
+        responseDeclarations,
         errors,
-        runValidation,
         addChoice,
         removeChoice,
         moveChoiceUp,
@@ -316,29 +261,25 @@
         openChoiceId.value = null;
       }
 
-      /** Handles clicks on the prompt wrapper. Ignores clicks from buttons/inputs
-       *  to prevent the TipTap minimize race condition (minimise fires blur → click
-       *  on the wrapper re-opens the editor instantly). */
       function handlePromptClick(event) {
         if (props.mode !== 'edit') return;
         if (event.target.closest('button') || event.target.closest('input')) return;
-        if (!isQuestionOpen.value) openQuestion();
+        if (!isQuestionOpen.value) {
+          event.stopPropagation();
+          openQuestion();
+        }
       }
 
-      /** Handles clicks on choice rows. Ignores clicks from buttons/inputs
-       *  to prevent the TipTap minimize race condition (minimize fires blur → click
-       *  on the wrapper re-opens the editor instantly). Selection controls and
-       *  toolbar actions use @click.stop in the template so they don't reach here. */
       function handleChoiceClick(event, choiceId) {
         if (props.mode !== 'edit') return;
         if (openChoiceId.value === choiceId) return;
         if (event.target.closest('button') || event.target.closest('input')) return;
-        openChoiceId.value = choiceId;
+        event.stopPropagation();
+        openChoice(choiceId);
       }
 
       function closeQuestion() {
         isQuestionOpen.value = false;
-        runValidation();
       }
 
       function openChoice(id) {
@@ -348,7 +289,6 @@
 
       function closeChoice() {
         openChoiceId.value = null;
-        runValidation();
       }
 
       watch(
@@ -368,19 +308,19 @@
         { immediate: true },
       );
 
-      // Emit a single unified interaction object whenever either bodyXml or
-      // responseDeclarations changes, mirroring the shape of the incoming prop.
-      const updatedInteraction = computed(() => ({
-        ...props.interaction,
+      // Emit bodyXml and responseDeclarations whenever either changes.
+      const workingInteraction = computed(() => ({
         bodyXml: bodyXml.value,
-        responseDeclarations: declarations.value,
+        responseDeclarations: responseDeclarations.value,
       }));
-      watch(updatedInteraction, newVal => emit('update:interaction', newVal), { immediate: true });
+      watch(workingInteraction, newVal => emit('update:interaction', newVal), { immediate: true });
 
       const isSingleSelect = computed(() => props.questionType === QuestionType.SINGLE_SELECT);
 
-      const answersLabel = computed(() =>
-        isSingleSelect.value ? answersLabelSingleChoice$() : answersLabelMultipleChoice$(),
+      const answersDescription = computed(() =>
+        isSingleSelect.value
+          ? answersDescriptionSingleChoice$()
+          : answersDescriptionMultipleChoice$(),
       );
 
       const correctChoiceId = computed(() => state.value.choices.find(a => a.correct)?.id ?? null);
@@ -416,10 +356,6 @@
           errors.value.length > 0 &&
           errorCodes.value.includes(ValidationError.TOO_MANY_CORRECT_ANSWERS),
       );
-      const tooFewChoicesError = computed(
-        () => errors.value.length > 0 && errorCodes.value.includes(ValidationError.TOO_FEW_CHOICES),
-      );
-
       function onToggleCorrect(id) {
         toggleCorrectChoice(id);
       }
@@ -444,7 +380,7 @@
             label: moveChoiceUpBtn$(),
             disabled: index === 0,
             handler: () => moveChoiceUp(answerId),
-            collapsed: false,
+            collapsed: windowIsSmall.value,
           },
           {
             id: 'down',
@@ -452,7 +388,7 @@
             label: moveChoiceDownBtn$(),
             disabled: index === state.value.choices.length - 1,
             handler: () => moveChoiceDown(answerId),
-            collapsed: false,
+            collapsed: windowIsSmall.value,
           },
           {
             id: 'delete',
@@ -460,15 +396,37 @@
             label: deleteChoiceBtn$(),
             disabled: state.value.choices.length <= 1,
             handler: () => onRemoveChoice(answerId),
-            collapsed: false,
+            collapsed: windowIsSmall.value,
           },
         ];
       }
 
       const instance = getCurrentInstance();
 
+      const isPromptEditing = computed(() => props.mode === 'edit' && isQuestionOpen.value);
+
+      const promptWrapperClass = computed(() => {
+        return isPromptEditing.value ? 'choice-editor__prompt-wrap' : 'choice-border';
+      });
+
+      const promptWrapperStyle = computed(() => {
+        if (isPromptEditing.value) {
+          return {};
+        }
+        return {
+          borderColor: questionHasError.value
+            ? instance.proxy.$themeTokens.error
+            : instance.proxy.$themeTokens.fineLine,
+          cursor: props.mode === 'edit' ? 'pointer' : undefined,
+        };
+      });
+
       function isChoiceClosed(id) {
         return props.mode !== 'edit' || openChoiceId.value !== id;
+      }
+
+      function choiceHasError(id) {
+        return emptyChoiceIds.value.has(id) || duplicateChoiceIds.value.has(id);
       }
 
       function isChoiceOpen(id) {
@@ -479,9 +437,7 @@
         const closed = isChoiceClosed(choice.id);
         const clickable = props.mode === 'edit' && closed;
         const isCorrect = choice.correct && (props.mode === 'edit' || props.showAnswers);
-        const hoverBg = isCorrect
-          ? instance.proxy.$themePalette.green.v_100
-          : instance.proxy.$themeTokens.fineLine;
+        const hoverBg = isCorrect ? palette.green.v_100 : instance.proxy.$themeTokens.fineLine;
         return [
           { 'is-clickable': clickable },
           clickable
@@ -494,28 +450,29 @@
 
       function getChoiceStyle(choice) {
         const isCorrect = choice.correct && (props.mode === 'edit' || props.showAnswers);
-        const hasError =
-          emptyChoiceIds.value.has(choice.id) || duplicateChoiceIds.value.has(choice.id);
+        const hasError = choiceHasError(choice.id);
 
         let borderColor = instance.proxy.$themeTokens.fineLine;
         if (hasError) {
           borderColor = instance.proxy.$themeTokens.error;
         } else if (isCorrect) {
-          borderColor = instance.proxy.$themePalette.green.v_500;
+          borderColor = palette.green.v_500;
         }
 
         return {
           borderColor,
-          backgroundColor: isCorrect ? instance.proxy.$themePalette.green.v_50 : null,
+          backgroundColor: isCorrect ? palette.green.v_50 : null,
         };
       }
 
       return {
+        promptWrapperClass,
+        promptWrapperStyle,
         state,
         isSingleSelect,
         windowIsSmall,
         answersLabel$,
-        answersLabel,
+        answersDescription,
         isQuestionOpen,
         closeQuestion,
         closeChoice,
@@ -523,16 +480,13 @@
         questionHasError,
         noCorrectAnswerError,
         tooManyCorrectError,
-        tooFewChoicesError,
         emptyChoiceIds,
         duplicateChoiceIds,
+        choiceHasError,
         setPrompt,
         setChoiceContent,
         onToggleCorrect,
         onAddChoice,
-        onRemoveChoice,
-        moveChoiceUp,
-        moveChoiceDown,
         getChoiceRowActions,
         isChoiceClosed,
         isChoiceOpen,
@@ -541,16 +495,12 @@
         handlePromptClick,
         handleChoiceClick,
         addChoiceBtn$,
-        deleteChoiceBtn$,
-        moveChoiceUpBtn$,
-        moveChoiceDownBtn$,
         markCorrectLabel$,
         errorPromptRequired$,
         errorNoCorrectAnswer$,
         errorTooManyCorrectAnswers$,
         errorEmptyChoiceContent$,
         errorDuplicateChoiceContent$,
-        errorTooFewChoices$,
         questionLabel$,
         buttonAppearanceOverrides,
       };
@@ -715,6 +665,15 @@
   .choice-editor__prompt-wrap {
     position: relative;
     padding: 4px 0;
+
+    .choice-card-text.is-closed {
+      min-height: auto;
+      padding: 0;
+    }
+
+    .choice-layout {
+      display: block;
+    }
   }
 
   .choice-border.is-clickable {

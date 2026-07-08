@@ -8,7 +8,9 @@ import { useInteraction } from '../useInteraction';
 function makeDescriptor({ parseReturn = {}, buildReturn = null, validateReturn = [] } = {}) {
   return {
     parse: jest.fn(() => parseReturn),
-    buildXML: jest.fn(() => buildReturn ?? { bodyXml: '<built/>', declarations: ['<decl/>'] }),
+    buildXML: jest.fn(
+      () => buildReturn ?? { bodyXml: '<built/>', responseDeclarations: ['<decl/>'] },
+    ),
     validate: jest.fn(() => validateReturn),
   };
 }
@@ -39,20 +41,20 @@ describe('useInteraction', () => {
     expect(state.value).toEqual(parseReturn);
   });
 
-  it('bodyXml and declarations are computed from buildXML', () => {
+  it('bodyXml and responseDeclarations are computed from buildXML', () => {
     const descriptor = makeDescriptor({
-      buildReturn: { bodyXml: '<body/>', declarations: ['<d1/>', '<d2/>'] },
+      buildReturn: { bodyXml: '<body/>', responseDeclarations: ['<d1/>', '<d2/>'] },
     });
     const questionType = ref('singleSelect');
 
-    const { bodyXml, declarations } = useInteraction(
+    const { bodyXml, responseDeclarations } = useInteraction(
       descriptor,
       { bodyXml: '', responseDeclarations: [] },
       questionType,
     );
 
     expect(bodyXml.value).toBe('<body/>');
-    expect(declarations.value).toEqual(['<d1/>', '<d2/>']);
+    expect(responseDeclarations.value).toEqual(['<d1/>', '<d2/>']);
   });
 
   it('errors starts as an empty array', () => {
@@ -101,7 +103,7 @@ describe('useInteraction', () => {
     let callCount = 0;
     const descriptor = {
       parse: jest.fn(() => ({ prompt: '' })),
-      buildXML: jest.fn(() => ({ bodyXml: `call-${++callCount}`, declarations: [] })),
+      buildXML: jest.fn(() => ({ bodyXml: `call-${++callCount}`, responseDeclarations: [] })),
       validate: jest.fn(() => []),
     };
     const questionType = ref('singleSelect');

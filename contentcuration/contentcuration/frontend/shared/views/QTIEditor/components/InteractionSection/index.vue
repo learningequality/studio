@@ -31,8 +31,8 @@
     name: 'InteractionSection',
 
     setup(props, { emit }) {
-      const bodyXmlRef = computed(() => props.interaction?.bodyXml);
-      const { descriptor, questionType, parseError } = useInteractionDescriptor(bodyXmlRef);
+      const interactionRef = computed(() => props.interaction);
+      const { descriptor, questionType, parseError } = useInteractionDescriptor(interactionRef);
 
       watch(
         questionType,

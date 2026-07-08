@@ -62,7 +62,7 @@ describe('QTIDeclaration.registerCapability', () => {
 describe('QTIDeclaration.fromInteractionDescriptor', () => {
   it('creates a declaration from descriptor-owned schema', () => {
     const descriptor = {
-      getDeclarationSchema: jest.fn(() => ({
+      getResponseDeclarationSchema: jest.fn(() => ({
         baseType: 'identifier',
         cardinality: 'multiple',
       })),
@@ -70,7 +70,7 @@ describe('QTIDeclaration.fromInteractionDescriptor', () => {
 
     const d = QTIDeclaration.fromInteractionDescriptor(descriptor, 'multiSelect', 'RESPONSE');
 
-    expect(descriptor.getDeclarationSchema).toHaveBeenCalledWith('multiSelect', null);
+    expect(descriptor.getResponseDeclarationSchema).toHaveBeenCalledWith('multiSelect', null);
     expect(d.identifier).toBe('RESPONSE');
     expect(d.baseType).toBe('identifier');
     expect(d.cardinality).toBe('multiple');
