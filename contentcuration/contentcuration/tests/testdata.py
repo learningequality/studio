@@ -288,13 +288,16 @@ def create_temp_file(filebytes, preset="document", ext="pdf", original_filename=
     )
 
 
-def create_studio_file(filebytes, preset="document", ext="pdf", original_filename=None):
+def create_studio_file(
+    filebytes, preset="document", ext="pdf", original_filename=None, uploaded_by=None
+):
     """
     Create a file with contents of `filebytes` and the associated cc.File object for it.
     :param filebytes: The data to be stored in the file (as bytes)
     :param preset: String identifying the format preset (defaults to ``document``)
     :param ext: File extension, omitting the initial period
     :param original_filename: Original filename (needed for exercise_images)
+    :param uploaded_by: User the file should appear to have been uploaded by
     Returns a dict containing the following:
     - name (str): the filename within the content storage system (= md5 hash of the contents + .ext )
     - data (bytes): file content (echo of `filebytes`)
@@ -335,6 +338,7 @@ def create_studio_file(filebytes, preset="document", ext="pdf", original_filenam
         preset=preset,
         original_filename=original_filename,
         file_on_disk=storage_file_path,
+        uploaded_by=uploaded_by,
     )
 
     return {
@@ -414,7 +418,7 @@ invalid_file_json = [
 ]
 
 
-def fileobj_exercise_image(size=(100, 100), color="red"):
+def fileobj_exercise_image(size=(100, 100), color="red", uploaded_by=None):
     """
     Create a generic exercise image file in storage and return a File model pointing to it.
     """
@@ -422,12 +426,15 @@ def fileobj_exercise_image(size=(100, 100), color="red"):
     buffer = BytesIO()
     image.save(buffer, "JPEG")
     temp_file_dict = create_studio_file(
-        buffer.getvalue(), preset=format_presets.EXERCISE_IMAGE, ext="jpg"
+        buffer.getvalue(),
+        preset=format_presets.EXERCISE_IMAGE,
+        ext="jpg",
+        uploaded_by=uploaded_by,
     )
     return temp_file_dict["db_file"]
 
 
-def fileobj_exercise_graphie(original_filename=None):
+def fileobj_exercise_graphie(original_filename=None, uploaded_by=None):
     """
     Create an graphi exercise image file in storage and return a File model pointing to it.
     """
@@ -439,6 +446,7 @@ def fileobj_exercise_graphie(original_filename=None):
         preset=format_presets.EXERCISE_GRAPHIE,
         ext="graphie",
         original_filename=original_filename or "theoriginalfilename",
+        uploaded_by=uploaded_by,
     )
     return temp_file_dict["db_file"]
 

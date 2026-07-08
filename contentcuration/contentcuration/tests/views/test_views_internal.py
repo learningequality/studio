@@ -33,12 +33,15 @@ from ..testdata import fileobj_exercise_image
 from ..testdata import fileobj_video
 from ..testdata import thumbnail_bytes
 from ..testdata import user
+from ..utils.qti.test_validation import _item_xml
 from contentcuration import ricecooker_versions as rc
 from contentcuration.constants import completion_criteria as studio_completion_criteria
 from contentcuration.db.models.manager import ALLOWED_OVERRIDES
 from contentcuration.db.models.manager import EDIT_ALLOWED_OVERRIDES
 from contentcuration.models import Channel
 from contentcuration.models import ContentNode
+from contentcuration.models import File
+from contentcuration.utils.assessment.qti.validation import validate_qti_item
 from contentcuration.views import internal
 
 
@@ -293,10 +296,13 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
 
         # get our random data from mixer
         random_data = mixer.blend(SampleContentNodeDataSchema)
-        # a vanilla image file associated with question
-        self.exercise_image = fileobj_exercise_image()
+        # a vanilla image file associated with question - uploaded_by matches
+        # self.admin_client() to mirror ricecooker's real upload_url flow,
+        # where the same authenticated user stages the file before referencing
+        # it in create_exercises
+        self.exercise_image = fileobj_exercise_image(uploaded_by=self.admin_user)
         # a perseus image file associated with question
-        self.exercise_graphie = fileobj_exercise_graphie()
+        self.exercise_graphie = fileobj_exercise_graphie(uploaded_by=self.admin_user)
         self.title = random_data.title
         self.sample_data = {
             "root_id": self.root_node.id,
@@ -332,7 +338,7 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
                             "question": u"Which numbers are even?\n\nTest local image include: ![](${☣ CONTENTSTORAGE}/%s)"
                             % self.exercise_image.filename(),
                             "hints": "[]",
-                            "answers": '[{"answer": "1", "correct": false, "order": 0}, {"answer": "2", "correct": True, "order": 1}, {"answer": "3", "correct": false, "order": 2}, {"answer": "4", "correct": true, "order": 3}, {"answer": "5", "correct": false, "order": 4}]',  # noqa
+                            "answers": '[{"answer": "1", "correct": false, "order": 0}, {"answer": "2", "correct": true, "order": 1}, {"answer": "3", "correct": false, "order": 2}, {"answer": "4", "correct": true, "order": 3}, {"answer": "5", "correct": false, "order": 4}]',  # noqa
                             "raw_data": "",
                             "source_url": None,
                             "randomize": False,
@@ -471,6 +477,188 @@ class ApiAddExerciseNodesToTreeTestCase(StudioTestCase):
         # check that we returned 400 with that POST request
         assert response.status_code == 400, "Got a non-400 request error: {}".format(
             response.status_code
+        )
+
+    def test_native_qti_item_persisted_and_media_mapped(self):
+        """
+        A native QTI question (raw_data XML + declared media) is persisted
+        verbatim as an exercises.QTI assessment item, and its media is mapped
+        by reusing the File row ricecooker's file_upload_url request already
+        created for it, without leaving stray/duplicate File rows behind.
+        """
+        assessment_id = "1" * 32
+        qti_exercise_image = fileobj_exercise_image(
+            size=(50, 50), color="blue", uploaded_by=self.admin_user
+        )
+        qti_raw_data = _item_xml(
+            "item_1",
+            "Sample Item",
+            '<qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">'
+            "<qti-correct-response><qti-value>choice_0</qti-value></qti-correct-response>"
+            "</qti-response-declaration>",
+            '<qti-choice-interaction response-identifier="RESPONSE" max-choices="1" '
+            'min-choices="0" orientation="vertical"><qti-prompt>Pick the diagram. '
+            '<img src="%s" alt="diagram" /></qti-prompt>'
+            '<qti-simple-choice identifier="choice_0" show-hide="show" fixed="false">Option A</qti-simple-choice>'
+            '<qti-simple-choice identifier="choice_1" show-hide="show" fixed="false">Option B</qti-simple-choice>'
+            "</qti-choice-interaction>" % qti_exercise_image.filename(),
+        )
+        self.sample_data["content_data"][0]["questions"].append(
+            {
+                "assessment_id": assessment_id,
+                "type": "QTI",
+                "files": [
+                    {
+                        "size": qti_exercise_image.file_size,
+                        "preset": "exercise_image",
+                        "filename": qti_exercise_image.filename(),
+                        "original_filename": None,
+                        "language": None,
+                        "source_url": None,
+                    }
+                ],
+                "question": "",
+                "hints": "[]",
+                "answers": "[]",
+                "raw_data": qti_raw_data,
+                "source_url": None,
+                "randomize": False,
+            }
+        )
+
+        response = self._make_request()
+        assert response.status_code == 200, response.content
+
+        c = ContentNode.objects.get(title=self.title)
+        qti_item = c.assessment_items.get(assessment_id=assessment_id)
+        self.assertEqual(qti_item.type, exercises.QTI)
+        self.assertEqual(qti_item.raw_data, qti_raw_data)
+        self.assertEqual(qti_item.files.count(), 1)
+        attached_file = qti_item.files.first()
+        self.assertEqual(attached_file.filename(), qti_exercise_image.filename())
+        # The File row is the exact one created when the image was staged
+        # (i.e. by ricecooker's file_upload_url request), not a new row - so
+        # its id and original_filename are preserved rather than overwritten.
+        self.assertEqual(attached_file.id, qti_exercise_image.id)
+        self.assertEqual(
+            attached_file.original_filename, qti_exercise_image.original_filename
+        )
+        # No stray/duplicate File row is left behind for this checksum.
+        self.assertEqual(
+            File.objects.filter(checksum=qti_exercise_image.checksum).count(), 1
+        )
+
+    def test_legacy_multiple_selection_question_converted_to_qti_on_ingest(self):
+        """
+        A legacy multiple_selection question is converted to schema-valid QTI
+        on ingest, and its media stays attached through the conversion.
+        """
+        response = self._make_request()
+        assert response.status_code == 200, response.content
+
+        c = ContentNode.objects.get(title=self.title)
+        item = c.assessment_items.get(assessment_id="abf45e8fd7f151adb1b3df2d751e945e")
+        self.assertEqual(item.type, exercises.QTI)
+        result = validate_qti_item(item.raw_data)
+        self.assertTrue(result.is_valid, result.errors)
+        self.assertIn("Which numbers are even?", item.raw_data)
+        self.assertEqual(item.files.count(), 1)
+        attached_file = item.files.first()
+        self.assertEqual(attached_file.filename(), self.exercise_image.filename())
+        # The pre-staged setUp fixture File is reused directly, not duplicated.
+        self.assertEqual(attached_file.id, self.exercise_image.id)
+        self.assertEqual(
+            File.objects.filter(checksum=self.exercise_image.checksum).count(), 1
+        )
+
+    def test_invalid_qti_raw_data_returns_400_and_creates_nothing(self):
+        """
+        A schema-invalid QTI upload is rejected with a 400 and rolls back the
+        whole request - it must not partially create the node/other items.
+        """
+        self.sample_data["content_data"][0]["questions"].append(
+            {
+                "assessment_id": "2" * 32,
+                "type": "QTI",
+                "files": [],
+                "question": "",
+                "hints": "[]",
+                "answers": "[]",
+                "raw_data": "<qti-assessment-item>not schema compliant</qti-assessment-item>",
+                "source_url": None,
+                "randomize": False,
+            }
+        )
+        response = self._make_request()
+        assert response.status_code == 400, response.content
+        # whole-request creation is atomic: the otherwise-valid node/questions
+        # from setUp must not have been persisted alongside the invalid one
+        assert not ContentNode.objects.filter(title=self.title).exists()
+
+    def test_perseus_custom_interaction_in_qti_rejected(self):
+        """
+        A QTI item wrapping a Perseus custom interaction is a categorical
+        mistake on ricecooker's part (it should upload raw Perseus content as
+        a perseus_question instead) - reject it outright rather than trying
+        to unwrap it.
+        """
+        assessment_id = "3" * 32
+        wrapped_perseus_json = self.sample_data["content_data"][0]["questions"][1][
+            "raw_data"
+        ]
+        perseus_payload_file = create_studio_file(wrapped_perseus_json, ext="json")
+        perseus_payload_filename = perseus_payload_file["name"]
+        raw_data = _item_xml(
+            "item_2",
+            "Wrapped Perseus Item",
+            "",
+            '<qti-custom-interaction response-identifier="RESPONSE" data-type="perseus" '
+            'data-perseus-path="%s"/>' % perseus_payload_filename,
+        )
+        self.sample_data["content_data"][0]["questions"].append(
+            {
+                "assessment_id": assessment_id,
+                "type": "QTI",
+                "files": [
+                    {
+                        "size": len(wrapped_perseus_json.encode("utf-8")),
+                        "preset": "document",
+                        "filename": perseus_payload_filename,
+                        "original_filename": None,
+                        "language": None,
+                        "source_url": None,
+                    }
+                ],
+                "question": "",
+                "hints": "[]",
+                "answers": "[]",
+                "raw_data": raw_data,
+                "source_url": None,
+                "randomize": False,
+            }
+        )
+
+        response = self._make_request()
+        assert response.status_code == 400, response.content
+        # whole-request creation is atomic: the otherwise-valid node/questions
+        # from setUp must not have been persisted alongside the rejected one
+        assert not ContentNode.objects.filter(title=self.title).exists()
+
+    def test_raw_perseus_question_passthrough_unchanged(self):
+        """
+        Regression guard: a raw (non-wrapped) perseus_question is completely
+        unaffected by the QTI ingest refactor.
+        """
+        response = self._make_request()
+        assert response.status_code == 200, response.content
+
+        c = ContentNode.objects.get(title=self.title)
+        item = c.assessment_items.get(assessment_id="98856e24d53b57ea9023782ab6018767")
+        self.assertEqual(item.type, exercises.PERSEUS_QUESTION)
+        self.assertIn("radio 1", item.raw_data)
+        self.assertEqual(item.files.count(), 1)
+        self.assertEqual(
+            item.files.first().filename(), self.exercise_graphie.filename()
         )
 
 

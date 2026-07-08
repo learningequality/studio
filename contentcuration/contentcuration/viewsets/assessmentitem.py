@@ -144,11 +144,11 @@ class AssessmentItemSerializer(BulkModelSerializer):
                 raise ValidationError(
                     {"raw_data": [error.message for error in result.errors]}
                 )
-        elif "raw_data" in data:
+        elif self._item_type != exercises.PERSEUS_QUESTION and "raw_data" in data:
             raise ValidationError(
                 {
                     "raw_data": [
-                        "This field can only be edited on a QTI assessment item."
+                        "This field can only be edited on a QTI or Perseus assessment item."
                     ]
                 }
             )

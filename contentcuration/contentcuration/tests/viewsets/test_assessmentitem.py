@@ -84,6 +84,28 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         except models.AssessmentItem.DoesNotExist:
             self.fail("AssessmentItem was not created")
 
+    def test_create_perseus_question_with_raw_data(self):
+        self.client.force_authenticate(user=self.user)
+        assessmentitem = self.assessmentitem_metadata
+        assessmentitem["type"] = exercises.PERSEUS_QUESTION
+        assessmentitem["raw_data"] = json.dumps({"question": {"content": "hi"}})
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                    channel_id=self.channel.id,
+                )
+            ],
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        ai = models.AssessmentItem.objects.get(
+            assessment_id=assessmentitem["assessment_id"]
+        )
+        self.assertEqual(ai.type, exercises.PERSEUS_QUESTION)
+        self.assertEqual(ai.raw_data, assessmentitem["raw_data"])
+
     def test_create_assessmentitem_no_node_permission(self):
         self.client.force_authenticate(user=self.user)
         new_channel = testdata.channel()
