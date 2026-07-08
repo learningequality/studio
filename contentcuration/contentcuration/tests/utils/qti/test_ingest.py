@@ -1,5 +1,6 @@
 import unittest
 
+from contentcuration.tests.utils.qti.test_validation import _item_xml
 from contentcuration.tests.utils.qti.test_validation import VALID_CHOICE_ITEM
 from contentcuration.utils.assessment.qti.ingest import convert_legacy_question_to_qti
 from contentcuration.utils.assessment.qti.ingest import (
@@ -44,17 +45,12 @@ class ConvertLegacyQuestionToQTITests(unittest.TestCase):
 
 
 def _custom_interaction_item_xml(data_type, path_attr, path_value):
-    return """<?xml version="1.0" encoding="UTF-8"?>
-<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
-    identifier="item1" title="t" adaptive="false" time-dependent="false">
-  <qti-item-body>
-    <qti-custom-interaction response-identifier="RESPONSE" data-type="%s"
-        %s="%s"/>
-  </qti-item-body>
-</qti-assessment-item>""" % (
-        data_type,
-        path_attr,
-        path_value,
+    return _item_xml(
+        "item1",
+        "t",
+        "",
+        '<qti-custom-interaction response-identifier="RESPONSE" data-type="%s" %s="%s"/>'
+        % (data_type, path_attr, path_value),
     )
 
 

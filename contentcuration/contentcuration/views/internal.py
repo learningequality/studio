@@ -935,7 +935,7 @@ def create_node(node_data, parent_node, sort_order):  # noqa: C901
     return node
 
 
-def create_exercises(user, node, data):  # noqa: C901
+def create_exercises(user, node, data):
     """Generate exercise from data, delegating item construction and QTI schema
     validation to AssessmentItemSerializer."""
     # First check that all assessment_ids are unique within the node
@@ -962,14 +962,6 @@ def create_exercises(user, node, data):  # noqa: C901
         )
         try:
             serializer.is_valid(raise_exception=True)
-        except DRFValidationError as e:
-            raise NodeValidationError(
-                "Invalid assessment item data for node {}: {}".format(
-                    node.node_id, e.detail
-                )
-            )
-
-        try:
             # AssessmentItemSerializer.set_files() attaches QTI media by
             # reusing the File row ricecooker's file_upload_url request already
             # created for each referenced checksum. A QTI item referencing a
@@ -978,8 +970,11 @@ def create_exercises(user, node, data):  # noqa: C901
             # rather than as a DRF ValidationError.
             instances = serializer.save()
         except (DRFValidationError, OSError) as e:
+            detail = e.detail if isinstance(e, DRFValidationError) else e
             raise NodeValidationError(
-                "Invalid assessment item data for node {}: {}".format(node.node_id, e)
+                "Invalid assessment item data for node {}: {}".format(
+                    node.node_id, detail
+                )
             )
 
         # set_files() only scans raw_data for QTI items; perseus_question raw_data
