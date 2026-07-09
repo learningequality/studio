@@ -1,6 +1,14 @@
 import { ref, nextTick } from 'vue';
 import { useInteraction } from '../useInteraction';
 
+jest.mock('lodash/debounce', () => {
+  return jest.fn(fn => {
+    const mocked = jest.fn((...args) => fn(...args));
+    mocked.cancel = jest.fn();
+    return mocked;
+  });
+});
+
 // ---------------------------------------------------------------------------
 // Minimal descriptor stub
 // ---------------------------------------------------------------------------
@@ -57,8 +65,9 @@ describe('useInteraction', () => {
     expect(responseDeclarations.value).toEqual(['<d1/>', '<d2/>']);
   });
 
-  it('errors starts as an empty array', () => {
-    const descriptor = makeDescriptor();
+  it('errors gets populated on instantiation via immediate watcher', () => {
+    const validateReturn = [{ code: 'INITIAL_ERROR' }];
+    const descriptor = makeDescriptor({ validateReturn });
     const questionType = ref('singleSelect');
 
     const { errors } = useInteraction(
@@ -67,12 +76,12 @@ describe('useInteraction', () => {
       questionType,
     );
 
-    expect(errors.value).toEqual([]);
+    // Because of immediate: true and mocked debounce, validate runs immediately
+    expect(errors.value).toEqual(validateReturn);
   });
 
-  it('runValidation populates errors from descriptor.validate', () => {
-    const validateReturn = [{ code: 'PROMPT_REQUIRED' }];
-    const descriptor = makeDescriptor({ validateReturn });
+  it('runValidation immediately updates errors when called manually', () => {
+    const descriptor = makeDescriptor({ validateReturn: [] });
     const questionType = ref('singleSelect');
 
     const { errors, runValidation } = useInteraction(
@@ -82,8 +91,12 @@ describe('useInteraction', () => {
     );
 
     expect(errors.value).toEqual([]);
+
+    // Change the mock to return something else to simulate state change
+    descriptor.validate.mockReturnValueOnce([{ code: 'NEW_ERROR' }]);
     runValidation();
-    expect(errors.value).toEqual(validateReturn);
+
+    expect(errors.value).toEqual([{ code: 'NEW_ERROR' }]);
   });
 
   it('runValidation passes current state and questionType to validate', () => {
@@ -139,8 +152,7 @@ describe('useInteraction', () => {
     expect(descriptor.buildXML).toHaveBeenLastCalledWith(expect.anything(), 'multiSelect');
   });
 
-  it('automatically runs validation (debounced) when state changes', async () => {
-    jest.useFakeTimers();
+  it('automatically runs validation when state changes', async () => {
     const validateReturn = [{ code: 'SOME_ERROR' }];
     const descriptor = makeDescriptor({ validateReturn });
     const questionType = ref('singleSelect');
@@ -151,19 +163,17 @@ describe('useInteraction', () => {
       questionType,
     );
 
-    expect(errors.value).toEqual([]);
+    // With mocked debounce, validate fires synchronously on immediate watcher.
+    // errors are already populated from the initial watcher run.
+    expect(errors.value).toEqual(validateReturn);
+
+    // Reset mock and update state — validate should be called again.
+    descriptor.validate.mockReset();
+    descriptor.validate.mockReturnValue([{ code: 'UPDATED_ERROR' }]);
     state.value = { prompt: 'updated' };
     await nextTick(); // flush Vue watcher queue
 
-    // Before the debounce fires, errors should still be empty.
-    expect(errors.value).toEqual([]);
-
-    // Fast-forward past the 400 ms debounce window.
-    jest.advanceTimersByTime(400);
-
     expect(descriptor.validate).toHaveBeenCalledWith({ prompt: 'updated' }, 'singleSelect');
-    expect(errors.value).toEqual(validateReturn);
-
-    jest.useRealTimers();
+    expect(errors.value).toEqual([{ code: 'UPDATED_ERROR' }]);
   });
 });

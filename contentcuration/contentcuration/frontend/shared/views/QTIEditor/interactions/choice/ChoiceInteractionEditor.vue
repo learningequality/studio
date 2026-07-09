@@ -108,7 +108,6 @@
                       :buttonValue="choice.id"
                       :label="markCorrectLabel$()"
                       :showLabel="false"
-                      :aria-label="markCorrectLabel$()"
                       :disabled="mode !== 'edit'"
                       :style="{ width: 'auto' }"
                       :color="$themePalette.green.v_600"
@@ -120,7 +119,6 @@
                       :checked="choice.correct"
                       :label="markCorrectLabel$()"
                       :showLabel="false"
-                      :aria-label="markCorrectLabel$()"
                       :disabled="mode !== 'edit'"
                       :color="$themePalette.green.v_600"
                       @change="onToggleCorrect(choice.id)"
@@ -189,7 +187,7 @@
 
   import { computed, ref, watch, getCurrentInstance } from 'vue';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
-  import { themePalette } from 'kolibri-design-system/lib/styles/theme';
+  import { themePalette, themeTokens } from 'kolibri-design-system/lib/styles/theme';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { QuestionType, ValidationError } from '../../constants';
   import { useChoiceInteraction } from '../../composables/useChoiceInteraction';
@@ -223,6 +221,7 @@
       } = qtiEditorStrings;
 
       const palette = themePalette();
+      const tokens = themeTokens();
       const buttonAppearanceOverrides = computed(() => ({
         backgroundColor: palette.blue.v_50,
         border: `1px dashed ${palette.blue.v_200}`,
@@ -361,7 +360,10 @@
 
       function onAddChoice() {
         addChoice();
-        openChoiceId.value = state.value.choices[state.value.choices.length - 1]?.id ?? null;
+        const newChoiceId = state.value.choices[state.value.choices.length - 1]?.id;
+        if (newChoiceId) {
+          openChoice(newChoiceId);
+        }
       }
 
       function onRemoveChoice(id) {
@@ -413,9 +415,7 @@
           return {};
         }
         return {
-          borderColor: questionHasError.value
-            ? instance.proxy.$themeTokens.error
-            : instance.proxy.$themeTokens.fineLine,
+          borderColor: questionHasError.value ? tokens.error : tokens.fineLine,
           cursor: props.mode === 'edit' ? 'pointer' : undefined,
         };
       });
@@ -436,7 +436,7 @@
         const closed = isChoiceClosed(choice.id);
         const clickable = props.mode === 'edit' && closed;
         const isCorrect = choice.correct && (props.mode === 'edit' || props.showAnswers);
-        const hoverBg = isCorrect ? palette.green.v_100 : instance.proxy.$themeTokens.fineLine;
+        const hoverBg = isCorrect ? palette.green.v_100 : tokens.fineLine;
         return [
           { 'is-clickable': clickable },
           clickable
@@ -451,9 +451,9 @@
         const isCorrect = choice.correct && (props.mode === 'edit' || props.showAnswers);
         const hasError = choiceHasError(choice.id);
 
-        let borderColor = instance.proxy.$themeTokens.fineLine;
+        let borderColor = tokens.fineLine;
         if (hasError) {
-          borderColor = instance.proxy.$themeTokens.error;
+          borderColor = tokens.error;
         } else if (isCorrect) {
           borderColor = palette.green.v_500;
         }

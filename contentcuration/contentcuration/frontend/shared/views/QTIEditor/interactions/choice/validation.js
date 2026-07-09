@@ -1,5 +1,5 @@
 import { QuestionType, ValidationError } from '../../constants';
-import { stripTags } from './parse';
+import { stripTags } from '../../utils/stripTags';
 
 /**
  * Validate ChoiceState → ValidationError[].

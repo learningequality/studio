@@ -6,12 +6,12 @@ import { generateRandomSlug } from '../../utils/generateRandomSlug';
 import { Orientation } from '../../constants';
 
 const serializer = new XMLSerializer();
-const RESPONSE_IDENTIFIER = 'RESPONSE';
 
 export function _defaultState() {
   return {
+    responseIdentifier: generateRandomSlug('response'),
     prompt: '',
-    choices: [],
+    choices: [{ id: generateRandomSlug('choice'), content: '', correct: false }],
     maxChoices: 1,
     minChoices: 0,
     shuffle: false,
@@ -65,6 +65,8 @@ export function parseChoiceInteraction(bodyXml, responseDeclarations) {
     return _defaultState();
   }
 
+  const responseIdentifier =
+    root.getAttribute('response-identifier') || generateRandomSlug('response');
   const maxChoices = parseInt(root.getAttribute('max-choices') ?? '0', 10);
   const minChoices = parseInt(root.getAttribute('min-choices') ?? '0', 10);
   const shuffle = root.getAttribute('shuffle') === 'true';
@@ -80,7 +82,7 @@ export function parseChoiceInteraction(bodyXml, responseDeclarations) {
     fixed: el.getAttribute('fixed') === 'true',
   }));
 
-  return { prompt, choices, maxChoices, minChoices, shuffle, orientation };
+  return { responseIdentifier, prompt, choices, maxChoices, minChoices, shuffle, orientation };
 }
 
 /**
@@ -92,10 +94,18 @@ export function parseChoiceInteraction(bodyXml, responseDeclarations) {
  * @returns {{ bodyXml: string, responseDeclarations: string[] }}
  */
 export function buildChoiceInteractionXML(state, questionType, declarationSchema) {
-  const { prompt, choices, maxChoices, minChoices, shuffle, orientation } = state;
+  const {
+    responseIdentifier = generateRandomSlug('response'),
+    prompt,
+    choices,
+    maxChoices,
+    minChoices,
+    shuffle,
+    orientation,
+  } = state;
 
   const attrs = {
-    'response-identifier': RESPONSE_IDENTIFIER,
+    'response-identifier': responseIdentifier,
     'max-choices': maxChoices,
     shuffle: String(shuffle),
     orientation,
@@ -125,7 +135,7 @@ export function buildChoiceInteractionXML(state, questionType, declarationSchema
 
   const { cardinality, baseType } = declarationSchema;
   const declaration = new QTIDeclaration({
-    identifier: RESPONSE_IDENTIFIER,
+    identifier: responseIdentifier,
     baseType,
     cardinality,
     tag: 'qti-response-declaration',
@@ -135,13 +145,4 @@ export function buildChoiceInteractionXML(state, questionType, declarationSchema
 
   const declarationXml = serializer.serializeToString(declaration.getXML());
   return { bodyXml, responseDeclarations: [declarationXml] };
-}
-
-/**
- * Strips HTML tags from a string.
- * @param {string} html
- * @returns {string}
- */
-export function stripTags(html) {
-  return (html ?? '').replace(/<[^>]*>/g, '');
 }

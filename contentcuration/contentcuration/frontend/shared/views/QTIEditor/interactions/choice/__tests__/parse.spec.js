@@ -130,18 +130,29 @@ describe('parse()', () => {
   describe('graceful fallback', () => {
     it('returns default state for empty bodyXml', () => {
       const state = parse('', []);
-      expect(state.choices).toEqual([]);
+      expect(state.choices).toHaveLength(1);
+      expect(state.choices[0].content).toBe('');
+      expect(state.choices[0].correct).toBe(false);
       expect(state.prompt).toBe('');
     });
 
     it('returns default state for malformed XML', () => {
       const state = parse('<unclosed', []);
-      expect(state.choices).toEqual([]);
+      expect(state.choices).toHaveLength(1);
     });
   });
 });
 
 describe('buildXML()', () => {
+  // Helper: parse an XML string and return the document root element.
+  function parseXmlString(xml) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(xml, 'text/xml');
+    const err = doc.querySelector('parsererror');
+    if (err) throw new Error(`Invalid XML: ${err.textContent}`);
+    return doc.documentElement;
+  }
+
   const baseState = {
     prompt: 'Pick one.',
     choices: [
@@ -154,85 +165,112 @@ describe('buildXML()', () => {
     orientation: Orientation.VERTICAL,
   };
 
-  it('sets cardinality="single" for singleSelect', () => {
-    const { responseDeclarations } = buildXML(baseState, QuestionType.SINGLE_SELECT);
-    expect(responseDeclarations[0]).toContain('cardinality="single"');
-  });
+  describe('response declaration XML', () => {
+    it('sets cardinality="single" on the declaration element for singleSelect', () => {
+      const { responseDeclarations } = buildXML(baseState, QuestionType.SINGLE_SELECT);
+      const decl = parseXmlString(responseDeclarations[0]);
+      expect(decl.getAttribute('cardinality')).toBe('single');
+    });
 
-  it('sets cardinality="multiple" for multiSelect', () => {
-    const multiState = {
-      ...baseState,
-      choices: [
-        { id: 'a', content: 'A', correct: true, fixed: false },
-        { id: 'b', content: 'B', correct: true, fixed: false },
-      ],
-      maxChoices: 2,
-    };
-    const { responseDeclarations } = buildXML(multiState, QuestionType.MULTI_SELECT);
-    expect(responseDeclarations[0]).toContain('cardinality="multiple"');
-  });
-
-  it('includes the correct identifier in <qti-value>', () => {
-    const { responseDeclarations } = buildXML(baseState, QuestionType.SINGLE_SELECT);
-    expect(responseDeclarations[0]).toContain('choice_a');
-    expect(responseDeclarations[0]).not.toContain('choice_b');
-  });
-
-  it('includes all correct identifiers for multi-select', () => {
-    const multiState = {
-      ...baseState,
-      choices: [
-        { id: 'x', content: 'X', correct: true, fixed: false },
-        { id: 'y', content: 'Y', correct: true, fixed: false },
-        { id: 'z', content: 'Z', correct: false, fixed: false },
-      ],
-      maxChoices: 2,
-    };
-    const { responseDeclarations } = buildXML(multiState, QuestionType.MULTI_SELECT);
-    expect(responseDeclarations[0]).toContain('x');
-    expect(responseDeclarations[0]).toContain('y');
-    expect(responseDeclarations[0]).not.toContain('z');
-  });
-
-  it('omits min-choices attribute when minChoices is 0', () => {
-    const { bodyXml } = buildXML(baseState, QuestionType.SINGLE_SELECT);
-    expect(bodyXml).not.toContain('min-choices');
-  });
-
-  it('includes min-choices attribute when minChoices > 0', () => {
-    const { bodyXml } = buildXML({ ...baseState, minChoices: 1 }, QuestionType.SINGLE_SELECT);
-    expect(bodyXml).toContain('min-choices');
-  });
-
-  it('includes one <qti-simple-choice> per choice', () => {
-    const { bodyXml } = buildXML(baseState, QuestionType.SINGLE_SELECT);
-    const matches = bodyXml.match(/qti-simple-choice/g) ?? [];
-    // Each tag appears as open + close = 2 × 2 choices = 4
-    expect(matches.length).toBe(4);
-  });
-
-  it('preserves rich markup as XML nodes instead of escaped text', () => {
-    const { bodyXml } = buildXML(
-      {
+    it('sets cardinality="multiple" on the declaration element for multiSelect', () => {
+      const multiState = {
         ...baseState,
-        prompt: '<p>Pick <strong>one</strong>.</p>',
         choices: [
-          {
-            id: 'choice_a',
-            content: '<p>Option <em>A</em></p>',
-            correct: true,
-            fixed: false,
-          },
-          { id: 'choice_b', content: 'Option B', correct: false, fixed: false },
+          { id: 'a', content: 'A', correct: true, fixed: false },
+          { id: 'b', content: 'B', correct: true, fixed: false },
         ],
-      },
-      QuestionType.SINGLE_SELECT,
-    );
+        maxChoices: 2,
+      };
+      const { responseDeclarations } = buildXML(multiState, QuestionType.MULTI_SELECT);
+      const decl = parseXmlString(responseDeclarations[0]);
+      expect(decl.getAttribute('cardinality')).toBe('multiple');
+    });
 
-    expect(bodyXml).toContain('<strong>one</strong>');
-    expect(bodyXml).toContain('<em>A</em>');
-    expect(bodyXml).not.toContain('&lt;strong');
-    expect(bodyXml).not.toContain('&lt;em');
+    it('sets base-type="identifier" on the declaration element', () => {
+      const { responseDeclarations } = buildXML(baseState, QuestionType.SINGLE_SELECT);
+      const decl = parseXmlString(responseDeclarations[0]);
+      expect(decl.getAttribute('base-type')).toBe('identifier');
+    });
+
+    it('includes only correct choice identifiers in <qti-value> elements', () => {
+      const { responseDeclarations } = buildXML(baseState, QuestionType.SINGLE_SELECT);
+      const decl = parseXmlString(responseDeclarations[0]);
+      const values = [...decl.querySelectorAll('qti-value')].map(n => n.textContent.trim());
+      expect(values).toContain('choice_a');
+      expect(values).not.toContain('choice_b');
+    });
+
+    it('includes all correct identifiers in <qti-value> elements for multi-select', () => {
+      const multiState = {
+        ...baseState,
+        choices: [
+          { id: 'x', content: 'X', correct: true, fixed: false },
+          { id: 'y', content: 'Y', correct: true, fixed: false },
+          { id: 'z', content: 'Z', correct: false, fixed: false },
+        ],
+        maxChoices: 2,
+      };
+      const { responseDeclarations } = buildXML(multiState, QuestionType.MULTI_SELECT);
+      const decl = parseXmlString(responseDeclarations[0]);
+      const values = [...decl.querySelectorAll('qti-value')].map(n => n.textContent.trim());
+      expect(values).toContain('x');
+      expect(values).toContain('y');
+      expect(values).not.toContain('z');
+    });
+  });
+
+  describe('body XML', () => {
+    it('omits min-choices attribute when minChoices is 0', () => {
+      const { bodyXml } = buildXML(baseState, QuestionType.SINGLE_SELECT);
+      const root = parseXmlString(bodyXml);
+      expect(root.getAttribute('min-choices')).toBeNull();
+    });
+
+    it('sets min-choices attribute when minChoices > 0', () => {
+      const { bodyXml } = buildXML({ ...baseState, minChoices: 1 }, QuestionType.SINGLE_SELECT);
+      const root = parseXmlString(bodyXml);
+      expect(root.getAttribute('min-choices')).toBe('1');
+    });
+
+    it('sets max-choices attribute from state', () => {
+      const { bodyXml } = buildXML(baseState, QuestionType.SINGLE_SELECT);
+      const root = parseXmlString(bodyXml);
+      expect(root.getAttribute('max-choices')).toBe('1');
+    });
+
+    it('renders one <qti-simple-choice> per choice with the correct identifier', () => {
+      const { bodyXml } = buildXML(baseState, QuestionType.SINGLE_SELECT);
+      const root = parseXmlString(bodyXml);
+      const simpleChoices = root.querySelectorAll('qti-simple-choice');
+      expect(simpleChoices).toHaveLength(2);
+      expect(simpleChoices[0].getAttribute('identifier')).toBe('choice_a');
+      expect(simpleChoices[1].getAttribute('identifier')).toBe('choice_b');
+    });
+
+    it('preserves rich markup as real XML child nodes, not escaped text', () => {
+      const { bodyXml } = buildXML(
+        {
+          ...baseState,
+          prompt: '<p>Pick <strong>one</strong>.</p>',
+          choices: [
+            {
+              id: 'choice_a',
+              content: '<p>Option <em>A</em></p>',
+              correct: true,
+              fixed: false,
+            },
+            { id: 'choice_b', content: 'Option B', correct: false, fixed: false },
+          ],
+        },
+        QuestionType.SINGLE_SELECT,
+      );
+
+      const root = parseXmlString(bodyXml);
+      expect(root.querySelector('strong')).not.toBeNull();
+      expect(root.querySelector('em')).not.toBeNull();
+      expect(root.querySelector('strong').textContent).toBe('one');
+      expect(root.querySelector('em').textContent).toBe('A');
+    });
   });
 });
 

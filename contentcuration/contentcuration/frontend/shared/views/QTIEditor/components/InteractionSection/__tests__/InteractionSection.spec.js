@@ -43,12 +43,11 @@ describe('InteractionSection', () => {
   });
 
   describe('parse error handling', () => {
-    it('shows a parse error message and no interaction when XML is malformed', () => {
+    it('gracefully falls back to default interaction state when XML is malformed', () => {
       renderSection({ interaction: interactionBlock('not-xml<{{') });
-      expect(screen.queryByRole('radio')).not.toBeInTheDocument();
-      // At minimum no interactive elements render
-      expect(screen.queryByRole('radio')).not.toBeInTheDocument();
-      expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+      // It should render exactly 1 choice fallback element
+      const inputs = screen.queryAllByRole('radio').concat(screen.queryAllByRole('checkbox'));
+      expect(inputs).toHaveLength(1);
     });
   });
 

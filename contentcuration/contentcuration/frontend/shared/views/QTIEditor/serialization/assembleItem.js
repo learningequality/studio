@@ -102,6 +102,9 @@ export function assembleItemXml({ identifier, title, language, bodyXml, response
     tag: 'qti-assessment-item',
     attrs: {
       xmlns: 'http://www.imsglobal.org/xsd/imsqtiasi_v3p0',
+      // TODO: We will need to properly generate the identifier and title
+      // on the useQtiItem composable when we integrate the question type selector
+      // and have the add question button working.
       identifier: identifier || 'item',
       title: title || '',
       adaptive: 'false',

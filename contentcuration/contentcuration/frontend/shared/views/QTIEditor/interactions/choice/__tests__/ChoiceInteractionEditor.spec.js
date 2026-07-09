@@ -13,6 +13,7 @@ import {
   mockInteractionBlockWithDecl as blockWithDecl,
 } from '../../../utils/testingFixtures';
 import { QuestionType } from '../../../constants';
+import { qtiEditorStrings as tr } from '../../../qtiEditorStrings';
 
 jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor');
 jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
@@ -148,7 +149,7 @@ describe('ChoiceInteractionEditor', () => {
         interaction: block(CHOICE_SINGLE_SELECT_XML),
         questionType: QuestionType.SINGLE_SELECT,
       });
-      expect(screen.getByRole('button', { name: /add choice/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: tr.$tr('addChoiceBtn') })).toBeInTheDocument();
     });
 
     it('adds a new choice row when Add choice is clicked', async () => {
@@ -156,7 +157,7 @@ describe('ChoiceInteractionEditor', () => {
         interaction: block(CHOICE_SINGLE_SELECT_XML),
         questionType: QuestionType.SINGLE_SELECT,
       });
-      await fireEvent.click(screen.getByRole('button', { name: /add choice/i }));
+      await fireEvent.click(screen.getByRole('button', { name: tr.$tr('addChoiceBtn') }));
       // 3 original choices + 1 newly added = 4 radios (choice list uses divs, not li elements)
       expect(screen.getAllByRole('radio')).toHaveLength(4);
     });
@@ -166,9 +167,9 @@ describe('ChoiceInteractionEditor', () => {
         interaction: block(CHOICE_SINGLE_SELECT_XML),
         questionType: QuestionType.SINGLE_SELECT,
       });
-      expect(screen.getAllByRole('button', { name: /move choice up/i })).toHaveLength(3);
-      expect(screen.getAllByRole('button', { name: /move choice down/i })).toHaveLength(3);
-      expect(screen.getAllByRole('button', { name: /delete choice/i })).toHaveLength(3);
+      expect(screen.getAllByRole('button', { name: tr.$tr('moveChoiceUpBtn') })).toHaveLength(3);
+      expect(screen.getAllByRole('button', { name: tr.$tr('moveChoiceDownBtn') })).toHaveLength(3);
+      expect(screen.getAllByRole('button', { name: tr.$tr('deleteChoiceBtn') })).toHaveLength(3);
     });
 
     it('disables move-up on the first choice', () => {
@@ -176,7 +177,7 @@ describe('ChoiceInteractionEditor', () => {
         interaction: block(CHOICE_SINGLE_SELECT_XML),
         questionType: QuestionType.SINGLE_SELECT,
       });
-      const moveUpBtns = screen.getAllByRole('button', { name: /move choice up/i });
+      const moveUpBtns = screen.getAllByRole('button', { name: tr.$tr('moveChoiceUpBtn') });
       expect(moveUpBtns[0]).toBeDisabled();
       expect(moveUpBtns[1]).toBeEnabled();
     });
@@ -186,7 +187,7 @@ describe('ChoiceInteractionEditor', () => {
         interaction: block(CHOICE_SINGLE_SELECT_XML),
         questionType: QuestionType.SINGLE_SELECT,
       });
-      const moveDownBtns = screen.getAllByRole('button', { name: /move choice down/i });
+      const moveDownBtns = screen.getAllByRole('button', { name: tr.$tr('moveChoiceDownBtn') });
       expect(moveDownBtns[2]).toBeDisabled();
       expect(moveDownBtns[1]).toBeEnabled();
     });
@@ -199,7 +200,7 @@ describe('ChoiceInteractionEditor', () => {
         interaction: block(xml),
         questionType: QuestionType.SINGLE_SELECT,
       });
-      expect(screen.getByRole('button', { name: /delete choice/i })).toBeDisabled();
+      expect(screen.getByRole('button', { name: tr.$tr('deleteChoiceBtn') })).toBeDisabled();
     });
 
     it('removes a choice row when delete is clicked', async () => {
@@ -207,7 +208,7 @@ describe('ChoiceInteractionEditor', () => {
         interaction: block(CHOICE_SINGLE_SELECT_XML),
         questionType: QuestionType.SINGLE_SELECT,
       });
-      const deleteBtns = screen.getAllByRole('button', { name: /delete choice/i });
+      const deleteBtns = screen.getAllByRole('button', { name: tr.$tr('deleteChoiceBtn') });
       await fireEvent.click(deleteBtns[0]);
       expect(screen.getAllByRole('radio')).toHaveLength(2);
     });
@@ -251,8 +252,12 @@ describe('ChoiceInteractionEditor', () => {
         mode: 'view',
         showAnswers: true,
       });
-      expect(screen.queryByRole('button', { name: /add choice/i })).not.toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /delete choice/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: tr.$tr('addChoiceBtn') }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: tr.$tr('deleteChoiceBtn') }),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -346,20 +351,20 @@ describe('ChoiceInteractionEditor', () => {
         questionType: QuestionType.SINGLE_SELECT,
       });
       screen
-        .getAllByRole('button', { name: /move choice up/i })
+        .getAllByRole('button', { name: tr.$tr('moveChoiceUpBtn') })
         .forEach(b => expect(b).toHaveAccessibleName());
     });
   });
 
   describe('graceful fallback', () => {
-    it('renders nothing interactive when bodyXml is empty', () => {
+    it('renders default interaction state when bodyXml is empty', () => {
       renderEditor({ interaction: block(''), questionType: QuestionType.SINGLE_SELECT });
-      expect(screen.queryByRole('radio')).not.toBeInTheDocument();
+      expect(screen.getAllByRole('radio')).toHaveLength(1);
     });
 
-    it('renders nothing interactive when XML is malformed', () => {
+    it('renders default interaction state when XML is malformed', () => {
       renderEditor({ interaction: block('<unclosed'), questionType: QuestionType.SINGLE_SELECT });
-      expect(screen.queryByRole('radio')).not.toBeInTheDocument();
+      expect(screen.getAllByRole('radio')).toHaveLength(1);
     });
   });
 });
