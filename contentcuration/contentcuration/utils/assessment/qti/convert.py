@@ -1,8 +1,11 @@
 import base64
+import logging
 from dataclasses import dataclass
+from dataclasses import field
 from typing import Any
 from typing import Dict
 from typing import List
+from typing import Optional
 from typing import Tuple
 
 from le_utils.constants import exercises
@@ -16,6 +19,10 @@ from contentcuration.utils.assessment.qti.assessment_item import ResponseDeclara
 from contentcuration.utils.assessment.qti.assessment_item import ResponseProcessing
 from contentcuration.utils.assessment.qti.assessment_item import Value
 from contentcuration.utils.assessment.qti.base import ElementTreeBase
+from contentcuration.utils.assessment.qti.catalog import Card
+from contentcuration.utils.assessment.qti.catalog import Catalog
+from contentcuration.utils.assessment.qti.catalog import CatalogInfo
+from contentcuration.utils.assessment.qti.catalog import HtmlContent
 from contentcuration.utils.assessment.qti.constants import BaseType
 from contentcuration.utils.assessment.qti.constants import Cardinality
 from contentcuration.utils.assessment.qti.constants import Orientation
@@ -58,6 +65,7 @@ class LegacyAssessmentItem:
     assessment_id: str
     title: str
     language: str
+    hints: List[Dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -73,6 +81,40 @@ def _create_html_content_from_text(text: str) -> FlowContentList:
         return []
     markup = render_markdown(text)
     return ElementTreeBase.from_string(markup)
+
+
+def _create_catalog_info(item: LegacyAssessmentItem) -> Optional[CatalogInfo]:
+    """Build the dormant hint catalog, or None if the item has no usable hints."""
+    try:
+        sorted_hints = sorted(item.hints, key=lambda hint: hint.get("order", 0))
+    except TypeError:
+        # A mixed-type or otherwise incomparable "order" value must not crash
+        # the channel publish - fall back to input order, same as base.py's
+        # ExerciseArchiveGenerator._sort_by_order.
+        logging.warning(
+            "Unable to sort hints for assessment item %s, leaving unsorted.",
+            item.assessment_id,
+        )
+        sorted_hints = item.hints
+    cards = []
+    for hint in sorted_hints:
+        text = hint.get("hint")
+        if not text or not text.strip():
+            # Log + skip rather than crash the channel publish or emit an
+            # empty card - matches the per-item log+skip preference.
+            logging.warning(
+                "Skipping hint with no text for assessment item %s",
+                item.assessment_id,
+            )
+            continue
+        cards.append(
+            Card(
+                html_content=HtmlContent(children=_create_html_content_from_text(text))
+            )
+        )
+    if not cards:
+        return None
+    return CatalogInfo(catalog=[Catalog(id_="kolibri-hints", card=cards)])
 
 
 def _response_declaration(
@@ -201,6 +243,7 @@ def convert_legacy_assessment_item_to_qti(
         response_declaration=[response_declaration],
         outcome_declaration=[outcome_declaration],
         item_body=item_body,
+        catalog_info=_create_catalog_info(item),
         response_processing=response_processing,
     )
 

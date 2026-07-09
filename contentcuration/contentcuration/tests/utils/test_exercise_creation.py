@@ -1400,6 +1400,48 @@ class TestQTIExerciseCreation(StudioTestCase):
             _normalize_xml(actual_manifest_xml),
         )
 
+    def _render_single_item_xml(self, assessment_id, hints):
+        """Package a single-question QTI exercise and return that item's XML."""
+        item = self._create_assessment_item(
+            exercises.SINGLE_SELECTION,
+            "What is 2+2?",
+            [
+                {"answer": "4", "correct": True, "order": 1},
+                {"answer": "3", "correct": False, "order": 2},
+            ],
+            hints=hints,
+            assessment_id=assessment_id,
+        )
+        exercise_data = {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": 5,
+            "m": 3,
+            "all_assessment_items": [item.assessment_id],
+            "assessment_mapping": {item.assessment_id: exercises.SINGLE_SELECTION},
+        }
+        self._create_qti_zip(exercise_data)
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+        return zip_file.read(f"items/{hex_to_qti_id(assessment_id)}.xml").decode(
+            "utf-8"
+        )
+
+    def test_qti_exercise_with_hints_produces_catalog_info(self):
+        item_xml = self._render_single_item_xml(
+            "1234567890abcdef1234567890abcdef",
+            [
+                {"hint": "Think about pairs.", "order": 1},
+                {"hint": "It's 4.", "order": 2},
+            ],
+        )
+        self.assertEqual(item_xml.count('support="ext:kolibri-hint"'), 2)
+        self.assertLess(item_xml.index("Think about pairs."), item_xml.index("It's 4."))
+
+    def test_qti_exercise_without_hints_produces_no_catalog_info(self):
+        item_xml = self._render_single_item_xml("abcdef1234567890abcdef1234567890", [])
+        self.assertNotIn("<qti-catalog-info", item_xml)
+
     def test_perseus_question_rejection(self):
         """Test that Perseus questions are properly rejected"""
         assessment_id = "aaaa1111bbbb2222cccc3333dddd4444"
@@ -1491,7 +1533,7 @@ class TestQTIExerciseCreation(StudioTestCase):
             _normalize_xml(actual_manifest_xml),
         )
 
-        self.assertEqual(exercise_file.checksum, "8df26b0c7009ae84fe148cceda8e0138")
+        self.assertEqual(exercise_file.checksum, "cd5a770d35fa1c25092331ee00f4ce4a")
 
     def test_image_resizing(self):
         # Create a base image file
@@ -1580,6 +1622,13 @@ class TestQTIExerciseCreation(StudioTestCase):
         </qti-simple-choice>
         </qti-choice-interaction>
         </qti-item-body>
+        <qti-catalog-info>
+        <qti-catalog id="kolibri-hints">
+        <qti-card support="ext:kolibri-hint">
+        <qti-html-content><p>Hint text</p></qti-html-content>
+        </qti-card>
+        </qti-catalog>
+        </qti-catalog-info>
         <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct" />
         </qti-assessment-item>"""
 
@@ -1690,7 +1739,7 @@ class TestQTIExerciseCreation(StudioTestCase):
             _normalize_xml(actual_manifest_xml),
         )
 
-        self.assertEqual(exercise_file.checksum, "8e488543ef52f0b153553eaf9fb51419")
+        self.assertEqual(exercise_file.checksum, "f15370f74b06b59bca6e289fe0e9cb87")
 
     def test_unsupported_question_type(self):
         """Test that unsupported question types raise appropriate errors"""

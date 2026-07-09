@@ -29,10 +29,16 @@ def convert_legacy_question_to_qti(question_data: dict) -> QTIConversionResult:
         if isinstance(answer.get("answer"), str):
             answer["answer"] = strip_content_storage_placeholder(answer["answer"])
 
+    hints = json.loads(question_data.get("hints") or "[]")
+    for hint in hints:
+        if isinstance(hint.get("hint"), str):
+            hint["hint"] = strip_content_storage_placeholder(hint["hint"])
+
     item = LegacyAssessmentItem(
         type=question_data["type"],
         question=strip_content_storage_placeholder(question_data.get("question") or ""),
         answers=answers,
+        hints=hints,
         randomize=question_data.get("randomize") or False,
         assessment_id=question_data["assessment_id"],
         title=question_data.get("assessment_id"),

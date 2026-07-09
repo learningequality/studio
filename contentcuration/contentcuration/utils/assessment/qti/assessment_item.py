@@ -12,6 +12,7 @@ from pydantic import PositiveInt
 from contentcuration.utils.assessment.qti.base import BaseSequence
 from contentcuration.utils.assessment.qti.base import QTIBase
 from contentcuration.utils.assessment.qti.base import TextType
+from contentcuration.utils.assessment.qti.catalog import CatalogInfo
 from contentcuration.utils.assessment.qti.constants import BaseType
 from contentcuration.utils.assessment.qti.constants import Cardinality
 from contentcuration.utils.assessment.qti.constants import ExternalScored
@@ -234,4 +235,5 @@ class AssessmentItem(QTIBase):
     response_declaration: List[ResponseDeclaration] = Field(default_factory=list)
     outcome_declaration: List[OutcomeDeclaration] = Field(default_factory=list)
     item_body: Optional[ItemBody] = None
+    catalog_info: Optional[CatalogInfo] = None
     response_processing: Optional[ResponseProcessing] = None

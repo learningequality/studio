@@ -10,6 +10,10 @@ from contentcuration.utils.assessment.qti.assessment_item import OutcomeDeclarat
 from contentcuration.utils.assessment.qti.assessment_item import ResponseDeclaration
 from contentcuration.utils.assessment.qti.assessment_item import ResponseProcessing
 from contentcuration.utils.assessment.qti.assessment_item import Value
+from contentcuration.utils.assessment.qti.catalog import Card
+from contentcuration.utils.assessment.qti.catalog import Catalog
+from contentcuration.utils.assessment.qti.catalog import CatalogInfo
+from contentcuration.utils.assessment.qti.catalog import HtmlContent
 from contentcuration.utils.assessment.qti.constants import BaseType
 from contentcuration.utils.assessment.qti.constants import Cardinality
 from contentcuration.utils.assessment.qti.html import Blockquote
@@ -31,6 +35,39 @@ from contentcuration.utils.assessment.qti.prompt import Prompt
 
 
 class QTIAssessmentItemTests(unittest.TestCase):
+    def test_assessment_item_with_catalog_info_orders_between_item_body_and_response_processing(
+        self,
+    ):
+        item_body = ItemBody(children=[P(children=["Question."])])
+        response_processing = ResponseProcessing(
+            template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"
+        )
+        catalog_info = CatalogInfo(
+            catalog=[
+                Catalog(
+                    id_="kolibri-hints",
+                    card=[
+                        Card(html_content=HtmlContent(children=[P(children=["Hint."])]))
+                    ],
+                )
+            ]
+        )
+
+        assessment_item = AssessmentItem(
+            identifier="item1",
+            title="Test",
+            language="en-US",
+            item_body=item_body,
+            catalog_info=catalog_info,
+            response_processing=response_processing,
+        )
+
+        xml = assessment_item.to_xml_string()
+        self.assertLess(xml.index("</qti-item-body>"), xml.index("<qti-catalog-info>"))
+        self.assertLess(
+            xml.index("</qti-catalog-info>"), xml.index("<qti-response-processing")
+        )
+
     def test_true_false_question(self):
         expected_xml = """<qti-assessment-item
  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"

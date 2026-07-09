@@ -159,6 +159,7 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
             type=assessment_item.type,
             question=processed_data["question"],
             answers=processed_data.get("answers", []),
+            hints=processed_data.get("hints", []),
             randomize=processed_data.get("randomize", False),
             assessment_id=assessment_item.assessment_id,
             title=f"{self.ccnode.title} {len(self.qti_resources) + 1}",
