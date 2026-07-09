@@ -43,6 +43,39 @@ class ConvertLegacyQuestionToQTITests(unittest.TestCase):
             },
         )
 
+    def test_convert_legacy_question_to_qti_strips_placeholder_from_hints_and_registers_image(
+        self,
+    ):
+        question_data = {
+            "type": "multiple_selection",
+            "assessment_id": "abf45e8fd7f151adb1b3df2d751e945e",
+            "question": "Which is red?",
+            "answers": '[{"answer": "Apple", "correct": true, "order": 0}, {"answer": "Sky", "correct": false, "order": 1}]',  # noqa
+            "hints": '[{"hint": "Try this: ![](${☣ CONTENTSTORAGE}/cccccccccccccccccccccccccccccccc.png)", "order": 0}]',  # noqa
+            "randomize": False,
+        }
+        result = convert_legacy_question_to_qti(question_data)
+        validation_result = validate_qti_item(result.xml)
+        self.assertTrue(validation_result.is_valid, validation_result.errors)
+        self.assertIn('support="ext:kolibri-hint"', result.xml)
+        self.assertIn(
+            "cccccccccccccccccccccccccccccccc.png",
+            get_qti_media_references(result.xml),
+        )
+
+    def test_convert_legacy_question_to_qti_without_hints_produces_no_catalog_info(
+        self,
+    ):
+        question_data = {
+            "type": "multiple_selection",
+            "assessment_id": "abf45e8fd7f151adb1b3df2d751e945e",
+            "question": "Which is red?",
+            "answers": '[{"answer": "Apple", "correct": true, "order": 0}, {"answer": "Sky", "correct": false, "order": 1}]',  # noqa
+            "randomize": False,
+        }
+        result = convert_legacy_question_to_qti(question_data)
+        self.assertNotIn("<qti-catalog-info", result.xml)
+
 
 def _custom_interaction_item_xml(data_type, path_attr, path_value):
     return _item_xml(
