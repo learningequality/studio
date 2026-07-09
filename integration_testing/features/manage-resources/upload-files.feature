@@ -18,7 +18,7 @@ Feature: Upload files
 		Then I see the *Edit files* modal #if I am uploading resources to a folder with metadata then I will first see the *Apply details from the folder <folder_name>*
 		When I fill in all the required fields
 			And I click the *Finish* button
-		Then I am returned to the main topic tree view
+		Then I am back at the channel editor page
 			And I can see the uploaded file
 
 	Scenario: Upload multiple supported files
@@ -30,7 +30,7 @@ Feature: Upload files
 		Then I see the *Edit files* modal #if I am uploading resources to a folder with metadata then I will first see the *Apply details from the folder <folder_name>*
 		When I fill in all the required fields for each file
 			And I click the *Finish* button
-		Then I am returned to the main topic tree view
+		Then I am back at the channel editor page
 			And I can see the uploaded files
 
 	Scenario: Upload more files
@@ -42,7 +42,7 @@ Feature: Upload files
 		Then I see the *Edit files* modal #if I am uploading resources to a folder with metadata then I will first see the *Apply details from the folder <folder_name>*
 		When I fill in all the required fields for each file
 			And I click the *Finish* button
-		Then I am returned to the main topic tree view
+		Then I am back at the channel editor page
 			And I can see the uploaded files
 
 	Scenario: Upload more files by drag and drop
@@ -51,7 +51,7 @@ Feature: Upload files
 		Then I see the *Edit files* modal with the newly uploaded files #if I am uploading resources to a folder with metadata then I will first see the *Apply details from the folder <folder_name>*
 		When I fill in all the required fields for each file
 			And I click the *Finish* button
-		Then I am returned to the main topic tree view
+		Then I am back at the channel editor page
 			And I can see the uploaded files
 
 	Scenario: Cancel the file upload

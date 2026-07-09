@@ -11,7 +11,7 @@ Feature: Create an account on Studio
 				And I see the *Basic information* section containing the following fields: First name, Last name, Email, Password and Confirm password
 				And I see the *How do you plan on using Kolibri Studio (check all that apply)*, *Where do you plan to use Kolibri Studio? (check all that apply)*, *How did you hear about us?* and *I have read and agree to terms of service and the privacy policy* sections
 				And I see the *View Privacy Policy* and *View Terms of Service* links
-			When I input all the required fields
+			When I fill in all of the required fields
 				And I click the *Finish* button
 			Then I see the *Activation link sent* page
 				And I see *Thank you for creating an account! To complete the process, please check your email for the activation link we sent you.*
@@ -31,3 +31,10 @@ Feature: Create an account on Studio
 				And I click the *Finish* button
 			Then I see the *Activation link sent* page
 				And I see *Thank you for creating an account! To complete the process, please check your email for the activation link we sent you.*
+
+		Scenario: Attempt to create an account with an already existing email
+			Given I have filled in all the required fields
+				And I have entered an already existing email in the *Email* field
+			When I click the *Finish* button
+			Then I see the *Please fix the errors below* alert under the main heading
+				And I see an *An account with this email already exists* error notification under the *Email* field

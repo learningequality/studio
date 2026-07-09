@@ -1,5 +1,5 @@
-Feature: Kolibri Studio critical workflows
-  This is a test suite of the main Kolibri Studio workflows.
+Feature: Kolibri Studio integration testing scenarios
+  This is an integration testing suite for Kolibri Studio.
 
   Background:
     Given Kolibri Studio is accessible at https://studio.learningequality.org/ or any of the test environments
@@ -25,6 +25,20 @@ Feature: Kolibri Studio critical workflows
 		Then I am able to sign in successfully
 			And I am at *My channels* page
 
+	Scenario: Sign in to Studio using valid credentials
+		Given I am at Kolibri Studio's sign-in page
+		When I fill in my email
+      And I fill in my password
+      And I click the *Sign in* button
+    Then I am signed in
+    	And I am at *My channels* page
+
+  Scenario: See error notification for incorrect email or password
+    Given I am at Kolibri Studio's sign-in page
+    When I fill in an incorrect email or password
+    	And I click the *Sign in* button
+    Then I see the following validation message above the form: *Email or password is incorrect*
+
 	Scenario: Reset my password
 		Given I've requested and received an email with a link to reset my password
 		When I click the link in the email
@@ -32,7 +46,7 @@ Feature: Kolibri Studio critical workflows
 			And I fill in the *New password* field
 			And I fill in the *Confirm password* field with the same password
 			And I press the *Submit* button
-		Then I see the following message: Password reset successfully
+		Then I see the following message: *Password reset successfully*
 
 	Scenario: Explore without an account
 		Given I am not signed in to Studio
@@ -119,6 +133,20 @@ Feature: Kolibri Studio critical workflows
 		Then I am back at the channel editor page
 			And I can see the newly created folder
 
+	Scenario: Create multiple folders
+		Given I am signed in to Studio
+			And I am at the channel editor page
+			And I have created an empty folder tree
+		When I click *⋮* (Options) button for a folder
+			And I click the *New folder* option
+		Then I see the *New folder* modal
+		When I fill in the required fields
+			And I click the *Add new folder* button
+		Then I can fill in the required fields for a new folder #repeat this process for as many empty folders as you need
+		When I click the *Finish* button
+		Then I am at the channel editor page
+			And I can see the created folders
+
 	Scenario: Upload all supported files
 		Given I am signed in to Studio
 			And I am at the channel editor page
@@ -133,6 +161,15 @@ Feature: Kolibri Studio critical workflows
 		When I click the *Open* button
 		Then I see the *Edit files* modal
 		When I fill in all the required fields
+			And I click the *Finish* button
+		Then I am back at the channel editor page
+			And I can see the uploaded files
+
+	Scenario: Upload more files by drag and drop
+		Given I am at the *Edit files* modal after having imported some files
+		When I drag and drop files
+		Then I see the *Edit files* modal with the newly uploaded files #if I am uploading resources to a folder with metadata then I will first see the *Apply details from the folder <folder_name>*
+		When I fill in all the required fields for each file
 			And I click the *Finish* button
 		Then I am back at the channel editor page
 			And I can see the uploaded files
@@ -320,6 +357,44 @@ Feature: Kolibri Studio critical workflows
 		When I navigate to the *Community Library* page
 		Then I can see that the channel is shown among the other Community Library channels
 
+	Scenario: Community Library page overview (published channels)
+		Given several channels have already been published to the Community Library
+		When I look at the page
+		Then I see the *Community Library* title
+			And I see *Browse community-submitted channels approved for discovery in Studio. Copy a token to use a channel in Kolibri. What is the Community Library?*
+			And I see a *Help grow the Community Library* banner with a *Go to my channels* button
+			And I see the cards of all of the currently published channels
+			And I see the following filters to the left of the page: *Search*, *Countries*, *Languages*, *Categories*
+
+	Scenario: Filter channels at the Community Library page
+		Given several channels have already been published to the Community Library
+		When I enter a keyword in the *Search* field
+		Then I see only the results matching the entered keyword
+		When there are no results matching the entered keyword
+		Then I see a *0 results found* text
+			And I see a *No channels match the selected filters.* message
+		When I click the *Clear all* link
+		Then I see the full list with the available cards
+		When apply any of the other available filters (*Countries*, *Languages*, *Categories*)
+		Then I see only the results matching the applied filters
+		When there are no results matching the applied filters
+		Then I see a *0 results found* text
+			And I see a *No channels match the selected filters.* message
+
+	Scenario: View the channel details and download the files with the channel summary
+			Given I am signed in to Studio
+			And I am in any of the tabs (*My Channels*, *Starred*, *View only*, or *Content Library*)
+			When I click the *i* button for the desired channel
+			Then I see a new page with the channel details
+				And I see the detailed information for the channel (token, size and resources, language, etc.)
+				And I see the *Download channel summary* button
+			When I click the *Download channel summary* button
+			Then I see the options to download the summary as a PDF or a CSV file
+			When I select the option to download as PDF
+			Then I can save and open the PDF file in my default system PDF reader application
+			When I select the option to download CSV
+			Then I can save and open the CSV file in my default system CSV application
+
 	Scenario: Invite collaborators with *Can edit* permissions
 		Given I am signed in to Studio
 			And I am at the channel editor page
@@ -408,6 +483,23 @@ Feature: Kolibri Studio critical workflows
 			And I see the *Undo* button
 			And I no longer see the resource
 
+	Scenario: Remove folders and resources through the *···* (Options) menu
+		Given I am signed in to Studio
+			And I am at the channel editor page
+			And there are available resources of different types
+		When I hover over a folder
+			And I click on the *···* (Options) button
+			And I select the *Remove* option
+		Then I can see the *Sent to trash* snackbar notification
+			And I see the *Undo* button
+			And I no longer see the removed folder
+		When I hover over a resource
+			And I click on the *···* (Options) button
+			And I select the *Remove* option
+		Then I can see the *Sent to trash* snackbar notification
+			And I see the *Undo* button
+			And I no longer see the resource
+
 	Scenario: Removed folder and resources can be restored
 	  Given I am signed in to Studio
 	    And I am at the channel editor page
@@ -447,13 +539,24 @@ Feature: Kolibri Studio critical workflows
 			And the resources are no longer in my original directory
 
 	Scenario: Apply metadata details from a folder when adding a resource
-		Given I have created a folder with multiple metadata details such as categories, levels, requirements, language
+		Given I am signed in to Studio
+			And I am at the channel editor page
+			And there are available resources of different types
+			And I have created a folder with multiple metadata details such as categories, levels, requirements, language
 		When I attempt to import, copy or move a resource into that folder
 		Then I see the *Apply details from the folder <folder name>* modal
 			And I see that all of the checkboxes for the available metadata are selected
 		When I click the *Continue* button
 			And I go to view the details of a resource
 		Then I see that the selected metadata is filled in
+
+	Scenario: Move a resource into a folder with no metadata
+    Given I am signed in to Studio
+			And I am at the channel editor page
+			And there are available resources of different types
+    	And I have created a folder named *Folder 1* with no metadata
+    When I move a resource into *Folder 1*
+    Then the modal for applying inheritable metadata is not displayed
 
 	Scenario: Delete a channel
 		Given I am signed in to Studio
@@ -536,6 +639,53 @@ Feature: Kolibri Studio critical workflows
 			And I see the newly created collection
 			And I see the number of channels in that collection
 
+	Scenario: Create a collection by searching for channels
+		Given I am signed in to Studio
+			And I am on the *Collections* tab
+		When I click the *New collection* button
+			And I click the *Select channels* button
+		Then I see the *Select channels* page
+			And I am on the *Kolibri library* tab # alternatively I can select the *My channels* or *View-only* tab
+		When I enter a search term in the *Search for a channel* field
+      And I select one or several channels
+			And I click the *Finish* button
+		Then I see the *New collection* screen with the selected channels
+			When I click the *Create* button
+		Then I see the *Collections* page
+			And I see the newly created collection
+			And I see the correct number of channels in that collection
+
+	Scenario: Edit a collection
+		Given I am signed in to Studio
+			And I am on the *Collections* tab
+			And I've already created some collections
+		When I click the *Options* drop-down for the collection I want to edit
+			And I select the *Edit collection* option
+		Then I see the collection's details
+			And I can change the collection name
+		When I click the *Select channels* button
+		Then I am on the *Kolibri library* tab # alternatively I can select the *My channels* or *View-only* tab
+		When I select one or several channels
+			And I click the *Finish* button
+		Then I see the the *New collection* screen with the selected channels
+		When I click the *Remove* button
+			Then I see a *Channel removed* snackbar message
+		When I click the *Save and close* button
+		Then I see the *Collections* page
+			And I see the edited collection
+			And I see the number of channels in that collection
+
+	Scenario: Delete a collection
+		Given I am signed in to Studio
+			And I am on the *Collections* tab
+			And I've already created some collections
+		When I click the *Options* drop-down for the collection I want to edit
+			And I select the *Delete collection* option
+		Then I see the *Delete collection* modal window
+		When I click the *Delete collection* button
+		Then I see the *Collections* page
+			And I see that the deleted collection is no longer displayed
+
 	Scenario: Explore the Content library
 		Given I am signed in to Studio
 		When I go to the *Content library*
@@ -552,3 +702,11 @@ Feature: Kolibri Studio critical workflows
 	  Then I am at Kolibri Studio's sign-in page
 	  When I click the browser's *Back* button
 	  Then I can't access any of the pages I've visited as a signed-in user
+
+	Scenario: Browse through the available pages in all supported browsers
+    When I visit each Kolibri Studio page in the following browsers and operating systems
+      - Firefox/Chrome/Edge on Windows
+      - Firefox/Chrome on Linux
+      - Firefox/Chrome/Safari on Mac OS
+    Then I can see that each page is displayed correctly
+      And I can interact with all of the available options and features of each page
