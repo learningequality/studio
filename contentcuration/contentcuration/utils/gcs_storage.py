@@ -11,6 +11,10 @@ from google.cloud.exceptions import InternalServerError
 from google.cloud.storage import Client
 from google.cloud.storage.blob import Blob
 
+from .files import determine_content_type
+from contentcuration.utils.files import base64_to_hex
+from contentcuration.utils.files import hex_to_base64
+
 OLD_STUDIO_STORAGE_PREFIX = "/contentworkshop_content/"
 
 CONTENT_DATABASES_MAX_AGE = 5  # seconds
@@ -120,10 +124,6 @@ class GoogleCloudStorage(Storage):
             blob.content_encoding = "gzip"
             fobj = buffer
 
-        # determine the current file's mimetype based on the name
-        # import determine_content_type lazily in here, so we don't get into an infinite loop with circular dependencies
-        from contentcuration.utils.storage_common import determine_content_type
-
         content_type = determine_content_type(name)
 
         # force the current file to be at file location 0, to
@@ -215,6 +215,18 @@ class GoogleCloudStorage(Storage):
             fobj.seek(current_location)
         return len(byt) == 0
 
+    def create_resumable_upload_session(self, name, md5, size):
+        blob = self.bucket.blob(name)
+        md5_b64 = hex_to_base64(md5)
+        blob.md5_hash = md5_b64.strip()
+        blob.content_type = determine_content_type(name)
+        blob.metadata = {"declared-size": str(size)}
+        return blob.create_resumable_upload_session(client=self.client)
+
+    def get_stored_object_md5(self, name):
+        blob = self.bucket.get_blob(name)
+        return base64_to_hex(blob.md5_hash) if blob is not None else None
+
 
 class CompositeGCS(Storage):
     def __init__(self):
@@ -283,3 +295,11 @@ class CompositeGCS(Storage):
 
     def get_modified_time(self, name):
         return self._get_readable_backend(name).get_modified_time(name)
+
+    def create_resumable_upload_session(self, name, md5_b64, size):
+        return self._get_writeable_backend().create_resumable_upload_session(
+            name, md5_b64, size
+        )
+
+    def get_stored_object_md5(self, name):
+        return self._get_readable_backend(name).get_stored_object_md5(name)
