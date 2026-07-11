@@ -16,8 +16,6 @@ from PIL import Image
 from PIL import ImageFile
 
 from contentcuration.api import write_raw_content_to_storage
-from contentcuration.models import File
-from contentcuration.models import generate_object_storage_name
 
 
 # Do this to ensure that we infer mimetypes for files properly, specifically
@@ -32,6 +30,11 @@ THUMBNAIL_WIDTH = 400
 def create_file_from_contents(
     contents, ext=None, node=None, preset_id=None, uploaded_by=None
 ):
+    # Imported here rather than at module level to avoid a circular import:
+    # the GCS storage backend imports this module, and importing models at load
+    # time re-enters a partially initialized contentcuration.models during boot.
+    from contentcuration.models import File
+
     checksum, _, path = write_raw_content_to_storage(contents, ext=ext)
 
     result = File(
@@ -52,6 +55,10 @@ def get_file_diff(files):
     storage, and return.
 
     """
+
+    # Imported here rather than at module level to avoid a circular import (see
+    # create_file_from_contents).
+    from contentcuration.models import generate_object_storage_name
 
     # We use a thread pool in here, making direct HEAD requests to the storage URL
     # to see if the objects exist.
@@ -101,6 +108,9 @@ def get_thumbnail_encoding(filename, dimension=THUMBNAIL_WIDTH):
         dimension (int, optional): desired width of thumbnail. Defaults to 400.
     Returns base64 encoding of resized thumbnail
     """
+    # Imported here rather than at module level to avoid a circular import (see
+    # create_file_from_contents).
+    from contentcuration.models import generate_object_storage_name
 
     if filename.startswith("data:image"):
         return filename
