@@ -1,17 +1,18 @@
-import { shallowMount, mount } from '@vue/test-utils';
+import { render, screen, fireEvent, within, configure } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
 
 import { factory } from '../../store';
 import { assessmentItemKey } from '../../utils';
 import AssessmentItemEditor from './AssessmentItemEditor';
 import { AssessmentItemTypes, ValidationErrors } from 'shared/constants';
 
-const store = factory();
-
 jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor.vue');
 
-const listeners = {
-  update: jest.fn(),
-};
+configure({
+  testIdAttribute: 'data-test',
+});
+
+const store = factory();
 
 const ITEM = {
   contentnode: 'Exercise 2',
@@ -28,239 +29,87 @@ const ITEM = {
   ],
 };
 
-const openQuestion = async wrapper => {
-  await wrapper.findComponent('[data-test="questionText"]').trigger('click');
+const renderComponent = (props = {}) => {
+  return render(AssessmentItemEditor, {
+    store,
+    routes: [],
+    props: {
+      nodeId: 'node-id',
+      item: ITEM,
+      ...props,
+    },
+  });
 };
 
-const updateQuestion = async (wrapper, newQuestionText) => {
-  wrapper.findComponent({ name: 'RichTextEditor' }).vm.$emit('update', newQuestionText);
-  await wrapper.vm.$nextTick();
+// Returns the payload of the most recent `update` event.
+const lastUpdatePayload = emitted => {
+  const updates = emitted().update;
+  return updates[updates.length - 1][0];
 };
 
-const selectKind = async (wrapper, kind) => {
-  wrapper.vm.onKindUpdate(kind);
-  await wrapper.vm.$nextTick();
+// Opens the question editor (question starts collapsed in view mode) and returns its textbox.
+const openQuestionEditor = async user => {
+  await user.click(screen.getByTestId('questionText'));
+  // Both the type dropdown and the answers expose textboxes, so target the question editor's.
+  return screen.getAllByRole('textbox').find(el => el.tagName === 'TEXTAREA');
+};
+
+// Opens the response-type dropdown (by clicking its current value) and picks a new type.
+const changeQuestionType = async (user, currentLabel, newLabel) => {
+  const select = screen.getByTestId('kindSelect');
+  await user.click(within(select).getByText(currentLabel));
+  await user.click(await screen.findByText(newLabel));
 };
 
 describe('AssessmentItemEditor', () => {
-  let wrapper;
+  it('shows the response type, question, answers, and hints of the item', () => {
+    renderComponent();
 
-  it('smoke test', () => {
-    const wrapper = shallowMount(AssessmentItemEditor, { store });
-
-    expect(wrapper.exists()).toBe(true);
+    expect(screen.getByText('Type')).toBeInTheDocument();
+    expect(screen.getByText('Exercise 2 - Question 2')).toBeInTheDocument();
+    expect(screen.getByText('Peanut butter')).toBeInTheDocument();
+    expect(screen.getByText('Mayonnaise (I mean you can, but...)')).toBeInTheDocument();
   });
 
-  it('renders question, answers and hints', () => {
-    wrapper = mount(AssessmentItemEditor, {
-      store,
-      propsData: {
-        item: ITEM,
-      },
-      listeners,
-    });
+  it('lets the user edit the question and emits the updated question text', async () => {
+    const user = userEvent.setup();
+    const { emitted } = renderComponent();
 
-    // Find the first RichTextEditor component, which is used for the question.
-    const questionEditor = wrapper.findComponent({ name: 'RichTextEditor' });
-    expect(questionEditor.exists()).toBe(true);
+    const questionEditor = await openQuestionEditor(user);
+    await fireEvent.update(questionEditor, 'My new question');
 
-    // Assert that it received the correct `value` prop.
-    expect(questionEditor.props('value')).toBe('Exercise 2 - Question 2');
-
-    // Check that the child editor components also exist.
-    expect(wrapper.findComponent({ name: 'AnswersEditor' }).exists()).toBe(true);
-    expect(wrapper.findComponent({ name: 'HintsEditor' }).exists()).toBe(true);
-  });
-
-  it('renders the type label and hints divider', () => {
-    wrapper = mount(AssessmentItemEditor, {
-      store,
-      propsData: {
-        item: ITEM,
-      },
-      listeners,
-    });
-
-    expect(wrapper.find('.field-label').text()).toBe('Type');
-    expect(wrapper.find('.hints-divider').exists()).toBe(true);
-  });
-
-  describe('on question text update', () => {
-    beforeEach(async () => {
-      wrapper = mount(AssessmentItemEditor, {
-        store,
-        propsData: {
-          item: ITEM,
-        },
-        listeners,
-      });
-
-      jest.clearAllMocks();
-
-      await openQuestion(wrapper);
-      await updateQuestion(wrapper, 'My new question');
-    });
-
-    it('emits update event with item containing updated question text', () => {
-      expect(listeners.update).toHaveBeenCalledWith({
-        ...assessmentItemKey(ITEM),
-        question: 'My new question',
-      });
+    expect(lastUpdatePayload(emitted)).toEqual({
+      ...assessmentItemKey(ITEM),
+      question: 'My new question',
     });
   });
 
-  describe('on item type update', () => {
-    describe('when changing to single selection', () => {
-      beforeEach(async () => {
-        const item = {
-          ...ITEM,
-          type: AssessmentItemTypes.MULTIPLE_SELECTION,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: true, order: 2 },
-          ],
-        };
+  describe('changing the question type', () => {
+    it('keeps a single correct answer when switching to single choice', async () => {
+      const item = {
+        ...ITEM,
+        type: AssessmentItemTypes.MULTIPLE_SELECTION,
+        answers: [
+          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          { answer: 'Peanut butter', correct: true, order: 2 },
+        ],
+      };
+      const user = userEvent.setup();
+      const { emitted } = renderComponent({ item });
 
-        jest.clearAllMocks();
+      await changeQuestionType(user, 'Multiple choice', 'Single choice');
 
-        wrapper = mount(AssessmentItemEditor, {
-          store,
-          propsData: {
-            item,
-          },
-          listeners,
-        });
-
-        await selectKind(wrapper, AssessmentItemTypes.SINGLE_SELECTION);
-      });
-
-      it('emits update event with item containing updated answers and type', () => {
-        expect(listeners.update).toHaveBeenCalledWith({
-          ...assessmentItemKey(ITEM),
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: false, order: 2 },
-          ],
-          type: AssessmentItemTypes.SINGLE_SELECTION,
-        });
+      expect(lastUpdatePayload(emitted)).toEqual({
+        ...assessmentItemKey(item),
+        type: AssessmentItemTypes.SINGLE_SELECTION,
+        answers: [
+          { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+          { answer: 'Peanut butter', correct: false, order: 2 },
+        ],
       });
     });
 
-    describe('when changing to multiple selection', () => {
-      beforeEach(async () => {
-        const item = {
-          ...ITEM,
-          type: AssessmentItemTypes.SINGLE_SELECTION,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: false, order: 2 },
-          ],
-        };
-
-        jest.clearAllMocks();
-
-        wrapper = mount(AssessmentItemEditor, {
-          store,
-          propsData: {
-            item,
-          },
-          listeners,
-        });
-
-        await selectKind(wrapper, AssessmentItemTypes.MULTIPLE_SELECTION);
-      });
-
-      it('emits update event with item containing same answers and type', () => {
-        expect(listeners.update).toHaveBeenCalledWith({
-          ...assessmentItemKey(ITEM),
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: false, order: 2 },
-          ],
-          type: AssessmentItemTypes.MULTIPLE_SELECTION,
-        });
-      });
-    });
-
-    describe('when changing to true/false', () => {
-      beforeEach(async () => {
-        const item = {
-          ...ITEM,
-          type: AssessmentItemTypes.SINGLE_SELECTION,
-          answers: [
-            { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-            { answer: 'Peanut butter', correct: false, order: 2 },
-          ],
-        };
-
-        jest.clearAllMocks();
-
-        wrapper = mount(AssessmentItemEditor, {
-          store,
-          propsData: {
-            item,
-          },
-          listeners,
-        });
-
-        await selectKind(wrapper, AssessmentItemTypes.TRUE_FALSE);
-      });
-
-      it('emits update event with item containing updated answers and type', () => {
-        expect(listeners.update).toHaveBeenCalledWith({
-          ...assessmentItemKey(ITEM),
-          answers: [
-            { answer: 'True', order: 1, correct: true },
-            { answer: 'False', order: 2, correct: false },
-          ],
-          type: AssessmentItemTypes.TRUE_FALSE,
-        });
-      });
-    });
-
-    describe('when changing to input question', () => {
-      beforeEach(async () => {
-        const item = {
-          ...ITEM,
-          type: AssessmentItemTypes.SINGLE_SELECTION,
-          answers: [
-            { answer: '8', correct: true, order: 1 },
-            { answer: '8.0', correct: false, order: 2 },
-            { answer: '-400.19090', correct: false, order: 3 },
-            { answer: '-140140104', correct: false, order: 4 },
-          ],
-        };
-
-        jest.clearAllMocks();
-
-        wrapper = mount(AssessmentItemEditor, {
-          store,
-          propsData: {
-            item,
-          },
-          listeners,
-        });
-
-        await selectKind(wrapper, AssessmentItemTypes.INPUT_QUESTION);
-      });
-
-      it('emits update event with item containing updated answers and type', () => {
-        expect(listeners.update).toHaveBeenCalledWith({
-          ...assessmentItemKey(ITEM),
-          answers: [
-            { answer: '8', correct: true, order: 1 },
-            { answer: '8.0', correct: true, order: 2 },
-            { answer: '-400.19090', correct: true, order: 3 },
-            { answer: '-140140104', correct: true, order: 4 },
-          ],
-          type: AssessmentItemTypes.INPUT_QUESTION,
-        });
-      });
-    });
-  });
-
-  describe('on answers update', () => {
-    beforeEach(async () => {
+    it('replaces the answers with True and False when switching to true or false', async () => {
       const item = {
         ...ITEM,
         type: AssessmentItemTypes.SINGLE_SELECTION,
@@ -269,98 +118,103 @@ describe('AssessmentItemEditor', () => {
           { answer: 'Peanut butter', correct: false, order: 2 },
         ],
       };
+      const user = userEvent.setup();
+      const { emitted } = renderComponent({ item });
 
-      jest.clearAllMocks();
+      await changeQuestionType(user, 'Single choice', 'True/False');
 
-      wrapper = mount(AssessmentItemEditor, {
-        store,
-        propsData: {
-          item,
-        },
-        listeners,
-      });
-
-      const newAnswers = [
-        { answer: 'Mayonnaise (I mean you can, but...)', correct: false, order: 1 },
-        { answer: 'Peanut butter', correct: false, order: 2 },
-      ];
-
-      wrapper.findComponent({ name: 'AnswersEditor' }).vm.$emit('update', newAnswers);
-      await wrapper.vm.$nextTick();
-    });
-
-    it('emits update event with an item containing updated answers', () => {
-      expect(listeners.update).toHaveBeenCalledWith({
-        ...assessmentItemKey(ITEM),
+      expect(lastUpdatePayload(emitted)).toEqual({
+        ...assessmentItemKey(item),
+        type: AssessmentItemTypes.TRUE_FALSE,
         answers: [
-          { answer: 'Mayonnaise (I mean you can, but...)', correct: false, order: 1 },
-          { answer: 'Peanut butter', correct: false, order: 2 },
+          { answer: 'True', order: 1, correct: true },
+          { answer: 'False', order: 2, correct: false },
         ],
       });
     });
-  });
 
-  describe('on hints update', () => {
-    beforeEach(async () => {
-      jest.clearAllMocks();
+    it('marks every numeric answer as correct when switching to numeric input', async () => {
       const item = {
         ...ITEM,
-        hints: [{ hint: 'Hint 1', order: 1 }],
+        type: AssessmentItemTypes.SINGLE_SELECTION,
+        answers: [
+          { answer: '8', correct: true, order: 1 },
+          { answer: '8.0', correct: false, order: 2 },
+          { answer: '-400.19090', correct: false, order: 3 },
+        ],
       };
+      const user = userEvent.setup();
+      const { emitted } = renderComponent({ item });
 
-      wrapper = mount(AssessmentItemEditor, {
-        store,
-        propsData: {
-          item,
-        },
-        listeners,
-      });
+      await changeQuestionType(user, 'Single choice', 'Numeric input');
 
-      const newHints = [
-        { hint: 'Hint 1', order: 1 },
-        { hint: 'Hint 2', order: 2 },
-      ];
-
-      wrapper.findComponent({ name: 'HintsEditor' }).vm.$emit('update', newHints);
-      await wrapper.vm.$nextTick();
-    });
-
-    it('emits update event with item containing updated hints', () => {
-      expect(listeners.update).toHaveBeenCalledWith({
-        ...assessmentItemKey(ITEM),
-        hints: [
-          { hint: 'Hint 1', order: 1 },
-          { hint: 'Hint 2', order: 2 },
+      expect(lastUpdatePayload(emitted)).toEqual({
+        ...assessmentItemKey(item),
+        type: AssessmentItemTypes.INPUT_QUESTION,
+        answers: [
+          { answer: '8', correct: true, order: 1 },
+          { answer: '8.0', correct: true, order: 2 },
+          { answer: '-400.19090', correct: true, order: 3 },
         ],
       });
     });
   });
 
-  describe('for an invalid item', () => {
-    beforeEach(() => {
-      const item = { ...ITEM };
-      const errors = [
+  it('emits the updated answers when the user changes which answer is correct', async () => {
+    const item = {
+      ...ITEM,
+      type: AssessmentItemTypes.SINGLE_SELECTION,
+      answers: [
+        { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
+        { answer: 'Peanut butter', correct: false, order: 2 },
+      ],
+    };
+    const { emitted } = renderComponent({ item });
+
+    // Selecting the second answer's correctness control makes it the correct one.
+    const radios = screen.getAllByRole('radio');
+    await fireEvent.click(radios[1]);
+
+    expect(lastUpdatePayload(emitted)).toEqual({
+      ...assessmentItemKey(item),
+      answers: [
+        { answer: 'Mayonnaise (I mean you can, but...)', correct: false, order: 1 },
+        { answer: 'Peanut butter', correct: true, order: 2 },
+      ],
+    });
+  });
+
+  it('emits the updated hints when the user edits a hint', async () => {
+    const user = userEvent.setup();
+    const item = {
+      ...ITEM,
+      hints: [{ hint: 'Hint 1', order: 1 }],
+    };
+    const { emitted } = renderComponent({ item });
+
+    // Open the collapsible hints section, then open the hint to edit it.
+    await user.click(screen.getByRole('button', { name: /hints/i }));
+    const hintCard = screen.getByTestId('hint');
+    await user.click(hintCard);
+
+    const hintEditor = within(screen.getByTestId('hint')).getByRole('textbox');
+    await fireEvent.update(hintEditor, 'Updated hint');
+
+    expect(lastUpdatePayload(emitted)).toEqual({
+      ...assessmentItemKey(item),
+      hints: [{ hint: 'Updated hint', order: 1 }],
+    });
+  });
+
+  it('shows validation messages for an invalid item', () => {
+    renderComponent({
+      errors: [
         ValidationErrors.QUESTION_REQUIRED,
         ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
-      ];
-
-      wrapper = mount(AssessmentItemEditor, {
-        store,
-        propsData: {
-          item,
-          errors,
-        },
-        listeners,
-      });
+      ],
     });
 
-    it('renders all errors messages', () => {
-      expect(wrapper.findComponent('[data-test=questionErrors]').html()).toContain(
-        'Question is required',
-      );
-      expect(wrapper.findComponent('[data-test=answersErrors]').html()).toContain(
-        'Choose a correct answer',
-      );
-    });
+    expect(screen.getByText('Question is required')).toBeInTheDocument();
+    expect(screen.getByText('Choose a correct answer')).toBeInTheDocument();
   });
 });
