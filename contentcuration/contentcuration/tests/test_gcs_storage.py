@@ -8,6 +8,7 @@ from google.cloud.storage import Client
 from google.cloud.storage.blob import Blob
 from mixer.main import mixer
 
+from contentcuration.utils.files import hex_to_base64
 from contentcuration.utils.gcs_storage import CompositeGCS
 from contentcuration.utils.gcs_storage import GoogleCloudStorage
 
@@ -232,3 +233,21 @@ class CompositeGCSTestCase(TestCase):
             self.storage.get_created_time("blob"),
             self.blob_cls.return_value.time_created,
         )
+
+    def test_get_stored_object_md5(self):
+        mock_blob = self.blob_cls("blob", "blob")
+        mock_blob.md5_hash = hex_to_base64("d41d8cd98f00b204e9800998ecf8427e")
+        self.mock_default_bucket.get_blob.return_value = mock_blob
+        self.assertEqual(
+            self.storage.get_stored_object_md5("blob"),
+            "d41d8cd98f00b204e9800998ecf8427e",
+        )
+
+    def test_get_stored_object_md5__returns_none_if_not_found(self):
+        # Regression: a not-yet-uploaded object is in no backend, so
+        # _get_readable_backend raises FileNotFoundError. get_stored_object_md5
+        # must swallow that and return None (else the resumable upload_url
+        # endpoint 500s on every new file), not propagate the error.
+        self.mock_default_bucket.get_blob.return_value = None
+        self.mock_anon_bucket.get_blob.return_value = None
+        self.assertIsNone(self.storage.get_stored_object_md5("blob"))

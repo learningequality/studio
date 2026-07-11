@@ -302,4 +302,11 @@ class CompositeGCS(Storage):
         )
 
     def get_stored_object_md5(self, name):
-        return self._get_readable_backend(name).get_stored_object_md5(name)
+        # A not-yet-uploaded object exists in no backend; treat that as "no
+        # stored md5" (None) rather than raising, matching
+        # GoogleCloudStorage.get_stored_object_md5 for a missing blob.
+        try:
+            backend = self._get_readable_backend(name)
+        except FileNotFoundError:
+            return None
+        return backend.get_stored_object_md5(name)
