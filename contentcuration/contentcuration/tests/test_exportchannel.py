@@ -4,6 +4,7 @@ import random
 import string
 import tempfile
 import uuid
+import zipfile
 from unittest import mock
 
 import pytest
@@ -35,6 +36,7 @@ from .testdata import node as create_node
 from .testdata import slideshow
 from .testdata import thumbnail_bytes
 from .testdata import tree
+from .utils.qti.test_validation import _item_xml
 from .utils.qti.test_validation import VALID_CHOICE_ITEM
 from .utils.restricted_filesystemstorage import RestrictedFileSystemStorage
 from contentcuration import models as cc
@@ -55,6 +57,24 @@ from contentcuration.utils.publish import set_channel_icon_encoding
 from contentcuration.viewsets.base import create_change_tracker
 
 pytestmark = pytest.mark.django_db
+
+# A schema-valid native QTI item whose single interaction (order) Perseus cannot
+# express, so a node containing it must publish QTI only.
+UNSUPPORTED_QTI_ITEM = _item_xml(
+    "item_unsupported",
+    "Unsupported Item",
+    '<qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier">'
+    "<qti-correct-response>"
+    "<qti-value>choice_0</qti-value>"
+    "<qti-value>choice_1</qti-value>"
+    "</qti-correct-response>"
+    "</qti-response-declaration>",
+    '<qti-order-interaction response-identifier="RESPONSE">'
+    "<qti-prompt>Put these in order.</qti-prompt>"
+    '<qti-simple-choice identifier="choice_0" fixed="false">First</qti-simple-choice>'
+    '<qti-simple-choice identifier="choice_1" fixed="false">Second</qti-simple-choice>'
+    "</qti-order-interaction>",
+)
 
 
 def description():
@@ -278,6 +298,29 @@ class ExportChannelTestCase(StudioTestCase):
             answers="[]",
             hints="[]",
             raw_data=VALID_CHOICE_ITEM,
+            order=1,
+            randomize=False,
+        )
+
+        # Native QTI item whose interaction Perseus cannot express -> QTI only
+        native_qti_unsupported_exercise = create_node(
+            {
+                "kind_id": "exercise",
+                "title": "Native QTI Unsupported Exercise",
+                "extra_fields": qti_extra_fields,
+            }
+        )
+        native_qti_unsupported_exercise.complete = True
+        native_qti_unsupported_exercise.parent = current_exercise.parent
+        native_qti_unsupported_exercise.save()
+        cc.AssessmentItem.objects.create(
+            contentnode=native_qti_unsupported_exercise,
+            assessment_id=uuid.uuid4().hex,
+            type=exercises.QTI,
+            question="",
+            answers="[]",
+            hints="[]",
+            raw_data=UNSUPPORTED_QTI_ITEM,
             order=1,
             randomize=False,
         )
@@ -779,8 +822,36 @@ class ExportChannelTestCase(StudioTestCase):
             "QTI file should be a zip archive",
         )
 
-    def test_native_qti_item_routes_to_qti_packaging(self):
+    def test_native_qti_choice_item_publishes_both_archives(self):
         node = cc.ContentNode.objects.get(title="Native QTI Exercise")
+        self.assertTrue(node.files.filter(preset_id=format_presets.QTI_ZIP).exists())
+        self.assertTrue(node.files.filter(preset_id=format_presets.EXERCISE).exists())
+
+    def test_native_qti_perseus_ids_match_assessment_metadata(self):
+        """The derived Perseus item JSON filenames must equal the ids recorded
+        in the published node's ``AssessmentMetaData.assessment_item_ids`` (the
+        QTI manifest ``K``-ids), so older Kolibri resolves the derived items."""
+        node = cc.ContentNode.objects.get(title="Native QTI Exercise")
+        exercise_file = node.files.get(preset_id=format_presets.EXERCISE)
+        with exercise_file.file_on_disk.open("rb") as file_handle:
+            item_stems = {
+                name[: -len(".json")]
+                for name in zipfile.ZipFile(file_handle).namelist()
+                if name.endswith(".json") and name != "exercise.json"
+            }
+
+        published_node = kolibri_models.ContentNode.objects.get(
+            title="Native QTI Exercise"
+        )
+        assessment_item_ids = set(
+            published_node.assessmentmetadata.first().assessment_item_ids
+        )
+
+        self.assertTrue(item_stems)
+        self.assertEqual(item_stems, assessment_item_ids)
+
+    def test_native_qti_unsupported_interaction_publishes_qti_only(self):
+        node = cc.ContentNode.objects.get(title="Native QTI Unsupported Exercise")
         self.assertTrue(node.files.filter(preset_id=format_presets.QTI_ZIP).exists())
         self.assertFalse(node.files.filter(preset_id=format_presets.EXERCISE).exists())
 

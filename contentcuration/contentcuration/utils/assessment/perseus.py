@@ -10,6 +10,7 @@ from le_utils.constants import format_presets
 
 from contentcuration import models
 from contentcuration.utils.assessment.base import ExerciseArchiveGenerator
+from contentcuration.utils.assessment.qti.perseus_derive import derive_perseus_item
 from contentcuration.utils.parser import extract_value
 
 
@@ -35,6 +36,24 @@ class PerseusExerciseGenerator(ExerciseArchiveGenerator):
         exercises.PERSEUS_QUESTION: "perseus/perseus_question.json",
         "true_false": "perseus/multiple_selection.json",
     }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Derived proxies for native QTI items, keyed by source assessment_id.
+        # Computed once and reused by both exercise.json and item processing.
+        self._derived_cache = None
+
+    def _derived_items(self):
+        """Derived Perseus proxies for the node's native QTI items, keyed by the
+        source (hex) ``assessment_id``. A ``None`` value marks an item that could
+        not be derived (already logged) and so is skipped from the archive."""
+        if self._derived_cache is None:
+            self._derived_cache = {
+                item.assessment_id: derive_perseus_item(item)
+                for item in self.ccnode.assessment_items.all()
+                if item.type == exercises.QTI
+            }
+        return self._derived_cache
 
     def _write_raw_perseus_image_files(self, assessment_item):
         # For raw perseus JSON questions, the files must be
@@ -86,6 +105,12 @@ class PerseusExerciseGenerator(ExerciseArchiveGenerator):
         return super()._process_content(content)
 
     def process_assessment_item(self, assessment_item):
+        if assessment_item.type == exercises.QTI:
+            derived = self._derived_items().get(assessment_item.assessment_id)
+            if derived is None:
+                # derive_perseus_item already logs why it could not derive.
+                return
+            return super().process_assessment_item(derived)
         if assessment_item.type == exercises.PERSEUS_QUESTION:
             self._write_raw_perseus_image_files(assessment_item)
         return super().process_assessment_item(assessment_item)
@@ -121,9 +146,47 @@ class PerseusExerciseGenerator(ExerciseArchiveGenerator):
     def get_image_ref_prefix(self):
         return f"${exercises.IMG_PLACEHOLDER}/images"
 
+    def _exercise_data_for_archive(self):
+        """``exercise.json`` must list the same item ids and types as the item
+        JSON files written into this archive. Native QTI items are written by
+        their derived proxy's ``assessment_id`` (the QTI root identifier) and
+        carry a legacy Perseus ``type``, so rewrite ``all_assessment_items`` /
+        ``assessment_mapping`` to match. Otherwise ``restore_channel``'s
+        ``extract_assessment_items`` opens ``{hex}.json`` and raises
+        ``FileNotFoundError``, and ``generate_assessment_item`` receives a
+        ``qti`` type it cannot map.
+        """
+        derived = self._derived_items()
+        if not derived:
+            return self.exercise_data
+
+        original_mapping = self.exercise_data.get("assessment_mapping", {})
+        new_ids = []
+        new_mapping = {}
+        for assessment_id in self.exercise_data.get("all_assessment_items", []):
+            if assessment_id in derived:
+                proxy = derived[assessment_id]
+                if proxy is None:
+                    # Not Perseus-expressible: no item JSON is written, so drop
+                    # it rather than leave a dangling reference in exercise.json.
+                    continue
+                new_ids.append(proxy.assessment_id)
+                new_mapping[proxy.assessment_id] = proxy.type
+            else:
+                new_ids.append(assessment_id)
+                if assessment_id in original_mapping:
+                    new_mapping[assessment_id] = original_mapping[assessment_id]
+        return {
+            **self.exercise_data,
+            "all_assessment_items": new_ids,
+            "assessment_mapping": new_mapping,
+        }
+
     def handle_before_assessment_items(self):
         exercise_context = {
-            "exercise": json.dumps(self.exercise_data, sort_keys=True, indent=4)
+            "exercise": json.dumps(
+                self._exercise_data_for_archive(), sort_keys=True, indent=4
+            )
         }
         exercise_result = render_to_string(
             "perseus/exercise.json", exercise_context
