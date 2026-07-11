@@ -26,6 +26,7 @@ from contentcuration.tests.utils.qti.test_validation import VALID_CHOICE_ITEM
 from contentcuration.utils.assessment.perseus import PerseusExerciseGenerator
 from contentcuration.utils.assessment.qti.archive import hex_to_qti_id
 from contentcuration.utils.assessment.qti.archive import QTIExerciseGenerator
+from contentcuration.utils.assessment.qti.validation import parse_qti_xml
 
 
 class TestPerseusExerciseCreation(StudioTestCase):
@@ -1320,6 +1321,17 @@ class TestQTIExerciseCreation(StudioTestCase):
         )
         return generator.create_exercise_archive()
 
+    def _create_perseus_zip(self, exercise_data):
+        """Create Perseus exercise zip using the generator"""
+        generator = PerseusExerciseGenerator(
+            self.exercise_node,
+            exercise_data,
+            self.channel.id,
+            "en-US",
+            user_id=self.user.id,
+        )
+        return generator.create_exercise_archive()
+
     def _validate_qti_zip_structure(self, exercise_file):
         """Helper to validate basic structure of the QTI Content Package"""
         # Use Django's storage backend to read the file
@@ -1976,3 +1988,62 @@ class TestQTIExerciseCreation(StudioTestCase):
             preset_id=format_presets.QTI_ZIP
         ).checksum
         self.assertNotEqual(first_checksum, second_checksum)
+
+    def test_native_qti_perseus_derivation(self):
+        """A native QTI choice item is derived into a rendered Perseus item JSON."""
+        catalog_info = (
+            '<qti-catalog-info><qti-catalog id="kolibri-hints">'
+            '<qti-card support="ext:kolibri-hint">'
+            "<qti-html-content><p>First hint.</p></qti-html-content>"
+            "</qti-card></qti-catalog></qti-catalog-info>"
+        )
+        raw_data = VALID_CHOICE_ITEM.replace(
+            "<qti-response-processing", catalog_info + "<qti-response-processing"
+        )
+        item = self._create_native_qti_item(raw_data)
+        exercise_data = {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": 5,
+            "m": 3,
+            "all_assessment_items": [item.assessment_id],
+            "assessment_mapping": {item.assessment_id: exercises.QTI},
+        }
+
+        self._create_perseus_zip(exercise_data)
+
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
+        with storage.open(exercise_file.file_on_disk.name, "rb") as f:
+            zip_file = zipfile.ZipFile(BytesIO(f.read()))
+
+        # The derived item JSON is named by the QTI item's root identifier (not
+        # the raw hex assessment_id), so it matches the id the QTI manifest
+        # records in the node's assessment metadata — how older Kolibri resolves
+        # the Perseus item. VALID_CHOICE_ITEM's root identifier is "item_1".
+        qti_id = parse_qti_xml(raw_data.encode("utf-8")).getroot().get("identifier")
+        self.assertIn("exercise.json", zip_file.namelist())
+        self.assertIn(f"{qti_id}.json", zip_file.namelist())
+
+        # exercise.json must reference the derived item by its root identifier
+        # and legacy type (not the raw hex id / "qti"), so restore_channel's
+        # extract_assessment_items opens the item JSON that actually ships and
+        # generate_assessment_item gets a mappable type.
+        exercise_json = json.loads(zip_file.read("exercise.json").decode("utf-8"))
+        self.assertEqual(exercise_json["all_assessment_items"], [qti_id])
+        self.assertEqual(
+            exercise_json["assessment_mapping"],
+            {qti_id: exercises.SINGLE_SELECTION},
+        )
+
+        item_json = json.loads(zip_file.read(f"{qti_id}.json").decode("utf-8"))
+        # Prompt is derived from the QTI qti-prompt.
+        self.assertIn("Select the correct answer.", item_json["question"]["content"])
+        # Choices and the correct answer match the QTI item.
+        choices = item_json["question"]["widgets"]["radio 1"]["options"]["choices"]
+        self.assertEqual(
+            {(choice["content"], choice["correct"]) for choice in choices},
+            {("Option A", True), ("Option B", False)},
+        )
+        # The kolibri-hint catalog card is derived back into a Perseus hint.
+        hint_content = "".join(hint["content"] for hint in item_json["hints"])
+        self.assertIn("First hint.", hint_content)
