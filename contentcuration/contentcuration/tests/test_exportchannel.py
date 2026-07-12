@@ -19,6 +19,7 @@ from kolibri_content.router import set_active_content_database
 from le_utils.constants import exercises
 from le_utils.constants import format_presets
 from le_utils.constants import modalities
+from le_utils.constants.format_presets import RENDERABLE_PRESETS_ORDER
 from le_utils.constants.labels import accessibility_categories
 from le_utils.constants.labels import learning_activities
 from le_utils.constants.labels import levels
@@ -504,6 +505,21 @@ class ExportChannelTestCase(StudioTestCase):
         assert files.count() > 0
         for file in files.prefetch_related("local_file"):
             self.assertEqual(file.file_size, file.local_file.file_size)
+
+    def test_file_included_presets_renderable(self):
+        # Every non-supplementary (renderable) exported file carries its own preset bit.
+        files = kolibri_models.File.objects.filter(supplementary=False)
+        assert files.count() > 0
+        for file in files:
+            expected = 2 ** RENDERABLE_PRESETS_ORDER.index(file.preset)
+            self.assertEqual(file.included_presets, expected)
+
+    def test_file_included_presets_supplementary_null(self):
+        # Supplementary files (e.g. thumbnails) leave included_presets NULL.
+        files = kolibri_models.File.objects.filter(supplementary=True)
+        assert files.count() > 0
+        for file in files:
+            self.assertIsNone(file.included_presets)
 
     def test_channel_icon_encoding(self):
         self.assertIsNotNone(self.content_channel.icon_encoding)
