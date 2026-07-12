@@ -132,6 +132,9 @@ class File(models.Model):
     supplementary = models.BooleanField(default=False)
     thumbnail = models.BooleanField(default=False)
     priority = models.IntegerField(blank=True, null=True, db_index=True)
+    # Bitmask of the renderable presets a device needs to render this file,
+    # including the file's own preset. NULL for supplementary files.
+    included_presets = models.IntegerField(blank=True, null=True)
 
     class Meta:
         abstract = True
