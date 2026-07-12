@@ -64,7 +64,6 @@
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { QuestionType } from '../../constants';
   import useQtiItem from '../../composables/useQtiItem';
-  import { assembleItemXml } from '../../serialization/assembleItem';
   import InteractionSection from '../InteractionSection/index.vue';
 
   export default {
@@ -81,7 +80,28 @@
         unknownTypeLabel$,
       } = qtiEditorStrings;
 
-      const { identifier, title, language, interactions } = useQtiItem(props.item.raw_data);
+      /**
+       * Track the current bodyXml and responseDeclarations for the interaction.
+       * Initialised after parsing; updated atomically when the editor emits
+       * update:interaction. Declared before useQtiItem so they can be passed in
+       * and observed by the rawData computed inside the composable.
+       */
+      const currentBodyXml = ref('');
+      const currentResponseDeclarations = ref([]);
+
+      // Parse the item XML. rawData is a computed inside useQtiItem that
+      // re-assembles the full XML whenever identifier/title/language or the
+      // editor refs change — no need to duplicate assembleItemXml here.
+      const { interactions, rawData } = useQtiItem(props.item.raw_data, {
+        bodyXml: currentBodyXml,
+        responseDeclarations: currentResponseDeclarations,
+      });
+
+      // Seed the editor refs from the parsed interactions (first interaction only).
+      if (interactions.value.length > 0) {
+        currentBodyXml.value = interactions.value[0].bodyXml;
+        currentResponseDeclarations.value = interactions.value[0].responseDeclarations;
+      }
 
       const questionNumberLabel = computed(() =>
         questionNumberLabel$({
@@ -118,33 +138,7 @@
         }),
       );
 
-      /**
-       * Track the current bodyXml and responseDeclarations for the interaction.
-       * Initialised from the parsed item; updated atomically when the editor
-       * emits update:interaction.
-       *
-       * Note: We are currently using only the first interaction, but this
-       * architecture is designed to be expansible to multiple interactions
-       * per question in the future.
-       */
-      const currentBodyXml = ref(
-        interactions.value.length > 0 ? interactions.value[0].bodyXml : '',
-      );
-      const currentResponseDeclarations = ref(
-        interactions.value.length > 0 ? interactions.value[0].responseDeclarations : [],
-      );
-
-      const rawData = computed(() =>
-        assembleItemXml({
-          identifier: identifier.value,
-          title: title.value,
-          language: language.value,
-          bodyXml: currentBodyXml.value,
-          responseDeclarations: currentResponseDeclarations.value,
-        }),
-      );
-
-      // Emit only when the assembled XML actually changes after initial mount
+      // Emit only when the assembled XML actually changes after initial mount.
       watch(rawData, newVal => {
         if (process.env.NODE_ENV === 'development') {
           // eslint-disable-next-line no-console

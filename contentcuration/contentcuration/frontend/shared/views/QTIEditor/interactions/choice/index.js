@@ -20,6 +20,4 @@ import { choiceInteractionDescriptor } from './ChoiceInteractionDescriptor';
  * @property {string}        orientation - From orientation attribute; default "vertical"
  */
 
-choiceInteractionDescriptor.editorComponent = ChoiceInteractionEditor;
-
-export default defineInteraction(choiceInteractionDescriptor);
+export default defineInteraction(choiceInteractionDescriptor, ChoiceInteractionEditor);
