@@ -152,6 +152,7 @@ class LocalFile(models.Model):
     )
     available = models.BooleanField(default=False)
     file_size = models.IntegerField(blank=True, null=True)
+    file_size_bigint = models.BigIntegerField(blank=True, null=True)
 
     class Meta:
         abstract = True
