@@ -16,6 +16,7 @@ from kolibri_content import models as kolibri_models
 from kolibri_content.router import cleanup_content_database_connection
 from kolibri_content.router import get_active_content_database
 from kolibri_content.router import set_active_content_database
+from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import format_presets
 from le_utils.constants import modalities
@@ -55,6 +56,10 @@ from contentcuration.utils.publish import set_channel_icon_encoding
 from contentcuration.viewsets.base import create_change_tracker
 
 pytestmark = pytest.mark.django_db
+
+
+# Larger than the signed 32-bit maximum (2_147_483_647); ~3 GB.
+LARGE_FILE_SIZE = 3 * 1024 ** 3
 
 
 def description():
@@ -387,6 +392,36 @@ class ExportChannelTestCase(StudioTestCase):
         lesson_topic.extra_fields = {"options": {"modality": modalities.LESSON}}
         lesson_topic.save()
 
+        document_kind, _ = cc.ContentKind.objects.get_or_create(
+            kind=content_kinds.DOCUMENT
+        )
+        large_file_node = cc.ContentNode(
+            kind=document_kind,
+            parent=self.content_channel.main_tree,
+            title="Large file node",
+            node_id=uuid.uuid4(),
+            content_id=uuid.uuid4(),
+            sort_order=1,
+            complete=True,
+        )
+        large_file_node.save()
+
+        large_db_file = create_studio_file(
+            b"large file body", preset="document", ext="pdf"
+        )["db_file"]
+        # A >2.1 GB file cannot fit the legacy 32-bit File.file_size column; its
+        # true size lives in the studio#5974 file_size_bigint shadow, with the
+        # legacy file_size left NULL.
+        large_db_file.file_size = None
+        large_db_file.contentnode = large_file_node
+        large_db_file.save()
+        # Set the shadow directly; the mirror trigger leaves it alone because
+        # file_size is unchanged (NULL).
+        cc.File.objects.filter(pk=large_db_file.pk).update(
+            file_size_bigint=LARGE_FILE_SIZE
+        )
+        self.large_file_checksum = large_db_file.checksum
+
         set_channel_icon_encoding(self.content_channel)
         self.tempdb = create_content_database(
             self.content_channel, True, self.admin_user.id, True
@@ -505,6 +540,24 @@ class ExportChannelTestCase(StudioTestCase):
         assert files.count() > 0
         for file in files.prefetch_related("local_file"):
             self.assertEqual(file.file_size, file.local_file.file_size)
+
+    def test_localfile_file_size_bigint_matches_small_files(self):
+        # Files that fit in 32 bits write the same value to both columns.
+        local_files = kolibri_models.LocalFile.objects.exclude(
+            pk=self.large_file_checksum
+        )
+        assert local_files.count() > 0
+        for local_file in local_files:
+            self.assertEqual(local_file.file_size_bigint, local_file.file_size)
+
+    def test_localfile_large_file_size_bigint(self):
+        # A >2.1 GB file keeps its real size in file_size_bigint and NULLs the
+        # legacy 32-bit file_size.
+        local_file = kolibri_models.LocalFile.objects.get(
+            pk=self.large_file_checksum
+        )
+        self.assertEqual(local_file.file_size_bigint, LARGE_FILE_SIZE)
+        self.assertIsNone(local_file.file_size)
 
     def test_file_included_presets_renderable(self):
         # Every non-supplementary (renderable) exported file carries its own preset bit.
