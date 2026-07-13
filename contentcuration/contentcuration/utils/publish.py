@@ -65,6 +65,8 @@ logging = logmodule.getLogger(__name__)
 PERSEUS_IMG_DIR = exercises.IMG_PLACEHOLDER + "/images"
 THUMBNAIL_DIMENSION = 128
 MIN_SCHEMA_VERSION = "1"
+# Largest value the legacy 32-bit LocalFile.file_size / File.file_size columns hold.
+INT_32BIT_MAX = 2 ** 31 - 1
 PUBLISHING_UPDATE_THRESHOLD = 3600
 
 
@@ -659,11 +661,23 @@ def create_associated_file_objects(kolibrinode, ccnode):
                 create_associated_thumbnail(ccnode, ccfilemodel) or ccfilemodel
             )
 
+        # The true size lives in the studio#5974 file_size_bigint shadow (the
+        # legacy 32-bit file_size cannot hold >2.1 GB); fall back to file_size
+        # for rows the shadow has not been backfilled onto yet.
+        real_size = ccfilemodel.file_size_bigint
+        if real_size is None:
+            real_size = ccfilemodel.file_size
+        if real_size is not None and real_size > INT_32BIT_MAX:
+            legacy_size = None
+        else:
+            legacy_size = real_size
+
         kolibrilocalfilemodel, new = kolibrimodels.LocalFile.objects.get_or_create(
             pk=ccfilemodel.checksum,
             defaults={
                 "extension": fformat.extension,
-                "file_size": ccfilemodel.file_size,
+                "file_size": legacy_size,
+                "file_size_bigint": real_size,
             },
         )
 
@@ -687,7 +701,7 @@ def create_associated_file_objects(kolibrinode, ccnode):
             checksum=ccfilemodel.checksum,
             extension=fformat.extension,
             available=True,  # TODO: Set this to False, once we have availability stamping implemented in Kolibri
-            file_size=ccfilemodel.file_size,
+            file_size=legacy_size,
             contentnode=kolibrinode,
             preset=preset.pk,
             supplementary=preset.supplementary,
