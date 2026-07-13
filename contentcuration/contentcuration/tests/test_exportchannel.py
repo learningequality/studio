@@ -553,9 +553,7 @@ class ExportChannelTestCase(StudioTestCase):
     def test_localfile_large_file_size_bigint(self):
         # A >2.1 GB file keeps its real size in file_size_bigint and NULLs the
         # legacy 32-bit file_size.
-        local_file = kolibri_models.LocalFile.objects.get(
-            pk=self.large_file_checksum
-        )
+        local_file = kolibri_models.LocalFile.objects.get(pk=self.large_file_checksum)
         self.assertEqual(local_file.file_size_bigint, LARGE_FILE_SIZE)
         self.assertIsNone(local_file.file_size)
 
