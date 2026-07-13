@@ -38,6 +38,7 @@ from le_utils.constants import format_presets
 from le_utils.constants import licenses
 from le_utils.constants import modalities
 from le_utils.constants import roles
+from le_utils.constants.format_presets import RENDERABLE_PRESETS_ORDER
 from search.models import ChannelFullTextSearch
 from search.models import ContentNodeFullTextSearch
 from search.utils import get_fts_annotated_channel_qs
@@ -666,6 +667,21 @@ def create_associated_file_objects(kolibrinode, ccnode):
             },
         )
 
+        included_presets = None
+        if not preset.supplementary:
+            try:
+                included_presets = 2 ** RENDERABLE_PRESETS_ORDER.index(preset.pk)
+            except ValueError:
+                # Renderable preset not in the (append-only) ordering — e.g. a newer
+                # le-utils preset. Log and leave included_presets NULL for this file
+                # rather than aborting the whole channel publish.
+                logging.warning(
+                    "Preset %s missing from RENDERABLE_PRESETS_ORDER; leaving "
+                    "included_presets NULL for file %s",
+                    preset.pk,
+                    ccfilemodel.pk,
+                )
+
         kolibrimodels.File.objects.create(
             pk=ccfilemodel.pk,
             checksum=ccfilemodel.checksum,
@@ -679,6 +695,7 @@ def create_associated_file_objects(kolibrinode, ccnode):
             thumbnail=preset.thumbnail,
             priority=preset.order,
             local_file=kolibrilocalfilemodel,
+            included_presets=included_presets,
         )
 
 
