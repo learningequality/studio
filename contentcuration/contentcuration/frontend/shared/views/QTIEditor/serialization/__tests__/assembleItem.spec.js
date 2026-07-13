@@ -143,6 +143,58 @@ describe('assembleItem', () => {
       ).toThrow('mutually exclusive');
     });
   });
+
+  describe('innerHTML — HTML5 void elements (TipTap regression)', () => {
+    it('handles a bare <br> without producing a parseerror in the XML output', () => {
+      const node = buildXmlNode({
+        tag: 'qti-prompt',
+        innerHTML: '<p>Line one</p><br><p>Line two</p>',
+      });
+      // Serialized output must be valid XML
+      const xml = serializer.serializeToString(node);
+      const doc = new DOMParser().parseFromString(xml, 'text/xml');
+      expect(doc.querySelector('parsererror')).toBeNull();
+    });
+
+    it('preserves text content when innerHTML contains a <br>', () => {
+      const node = buildXmlNode({
+        tag: 'qti-prompt',
+        innerHTML: '<p>First</p><br><p>Second</p>',
+      });
+      expect(node.textContent).toContain('First');
+      expect(node.textContent).toContain('Second');
+    });
+
+    it('handles an unclosed <img> without producing a parseerror', () => {
+      const node = buildXmlNode({
+        tag: 'qti-simple-choice',
+        innerHTML: '<img src="cat.png" alt="cat"><span>A cat</span>',
+      });
+      const xml = serializer.serializeToString(node);
+      const doc = new DOMParser().parseFromString(xml, 'text/xml');
+      expect(doc.querySelector('parsererror')).toBeNull();
+      expect(node.textContent).toContain('A cat');
+    });
+
+    it('self-closes void elements in the serialized XML output', () => {
+      const node = buildXmlNode({ tag: 'qti-prompt', innerHTML: 'Hello<br>World' });
+      const xml = serializer.serializeToString(node);
+      // <br> must be self-closed in the output (br/ or br with no children)
+      expect(xml).toMatch(/<br[\s/]/);
+      // And the result must still parse without error
+      expect(
+        new DOMParser().parseFromString(xml, 'text/xml').querySelector('parsererror'),
+      ).toBeNull();
+    });
+
+    it('preserves well-formed HTML markup correctly', () => {
+      const node = buildXmlNode({
+        tag: 'qti-simple-choice',
+        innerHTML: '<p>Option <strong>A</strong></p>',
+      });
+      expect(node.querySelector('strong').textContent).toBe('A');
+    });
+  });
 });
 
 describe('assembleItemXml', () => {

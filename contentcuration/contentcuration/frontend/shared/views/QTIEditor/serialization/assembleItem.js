@@ -38,11 +38,11 @@ export function buildXmlNode({ tag, attrs = {}, children, innerHTML }) {
   }
 
   if (innerHTML !== undefined) {
-    const parsed = new DOMParser().parseFromString(
-      `<qti-fragment>${innerHTML}</qti-fragment>`,
-      'text/xml',
+    const htmlDoc = new DOMParser().parseFromString(
+      `<!DOCTYPE html><body>${innerHTML}</body>`,
+      'text/html',
     );
-    for (const child of [...parsed.documentElement.childNodes]) {
+    for (const child of [...htmlDoc.body.childNodes]) {
       el.appendChild(xmlDoc.importNode(child, true));
     }
   } else {
