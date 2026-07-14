@@ -57,6 +57,7 @@ from contentcuration.viewsets.feedback import RecommendationsEventViewSet
 from contentcuration.viewsets.feedback import RecommendationsInteractionEventViewSet
 from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
+from contentcuration.viewsets.organization import OrganizationViewSet, OrganizationMemberViewSet
 from contentcuration.viewsets.recommendation import RecommendationView
 from contentcuration.viewsets.sync.endpoint import SyncView
 from contentcuration.viewsets.user import AdminUserViewSet
@@ -83,6 +84,8 @@ router.register(r"file", FileViewSet)
 router.register(r"channeluser", ChannelUserViewSet, basename="channeluser")
 router.register(r"user", UserViewSet)
 router.register(r"invitation", InvitationViewSet)
+router.register(r"organization", OrganizationViewSet, basename="organization")
+router.register(r"organization-members", OrganizationMemberViewSet, basename="organization-members")
 router.register(r"contentnode", ContentNodeViewSet)
 router.register(r"assessmentitem", AssessmentItemViewSet)
 router.register(r"admin-users", AdminUserViewSet, basename="admin-users")
