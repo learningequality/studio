@@ -23,6 +23,20 @@ export function parseXML(xmlString) {
 }
 
 /**
+ * Extract the inner HTML of the first <qti-prompt> child of an interaction element.
+ * Returns an empty string when no prompt element is present.
+ * Using innerHTML (not textContent) preserves rich inline markup (<p>, <strong>, etc.)
+ * for round-trip fidelity.
+ *
+ * @param {Element} interactionEl - The <qti-*-interaction> root element
+ * @returns {string}
+ */
+export function getPromptHTML(interactionEl) {
+  const promptEl = interactionEl.querySelector('qti-prompt');
+  return promptEl ? promptEl.innerHTML : '';
+}
+
+/**
  * Parses a raw QTI XML string into the structured ItemModel.
  *
  * Each interaction block in the item body becomes one entry in `interactions`.

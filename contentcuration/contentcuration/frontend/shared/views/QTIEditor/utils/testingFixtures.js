@@ -1,6 +1,4 @@
-// ---------------------------------------------------------------------------
 // Centralized QTI Mock XML Fixtures for Unit Tests
-// ---------------------------------------------------------------------------
 
 export const CHOICE_SINGLE_SELECT_XML = `<qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
   <qti-prompt>Which planet is closest to the Sun?</qti-prompt>
@@ -24,9 +22,18 @@ export const UNKNOWN_INTERACTION_XML = `<qti-unknown-interaction response-identi
   <qti-prompt>Unknown.</qti-prompt>
 </qti-unknown-interaction>`;
 
-// ---------------------------------------------------------------------------
+export const CHOICE_SINGLE_DECL_XML = `<qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+  <qti-correct-response><qti-value>mercury</qti-value></qti-correct-response>
+</qti-response-declaration>`;
+
+export const CHOICE_MULTI_DECL_XML = `<qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="identifier">
+  <qti-correct-response>
+    <qti-value>a</qti-value>
+    <qti-value>c</qti-value>
+  </qti-correct-response>
+</qti-response-declaration>`;
+
 // Full QTI Assessment Item XML Documents
-// ---------------------------------------------------------------------------
 
 export const VALID_CHOICE_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item
@@ -87,4 +94,15 @@ export const TWO_INTERACTIONS_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
 export const mockInteractionBlock = bodyXml => ({
   bodyXml,
   responseDeclarations: [],
+});
+
+/**
+ * Wraps a snippet of interaction XML and a declaration into a mock 'block' object
+ * @param {string} bodyXml
+ * @param {string} declarationXml
+ * @returns {object}
+ */
+export const mockInteractionBlockWithDecl = (bodyXml, declarationXml) => ({
+  bodyXml,
+  responseDeclarations: [declarationXml],
 });

@@ -33,6 +33,7 @@
         :mode="mode"
         :showAnswers="showAnswers"
         @update:questionType="type => (currentQuestionType = type)"
+        @update:interaction="onUpdateInteraction"
       />
       <p
         v-else
@@ -59,7 +60,7 @@
 
 <script>
 
-  import { computed, ref } from 'vue';
+  import { computed, ref, watch } from 'vue';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { QuestionType } from '../../constants';
   import useQtiItem from '../../composables/useQtiItem';
@@ -70,7 +71,7 @@
 
     components: { InteractionSection },
 
-    setup(props) {
+    setup(props, { emit }) {
       const {
         questionNumberLabel$,
         questionNumberAndTypeLabel$,
@@ -79,7 +80,28 @@
         unknownTypeLabel$,
       } = qtiEditorStrings;
 
-      const { interactions } = useQtiItem(props.item.raw_data);
+      /**
+       * Track the current bodyXml and responseDeclarations for the interaction.
+       * Initialised after parsing; updated atomically when the editor emits
+       * update:interaction. Declared before useQtiItem so they can be passed in
+       * and observed by the rawData computed inside the composable.
+       */
+      const currentBodyXml = ref('');
+      const currentResponseDeclarations = ref([]);
+
+      // Parse the item XML. rawData is a computed inside useQtiItem that
+      // re-assembles the full XML whenever identifier/title/language or the
+      // editor refs change — no need to duplicate assembleItemXml here.
+      const { interactions, rawData } = useQtiItem(props.item.raw_data, {
+        bodyXml: currentBodyXml,
+        responseDeclarations: currentResponseDeclarations,
+      });
+
+      // Seed the editor refs from the parsed interactions (first interaction only).
+      if (interactions.value.length > 0) {
+        currentBodyXml.value = interactions.value[0].bodyXml;
+        currentResponseDeclarations.value = interactions.value[0].responseDeclarations;
+      }
 
       const questionNumberLabel = computed(() =>
         questionNumberLabel$({
@@ -116,6 +138,20 @@
         }),
       );
 
+      // Emit only when the assembled XML actually changes after initial mount.
+      watch(rawData, newVal => {
+        if (process.env.NODE_ENV === 'development') {
+          // eslint-disable-next-line no-console
+          console.log('[QTIItemEditor] assembled XML:\n', newVal);
+        }
+        emit('update:rawData', newVal);
+      });
+
+      function onUpdateInteraction({ bodyXml, responseDeclarations }) {
+        currentBodyXml.value = bodyXml;
+        currentResponseDeclarations.value = responseDeclarations;
+      }
+
       return {
         currentQuestionType,
         interactions,
@@ -123,6 +159,7 @@
         questionNumberAndTypeLabel,
         closeBtnLabel$,
         questionContentPlaceholder$,
+        onUpdateInteraction,
       };
     },
 
@@ -158,7 +195,7 @@
       },
     },
 
-    emits: ['close'],
+    emits: ['close', 'update:rawData'],
   };
 
 </script>
@@ -193,13 +230,13 @@
 
   .question-card-body {
     min-width: 0;
-    padding: 10px var(--question-card-horizontal-padding);
+    padding: 10px var(--question-card-horizontal-padding) 16px;
   }
 
   .question-card-footer {
     display: flex;
     justify-content: flex-end;
-    padding: 0 var(--question-card-horizontal-padding) 20px;
+    padding: 0 var(--question-card-horizontal-padding) 16px;
   }
 
 </style>

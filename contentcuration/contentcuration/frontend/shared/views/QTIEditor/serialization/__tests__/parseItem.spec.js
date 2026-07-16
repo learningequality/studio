@@ -1,3 +1,4 @@
+/* eslint-disable jest-dom/prefer-to-have-attribute, jest-dom/prefer-to-have-text-content */
 import { parseXML, parseItem } from '../parseItem';
 import { VALID_CHOICE_ITEM_DOCUMENT, TWO_INTERACTIONS_DOCUMENT } from '../../utils/testingFixtures';
 

@@ -4,7 +4,10 @@
     ref="editorContainer"
     class="editor-container"
     :class="{ 'view-mode': editorMode === 'view' }"
-    :style="minHeight && editorMode !== 'view' ? { minHeight } : {}"
+    :style="[
+      minHeight && editorMode !== 'view' ? { minHeight } : {},
+      editorMode !== 'view' ? { backgroundColor: $themePalette.white } : {},
+    ]"
     :tabindex="tabindex"
     role="textbox"
     :aria-label="editorMode === 'edit' ? TipTapEditorLabel$() : TipTapViewerLabel$()"

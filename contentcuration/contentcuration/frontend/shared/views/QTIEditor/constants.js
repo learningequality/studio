@@ -19,6 +19,11 @@ export const BaseType = Object.freeze({
   URI: 'uri',
 });
 
+export const Orientation = Object.freeze({
+  VERTICAL: 'vertical',
+  HORIZONTAL: 'horizontal',
+});
+
 /**
  * There are three distinct type concepts used within the QTI architecture:
  *
@@ -72,4 +77,17 @@ export const AssessmentItemTypes = Object.freeze({
 export const QuestionType = Object.freeze({
   SINGLE_SELECT: 'singleSelect',
   MULTI_SELECT: 'multiSelect',
+});
+
+/**
+ * Error codes returned by each interaction's validate() function.
+ * Interaction-agnostic codes live here; interaction-specific codes may extend
+ * this set in their own validate.js module.
+ */
+export const ValidationError = Object.freeze({
+  PROMPT_REQUIRED: 'PROMPT_REQUIRED',
+  NO_CORRECT_ANSWER: 'NO_CORRECT_ANSWER',
+  TOO_MANY_CORRECT_ANSWERS: 'TOO_MANY_CORRECT_ANSWERS',
+  EMPTY_CHOICE_CONTENT: 'EMPTY_CHOICE_CONTENT',
+  DUPLICATE_CHOICE_CONTENT: 'DUPLICATE_CHOICE_CONTENT',
 });

@@ -37,6 +37,22 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Multiple Choice',
     context: 'Display name for a multiple-select question type',
   },
+  questionLabel: {
+    message: 'Question',
+    context: 'Section header for the question prompt',
+  },
+  answersLabel: {
+    message: 'Answer options',
+    context: 'Section header above choice options',
+  },
+  answersDescriptionSingleChoice: {
+    message: 'Select one correct answer',
+    context: 'Instruction subtitle above single-choice options',
+  },
+  answersDescriptionMultipleChoice: {
+    message: 'Select all correct answers',
+    context: 'Instruction subtitle above multiple-choice options',
+  },
   orderLabel: {
     message: 'Order',
     context: 'Display name for an order question type',
@@ -80,5 +96,45 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
   toolbarLabelAddBelow: {
     message: 'Add question below',
     context: 'Action to add a new question below the current one',
+  },
+  addChoiceBtn: {
+    message: 'Add choice',
+    context: 'Button that appends a new answer choice',
+  },
+  deleteChoiceBtn: {
+    message: 'Delete choice',
+    context: 'Accessible label for the delete-choice icon button',
+  },
+  moveChoiceUpBtn: {
+    message: 'Move choice up',
+    context: 'Accessible label for the move-up icon button',
+  },
+  moveChoiceDownBtn: {
+    message: 'Move choice down',
+    context: 'Accessible label for the move-down icon button',
+  },
+  markCorrectLabel: {
+    message: 'Mark as correct answer',
+    context: 'Accessible label for radio / checkbox that marks a choice as correct',
+  },
+  errorPromptRequired: {
+    message: 'Question is required',
+    context: 'Validation error shown when the prompt is empty',
+  },
+  errorNoCorrectAnswer: {
+    message: 'Choose a correct answer',
+    context: 'Validation error when no choice is marked correct',
+  },
+  errorTooManyCorrectAnswers: {
+    message: 'Only one correct answer is allowed for single-choice questions.',
+    context: 'Validation error when multiple choices are marked correct for single-select',
+  },
+  errorEmptyChoiceContent: {
+    message: 'Answer cannot be blank',
+    context: 'Validation error when an answer option is empty',
+  },
+  errorDuplicateChoiceContent: {
+    message: 'Duplicate answer options are not allowed',
+    context: 'Validation error when two or more answer options have identical content',
   },
 });
