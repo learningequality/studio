@@ -230,13 +230,13 @@
 
   .question-card-body {
     min-width: 0;
-    padding: 10px var(--question-card-horizontal-padding);
+    padding: 10px var(--question-card-horizontal-padding) 16px;
   }
 
   .question-card-footer {
     display: flex;
     justify-content: flex-end;
-    padding: 0 var(--question-card-horizontal-padding) 20px;
+    padding: 0 var(--question-card-horizontal-padding) 16px;
   }
 
 </style>

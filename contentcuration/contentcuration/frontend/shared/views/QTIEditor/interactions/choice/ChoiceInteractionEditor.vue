@@ -28,6 +28,7 @@
                 format="html"
                 :minHeight="'80px'"
                 :autofocus="mode === 'edit' && isQuestionOpen"
+                :imageProcessor="EditorImageProcessor"
                 class="editor"
                 @update="setPrompt"
                 @minimize="closeQuestion"
@@ -104,7 +105,7 @@
                   <template v-else>
                     <KRadioButton
                       v-if="isSingleSelect"
-                      :currentValue="correctChoiceId"
+                      :currentValue="correctChoiceId || ''"
                       :buttonValue="choice.id"
                       :label="markCorrectLabel$()"
                       :showLabel="false"
@@ -133,6 +134,7 @@
                     format="html"
                     :minHeight="'80px'"
                     :autofocus="isChoiceOpen(choice.id)"
+                    :imageProcessor="EditorImageProcessor"
                     class="editor"
                     @update="html => setChoiceContent(choice.id, html)"
                     @minimize="closeChoice"
@@ -150,10 +152,16 @@
               </div>
             </div>
             <!-- Per-choice validation messages sit INSIDE the bordered card -->
-            <ValidationMessage v-if="emptyChoiceIds.has(choice.id)">
+            <ValidationMessage
+              v-if="emptyChoiceIds.has(choice.id)"
+              class="choice-validation-message"
+            >
               {{ errorEmptyChoiceContent$() }}
             </ValidationMessage>
-            <ValidationMessage v-if="duplicateChoiceIds.has(choice.id)">
+            <ValidationMessage
+              v-if="duplicateChoiceIds.has(choice.id)"
+              class="choice-validation-message"
+            >
               {{ errorDuplicateChoiceContent$() }}
             </ValidationMessage>
           </div>
@@ -194,6 +202,7 @@
   import CollapsibleToolbar from '../../components/CollapsibleToolbar/index.vue';
   import ValidationMessage from '../../components/ValidationMessage/index.vue';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor';
+  import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
 
   export default {
     name: 'ChoiceInteractionEditor',
@@ -465,6 +474,7 @@
       }
 
       return {
+        EditorImageProcessor,
         promptWrapperClass,
         promptWrapperStyle,
         state,
@@ -595,6 +605,10 @@
         min-height: 36px;
       }
     }
+  }
+
+  .choice-validation-message {
+    padding: 7.5px;
   }
 
   /* Flex row: [selection] [content] [actions] */
