@@ -1,7 +1,8 @@
 /**
  * Shared XML parse helper for declaration tests.
  */
-const parser = new DOMParser();
+import { parseXML as parseXMLDocument } from '../../parseItem';
+
 const serializer = new XMLSerializer();
 
 /**
@@ -10,10 +11,7 @@ const serializer = new XMLSerializer();
  * @returns {Element}
  */
 export function parseXML(xmlString) {
-  const doc = parser.parseFromString(xmlString, 'text/xml');
-  const error = doc.querySelector('parsererror');
-  if (error) throw new Error(`XML parse error: ${error.textContent}`);
-  return doc.documentElement;
+  return parseXMLDocument(xmlString).documentElement;
 }
 
 /**
