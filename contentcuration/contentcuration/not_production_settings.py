@@ -20,5 +20,14 @@ INTERNAL_IPS = (
 
 AWS_AUTO_CREATE_BUCKET = True
 
+INSTALLED_APPS += ("django_migration_linter",)  # noqa F405
+
+MIGRATION_LINTER_OPTIONS = {
+    "exclude_apps": [
+        "kolibri_content"
+    ],  # SQLite content-export app; not on the safe-DDL Postgres backend
+    "sql_analyser": "postgresql",
+}
+
 # Use local instance for curriculum automation for development
 CURRICULUM_AUTOMATION_API_URL = "http://localhost:8000"

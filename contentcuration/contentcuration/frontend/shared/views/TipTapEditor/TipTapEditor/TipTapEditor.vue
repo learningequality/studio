@@ -200,7 +200,10 @@
         return editor.value.storage.markdown.getMarkdown();
       };
 
-      let isUpdatingFromOutside = false; // A flag to prevent infinite update loops
+      // Cache of the latest markdown value emitted by this component. Used to
+      // detect when an incoming prop.value is just our own emitted value echoed
+      // back, so we can skip unnecessary re-rendering of the editor content.
+      let lastEmittedMarkdown = null;
 
       watch(
         () => props.mode,
@@ -220,6 +223,13 @@
       watch(
         () => props.value,
         newValue => {
+          // If the incoming value matches what we last emitted, the editor
+          // already reflects this content, so skip re-rendering to avoid
+          // unnecessary work and resetting the editor state.
+          if (newValue === lastEmittedMarkdown) {
+            return;
+          }
+
           const processedContent =
             props.format === 'html' ? newValue : preprocessMarkdown(newValue);
 
@@ -231,29 +241,31 @@
           }
 
           if (getContent() !== newValue) {
-            isUpdatingFromOutside = true;
             editor.value.commands.setContent(processedContent, false);
-            nextTick(() => {
-              isUpdatingFromOutside = false;
-            });
           }
         },
         { immediate: true },
       );
 
-      // sync changes from the editor to the parent component
-      watch(
-        () => editor.value?.state,
-        () => {
-          if (!editor.value || !isReady.value || isUpdatingFromOutside) return;
+      // sync changes from the editor to the parent component, only on blur
+      const emitContentUpdate = () => {
+        if (!editor.value || !isReady.value) {
+          return;
+        }
 
-          const content = getContent();
-          if (content !== props.value) {
-            emit('update', content);
-          }
-        },
-        { deep: true },
-      );
+        const content = getContent();
+        if (content !== props.value) {
+          lastEmittedMarkdown = content;
+          emit('update', content);
+        }
+      };
+
+      // Emit the content update only when the editor loses focus (blur).
+      watch(isFocused, (focused, wasFocused) => {
+        if (wasFocused && !focused) {
+          emitContentUpdate();
+        }
+      });
 
       const handleContainerKeydown = event => {
         if (event.key === 'Enter') {

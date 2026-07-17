@@ -16,7 +16,9 @@ from .base import BaseAPITestCase
 from .base import StudioTestCase
 from .testdata import fileobj_video
 from contentcuration.models import DEFAULT_CONTENT_DEFAULTS
+from contentcuration.models import File
 from contentcuration.models import Invitation
+from contentcuration.models import Language
 from contentcuration.models import User
 from contentcuration.models import UserSubscription
 from contentcuration.tests import testdata
@@ -162,6 +164,80 @@ class UserAccountTestCase(BaseAPITestCase):
                         self.assertIn(videos[index - 1].original_filename, row)
                         self.assertIn(_format_size(videos[index - 1].file_size), row)
             self.assertEqual(index, len(videos))
+
+    def test_user_csv_export_reports_channel_and_content_metadata(self):
+        language = Language.objects.create(lang_code="fr", readable_name="French")
+        file_record = File.objects.filter(
+            contentnode__tree_id=self.channel.main_tree.tree_id
+        ).first()
+        file_record.uploaded_by = self.user
+        file_record.original_filename = "sample-video.mp4"
+        file_record.language = None
+        file_record.save()
+
+        contentnode = file_record.contentnode
+        contentnode.title = "CSV Content Title"
+        contentnode.description = "CSV Description"
+        contentnode.author = "CSV Author"
+        contentnode.language = language
+        contentnode.license_description = "CSV License Description"
+        contentnode.copyright_holder = "CSV Copyright Holder"
+        contentnode.save()
+
+        with tempfile.NamedTemporaryFile(suffix=".csv") as tempf:
+            write_user_csv(self.user, path=tempf.name)
+
+            with io.open(tempf.name, "r", encoding="utf-8") as csv_file:
+                rows = list(csv.DictReader(csv_file, delimiter=","))
+
+        self.assertTrue(rows)
+        row = rows[0]
+        self.assertEqual(row["Channel"], self.channel.name)
+        self.assertEqual(row["Title"], "CSV Content Title")
+        self.assertEqual(row["Filename"], "sample-video.mp4")
+        self.assertEqual(row["Description"], "CSV Description")
+        self.assertEqual(row["Author"], "CSV Author")
+        self.assertEqual(row["Language"], "French")
+        self.assertEqual(row["License Description"], "CSV License Description")
+        self.assertEqual(row["Copyright Holder"], "CSV Copyright Holder")
+
+    def test_user_csv_export_reports_staged_files(self):
+        self.user.staged_files.create(checksum="stagedchecksum", file_size=2048)
+
+        with tempfile.NamedTemporaryFile(suffix=".csv") as tempf:
+            write_user_csv(self.user, path=tempf.name)
+
+            with io.open(tempf.name, "r", encoding="utf-8") as csv_file:
+                rows = list(csv.DictReader(csv_file, delimiter=","))
+
+        staged_rows = [row for row in rows if row["Filename"] == "Staged File"]
+        self.assertEqual(len(staged_rows), 1)
+        staged_row = staged_rows[0]
+        self.assertEqual(staged_row["Channel"], "No Channel")
+        self.assertEqual(staged_row["Title"], "No Resource")
+        self.assertEqual(staged_row["File Size"], _format_size(2048))
+        self.assertEqual(staged_row["URL"], "")
+
+    def test_user_csv_export_includes_files_without_contentnode(self):
+        file_without_contentnode = fileobj_video()
+        self.assertIsNone(file_without_contentnode.contentnode_id)
+        file_without_contentnode.uploaded_by = self.user
+        file_without_contentnode.original_filename = "no-contentnode.mp4"
+        file_without_contentnode.save()
+
+        with tempfile.NamedTemporaryFile(suffix=".csv") as tempf:
+            write_user_csv(self.user, path=tempf.name)
+
+            with io.open(tempf.name, "r", encoding="utf-8") as csv_file:
+                rows = list(csv.DictReader(csv_file, delimiter=","))
+
+        row = next(
+            row
+            for row in rows
+            if row["Filename"] == file_without_contentnode.original_filename
+        )
+        self.assertEqual(row["Title"], "No resource")
+        self.assertEqual(row["Channel"], "No Channel")
 
 
 class UserEffectiveDiskSpaceTest(StudioTestCase):

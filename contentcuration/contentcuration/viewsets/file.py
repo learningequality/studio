@@ -1,7 +1,7 @@
-import codecs
 import math
 
 from django.core.exceptions import PermissionDenied
+from django.core.files.storage import default_storage
 from django.http import HttpResponseBadRequest
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
@@ -34,6 +34,8 @@ from contentcuration.viewsets.sync.utils import generate_update_event
 
 PRESET_LOOKUP = {p.id: p for p in format_presets.PRESETLIST}
 
+MAX_NON_RESUMABLE_UPLOAD_SIZE = 500 * 1024 * 1024
+
 
 class StrictFloatField(serializers.FloatField):
     def to_internal_value(self, data):
@@ -48,7 +50,7 @@ class FileUploadURLSerializer(serializers.Serializer):
     """
     Serializer to validate inputs for the upload_url endpoint.
     Required:
-      - size: a float value
+      - size: an integer value (bytes)
       - checksum: a 32-digit hex string
       - name: a string (note: mapped from request.data['name'])
       - file_format: a valid file format choice from file_formats.choices
@@ -57,12 +59,13 @@ class FileUploadURLSerializer(serializers.Serializer):
       - duration: a number that will be floored to an integer and must be > 0
     """
 
-    size = serializers.FloatField(required=True)
+    size = serializers.IntegerField(required=True)
     checksum = serializers.RegexField(regex=r"^[0-9a-f]{32}$", required=True)
     name = serializers.CharField(required=True)
     file_format = serializers.ChoiceField(choices=file_formats.choices, required=True)
     preset = serializers.ChoiceField(choices=format_presets.choices, required=True)
     duration = StrictFloatField(required=False, allow_null=True)
+    resumable = serializers.BooleanField(required=False, default=False)
 
     def validate_duration(self, value):
         if value is None:
@@ -88,6 +91,10 @@ class FileUploadURLSerializer(serializers.Serializer):
         if attrs["file_format"] not in preset_obj.allowed_formats:
             raise serializers.ValidationError(
                 f"File format {attrs['file_format']} is not an allowed format for this preset {attrs['preset']}"
+            )
+        if not attrs["resumable"] and attrs["size"] > MAX_NON_RESUMABLE_UPLOAD_SIZE:
+            raise serializers.ValidationError(
+                "Files larger than 500 MB must use a resumable upload."
             )
         return attrs
 
@@ -235,26 +242,37 @@ class FileViewSet(BulkDeleteMixin, UpdateModelMixin, ReadOnlyValuesViewset):
         file_format = validated_data["file_format"]
         preset = validated_data["preset"]
         duration = validated_data.get("duration")
+        resumable = validated_data["resumable"]
 
         try:
-            request.user.check_space(float(size), checksum)
+            request.user.check_space(size, checksum)
         except PermissionDenied:
             return HttpResponseBadRequest(
                 reason="Not enough space. Check your storage under Settings page.",
                 status=412,
             )
 
-        might_skip = File.objects.filter(checksum=checksum).exists()
-
         filepath = generate_object_storage_name(
             checksum, filename, default_ext=file_format
         )
-        checksum_base64 = codecs.encode(
-            codecs.decode(checksum, "hex"), "base64"
-        ).decode()
-        retval = get_presigned_upload_url(
-            filepath, checksum_base64, 600, content_length=size
-        )
+        if resumable and hasattr(default_storage, "create_resumable_upload_session"):
+            # Resumable response omits mimetype/might_skip.
+            stored = default_storage.get_stored_object_md5(filepath) == checksum
+            retval = {
+                "resumable": True,
+                "uploadURL": None
+                if stored
+                else default_storage.create_resumable_upload_session(
+                    filepath, checksum, size
+                ),
+                "alreadyUploaded": stored,
+            }
+        else:
+            retval = get_presigned_upload_url(
+                filepath, checksum, 600, content_length=size
+            )
+            retval["resumable"] = False
+            retval["might_skip"] = File.objects.filter(checksum=checksum).exists()
 
         file = File(
             file_size=size,
@@ -270,8 +288,5 @@ class FileViewSet(BulkDeleteMixin, UpdateModelMixin, ReadOnlyValuesViewset):
         # Avoid using our file_on_disk attribute for checks
         file.save(set_by_file_on_disk=False)
 
-        retval.update(
-            {"might_skip": might_skip, "file": self.serialize_object(id=file.id)}
-        )
-
+        retval["file"] = self.serialize_object(id=file.id)
         return Response(retval)

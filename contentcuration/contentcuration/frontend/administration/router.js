@@ -34,11 +34,7 @@ const router = new VueRouter({
       name: RouteNames.COMMUNITY_LIBRARY_SUBMISSION,
       path: '/community-library/:channelId/:submissionId',
       component: SubmissionDetailsModal,
-      props: route => ({
-        channelId: route.params.channelId,
-        submissionId: route.params.submissionId,
-        adminReview: true,
-      }),
+      props: true,
     },
     // Catch-all redirect to channels tab
     {

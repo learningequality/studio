@@ -1,4 +1,3 @@
-import codecs
 import hashlib
 from datetime import timedelta
 from io import BytesIO
@@ -12,6 +11,7 @@ from mock import MagicMock
 
 from .base import StudioTestCase
 from contentcuration.models import generate_object_storage_name
+from contentcuration.utils.gcs_storage import GoogleCloudStorage
 from contentcuration.utils.storage_common import _get_gcs_presigned_put_url
 from contentcuration.utils.storage_common import determine_content_type
 from contentcuration.utils.storage_common import get_presigned_upload_url
@@ -79,7 +79,7 @@ class FileSystemStoragePresignedURLTestCase(TestCase):
         with pytest.raises(UnknownStorageBackendError):
             get_presigned_upload_url(
                 "nice",
-                "err",
+                "d41d8cd98f00b204e9800998ecf8427e",
                 5,
                 0,
                 storage=self.STORAGE,
@@ -157,6 +157,23 @@ class GoogleCloudStoragePresignedURLUnitTestCase(TestCase):
             content_type=mimetype,
         )
 
+    def test_create_resumable_session_pins_md5_size_and_returns_url(self):
+        storage = GoogleCloudStorage(self.client, "bucket")
+        blob = self.client.get_bucket.return_value.blob.return_value
+        blob.create_resumable_upload_session.return_value = "https://session.url"
+
+        url = storage.create_resumable_upload_session(
+            "storage/a/b/abc.jpg",
+            "d41d8cd98f00b204e9800998ecf8427e",
+            2048,
+        )
+
+        assert url == "https://session.url"
+        assert blob.md5_hash == "1B2M2Y8AsgTpgAmY7PhCfg=="  # hex checksum, b64-encoded
+        assert blob.content_type == "image/jpeg"
+        assert blob.metadata == {"declared-size": "2048"}
+        blob.create_resumable_upload_session.assert_called_once()
+
 
 class S3StoragePresignedURLUnitTestCase(StudioTestCase):
     """
@@ -177,7 +194,12 @@ class S3StoragePresignedURLUnitTestCase(StudioTestCase):
 
         # use a real connection here as a sanity check
         ret = get_presigned_upload_url(
-            "a/b/abc.jpg", "aBc", 10, 1, storage=self.STORAGE, client=None
+            "a/b/abc.jpg",
+            "d41d8cd98f00b204e9800998ecf8427e",
+            10,
+            1,
+            storage=self.STORAGE,
+            client=None,
         )
         url = ret["uploadURL"]
 
@@ -189,19 +211,12 @@ class S3StoragePresignedURLUnitTestCase(StudioTestCase):
         """
         file_contents = b"blahfilecontents"
         file = BytesIO(file_contents)
-        # S3 expects a base64-encoded MD5 checksum
-        md5 = hashlib.md5(file_contents)
-        md5_checksum = md5.hexdigest()
-        md5_checksum_base64 = codecs.encode(
-            codecs.decode(md5_checksum, "hex"), "base64"
-        ).decode()
+        md5_checksum = hashlib.md5(file_contents).hexdigest()
 
         filename = "blahfile.jpg"
         filepath = generate_object_storage_name(md5_checksum, filename)
 
-        ret = get_presigned_upload_url(
-            filepath, md5_checksum_base64, 1000, len(file_contents)
-        )
+        ret = get_presigned_upload_url(filepath, md5_checksum, 1000, len(file_contents))
         url = ret["uploadURL"]
         content_type = ret["mimetype"]
 
