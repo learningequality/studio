@@ -1,11 +1,12 @@
-import { render, screen, configure } from '@testing-library/vue';
+import { render, screen } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import FileUploadItem from '../FileUploadItem';
 import { factory } from '../../../store';
 import { fileErrors } from 'shared/constants';
+import { createTranslator } from 'shared/i18n';
 
+const tr = createTranslator('FileUploadItem', FileUploadItem.$trs);
 const testFile = { id: 'test' };
-configure({ testIdAttribute: 'data-test' });
 
 function renderComponent({ props = {}, file = {}, store = factory(), stubs = {} } = {}) {
   return render(FileUploadItem, {
@@ -38,7 +39,7 @@ describe('fileUploadItem', () => {
           original_filename: 'file',
         },
       });
-      expect(screen.getByText('Unknown filename')).toBeInTheDocument();
+      expect(screen.getByText(tr.$tr('unknownFile'))).toBeInTheDocument();
     });
 
     it("shows 'Unknown filename' when the uploaded filename is ''", () => {
@@ -47,7 +48,7 @@ describe('fileUploadItem', () => {
           original_filename: '',
         },
       });
-      expect(screen.getByText('Unknown filename')).toBeInTheDocument();
+      expect(screen.getByText(tr.$tr('unknownFile'))).toBeInTheDocument();
     });
 
     it('shows the uploaded file name when it is available', () => {
@@ -79,14 +80,14 @@ describe('fileUploadItem', () => {
           error: fileErrors.UPLOAD_FAILED,
         },
       });
-      expect(screen.getByText('Upload failed')).toBeInTheDocument();
+      expect(screen.getByText(tr.$tr('uploadFailed'))).toBeInTheDocument();
     });
 
     it('shows a Select file action when no file has been uploaded', () => {
       renderComponent({
         file: null,
       });
-      expect(screen.getByText('Select file')).toBeInTheDocument();
+      expect(screen.getByText(tr.$tr('uploadButton'))).toBeInTheDocument();
     });
 
     it('shows file actions when the user opens the options menu', async () => {
@@ -102,10 +103,10 @@ describe('fileUploadItem', () => {
           url: 'file-url',
         },
       });
-      await user.click(screen.getByRole('button'));
-      expect(screen.getByText('Replace file')).toBeInTheDocument();
-      expect(screen.getByText('Download')).toBeInTheDocument();
-      expect(screen.getByText('Remove')).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: tr.$tr('fileOptionsButtonLabel') }));
+      expect(screen.getByText(tr.$tr('replaceFileMenuOptionLabel'))).toBeInTheDocument();
+      expect(screen.getByText(tr.$tr('downloadMenuOptionLabel'))).toBeInTheDocument();
+      expect(screen.getByText(tr.$tr('removeMenuOptionLabel'))).toBeInTheDocument();
     });
 
     it('calls the upload complete handler when the replacement upload finishes', async () => {
@@ -192,7 +193,7 @@ describe('fileUploadItem', () => {
         },
       });
 
-      await user.click(screen.getByTestId('list-item'));
+      await user.click(screen.getByText(tr.$tr('uploadButton')));
 
       expect(openFileDialog).toHaveBeenCalled();
       expect(emitted()).not.toHaveProperty('selected');
