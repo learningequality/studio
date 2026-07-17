@@ -8,6 +8,8 @@
  * (e.g. XMLSerializer.serializeToString).
  */
 
+import { parseXML } from './parseItem';
+
 const xmlDoc = new DOMParser().parseFromString('<root/>', 'text/xml');
 const serializer = new XMLSerializer();
 
@@ -38,10 +40,7 @@ export function buildXmlNode({ tag, attrs = {}, children, innerHTML }) {
   }
 
   if (innerHTML !== undefined) {
-    const htmlDoc = new DOMParser().parseFromString(
-      `<!DOCTYPE html><body>${innerHTML}</body>`,
-      'text/html',
-    );
+    const htmlDoc = parseXML(`<!DOCTYPE html><body>${innerHTML}</body>`, 'text/html');
     for (const child of [...htmlDoc.body.childNodes]) {
       el.appendChild(xmlDoc.importNode(child, true));
     }
@@ -80,17 +79,15 @@ export function buildXmlNode({ tag, attrs = {}, children, innerHTML }) {
  * @returns {string} Full QTI XML string
  */
 export function assembleItemXml({ identifier, title, language, bodyXml, responseDeclarations }) {
-  const declParser = new DOMParser();
-
   // Parse each serialized declaration string back into a DOM node so it can be
   // adopted into the assessment item tree via buildXmlNode's importNode logic.
   const declNodes = (responseDeclarations || []).map(declXml => {
-    const doc = declParser.parseFromString(declXml, 'text/xml');
+    const doc = parseXML(declXml);
     return doc.documentElement;
   });
 
   // Parse the interaction body XML into a DOM node.
-  const bodyDoc = declParser.parseFromString(bodyXml || '<qti-item-body/>', 'text/xml');
+  const bodyDoc = parseXML(bodyXml || '<qti-item-body/>');
   const interactionNode = bodyDoc.documentElement;
 
   const itemBodyNode = buildXmlNode({

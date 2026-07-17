@@ -4,6 +4,8 @@
  * @module serialization/qti/QTISanitizer
  */
 
+import { parseXML } from '../parseItem';
+
 // Valid QTI 3.0 base-type values — https://www.imsglobal.org/spec/qti/v3p0/impl/#h.wq4e8lbs4wa9
 const VALID_BASE_TYPES = new Set([
   'boolean',
@@ -91,7 +93,7 @@ export class QTISanitizer {
     if (typeof value !== 'string') return String(value ?? '');
     // Fast path: if no `<` is present there is nothing to strip.
     if (!value.includes('<')) return value;
-    const doc = new DOMParser().parseFromString(value, 'text/html');
+    const doc = parseXML(value, 'text/html');
     // Remove script and style elements entirely — we do NOT want their text content.
     doc.querySelectorAll('script, style').forEach(el => el.remove());
     return doc.body.textContent ?? '';

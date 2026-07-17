@@ -4,19 +4,26 @@ const serializer = new XMLSerializer();
 const parser = new DOMParser();
 
 /**
- * Parses a QTI XML string into a validated XML Document.
+ * Parses a QTI XML or HTML string into a Document.
  *
- * @param {string} xmlString - Raw QTI XML string
- * @returns {Document} Parsed XML Document
- * @throws {Error} If the XML is malformed or contains a parsererror
+ * @param {string} xmlString - Raw QTI XML (or HTML fragment) string
+ * @param {string} [mimeType='text/xml'] - Parse mode. `'text/xml'` runs the
+ *   `parsererror` check; `'text/html'` parses leniently and never throws.
+ * @returns {Document} Parsed XML or HTML Document
+ * @throws {Error} If parsing as `'text/xml'` and the input is malformed or
+ *   contains a parsererror. HTML parsing never throws.
  */
-export function parseXML(xmlString) {
-  const doc = parser.parseFromString(xmlString, 'text/xml');
+export function parseXML(xmlString, mimeType = 'text/xml') {
+  const doc = parser.parseFromString(xmlString, mimeType);
 
-  // DOMParser never throws — it signals failure via a <parsererror> node.
-  const error = doc.querySelector('parsererror');
-  if (error) {
-    throw new Error(`QTI XML parse error: ${error.textContent.trim()}`);
+  // DOMParser never throws — it signals failure via a <parsererror> node. This
+  // only applies to XML: the HTML parser recovers silently and never emits one,
+  // so an HTML document literally containing a <parsererror> must not trip it.
+  if (mimeType === 'text/xml') {
+    const error = doc.querySelector('parsererror');
+    if (error) {
+      throw new Error(`QTI XML parse error: ${error.textContent.trim()}`);
+    }
   }
 
   return doc;
