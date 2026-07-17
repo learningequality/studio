@@ -8,3 +8,4 @@ pytest-timeout
 pre-commit==4.6.0
 nodeenv
 drf-yasg==1.21.10
+django-migration-linter==6.0.0
