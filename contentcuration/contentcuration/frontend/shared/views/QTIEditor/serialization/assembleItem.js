@@ -82,12 +82,12 @@ export function assembleItemXml({ identifier, title, language, bodyXml, response
   // Parse each serialized declaration string back into a DOM node so it can be
   // adopted into the assessment item tree via buildXmlNode's importNode logic.
   const declNodes = (responseDeclarations || []).map(declXml => {
-    const doc = parseXML(declXml, 'text/xml');
+    const doc = parseXML(declXml);
     return doc.documentElement;
   });
 
   // Parse the interaction body XML into a DOM node.
-  const bodyDoc = parseXML(bodyXml || '<qti-item-body/>', 'text/xml');
+  const bodyDoc = parseXML(bodyXml || '<qti-item-body/>');
   const interactionNode = bodyDoc.documentElement;
 
   const itemBodyNode = buildXmlNode({
