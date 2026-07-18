@@ -194,7 +194,9 @@ class ResponseDeclaration(QTIBase):
 
     identifier: QTIIdentifier
     cardinality: Cardinality
-    base_type: BaseType
+    # base-type is optional in the XSD and is omitted for record cardinality,
+    # whose fields each carry their own base-type at runtime.
+    base_type: Optional[BaseType] = None
     correct_response: Optional[CorrectResponse] = None
     mapping: Optional[Mapping] = None
     area_mapping: Optional[AreaMapping] = None
@@ -205,6 +207,57 @@ class ResponseDeclaration(QTIBase):
         return self
 
 
+class BaseValue(QTIBase):
+    """A literal value of a given base-type (``qti-base-value`` expression)."""
+
+    base_type: BaseType
+    value: TextType
+
+
+class Variable(QTIBase):
+    """Look up the value of an item variable (``qti-variable`` expression)."""
+
+    identifier: QTIIdentifier
+
+
+class FieldValue(QTIBase):
+    """
+    Extract a named field from a record-cardinality expression
+    (``qti-field-value``). Used to read a single field, e.g. ``correct``, out of
+    a record response variable.
+    """
+
+    field_identifier: QTIIdentifier
+    variable: Variable
+
+
+class SetOutcomeValue(QTIBase):
+    """Assign an expression's value to an outcome variable."""
+
+    identifier: QTIIdentifier
+    base_value: BaseValue
+
+
+class ResponseIf(QTIBase):
+    """The 'if' branch of a response condition: a boolean expression plus a rule."""
+
+    field_value: FieldValue
+    set_outcome_value: SetOutcomeValue
+
+
+class ResponseElse(QTIBase):
+    """The 'else' branch of a response condition."""
+
+    set_outcome_value: SetOutcomeValue
+
+
+class ResponseCondition(QTIBase):
+    """An if/else response-processing rule (``qti-response-condition``)."""
+
+    response_if: ResponseIf
+    response_else: Optional[ResponseElse] = None
+
+
 class ResponseProcessing(QTIBase):
     """Represents response processing rules or template reference"""
 
@@ -213,7 +266,9 @@ class ResponseProcessing(QTIBase):
     # Optional URL that resolves to the template - we additionally enforce that this be local
     # although this is not required by the QTI spec
     template_location: Optional[LocalHrefPath] = None
-    # rules deliberately not implemented yet
+    # Inline response-processing rules, used when no standard template can express
+    # the grading (e.g. reading the correct/incorrect result out of a record).
+    children: List[ResponseCondition] = Field(default_factory=list)
 
 
 class AssessmentItem(QTIBase):

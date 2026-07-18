@@ -4,9 +4,16 @@ import unittest
 from le_utils.constants import exercises
 
 from contentcuration.utils.assessment.qti.convert import (
+    build_perseus_custom_interaction_item,
+)
+from contentcuration.utils.assessment.qti.convert import (
     convert_legacy_assessment_item_to_qti,
 )
+from contentcuration.utils.assessment.qti.convert import hex_to_qti_id
 from contentcuration.utils.assessment.qti.convert import LegacyAssessmentItem
+from contentcuration.utils.assessment.qti.interaction_types.custom import (
+    CustomInteraction,
+)
 from contentcuration.utils.assessment.qti.validation import validate_qti_item
 
 
@@ -230,6 +237,65 @@ class TextEntryInteractionConversionTests(unittest.TestCase):
             _normalize_xml(_load_fixture("free_response_with_maths.xml")),
             _normalize_xml(result.xml),
         )
+
+
+class CustomInteractionTests(unittest.TestCase):
+    ASSESSMENT_ID = "2b1c3d4e5f60718293a4b5c6d7e8f900"
+
+    def _build_item(self):
+        return build_perseus_custom_interaction_item(
+            self.ASSESSMENT_ID,
+            f"perseus/{self.ASSESSMENT_ID}.json",
+            "Q 1",
+            "en",
+        )
+
+    def test_custom_interaction_element_and_attributes(self):
+        interaction = CustomInteraction(
+            response_identifier="RESPONSE",
+            data_type="perseus",
+            data_perseus_path="perseus/abc.json",
+        )
+
+        xml = interaction.to_xml_string()
+
+        self.assertEqual(
+            _normalize_xml(
+                '<qti-custom-interaction response-identifier="RESPONSE" '
+                'data-type="perseus" data-perseus-path="perseus/abc.json" />'
+            ),
+            _normalize_xml(xml),
+        )
+
+    def test_builder_identifier_and_validity(self):
+        result = self._build_item()
+
+        self.assertEqual(result.identifier, hex_to_qti_id(self.ASSESSMENT_ID))
+        self.assertEqual(result.file_dependencies, [])
+        self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
+        self.assertIn('data-type="perseus"', result.xml)
+        self.assertIn(
+            f'data-perseus-path="perseus/{self.ASSESSMENT_ID}.json"', result.xml
+        )
+
+    def test_builder_grades_from_record_correct_field(self):
+        """
+        The Perseus renderer reports its result through a record RESPONSE, and
+        the item grades itself off that record's ``correct`` field.
+        """
+        result = self._build_item()
+
+        normalized = _normalize_xml(result.xml)
+        # RESPONSE is a record so it can carry correct/simpleAnswer/answerState.
+        self.assertIn(
+            '<qti-response-declaration identifier="RESPONSE" cardinality="record"',
+            normalized,
+        )
+        # SCORE outcome plus response processing that reads the correct field.
+        self.assertIn('<qti-outcome-declaration identifier="SCORE"', normalized)
+        self.assertIn('<qti-field-value field-identifier="correct">', normalized)
+        self.assertIn('<qti-variable identifier="RESPONSE"', normalized)
+        self.assertIn('<qti-set-outcome-value identifier="SCORE">', normalized)
 
 
 class UnsupportedTypeConversionTests(unittest.TestCase):
