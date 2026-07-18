@@ -386,13 +386,26 @@ class TreeMapper:
                 metadata,
             )
 
+            # A mixed node's QTI package embeds its raw Perseus questions as
+            # custom interactions, so that file also needs the Perseus/exercise
+            # renderer. Discovered here alongside generator selection and carried
+            # to create_associated_file_objects, so the included_presets bit is
+            # grounded in the same decision that drives the embedding.
+            qti_embeds_perseus = False
+
             if has_assessments(node):
                 exercise_data = process_assessment_metadata(node)
+                mapping_values = exercise_data["assessment_mapping"].values()
                 any_perseus_question = any(
-                    t == exercises.PERSEUS_QUESTION
-                    for t in exercise_data["assessment_mapping"].values()
+                    t == exercises.PERSEUS_QUESTION for t in mapping_values
                 )
-                if any_perseus_question:
+                any_native_qti = any(t == exercises.QTI for t in mapping_values)
+                qti_embeds_perseus = any_perseus_question and any_native_qti
+                if qti_embeds_perseus:
+                    # Mixed node: one QTI package, raw Perseus embedded as
+                    # custom interactions.
+                    generator_classes = [QTIExerciseGenerator]
+                elif any_perseus_question:
                     generator_classes = [PerseusExerciseGenerator]
                 else:
                     generator_classes = [QTIExerciseGenerator]
@@ -439,7 +452,7 @@ class TreeMapper:
             if node.kind_id == content_kinds.TOPIC:
                 for child in node.children.all():
                     self.recurse_nodes(child, metadata)
-            create_associated_file_objects(kolibrinode, node)
+            create_associated_file_objects(kolibrinode, node, qti_embeds_perseus)
             map_tags_to_node(kolibrinode, node)
 
         self._node_completed()
@@ -669,7 +682,7 @@ def create_associated_thumbnail(ccnode, ccfilemodel):
     )
 
 
-def create_associated_file_objects(kolibrinode, ccnode):
+def create_associated_file_objects(kolibrinode, ccnode, qti_embeds_perseus=False):
     logging.debug(
         "Creating LocalFile and File objects for Node {}".format(kolibrinode.id)
     )
@@ -721,6 +734,17 @@ def create_associated_file_objects(kolibrinode, ccnode):
                     preset.pk,
                     ccfilemodel.pk,
                 )
+
+        # EXERCISE bit: a mixed QTI package embeds raw Perseus custom
+        # interactions, so it also needs the Perseus renderer (see recurse_nodes).
+        if (
+            included_presets is not None
+            and preset.pk == format_presets.QTI_ZIP
+            and qti_embeds_perseus
+        ):
+            included_presets |= 2 ** RENDERABLE_PRESETS_ORDER.index(
+                format_presets.EXERCISE
+            )
 
         kolibrimodels.File.objects.create(
             pk=ccfilemodel.pk,
