@@ -7,6 +7,7 @@ import os
 import re
 import zipfile
 from io import BytesIO
+from tempfile import TemporaryDirectory
 from uuid import uuid4
 
 from django.core.files.storage import default_storage as storage
@@ -27,6 +28,7 @@ from contentcuration.utils.assessment.perseus import PerseusExerciseGenerator
 from contentcuration.utils.assessment.qti.archive import hex_to_qti_id
 from contentcuration.utils.assessment.qti.archive import QTIExerciseGenerator
 from contentcuration.utils.assessment.qti.validation import parse_qti_xml
+from contentcuration.utils.assessment.qti.validation import validate_qti_item
 
 
 class TestPerseusExerciseCreation(StudioTestCase):
@@ -479,6 +481,45 @@ class TestPerseusExerciseCreation(StudioTestCase):
             graphie_file.save()
 
         return item, graphie_files
+
+    def test_write_raw_perseus_assets_returns_paths_and_writes_files(self):
+        """`_write_raw_perseus_assets` writes an item's images/graphie assets into
+        the given directory and returns their package-relative paths."""
+        image_file = fileobj_exercise_image()
+        graphie_file = fileobj_exercise_graphie(original_filename="mygraphie")
+
+        item = AssessmentItem.objects.create(
+            contentnode=self.exercise_node,
+            assessment_id="fedcba0987654321fedcba0987654321",
+            type=exercises.PERSEUS_QUESTION,
+            raw_data="{}",
+            order=1,
+            randomize=True,
+        )
+        image_file.assessment_item = item
+        image_file.save()
+        graphie_file.assessment_item = item
+        graphie_file.save()
+
+        generator = PerseusExerciseGenerator(
+            self.exercise_node, {}, self.channel.id, "en-US", user_id=self.user.id
+        )
+        with TemporaryDirectory() as tempdir:
+            generator.tempdir = tempdir
+            written = generator._write_raw_perseus_assets(item, "perseus/images")
+
+            image_path = (
+                f"perseus/images/{image_file.checksum}.{image_file.file_format_id}"
+            )
+            svg_path = f"perseus/images/{graphie_file.original_filename}.svg"
+            json_path = f"perseus/images/{graphie_file.original_filename}-data.json"
+
+            self.assertIn(image_path, written)
+            self.assertIn(svg_path, written)
+            self.assertIn(json_path, written)
+
+            for path in (image_path, svg_path, json_path):
+                self.assertTrue(os.path.exists(os.path.join(tempdir, path)))
 
     def test_exercise_with_graphie(self):
         """Test creating an exercise with graphie files (SVG+JSON pairs)"""
@@ -1454,32 +1495,83 @@ class TestQTIExerciseCreation(StudioTestCase):
         item_xml = self._render_single_item_xml("abcdef1234567890abcdef1234567890", [])
         self.assertNotIn("<qti-catalog-info", item_xml)
 
-    def test_perseus_question_rejection(self):
-        """Test that Perseus questions are properly rejected"""
-        assessment_id = "aaaa1111bbbb2222cccc3333dddd4444"
-        # Create a mock Perseus question
-        item = AssessmentItem.objects.create(
-            contentnode=self.exercise_node,
-            assessment_id=assessment_id,
-            type=exercises.PERSEUS_QUESTION,
-            raw_data='{"question": {"content": "Perseus content"}}',
-            order=1,
+    def test_perseus_custom_interaction_embedded_with_native_qti(self):
+        """A node mixing a native QTI item and a raw Perseus question yields one
+        QTI package: the native item, plus the Perseus question wrapped as a
+        ``qti-custom-interaction`` with its JSON and image packaged and declared."""
+        native_id = "1234567890abcdef1234567890abcdef"
+        native_item = self._create_native_qti_item(
+            VALID_CHOICE_ITEM, assessment_id=native_id
         )
+
+        image_file = fileobj_exercise_image()
+        image_url = exercises.CONTENT_STORAGE_FORMAT.format(image_file.filename())
+        perseus_id = "aaaa1111bbbb2222cccc3333dddd4444"
+        perseus_item = AssessmentItem.objects.create(
+            contentnode=self.exercise_node,
+            assessment_id=perseus_id,
+            type=exercises.PERSEUS_QUESTION,
+            raw_data=json.dumps(
+                {"question": {"content": f"See ![shape]({image_url})", "images": {}}},
+                ensure_ascii=False,
+            ),
+            order=2,
+            randomize=False,
+        )
+        image_file.assessment_item = perseus_item
+        image_file.save()
 
         exercise_data = {
             "mastery_model": exercises.M_OF_N,
             "randomize": True,
             "n": 1,
             "m": 1,
-            "all_assessment_items": [item.assessment_id],
-            "assessment_mapping": {item.assessment_id: exercises.PERSEUS_QUESTION},
+            "all_assessment_items": [
+                native_item.assessment_id,
+                perseus_item.assessment_id,
+            ],
+            "assessment_mapping": {
+                native_item.assessment_id: exercises.QTI,
+                perseus_item.assessment_id: exercises.PERSEUS_QUESTION,
+            },
         }
 
-        # Should raise ValueError for Perseus questions
-        with self.assertRaises(ValueError) as context:
-            self._create_qti_zip(exercise_data)
+        self._create_qti_zip(exercise_data)
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
 
-        self.assertIn("Perseus questions are not supported", str(context.exception))
+        namelist = zip_file.namelist()
+        perseus_item_path = f"items/{hex_to_qti_id(perseus_id)}.xml"
+        perseus_json_path = f"perseus/{perseus_id}.json"
+        image_path = f"perseus/images/{image_file.filename()}"
+
+        # Native QTI item and the Perseus wrapper item both present.
+        self.assertIn("items/item_1.xml", namelist)
+        self.assertIn(perseus_item_path, namelist)
+        # Perseus JSON and its image packaged.
+        self.assertIn(perseus_json_path, namelist)
+        self.assertIn(image_path, namelist)
+
+        # The wrapper item validates and references the Perseus JSON.
+        wrapper_xml = zip_file.read(perseus_item_path).decode("utf-8")
+        self.assertTrue(validate_qti_item(wrapper_xml.encode("utf-8")).is_valid)
+        parsed = parse_qti_xml(wrapper_xml.encode("utf-8"))
+        custom = parsed.getroot().iter("{*}qti-custom-interaction")
+        custom_el = next(custom)
+        self.assertEqual(custom_el.get("data-type"), "perseus")
+        self.assertEqual(custom_el.get("data-perseus-path"), perseus_json_path)
+
+        # The Perseus JSON's image reference was rewritten to the packaged path.
+        packaged_json = zip_file.read(perseus_json_path).decode("utf-8")
+        self.assertIn(
+            f"${exercises.IMG_PLACEHOLDER}/perseus/images/{image_file.filename()}",
+            packaged_json,
+        )
+
+        # The manifest lists the JSON and image as files of the perseus resource.
+        manifest_xml = zip_file.read("imsmanifest.xml").decode("utf-8")
+        self.assertIn(f'<file href="{perseus_json_path}" />', manifest_xml)
+        self.assertIn(f'<file href="{image_path}" />', manifest_xml)
 
     def test_exercise_with_image(self):
         """Test QTI exercise generation with images"""

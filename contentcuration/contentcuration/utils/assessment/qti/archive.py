@@ -12,6 +12,9 @@ from le_utils.constants import format_presets
 from contentcuration.utils.assessment.base import ExerciseArchiveGenerator
 from contentcuration.utils.assessment.qti.constants import ResourceType
 from contentcuration.utils.assessment.qti.convert import (
+    build_perseus_custom_interaction_item,
+)
+from contentcuration.utils.assessment.qti.convert import (
     convert_legacy_assessment_item_to_qti,
 )
 from contentcuration.utils.assessment.qti.convert import hex_to_qti_id
@@ -43,6 +46,8 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
     file_format = "zip"
     preset = format_presets.QTI_ZIP
 
+    PERSEUS_IMAGE_DIR = "perseus/images"
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.qti_resources: List[QTIResource] = []
@@ -60,6 +65,16 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
 
     def _qti_item_filepath(self, assessment_id):
         return f"items/{assessment_id}.xml"
+
+    def _node_language(self):
+        return (
+            self.ccnode.language.lang_code
+            if self.ccnode.language
+            else self.default_language
+        )
+
+    def _next_item_title(self):
+        return f"{self.ccnode.title} {len(self.qti_resources) + 1}"
 
     def _add_resource(self, resource: QTIResource) -> None:
         if any(r.identifier == resource.identifier for r in self.qti_resources):
@@ -136,6 +151,44 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
         item_xml = rewrite_qti_media_paths(raw_data, path_by_filename)
         return item_xml, sorted(path_by_filename.values())
 
+    def process_assessment_item(self, assessment_item):
+        if assessment_item.type == exercises.PERSEUS_QUESTION:
+            return self._create_perseus_custom_interaction(assessment_item)
+        return super().process_assessment_item(assessment_item)
+
+    def _create_perseus_custom_interaction(self, assessment_item) -> None:
+        """Embed a raw Perseus question as a ``qti-custom-interaction``.
+
+        Writes the Perseus JSON (with its content-storage references rewritten to
+        the packaged asset paths) and its image/graphie assets into the package,
+        and declares them as dependencies of the wrapper item's manifest resource.
+        """
+        asset_paths = self._write_raw_perseus_assets(
+            assessment_item, self.PERSEUS_IMAGE_DIR
+        )
+        perseus_json = self._rewrite_content_storage_refs(
+            assessment_item.raw_data, self.PERSEUS_IMAGE_DIR
+        )
+        perseus_path = f"perseus/{assessment_item.assessment_id}.json"
+        self.add_file_to_write(perseus_path, perseus_json.encode("utf-8"))
+
+        result = build_perseus_custom_interaction_item(
+            assessment_item.assessment_id,
+            perseus_path,
+            self._next_item_title(),
+            self._node_language(),
+        )
+
+        item_path = self._qti_item_filepath(result.identifier)
+        self.add_file_to_write(item_path, result.xml.encode("utf-8"))
+        self._add_resource(
+            QTIResource(
+                identifier=result.identifier,
+                filepath=item_path,
+                file_dependencies=[perseus_path, *asset_paths],
+            )
+        )
+
     def create_assessment_item(
         self, assessment_item, processed_data: Dict[str, Any]
     ) -> Optional[Tuple[str, bytes]]:
@@ -144,17 +197,6 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
         if assessment_item.type == exercises.QTI:
             return self._create_native_qti_item(assessment_item)
 
-        # Skip Perseus questions as they can't be easily converted
-        if assessment_item.type == exercises.PERSEUS_QUESTION:
-            raise ValueError(
-                f"Perseus questions are not supported in QTI format: {assessment_item.assessment_id}"
-            )
-
-        language = (
-            self.ccnode.language.lang_code
-            if self.ccnode.language
-            else self.default_language
-        )
         legacy_item = LegacyAssessmentItem(
             type=assessment_item.type,
             question=processed_data["question"],
@@ -162,8 +204,8 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
             hints=processed_data.get("hints", []),
             randomize=processed_data.get("randomize", False),
             assessment_id=assessment_item.assessment_id,
-            title=f"{self.ccnode.title} {len(self.qti_resources) + 1}",
-            language=language,
+            title=self._next_item_title(),
+            language=self._node_language(),
         )
         result = convert_legacy_assessment_item_to_qti(legacy_item)
 
