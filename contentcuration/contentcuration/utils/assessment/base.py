@@ -13,6 +13,7 @@ from tempfile import TemporaryDirectory
 from django.core.files import File
 from django.core.files.storage import default_storage as storage
 from le_utils.constants import exercises
+from le_utils.constants import format_presets
 from PIL import Image
 
 from contentcuration import models
@@ -135,6 +136,67 @@ class ExerciseArchiveGenerator(ABC):
         with open(full_path, "wb") as f:
             f.write(content)
         self.files_to_write.append(full_path)
+
+    def _write_raw_perseus_assets(self, assessment_item, images_dir):
+        """Write a raw Perseus item's image and graphie assets into ``images_dir``
+        and return the sorted list of package-relative paths written.
+
+        Graphie files are stored as a single delimited blob and are split into
+        their ``.svg`` and ``-data.json`` parts here.
+        """
+        # For raw perseus JSON questions, the files must be
+        # specified in advance.
+
+        # Files have been prefetched when the assessment item was
+        # queried, so take advantage of that.
+        files = sorted(assessment_item.files.all(), key=lambda x: x.checksum)
+        image_files = filter(
+            lambda x: x.preset_id == format_presets.EXERCISE_IMAGE, files
+        )
+        graphie_files = filter(
+            lambda x: x.preset_id == format_presets.EXERCISE_GRAPHIE, files
+        )
+        written_paths = []
+        for image in image_files:
+            image_name = "{}/{}.{}".format(
+                images_dir, image.checksum, image.file_format_id
+            )
+            with storage.open(
+                models.generate_object_storage_name(image.checksum, str(image)),
+                "rb",
+            ) as content:
+                self.add_file_to_write(image_name, content.read())
+            written_paths.append(image_name)
+
+        for image in graphie_files:
+            svg_name = "{}/{}.svg".format(images_dir, image.original_filename)
+            json_name = "{}/{}-data.json".format(images_dir, image.original_filename)
+            with storage.open(
+                models.generate_object_storage_name(image.checksum, str(image)),
+                "rb",
+            ) as content:
+                content = content.read()
+                # in Python 3, delimiter needs to be in bytes format
+                content = content.split(exercises.GRAPHIE_DELIMITER.encode("ascii"))
+                if len(content) != 2:
+                    raise ValueError(
+                        f"Graphie file '{image.original_filename}' "
+                        f"missing delimiter {exercises.GRAPHIE_DELIMITER!r}"
+                    )
+                self.add_file_to_write(svg_name, content[0])
+                self.add_file_to_write(json_name, content[1])
+            written_paths.append(svg_name)
+            written_paths.append(json_name)
+
+        return sorted(written_paths)
+
+    def _rewrite_content_storage_refs(self, raw_data, images_dir):
+        """Rewrite a raw item's content-storage references to the packaged
+        ``images_dir`` (under the ``IMG_PLACEHOLDER`` the renderer resolves)."""
+        return raw_data.replace(
+            exercises.CONTENT_STORAGE_PLACEHOLDER,
+            f"{exercises.IMG_PLACEHOLDER}/{images_dir}",
+        )
 
     def _add_original_image(self, checksum, filename, new_file_path):
         """Extract original image handling"""
@@ -314,15 +376,13 @@ class ExerciseArchiveGenerator(ABC):
         processed_answers = self._process_answers(assessment_item)
         processed_hints = self._process_hints(assessment_item)
 
-        new_file_path = self.get_image_file_path()
-        new_image_path = f"{exercises.IMG_PLACEHOLDER}/{new_file_path}"
         context = {
             "question": question,
             "question_images": question_images,
             "answers": processed_answers,
             "multiple_select": assessment_item.type == exercises.MULTIPLE_SELECTION,
-            "raw_data": assessment_item.raw_data.replace(
-                exercises.CONTENT_STORAGE_PLACEHOLDER, new_image_path
+            "raw_data": self._rewrite_content_storage_refs(
+                assessment_item.raw_data, self.get_image_file_path()
             ),
             "hints": processed_hints,
             "randomize": assessment_item.randomize,
