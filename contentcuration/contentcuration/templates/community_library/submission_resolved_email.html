@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+{% load i18n %}
+<html>
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    {% autoescape off %}
+    <p>{% blocktrans with name=name %}Hello {{ name }},{% endblocktrans %}</p>
+
+    <p><a href="{{ channel_url }}" target="_blank">{% blocktrans with channel_name=channel.name %}{{ channel_name }}{% endblocktrans %}</a> ({{ channel_url }})</p>
+
+    <p>{{ status_message }}</p>
+
+    {% if feedback_notes %}
+    <p>{{ feedback_notes_label }}: {{ feedback_notes }}</p>
+    {% endif %}
+
+    <p>
+        {% translate "Thanks for using Kolibri Studio!" %}
+        <br>
+        {% translate "The Learning Equality Team" %}
+    </p>
+    {% endautoescape %}
+</body>
+</html>

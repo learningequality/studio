@@ -2,6 +2,7 @@ import datetime
 from unittest import mock
 
 import pytz
+from django.core import mail
 from django.urls import reverse
 
 from contentcuration.constants import (
@@ -731,6 +732,13 @@ class AdminViewSetTestCase(StudioAPITestCase):
             channel_id=self.submission.channel.id,
         )
 
+        self.assertEqual(len(mail.outbox), 1)
+        sent_email = mail.outbox[0]
+        self.assertEqual(sent_email.to, [self.submission.author.email])
+        self.assertIn("approved", sent_email.subject.lower())
+        self.assertIn("available in community library", sent_email.body.lower())
+        self.assertIn(self.submission.channel.name, sent_email.body)
+
     @mock.patch(
         "contentcuration.viewsets.community_library_submission.apply_channel_changes_task"
     )
@@ -769,6 +777,14 @@ class AdminViewSetTestCase(StudioAPITestCase):
             ).exists()
         )
         apply_task_mock.fetch_or_enqueue.assert_not_called()
+
+        self.assertEqual(len(mail.outbox), 1)
+        sent_email = mail.outbox[0]
+        self.assertEqual(sent_email.to, [self.submission.author.email])
+        self.assertIn("needs changes", sent_email.subject.lower())
+        self.assertIn("needs changes", sent_email.body.lower())
+        self.assertIn(self.submission.channel.name, sent_email.body)
+        self.assertIn(self.feedback_notes, sent_email.body)
 
     def test_resolve_submission__reject_missing_resolution_reason(self):
         self.client.force_authenticate(user=self.admin_user)

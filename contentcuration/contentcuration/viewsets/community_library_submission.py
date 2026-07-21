@@ -358,4 +358,6 @@ class AdminCommunityLibrarySubmissionViewSet(
                 published_version.id
             )
 
+        submission.send_resolution_email()
+
         return Response(self.serialize_object())
