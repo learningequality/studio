@@ -1,4 +1,4 @@
-import { QTI_INTERACTION_TAGS } from '../constants';
+import { QTI_INTERACTION_TAGS, QtiInteraction } from '../constants';
 
 const serializer = new XMLSerializer();
 const parser = new DOMParser();
@@ -50,6 +50,10 @@ export function getPromptHTML(interactionEl) {
  * A response declaration belongs to an interaction when the declaration's
  * `identifier` matches the interaction's `response-identifier` attribute.
  *
+ * For descriptors with `placement: 'inline'`, `bodyXml` is the serialized
+ * `<qti-item-body>` rather than the interaction element alone, so the
+ * interaction's parse() function can recover prompt content from body siblings.
+ *
  * @param {string} rawData - Raw QTI XML string (the full assessment item XML)
  * @returns {{
  *   identifier: string,
@@ -84,8 +88,13 @@ export function parseItem(rawData) {
         .filter(d => d.getAttribute('identifier') === responseId)
         .map(d => serializer.serializeToString(d));
 
+      // Inline interactions (e.g. text-entry) embed their prompt in body
+      // siblings, not inside the element. Pass the full <qti-item-body> so
+      // parse() can recover the prompt from the surrounding context.
+      const isInline = el.tagName.toLowerCase() === QtiInteraction.TEXT_ENTRY;
+
       interactions.push({
-        bodyXml: serializer.serializeToString(el),
+        bodyXml: isInline ? serializer.serializeToString(body) : serializer.serializeToString(el),
         responseDeclarations,
       });
     }

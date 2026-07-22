@@ -22,6 +22,19 @@ export const UNKNOWN_INTERACTION_XML = `<qti-unknown-interaction response-identi
   <qti-prompt>Unknown.</qti-prompt>
 </qti-unknown-interaction>`;
 
+/**
+ * Text-entry fixtures use inline placement, so bodyXml is the full
+ * <qti-item-body> rather than just the interaction element.
+ * This is the shape that parseItem() produces for qti-text-entry-interaction.
+ */
+export const TEXT_ENTRY_BODY_XML = `<qti-item-body><div><div><p>What is H2O?</p></div><p><qti-text-entry-interaction response-identifier="RESPONSE"/></p></div></qti-item-body>`;
+
+export const TEXT_ENTRY_NUMERIC_DECL_XML = `<qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="float"><qti-correct-response><qti-value>42</qti-value></qti-correct-response></qti-response-declaration>`;
+
+export const TEXT_ENTRY_STRING_DECL_XML = `<qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"><qti-correct-response><qti-value>H2O</qti-value></qti-correct-response></qti-response-declaration>`;
+
+export const TEXT_ENTRY_FREE_DECL_XML = `<qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>`;
+
 export const CHOICE_SINGLE_DECL_XML = `<qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
   <qti-correct-response><qti-value>mercury</qti-value></qti-correct-response>
 </qti-response-declaration>`;

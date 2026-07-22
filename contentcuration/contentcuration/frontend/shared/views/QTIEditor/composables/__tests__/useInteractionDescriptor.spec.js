@@ -8,7 +8,13 @@ import {
   CHOICE_SINGLE_SELECT_XML,
   CHOICE_MULTI_SELECT_XML,
   UNKNOWN_INTERACTION_XML,
+  TEXT_ENTRY_BODY_XML,
+  TEXT_ENTRY_NUMERIC_DECL_XML,
+  TEXT_ENTRY_STRING_DECL_XML,
+  TEXT_ENTRY_FREE_DECL_XML,
 } from '../../utils/testingFixtures';
+
+jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor');
 
 // ---------------------------------------------------------------------------
 // Helper: renders a wrapper component that runs the composable inside setup().
@@ -103,11 +109,12 @@ describe('useInteractionDescriptor', () => {
   });
 
   describe('with malformed XML', () => {
-    it('returns a non-null parseError', async () => {
+    it('returns null parseError (text/html parser recovers silently from malformed input)', async () => {
+      // inferFromXml now uses text/html which never throws — malformed fragments
+      // are recovered gracefully by the browser HTML parser, so parseError stays null.
       const { result } = renderDescriptor('<unclosed');
       await nextTick();
-      expect(result.parseError.value).not.toBeNull();
-      expect(typeof result.parseError.value).toBe('string');
+      expect(result.parseError.value).toBeNull();
     });
 
     it('still returns a defined fallback descriptor on parse error', async () => {
@@ -132,6 +139,43 @@ describe('useInteractionDescriptor', () => {
       // Still the same descriptor (choice handles both), but questionType changed
       expect(result.descriptor.value.type).toBe(QtiInteraction.CHOICE);
       expect(result.questionType.value).toBe(QuestionType.MULTI_SELECT);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Regression: inline placement — bodyXml is a full <qti-item-body>
+  // Before the fix, documentElement was <qti-item-body> and no descriptor
+  // matched it, so the code fell back to the choice descriptor for every
+  // text-entry item, showing them as "Multiple Choice / Single Choice".
+  // ---------------------------------------------------------------------------
+  describe('with an inline text-entry interaction (bodyXml is qti-item-body)', () => {
+    it('resolves the TextEntry descriptor for a numeric declaration', async () => {
+      const { result } = renderDescriptor(TEXT_ENTRY_BODY_XML, [TEXT_ENTRY_NUMERIC_DECL_XML]);
+      await nextTick();
+      expect(result.descriptor.value.type).toBe(QtiInteraction.TEXT_ENTRY);
+      expect(result.questionType.value).toBe(QuestionType.NUMERIC);
+    });
+
+    it('resolves the TextEntry descriptor for a string + correct-response (textEntry)', async () => {
+      const { result } = renderDescriptor(TEXT_ENTRY_BODY_XML, [TEXT_ENTRY_STRING_DECL_XML]);
+      await nextTick();
+      expect(result.descriptor.value.type).toBe(QtiInteraction.TEXT_ENTRY);
+      expect(result.questionType.value).toBe(QuestionType.TEXT_ENTRY);
+    });
+
+    it('resolves the TextEntry descriptor for a string with no correct-response (freeResponse)', async () => {
+      const { result } = renderDescriptor(TEXT_ENTRY_BODY_XML, [TEXT_ENTRY_FREE_DECL_XML]);
+      await nextTick();
+      expect(result.descriptor.value.type).toBe(QtiInteraction.TEXT_ENTRY);
+      expect(result.questionType.value).toBe(QuestionType.FREE_RESPONSE);
+    });
+
+    it('does NOT resolve as choice when bodyXml is a qti-item-body (regression)', async () => {
+      // This is the exact bug: without the fix every text-entry item was
+      // treated as a choice interaction because documentElement was <qti-item-body>.
+      const { result } = renderDescriptor(TEXT_ENTRY_BODY_XML, [TEXT_ENTRY_FREE_DECL_XML]);
+      await nextTick();
+      expect(result.descriptor.value.type).not.toBe(QtiInteraction.CHOICE);
     });
   });
 });

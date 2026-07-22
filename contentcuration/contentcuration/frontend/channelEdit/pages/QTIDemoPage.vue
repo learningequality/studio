@@ -28,36 +28,8 @@
 <script>
 
   import { ref, defineComponent } from 'vue';
-  import { CHOICE_ITEM_XML, MULTI_CHOICE_ITEM_XML } from './qtiDemoData';
+  import { INITIAL_ASSESSMENTS } from './qtiDemoData';
   import QTIEditor from 'shared/views/QTIEditor/index';
-  import { AssessmentItemTypes } from 'shared/views/QTIEditor/constants';
-
-  /**
-   * Hardcoded items covering different states:
-   *  - item-1: has raw_data (real QTI XML) → exercises the full load path
-   *  - item-2: no raw_data → shows placeholder (blank new item state)
-   *  - item-3: no raw_data → shows placeholder
-   */
-  const INITIAL_ASSESSMENTS = [
-    {
-      assessment_id: 'demo-item-1',
-      type: AssessmentItemTypes.QTI,
-      raw_data: CHOICE_ITEM_XML,
-    },
-    {
-      assessment_id: 'demo-item-2',
-      type: AssessmentItemTypes.QTI,
-      raw_data: MULTI_CHOICE_ITEM_XML,
-    },
-    {
-      assessment_id: 'demo-item-3',
-      type: AssessmentItemTypes.QTI,
-    },
-    {
-      assessment_id: 'demo-item-4',
-      type: AssessmentItemTypes.QTI,
-    },
-  ];
 
   export default defineComponent({
     name: 'QTIDemoPage',

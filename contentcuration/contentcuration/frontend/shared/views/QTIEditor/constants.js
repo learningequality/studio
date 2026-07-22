@@ -77,6 +77,9 @@ export const AssessmentItemTypes = Object.freeze({
 export const QuestionType = Object.freeze({
   SINGLE_SELECT: 'singleSelect',
   MULTI_SELECT: 'multiSelect',
+  NUMERIC: 'numeric',
+  TEXT_ENTRY: 'textEntry',
+  FREE_RESPONSE: 'freeResponse',
 });
 
 /**
@@ -90,4 +93,6 @@ export const ValidationError = Object.freeze({
   TOO_MANY_CORRECT_ANSWERS: 'TOO_MANY_CORRECT_ANSWERS',
   EMPTY_CHOICE_CONTENT: 'EMPTY_CHOICE_CONTENT',
   DUPLICATE_CHOICE_CONTENT: 'DUPLICATE_CHOICE_CONTENT',
+  INVALID_NUMERIC_VALUE: 'INVALID_NUMERIC_VALUE',
+  EMPTY_ANSWER_CONTENT: 'EMPTY_ANSWER_CONTENT',
 });

@@ -24,8 +24,23 @@ export default function useInteractionDescriptor(interactionRef) {
       return { descriptor: registry[DEFAULT_INTERACTION], questionType: null, error: null };
     }
     try {
-      const doc = parseXML(xml);
-      const interactionEl = doc.documentElement;
+      // Parse as text/html — the serialized bodyXml carries an xmlns attribute
+      // (e.g. xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0") that causes
+      // CSS querySelector to silently fail in Chrome/Firefox when using the
+      // strict text/xml parser. text/html strips namespaces and always works.
+      const doc = parseXML(xml, 'text/html');
+      // In html mode the document is: <html><head/><body>…content…</body></html>
+      // For block interactions the content IS the interaction element itself;
+      // for inline interactions it is the <qti-item-body> wrapper.
+      const root = doc.body.firstElementChild ?? doc.body;
+      const interactionEl =
+        descriptors.reduce((found, d) => {
+          if (found) return found;
+          // Try root itself first, then search descendants.
+          if (d.matches(root)) return root;
+          return root.querySelector(d.type) ?? null;
+        }, null) ?? root;
+
       const desc = descriptors.find(d => d.matches(interactionEl)) ?? registry[DEFAULT_INTERACTION];
       return {
         descriptor: desc,

@@ -1,5 +1,6 @@
 import { QtiInteraction } from '../constants';
 import choiceDescriptor from './choice/index';
+import textEntryDescriptor from './textEntry/index';
 
 /**
  * The default interaction type used as fallback when no descriptor matches
@@ -12,7 +13,7 @@ export const DEFAULT_INTERACTION = QtiInteraction.CHOICE;
  * InteractionSection iterates this to find the first descriptor whose
  * matches(el) returns true.
  */
-export const descriptors = [choiceDescriptor];
+export const descriptors = [choiceDescriptor, textEntryDescriptor];
 
 /**
  * Registry map keyed by descriptor.type for O(1) direct lookup.

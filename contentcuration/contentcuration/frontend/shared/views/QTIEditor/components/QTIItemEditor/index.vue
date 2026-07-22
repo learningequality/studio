@@ -62,7 +62,6 @@
 
   import { computed, ref, watch } from 'vue';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
-  import { QuestionType } from '../../constants';
   import useQtiItem from '../../composables/useQtiItem';
   import InteractionSection from '../InteractionSection/index.vue';
 
@@ -117,18 +116,13 @@
        */
       const currentQuestionType = ref(null);
 
-      /**
-       * Maps each QuestionType to its localized display label.
-       * Add new entries here as more question types are introduced.
-       */
-      const QUESTION_TYPE_LABELS = {
-        [QuestionType.SINGLE_SELECT]: () => qtiEditorStrings.singleChoiceLabel$(),
-        [QuestionType.MULTI_SELECT]: () => qtiEditorStrings.multipleChoiceLabel$(),
-      };
-
-      const interactionTypeLabel = computed(
-        () => QUESTION_TYPE_LABELS[currentQuestionType.value]?.() ?? unknownTypeLabel$(),
-      );
+      const interactionTypeLabel = computed(() => {
+        const type = currentQuestionType.value;
+        if (!type) return unknownTypeLabel$();
+        // Dynamic access to the localized string method (e.g. 'singleSelectLabel$()')
+        const methodKey = `${type}Label$`;
+        return qtiEditorStrings[methodKey]?.() ?? unknownTypeLabel$();
+      });
 
       const questionNumberAndTypeLabel = computed(() =>
         questionNumberAndTypeLabel$({
