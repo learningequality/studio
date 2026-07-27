@@ -248,6 +248,8 @@ class OrganizationMemberViewSet(
         "organization_name": "organization__name",
         "user": "user_id",
         "user_email": "user__email",
+        "user_first_name": "user__first_name",
+        "user_last_name": "user__last_name",
         "user_name": _get_member_name,
     }
 
