@@ -3,11 +3,29 @@ import { parseXML } from '../../serialization/parseItem';
 import { buildXmlNode } from '../../serialization/assembleItem';
 import CorrectResponse from '../../serialization/qti/declarations/correctResponse';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
-import { BaseType } from '../../constants';
+import { BaseType, RESPONSE_IDENTIFIER } from '../../constants';
 
 const serializer = new XMLSerializer();
 
-const RESPONSE_IDENTIFIER = 'RESPONSE';
+/**
+ * @typedef {object} TextEntryAnswer
+ * @property {string}  id            - Client-side slug (not serialized to XML)
+ * @property {string}  value         - The answer value as a string. For numeric this is a
+ *                                     float/int string (e.g. "12", "0.5"); for textEntry it
+ *                                     is a free-form string (e.g. "Paris").
+ * @property {boolean} caseSensitive - textEntry only. When true, "H2O" ≠ "h2o".
+ *                                     Always false for numeric answers.
+ */
+
+/**
+ * @typedef {object} TextEntryState
+ * @property {string}            prompt         - HTML content of the question prompt; default ""
+ * @property {TextEntryAnswer[]} answers        - Acceptable correct answers.
+ *                                                Empty ([]) for freeResponse.
+ * @property {number}            expectedLength - Value of the `expected-length` attribute.
+ *                                                FREE_RESPONSE_EXPECTED_LENGTH for freeResponse;
+ *                                                0 (absent) for numeric and textEntry.
+ */
 
 /**
  * Default `expected-length` attribute written on `<qti-text-entry-interaction>`
@@ -18,7 +36,7 @@ const RESPONSE_IDENTIFIER = 'RESPONSE';
  * This attribute is informational — it hints to the player how wide to render
  * the input box. It has no effect on scoring.
  */
-export const FREE_RESPONSE_EXPECTED_LENGTH = 50;
+export const DEFAULT_EXPECTED_LENGTH = 50;
 
 /**
  * Default state — used when bodyXml is absent or unparseable.
@@ -29,7 +47,7 @@ export function _defaultState() {
   return {
     prompt: '',
     answers: [],
-    expectedLength: 0,
+    expectedLength: DEFAULT_EXPECTED_LENGTH,
   };
 }
 
@@ -40,34 +58,36 @@ export function _defaultState() {
  * buildTextEntryInteractionXML wraps body content in a single `<div>`, so we
  * look inside that wrapper for prompt children and the interaction container.
  *
- * @param {Element} bodyEl - The `<qti-item-body>` element
+ * @param {Element} bodyEl - The wrapper element that contains both the
+ *                           prompt and the text entry interaction
  * @returns {string}
  */
-export function _extractPromptHTML(bodyEl) {
-  const interactionEl = bodyEl.querySelector('qti-text-entry-interaction');
+function extractPromptHTML(bodyEl) {
+  const clone = bodyEl.cloneNode(true);
+  const interactionEl = clone.querySelector('qti-text-entry-interaction');
   if (!interactionEl) return '';
 
-  // The interaction sits in a <p>; the <p> itself (or the interaction) is the
-  // container we want to exclude.
+  // The interaction typically sits in a <p>; remove the <p> (or just the interaction)
   const interactionContainer = interactionEl.parentElement;
+  if (
+    interactionContainer &&
+    interactionContainer !== clone &&
+    interactionContainer.tagName.toLowerCase() === 'p'
+  ) {
+    interactionContainer.remove();
+  } else {
+    interactionEl.remove();
+  }
 
   // buildTextEntryInteractionXML wraps everything in a single outer <div>.
-  // If the body has exactly one <div> child, iterate its children so we
-  // exclude only the <p> holding the interaction rather than the entire wrapper.
-  const bodyChildren = bodyEl.children;
+  // If the body has exactly one <div> child, extract from inside it.
+  const bodyChildren = clone.children;
   const searchRoot =
     bodyChildren.length === 1 && bodyChildren[0].tagName.toLowerCase() === 'div'
       ? bodyChildren[0]
-      : bodyEl;
+      : clone;
 
-  const parts = [];
-  for (const child of searchRoot.childNodes) {
-    if (child === interactionContainer || child === interactionEl) continue;
-    parts.push(
-      child.nodeType === Node.TEXT_NODE ? child.textContent : serializer.serializeToString(child),
-    );
-  }
-  return parts.join('').trim();
+  return searchRoot.innerHTML.replace(/ xmlns="http:\/\/www\.w3\.org\/1999\/xhtml"/g, '').trim();
 }
 
 /**
@@ -90,10 +110,22 @@ export function _extractAnswers(responseDeclarations) {
     const isFloat = declEl.getAttribute('base-type') === BaseType.FLOAT;
     const isString = declEl.getAttribute('base-type') === BaseType.STRING;
 
-    if (!isFloat && !isString) return [];
+    if (!isFloat && !isString) {
+      // eslint-disable-next-line no-console
+      console.error(
+        `[QTI Editor] Unsupported text-entry base-type: ${declEl.getAttribute('base-type')}`,
+      );
+      return [];
+    }
 
     const correctResponseEl = declEl.querySelector('qti-correct-response');
-    if (!correctResponseEl) return [];
+    if (!correctResponseEl) {
+      if (isFloat) {
+        // eslint-disable-next-line no-console
+        console.error('[QTI Editor] Missing <qti-correct-response> for numeric interaction');
+      }
+      return [];
+    }
 
     const valueEls = [...correctResponseEl.querySelectorAll('qti-value')];
     if (valueEls.length === 0) return [];
@@ -104,7 +136,9 @@ export function _extractAnswers(responseDeclarations) {
       // case-sensitive is only meaningful for string base-type answers.
       caseSensitive: isString && el.getAttribute('case-sensitive') === 'true',
     }));
-  } catch {
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[QTI Editor] Failed to parse text-entry response declaration:', err);
     return [];
   }
 }
@@ -125,22 +159,22 @@ export function parseTextEntryInteraction(bodyXml, responseDeclarations) {
 
   let bodyEl;
   try {
-    const doc = parseXML(bodyXml, 'text/html');
-    // bodyXml may be the <qti-item-body> itself or wrap it — handle both.
-    bodyEl =
-      doc.body.firstElementChild &&
-      doc.body.firstElementChild.tagName.toLowerCase() === 'qti-item-body'
-        ? doc.body.firstElementChild
-        : (doc.querySelector('qti-item-body') ?? doc.body.firstElementChild ?? doc.body);
-  } catch {
+    const doc = parseXML(bodyXml);
+    bodyEl = doc.documentElement;
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[QTI Editor] Failed to parse text-entry interaction XML:', err);
     return _defaultState();
   }
 
   const interactionEl = bodyEl.querySelector('qti-text-entry-interaction');
   if (!interactionEl) return _defaultState();
 
-  const expectedLength = parseInt(interactionEl.getAttribute('expected-length') ?? '0', 10);
-  const prompt = _extractPromptHTML(bodyEl);
+  const expectedLength = parseInt(
+    interactionEl.getAttribute('expected-length') ?? String(DEFAULT_EXPECTED_LENGTH),
+    10,
+  );
+  const prompt = extractPromptHTML(bodyEl);
   const answers = _extractAnswers(responseDeclarations);
 
   return { prompt, answers, expectedLength };
@@ -161,16 +195,11 @@ export function buildTextEntryInteractionXML(state, questionType, declarationSch
   const { prompt, answers, expectedLength } = state;
   const { baseType, cardinality } = declarationSchema;
 
-  // Only freeResponse has an expected-length; textEntry and numeric do not.
-  const isFreeResponse = baseType === BaseType.STRING && answers.length === 0;
-
   const interactionAttrs = {
     'response-identifier': RESPONSE_IDENTIFIER,
   };
 
-  const effectiveExpectedLength = isFreeResponse
-    ? FREE_RESPONSE_EXPECTED_LENGTH
-    : expectedLength || null;
+  const effectiveExpectedLength = expectedLength || DEFAULT_EXPECTED_LENGTH;
   if (effectiveExpectedLength) {
     interactionAttrs['expected-length'] = effectiveExpectedLength;
   }
@@ -189,7 +218,11 @@ export function buildTextEntryInteractionXML(state, questionType, declarationSch
   // Build the body content: prompt HTML (if any) followed by the interaction paragraph.
   const divChildren = [];
   if (prompt) {
-    divChildren.push(buildXmlNode({ tag: 'div', innerHTML: prompt }));
+    const promptDoc = new DOMParser().parseFromString(
+      `<!DOCTYPE html><body>${prompt}</body>`,
+      'text/html',
+    );
+    divChildren.push(...promptDoc.body.childNodes);
   }
   divChildren.push(interactionParagraph);
 
@@ -209,6 +242,7 @@ export function buildTextEntryInteractionXML(state, questionType, declarationSch
   });
 
   // Write a correct-response for numeric and textEntry (not freeResponse).
+  const isFreeResponse = baseType === BaseType.STRING && answers.length === 0;
   if (!isFreeResponse && answers.length > 0) {
     if (baseType === BaseType.STRING) {
       // Build <qti-correct-response> manually so we can write the optional

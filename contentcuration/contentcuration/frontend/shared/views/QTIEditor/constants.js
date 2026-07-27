@@ -95,4 +95,15 @@ export const ValidationError = Object.freeze({
   DUPLICATE_CHOICE_CONTENT: 'DUPLICATE_CHOICE_CONTENT',
   INVALID_NUMERIC_VALUE: 'INVALID_NUMERIC_VALUE',
   EMPTY_ANSWER_CONTENT: 'EMPTY_ANSWER_CONTENT',
+  DUPLICATE_ANSWER_CONTENT: 'DUPLICATE_ANSWER_CONTENT',
 });
+
+export const RESPONSE_IDENTIFIER = 'RESPONSE';
+
+/**
+ * Set of QTI interaction tag names that have `placement: 'inline'`.
+ * Used by parseItem to decide whether to serialize the full `<qti-item-body>`
+ * (inline) or just the interaction element (block).
+ * Kept here to avoid a circular dependency with the descriptor registry.
+ */
+export const INLINE_INTERACTION_TAGS = new Set([QtiInteraction.TEXT_ENTRY]);

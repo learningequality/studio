@@ -109,12 +109,12 @@ describe('useInteractionDescriptor', () => {
   });
 
   describe('with malformed XML', () => {
-    it('returns null parseError (text/html parser recovers silently from malformed input)', async () => {
-      // inferFromXml now uses text/html which never throws — malformed fragments
-      // are recovered gracefully by the browser HTML parser, so parseError stays null.
+    it('returns a parse error for malformed XML', async () => {
+      // inferFromXml uses text/xml which throws a parser error for malformed fragments.
       const { result } = renderDescriptor('<unclosed');
       await nextTick();
-      expect(result.parseError.value).toBeNull();
+      expect(typeof result.parseError.value).toBe('string');
+      expect(result.parseError.value).toMatch(/parse error/);
     });
 
     it('still returns a defined fallback descriptor on parse error', async () => {

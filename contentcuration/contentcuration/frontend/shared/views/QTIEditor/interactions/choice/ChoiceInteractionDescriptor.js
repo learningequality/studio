@@ -1,4 +1,5 @@
 import { QtiInteraction, QuestionType, BaseType, Cardinality } from '../../constants';
+import { parseXML } from '../../serialization/parseItem';
 import { parseChoiceInteraction, buildChoiceInteractionXML } from './parse';
 import { validateChoiceInteraction } from './validation';
 
@@ -28,7 +29,7 @@ export class ChoiceInteractionDescriptor {
    */
   getQuestionType(el, responseDeclarations = []) {
     if (responseDeclarations.length > 0) {
-      const doc = new DOMParser().parseFromString(responseDeclarations[0], 'text/xml');
+      const doc = parseXML(responseDeclarations[0]);
       const cardinality = doc.documentElement.getAttribute('cardinality');
       if (cardinality) {
         return cardinality === Cardinality.MULTIPLE

@@ -32,3 +32,13 @@ export const registry = Object.fromEntries(descriptors.map(d => [d.type, d]));
 export function getDescriptorForQuestionType(questionType) {
   return descriptors.find(d => d.questionTypes.includes(questionType));
 }
+
+/**
+ * Find the interaction descriptor for a given QTI interaction tag name.
+ *
+ * @param {string} tagName
+ * @returns {import('./defineInteraction').InteractionDescriptor|undefined}
+ */
+export function getDescriptorForInteractionType(tagName) {
+  return registry[tagName];
+}

@@ -1,15 +1,33 @@
 import { QTIDeclaration } from '../../serialization/qti/QTIDeclaration';
-import { parseXML, getPromptHTML } from '../../serialization/parseItem';
+import { getPromptHTML, parseXML } from '../../serialization/parseItem';
 import { buildXmlNode } from '../../serialization/assembleItem';
 import CorrectResponse from '../../serialization/qti/declarations/correctResponse';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
-import { Orientation } from '../../constants';
+import { Orientation, RESPONSE_IDENTIFIER } from '../../constants';
+
+/**
+ * @typedef {object} ChoiceAnswer
+ * @property {string}  id       - QTI identifier, e.g. "choice_xlqTuVoq"
+ * @property {string}  content  - HTML content of the <qti-simple-choice>
+ * @property {boolean} correct  - Whether this choice is in the correct response
+ * @property {boolean} fixed    - Whether this choice is fixed (round-trip only)
+ */
+
+/**
+ * @typedef {object} ChoiceState
+ * @property {string}        prompt      - HTML content of <qti-prompt>; default ""
+ * @property {ChoiceAnswer[]} answers
+ * @property {number}        maxChoices  - From max-choices attribute (0 = unlimited)
+ * @property {number}        minChoices  - From min-choices attribute; default 0
+ * @property {boolean}       shuffle     - From shuffle attribute; default false
+ * @property {string}        orientation - From orientation attribute; default "vertical"
+ */
 
 const serializer = new XMLSerializer();
 
 export function _defaultState() {
   return {
-    responseIdentifier: generateRandomSlug('response'),
+    responseIdentifier: RESPONSE_IDENTIFIER,
     prompt: '',
     choices: [{ id: generateRandomSlug('choice'), content: '', correct: false }],
     maxChoices: 1,
@@ -65,8 +83,7 @@ export function parseChoiceInteraction(bodyXml, responseDeclarations) {
     return _defaultState();
   }
 
-  const responseIdentifier =
-    root.getAttribute('response-identifier') || generateRandomSlug('response');
+  const responseIdentifier = root.getAttribute('response-identifier') || RESPONSE_IDENTIFIER;
   const maxChoices = parseInt(root.getAttribute('max-choices') ?? '0', 10);
   const minChoices = parseInt(root.getAttribute('min-choices') ?? '0', 10);
   const shuffle = root.getAttribute('shuffle') === 'true';
@@ -95,7 +112,7 @@ export function parseChoiceInteraction(bodyXml, responseDeclarations) {
  */
 export function buildChoiceInteractionXML(state, questionType, declarationSchema) {
   const {
-    responseIdentifier = generateRandomSlug('response'),
+    responseIdentifier = RESPONSE_IDENTIFIER,
     prompt,
     choices,
     maxChoices,

@@ -169,22 +169,12 @@
       </div>
 
       <!-- Add choice button (edit only) -->
-      <KButton
+      <AddListItemButton
         v-if="mode === 'edit'"
-        appearance="flat-button"
-        :appearanceOverrides="buttonAppearanceOverrides"
-        class="choice-editor-button"
+        :label="addChoiceBtn$()"
         :aria-label="addChoiceBtn$()"
         @click="onAddChoice"
-      >
-        <div class="add-choice-btn-content">
-          <KIcon
-            icon="plus"
-            :color="$themePalette.blue.v_500"
-          />
-          <span>{{ addChoiceBtn$() }}</span>
-        </div>
-      </KButton>
+      />
     </div>
   </div>
 
@@ -201,13 +191,14 @@
   import { useChoiceInteraction } from '../../composables/useChoiceInteraction';
   import CollapsibleToolbar from '../../components/CollapsibleToolbar/index.vue';
   import ValidationMessage from '../../components/ValidationMessage/index.vue';
+  import AddListItemButton from '../../components/AddListItemButton/index.vue';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor';
   import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
 
   export default {
     name: 'ChoiceInteractionEditor',
 
-    components: { TipTapEditor, CollapsibleToolbar, ValidationMessage },
+    components: { TipTapEditor, CollapsibleToolbar, ValidationMessage, AddListItemButton },
 
     setup(props, { emit }) {
       const { windowIsSmall } = useKResponsiveWindow();
@@ -231,17 +222,6 @@
 
       const palette = themePalette();
       const tokens = themeTokens();
-      const buttonAppearanceOverrides = computed(() => ({
-        backgroundColor: palette.blue.v_50,
-        border: `1px dashed ${palette.blue.v_200}`,
-        color: `${palette.blue.v_500} !important`,
-        fontSize: '14px',
-        fontWeight: '600',
-        textTransform: 'none',
-        ':hover': {
-          backgroundColor: palette.blue.v_100,
-        },
-      }));
 
       // questionType prop is not a Ref — wrap it so useChoiceInteraction can react to changes.
       const questionTypeRef = computed(() => props.questionType);
@@ -511,7 +491,6 @@
         errorEmptyChoiceContent$,
         errorDuplicateChoiceContent$,
         questionLabel$,
-        buttonAppearanceOverrides,
       };
     },
 
@@ -691,22 +670,6 @@
 
   .choice-border.is-clickable {
     cursor: pointer;
-  }
-
-  .choice-editor-button {
-    justify-content: center;
-    width: 100%;
-    padding: 11px 16px !important;
-    margin-top: 10px;
-    line-height: unset !important;
-    border-radius: 4px !important;
-  }
-
-  .add-choice-btn-content {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    justify-content: center;
   }
 
 </style>

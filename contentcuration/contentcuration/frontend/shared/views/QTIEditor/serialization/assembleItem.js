@@ -90,10 +90,13 @@ export function assembleItemXml({ identifier, title, language, bodyXml, response
   const bodyDoc = parseXML(bodyXml || '<qti-item-body/>');
   const interactionNode = bodyDoc.documentElement;
 
-  const itemBodyNode = buildXmlNode({
-    tag: 'qti-item-body',
-    children: [interactionNode],
-  });
+  const itemBodyNode =
+    interactionNode.tagName.toLowerCase() === 'qti-item-body'
+      ? interactionNode
+      : buildXmlNode({
+          tag: 'qti-item-body',
+          children: [interactionNode],
+        });
 
   const assessmentItemNode = buildXmlNode({
     tag: 'qti-assessment-item',

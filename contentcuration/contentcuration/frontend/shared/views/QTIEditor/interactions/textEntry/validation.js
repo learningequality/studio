@@ -21,26 +21,34 @@ export function validateTextEntryInteraction(state, questionType) {
     errors.push({ code: ValidationError.PROMPT_REQUIRED });
   }
 
-  if (questionType === QuestionType.NUMERIC) {
+  if (questionType === QuestionType.NUMERIC || questionType === QuestionType.TEXT_ENTRY) {
     if (answers.length === 0) {
       errors.push({ code: ValidationError.NO_CORRECT_ANSWER });
     }
 
+    const seen = new Set();
+
     for (const answer of answers) {
-      if (!floatOrIntRegex.test(answer.value.trim())) {
-        errors.push({ code: ValidationError.INVALID_NUMERIC_VALUE, id: answer.id });
+      const val = answer.value.trim();
+
+      if (questionType === QuestionType.NUMERIC) {
+        if (!floatOrIntRegex.test(val)) {
+          errors.push({ code: ValidationError.INVALID_NUMERIC_VALUE, id: answer.id });
+        }
+      } else {
+        if (!val) {
+          errors.push({ code: ValidationError.EMPTY_ANSWER_CONTENT, id: answer.id });
+        }
       }
-    }
-  }
 
-  if (questionType === QuestionType.TEXT_ENTRY) {
-    if (answers.length === 0) {
-      errors.push({ code: ValidationError.NO_CORRECT_ANSWER });
-    }
+      const lookupKey =
+        questionType === QuestionType.TEXT_ENTRY && !answer.caseSensitive ? val.toLowerCase() : val;
 
-    for (const answer of answers) {
-      if (!answer.value.trim()) {
-        errors.push({ code: ValidationError.EMPTY_ANSWER_CONTENT, id: answer.id });
+      if (val) {
+        if (seen.has(lookupKey)) {
+          errors.push({ code: ValidationError.DUPLICATE_ANSWER_CONTENT, id: answer.id });
+        }
+        seen.add(lookupKey);
       }
     }
   }

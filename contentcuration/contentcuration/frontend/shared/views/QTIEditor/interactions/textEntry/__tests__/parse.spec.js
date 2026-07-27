@@ -1,10 +1,9 @@
 import {
   _defaultState,
   _extractAnswers,
-  _extractPromptHTML,
   parseTextEntryInteraction,
   buildTextEntryInteractionXML,
-  FREE_RESPONSE_EXPECTED_LENGTH,
+  DEFAULT_EXPECTED_LENGTH,
 } from '../parse';
 import { BaseType, Cardinality, QuestionType } from '../../../constants';
 
@@ -48,8 +47,8 @@ describe('_defaultState', () => {
     expect(_defaultState().answers).toEqual([]);
   });
 
-  it('returns expectedLength as 0', () => {
-    expect(_defaultState().expectedLength).toBe(0);
+  it('returns expectedLength as DEFAULT_EXPECTED_LENGTH', () => {
+    expect(_defaultState().expectedLength).toBe(DEFAULT_EXPECTED_LENGTH);
   });
 });
 
@@ -90,27 +89,6 @@ describe('_extractAnswers', () => {
   });
 });
 
-// ─── _extractPromptHTML ────────────────────────────────────────────────────
-
-describe('_extractPromptHTML', () => {
-  it('returns empty string when no non-interaction content exists', () => {
-    const doc = new DOMParser().parseFromString(makeBodyXml(), 'text/xml');
-    const bodyEl = doc.documentElement;
-    expect(_extractPromptHTML(bodyEl).trim()).toBe('');
-  });
-
-  it('excludes the interaction container from the prompt', () => {
-    const doc = new DOMParser().parseFromString(
-      makeBodyXml({ promptHtml: '<p>What is 3 × 4?</p>' }),
-      'text/xml',
-    );
-    const bodyEl = doc.documentElement;
-    const html = _extractPromptHTML(bodyEl);
-    expect(html).not.toContain('qti-text-entry-interaction');
-    expect(html).toContain('3');
-  });
-});
-
 // ─── parseTextEntryInteraction ─────────────────────────────────────────────
 
 describe('parseTextEntryInteraction', () => {
@@ -140,10 +118,10 @@ describe('parseTextEntryInteraction', () => {
 
     it('reads expectedLength from the element attribute', () => {
       const state = parseTextEntryInteraction(
-        makeBodyXml({ expectedLength: FREE_RESPONSE_EXPECTED_LENGTH }),
+        makeBodyXml({ expectedLength: DEFAULT_EXPECTED_LENGTH }),
         [FREE_RESPONSE_DECLARATION],
       );
-      expect(state.expectedLength).toBe(FREE_RESPONSE_EXPECTED_LENGTH);
+      expect(state.expectedLength).toBe(DEFAULT_EXPECTED_LENGTH);
     });
   });
 
@@ -158,11 +136,6 @@ describe('parseTextEntryInteraction', () => {
       const state = parseTextEntryInteraction(makeBodyXml(), [MULTI_NUMERIC_DECLARATION]);
       expect(state.answers).toHaveLength(2);
       expect(state.answers.map(a => a.value)).toEqual(['0.5', '1.5']);
-    });
-
-    it('defaults expectedLength to 0 when absent', () => {
-      const state = parseTextEntryInteraction(makeBodyXml(), [SINGLE_NUMERIC_DECLARATION]);
-      expect(state.expectedLength).toBe(0);
     });
   });
 });
@@ -204,22 +177,24 @@ describe('buildTextEntryInteractionXML', () => {
       expect(bodyXml).toContain('response-identifier="RESPONSE"');
     });
 
-    it('adds expected-length for freeResponse using FREE_RESPONSE_EXPECTED_LENGTH', () => {
+    it('adds expected-length using DEFAULT_EXPECTED_LENGTH for all types', () => {
       const { bodyXml } = buildTextEntryInteractionXML(
-        { prompt: '', answers: [], expectedLength: 0 },
+        _defaultState(),
         QuestionType.FREE_RESPONSE,
         FREE_SCHEMA,
       );
-      expect(bodyXml).toContain(`expected-length="${FREE_RESPONSE_EXPECTED_LENGTH}"`);
+      expect(bodyXml).toContain(`expected-length="${DEFAULT_EXPECTED_LENGTH}"`);
     });
 
-    it('does not add expected-length for numeric when expectedLength is 0', () => {
+    it('uses provided expectedLength instead of DEFAULT_EXPECTED_LENGTH', () => {
+      const state = _defaultState();
+      state.expectedLength = 100;
       const { bodyXml } = buildTextEntryInteractionXML(
-        { prompt: '', answers: [{ id: 'a1', value: '12' }], expectedLength: 0 },
-        QuestionType.NUMERIC,
-        NUMERIC_SINGLE_SCHEMA,
+        state,
+        QuestionType.FREE_RESPONSE,
+        FREE_SCHEMA,
       );
-      expect(bodyXml).not.toContain('expected-length');
+      expect(bodyXml).toContain(`expected-length="100"`);
     });
   });
 
@@ -304,24 +279,26 @@ describe('buildTextEntryInteractionXML', () => {
 
       expect(parsed.answers).toHaveLength(1);
       expect(parsed.answers[0].value).toBe('12');
-      expect(parsed.expectedLength).toBe(0);
+      expect(parsed.expectedLength).toBe(DEFAULT_EXPECTED_LENGTH);
+      expect(parsed.prompt).toBe(original.prompt);
     });
 
     it('freeResponse: parse → buildXML → parse yields equivalent state', () => {
-      const original = {
-        prompt: '<p>Describe photosynthesis.</p>',
+      const state = {
+        prompt: '<p>A question prompt.</p>',
+        expectedLength: DEFAULT_EXPECTED_LENGTH,
         answers: [],
-        expectedLength: FREE_RESPONSE_EXPECTED_LENGTH,
       };
       const { bodyXml, responseDeclarations } = buildTextEntryInteractionXML(
-        original,
+        state,
         QuestionType.FREE_RESPONSE,
         FREE_SCHEMA,
       );
+
       const parsed = parseTextEntryInteraction(bodyXml, responseDeclarations);
 
-      expect(parsed.answers).toEqual([]);
-      expect(parsed.expectedLength).toBe(FREE_RESPONSE_EXPECTED_LENGTH);
+      expect(parsed.prompt).toBe('<p>A question prompt.</p>');
+      expect(parsed.expectedLength).toBe(DEFAULT_EXPECTED_LENGTH);
     });
 
     it('multi-answer numeric: round-trip preserves all values', () => {

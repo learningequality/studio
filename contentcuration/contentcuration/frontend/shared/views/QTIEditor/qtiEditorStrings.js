@@ -137,17 +137,33 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Duplicate answer options are not allowed',
     context: 'Validation error when two or more answer options have identical content',
   },
+  errorDuplicateAnswerContent: {
+    message: 'Duplicate answers are not allowed',
+    context: 'Validation error when two or more text/numeric answers have identical values',
+  },
   numericLabel: {
     message: 'Numeric',
     context: 'Display name for a numeric text-entry question type',
+  },
+  numericDescription: {
+    message: 'Learners must enter a specific number or mathematical expression.',
+    context: 'Description for the numeric question type in the info modal',
   },
   textEntryLabel: {
     message: 'Text entry',
     context: 'Display name for a string text-entry question type with a required correct answer',
   },
+  textEntryDescription: {
+    message: 'Learners must type a specific word or phrase. Exact matches can be required.',
+    context: 'Description for the text entry question type in the info modal',
+  },
   freeResponseLabel: {
     message: 'Free response',
     context: 'Display name for a free-response text-entry question type',
+  },
+  freeResponseDescription: {
+    message: 'Learners can write an open-ended response. No correct answer is enforced.',
+    context: 'Description for the free response question type in the info modal',
   },
   acceptableAnswersLabel: {
     message: 'Acceptable answers',

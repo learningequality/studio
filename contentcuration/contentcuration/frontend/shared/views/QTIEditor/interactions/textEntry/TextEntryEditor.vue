@@ -62,7 +62,7 @@
         >
           <div
             class="answer-border"
-            :style="answerBorderStyle(answer.id)"
+            :class="{ 'has-error': answerHasError(answer.id) }"
           >
             <div
               class="answer-layout"
@@ -71,16 +71,17 @@
               <div class="answer-input-wrap">
                 <input
                   :id="`answer-input-${answer.id}`"
+                  :ref="el => setAnswerInputRef(answer.id, el)"
                   :value="answer.value"
                   :placeholder="isNumeric ? answerValuePlaceholder$() : answerTextPlaceholder$()"
                   class="answer-native-input"
+                  dir="auto"
+                  maxlength="250"
                   :style="{
                     color: $themeTokens.text,
-                    '--placeholder-color': $themeTokens.annotation,
                   }"
                   @input="e => onAnswerInput(answer.id, e.target.value)"
-                  @focus="onAnswerFocus(answer.id)"
-                  @blur="onAnswerBlur"
+                  @blur="runValidation"
                 >
               </div>
 
@@ -128,26 +129,23 @@
             >
               {{ errorEmptyAnswerContent$() }}
             </ValidationMessage>
+
+            <ValidationMessage
+              v-if="answerHasError(answer.id, ValidationError.DUPLICATE_ANSWER_CONTENT)"
+              class="answer-validation-message"
+            >
+              {{ errorDuplicateAnswerContent$() }}
+            </ValidationMessage>
           </div>
         </div>
       </div>
 
-      <KButton
+      <AddListItemButton
         v-if="mode === 'edit'"
-        appearance="flat-button"
-        :appearanceOverrides="addBtnOverrides"
-        class="add-answer-btn"
+        :label="addAnswerBtn$()"
         :aria-label="addAnswerBtn$()"
         @click="onAddAnswer"
-      >
-        <div class="add-answer-btn-content">
-          <KIcon
-            icon="plus"
-            :color="$themePalette.blue.v_500"
-          />
-          <span>{{ addAnswerBtn$() }}</span>
-        </div>
-      </KButton>
+      />
     </div>
   </div>
 
@@ -158,19 +156,19 @@
 
   import { computed, ref, watch, nextTick } from 'vue';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
-  import { themePalette, themeTokens } from 'kolibri-design-system/lib/styles/theme';
-  import { QTISanitizer } from '../../serialization/qti/QTISanitizer';
+  import { themeTokens } from 'kolibri-design-system/lib/styles/theme';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { QuestionType, ValidationError } from '../../constants';
   import { useTextEntryInteraction } from '../../composables/useTextEntryInteraction';
   import ValidationMessage from 'shared/views/QTIEditor/components/ValidationMessage';
+  import AddListItemButton from 'shared/views/QTIEditor/components/AddListItemButton';
   import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor';
 
   export default {
     name: 'TextEntryEditor',
 
-    components: { TipTapEditor, ValidationMessage },
+    components: { TipTapEditor, ValidationMessage, AddListItemButton },
 
     setup(props, { emit }) {
       const { windowIsSmall } = useKResponsiveWindow();
@@ -189,9 +187,9 @@
         errorNoCorrectAnswer$,
         errorInvalidNumericValue$,
         errorEmptyAnswerContent$,
+        errorDuplicateAnswerContent$,
       } = qtiEditorStrings;
 
-      const palette = themePalette();
       const tokens = themeTokens();
 
       const questionTypeRef = computed(() => props.questionType);
@@ -242,7 +240,7 @@
         () => props.mode,
         newMode => {
           if (newMode === 'edit') {
-            if (!QTISanitizer.stripTags(state.value.prompt).trim()) {
+            if (!state.value.prompt || !state.value.prompt.trim()) {
               openPrompt();
             }
           } else {
@@ -280,7 +278,8 @@
         for (const e of errors.value) {
           if (
             e.code === ValidationError.INVALID_NUMERIC_VALUE ||
-            e.code === ValidationError.EMPTY_ANSWER_CONTENT
+            e.code === ValidationError.EMPTY_ANSWER_CONTENT ||
+            e.code === ValidationError.DUPLICATE_ANSWER_CONTENT
           ) {
             if (!map.has(e.id)) map.set(e.id, new Set());
             map.get(e.id).add(e.code);
@@ -295,44 +294,26 @@
         return true;
       }
 
-      // Per-row focus state
-      const focusedAnswerId = ref(null);
-
-      function answerBorderStyle(id) {
-        const hasError = answerHasError(id);
-        if (hasError) return { borderColor: tokens.error };
-        if (focusedAnswerId.value === id) return { borderColor: tokens.primaryDark };
-        return { borderColor: tokens.fineLine };
-      }
-
-      function onAnswerFocus(id) {
-        focusedAnswerId.value = id;
-      }
-
-      function onAnswerBlur() {
-        focusedAnswerId.value = null;
-        runValidation();
-      }
-
-      const addBtnOverrides = computed(() => ({
-        backgroundColor: palette.blue.v_50,
-        border: `1px dashed ${palette.blue.v_200}`,
-        color: `${palette.blue.v_500} !important`,
-        fontSize: '14px',
-        fontWeight: '600',
-        textTransform: 'none',
-        ':hover': { backgroundColor: palette.blue.v_100 },
-      }));
-
       // Mutations
       function onAnswerInput(id, value) {
         updateAnswerValue(id, value);
       }
 
+      // Map of answer id -> input DOM element for focusing
+      const answerInputRefs = ref({});
+
+      function setAnswerInputRef(id, el) {
+        if (el) {
+          answerInputRefs.value[id] = el;
+        } else {
+          delete answerInputRefs.value[id];
+        }
+      }
+
       async function onAddAnswer() {
         const newId = addAnswer();
         await nextTick();
-        const input = document.getElementById(`answer-input-${newId}`);
+        const input = answerInputRefs.value[newId];
         if (input) input.focus();
       }
 
@@ -370,10 +351,7 @@
         questionHasError,
         noCorrectAnswerError,
         answerHasError,
-        answerBorderStyle,
-        addBtnOverrides,
-        onAnswerFocus,
-        onAnswerBlur,
+        runValidation,
         handlePromptClick,
         closePrompt,
         setPrompt,
@@ -395,7 +373,9 @@
         errorNoCorrectAnswer$,
         errorInvalidNumericValue$,
         errorEmptyAnswerContent$,
+        errorDuplicateAnswerContent$,
         ValidationError,
+        setAnswerInputRef,
       };
     },
 
@@ -454,9 +434,20 @@
 
   /* Bordered answer card */
   .answer-border {
-    border: 1px solid;
+    border: 1px solid v-bind('$themeTokens.fineLine');
     border-radius: 4px;
-    transition: background-color 0.3s;
+    transition:
+      background-color 0.3s,
+      border-color 0.3s;
+
+    &:not(.has-error):hover,
+    &:not(.has-error):focus-within {
+      border-color: v-bind('$themeTokens.primaryDark');
+    }
+
+    &.has-error {
+      border-color: v-bind('$themeTokens.error');
+    }
   }
 
   /* Prompt card when open */
@@ -509,7 +500,7 @@
     outline: none;
 
     &::placeholder {
-      color: var(--placeholder-color);
+      color: v-bind('$themeTokens.annotation');
       opacity: 1;
     }
   }
@@ -544,28 +535,6 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
-  }
-
-  .answer-group {
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Add option */
-  .add-answer-btn {
-    justify-content: center;
-    width: 100%;
-    padding: 11px 16px !important;
-    margin-top: 10px;
-    line-height: unset !important;
-    border-radius: 4px !important;
-  }
-
-  .add-answer-btn-content {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    justify-content: center;
   }
 
   .editor {

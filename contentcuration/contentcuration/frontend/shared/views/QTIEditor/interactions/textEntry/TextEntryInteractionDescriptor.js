@@ -1,4 +1,5 @@
 import { QtiInteraction, QuestionType, BaseType, Cardinality } from '../../constants';
+import { parseXML } from '../../serialization/parseItem';
 import { parseTextEntryInteraction, buildTextEntryInteractionXML } from './parse';
 import { validateTextEntryInteraction } from './validation';
 
@@ -9,7 +10,7 @@ import { validateTextEntryInteraction } from './validation';
  * should be passed as bodyXml rather than just the interaction element, so
  * parse() can recover the prompt from body siblings.
  */
-export class TextEntryInteractionDescriptor {
+class TextEntryInteractionDescriptor {
   constructor() {
     this.type = QtiInteraction.TEXT_ENTRY;
     this.placement = 'inline';
@@ -24,7 +25,8 @@ export class TextEntryInteractionDescriptor {
 
   /** @param {Element} el */
   matches(el) {
-    return el.tagName.toLowerCase() === QtiInteraction.TEXT_ENTRY;
+    if (el.tagName.toLowerCase() === QtiInteraction.TEXT_ENTRY) return true;
+    return !!el.querySelector(QtiInteraction.TEXT_ENTRY);
   }
 
   /**
@@ -38,9 +40,8 @@ export class TextEntryInteractionDescriptor {
     if (!responseDeclarations.length) return QuestionType.FREE_RESPONSE;
 
     try {
-      const doc = new DOMParser().parseFromString(responseDeclarations[0], 'text/html');
-      // In text/html, the root is usually doc.body.firstElementChild
-      const root = doc.body.firstElementChild ?? doc.body;
+      const doc = parseXML(responseDeclarations[0]);
+      const root = doc.documentElement;
       const baseType = root.getAttribute('base-type');
 
       if (baseType === BaseType.FLOAT) return QuestionType.NUMERIC;

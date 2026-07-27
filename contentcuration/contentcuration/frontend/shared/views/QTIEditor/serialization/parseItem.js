@@ -1,4 +1,4 @@
-import { QTI_INTERACTION_TAGS, QtiInteraction } from '../constants';
+import { QTI_INTERACTION_TAGS, INLINE_INTERACTION_TAGS } from '../constants';
 
 const serializer = new XMLSerializer();
 const parser = new DOMParser();
@@ -14,7 +14,13 @@ const parser = new DOMParser();
  *   contains a parsererror. HTML parsing never throws.
  */
 export function parseXML(xmlString, mimeType = 'text/xml') {
-  const doc = parser.parseFromString(xmlString, mimeType);
+  let input = xmlString;
+  // Remove xmlns to ensure querySelector works.
+  if (mimeType === 'text/xml') {
+    input = xmlString.replace(/ xmlns="[^"]*"/g, '');
+  }
+
+  const doc = parser.parseFromString(input, mimeType);
 
   // DOMParser never throws — it signals failure via a <parsererror> node. This
   // only applies to XML: the HTML parser recovers silently and never emits one,
@@ -88,10 +94,7 @@ export function parseItem(rawData) {
         .filter(d => d.getAttribute('identifier') === responseId)
         .map(d => serializer.serializeToString(d));
 
-      // Inline interactions (e.g. text-entry) embed their prompt in body
-      // siblings, not inside the element. Pass the full <qti-item-body> so
-      // parse() can recover the prompt from the surrounding context.
-      const isInline = el.tagName.toLowerCase() === QtiInteraction.TEXT_ENTRY;
+      const isInline = INLINE_INTERACTION_TAGS.has(el.tagName.toLowerCase());
 
       interactions.push({
         bodyXml: isInline ? serializer.serializeToString(body) : serializer.serializeToString(el),
