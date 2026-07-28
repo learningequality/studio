@@ -19,6 +19,7 @@ from contentcuration.viewsets.base import (
     RESTCreateModelMixin,
     RESTDestroyModelMixin,
     RESTUpdateModelMixin,
+    ReadOnlyValuesViewset,
     ValuesViewset,
 )
 
@@ -46,15 +47,17 @@ class OrganizationSerializer(BulkModelSerializer):
 
 class OrganizationMemberSerializer(BulkModelSerializer):
     """
-    Write serializer for OrganizationRole membership records.
+    Write serializer for updating OrganizationRole membership records.
 
-    Organization and user may be set when creating a membership, but cannot be
-    changed afterwards. Read operations are handled by the viewset values map.
+    Membership creation is handled by invitation acceptance. Organization and
+    user are immutable through this endpoint; admins may only update an existing
+    membership's role, description, or status. Read operations are handled by
+    the viewset values map.
     """
 
     status = serializers.ChoiceField(
         choices=organization_role_status_choices,
-        default=ORGANIZATION_ROLE_STATUS_ACTIVE,
+        required=False,
     )
 
     class Meta:
@@ -67,18 +70,8 @@ class OrganizationMemberSerializer(BulkModelSerializer):
             "description",
             "status",
         )
+        read_only_fields = ("organization", "user")
         list_serializer_class = BulkListSerializer
-
-    def get_fields(self):
-        fields = super().get_fields()
-
-        # A membership may move between statuses and roles, but it must never be
-        # reassigned to a different organization or user.
-        if self.instance is not None:
-            fields["organization"].read_only = True
-            fields["user"].read_only = True
-
-        return fields
 
 
 class OrganizationFilter(FilterSet):
@@ -207,17 +200,17 @@ class OrganizationViewSet(
 
 
 class OrganizationMemberViewSet(
-    ValuesViewset,
-    RESTCreateModelMixin,
+    ReadOnlyValuesViewset,
     RESTUpdateModelMixin,
     RESTDestroyModelMixin,
 ):
     """
     Organization membership and role API.
 
-    Active organization members may read the membership list. Only active
-    organization admins may create, update, or remove memberships. Site admins
-    may manage all memberships.
+    Active organization members may read the membership list. New membership
+    records are created only when an invitation is accepted. Active organization
+    admins may update or remove existing memberships. Site admins may manage all
+    existing memberships.
     """
 
     queryset = OrganizationRole.objects.all()
@@ -351,16 +344,6 @@ class OrganizationMemberViewSet(
             raise ValidationError(
                 "An organization must have at least one active admin."
             )
-
-    def perform_create(self, serializer, change=None):
-        organization = serializer.validated_data["organization"]
-        self._require_admin(organization)
-
-        if organization.deleted:
-            raise ValidationError("Cannot add members to a deleted organization.")
-
-        with transaction.atomic():
-            serializer.save()
 
     def perform_update(self, serializer):
         with transaction.atomic():
