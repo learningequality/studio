@@ -62,6 +62,7 @@
 
   import { computed, ref, watch } from 'vue';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
+  import { QuestionType } from '../../constants';
   import useQtiItem from '../../composables/useQtiItem';
   import InteractionSection from '../InteractionSection/index.vue';
 
@@ -119,9 +120,14 @@
       const interactionTypeLabel = computed(() => {
         const type = currentQuestionType.value;
         if (!type) return unknownTypeLabel$();
-        // Dynamic access to the localized string method (e.g. 'singleSelectLabel$()')
-        const methodKey = `${type}Label$`;
-        return qtiEditorStrings[methodKey]?.() ?? unknownTypeLabel$();
+        const QUESTION_TYPE_LABELS = {
+          [QuestionType.SINGLE_SELECT]: qtiEditorStrings.singleSelectLabel$,
+          [QuestionType.MULTI_SELECT]: qtiEditorStrings.multiSelectLabel$,
+          [QuestionType.NUMERIC]: qtiEditorStrings.numericLabel$,
+          [QuestionType.TEXT_ENTRY]: qtiEditorStrings.textEntryLabel$,
+          [QuestionType.FREE_RESPONSE]: qtiEditorStrings.freeResponseLabel$,
+        };
+        return (QUESTION_TYPE_LABELS[type] ?? unknownTypeLabel$)();
       });
 
       const questionNumberAndTypeLabel = computed(() =>

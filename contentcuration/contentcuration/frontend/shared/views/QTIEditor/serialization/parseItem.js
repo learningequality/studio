@@ -15,9 +15,8 @@ const parser = new DOMParser();
  */
 export function parseXML(xmlString, mimeType = 'text/xml') {
   let input = xmlString;
-  // Remove xmlns to ensure querySelector works.
   if (mimeType === 'text/xml') {
-    input = xmlString.replace(/ xmlns="[^"]*"/g, '');
+    input = xmlString.replace(/ xmlns="[^"]*"/, '');
   }
 
   const doc = parser.parseFromString(input, mimeType);

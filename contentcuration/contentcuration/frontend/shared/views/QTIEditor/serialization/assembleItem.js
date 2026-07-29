@@ -86,16 +86,14 @@ export function assembleItemXml({ identifier, title, language, bodyXml, response
     return doc.documentElement;
   });
 
-  // Parse the interaction body XML into a DOM node.
   const bodyDoc = parseXML(bodyXml || '<qti-item-body/>');
-  const interactionNode = bodyDoc.documentElement;
-
+  const bodyRoot = bodyDoc.documentElement;
   const itemBodyNode =
-    interactionNode.tagName.toLowerCase() === 'qti-item-body'
-      ? interactionNode
+    bodyRoot.tagName.toLowerCase() === 'qti-item-body'
+      ? bodyRoot
       : buildXmlNode({
           tag: 'qti-item-body',
-          children: [interactionNode],
+          children: [bodyRoot],
         });
 
   const assessmentItemNode = buildXmlNode({

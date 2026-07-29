@@ -7,8 +7,6 @@ import {
 } from '../parse';
 import { BaseType, Cardinality, QuestionType } from '../../../constants';
 
-// ─── Fixtures ──────────────────────────────────────────────────────────────
-
 const FREE_RESPONSE_DECLARATION = `
   <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
 `.trim();
@@ -36,23 +34,23 @@ function makeBodyXml({ promptHtml = '', expectedLength = null } = {}) {
   return `<qti-item-body><div>${promptHtml ? `<div>${promptHtml}</div>` : ''}<p><qti-text-entry-interaction ${interactionAttrs}/></p></div></qti-item-body>`;
 }
 
-// ─── _defaultState ─────────────────────────────────────────────────────────
-
 describe('_defaultState', () => {
   it('returns prompt as empty string', () => {
     expect(_defaultState().prompt).toBe('');
   });
 
-  it('returns answers as empty array', () => {
-    expect(_defaultState().answers).toEqual([]);
+  it('returns answers as an array with one empty answer seeded', () => {
+    const answers = _defaultState().answers;
+    expect(answers).toHaveLength(1);
+    expect(answers[0].value).toBe('');
+    expect(answers[0].caseSensitive).toBe(false);
+    expect(typeof answers[0].id).toBe('string');
   });
 
   it('returns expectedLength as DEFAULT_EXPECTED_LENGTH', () => {
     expect(_defaultState().expectedLength).toBe(DEFAULT_EXPECTED_LENGTH);
   });
 });
-
-// ─── _extractAnswers ───────────────────────────────────────────────────────
 
 describe('_extractAnswers', () => {
   it('returns [] when no declaration is provided', () => {
@@ -89,20 +87,25 @@ describe('_extractAnswers', () => {
   });
 });
 
-// ─── parseTextEntryInteraction ─────────────────────────────────────────────
-
 describe('parseTextEntryInteraction', () => {
   it('returns defaultState when bodyXml is empty', () => {
-    expect(parseTextEntryInteraction('', [])).toEqual(_defaultState());
+    const state = parseTextEntryInteraction('', []);
+    expect(state.prompt).toBe('');
+    expect(state.expectedLength).toBe(DEFAULT_EXPECTED_LENGTH);
+    expect(state.answers).toHaveLength(1);
   });
 
   it('returns defaultState when bodyXml is unparseable', () => {
-    expect(parseTextEntryInteraction('<<bad xml', [])).toEqual(_defaultState());
+    const state = parseTextEntryInteraction('<<bad xml', []);
+    expect(state.prompt).toBe('');
+    expect(state.answers).toHaveLength(1);
   });
 
   it('returns defaultState when no interaction element found', () => {
     const bodyXml = '<qti-item-body><p>No interaction here</p></qti-item-body>';
-    expect(parseTextEntryInteraction(bodyXml, [])).toEqual(_defaultState());
+    const state = parseTextEntryInteraction(bodyXml, []);
+    expect(state.prompt).toBe('');
+    expect(state.answers).toHaveLength(1);
   });
 
   describe('freeResponse', () => {
@@ -139,8 +142,6 @@ describe('parseTextEntryInteraction', () => {
     });
   });
 });
-
-// ─── buildTextEntryInteractionXML ──────────────────────────────────────────
 
 describe('buildTextEntryInteractionXML', () => {
   const FREE_SCHEMA = { baseType: BaseType.STRING, cardinality: Cardinality.SINGLE };
@@ -260,6 +261,15 @@ describe('buildTextEntryInteractionXML', () => {
       expect(responseDeclarations[0]).toContain('qti-correct-response');
       expect(responseDeclarations[0]).toContain('>0.5<');
       expect(responseDeclarations[0]).toContain('>1.5<');
+    });
+
+    it('numeric with 0 answers omits <qti-correct-response> (empty element is invalid per XSD)', () => {
+      const { responseDeclarations } = buildTextEntryInteractionXML(
+        { prompt: '', answers: [], expectedLength: 0 },
+        QuestionType.NUMERIC,
+        NUMERIC_SINGLE_SCHEMA,
+      );
+      expect(responseDeclarations[0]).not.toContain('qti-correct-response');
     });
   });
 

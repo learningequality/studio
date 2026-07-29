@@ -3,7 +3,8 @@ import { parseXML } from '../../serialization/parseItem';
 import { buildXmlNode } from '../../serialization/assembleItem';
 import CorrectResponse from '../../serialization/qti/declarations/correctResponse';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
-import { BaseType, RESPONSE_IDENTIFIER } from '../../constants';
+import { BaseType, QuestionType, RESPONSE_IDENTIFIER } from '../../constants';
+import { CAPABILITY } from '../../serialization/qti/declarations/capabilities';
 
 const serializer = new XMLSerializer();
 
@@ -23,18 +24,10 @@ const serializer = new XMLSerializer();
  * @property {TextEntryAnswer[]} answers        - Acceptable correct answers.
  *                                                Empty ([]) for freeResponse.
  * @property {number}            expectedLength - Value of the `expected-length` attribute.
- *                                                FREE_RESPONSE_EXPECTED_LENGTH for freeResponse;
- *                                                0 (absent) for numeric and textEntry.
  */
 
 /**
- * Default `expected-length` attribute written on `<qti-text-entry-interaction>`
- * for free-response items. The QTI 3.0 spec does not mandate a value; 50 is a
- * widely-used authoring convention (sourced from the textEntry interaction PR
- * description). Change this constant if your platform uses a different default.
- *
- * This attribute is informational — it hints to the player how wide to render
- * the input box. It has no effect on scoring.
+ * Default `expected-length` attribute for `<qti-text-entry-interaction>`.
  */
 export const DEFAULT_EXPECTED_LENGTH = 50;
 
@@ -46,20 +39,16 @@ export const DEFAULT_EXPECTED_LENGTH = 50;
 export function _defaultState() {
   return {
     prompt: '',
-    answers: [],
+    answers: [{ id: generateRandomSlug('answer'), value: '', caseSensitive: false }],
     expectedLength: DEFAULT_EXPECTED_LENGTH,
   };
 }
 
 /**
- * Serialize body children to an HTML string, excluding the element that
- * directly contains the `<qti-text-entry-interaction>`.
+ * Serializes the body element children to an HTML string, excluding the
+ * element that directly contains the `<qti-text-entry-interaction>`.
  *
- * buildTextEntryInteractionXML wraps body content in a single `<div>`, so we
- * look inside that wrapper for prompt children and the interaction container.
- *
- * @param {Element} bodyEl - The wrapper element that contains both the
- *                           prompt and the text entry interaction
+ * @param {Element} bodyEl - The `<qti-item-body>` element
  * @returns {string}
  */
 function extractPromptHTML(bodyEl) {
@@ -67,7 +56,6 @@ function extractPromptHTML(bodyEl) {
   const interactionEl = clone.querySelector('qti-text-entry-interaction');
   if (!interactionEl) return '';
 
-  // The interaction typically sits in a <p>; remove the <p> (or just the interaction)
   const interactionContainer = interactionEl.parentElement;
   if (
     interactionContainer &&
@@ -79,15 +67,7 @@ function extractPromptHTML(bodyEl) {
     interactionEl.remove();
   }
 
-  // buildTextEntryInteractionXML wraps everything in a single outer <div>.
-  // If the body has exactly one <div> child, extract from inside it.
-  const bodyChildren = clone.children;
-  const searchRoot =
-    bodyChildren.length === 1 && bodyChildren[0].tagName.toLowerCase() === 'div'
-      ? bodyChildren[0]
-      : clone;
-
-  return searchRoot.innerHTML.replace(/ xmlns="http:\/\/www\.w3\.org\/1999\/xhtml"/g, '').trim();
+  return clone.innerHTML.trim();
 }
 
 /**
@@ -133,7 +113,6 @@ export function _extractAnswers(responseDeclarations) {
     return valueEls.map(el => ({
       id: generateRandomSlug('answer'),
       value: el.textContent.trim(),
-      // case-sensitive is only meaningful for string base-type answers.
       caseSensitive: isString && el.getAttribute('case-sensitive') === 'true',
     }));
   } catch (err) {
@@ -183,11 +162,8 @@ export function parseTextEntryInteraction(bodyXml, responseDeclarations) {
 /**
  * Serialize TextEntryState → { bodyXml, responseDeclarations }.
  *
- * The output `bodyXml` is a full `<qti-item-body>` so that parseItem can
- * store it and the next parse() call can extract the prompt correctly.
- *
  * @param {TextEntryState} state
- * @param {string} questionType - QuestionType.NUMERIC | QuestionType.FREE_RESPONSE
+ * @param {string} questionType - One of QuestionType.NUMERIC, TEXT_ENTRY, FREE_RESPONSE
  * @param {{ baseType: string, cardinality: string }} declarationSchema
  * @returns {{ bodyXml: string, responseDeclarations: string[] }}
  */
@@ -215,22 +191,15 @@ export function buildTextEntryInteractionXML(state, questionType, declarationSch
     children: [interactionEl],
   });
 
-  // Build the body content: prompt HTML (if any) followed by the interaction paragraph.
-  const divChildren = [];
+  // Build body children: prompt HTML nodes (if any) followed by the interaction paragraph.
+  const bodyChildren = [];
   if (prompt) {
-    const promptDoc = new DOMParser().parseFromString(
-      `<!DOCTYPE html><body>${prompt}</body>`,
-      'text/html',
-    );
-    divChildren.push(...promptDoc.body.childNodes);
+    const promptDoc = parseXML(`<!DOCTYPE html><body>${prompt}</body>`, 'text/html');
+    bodyChildren.push(...promptDoc.body.childNodes);
   }
-  divChildren.push(interactionParagraph);
+  bodyChildren.push(interactionParagraph);
 
-  const bodyEl = buildXmlNode({
-    tag: 'qti-item-body',
-    children: [buildXmlNode({ tag: 'div', children: divChildren })],
-  });
-
+  const bodyEl = buildXmlNode({ tag: 'qti-item-body', children: bodyChildren });
   const bodyXml = serializer.serializeToString(bodyEl);
 
   // Build the response declaration.
@@ -241,26 +210,23 @@ export function buildTextEntryInteractionXML(state, questionType, declarationSch
     tag: 'qti-response-declaration',
   });
 
-  // Write a correct-response for numeric and textEntry (not freeResponse).
-  const isFreeResponse = baseType === BaseType.STRING && answers.length === 0;
-  if (!isFreeResponse && answers.length > 0) {
-    if (baseType === BaseType.STRING) {
-      // Build <qti-correct-response> manually so we can write the optional
-      // case-sensitive="true" attribute on individual <qti-value> elements.
-      const valueEls = answers.map(a => {
-        const valueEl = buildXmlNode({ tag: 'qti-value', children: [a.value] });
-        if (a.caseSensitive) {
-          valueEl.setAttribute('case-sensitive', 'true');
-        }
-        return valueEl;
+  if (questionType === QuestionType.FREE_RESPONSE) {
+    // No correct answer
+  } else if (baseType === BaseType.STRING) {
+    if (answers.length > 0) {
+      const textAnswers = answers.slice();
+      declaration.registerCapability(CAPABILITY.CORRECT_RESPONSE, {
+        get: () => textAnswers.map(a => a.value),
+        getXML: () => {
+          const valueEls = textAnswers.map(a =>
+            buildXmlNode({ tag: 'qti-value', children: [a.value] }),
+          );
+          return buildXmlNode({ tag: 'qti-correct-response', children: valueEls });
+        },
       });
-      const correctResponseEl = buildXmlNode({
-        tag: 'qti-correct-response',
-        children: valueEls,
-      });
-      declaration.getXML().appendChild(correctResponseEl);
-    } else {
-      // Numeric: delegate to CorrectResponse (no per-value attrs needed).
+    }
+  } else {
+    if (answers.length > 0) {
       new CorrectResponse(
         answers.map(a => a.value),
         declaration,

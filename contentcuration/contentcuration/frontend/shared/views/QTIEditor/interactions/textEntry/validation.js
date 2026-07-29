@@ -41,8 +41,12 @@ export function validateTextEntryInteraction(state, questionType) {
         }
       }
 
-      const lookupKey =
+      const normalizedVal =
         questionType === QuestionType.TEXT_ENTRY && !answer.caseSensitive ? val.toLowerCase() : val;
+      const lookupKey =
+        questionType === QuestionType.TEXT_ENTRY
+          ? `${normalizedVal}|${answer.caseSensitive}`
+          : normalizedVal;
 
       if (val) {
         if (seen.has(lookupKey)) {

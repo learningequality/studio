@@ -31,8 +31,6 @@ describe('defineInteraction', () => {
     expect(descriptor.editorComponent).toBe(component);
   });
 
-  // Keys that must be present on the descriptor itself (editorComponent is injected
-  // by defineInteraction from the second argument, so it is excluded here).
   const REQUIRED_DESCRIPTOR_KEYS = [
     'type',
     'placement',
@@ -56,7 +54,6 @@ describe('defineInteraction', () => {
 
   it('throws when editorComponent is not passed as the second argument', () => {
     const descriptor = makeValidDescriptor();
-    // Calling with no second arg means editorComponent is undefined — still flagged.
     expect(() => defineInteraction(descriptor)).toThrow(/missing required key "editorComponent"/i);
   });
 

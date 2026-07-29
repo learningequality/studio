@@ -2,8 +2,6 @@ import { ref } from 'vue';
 import { useTextEntryInteraction } from '../useTextEntryInteraction';
 import { QuestionType, ValidationError } from '../../constants';
 
-// ─── Helpers ───────────────────────────────────────────────────────────────
-
 function makeNumericBlock(answerValues = ['12']) {
   const values = answerValues.map(v => `<qti-value>${v}</qti-value>`).join('');
   const cardinality = answerValues.length > 1 ? 'multiple' : 'single';
@@ -21,16 +19,14 @@ function makeFreeBlock() {
 }
 
 function setupNumeric(answerValues = ['12']) {
-  const qt = ref(QuestionType.NUMERIC);
-  return { qt, ...useTextEntryInteraction(makeNumericBlock(answerValues), qt) };
+  const questionType = ref(QuestionType.NUMERIC);
+  return { questionType, ...useTextEntryInteraction(makeNumericBlock(answerValues), questionType) };
 }
 
 function setupFree() {
-  const qt = ref(QuestionType.FREE_RESPONSE);
-  return { qt, ...useTextEntryInteraction(makeFreeBlock(), qt) };
+  const questionType = ref(QuestionType.FREE_RESPONSE);
+  return { questionType, ...useTextEntryInteraction(makeFreeBlock(), questionType) };
 }
-
-// ─── Tests ─────────────────────────────────────────────────────────────────
 
 describe('useTextEntryInteraction', () => {
   describe('initial state', () => {

@@ -29,12 +29,9 @@ const renderEditor = (props = {}) =>
     routes: new VueRouter(),
   });
 
-// ─── numeric ─────────────────────────────────────────────────────────────────
-
 describe('TextEntryEditor — numeric', () => {
-  // Helper: count only the answer-native-input elements (excludes csrf and other env inputs)
   const answerInputs = () =>
-    screen.getAllByRole('textbox').filter(el => el.classList.contains('answer-native-input'));
+    screen.queryAllByRole('textbox', { name: tr.$tr('answerValuePlaceholder') });
 
   describe('answer list', () => {
     it('renders one answer row per value in the declaration', () => {
@@ -68,7 +65,7 @@ describe('TextEntryEditor — numeric', () => {
         interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL),
         questionType: QuestionType.NUMERIC,
       });
-      expect(screen.getAllByRole('button', { name: tr.$tr('deleteAnswerBtn') })).toHaveLength(1);
+      expect(screen.getAllByRole('button', { name: /Delete answer/i })).toHaveLength(1);
     });
 
     it('disables delete when only one answer remains', () => {
@@ -76,7 +73,7 @@ describe('TextEntryEditor — numeric', () => {
         interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL),
         questionType: QuestionType.NUMERIC,
       });
-      expect(screen.getByRole('button', { name: tr.$tr('deleteAnswerBtn') })).toBeDisabled();
+      expect(screen.getByRole('button', { name: /Delete answer/i })).toBeDisabled();
     });
 
     it('removes an answer row when delete is clicked (with 2+ rows)', async () => {
@@ -86,7 +83,7 @@ describe('TextEntryEditor — numeric', () => {
       });
       await fireEvent.click(screen.getByRole('button', { name: tr.$tr('addAnswerBtn') }));
       expect(answerInputs().length).toBe(2);
-      const deleteBtns = screen.getAllByRole('button', { name: tr.$tr('deleteAnswerBtn') });
+      const deleteBtns = screen.getAllByRole('button', { name: /Delete answer/i });
       await fireEvent.click(deleteBtns[0]);
       expect(answerInputs().length).toBe(1);
     });
@@ -171,18 +168,13 @@ describe('TextEntryEditor — numeric', () => {
   });
 });
 
-// ─── textEntry (string with correct answer) ────────────────────────────────────
-
 describe('TextEntryEditor — textEntry', () => {
   it('renders the answer list section', () => {
     renderEditor({
       interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, STRING_DECL),
       questionType: QuestionType.TEXT_ENTRY,
     });
-    // Filter to only answer-native-input elements (excludes env inputs like csrfmiddlewaretoken)
-    const inputs = screen
-      .getAllByRole('textbox')
-      .filter(el => el.classList.contains('answer-native-input'));
+    const inputs = screen.queryAllByRole('textbox', { name: tr.$tr('answerTextPlaceholder') });
     expect(inputs.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -207,8 +199,6 @@ describe('TextEntryEditor — textEntry', () => {
   });
 });
 
-// ─── freeResponse ──────────────────────────────────────────────────────────────
-
 describe('TextEntryEditor — freeResponse', () => {
   it('does not render the Add answer button', () => {
     renderEditor({
@@ -223,14 +213,14 @@ describe('TextEntryEditor — freeResponse', () => {
       interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, FREE_DECL),
       questionType: QuestionType.FREE_RESPONSE,
     });
-    const inputs = screen
-      .queryAllByRole('textbox')
-      .filter(el => el.classList.contains('answer-native-input'));
-    expect(inputs.length).toBe(0);
+    expect(
+      screen.queryAllByRole('textbox', { name: tr.$tr('answerValuePlaceholder') }).length,
+    ).toBe(0);
+    expect(screen.queryAllByRole('textbox', { name: tr.$tr('answerTextPlaceholder') }).length).toBe(
+      0,
+    );
   });
 });
-
-// ─── emits ─────────────────────────────────────────────────────────────────────
 
 describe('TextEntryEditor — emits', () => {
   it('emits update:interaction on mount with bodyXml and responseDeclarations', () => {
@@ -255,8 +245,6 @@ describe('TextEntryEditor — emits', () => {
   });
 });
 
-// ─── accessibility ──────────────────────────────────────────────────────────────
-
 describe('TextEntryEditor — accessibility', () => {
   it('delete icon buttons have accessible labels', () => {
     renderEditor({
@@ -264,12 +252,10 @@ describe('TextEntryEditor — accessibility', () => {
       questionType: QuestionType.NUMERIC,
     });
     screen
-      .getAllByRole('button', { name: tr.$tr('deleteAnswerBtn') })
+      .getAllByRole('button', { name: /Delete answer/i })
       .forEach(b => expect(b).toHaveAccessibleName());
   });
 });
-
-// ─── graceful fallback ──────────────────────────────────────────────────────────
 
 describe('TextEntryEditor — graceful fallback', () => {
   it('does not crash with empty bodyXml for numeric', () => {

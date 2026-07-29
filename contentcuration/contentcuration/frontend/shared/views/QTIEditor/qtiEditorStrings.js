@@ -182,7 +182,7 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     context: 'Button that appends a new answer row',
   },
   deleteAnswerBtn: {
-    message: 'Delete answer',
+    message: 'Delete answer {number}',
     context: 'Accessible label for the delete icon button next to an answer row',
   },
   caseSensitiveLabel: {
@@ -201,5 +201,9 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
   errorInvalidNumericValue: {
     message: 'Must be a valid number (e.g. 12, 0.5, -3.14)',
     context: 'Validation error shown when an answer value is not a valid number',
+  },
+  errorParsingQuestion: {
+    message: 'This question could not be loaded',
+    context: 'Shown in place of the interaction editor when the QTI XML fails to parse',
   },
 });

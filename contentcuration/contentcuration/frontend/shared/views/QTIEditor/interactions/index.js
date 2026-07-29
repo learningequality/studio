@@ -9,9 +9,8 @@ import textEntryDescriptor from './textEntry/index';
 export const DEFAULT_INTERACTION = QtiInteraction.CHOICE;
 
 /**
- * Ordered array of all registered interaction descriptors.
- * InteractionSection iterates this to find the first descriptor whose
- * matches(el) returns true.
+ * Ordered list of all registered interaction descriptors.
+ * Searched in order; the first whose `matches(el)` returns true wins.
  */
 export const descriptors = [choiceDescriptor, textEntryDescriptor];
 
@@ -31,14 +30,4 @@ export const registry = Object.fromEntries(descriptors.map(d => [d.type, d]));
  */
 export function getDescriptorForQuestionType(questionType) {
   return descriptors.find(d => d.questionTypes.includes(questionType));
-}
-
-/**
- * Find the interaction descriptor for a given QTI interaction tag name.
- *
- * @param {string} tagName
- * @returns {import('./defineInteraction').InteractionDescriptor|undefined}
- */
-export function getDescriptorForInteractionType(tagName) {
-  return registry[tagName];
 }

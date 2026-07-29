@@ -16,12 +16,6 @@ import {
 
 jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor');
 
-// ---------------------------------------------------------------------------
-// Helper: renders a wrapper component that runs the composable inside setup().
-// Because questionType is now set on mount (not as a computed), we must wait
-// for the component to mount before checking reactive values.
-// ---------------------------------------------------------------------------
-
 function renderDescriptor(initialXml = null, declarations = []) {
   const interactionRef = ref(
     initialXml ? { bodyXml: initialXml, responseDeclarations: declarations } : null,
@@ -39,10 +33,6 @@ function renderDescriptor(initialXml = null, declarations = []) {
   render(TestWrapper, { routes: new VueRouter() });
   return { result, interactionRef };
 }
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
 
 describe('useInteractionDescriptor', () => {
   describe('with a valid choice interaction', () => {
@@ -110,11 +100,10 @@ describe('useInteractionDescriptor', () => {
 
   describe('with malformed XML', () => {
     it('returns a parse error for malformed XML', async () => {
-      // inferFromXml uses text/xml which throws a parser error for malformed fragments.
       const { result } = renderDescriptor('<unclosed');
       await nextTick();
       expect(typeof result.parseError.value).toBe('string');
-      expect(result.parseError.value).toMatch(/parse error/);
+      expect(result.parseError.value).toBe('This question could not be loaded');
     });
 
     it('still returns a defined fallback descriptor on parse error', async () => {
@@ -132,22 +121,14 @@ describe('useInteractionDescriptor', () => {
       expect(result.questionType.value).toBe(QuestionType.SINGLE_SELECT);
       expect(result.descriptor.value.type).toBe(QtiInteraction.CHOICE);
 
-      // Simulate user switching question type via the selector
       result.questionType.value = QuestionType.MULTI_SELECT;
       await nextTick();
 
-      // Still the same descriptor (choice handles both), but questionType changed
       expect(result.descriptor.value.type).toBe(QtiInteraction.CHOICE);
       expect(result.questionType.value).toBe(QuestionType.MULTI_SELECT);
     });
   });
 
-  // ---------------------------------------------------------------------------
-  // Regression: inline placement — bodyXml is a full <qti-item-body>
-  // Before the fix, documentElement was <qti-item-body> and no descriptor
-  // matched it, so the code fell back to the choice descriptor for every
-  // text-entry item, showing them as "Multiple Choice / Single Choice".
-  // ---------------------------------------------------------------------------
   describe('with an inline text-entry interaction (bodyXml is qti-item-body)', () => {
     it('resolves the TextEntry descriptor for a numeric declaration', async () => {
       const { result } = renderDescriptor(TEXT_ENTRY_BODY_XML, [TEXT_ENTRY_NUMERIC_DECL_XML]);
@@ -168,14 +149,6 @@ describe('useInteractionDescriptor', () => {
       await nextTick();
       expect(result.descriptor.value.type).toBe(QtiInteraction.TEXT_ENTRY);
       expect(result.questionType.value).toBe(QuestionType.FREE_RESPONSE);
-    });
-
-    it('does NOT resolve as choice when bodyXml is a qti-item-body (regression)', async () => {
-      // This is the exact bug: without the fix every text-entry item was
-      // treated as a choice interaction because documentElement was <qti-item-body>.
-      const { result } = renderDescriptor(TEXT_ENTRY_BODY_XML, [TEXT_ENTRY_FREE_DECL_XML]);
-      await nextTick();
-      expect(result.descriptor.value.type).not.toBe(QtiInteraction.CHOICE);
     });
   });
 });

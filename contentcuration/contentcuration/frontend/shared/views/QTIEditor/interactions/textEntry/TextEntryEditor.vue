@@ -14,9 +14,16 @@
       </div>
 
       <div
-        :class="promptWrapperClass"
-        :style="promptWrapperStyle"
+        :class="[
+          isPromptOpen ? 'prompt-open-wrap' : 'answer-border',
+          { 'has-error': !isPromptOpen && questionHasError },
+        ]"
+        :style="{ cursor: mode === 'edit' && !isPromptOpen ? 'pointer' : undefined }"
+        :tabindex="mode === 'edit' && !isPromptOpen ? 0 : undefined"
+        :role="mode === 'edit' && !isPromptOpen ? 'button' : undefined"
         @click="handlePromptClick"
+        @keydown.enter.prevent="handlePromptClick"
+        @keydown.space.prevent="handlePromptClick"
       >
         <TipTapEditor
           :value="state.prompt"
@@ -56,7 +63,7 @@
 
       <div class="answers-list">
         <div
-          v-for="answer in state.answers"
+          v-for="(answer, index) in state.answers"
           :key="answer.id"
           class="answer-group"
         >
@@ -73,16 +80,30 @@
                   :id="`answer-input-${answer.id}`"
                   :ref="el => setAnswerInputRef(answer.id, el)"
                   :value="answer.value"
+                  :aria-label="isNumeric ? answerValuePlaceholder$() : answerTextPlaceholder$()"
                   :placeholder="isNumeric ? answerValuePlaceholder$() : answerTextPlaceholder$()"
                   class="answer-native-input"
                   dir="auto"
-                  maxlength="250"
+                  :maxlength="DEFAULT_EXPECTED_LENGTH"
+                  :disabled="mode !== 'edit'"
                   :style="{
                     color: $themeTokens.text,
                   }"
                   @input="e => onAnswerInput(answer.id, e.target.value)"
-                  @blur="runValidation"
+                  @focus="focusedAnswerId = answer.id"
+                  @blur="
+                    focusedAnswerId = null;
+                    runValidation();
+                  "
                 >
+                <span
+                  v-if="focusedAnswerId === answer.id"
+                  class="char-counter"
+                  :style="{ color: $themePalette.grey.v_700 }"
+                  aria-hidden="true"
+                >
+                  {{ answer.value.length }}/{{ DEFAULT_EXPECTED_LENGTH }}
+                </span>
               </div>
 
               <div
@@ -99,13 +120,15 @@
                     :label="caseSensitiveLabel$()"
                     class="case-sensitive-check"
                     :style="{ color: $themePalette.grey.v_700 }"
+                    :disabled="mode !== 'edit'"
                     @change="onToggleCaseSensitive(answer.id)"
                   />
                 </div>
                 <KIconButton
+                  v-if="mode === 'edit'"
                   icon="close"
-                  :tooltip="deleteAnswerBtn$()"
-                  :ariaLabel="deleteAnswerBtn$()"
+                  :tooltip="deleteAnswerBtn$({ number: index + 1 })"
+                  :ariaLabel="deleteAnswerBtn$({ number: index + 1 })"
                   :disabled="state.answers.length <= 1"
                   :color="
                     state.answers.length <= 1 ? $themeTokens.textDisabled : $themePalette.grey.v_800
@@ -156,10 +179,10 @@
 
   import { computed, ref, watch, nextTick } from 'vue';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
-  import { themeTokens } from 'kolibri-design-system/lib/styles/theme';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { QuestionType, ValidationError } from '../../constants';
   import { useTextEntryInteraction } from '../../composables/useTextEntryInteraction';
+  import { DEFAULT_EXPECTED_LENGTH } from './parse';
   import ValidationMessage from 'shared/views/QTIEditor/components/ValidationMessage';
   import AddListItemButton from 'shared/views/QTIEditor/components/AddListItemButton';
   import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
@@ -190,8 +213,6 @@
         errorDuplicateAnswerContent$,
       } = qtiEditorStrings;
 
-      const tokens = themeTokens();
-
       const questionTypeRef = computed(() => props.questionType);
 
       const {
@@ -215,7 +236,6 @@
           props.questionType === QuestionType.TEXT_ENTRY,
       );
 
-      // Prompt open/close state
       const isPromptOpen = ref(false);
 
       function openPrompt() {
@@ -249,20 +269,6 @@
         },
         { immediate: true },
       );
-
-      // Prompt wrapper class/style
-      const promptWrapperClass = computed(() =>
-        isPromptOpen.value ? 'prompt-open-wrap' : 'answer-border',
-      );
-
-      const promptWrapperStyle = computed(() => {
-        if (isPromptOpen.value) return {};
-        const hasError = errors.value.some(e => e.code === ValidationError.PROMPT_REQUIRED);
-        return {
-          borderColor: hasError ? tokens.error : tokens.fineLine,
-          cursor: props.mode === 'edit' ? 'pointer' : undefined,
-        };
-      });
 
       // Error sets
       const questionHasError = computed(() =>
@@ -301,6 +307,7 @@
 
       // Map of answer id -> input DOM element for focusing
       const answerInputRefs = ref({});
+      const focusedAnswerId = ref(null);
 
       function setAnswerInputRef(id, el) {
         if (el) {
@@ -326,7 +333,6 @@
         toggleCaseSensitive(id);
       }
 
-      // Emit bodyXml and responseDeclarations whenever either changes.
       const workingInteraction = computed(() => ({
         bodyXml: composableBodyXml.value,
         responseDeclarations: composableDeclarations.value,
@@ -334,6 +340,7 @@
       watch(
         workingInteraction,
         newVal => {
+          if (props.mode !== 'edit') return;
           if (!newVal.bodyXml) return;
           emit('update:interaction', newVal);
         },
@@ -341,13 +348,12 @@
       );
 
       return {
+        DEFAULT_EXPECTED_LENGTH,
         state,
         windowIsSmall,
         isNumeric,
         showAnswerSection,
         isPromptOpen,
-        promptWrapperClass,
-        promptWrapperStyle,
         questionHasError,
         noCorrectAnswerError,
         answerHasError,
@@ -376,6 +382,7 @@
         errorDuplicateAnswerContent$,
         ValidationError,
         setAnswerInputRef,
+        focusedAnswerId,
       };
     },
 
@@ -485,7 +492,10 @@
   }
 
   .answer-input-wrap {
+    display: flex;
     flex: 1;
+    gap: 8px;
+    align-items: center;
     min-width: 0;
   }
 
@@ -503,6 +513,13 @@
       color: v-bind('$themeTokens.annotation');
       opacity: 1;
     }
+  }
+
+  .char-counter {
+    flex-shrink: 0;
+    font-size: 12px;
+    line-height: 1;
+    white-space: nowrap;
   }
 
   /* Actions cluster: case-sensitive checkbox + delete icon */

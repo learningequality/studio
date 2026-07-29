@@ -57,27 +57,23 @@ class TextEntryInteractionDescriptor {
 
   /**
    * Returns the response declaration schema for the given question type.
-   *
-   * For numeric, cardinality is derived from the current answer count so the
-   * declaration stays correct as answers are added/removed.
+   * Cardinality is derived from answer count for NUMERIC and TEXT_ENTRY so it
+   * stays in sync as answers are added or removed.
    *
    * @param {string} questionType
    * @param {TextEntryState|null} [state]
    * @returns {{ baseType: string, cardinality: string }}
    */
   getResponseDeclarationSchema(questionType, state = null) {
-    // Both freeResponse and textEntry use base-type string, cardinality single.
-    // The presence or absence of <qti-correct-response> is determined by
-    // buildTextEntryInteractionXML based on answers.length, not the schema.
-    if (questionType === QuestionType.FREE_RESPONSE || questionType === QuestionType.TEXT_ENTRY) {
+    if (questionType === QuestionType.FREE_RESPONSE) {
       return { baseType: BaseType.STRING, cardinality: Cardinality.SINGLE };
     }
-    // NUMERIC: cardinality depends on how many acceptable answers are defined.
     const answerCount = state?.answers?.length ?? 0;
-    return {
-      baseType: BaseType.FLOAT,
-      cardinality: answerCount > 1 ? Cardinality.MULTIPLE : Cardinality.SINGLE,
-    };
+    const cardinality = answerCount > 1 ? Cardinality.MULTIPLE : Cardinality.SINGLE;
+    if (questionType === QuestionType.TEXT_ENTRY) {
+      return { baseType: BaseType.STRING, cardinality };
+    }
+    return { baseType: BaseType.FLOAT, cardinality };
   }
 
   /**

@@ -147,8 +147,6 @@ describe('validateTextEntryInteraction', () => {
     });
 
     it('does not flag INVALID_NUMERIC_VALUE for freeResponse', () => {
-      // freeResponse state with a clearly non-numeric "answer" — should not error
-      // (answers is always [] for freeResponse, but just in case)
       const errors = validateTextEntryInteraction(
         { ...VALID_FREE_STATE, answers: [{ id: 'a1', value: 'abc' }] },
         QuestionType.FREE_RESPONSE,
