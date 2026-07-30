@@ -1,7 +1,7 @@
 <template>
 
   <div
-    class="page"
+    class="page theme--light"
     :style="{ backgroundColor: $themePalette.grey.v_100 }"
   >
     <div>
