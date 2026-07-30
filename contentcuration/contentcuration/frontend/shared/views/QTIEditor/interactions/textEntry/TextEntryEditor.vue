@@ -84,7 +84,7 @@
                   :placeholder="isNumeric ? answerValuePlaceholder$() : answerTextPlaceholder$()"
                   class="answer-native-input"
                   dir="auto"
-                  :maxlength="DEFAULT_EXPECTED_LENGTH"
+                  :maxlength="state.expectedLength"
                   :disabled="mode !== 'edit'"
                   :style="{
                     color: $themeTokens.text,
@@ -102,7 +102,7 @@
                   :style="{ color: $themePalette.grey.v_700 }"
                   aria-hidden="true"
                 >
-                  {{ answer.value.length }}/{{ DEFAULT_EXPECTED_LENGTH }}
+                  {{ answer.value.length }}/{{ state.expectedLength }}
                 </span>
               </div>
 
@@ -182,7 +182,6 @@
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { QuestionType, ValidationError } from '../../constants';
   import { useTextEntryInteraction } from '../../composables/useTextEntryInteraction';
-  import { DEFAULT_EXPECTED_LENGTH } from './parse';
   import ValidationMessage from 'shared/views/QTIEditor/components/ValidationMessage';
   import AddListItemButton from 'shared/views/QTIEditor/components/AddListItemButton';
   import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
@@ -348,7 +347,6 @@
       );
 
       return {
-        DEFAULT_EXPECTED_LENGTH,
         state,
         windowIsSmall,
         isNumeric,

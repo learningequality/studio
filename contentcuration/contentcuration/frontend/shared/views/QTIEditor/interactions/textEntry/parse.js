@@ -4,7 +4,6 @@ import { buildXmlNode } from '../../serialization/assembleItem';
 import CorrectResponse from '../../serialization/qti/declarations/correctResponse';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
 import { BaseType, QuestionType, RESPONSE_IDENTIFIER } from '../../constants';
-import { CAPABILITY } from '../../serialization/qti/declarations/capabilities';
 
 const serializer = new XMLSerializer();
 
@@ -210,23 +209,8 @@ export function buildTextEntryInteractionXML(state, questionType, declarationSch
     tag: 'qti-response-declaration',
   });
 
-  if (questionType === QuestionType.FREE_RESPONSE) {
-    // No correct answer
-  } else if (baseType === BaseType.STRING) {
-    if (answers.length > 0) {
-      const textAnswers = answers.slice();
-      declaration.registerCapability(CAPABILITY.CORRECT_RESPONSE, {
-        get: () => textAnswers.map(a => a.value),
-        getXML: () => {
-          const valueEls = textAnswers.map(a =>
-            buildXmlNode({ tag: 'qti-value', children: [a.value] }),
-          );
-          return buildXmlNode({ tag: 'qti-correct-response', children: valueEls });
-        },
-      });
-    }
-  } else {
-    if (answers.length > 0) {
+  if (questionType !== QuestionType.FREE_RESPONSE) {
+    if (answers.length !== 0) {
       new CorrectResponse(
         answers.map(a => a.value),
         declaration,
