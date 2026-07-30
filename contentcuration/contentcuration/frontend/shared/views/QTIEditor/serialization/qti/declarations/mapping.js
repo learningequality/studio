@@ -61,12 +61,16 @@ export default class Mapping {
   static fromXML(xmlNode, declaration) {
     const bounds = parseScoringAttrs(xmlNode);
 
-    const entries = [...xmlNode.querySelectorAll('qti-map-entry')].map(entry => ({
-      mapKey: declaration.coerceValue(entry.getAttribute('map-key')),
-      mappedValue: parseFloat(entry.getAttribute('mapped-value')),
-      // Per QTI spec, case-sensitive defaults to true; only false when explicitly set.
-      caseSensitive: entry.getAttribute('case-sensitive') !== 'false',
-    }));
+    const entries = [...xmlNode.querySelectorAll('qti-map-entry')].map(entry => {
+      // Per QTI spec, case-sensitive is an xs:boolean defaulting to true — it is false
+      // only when explicitly set to one of its false lexical forms ('false' or '0').
+      const caseSensitiveAttr = entry.getAttribute('case-sensitive');
+      return {
+        mapKey: declaration.coerceValue(entry.getAttribute('map-key')),
+        mappedValue: parseFloat(entry.getAttribute('mapped-value')),
+        caseSensitive: caseSensitiveAttr !== 'false' && caseSensitiveAttr !== '0',
+      };
+    });
 
     return new Mapping({ ...bounds, entries }, declaration);
   }

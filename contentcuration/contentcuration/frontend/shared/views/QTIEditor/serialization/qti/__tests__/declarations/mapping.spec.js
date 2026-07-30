@@ -5,7 +5,12 @@ import Mapping from '../../declarations/mapping.js';
 import { QTIDeclaration } from '../../QTIDeclaration.js';
 import { CAPABILITY } from '../../declarations/index.js';
 import { parseXML, reparse } from '../testUtils.js';
-import { MAPPING_WITH_BOUNDS_XML, MAPPING_WITH_CI_XML, SIMPLE_MAPPING_XML } from './fixtures.js';
+import {
+  MAPPING_WITH_BOUNDS_XML,
+  MAPPING_WITH_CI_XML,
+  MAPPING_WITH_NUMERIC_BOOLEANS_XML,
+  SIMPLE_MAPPING_XML,
+} from './fixtures.js';
 
 function makeDeclaration() {
   return new QTIDeclaration({
@@ -98,6 +103,13 @@ describe('Mapping', () => {
       const m = Mapping.fromXML(node, declaration);
       expect(m.get().entries[0].caseSensitive).toBe(false);
       expect(m.get().entries[1].caseSensitive).toBe(true);
+    });
+
+    it('parses numeric xs:boolean lexical forms on entries', () => {
+      const node = parseMappingXml(MAPPING_WITH_NUMERIC_BOOLEANS_XML);
+      const { entries } = Mapping.fromXML(node, makeDeclaration()).get();
+      expect(entries[0].caseSensitive).toBe(false);
+      expect(entries[1].caseSensitive).toBe(true);
     });
 
     it('registers itself as MAPPING capability', () => {
