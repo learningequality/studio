@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/vue';
+import { fireEvent, render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import VueRouter from 'vue-router';
 import AccountsMain from '../AccountsMain.vue';
@@ -84,6 +84,57 @@ describe('AccountsMain', () => {
     await waitFor(() => {
       const errorMessages = screen.queryAllByText(/required|field is required/i);
       expect(errorMessages.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('should not attempt to log in when the form is invalid', async () => {
+    const loginMock = jest.fn();
+    makeWrapper({ loginMock });
+
+    await user.click(screen.getByRole('button', { name: /sign in/i }));
+
+    expect(loginMock).not.toHaveBeenCalled();
+  });
+
+  it('should not show the email error while the user is still typing', async () => {
+    makeWrapper();
+
+    await user.type(screen.getByLabelText(/email/i), 'not-an-email');
+
+    expect(screen.queryByText('Please enter a valid email')).not.toBeInTheDocument();
+  });
+
+  it('should show the email error once the field loses focus', async () => {
+    makeWrapper();
+    const emailField = screen.getByLabelText(/email/i);
+
+    await user.type(emailField, 'not-an-email');
+    await fireEvent.blur(emailField);
+
+    await waitFor(() => {
+      expect(screen.getByText('Please enter a valid email')).toBeInTheDocument();
+    });
+  });
+
+  it('should show the offline banner when offline', () => {
+    makeWrapper({ online: false });
+
+    expect(screen.getByText(/you seem to be offline/i)).toBeInTheDocument();
+  });
+
+  it('should preserve leading and trailing whitespace in the password', async () => {
+    const loginMock = jest.fn().mockResolvedValue();
+    makeWrapper({ loginMock });
+
+    await user.type(screen.getByLabelText(/email/i), 'test@test.com');
+    await user.type(screen.getByLabelText(/password/i), '  spaced  ');
+    await user.click(screen.getByRole('button', { name: /sign in/i }));
+
+    await waitFor(() => {
+      expect(loginMock).toHaveBeenCalledWith('login', {
+        username: 'test@test.com',
+        password: '  spaced  ',
+      });
     });
   });
 
