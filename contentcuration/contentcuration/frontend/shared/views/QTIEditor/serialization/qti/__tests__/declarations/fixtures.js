@@ -21,7 +21,7 @@ export const MAPPING_WITH_CI_XML = `
 <qti-response-declaration identifier="RESPONSE" base-type="string" cardinality="single">
   <qti-mapping default-value="0">
     <qti-map-entry map-key="hello" mapped-value="1" case-sensitive="false"/>
-    <qti-map-entry map-key="world" mapped-value="1"/>
+    <qti-map-entry map-key="world" mapped-value="1" case-sensitive="true"/>
   </qti-mapping>
 </qti-response-declaration>
 `.trim();

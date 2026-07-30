@@ -131,12 +131,12 @@ export const TEXT_ENTRY_ITEM_XML = `<?xml version="1.0" encoding="UTF-8"?>
       <qti-value>H2o</qti-value>
     </qti-correct-response>
 
-    <!-- Per-answer case sensitivity lives here; entries are case-sensitive by
-         default, so only the case-insensitive answers carry the attribute. -->
+    <!-- Per-answer case sensitivity lives here; entries are case-insensitive by
+         default, so only the case-sensitive answer carries the attribute. -->
     <qti-mapping default-value="0">
-      <qti-map-entry map-key="H2O" mapped-value="1"/>
-      <qti-map-entry map-key="h2o" mapped-value="1" case-sensitive="false"/>
-      <qti-map-entry map-key="H2o" mapped-value="1" case-sensitive="false"/>
+      <qti-map-entry map-key="H2O" mapped-value="1" case-sensitive="true"/>
+      <qti-map-entry map-key="h2o" mapped-value="1"/>
+      <qti-map-entry map-key="H2o" mapped-value="1"/>
     </qti-mapping>
   </qti-response-declaration>
 

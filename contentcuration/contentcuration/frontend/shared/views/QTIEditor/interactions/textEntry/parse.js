@@ -74,7 +74,7 @@ function extractPromptHTML(bodyEl) {
  * Build a value → caseSensitive lookup from a declaration's <qti-mapping>.
  *
  * Entries whose map-key matches no correct-response value are never looked up, and
- * answers with no matching entry fall back to the spec default at the call site —
+ * answers with no matching entry fall back to the schema default at the call site —
  * neither case is an error.
  *
  * @param {Element} declEl - The <qti-response-declaration> element
@@ -87,7 +87,7 @@ function caseSensitivityByValue(declEl) {
   } catch (err) {
     // QTIDeclaration validates the declaration more strictly than answer extraction
     // needs — a missing identifier, say, makes it unmodellable. The correct-response
-    // values are still readable, so degrade to the spec default for case sensitivity
+    // values are still readable, so degrade to the schema default for case sensitivity
     // rather than discarding the author's answers.
     // eslint-disable-next-line no-console
     console.warn('[QTI Editor] Could not read <qti-mapping> case sensitivity:', err);
@@ -153,8 +153,9 @@ export function _extractAnswers(responseDeclarations) {
       return {
         id: generateRandomSlug('answer'),
         value,
-        // Per spec, an answer with no matching qti-map-entry is case-sensitive.
-        caseSensitive: isString ? (caseSensitivity.get(value) ?? true) : false,
+        // An answer with no matching qti-map-entry — including every answer in an
+        // item authored before mappings were written — takes the XSD default, false.
+        caseSensitive: isString && (caseSensitivity.get(value) ?? false),
       };
     });
   } catch (err) {

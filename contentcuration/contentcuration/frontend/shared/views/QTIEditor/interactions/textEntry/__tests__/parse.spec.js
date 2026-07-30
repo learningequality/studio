@@ -36,8 +36,8 @@ const TEXT_ENTRY_DECLARATION_WITH_MAPPING = `
     </qti-correct-response>
     <qti-mapping default-value="0">
       <qti-map-entry map-key="Paris" mapped-value="1" case-sensitive="false"/>
-      <qti-map-entry map-key="Madrid" mapped-value="1"/>
-      <qti-map-entry map-key="Lisbon" mapped-value="1" case-sensitive="false"/>
+      <qti-map-entry map-key="Madrid" mapped-value="1" case-sensitive="true"/>
+      <qti-map-entry map-key="Lisbon" mapped-value="1" case-sensitive="true"/>
     </qti-mapping>
   </qti-response-declaration>
 `.trim();
@@ -56,7 +56,7 @@ const BLANK_VALUE_DECLARATION = `
       <qti-value></qti-value>
     </qti-correct-response>
     <qti-mapping default-value="0">
-      <qti-map-entry map-key="" mapped-value="1" case-sensitive="false"/>
+      <qti-map-entry map-key="" mapped-value="1" case-sensitive="true"/>
     </qti-mapping>
   </qti-response-declaration>
 `.trim();
@@ -133,23 +133,19 @@ describe('_extractAnswers', () => {
       jest.restoreAllMocks();
     });
 
-    it('reads caseSensitive from qti-map-entry by map-key', () => {
-      const result = _extractAnswers([TEXT_ENTRY_DECLARATION_WITH_MAPPING]);
-      const byValue = Object.fromEntries(result.map(a => [a.value, a.caseSensitive]));
-      expect(byValue).toEqual({ Paris: false, Madrid: true });
-    });
-
-    it('ignores a map entry with no matching qti-value', () => {
+    it('reads caseSensitive by map-key, silently ignoring unmatched entries', () => {
       const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       const result = _extractAnswers([TEXT_ENTRY_DECLARATION_WITH_MAPPING]);
-      expect(result).toHaveLength(2);
+      // The Lisbon entry has no <qti-value>, so it contributes no answer and no error.
+      const byValue = Object.fromEntries(result.map(a => [a.value, a.caseSensitive]));
+      expect(byValue).toEqual({ Paris: false, Madrid: true });
       expect(errorSpy).not.toHaveBeenCalled();
     });
 
-    it('falls back to caseSensitive true when there is no mapping', () => {
+    it('falls back to caseSensitive false when there is no mapping', () => {
       const result = _extractAnswers([TEXT_ENTRY_DECLARATION_WITHOUT_MAPPING]);
       expect(result).toHaveLength(1);
-      expect(result[0].caseSensitive).toBe(true);
+      expect(result[0].caseSensitive).toBe(false);
     });
 
     it('reports numeric answers as never case-sensitive', () => {
@@ -159,15 +155,16 @@ describe('_extractAnswers', () => {
 
     it('matches a map entry for a blank answer value', () => {
       // An empty map-key coerces to null (QTI NULL semantics) while the answer value
-      // is the empty string, so the two must still be matched up.
+      // is the empty string, so the two must still be matched up. The entry declares
+      // case-sensitive="true", which the no-match fallback would never produce.
       const result = _extractAnswers([BLANK_VALUE_DECLARATION]);
-      expect(result).toEqual([expect.objectContaining({ value: '', caseSensitive: false })]);
+      expect(result).toEqual([expect.objectContaining({ value: '', caseSensitive: true })]);
     });
 
     it('keeps the answers when the declaration is too malformed to model', () => {
       jest.spyOn(console, 'warn').mockImplementation(() => {});
       const result = _extractAnswers([DECLARATION_WITHOUT_IDENTIFIER]);
-      expect(result).toEqual([expect.objectContaining({ value: 'Paris', caseSensitive: true })]);
+      expect(result).toEqual([expect.objectContaining({ value: 'Paris', caseSensitive: false })]);
     });
   });
 });
@@ -390,11 +387,11 @@ describe('buildTextEntryInteractionXML', () => {
       expect(entries.map(e => e.getAttribute('mapped-value'))).toEqual(['1', '1']);
     });
 
-    it('writes case-sensitive="false" only for case-insensitive answers', () => {
+    it('writes case-sensitive="true" only for case-sensitive answers', () => {
       const entries = [...buildCaseDeclaration().doc.querySelectorAll('qti-map-entry')];
-      // getAttribute is null when the attribute is absent — Madrid is case-sensitive,
-      // which is the spec default and so is left unwritten.
-      expect(entries.map(e => e.getAttribute('case-sensitive'))).toEqual(['false', null]);
+      // getAttribute is null when the attribute is absent — Paris is case-insensitive,
+      // which is the XSD default for the attribute and so is left unwritten.
+      expect(entries.map(e => e.getAttribute('case-sensitive'))).toEqual([null, 'true']);
     });
 
     it('emits no mapping for numeric answers', () => {

@@ -62,13 +62,14 @@ export default class Mapping {
     const bounds = parseScoringAttrs(xmlNode);
 
     const entries = [...xmlNode.querySelectorAll('qti-map-entry')].map(entry => {
-      // Per QTI spec, case-sensitive is an xs:boolean defaulting to true — it is false
-      // only when explicitly set to one of its false lexical forms ('false' or '0').
+      // Per the QTI 3.0 XSD (MapEntryDType), case-sensitive is an optional xs:boolean
+      // defaulting to false — it is true only when explicitly set to one of its true
+      // lexical forms ('true' or '1').
       const caseSensitiveAttr = entry.getAttribute('case-sensitive');
       return {
         mapKey: declaration.coerceValue(entry.getAttribute('map-key')),
         mappedValue: parseFloat(entry.getAttribute('mapped-value')),
-        caseSensitive: caseSensitiveAttr !== 'false' && caseSensitiveAttr !== '0',
+        caseSensitive: caseSensitiveAttr === 'true' || caseSensitiveAttr === '1',
       };
     });
 
@@ -98,8 +99,10 @@ export default class Mapping {
         'map-key': this._declaration.formatValue(entry.mapKey),
         'mapped-value': entry.mappedValue,
       };
-      // Omit case-sensitive when true — it is the spec default.
-      if (!entry.caseSensitive) entryAttrs['case-sensitive'] = 'false';
+      // Omit case-sensitive when false — it is the XSD default. Writing it only for
+      // true keeps the emitted value and the schema default in agreement, so a
+      // consumer that applies XSD attribute defaults reads back what was authored.
+      if (entry.caseSensitive) entryAttrs['case-sensitive'] = 'true';
       return buildXmlNode({ tag: 'qti-map-entry', attrs: entryAttrs });
     });
 
