@@ -4,6 +4,8 @@ import QTIItemEditor from '../index.vue';
 import { qtiEditorStrings } from '../../../qtiEditorStrings';
 import { AssessmentItemTypes } from '../../../constants';
 
+jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor');
+
 const { closeBtnLabel$, questionContentPlaceholder$ } = qtiEditorStrings;
 
 const defaultProps = {

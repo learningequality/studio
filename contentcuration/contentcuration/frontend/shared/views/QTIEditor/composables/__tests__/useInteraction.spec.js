@@ -9,10 +9,6 @@ jest.mock('lodash/debounce', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// Minimal descriptor stub
-// ---------------------------------------------------------------------------
-
 function makeDescriptor({ parseReturn = {}, buildReturn = null, validateReturn = [] } = {}) {
   return {
     parse: jest.fn(() => parseReturn),
@@ -76,7 +72,6 @@ describe('useInteraction', () => {
       questionType,
     );
 
-    // Because of immediate: true and mocked debounce, validate runs immediately
     expect(errors.value).toEqual(validateReturn);
   });
 
@@ -92,7 +87,6 @@ describe('useInteraction', () => {
 
     expect(errors.value).toEqual([]);
 
-    // Change the mock to return something else to simulate state change
     descriptor.validate.mockReturnValueOnce([{ code: 'NEW_ERROR' }]);
     runValidation();
 
@@ -163,15 +157,12 @@ describe('useInteraction', () => {
       questionType,
     );
 
-    // With mocked debounce, validate fires synchronously on immediate watcher.
-    // errors are already populated from the initial watcher run.
     expect(errors.value).toEqual(validateReturn);
 
-    // Reset mock and update state — validate should be called again.
     descriptor.validate.mockReset();
     descriptor.validate.mockReturnValue([{ code: 'UPDATED_ERROR' }]);
     state.value = { prompt: 'updated' };
-    await nextTick(); // flush Vue watcher queue
+    await nextTick();
 
     expect(descriptor.validate).toHaveBeenCalledWith({ prompt: 'updated' }, 'singleSelect');
     expect(errors.value).toEqual([{ code: 'UPDATED_ERROR' }]);

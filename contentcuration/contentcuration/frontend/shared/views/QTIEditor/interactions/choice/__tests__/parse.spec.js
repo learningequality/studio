@@ -144,7 +144,6 @@ describe('parse()', () => {
 });
 
 describe('buildXML()', () => {
-  // Helper: parse an XML string and return the document root element.
   function parseXmlString(xml) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(xml, 'text/xml');

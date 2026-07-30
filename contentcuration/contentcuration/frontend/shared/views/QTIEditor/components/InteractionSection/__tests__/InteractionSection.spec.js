@@ -17,10 +17,6 @@ const renderSection = (props = {}) =>
     routes: new VueRouter(),
   });
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
-
 describe('InteractionSection', () => {
   describe('choice interaction', () => {
     it('renders the prompt from the XML via ChoiceInteractionEditor', () => {
@@ -43,11 +39,9 @@ describe('InteractionSection', () => {
   });
 
   describe('parse error handling', () => {
-    it('gracefully falls back to default interaction state when XML is malformed', () => {
+    it('shows a parse error when XML is malformed', () => {
       renderSection({ interaction: interactionBlock('not-xml<{{') });
-      // It should render exactly 1 choice fallback element
-      const inputs = screen.queryAllByRole('radio').concat(screen.queryAllByRole('checkbox'));
-      expect(inputs).toHaveLength(1);
+      expect(screen.getByText('This question could not be loaded')).toBeInTheDocument();
     });
   });
 

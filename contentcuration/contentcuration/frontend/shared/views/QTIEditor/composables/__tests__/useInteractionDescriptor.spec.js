@@ -8,13 +8,13 @@ import {
   CHOICE_SINGLE_SELECT_XML,
   CHOICE_MULTI_SELECT_XML,
   UNKNOWN_INTERACTION_XML,
+  TEXT_ENTRY_BODY_XML,
+  TEXT_ENTRY_NUMERIC_DECL_XML,
+  TEXT_ENTRY_STRING_DECL_XML,
+  TEXT_ENTRY_FREE_DECL_XML,
 } from '../../utils/testingFixtures';
 
-// ---------------------------------------------------------------------------
-// Helper: renders a wrapper component that runs the composable inside setup().
-// Because questionType is now set on mount (not as a computed), we must wait
-// for the component to mount before checking reactive values.
-// ---------------------------------------------------------------------------
+jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor');
 
 function renderDescriptor(initialXml = null, declarations = []) {
   const interactionRef = ref(
@@ -33,10 +33,6 @@ function renderDescriptor(initialXml = null, declarations = []) {
   render(TestWrapper, { routes: new VueRouter() });
   return { result, interactionRef };
 }
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
 
 describe('useInteractionDescriptor', () => {
   describe('with a valid choice interaction', () => {
@@ -103,11 +99,11 @@ describe('useInteractionDescriptor', () => {
   });
 
   describe('with malformed XML', () => {
-    it('returns a non-null parseError', async () => {
+    it('returns a parse error for malformed XML', async () => {
       const { result } = renderDescriptor('<unclosed');
       await nextTick();
-      expect(result.parseError.value).not.toBeNull();
       expect(typeof result.parseError.value).toBe('string');
+      expect(result.parseError.value).toBe('This question could not be loaded');
     });
 
     it('still returns a defined fallback descriptor on parse error', async () => {
@@ -125,13 +121,34 @@ describe('useInteractionDescriptor', () => {
       expect(result.questionType.value).toBe(QuestionType.SINGLE_SELECT);
       expect(result.descriptor.value.type).toBe(QtiInteraction.CHOICE);
 
-      // Simulate user switching question type via the selector
       result.questionType.value = QuestionType.MULTI_SELECT;
       await nextTick();
 
-      // Still the same descriptor (choice handles both), but questionType changed
       expect(result.descriptor.value.type).toBe(QtiInteraction.CHOICE);
       expect(result.questionType.value).toBe(QuestionType.MULTI_SELECT);
+    });
+  });
+
+  describe('with an inline text-entry interaction (bodyXml is qti-item-body)', () => {
+    it('resolves the TextEntry descriptor for a numeric declaration', async () => {
+      const { result } = renderDescriptor(TEXT_ENTRY_BODY_XML, [TEXT_ENTRY_NUMERIC_DECL_XML]);
+      await nextTick();
+      expect(result.descriptor.value.type).toBe(QtiInteraction.TEXT_ENTRY);
+      expect(result.questionType.value).toBe(QuestionType.NUMERIC);
+    });
+
+    it('resolves the TextEntry descriptor for a string + correct-response (textEntry)', async () => {
+      const { result } = renderDescriptor(TEXT_ENTRY_BODY_XML, [TEXT_ENTRY_STRING_DECL_XML]);
+      await nextTick();
+      expect(result.descriptor.value.type).toBe(QtiInteraction.TEXT_ENTRY);
+      expect(result.questionType.value).toBe(QuestionType.TEXT_ENTRY);
+    });
+
+    it('resolves the TextEntry descriptor for a string with no correct-response (freeResponse)', async () => {
+      const { result } = renderDescriptor(TEXT_ENTRY_BODY_XML, [TEXT_ENTRY_FREE_DECL_XML]);
+      await nextTick();
+      expect(result.descriptor.value.type).toBe(QtiInteraction.TEXT_ENTRY);
+      expect(result.questionType.value).toBe(QuestionType.FREE_RESPONSE);
     });
   });
 });

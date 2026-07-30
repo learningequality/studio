@@ -117,18 +117,18 @@
        */
       const currentQuestionType = ref(null);
 
-      /**
-       * Maps each QuestionType to its localized display label.
-       * Add new entries here as more question types are introduced.
-       */
-      const QUESTION_TYPE_LABELS = {
-        [QuestionType.SINGLE_SELECT]: () => qtiEditorStrings.singleChoiceLabel$(),
-        [QuestionType.MULTI_SELECT]: () => qtiEditorStrings.multipleChoiceLabel$(),
-      };
-
-      const interactionTypeLabel = computed(
-        () => QUESTION_TYPE_LABELS[currentQuestionType.value]?.() ?? unknownTypeLabel$(),
-      );
+      const interactionTypeLabel = computed(() => {
+        const type = currentQuestionType.value;
+        if (!type) return unknownTypeLabel$();
+        const QUESTION_TYPE_LABELS = {
+          [QuestionType.SINGLE_SELECT]: qtiEditorStrings.singleSelectLabel$,
+          [QuestionType.MULTI_SELECT]: qtiEditorStrings.multiSelectLabel$,
+          [QuestionType.NUMERIC]: qtiEditorStrings.numericLabel$,
+          [QuestionType.TEXT_ENTRY]: qtiEditorStrings.textEntryLabel$,
+          [QuestionType.FREE_RESPONSE]: qtiEditorStrings.freeResponseLabel$,
+        };
+        return (QUESTION_TYPE_LABELS[type] ?? unknownTypeLabel$)();
+      });
 
       const questionNumberAndTypeLabel = computed(() =>
         questionNumberAndTypeLabel$({

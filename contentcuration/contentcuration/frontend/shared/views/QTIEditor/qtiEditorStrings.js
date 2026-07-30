@@ -29,11 +29,11 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Show answers',
     context: 'Checkbox label to toggle displaying answers/previews',
   },
-  singleChoiceLabel: {
+  singleSelectLabel: {
     message: 'Single Choice',
     context: 'Display name for a single-select question type',
   },
-  multipleChoiceLabel: {
+  multiSelectLabel: {
     message: 'Multiple Choice',
     context: 'Display name for a multiple-select question type',
   },
@@ -60,10 +60,6 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
   matchLabel: {
     message: 'Match',
     context: 'Display name for a match question type',
-  },
-  textEntryLabel: {
-    message: 'Text entry',
-    context: 'Display name for a text entry question type',
   },
   extendedTextLabel: {
     message: 'Extended text',
@@ -133,8 +129,81 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Answer cannot be blank',
     context: 'Validation error when an answer option is empty',
   },
+  errorEmptyAnswerContent: {
+    message: 'Cannot be empty',
+    context: 'Validation error when a text entry answer is empty',
+  },
   errorDuplicateChoiceContent: {
     message: 'Duplicate answer options are not allowed',
     context: 'Validation error when two or more answer options have identical content',
+  },
+  errorDuplicateAnswerContent: {
+    message: 'Duplicate answers are not allowed',
+    context: 'Validation error when two or more text/numeric answers have identical values',
+  },
+  numericLabel: {
+    message: 'Numeric',
+    context: 'Display name for a numeric text-entry question type',
+  },
+  numericDescription: {
+    message: 'Learners must enter a specific number or mathematical expression.',
+    context: 'Description for the numeric question type in the info modal',
+  },
+  textEntryLabel: {
+    message: 'Text entry',
+    context: 'Display name for a string text-entry question type with a required correct answer',
+  },
+  textEntryDescription: {
+    message: 'Learners must type a specific word or phrase. Exact matches can be required.',
+    context: 'Description for the text entry question type in the info modal',
+  },
+  freeResponseLabel: {
+    message: 'Free response',
+    context: 'Display name for a free-response text-entry question type',
+  },
+  freeResponseDescription: {
+    message: 'Learners can write an open-ended response. No correct answer is enforced.',
+    context: 'Description for the free response question type in the info modal',
+  },
+  acceptableAnswersLabel: {
+    message: 'Acceptable answers',
+    context: 'Section header above the list of correct numeric answer values',
+  },
+  acceptableAnswersDescription: {
+    message: 'Enter all acceptable numeric values',
+    context: 'Subtitle under the acceptable answers header for numeric questions',
+  },
+  acceptableAnswersDescriptionTextEntry: {
+    message: 'Enter all acceptable spellings or formats',
+    context: 'Subtitle under the acceptable answers header for text entry questions',
+  },
+  addAnswerBtn: {
+    message: 'Add acceptable answer',
+    context: 'Button that appends a new answer row',
+  },
+  deleteAnswerBtn: {
+    message: 'Delete answer {number}',
+    context: 'Accessible label for the delete icon button next to an answer row',
+  },
+  caseSensitiveLabel: {
+    message: 'Case-sensitive',
+    context:
+      'Checkbox label — when checked, the answer must match exact casing (e.g. "H2O" ≠ "h2o")',
+  },
+  answerValuePlaceholder: {
+    message: 'Enter a number',
+    context: 'Placeholder inside a numeric answer input field',
+  },
+  answerTextPlaceholder: {
+    message: 'Enter an accepted answer',
+    context: 'Placeholder inside a text-entry answer input field',
+  },
+  errorInvalidNumericValue: {
+    message: 'Must be a valid number (e.g. 12, 0.5, -3.14)',
+    context: 'Validation error shown when an answer value is not a valid number',
+  },
+  errorParsingQuestion: {
+    message: 'This question could not be loaded',
+    context: 'Shown in place of the interaction editor when the QTI XML fails to parse',
   },
 });

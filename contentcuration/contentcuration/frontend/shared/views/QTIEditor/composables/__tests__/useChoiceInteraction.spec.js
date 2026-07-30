@@ -30,14 +30,10 @@ function makeBlock(choices, questionType = QuestionType.SINGLE_SELECT) {
 }
 
 function setup(choices, questionType = QuestionType.SINGLE_SELECT) {
-  const qt = ref(questionType);
+  const questionTypeRef = ref(questionType);
   const block = makeBlock(choices, questionType);
-  return { qt, ...useChoiceInteraction(block, qt) };
+  return { questionTypeRef, ...useChoiceInteraction(block, questionTypeRef) };
 }
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
 
 describe('useChoiceInteraction', () => {
   describe('addChoice()', () => {
@@ -118,33 +114,33 @@ describe('useChoiceInteraction', () => {
 
   describe('toggleCorrectChoice()', () => {
     it('singleSelect: sets only the target as correct and clears others', () => {
-      const { state, toggleCorrectChoice, qt } = setup([
+      const { state, toggleCorrectChoice, questionTypeRef } = setup([
         makeAnswer({ id: 'a', correct: true }),
         makeAnswer({ id: 'b', correct: false }),
       ]);
-      qt.value = QuestionType.SINGLE_SELECT;
+      questionTypeRef.value = QuestionType.SINGLE_SELECT;
       toggleCorrectChoice('b');
       expect(state.value.choices.find(a => a.id === 'b').correct).toBe(true);
       expect(state.value.choices.find(a => a.id === 'a').correct).toBe(false);
     });
 
     it('multiSelect: toggles only the target, leaves others unchanged', () => {
-      const { state, toggleCorrectChoice, qt } = setup(
+      const { state, toggleCorrectChoice, questionTypeRef } = setup(
         [makeAnswer({ id: 'a', correct: true }), makeAnswer({ id: 'b', correct: false })],
         QuestionType.MULTI_SELECT,
       );
-      qt.value = QuestionType.MULTI_SELECT;
+      questionTypeRef.value = QuestionType.MULTI_SELECT;
       toggleCorrectChoice('b');
       expect(state.value.choices.find(a => a.id === 'b').correct).toBe(true);
       expect(state.value.choices.find(a => a.id === 'a').correct).toBe(true);
     });
 
     it('multiSelect: toggles correct off when already correct', () => {
-      const { state, toggleCorrectChoice, qt } = setup(
+      const { state, toggleCorrectChoice, questionTypeRef } = setup(
         [makeAnswer({ id: 'a', correct: true }), makeAnswer({ id: 'b', correct: true })],
         QuestionType.MULTI_SELECT,
       );
-      qt.value = QuestionType.MULTI_SELECT;
+      questionTypeRef.value = QuestionType.MULTI_SELECT;
       toggleCorrectChoice('a');
       expect(state.value.choices.find(a => a.id === 'a').correct).toBe(false);
       expect(state.value.choices.find(a => a.id === 'b').correct).toBe(true);

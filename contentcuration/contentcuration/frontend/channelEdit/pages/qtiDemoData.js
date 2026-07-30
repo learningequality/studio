@@ -78,10 +78,102 @@ export const MULTI_CHOICE_ITEM_XML = `<?xml version="1.0" encoding="UTF-8"?>
 </qti-assessment-item>`;
 
 /**
+ * Demo item 3: numeric text-entry — student types an acceptable number.
+ */
+export const NUMERIC_ITEM_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  identifier="item-numeric"
+  title="Speed of light"
+  adaptive="false"
+  time-dependent="false"
+  xml:lang="en"
+>
+  <qti-response-declaration
+    identifier="RESPONSE"
+    cardinality="multiple"
+    base-type="float"
+  >
+    <qti-correct-response>
+      <qti-value>299792458</qti-value>
+      <qti-value>3e8</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+
+  <qti-item-body>
+    <div>
+      <div><p>What is the speed of light in m/s? (enter one of the accepted values)</p></div>
+      <p><qti-text-entry-interaction response-identifier="RESPONSE"/></p>
+    </div>
+  </qti-item-body>
+</qti-assessment-item>`;
+
+/**
+ * Demo item 4: textEntry — student types a string answer (case-sensitive option shown).
+ */
+export const TEXT_ENTRY_ITEM_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  identifier="item-text-entry"
+  title="Chemical symbol for water"
+  adaptive="false"
+  time-dependent="false"
+  xml:lang="en"
+>
+  <qti-response-declaration
+    identifier="RESPONSE"
+    cardinality="single"
+    base-type="string"
+  >
+    <qti-correct-response>
+      <qti-value case-sensitive="true">H2O</qti-value>
+      <qti-value>h2o</qti-value>
+      <qti-value>H2o</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+
+  <qti-item-body>
+    <div>
+      <div><p>What is the chemical symbol for water?</p></div>
+      <p><qti-text-entry-interaction response-identifier="RESPONSE" expected-length="10"/></p>
+    </div>
+  </qti-item-body>
+</qti-assessment-item>`;
+
+/**
+ * Demo item 5: freeResponse — open-ended, no correct answer.
+ */
+export const FREE_RESPONSE_ITEM_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  identifier="item-free-response"
+  title="Describe photosynthesis"
+  adaptive="false"
+  time-dependent="false"
+  xml:lang="en"
+>
+  <qti-response-declaration
+    identifier="RESPONSE"
+    cardinality="single"
+    base-type="string"
+  />
+
+  <qti-item-body>
+    <div>
+      <div><p>Describe the process of photosynthesis in your own words.</p></div>
+      <p><qti-text-entry-interaction response-identifier="RESPONSE" expected-length="50"/></p>
+    </div>
+  </qti-item-body>
+</qti-assessment-item>`;
+
+/**
  * Hardcoded items covering different states:
- *  - item-1: has raw_data (real QTI XML) → exercises the full load path
- *  - item-2: no raw_data → shows placeholder (blank new item state)
- *  - item-3: no raw_data → shows placeholder
+ *  - item-1: single-select choice interaction
+ *  - item-2: multi-select choice interaction
+ *  - item-numeric: numeric text-entry
+ *  - item-text-entry: string text-entry with case-sensitive answers
+ *  - item-free-response: free-response text-entry (no correct answer)
+ *  - item-blank: no raw_data → shows placeholder (blank new item state)
  */
 export const INITIAL_ASSESSMENTS = [
   {
@@ -95,7 +187,22 @@ export const INITIAL_ASSESSMENTS = [
     raw_data: MULTI_CHOICE_ITEM_XML,
   },
   {
-    assessment_id: 'demo-item-3',
+    assessment_id: 'demo-item-numeric',
+    type: AssessmentItemTypes.QTI,
+    raw_data: NUMERIC_ITEM_XML,
+  },
+  {
+    assessment_id: 'demo-item-text-entry',
+    type: AssessmentItemTypes.QTI,
+    raw_data: TEXT_ENTRY_ITEM_XML,
+  },
+  {
+    assessment_id: 'demo-item-free-response',
+    type: AssessmentItemTypes.QTI,
+    raw_data: FREE_RESPONSE_ITEM_XML,
+  },
+  {
+    assessment_id: 'demo-item-blank',
     type: AssessmentItemTypes.QTI,
   },
 ];

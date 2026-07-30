@@ -1,23 +1,21 @@
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref } from 'vue';
 import { parseXML } from '../serialization/parseItem';
 import { descriptors, registry, DEFAULT_INTERACTION } from '../interactions/index';
+import { qtiEditorStrings } from '../qtiEditorStrings';
+
+const { errorParsingQuestion$ } = qtiEditorStrings;
 
 /**
- * Composable that manages the question type and descriptor for a single
- * interaction block.
+ * Composable that resolves the interaction descriptor and question type for a
+ * single interaction block.
  *
  * @param {import('vue').Ref<object>} interactionRef
  *   Ref to the interaction block { bodyXml, responseDeclarations }.
  */
 export default function useInteractionDescriptor(interactionRef) {
-  /** Writable question type — set from XML on mount, then driven by UI selections. */
-  const questionType = ref(null);
-  /** Any parse error message from the initial XML parse; null when clean. */
-  const parseError = ref(null);
-
   /**
-   * Parses bodyXml and returns { descriptor, questionType } without touching
-   * any reactive state — pure helper used only on mount.
+   * Parses bodyXml and returns the matching descriptor, resolved
+   * question type, and any parse error without touching reactive state.
    */
   function inferFromXml(xml, declarations) {
     if (!xml) {
@@ -33,29 +31,35 @@ export default function useInteractionDescriptor(interactionRef) {
         error: null,
       };
     } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('[QTI] Failed to parse interaction XML:', e.message);
       return {
         descriptor: registry[DEFAULT_INTERACTION],
         questionType: null,
-        error: e.message,
+        error: errorParsingQuestion$(),
       };
     }
   }
 
-  /** Parse XML once when the host component mounts to set the initial state. */
-  onMounted(() => {
-    const inferred = inferFromXml(
-      interactionRef.value?.bodyXml,
-      interactionRef.value?.responseDeclarations,
-    );
-    questionType.value = inferred.questionType;
-    parseError.value = inferred.error;
-  });
+  /**
+   * Parse the initial XML synchronously during component setup.
+   *
+   * This ensures `questionType` is immediately available for downstream components
+   * on first render, avoiding prop validation warnings that would occur if
+   * initialization was deferred to a lifecycle hook.
+   */
+  const initial = inferFromXml(
+    interactionRef.value?.bodyXml,
+    interactionRef.value?.responseDeclarations,
+  );
+
+  /** Writable ref driven by UI selections after initial parse. */
+  const questionType = ref(initial.questionType);
+  const parseError = ref(initial.error);
 
   /**
-   * Descriptor is derived from the current questionType ref.
-   * Uses each descriptor's `questionTypes` array so the lookup stays accurate
-   * when the user changes the question type via the selector.
-   * Falls back to the default descriptor when no match is found.
+   * Derived from questionType so the descriptor updates when the user switches
+   * question types via the selector. Falls back to the default when no match.
    */
   const descriptor = computed(
     () =>

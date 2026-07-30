@@ -2,10 +2,7 @@
 import { parseXML, parseItem } from '../parseItem';
 import { VALID_CHOICE_ITEM_DOCUMENT, TWO_INTERACTIONS_DOCUMENT } from '../../utils/testingFixtures';
 
-// ---------------------------------------------------------------------------
 // Fixtures
-// ---------------------------------------------------------------------------
-
 const ITEM_NO_INTERACTIONS = `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item
   xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
@@ -18,10 +15,7 @@ const ITEM_NO_INTERACTIONS = `<?xml version="1.0" encoding="UTF-8"?>
   <qti-item-body></qti-item-body>
 </qti-assessment-item>`;
 
-// ---------------------------------------------------------------------------
 // parseXML
-// ---------------------------------------------------------------------------
-
 describe('parseXML', () => {
   it('parses valid XML into a Document', () => {
     const doc = parseXML(VALID_CHOICE_ITEM_DOCUMENT);
@@ -61,10 +55,7 @@ describe('parseXML', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
 // parseItem — meta extraction
-// ---------------------------------------------------------------------------
-
 describe('parseItem — meta', () => {
   it('returns an object with the top-level item attributes', () => {
     const model = parseItem(VALID_CHOICE_ITEM_DOCUMENT);
@@ -83,10 +74,7 @@ describe('parseItem — meta', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
 // parseItem — interaction blocks
-// ---------------------------------------------------------------------------
-
 describe('parseItem — interaction blocks', () => {
   it('extracts interactions and their corresponding response declarations', () => {
     const model = parseItem(VALID_CHOICE_ITEM_DOCUMENT);
@@ -109,10 +97,7 @@ describe('parseItem — interaction blocks', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
 // parseItem — response declaration matching
-// ---------------------------------------------------------------------------
-
 describe('parseItem — response declaration matching', () => {
   it('matches each interaction to its own response declaration', () => {
     const model = parseItem(TWO_INTERACTIONS_DOCUMENT);

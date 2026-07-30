@@ -1,4 +1,4 @@
-import { QTI_INTERACTION_TAGS } from '../constants';
+import { QTI_INTERACTION_TAGS, INLINE_INTERACTION_TAGS } from '../constants';
 
 const serializer = new XMLSerializer();
 const parser = new DOMParser();
@@ -14,7 +14,12 @@ const parser = new DOMParser();
  *   contains a parsererror. HTML parsing never throws.
  */
 export function parseXML(xmlString, mimeType = 'text/xml') {
-  const doc = parser.parseFromString(xmlString, mimeType);
+  let input = xmlString;
+  if (mimeType === 'text/xml') {
+    input = xmlString.replace(/ xmlns="[^"]*"/, '');
+  }
+
+  const doc = parser.parseFromString(input, mimeType);
 
   // DOMParser never throws — it signals failure via a <parsererror> node. This
   // only applies to XML: the HTML parser recovers silently and never emits one,
@@ -50,6 +55,10 @@ export function getPromptHTML(interactionEl) {
  * A response declaration belongs to an interaction when the declaration's
  * `identifier` matches the interaction's `response-identifier` attribute.
  *
+ * For descriptors with `placement: 'inline'`, `bodyXml` is the serialized
+ * `<qti-item-body>` rather than the interaction element alone, so the
+ * interaction's parse() function can recover prompt content from body siblings.
+ *
  * @param {string} rawData - Raw QTI XML string (the full assessment item XML)
  * @returns {{
  *   identifier: string,
@@ -84,8 +93,10 @@ export function parseItem(rawData) {
         .filter(d => d.getAttribute('identifier') === responseId)
         .map(d => serializer.serializeToString(d));
 
+      const isInline = INLINE_INTERACTION_TAGS.has(el.tagName.toLowerCase());
+
       interactions.push({
-        bodyXml: serializer.serializeToString(el),
+        bodyXml: isInline ? serializer.serializeToString(body) : serializer.serializeToString(el),
         responseDeclarations,
       });
     }
