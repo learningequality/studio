@@ -510,7 +510,9 @@ describe('buildTextEntryInteractionXML', () => {
         answers: [
           { id: 'a1', value: 'Paris', caseSensitive: false },
           { id: 'a2', value: 'Madrid', caseSensitive: true },
-          { id: 'a3', value: '  Rome  ', caseSensitive: false },
+          // Padded and case-sensitive: false would also be the no-match fallback, so
+          // only a case-sensitive answer proves the padded value found its map entry.
+          { id: 'a3', value: '  Rome  ', caseSensitive: true },
         ],
         expectedLength: 0,
       };
@@ -522,7 +524,7 @@ describe('buildTextEntryInteractionXML', () => {
       const parsed = parseTextEntryInteraction(bodyXml, responseDeclarations);
 
       const byValue = Object.fromEntries(parsed.answers.map(a => [a.value, a.caseSensitive]));
-      expect(byValue).toEqual({ Paris: false, Madrid: true, Rome: false });
+      expect(byValue).toEqual({ Paris: false, Madrid: true, Rome: true });
     });
   });
 });
