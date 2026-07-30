@@ -28,6 +28,48 @@ const MULTI_NUMERIC_DECLARATION = `
   </qti-response-declaration>
 `.trim();
 
+const TEXT_ENTRY_DECLARATION_WITH_MAPPING = `
+  <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="string">
+    <qti-correct-response>
+      <qti-value>Paris</qti-value>
+      <qti-value>Madrid</qti-value>
+    </qti-correct-response>
+    <qti-mapping default-value="0">
+      <qti-map-entry map-key="Paris" mapped-value="1" case-sensitive="false"/>
+      <qti-map-entry map-key="Madrid" mapped-value="1"/>
+      <qti-map-entry map-key="Lisbon" mapped-value="1" case-sensitive="false"/>
+    </qti-mapping>
+  </qti-response-declaration>
+`.trim();
+
+const TEXT_ENTRY_DECLARATION_WITHOUT_MAPPING = `
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string">
+    <qti-correct-response>
+      <qti-value>Paris</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+`.trim();
+
+const BLANK_VALUE_DECLARATION = `
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string">
+    <qti-correct-response>
+      <qti-value></qti-value>
+    </qti-correct-response>
+    <qti-mapping default-value="0">
+      <qti-map-entry map-key="" mapped-value="1" case-sensitive="false"/>
+    </qti-mapping>
+  </qti-response-declaration>
+`.trim();
+
+/** `identifier` is required by the QTI schema — QTIDeclaration refuses to model this. */
+const DECLARATION_WITHOUT_IDENTIFIER = `
+  <qti-response-declaration cardinality="single" base-type="string">
+    <qti-correct-response>
+      <qti-value>Paris</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+`.trim();
+
 /** Build a minimal <qti-item-body> with the given prompt div and the interaction. */
 function makeBodyXml({ promptHtml = '', expectedLength = null } = {}) {
   const interactionAttrs = `response-identifier="RESPONSE"${expectedLength ? ` expected-length="${expectedLength}"` : ''}`;
@@ -84,6 +126,49 @@ describe('_extractAnswers', () => {
   it('assigns unique ids to each answer', () => {
     const result = _extractAnswers([MULTI_NUMERIC_DECLARATION]);
     expect(result[0].id).not.toBe(result[1].id);
+  });
+
+  describe('mapping-derived case sensitivity', () => {
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('reads caseSensitive from qti-map-entry by map-key', () => {
+      const result = _extractAnswers([TEXT_ENTRY_DECLARATION_WITH_MAPPING]);
+      const byValue = Object.fromEntries(result.map(a => [a.value, a.caseSensitive]));
+      expect(byValue).toEqual({ Paris: false, Madrid: true });
+    });
+
+    it('ignores a map entry with no matching qti-value', () => {
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const result = _extractAnswers([TEXT_ENTRY_DECLARATION_WITH_MAPPING]);
+      expect(result).toHaveLength(2);
+      expect(errorSpy).not.toHaveBeenCalled();
+    });
+
+    it('falls back to caseSensitive true when there is no mapping', () => {
+      const result = _extractAnswers([TEXT_ENTRY_DECLARATION_WITHOUT_MAPPING]);
+      expect(result).toHaveLength(1);
+      expect(result[0].caseSensitive).toBe(true);
+    });
+
+    it('reports numeric answers as never case-sensitive', () => {
+      const result = _extractAnswers([SINGLE_NUMERIC_DECLARATION]);
+      expect(result[0].caseSensitive).toBe(false);
+    });
+
+    it('matches a map entry for a blank answer value', () => {
+      // An empty map-key coerces to null (QTI NULL semantics) while the answer value
+      // is the empty string, so the two must still be matched up.
+      const result = _extractAnswers([BLANK_VALUE_DECLARATION]);
+      expect(result).toEqual([expect.objectContaining({ value: '', caseSensitive: false })]);
+    });
+
+    it('keeps the answers when the declaration is too malformed to model', () => {
+      jest.spyOn(console, 'warn').mockImplementation(() => {});
+      const result = _extractAnswers([DECLARATION_WITHOUT_IDENTIFIER]);
+      expect(result).toEqual([expect.objectContaining({ value: 'Paris', caseSensitive: true })]);
+    });
   });
 });
 
@@ -147,6 +232,7 @@ describe('buildTextEntryInteractionXML', () => {
   const FREE_SCHEMA = { baseType: BaseType.STRING, cardinality: Cardinality.SINGLE };
   const NUMERIC_SINGLE_SCHEMA = { baseType: BaseType.FLOAT, cardinality: Cardinality.SINGLE };
   const NUMERIC_MULTI_SCHEMA = { baseType: BaseType.FLOAT, cardinality: Cardinality.MULTIPLE };
+  const TEXT_ENTRY_MULTI_SCHEMA = { baseType: BaseType.STRING, cardinality: Cardinality.MULTIPLE };
 
   describe('bodyXml', () => {
     it('produces a well-formed <qti-item-body>', () => {
@@ -273,6 +359,98 @@ describe('buildTextEntryInteractionXML', () => {
     });
   });
 
+  describe('mapping', () => {
+    const CASE_ANSWERS = [
+      { id: 'a1', value: 'Paris', caseSensitive: false },
+      { id: 'a2', value: 'Madrid', caseSensitive: true },
+    ];
+
+    /** Build the declaration for the given state and return it as both string and DOM. */
+    function buildDeclaration(state, questionType, schema) {
+      const { responseDeclarations } = buildTextEntryInteractionXML(state, questionType, schema);
+      const [decl] = responseDeclarations;
+      return { decl, doc: new DOMParser().parseFromString(decl, 'text/xml') };
+    }
+
+    /** The happy-path build, shared by the tests that assert on CASE_ANSWERS. */
+    function buildCaseDeclaration() {
+      return buildDeclaration(
+        { prompt: '', answers: CASE_ANSWERS, expectedLength: 0 },
+        QuestionType.TEXT_ENTRY,
+        TEXT_ENTRY_MULTI_SCHEMA,
+      );
+    }
+
+    it('emits one qti-map-entry per string answer', () => {
+      const { doc } = buildCaseDeclaration();
+      expect(doc.querySelectorAll('qti-mapping')).toHaveLength(1);
+
+      const entries = [...doc.querySelectorAll('qti-map-entry')];
+      expect(entries.map(e => e.getAttribute('map-key'))).toEqual(['Paris', 'Madrid']);
+      expect(entries.map(e => e.getAttribute('mapped-value'))).toEqual(['1', '1']);
+    });
+
+    it('writes case-sensitive="false" only for case-insensitive answers', () => {
+      const entries = [...buildCaseDeclaration().doc.querySelectorAll('qti-map-entry')];
+      // getAttribute is null when the attribute is absent — Madrid is case-sensitive,
+      // which is the spec default and so is left unwritten.
+      expect(entries.map(e => e.getAttribute('case-sensitive'))).toEqual(['false', null]);
+    });
+
+    it('emits no mapping for numeric answers', () => {
+      const { doc } = buildDeclaration(
+        {
+          prompt: '',
+          answers: [
+            { id: 'a1', value: '0.5' },
+            { id: 'a2', value: '1.5' },
+          ],
+          expectedLength: 0,
+        },
+        QuestionType.NUMERIC,
+        NUMERIC_MULTI_SCHEMA,
+      );
+      expect(doc.querySelector('qti-mapping')).toBeNull();
+    });
+
+    it('emits no mapping for free response', () => {
+      const { doc } = buildDeclaration(
+        { prompt: '', answers: CASE_ANSWERS, expectedLength: 0 },
+        QuestionType.FREE_RESPONSE,
+        FREE_SCHEMA,
+      );
+      expect(doc.querySelector('qti-mapping')).toBeNull();
+    });
+
+    it('emits no mapping when there are zero answers', () => {
+      const { doc } = buildDeclaration(
+        { prompt: '', answers: [], expectedLength: 0 },
+        QuestionType.TEXT_ENTRY,
+        TEXT_ENTRY_MULTI_SCHEMA,
+      );
+      expect(doc.querySelector('qti-mapping')).toBeNull();
+    });
+
+    it('emits qti-mapping after qti-correct-response per the XSD sequence', () => {
+      const { decl } = buildCaseDeclaration();
+      expect(decl.indexOf('<qti-correct-response')).toBeLessThan(decl.indexOf('<qti-mapping'));
+    });
+
+    it('trims map-key to match the value the parser reads back', () => {
+      const { doc } = buildDeclaration(
+        {
+          prompt: '',
+          answers: [{ id: 'a1', value: '  Paris  ', caseSensitive: false }],
+          expectedLength: 0,
+        },
+        QuestionType.TEXT_ENTRY,
+        TEXT_ENTRY_MULTI_SCHEMA,
+      );
+      const mapKey = doc.querySelector('qti-map-entry').getAttribute('map-key');
+      expect(mapKey).toBe('Paris');
+    });
+  });
+
   describe('round-trip', () => {
     it('numeric: parse → buildXML → parse yields equivalent state', () => {
       const original = {
@@ -327,6 +505,27 @@ describe('buildTextEntryInteractionXML', () => {
       );
       const parsed = parseTextEntryInteraction(bodyXml, responseDeclarations);
       expect(parsed.answers.map(a => a.value)).toEqual(['0.5', '1.5']);
+    });
+
+    it('textEntry: round-trip preserves per-answer caseSensitive', () => {
+      const original = {
+        prompt: '<p>Name a capital city.</p>',
+        answers: [
+          { id: 'a1', value: 'Paris', caseSensitive: false },
+          { id: 'a2', value: 'Madrid', caseSensitive: true },
+          { id: 'a3', value: '  Rome  ', caseSensitive: false },
+        ],
+        expectedLength: 0,
+      };
+      const { bodyXml, responseDeclarations } = buildTextEntryInteractionXML(
+        original,
+        QuestionType.TEXT_ENTRY,
+        TEXT_ENTRY_MULTI_SCHEMA,
+      );
+      const parsed = parseTextEntryInteraction(bodyXml, responseDeclarations);
+
+      const byValue = Object.fromEntries(parsed.answers.map(a => [a.value, a.caseSensitive]));
+      expect(byValue).toEqual({ Paris: false, Madrid: true, Rome: false });
     });
   });
 });

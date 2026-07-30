@@ -2,6 +2,7 @@ import { QTIDeclaration } from '../../serialization/qti/QTIDeclaration';
 import { parseXML } from '../../serialization/parseItem';
 import { buildXmlNode } from '../../serialization/assembleItem';
 import CorrectResponse from '../../serialization/qti/declarations/correctResponse';
+import Mapping from '../../serialization/qti/declarations/mapping';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
 import { BaseType, QuestionType, RESPONSE_IDENTIFIER } from '../../constants';
 
@@ -70,12 +71,48 @@ function extractPromptHTML(bodyEl) {
 }
 
 /**
+ * Build a value → caseSensitive lookup from a declaration's <qti-mapping>.
+ *
+ * Entries whose map-key matches no correct-response value are never looked up, and
+ * answers with no matching entry fall back to the spec default at the call site —
+ * neither case is an error.
+ *
+ * @param {Element} declEl - The <qti-response-declaration> element
+ * @returns {Map<string, boolean>}
+ */
+function caseSensitivityByValue(declEl) {
+  let declaration;
+  try {
+    declaration = QTIDeclaration.fromXML(declEl);
+  } catch (err) {
+    // QTIDeclaration validates the declaration more strictly than answer extraction
+    // needs — a missing identifier, say, makes it unmodellable. The correct-response
+    // values are still readable, so degrade to the spec default for case sensitivity
+    // rather than discarding the author's answers.
+    // eslint-disable-next-line no-console
+    console.warn('[QTI Editor] Could not read <qti-mapping> case sensitivity:', err);
+    return new Map();
+  }
+
+  const { mapping } = declaration;
+  return new Map(
+    (mapping?.entries ?? []).map(entry => [
+      // Key on the XML string form: map-key is coerced on parse (an empty key becomes
+      // null under QTI NULL semantics) while answer values stay raw <qti-value> text.
+      declaration.formatValue(entry.mapKey),
+      entry.caseSensitive,
+    ]),
+  );
+}
+
+/**
  * Extract correct answer values from the response declaration string.
  * Returns an array of `{ id, value, caseSensitive }` objects, or [] when no
  * correct response is declared (i.e. free-response items).
  *
  * Supports both float (numeric) and string (textEntry) base-types.
- * The `caseSensitive` field is only meaningful for string base-type answers.
+ * For string base-types `caseSensitive` comes from the declaration's
+ * <qti-mapping>, matched by `map-key`; it is always false for float.
  *
  * @param {string[]} responseDeclarations
  * @returns {{ id: string, value: string, caseSensitive: boolean }[]}
@@ -109,11 +146,17 @@ export function _extractAnswers(responseDeclarations) {
     const valueEls = [...correctResponseEl.querySelectorAll('qti-value')];
     if (valueEls.length === 0) return [];
 
-    return valueEls.map(el => ({
-      id: generateRandomSlug('answer'),
-      value: el.textContent.trim(),
-      caseSensitive: isString && el.getAttribute('case-sensitive') === 'true',
-    }));
+    const caseSensitivity = isString ? caseSensitivityByValue(declEl) : null;
+
+    return valueEls.map(el => {
+      const value = el.textContent.trim();
+      return {
+        id: generateRandomSlug('answer'),
+        value,
+        // Per spec, an answer with no matching qti-map-entry is case-sensitive.
+        caseSensitive: isString ? (caseSensitivity.get(value) ?? true) : false,
+      };
+    });
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error('[QTI Editor] Failed to parse text-entry response declaration:', err);
@@ -209,10 +252,31 @@ export function buildTextEntryInteractionXML(state, questionType, declarationSch
     tag: 'qti-response-declaration',
   });
 
-  if (questionType !== QuestionType.FREE_RESPONSE) {
-    if (answers.length !== 0) {
-      new CorrectResponse(
-        answers.map(a => a.value),
+  // CorrectResponse must be constructed before Mapping: QTIDeclaration.getXML emits its
+  // children in capability insertion order, and the QTI schema requires
+  // <qti-correct-response> to precede <qti-mapping>.
+  if (questionType !== QuestionType.FREE_RESPONSE && answers.length !== 0) {
+    new CorrectResponse(
+      answers.map(a => a.value),
+      declaration,
+    );
+
+    // <qti-mapping> is the spec-defined home for per-answer case sensitivity, which
+    // is a string-only concept. mapped-value is required by the schema; the authoring
+    // editor does not score responses, so every accepted answer maps to the same value.
+    if (baseType === BaseType.STRING) {
+      new Mapping(
+        {
+          defaultValue: 0,
+          lowerBound: null,
+          upperBound: null,
+          entries: answers.map(a => ({
+            // Trimmed to match how _extractAnswers reads <qti-value> text back.
+            mapKey: a.value.trim(),
+            mappedValue: 1,
+            caseSensitive: Boolean(a.caseSensitive),
+          })),
+        },
         declaration,
       );
     }
