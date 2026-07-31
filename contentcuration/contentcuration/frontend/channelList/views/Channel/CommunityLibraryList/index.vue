@@ -97,7 +97,10 @@
               <h2>{{ filterLabel$() }}</h2>
             </template>
             <template #default>
-              <CommunityLibraryFilters :disabled="loading" />
+              <CommunityLibraryFilters
+                :disabled="loading"
+                :style="{ padding: '24px 32px 16px' }"
+              />
             </template>
           </SidePanelModal>
         </template>
