@@ -15,6 +15,7 @@
       :interaction="interaction"
       :mode="mode"
       :showAnswers="showAnswers"
+      :teleportTarget="teleportTarget"
       @update:interaction="interaction => $emit('update:interaction', interaction)"
     />
   </div>
@@ -65,6 +66,10 @@
       showAnswers: {
         type: Boolean,
         default: false,
+      },
+      teleportTarget: {
+        type: String,
+        default: '',
       },
     },
 

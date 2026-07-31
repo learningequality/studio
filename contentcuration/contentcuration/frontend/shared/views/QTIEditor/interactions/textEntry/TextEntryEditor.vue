@@ -1,13 +1,14 @@
 <template>
 
   <div class="text-entry-editor">
-    <!-- Question settings header -->
-    <QuestionSettingsHeader
-      :questionType="questionType"
-      :questionTypeOptions="questionTypeOptions"
-      :mode="mode"
-      @update:questionType="onQuestionTypeChange"
-    />
+    <Teleport :to="teleportTarget">
+      <QuestionSettingsHeader
+        :questionType="questionType"
+        :questionTypeOptions="questionTypeOptions"
+        :mode="mode"
+        @update:questionType="onQuestionTypeChange"
+      />
+    </Teleport>
 
     <!-- Prompt -->
     <div class="text-entry-editor__section">
@@ -432,6 +433,10 @@
       questionType: {
         type: String,
         default: null,
+      },
+      teleportTarget: {
+        type: String,
+        default: '#qti-question-settings',
       },
       mode: {
         type: String,

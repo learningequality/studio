@@ -122,6 +122,7 @@ import ActionLink from 'shared/views/ActionLink';
 import Icon from 'shared/views/Icon';
 import BaseMenu from 'shared/views/BaseMenu.vue';
 import Divider from 'shared/views/Divider';
+import Teleport from 'shared/views/QTIEditor/components/Teleport.vue';
 import { initializeDB, resetDB } from 'shared/data';
 import { Session, injectVuexStore } from 'shared/data/resources';
 
@@ -259,6 +260,7 @@ Vue.component('ActionLink', ActionLink);
 Vue.component('BaseMenu', BaseMenu);
 Vue.component('Divider', Divider);
 Vue.component('Icon', Icon);
+Vue.component('Teleport', Teleport);
 
 function initiateServiceWorker() {
   // Second conditional must be removed if you are doing dev work on the service

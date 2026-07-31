@@ -1,23 +1,24 @@
 <template>
 
   <div class="choice-editor">
-    <!-- Question settings header -->
-    <QuestionSettingsHeader
-      :questionType="questionType"
-      :questionTypeOptions="questionTypeOptions"
-      :mode="mode"
-      @update:questionType="onQuestionTypeChange"
-    >
-      <template #answerSettings>
-        <AnswerSettings
-          :settings="answerSettingsConfig"
-          :shuffle="state.shuffle"
-          :showAnswerCount="showAnswerCount"
-          @update:shuffle="setShuffle"
-          @update:showAnswerCount="setShowAnswerCount"
-        />
-      </template>
-    </QuestionSettingsHeader>
+    <Teleport :to="teleportTarget">
+      <QuestionSettingsHeader
+        :questionType="questionType"
+        :questionTypeOptions="questionTypeOptions"
+        :mode="mode"
+        @update:questionType="onQuestionTypeChange"
+      >
+        <template #answerSettings>
+          <AnswerSettings
+            :settings="answerSettingsConfig"
+            :shuffle="state.shuffle"
+            :showAnswerCount="showAnswerCount"
+            @update:shuffle="setShuffle"
+            @update:showAnswerCount="setShowAnswerCount"
+          />
+        </template>
+      </QuestionSettingsHeader>
+    </Teleport>
 
     <!-- Prompt -->
     <div class="choice-editor__section">
@@ -81,7 +82,7 @@
         {{ answersDescription }}
       </div>
 
-      <div class="choices-list">
+      <KRadioButtonGroup class="choices-list">
         <div
           v-for="(choice, index) in state.choices"
           :key="choice.id"
@@ -169,7 +170,6 @@
                 </div>
               </div>
             </div>
-            <!-- Per-choice validation messages sit INSIDE the bordered card -->
             <ValidationMessage
               v-if="emptyChoiceIds.has(choice.id)"
               class="choice-validation-message"
@@ -184,7 +184,7 @@
             </ValidationMessage>
           </div>
         </div>
-      </div>
+      </KRadioButtonGroup>
 
       <!-- Add choice button (edit only) -->
       <AddListItemButton
@@ -204,6 +204,7 @@
   import { computed, ref, watch, getCurrentInstance } from 'vue';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { themePalette, themeTokens } from 'kolibri-design-system/lib/styles/theme';
+  import KRadioButtonGroup from 'kolibri-design-system/lib/KRadioButtonGroup';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { QuestionType, ValidationError } from '../../constants';
   import { useChoiceInteraction } from '../../composables/useChoiceInteraction';
@@ -225,6 +226,7 @@
       AddListItemButton,
       QuestionSettingsHeader,
       AnswerSettings,
+      KRadioButtonGroup,
     },
 
     setup(props, { emit }) {
@@ -574,6 +576,10 @@
       showAnswers: {
         type: Boolean,
         default: false,
+      },
+      teleportTarget: {
+        type: String,
+        default: '#qti-question-settings',
       },
     },
 

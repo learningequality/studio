@@ -26,12 +26,15 @@
       </div>
     </div>
 
+    <div :id="`qti-question-settings-${index}`"></div>
+
     <div class="question-card-body">
       <InteractionSection
         v-if="interactions.length > 0"
         :interaction="interactions[0]"
         :mode="mode"
         :showAnswers="showAnswers"
+        :teleportTarget="`#qti-question-settings-${index}`"
         @update:questionType="type => (currentQuestionType = type)"
         @update:interaction="onUpdateInteraction"
       />
