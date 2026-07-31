@@ -71,34 +71,6 @@ function extractPromptHTML(bodyEl) {
 }
 
 /**
- * Build a value → caseSensitive lookup from a declaration's <qti-mapping>.
- *
- * @param {Element} declEl - The <qti-response-declaration> element
- * @returns {Map<string, boolean>}
- */
-function caseSensitivityByValue(declEl) {
-  let declaration;
-  try {
-    declaration = QTIDeclaration.fromXML(declEl);
-  } catch (err) {
-    // QTIDeclaration validates more strictly than answer extraction needs (a missing
-    // identifier makes it unmodellable), so degrade rather than drop the answers.
-    // eslint-disable-next-line no-console
-    console.warn('[QTI Editor] Could not read <qti-mapping> case sensitivity:', err);
-    return new Map();
-  }
-
-  // Key on the XML string form: map-key is coerced on parse (empty → null under QTI
-  // NULL semantics) while answer values stay raw <qti-value> text.
-  return new Map(
-    (declaration.mapping?.entries ?? []).map(entry => [
-      declaration.formatValue(entry.mapKey),
-      entry.caseSensitive,
-    ]),
-  );
-}
-
-/**
  * Extract correct answer values from the response declaration string.
  * Returns an array of `{ id, value, caseSensitive }` objects, or [] when no
  * correct response is declared (i.e. free-response items).
@@ -115,40 +87,40 @@ export function _extractAnswers(responseDeclarations) {
   if (!declXml) return [];
 
   try {
-    const declEl = parseXML(declXml).documentElement;
-    const isFloat = declEl.getAttribute('base-type') === BaseType.FLOAT;
-    const isString = declEl.getAttribute('base-type') === BaseType.STRING;
+    const declaration = QTIDeclaration.fromXML(parseXML(declXml).documentElement);
+    const { baseType, correctResponse } = declaration;
 
-    if (!isFloat && !isString) {
+    if (baseType !== BaseType.FLOAT && baseType !== BaseType.STRING) {
       // eslint-disable-next-line no-console
-      console.error(
-        `[QTI Editor] Unsupported text-entry base-type: ${declEl.getAttribute('base-type')}`,
-      );
+      console.error(`[QTI Editor] Unsupported text-entry base-type: ${baseType}`);
       return [];
     }
 
-    const correctResponseEl = declEl.querySelector('qti-correct-response');
-    if (!correctResponseEl) {
-      if (isFloat) {
+    if (correctResponse === null) {
+      if (baseType === BaseType.FLOAT) {
         // eslint-disable-next-line no-console
         console.error('[QTI Editor] Missing <qti-correct-response> for numeric interaction');
       }
       return [];
     }
 
-    const valueEls = [...correctResponseEl.querySelectorAll('qti-value')];
-    if (valueEls.length === 0) return [];
+    // Case sensitivity is a string-only concept, so numeric answers never read the mapping.
+    const mapEntries = baseType === BaseType.STRING ? (declaration.mapping?.entries ?? []) : [];
+    // Key on the XML string form: both map-key and correct-response values are coerced
+    // on parse (empty → null under QTI NULL semantics), so formatting both back matches
+    // them on equal terms.
+    const caseSensitivity = new Map(
+      mapEntries.map(entry => [declaration.formatValue(entry.mapKey), entry.caseSensitive]),
+    );
 
-    const caseSensitivity = isString ? caseSensitivityByValue(declEl) : null;
-
-    return valueEls.map(el => {
-      const value = el.textContent.trim();
+    return correctResponse.map(value => {
+      const formatted = declaration.formatValue(value);
       return {
         id: generateRandomSlug('answer'),
-        value,
+        value: formatted,
         // An answer with no matching qti-map-entry — including every answer in an
         // item authored before mappings were written — takes the XSD default, false.
-        caseSensitive: caseSensitivity?.get(value) ?? false,
+        caseSensitive: caseSensitivity.get(formatted) ?? false,
       };
     });
   } catch (err) {

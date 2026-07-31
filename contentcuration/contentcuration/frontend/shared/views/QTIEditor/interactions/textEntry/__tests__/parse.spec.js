@@ -95,6 +95,10 @@ describe('_defaultState', () => {
 });
 
 describe('_extractAnswers', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it('returns [] when no declaration is provided', () => {
     expect(_extractAnswers([])).toEqual([]);
   });
@@ -128,11 +132,13 @@ describe('_extractAnswers', () => {
     expect(result[0].id).not.toBe(result[1].id);
   });
 
-  describe('mapping-derived case sensitivity', () => {
-    afterEach(() => {
-      jest.restoreAllMocks();
-    });
+  it('returns [] when the declaration is too malformed to model', () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    expect(_extractAnswers([DECLARATION_WITHOUT_IDENTIFIER])).toEqual([]);
+    expect(errorSpy).toHaveBeenCalled();
+  });
 
+  describe('mapping-derived case sensitivity', () => {
     it('reads caseSensitive by map-key, silently ignoring unmatched entries', () => {
       const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       const result = _extractAnswers([TEXT_ENTRY_DECLARATION_WITH_MAPPING]);
@@ -154,16 +160,11 @@ describe('_extractAnswers', () => {
     });
 
     it('matches a map entry for a blank answer value', () => {
-      // Empty map-key coerces to null (QTI NULL) while the value stays ''; the entry is
-      // case-sensitive="true" so a missed lookup can't slip through the false fallback.
+      // Both the empty map-key and the empty <qti-value> coerce to null (QTI NULL) and
+      // format back to ''; the entry is case-sensitive="true" so a missed lookup can't
+      // slip through the false fallback.
       const result = _extractAnswers([BLANK_VALUE_DECLARATION]);
       expect(result).toEqual([expect.objectContaining({ value: '', caseSensitive: true })]);
-    });
-
-    it('keeps the answers when the declaration is too malformed to model', () => {
-      jest.spyOn(console, 'warn').mockImplementation(() => {});
-      const result = _extractAnswers([DECLARATION_WITHOUT_IDENTIFIER]);
-      expect(result).toEqual([expect.objectContaining({ value: 'Paris', caseSensitive: false })]);
     });
   });
 });
