@@ -155,7 +155,7 @@ export function _extractAnswers(responseDeclarations) {
         value,
         // An answer with no matching qti-map-entry — including every answer in an
         // item authored before mappings were written — takes the XSD default, false.
-        caseSensitive: isString && (caseSensitivity.get(value) ?? false),
+        caseSensitive: caseSensitivity?.get(value) ?? false,
       };
     });
   } catch (err) {

@@ -432,20 +432,6 @@ describe('buildTextEntryInteractionXML', () => {
       const { decl } = buildCaseDeclaration();
       expect(decl.indexOf('<qti-correct-response')).toBeLessThan(decl.indexOf('<qti-mapping'));
     });
-
-    it('trims map-key to match the value the parser reads back', () => {
-      const { doc } = buildDeclaration(
-        {
-          prompt: '',
-          answers: [{ id: 'a1', value: '  Paris  ', caseSensitive: false }],
-          expectedLength: 0,
-        },
-        QuestionType.TEXT_ENTRY,
-        TEXT_ENTRY_MULTI_SCHEMA,
-      );
-      const mapKey = doc.querySelector('qti-map-entry').getAttribute('map-key');
-      expect(mapKey).toBe('Paris');
-    });
   });
 
   describe('round-trip', () => {
@@ -510,8 +496,9 @@ describe('buildTextEntryInteractionXML', () => {
         answers: [
           { id: 'a1', value: 'Paris', caseSensitive: false },
           { id: 'a2', value: 'Madrid', caseSensitive: true },
-          // Padded and case-sensitive: false would also be the no-match fallback, so
-          // only a case-sensitive answer proves the padded value found its map entry.
+          // Padded, so this answer only keeps its flag if map-key is written trimmed —
+          // the parser reads <qti-value> text trimmed. Case-sensitive because false is
+          // also the no-match fallback, which would hide a missed lookup.
           { id: 'a3', value: '  Rome  ', caseSensitive: true },
         ],
         expectedLength: 0,
