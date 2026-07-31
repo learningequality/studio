@@ -154,9 +154,8 @@ describe('_extractAnswers', () => {
     });
 
     it('matches a map entry for a blank answer value', () => {
-      // An empty map-key coerces to null (QTI NULL semantics) while the answer value
-      // is the empty string, so the two must still be matched up. The entry declares
-      // case-sensitive="true", which the no-match fallback would never produce.
+      // Empty map-key coerces to null (QTI NULL) while the value stays ''; the entry is
+      // case-sensitive="true" so a missed lookup can't slip through the false fallback.
       const result = _extractAnswers([BLANK_VALUE_DECLARATION]);
       expect(result).toEqual([expect.objectContaining({ value: '', caseSensitive: true })]);
     });
@@ -362,24 +361,21 @@ describe('buildTextEntryInteractionXML', () => {
       { id: 'a2', value: 'Madrid', caseSensitive: true },
     ];
 
+    const CASE_STATE = { prompt: '', answers: CASE_ANSWERS, expectedLength: 0 };
+
     /** Build the declaration for the given state and return it as both string and DOM. */
-    function buildDeclaration(state, questionType, schema) {
+    function buildDeclaration(
+      state,
+      questionType = QuestionType.TEXT_ENTRY,
+      schema = TEXT_ENTRY_MULTI_SCHEMA,
+    ) {
       const { responseDeclarations } = buildTextEntryInteractionXML(state, questionType, schema);
       const [decl] = responseDeclarations;
       return { decl, doc: new DOMParser().parseFromString(decl, 'text/xml') };
     }
 
-    /** The happy-path build, shared by the tests that assert on CASE_ANSWERS. */
-    function buildCaseDeclaration() {
-      return buildDeclaration(
-        { prompt: '', answers: CASE_ANSWERS, expectedLength: 0 },
-        QuestionType.TEXT_ENTRY,
-        TEXT_ENTRY_MULTI_SCHEMA,
-      );
-    }
-
     it('emits one qti-map-entry per string answer', () => {
-      const { doc } = buildCaseDeclaration();
+      const { doc } = buildDeclaration(CASE_STATE);
       expect(doc.querySelectorAll('qti-mapping')).toHaveLength(1);
 
       const entries = [...doc.querySelectorAll('qti-map-entry')];
@@ -388,9 +384,8 @@ describe('buildTextEntryInteractionXML', () => {
     });
 
     it('writes case-sensitive="true" only for case-sensitive answers', () => {
-      const entries = [...buildCaseDeclaration().doc.querySelectorAll('qti-map-entry')];
-      // getAttribute is null when the attribute is absent — Paris is case-insensitive,
-      // which is the XSD default for the attribute and so is left unwritten.
+      const entries = [...buildDeclaration(CASE_STATE).doc.querySelectorAll('qti-map-entry')];
+      // null = attribute absent; false is the XSD default and so is left unwritten.
       expect(entries.map(e => e.getAttribute('case-sensitive'))).toEqual([null, 'true']);
     });
 
@@ -411,25 +406,17 @@ describe('buildTextEntryInteractionXML', () => {
     });
 
     it('emits no mapping for free response', () => {
-      const { doc } = buildDeclaration(
-        { prompt: '', answers: CASE_ANSWERS, expectedLength: 0 },
-        QuestionType.FREE_RESPONSE,
-        FREE_SCHEMA,
-      );
+      const { doc } = buildDeclaration(CASE_STATE, QuestionType.FREE_RESPONSE, FREE_SCHEMA);
       expect(doc.querySelector('qti-mapping')).toBeNull();
     });
 
     it('emits no mapping when there are zero answers', () => {
-      const { doc } = buildDeclaration(
-        { prompt: '', answers: [], expectedLength: 0 },
-        QuestionType.TEXT_ENTRY,
-        TEXT_ENTRY_MULTI_SCHEMA,
-      );
+      const { doc } = buildDeclaration({ ...CASE_STATE, answers: [] });
       expect(doc.querySelector('qti-mapping')).toBeNull();
     });
 
     it('emits qti-mapping after qti-correct-response per the XSD sequence', () => {
-      const { decl } = buildCaseDeclaration();
+      const { decl } = buildDeclaration(CASE_STATE);
       expect(decl.indexOf('<qti-correct-response')).toBeLessThan(decl.indexOf('<qti-mapping'));
     });
   });
@@ -496,9 +483,8 @@ describe('buildTextEntryInteractionXML', () => {
         answers: [
           { id: 'a1', value: 'Paris', caseSensitive: false },
           { id: 'a2', value: 'Madrid', caseSensitive: true },
-          // Padded, so this answer only keeps its flag if map-key is written trimmed —
-          // the parser reads <qti-value> text trimmed. Case-sensitive because false is
-          // also the no-match fallback, which would hide a missed lookup.
+          // Padded: keeps its flag only if map-key is written trimmed. Case-sensitive
+          // because false is also the no-match fallback, which would hide a miss.
           { id: 'a3', value: '  Rome  ', caseSensitive: true },
         ],
         expectedLength: 0,

@@ -73,10 +73,6 @@ function extractPromptHTML(bodyEl) {
 /**
  * Build a value → caseSensitive lookup from a declaration's <qti-mapping>.
  *
- * Entries whose map-key matches no correct-response value are never looked up, and
- * answers with no matching entry fall back to the schema default at the call site —
- * neither case is an error.
- *
  * @param {Element} declEl - The <qti-response-declaration> element
  * @returns {Map<string, boolean>}
  */
@@ -85,20 +81,17 @@ function caseSensitivityByValue(declEl) {
   try {
     declaration = QTIDeclaration.fromXML(declEl);
   } catch (err) {
-    // QTIDeclaration validates the declaration more strictly than answer extraction
-    // needs — a missing identifier, say, makes it unmodellable. The correct-response
-    // values are still readable, so degrade to the schema default for case sensitivity
-    // rather than discarding the author's answers.
+    // QTIDeclaration validates more strictly than answer extraction needs (a missing
+    // identifier makes it unmodellable), so degrade rather than drop the answers.
     // eslint-disable-next-line no-console
     console.warn('[QTI Editor] Could not read <qti-mapping> case sensitivity:', err);
     return new Map();
   }
 
-  const { mapping } = declaration;
+  // Key on the XML string form: map-key is coerced on parse (empty → null under QTI
+  // NULL semantics) while answer values stay raw <qti-value> text.
   return new Map(
-    (mapping?.entries ?? []).map(entry => [
-      // Key on the XML string form: map-key is coerced on parse (an empty key becomes
-      // null under QTI NULL semantics) while answer values stay raw <qti-value> text.
+    (declaration.mapping?.entries ?? []).map(entry => [
       declaration.formatValue(entry.mapKey),
       entry.caseSensitive,
     ]),
@@ -253,18 +246,16 @@ export function buildTextEntryInteractionXML(state, questionType, declarationSch
     tag: 'qti-response-declaration',
   });
 
-  // CorrectResponse must be constructed before Mapping: QTIDeclaration.getXML emits its
-  // children in capability insertion order, and the QTI schema requires
-  // <qti-correct-response> to precede <qti-mapping>.
+  // CorrectResponse before Mapping: getXML emits children in capability insertion
+  // order, and the schema requires <qti-correct-response> to precede <qti-mapping>.
   if (questionType !== QuestionType.FREE_RESPONSE && answers.length !== 0) {
     new CorrectResponse(
       answers.map(a => a.value),
       declaration,
     );
 
-    // <qti-mapping> is the spec-defined home for per-answer case sensitivity, which
-    // is a string-only concept. mapped-value is required by the schema; the authoring
-    // editor does not score responses, so every accepted answer maps to the same value.
+    // <qti-mapping> is the spec's home for per-answer case sensitivity (string-only).
+    // mapped-value is schema-required but unused: the editor does not score responses.
     if (baseType === BaseType.STRING) {
       new Mapping(
         {

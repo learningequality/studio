@@ -61,17 +61,12 @@ export default class Mapping {
   static fromXML(xmlNode, declaration) {
     const bounds = parseScoringAttrs(xmlNode);
 
-    const entries = [...xmlNode.querySelectorAll('qti-map-entry')].map(entry => {
-      // Per the QTI 3.0 XSD (MapEntryDType), case-sensitive is an optional xs:boolean
-      // defaulting to false — it is true only when explicitly set to one of its true
-      // lexical forms ('true' or '1').
-      const caseSensitiveAttr = entry.getAttribute('case-sensitive');
-      return {
-        mapKey: declaration.coerceValue(entry.getAttribute('map-key')),
-        mappedValue: parseFloat(entry.getAttribute('mapped-value')),
-        caseSensitive: caseSensitiveAttr === 'true' || caseSensitiveAttr === '1',
-      };
-    });
+    const entries = [...xmlNode.querySelectorAll('qti-map-entry')].map(entry => ({
+      mapKey: declaration.coerceValue(entry.getAttribute('map-key')),
+      mappedValue: parseFloat(entry.getAttribute('mapped-value')),
+      // XSD default (MapEntryDType) is false; true only for xs:boolean's true forms.
+      caseSensitive: ['true', '1'].includes(entry.getAttribute('case-sensitive')),
+    }));
 
     return new Mapping({ ...bounds, entries }, declaration);
   }
@@ -99,9 +94,8 @@ export default class Mapping {
         'map-key': this._declaration.formatValue(entry.mapKey),
         'mapped-value': entry.mappedValue,
       };
-      // Omit case-sensitive when false — it is the XSD default. Writing it only for
-      // true keeps the emitted value and the schema default in agreement, so a
-      // consumer that applies XSD attribute defaults reads back what was authored.
+      // Omit when false — the XSD default — so a consumer applying attribute defaults
+      // reads back what was authored.
       if (entry.caseSensitive) entryAttrs['case-sensitive'] = 'true';
       return buildXmlNode({ tag: 'qti-map-entry', attrs: entryAttrs });
     });

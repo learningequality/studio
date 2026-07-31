@@ -93,7 +93,6 @@ describe('Mapping', () => {
       });
     });
 
-    // case-sensitive is an xs:boolean, so 'false' and '0' are both false, 'true' and '1' both true.
     it.each([
       ['word', 'false', 'true'],
       ['numeric', '0', '1'],
