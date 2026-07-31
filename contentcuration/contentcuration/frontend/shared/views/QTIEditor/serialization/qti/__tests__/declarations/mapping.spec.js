@@ -5,12 +5,7 @@ import Mapping from '../../declarations/mapping.js';
 import { QTIDeclaration } from '../../QTIDeclaration.js';
 import { CAPABILITY } from '../../declarations/index.js';
 import { parseXML, reparse } from '../testUtils.js';
-import {
-  MAPPING_WITH_BOUNDS_XML,
-  MAPPING_WITH_CI_XML,
-  MAPPING_WITH_NUMERIC_BOOLEANS_XML,
-  SIMPLE_MAPPING_XML,
-} from './fixtures.js';
+import { MAPPING_WITH_BOUNDS_XML, SIMPLE_MAPPING_XML } from './fixtures.js';
 
 function makeDeclaration() {
   return new QTIDeclaration({
@@ -98,16 +93,19 @@ describe('Mapping', () => {
       });
     });
 
-    it('parses explicit case-sensitive values on entries', () => {
-      const node = parseMappingXml(MAPPING_WITH_CI_XML);
-      const declaration = makeDeclaration();
-      const m = Mapping.fromXML(node, declaration);
-      expect(m.get().entries[0].caseSensitive).toBe(false);
-      expect(m.get().entries[1].caseSensitive).toBe(true);
-    });
-
-    it('parses numeric xs:boolean lexical forms on entries', () => {
-      const node = parseMappingXml(MAPPING_WITH_NUMERIC_BOOLEANS_XML);
+    // case-sensitive is an xs:boolean, so 'false' and '0' are both false, 'true' and '1' both true.
+    it.each([
+      ['word', 'false', 'true'],
+      ['numeric', '0', '1'],
+    ])('parses %s xs:boolean lexical forms of case-sensitive on entries', (_, off, on) => {
+      const node = parseMappingXml(`
+        <qti-response-declaration identifier="RESPONSE" base-type="string" cardinality="single">
+          <qti-mapping default-value="0">
+            <qti-map-entry map-key="hello" mapped-value="1" case-sensitive="${off}"/>
+            <qti-map-entry map-key="world" mapped-value="1" case-sensitive="${on}"/>
+          </qti-mapping>
+        </qti-response-declaration>
+      `);
       const { entries } = Mapping.fromXML(node, makeDeclaration()).get();
       expect(entries[0].caseSensitive).toBe(false);
       expect(entries[1].caseSensitive).toBe(true);
