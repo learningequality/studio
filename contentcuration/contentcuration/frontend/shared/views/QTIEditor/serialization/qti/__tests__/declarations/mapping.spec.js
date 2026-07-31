@@ -5,7 +5,7 @@ import Mapping from '../../declarations/mapping.js';
 import { QTIDeclaration } from '../../QTIDeclaration.js';
 import { CAPABILITY } from '../../declarations/index.js';
 import { parseXML, reparse } from '../testUtils.js';
-import { MAPPING_WITH_BOUNDS_XML, MAPPING_WITH_CI_XML, SIMPLE_MAPPING_XML } from './fixtures.js';
+import { MAPPING_WITH_BOUNDS_XML, SIMPLE_MAPPING_XML } from './fixtures.js';
 
 function makeDeclaration() {
   return new QTIDeclaration({
@@ -80,24 +80,34 @@ describe('Mapping', () => {
       const declaration = makeDeclaration();
       const m = Mapping.fromXML(node, declaration);
       expect(m.get().entries).toHaveLength(2);
+      // Neither entry declares case-sensitive, so both take the XSD default of false.
       expect(m.get().entries[0]).toEqual({
         mapKey: 'ChoiceA',
         mappedValue: 1,
-        caseSensitive: true,
+        caseSensitive: false,
       });
       expect(m.get().entries[1]).toEqual({
         mapKey: 'ChoiceB',
         mappedValue: -0.5,
-        caseSensitive: true,
+        caseSensitive: false,
       });
     });
 
-    it('parses case-sensitive="false" on entries', () => {
-      const node = parseMappingXml(MAPPING_WITH_CI_XML);
-      const declaration = makeDeclaration();
-      const m = Mapping.fromXML(node, declaration);
-      expect(m.get().entries[0].caseSensitive).toBe(false);
-      expect(m.get().entries[1].caseSensitive).toBe(true);
+    it.each([
+      ['word', 'false', 'true'],
+      ['numeric', '0', '1'],
+    ])('parses %s xs:boolean lexical forms of case-sensitive on entries', (_, off, on) => {
+      const node = parseMappingXml(`
+        <qti-response-declaration identifier="RESPONSE" base-type="string" cardinality="single">
+          <qti-mapping default-value="0">
+            <qti-map-entry map-key="hello" mapped-value="1" case-sensitive="${off}"/>
+            <qti-map-entry map-key="world" mapped-value="1" case-sensitive="${on}"/>
+          </qti-mapping>
+        </qti-response-declaration>
+      `);
+      const { entries } = Mapping.fromXML(node, makeDeclaration()).get();
+      expect(entries[0].caseSensitive).toBe(false);
+      expect(entries[1].caseSensitive).toBe(true);
     });
 
     it('registers itself as MAPPING capability', () => {
@@ -157,7 +167,7 @@ describe('Mapping', () => {
       expect(entries[0].getAttribute('mapped-value')).toBe('1');
     });
 
-    it('only emits case-sensitive attr when false', () => {
+    it('only emits case-sensitive attr when true', () => {
       const data = {
         defaultValue: 0,
         lowerBound: null,
@@ -170,8 +180,8 @@ describe('Mapping', () => {
       const entries = [
         ...new Mapping(data, makeDeclaration()).getXML().querySelectorAll('qti-map-entry'),
       ];
-      expect(entries[0].getAttribute('case-sensitive')).toBe('false');
-      expect(entries[1].hasAttribute('case-sensitive')).toBe(false);
+      expect(entries[0].hasAttribute('case-sensitive')).toBe(false);
+      expect(entries[1].getAttribute('case-sensitive')).toBe('true');
     });
 
     it('round-trips fromXML → getXML preserves all attributes via DOM', () => {
