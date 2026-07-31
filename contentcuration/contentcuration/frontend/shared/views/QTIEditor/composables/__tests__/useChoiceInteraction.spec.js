@@ -174,4 +174,95 @@ describe('useChoiceInteraction', () => {
       expect(state.value.shuffle).toBe(true);
     });
   });
+
+  describe('showAnswerCount', () => {
+    it('defaults to true', () => {
+      const { showAnswerCount } = setup([
+        makeAnswer({ id: 'a', correct: true }),
+        makeAnswer({ id: 'b', correct: false }),
+      ]);
+      expect(showAnswerCount.value).toBe(true);
+    });
+
+    it('can be set to false', () => {
+      const { showAnswerCount, setShowAnswerCount } = setup([
+        makeAnswer({ id: 'a', correct: true }),
+        makeAnswer({ id: 'b', correct: false }),
+      ]);
+      setShowAnswerCount(false);
+      expect(showAnswerCount.value).toBe(false);
+    });
+  });
+
+  describe('effectiveMaxChoices', () => {
+    it('when showAnswerCount is true, max-choices equals number of correct answers', () => {
+      const { bodyXml } = setup(
+        [
+          makeAnswer({ id: 'a', correct: true }),
+          makeAnswer({ id: 'b', correct: true }),
+          makeAnswer({ id: 'c', correct: false }),
+        ],
+        QuestionType.MULTI_SELECT,
+      );
+
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(
+        '<html><body>' + bodyXml.value + '</body></html>',
+        'text/html',
+      );
+      const interaction = doc.querySelector('qti-choice-interaction');
+
+      expect(interaction).toHaveAttribute('max-choices', '2');
+    });
+
+    it('when showAnswerCount is false, max-choices is 0', () => {
+      const { bodyXml, setShowAnswerCount } = setup(
+        [
+          makeAnswer({ id: 'a', correct: true }),
+          makeAnswer({ id: 'b', correct: true }),
+          makeAnswer({ id: 'c', correct: false }),
+        ],
+        QuestionType.MULTI_SELECT,
+      );
+
+      setShowAnswerCount(false);
+
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(
+        '<html><body>' + bodyXml.value + '</body></html>',
+        'text/html',
+      );
+      const interaction = doc.querySelector('qti-choice-interaction');
+
+      expect(interaction).toHaveAttribute('max-choices', '0');
+    });
+
+    it('updates automatically when correct answers change and showAnswerCount is true', () => {
+      const { bodyXml, toggleCorrectChoice } = setup(
+        [
+          makeAnswer({ id: 'a', correct: true }),
+          makeAnswer({ id: 'b', correct: false }),
+          makeAnswer({ id: 'c', correct: false }),
+        ],
+        QuestionType.MULTI_SELECT,
+      );
+
+      // Initially 1 correct answer
+      let parser = new DOMParser();
+      let doc = parser.parseFromString(
+        '<html><body>' + bodyXml.value + '</body></html>',
+        'text/html',
+      );
+      let interaction = doc.querySelector('qti-choice-interaction');
+      expect(interaction).toHaveAttribute('max-choices', '1');
+
+      // Toggle second answer correct
+      toggleCorrectChoice('b');
+
+      parser = new DOMParser();
+      doc = parser.parseFromString('<html><body>' + bodyXml.value + '</body></html>', 'text/html');
+      interaction = doc.querySelector('qti-choice-interaction');
+      expect(interaction).toHaveAttribute('max-choices', '2');
+    });
+  });
 });

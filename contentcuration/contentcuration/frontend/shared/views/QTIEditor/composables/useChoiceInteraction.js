@@ -1,4 +1,4 @@
-import { readonly } from 'vue';
+import { readonly, computed } from 'vue';
 import { QuestionType } from '../constants';
 import { generateRandomSlug } from '../utils/generateRandomSlug';
 import { choiceInteractionDescriptor } from '../interactions/choice/ChoiceInteractionDescriptor';
@@ -18,9 +18,37 @@ export function useChoiceInteraction(interactionBlock, questionType) {
   const base = useInteraction(choiceInteractionDescriptor, interactionBlock, questionType);
   const { state } = base;
 
-  // ---------------------------------------------------------------------------
-  // Structural mutations
-  // ---------------------------------------------------------------------------
+  const parsedShowAnswerCount = (state.value.maxChoices ?? 1) !== 0;
+
+  const showAnswerCount = computed({
+    get: () => state.value.showAnswerCount ?? parsedShowAnswerCount,
+    set: val => {
+      state.value = { ...state.value, showAnswerCount: val };
+    },
+  });
+
+  function setShowAnswerCount(val) {
+    showAnswerCount.value = val;
+  }
+
+  const effectiveMaxChoices = computed(() => {
+    if (!showAnswerCount.value) return 0;
+    return state.value.choices.filter(c => c.correct).length;
+  });
+
+  const stateForXml = computed(() => ({
+    ...state.value,
+    maxChoices: effectiveMaxChoices.value,
+    minChoices: effectiveMaxChoices.value,
+  }));
+
+  const builtXml = computed(() => {
+    if (!questionType.value) return { bodyXml: '', responseDeclarations: [] };
+    return choiceInteractionDescriptor.buildXML(stateForXml.value, questionType.value);
+  });
+
+  const bodyXml = computed(() => builtXml.value.bodyXml);
+  const responseDeclarations = computed(() => builtXml.value.responseDeclarations);
 
   function addChoice() {
     state.value = {
@@ -74,10 +102,6 @@ export function useChoiceInteraction(interactionBlock, questionType) {
     };
   }
 
-  // ---------------------------------------------------------------------------
-  // Field mutations
-  // ---------------------------------------------------------------------------
-
   function setPrompt(html) {
     state.value = { ...state.value, prompt: html };
   }
@@ -96,6 +120,10 @@ export function useChoiceInteraction(interactionBlock, questionType) {
   return {
     ...base,
     state: readonly(state),
+    bodyXml,
+    responseDeclarations,
+    showAnswerCount: readonly(showAnswerCount),
+    setShowAnswerCount,
     addChoice,
     removeChoice,
     moveChoiceUp,

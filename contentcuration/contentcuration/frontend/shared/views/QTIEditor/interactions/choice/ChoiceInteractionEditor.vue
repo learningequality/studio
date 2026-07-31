@@ -1,6 +1,24 @@
 <template>
 
   <div class="choice-editor">
+    <!-- Question settings header -->
+    <QuestionSettingsHeader
+      :questionType="questionType"
+      :questionTypeOptions="questionTypeOptions"
+      :mode="mode"
+      @update:questionType="onQuestionTypeChange"
+    >
+      <template #answerSettings>
+        <AnswerSettings
+          :settings="answerSettingsConfig"
+          :shuffle="state.shuffle"
+          :showAnswerCount="showAnswerCount"
+          @update:shuffle="setShuffle"
+          @update:showAnswerCount="setShowAnswerCount"
+        />
+      </template>
+    </QuestionSettingsHeader>
+
     <!-- Prompt -->
     <div class="choice-editor__section">
       <ValidationMessage v-if="questionHasError">
@@ -192,13 +210,22 @@
   import CollapsibleToolbar from '../../components/CollapsibleToolbar/index.vue';
   import ValidationMessage from '../../components/ValidationMessage/index.vue';
   import AddListItemButton from '../../components/AddListItemButton/index.vue';
+  import QuestionSettingsHeader from '../../components/QuestionSettingsHeader/index.vue';
+  import AnswerSettings from '../../components/AnswerSettings/index.vue';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor';
   import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
 
   export default {
     name: 'ChoiceInteractionEditor',
 
-    components: { TipTapEditor, CollapsibleToolbar, ValidationMessage, AddListItemButton },
+    components: {
+      TipTapEditor,
+      CollapsibleToolbar,
+      ValidationMessage,
+      AddListItemButton,
+      QuestionSettingsHeader,
+      AnswerSettings,
+    },
 
     setup(props, { emit }) {
       const { windowIsSmall } = useKResponsiveWindow();
@@ -218,6 +245,10 @@
         answersLabel$,
         answersDescriptionSingleChoice$,
         answersDescriptionMultipleChoice$,
+        singleSelectLabel$,
+        multiSelectLabel$,
+        singleChoiceDescription$,
+        multipleSelectionDescription$,
       } = qtiEditorStrings;
 
       const palette = themePalette();
@@ -231,6 +262,8 @@
         bodyXml,
         responseDeclarations,
         errors,
+        showAnswerCount,
+        setShowAnswerCount,
         addChoice,
         removeChoice,
         moveChoiceUp,
@@ -238,7 +271,31 @@
         toggleCorrectChoice,
         setPrompt,
         setChoiceContent,
+        setShuffle,
       } = useChoiceInteraction(props.interaction, questionTypeRef);
+
+      const isSingleSelect = computed(() => props.questionType === QuestionType.SINGLE_SELECT);
+
+      const questionTypeOptions = computed(() => [
+        {
+          value: QuestionType.SINGLE_SELECT,
+          label: singleSelectLabel$(),
+          description: singleChoiceDescription$(),
+        },
+        {
+          value: QuestionType.MULTI_SELECT,
+          label: multiSelectLabel$(),
+          description: multipleSelectionDescription$(),
+        },
+      ]);
+
+      const answerSettingsConfig = computed(() =>
+        isSingleSelect.value ? ['shuffle'] : ['shuffle', 'showAnswerCount'],
+      );
+
+      function onQuestionTypeChange(newType) {
+        emit('update:questionType', newType);
+      }
 
       const isQuestionOpen = ref(false);
       const openChoiceId = ref(null);
@@ -301,8 +358,6 @@
         responseDeclarations: responseDeclarations.value,
       }));
       watch(workingInteraction, newVal => emit('update:interaction', newVal), { immediate: true });
-
-      const isSingleSelect = computed(() => props.questionType === QuestionType.SINGLE_SELECT);
 
       const answersDescription = computed(() =>
         isSingleSelect.value
@@ -460,6 +515,9 @@
         state,
         isSingleSelect,
         windowIsSmall,
+        questionTypeOptions,
+        answerSettingsConfig,
+        showAnswerCount,
         answersLabel$,
         answersDescription,
         isQuestionOpen,
@@ -474,6 +532,9 @@
         choiceHasError,
         setPrompt,
         setChoiceContent,
+        setShuffle,
+        setShowAnswerCount,
+        onQuestionTypeChange,
         onToggleCorrect,
         onAddChoice,
         getChoiceRowActions,
@@ -516,7 +577,7 @@
       },
     },
 
-    emits: ['update:interaction'],
+    emits: ['update:interaction', 'update:questionType'],
   };
 
 </script>

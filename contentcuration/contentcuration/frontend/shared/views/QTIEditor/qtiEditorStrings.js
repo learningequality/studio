@@ -206,4 +206,57 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'This question could not be loaded',
     context: 'Shown in place of the interaction editor when the QTI XML fails to parse',
   },
+  // Question type selector
+  typeLabel: {
+    message: 'Type',
+    context: 'Short label above the question type selector',
+  },
+  responseTypeLabel: {
+    message: 'Response type',
+    context: 'Label for the question type selector dropdown',
+  },
+  responseTypeInfoTitle: {
+    message: 'Response type',
+    context: 'Modal title explaining available question types',
+  },
+  singleChoiceDescription: {
+    message: 'Learners choose one correct answer from a list of options.',
+    context: 'Description of single choice question type in info modal',
+  },
+  multipleSelectionDescription: {
+    message:
+      'Learners identify all correct answers from a list, where more than one option may apply.',
+    context: 'Description of multiple selection question type in info modal',
+  },
+  // Answer settings
+  answerSettingsLabel: {
+    message: 'Answer settings',
+    context: 'Section header for answer configuration controls',
+  },
+  shuffleAnswersLabel: {
+    message: 'Shuffle answers for learners',
+    context: 'Checkbox label to randomize answer order',
+  },
+  shuffleAnswersInfoTitle: {
+    message: 'Shuffle answers for learners',
+    context: 'Modal title explaining shuffle behavior',
+  },
+  shuffleAnswersInfoBody: {
+    message:
+      'The order of answer choices will be randomized each time a learner sees this question. This helps prevent learners from memorizing answer positions rather than understanding the content.',
+    context: 'Modal body explaining shuffle behavior',
+  },
+  showAnswerCountLabel: {
+    message: 'Show learners how many answers to select',
+    context: 'Checkbox label for displaying answer count hint',
+  },
+  showAnswerCountInfoTitle: {
+    message: 'Show learners how many answers to select',
+    context: 'Modal title explaining answer count hint',
+  },
+  showAnswerCountInfoBody: {
+    message:
+      'When enabled, learners see a hint below the answer options so they know how many answers to choose. Toggle this off to increase question difficulty.',
+    context: 'Modal body explaining answer count hint',
+  },
 });

@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/vue';
 import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
 import InteractionSection from '../index.vue';
+import { qtiEditorStrings as tr } from '../../../qtiEditorStrings';
 
 import {
   CHOICE_SINGLE_SELECT_XML,
@@ -10,6 +11,13 @@ import {
 } from '../../../utils/testingFixtures';
 
 jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor');
+jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
+  const { ref } = require('vue');
+  return {
+    __esModule: true,
+    default: () => ({ windowIsSmall: ref(false) }),
+  };
+});
 
 const renderSection = (props = {}) =>
   render(InteractionSection, {
@@ -41,7 +49,7 @@ describe('InteractionSection', () => {
   describe('parse error handling', () => {
     it('shows a parse error when XML is malformed', () => {
       renderSection({ interaction: interactionBlock('not-xml<{{') });
-      expect(screen.getByText('This question could not be loaded')).toBeInTheDocument();
+      expect(screen.getByText(tr.$tr('errorParsingQuestion'))).toBeInTheDocument();
     });
   });
 
