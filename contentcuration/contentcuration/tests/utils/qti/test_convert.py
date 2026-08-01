@@ -156,8 +156,8 @@ class ChoiceInteractionConversionTests(unittest.TestCase):
                 self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
     def test_choice_type_with_no_answers_and_no_question(self):
-        # The model's own defaults, and qti-item-body cannot be empty - so an
-        # untyped question carries an empty paragraph.
+        # The model's own defaults, and qti-item-body cannot be empty - so a
+        # question with nothing typed into it yet carries an empty paragraph.
         item = _make_item(
             type=exercises.MULTIPLE_SELECTION,
             question="",
@@ -172,8 +172,9 @@ class ChoiceInteractionConversionTests(unittest.TestCase):
 
     def test_choice_type_with_no_answers_and_block_maths(self):
         # Block maths renders as a top level <math>, which qti-item-body does not
-        # accept directly. Validity is not asserted: the MathML namespace gap
-        # test_free_response_with_maths lives with is unrelated here.
+        # accept directly - hence the wrapping div. XSD validity is not asserted
+        # here: rendered MathML does not carry its namespace, the same gap
+        # test_free_response_with_maths lives with.
         item = _make_item(
             type=exercises.SINGLE_SELECTION,
             question="$$\\sum_n^sxa^n$$",
@@ -183,7 +184,7 @@ class ChoiceInteractionConversionTests(unittest.TestCase):
 
         result = convert_legacy_assessment_item_to_qti(item)
 
-        self.assertIn('<math display="block">', result.xml)
+        self.assertIn('<qti-item-body><div><math display="block">', result.xml)
 
     def test_media_reference_survives(self):
         item = _make_item(

@@ -32,8 +32,9 @@ exercise_image_filename_regex = re.compile(
     )
 )
 
-# Everything else is converted to QTI on read until the global backfill (#6007)
-# makes the conversion permanent and AssessmentItemViewSet.consolidate goes away.
+# Types the read path returns as stored. Everything else is a legacy type that is
+# converted to QTI on read until the global backfill (#6007) makes the conversion
+# permanent, at which point AssessmentItemViewSet.consolidate goes away.
 PASSTHROUGH_TYPES = (exercises.QTI, exercises.PERSEUS_QUESTION)
 
 

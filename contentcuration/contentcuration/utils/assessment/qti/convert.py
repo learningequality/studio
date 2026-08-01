@@ -143,7 +143,10 @@ def _response_declaration(
 def _create_choice_interaction_and_response(
     item: LegacyAssessmentItem,
 ) -> Tuple[Optional[ChoiceInteraction], Optional[ResponseDeclaration]]:
-    """Create a QTI choice interaction for multiple choice questions."""
+    """
+    Create a QTI choice interaction for multiple choice questions, or
+    ``(None, None)`` if the question has no answers to choose between.
+    """
     if not item.answers:
         # An answerless choice question is ordinary in-progress authoring state -
         # it is what the editor writes for every newly added question - but the
