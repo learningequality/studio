@@ -1265,6 +1265,8 @@ class DualReadTestCase(StudioAPITestCase):
         self.assertEqual(item["question"], "")
         self.assertEqual(item["answers"], "[]")
         self.assertEqual(item["hints"], "[]")
+        # The node language is only in the values tuple to feed the conversion.
+        self.assertNotIn("contentnode__language__lang_code", item)
 
     def test_converted_items_are_tagged_with_their_own_node_language(self):
         # A contentnode__in read spans several nodes, so each item has to pick
@@ -1321,6 +1323,8 @@ class DualReadTestCase(StudioAPITestCase):
 
         self.assertEqual(item["type"], exercises.PERSEUS_QUESTION)
         self.assertEqual(item["raw_data"], raw_data)
+        # A passed-through row must shed the node language too.
+        self.assertNotIn("contentnode__language__lang_code", item)
 
     def test_native_qti_item_returned_unchanged(self):
         assessment_id = self._create_item(

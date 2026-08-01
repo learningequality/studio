@@ -360,11 +360,11 @@ class AssessmentItemViewSet(BulkCreateMixin, BulkUpdateMixin, ValuesViewset):
             try:
                 # A new dict, so the language does not leak into the response.
                 result = convert_legacy_question_to_qti(dict(item, language=language))
-            except (ValueError, TypeError) as e:
-                # serialize_object() turns ValueError/TypeError into a 404
-                # (base.py), reporting a corrupt row as a missing one; re-raise
-                # as a type it does not catch (pydantic and json errors both
-                # subclass ValueError).
+            except (IndexError, ValueError, TypeError) as e:
+                # serialize_object() turns IndexError/ValueError/TypeError into
+                # a 404 (base.py), reporting a corrupt row as a missing one;
+                # re-raise as a type it does not catch (pydantic and json errors
+                # both subclass ValueError).
                 raise LegacyConversionError(
                     f"Could not convert assessment item {item['assessment_id']} to QTI"
                 ) from e

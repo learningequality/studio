@@ -156,8 +156,8 @@ class ChoiceInteractionConversionTests(unittest.TestCase):
                 self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
     def test_choice_type_with_no_answers_and_no_question(self):
-        # The model's own defaults, and qti-item-body cannot be empty - so a
-        # question with nothing typed into it yet carries an empty paragraph.
+        # The model's own defaults - a question with nothing typed into it yet
+        # still carries an empty paragraph to render and edit.
         item = _make_item(
             type=exercises.MULTIPLE_SELECTION,
             question="",

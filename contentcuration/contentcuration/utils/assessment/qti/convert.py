@@ -325,8 +325,9 @@ def convert_legacy_assessment_item_to_qti(
     if interaction is None:
         # Emit the question text alone, ungraded. Div because rendered markdown
         # can start with a top level <math>, which qti-item-body does not accept
-        # directly; P() because the container cannot be empty and a newly added
-        # question has no text yet.
+        # directly; the empty P stands in for the text a newly added question
+        # does not have yet, so the body is a paragraph to render and edit
+        # rather than a bare empty div.
         item_body = ItemBody(
             children=[
                 Div(children=_create_html_content_from_text(item.question) or [P()])
