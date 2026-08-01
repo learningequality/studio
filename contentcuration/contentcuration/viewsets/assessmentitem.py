@@ -12,6 +12,7 @@ from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.models import generate_object_storage_name
+from contentcuration.utils.assessment.qti.ingest import convert_legacy_question_to_qti
 from contentcuration.utils.assessment.qti.media import get_qti_media_references
 from contentcuration.utils.assessment.qti.validation import validate_qti_item
 from contentcuration.viewsets.base import BulkCreateMixin
@@ -30,6 +31,14 @@ exercise_image_filename_regex = re.compile(
         placeholder=exercises.CONTENT_STORAGE_PLACEHOLDER
     )
 )
+
+# Everything else is converted to QTI on read until the global backfill (#6007)
+# makes the conversion permanent and AssessmentItemViewSet.consolidate goes away.
+PASSTHROUGH_TYPES = (exercises.QTI, exercises.PERSEUS_QUESTION)
+
+
+class LegacyConversionError(Exception):
+    """A still-legacy assessment item could not be converted to QTI on read."""
 
 
 class AssessmentItemFilter(RequiredFilterSet):
@@ -332,8 +341,37 @@ class AssessmentItemViewSet(BulkCreateMixin, BulkUpdateMixin, ValuesViewset):
         "source_url",
         "randomize",
         "deleted",
+        # Only consumed by consolidate(), which pops it back off - publish tags
+        # an item with the bare lang_code of its content node's language
+        # (utils/assessment/qti/archive.py), so the read path matches.
+        "contentnode__language__lang_code",
     )
 
     field_map = {
         "contentnode": "contentnode_id",
     }
+
+    def consolidate(self, items, queryset):
+        for item in items:
+            language = item.pop("contentnode__language__lang_code", None)
+            if item["type"] in PASSTHROUGH_TYPES:
+                continue
+            try:
+                # A new dict, so the language does not leak into the response.
+                result = convert_legacy_question_to_qti(dict(item, language=language))
+            except (ValueError, TypeError) as e:
+                # serialize_object() turns ValueError/TypeError into a 404
+                # (base.py), reporting a corrupt row as a missing one; re-raise
+                # as a type it does not catch (pydantic and json errors both
+                # subclass ValueError).
+                raise LegacyConversionError(
+                    f"Could not convert assessment item {item['assessment_id']} to QTI"
+                ) from e
+            item.update(
+                type=exercises.QTI,
+                raw_data=result.xml,
+                question="",
+                answers="[]",
+                hints="[]",
+            )
+        return items
