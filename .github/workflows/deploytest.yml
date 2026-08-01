@@ -35,7 +35,7 @@ jobs:
     - name: Use pnpm
       uses: pnpm/action-setup@v6.0.9
     - name: Use Node.js
-      uses: actions/setup-node@v6
+      uses: actions/setup-node@v7
       with:
         node-version: '20.x'
         cache: 'pnpm'
@@ -74,7 +74,7 @@ jobs:
     - name: Use pnpm
       uses: pnpm/action-setup@v6.0.9
     - name: Use Node.js
-      uses: actions/setup-node@v6
+      uses: actions/setup-node@v7
       with:
         node-version: '20.x'
         cache: 'pnpm'
@@ -167,7 +167,7 @@ jobs:
           # stats file at contentcuration/build/webpack-stats.json (STATS_FILE).
           path: contentcuration
       - name: Cache Playwright browsers
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: playwright-chromium-${{ runner.os }}-v1
