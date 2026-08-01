@@ -166,12 +166,12 @@ class OrganizationListCreateTestCase(OrganizationAPITestCase):
             format="json",
         )
 
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_list_organizations_requires_authentication(self):
         response = APIClient().get(self.organization_list_url)
 
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class OrganizationRetrieveUpdateDeleteTestCase(OrganizationAPITestCase):
