@@ -117,6 +117,74 @@ class ChoiceInteractionConversionTests(unittest.TestCase):
         )
         self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
+    def test_single_selection_no_answers(self):
+        item = _make_item(
+            type=exercises.SINGLE_SELECTION,
+            question="What is 2+2?",
+            answers=[],
+            randomize=True,
+            assessment_id="abcdef1234567890abcdef1234567890",
+        )
+
+        result = convert_legacy_assessment_item_to_qti(item)
+
+        self.assertEqual(result.identifier, "Kq83vEjRWeJCrze8SNFZ4kA")
+        self.assertEqual(
+            _normalize_xml(_load_fixture("single_selection_no_answers.xml")),
+            _normalize_xml(result.xml),
+        )
+        self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
+
+    def test_choice_types_with_no_answers_omit_the_interaction(self):
+        # The guard is on the choice types as a group, not just SINGLE_SELECTION,
+        # which test_single_selection_no_answers already pins against the fixture.
+        for question_type in (exercises.MULTIPLE_SELECTION, "true_false"):
+            with self.subTest(question_type=question_type):
+                item = _make_item(
+                    type=question_type,
+                    question="What is 2+2?",
+                    answers=[],
+                    assessment_id="abcdef1234567890abcdef1234567890",
+                )
+
+                result = convert_legacy_assessment_item_to_qti(item)
+
+                self.assertNotIn("qti-choice-interaction", result.xml)
+                self.assertNotIn("qti-response-declaration", result.xml)
+                self.assertNotIn("qti-response-processing", result.xml)
+                self.assertIn("<p>What is 2+2?</p>", result.xml)
+                self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
+
+    def test_choice_type_with_no_answers_and_no_question(self):
+        # The model's own defaults, and qti-item-body cannot be empty - so an
+        # untyped question carries an empty paragraph.
+        item = _make_item(
+            type=exercises.MULTIPLE_SELECTION,
+            question="",
+            answers=[],
+            assessment_id="abcdef1234567890abcdef1234567890",
+        )
+
+        result = convert_legacy_assessment_item_to_qti(item)
+
+        self.assertIn("<qti-item-body><div><p /></div></qti-item-body>", result.xml)
+        self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
+
+    def test_choice_type_with_no_answers_and_block_maths(self):
+        # Block maths renders as a top level <math>, which qti-item-body does not
+        # accept directly. Validity is not asserted: the MathML namespace gap
+        # test_free_response_with_maths lives with is unrelated here.
+        item = _make_item(
+            type=exercises.SINGLE_SELECTION,
+            question="$$\\sum_n^sxa^n$$",
+            answers=[],
+            assessment_id="abcdef1234567890abcdef1234567890",
+        )
+
+        result = convert_legacy_assessment_item_to_qti(item)
+
+        self.assertIn('<math display="block">', result.xml)
+
     def test_media_reference_survives(self):
         item = _make_item(
             type=exercises.SINGLE_SELECTION,

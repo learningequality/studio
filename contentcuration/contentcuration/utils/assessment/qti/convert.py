@@ -142,8 +142,15 @@ def _response_declaration(
 
 def _create_choice_interaction_and_response(
     item: LegacyAssessmentItem,
-) -> Tuple[ChoiceInteraction, ResponseDeclaration]:
+) -> Tuple[Optional[ChoiceInteraction], Optional[ResponseDeclaration]]:
     """Create a QTI choice interaction for multiple choice questions."""
+    if not item.answers:
+        # An answerless choice question is ordinary in-progress authoring state -
+        # it is what the editor writes for every newly added question - but the
+        # XSD requires a qti-choice-interaction to carry at least one
+        # qti-simple-choice, and there is nothing to bind a response to.
+        return None, None
+
     multiple_select = item.type == exercises.MULTIPLE_SELECTION
 
     prompt = Prompt(children=_create_html_content_from_text(item.question))
@@ -312,14 +319,27 @@ def convert_legacy_assessment_item_to_qti(
     else:
         raise ValueError(f"Unsupported question type: {item.type}")
 
-    item_body = ItemBody(children=[interaction])
+    if interaction is None:
+        # Emit the question text alone, ungraded. Div because rendered markdown
+        # can start with a top level <math>, which qti-item-body does not accept
+        # directly; P() because the container cannot be empty and a newly added
+        # question has no text yet.
+        item_body = ItemBody(
+            children=[
+                Div(children=_create_html_content_from_text(item.question) or [P()])
+            ]
+        )
+        response_declarations = []
+        response_processing = None
+    else:
+        item_body = ItemBody(children=[interaction])
+        response_declarations = [response_declaration]
+        response_processing = ResponseProcessing(
+            template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"
+        )
 
     outcome_declaration = OutcomeDeclaration(
         identifier="SCORE", cardinality=Cardinality.SINGLE, base_type=BaseType.FLOAT
-    )
-
-    response_processing = ResponseProcessing(
-        template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"
     )
 
     qti_item_id = hex_to_qti_id(item.assessment_id)
@@ -330,7 +350,7 @@ def convert_legacy_assessment_item_to_qti(
         language=item.language,
         adaptive=False,
         time_dependent=False,
-        response_declaration=[response_declaration],
+        response_declaration=response_declarations,
         outcome_declaration=[outcome_declaration],
         item_body=item_body,
         catalog_info=_create_catalog_info(item),
