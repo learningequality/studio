@@ -1,13 +1,17 @@
 <template>
 
   <div
-    v-if="mode === 'edit'"
-    class="question-settings-header"
+    class="question-type-selector"
     :class="{ 'small-screen': windowIsSmall }"
     :style="{ borderBottom: `1px solid ${$themeTokens.fineLine}` }"
   >
-    <div class="type-selector-group">
+    <div
+      class="type-selector-group"
+      role="group"
+      :aria-labelledby="labelId"
+    >
       <div
+        :id="labelId"
         class="group-label"
         :style="{ color: $themePalette.grey.v_700 }"
       >
@@ -47,15 +51,14 @@
     </div>
 
     <div
-      v-if="$slots.answerSettings"
+      :id="settingsTargetId"
       class="answer-settings-group"
-    >
-      <slot name="answerSettings"></slot>
-    </div>
+    ></div>
 
     <KModal
       v-if="showTypeInfoModal"
       :title="responseTypeInfoTitle$()"
+      :cancelText="closeBtnLabel$()"
       @cancel="showTypeInfoModal = false"
     >
       <div class="type-info-list">
@@ -78,12 +81,6 @@
           </div>
         </div>
       </div>
-      <template #actions>
-        <KButton
-          :text="closeBtnLabel$()"
-          @click="showTypeInfoModal = false"
-        />
-      </template>
     </KModal>
   </div>
 
@@ -95,9 +92,11 @@
   import { ref, computed } from 'vue';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
+  import { descriptors } from '../../interactions';
+  import { generateRandomSlug } from '../../utils/generateRandomSlug';
 
   export default {
-    name: 'QuestionSettingsHeader',
+    name: 'QuestionTypeSelector',
 
     setup(props) {
       const { windowIsSmall } = useKResponsiveWindow();
@@ -106,10 +105,16 @@
 
       const showTypeInfoModal = ref(false);
 
+      const labelId = generateRandomSlug('type-selector');
+
+      const questionTypeOptions = computed(() => {
+        return descriptors.flatMap(d => d.getTypeOptions?.(qtiEditorStrings) ?? []);
+      });
+
       const selectedOption = computed(
         () =>
-          props.questionTypeOptions.find(o => o.value === props.questionType) ||
-          props.questionTypeOptions[0],
+          questionTypeOptions.value.find(o => o.value === props.questionType) ||
+          questionTypeOptions.value[0],
       );
 
       return {
@@ -119,6 +124,8 @@
         responseTypeInfoTitle$,
         closeBtnLabel$,
         showTypeInfoModal,
+        labelId,
+        questionTypeOptions,
         selectedOption,
       };
     },
@@ -128,24 +135,10 @@
         type: String,
         required: true,
       },
-      questionTypeOptions: {
-        type: Array,
-        required: true,
-        validator: arr =>
-          arr.every(
-            opt =>
-              opt.value &&
-              opt.label &&
-              opt.description &&
-              typeof opt.value === 'string' &&
-              typeof opt.label === 'string' &&
-              typeof opt.description === 'string',
-          ),
-      },
-      mode: {
+
+      settingsTargetId: {
         type: String,
         required: true,
-        validator: val => ['view', 'edit'].includes(val),
       },
     },
 
@@ -157,7 +150,7 @@
 
 <style lang="scss" scoped>
 
-  .question-settings-header {
+  .question-type-selector {
     display: flex;
     flex-wrap: wrap;
     gap: 5px;

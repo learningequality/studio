@@ -26,15 +26,12 @@
       </div>
     </div>
 
-    <div :id="`qti-question-settings-${index}`"></div>
-
     <div class="question-card-body">
       <InteractionSection
         v-if="interactions.length > 0"
-        :interaction="interactions[0]"
+        :interaction="currentInteraction"
         :mode="mode"
         :showAnswers="showAnswers"
-        :teleportTarget="`#qti-question-settings-${index}`"
         @update:questionType="type => (currentQuestionType = type)"
         @update:interaction="onUpdateInteraction"
       />
@@ -106,6 +103,11 @@
         currentResponseDeclarations.value = interactions.value[0].responseDeclarations;
       }
 
+      const currentInteraction = computed(() => ({
+        bodyXml: currentBodyXml.value,
+        responseDeclarations: currentResponseDeclarations.value,
+      }));
+
       const questionNumberLabel = computed(() =>
         questionNumberLabel$({
           number: props.index + 1,
@@ -158,6 +160,7 @@
       return {
         currentQuestionType,
         interactions,
+        currentInteraction,
         questionNumberLabel,
         questionNumberAndTypeLabel,
         closeBtnLabel$,

@@ -1,17 +1,19 @@
 <template>
 
-  <div class="answer-settings">
+  <div
+    role="group"
+    :aria-labelledby="labelId"
+    class="answer-settings"
+  >
     <div
+      :id="labelId"
       class="answer-settings-label"
       :style="{ color: $themePalette.grey.v_700 }"
     >
       {{ answerSettingsLabel$() }}
     </div>
 
-    <div
-      v-if="settings.includes('shuffle')"
-      class="setting-row"
-    >
+    <div class="setting-row">
       <KCheckbox
         :checked="shuffle"
         :label="shuffleAnswersLabel$()"
@@ -29,7 +31,7 @@
     </div>
 
     <div
-      v-if="settings.includes('showAnswerCount')"
+      v-if="questionType === QuestionType.MULTI_SELECT"
       class="setting-row"
     >
       <KCheckbox
@@ -51,33 +53,23 @@
     <KModal
       v-if="showShuffleModal"
       :title="shuffleAnswersInfoTitle$()"
+      :cancelText="closeBtnLabel$()"
       @cancel="showShuffleModal = false"
     >
-      <p :style="{ color: $themeTokens.annotation }">
+      <p>
         {{ shuffleAnswersInfoBody$() }}
       </p>
-      <template #actions>
-        <KButton
-          :text="closeBtnLabel$()"
-          @click="showShuffleModal = false"
-        />
-      </template>
     </KModal>
 
     <KModal
       v-if="showAnswerCountModal"
       :title="showAnswerCountInfoTitle$()"
+      :cancelText="closeBtnLabel$()"
       @cancel="showAnswerCountModal = false"
     >
-      <p :style="{ color: $themeTokens.annotation }">
+      <p>
         {{ showAnswerCountInfoBody$() }}
       </p>
-      <template #actions>
-        <KButton
-          :text="closeBtnLabel$()"
-          @click="showAnswerCountModal = false"
-        />
-      </template>
     </KModal>
   </div>
 
@@ -87,7 +79,9 @@
 <script>
 
   import { ref } from 'vue';
-  import { qtiEditorStrings } from '../../qtiEditorStrings';
+  import { qtiEditorStrings } from '../../../../qtiEditorStrings';
+  import { QuestionType } from '../../../../constants';
+  import { generateRandomSlug } from '../../../../utils/generateRandomSlug';
 
   export default {
     name: 'AnswerSettings',
@@ -107,6 +101,8 @@
       const showShuffleModal = ref(false);
       const showAnswerCountModal = ref(false);
 
+      const labelId = generateRandomSlug('answer-settings');
+
       return {
         answerSettingsLabel$,
         shuffleAnswersLabel$,
@@ -118,14 +114,15 @@
         closeBtnLabel$,
         showShuffleModal,
         showAnswerCountModal,
+        labelId,
+        QuestionType,
       };
     },
 
     props: {
-      settings: {
-        type: Array,
+      questionType: {
+        type: String,
         required: true,
-        validator: arr => arr.every(setting => ['shuffle', 'showAnswerCount'].includes(setting)),
       },
       shuffle: {
         type: Boolean,

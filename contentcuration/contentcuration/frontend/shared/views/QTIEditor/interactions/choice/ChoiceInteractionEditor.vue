@@ -1,23 +1,17 @@
 <template>
 
   <div class="choice-editor">
-    <Teleport :to="teleportTarget">
-      <QuestionSettingsHeader
+    <Teleport
+      v-if="mode === 'edit' && teleportTargetId"
+      :to="`#${teleportTargetId}`"
+    >
+      <AnswerSettings
         :questionType="questionType"
-        :questionTypeOptions="questionTypeOptions"
-        :mode="mode"
-        @update:questionType="onQuestionTypeChange"
-      >
-        <template #answerSettings>
-          <AnswerSettings
-            :settings="answerSettingsConfig"
-            :shuffle="state.shuffle"
-            :showAnswerCount="showAnswerCount"
-            @update:shuffle="setShuffle"
-            @update:showAnswerCount="setShowAnswerCount"
-          />
-        </template>
-      </QuestionSettingsHeader>
+        :shuffle="state.shuffle"
+        :showAnswerCount="state.showAnswerCount"
+        @update:shuffle="setShuffle"
+        @update:showAnswerCount="setShowAnswerCount"
+      />
     </Teleport>
 
     <!-- Prompt -->
@@ -70,6 +64,7 @@
         {{ errorTooManyCorrectAnswers$() }}
       </ValidationMessage>
       <div
+        :id="answersHeaderId"
         class="answers-header field-label"
         :style="{ color: $themePalette.grey.v_700 }"
       >
@@ -82,7 +77,12 @@
         {{ answersDescription }}
       </div>
 
-      <KRadioButtonGroup class="choices-list">
+      <component
+        :is="isSingleSelect ? 'KRadioButtonGroup' : 'div'"
+        class="choices-list"
+        :aria-labelledby="answersHeaderId"
+        :role="!isSingleSelect ? 'group' : undefined"
+      >
         <div
           v-for="(choice, index) in state.choices"
           :key="choice.id"
@@ -114,36 +114,33 @@
                   class="choice-selection"
                   @click.stop
                 >
-                  <!-- Error icon replaces selection control when choice has an error -->
                   <KIcon
                     v-if="choiceHasError(choice.id)"
                     icon="error"
                     :color="$themeTokens.error"
-                    :style="{ width: '20px', height: '20px', marginTop: '2px' }"
+                    :style="{ width: '20px', height: '20px', marginTop: '2px', marginRight: '4px' }"
                   />
-                  <template v-else>
-                    <KRadioButton
-                      v-if="isSingleSelect"
-                      :currentValue="correctChoiceId || ''"
-                      :buttonValue="choice.id"
-                      :label="markCorrectLabel$()"
-                      :showLabel="false"
-                      :disabled="mode !== 'edit'"
-                      :style="{ width: 'auto' }"
-                      :color="$themePalette.green.v_600"
-                      @change="onToggleCorrect(choice.id)"
-                    />
-                    <!-- KCheckbox color prop colors the checked icon green -->
-                    <KCheckbox
-                      v-else
-                      :checked="choice.correct"
-                      :label="markCorrectLabel$()"
-                      :showLabel="false"
-                      :disabled="mode !== 'edit'"
-                      :color="$themePalette.green.v_600"
-                      @change="onToggleCorrect(choice.id)"
-                    />
-                  </template>
+                  <KRadioButton
+                    v-if="isSingleSelect"
+                    :currentValue="correctChoiceId || ''"
+                    :buttonValue="choice.id"
+                    :label="markCorrectLabel$()"
+                    :showLabel="false"
+                    :disabled="mode !== 'edit'"
+                    :style="{ width: 'auto' }"
+                    :color="$themePalette.green.v_600"
+                    @change="onToggleCorrect(choice.id)"
+                  />
+                  <!-- KCheckbox color prop colors the checked icon green -->
+                  <KCheckbox
+                    v-else
+                    :checked="choice.correct"
+                    :label="markCorrectLabel$()"
+                    :showLabel="false"
+                    :disabled="mode !== 'edit'"
+                    :color="$themePalette.green.v_600"
+                    @change="onToggleCorrect(choice.id)"
+                  />
                 </div>
 
                 <div class="choice-content">
@@ -170,6 +167,7 @@
                 </div>
               </div>
             </div>
+            <!-- Per-choice validation messages sit INSIDE the bordered card -->
             <ValidationMessage
               v-if="emptyChoiceIds.has(choice.id)"
               class="choice-validation-message"
@@ -184,7 +182,7 @@
             </ValidationMessage>
           </div>
         </div>
-      </KRadioButtonGroup>
+      </component>
 
       <!-- Add choice button (edit only) -->
       <AddListItemButton
@@ -202,17 +200,17 @@
 <script>
 
   import { computed, ref, watch, getCurrentInstance } from 'vue';
+  import Teleport from 'vue2-teleport';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { themePalette, themeTokens } from 'kolibri-design-system/lib/styles/theme';
-  import KRadioButtonGroup from 'kolibri-design-system/lib/KRadioButtonGroup';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
-  import { QuestionType, ValidationError } from '../../constants';
+  import { ValidationError } from '../../constants';
+  import { generateRandomSlug } from '../../utils/generateRandomSlug';
   import { useChoiceInteraction } from '../../composables/useChoiceInteraction';
   import CollapsibleToolbar from '../../components/CollapsibleToolbar/index.vue';
   import ValidationMessage from '../../components/ValidationMessage/index.vue';
   import AddListItemButton from '../../components/AddListItemButton/index.vue';
-  import QuestionSettingsHeader from '../../components/QuestionSettingsHeader/index.vue';
-  import AnswerSettings from '../../components/AnswerSettings/index.vue';
+  import AnswerSettings from './components/AnswerSettings/index.vue';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor';
   import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
 
@@ -224,9 +222,8 @@
       CollapsibleToolbar,
       ValidationMessage,
       AddListItemButton,
-      QuestionSettingsHeader,
       AnswerSettings,
-      KRadioButtonGroup,
+      Teleport,
     },
 
     setup(props, { emit }) {
@@ -247,10 +244,6 @@
         answersLabel$,
         answersDescriptionSingleChoice$,
         answersDescriptionMultipleChoice$,
-        singleSelectLabel$,
-        multiSelectLabel$,
-        singleChoiceDescription$,
-        multipleSelectionDescription$,
       } = qtiEditorStrings;
 
       const palette = themePalette();
@@ -264,8 +257,7 @@
         bodyXml,
         responseDeclarations,
         errors,
-        showAnswerCount,
-        setShowAnswerCount,
+        isSingleSelect,
         addChoice,
         removeChoice,
         moveChoiceUp,
@@ -274,30 +266,8 @@
         setPrompt,
         setChoiceContent,
         setShuffle,
+        setShowAnswerCount,
       } = useChoiceInteraction(props.interaction, questionTypeRef);
-
-      const isSingleSelect = computed(() => props.questionType === QuestionType.SINGLE_SELECT);
-
-      const questionTypeOptions = computed(() => [
-        {
-          value: QuestionType.SINGLE_SELECT,
-          label: singleSelectLabel$(),
-          description: singleChoiceDescription$(),
-        },
-        {
-          value: QuestionType.MULTI_SELECT,
-          label: multiSelectLabel$(),
-          description: multipleSelectionDescription$(),
-        },
-      ]);
-
-      const answerSettingsConfig = computed(() =>
-        isSingleSelect.value ? ['shuffle'] : ['shuffle', 'showAnswerCount'],
-      );
-
-      function onQuestionTypeChange(newType) {
-        emit('update:questionType', newType);
-      }
 
       const isQuestionOpen = ref(false);
       const openChoiceId = ref(null);
@@ -510,6 +480,8 @@
         };
       }
 
+      const answersHeaderId = generateRandomSlug('answers-header');
+
       return {
         EditorImageProcessor,
         promptWrapperClass,
@@ -517,11 +489,9 @@
         state,
         isSingleSelect,
         windowIsSmall,
-        questionTypeOptions,
-        answerSettingsConfig,
-        showAnswerCount,
         answersLabel$,
         answersDescription,
+        answersHeaderId,
         isQuestionOpen,
         closeQuestion,
         closeChoice,
@@ -536,7 +506,6 @@
         setChoiceContent,
         setShuffle,
         setShowAnswerCount,
-        onQuestionTypeChange,
         onToggleCorrect,
         onAddChoice,
         getChoiceRowActions,
@@ -577,13 +546,13 @@
         type: Boolean,
         default: false,
       },
-      teleportTarget: {
+      teleportTargetId: {
         type: String,
-        default: '#qti-question-settings',
+        required: true,
       },
     },
 
-    emits: ['update:interaction', 'update:questionType'],
+    emits: ['update:interaction'],
   };
 
 </script>

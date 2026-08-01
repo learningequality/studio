@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/vue';
+import { render, screen, fireEvent, within } from '@testing-library/vue';
 import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
 import ChoiceInteractionEditor from '../ChoiceInteractionEditor.vue';
@@ -24,9 +24,23 @@ jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
   };
 });
 
+let teleportContainer;
+
+beforeEach(() => {
+  teleportContainer = document.createElement('div');
+  teleportContainer.id = 'test-settings-target';
+  document.body.appendChild(teleportContainer);
+});
+
+afterEach(() => {
+  if (teleportContainer && teleportContainer.parentNode) {
+    teleportContainer.parentNode.removeChild(teleportContainer);
+  }
+});
+
 const renderEditor = (props = {}) =>
   render(ChoiceInteractionEditor, {
-    props: { mode: 'edit', ...props },
+    props: { mode: 'edit', teleportTargetId: 'test-settings-target', ...props },
     routes: new VueRouter(),
   });
 
@@ -92,9 +106,9 @@ describe('ChoiceInteractionEditor', () => {
 
   describe('multiSelect (KCheckbox)', () => {
     const choiceCheckboxes = () => {
-      const list = document.querySelector('.choices-list');
-      if (!list) return [];
-      return Array.from(list.querySelectorAll('input[type="checkbox"]'));
+      const group = screen.queryByRole('group', { name: tr.$tr('answersLabel') });
+      if (!group) return [];
+      return Array.from(group.querySelectorAll('input[type="checkbox"]'));
     };
 
     it('renders a checkbox for each choice', () => {
@@ -340,7 +354,9 @@ describe('ChoiceInteractionEditor', () => {
         interaction: block(CHOICE_MULTI_SELECT_XML),
         questionType: QuestionType.MULTI_SELECT,
       });
-      expect(screen.getByText(tr.$tr('answerSettingsLabel'))).toBeInTheDocument();
+      expect(
+        within(teleportContainer).getByText(tr.$tr('answerSettingsLabel')),
+      ).toBeInTheDocument();
     });
 
     it('renders shuffle answers checkbox', () => {
@@ -350,7 +366,7 @@ describe('ChoiceInteractionEditor', () => {
       });
       // KIconButton also has the same aria-label — use role=checkbox specifically
       expect(
-        screen.getByRole('checkbox', { name: tr.$tr('shuffleAnswersLabel') }),
+        within(teleportContainer).getByRole('checkbox', { name: tr.$tr('shuffleAnswersLabel') }),
       ).toBeInTheDocument();
     });
 
@@ -360,7 +376,7 @@ describe('ChoiceInteractionEditor', () => {
         questionType: QuestionType.SINGLE_SELECT,
       });
       expect(
-        screen.queryByRole('checkbox', { name: tr.$tr('showAnswerCountLabel') }),
+        within(teleportContainer).queryByRole('checkbox', { name: tr.$tr('showAnswerCountLabel') }),
       ).not.toBeInTheDocument();
     });
 
@@ -370,7 +386,7 @@ describe('ChoiceInteractionEditor', () => {
         questionType: QuestionType.MULTI_SELECT,
       });
       expect(
-        screen.getByRole('checkbox', { name: tr.$tr('showAnswerCountLabel') }),
+        within(teleportContainer).getByRole('checkbox', { name: tr.$tr('showAnswerCountLabel') }),
       ).toBeInTheDocument();
     });
 
@@ -379,7 +395,9 @@ describe('ChoiceInteractionEditor', () => {
         interaction: block(CHOICE_MULTI_SELECT_XML),
         questionType: QuestionType.MULTI_SELECT,
       });
-      await fireEvent.click(screen.getByRole('checkbox', { name: tr.$tr('shuffleAnswersLabel') }));
+      await fireEvent.click(
+        within(teleportContainer).getByRole('checkbox', { name: tr.$tr('shuffleAnswersLabel') }),
+      );
       const latest = emitted()['update:interaction'].at(-1)[0];
       expect(latest.bodyXml).toContain('shuffle="true"');
     });
@@ -389,7 +407,9 @@ describe('ChoiceInteractionEditor', () => {
         interaction: block(CHOICE_MULTI_SELECT_XML),
         questionType: QuestionType.MULTI_SELECT,
       });
-      const infoBtn = screen.getByRole('button', { name: tr.$tr('shuffleAnswersInfoTitle') });
+      const infoBtn = within(teleportContainer).getByRole('button', {
+        name: tr.$tr('shuffleAnswersInfoTitle'),
+      });
       await fireEvent.click(infoBtn);
       expect(screen.getByRole('dialog')).toBeInTheDocument();
       expect(screen.getByText(tr.$tr('shuffleAnswersInfoBody'))).toBeInTheDocument();
@@ -400,40 +420,10 @@ describe('ChoiceInteractionEditor', () => {
         interaction: block(CHOICE_MULTI_SELECT_XML),
         questionType: QuestionType.MULTI_SELECT,
       });
-      const infoBtn = screen.getByRole('button', { name: tr.$tr('shuffleAnswersInfoTitle') });
+      const infoBtn = within(teleportContainer).getByRole('button', {
+        name: tr.$tr('shuffleAnswersInfoTitle'),
+      });
       await fireEvent.click(infoBtn);
-      await fireEvent.click(screen.getByRole('button', { name: tr.$tr('closeBtnLabel') }));
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    });
-  });
-
-  describe('Question type selector', () => {
-    it('renders the type selector in edit mode', () => {
-      renderEditor({
-        interaction: block(CHOICE_SINGLE_SELECT_XML),
-        questionType: QuestionType.SINGLE_SELECT,
-      });
-      expect(screen.getByText(tr.$tr('typeLabel'))).toBeInTheDocument();
-    });
-
-    it('clicking the type info button opens a modal with descriptions', async () => {
-      renderEditor({
-        interaction: block(CHOICE_SINGLE_SELECT_XML),
-        questionType: QuestionType.SINGLE_SELECT,
-      });
-      const infoBtn = screen.getByRole('button', { name: tr.$tr('responseTypeInfoTitle') });
-      await fireEvent.click(infoBtn);
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
-      expect(screen.getByText(tr.$tr('singleChoiceDescription'))).toBeInTheDocument();
-      expect(screen.getByText(tr.$tr('multipleSelectionDescription'))).toBeInTheDocument();
-    });
-
-    it('type info modal closes on Close', async () => {
-      renderEditor({
-        interaction: block(CHOICE_SINGLE_SELECT_XML),
-        questionType: QuestionType.SINGLE_SELECT,
-      });
-      await fireEvent.click(screen.getByRole('button', { name: tr.$tr('responseTypeInfoTitle') }));
       await fireEvent.click(screen.getByRole('button', { name: tr.$tr('closeBtnLabel') }));
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });

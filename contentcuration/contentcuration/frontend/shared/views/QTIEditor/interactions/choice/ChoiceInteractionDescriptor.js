@@ -15,6 +15,21 @@ export class ChoiceInteractionDescriptor {
     this.convertsFrom = [];
   }
 
+  getTypeOptions(tr) {
+    return [
+      {
+        value: QuestionType.SINGLE_SELECT,
+        label: tr.singleSelectLabel$(),
+        description: tr.singleChoiceDescription$(),
+      },
+      {
+        value: QuestionType.MULTI_SELECT,
+        label: tr.multiSelectLabel$(),
+        description: tr.multipleSelectionDescription$(),
+      },
+    ];
+  }
+
   /** @param {Element} el */
   matches(el) {
     return el.tagName.toLowerCase() === QtiInteraction.CHOICE;

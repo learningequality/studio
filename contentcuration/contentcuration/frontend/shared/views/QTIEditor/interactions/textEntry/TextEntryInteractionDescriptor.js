@@ -23,6 +23,26 @@ class TextEntryInteractionDescriptor {
     this.convertsFrom = [];
   }
 
+  getTypeOptions(tr) {
+    return [
+      {
+        value: QuestionType.NUMERIC,
+        label: tr.numericLabel$(),
+        description: tr.numericDescription$(),
+      },
+      {
+        value: QuestionType.TEXT_ENTRY,
+        label: tr.textEntryLabel$(),
+        description: tr.textEntryDescription$(),
+      },
+      {
+        value: QuestionType.FREE_RESPONSE,
+        label: tr.freeResponseLabel$(),
+        description: tr.freeResponseDescription$(),
+      },
+    ];
+  }
+
   /** @param {Element} el */
   matches(el) {
     if (el.tagName.toLowerCase() === QtiInteraction.TEXT_ENTRY) return true;

@@ -268,13 +268,3 @@ describe('TextEntryEditor — graceful fallback', () => {
     expect(screen.queryByRole('button', { name: tr.$tr('addAnswerBtn') })).not.toBeInTheDocument();
   });
 });
-
-describe('TextEntryEditor — type selector', () => {
-  it('renders the QuestionSettingsHeader in edit mode', () => {
-    renderEditor({
-      interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL),
-      questionType: QuestionType.NUMERIC,
-    });
-    expect(screen.getByText(tr.$tr('typeLabel'))).toBeInTheDocument();
-  });
-});

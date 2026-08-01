@@ -1,7 +1,8 @@
 import { render, screen, fireEvent } from '@testing-library/vue';
 import VueRouter from 'vue-router';
 import AnswerSettings from '../index.vue';
-import { qtiEditorStrings as tr } from '../../../qtiEditorStrings';
+import { qtiEditorStrings as tr } from '../../../../../qtiEditorStrings';
+import { QuestionType } from '../../../../../constants';
 
 jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
   const { ref } = require('vue');
@@ -12,7 +13,7 @@ jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
 });
 
 const defaultProps = {
-  settings: ['shuffle', 'showAnswerCount'],
+  questionType: QuestionType.MULTI_SELECT,
   shuffle: false,
   showAnswerCount: true,
 };
@@ -30,26 +31,16 @@ describe('AnswerSettings', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders show answer count checkbox when included in settings', () => {
+  it('renders show answer count checkbox when questionType is MULTI_SELECT', () => {
     render(AnswerSettings, { props: defaultProps, routes: new VueRouter() });
     expect(
       screen.getByRole('checkbox', { name: tr.$tr('showAnswerCountLabel') }),
     ).toBeInTheDocument();
   });
 
-  it('does not render shuffle checkbox when not in settings', () => {
+  it('does not render show answer count checkbox when questionType is SINGLE_SELECT', () => {
     render(AnswerSettings, {
-      props: { ...defaultProps, settings: ['showAnswerCount'] },
-      routes: new VueRouter(),
-    });
-    expect(
-      screen.queryByRole('checkbox', { name: tr.$tr('shuffleAnswersLabel') }),
-    ).not.toBeInTheDocument();
-  });
-
-  it('does not render show answer count checkbox when not in settings', () => {
-    render(AnswerSettings, {
-      props: { ...defaultProps, settings: ['shuffle'] },
+      props: { ...defaultProps, questionType: QuestionType.SINGLE_SELECT },
       routes: new VueRouter(),
     });
     expect(

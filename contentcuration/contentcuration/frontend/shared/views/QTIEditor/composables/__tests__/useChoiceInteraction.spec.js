@@ -176,25 +176,25 @@ describe('useChoiceInteraction', () => {
   });
 
   describe('showAnswerCount', () => {
-    it('defaults to true', () => {
-      const { showAnswerCount } = setup([
+    it('defaults to true (maxChoices !== 0 in the fixture)', () => {
+      const { state } = setup([
         makeAnswer({ id: 'a', correct: true }),
         makeAnswer({ id: 'b', correct: false }),
       ]);
-      expect(showAnswerCount.value).toBe(true);
+      expect(state.value.showAnswerCount).toBe(true);
     });
 
-    it('can be set to false', () => {
-      const { showAnswerCount, setShowAnswerCount } = setup([
+    it('setShowAnswerCount(false) updates state.showAnswerCount', () => {
+      const { state, setShowAnswerCount } = setup([
         makeAnswer({ id: 'a', correct: true }),
         makeAnswer({ id: 'b', correct: false }),
       ]);
       setShowAnswerCount(false);
-      expect(showAnswerCount.value).toBe(false);
+      expect(state.value.showAnswerCount).toBe(false);
     });
   });
 
-  describe('effectiveMaxChoices', () => {
+  describe('max-choices / min-choices XML output', () => {
     it('when showAnswerCount is true, max-choices equals number of correct answers', () => {
       const { bodyXml } = setup(
         [
@@ -206,13 +206,10 @@ describe('useChoiceInteraction', () => {
       );
 
       const parser = new DOMParser();
-      const doc = parser.parseFromString(
-        '<html><body>' + bodyXml.value + '</body></html>',
-        'text/html',
-      );
+      const doc = parser.parseFromString(bodyXml.value, 'text/xml');
       const interaction = doc.querySelector('qti-choice-interaction');
 
-      expect(interaction).toHaveAttribute('max-choices', '2');
+      expect(interaction?.getAttribute('max-choices')).toBe('2');
     });
 
     it('when showAnswerCount is false, max-choices is 0', () => {
@@ -228,13 +225,10 @@ describe('useChoiceInteraction', () => {
       setShowAnswerCount(false);
 
       const parser = new DOMParser();
-      const doc = parser.parseFromString(
-        '<html><body>' + bodyXml.value + '</body></html>',
-        'text/html',
-      );
+      const doc = parser.parseFromString(bodyXml.value, 'text/xml');
       const interaction = doc.querySelector('qti-choice-interaction');
 
-      expect(interaction).toHaveAttribute('max-choices', '0');
+      expect(interaction?.getAttribute('max-choices')).toBe('0');
     });
 
     it('updates automatically when correct answers change and showAnswerCount is true', () => {
@@ -249,20 +243,56 @@ describe('useChoiceInteraction', () => {
 
       // Initially 1 correct answer
       let parser = new DOMParser();
-      let doc = parser.parseFromString(
-        '<html><body>' + bodyXml.value + '</body></html>',
-        'text/html',
-      );
+      let doc = parser.parseFromString(bodyXml.value, 'text/xml');
       let interaction = doc.querySelector('qti-choice-interaction');
-      expect(interaction).toHaveAttribute('max-choices', '1');
+      expect(interaction?.getAttribute('max-choices')).toBe('1');
+      expect(interaction?.getAttribute('min-choices')).toBe('1');
 
       // Toggle second answer correct
       toggleCorrectChoice('b');
 
       parser = new DOMParser();
-      doc = parser.parseFromString('<html><body>' + bodyXml.value + '</body></html>', 'text/html');
+      doc = parser.parseFromString(bodyXml.value, 'text/xml');
       interaction = doc.querySelector('qti-choice-interaction');
-      expect(interaction).toHaveAttribute('max-choices', '2');
+      expect(interaction?.getAttribute('max-choices')).toBe('2');
+      expect(interaction?.getAttribute('min-choices')).toBe('2');
+    });
+
+    it('sets max-choices to 1 and omits min-choices for single select', () => {
+      const { bodyXml } = setup(
+        [makeAnswer({ id: 'a', correct: true }), makeAnswer({ id: 'b', correct: false })],
+        QuestionType.SINGLE_SELECT,
+      );
+
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(bodyXml.value, 'text/xml');
+      const interaction = doc.querySelector('qti-choice-interaction');
+      expect(interaction?.getAttribute('max-choices')).toBe('1');
+      expect(interaction?.hasAttribute('min-choices')).toBe(false);
+    });
+  });
+
+  describe('questionType conversion', () => {
+    it('updates response declaration cardinality to match the new type', () => {
+      const { questionTypeRef, responseDeclarations } = setup(
+        [makeAnswer({ id: 'a', correct: true }), makeAnswer({ id: 'b', correct: false })],
+        QuestionType.SINGLE_SELECT,
+      );
+
+      // Verify initial state
+      let parser = new DOMParser();
+      let doc = parser.parseFromString(responseDeclarations.value[0], 'text/xml');
+      let declaration = doc.querySelector('qti-response-declaration');
+      expect(declaration?.getAttribute('cardinality')).toBe('single');
+
+      // Change type to multi-select
+      questionTypeRef.value = QuestionType.MULTI_SELECT;
+
+      // Verify updated state
+      parser = new DOMParser();
+      doc = parser.parseFromString(responseDeclarations.value[0], 'text/xml');
+      declaration = doc.querySelector('qti-response-declaration');
+      expect(declaration?.getAttribute('cardinality')).toBe('multiple');
     });
   });
 });

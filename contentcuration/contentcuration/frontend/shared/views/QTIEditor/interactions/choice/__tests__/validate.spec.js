@@ -17,8 +17,6 @@ function makeState(overrides = {}) {
       makeAnswer({ id: 'choice_a', content: 'Four', correct: true }),
       makeAnswer({ id: 'choice_b', content: 'Five', correct: false }),
     ],
-    maxChoices: 1,
-    minChoices: 0,
     shuffle: false,
     orientation: Orientation.VERTICAL,
     ...overrides,

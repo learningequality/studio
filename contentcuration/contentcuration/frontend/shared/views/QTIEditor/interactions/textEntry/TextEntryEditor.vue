@@ -1,15 +1,6 @@
 <template>
 
   <div class="text-entry-editor">
-    <Teleport :to="teleportTarget">
-      <QuestionSettingsHeader
-        :questionType="questionType"
-        :questionTypeOptions="questionTypeOptions"
-        :mode="mode"
-        @update:questionType="onQuestionTypeChange"
-      />
-    </Teleport>
-
     <!-- Prompt -->
     <div class="text-entry-editor__section">
       <ValidationMessage v-if="questionHasError">
@@ -191,7 +182,6 @@
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { QuestionType, ValidationError } from '../../constants';
   import { useTextEntryInteraction } from '../../composables/useTextEntryInteraction';
-  import QuestionSettingsHeader from '../../components/QuestionSettingsHeader/index.vue';
   import ValidationMessage from 'shared/views/QTIEditor/components/ValidationMessage';
   import AddListItemButton from 'shared/views/QTIEditor/components/AddListItemButton';
   import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
@@ -200,7 +190,8 @@
   export default {
     name: 'TextEntryEditor',
 
-    components: { TipTapEditor, ValidationMessage, AddListItemButton, QuestionSettingsHeader },
+    components: { TipTapEditor, ValidationMessage, AddListItemButton },
+    inheritAttrs: false,
 
     setup(props, { emit }) {
       const { windowIsSmall } = useKResponsiveWindow();
@@ -220,12 +211,6 @@
         errorInvalidNumericValue$,
         errorEmptyAnswerContent$,
         errorDuplicateAnswerContent$,
-        numericLabel$,
-        textEntryLabel$,
-        numericDescription$,
-        textEntryDescription$,
-        freeResponseLabel$,
-        freeResponseDescription$,
       } = qtiEditorStrings;
 
       const questionTypeRef = computed(() => props.questionType);
@@ -242,28 +227,6 @@
         updateAnswerValue,
         toggleCaseSensitive,
       } = useTextEntryInteraction(props.interaction, questionTypeRef);
-
-      const questionTypeOptions = computed(() => [
-        {
-          value: QuestionType.NUMERIC,
-          label: numericLabel$(),
-          description: numericDescription$(),
-        },
-        {
-          value: QuestionType.TEXT_ENTRY,
-          label: textEntryLabel$(),
-          description: textEntryDescription$(),
-        },
-        {
-          value: QuestionType.FREE_RESPONSE,
-          label: freeResponseLabel$(),
-          description: freeResponseDescription$(),
-        },
-      ]);
-
-      function onQuestionTypeChange(newType) {
-        emit('update:questionType', newType);
-      }
 
       const isNumeric = computed(() => props.questionType === QuestionType.NUMERIC);
 
@@ -394,8 +357,6 @@
         noCorrectAnswerError,
         answerHasError,
         runValidation,
-        questionTypeOptions,
-        onQuestionTypeChange,
         handlePromptClick,
         closePrompt,
         setPrompt,
@@ -434,10 +395,7 @@
         type: String,
         default: null,
       },
-      teleportTarget: {
-        type: String,
-        default: '#qti-question-settings',
-      },
+
       mode: {
         type: String,
         default: 'view',
@@ -450,7 +408,7 @@
       },
     },
 
-    emits: ['update:interaction', 'update:questionType'],
+    emits: ['update:interaction'],
   };
 
 </script>

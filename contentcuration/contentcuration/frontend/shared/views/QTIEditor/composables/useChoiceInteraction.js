@@ -1,4 +1,4 @@
-import { readonly, computed } from 'vue';
+import { computed, readonly } from 'vue';
 import { QuestionType } from '../constants';
 import { generateRandomSlug } from '../utils/generateRandomSlug';
 import { choiceInteractionDescriptor } from '../interactions/choice/ChoiceInteractionDescriptor';
@@ -17,38 +17,7 @@ import { useInteraction } from './useInteraction';
 export function useChoiceInteraction(interactionBlock, questionType) {
   const base = useInteraction(choiceInteractionDescriptor, interactionBlock, questionType);
   const { state } = base;
-
-  const parsedShowAnswerCount = (state.value.maxChoices ?? 1) !== 0;
-
-  const showAnswerCount = computed({
-    get: () => state.value.showAnswerCount ?? parsedShowAnswerCount,
-    set: val => {
-      state.value = { ...state.value, showAnswerCount: val };
-    },
-  });
-
-  function setShowAnswerCount(val) {
-    showAnswerCount.value = val;
-  }
-
-  const effectiveMaxChoices = computed(() => {
-    if (!showAnswerCount.value) return 0;
-    return state.value.choices.filter(c => c.correct).length;
-  });
-
-  const stateForXml = computed(() => ({
-    ...state.value,
-    maxChoices: effectiveMaxChoices.value,
-    minChoices: effectiveMaxChoices.value,
-  }));
-
-  const builtXml = computed(() => {
-    if (!questionType.value) return { bodyXml: '', responseDeclarations: [] };
-    return choiceInteractionDescriptor.buildXML(stateForXml.value, questionType.value);
-  });
-
-  const bodyXml = computed(() => builtXml.value.bodyXml);
-  const responseDeclarations = computed(() => builtXml.value.responseDeclarations);
+  const isSingleSelect = computed(() => questionType.value === QuestionType.SINGLE_SELECT);
 
   function addChoice() {
     state.value = {
@@ -117,13 +86,14 @@ export function useChoiceInteraction(interactionBlock, questionType) {
     state.value = { ...state.value, shuffle: val };
   }
 
+  function setShowAnswerCount(val) {
+    state.value = { ...state.value, showAnswerCount: val };
+  }
+
   return {
     ...base,
     state: readonly(state),
-    bodyXml,
-    responseDeclarations,
-    showAnswerCount: readonly(showAnswerCount),
-    setShowAnswerCount,
+    isSingleSelect,
     addChoice,
     removeChoice,
     moveChoiceUp,
@@ -132,5 +102,6 @@ export function useChoiceInteraction(interactionBlock, questionType) {
     setPrompt,
     setChoiceContent,
     setShuffle,
+    setShowAnswerCount,
   };
 }
