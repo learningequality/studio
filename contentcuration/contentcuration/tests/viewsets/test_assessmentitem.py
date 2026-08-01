@@ -1243,8 +1243,7 @@ class DualReadTestCase(StudioAPITestCase):
                 self.assertIn(interaction, item["raw_data"])
 
     def test_answerless_choice_item_is_returned_as_valid_qti(self):
-        # The shape the editor writes for every newly added question: a choice
-        # type with no answers and nothing typed into it yet.
+        # The shape the editor writes for every newly added question.
         assessment_id = self._create_item(type=exercises.SINGLE_SELECTION).assessment_id
 
         item = self._get_item(assessment_id)
@@ -1269,10 +1268,9 @@ class DualReadTestCase(StudioAPITestCase):
         self.assertNotIn("contentnode__language__lang_code", item)
 
     def test_converted_items_are_tagged_with_their_own_node_language(self):
-        # A contentnode__in read spans several nodes, so each item has to pick
-        # up its own node's language rather than one language for the batch.
-        # pt-BR has a subcode, so the bare lang_code publish tags items with is
-        # distinguishable from the Language primary key.
+        # A contentnode__in read spans several nodes, so each item must pick up its
+        # own node's language; pt-BR has a subcode, so the bare lang_code publish
+        # tags items with is distinguishable from the Language primary key.
         self.node.language = models.Language.objects.get(id="pt-BR")
         self.node.save()
         other_node = models.ContentNode.objects.create(
@@ -1360,8 +1358,8 @@ class DualReadTestCase(StudioAPITestCase):
             )
 
     def test_unconvertible_type_is_not_a_404_on_detail_route(self):
-        # serialize_object() turns ValueError into a 404, which would report a
-        # corrupt row as a missing one - the failure must surface instead.
+        # Only this route goes through serialize_object(), which is what would
+        # otherwise swallow the failure into a 404.
         assessmentitem = self._create_item(
             type="not_a_real_type", question="What is 2+2?"
         )

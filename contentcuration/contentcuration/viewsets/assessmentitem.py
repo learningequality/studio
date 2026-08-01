@@ -32,9 +32,8 @@ exercise_image_filename_regex = re.compile(
     )
 )
 
-# Types the read path returns as stored. Everything else is a legacy type that is
-# converted to QTI on read until the global backfill (#6007) makes the conversion
-# permanent, at which point AssessmentItemViewSet.consolidate goes away.
+# Everything else is a legacy type, converted to QTI on read until the global
+# backfill (#6007) makes that permanent and consolidate() goes away.
 PASSTHROUGH_TYPES = (exercises.QTI, exercises.PERSEUS_QUESTION)
 
 
@@ -342,8 +341,8 @@ class AssessmentItemViewSet(BulkCreateMixin, BulkUpdateMixin, ValuesViewset):
         "source_url",
         "randomize",
         "deleted",
-        # Only consumed by consolidate(), which pops it back off - publish tags
-        # an item with the bare lang_code of its content node's language
+        # Only consumed by consolidate(), which pops it back off. Publish tags an
+        # item with the bare lang_code of its content node's language
         # (utils/assessment/qti/archive.py), so the read path matches.
         "contentnode__language__lang_code",
     )
@@ -354,17 +353,16 @@ class AssessmentItemViewSet(BulkCreateMixin, BulkUpdateMixin, ValuesViewset):
 
     def consolidate(self, items, queryset):
         for item in items:
-            language = item.pop("contentnode__language__lang_code", None)
+            language = item.pop("contentnode__language__lang_code")
             if item["type"] in PASSTHROUGH_TYPES:
                 continue
             try:
                 # A new dict, so the language does not leak into the response.
                 result = convert_legacy_question_to_qti(dict(item, language=language))
             except (IndexError, ValueError, TypeError) as e:
-                # serialize_object() turns IndexError/ValueError/TypeError into
-                # a 404 (base.py), reporting a corrupt row as a missing one;
-                # re-raise as a type it does not catch (pydantic and json errors
-                # both subclass ValueError).
+                # serialize_object() turns these into a 404 (base.py), reporting
+                # a corrupt row as a missing one; re-raise as a type it does not
+                # catch. pydantic and json errors both subclass ValueError.
                 raise LegacyConversionError(
                     f"Could not convert assessment item {item['assessment_id']} to QTI"
                 ) from e

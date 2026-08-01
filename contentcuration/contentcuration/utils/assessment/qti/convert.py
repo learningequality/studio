@@ -7,6 +7,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
+from typing import Union
 
 from le_utils.constants import exercises
 
@@ -142,17 +143,17 @@ def _response_declaration(
 
 def _create_choice_interaction_and_response(
     item: LegacyAssessmentItem,
-) -> Tuple[Optional[ChoiceInteraction], Optional[ResponseDeclaration]]:
-    """
-    Create a QTI choice interaction for multiple choice questions, or
-    ``(None, None)`` if the question has no answers to choose between.
-    """
+) -> Tuple[Union[ChoiceInteraction, Div], Optional[ResponseDeclaration]]:
+    """Create a QTI choice interaction for multiple choice questions."""
     if not item.answers:
-        # An answerless choice question is ordinary in-progress authoring state -
-        # it is what the editor writes for every newly added question - but the
-        # XSD requires a qti-choice-interaction to carry at least one
-        # qti-simple-choice, and there is nothing to bind a response to.
-        return None, None
+        # An answerless choice question is ordinary in-progress authoring state,
+        # but the XSD requires at least one qti-simple-choice and there is no
+        # response to bind, so emit the question alone, ungraded. Div because
+        # rendered markdown can start with a top level <math>, which
+        # qti-item-body does not accept; empty P so an untyped question still
+        # renders as an editable paragraph.
+        body = _create_html_content_from_text(item.question) or [P()]
+        return Div(children=body), None
 
     multiple_select = item.type == exercises.MULTIPLE_SELECTION
 
@@ -322,25 +323,18 @@ def convert_legacy_assessment_item_to_qti(
     else:
         raise ValueError(f"Unsupported question type: {item.type}")
 
-    if interaction is None:
-        # Emit the question text alone, ungraded. Div because rendered markdown
-        # can start with a top level <math>, which qti-item-body does not accept
-        # directly; the empty P stands in for the text a newly added question
-        # does not have yet, so the body is a paragraph to render and edit
-        # rather than a bare empty div.
-        item_body = ItemBody(
-            children=[
-                Div(children=_create_html_content_from_text(item.question) or [P()])
-            ]
-        )
-        response_declarations = []
-        response_processing = None
-    else:
-        item_body = ItemBody(children=[interaction])
-        response_declarations = [response_declaration]
-        response_processing = ResponseProcessing(
+    item_body = ItemBody(children=[interaction])
+
+    response_declarations = (
+        [response_declaration] if response_declaration is not None else []
+    )
+    response_processing = (
+        ResponseProcessing(
             template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"
         )
+        if response_declarations
+        else None
+    )
 
     outcome_declaration = OutcomeDeclaration(
         identifier="SCORE", cardinality=Cardinality.SINGLE, base_type=BaseType.FLOAT

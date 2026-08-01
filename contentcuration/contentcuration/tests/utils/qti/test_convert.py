@@ -136,8 +136,8 @@ class ChoiceInteractionConversionTests(unittest.TestCase):
         self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
     def test_choice_types_with_no_answers_omit_the_interaction(self):
-        # The guard is on the choice types as a group, not just SINGLE_SELECTION,
-        # which test_single_selection_no_answers already pins against the fixture.
+        # The guard covers the choice types as a group; test_single_selection_no_answers
+        # pins SINGLE_SELECTION against the fixture.
         for question_type in (exercises.MULTIPLE_SELECTION, "true_false"):
             with self.subTest(question_type=question_type):
                 item = _make_item(
@@ -156,8 +156,6 @@ class ChoiceInteractionConversionTests(unittest.TestCase):
                 self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
     def test_choice_type_with_no_answers_and_no_question(self):
-        # The model's own defaults - a question with nothing typed into it yet
-        # still carries an empty paragraph to render and edit.
         item = _make_item(
             type=exercises.MULTIPLE_SELECTION,
             question="",
@@ -171,10 +169,8 @@ class ChoiceInteractionConversionTests(unittest.TestCase):
         self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
     def test_choice_type_with_no_answers_and_block_maths(self):
-        # Block maths renders as a top level <math>, which qti-item-body does not
-        # accept directly - hence the wrapping div. XSD validity is not asserted
-        # here: rendered MathML does not carry its namespace, the same gap
-        # test_free_response_with_maths lives with.
+        # Validity is not asserted: rendered MathML carries no namespace, the same
+        # gap test_free_response_with_maths lives with.
         item = _make_item(
             type=exercises.SINGLE_SELECTION,
             question="$$\\sum_n^sxa^n$$",
