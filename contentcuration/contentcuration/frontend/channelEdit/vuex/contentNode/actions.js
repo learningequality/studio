@@ -359,7 +359,10 @@ export function updateContentNode(
   }
   let contentNodeData = generateContentNodeData(payload);
 
-  const node = context.getters.getContentNode(id);
+  const node =
+    context.getters.getContentNode(id) ||
+    (mergeMapFields &&
+      (context.state.inheritingNodes || []).find(inheritingNode => inheritingNode.id === id));
 
   // Don't overwrite existing extra_fields data
   if (contentNodeData.extra_fields) {

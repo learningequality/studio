@@ -166,6 +166,34 @@ describe('contentNode actions', () => {
           updateSpy.mockRestore();
         });
     });
+    it('should merge map fields from queued inheriting nodes when the node is not in the map', async () => {
+      store.commit('contentNode/ADD_INHERITING_NODE', {
+        id,
+        title: 'test',
+        grade_levels: {
+          lower_primary: true,
+        },
+      });
+      const updateSpy = jest
+        .spyOn(ContentNode, 'update')
+        .mockImplementation(() => Promise.resolve());
+
+      await store.dispatch('contentNode/updateContentNode', {
+        id,
+        mergeMapFields: true,
+        grade_levels: {
+          upper_primary: true,
+        },
+      });
+
+      expect(updateSpy).toHaveBeenCalledWith(id, {
+        changed: true,
+        grade_levels: {
+          lower_primary: true,
+          upper_primary: true,
+        },
+      });
+    });
   });
   describe('updateContentNodeDescendants', () => {
     const nodeIdToUpdate = '0000-1111-2222-3333';
