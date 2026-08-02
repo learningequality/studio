@@ -195,7 +195,7 @@ packaging==26.2
     #   google-cloud-error-reporting
     #   gunicorn
     #   kombu
-pillow==12.2.0
+pillow==12.3.0
     # via -r requirements.in
 prometheus-client==0.10.1
     # via django-prometheus
