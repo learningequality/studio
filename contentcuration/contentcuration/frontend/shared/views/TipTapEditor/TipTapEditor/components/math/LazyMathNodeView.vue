@@ -100,6 +100,11 @@
     display: inline-block;
   }
 
+  .math-node-wrapper--selected {
+    color: HighlightText;
+    background-color: Highlight;
+  }
+
   .math-loading {
     display: inline-block;
     min-width: 20px;
