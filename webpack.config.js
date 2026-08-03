@@ -122,7 +122,7 @@ module.exports = (env = {}) => {
       chunkFilename: '[name]-[id]-[fullhash].js',
       path: bundleOutputDir,
       publicPath: dev ? devPublicPath : '/static/studio/',
-      pathinfo: !dev,
+      pathinfo: dev,
     },
     devServer: {
       port: 4000,
