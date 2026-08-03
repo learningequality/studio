@@ -101,12 +101,6 @@ def _is_site_admin(user):
     return bool(getattr(user, "is_admin", False))
 
 
-def _get_member_name(item):
-    first_name = item.pop("user__first_name", "") or ""
-    last_name = item.pop("user__last_name", "") or ""
-    return "{} {}".format(first_name, last_name).strip()
-
-
 class OrganizationViewSet(
     ValuesViewset,
     RESTCreateModelMixin,
@@ -243,8 +237,16 @@ class OrganizationMemberViewSet(
         "user_email": "user__email",
         "user_first_name": "user__first_name",
         "user_last_name": "user__last_name",
-        "user_name": _get_member_name,
     }
+
+    def consolidate(self, items, queryset):
+        """Add the display name after field mappings have been applied."""
+        for item in items:
+            item["user_name"] = "{} {}".format(
+                item.get("user_first_name", "") or "",
+                item.get("user_last_name", "") or "",
+            ).strip()
+        return items
 
     def get_queryset(self):
         """
