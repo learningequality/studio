@@ -322,9 +322,7 @@ class OrganizationMemberViewSet(
             return
 
         resulting_role = new_role if new_role is not None else membership.role
-        resulting_status = (
-            new_status if new_status is not None else membership.status
-        )
+        resulting_status = new_status if new_status is not None else membership.status
 
         if (
             resulting_role == ORGANIZATION_ADMIN

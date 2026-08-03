@@ -524,9 +524,7 @@ class OrganizationMembershipDeleteTestCase(OrganizationAPITestCase):
     def test_last_active_admin_cannot_be_removed(self):
         self.authenticate_as(self.organization_admin)
 
-        response = self.client.delete(
-            self.membership_detail_url(self.admin_membership)
-        )
+        response = self.client.delete(self.membership_detail_url(self.admin_membership))
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertTrue(
