@@ -16,6 +16,15 @@ from le_utils.constants.labels import subjects
 from contentcuration.constants import channel_history
 from contentcuration.constants import community_library_submission
 from contentcuration.constants import user_history
+from contentcuration.constants.organization_roles import ORGANIZATION_ADMIN
+from contentcuration.constants.organization_roles import ORGANIZATION_EDITOR
+from contentcuration.constants.organization_roles import (
+    ORGANIZATION_ROLE_STATUS_ACTIVE,
+)
+from contentcuration.constants.organization_roles import (
+    ORGANIZATION_ROLE_STATUS_PENDING,
+)
+from contentcuration.constants.organization_roles import ORGANIZATION_VIEWER
 from contentcuration.models import AssessmentItem
 from contentcuration.models import AuditedSpecialPermissionsLicense
 from contentcuration.models import Change
@@ -34,6 +43,8 @@ from contentcuration.models import Invitation
 from contentcuration.models import Language
 from contentcuration.models import License
 from contentcuration.models import object_storage_name
+from contentcuration.models import Organization
+from contentcuration.models import OrganizationRole
 from contentcuration.models import RecommendationsEvent
 from contentcuration.models import RecommendationsInteractionEvent
 from contentcuration.models import User
@@ -307,6 +318,165 @@ class ChannelTestCase(PermissionQuerysetTestCase):
         )
 
         self.assertEqual(channel.get_server_rev(), 2)
+
+
+class OrganizationTestCase(PermissionQuerysetTestCase):
+    @property
+    def base_queryset(self):
+        return Organization.objects.all()
+
+    def test_filter_edit_queryset__admin_role(self):
+        organization = testdata.organization()
+        user = testdata.user()
+
+        queryset = Organization.filter_edit_queryset(self.base_queryset, user=user)
+        self.assertQuerysetDoesNotContain(queryset, pk=organization.id)
+
+        OrganizationRole.objects.create(
+            user=user,
+            organization=organization,
+            role=ORGANIZATION_ADMIN,
+            status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+        )
+        queryset = Organization.filter_edit_queryset(self.base_queryset, user=user)
+        self.assertQuerysetContains(queryset, pk=organization.id)
+
+    def test_filter_edit_queryset__editor_role_cannot_edit(self):
+        organization = testdata.organization()
+        user = testdata.user()
+        OrganizationRole.objects.create(
+            user=user,
+            organization=organization,
+            role=ORGANIZATION_EDITOR,
+            status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+        )
+
+        queryset = Organization.filter_edit_queryset(self.base_queryset, user=user)
+        self.assertQuerysetDoesNotContain(queryset, pk=organization.id)
+
+    def test_filter_edit_queryset__pending_admin_cannot_edit(self):
+        organization = testdata.organization()
+        user = testdata.user()
+        OrganizationRole.objects.create(
+            user=user,
+            organization=organization,
+            role=ORGANIZATION_ADMIN,
+            status=ORGANIZATION_ROLE_STATUS_PENDING,
+        )
+
+        queryset = Organization.filter_edit_queryset(self.base_queryset, user=user)
+        self.assertQuerysetDoesNotContain(queryset, pk=organization.id)
+
+    def test_filter_edit_queryset__anonymous(self):
+        organization = testdata.organization()
+
+        queryset = Organization.filter_edit_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
+        self.assertQuerysetDoesNotContain(queryset, pk=organization.id)
+
+    def test_filter_view_queryset__viewer_role(self):
+        organization = testdata.organization()
+        user = testdata.user()
+
+        queryset = Organization.filter_view_queryset(self.base_queryset, user=user)
+        self.assertQuerysetDoesNotContain(queryset, pk=organization.id)
+
+        OrganizationRole.objects.create(
+            user=user,
+            organization=organization,
+            role=ORGANIZATION_VIEWER,
+            status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+        )
+        queryset = Organization.filter_view_queryset(self.base_queryset, user=user)
+        self.assertQuerysetContains(queryset, pk=organization.id)
+
+    def test_filter_view_queryset__anonymous(self):
+        organization = testdata.organization()
+
+        queryset = Organization.filter_view_queryset(
+            self.base_queryset, user=self.anonymous_user
+        )
+        self.assertQuerysetDoesNotContain(queryset, pk=organization.id)
+
+
+class InvitationOrganizationTestCase(PermissionQuerysetTestCase):
+    @property
+    def base_queryset(self):
+        return Invitation.objects.all()
+
+    def _make_org_invitation(self):
+        organization = testdata.organization()
+        invitee = testdata.user(email="org-invitee@le.com")
+        invitation = Invitation.objects.create(
+            email=invitee.email, organization=organization
+        )
+        return organization, invitation
+
+    def test_filter_edit_queryset__organization_admin(self):
+        organization, invitation = self._make_org_invitation()
+        user = testdata.user()
+
+        queryset = Invitation.filter_edit_queryset(self.base_queryset, user=user)
+        self.assertQuerysetDoesNotContain(queryset, pk=invitation.id)
+
+        OrganizationRole.objects.create(
+            user=user,
+            organization=organization,
+            role=ORGANIZATION_ADMIN,
+            status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+        )
+        queryset = Invitation.filter_edit_queryset(self.base_queryset, user=user)
+        self.assertQuerysetContains(queryset, pk=invitation.id)
+
+    def test_filter_edit_queryset__organization_editor_cannot_edit(self):
+        organization, invitation = self._make_org_invitation()
+        user = testdata.user()
+        OrganizationRole.objects.create(
+            user=user,
+            organization=organization,
+            role=ORGANIZATION_EDITOR,
+            status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+        )
+
+        queryset = Invitation.filter_edit_queryset(self.base_queryset, user=user)
+        self.assertQuerysetDoesNotContain(queryset, pk=invitation.id)
+
+    def test_filter_view_queryset__organization_editor(self):
+        organization, invitation = self._make_org_invitation()
+        user = testdata.user()
+
+        queryset = Invitation.filter_view_queryset(self.base_queryset, user=user)
+        self.assertQuerysetDoesNotContain(queryset, pk=invitation.id)
+
+        OrganizationRole.objects.create(
+            user=user,
+            organization=organization,
+            role=ORGANIZATION_EDITOR,
+            status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+        )
+        queryset = Invitation.filter_view_queryset(self.base_queryset, user=user)
+        self.assertQuerysetContains(queryset, pk=invitation.id)
+
+    def test_filter_view_queryset__organization_viewer(self):
+        organization, invitation = self._make_org_invitation()
+        user = testdata.user()
+        OrganizationRole.objects.create(
+            user=user,
+            organization=organization,
+            role=ORGANIZATION_VIEWER,
+            status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+        )
+
+        queryset = Invitation.filter_view_queryset(self.base_queryset, user=user)
+        self.assertQuerysetContains(queryset, pk=invitation.id)
+
+    def test_filter_view_queryset__unrelated_user(self):
+        organization, invitation = self._make_org_invitation()
+        user = testdata.user()
+
+        queryset = Invitation.filter_view_queryset(self.base_queryset, user=user)
+        self.assertQuerysetDoesNotContain(queryset, pk=invitation.id)
 
 
 class ContentNodeTestCase(PermissionQuerysetTestCase):
