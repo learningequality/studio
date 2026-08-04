@@ -621,6 +621,7 @@
     display: flex;
     flex-direction: column;
     gap: 15px;
+    padding: 24px 32px 16px;
   }
 
   .submission-info-text {
