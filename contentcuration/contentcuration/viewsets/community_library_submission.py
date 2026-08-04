@@ -1,3 +1,5 @@
+import logging
+
 from django.db.models import OuterRef
 from django.db.models import Subquery
 from django_filters import BaseInFilter
@@ -35,6 +37,8 @@ from contentcuration.viewsets.sync.utils import (
     generate_added_to_community_library_event,
 )
 from contentcuration.viewsets.user import IsAdminUser
+
+logger = logging.getLogger(__name__)
 
 
 class ChoiceInFilter(BaseInFilter, ChoiceFilter):
@@ -358,6 +362,13 @@ class AdminCommunityLibrarySubmissionViewSet(
                 published_version.id
             )
 
-        submission.send_resolution_email()
+        try:
+            submission.send_resolution_email()
+        except Exception:
+            # The resolution itself has already been committed; a failure to
+            # notify the author shouldn't turn that into a 500 response.
+            logger.exception(
+                "Failed to send resolution email for submission %s", submission.pk
+            )
 
         return Response(self.serialize_object())

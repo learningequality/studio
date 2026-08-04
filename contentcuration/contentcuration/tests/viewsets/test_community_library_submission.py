@@ -17,6 +17,7 @@ from contentcuration.models import User
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.tests.helpers import reverse_with_query
+from contentcuration.utils.urls import canonical_url
 from contentcuration.viewsets.sync.constants import ADDED_TO_COMMUNITY_LIBRARY
 
 
@@ -736,8 +737,53 @@ class AdminViewSetTestCase(StudioAPITestCase):
         sent_email = mail.outbox[0]
         self.assertEqual(sent_email.to, [self.submission.author.email])
         self.assertIn("approved", sent_email.subject.lower())
-        self.assertIn("available in community library", sent_email.body.lower())
+        self.assertIn("approved", sent_email.body.lower())
         self.assertIn(self.submission.channel.name, sent_email.body)
+        self.assertIn(
+            canonical_url(
+                reverse("channel", kwargs={"channel_id": self.submission.channel.pk})
+            ),
+            sent_email.body,
+        )
+
+    @mock.patch(
+        "contentcuration.viewsets.community_library_submission.apply_channel_changes_task"
+    )
+    @mock.patch(
+        "contentcuration.models.CommunityLibrarySubmission.send_resolution_email",
+        side_effect=Exception("SMTP is down"),
+    )
+    def test_resolve_submission__accept_correct_when_email_fails(
+        self, send_email_mock, apply_task_mock
+    ):
+        """A failure to notify the author shouldn't undo or fail the resolution."""
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.post(
+            reverse(
+                "admin-community-library-submission-resolve",
+                args=[self.submission.id],
+            ),
+            self.resolve_approve_metadata,
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        resolved_submission = CommunityLibrarySubmission.objects.get(
+            id=self.submission.id
+        )
+        self.assertEqual(
+            resolved_submission.status,
+            community_library_submission_constants.STATUS_APPROVED,
+        )
+        Change.objects.get(
+            channel=self.submission.channel,
+            change_type=ADDED_TO_COMMUNITY_LIBRARY,
+        )
+        apply_task_mock.fetch_or_enqueue.assert_called_once_with(
+            self.admin_user,
+            channel_id=self.submission.channel.id,
+        )
+        self.assertEqual(len(mail.outbox), 0)
 
     @mock.patch(
         "contentcuration.viewsets.community_library_submission.apply_channel_changes_task"
@@ -784,6 +830,12 @@ class AdminViewSetTestCase(StudioAPITestCase):
         self.assertIn("needs changes", sent_email.subject.lower())
         self.assertIn("needs changes", sent_email.body.lower())
         self.assertIn(self.submission.channel.name, sent_email.body)
+        self.assertIn(
+            canonical_url(
+                reverse("channel", kwargs={"channel_id": self.submission.channel.pk})
+            ),
+            sent_email.body,
+        )
         self.assertIn(self.feedback_notes, sent_email.body)
 
     def test_resolve_submission__reject_missing_resolution_reason(self):

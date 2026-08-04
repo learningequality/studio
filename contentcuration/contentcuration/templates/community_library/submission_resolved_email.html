@@ -1,20 +1,25 @@
 <!DOCTYPE html>
 {% load i18n %}
-<html>
+{% get_current_language as LANGUAGE_CODE %}
+{% get_current_language_bidi as LANGUAGE_BIDI %}
+<html lang="{{ LANGUAGE_CODE }}" dir="{% if LANGUAGE_BIDI %}rtl{% else %}ltr{% endif %}">
 <head>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-    {% autoescape off %}
     <p>{% blocktrans with name=name %}Hello {{ name }},{% endblocktrans %}</p>
 
-    <p><a href="{{ channel_url }}" target="_blank">{% blocktrans with channel_name=channel.name %}{{ channel_name }}{% endblocktrans %}</a> ({{ channel_url }})</p>
+    <p><a href="{{ channel_url }}" target="_blank">{{ channel.name }}</a> ({{ channel_url }})</p>
 
-    <p>{{ status_message }}</p>
+    {% if approved %}
+    <p>{% translate "Your submission has been approved and will be added to the Community Library soon." %}</p>
+    {% else %}
+    <p>{% translate "Your submission needs changes. Please review the notes below and resubmit after all feedback has been addressed." %}</p>
+    {% endif %}
 
     {% if feedback_notes %}
-    <p>{{ feedback_notes_label }}: {{ feedback_notes }}</p>
+    <p>{% translate "Notes from the reviewer" %}: {{ feedback_notes }}</p>
     {% endif %}
 
     <p>
@@ -22,6 +27,5 @@
         <br>
         {% translate "The Learning Equality Team" %}
     </p>
-    {% endautoescape %}
 </body>
 </html>
