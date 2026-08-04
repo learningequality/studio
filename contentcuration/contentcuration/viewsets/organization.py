@@ -1,27 +1,28 @@
 from django.db import transaction
 from django.db.models import Q
-from django_filters.rest_framework import CharFilter, FilterSet
+from django_filters.rest_framework import CharFilter
+from django_filters.rest_framework import FilterSet
 from rest_framework import serializers
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 
+from contentcuration.constants.organization_roles import ORGANIZATION_ADMIN
+from contentcuration.constants.organization_roles import ORGANIZATION_ROLE_STATUS_ACTIVE
 from contentcuration.constants.organization_roles import (
-    ORGANIZATION_ADMIN,
-    ORGANIZATION_ROLE_STATUS_ACTIVE,
-    ORGANIZATION_VIEWER,
     organization_role_status_choices,
 )
-from contentcuration.models import Organization, OrganizationRole
+from contentcuration.constants.organization_roles import ORGANIZATION_VIEWER
+from contentcuration.models import Organization
+from contentcuration.models import OrganizationRole
 from contentcuration.utils.pagination import ValuesViewsetPageNumberPagination
-from contentcuration.viewsets.base import (
-    BulkListSerializer,
-    BulkModelSerializer,
-    RESTCreateModelMixin,
-    RESTDestroyModelMixin,
-    RESTUpdateModelMixin,
-    ReadOnlyValuesViewset,
-    ValuesViewset,
-)
+from contentcuration.viewsets.base import BulkListSerializer
+from contentcuration.viewsets.base import BulkModelSerializer
+from contentcuration.viewsets.base import ReadOnlyValuesViewset
+from contentcuration.viewsets.base import RESTCreateModelMixin
+from contentcuration.viewsets.base import RESTDestroyModelMixin
+from contentcuration.viewsets.base import RESTUpdateModelMixin
+from contentcuration.viewsets.base import ValuesViewset
 
 
 class OrganizationSerializer(BulkModelSerializer):

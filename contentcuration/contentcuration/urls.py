@@ -13,7 +13,6 @@ Including another URLconf
     1. Add an import:  from blog import urls as blog_urls
     2. Add a URL to urlpatterns:  re_path(r'^blog/', include(blog_urls))
 """
-
 import uuid
 
 import django_js_reverse.views as django_js_reverse_views
@@ -58,10 +57,8 @@ from contentcuration.viewsets.feedback import RecommendationsEventViewSet
 from contentcuration.viewsets.feedback import RecommendationsInteractionEventViewSet
 from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
-from contentcuration.viewsets.organization import (
-    OrganizationViewSet,
-    OrganizationMemberViewSet,
-)
+from contentcuration.viewsets.organization import OrganizationMemberViewSet
+from contentcuration.viewsets.organization import OrganizationViewSet
 from contentcuration.viewsets.recommendation import RecommendationView
 from contentcuration.viewsets.sync.endpoint import SyncView
 from contentcuration.viewsets.user import AdminUserViewSet
