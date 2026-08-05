@@ -48,7 +48,10 @@ from django.db.models.indexes import IndexExpression
 from django.db.models.query_utils import DeferredAttribute
 from django.db.models.sql import Query
 from django.dispatch import receiver
+from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import timezone
+from django.utils import translation
 from django.utils.translation import gettext as _
 from django_cte import CTEManager
 from django_cte import CTEQuerySet
@@ -86,7 +89,9 @@ from contentcuration.db.models.functions import Unnest
 from contentcuration.db.models.manager import CustomContentNodeTreeManager
 from contentcuration.db.models.manager import CustomManager
 from contentcuration.utils.cache import delete_public_channel_cache_keys
+from contentcuration.utils.i18n import closest_supported_locale
 from contentcuration.utils.parser import load_json_string
+from contentcuration.utils.urls import canonical_url
 from contentcuration.viewsets.sync.constants import ALL_CHANGES
 from contentcuration.viewsets.sync.constants import ALL_TABLES
 from contentcuration.viewsets.sync.constants import PUBLISHABLE_CHANGE_TABLES
@@ -3048,6 +3053,49 @@ class CommunityLibrarySubmission(models.Model):
             editors = editors.exclude(id=exclude_user_id)
 
         User.notify_users(editors, date=self.date_updated)
+
+    def send_resolution_email(self):
+        """
+        Send an email to the submission author letting them know their
+        Community Library submission has been resolved (approved or
+        rejected).
+        """
+        is_approved = self.status == community_library_submission.STATUS_APPROVED
+
+        channel_language = self.channel.language
+        locale_code = (
+            closest_supported_locale(channel_language.lang_code)
+            if channel_language
+            else None
+        ) or settings.LANGUAGE_CODE
+        with translation.override(locale_code):
+            if is_approved:
+                subject_text = _("Your Community Library submission has been approved")
+            else:
+                subject_text = _("Your Community Library submission needs changes")
+
+            subject = render_to_string(
+                "registration/custom_email_subject.txt",
+                {"subject": subject_text},
+            )
+            subject = "".join(subject.splitlines())
+
+            message = render_to_string(
+                "community_library/submission_resolved_email.html",
+                {
+                    "name": self.author.get_full_name(),
+                    "channel": self.channel,
+                    "channel_url": canonical_url(
+                        reverse("channel", kwargs={"channel_id": self.channel.pk})
+                    ),
+                    "approved": is_approved,
+                    "feedback_notes": self.feedback_notes,
+                },
+            )
+
+        self.author.email_user(
+            subject, message, settings.DEFAULT_FROM_EMAIL, html_message=message
+        )
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):
