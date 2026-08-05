@@ -52,6 +52,7 @@
               icon="optionsHorizontal"
               appearance="flat-button"
               data-test="show-file-options"
+              :ariaLabel="$tr('fileOptionsButtonLabel')"
             >
               <template #menu>
                 <KDropdownMenu
@@ -218,6 +219,7 @@
       replaceFileMenuOptionLabel: 'Replace file',
       downloadMenuOptionLabel: 'Download',
       removeMenuOptionLabel: 'Remove',
+      fileOptionsButtonLabel: 'File options',
       downloadFailed: 'Failed to download file',
       /* eslint-disable kolibri/vue-no-unused-translations */
       removeFileButton: 'Remove',
