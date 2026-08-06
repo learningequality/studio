@@ -1,4 +1,5 @@
 import uuid
+from unittest import mock
 
 from django.urls import reverse
 from le_utils.constants import content_kinds
@@ -12,6 +13,8 @@ from contentcuration.tests.viewsets.base import generate_create_event
 from contentcuration.tests.viewsets.base import generate_delete_event
 from contentcuration.tests.viewsets.base import generate_update_event
 from contentcuration.tests.viewsets.base import SyncTestMixin
+from contentcuration.viewsets.file import FileUploadURLSerializer
+from contentcuration.viewsets.file import MAX_NON_RESUMABLE_UPLOAD_SIZE
 from contentcuration.viewsets.sync.constants import CONTENTNODE
 from contentcuration.viewsets.sync.constants import FILE
 
@@ -546,6 +549,9 @@ class UploadFileURLTestCase(StudioAPITestCase):
 
     def test_insufficient_storage(self):
         self.file["size"] = 100000000000000
+        self.file[
+            "resumable"
+        ] = True  # resumable bypasses the >500MB guard so this still exercises the quota (412) path
 
         self.client.force_authenticate(user=self.user)
         response = self.client.post(
@@ -589,6 +595,26 @@ class UploadFileURLTestCase(StudioAPITestCase):
         )
 
         self.assertEqual(response.status_code, 400)
+
+    def test_fractional_size_rejected(self):
+        s = FileUploadURLSerializer(data={**self.file, "size": 1000.5})
+        assert not s.is_valid()
+        assert "size" in s.errors
+
+    def test_large_non_resumable_rejected(self):
+        self.file["size"] = MAX_NON_RESUMABLE_UPLOAD_SIZE + 1
+        self.client.force_authenticate(user=self.user)
+        resp = self.client.post(reverse("file-upload-url"), self.file, format="json")
+        assert resp.status_code == 400
+
+    def test_large_resumable_allowed(self):
+        self.user.disk_space = 10 * 1024 * 1024 * 1024
+        self.user.save()
+        self.file["size"] = MAX_NON_RESUMABLE_UPLOAD_SIZE + 1
+        self.file["resumable"] = True
+        self.client.force_authenticate(user=self.user)
+        resp = self.client.post(reverse("file-upload-url"), self.file, format="json")
+        assert resp.status_code == 200
 
 
 class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):
@@ -763,3 +789,60 @@ class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):
         self.assertEqual(
             copied_node_content_id_before_upload, copied_node_content_id_after_upload
         )
+
+
+class ResumableUploadURLTestCase(StudioAPITestCase):
+    def setUp(self):
+        super(ResumableUploadURLTestCase, self).setUp()
+        self.user = testdata.user()
+        # Give user enough quota to handle resumable uploads
+        self.user.disk_space = 10 * 1024 * 1024 * 1024
+        self.user.save()
+        self.file = {
+            "size": 1000,
+            "checksum": uuid.uuid4().hex,
+            "name": "le_studio",
+            "file_format": file_formats.MP3,
+            "preset": format_presets.AUDIO,
+            "duration": 10.123,
+            "resumable": True,
+        }
+
+    @mock.patch("contentcuration.viewsets.file.default_storage")
+    def test_resumable_returns_session_when_not_stored(self, mock_storage):
+        mock_storage.get_stored_object_md5.return_value = None
+        mock_storage.create_resumable_upload_session.return_value = (
+            "https://session.url"
+        )
+        self.client.force_authenticate(user=self.user)
+        resp = self.client.post(reverse("file-upload-url"), self.file, format="json")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["resumable"] is True
+        assert data["uploadURL"] == "https://session.url"
+        assert data["alreadyUploaded"] is False
+        assert "file" in data
+        assert data["file"]["id"]
+        mock_storage.create_resumable_upload_session.assert_called_once()
+
+    @mock.patch("contentcuration.viewsets.file.default_storage")
+    def test_resumable_skips_when_already_stored(self, mock_storage):
+        mock_storage.get_stored_object_md5.return_value = self.file["checksum"]
+        self.client.force_authenticate(user=self.user)
+        resp = self.client.post(reverse("file-upload-url"), self.file, format="json")
+        data = resp.json()
+        assert data["resumable"] is True and data["alreadyUploaded"] is True
+        assert data["uploadURL"] is None
+        assert "file" in data
+        assert data["file"]["id"]
+        mock_storage.create_resumable_upload_session.assert_not_called()
+
+    def test_resumable_falls_back_to_single_put_on_s3(self):
+        # default_storage is S3 in the test env → no resumable support
+        self.client.force_authenticate(user=self.user)
+        resp = self.client.post(reverse("file-upload-url"), self.file, format="json")
+        data = resp.json()
+        assert data["resumable"] is False
+        assert "uploadURL" in data
+        assert "file" in data
+        assert data["file"]["id"]

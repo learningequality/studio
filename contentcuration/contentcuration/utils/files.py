@@ -1,5 +1,7 @@
 import base64
+import codecs
 import copy
+import mimetypes
 import os
 import re
 import tempfile
@@ -14,8 +16,12 @@ from PIL import Image
 from PIL import ImageFile
 
 from contentcuration.api import write_raw_content_to_storage
-from contentcuration.models import File
-from contentcuration.models import generate_object_storage_name
+
+
+# Do this to ensure that we infer mimetypes for files properly, specifically
+# zip file and epub files.
+# to add additional files add them to the mime.types file
+mimetypes.init([os.path.join(os.path.dirname(__file__), "mime.types")])
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 THUMBNAIL_WIDTH = 400
@@ -24,6 +30,11 @@ THUMBNAIL_WIDTH = 400
 def create_file_from_contents(
     contents, ext=None, node=None, preset_id=None, uploaded_by=None
 ):
+    # Imported here rather than at module level to avoid a circular import:
+    # the GCS storage backend imports this module, and importing models at load
+    # time re-enters a partially initialized contentcuration.models during boot.
+    from contentcuration.models import File
+
     checksum, _, path = write_raw_content_to_storage(contents, ext=ext)
 
     result = File(
@@ -44,6 +55,10 @@ def get_file_diff(files):
     storage, and return.
 
     """
+
+    # Imported here rather than at module level to avoid a circular import (see
+    # create_file_from_contents).
+    from contentcuration.models import generate_object_storage_name
 
     # We use a thread pool in here, making direct HEAD requests to the storage URL
     # to see if the objects exist.
@@ -93,6 +108,9 @@ def get_thumbnail_encoding(filename, dimension=THUMBNAIL_WIDTH):
         dimension (int, optional): desired width of thumbnail. Defaults to 400.
     Returns base64 encoding of resized thumbnail
     """
+    # Imported here rather than at module level to avoid a circular import (see
+    # create_file_from_contents).
+    from contentcuration.models import generate_object_storage_name
 
     if filename.startswith("data:image"):
         return filename
@@ -196,3 +214,27 @@ def create_thumbnail_from_base64(
             )
     finally:
         os.close(fd)
+
+
+def determine_content_type(filename):
+    """
+    Guesses the content type of a filename. Returns the mimetype of a file.
+
+    Returns "application/octet-stream" if the type can't be guessed.
+    Raises an AssertionError if filename is not a string.
+    """
+
+    typ, _ = mimetypes.guess_type(filename)
+
+    if not typ:
+        return "application/octet-stream"
+    return typ
+
+
+def hex_to_base64(hexdigest):
+    """Convert a hex-encoded digest (e.g. an MD5 checksum) to base64."""
+    return codecs.encode(codecs.decode(hexdigest, "hex"), "base64").decode().strip()
+
+
+def base64_to_hex(b64):
+    return codecs.encode(codecs.decode(b64.encode(), "base64"), "hex").decode().strip()

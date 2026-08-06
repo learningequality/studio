@@ -38,6 +38,7 @@ from le_utils.constants import format_presets
 from le_utils.constants import licenses
 from le_utils.constants import modalities
 from le_utils.constants import roles
+from le_utils.constants.format_presets import RENDERABLE_PRESETS_ORDER
 from search.models import ChannelFullTextSearch
 from search.models import ContentNodeFullTextSearch
 from search.utils import get_fts_annotated_channel_qs
@@ -64,6 +65,8 @@ logging = logmodule.getLogger(__name__)
 PERSEUS_IMG_DIR = exercises.IMG_PLACEHOLDER + "/images"
 THUMBNAIL_DIMENSION = 128
 MIN_SCHEMA_VERSION = "1"
+# Largest value the legacy 32-bit LocalFile.file_size / File.file_size columns hold.
+INT_32BIT_MAX = 2 ** 31 - 1
 PUBLISHING_UPDATE_THRESHOLD = 3600
 
 
@@ -658,20 +661,47 @@ def create_associated_file_objects(kolibrinode, ccnode):
                 create_associated_thumbnail(ccnode, ccfilemodel) or ccfilemodel
             )
 
+        # The true size lives in the studio#5974 file_size_bigint shadow (the
+        # legacy 32-bit file_size cannot hold >2.1 GB); fall back to file_size
+        # for rows the shadow has not been backfilled onto yet.
+        real_size = ccfilemodel.file_size_bigint
+        if real_size is None:
+            real_size = ccfilemodel.file_size
+        if real_size is not None and real_size > INT_32BIT_MAX:
+            legacy_size = None
+        else:
+            legacy_size = real_size
+
         kolibrilocalfilemodel, new = kolibrimodels.LocalFile.objects.get_or_create(
             pk=ccfilemodel.checksum,
             defaults={
                 "extension": fformat.extension,
-                "file_size": ccfilemodel.file_size,
+                "file_size": legacy_size,
+                "file_size_bigint": real_size,
             },
         )
+
+        included_presets = None
+        if not preset.supplementary:
+            try:
+                included_presets = 2 ** RENDERABLE_PRESETS_ORDER.index(preset.pk)
+            except ValueError:
+                # Renderable preset not in the (append-only) ordering — e.g. a newer
+                # le-utils preset. Log and leave included_presets NULL for this file
+                # rather than aborting the whole channel publish.
+                logging.warning(
+                    "Preset %s missing from RENDERABLE_PRESETS_ORDER; leaving "
+                    "included_presets NULL for file %s",
+                    preset.pk,
+                    ccfilemodel.pk,
+                )
 
         kolibrimodels.File.objects.create(
             pk=ccfilemodel.pk,
             checksum=ccfilemodel.checksum,
             extension=fformat.extension,
             available=True,  # TODO: Set this to False, once we have availability stamping implemented in Kolibri
-            file_size=ccfilemodel.file_size,
+            file_size=legacy_size,
             contentnode=kolibrinode,
             preset=preset.pk,
             supplementary=preset.supplementary,
@@ -679,6 +709,7 @@ def create_associated_file_objects(kolibrinode, ccnode):
             thumbnail=preset.thumbnail,
             priority=preset.order,
             local_file=kolibrilocalfilemodel,
+            included_presets=included_presets,
         )
 
 

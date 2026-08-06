@@ -1,43 +1,22 @@
-import mimetypes
-import os
 from datetime import timedelta
 
 from django.conf import settings
 from django.core.files.storage import default_storage
 from django_s3_storage.storage import S3Storage
 
+from .files import determine_content_type
+from .files import hex_to_base64
 from .gcs_storage import CompositeGCS
 from .gcs_storage import GoogleCloudStorage
-
-
-# Do this to ensure that we infer mimetypes for files properly, specifically
-# zip file and epub files.
-# to add additional files add them to the mime.types file
-mimetypes.init([os.path.join(os.path.dirname(__file__), "mime.types")])
 
 
 class UnknownStorageBackendError(Exception):
     pass
 
 
-def determine_content_type(filename):
-    """
-    Guesses the content type of a filename. Returns the mimetype of a file.
-
-    Returns "application/octet-stream" if the type can't be guessed.
-    Raises an AssertionError if filename is not a string.
-    """
-
-    typ, _ = mimetypes.guess_type(filename)
-
-    if not typ:
-        return "application/octet-stream"
-    return typ
-
-
 def get_presigned_upload_url(
     filepath,
-    md5sum_b64,
+    md5_hex,
     lifetime_sec,
     content_length,
     storage=default_storage,
@@ -48,9 +27,10 @@ def get_presigned_upload_url(
     contents with the contents of your PUT request.
 
     :param: filepath: the file path inside the bucket, to the file.
-    :param: md5sum_b64: the base64 encoded md5 hash of the file. The holder of the URL will
-    have to set a Content-MD5 HTTP header matching this md5sum once it
-    initiates the download.
+    :param: md5_hex: the hex-encoded md5 hash of the file. The base64 encoding
+    that GCS requires for the Content-MD5 header is handled internally; the
+    holder of the URL must set a Content-MD5 HTTP header matching that
+    base64-encoded value once it initiates the upload.
     :param: lifetime_sec: the lifetime of the generated upload url, in seconds.
     :param: content_length: the size of the content, in bytes.
     :param: client: the storage client that will be used to gennerate the presigned URL.
@@ -67,6 +47,7 @@ def get_presigned_upload_url(
     # both storage types are having difficulties enforcing it.
 
     mimetype = determine_content_type(filepath)
+    md5sum_b64 = hex_to_base64(md5_hex)
     if isinstance(storage, (GoogleCloudStorage, CompositeGCS)):
         client = client or storage.get_client()
         bucket = settings.AWS_S3_BUCKET_NAME

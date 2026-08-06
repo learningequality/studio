@@ -41,6 +41,20 @@ def _get_language_info():
 LANGUAGE_INFO = _get_language_info()
 
 
+def closest_supported_locale(lang_code):
+    """
+    Given a content language's primary code (e.g. "es", "fr"), return the
+    Studio UI locale in SUPPORTED_LANGUAGES that matches it, ignoring region,
+    or None if Studio has no UI translation for that language.
+    """
+    if not lang_code:
+        return None
+    for supported in SUPPORTED_LANGUAGES:
+        if supported.split("-")[0] == lang_code:
+            return supported
+    return None
+
+
 def language_globals():
     language_code = get_language()
     lang_dir = "rtl" if get_language_bidi() else "ltr"
