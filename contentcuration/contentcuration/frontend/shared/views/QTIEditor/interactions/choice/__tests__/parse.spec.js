@@ -18,17 +18,12 @@ const buildXML = choiceInteractionDescriptor.buildXML.bind(choiceInteractionDesc
 
 describe('parse()', () => {
   describe('attribute defaults', () => {
-    it('defaults maxChoices to 0 when attribute is absent', () => {
+    it('defaults showAnswerCount to true when max-choices attribute is absent', () => {
       const xml = `<qti-choice-interaction response-identifier="RESPONSE">
         <qti-simple-choice identifier="a">A</qti-simple-choice>
       </qti-choice-interaction>`;
       const state = parse(xml, []);
-      expect(state.maxChoices).toBe(0);
-    });
-
-    it('defaults minChoices to 0 when attribute is absent', () => {
-      const state = parse(CHOICE_SINGLE_SELECT_XML, []);
-      expect(state.minChoices).toBe(0);
+      expect(state.showAnswerCount).toBe(true);
     });
 
     it('defaults shuffle to false when attribute is absent', () => {
@@ -48,9 +43,12 @@ describe('parse()', () => {
   });
 
   describe('attribute reading', () => {
-    it('reads max-choices attribute', () => {
-      const state = parse(CHOICE_SINGLE_SELECT_XML, []);
-      expect(state.maxChoices).toBe(1);
+    it('sets showAnswerCount to false when max-choices="0"', () => {
+      const xml = `<qti-choice-interaction response-identifier="RESPONSE" max-choices="0">
+        <qti-simple-choice identifier="a">A</qti-simple-choice>
+      </qti-choice-interaction>`;
+      const state = parse(xml, []);
+      expect(state.showAnswerCount).toBe(false);
     });
 
     it('reads shuffle attribute when true', () => {
@@ -134,11 +132,22 @@ describe('parse()', () => {
       expect(state.choices[0].content).toBe('');
       expect(state.choices[0].correct).toBe(false);
       expect(state.prompt).toBe('');
+      expect(state.showAnswerCount).toBe(true);
     });
 
     it('returns default state for malformed XML', () => {
       const state = parse('<unclosed', []);
       expect(state.choices).toHaveLength(1);
+    });
+  });
+
+  describe('showAnswerCount', () => {
+    it('parses max-choices="0" as showAnswerCount = false', () => {
+      const xml = `<qti-choice-interaction response-identifier="RESPONSE" max-choices="0">
+        <qti-simple-choice identifier="a">A</qti-simple-choice>
+      </qti-choice-interaction>`;
+      const state = parse(xml, []);
+      expect(state.showAnswerCount).toBe(false);
     });
   });
 });
@@ -158,8 +167,7 @@ describe('buildXML()', () => {
       { id: 'choice_a', content: 'Option A', correct: true, fixed: false },
       { id: 'choice_b', content: 'Option B', correct: false, fixed: false },
     ],
-    maxChoices: 1,
-    minChoices: 0,
+    showAnswerCount: true,
     shuffle: false,
     orientation: Orientation.VERTICAL,
   };
@@ -178,7 +186,6 @@ describe('buildXML()', () => {
           { id: 'a', content: 'A', correct: true, fixed: false },
           { id: 'b', content: 'B', correct: true, fixed: false },
         ],
-        maxChoices: 2,
       };
       const { responseDeclarations } = buildXML(multiState, QuestionType.MULTI_SELECT);
       const decl = parseXmlString(responseDeclarations[0]);
@@ -207,7 +214,6 @@ describe('buildXML()', () => {
           { id: 'y', content: 'Y', correct: true, fixed: false },
           { id: 'z', content: 'Z', correct: false, fixed: false },
         ],
-        maxChoices: 2,
       };
       const { responseDeclarations } = buildXML(multiState, QuestionType.MULTI_SELECT);
       const decl = parseXmlString(responseDeclarations[0]);
@@ -219,22 +225,44 @@ describe('buildXML()', () => {
   });
 
   describe('body XML', () => {
-    it('omits min-choices attribute when minChoices is 0', () => {
+    it('omits min-choices attribute for single-select (spec: only multi-select uses min-choices)', () => {
       const { bodyXml } = buildXML(baseState, QuestionType.SINGLE_SELECT);
       const root = parseXmlString(bodyXml);
       expect(root.getAttribute('min-choices')).toBeNull();
     });
 
-    it('sets min-choices attribute when minChoices > 0', () => {
-      const { bodyXml } = buildXML({ ...baseState, minChoices: 1 }, QuestionType.SINGLE_SELECT);
+    it('sets min-choices attribute for multi-select when showAnswerCount is true', () => {
+      const multiState = {
+        ...baseState,
+        choices: [
+          { id: 'choice_a', content: 'Option A', correct: true, fixed: false },
+          { id: 'choice_b', content: 'Option B', correct: false, fixed: false },
+        ],
+        showAnswerCount: true,
+      };
+      const { bodyXml } = buildXML(multiState, QuestionType.MULTI_SELECT);
       const root = parseXmlString(bodyXml);
       expect(root.getAttribute('min-choices')).toBe('1');
     });
 
-    it('sets max-choices attribute from state', () => {
+    it('sets max-choices to 1 for single-select regardless of correct count', () => {
       const { bodyXml } = buildXML(baseState, QuestionType.SINGLE_SELECT);
       const root = parseXmlString(bodyXml);
       expect(root.getAttribute('max-choices')).toBe('1');
+    });
+
+    it('emits explicit max-choices="0" for multi-select + showAnswerCount + zero correct answers', () => {
+      const noCorrectState = {
+        ...baseState,
+        choices: [
+          { id: 'choice_a', content: 'Option A', correct: false, fixed: false },
+          { id: 'choice_b', content: 'Option B', correct: false, fixed: false },
+        ],
+        showAnswerCount: true,
+      };
+      const { bodyXml } = buildXML(noCorrectState, QuestionType.MULTI_SELECT);
+      const root = parseXmlString(bodyXml);
+      expect(root.getAttribute('max-choices')).toBe('0');
     });
 
     it('renders one <qti-simple-choice> per choice with the correct identifier', () => {
@@ -279,7 +307,7 @@ describe('parse → buildXML → parse round-trip', () => {
     const { bodyXml, responseDeclarations } = buildXML(original, QuestionType.SINGLE_SELECT);
     const reparsed = parse(bodyXml, responseDeclarations);
 
-    expect(reparsed.maxChoices).toBe(original.maxChoices);
+    expect(reparsed.showAnswerCount).toBe(original.showAnswerCount);
     expect(reparsed.shuffle).toBe(original.shuffle);
     expect(reparsed.orientation).toBe(original.orientation);
     expect(reparsed.choices.map(a => a.id)).toEqual(original.choices.map(a => a.id));

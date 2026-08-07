@@ -191,6 +191,7 @@
     name: 'TextEntryEditor',
 
     components: { TipTapEditor, ValidationMessage, AddListItemButton },
+    inheritAttrs: false,
 
     setup(props, { emit }) {
       const { windowIsSmall } = useKResponsiveWindow();
@@ -394,6 +395,7 @@
         type: String,
         default: null,
       },
+
       mode: {
         type: String,
         default: 'view',

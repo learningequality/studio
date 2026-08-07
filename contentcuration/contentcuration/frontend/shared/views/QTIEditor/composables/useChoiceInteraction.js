@@ -1,4 +1,4 @@
-import { readonly } from 'vue';
+import { computed, readonly } from 'vue';
 import { QuestionType } from '../constants';
 import { generateRandomSlug } from '../utils/generateRandomSlug';
 import { choiceInteractionDescriptor } from '../interactions/choice/ChoiceInteractionDescriptor';
@@ -17,10 +17,7 @@ import { useInteraction } from './useInteraction';
 export function useChoiceInteraction(interactionBlock, questionType) {
   const base = useInteraction(choiceInteractionDescriptor, interactionBlock, questionType);
   const { state } = base;
-
-  // ---------------------------------------------------------------------------
-  // Structural mutations
-  // ---------------------------------------------------------------------------
+  const isSingleSelect = computed(() => questionType.value === QuestionType.SINGLE_SELECT);
 
   function addChoice() {
     state.value = {
@@ -74,10 +71,6 @@ export function useChoiceInteraction(interactionBlock, questionType) {
     };
   }
 
-  // ---------------------------------------------------------------------------
-  // Field mutations
-  // ---------------------------------------------------------------------------
-
   function setPrompt(html) {
     state.value = { ...state.value, prompt: html };
   }
@@ -93,9 +86,14 @@ export function useChoiceInteraction(interactionBlock, questionType) {
     state.value = { ...state.value, shuffle: val };
   }
 
+  function setShowAnswerCount(val) {
+    state.value = { ...state.value, showAnswerCount: val };
+  }
+
   return {
     ...base,
     state: readonly(state),
+    isSingleSelect,
     addChoice,
     removeChoice,
     moveChoiceUp,
@@ -104,5 +102,6 @@ export function useChoiceInteraction(interactionBlock, questionType) {
     setPrompt,
     setChoiceContent,
     setShuffle,
+    setShowAnswerCount,
   };
 }

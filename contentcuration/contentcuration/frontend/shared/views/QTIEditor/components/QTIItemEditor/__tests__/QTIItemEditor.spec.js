@@ -5,6 +5,13 @@ import { qtiEditorStrings } from '../../../qtiEditorStrings';
 import { AssessmentItemTypes } from '../../../constants';
 
 jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor');
+jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
+  const { ref } = require('vue');
+  return {
+    __esModule: true,
+    default: () => ({ windowIsSmall: ref(false) }),
+  };
+});
 
 const { closeBtnLabel$, questionContentPlaceholder$ } = qtiEditorStrings;
 

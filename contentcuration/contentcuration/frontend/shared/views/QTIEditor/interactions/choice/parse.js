@@ -3,7 +3,7 @@ import { getPromptHTML, parseXML } from '../../serialization/parseItem';
 import { buildXmlNode } from '../../serialization/assembleItem';
 import CorrectResponse from '../../serialization/qti/declarations/correctResponse';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
-import { Orientation, RESPONSE_IDENTIFIER } from '../../constants';
+import { Orientation, QuestionType, RESPONSE_IDENTIFIER } from '../../constants';
 
 /**
  * @typedef {object} ChoiceAnswer
@@ -15,12 +15,11 @@ import { Orientation, RESPONSE_IDENTIFIER } from '../../constants';
 
 /**
  * @typedef {object} ChoiceState
- * @property {string}        prompt      - HTML content of <qti-prompt>; default ""
- * @property {ChoiceAnswer[]} answers
- * @property {number}        maxChoices  - From max-choices attribute (0 = unlimited)
- * @property {number}        minChoices  - From min-choices attribute; default 0
- * @property {boolean}       shuffle     - From shuffle attribute; default false
- * @property {string}        orientation - From orientation attribute; default "vertical"
+ * @property {string}        prompt          - HTML content of <qti-prompt>; default ""
+ * @property {ChoiceAnswer[]} choices
+ * @property {boolean}       showAnswerCount - true unless max-choices="0" in the source XML
+ * @property {boolean}       shuffle         - From shuffle attribute; default false
+ * @property {string}        orientation     - From orientation attribute; default "vertical"
  */
 
 const serializer = new XMLSerializer();
@@ -30,8 +29,7 @@ export function _defaultState() {
     responseIdentifier: RESPONSE_IDENTIFIER,
     prompt: '',
     choices: [{ id: generateRandomSlug('choice'), content: '', correct: false }],
-    maxChoices: 1,
-    minChoices: 0,
+    showAnswerCount: true,
     shuffle: false,
     orientation: Orientation.VERTICAL,
   };
@@ -84,11 +82,10 @@ export function parseChoiceInteraction(bodyXml, responseDeclarations) {
   }
 
   const responseIdentifier = root.getAttribute('response-identifier') || RESPONSE_IDENTIFIER;
-  const maxChoices = parseInt(root.getAttribute('max-choices') ?? '0', 10);
-  const minChoices = parseInt(root.getAttribute('min-choices') ?? '0', 10);
   const shuffle = root.getAttribute('shuffle') === 'true';
   const orientation = root.getAttribute('orientation') ?? Orientation.VERTICAL;
   const prompt = getPromptHTML(root);
+  const showAnswerCount = root.getAttribute('max-choices') !== '0';
 
   const correctIds = _extractCorrectIds(responseDeclarations);
 
@@ -99,7 +96,14 @@ export function parseChoiceInteraction(bodyXml, responseDeclarations) {
     fixed: el.getAttribute('fixed') === 'true',
   }));
 
-  return { responseIdentifier, prompt, choices, maxChoices, minChoices, shuffle, orientation };
+  return {
+    responseIdentifier,
+    prompt,
+    choices,
+    showAnswerCount,
+    shuffle,
+    orientation,
+  };
 }
 
 /**
@@ -115,19 +119,31 @@ export function buildChoiceInteractionXML(state, questionType, declarationSchema
     responseIdentifier = RESPONSE_IDENTIFIER,
     prompt,
     choices,
-    maxChoices,
-    minChoices,
+    showAnswerCount = true,
     shuffle,
     orientation,
   } = state;
 
+  const correctCount = choices.filter(c => c.correct).length;
+
+  let maxChoicesAttr;
+  let minChoicesAttr;
+  if (questionType === QuestionType.SINGLE_SELECT) {
+    maxChoicesAttr = 1;
+  } else if (!showAnswerCount) {
+    maxChoicesAttr = 0;
+  } else {
+    maxChoicesAttr = correctCount;
+    minChoicesAttr = correctCount;
+  }
+
   const attrs = {
     'response-identifier': responseIdentifier,
-    'max-choices': maxChoices,
+    'max-choices': maxChoicesAttr,
     shuffle: String(shuffle),
     orientation,
   };
-  if (minChoices > 0) attrs['min-choices'] = minChoices;
+  if (minChoicesAttr > 0) attrs['min-choices'] = minChoicesAttr;
 
   const children = [];
 

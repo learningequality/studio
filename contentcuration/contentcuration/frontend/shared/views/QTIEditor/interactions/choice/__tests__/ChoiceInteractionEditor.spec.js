@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/vue';
+import { render, screen, fireEvent, within } from '@testing-library/vue';
 import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
 import ChoiceInteractionEditor from '../ChoiceInteractionEditor.vue';
@@ -24,9 +24,23 @@ jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
   };
 });
 
+let teleportContainer;
+
+beforeEach(() => {
+  teleportContainer = document.createElement('div');
+  teleportContainer.id = 'test-settings-target';
+  document.body.appendChild(teleportContainer);
+});
+
+afterEach(() => {
+  if (teleportContainer && teleportContainer.parentNode) {
+    teleportContainer.parentNode.removeChild(teleportContainer);
+  }
+});
+
 const renderEditor = (props = {}) =>
   render(ChoiceInteractionEditor, {
-    props: { mode: 'edit', ...props },
+    props: { mode: 'edit', teleportTargetId: 'test-settings-target', ...props },
     routes: new VueRouter(),
   });
 
@@ -91,12 +105,18 @@ describe('ChoiceInteractionEditor', () => {
   });
 
   describe('multiSelect (KCheckbox)', () => {
+    const choiceCheckboxes = () => {
+      const group = screen.queryByRole('group', { name: tr.$tr('answersLabel') });
+      if (!group) return [];
+      return Array.from(group.querySelectorAll('input[type="checkbox"]'));
+    };
+
     it('renders a checkbox for each choice', () => {
       renderEditor({
         interaction: block(CHOICE_MULTI_SELECT_XML),
         questionType: QuestionType.MULTI_SELECT,
       });
-      expect(screen.getAllByRole('checkbox')).toHaveLength(3);
+      expect(choiceCheckboxes()).toHaveLength(3);
     });
 
     it('renders the correct choice labels', () => {
@@ -114,7 +134,7 @@ describe('ChoiceInteractionEditor', () => {
         interaction: blockWithDecl(CHOICE_MULTI_SELECT_XML, MULTI_DECL),
         questionType: QuestionType.MULTI_SELECT,
       });
-      const checkboxes = screen.getAllByRole('checkbox');
+      const checkboxes = choiceCheckboxes();
       expect(checkboxes[0]).toBeChecked(); // a
       expect(checkboxes[1]).not.toBeChecked(); // b
       expect(checkboxes[2]).toBeChecked(); // c
@@ -125,7 +145,7 @@ describe('ChoiceInteractionEditor', () => {
         interaction: block(CHOICE_MULTI_SELECT_XML),
         questionType: QuestionType.MULTI_SELECT,
       });
-      const [checkA, checkB] = screen.getAllByRole('checkbox');
+      const [checkA, checkB] = choiceCheckboxes();
       await fireEvent.click(checkA);
       await fireEvent.click(checkB);
       expect(checkA).toBeChecked();
@@ -137,7 +157,7 @@ describe('ChoiceInteractionEditor', () => {
         interaction: blockWithDecl(CHOICE_MULTI_SELECT_XML, MULTI_DECL),
         questionType: QuestionType.MULTI_SELECT,
       });
-      const [checkA] = screen.getAllByRole('checkbox');
+      const [checkA] = choiceCheckboxes();
       await fireEvent.click(checkA);
       expect(checkA).not.toBeChecked();
     });
@@ -325,6 +345,87 @@ describe('ChoiceInteractionEditor', () => {
       const before = emitted()['update:interaction'].length;
       await fireEvent.click(screen.getByRole('button', { name: /add choice/i }));
       expect(emitted()['update:interaction'].length).toBeGreaterThan(before);
+    });
+  });
+
+  describe('Answer settings', () => {
+    it('renders Answer settings section in edit mode', () => {
+      renderEditor({
+        interaction: block(CHOICE_MULTI_SELECT_XML),
+        questionType: QuestionType.MULTI_SELECT,
+      });
+      expect(
+        within(teleportContainer).getByText(tr.$tr('answerSettingsLabel')),
+      ).toBeInTheDocument();
+    });
+
+    it('renders shuffle answers checkbox', () => {
+      renderEditor({
+        interaction: block(CHOICE_MULTI_SELECT_XML),
+        questionType: QuestionType.MULTI_SELECT,
+      });
+      // KIconButton also has the same aria-label — use role=checkbox specifically
+      expect(
+        within(teleportContainer).getByRole('checkbox', { name: tr.$tr('shuffleAnswersLabel') }),
+      ).toBeInTheDocument();
+    });
+
+    it('hides show-answer-count checkbox for single choice', () => {
+      renderEditor({
+        interaction: block(CHOICE_SINGLE_SELECT_XML),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
+      expect(
+        within(teleportContainer).queryByRole('checkbox', { name: tr.$tr('showAnswerCountLabel') }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('shows show-answer-count checkbox for multi choice', () => {
+      renderEditor({
+        interaction: block(CHOICE_MULTI_SELECT_XML),
+        questionType: QuestionType.MULTI_SELECT,
+      });
+      expect(
+        within(teleportContainer).getByRole('checkbox', { name: tr.$tr('showAnswerCountLabel') }),
+      ).toBeInTheDocument();
+    });
+
+    it('toggling shuffle emits updated XML with shuffle="true"', async () => {
+      const { emitted } = renderEditor({
+        interaction: block(CHOICE_MULTI_SELECT_XML),
+        questionType: QuestionType.MULTI_SELECT,
+      });
+      await fireEvent.click(
+        within(teleportContainer).getByRole('checkbox', { name: tr.$tr('shuffleAnswersLabel') }),
+      );
+      const latest = emitted()['update:interaction'].at(-1)[0];
+      expect(latest.bodyXml).toContain('shuffle="true"');
+    });
+
+    it('clicking the info button next to shuffle opens a modal', async () => {
+      renderEditor({
+        interaction: block(CHOICE_MULTI_SELECT_XML),
+        questionType: QuestionType.MULTI_SELECT,
+      });
+      const infoBtn = within(teleportContainer).getByRole('button', {
+        name: tr.$tr('shuffleAnswersInfoTitle'),
+      });
+      await fireEvent.click(infoBtn);
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(screen.getByText(tr.$tr('shuffleAnswersInfoBody'))).toBeInTheDocument();
+    });
+
+    it('KModal closes when the Close button is clicked', async () => {
+      renderEditor({
+        interaction: block(CHOICE_MULTI_SELECT_XML),
+        questionType: QuestionType.MULTI_SELECT,
+      });
+      const infoBtn = within(teleportContainer).getByRole('button', {
+        name: tr.$tr('shuffleAnswersInfoTitle'),
+      });
+      await fireEvent.click(infoBtn);
+      await fireEvent.click(screen.getByRole('button', { name: tr.$tr('closeBtnLabel') }));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
   });
 
