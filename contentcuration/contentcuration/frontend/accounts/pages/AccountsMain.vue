@@ -1,17 +1,13 @@
 <template>
 
-  <VApp>
-    <VLayout
-      fill-height
-      justify-center
-      class="main pt-5"
-    >
-      <div>
-        <!-- Sign in -->
-        <VCard
-          class="pa-4"
-          style="width: 300px; margin: 0 auto"
-        >
+  <div
+    class="page theme--light"
+    :style="{ backgroundColor: $themePalette.grey.v_100 }"
+  >
+    <div>
+      <!-- Sign in -->
+      <StudioRaisedBox class="sign-in-card">
+        <template #header>
           <div class="k-logo-container">
             <KLogo
               altText="Kolibri Logo with background"
@@ -19,103 +15,121 @@
               :size="120"
             />
           </div>
-          <h2 class="primary--text py-2 text-xs-center">
-            {{ $tr('kolibriStudio') }}
-          </h2>
-          <Banner
-            :value="loginFailed"
-            :text="$tr('loginFailed')"
-            error
-          />
-          <Banner
-            :value="offline"
-            :text="$tr('loginFailedOffline')"
-            error
-          />
-          <Banner
-            :value="Boolean(nextParam)"
-            :text="$tr('loginToProceed')"
-            class="pb-0 px-0"
-            data-test="loginToProceed"
-          />
-          <VForm
-            ref="form"
-            lazy-validation
-            class="py-3"
-            @submit.prevent="submit"
+          <h1
+            class="notranslate page-title"
+            :style="{ color: $themeTokens.primary }"
           >
-            <EmailField
-              v-model="username"
-              autofocus
-            />
-            <PasswordField
-              v-model="password"
-              :label="$tr('passwordLabel')"
-            />
-            <p>
+            {{ $tr('kolibriStudio') }}
+          </h1>
+        </template>
+        <template #main>
+          <div class="card-body">
+            <StudioBanner
+              v-if="loginFailed"
+              error
+            >
+              {{ $tr('loginFailed') }}
+            </StudioBanner>
+            <StudioBanner
+              v-if="offline"
+              error
+            >
+              {{ $tr('loginFailedOffline') }}
+            </StudioBanner>
+            <StudioBanner
+              v-if="nextParam"
+              data-test="loginToProceed"
+            >
+              {{ $tr('loginToProceed') }}
+            </StudioBanner>
+            <form
+              class="form"
+              @submit.prevent="submit"
+            >
+              <StudioEmailField
+                v-model="username"
+                autofocus
+                :errorMessages="touched.username && errors.username ? [usernameErrorText] : []"
+                :appearanceOverrides="{ maxWidth: '100%' }"
+                @blur="touched.username = true"
+              />
+              <StudioPasswordField
+                v-model="password"
+                :errorMessages="touched.password && errors.password ? [passwordErrorText] : []"
+                :appearanceOverrides="{ maxWidth: '100%' }"
+                @blur="touched.password = true"
+              />
+              <p>
+                <KRouterLink
+                  :to="{ name: 'ForgotPassword' }"
+                  :text="$tr('forgotPasswordLink')"
+                  appearance="basic-link"
+                />
+              </p>
+              <KButton
+                primary
+                class="w-100"
+                :text="$tr('signInButton')"
+                :disabled="offline || busy"
+                type="submit"
+              />
               <KRouterLink
-                :to="{ name: 'ForgotPassword' }"
-                :text="$tr('forgotPasswordLink')"
+                primary
+                class="create-account-link w-100"
+                :text="$tr('createAccountButton')"
+                :to="{ name: 'Create' }"
+                appearance="flat-button"
+              />
+            </form>
+            <hr
+              class="divider"
+              :style="{ borderTopColor: $themeTokens.fineLine }"
+            >
+            <p class="guest-link">
+              <KButton
+                href="/channels/#public"
+                :text="$tr('guestModeLink')"
                 appearance="basic-link"
               />
             </p>
-            <KButton
-              primary
-              class="w-100"
-              :text="$tr('signInButton')"
-              :disabled="offline || busy"
-              type="submit"
-            />
-            <KRouterLink
-              primary
-              class="mt-2 w-100"
-              :text="$tr('createAccountButton')"
-              :to="{ name: 'Create' }"
-              appearance="flat-button"
-            />
-          </VForm>
-          <VDivider />
-          <p class="mt-4 text-xs-center">
-            <KButton
-              href="/channels/#public"
-              :text="$tr('guestModeLink')"
-              appearance="basic-link"
-            />
-          </p>
-        </VCard>
+          </div>
+        </template>
+      </StudioRaisedBox>
 
-        <!-- Footer -->
-        <LanguageSwitcherList class="mt-3 text-xs-center" />
+      <!-- Footer -->
+      <LanguageSwitcherList class="language-switcher" />
 
-        <p class="links mt-3 text-xs-center">
-          <span>
-            <KButton
-              :text="$tr('privacyPolicyLink')"
-              appearance="basic-link"
-              @click="showPrivacyPolicy"
-            />
-          </span>
-          <span>
-            <KButton
-              :text="$tr('TOSLink')"
-              appearance="basic-link"
-              @click="showTermsOfService"
-            />
-          </span>
-          <span>
-            <KButton
-              href="https://learningequality.org/"
-              :text="$tr('copyright', { year: new Date().getFullYear() })"
-              appearance="basic-link"
-              iconAfter="openNewTab"
-              target="_blank"
-            />
-          </span>
-        </p>
-      </div>
-    </VLayout>
+      <p
+        class="links"
+        :style="{ color: $themePalette.grey.v_700 }"
+      >
+        <span>
+          <KButton
+            :text="$tr('privacyPolicyLink')"
+            appearance="basic-link"
+            @click="showPrivacyPolicy"
+          />
+        </span>
+        <span>
+          <KButton
+            :text="$tr('TOSLink')"
+            appearance="basic-link"
+            @click="showTermsOfService"
+          />
+        </span>
+        <span>
+          <KButton
+            href="https://learningequality.org/"
+            :text="$tr('copyright', { year: new Date().getFullYear() })"
+            appearance="basic-link"
+            iconAfter="openNewTab"
+            target="_blank"
+          />
+        </span>
+      </p>
+    </div>
     <PolicyModals />
-  </VApp>
+  </div>
 
 </template>
 
@@ -123,30 +137,46 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
-  import EmailField from 'shared/views/form/EmailField';
-  import PasswordField from 'shared/views/form/PasswordField';
-  import Banner from 'shared/views/Banner';
+  import StudioEmailField from '../components/form/StudioEmailField';
+  import StudioPasswordField from '../components/form/StudioPasswordField';
   import PolicyModals from 'shared/views/policies/PolicyModals';
-  import { policies } from 'shared/constants';
+  import StudioBanner from 'shared/views/StudioBanner';
+  import StudioRaisedBox from 'shared/views/StudioRaisedBox';
   import LanguageSwitcherList from 'shared/languageSwitcher/LanguageSwitcherList';
+  import { policies } from 'shared/constants';
+  import commonStrings from 'shared/translator';
+  import { generateFormMixin } from 'shared/mixins';
   import { redirectBrowser } from 'shared/utils/navigation';
+
+  const formMixin = generateFormMixin({
+    username: {
+      required: true,
+      validator: v => Boolean(v && v.trim()) && /.+@.+\..+/.test(v),
+    },
+    password: {
+      required: true,
+    },
+  });
 
   export default {
     name: 'AccountsMain',
     components: {
-      Banner,
-      EmailField,
       LanguageSwitcherList,
-      PasswordField,
       PolicyModals,
+      StudioBanner,
+      StudioEmailField,
+      StudioPasswordField,
+      StudioRaisedBox,
     },
+    mixins: [formMixin],
     data() {
       return {
-        username: '',
-        password: '',
         loginFailed: false,
         busy: false,
-        loginFailedOffline: false,
+        touched: {
+          username: false,
+          password: false,
+        },
       };
     },
     computed: {
@@ -157,6 +187,17 @@
         const params = new URLSearchParams(window.location.search.substring(1));
         return params.get('next');
       },
+      usernameErrorText() {
+        if (!this.username || !this.username.trim()) {
+          /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+          return commonStrings.$tr('fieldRequired');
+        }
+        return this.$tr('validEmailMessage');
+      },
+      passwordErrorText() {
+        /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+        return commonStrings.$tr('fieldRequired');
+      },
     },
     methods: {
       ...mapActions(['login']),
@@ -166,41 +207,43 @@
       showPrivacyPolicy() {
         this.$router.push({ query: { showPolicy: policies.PRIVACY } });
       },
-      submit() {
-        if (this.$refs.form.validate()) {
-          this.busy = true;
-          const credentials = {
-            username: this.username,
-            password: this.password,
-          };
-          return this.login(credentials)
-            .then(() => {
-              this.loginFailedOffline = false;
-              this.loginFailed = false;
-              redirectBrowser(this.nextParam || window.Urls.channels());
-            })
-            .catch(err => {
-              this.busy = false;
-              if (err.message === 'Network Error') {
-                this.loginFailedOffline = true;
-              } else if (err.response.status === 405) {
-                this.$router.push({ name: 'AccountNotActivated' });
-              } else {
-                this.loginFailed = true;
-              }
-            });
-        }
-        return Promise.resolve();
+      // eslint-disable-next-line vue/no-unused-properties
+      onValidationFailed() {
+        this.touched.username = true;
+        this.touched.password = true;
+      },
+      // eslint-disable-next-line vue/no-unused-properties
+      onSubmit(formData) {
+        this.busy = true;
+        const credentials = {
+          username: formData.username,
+          password: this.password,
+        };
+        return this.login(credentials)
+          .then(() => {
+            this.loginFailed = false;
+            redirectBrowser(this.nextParam || window.Urls.channels());
+          })
+          .catch(err => {
+            this.busy = false;
+            if (err.message === 'Network Error') {
+              return;
+            } else if (err.response.status === 405) {
+              this.$router.push({ name: 'AccountNotActivated' });
+            } else {
+              this.loginFailed = true;
+            }
+          });
       },
     },
     $trs: {
       kolibriStudio: 'Kolibri Studio',
-      passwordLabel: 'Password',
       forgotPasswordLink: 'Forgot your password?',
       signInButton: 'Sign in',
       createAccountButton: 'Create an account',
       guestModeLink: 'Explore without an account',
       loginFailed: 'Email or password is incorrect',
+      validEmailMessage: 'Please enter a valid email',
       privacyPolicyLink: 'Privacy policy',
       TOSLink: 'Terms of service',
       copyright: '© {year} Learning Equality',
@@ -215,31 +258,74 @@
 
 <style lang="scss" scoped>
 
-  .main {
+  .page {
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    padding-top: 48px;
     overflow: auto;
-    /* stylelint-disable-next-line custom-property-pattern */
-    background-color: var(--v-backgroundColor-base);
   }
 
-  .links {
-    span {
-      &:not(:last-child)::after {
-        margin: 0 8px 0 12px;
-        font-size: 14pt;
-        color: var(--v-grey-base);
-        vertical-align: middle;
-        content: '•';
-      }
-    }
+  .sign-in-card {
+    width: 300px;
+    margin: 0 auto;
+  }
+
+  .k-logo-container {
+    display: flex;
+    justify-content: center;
+  }
+
+  .page-title {
+    padding: 8px 0;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .card-body {
+    padding: 0 16px;
+  }
+
+  .form {
+    padding: 16px 0;
+  }
+
+  .create-account-link {
+    margin-top: 8px;
+  }
+
+  .divider {
+    border: 0;
+    border-top: 1px solid;
+  }
+
+  .guest-link {
+    margin-top: 24px;
+    text-align: center;
   }
 
   .w-100 {
     width: 100%;
   }
 
-  .k-logo-container {
-    display: flex;
-    justify-content: center;
+  .language-switcher {
+    margin-top: 16px;
+    text-align: center;
+  }
+
+  .links {
+    margin-top: 16px;
+    text-align: center;
+
+    span {
+      &:not(:last-child)::after {
+        margin: 0 8px 0 12px;
+        font-size: 14pt;
+        vertical-align: middle;
+        content: '•';
+      }
+    }
   }
 
 </style>
