@@ -7,6 +7,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
+from typing import Union
 
 from le_utils.constants import exercises
 
@@ -142,8 +143,18 @@ def _response_declaration(
 
 def _create_choice_interaction_and_response(
     item: LegacyAssessmentItem,
-) -> Tuple[ChoiceInteraction, ResponseDeclaration]:
+) -> Tuple[Union[ChoiceInteraction, Div], Optional[ResponseDeclaration]]:
     """Create a QTI choice interaction for multiple choice questions."""
+    if not item.answers:
+        # An answerless choice question is ordinary in-progress authoring state,
+        # but the XSD requires at least one qti-simple-choice and there is no
+        # response to bind, so emit the question alone, ungraded. Div because
+        # rendered markdown can start with a top level <math>, which
+        # qti-item-body does not accept; empty P so an untyped question still
+        # renders as an editable paragraph.
+        body = _create_html_content_from_text(item.question) or [P()]
+        return Div(children=body), None
+
     multiple_select = item.type == exercises.MULTIPLE_SELECTION
 
     prompt = Prompt(children=_create_html_content_from_text(item.question))
@@ -314,12 +325,19 @@ def convert_legacy_assessment_item_to_qti(
 
     item_body = ItemBody(children=[interaction])
 
-    outcome_declaration = OutcomeDeclaration(
-        identifier="SCORE", cardinality=Cardinality.SINGLE, base_type=BaseType.FLOAT
+    response_declarations = (
+        [response_declaration] if response_declaration is not None else []
+    )
+    response_processing = (
+        ResponseProcessing(
+            template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"
+        )
+        if response_declarations
+        else None
     )
 
-    response_processing = ResponseProcessing(
-        template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"
+    outcome_declaration = OutcomeDeclaration(
+        identifier="SCORE", cardinality=Cardinality.SINGLE, base_type=BaseType.FLOAT
     )
 
     qti_item_id = hex_to_qti_id(item.assessment_id)
@@ -330,7 +348,7 @@ def convert_legacy_assessment_item_to_qti(
         language=item.language,
         adaptive=False,
         time_dependent=False,
-        response_declaration=[response_declaration],
+        response_declaration=response_declarations,
         outcome_declaration=[outcome_declaration],
         item_body=item_body,
         catalog_info=_create_catalog_info(item),

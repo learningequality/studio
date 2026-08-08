@@ -117,6 +117,71 @@ class ChoiceInteractionConversionTests(unittest.TestCase):
         )
         self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
+    def test_single_selection_no_answers(self):
+        item = _make_item(
+            type=exercises.SINGLE_SELECTION,
+            question="What is 2+2?",
+            answers=[],
+            randomize=True,
+            assessment_id="abcdef1234567890abcdef1234567890",
+        )
+
+        result = convert_legacy_assessment_item_to_qti(item)
+
+        self.assertEqual(result.identifier, "Kq83vEjRWeJCrze8SNFZ4kA")
+        self.assertEqual(
+            _normalize_xml(_load_fixture("single_selection_no_answers.xml")),
+            _normalize_xml(result.xml),
+        )
+        self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
+
+    def test_choice_types_with_no_answers_omit_the_interaction(self):
+        # The guard covers the choice types as a group; test_single_selection_no_answers
+        # pins SINGLE_SELECTION against the fixture.
+        for question_type in (exercises.MULTIPLE_SELECTION, "true_false"):
+            with self.subTest(question_type=question_type):
+                item = _make_item(
+                    type=question_type,
+                    question="What is 2+2?",
+                    answers=[],
+                    assessment_id="abcdef1234567890abcdef1234567890",
+                )
+
+                result = convert_legacy_assessment_item_to_qti(item)
+
+                self.assertNotIn("qti-choice-interaction", result.xml)
+                self.assertNotIn("qti-response-declaration", result.xml)
+                self.assertNotIn("qti-response-processing", result.xml)
+                self.assertIn("<p>What is 2+2?</p>", result.xml)
+                self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
+
+    def test_choice_type_with_no_answers_and_no_question(self):
+        item = _make_item(
+            type=exercises.MULTIPLE_SELECTION,
+            question="",
+            answers=[],
+            assessment_id="abcdef1234567890abcdef1234567890",
+        )
+
+        result = convert_legacy_assessment_item_to_qti(item)
+
+        self.assertIn("<qti-item-body><div><p /></div></qti-item-body>", result.xml)
+        self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
+
+    def test_choice_type_with_no_answers_and_block_maths(self):
+        # Validity is not asserted: rendered MathML carries no namespace, the same
+        # gap test_free_response_with_maths lives with.
+        item = _make_item(
+            type=exercises.SINGLE_SELECTION,
+            question="$$\\sum_n^sxa^n$$",
+            answers=[],
+            assessment_id="abcdef1234567890abcdef1234567890",
+        )
+
+        result = convert_legacy_assessment_item_to_qti(item)
+
+        self.assertIn('<qti-item-body><div><math display="block">', result.xml)
+
     def test_media_reference_survives(self):
         item = _make_item(
             type=exercises.SINGLE_SELECTION,
