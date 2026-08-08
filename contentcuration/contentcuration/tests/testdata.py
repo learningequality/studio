@@ -19,6 +19,10 @@ from contentcuration import models as cc
 from contentcuration.constants import (
     community_library_submission as community_library_submission_constants,
 )
+from contentcuration.constants.organization_roles import ORGANIZATION_ADMIN
+from contentcuration.constants.organization_roles import (
+    ORGANIZATION_ROLE_STATUS_ACTIVE,
+)
 from contentcuration.tests.utils import mixer
 
 
@@ -251,6 +255,18 @@ def channel(name="testchannel"):
     channel.save()
 
     return channel
+
+
+def organization(name="Test Organization"):
+    return cc.Organization.objects.create(name=name)
+
+
+def organization_role(
+    user, organization, role=ORGANIZATION_ADMIN, status=ORGANIZATION_ROLE_STATUS_ACTIVE
+):
+    return cc.OrganizationRole.objects.create(
+        user=user, organization=organization, role=role, status=status
+    )
 
 
 def random_string(chars=10):
