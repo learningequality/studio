@@ -4,7 +4,7 @@ amqp==5.1.1
     # via kombu
 annotated-types==0.7.0
     # via pydantic
-asgiref==3.3.4
+asgiref==3.12.1
     # via django
 async-timeout==5.0.1
     # via redis
@@ -50,7 +50,7 @@ confusable-homoglyphs==3.2.0
     # via django-registration
 cryptography==50.0.0
     # via google-auth
-django==3.2.24
+django==5.2.16
     # via
     #   -r requirements.in
     #   django-celery-results
@@ -243,9 +243,7 @@ python-dateutil==2.9.0.post0
 python-postmark==0.7.0
     # via -r requirements.in
 pytz==2022.1
-    # via
-    #   django
-    #   django-postmark
+    # via django-postmark
 redis==8.0.1
     # via
     #   -r requirements.in
@@ -281,6 +279,7 @@ stripe==5.5.0
     # via -r requirements.in
 typing-extensions==4.15.0
     # via
+    #   asgiref
     #   cryptography
     #   exceptiongroup
     #   grpcio

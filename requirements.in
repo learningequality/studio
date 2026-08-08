@@ -12,7 +12,7 @@ jsonfield==3.1.0
 celery==5.6.3
 redis
 python-postmark==0.7.0
-Django==3.2.24
+Django==5.2.16
 django-webpack-loader==0.7.0
 google-cloud-error-reporting
 google-cloud-storage==3.10.1
