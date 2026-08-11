@@ -58,10 +58,8 @@ from contentcuration.viewsets.feedback import RecommendationsEventViewSet
 from contentcuration.viewsets.feedback import RecommendationsInteractionEventViewSet
 from contentcuration.viewsets.file import FileViewSet
 from contentcuration.viewsets.invitation import InvitationViewSet
-from contentcuration.viewsets.organization import (
-    OrganizationViewSet,
-    OrganizationMemberViewSet,
-)
+from contentcuration.viewsets.organization import OrganizationMemberViewSet
+from contentcuration.viewsets.organization import OrganizationViewSet
 from contentcuration.viewsets.recommendation import RecommendationView
 from contentcuration.viewsets.sync.endpoint import SyncView
 from contentcuration.viewsets.user import AdminUserViewSet

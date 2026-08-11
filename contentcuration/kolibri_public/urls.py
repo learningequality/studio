@@ -8,7 +8,6 @@ from kolibri_public.views import ContentNodeTreeViewset
 from kolibri_public.views import ContentNodeViewset
 from rest_framework import routers
 
-
 public_content_v2_router = routers.SimpleRouter()
 public_content_v2_router.register(
     r"channel", ChannelMetadataViewSet, basename="publicchannel"
