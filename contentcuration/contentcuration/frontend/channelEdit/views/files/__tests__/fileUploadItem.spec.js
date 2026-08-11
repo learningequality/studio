@@ -1,18 +1,24 @@
-import { render, screen } from '@testing-library/vue';
+import { render, screen, waitFor, configure } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import FileUploadItem from '../FileUploadItem';
 import { factory } from '../../../store';
+import Uploader from 'shared/views/files/Uploader';
 import { fileErrors } from 'shared/constants';
 import { createTranslator } from 'shared/i18n';
+
+configure({ testIdAttribute: 'data-test' });
+
+jest.mock('shared/vuex/file/validation', () => ({
+  validateFile: jest.fn(() => Promise.resolve(0)),
+}));
 
 const tr = createTranslator('FileUploadItem', FileUploadItem.$trs);
 const testFile = { id: 'test' };
 
-function renderComponent({ props = {}, file = {}, store = factory(), stubs = {} } = {}) {
+function renderComponent({ props = {}, file = {}, store = factory() } = {}) {
   return render(FileUploadItem, {
     routes: [],
     store,
-    stubs,
     props: {
       file:
         file === null
@@ -110,46 +116,49 @@ describe('fileUploadItem', () => {
     });
 
     it('calls the upload complete handler when the replacement upload finishes', async () => {
-      const user = userEvent.setup();
-      const uploadCompleteHandler = jest.fn();
+      const store = factory();
+      store.commit('ADD_SESSION', { id: 1, disk_space: 209715200, disk_space_used: 0 });
 
-      const UploaderStub = {
-        name: 'Uploader',
-        props: ['uploadingHandler', 'uploadCompleteHandler'],
-        methods: {
-          openFileDialog() {},
-          handleFiles() {},
-        },
-        template: `
-          <div>
-            <button type="button" @click="uploadingHandler({ id: 'file-1' })">
-              Start upload
-            </button>
-            <button type="button" @click="uploadCompleteHandler({ id: 'file-1' })">
-              Finish upload
-            </button>
-            <slot :openFileDialog="openFileDialog" :handleFiles="handleFiles" />
-          </div>
-        `,
+      const uploadCompleteHandler = jest.fn();
+      const fileObject = {
+        id: 'file-1',
+        preset: 'document',
+        checksum: 'checksum',
+        file_format: 'pdf',
+        original_filename: 'test.pdf',
+        loaded: 0,
+        total: 10,
       };
 
+      const uploadFile = jest
+        .spyOn(Uploader.methods, 'uploadFile')
+        .mockImplementation(async () => {
+          store.commit('file/ADD_FILE', fileObject);
+          return { fileObject, uploadPromise: Promise.resolve(fileObject) };
+        });
+
       renderComponent({
+        store,
         props: {
           uploadCompleteHandler,
         },
-        stubs: {
-          Uploader: UploaderStub,
-        },
       });
 
-      await user.click(screen.getByRole('button', { name: 'Start upload' }));
-      await user.click(screen.getByRole('button', { name: 'Finish upload' }));
-
-      expect(uploadCompleteHandler).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: 'file-1',
-        }),
+      const fileInput = screen.getByTestId('upload-dialog');
+      await userEvent.upload(
+        fileInput,
+        new File(['pdf'], 'test.pdf', { type: 'application/pdf' }),
       );
+
+      await waitFor(() => {
+        expect(uploadCompleteHandler).toHaveBeenCalledWith(
+          expect.objectContaining({
+            id: 'file-1',
+          }),
+        );
+      });
+
+      uploadFile.mockRestore();
     });
 
     it('selects the existing file when the user clicks the file row', async () => {
@@ -169,34 +178,18 @@ describe('fileUploadItem', () => {
 
     it('opens the file chooser when the user clicks an empty file row', async () => {
       const user = userEvent.setup();
-      const openFileDialog = jest.fn();
-
-      const UploaderStub = {
-        name: 'Uploader',
-        methods: {
-          openFileDialog() {
-            openFileDialog();
-          },
-          handleFiles() {},
-        },
-        template: `
-          <div>
-            <slot :openFileDialog="openFileDialog" :handleFiles="handleFiles" />
-          </div>
-        `,
-      };
+      const clickSpy = jest.spyOn(HTMLInputElement.prototype, 'click');
 
       const { emitted } = renderComponent({
         file: null,
-        stubs: {
-          Uploader: UploaderStub,
-        },
       });
 
       await user.click(screen.getByText(tr.$tr('uploadButton')));
 
-      expect(openFileDialog).toHaveBeenCalled();
+      expect(clickSpy).toHaveBeenCalled();
       expect(emitted()).not.toHaveProperty('selected');
+
+      clickSpy.mockRestore();
     });
   });
 });
