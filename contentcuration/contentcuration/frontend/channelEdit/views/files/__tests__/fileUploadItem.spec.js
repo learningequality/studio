@@ -38,6 +38,10 @@ function renderComponent({ props = {}, file = {}, store = factory() } = {}) {
 }
 
 describe('fileUploadItem', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   describe('render', () => {
     it('shows "Unknown filename" when the uploaded file has a generic name', () => {
       renderComponent({
@@ -130,12 +134,10 @@ describe('fileUploadItem', () => {
         total: 10,
       };
 
-      const uploadFile = jest
-        .spyOn(Uploader.methods, 'uploadFile')
-        .mockImplementation(async () => {
-          store.commit('file/ADD_FILE', fileObject);
-          return { fileObject, uploadPromise: Promise.resolve(fileObject) };
-        });
+      jest.spyOn(Uploader.methods, 'uploadFile').mockImplementation(async () => {
+        store.commit('file/ADD_FILE', fileObject);
+        return { fileObject, uploadPromise: Promise.resolve(fileObject) };
+      });
 
       renderComponent({
         store,
@@ -157,8 +159,6 @@ describe('fileUploadItem', () => {
           }),
         );
       });
-
-      uploadFile.mockRestore();
     });
 
     it('selects the existing file when the user clicks the file row', async () => {
@@ -188,8 +188,6 @@ describe('fileUploadItem', () => {
 
       expect(clickSpy).toHaveBeenCalled();
       expect(emitted()).not.toHaveProperty('selected');
-
-      clickSpy.mockRestore();
     });
   });
 });
