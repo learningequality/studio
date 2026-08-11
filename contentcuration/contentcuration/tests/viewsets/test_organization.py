@@ -16,11 +16,10 @@ from contentcuration.constants.organization_roles import ORGANIZATION_VIEWER
 from contentcuration.models import Organization
 from contentcuration.models import OrganizationRole
 from contentcuration.tests import testdata
-from contentcuration.tests.base import BaseAPITestCase
-from contentcuration.viewsets.organization import OrganizationMemberViewSet
+from contentcuration.tests.base import StudioAPITestCase
 
 
-class OrganizationAPITestCase(BaseAPITestCase):
+class OrganizationAPITestCase(StudioAPITestCase):
     """Shared organization API fixtures and URL helpers."""
 
     def setUp(self):
@@ -350,7 +349,7 @@ class OrganizationMembershipListTestCase(OrganizationAPITestCase):
 
 
 class OrganizationMembershipCreationTestCase(OrganizationAPITestCase):
-    def test_direct_membership_creation_is_not_allowed(self):
+    def test_active_admin_can_create_membership(self):
         self.authenticate_as(self.organization_admin)
         data = {
             "organization": str(self.organization.id),
@@ -361,7 +360,26 @@ class OrganizationMembershipCreationTestCase(OrganizationAPITestCase):
 
         response = self.client.post(self.membership_list_url, data, format="json")
 
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        membership = OrganizationRole.objects.get(
+            organization=self.organization,
+            user=self.other_user,
+        )
+        self.assertEqual(membership.role, ORGANIZATION_VIEWER)
+        self.assertEqual(membership.status, ORGANIZATION_ROLE_STATUS_ACTIVE)
+
+    def test_editor_cannot_create_membership(self):
+        self.authenticate_as(self.editor_user)
+        data = {
+            "organization": str(self.organization.id),
+            "user": str(self.other_user.id),
+            "role": ORGANIZATION_VIEWER,
+            "status": ORGANIZATION_ROLE_STATUS_ACTIVE,
+        }
+
+        response = self.client.post(self.membership_list_url, data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertFalse(
             OrganizationRole.objects.filter(
                 organization=self.organization,
@@ -369,8 +387,57 @@ class OrganizationMembershipCreationTestCase(OrganizationAPITestCase):
             ).exists()
         )
 
-    def test_membership_viewset_has_no_sync_creation_handler(self):
-        self.assertFalse(hasattr(OrganizationMemberViewSet, "create_from_changes"))
+    def test_nonmember_cannot_create_membership(self):
+        self.authenticate_as(self.other_user)
+        data = {
+            "organization": str(self.organization.id),
+            "user": str(self.other_user.id),
+            "role": ORGANIZATION_VIEWER,
+            "status": ORGANIZATION_ROLE_STATUS_ACTIVE,
+        }
+
+        response = self.client.post(self.membership_list_url, data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertFalse(
+            OrganizationRole.objects.filter(
+                organization=self.organization,
+                user=self.other_user,
+            ).exists()
+        )
+
+    def test_invalid_role_is_rejected_on_create(self):
+        self.authenticate_as(self.organization_admin)
+        data = {
+            "organization": str(self.organization.id),
+            "user": str(self.other_user.id),
+            "role": "invalid-role",
+            "status": ORGANIZATION_ROLE_STATUS_ACTIVE,
+        }
+
+        response = self.client.post(self.membership_list_url, data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_duplicate_membership_is_rejected(self):
+        self.authenticate_as(self.organization_admin)
+        data = {
+            "organization": str(self.organization.id),
+            "user": str(self.viewer_user.id),
+            "role": ORGANIZATION_EDITOR,
+            "status": ORGANIZATION_ROLE_STATUS_ACTIVE,
+        }
+
+        response = self.client.post(self.membership_list_url, data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            OrganizationRole.objects.filter(
+                organization=self.organization,
+                user=self.viewer_user,
+            ).count(),
+            1,
+        )
 
 
 class OrganizationMembershipUpdateTestCase(OrganizationAPITestCase):

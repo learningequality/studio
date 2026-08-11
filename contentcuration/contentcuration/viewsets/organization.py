@@ -1,10 +1,10 @@
 from django.db import transaction
 from django.db.models import Q
-from django_filters.rest_framework import CharFilter, FilterSet
+from django_filters.rest_framework import CharFilter, FilterSet, NumberFilter
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
-
+from rest_framework.response import Response
 from contentcuration.constants.organization_roles import (
     ORGANIZATION_ADMIN,
     ORGANIZATION_ROLE_STATUS_ACTIVE,
@@ -47,12 +47,11 @@ class OrganizationSerializer(BulkModelSerializer):
 
 class OrganizationMemberSerializer(BulkModelSerializer):
     """
-    Write serializer for updating OrganizationRole membership records.
+    Write serializer for OrganizationRole membership records.
 
-    Membership creation is handled by invitation acceptance. Organization and
-    user are immutable through this endpoint; admins may only update an existing
-    membership's role, description, or status. Read operations are handled by
-    the viewset values map.
+    Organization and user are writable when creating a membership. They are
+    immutable once the membership exists; admins may update role, description,
+    or status. Read operations are handled by the viewset values map.
     """
 
     status = serializers.ChoiceField(
@@ -70,8 +69,14 @@ class OrganizationMemberSerializer(BulkModelSerializer):
             "description",
             "status",
         )
-        read_only_fields = ("organization", "user")
         list_serializer_class = BulkListSerializer
+
+    def update(self, instance, validated_data):
+        validated_data.pop("organization", None)
+        validated_data.pop("user", None)
+        return super(OrganizationMemberSerializer, self).update(
+            instance, validated_data
+        )
 
 
 class OrganizationFilter(FilterSet):
@@ -84,7 +89,7 @@ class OrganizationFilter(FilterSet):
 
 class OrganizationMemberFilter(FilterSet):
     organization = CharFilter(field_name="organization_id")
-    user = CharFilter(field_name="user_id")
+    user = NumberFilter(field_name="user_id")
 
     class Meta:
         model = OrganizationRole
@@ -134,47 +139,47 @@ class OrganizationViewSet(
         "updated_at",
     )
 
-    def get_queryset(self):
-        """
-        Return organizations visible to the current user.
+    # def get_queryset(self):
+    #     """
+    #     Return organizations visible to the current user.
 
-        Public organizations are visible to authenticated users. Private
-        organizations require an active membership. Non-active memberships do
-        not grant access.
-        """
-        queryset = Organization.objects.filter(deleted=False)
-        user = self.request.user
+    #     Public organizations are visible to authenticated users. Private
+    #     organizations require an active membership. Non-active memberships do
+    #     not grant access.
+    #     """
+    #     queryset = Organization.objects.filter(deleted=False)
+    #     user = self.request.user
 
-        if _is_site_admin(user):
-            return queryset
+    #     if _is_site_admin(user):
+    #         return queryset
 
-        if not user.is_authenticated:
-            return queryset.filter(public=True)
+    #     if not user.is_authenticated:
+    #         return queryset.filter(public=True)
 
-        return queryset.filter(
-            Q(public=True)
-            | Q(
-                user_roles__user=user,
-                user_roles__status=ORGANIZATION_ROLE_STATUS_ACTIVE,
-            )
-        ).distinct()
+    #     return queryset.filter(
+    #         Q(public=True)
+    #         | Q(
+    #             user_roles__user=user,
+    #             user_roles__status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+    #         )
+    #     ).distinct()
 
-    def get_edit_queryset(self):
-        """Return organizations that the current user may modify."""
-        queryset = Organization.objects.filter(deleted=False)
-        user = self.request.user
+    # def get_edit_queryset(self):
+    #     """Return organizations that the current user may modify."""
+    #     queryset = Organization.objects.filter(deleted=False)
+    #     user = self.request.user
 
-        if _is_site_admin(user):
-            return queryset
+    #     if _is_site_admin(user):
+    #         return queryset
 
-        if not user.is_authenticated:
-            return queryset.none()
+    #     if not user.is_authenticated:
+    #         return queryset.none()
 
-        return queryset.filter(
-            user_roles__user=user,
-            user_roles__role=ORGANIZATION_ADMIN,
-            user_roles__status=ORGANIZATION_ROLE_STATUS_ACTIVE,
-        ).distinct()
+    #     return queryset.filter(
+    #         user_roles__user=user,
+    #         user_roles__role=ORGANIZATION_ADMIN,
+    #         user_roles__status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+    #     ).distinct()
 
     def perform_create(self, serializer, change=None):
         """Create the organization and its initial administrator atomically."""
@@ -194,17 +199,17 @@ class OrganizationViewSet(
 
 
 class OrganizationMemberViewSet(
-    ReadOnlyValuesViewset,
+    ValuesViewset,
+    RESTCreateModelMixin,
     RESTUpdateModelMixin,
     RESTDestroyModelMixin,
 ):
     """
     Organization membership and role API.
 
-    Active organization members may read the membership list. New membership
-    records are created only when an invitation is accepted. Active organization
-    admins may update or remove existing memberships. Site admins may manage all
-    existing memberships.
+    Active organization members may read the membership list. Active organization
+    admins may create, update, or remove memberships and assign roles. Site admins
+    may manage all memberships.
     """
 
     queryset = OrganizationRole.objects.all()
@@ -248,48 +253,6 @@ class OrganizationMemberViewSet(
             ).strip()
         return items
 
-    def get_queryset(self):
-        """
-        Return memberships belonging to organizations the user may inspect.
-
-        A public organization does not expose its membership list to the
-        public; an active membership is required.
-        """
-        queryset = OrganizationRole.objects.select_related(
-            "organization", "user"
-        ).filter(organization__deleted=False)
-        user = self.request.user
-
-        if _is_site_admin(user):
-            return queryset
-
-        if not user.is_authenticated:
-            return queryset.none()
-
-        return queryset.filter(
-            organization__user_roles__user=user,
-            organization__user_roles__status=ORGANIZATION_ROLE_STATUS_ACTIVE,
-        ).distinct()
-
-    def get_edit_queryset(self):
-        """Return memberships managed by organizations where the user is admin."""
-        queryset = OrganizationRole.objects.select_related(
-            "organization", "user"
-        ).filter(organization__deleted=False)
-        user = self.request.user
-
-        if _is_site_admin(user):
-            return queryset
-
-        if not user.is_authenticated:
-            return queryset.none()
-
-        return queryset.filter(
-            organization__user_roles__user=user,
-            organization__user_roles__role=ORGANIZATION_ADMIN,
-            organization__user_roles__status=ORGANIZATION_ROLE_STATUS_ACTIVE,
-        ).distinct()
-
     def _require_admin(self, organization):
         user = self.request.user
 
@@ -308,9 +271,15 @@ class OrganizationMemberViewSet(
                 "Only active organization admins may manage membership."
             )
 
+    def perform_create(self, serializer, change=None):
+        organization = serializer.validated_data["organization"]
+        self._require_admin(organization)
+        serializer.save()
+
     def _ensure_not_last_active_admin(
         self,
         membership,
+        active_admin_count,
         new_role=None,
         new_status=None,
     ):
@@ -330,32 +299,37 @@ class OrganizationMemberViewSet(
         ):
             return
 
-        active_admin_ids = list(
-            OrganizationRole.objects.select_for_update()
-            .filter(
-                organization=membership.organization,
-                role=ORGANIZATION_ADMIN,
-                status=ORGANIZATION_ROLE_STATUS_ACTIVE,
-            )
-            .values_list("id", flat=True)
-        )
-
-        if len(active_admin_ids) <= 1:
+        if active_admin_count <= 1:
             raise ValidationError(
                 "An organization must have at least one active admin."
             )
 
+    def _lock_active_admins(self, organization_id):
+        """Lock active admin memberships in a deterministic order."""
+        return list(
+            OrganizationRole.objects.select_for_update(of=("self",))
+            .filter(
+                organization_id=organization_id,
+                role=ORGANIZATION_ADMIN,
+                status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+            )
+            .order_by("id")
+            .values_list("id", flat=True)
+        )
+
     def perform_update(self, serializer):
         with transaction.atomic():
+            active_admin_ids = self._lock_active_admins(
+                serializer.instance.organization_id
+            )
             membership = (
-                OrganizationRole.objects.select_for_update()
+                OrganizationRole.objects.select_for_update(of=("self",))
                 .select_related("organization", "user")
                 .get(pk=serializer.instance.pk)
             )
-            self._require_admin(membership.organization)
-
             self._ensure_not_last_active_admin(
                 membership,
+                active_admin_count=len(active_admin_ids),
                 new_role=serializer.validated_data.get("role"),
                 new_status=serializer.validated_data.get("status"),
             )
@@ -365,18 +339,39 @@ class OrganizationMemberViewSet(
 
     def perform_destroy(self, instance):
         with transaction.atomic():
+            active_admin_ids = self._lock_active_admins(instance.organization_id)
             membership = (
-                OrganizationRole.objects.select_for_update()
+                OrganizationRole.objects.select_for_update(of=("self",))
                 .select_related("organization", "user")
                 .get(pk=instance.pk)
             )
-            self._require_admin(membership.organization)
             self._ensure_not_last_active_admin(
                 membership,
+                active_admin_count=len(active_admin_ids),
                 new_role=ORGANIZATION_VIEWER,
                 new_status=membership.status,
             )
             membership.delete()
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = self.get_edit_object()
+
+        serializer = self.get_serializer(
+            instance,
+            data=request.data,
+            partial=partial,
+        )
+        serializer.is_valid(raise_exception=True)
+
+        self.perform_update(serializer)
+
+        queryset = OrganizationRole.objects.select_related(
+            "organization",
+            "user",
+        ).filter(pk=serializer.instance.pk)
+
+        return Response(self.serialize(queryset)[0])
 
 
 # The model is named OrganizationRole, while existing work may already import
