@@ -1250,6 +1250,36 @@ class Channel(models.Model):
         return queryset.filter(Q(edit=True) | Q(organization_edit=True))
 
     @classmethod
+    def filter_delete_queryset(cls, queryset, user):
+        user_id = not user.is_anonymous and user.id
+
+        if not user_id:
+            return queryset.none()
+
+        edit = Exists(
+            User.editable_channels.through.objects.filter(
+                user_id=user_id, channel_id=OuterRef("id")
+            )
+        )
+        organization_delete = Exists(
+            OrganizationRole.objects.filter(
+                user_id=user_id,
+                organization_id=OuterRef("organization_id"),
+                status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+                role=ORGANIZATION_ADMIN,
+            )
+        )
+        queryset = queryset.annotate(
+            edit=edit,
+            organization_delete=organization_delete,
+        )
+
+        if user.is_admin:
+            return queryset
+
+        return queryset.filter(Q(edit=True) | Q(organization_delete=True))
+
+    @classmethod
     def filter_view_queryset(cls, queryset, user):
         user_id = not user.is_anonymous and user.id
         user_email = not user.is_anonymous and user.email
