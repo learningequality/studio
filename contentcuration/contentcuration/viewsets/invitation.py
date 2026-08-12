@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from contentcuration.models import Change
 from contentcuration.models import Channel
 from contentcuration.models import Invitation
+from contentcuration.models import Organization
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
@@ -25,7 +26,12 @@ class InvitationSerializer(BulkModelSerializer):
     accepted = serializers.BooleanField(read_only=True)
     declined = serializers.BooleanField(read_only=True)
 
-    channel = UserFilteredPrimaryKeyRelatedField(queryset=Channel.objects.all())
+    channel = UserFilteredPrimaryKeyRelatedField(
+        queryset=Channel.objects.all(), required=False
+    )
+    organization = UserFilteredPrimaryKeyRelatedField(
+        queryset=Organization.objects.all(), required=False
+    )
 
     class Meta:
         model = Invitation
@@ -36,11 +42,27 @@ class InvitationSerializer(BulkModelSerializer):
             "revoked",
             "email",
             "channel",
+            "organization",
             "share_mode",
             "first_name",
             "last_name",
         )
         list_serializer_class = BulkListSerializer
+
+    def validate(self, data):
+        channel = data.get("channel", getattr(self.instance, "channel_id", None))
+        organization = data.get(
+            "organization", getattr(self.instance, "organization_id", None)
+        )
+        if not channel and not organization:
+            raise serializers.ValidationError(
+                "Invitation must specify either a channel or an organization."
+            )
+        if channel and organization:
+            raise serializers.ValidationError(
+                "Invitation cannot specify both a channel and an organization."
+            )
+        return data
 
     def create(self, validated_data):
         # Need to remove default values for these non-model fields here
@@ -52,8 +74,10 @@ class InvitationSerializer(BulkModelSerializer):
 
     def update(self, instance, validated_data):
         instance = super(InvitationSerializer, self).update(instance, validated_data)
-        accepted = self.initial_data.get("accepted") or instance.accepted
-        revoked = self.initial_data.get("revoked") or instance.revoked
+        # validated_data, not initial_data, respects get_fields' read-only
+        # flags; only trigger accept() on an actual incoming toggle.
+        accepted = validated_data.get("accepted")
+        revoked = validated_data.get("revoked") or instance.revoked
 
         if accepted and not revoked:
             instance.accept()
@@ -65,6 +89,7 @@ class InvitationSerializer(BulkModelSerializer):
                         "accepted": True,
                     },
                     channel_id=instance.channel_id,
+                    user_id=self.context["request"].user.id,
                 )
             )
 
@@ -76,11 +101,27 @@ class InvitationSerializer(BulkModelSerializer):
 
         # allow invitation state to be modified under the right conditions
         if request and request.user and self.instance:
-            if self.instance.invited == request.user:
+            # Match on email, not the `invited` FK - `invited` is only set by
+            # the channel email-invite flow, never for sync-created invitations.
+            if (request.user.email or "").lower() == (
+                self.instance.email or ""
+            ).lower():
                 fields["accepted"].read_only = self.instance.revoked
                 fields["declined"].read_only = False
-            if self.instance.sender == request.user:
+
+            is_org_admin = (
+                self.instance.organization_id
+                and Organization.filter_edit_queryset(
+                    Organization.objects.filter(id=self.instance.organization_id),
+                    request.user,
+                ).exists()
+            )
+            if self.instance.sender == request.user or is_org_admin:
                 fields["revoked"].read_only = False
+            else:
+                # Otherwise the invitee could raise their own access level
+                # (e.g. to org admin) via share_mode before accepting.
+                fields["share_mode"].read_only = True
 
         return fields
 
@@ -88,12 +129,14 @@ class InvitationSerializer(BulkModelSerializer):
 class InvitationFilter(FilterSet):
     invited = CharFilter(method="filter_invited")
     channel = CharFilter(method="filter_channel")
+    organization = CharFilter(method="filter_organization")
 
     class Meta:
         model = Invitation
         fields = (
             "invited",
             "channel",
+            "organization",
         )
 
     def filter_invited(self, queryset, name, value):
@@ -101,6 +144,9 @@ class InvitationFilter(FilterSet):
 
     def filter_channel(self, queryset, name, value):
         return queryset.filter(channel_id=value)
+
+    def filter_organization(self, queryset, name, value):
+        return queryset.filter(organization_id=value)
 
 
 def get_sender_name(item):
@@ -124,6 +170,7 @@ class InvitationViewSet(ValuesViewset):
         "sender__first_name",
         "sender__last_name",
         "channel_id",
+        "organization_id",
         "share_mode",
         "channel__name",
     )
@@ -133,6 +180,7 @@ class InvitationViewSet(ValuesViewset):
         "sender_name": get_sender_name,
         "channel_name": "channel__name",
         "channel": "channel_id",
+        "organization": "organization_id",
     }
 
     def perform_update(self, serializer):
@@ -163,6 +211,7 @@ class InvitationViewSet(ValuesViewset):
                 INVITATION,
                 {"accepted": True},
                 channel_id=invitation.channel_id,
+                user_id=request.user.id,
             ),
             applied=True,
             created_by_id=request.user.id,
@@ -181,6 +230,7 @@ class InvitationViewSet(ValuesViewset):
                 INVITATION,
                 {"declined": True},
                 channel_id=invitation.channel_id,
+                user_id=request.user.id,
             ),
             applied=True,
             created_by_id=request.user.id,
