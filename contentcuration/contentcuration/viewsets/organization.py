@@ -1,23 +1,24 @@
 from django.db import transaction
-from django.db.models import Q
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import FilterSet
 from django_filters.rest_framework import NumberFilter
+from django_filters.rest_framework import UUIDFilter
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from contentcuration.constants.organization_roles import ORGANIZATION_ADMIN
+from contentcuration.constants.organization_roles import ORGANIZATION_ROLE_STATUS_ACTIVE
+from contentcuration.constants.organization_roles import ORGANIZATION_VIEWER
 from contentcuration.constants.organization_roles import (
     organization_role_status_choices,
 )
-from contentcuration.constants.organization_roles import ORGANIZATION_VIEWER
 from contentcuration.models import Organization
 from contentcuration.models import OrganizationRole
 from contentcuration.utils.pagination import ValuesViewsetPageNumberPagination
 from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
-from contentcuration.viewsets.base import ReadOnlyValuesViewset
 from contentcuration.viewsets.base import RESTCreateModelMixin
 from contentcuration.viewsets.base import RESTDestroyModelMixin
 from contentcuration.viewsets.base import RESTUpdateModelMixin
@@ -88,7 +89,7 @@ class OrganizationFilter(FilterSet):
 
 
 class OrganizationMemberFilter(FilterSet):
-    organization = CharFilter(field_name="organization_id")
+    organization = UUIDFilter(field_name="organization_id")
     user = NumberFilter(field_name="user_id")
 
     class Meta:

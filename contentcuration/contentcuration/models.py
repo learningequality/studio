@@ -689,39 +689,13 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     @classmethod
     def filter_edit_queryset(cls, queryset, user):
-        user_id = not user.is_anonymous and user.id
-
-        # it won't return anything
-        if not user_id:
+        if user.is_anonymous:
             return queryset.none()
-
-        edit = Exists(
-            User.editable_channels.through.objects.filter(
-                user_id=user_id, channel_id=OuterRef("id")
-            )
-        )
-
-        organization_edit = Exists(
-            OrganizationRole.objects.filter(
-                user_id=user_id,
-                organization_id=OuterRef("organization_id"),
-                status=ORGANIZATION_ROLE_STATUS_ACTIVE,
-                role__in=(
-                    ORGANIZATION_ADMIN,
-                    ORGANIZATION_EDITOR,
-                ),
-            )
-        )
-
-        queryset = queryset.annotate(
-            edit=edit,
-            organization_edit=organization_edit,
-        )
 
         if user.is_admin:
             return queryset
 
-        return queryset.filter(Q(edit=True) | Q(organization_edit=True))
+        return queryset.filter(pk=user.pk)
 
     @classmethod
     def get_for_email(cls, email, deleted=False, **filters):
@@ -1255,11 +1229,25 @@ class Channel(models.Model):
                 user_id=user_id, channel_id=OuterRef("id")
             )
         )
-        queryset = queryset.annotate(edit=edit)
+        organization_edit = Exists(
+            OrganizationRole.objects.filter(
+                user_id=user_id,
+                organization_id=OuterRef("organization_id"),
+                status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+                role__in=(
+                    ORGANIZATION_ADMIN,
+                    ORGANIZATION_EDITOR,
+                ),
+            )
+        )
+        queryset = queryset.annotate(
+            edit=edit,
+            organization_edit=organization_edit,
+        )
         if user.is_admin:
             return queryset
 
-        return queryset.filter(edit=True)
+        return queryset.filter(Q(edit=True) | Q(organization_edit=True))
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):
