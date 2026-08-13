@@ -80,6 +80,7 @@ export const QuestionType = Object.freeze({
   NUMERIC: 'numeric',
   TEXT_ENTRY: 'textEntry',
   FREE_RESPONSE: 'freeResponse',
+  ORDERING: 'ordering',
 });
 
 /**
@@ -96,6 +97,7 @@ export const ValidationError = Object.freeze({
   INVALID_NUMERIC_VALUE: 'INVALID_NUMERIC_VALUE',
   EMPTY_ANSWER_CONTENT: 'EMPTY_ANSWER_CONTENT',
   DUPLICATE_ANSWER_CONTENT: 'DUPLICATE_ANSWER_CONTENT',
+  TOO_FEW_CHOICES: 'TOO_FEW_CHOICES',
 });
 
 export const RESPONSE_IDENTIFIER = 'RESPONSE';

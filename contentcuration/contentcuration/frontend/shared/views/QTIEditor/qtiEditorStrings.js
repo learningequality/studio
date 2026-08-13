@@ -53,9 +53,51 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Select all correct answers',
     context: 'Instruction subtitle above multiple-choice options',
   },
-  orderLabel: {
-    message: 'Order',
-    context: 'Display name for an order question type',
+
+  orderingLabel: {
+    message: 'Ordering',
+    context: 'Display name for an ordering question type shown in the question type selector',
+  },
+  orderingDescription: {
+    message: 'Learners must arrange items into the correct order.',
+    context: 'Description for the ordering question type in the info modal',
+  },
+  correctOrderLabel: {
+    message: 'Correct order',
+    context: 'Section header above the ordering item list — items are shown in the correct order',
+  },
+  correctOrderDescription: {
+    message: 'Learners will see these shuffled',
+    context:
+      'Subtitle under the correct order header explaining that items will be shuffled for learners',
+  },
+  addItemBtn: {
+    message: 'Add option',
+    context: 'Button that appends a new ordering item',
+  },
+  deleteItemBtn: {
+    message: 'Delete option {number}',
+    context: 'Accessible label for the delete icon button next to an ordering item row',
+  },
+  moveItemUpBtn: {
+    message: 'Move option {number} up',
+    context: 'Accessible label for the move-up icon button next to an ordering item row',
+  },
+  moveItemDownBtn: {
+    message: 'Move option {number} down',
+    context: 'Accessible label for the move-down icon button next to an ordering item row',
+  },
+  errorTooFewChoices: {
+    message: 'At least 2 items are required for an ordering question.',
+    context: 'Validation error when fewer than 2 ordering items are present',
+  },
+  errorEmptyItemContent: {
+    message: 'Item cannot be blank',
+    context: 'Validation error when an ordering item has no content',
+  },
+  errorDuplicateItemContent: {
+    message: 'Duplicate items are not allowed',
+    context: 'Validation error when two or more ordering items have identical content',
   },
   matchLabel: {
     message: 'Match',

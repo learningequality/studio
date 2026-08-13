@@ -175,13 +175,54 @@ export const FREE_RESPONSE_ITEM_XML = `<?xml version="1.0" encoding="UTF-8"?>
 </qti-assessment-item>`;
 
 /**
+ * Demo item 6: ordering interaction — learner arranges planets in correct order.
+ * Uses cardinality="ordered" and base-type="identifier" per QTI 3.0 §3.2.10.
+ */
+export const ORDERING_ITEM_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  identifier="item-ordering"
+  title="Order the planets by distance from the Sun"
+  adaptive="false"
+  time-dependent="false"
+  xml:lang="en"
+>
+  <qti-response-declaration
+    identifier="RESPONSE"
+    cardinality="ordered"
+    base-type="identifier"
+  >
+    <qti-correct-response>
+      <qti-value>order_mercury</qti-value>
+      <qti-value>order_venus</qti-value>
+      <qti-value>order_earth</qti-value>
+      <qti-value>order_mars</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+
+  <qti-item-body>
+    <qti-order-interaction
+      response-identifier="RESPONSE"
+      orientation="vertical"
+      shuffle="true"
+    >
+      <qti-prompt><p>Arrange the planets in order from closest to farthest from the Sun.</p></qti-prompt>
+      <qti-simple-choice identifier="order_mercury">Mercury</qti-simple-choice>
+      <qti-simple-choice identifier="order_venus">Venus</qti-simple-choice>
+      <qti-simple-choice identifier="order_earth">Earth</qti-simple-choice>
+      <qti-simple-choice identifier="order_mars">Mars</qti-simple-choice>
+    </qti-order-interaction>
+  </qti-item-body>
+</qti-assessment-item>`;
+
+/**
  * Hardcoded items covering different states:
  *  - item-1: single-select choice interaction
  *  - item-2: multi-select choice interaction
  *  - item-numeric: numeric text-entry
  *  - item-text-entry: string text-entry with case-sensitive answers
  *  - item-free-response: free-response text-entry (no correct answer)
- *  - item-blank: no raw_data → shows placeholder (blank new item state)
+ *  - item-ordering: ordering interaction (planets by distance from the Sun)
  */
 export const INITIAL_ASSESSMENTS = [
   {
@@ -210,7 +251,8 @@ export const INITIAL_ASSESSMENTS = [
     raw_data: FREE_RESPONSE_ITEM_XML,
   },
   {
-    assessment_id: 'demo-item-blank',
+    assessment_id: 'demo-item-ordering',
     type: AssessmentItemTypes.QTI,
+    raw_data: ORDERING_ITEM_XML,
   },
 ];

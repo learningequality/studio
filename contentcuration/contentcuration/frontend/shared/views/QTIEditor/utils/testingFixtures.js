@@ -46,6 +46,21 @@ export const CHOICE_MULTI_DECL_XML = `<qti-response-declaration identifier="RESP
   </qti-correct-response>
 </qti-response-declaration>`;
 
+export const ORDERING_XML = `<qti-order-interaction response-identifier="RESPONSE" orientation="vertical" shuffle="true">
+  <qti-prompt><p>Arrange the planets in order from closest to farthest from the Sun.</p></qti-prompt>
+  <qti-simple-choice identifier="order_aaa11111">Mercury</qti-simple-choice>
+  <qti-simple-choice identifier="order_bbb22222">Venus</qti-simple-choice>
+  <qti-simple-choice identifier="order_ccc33333">Earth</qti-simple-choice>
+</qti-order-interaction>`;
+
+export const ORDERING_DECL_XML = `<qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier">
+  <qti-correct-response>
+    <qti-value>order_aaa11111</qti-value>
+    <qti-value>order_bbb22222</qti-value>
+    <qti-value>order_ccc33333</qti-value>
+  </qti-correct-response>
+</qti-response-declaration>`;
+
 // Full QTI Assessment Item XML Documents
 
 export const VALID_CHOICE_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
