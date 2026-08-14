@@ -52,10 +52,6 @@ export const NOVALUE = Symbol('No value default');
 // that they have not yet been committed to our IndexedDB layer.
 export const NEW_OBJECT = Symbol('New object');
 
-// This symbol is used as a key on new objects used to denote when
-// validation should be delayed
-export const DELAYED_VALIDATION = Symbol('Delayed validation');
-
 export const kindToIconMap = {
   audio: 'headset',
   channel: 'apps',
@@ -153,12 +149,8 @@ export const ErrorTypes = Object.freeze({
 
 // should correspond to backend types
 export const AssessmentItemTypes = {
-  SINGLE_SELECTION: 'single_selection',
-  MULTIPLE_SELECTION: 'multiple_selection',
-  TRUE_FALSE: 'true_false',
-  INPUT_QUESTION: 'input_question',
+  QTI: 'QTI',
   PERSEUS_QUESTION: 'perseus_question',
-  FREE_RESPONSE: 'free_response',
 };
 
 export const ValidationErrors = {
@@ -174,10 +166,6 @@ export const ValidationErrors = {
   MASTERY_MODEL_N_REQUIRED: 'MASTERY_MODEL_N_REQUIRED',
   MASTERY_MODEL_N_WHOLE_NUMBER: 'MASTERY_MODEL_N_WHOLE_NUMBER',
   MASTERY_MODEL_N_GT_ZERO: 'MASTERY_MODEL_N_GT_ZERO',
-  QUESTION_REQUIRED: 'QUESTION_REQUIRED',
-  INVALID_NUMBER_OF_CORRECT_ANSWERS: 'INVALID_NUMBER_OF_CORRECT_ANSWERS',
-  INVALID_COMPLETION_TYPE_FOR_FREE_RESPONSE_QUESTION:
-    'INVALID_COMPLETION_TYPE_FOR_FREE_RESPONSE_QUESTION',
   NO_VALID_PRIMARY_FILES: 'NO_VALID_PRIMARY_FILES',
   INVALID_COMPLETION_CRITERIA_MODEL: 'INVALID_COMPLETION_CRITERIA_MODEL',
   COMPLETION_REQUIRED: 'COMPLETION_REQUIRED',
