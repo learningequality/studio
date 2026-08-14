@@ -42,9 +42,16 @@ export default class CorrectResponse {
   }
 
   /**
-   * @returns {Element}
+   * `qti-correct-response` is optional but must hold at least one `qti-value` when
+   * present, so an answer-less declaration omits the element rather than emitting an
+   * empty one the schema would reject.
+   *
+   * @returns {Element|null}
    */
   getXML() {
+    if (!this._values.length) {
+      return null;
+    }
     return buildXmlNode({
       tag: 'qti-correct-response',
       children: this._declaration
