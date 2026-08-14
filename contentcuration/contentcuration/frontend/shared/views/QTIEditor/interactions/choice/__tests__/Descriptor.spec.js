@@ -1,4 +1,4 @@
-import { ChoiceInteractionDescriptor } from '../ChoiceInteractionDescriptor';
+import { ChoiceInteractionDescriptor } from '../Descriptor';
 import { BaseType, Cardinality, QtiInteraction, QuestionType } from '../../../constants';
 
 describe('ChoiceInteractionDescriptor', () => {

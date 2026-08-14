@@ -1,6 +1,6 @@
 import { readonly } from 'vue';
 import { generateRandomSlug } from '../utils/generateRandomSlug';
-import { orderingInteractionDescriptor } from '../interactions/ordering/OrderingInteractionDescriptor';
+import { orderingInteractionDescriptor } from '../interactions/ordering/Descriptor';
 import { useInteraction } from './useInteraction';
 
 /**

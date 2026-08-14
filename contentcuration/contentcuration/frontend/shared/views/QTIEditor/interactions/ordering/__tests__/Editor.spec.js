@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/vue';
 import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
-import OrderingInteractionEditor from '../OrderingInteractionEditor.vue';
+import OrderingEditor from '../Editor.vue';
 
 import {
   ORDERING_XML,
@@ -22,12 +22,12 @@ jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
 });
 
 const renderEditor = (props = {}) =>
-  render(OrderingInteractionEditor, {
+  render(OrderingEditor, {
     props: { mode: 'edit', ...props },
     routes: new VueRouter(),
   });
 
-describe('OrderingInteractionEditor', () => {
+describe('OrderingEditor', () => {
   describe('edit mode rendering', () => {
     it('renders the prompt text from the XML', () => {
       renderEditor({

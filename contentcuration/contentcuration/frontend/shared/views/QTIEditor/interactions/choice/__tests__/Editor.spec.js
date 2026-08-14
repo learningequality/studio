@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, within } from '@testing-library/vue';
 import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
-import ChoiceInteractionEditor from '../ChoiceInteractionEditor.vue';
+import ChoiceInteractionEditor from '../Editor.vue';
 
 import {
   CHOICE_SINGLE_SELECT_XML,

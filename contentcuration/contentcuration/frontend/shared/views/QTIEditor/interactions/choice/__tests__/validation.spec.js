@@ -1,4 +1,4 @@
-import { choiceInteractionDescriptor } from '../ChoiceInteractionDescriptor';
+import { choiceInteractionDescriptor } from '../Descriptor';
 
 import { ValidationError, QuestionType, Orientation } from '../../../constants';
 
