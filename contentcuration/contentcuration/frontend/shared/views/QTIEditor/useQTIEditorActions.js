@@ -1,4 +1,5 @@
 import { qtiEditorStrings } from './qtiEditorStrings';
+import { AssessmentItemTypes } from './constants';
 
 /**
  * Generates the toolbar actions array for a specific QTI item in the list.
@@ -32,7 +33,8 @@ export default function useQTIEditorActions({
       label: toolbarLabelEdit$(),
       handler: () => openItem(item.assessment_id),
       collapsed: false,
-      disabled: isEditMode,
+      // Items authored elsewhere (e.g. Perseus) can be moved or removed, but not opened.
+      disabled: isEditMode || item.type !== AssessmentItemTypes.QTI,
     });
 
     result.push({

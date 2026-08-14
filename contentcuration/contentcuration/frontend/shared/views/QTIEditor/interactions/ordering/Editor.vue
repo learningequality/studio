@@ -283,6 +283,9 @@
         emit('update:interaction', newVal);
       });
 
+      // Errors are reported the same way, for the card to show that the question needs work.
+      watch(errors, newVal => emit('update:errors', newVal), { immediate: true });
+
       const errorCodes = computed(() => errors.value.map(e => e.code));
 
       const promptHasError = computed(() =>
@@ -438,7 +441,7 @@
       },
     },
 
-    emits: ['update:interaction'],
+    emits: ['update:interaction', 'update:errors'],
   };
 
 </script>

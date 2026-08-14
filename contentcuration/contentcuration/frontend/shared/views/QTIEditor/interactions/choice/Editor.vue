@@ -337,6 +337,9 @@
       }));
       watch(workingInteraction, newVal => emit('update:interaction', newVal), { immediate: true });
 
+      // Errors are reported the same way, for the card to show that the question needs work.
+      watch(errors, newVal => emit('update:errors', newVal), { immediate: true });
+
       const answersDescription = computed(() =>
         isSingleSelect.value
           ? answersDescriptionSingleChoice$()
@@ -554,7 +557,7 @@
       },
     },
 
-    emits: ['update:interaction'],
+    emits: ['update:interaction', 'update:errors'],
   };
 
 </script>

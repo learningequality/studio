@@ -29,6 +29,15 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Show answers',
     context: 'Checkbox label to toggle displaying answers/previews',
   },
+  incompleteItemIndicatorLabel: {
+    message: 'Incomplete',
+    context: 'Shown in a question card header when the question is missing something',
+  },
+  unsupportedItemMessage: {
+    message: 'This question cannot be edited here',
+    context:
+      'Shown in place of the editor for questions authored elsewhere, or whose content could not be read',
+  },
   singleSelectLabel: {
     message: 'Single Choice',
     context: 'Display name for a single-select question type',
@@ -210,6 +219,11 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
   freeResponseLabel: {
     message: 'Free response',
     context: 'Display name for a free-response text-entry question type',
+  },
+  errorFreeResponseNotAllowed: {
+    message: 'Free response is only available on surveys. Choose another type.',
+    context:
+      'Validation error shown under the type selector when a question is a free response but the exercise scores its questions',
   },
   freeResponseDescription: {
     message: 'Learners can write an open-ended response. No correct answer is enforced.',
