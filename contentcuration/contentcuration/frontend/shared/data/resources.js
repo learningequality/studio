@@ -47,7 +47,7 @@ import {
 import urls from 'shared/urls';
 import { currentLanguage } from 'shared/i18n';
 import client, { paramsSerializer } from 'shared/client';
-import { DELAYED_VALIDATION, fileErrors, NEW_OBJECT } from 'shared/constants';
+import { fileErrors, NEW_OBJECT } from 'shared/constants';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 import { getMergedMapFields } from 'shared/utils/helpers';
 
@@ -606,8 +606,7 @@ class IndexedDBResource {
   }
 
   /**
-   * Method to remove the NEW_OBJECT and DELAYED_VALIDATION symbols
-   * property so we don't commit it to IndexedDB
+   * Method to remove the NEW_OBJECT symbol property so we don't commit it to IndexedDB
    * @param {Object} obj
    * @return {Object}
    */
@@ -616,7 +615,6 @@ class IndexedDBResource {
       ...obj,
     };
     delete out[NEW_OBJECT];
-    delete out[DELAYED_VALIDATION];
     return out;
   }
 

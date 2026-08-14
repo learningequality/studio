@@ -34,16 +34,6 @@ export const descriptors = [
 export const registry = Object.fromEntries(descriptors.map(d => [d.type, d]));
 
 /**
- * Find the interaction descriptor that supports a given question type.
- *
- * @param {string} questionType
- * @returns {import('./InteractionDescriptor').InteractionDescriptor|undefined}
- */
-export function getDescriptorForQuestionType(questionType) {
-  return descriptors.find(d => d.questionTypes.includes(questionType));
-}
-
-/**
  * Whether an interaction is authored inline, and so needs the whole item body to parse
  * rather than its own element. Read off the descriptor's placement, so declaring it there
  * is all a new inline interaction has to do.
