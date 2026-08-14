@@ -16,7 +16,7 @@
       />
 
       <component
-        :is="descriptor.editorComponent"
+        :is="editorComponent"
         :key="descriptor.type"
         :questionType="questionType"
         :interaction="interaction"
@@ -37,7 +37,7 @@
   import useInteractionDescriptor from '../../composables/useInteractionDescriptor';
   import QuestionTypeSelector from '../QuestionTypeSelector/index.vue';
   import { generateRandomSlug } from '../../utils/generateRandomSlug';
-  import { descriptors } from '../../interactions';
+  import { descriptors, editors } from '../../interactions';
 
   export default {
     name: 'InteractionSection',
@@ -81,8 +81,11 @@
 
       const settingsTargetId = generateRandomSlug('answer-settings');
 
+      const editorComponent = computed(() => editors[descriptor.value.type]);
+
       return {
         descriptor,
+        editorComponent,
         questionType,
         parseError,
         onUpdateQuestionType,

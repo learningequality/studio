@@ -1,4 +1,4 @@
-import { validateOrderingInteraction } from '../validate';
+import { validateOrderingInteraction } from '../validation';
 import { ValidationError, Orientation } from '../../../constants';
 
 function makeItem(overrides = {}) {

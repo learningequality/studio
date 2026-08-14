@@ -1,5 +1,5 @@
 /* eslint-disable jest-dom/prefer-to-have-attribute, jest-dom/prefer-to-have-text-content */
-import { parseXML, parseItem } from '../parseItem';
+import { parseItem } from '../parseItem';
 import { VALID_CHOICE_ITEM_DOCUMENT, TWO_INTERACTIONS_DOCUMENT } from '../../utils/testingFixtures';
 
 // Fixtures
@@ -14,46 +14,6 @@ const ITEM_NO_INTERACTIONS = `<?xml version="1.0" encoding="UTF-8"?>
 >
   <qti-item-body></qti-item-body>
 </qti-assessment-item>`;
-
-// parseXML
-describe('parseXML', () => {
-  it('parses valid XML into a Document', () => {
-    const doc = parseXML(VALID_CHOICE_ITEM_DOCUMENT);
-    expect(doc).toBeInstanceOf(Document);
-    expect(doc.querySelector('qti-assessment-item')).not.toBeNull();
-  });
-
-  it('throws for malformed XML', () => {
-    expect(() => parseXML('<unclosed')).toThrow(/QTI XML parse error/i);
-  });
-
-  it('throws for XML with a parsererror node', () => {
-    // An extra closing tag causes a parsererror in jsdom
-    expect(() => parseXML('<root></root></extra>')).toThrow(/QTI XML parse error/i);
-  });
-
-  it('parses valid XML when text/xml is passed explicitly', () => {
-    const doc = parseXML(VALID_CHOICE_ITEM_DOCUMENT, 'text/xml');
-    expect(doc.querySelector('qti-assessment-item')).not.toBeNull();
-  });
-
-  it('parses HTML leniently into a Document when text/html is passed', () => {
-    const doc = parseXML('<b>bold</b>', 'text/html');
-    expect(doc).toBeInstanceOf(Document);
-    // doc.body is a DOMParser-realm node, not a testing-library node, so
-    // toHaveTextContent rejects it; assert on textContent directly.
-    // eslint-disable-next-line jest-dom/prefer-to-have-text-content
-    expect(doc.body.textContent).toBe('bold');
-  });
-
-  it('does not throw for malformed HTML', () => {
-    expect(() => parseXML('<unclosed', 'text/html')).not.toThrow();
-  });
-
-  it('does not treat a literal parsererror element in HTML as a failure', () => {
-    expect(() => parseXML('<parsererror>x</parsererror>', 'text/html')).not.toThrow();
-  });
-});
 
 // parseItem — meta extraction
 describe('parseItem — meta', () => {

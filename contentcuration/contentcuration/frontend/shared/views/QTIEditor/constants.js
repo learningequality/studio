@@ -90,6 +90,10 @@ export const QuestionType = Object.freeze({
  * this set in their own validate.js module.
  */
 export const ValidationError = Object.freeze({
+  // Item-level codes, produced by validateItem.js rather than an interaction
+  PARSE_ERROR: 'PARSE_ERROR',
+  NO_INTERACTION: 'NO_INTERACTION',
+  FREE_RESPONSE_NOT_ALLOWED: 'FREE_RESPONSE_NOT_ALLOWED',
   PROMPT_REQUIRED: 'PROMPT_REQUIRED',
   NO_CORRECT_ANSWER: 'NO_CORRECT_ANSWER',
   TOO_MANY_CORRECT_ANSWERS: 'TOO_MANY_CORRECT_ANSWERS',
@@ -103,10 +107,7 @@ export const ValidationError = Object.freeze({
 
 export const RESPONSE_IDENTIFIER = 'RESPONSE';
 
-/**
- * Set of QTI interaction tag names that have `placement: 'inline'`.
- * Used by parseItem to decide whether to serialize the full `<qti-item-body>`
- * (inline) or just the interaction element (block).
- * Kept here to avoid a circular dependency with the descriptor registry.
- */
-export const INLINE_INTERACTION_TAGS = new Set([QtiInteraction.TEXT_ENTRY]);
+export const Placement = Object.freeze({
+  BLOCK: 'block',
+  INLINE: 'inline',
+});

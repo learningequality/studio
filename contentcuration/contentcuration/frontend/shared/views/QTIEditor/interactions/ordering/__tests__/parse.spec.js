@@ -1,7 +1,7 @@
 /* eslint-disable jest-dom/prefer-to-have-attribute, jest-dom/prefer-to-have-text-content */
 // The eslint-dom matchers reject XML nodes produced by DOMParser(..., 'text/xml').
 
-import { orderingInteractionDescriptor } from '../OrderingInteractionDescriptor';
+import { orderingInteractionDescriptor } from '../Descriptor';
 import { ORDERING_XML, ORDERING_DECL_XML } from '../../../utils/testingFixtures';
 import { QuestionType, Orientation } from '../../../constants';
 
