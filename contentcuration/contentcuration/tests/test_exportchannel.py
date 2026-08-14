@@ -44,6 +44,7 @@ from .utils.restricted_filesystemstorage import RestrictedFileSystemStorage
 from contentcuration import models as cc
 from contentcuration.models import CustomTaskMetadata
 from contentcuration.utils.assessment.qti.archive import hex_to_qti_id
+from contentcuration.utils.assessment.qti.validation import parse_qti_xml
 from contentcuration.utils.celery.tasks import generate_task_signature
 from contentcuration.utils.publish import ChannelIncompleteError
 from contentcuration.utils.publish import convert_channel_thumbnail
@@ -984,6 +985,30 @@ class ExportChannelTestCase(StudioTestCase):
 
         self.assertTrue(item_stems)
         self.assertEqual(item_stems, assessment_item_ids)
+
+    def test_native_qti_item_declares_the_node_language(self):
+        """The editor has no language of its own to write, so publishing supplies it.
+
+        The other two paths through the same generator stamp the node's language as they
+        build their items; this asserts the raw_data path does not ship items that declare
+        no language, which a package would otherwise mix with ones that do.
+        """
+        node = cc.ContentNode.objects.get(title="Native QTI Exercise")
+        qti_file = node.files.get(preset_id=format_presets.QTI_ZIP)
+        with qti_file.file_on_disk.open("rb") as file_handle:
+            archive = zipfile.ZipFile(file_handle)
+            item_names = [
+                name
+                for name in archive.namelist()
+                if name.startswith("items/") and name.endswith(".xml")
+            ]
+            self.assertTrue(item_names)
+            for name in item_names:
+                root = parse_qti_xml(archive.read(name)).getroot()
+                self.assertEqual(
+                    root.get("{http://www.w3.org/XML/1998/namespace}lang"),
+                    node.language.lang_code if node.language else "en",
+                )
 
     def test_native_qti_unsupported_interaction_publishes_qti_only(self):
         node = cc.ContentNode.objects.get(title="Native QTI Unsupported Exercise")

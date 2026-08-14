@@ -14,12 +14,11 @@ const parser = new DOMParser();
  *   contains a parsererror. HTML parsing never throws.
  */
 export function parseXML(xmlString, mimeType = 'text/xml') {
-  let input = xmlString;
-  if (mimeType === 'text/xml') {
-    input = xmlString.replace(/ xmlns="[^"]*"/, '');
-  }
-
-  const doc = parser.parseFromString(input, mimeType);
+  // Namespace declarations are left in place. Everything here looks elements up by local
+  // name, which matches in any namespace, so removing them buys nothing — while a foreign
+  // namespace a nested subtree does need (MathML from the formula button, SVG) would be
+  // lost with them, and inheriting the QTI namespace instead makes the item invalid.
+  const doc = parser.parseFromString(xmlString, mimeType);
 
   // DOMParser never throws — it signals failure via a <parsererror> node. This
   // only applies to XML: the HTML parser recovers silently and never emits one,
