@@ -172,7 +172,7 @@
 
     props: {
       /**
-       * Assessment item: { assessment_id, type, raw_data? }
+       * Assessment item: { assessment_id, type, raw_data }
        * raw_data is the full QTI XML string; absent on blank newly-created items.
        */
       item: {
