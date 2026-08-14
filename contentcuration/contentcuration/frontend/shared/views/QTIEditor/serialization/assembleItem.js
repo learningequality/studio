@@ -184,9 +184,8 @@ export function assembleItemXml({
     tag: 'qti-assessment-item',
     attrs: {
       xmlns: 'http://www.imsglobal.org/xsd/imsqtiasi_v3p0',
-      // TODO: We will need to properly generate the identifier and title
-      // on the useQtiItem composable when we integrate the question type selector
-      // and have the add question button working.
+      // New items get their identifier and title from createBlankItem.js; these fallbacks
+      // only cover items assembled from XML that never carried them.
       identifier: identifier || 'item',
       title: title || '',
       adaptive: 'false',

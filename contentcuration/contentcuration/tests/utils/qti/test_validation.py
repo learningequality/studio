@@ -152,6 +152,36 @@ class UncoveredInteractionTypeTests(unittest.TestCase):
         self.assertTrue(result.errors)
 
 
+# Mirrors what the QTI editor emits for a brand new question, before the author has
+# written anything — see createBlankItem.js. Every "New question" click sends this to the
+# sync endpoint, which validates it, so the two have to stay in lockstep. It carries the
+# scoring outcome and the match_correct template, so a question authored here is gradable
+# in the same way as one the legacy conversion produces.
+BLANK_EDITOR_ITEM = (
+    '<?xml version="1.0" encoding="UTF-8"?>\n'
+    '<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" '
+    'identifier="item_0a8rpumo" title="Question" adaptive="false" time-dependent="false">'
+    '<qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier" />'
+    '<qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float" />'
+    "<qti-item-body>"
+    '<qti-choice-interaction response-identifier="RESPONSE" max-choices="1" shuffle="false" '
+    'orientation="vertical">'
+    '<qti-simple-choice identifier="choice_oaasu90l" />'
+    "</qti-choice-interaction>"
+    "</qti-item-body>"
+    "<qti-response-processing "
+    'template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct" />'
+    "</qti-assessment-item>"
+)
+
+
+class BlankEditorItemTests(unittest.TestCase):
+    def test_accepts_blank_item_from_editor(self):
+        result = validate_qti_item(BLANK_EDITOR_ITEM)
+        self.assertTrue(result.is_valid)
+        self.assertEqual(result.errors, [])
+
+
 class SchemaReuseTests(unittest.TestCase):
     def test_schema_compiled_once_across_multiple_validate_calls(self):
         _compiled_schema.cache_clear()

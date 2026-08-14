@@ -66,6 +66,7 @@
   import QTIItemEditor from './components/QTIItemEditor/index';
   import CollapsibleToolbar from './components/CollapsibleToolbar/index.vue';
   import useQTIEditorActions from './useQTIEditorActions';
+  import { createBlankItemXml } from './serialization/createBlankItem';
 
   // Custom uuid4 function to match our dashless uuids on the server side
   function uuid4() {
@@ -77,6 +78,7 @@
     return {
       assessment_id: uuid4(),
       type: AssessmentItemTypes.QTI,
+      raw_data: createBlankItemXml(),
     };
   }
 
