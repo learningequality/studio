@@ -5,7 +5,22 @@ import {
   getInvalidAssessmentItemsCount,
   getAssessmentItemsAreValid,
 } from '../getters';
-import { AssessmentItemTypes, DELAYED_VALIDATION, ValidationErrors } from 'shared/constants';
+import { AssessmentItemTypes, ContentModalities } from 'shared/constants';
+import { ValidationError } from 'shared/views/QTIEditor/constants';
+import {
+  VALID_CHOICE_ITEM_DOCUMENT,
+  CHOICE_ITEM_DOCUMENT_NO_PROMPT,
+  CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER,
+  FREE_RESPONSE_ITEM_DOCUMENT,
+} from 'shared/views/QTIEditor/utils/testingFixtures';
+
+const item = (assessment_id, contentnode, raw_data, extra = {}) => ({
+  assessment_id,
+  contentnode,
+  type: AssessmentItemTypes.QTI,
+  raw_data,
+  ...extra,
+});
 
 describe('assessmentItem getters', () => {
   let state;
@@ -15,72 +30,44 @@ describe('assessmentItem getters', () => {
     state = {
       assessmentItemsMap: {
         'content-node-id-1': {
-          'assessment-id-1': {
-            assessment_id: 'assessment-id-1',
-            contentnode: 'content-node-id-1',
-            type: AssessmentItemTypes.SINGLE_SELECTION,
-            question: '1+1=?',
-            answers: [
-              {
-                answer: '2',
-                correct: false,
-                order: 1,
-              },
-              {
-                answer: '11',
-                correct: true,
-                order: 2,
-              },
-            ],
-          },
+          'assessment-id-1': item(
+            'assessment-id-1',
+            'content-node-id-1',
+            VALID_CHOICE_ITEM_DOCUMENT,
+          ),
         },
         'content-node-id-2': {
-          'assessment-id-2': {
-            assessment_id: 'assessment-id-2',
-            contentnode: 'content-node-id-2',
-            type: AssessmentItemTypes.SINGLE_SELECTION,
-            question: '',
-            answers: [],
-            order: 1,
-          },
-          'assessment-id-3': {
-            assessment_id: 'assessment-id-3',
-            contentnode: 'content-node-id-2',
-            [DELAYED_VALIDATION]: true,
-            type: AssessmentItemTypes.SINGLE_SELECTION,
-            question: 'What color are minions?',
-            answers: [
-              {
-                answer: 'Blue',
-                correct: false,
-                order: 1,
-              },
-              {
-                answer: 'Yellow',
-                correct: false,
-                order: 2,
-              },
-            ],
-            order: 2,
-          },
+          'assessment-id-2': item(
+            'assessment-id-2',
+            'content-node-id-2',
+            CHOICE_ITEM_DOCUMENT_NO_PROMPT,
+            { order: 1 },
+          ),
+          'assessment-id-3': item(
+            'assessment-id-3',
+            'content-node-id-2',
+            CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER,
+            { order: 2 },
+          ),
         },
         'content-node-id-3': {
-          'assessment-id-4': {
-            assessment_id: 'assessment-id-4',
-            contentnode: 'content-node-id-3',
-            [DELAYED_VALIDATION]: true,
-            type: AssessmentItemTypes.SINGLE_SELECTION,
-            question: '',
-            answers: [],
-          },
-          'assessment-id-5': {
-            assessment_id: 'assessment-id-5',
-            contentnode: 'content-node-id-3',
-            [DELAYED_VALIDATION]: true,
-            type: AssessmentItemTypes.SINGLE_SELECTION,
-            question: '',
-            answers: [],
-          },
+          'assessment-id-4': item(
+            'assessment-id-4',
+            'content-node-id-3',
+            CHOICE_ITEM_DOCUMENT_NO_PROMPT,
+          ),
+          'assessment-id-5': item(
+            'assessment-id-5',
+            'content-node-id-3',
+            CHOICE_ITEM_DOCUMENT_NO_PROMPT,
+          ),
+        },
+        'content-node-id-survey': {
+          'assessment-id-6': item(
+            'assessment-id-6',
+            'content-node-id-survey',
+            FREE_RESPONSE_ITEM_DOCUMENT,
+          ),
         },
       },
     };
@@ -89,9 +76,16 @@ describe('assessmentItem getters', () => {
       'contentNode/getContentNode': id => ({
         id,
         kind: 'exercise',
+        extra_fields:
+          id === 'content-node-id-survey'
+            ? { options: { modality: ContentModalities.SURVEY } }
+            : {},
       }),
     };
   });
+
+  const errorsFor = (contentNodeId, options = {}) =>
+    getAssessmentItemsErrors(state, {}, {}, rootGetters)({ contentNodeId, ...options });
 
   describe('getAssessmentItems', () => {
     it('returns an empty array if a content node not found', () => {
@@ -99,35 +93,9 @@ describe('assessmentItem getters', () => {
     });
 
     it('returns an array of assessment items belonging to a content node', () => {
-      expect(getAssessmentItems(state)('content-node-id-2')).toEqual([
-        {
-          assessment_id: 'assessment-id-2',
-          contentnode: 'content-node-id-2',
-          type: AssessmentItemTypes.SINGLE_SELECTION,
-          question: '',
-          answers: [],
-          order: 1,
-        },
-        {
-          assessment_id: 'assessment-id-3',
-          contentnode: 'content-node-id-2',
-          [DELAYED_VALIDATION]: true,
-          type: AssessmentItemTypes.SINGLE_SELECTION,
-          question: 'What color are minions?',
-          answers: [
-            {
-              answer: 'Blue',
-              correct: false,
-              order: 1,
-            },
-            {
-              answer: 'Yellow',
-              correct: false,
-              order: 2,
-            },
-          ],
-          order: 2,
-        },
+      expect(getAssessmentItems(state)('content-node-id-2').map(i => i.assessment_id)).toEqual([
+        'assessment-id-2',
+        'assessment-id-3',
       ]);
     });
   });
@@ -144,37 +112,23 @@ describe('assessmentItem getters', () => {
 
   describe('getAssessmentItemsErrors', () => {
     it('returns validation codes corresponding to invalid assessment items of a content node', () => {
-      expect(
-        getAssessmentItemsErrors(
-          state,
-          {},
-          {},
-          rootGetters,
-        )({ contentNodeId: 'content-node-id-2' }),
-      ).toEqual({
-        'assessment-id-2': [
-          ValidationErrors.QUESTION_REQUIRED,
-          ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
-        ],
-        'assessment-id-3': [ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS],
+      expect(errorsFor('content-node-id-2')).toEqual({
+        'assessment-id-2': [{ code: ValidationError.PROMPT_REQUIRED }],
+        'assessment-id-3': [{ code: ValidationError.NO_CORRECT_ANSWER }],
       });
     });
 
-    it("doesn't include invalid nodes errors that are new if `ignoreDelayed` set to true", () => {
-      expect(
-        getAssessmentItemsErrors(
-          state,
-          {},
-          {},
-          rootGetters,
-        )({ contentNodeId: 'content-node-id-2', ignoreDelayed: true }),
-      ).toEqual({
-        'assessment-id-2': [
-          ValidationErrors.QUESTION_REQUIRED,
-          ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
-        ],
-        'assessment-id-3': [],
+    it('rejects a free-response question on a node that is not a survey', () => {
+      state.assessmentItemsMap['content-node-id-1']['assessment-id-1'].raw_data =
+        FREE_RESPONSE_ITEM_DOCUMENT;
+
+      expect(errorsFor('content-node-id-1')['assessment-id-1']).toContainEqual({
+        code: ValidationError.FREE_RESPONSE_NOT_ALLOWED,
       });
+    });
+
+    it('accepts a free-response question on a survey', () => {
+      expect(errorsFor('content-node-id-survey')).toEqual({ 'assessment-id-6': [] });
     });
   });
 
@@ -190,17 +144,18 @@ describe('assessmentItem getters', () => {
       ).toBe(2);
     });
 
-    it("doesn't count invalid nodes that are new if `ignoreDelayed` set to true", () => {
+    it('counts an item the author has only just added like any other', () => {
+      state.assessmentItemsMap['content-node-id-3'] = {
+        'assessment-id-7': item('assessment-id-7', 'content-node-id-3', ''),
+      };
+
       expect(
         getInvalidAssessmentItemsCount(
           state,
           {},
           {},
           rootGetters,
-        )({
-          contentNodeId: 'content-node-id-2',
-          ignoreDelayed: true,
-        }),
+        )({ contentNodeId: 'content-node-id-3' }),
       ).toBe(1);
     });
   });
@@ -228,18 +183,15 @@ describe('assessmentItem getters', () => {
       ).toBe(false);
     });
 
-    it('returns true if all assessment items are not valid and marked as new if `ignoreDelayed` set to true', () => {
+    it('returns false when every assessment item of a content node is invalid', () => {
       expect(
         getAssessmentItemsAreValid(
           state,
           {},
           {},
           rootGetters,
-        )({
-          contentNodeId: 'content-node-id-4',
-          ignoreDelayed: true,
-        }),
-      ).toBe(true);
+        )({ contentNodeId: 'content-node-id-3' }),
+      ).toBe(false);
     });
   });
 });

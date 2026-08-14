@@ -17,9 +17,4 @@ export const editors = Object.freeze({
   [QtiInteraction.ORDER]: OrderingEditor,
 });
 
-export {
-  DEFAULT_INTERACTION,
-  descriptors,
-  registry,
-  getDescriptorForQuestionType,
-} from './descriptors';
+export { DEFAULT_INTERACTION, descriptors, registry } from './descriptors';

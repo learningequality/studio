@@ -69,7 +69,6 @@ export default function useAssessmentItems(nodeId) {
   const invalidItemsCount = computed(() =>
     store.getters['assessmentItem/getInvalidAssessmentItemsCount']({
       contentNodeId: unref(nodeId),
-      ignoreDelayed: true,
     }),
   );
 
