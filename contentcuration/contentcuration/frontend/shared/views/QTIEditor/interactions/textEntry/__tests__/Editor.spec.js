@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/vue';
 import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
-import TextEntryEditor from '../TextEntryEditor.vue';
+import TextEntryEditor from '../Editor.vue';
 
 import {
   TEXT_ENTRY_BODY_XML,

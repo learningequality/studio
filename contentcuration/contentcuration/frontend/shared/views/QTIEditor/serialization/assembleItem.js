@@ -8,7 +8,7 @@
  * (e.g. XMLSerializer.serializeToString).
  */
 
-import { parseXML } from './parseItem';
+import { parseXML } from './xml';
 
 const xmlDoc = new DOMParser().parseFromString('<root/>', 'text/xml');
 const serializer = new XMLSerializer();

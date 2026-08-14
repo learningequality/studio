@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
 import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
-import OrderingInteractionEditor from '../OrderingInteractionEditor.vue';
+import OrderingEditor from '../Editor.vue';
 
 import {
   ORDERING_XML,
@@ -44,7 +44,7 @@ const moveUpName = number => dragTr.$tr('moveItemUpLabel', { item: itemLabel(num
 const moveDownName = number => dragTr.$tr('moveItemDownLabel', { item: itemLabel(number) });
 
 const renderEditor = (props = {}) =>
-  render(OrderingInteractionEditor, {
+  render(OrderingEditor, {
     props: { mode: 'edit', ...props },
     routes: new VueRouter(),
   });
@@ -62,7 +62,7 @@ const dragFirstRowToLast = async () => {
   await nextTick();
 };
 
-describe('OrderingInteractionEditor', () => {
+describe('OrderingEditor', () => {
   describe('edit mode rendering', () => {
     it('renders the prompt text from the XML', () => {
       renderEditor({

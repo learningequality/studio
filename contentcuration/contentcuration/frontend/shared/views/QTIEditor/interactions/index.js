@@ -1,34 +1,25 @@
 import { QtiInteraction } from '../constants';
-import choiceDescriptor from './choice/index';
-import textEntryDescriptor from './textEntry/index';
-import orderingDescriptor from './ordering/index';
+import ChoiceEditor from './choice/Editor.vue';
+import TextEntryEditor from './textEntry/Editor.vue';
+import OrderingEditor from './ordering/Editor.vue';
 
 /**
- * The default interaction type used as fallback when no descriptor matches
- * the interaction element found in the XML body.
- */
-export const DEFAULT_INTERACTION = QtiInteraction.CHOICE;
-
-/**
- * Ordered list of all registered interaction descriptors.
- * Searched in order; the first whose `matches(el)` returns true wins.
- */
-export const descriptors = [choiceDescriptor, textEntryDescriptor, orderingDescriptor];
-
-/**
- * Registry map keyed by descriptor.type for O(1) direct lookup.
- * Built from the descriptors array — do not populate manually.
+ * Entry point for the editor tree: the descriptors, plus the Vue component that edits each
+ * interaction.
  *
- * @type {Object.<string, import('./defineInteraction').InteractionDescriptor>}
+ * The editors live here rather than on the descriptors themselves so that `./descriptors`
+ * stays free of `.vue` files — see the note there. Import this module when something is
+ * going to be rendered, and `./descriptors` when it is not.
  */
-export const registry = Object.fromEntries(descriptors.map(d => [d.type, d]));
+export const editors = Object.freeze({
+  [QtiInteraction.CHOICE]: ChoiceEditor,
+  [QtiInteraction.TEXT_ENTRY]: TextEntryEditor,
+  [QtiInteraction.ORDER]: OrderingEditor,
+});
 
-/**
- * Find the interaction descriptor that supports a given question type.
- *
- * @param {string} questionType
- * @returns {import('./defineInteraction').InteractionDescriptor|undefined}
- */
-export function getDescriptorForQuestionType(questionType) {
-  return descriptors.find(d => d.questionTypes.includes(questionType));
-}
+export {
+  DEFAULT_INTERACTION,
+  descriptors,
+  registry,
+  getDescriptorForQuestionType,
+} from './descriptors';
