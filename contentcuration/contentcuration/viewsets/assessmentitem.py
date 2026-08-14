@@ -136,7 +136,20 @@ class AssessmentItemSerializer(BulkModelSerializer):
         # except Exception in create_from_changes/update_from_changes and
         # reported as "Internal server error" for the whole batch.
         data = super(AssessmentItemSerializer, self).validate(data)
-        if self._item_type == exercises.QTI:
+        item_type = self._item_type
+        if (
+            self.instance is not None
+            and "raw_data" in data
+            and item_type not in PASSTHROUGH_TYPES
+        ):
+            # consolidate() hands every still-legacy item to the client as QTI, so an edit
+            # comes back as QTI raw_data. Accept it and let the row catch up with what the
+            # client was told — the same conversion the global backfill (#6007) will apply
+            # to every item, done one item at a time as authors touch them. The legacy
+            # question/answers/hints columns are left alone; they stop being read as soon
+            # as the type changes, and the backfill clears them.
+            item_type = data["type"] = exercises.QTI
+        if item_type == exercises.QTI:
             legacy_fields = {"question", "answers", "hints"}.intersection(data)
             if legacy_fields:
                 raise ValidationError(
@@ -155,7 +168,7 @@ class AssessmentItemSerializer(BulkModelSerializer):
                 raise ValidationError(
                     {"raw_data": [error.message for error in result.errors]}
                 )
-        elif self._item_type != exercises.PERSEUS_QUESTION and "raw_data" in data:
+        elif item_type != exercises.PERSEUS_QUESTION and "raw_data" in data:
             raise ValidationError(
                 {
                     "raw_data": [

@@ -607,7 +607,9 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
                 assessment_id=assessmentitem["assessment_id"]
             )
 
-    def test_update_non_qti_assessmentitem_rejects_raw_data_edit(self):
+    def test_update_legacy_assessmentitem_converts_it_to_qti(self):
+        # The read path serves legacy items as QTI (see consolidate), so an edit comes
+        # back as QTI raw_data — and the row is converted to match.
         assessmentitem = models.AssessmentItem.objects.create(
             **self.assessmentitem_db_metadata
         )
@@ -622,8 +624,29 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
                 )
             ],
         )
+        self.assertEqual(response.json()["errors"], [])
+        updated = models.AssessmentItem.objects.get(id=assessmentitem.id)
+        self.assertEqual(updated.type, exercises.QTI)
+        self.assertEqual(updated.raw_data, VALID_CHOICE_ITEM)
+
+    def test_update_legacy_assessmentitem_rejects_invalid_qti(self):
+        assessmentitem = models.AssessmentItem.objects.create(
+            **self.assessmentitem_db_metadata
+        )
+        self.client.force_authenticate(user=self.user)
+        response = self.sync_changes(
+            [
+                generate_update_event(
+                    [assessmentitem.contentnode_id, assessmentitem.assessment_id],
+                    ASSESSMENTITEM,
+                    {"raw_data": "<qti-assessment-item><oops>"},
+                    channel_id=self.channel.id,
+                )
+            ],
+        )
         self.assertTrue(response.json()["errors"][0]["errors"]["raw_data"])
         updated = models.AssessmentItem.objects.get(id=assessmentitem.id)
+        self.assertEqual(updated.type, assessmentitem.type)
         self.assertEqual(updated.raw_data, "")
 
     def _create_qti_referenced_files(self, checksums):
