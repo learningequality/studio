@@ -12,6 +12,7 @@
         v-if="mode === 'edit'"
         :questionType="questionType"
         :settingsTargetId="settingsTargetId"
+        :allowFreeResponse="allowFreeResponse"
         @update:questionType="onUpdateQuestionType"
       />
 
@@ -24,6 +25,7 @@
         :showAnswers="showAnswers"
         :teleportTargetId="settingsTargetId"
         @update:interaction="onUpdateInteraction"
+        @update:errors="errors => $emit('update:errors', errors)"
       />
     </div>
   </div>
@@ -115,9 +117,17 @@
         type: Boolean,
         default: false,
       },
+      /**
+       * Whether a question with no correct answer is acceptable here. Passed straight to the
+       * type selector, which is the only part of an interaction this concerns.
+       */
+      allowFreeResponse: {
+        type: Boolean,
+        default: true,
+      },
     },
 
-    emits: ['update:questionType', 'update:interaction'],
+    emits: ['update:questionType', 'update:interaction', 'update:errors'],
   };
 
 </script>

@@ -26,6 +26,7 @@
           :index="idx"
           :total="items.length"
           :mode="activeId === item.assessment_id ? 'edit' : 'view'"
+          :allowFreeResponse="allowFreeResponse"
           :showAnswers="showAnswers"
           data-testid="item"
           @close="closeItem"
@@ -102,6 +103,9 @@
       const showAnswers = ref(false);
 
       function openItem(id) {
+        const item = props.assessments.find(i => i.assessment_id === id);
+        // Items authored elsewhere (e.g. Perseus) are read-only here.
+        if (!item || item.type !== AssessmentItemTypes.QTI) return;
         activeId.value = id;
       }
 
@@ -197,6 +201,14 @@
       assessments: {
         type: Array,
         default: () => [],
+      },
+      /**
+       * Whether a question with no correct answer counts as complete. Only a survey
+       * accepts those, so a consumer that scores its questions passes false.
+       */
+      allowFreeResponse: {
+        type: Boolean,
+        default: true,
       },
     },
 
