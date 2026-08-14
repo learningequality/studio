@@ -1,5 +1,5 @@
-import { validateQtiItem } from '../validateItem';
-import { ValidationError } from '../constants';
+import { validateItemShape, validateQtiItem } from '../validateItem';
+import { QuestionType, ValidationError } from '../constants';
 import {
   VALID_CHOICE_ITEM_DOCUMENT,
   CHOICE_ITEM_DOCUMENT_NO_PROMPT,
@@ -41,5 +41,41 @@ describe('validateQtiItem', () => {
     expect(validateQtiItem('<qti-assessment-item><oops>')).toEqual([
       { code: ValidationError.PARSE_ERROR },
     ]);
+  });
+});
+
+// What the editor asks about an item it is already showing, which is everything an
+// interaction cannot answer for itself.
+describe('validateItemShape', () => {
+  it('accepts an item with something to answer', () => {
+    expect(
+      validateItemShape({ interactions: [{}], questionTypes: [QuestionType.SINGLE_SELECT] }),
+    ).toEqual([]);
+  });
+
+  it('reports an item with nothing to answer', () => {
+    expect(validateItemShape({ interactions: [] })).toEqual([
+      { code: ValidationError.NO_INTERACTION },
+    ]);
+  });
+
+  it('accepts a free-response question when the consumer allows it', () => {
+    expect(
+      validateItemShape({
+        interactions: [{}],
+        questionTypes: [QuestionType.FREE_RESPONSE],
+        allowFreeResponse: true,
+      }),
+    ).toEqual([]);
+  });
+
+  it('reports a free-response question when the consumer scores its questions', () => {
+    expect(
+      validateItemShape({
+        interactions: [{}],
+        questionTypes: [QuestionType.FREE_RESPONSE],
+        allowFreeResponse: false,
+      }),
+    ).toEqual([{ code: ValidationError.FREE_RESPONSE_NOT_ALLOWED }]);
   });
 });

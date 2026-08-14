@@ -143,6 +143,34 @@ export const CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER = `<?xml version="1.0" encod
 </qti-assessment-item>`;
 
 /**
+ * An ordering item missing its prompt — used to check that an interaction which reports
+ * nothing to the card is still reported as incomplete.
+ */
+export const ORDERING_ITEM_DOCUMENT_NO_PROMPT = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  identifier="item-ordering"
+  title="Ordering"
+  adaptive="false"
+  time-dependent="false"
+  xml:lang="en"
+>
+  <qti-response-declaration identifier="RESPONSE" cardinality="ordered" base-type="identifier">
+    <qti-correct-response>
+      <qti-value>order_aaa11111</qti-value>
+      <qti-value>order_bbb22222</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+
+  <qti-item-body>
+    <qti-order-interaction response-identifier="RESPONSE" orientation="vertical" shuffle="true">
+      <qti-simple-choice identifier="order_aaa11111">Mercury</qti-simple-choice>
+      <qti-simple-choice identifier="order_bbb22222">Venus</qti-simple-choice>
+    </qti-order-interaction>
+  </qti-item-body>
+</qti-assessment-item>`;
+
+/**
  * A text-entry item whose declaration carries no correct response — an open-ended
  * question, which only surveys accept.
  */
