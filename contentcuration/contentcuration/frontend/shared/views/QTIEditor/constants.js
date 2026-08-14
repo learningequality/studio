@@ -34,14 +34,14 @@ export const Orientation = Object.freeze({
  * 2. QuestionType -> The type editors will select per assessment item.
  *    It's different from AssessmentItemType because we will extend this for all
  *    new question types without confusing it with values stored in the database
- *    (all of these will be assessment item type: "qti"). Value is related to how
+ *    (all of these will be assessment item type: "QTI"). Value is related to how
  *    Studio presents different question options to users in the UI.
  *
  * 3. InteractionType (QtiInteraction) -> The actual interactions defined by QTI,
  *    and the ones that dictate how to parse and what descriptor we will use.
  *    Each QTI interaction can have multiple related question types (e.g., choice
  *    can be singleSelect or multiSelect), but all of them will have assessment
- *    item type "qti".
+ *    item type "QTI".
  */
 
 /**
@@ -66,7 +66,8 @@ export const QTI_INTERACTION_TAGS = Object.freeze(Object.values(QtiInteraction))
  * by the broader Studio assessment system, not by this editor.
  */
 export const AssessmentItemTypes = Object.freeze({
-  QTI: 'qti',
+  // Matches the value the API stores and returns (le_utils exercises.QTI).
+  QTI: 'QTI',
 });
 
 /**

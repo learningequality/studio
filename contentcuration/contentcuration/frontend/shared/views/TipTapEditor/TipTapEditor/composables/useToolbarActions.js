@@ -5,6 +5,14 @@ import { transformPastedHTML } from '../utils/pasteTransform';
 export function useToolbarActions(emit) {
   const editor = inject('editor', null);
 
+  /**
+   * Drop the actions marked `hide`, which every toolbar honours — the desktop one and
+   * the mobile bars alike. Same convention as the hidden groups in EditorToolbar.vue:
+   * the action stays defined, with the reason it is not offered, so restoring it is a
+   * matter of deleting one flag.
+   */
+  const visible = actions => actions.filter(action => !action.hide);
+
   // helper
   const getEffectiveAlignment = editorInstance => {
     if (!editorInstance) return 'left';
@@ -345,36 +353,44 @@ export function useToolbarActions(emit) {
     },
   ]);
 
-  const textActions = computed(() => [
-    {
-      name: 'bold',
-      title: bold$(),
-      icon: require('../../assets/icon-bold.svg'),
-      handler: handleBold,
-      isActive: isMarkActive('bold'),
-    },
-    {
-      name: 'italic',
-      title: italic$(),
-      icon: require('../../assets/icon-italic.svg'),
-      handler: handleItalic,
-      isActive: isMarkActive('italic'),
-    },
-    {
-      name: 'underline',
-      title: underline$(),
-      icon: require('../../assets/icon-underline.svg'),
-      handler: handleUnderline,
-      isActive: isMarkActive('underline'),
-    },
-    {
-      name: 'strikethrough',
-      title: strikethrough$(),
-      icon: require('../../assets/icon-strikethrough.svg'),
-      handler: handleStrikethrough,
-      isActive: isMarkActive('strike'),
-    },
-  ]);
+  const textActions = computed(() =>
+    visible([
+      {
+        name: 'bold',
+        title: bold$(),
+        icon: require('../../assets/icon-bold.svg'),
+        handler: handleBold,
+        isActive: isMarkActive('bold'),
+      },
+      {
+        name: 'italic',
+        title: italic$(),
+        icon: require('../../assets/icon-italic.svg'),
+        handler: handleItalic,
+        isActive: isMarkActive('italic'),
+      },
+      {
+        name: 'underline',
+        title: underline$(),
+        icon: require('../../assets/icon-underline.svg'),
+        handler: handleUnderline,
+        isActive: isMarkActive('underline'),
+        // The QTI 3.0 HTML profile has no <u> or <s>, so the item schema rejects an item
+        // carrying either and the save fails. Both marks are switched off in useEditor.js
+        // as well, since hiding a button leaves its keyboard shortcut behind — offering
+        // these again means undoing both halves.
+        hide: true,
+      },
+      {
+        name: 'strikethrough',
+        title: strikethrough$(),
+        icon: require('../../assets/icon-strikethrough.svg'),
+        handler: handleStrikethrough,
+        isActive: isMarkActive('strike'),
+        hide: true,
+      },
+    ]),
+  );
 
   const listActions = computed(() => [
     {
@@ -414,34 +430,40 @@ export function useToolbarActions(emit) {
     },
   ]);
 
-  const insertTools = computed(() => [
-    {
-      name: 'image',
-      title: insertImage$(),
-      icon: require('../../assets/icon-insertImage.svg'),
-      handler: handleInsertImage,
-    },
-    {
-      name: 'link',
-      title: insertLink$(),
-      icon: require('../../assets/icon-link.svg'),
-      isActive: isMarkActive('link'),
-      handler: handleInsertLink,
-    },
-    {
-      name: 'math',
-      title: mathFormula$(),
-      icon: require('../../assets/icon-formula.svg'),
-      handler: handleMath,
-    },
-    {
-      name: 'code',
-      title: codeBlock$(),
-      icon: require('../../assets/icon-codeblock.svg'),
-      handler: handleCodeBlock,
-      isActive: isMarkActive('codeBlock'),
-    },
-  ]);
+  const insertTools = computed(() =>
+    visible([
+      {
+        name: 'image',
+        title: insertImage$(),
+        icon: require('../../assets/icon-insertImage.svg'),
+        handler: handleInsertImage,
+      },
+      {
+        name: 'link',
+        title: insertLink$(),
+        icon: require('../../assets/icon-link.svg'),
+        isActive: isMarkActive('link'),
+        handler: handleInsertLink,
+        // Legacy conversion unwraps anchors, since one has nothing to navigate to on a
+        // device with no internet access (utils/assessment/qti/convert.py). Hidden so the
+        // editor does not offer what a converted question cannot keep.
+        hide: true,
+      },
+      {
+        name: 'math',
+        title: mathFormula$(),
+        icon: require('../../assets/icon-formula.svg'),
+        handler: handleMath,
+      },
+      {
+        name: 'code',
+        title: codeBlock$(),
+        icon: require('../../assets/icon-codeblock.svg'),
+        handler: handleCodeBlock,
+        isActive: isMarkActive('codeBlock'),
+      },
+    ]),
+  );
 
   const minimizeAction = {
     name: 'minimize',
@@ -464,6 +486,11 @@ export function useToolbarActions(emit) {
       handler: handleToggleAlign,
       isActive: false,
       isAvailable: !isMarkActive('codeBlock'),
+      // TextAlign writes `style="text-align: …"`, and the QTI 3.0 HTML profile declares no
+      // style attribute — the item schema admits one only through its lax wildcard, so an
+      // aligned paragraph saves and then ships as non-conformant QTI. The image extension
+      // carries alignment as `data-text-align` instead, which the schema does allow.
+      hide: true,
     };
   });
 
