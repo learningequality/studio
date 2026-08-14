@@ -91,6 +91,92 @@ export const VALID_CHOICE_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?
   </qti-item-body>
 </qti-assessment-item>`;
 
+export const CHOICE_ITEM_DOCUMENT_NO_PROMPT = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  identifier="item-test-2"
+  title="Test Question"
+  adaptive="false"
+  time-dependent="false"
+  xml:lang="en"
+>
+  <qti-response-declaration
+    identifier="RESPONSE"
+    cardinality="single"
+    base-type="identifier"
+  >
+    <qti-correct-response>
+      <qti-value>choice-a</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+
+  <qti-item-body>
+    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
+      <qti-simple-choice identifier="choice-a">A</qti-simple-choice>
+      <qti-simple-choice identifier="choice-b">B</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+</qti-assessment-item>`;
+
+export const CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  identifier="item-test-3"
+  title="Test Question"
+  adaptive="false"
+  time-dependent="false"
+  xml:lang="en"
+>
+  <qti-response-declaration
+    identifier="RESPONSE"
+    cardinality="single"
+    base-type="identifier"
+  />
+
+  <qti-item-body>
+    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
+      <qti-prompt>Pick one.</qti-prompt>
+      <qti-simple-choice identifier="choice-a">A</qti-simple-choice>
+      <qti-simple-choice identifier="choice-b">B</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+</qti-assessment-item>`;
+
+/**
+ * A text-entry item whose declaration carries no correct response — an open-ended
+ * question, which only surveys accept.
+ */
+export const FREE_RESPONSE_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  identifier="item-free"
+  title="Free Response"
+  adaptive="false"
+  time-dependent="false"
+  xml:lang="en"
+>
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string" />
+
+  <qti-item-body>
+    <p>Tell us what you think.</p>
+    <p><qti-text-entry-interaction response-identifier="RESPONSE" /></p>
+  </qti-item-body>
+</qti-assessment-item>`;
+
+export const NO_INTERACTION_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  identifier="item-empty"
+  title="Empty Question"
+  adaptive="false"
+  time-dependent="false"
+  xml:lang="en"
+>
+  <qti-item-body>
+    <p>Just some text.</p>
+  </qti-item-body>
+</qti-assessment-item>`;
+
 export const TWO_INTERACTIONS_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item
   xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
