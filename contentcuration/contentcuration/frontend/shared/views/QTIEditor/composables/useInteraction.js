@@ -13,7 +13,7 @@ import debounce from 'lodash/debounce';
  * only appear after the user pauses typing (400 ms), avoiding noisy
  * inline error flicker on every keystroke.
  *
- * @param {import('../interactions/defineInteraction').InteractionDescriptor} descriptor
+ * @param {import('../interactions/InteractionDescriptor').InteractionDescriptor} descriptor
  * @param {{ bodyXml: string, responseDeclarations: string[] }} interactionBlock
  * @param {import('vue').Ref<string|null>} questionType
  * @returns {{

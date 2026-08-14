@@ -1,16 +1,17 @@
 import { QtiInteraction, QuestionType, BaseType, Cardinality } from '../../constants';
+import { InteractionDescriptor } from '../InteractionDescriptor';
 import { parseOrderingInteraction, buildOrderingInteractionXML } from './parse';
-import { validateOrderingInteraction } from './validate';
+import { validateOrderingInteraction } from './validation';
 
 /**
  * Owns all ordering-specific interaction logic: schema, parse, buildXML, and validate.
  */
-export class OrderingInteractionDescriptor {
-  constructor({ editorComponent = null } = {}) {
-    this.type = QtiInteraction.ORDER;
-    this.placement = 'block';
-    this.questionTypes = [QuestionType.ORDERING];
-    this.editorComponent = editorComponent;
+export class OrderingInteractionDescriptor extends InteractionDescriptor {
+  constructor() {
+    super({
+      type: QtiInteraction.ORDER,
+      questionTypes: [QuestionType.ORDERING],
+    });
     this.convertsFrom = [];
   }
 
@@ -22,11 +23,6 @@ export class OrderingInteractionDescriptor {
         description: tr.orderingDescription$(),
       },
     ];
-  }
-
-  /** @param {Element} el */
-  matches(el) {
-    return el.tagName.toLowerCase() === QtiInteraction.ORDER;
   }
 
   /**

@@ -1,25 +1,22 @@
-import { QtiInteraction, QuestionType, BaseType, Cardinality } from '../../constants';
-import { parseXML } from '../../serialization/parseItem';
+import { QtiInteraction, QuestionType, BaseType, Cardinality, Placement } from '../../constants';
+import { parseXML } from '../../serialization/xml';
+import { InteractionDescriptor } from '../InteractionDescriptor';
 import { parseTextEntryInteraction, buildTextEntryInteractionXML } from './parse';
 import { validateTextEntryInteraction } from './validation';
 
 /**
  * Owns all text-entry-specific interaction logic: schema, parse, buildXML, validate.
  *
- * placement: 'inline' — signals to parseItem that the whole <qti-item-body>
- * should be passed as bodyXml rather than just the interaction element, so
- * parse() can recover the prompt from body siblings.
+ * Inline placement means parse() is handed the whole <qti-item-body> rather than just the
+ * interaction element, so it can recover the prompt from the body siblings.
  */
-class TextEntryInteractionDescriptor {
+class TextEntryInteractionDescriptor extends InteractionDescriptor {
   constructor() {
-    this.type = QtiInteraction.TEXT_ENTRY;
-    this.placement = 'inline';
-    this.questionTypes = [
-      QuestionType.NUMERIC,
-      QuestionType.TEXT_ENTRY,
-      QuestionType.FREE_RESPONSE,
-    ];
-    this.editorComponent = null;
+    super({
+      type: QtiInteraction.TEXT_ENTRY,
+      questionTypes: [QuestionType.NUMERIC, QuestionType.TEXT_ENTRY, QuestionType.FREE_RESPONSE],
+      placement: Placement.INLINE,
+    });
     this.convertsFrom = [];
   }
 

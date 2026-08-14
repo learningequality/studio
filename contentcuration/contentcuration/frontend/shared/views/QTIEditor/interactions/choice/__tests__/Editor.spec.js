@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
 import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
-import ChoiceInteractionEditor from '../ChoiceInteractionEditor.vue';
+import ChoiceInteractionEditor from '../Editor.vue';
 
 import {
   CHOICE_SINGLE_SELECT_XML,

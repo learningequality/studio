@@ -1,17 +1,18 @@
 import { QtiInteraction, QuestionType, BaseType, Cardinality } from '../../constants';
-import { parseXML } from '../../serialization/parseItem';
+import { parseXML } from '../../serialization/xml';
+import { InteractionDescriptor } from '../InteractionDescriptor';
 import { parseChoiceInteraction, buildChoiceInteractionXML } from './parse';
 import { validateChoiceInteraction } from './validation';
 
 /**
  * Owns all choice-specific interaction logic: schema, parse, buildXML, and validate.
  */
-export class ChoiceInteractionDescriptor {
-  constructor({ editorComponent = null } = {}) {
-    this.type = QtiInteraction.CHOICE;
-    this.placement = 'block';
-    this.questionTypes = [QuestionType.SINGLE_SELECT, QuestionType.MULTI_SELECT];
-    this.editorComponent = editorComponent;
+export class ChoiceInteractionDescriptor extends InteractionDescriptor {
+  constructor() {
+    super({
+      type: QtiInteraction.CHOICE,
+      questionTypes: [QuestionType.SINGLE_SELECT, QuestionType.MULTI_SELECT],
+    });
     this.convertsFrom = [];
   }
 
@@ -28,11 +29,6 @@ export class ChoiceInteractionDescriptor {
         description: tr.multipleSelectionDescription$(),
       },
     ];
-  }
-
-  /** @param {Element} el */
-  matches(el) {
-    return el.tagName.toLowerCase() === QtiInteraction.CHOICE;
   }
 
   /**

@@ -1,5 +1,5 @@
 import { QTIDeclaration } from '../../serialization/qti/QTIDeclaration';
-import { parseXML } from '../../serialization/parseItem';
+import { parseXML } from '../../serialization/xml';
 import { buildXmlNode } from '../../serialization/assembleItem';
 import CorrectResponse from '../../serialization/qti/declarations/correctResponse';
 import Mapping from '../../serialization/qti/declarations/mapping';

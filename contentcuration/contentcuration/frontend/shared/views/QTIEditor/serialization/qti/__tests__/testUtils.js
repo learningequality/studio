@@ -1,7 +1,7 @@
 /**
  * Shared XML parse helper for declaration tests.
  */
-import { parseXML as parseXMLDocument } from '../../parseItem';
+import { parseXML as parseXMLDocument } from '../../xml';
 
 const serializer = new XMLSerializer();
 
