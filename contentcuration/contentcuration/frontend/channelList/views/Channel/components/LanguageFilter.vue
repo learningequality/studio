@@ -1,73 +1,25 @@
 <template>
 
-  <VAutocomplete
+  <KMultiSelect
     v-model="languages"
-    :items="availableLanguages"
+    :options="availableLanguages"
     :label="$tr('languageLabel')"
-    color="primary"
-    item-value="id"
-    :item-text="languageSearchValue"
-    autoSelectFirst
-    :no-data-text="$tr('noMatchingLanguageText')"
-    box
-    multiple
+    itemValue="id"
+    itemText="name"
+    :searchKeys="['related_names', 'id']"
+    :multiple="true"
     clearable
-    :search-input.sync="languageInput"
-    v-bind="$attrs"
-    @change="languageInput = ''"
-    @blur="resetScroll"
-  >
-    <template #selection="{ item }">
-      <VTooltip
-        bottom
-        lazy
-      >
-        <template>
-          <StudioChip class="ma-1">
-            <div class="text-truncate">
-              {{ item.name }}
-            </div>
-          </StudioChip>
-        </template>
-        <span>{{ item.name }}</span>
-      </VTooltip>
-    </template>
-    <template #item="{ item }">
-      <KCheckbox
-        :key="item.id"
-        :ref="'checkbox-' + item.id"
-        v-model="languages"
-        :presentational="true"
-        :value="item.id"
-        class="mb-0 mt-1 scroll-margin"
-        :labelDir="null"
-      >
-        <VTooltip
-          bottom
-          lazy
-        >
-          <template #activator="{ on }">
-            <div
-              class="text-truncate"
-              style="width: 250px"
-              v-on="on"
-            >
-              {{ item.name }}
-            </div>
-          </template>
-          <span>{{ item.name }}</span>
-        </VTooltip>
-      </KCheckbox>
-    </template>
-  </VAutocomplete>
+    :noResultsText="$tr('noMatchingLanguageText')"
+    :messages="messages"
+  />
 
 </template>
 
 
 <script>
 
+  import KMultiSelect from 'kolibri-design-system/lib/candidate/multiselect/KMultiSelect';
   import LanguagesMap, { LanguagesList } from 'shared/leUtils/Languages';
-  import StudioChip from 'shared/views/StudioChip.vue';
 
   const publicLanguages = Object.entries(window.publicLanguages || {}).map(([langId, count]) => {
     const baseLanguage = LanguagesMap.get(langId);
@@ -84,7 +36,7 @@
   export default {
     name: 'LanguageFilter',
     components: {
-      StudioChip,
+      KMultiSelect,
     },
     props: {
       value: {
@@ -96,7 +48,6 @@
     },
     data() {
       return {
-        languageInput: '',
         availableLanguages: publicLanguages,
       };
     },
@@ -109,48 +60,37 @@
           this.$emit('input', value.filter(Boolean));
         },
       },
-    },
-    methods: {
-      languageSearchValue(item) {
-        return item.name + (item.related_names || []).join('') + item.id;
-      },
-      resetScroll() {
-        const [{ id: firstLangId } = {}] = publicLanguages;
-        if (!firstLangId) {
-          return;
-        }
-        const firstItem = this.$refs[`checkbox-${firstLangId}`];
-        if (!firstItem) {
-          return;
-        }
-        firstItem.$el.scrollIntoView();
+      messages() {
+        return {
+          clearText: () => this.$tr('clearText'),
+          open: () => this.$tr('openMenu'),
+          close: () => this.$tr('closeMenu'),
+          clickable: () => this.$tr('optionsClickable'),
+          allOptionsSelected: () => this.$tr('allOptionsSelected'),
+          allOptionsDeselected: () => this.$tr('allOptionsDeselected'),
+          optionDeselected: () => this.$tr('optionDeselected'),
+          itemsSelected: ({ count }) => this.$tr('itemsSelected', { count }),
+          selected: ({ label }) => this.$tr('languageSelected', { label }),
+          removed: ({ label }) => this.$tr('languageRemoved', { label }),
+          cleared: ({ count }) => this.$tr('selectionsCleared', { count }),
+        };
       },
     },
     $trs: {
       languageLabel: 'Languages',
       noMatchingLanguageText: 'No language matches the search',
+      clearText: 'Clear all',
+      openMenu: 'Open menu',
+      closeMenu: 'Close menu',
+      optionsClickable: 'Options are clickable',
+      allOptionsSelected: 'All options selected',
+      allOptionsDeselected: 'No options selected',
+      optionDeselected: 'Option deselected',
+      itemsSelected: '{count, plural, one {# language selected} other {# languages selected}}',
+      languageSelected: 'Selected {label}',
+      languageRemoved: 'Removed {label}',
+      selectionsCleared: '{count, plural, one {Cleared # selection} other {Cleared # selections}}',
     },
   };
 
 </script>
-
-
-<style lang="scss" scoped>
-
-  // Need to set otherwise chips will exceed width of selection box
-  ::v-deep .v-select__selections {
-    width: calc(100% - 48px);
-  }
-
-  .v-chip,
-  ::v-deep .v-chip__content,
-  .text-truncate {
-    max-width: 100%;
-  }
-
-  .scroll-margin {
-    /* Fixes scroll position on reset scroll */
-    scroll-margin: 16px;
-  }
-
-</style>
