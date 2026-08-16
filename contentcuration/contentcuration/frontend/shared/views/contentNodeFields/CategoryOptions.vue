@@ -1,7 +1,38 @@
 <template>
 
   <div>
-    <DropdownWrapper>
+    <KMultiSelect
+      v-if="!expanded"
+      :value="autocompleteValues"
+      :options="categoriesList"
+      itemValue="value"
+      itemText="text"
+      :label="translateMetadataString('category')"
+      :multiple="true"
+      :autoPromoteParent="false"
+      clearable
+      :noResultsText="$tr('noCategoryFoundText')"
+      :messages="messages"
+      @input="onKMultiSelectInput"
+    >
+      <template #chip="{ option, remove: removeChip }">
+        <span :ref="'category-chip-' + option.value">
+          <KChip
+            :text="option.text"
+            close
+            @close="removeChip"
+          />
+        </span>
+        <KTooltip
+          :reference="'category-chip-' + option.value"
+          :refs="$refs"
+          placement="top"
+          :text="tooltipText(option.value)"
+        />
+      </template>
+    </KMultiSelect>
+
+    <DropdownWrapper v-if="expanded">
       <template #default="{ attach, menuProps }">
         <VAutocomplete
           :value="autocompleteValues"
@@ -18,8 +49,8 @@
           :menu-props="{
             ...menuProps,
             zIndex: 4,
-            height: expanded ? 0 : 'auto',
-            maxHeight: expanded ? 0 : 300,
+            height: 0,
+            maxHeight: 0,
           }"
           :attach="attach"
           @click:clear="$nextTick(() => removeAll())"
@@ -104,13 +135,15 @@
 <script>
 
   import camelCase from 'lodash/camelCase';
+  import KMultiSelect from 'kolibri-design-system/lib/candidate/multiselect/KMultiSelect';
+  import KChip from 'kolibri-design-system/lib/candidate/multiselect/KChip';
   import { getSortedCategories } from 'shared/utils/helpers';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 
   export default {
     name: 'CategoryOptions',
-    components: { DropdownWrapper },
+    components: { KMultiSelect, KChip, DropdownWrapper },
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
       /**
@@ -177,6 +210,22 @@
           option.text.toLowerCase().includes(searchQuery),
         );
       },
+      messages() {
+        return {
+          clearText: () => this.$tr('clearText'),
+          open: () => this.$tr('openMenu'),
+          close: () => this.$tr('closeMenu'),
+          clickable: () => this.$tr('optionsClickable'),
+          allOptionsSelected: () => this.$tr('allOptionsSelected'),
+          allOptionsDeselected: () => this.$tr('allOptionsDeselected'),
+          optionDeselected: () => this.$tr('optionDeselected'),
+          partiallySelected: () => this.$tr('partiallySelected'),
+          itemsSelected: ({ count }) => this.$tr('itemsSelected', { count }),
+          selected: ({ label }) => this.$tr('categorySelected', { label }),
+          removed: ({ label }) => this.$tr('categoryRemoved', { label }),
+          cleared: () => this.$tr('allCategoriesCleared'),
+        };
+      },
     },
     methods: {
       treeItemStyle(item) {
@@ -200,6 +249,21 @@
       },
       removeAll() {
         this.selected = {};
+      },
+      // Rebuilds the { category: [nodeIds] } object from KMultiSelect's flat
+      // array. Categories not applied to every edited node are invisible to
+      // KMultiSelect (see autocompleteValues), so they are carried over untouched.
+      onKMultiSelectInput(newValues) {
+        const newSelected = {};
+        Object.entries(this.selected).forEach(([category, ids]) => {
+          if (ids.length !== this.nodeIds.length) {
+            newSelected[category] = ids;
+          }
+        });
+        newValues.forEach(value => {
+          newSelected[value] = this.nodeIds;
+        });
+        this.selected = newSelected;
       },
       tooltipText(optionId) {
         const option = this.categoriesList.find(option => option.value === optionId);
@@ -275,6 +339,18 @@
     },
     $trs: {
       noCategoryFoundText: 'Category not found',
+      clearText: 'Clear all',
+      openMenu: 'Open menu',
+      closeMenu: 'Close menu',
+      optionsClickable: 'Options are clickable',
+      allOptionsSelected: 'All options selected',
+      allOptionsDeselected: 'No options selected',
+      optionDeselected: 'Option deselected',
+      partiallySelected: 'Partially selected',
+      itemsSelected: '{count, plural, one {# category selected} other {# categories selected}}',
+      categorySelected: 'Selected {label}',
+      categoryRemoved: 'Removed {label}',
+      allCategoriesCleared: 'All categories cleared',
     },
   };
 
