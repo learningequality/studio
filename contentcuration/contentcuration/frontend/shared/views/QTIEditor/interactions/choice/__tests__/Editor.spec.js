@@ -215,7 +215,9 @@ describe('ChoiceInteractionEditor', () => {
         questionType: QuestionType.SINGLE_SELECT,
       });
       await fireEvent.click(screen.getByRole('button', { name: tr.$tr('addChoiceBtn') }));
-      expect(screen.getAllByRole('radio')).toHaveLength(4);
+      // Counted by row rather than by radio: the added choice is empty, so validation —
+      // no longer debounced — puts the error icon where its radio would be.
+      expect(screen.getAllByRole('button', { name: tr.$tr('deleteChoiceBtn') })).toHaveLength(4);
     });
 
     it('gives every choice row its own delete button', () => {
@@ -432,65 +434,64 @@ describe('ChoiceInteractionEditor', () => {
   });
 
   describe('validation', () => {
-    it('does not show errors before any field is touched', () => {
+    it('reports what is missing as soon as it renders', () => {
+      // Validation is not debounced, so errors describe the state on screen from the start:
+      // this fixture has no declaration, so no choice is marked correct.
       renderEditor({
         interaction: block(CHOICE_SINGLE_SELECT_XML),
         questionType: QuestionType.SINGLE_SELECT,
       });
+
+      expect(screen.getByText(tr.errorNoCorrectAnswer$())).toBeInTheDocument();
+    });
+
+    it('shows no errors for a question that is already complete', () => {
+      renderEditor({
+        interaction: blockWithDecl(CHOICE_SINGLE_SELECT_XML, SINGLE_DECL),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
+
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     });
 
     it('shows global errors (no correct choice) after a structural mutation', async () => {
-      jest.useFakeTimers();
       // Add a choice so we have 2+ choices — then the only error is no correct choice.
       renderEditor({
         interaction: block(CHOICE_SINGLE_SELECT_XML),
         questionType: QuestionType.SINGLE_SELECT,
       });
-      // Clicking Add choice mutates state → debounced validate fires.
+      // Clicking Add choice mutates state, which validates straight away.
       await fireEvent.click(screen.getByRole('button', { name: /add choice/i }));
-      // Flush Vue watcher queue.
       await nextTick();
-      // Advance past the 400ms debounce, then flush the resulting DOM update.
-      jest.advanceTimersByTime(400);
-      await nextTick();
-      jest.useRealTimers();
+
       // NO_CORRECT_ANSWER (and potentially others) should be shown after validation runs.
       expect(screen.getAllByRole('alert').length).toBeGreaterThan(0);
     });
 
     it('replaces the selection control with the error icon on an invalid choice', async () => {
-      jest.useFakeTimers();
-      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+      const user = userEvent.setup();
       renderEditor({
         interaction: block(CHOICE_SINGLE_SELECT_XML),
         questionType: QuestionType.SINGLE_SELECT,
       });
       expect(screen.getAllByRole('radio')).toHaveLength(3);
-      // The added choice starts empty, so the debounced validation flags it.
+      // The added choice starts empty, so validation flags it straight away.
       await user.click(screen.getByRole('button', { name: /add choice/i }));
       await nextTick();
-      jest.advanceTimersByTime(400);
-      await nextTick();
-      jest.useRealTimers();
       // Four rows, but the invalid one shows the error icon where its radio was
       expect(screen.getAllByRole('button', { name: tr.$tr('deleteChoiceBtn') })).toHaveLength(4);
       expect(screen.getAllByRole('radio')).toHaveLength(3);
     });
 
-    it('shows no-correct-choice error after toggling and running validation', async () => {
-      jest.useFakeTimers();
+    it('shows the empty-choice error as soon as a choice is added', async () => {
       renderEditor({
         interaction: blockWithDecl(CHOICE_SINGLE_SELECT_XML, SINGLE_DECL),
         questionType: QuestionType.SINGLE_SELECT,
       });
-      // Trigger validation via add-choice which mutates state → debounced validate fires.
       await fireEvent.click(screen.getByRole('button', { name: /add choice/i }));
       await nextTick();
-      jest.advanceTimersByTime(400);
-      await nextTick();
-      jest.useRealTimers();
-      // Validate fires; errors should appear (e.g. empty choice content).
+
+      expect(screen.getByText(tr.errorEmptyChoiceContent$())).toBeInTheDocument();
     });
   });
 
@@ -661,15 +662,18 @@ describe('ChoiceInteractionEditor', () => {
     });
   });
 
+  // The default state is one empty choice, which validation flags immediately now that it
+  // is not debounced — so the row is counted by its delete button, its radio having been
+  // replaced by the error icon.
   describe('graceful fallback', () => {
     it('renders default interaction state when bodyXml is empty', () => {
       renderEditor({ interaction: block(''), questionType: QuestionType.SINGLE_SELECT });
-      expect(screen.getAllByRole('radio')).toHaveLength(1);
+      expect(screen.getAllByRole('button', { name: tr.$tr('deleteChoiceBtn') })).toHaveLength(1);
     });
 
     it('renders default interaction state when XML is malformed', () => {
       renderEditor({ interaction: block('<unclosed'), questionType: QuestionType.SINGLE_SELECT });
-      expect(screen.getAllByRole('radio')).toHaveLength(1);
+      expect(screen.getAllByRole('button', { name: tr.$tr('deleteChoiceBtn') })).toHaveLength(1);
     });
   });
 });
