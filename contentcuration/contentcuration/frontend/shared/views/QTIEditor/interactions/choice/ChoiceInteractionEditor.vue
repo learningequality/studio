@@ -27,9 +27,11 @@
       </div>
 
       <!-- Prompt -->
-      <div
-        :class="promptWrapperClass"
+      <ClickableRegion
+        :class="getPromptWrapperClass()"
         :style="promptWrapperStyle"
+        :suppressed="mode !== 'edit' || isQuestionOpen"
+        :aria-label="editQuestionLabel$()"
         @click="handlePromptClick"
       >
         <div class="choice-card-text is-closed">
@@ -42,6 +44,7 @@
                 :minHeight="'80px'"
                 :autofocus="mode === 'edit' && isQuestionOpen"
                 :imageProcessor="EditorImageProcessor"
+                :tabindex="-1"
                 class="editor"
                 @update="setPrompt"
                 @minimize="closeQuestion"
@@ -49,7 +52,7 @@
             </div>
           </div>
         </div>
-      </div>
+      </ClickableRegion>
     </div>
 
     <!-- Choice list -->
@@ -90,11 +93,13 @@
           class="choice-group"
         >
           <!-- Bordered choice card -->
-          <div
+          <ClickableRegion
             class="choice-border"
             :class="getChoiceClasses(choice)"
             :style="getChoiceStyle(choice)"
-            @click="handleChoiceClick($event, choice.id)"
+            :suppressed="mode !== 'edit' || isChoiceOpen(choice.id)"
+            :aria-label="editAnswerOptionLabel$({ number: index + 1 })"
+            @click="handleChoiceClick(choice.id)"
           >
             <div
               class="choice-card-text"
@@ -152,6 +157,7 @@
                     :minHeight="'80px'"
                     :autofocus="isChoiceOpen(choice.id)"
                     :imageProcessor="EditorImageProcessor"
+                    :tabindex="-1"
                     class="editor"
                     @update="html => setChoiceContent(choice.id, html)"
                     @minimize="closeChoice"
@@ -181,7 +187,7 @@
             >
               {{ errorDuplicateChoiceContent$() }}
             </ValidationMessage>
-          </div>
+          </ClickableRegion>
         </div>
       </component>
 
@@ -200,7 +206,7 @@
 
 <script>
 
-  import { computed, ref, watch, getCurrentInstance } from 'vue';
+  import { computed, ref, watch } from 'vue';
   import Teleport from 'vue2-teleport';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { themePalette, themeTokens } from 'kolibri-design-system/lib/styles/theme';
@@ -211,6 +217,7 @@
   import CollapsibleToolbar from '../../components/CollapsibleToolbar/index.vue';
   import ValidationMessage from '../../components/ValidationMessage/index.vue';
   import AddListItemButton from '../../components/AddListItemButton/index.vue';
+  import ClickableRegion from '../../components/ClickableRegion/index.vue';
   import AnswerSettings from './components/AnswerSettings/index.vue';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor';
   import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
@@ -219,6 +226,7 @@
     name: 'ChoiceInteractionEditor',
 
     components: {
+      ClickableRegion,
       TipTapEditor,
       CollapsibleToolbar,
       ValidationMessage,
@@ -245,6 +253,8 @@
         answersLabel$,
         answersDescriptionSingleChoice$,
         answersDescriptionMultipleChoice$,
+        editQuestionLabel$,
+        editAnswerOptionLabel$,
       } = qtiEditorStrings;
 
       const palette = themePalette();
@@ -278,20 +288,16 @@
         openChoiceId.value = null;
       }
 
-      function handlePromptClick(event) {
+      function handlePromptClick() {
         if (props.mode !== 'edit') return;
-        if (event.target.closest('button') || event.target.closest('input')) return;
         if (!isQuestionOpen.value) {
-          event.stopPropagation();
           openQuestion();
         }
       }
 
-      function handleChoiceClick(event, choiceId) {
+      function handleChoiceClick(choiceId) {
         if (props.mode !== 'edit') return;
         if (openChoiceId.value === choiceId) return;
-        if (event.target.closest('button') || event.target.closest('input')) return;
-        event.stopPropagation();
         openChoice(choiceId);
       }
 
@@ -325,7 +331,6 @@
         { immediate: true },
       );
 
-      // Emit bodyXml and responseDeclarations whenever either changes.
       const workingInteraction = computed(() => ({
         bodyXml: bodyXml.value,
         responseDeclarations: responseDeclarations.value,
@@ -419,13 +424,14 @@
         ];
       }
 
-      const instance = getCurrentInstance();
-
       const isPromptEditing = computed(() => props.mode === 'edit' && isQuestionOpen.value);
 
-      const promptWrapperClass = computed(() => {
-        return isPromptEditing.value ? 'choice-editor__prompt-wrap' : 'choice-border';
-      });
+      function getPromptWrapperClass() {
+        if (isPromptEditing.value) {
+          return 'choice-editor__prompt-wrap';
+        }
+        return ['choice-border', { 'is-clickable': props.mode === 'edit' }];
+      }
 
       const promptWrapperStyle = computed(() => {
         if (isPromptEditing.value) {
@@ -433,7 +439,6 @@
         }
         return {
           borderColor: questionHasError.value ? tokens.error : tokens.fineLine,
-          cursor: props.mode === 'edit' ? 'pointer' : undefined,
         };
       });
 
@@ -450,18 +455,9 @@
       }
 
       function getChoiceClasses(choice) {
-        const closed = isChoiceClosed(choice.id);
-        const clickable = props.mode === 'edit' && closed;
-        const isCorrect = choice.correct && (props.mode === 'edit' || props.showAnswers);
-        const hoverBg = isCorrect ? palette.green.v_100 : tokens.fineLine;
-        return [
-          { 'is-clickable': clickable },
-          clickable
-            ? instance.proxy.$computedClass({
-              ':hover': { backgroundColor: hoverBg },
-            })
-            : '',
-        ];
+        return {
+          'is-clickable': props.mode === 'edit' && isChoiceClosed(choice.id),
+        };
       }
 
       function getChoiceStyle(choice) {
@@ -475,9 +471,12 @@
           borderColor = palette.green.v_500;
         }
 
+        const hoverBg = isCorrect ? palette.green.v_100 : tokens.fineLine;
+
         return {
           borderColor,
           backgroundColor: isCorrect ? palette.green.v_50 : null,
+          '--clickable-region-hover-bg': hoverBg,
         };
       }
 
@@ -485,7 +484,7 @@
 
       return {
         EditorImageProcessor,
-        promptWrapperClass,
+        getPromptWrapperClass,
         promptWrapperStyle,
         state,
         isSingleSelect,
@@ -524,6 +523,8 @@
         errorEmptyChoiceContent$,
         errorDuplicateChoiceContent$,
         questionLabel$,
+        editQuestionLabel$,
+        editAnswerOptionLabel$,
       };
     },
 
@@ -707,6 +708,10 @@
 
   .choice-border.is-clickable {
     cursor: pointer;
+
+    &:hover {
+      background-color: var(--clickable-region-hover-bg, v-bind('$themeTokens.fineLine'));
+    }
   }
 
 </style>

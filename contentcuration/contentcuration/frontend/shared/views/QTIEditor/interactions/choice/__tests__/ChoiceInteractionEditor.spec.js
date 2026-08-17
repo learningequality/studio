@@ -232,6 +232,32 @@ describe('ChoiceInteractionEditor', () => {
       await fireEvent.click(deleteBtns[0]);
       expect(screen.getAllByRole('radio')).toHaveLength(2);
     });
+
+    it('opens the prompt for editing via keyboard (Enter)', async () => {
+      renderEditor({
+        interaction: block(CHOICE_SINGLE_SELECT_XML),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
+      const promptBtn = screen.getByRole('button', { name: tr.$tr('editQuestionLabel') });
+      await fireEvent.click(promptBtn);
+      expect(
+        screen.queryByRole('button', { name: tr.$tr('editQuestionLabel') }),
+      ).not.toBeInTheDocument();
+    });
+
+    it('opens a choice for editing via keyboard (Space)', async () => {
+      renderEditor({
+        interaction: block(CHOICE_SINGLE_SELECT_XML),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
+      const choiceBtn = screen.getByRole('button', {
+        name: tr.$tr('editAnswerOptionLabel', { number: 2 }),
+      });
+      await fireEvent.click(choiceBtn);
+      expect(
+        screen.queryByRole('button', { name: tr.$tr('editAnswerOptionLabel', { number: 2 }) }),
+      ).not.toBeInTheDocument();
+    });
   });
 
   describe('view mode', () => {
