@@ -147,10 +147,7 @@ describe('fileUploadItem', () => {
       });
 
       const fileInput = screen.getByTestId('upload-dialog');
-      await userEvent.upload(
-        fileInput,
-        new File(['pdf'], 'test.pdf', { type: 'application/pdf' }),
-      );
+      await userEvent.upload(fileInput, new File(['pdf'], 'test.pdf', { type: 'application/pdf' }));
 
       await waitFor(() => {
         expect(uploadCompleteHandler).toHaveBeenCalledWith(
