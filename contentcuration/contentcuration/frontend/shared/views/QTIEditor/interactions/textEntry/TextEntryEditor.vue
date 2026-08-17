@@ -55,6 +55,7 @@
         {{ acceptableAnswersLabel$() }}
       </div>
       <div
+        v-if="mode === 'edit'"
         class="answers-description"
         :style="{ color: $themeTokens.annotation }"
       >

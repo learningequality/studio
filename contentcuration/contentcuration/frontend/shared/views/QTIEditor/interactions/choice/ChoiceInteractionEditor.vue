@@ -71,6 +71,7 @@
         {{ answersLabel$() }}
       </div>
       <div
+        v-if="mode === 'edit'"
         class="choices-label"
         :style="{ color: $themeTokens.annotation }"
       >
