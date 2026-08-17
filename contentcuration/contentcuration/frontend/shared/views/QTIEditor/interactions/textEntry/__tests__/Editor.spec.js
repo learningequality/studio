@@ -126,10 +126,6 @@ describe('TextEntryEditor — numeric', () => {
   });
 
   describe('validation', () => {
-    afterEach(() => {
-      jest.useRealTimers();
-    });
-
     it('does not show errors before any field is touched', () => {
       renderEditor({
         interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL),
@@ -139,7 +135,6 @@ describe('TextEntryEditor — numeric', () => {
     });
 
     it('shows an error after typing a non-numeric value and blurring', async () => {
-      jest.useFakeTimers();
       renderEditor({
         interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL),
         questionType: QuestionType.NUMERIC,
@@ -147,22 +142,19 @@ describe('TextEntryEditor — numeric', () => {
       const input = answerInputs()[0];
       await fireEvent.input(input, { target: { value: 'not-a-number' } });
       await fireEvent.blur(input);
-      jest.useRealTimers();
       await nextTick();
+
       expect(screen.getByRole('alert')).toBeInTheDocument();
     });
 
-    it('shows validation errors after a state mutation and debounce', async () => {
-      jest.useFakeTimers();
+    it('shows validation errors as soon as the state changes', async () => {
       renderEditor({
         interaction: block(TEXT_ENTRY_BODY_XML),
         questionType: QuestionType.NUMERIC,
       });
       await fireEvent.click(screen.getByRole('button', { name: tr.$tr('addAnswerBtn') }));
       await nextTick();
-      jest.advanceTimersByTime(400);
-      jest.useRealTimers();
-      await nextTick();
+
       expect(screen.getAllByRole('alert').length).toBeGreaterThan(0);
     });
   });
@@ -260,7 +252,10 @@ describe('TextEntryEditor — accessibility', () => {
 describe('TextEntryEditor — graceful fallback', () => {
   it('does not crash with empty bodyXml for numeric', () => {
     renderEditor({ interaction: block(''), questionType: QuestionType.NUMERIC });
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+    // An empty interaction is incomplete, and validation is not debounced, so it says so
+    // right away rather than rendering nothing.
+    expect(screen.getByText(tr.errorPromptRequired$())).toBeInTheDocument();
   });
 
   it('does not crash with empty bodyXml for freeResponse', () => {
