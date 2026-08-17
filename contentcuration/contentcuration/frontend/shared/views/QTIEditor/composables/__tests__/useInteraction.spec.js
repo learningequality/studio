@@ -1,14 +1,6 @@
 import { ref, nextTick } from 'vue';
 import { useInteraction } from '../useInteraction';
 
-jest.mock('lodash/debounce', () => {
-  return jest.fn(fn => {
-    const mocked = jest.fn((...args) => fn(...args));
-    mocked.cancel = jest.fn();
-    return mocked;
-  });
-});
-
 function makeDescriptor({ parseReturn = {}, buildReturn = null, validateReturn = [] } = {}) {
   return {
     parse: jest.fn(() => parseReturn),

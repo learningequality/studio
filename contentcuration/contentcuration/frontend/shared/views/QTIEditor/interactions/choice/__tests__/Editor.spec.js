@@ -308,46 +308,49 @@ describe('ChoiceInteractionEditor', () => {
   });
 
   describe('validation', () => {
-    it('does not show errors before any field is touched', () => {
+    it('reports what is missing as soon as it renders', () => {
+      // Validation is not debounced, so errors describe the state on screen from the start:
+      // this fixture has no declaration, so no choice is marked correct.
       renderEditor({
         interaction: block(CHOICE_SINGLE_SELECT_XML),
         questionType: QuestionType.SINGLE_SELECT,
       });
+
+      expect(screen.getByText(tr.errorNoCorrectAnswer$())).toBeInTheDocument();
+    });
+
+    it('shows no errors for a question that is already complete', () => {
+      renderEditor({
+        interaction: blockWithDecl(CHOICE_SINGLE_SELECT_XML, SINGLE_DECL),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
+
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     });
 
     it('shows global errors (no correct choice) after a structural mutation', async () => {
-      jest.useFakeTimers();
       // Add a choice so we have 2+ choices — then the only error is no correct choice.
       renderEditor({
         interaction: block(CHOICE_SINGLE_SELECT_XML),
         questionType: QuestionType.SINGLE_SELECT,
       });
-      // Clicking Add choice mutates state → debounced validate fires.
+      // Clicking Add choice mutates state, which validates straight away.
       await fireEvent.click(screen.getByRole('button', { name: /add choice/i }));
-      // Flush Vue watcher queue.
       await nextTick();
-      // Advance past the 400ms debounce, then flush the resulting DOM update.
-      jest.advanceTimersByTime(400);
-      await nextTick();
-      jest.useRealTimers();
+
       // NO_CORRECT_ANSWER (and potentially others) should be shown after validation runs.
       expect(screen.getAllByRole('alert').length).toBeGreaterThan(0);
     });
 
-    it('shows no-correct-choice error after toggling and running validation', async () => {
-      jest.useFakeTimers();
+    it('shows the empty-choice error as soon as a choice is added', async () => {
       renderEditor({
         interaction: blockWithDecl(CHOICE_SINGLE_SELECT_XML, SINGLE_DECL),
         questionType: QuestionType.SINGLE_SELECT,
       });
-      // Trigger validation via add-choice which mutates state → debounced validate fires.
       await fireEvent.click(screen.getByRole('button', { name: /add choice/i }));
       await nextTick();
-      jest.advanceTimersByTime(400);
-      await nextTick();
-      jest.useRealTimers();
-      // Validate fires; errors should appear (e.g. empty choice content).
+
+      expect(screen.getByText(tr.errorEmptyChoiceContent$())).toBeInTheDocument();
     });
   });
 

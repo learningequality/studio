@@ -112,15 +112,10 @@ describe('QTIItemEditor', () => {
 
   describe('incomplete indicator', () => {
     const renderAndValidate = async raw_data => {
-      jest.useFakeTimers();
       renderComponent({
         item: { assessment_id: 'item-id', type: AssessmentItemTypes.QTI, raw_data },
       });
       await nextTick();
-      // Validation is debounced inside the interaction editor.
-      jest.advanceTimersByTime(400);
-      await nextTick();
-      jest.useRealTimers();
     };
 
     test('is shown for a question missing something the author has to supply', async () => {

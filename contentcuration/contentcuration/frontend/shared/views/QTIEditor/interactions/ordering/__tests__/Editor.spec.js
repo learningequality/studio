@@ -214,7 +214,7 @@ describe('OrderingEditor', () => {
   });
 
   describe('validation', () => {
-    it('does not show errors before any field is touched', () => {
+    it('shows no errors for a question that is already complete', () => {
       renderEditor({
         interaction: blockWithDecl(ORDERING_XML, ORDERING_DECL_XML),
         questionType: QuestionType.ORDERING,
@@ -222,19 +222,15 @@ describe('OrderingEditor', () => {
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     });
 
-    it('shows errors after runValidation is triggered by state mutation', async () => {
-      jest.useFakeTimers();
+    it('reports what is missing as soon as the state changes', async () => {
       renderEditor({
         interaction: block(''),
         questionType: QuestionType.ORDERING,
       });
       await fireEvent.click(screen.getByRole('button', { name: tr.$tr('addItemBtn') }));
       await nextTick();
-      jest.advanceTimersByTime(400);
-      await nextTick();
-      jest.useRealTimers();
-      // Prompt is empty → should show prompt required error
-      expect(screen.getAllByRole('alert').length).toBeGreaterThan(0);
+
+      expect(screen.getByText(tr.errorPromptRequired$())).toBeInTheDocument();
     });
   });
 
