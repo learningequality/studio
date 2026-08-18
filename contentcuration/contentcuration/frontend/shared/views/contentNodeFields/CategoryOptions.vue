@@ -138,6 +138,7 @@
   import KMultiSelect from 'kolibri-design-system/lib/candidate/multiselect/KMultiSelect';
   import KChip from 'kolibri-design-system/lib/candidate/multiselect/KChip';
   import { getSortedCategories } from 'shared/utils/helpers';
+  import { commonStrings } from 'shared/strings/commonStrings';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 
@@ -145,6 +146,33 @@
     name: 'CategoryOptions',
     components: { KMultiSelect, KChip, DropdownWrapper },
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
+    setup() {
+      const {
+        clearAllAction$,
+        openMenuAction$,
+        closeMenuAction$,
+        optionsClickableLabel$,
+        allOptionsSelectedLabel$,
+        allOptionsDeselectedLabel$,
+        optionDeselectedLabel$,
+        partiallySelectedLabel$,
+        optionSelectedLabel$,
+        optionRemovedLabel$,
+      } = commonStrings;
+
+      return {
+        clearAllAction$,
+        openMenuAction$,
+        closeMenuAction$,
+        optionsClickableLabel$,
+        allOptionsSelectedLabel$,
+        allOptionsDeselectedLabel$,
+        optionDeselectedLabel$,
+        partiallySelectedLabel$,
+        optionSelectedLabel$,
+        optionRemovedLabel$,
+      };
+    },
     props: {
       /**
        * This prop receives an object with the following structure:
@@ -212,17 +240,17 @@
       },
       messages() {
         return {
-          clearText: () => this.$tr('clearText'),
-          open: () => this.$tr('openMenu'),
-          close: () => this.$tr('closeMenu'),
-          clickable: () => this.$tr('optionsClickable'),
-          allOptionsSelected: () => this.$tr('allOptionsSelected'),
-          allOptionsDeselected: () => this.$tr('allOptionsDeselected'),
-          optionDeselected: () => this.$tr('optionDeselected'),
-          partiallySelected: () => this.$tr('partiallySelected'),
+          clearText: this.clearAllAction$,
+          open: this.openMenuAction$,
+          close: this.closeMenuAction$,
+          clickable: this.optionsClickableLabel$,
+          allOptionsSelected: this.allOptionsSelectedLabel$,
+          allOptionsDeselected: this.allOptionsDeselectedLabel$,
+          optionDeselected: this.optionDeselectedLabel$,
+          partiallySelected: this.partiallySelectedLabel$,
           itemsSelected: ({ count }) => this.$tr('itemsSelected', { count }),
-          selected: ({ label }) => this.$tr('categorySelected', { label }),
-          removed: ({ label }) => this.$tr('categoryRemoved', { label }),
+          selected: this.optionSelectedLabel$,
+          removed: this.optionRemovedLabel$,
           cleared: () => this.$tr('allCategoriesCleared'),
         };
       },
@@ -339,17 +367,7 @@
     },
     $trs: {
       noCategoryFoundText: 'Category not found',
-      clearText: 'Clear all',
-      openMenu: 'Open menu',
-      closeMenu: 'Close menu',
-      optionsClickable: 'Options are clickable',
-      allOptionsSelected: 'All options selected',
-      allOptionsDeselected: 'No options selected',
-      optionDeselected: 'Option deselected',
-      partiallySelected: 'Partially selected',
       itemsSelected: '{count, plural, one {# category selected} other {# categories selected}}',
-      categorySelected: 'Selected {label}',
-      categoryRemoved: 'Removed {label}',
       allCategoriesCleared: 'All categories cleared',
     },
   };
