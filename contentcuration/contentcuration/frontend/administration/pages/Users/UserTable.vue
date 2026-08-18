@@ -119,24 +119,23 @@
       </VFlex>
       <VFlex
         xs12
-        sm6
-        md3
-        class="align-center d-flex px-3"
+        md6
+        class="px-3 toggle-filters"
       >
         <Checkbox
           v-model="hasPublishedFilter"
           label="Has published a channel"
         />
-      </VFlex>
-      <VFlex
-        xs12
-        sm6
-        md3
-        class="align-center d-flex px-3"
-      >
         <Checkbox
           v-model="hasEditsFilter"
-          label="Has Studio edits"
+          label="Has Studio activity"
+        />
+        <KButton
+          appearance="basic-link"
+          text="Clear filters"
+          data-test="clear-filters"
+          :disabled="!hasActiveFilters"
+          @click="clearFilters"
         />
       </VFlex>
     </VLayout>
@@ -208,8 +207,10 @@
 
   import { ref, onMounted, computed, getCurrentInstance } from 'vue';
   import { mapGetters } from 'vuex';
+  import pick from 'lodash/pick';
   import transform from 'lodash/transform';
   import { saveAs } from 'file-saver';
+  import { useRoute } from 'vue-router/composables';
   import { useTable } from '../../composables/useTable';
   import { RouteNames, rowsPerPageItems } from '../../constants';
   import EmailUsersDialog from './EmailUsersDialog';
@@ -217,6 +218,7 @@
   import client from 'shared/client';
   import { useFilter } from 'shared/composables/useFilter';
   import { useKeywordSearch } from 'shared/composables/useKeywordSearch';
+  import { useQueryParams } from 'shared/composables/useQueryParams';
   import { routerMixin } from 'shared/mixins';
   import IconButton from 'shared/views/IconButton';
   import Checkbox from 'shared/views/form/Checkbox';
@@ -228,6 +230,19 @@
     inactive: { label: 'Inactive', params: { is_active: false } },
     administrator: { label: 'Administrators', params: { is_admin: true } },
     sushichef: { label: 'Sushi chef', params: { chef: true } },
+  };
+
+  const TABLE_STATE_QUERY_PARAMS = ['page', 'page_size', 'sortBy', 'descending'];
+
+  // Mirrors the defaultValue each filter below declares.
+  const FILTER_DEFAULTS = {
+    userType: undefined,
+    location: undefined,
+    keywords: undefined,
+    joinedWithin: 'any',
+    activeWithin: 'any',
+    hasPublished: 'no',
+    hasEdits: 'no',
   };
 
   const DATE_WINDOWS = [
@@ -301,6 +316,8 @@
     setup() {
       const { proxy } = getCurrentInstance();
       const store = proxy.$store;
+      const route = useRoute();
+      const { updateQueryParams } = useQueryParams();
 
       const {
         filter: _userTypeFilter,
@@ -368,7 +385,7 @@
       const { filter: hasEditsFilter, fetchQueryParams: hasEditsFetchQueryParams } =
         useBooleanFilter({
           name: 'hasEdits',
-          label: 'Has Studio edits',
+          label: 'Has Studio activity',
           paramName: 'has_edits',
         });
 
@@ -401,6 +418,16 @@
         };
       });
 
+      const hasActiveFilters = computed(() =>
+        Object.entries(FILTER_DEFAULTS).some(
+          ([name, defaultValue]) => (route.query[name] ?? defaultValue) !== defaultValue,
+        ),
+      );
+
+      function clearFilters() {
+        updateQueryParams(pick(route.query, TABLE_STATE_QUERY_PARAMS));
+      }
+
       function loadUsers(fetchParams) {
         return store.dispatch('userAdmin/loadUsers', fetchParams);
       }
@@ -424,6 +451,8 @@
         activeWithinOptions,
         hasPublishedFilter,
         hasEditsFilter,
+        hasActiveFilters,
+        clearFilters,
         pagination,
         loading,
         loadItems,
@@ -525,4 +554,13 @@
 </script>
 
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+
+  .toggle-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+  }
+
+</style>
