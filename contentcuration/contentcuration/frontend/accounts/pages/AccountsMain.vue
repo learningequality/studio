@@ -182,6 +182,10 @@
       return {
         loginFailed: false,
         busy: false,
+        // Gates error display until blur, since formMixin's setters otherwise
+        // mark errors on every keystroke. Create.vue has no equivalent gate,
+        // so the two forms validate differently; epic-level decision tracked
+        // on #5060.
         touched: {
           username: false,
           password: false,

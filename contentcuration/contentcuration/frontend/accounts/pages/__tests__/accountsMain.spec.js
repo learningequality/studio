@@ -139,13 +139,7 @@ describe('AccountsMain', () => {
     });
   });
 
-  it('should show the offline banner when offline', () => {
-    makeWrapper({ online: false });
-
-    expect(screen.getByText(/you seem to be offline/i)).toBeInTheDocument();
-  });
-
-  it('should announce the offline banner to screen readers', () => {
+  it('should show and announce the offline banner when offline', () => {
     makeWrapper({ online: false });
 
     expect(screen.getByRole('alert')).toHaveTextContent(/you seem to be offline/i);
@@ -167,23 +161,7 @@ describe('AccountsMain', () => {
     });
   });
 
-  it('should show error message when login fails', async () => {
-    const loginMock = jest.fn().mockRejectedValue({
-      response: { status: 401 },
-    });
-    makeWrapper({ loginMock });
-
-    await user.type(screen.getByLabelText(/email/i), 'test@test.com');
-    await user.type(screen.getByLabelText(/password/i), 'wrongpassword');
-    await user.click(screen.getByRole('button', { name: /sign in/i }));
-
-    // User sees error banner
-    await waitFor(() => {
-      expect(screen.getByText('Email or password is incorrect')).toBeInTheDocument();
-    });
-  });
-
-  it('should announce login failure to screen readers', async () => {
+  it('should show and announce login failure to screen readers', async () => {
     const loginMock = jest.fn().mockRejectedValue({
       response: { status: 401 },
     });
