@@ -182,6 +182,70 @@ class BlankEditorItemTests(unittest.TestCase):
         self.assertEqual(result.errors, [])
 
 
+# The exact document the QTI editor writes back for a converted legacy question whose
+# hints it re-serialized - see HintsSection and serialization/hints.js. Assembled from
+# named parts because the schema fixes the order of the item's children, and putting the
+# catalog on the wrong side of the body is the one mistake this shape can make while
+# still looking right.
+_HINTED_ITEM_HEAD = (
+    '<?xml version="1.0" encoding="UTF-8"?>\n'
+    '<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" '
+    'identifier="item-hints" title="Hinted Question" adaptive="false" '
+    'time-dependent="false" xml:lang="en">'
+    '<qti-response-declaration identifier="RESPONSE" cardinality="single" '
+    'base-type="identifier">'
+    "<qti-correct-response><qti-value>choice-a</qti-value></qti-correct-response>"
+    "</qti-response-declaration>"
+)
+
+_HINTED_ITEM_BODY = (
+    "<qti-item-body>"
+    '<qti-choice-interaction response-identifier="RESPONSE" max-choices="1">'
+    "<qti-prompt>Pick one.</qti-prompt>"
+    '<qti-simple-choice identifier="choice-a">A</qti-simple-choice>'
+    '<qti-simple-choice identifier="choice-b">B</qti-simple-choice>'
+    "</qti-choice-interaction>"
+    "</qti-item-body>"
+)
+
+_HINTED_ITEM_CATALOG = (
+    '<qti-catalog-info><qti-catalog id="kolibri-hints">'
+    '<qti-card support="ext:kolibri-hint">'
+    "<qti-html-content><p>test</p></qti-html-content></qti-card>"
+    '<qti-card support="ext:kolibri-hint">'
+    "<qti-html-content><p>test2 2</p></qti-html-content></qti-card>"
+    '<qti-card support="ext:kolibri-hint">'
+    "<qti-html-content><p>test3 3</p></qti-html-content></qti-card>"
+    "</qti-catalog></qti-catalog-info>"
+)
+
+HINTED_EDITOR_ITEM = (
+    _HINTED_ITEM_HEAD
+    + _HINTED_ITEM_BODY
+    + _HINTED_ITEM_CATALOG
+    + "</qti-assessment-item>"
+)
+
+CATALOG_BEFORE_BODY_ITEM = (
+    _HINTED_ITEM_HEAD
+    + _HINTED_ITEM_CATALOG
+    + _HINTED_ITEM_BODY
+    + "</qti-assessment-item>"
+)
+
+
+class HintedEditorItemTests(unittest.TestCase):
+    def test_accepts_hinted_item_from_editor(self):
+        result = validate_qti_item(HINTED_EDITOR_ITEM)
+        self.assertTrue(result.is_valid)
+        self.assertEqual(result.errors, [])
+
+    def test_rejects_catalog_before_item_body(self):
+        result = validate_qti_item(CATALOG_BEFORE_BODY_ITEM)
+        self.assertFalse(result.is_valid)
+        self.assertIn("qti-item-body", result.errors[0].message)
+
+
 class SchemaReuseTests(unittest.TestCase):
     def test_schema_compiled_once_across_multiple_validate_calls(self):
         _compiled_schema.cache_clear()

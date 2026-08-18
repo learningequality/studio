@@ -10,6 +10,8 @@ import {
   ORDERING_ITEM_DOCUMENT_NO_PROMPT,
   FREE_RESPONSE_ITEM_DOCUMENT,
   NO_INTERACTION_ITEM_DOCUMENT,
+  CHOICE_ITEM_DOCUMENT_WITH_HINTS,
+  NO_INTERACTION_ITEM_WITH_HINTS,
 } from '../../../utils/testingFixtures';
 
 jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor');
@@ -26,6 +28,7 @@ const {
   questionContentPlaceholder$,
   unsupportedItemMessage$,
   incompleteItemIndicatorLabel$,
+  hintsLabel$,
 } = qtiEditorStrings;
 
 const defaultProps = {
@@ -211,6 +214,80 @@ describe('QTIItemEditor', () => {
 
       const reported = emitted()['update:rawData'].pop()[0];
       expect(reported.match(/<qti-simple-choice/g)).toHaveLength(3);
+    });
+  });
+
+  describe('hints', () => {
+    // Adaptation of the hints previously used in Studio. New hints are not
+    // supported, only the display of existing ones.
+    test('offers no hints section on a question that arrived without any', () => {
+      renderComponent({
+        item: { ...defaultProps.item, raw_data: VALID_CHOICE_ITEM_DOCUMENT },
+        mode: 'edit',
+      });
+      expect(screen.queryByText(hintsLabel$())).not.toBeInTheDocument();
+    });
+
+    test('offers no hints section on a newly created question', () => {
+      renderComponent({ mode: 'edit' });
+      expect(screen.queryByText(hintsLabel$())).not.toBeInTheDocument();
+    });
+
+    test('shows the hints section on a question that arrived with hints', () => {
+      renderComponent({
+        item: { ...defaultProps.item, raw_data: CHOICE_ITEM_DOCUMENT_WITH_HINTS },
+        mode: 'edit',
+      });
+      expect(screen.getByText(hintsLabel$())).toBeInTheDocument();
+    });
+
+    test('keeps the hints of a closed question out of the way until answers are shown', () => {
+      renderComponent({
+        item: { ...defaultProps.item, raw_data: CHOICE_ITEM_DOCUMENT_WITH_HINTS },
+        mode: 'view',
+        showAnswers: false,
+      });
+      expect(screen.queryByText(hintsLabel$())).not.toBeInTheDocument();
+    });
+
+    test('shows the hints of a closed question when answers are shown', () => {
+      renderComponent({
+        item: { ...defaultProps.item, raw_data: CHOICE_ITEM_DOCUMENT_WITH_HINTS },
+        mode: 'view',
+        showAnswers: true,
+      });
+      expect(screen.getByText(hintsLabel$())).toBeInTheDocument();
+    });
+
+    test('keeps the body of a question that has no interaction when a hint changes', async () => {
+      // Nothing mounts an interaction editor here, so the editor holds no body of its own.
+      // Assembling from that empty state would replace the question's text with an empty
+      // <qti-item-body/> — a hint edit silently deleting the question.
+      const { emitted } = renderComponent({
+        item: { ...defaultProps.item, raw_data: NO_INTERACTION_ITEM_WITH_HINTS },
+        mode: 'edit',
+      });
+      await fireEvent.click(screen.getByRole('button', { name: hintsLabel$() }));
+      await fireEvent.click(screen.getAllByRole('button', { name: 'Delete hint' })[0]);
+      await nextTick();
+
+      const [xml] = emitted()['update:rawData'].at(-1);
+      expect(xml).toContain('What is the capital of France?');
+      expect(xml).not.toContain('<qti-item-body/>');
+    });
+
+    test('reports the item XML when a hint changes', async () => {
+      const { emitted } = renderComponent({
+        item: { ...defaultProps.item, raw_data: CHOICE_ITEM_DOCUMENT_WITH_HINTS },
+        mode: 'edit',
+      });
+      await fireEvent.click(screen.getByRole('button', { name: hintsLabel$() }));
+      await fireEvent.click(screen.getAllByRole('button', { name: 'Delete hint' })[0]);
+      await nextTick();
+
+      const [xml] = emitted()['update:rawData'].at(-1);
+      expect(xml).toContain('<p>test2 2</p>');
+      expect(xml).not.toContain('<p>test</p>');
     });
   });
 

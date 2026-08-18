@@ -6,12 +6,12 @@
       <ValidationMessage v-if="questionHasError">
         {{ errorPromptRequired$() }}
       </ValidationMessage>
-      <div
+      <h4
         class="field-label"
         :style="{ color: $themePalette.grey.v_700 }"
       >
         {{ questionLabel$() }}
-      </div>
+      </h4>
 
       <ClickableRegion
         :class="[
@@ -49,12 +49,12 @@
         {{ errorNoCorrectAnswer$() }}
       </ValidationMessage>
 
-      <div
+      <h4
         class="field-label"
         :style="{ color: $themePalette.grey.v_700 }"
       >
         {{ acceptableAnswersLabel$() }}
-      </div>
+      </h4>
       <div
         v-if="mode === 'edit'"
         class="answers-description"
@@ -433,8 +433,9 @@
     flex-direction: column;
   }
 
+  /* A heading, so its own margins are set rather than inherited from the UA stylesheet */
   .field-label {
-    margin-bottom: 8px;
+    margin: 0 0 8px;
     font-size: 14px;
     font-weight: 600;
   }

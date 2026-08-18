@@ -19,12 +19,12 @@
       <ValidationMessage v-if="questionHasError">
         {{ errorPromptRequired$() }}
       </ValidationMessage>
-      <div
+      <h4
         class="field-label"
         :style="{ color: $themePalette.grey.v_700 }"
       >
         {{ questionLabel$() }}
-      </div>
+      </h4>
 
       <!-- Prompt -->
       <ClickableRegion
@@ -66,13 +66,13 @@
       <ValidationMessage v-if="tooManyCorrectError">
         {{ errorTooManyCorrectAnswers$() }}
       </ValidationMessage>
-      <div
+      <h4
         :id="answersHeaderId"
         class="answers-header field-label"
         :style="{ color: $themePalette.grey.v_700 }"
       >
         {{ answersLabel$() }}
-      </div>
+      </h4>
       <div
         v-if="mode === 'edit'"
         class="choices-label"
@@ -571,8 +571,9 @@
     gap: 16px;
   }
 
+  /* A heading, so its own margins are set rather than inherited from the UA stylesheet */
   .field-label {
-    margin-bottom: 8px;
+    margin: 0 0 8px;
     font-size: 14px;
     font-weight: 600;
   }
