@@ -3,7 +3,6 @@
   <div
     class="question-type-selector"
     :class="{ 'small-screen': windowIsSmall }"
-    :style="{ borderBottom: `1px solid ${$themeTokens.fineLine}` }"
   >
     <div
       class="type-selector-group"

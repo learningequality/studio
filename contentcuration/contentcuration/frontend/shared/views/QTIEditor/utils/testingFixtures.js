@@ -205,6 +205,82 @@ export const NO_INTERACTION_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8
   </qti-item-body>
 </qti-assessment-item>`;
 
+/**
+ * A converted legacy question, whose hints the backend carries in a catalog. Indented as
+ * the API serves it, so the parse has to cope with the whitespace inside each card.
+ */
+export const CHOICE_ITEM_DOCUMENT_WITH_HINTS = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  identifier="item-hints"
+  title="Hinted Question"
+  adaptive="false"
+  time-dependent="false"
+  xml:lang="en"
+>
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
+    <qti-correct-response>
+      <qti-value>choice-a</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+
+  <qti-item-body>
+    <qti-choice-interaction response-identifier="RESPONSE" max-choices="1">
+      <qti-prompt>Pick one.</qti-prompt>
+      <qti-simple-choice identifier="choice-a">A</qti-simple-choice>
+      <qti-simple-choice identifier="choice-b">B</qti-simple-choice>
+    </qti-choice-interaction>
+  </qti-item-body>
+  <qti-catalog-info>
+    <qti-catalog id="kolibri-hints">
+      <qti-card support="ext:kolibri-hint">
+        <qti-html-content>
+          <p>test</p>
+        </qti-html-content>
+      </qti-card>
+      <qti-card support="ext:kolibri-hint">
+        <qti-html-content>
+          <p>test2 2</p>
+        </qti-html-content>
+      </qti-card>
+      <qti-card support="ext:kolibri-hint">
+        <qti-html-content>
+          <p>test3 3</p>
+        </qti-html-content>
+      </qti-card>
+    </qti-catalog>
+  </qti-catalog-info>
+</qti-assessment-item>`;
+
+/**
+ * A converted question with nothing to answer, which still carries its text in the body and
+ * hints in its catalog. No interaction means no interaction editor, so the only thing an
+ * author can edit here is a hint — and that must not cost the body.
+ */
+export const NO_INTERACTION_ITEM_WITH_HINTS = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  identifier="item-no-interaction-hints"
+  title="Answerless Question"
+  adaptive="false"
+  time-dependent="false"
+  xml:lang="en"
+>
+  <qti-item-body>
+    <div><p>What is the capital of France?</p></div>
+  </qti-item-body>
+  <qti-catalog-info>
+    <qti-catalog id="kolibri-hints">
+      <qti-card support="ext:kolibri-hint">
+        <qti-html-content><p>It is on the Seine</p></qti-html-content>
+      </qti-card>
+      <qti-card support="ext:kolibri-hint">
+        <qti-html-content><p>Starts with a P</p></qti-html-content>
+      </qti-card>
+    </qti-catalog>
+  </qti-catalog-info>
+</qti-assessment-item>`;
+
 export const TWO_INTERACTIONS_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item
   xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"

@@ -19,12 +19,12 @@
       <ValidationMessage v-if="questionHasError">
         {{ errorPromptRequired$() }}
       </ValidationMessage>
-      <div
+      <h4
         class="field-label"
         :style="{ color: $themePalette.grey.v_700 }"
       >
         {{ questionLabel$() }}
-      </div>
+      </h4>
 
       <!-- Prompt -->
       <ClickableRegion
@@ -66,13 +66,13 @@
       <ValidationMessage v-if="tooManyCorrectError">
         {{ errorTooManyCorrectAnswers$() }}
       </ValidationMessage>
-      <div
+      <h4
         :id="answersHeaderId"
         class="answers-header field-label"
         :style="{ color: $themePalette.grey.v_700 }"
       >
         {{ answersLabel$() }}
-      </div>
+      </h4>
       <div
         v-if="mode === 'edit'"
         class="choices-label"
@@ -127,61 +127,63 @@
                         'small-screen': windowIsSmall,
                       }"
                     >
-                      <!-- `@click.stop` so using the handle does not open the choice
+                      <div class="choice-handlers">
+                        <!-- `@click.stop` so using the handle does not open the choice
                            for editing -->
-                      <DraggableHandle v-if="isReorderable">
+                        <DraggableHandle v-if="isReorderable">
+                          <div
+                            class="choice-drag"
+                            @click.stop
+                          >
+                            <DragSortWidget
+                              :color="$themePalette.grey.v_700"
+                              :isFirst="index === 0"
+                              :isLast="index === state.choices.length - 1"
+                              :itemLabel="choiceItemLabel$({ number: index + 1 })"
+                              :position="index + 1"
+                              :total="state.choices.length"
+                              @moveUp="moveChoiceUp(choice.id)"
+                              @moveDown="moveChoiceDown(choice.id)"
+                            />
+                          </div>
+                        </DraggableHandle>
+
+                        <!-- Selection control; an invalid choice shows the error icon
+                           in its place -->
                         <div
-                          class="choice-drag"
+                          class="choice-selection"
                           @click.stop
                         >
-                          <DragSortWidget
-                            :color="$themePalette.grey.v_700"
-                            :isFirst="index === 0"
-                            :isLast="index === state.choices.length - 1"
-                            :itemLabel="choiceItemLabel$({ number: index + 1 })"
-                            :position="index + 1"
-                            :total="state.choices.length"
-                            @moveUp="moveChoiceUp(choice.id)"
-                            @moveDown="moveChoiceDown(choice.id)"
+                          <KIcon
+                            v-if="choiceHasError(choice.id)"
+                            icon="error"
+                            class="choice-error-icon"
+                            :color="$themeTokens.error"
+                          />
+                          <KRadioButton
+                            v-else-if="isSingleSelect"
+                            class="margin-0"
+                            :currentValue="correctChoiceId || ''"
+                            :buttonValue="choice.id"
+                            :label="markCorrectLabel$()"
+                            :showLabel="false"
+                            :disabled="mode !== 'edit'"
+                            :style="{ width: 'auto' }"
+                            :color="$themePalette.green.v_600"
+                            @change="onToggleCorrect(choice.id)"
+                          />
+                          <!-- KCheckbox color prop colors the checked icon green -->
+                          <KCheckbox
+                            v-else
+                            class="margin-0"
+                            :checked="choice.correct"
+                            :label="markCorrectLabel$()"
+                            :showLabel="false"
+                            :disabled="mode !== 'edit'"
+                            :color="$themePalette.green.v_600"
+                            @change="onToggleCorrect(choice.id)"
                           />
                         </div>
-                      </DraggableHandle>
-
-                      <!-- Selection control; an invalid choice shows the error icon
-                           in its place -->
-                      <div
-                        class="choice-selection"
-                        @click.stop
-                      >
-                        <KIcon
-                          v-if="choiceHasError(choice.id)"
-                          icon="error"
-                          class="choice-error-icon"
-                          :color="$themeTokens.error"
-                        />
-                        <KRadioButton
-                          v-else-if="isSingleSelect"
-                          class="margin-0"
-                          :currentValue="correctChoiceId || ''"
-                          :buttonValue="choice.id"
-                          :label="markCorrectLabel$()"
-                          :showLabel="false"
-                          :disabled="mode !== 'edit'"
-                          :style="{ width: 'auto' }"
-                          :color="$themePalette.green.v_600"
-                          @change="onToggleCorrect(choice.id)"
-                        />
-                        <!-- KCheckbox color prop colors the checked icon green -->
-                        <KCheckbox
-                          v-else
-                          class="margin-0"
-                          :checked="choice.correct"
-                          :label="markCorrectLabel$()"
-                          :showLabel="false"
-                          :disabled="mode !== 'edit'"
-                          :color="$themePalette.green.v_600"
-                          @change="onToggleCorrect(choice.id)"
-                        />
                       </div>
 
                       <div class="choice-content">
@@ -614,8 +616,9 @@
     gap: 16px;
   }
 
+  /* A heading, so its own margins are set rather than inherited from the UA stylesheet */
   .field-label {
-    margin-bottom: 8px;
+    margin: 0 0 8px;
     font-size: 14px;
     font-weight: 600;
   }
@@ -677,7 +680,7 @@
     padding: 7.5px;
   }
 
-  /* Flex row: [drag] [selection] [content] [actions] */
+  /* Flex row: [[drag] [selection]] [content] [actions] */
   .choice-layout {
     display: flex;
     align-items: center;
@@ -705,6 +708,12 @@
           min-width: 0;
         }
       }
+    }
+
+    .choice-handlers {
+      display: flex;
+      flex-shrink: 0;
+      align-items: center;
     }
   }
 

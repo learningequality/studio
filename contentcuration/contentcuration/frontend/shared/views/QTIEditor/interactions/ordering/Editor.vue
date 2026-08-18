@@ -6,12 +6,12 @@
       <ValidationMessage v-if="promptHasError">
         {{ errorPromptRequired$() }}
       </ValidationMessage>
-      <div
+      <h4
         class="field-label"
         :style="{ color: $themePalette.grey.v_700 }"
       >
         {{ questionLabel$() }}
-      </div>
+      </h4>
       <ClickableRegion
         :class="promptWrapperClass"
         :style="promptWrapperStyle"
@@ -50,12 +50,12 @@
 
       <!-- Section header -->
       <div class="ordering-headers">
-        <div
-          class="ordering-header-label"
+        <h4
+          class="field-label ordering-header-label"
           :style="{ color: $themePalette.grey.v_700 }"
         >
           {{ correctOrderLabel$() }}
-        </div>
+        </h4>
         <div
           v-if="mode === 'edit'"
           class="ordering-sublabel"
@@ -487,8 +487,9 @@
     gap: 4px;
   }
 
+  /* A heading, so its own margins are set rather than inherited from the UA stylesheet */
   .field-label {
-    margin-bottom: 8px;
+    margin: 0 0 8px;
     font-size: 14px;
     font-weight: 600;
   }
@@ -501,8 +502,7 @@
   }
 
   .ordering-header-label {
-    font-size: 12px;
-    font-weight: 600;
+    margin-bottom: 0;
   }
 
   .ordering-sublabel {
