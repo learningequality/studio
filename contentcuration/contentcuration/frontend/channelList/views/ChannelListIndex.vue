@@ -28,10 +28,7 @@
       </VToolbarTitle>
     </VToolbar>
     <AppBar v-else>
-      <template
-        v-if="loggedIn"
-        #tabs
-      >
+      <template #tabs>
         <VTab
           v-for="listType in lists"
           :key="listType.id"
@@ -61,6 +58,7 @@
           {{ communityLibraryLabel$() }}
         </VTab>
         <VTab
+          v-if="loggedIn"
           :to="channelSetLink"
           @click="channelSetsTabClick"
         >
@@ -117,6 +115,11 @@
     RouteNames.CATALOG_FAQ,
   ];
 
+  const COMMUNITY_LIBRARY_PAGES = [
+    RouteNames.COMMUNITY_LIBRARY_ITEMS,
+    RouteNames.COMMUNITY_LIBRARY_DETAILS,
+  ];
+
   const CHANNEL_SETS = 'channel_sets';
   const ListTypeToAnalyticsLabel = {
     [ChannelListTypes.EDITABLE]: 'EDITABLE',
@@ -164,13 +167,19 @@
         return this.$route.name === RouteNames.COMMUNITY_LIBRARY_ITEMS;
       },
       toolbarHeight() {
-        return this.loggedIn && !this.isFAQPage ? 112 : 64;
+        return this.libraryMode || this.isFAQPage ? 64 : 112;
       },
       contentOffset() {
         return this.toolbarHeight + (this.offline ? 48 : 0);
       },
       lists() {
+        if (!this.loggedIn) {
+          return [];
+        }
         return Object.values(ChannelListTypes).filter(l => l !== 'public');
+      },
+      anonymousPages() {
+        return this.libraryMode ? CATALOG_PAGES : [...CATALOG_PAGES, ...COMMUNITY_LIBRARY_PAGES];
       },
       invitationsByListCounts() {
         const inviteMap = {};
@@ -205,10 +214,12 @@
     },
     watch: {
       $route(route) {
-        if (route.name === RouteNames.CHANNELS_EDITABLE) {
-          this.loggedIn
-            ? this.loadInvitationList()
-            : this.$router.replace({ name: RouteNames.CATALOG_ITEMS });
+        if (!this.loggedIn) {
+          if (!this.anonymousPages.includes(route.name)) {
+            this.$router.replace({ name: RouteNames.CATALOG_ITEMS });
+          }
+        } else if (route.name === RouteNames.CHANNELS_EDITABLE) {
+          this.loadInvitationList();
         }
         if (this.fullPageError) {
           this.$store.dispatch('errors/clearError');
@@ -222,7 +233,7 @@
     created() {
       if (this.loggedIn) {
         this.loadInvitationList();
-      } else if (!CATALOG_PAGES.includes(this.$route.name)) {
+      } else if (!this.anonymousPages.includes(this.$route.name)) {
         this.$router.replace({ name: RouteNames.CATALOG_ITEMS });
       }
     },

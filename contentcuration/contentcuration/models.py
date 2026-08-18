@@ -1702,13 +1702,27 @@ class ChannelVersion(models.Model):
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):
+        live_in_community_library = Q(
+            Exists(
+                CommunityLibrarySubmission.objects.filter(
+                    channel=OuterRef("channel"),
+                    channel_version=OuterRef("version"),
+                    status=community_library_submission.STATUS_LIVE,
+                )
+            )
+        )
+
         if user.is_anonymous:
-            return queryset.none()
+            return queryset.filter(live_in_community_library)
 
         if user.is_admin:
             return queryset
 
-        return queryset.filter(Q(channel__viewers=user) | Q(channel__editors=user))
+        return queryset.filter(
+            live_in_community_library
+            | Q(channel__viewers=user)
+            | Q(channel__editors=user)
+        )
 
     @classmethod
     def filter_edit_queryset(cls, queryset, user):
