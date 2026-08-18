@@ -153,6 +153,10 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Edit answer option {number}',
     context: 'Accessible label for the clickable region to edit an answer choice',
   },
+  editHintLabel: {
+    message: 'Edit hint {number}',
+    context: 'Accessible label for the clickable region to edit a hint',
+  },
   deleteChoiceBtn: {
     message: 'Delete choice',
     context: 'Accessible label for the delete-choice icon button',
@@ -165,6 +169,34 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
   markCorrectLabel: {
     message: 'Mark as correct answer',
     context: 'Accessible label for radio / checkbox that marks a choice as correct',
+  },
+  hintsLabel: {
+    message: 'Hints',
+    context: 'Header of the collapsible hints section of a question',
+  },
+  noHintsPlaceholder: {
+    message: 'Question has no hints',
+    context: 'Shown in the hints section when the question has no hints',
+  },
+  hintPlaceholder: {
+    message: 'Enter hint {index}...',
+    context: 'Placeholder shown in place of a hint that has no text yet',
+  },
+  addHintBtn: {
+    message: 'Add hint',
+    context: 'Button that appends a new hint to the question',
+  },
+  deleteHintBtn: {
+    message: 'Delete hint',
+    context: 'Accessible label for the delete-hint icon button',
+  },
+  moveHintUpBtn: {
+    message: 'Move hint up',
+    context: 'Accessible label for the move-hint-up icon button',
+  },
+  moveHintDownBtn: {
+    message: 'Move hint down',
+    context: 'Accessible label for the move-hint-down icon button',
   },
   errorPromptRequired: {
     message: 'Question is required',

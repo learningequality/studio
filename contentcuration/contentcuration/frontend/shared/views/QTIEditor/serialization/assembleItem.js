@@ -8,6 +8,7 @@
  * (e.g. XMLSerializer.serializeToString).
  */
 
+import { HINT_CATALOG_ID, HINT_SUPPORT, hintHasContent } from './hints';
 import { parseXML } from './xml';
 
 const xmlDoc = new DOMParser().parseFromString('<root/>', 'text/xml');
@@ -110,6 +111,35 @@ export function buildXmlNode({ tag, attrs = {}, children, innerHTML }) {
   return el;
 }
 
+/**
+ * Build the `<qti-catalog-info>` holding the item's hints, or null when there is nothing
+ * to write. A catalog has to hold at least one card, so an item whose hints are all empty
+ * carries no catalog at all rather than an empty one.
+ *
+ * @param {Array<{ content: string }>} hints
+ * @returns {Element|null}
+ */
+function buildHintCatalogNode(hints) {
+  const cards = hints.filter(hintHasContent).map(hint =>
+    buildXmlNode({
+      tag: 'qti-card',
+      attrs: { support: HINT_SUPPORT },
+      children: [buildXmlNode({ tag: 'qti-html-content', innerHTML: hint.content })],
+    }),
+  );
+
+  if (!cards.length) {
+    return null;
+  }
+
+  return buildXmlNode({
+    tag: 'qti-catalog-info',
+    children: [
+      buildXmlNode({ tag: 'qti-catalog', attrs: { id: HINT_CATALOG_ID }, children: cards }),
+    ],
+  });
+}
+
 /** The scoring outcome every item carries, matching what the legacy conversion emits. */
 function buildOutcomeDeclarationNode() {
   return buildXmlNode({
@@ -152,6 +182,7 @@ function buildResponseProcessingNode(declarationCount) {
  * @param {string}   params.language              - Language tag, or '' to omit it
  * @param {string}   params.bodyXml               - Serialized interaction element XML string
  * @param {string[]} params.responseDeclarations  - Array of serialized declaration XML strings
+ * @param {Array<{ content: string }>} [params.hints] - Item hints, in order
  * @returns {string} Full QTI XML string
  */
 export function assembleItemXml({
@@ -160,6 +191,7 @@ export function assembleItemXml({
   language,
   bodyXml,
   responseDeclarations,
+  hints = [],
 }) {
   // Parse each serialized declaration string back into a DOM node so it can be
   // adopted into the assessment item tree via buildXmlNode's importNode logic.
@@ -178,6 +210,7 @@ export function assembleItemXml({
           children: [bodyRoot],
         });
 
+  const catalogInfoNode = buildHintCatalogNode(hints);
   const responseProcessingNode = buildResponseProcessingNode(declNodes.length);
 
   const assessmentItemNode = buildXmlNode({
@@ -194,11 +227,12 @@ export function assembleItemXml({
       // item without one.
       'xml:lang': language || null,
     },
-    // The schema fixes this order: declarations, the body, then the processing.
+    // The schema fixes this order: declarations, the body, the catalog, the processing.
     children: [
       ...declNodes,
       buildOutcomeDeclarationNode(),
       itemBodyNode,
+      ...(catalogInfoNode ? [catalogInfoNode] : []),
       ...(responseProcessingNode ? [responseProcessingNode] : []),
     ],
   });
