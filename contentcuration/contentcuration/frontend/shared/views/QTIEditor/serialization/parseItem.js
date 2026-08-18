@@ -1,5 +1,6 @@
 import { QTI_INTERACTION_TAGS } from '../constants';
 import { isInlineInteraction } from '../interactions/descriptors';
+import { parseHints } from './hints';
 import { parseXML } from './xml';
 
 const serializer = new XMLSerializer();
@@ -15,12 +16,19 @@ const serializer = new XMLSerializer();
  * `<qti-item-body>` as its `bodyXml` rather than the interaction element alone,
  * so its parse() can recover prompt content from body siblings.
  *
+ * Hints belong to the item rather than to any one interaction, so they come back
+ * alongside `interactions` rather than inside them. So does the body: an item can carry
+ * content with no interaction this editor recognises, and a caller that reassembles the
+ * item needs its body whether or not it found one.
+ *
  * @param {string} rawData - Raw QTI XML string (the full assessment item XML)
  * @returns {{
  *   identifier: string,
  *   title: string,
  *   language: string,
- *   interactions: Array<{ bodyXml: string, responseDeclarations: string[] }>
+ *   itemBodyXml: string,
+ *   interactions: Array<{ bodyXml: string, responseDeclarations: string[] }>,
+ *   hints: Array<{ id: string, content: string }>
  * }}
  */
 export function parseItem(rawData) {
@@ -58,5 +66,12 @@ export function parseItem(rawData) {
     }
   }
 
-  return { identifier, title, language, interactions };
+  return {
+    identifier,
+    title,
+    language,
+    itemBodyXml: body ? serializer.serializeToString(body) : '',
+    interactions,
+    hints: parseHints(doc),
+  };
 }

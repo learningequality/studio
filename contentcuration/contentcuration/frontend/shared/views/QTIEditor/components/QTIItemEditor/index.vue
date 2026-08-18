@@ -62,6 +62,13 @@
       >
         {{ questionContentPlaceholder$() }}
       </p>
+
+      <HintsSection
+        v-if="hasHints && (mode === 'edit' || showAnswers)"
+        :hints="hints"
+        :mode="mode"
+        @update:hints="onUpdateHints"
+      />
     </div>
 
     <div
@@ -87,11 +94,12 @@
   import useQtiItem from '../../composables/useQtiItem';
   import { validateItemShape } from '../../validateItem';
   import InteractionSection from '../InteractionSection/index.vue';
+  import HintsSection from '../HintsSection/index.vue';
 
   export default {
     name: 'QTIItemEditor',
 
-    components: { InteractionSection },
+    components: { InteractionSection, HintsSection },
 
     setup(props, { emit }) {
       const {
@@ -116,10 +124,13 @@
       // Parse the item XML. rawData is a computed inside useQtiItem that
       // re-assembles the full XML whenever identifier/title/language or the
       // editor refs change — no need to duplicate assembleItemXml here.
-      const { interactions, parseError, rawData } = useQtiItem(props.item.raw_data, {
-        bodyXml: currentBodyXml,
-        responseDeclarations: currentResponseDeclarations,
-      });
+      const { interactions, itemBodyXml, hints, parseError, rawData } = useQtiItem(
+        props.item.raw_data,
+        {
+          bodyXml: currentBodyXml,
+          responseDeclarations: currentResponseDeclarations,
+        },
+      );
 
       /**
        * Items authored outside this editor (e.g. Perseus questions) and items whose XML
@@ -129,9 +140,16 @@
         () => props.item.type !== AssessmentItemTypes.QTI || Boolean(parseError.value),
       );
 
-      // Seed the editor refs from the parsed interactions (first interaction only).
+      /*
+       * Seed the editor refs from the parsed item (first interaction only).
+       *
+       * The body is seeded even when there is no interaction to edit. Such an item still has
+       * content — its own text, and any interaction this editor has no descriptor for — and
+       * anything else the author can change, a hint, reassembles the whole item. Leaving the
+       * body unseeded would write an empty <qti-item-body/> over that text.
+       */
+      currentBodyXml.value = interactions.value[0]?.bodyXml ?? itemBodyXml.value;
       if (interactions.value.length > 0) {
-        currentBodyXml.value = interactions.value[0].bodyXml;
         currentResponseDeclarations.value = interactions.value[0].responseDeclarations;
       }
 
@@ -203,6 +221,20 @@
         currentResponseDeclarations.value = responseDeclarations;
       }
 
+      /**
+       * Whether this question offers hints at all, which is settled by what the item arrived
+       * with: only a question that already has them shows the section (product decision).
+       *
+       * Read once from the parsed item rather than from the live list, so removing the last
+       * hint does not take the section away while the author is still working in it.
+       */
+      const hasHints = hints.value.length > 0;
+
+      function onUpdateHints(newHints) {
+        editedHere = props.mode === 'edit';
+        hints.value = newHints;
+      }
+
       /** Errors the interaction editor reports about the state it holds. */
       const errors = ref([]);
 
@@ -239,6 +271,9 @@
         unsupportedItemMessage$,
         onUpdateInteraction,
         onUpdateErrors,
+        hints,
+        hasHints,
+        onUpdateHints,
       };
     },
 
@@ -325,6 +360,9 @@
   }
 
   .question-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
     min-width: 0;
     padding: 10px var(--question-card-horizontal-padding) 16px;
   }

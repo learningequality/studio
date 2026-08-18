@@ -72,6 +72,33 @@ describe('a converted single-selection item', () => {
   });
 });
 
+describe('a converted question with nothing to answer', () => {
+  // The conversion gives an answerless legacy question an interaction with no choices to pick
+  // from, so its prompt is the whole of its content. Reassembling the item has to keep that,
+  // or the only edit available — a hint — writes an empty body over the question.
+  const original = read('single_selection_no_answers');
+
+  it('is read with the interaction carrying its prompt', () => {
+    const item = parseItem(original);
+    expect(item.interactions).toHaveLength(1);
+    expect(item.interactions[0].bodyXml).toContain('What is 2+2?');
+  });
+
+  it('keeps that body when reassembled', () => {
+    const item = parseItem(original);
+    const xml = assembleItemXml({
+      identifier: item.identifier,
+      title: item.title,
+      language: item.language,
+      bodyXml: item.interactions[0]?.bodyXml ?? item.itemBodyXml,
+      responseDeclarations: [],
+      hints: item.hints,
+    });
+    expect(xml).toContain('What is 2+2?');
+    expect(xml).not.toContain('<qti-item-body/>');
+  });
+});
+
 describe('an item this editor wrote', () => {
   it('keeps xml:lang, the spelling this editor uses', () => {
     const xml = assembleItemXml({
