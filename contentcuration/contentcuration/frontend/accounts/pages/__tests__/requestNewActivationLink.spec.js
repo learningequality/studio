@@ -4,18 +4,19 @@ import Vuex from 'vuex';
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 import RequestNewActivationLink from '../activateAccount/RequestNewActivationLink';
+import commonStrings from 'shared/translator';
 
 Vue.use(Vuex);
 Vue.use(VueRouter);
 let testStore;
 
-function createTestStore() {
+function createTestStore({ sendActivationLink = jest.fn(() => Promise.resolve()) } = {}) {
   testStore = new Vuex.Store({
     modules: {
       account: {
         namespaced: true,
         actions: {
-          sendActivationLink: jest.fn(() => Promise.resolve()),
+          sendActivationLink,
         },
       },
     },
@@ -23,7 +24,7 @@ function createTestStore() {
   return testStore;
 }
 
-function renderComponent() {
+function renderComponent(storeOptions) {
   const router = new VueRouter({
     routes: [
       {
@@ -38,21 +39,42 @@ function renderComponent() {
   });
 
   return render(RequestNewActivationLink, {
-    store: createTestStore(),
+    store: createTestStore(storeOptions),
     router,
   });
 }
 
 describe('requestNewActivationLink', () => {
-  it('should show validation error when submitting with invalid email', async () => {
+  it('should show a required-field error when submitting with an empty email', async () => {
     const user = userEvent.setup();
     renderComponent();
 
-    const submitButton = screen.getByRole('button', { name: /submit/i });
+    const submitButton = screen.getByRole('button', {
+      name: RequestNewActivationLink.$trs.submitButton,
+    });
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/activation failed/i)).toBeInTheDocument();
+      expect(screen.getByText(commonStrings.$tr('fieldRequired'))).toBeInTheDocument();
+    });
+  });
+
+  it('should show a validation error when submitting an invalid email', async () => {
+    const user = userEvent.setup();
+    renderComponent();
+
+    const emailInput = screen.getByLabelText(RequestNewActivationLink.$trs.emailLabel);
+    const submitButton = screen.getByRole('button', {
+      name: RequestNewActivationLink.$trs.submitButton,
+    });
+
+    await user.type(emailInput, 'not-an-email');
+    await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(RequestNewActivationLink.$trs.emailValidationMessage),
+      ).toBeInTheDocument();
     });
   });
 
@@ -61,8 +83,10 @@ describe('requestNewActivationLink', () => {
     renderComponent();
     const sendActivationLink = jest.spyOn(testStore, 'dispatch');
 
-    const emailInput = screen.getByLabelText(/email/i);
-    const submitButton = screen.getByRole('button', { name: /submit/i });
+    const emailInput = screen.getByLabelText(RequestNewActivationLink.$trs.emailLabel);
+    const submitButton = screen.getByRole('button', {
+      name: RequestNewActivationLink.$trs.submitButton,
+    });
 
     await user.type(emailInput, 'test@test.com');
     await user.click(submitButton);
@@ -72,6 +96,25 @@ describe('requestNewActivationLink', () => {
         'account/sendActivationLink',
         'test@test.com',
       );
+    });
+  });
+
+  it('should show a banner when the request fails', async () => {
+    const user = userEvent.setup();
+    renderComponent({ sendActivationLink: jest.fn(() => Promise.reject(new Error('failed'))) });
+
+    const emailInput = screen.getByLabelText(RequestNewActivationLink.$trs.emailLabel);
+    const submitButton = screen.getByRole('button', {
+      name: RequestNewActivationLink.$trs.submitButton,
+    });
+
+    await user.type(emailInput, 'test@test.com');
+    await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(RequestNewActivationLink.$trs.activationRequestFailed),
+      ).toBeInTheDocument();
     });
   });
 });
