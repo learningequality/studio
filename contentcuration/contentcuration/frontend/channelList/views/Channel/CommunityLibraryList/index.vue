@@ -41,6 +41,7 @@
           @close="isAboutCommunityLibraryOpen = false"
         />
         <div
+          v-if="loggedIn"
           class="community-library-banner"
           :style="{
             backgroundColor: $themePalette.orange.v_100,
@@ -277,6 +278,8 @@
       } = communityChannelsStrings;
       const { copyChannelTokenAction$ } = commonStrings;
 
+      const loggedIn = computed(() => store.getters.loggedIn);
+
       const availableLabels = ref(null);
 
       const {
@@ -458,6 +461,7 @@
       return {
         windowIsSmall,
         windowBreakpoint,
+        loggedIn,
         tokenChannel,
         loading,
         loadError,
