@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/vue';
+import { render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import VueRouter from 'vue-router';
 import AccountsMain from '../AccountsMain.vue';
@@ -80,7 +80,7 @@ describe('AccountsMain', () => {
     makeWrapper();
     await user.click(screen.getByRole('button', { name: /sign in/i }));
 
-    // User sees validation errors (from EmailField and PasswordField components)
+    // User sees validation errors (from StudioEmailField and StudioPasswordField components)
     await waitFor(() => {
       const errorMessages = screen.queryAllByText(/required|field is required/i);
       expect(errorMessages.length).toBeGreaterThan(0);
@@ -96,6 +96,29 @@ describe('AccountsMain', () => {
     expect(loginMock).not.toHaveBeenCalled();
   });
 
+  it('should move focus to the email field when it is the first invalid field', async () => {
+    makeWrapper();
+    const emailField = screen.getByLabelText(/email/i);
+
+    await user.click(screen.getByRole('button', { name: /sign in/i }));
+
+    await waitFor(() => {
+      expect(emailField).toHaveFocus();
+    });
+  });
+
+  it('should move focus to the password field when only it is invalid', async () => {
+    makeWrapper();
+    const passwordField = screen.getByLabelText(/password/i);
+
+    await user.type(screen.getByLabelText(/email/i), 'test@test.com');
+    await user.click(screen.getByRole('button', { name: /sign in/i }));
+
+    await waitFor(() => {
+      expect(passwordField).toHaveFocus();
+    });
+  });
+
   it('should not show the email error while the user is still typing', async () => {
     makeWrapper();
 
@@ -109,7 +132,7 @@ describe('AccountsMain', () => {
     const emailField = screen.getByLabelText(/email/i);
 
     await user.type(emailField, 'not-an-email');
-    await fireEvent.blur(emailField);
+    await user.tab();
 
     await waitFor(() => {
       expect(screen.getByText('Please enter a valid email')).toBeInTheDocument();
@@ -120,6 +143,12 @@ describe('AccountsMain', () => {
     makeWrapper({ online: false });
 
     expect(screen.getByText(/you seem to be offline/i)).toBeInTheDocument();
+  });
+
+  it('should announce the offline banner to screen readers', () => {
+    makeWrapper({ online: false });
+
+    expect(screen.getByRole('alert')).toHaveTextContent(/you seem to be offline/i);
   });
 
   it('should preserve leading and trailing whitespace in the password', async () => {
@@ -151,6 +180,21 @@ describe('AccountsMain', () => {
     // User sees error banner
     await waitFor(() => {
       expect(screen.getByText('Email or password is incorrect')).toBeInTheDocument();
+    });
+  });
+
+  it('should announce login failure to screen readers', async () => {
+    const loginMock = jest.fn().mockRejectedValue({
+      response: { status: 401 },
+    });
+    makeWrapper({ loginMock });
+
+    await user.type(screen.getByLabelText(/email/i), 'test@test.com');
+    await user.type(screen.getByLabelText(/password/i), 'wrongpassword');
+    await user.click(screen.getByRole('button', { name: /sign in/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('Email or password is incorrect');
     });
   });
 

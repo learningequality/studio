@@ -1,5 +1,12 @@
 <template>
 
+  <!--
+    theme--light is load-bearing: Vuetify 1.5 (still active via VApp on other
+    account pages, e.g. MessageLayout.vue) generates a global .link background
+    rule that collides with the basic-link KButtons below. It's only
+    neutralised under .theme--light in shared/styles/main.scss. Remove this
+    only once that rule is un-nested there.
+  -->
   <div
     class="page theme--light"
     :style="{ backgroundColor: $themePalette.grey.v_100 }"
@@ -26,12 +33,14 @@
           <div class="card-body">
             <StudioBanner
               v-if="loginFailed"
+              role="alert"
               error
             >
               {{ $tr('loginFailed') }}
             </StudioBanner>
             <StudioBanner
               v-if="offline"
+              role="alert"
               error
             >
               {{ $tr('loginFailedOffline') }}
@@ -211,10 +220,20 @@
       onValidationFailed() {
         this.touched.username = true;
         this.touched.password = true;
+        this.$nextTick(() => {
+          const selector = this.errors.username ? 'input[type="email"]' : 'input[type="password"]';
+          const firstInvalidInput = this.$el.querySelector(selector);
+          if (firstInvalidInput) {
+            firstInvalidInput.focus();
+          }
+        });
       },
       // eslint-disable-next-line vue/no-unused-properties
       onSubmit(formData) {
         this.busy = true;
+        // formMixin's clean() trims every field, including password, before
+        // building formData. Reading the untrimmed this.password here (not
+        // formData.password) preserves leading/trailing spaces the user typed.
         const credentials = {
           username: formData.username,
           password: this.password,
@@ -227,8 +246,11 @@
           .catch(err => {
             this.busy = false;
             if (err.message === 'Network Error') {
+              // The offline banner is driven by state.connection.online via
+              // the offline computed property, so no local flag is needed here.
               return;
-            } else if (err.response.status === 405) {
+            }
+            if (err.response.status === 405) {
               this.$router.push({ name: 'AccountNotActivated' });
             } else {
               this.loginFailed = true;
