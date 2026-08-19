@@ -1,7 +1,39 @@
 <template>
 
   <div>
-    <DropdownWrapper>
+    <KMultiSelect
+      v-if="!expanded"
+      :value="autocompleteValues"
+      :options="categoriesList"
+      itemValue="value"
+      itemText="text"
+      :label="translateMetadataString('category')"
+      :autoPromoteParent="false"
+      clearable
+      :noResultsText="$tr('noCategoryFoundText')"
+      :messages="messages"
+      @input="onKMultiSelectInput"
+    >
+      <template #chip="{ option, remove: removeChip }">
+        <span :ref="'category-chip-' + option.value">
+          <KChip
+            :text="option.text"
+            :removeLabel="$tr('removeCategory', { label: tooltipText(option.value) })"
+            close
+            @close="removeChip"
+            @mousedown.native.prevent
+          />
+        </span>
+        <KTooltip
+          :reference="'category-chip-' + option.value"
+          :refs="$refs"
+          placement="top"
+          :text="tooltipText(option.value)"
+        />
+      </template>
+    </KMultiSelect>
+
+    <DropdownWrapper v-if="expanded">
       <template #default="{ attach, menuProps }">
         <VAutocomplete
           :value="autocompleteValues"
@@ -18,8 +50,8 @@
           :menu-props="{
             ...menuProps,
             zIndex: 4,
-            height: expanded ? 0 : 'auto',
-            maxHeight: expanded ? 0 : 300,
+            height: 0,
+            maxHeight: 0,
           }"
           :attach="attach"
           @click:clear="$nextTick(() => removeAll())"
@@ -43,34 +75,6 @@
                 <div>{{ tooltipText(data.item.value) }}</div>
               </div>
             </VTooltip>
-          </template>
-
-          <template #no-data>
-            <VListTile v-if="categoryText && categoryText.trim()">
-              <VListTileContent>
-                <VListTileTitle>
-                  {{ $tr('noCategoryFoundText', { text: categoryText.trim() }) }}
-                </VListTileTitle>
-              </VListTileContent>
-            </VListTile>
-          </template>
-
-          <template #item="{ item }">
-            <VListTile
-              :value="isSelected(item.value)"
-              :class="{ parentOption: !item.value.includes('.') }"
-              @mousedown.prevent
-              @click="onChange(item.value)"
-            >
-              <KCheckbox
-                :checked="isSelected(item.value)"
-                :label="item.text"
-                :value="item.value"
-                style="margin-top: 10px"
-                :style="treeItemStyle(item)"
-                :ripple="false"
-              />
-            </VListTile>
           </template>
         </VAutocomplete>
       </template>
@@ -104,13 +108,17 @@
 <script>
 
   import camelCase from 'lodash/camelCase';
+  import KMultiSelect from 'kolibri-design-system/lib/candidate/multiselect/KMultiSelect';
+  import KChip from 'kolibri-design-system/lib/candidate/multiselect/KChip';
   import { getSortedCategories } from 'shared/utils/helpers';
+  import { commonStrings } from 'shared/strings/commonStrings';
+  import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 
   export default {
     name: 'CategoryOptions',
-    components: { DropdownWrapper },
+    components: { KMultiSelect, KChip, DropdownWrapper },
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
     props: {
       /**
@@ -177,6 +185,34 @@
           option.text.toLowerCase().includes(searchQuery),
         );
       },
+      messages() {
+        const {
+          openMenuAction$,
+          closeMenuAction$,
+          optionsClickableLabel$,
+          allOptionsSelectedLabel$,
+          allOptionsDeselectedLabel$,
+          optionDeselectedLabel$,
+          partiallySelectedLabel$,
+          optionSelectedLabel$,
+          optionRemovedLabel$,
+        } = commonStrings;
+        const { clearAllAction$ } = communityChannelsStrings;
+        return {
+          clearText: clearAllAction$,
+          open: openMenuAction$,
+          close: closeMenuAction$,
+          clickable: optionsClickableLabel$,
+          allOptionsSelected: allOptionsSelectedLabel$,
+          allOptionsDeselected: allOptionsDeselectedLabel$,
+          optionDeselected: optionDeselectedLabel$,
+          partiallySelected: partiallySelectedLabel$,
+          itemsSelected: ({ count }) => this.$tr('itemsSelected', { count }),
+          selected: optionSelectedLabel$,
+          removed: optionRemovedLabel$,
+          cleared: () => this.$tr('allCategoriesCleared'),
+        };
+      },
     },
     methods: {
       treeItemStyle(item) {
@@ -200,6 +236,11 @@
       },
       removeAll() {
         this.selected = {};
+      },
+      // Dropdown mode is only rendered when a single node is edited, so every
+      // selected category simply applies to all of nodeIds.
+      onKMultiSelectInput(newValues) {
+        this.selected = Object.fromEntries(newValues.map(value => [value, this.nodeIds]));
       },
       tooltipText(optionId) {
         const option = this.categoriesList.find(option => option.value === optionId);
@@ -275,6 +316,9 @@
     },
     $trs: {
       noCategoryFoundText: 'Category not found',
+      itemsSelected: '{count, plural, one {# category selected} other {# categories selected}}',
+      allCategoriesCleared: 'All categories cleared',
+      removeCategory: 'Remove {label}',
     },
   };
 
@@ -282,10 +326,6 @@
 
 
 <style lang="scss" scoped>
-
-  .parentOption:not(:first-child) {
-    border-top: 1px solid rgba(0, 0, 0, 0.12);
-  }
 
   .checkbox-list-wrapper {
     height: 250px;

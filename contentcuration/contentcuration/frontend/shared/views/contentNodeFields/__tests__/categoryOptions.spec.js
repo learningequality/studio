@@ -1,81 +1,166 @@
-import { shallowMount } from '@vue/test-utils';
+import { render, screen, within } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
+import VueRouter from 'vue-router';
 import CategoryOptions from '../CategoryOptions.vue';
+import { commonStrings } from 'shared/strings/commonStrings';
+import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
+import { createTranslator } from 'shared/i18n';
+import { metadataTranslationMixin } from 'shared/mixins';
 
-function makeWrapper({ value = {}, nodeIds = ['node1'] } = {}) {
-  return shallowMount(CategoryOptions, {
-    propsData: {
-      value,
-      nodeIds,
-    },
+const { translateMetadataString } = metadataTranslationMixin.methods;
+const { openMenuAction$ } = commonStrings;
+const { clearAllAction$ } = communityChannelsStrings;
+const { removeCategory$ } = createTranslator('CategoryOptions', CategoryOptions.$trs);
+
+const SCHOOL = 'd&WXdXWF';
+const ARTS = 'd&WXdXWF.5QAjgfv7';
+const DANCE = 'd&WXdXWF.5QAjgfv7.BUMJJBnS';
+const MUSIC = 'd&WXdXWF.5QAjgfv7.u0aKjT4i';
+
+const SCHOOL_LABEL = translateMetadataString('school');
+const ARTS_LABEL = translateMetadataString('arts');
+const DANCE_LABEL = translateMetadataString('dance');
+const MUSIC_LABEL = translateMetadataString('music');
+const DANCE_PATH = `${SCHOOL_LABEL} - ${ARTS_LABEL} - ${DANCE_LABEL}`;
+const ARTS_PATH = `${SCHOOL_LABEL} - ${ARTS_LABEL}`;
+
+const NODE_1 = 'node1';
+const NODE_2 = 'node2';
+
+function renderComponent({ value = {}, nodeIds = [NODE_1], expanded = false } = {}) {
+  return render(CategoryOptions, {
+    props: { value, nodeIds, expanded },
+    routes: new VueRouter(),
   });
 }
 
+function lastInput(emitted) {
+  const events = emitted().input;
+  return events[events.length - 1][0];
+}
+
 describe('CategoryOptions', () => {
-  it('smoke test', () => {
-    const wrapper = makeWrapper();
-    expect(wrapper.exists()).toBe(true);
+  it('renders the category field', () => {
+    renderComponent();
+    expect(screen.getByText(translateMetadataString('category'))).toBeInTheDocument();
   });
 
-  it('emits expected data', () => {
-    const wrapper = makeWrapper();
-    const value = 'string';
-    wrapper.vm.$emit('input', value);
-
-    expect(wrapper.emitted().input).toBeTruthy();
-    expect(wrapper.emitted().input.length).toBe(1);
-    expect(wrapper.emitted().input[0]).toEqual([value]);
-  });
-
-  describe('display', () => {
-    it('has a tooltip that displays the tree for value of an item', () => {
-      const wrapper = makeWrapper();
-      const item = 'd&WXdXWF.5QAjgfv7.BUMJJBnS'; // 'Dance'
-      const expectedToolTip = 'School - Arts - Dance';
-
-      expect(wrapper.vm.tooltipText(item)).toEqual(expectedToolTip);
-    });
-    it(`dropdown has 'levels' key necessary to display the nested structure of categories`, () => {
-      const wrapper = makeWrapper();
-      const dropdown = wrapper.vm.categoriesList;
-      const everyCategoryHasLevelsKey = dropdown.every(item => 'level' in item);
-
-      expect(everyCategoryHasLevelsKey).toBeTruthy();
-    });
-  });
-
-  describe('interactions', () => {
-    it('when user checks an item, that is emitted to the parent component', () => {
-      const wrapper = makeWrapper();
-      const item = 'abcd';
-      wrapper.vm.$emit = jest.fn();
-      wrapper.vm.add(item);
-
-      expect(wrapper.vm.$emit.mock.calls[0][0]).toBe('input');
-      expect(wrapper.vm.$emit.mock.calls[0][1]).toEqual({ abcd: ['node1'] });
-    });
-    it('when user unchecks an item, that is emitted to the parent component', () => {
-      const wrapper = makeWrapper();
-      const item = 'defj';
-      wrapper.vm.$emit = jest.fn();
-      wrapper.vm.remove(item);
-
-      expect(wrapper.vm.$emit.mock.calls[0][0]).toBe('input');
-      expect(wrapper.vm.$emit.mock.calls[0][1]).toEqual({});
-    });
-  });
-
-  describe('close button on chip interactions', () => {
-    it('in the autocomplete bar, the chip is removed when user clicks on its close button', async () => {
-      const wrapper = makeWrapper({
+  describe('dropdown mode (KMultiSelect)', () => {
+    it('shows a chip only for categories applied to every edited node', () => {
+      renderComponent({
         value: {
-          'remove me': ['node1'],
-          'keep me': ['node1'],
+          [DANCE]: [NODE_1, NODE_2],
+          [MUSIC]: [NODE_1],
         },
+        nodeIds: [NODE_1, NODE_2],
       });
-      const originalChipsLength = Object.keys(wrapper.vm.selected).length;
-      wrapper.vm.remove('remove me');
 
-      expect(wrapper.emitted().input.length).toEqual(originalChipsLength - 1);
+      // The closed dropdown stays in the DOM (v-show), so queries must not look inside it.
+      // getAllByText because KChip nests two elements that both carry the chip text.
+      const chipsArea = within(screen.getByRole('group'));
+      expect(chipsArea.getAllByText(DANCE_LABEL).length).toBeGreaterThan(0);
+      expect(chipsArea.queryByText(MUSIC_LABEL)).not.toBeInTheDocument();
+    });
+
+    it('shows the full category path in the chip tooltip', async () => {
+      renderComponent({ value: { [DANCE]: [NODE_1] } });
+
+      expect(await screen.findByText(DANCE_PATH)).toBeInTheDocument();
+    });
+
+    it('renders parent categories as named groups in the dropdown', async () => {
+      renderComponent();
+
+      await userEvent.click(screen.getByRole('combobox'));
+
+      const school = await screen.findByRole('group', { name: SCHOOL_LABEL });
+      expect(within(school).getByRole('option', { name: DANCE_LABEL })).toBeInTheDocument();
+    });
+
+    it('emits the selection as an object applying each category to all edited nodes', async () => {
+      const { emitted } = renderComponent();
+
+      await userEvent.click(screen.getByRole('combobox'));
+      await userEvent.click(await screen.findByRole('option', { name: SCHOOL_LABEL }));
+
+      expect(lastInput(emitted)).toEqual({
+        [SCHOOL]: [NODE_1],
+      });
+    });
+
+    it('adds only the parent when a partially selected parent is clicked', async () => {
+      const { emitted } = renderComponent({ value: { [DANCE]: [NODE_1] } });
+
+      await userEvent.click(screen.getByRole('combobox'));
+      // An indeterminate option's accessible name includes the hidden
+      // "partially selected" text, so match on how the name starts.
+      await userEvent.click(
+        await screen.findByRole('option', { name: name => name.startsWith(SCHOOL_LABEL) }),
+      );
+
+      expect(lastInput(emitted)).toEqual({
+        [DANCE]: [NODE_1],
+        [SCHOOL]: [NODE_1],
+      });
+    });
+
+    it('removes a category when its chip close button is clicked', async () => {
+      const { emitted } = renderComponent({ value: { [DANCE]: [NODE_1] } });
+
+      await userEvent.click(
+        screen.getByRole('button', { name: removeCategory$({ label: DANCE_PATH }) }),
+      );
+
+      expect(lastInput(emitted)).toEqual({});
+    });
+
+    it('removes stored descendants when a parent chip is removed', async () => {
+      const { emitted } = renderComponent({
+        value: { [ARTS]: [NODE_1], [DANCE]: [NODE_1] },
+      });
+
+      await userEvent.click(
+        screen.getByRole('button', { name: removeCategory$({ label: ARTS_PATH }) }),
+      );
+
+      expect(lastInput(emitted)).toEqual({});
+    });
+
+    it('emits an empty object when the selection is cleared', async () => {
+      const { emitted } = renderComponent({ value: { [DANCE]: [NODE_1] } });
+
+      await userEvent.click(screen.getByRole('button', { name: clearAllAction$() }));
+
+      expect(lastInput(emitted)).toEqual({});
+    });
+  });
+
+  describe('expanded mode', () => {
+    it('renders the flat checkbox list instead of KMultiSelect', () => {
+      renderComponent({ expanded: true });
+
+      expect(screen.queryByRole('button', { name: openMenuAction$() })).not.toBeInTheDocument();
+      expect(screen.getByRole('checkbox', { name: DANCE_LABEL })).toBeInTheDocument();
+    });
+
+    it('emits the added category applied to all edited nodes when checked', async () => {
+      const { emitted } = renderComponent({ expanded: true, nodeIds: [NODE_1] });
+
+      await userEvent.click(screen.getByRole('checkbox', { name: DANCE_LABEL }));
+
+      expect(lastInput(emitted)).toEqual({ [DANCE]: [NODE_1] });
+    });
+
+    it('removes a category and its stored descendants when unchecked', async () => {
+      const { emitted } = renderComponent({
+        expanded: true,
+        value: { [ARTS]: [NODE_1], [DANCE]: [NODE_1] },
+        nodeIds: [NODE_1],
+      });
+
+      await userEvent.click(screen.getByRole('checkbox', { name: ARTS_LABEL }));
+
+      expect(lastInput(emitted)).toEqual({});
     });
   });
 });

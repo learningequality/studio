@@ -445,6 +445,7 @@ export const communityChannelsStrings = createTranslator('CommunityChannelsStrin
     message: 'New',
     context: 'Label indicating the section for new notifications',
   },
+  // TODO: clearAllAction should be moved to commonStrings.js in next major Studio release
   clearAllAction: {
     message: 'Clear all',
     context: 'Action button to clear all notifications',
