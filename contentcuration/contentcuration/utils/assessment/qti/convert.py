@@ -244,7 +244,7 @@ def build_perseus_custom_interaction_item(
     item = AssessmentItem(
         identifier=identifier,
         title=title,
-        language=language,
+        xml__lang=language,
         adaptive=False,
         time_dependent=False,
         response_declaration=[
@@ -327,7 +327,7 @@ def convert_legacy_assessment_item_to_qti(
     qti_item = AssessmentItem(
         identifier=qti_item_id,
         title=item.title,
-        language=item.language,
+        xml__lang=item.language,
         adaptive=False,
         time_dependent=False,
         response_declaration=[response_declaration],

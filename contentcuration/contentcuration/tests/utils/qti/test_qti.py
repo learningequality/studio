@@ -220,10 +220,10 @@ class QTIDataClassTests(unittest.TestCase):
         assessment_item_element = AssessmentItem(
             identifier="item_1",
             title="Test Assessment Item",
-            language="en-US",
+            xml__lang="en-US",
             item_body=item_body,
         )
-        expected_xml = '<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqtiasi_v3p0 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqti_asiv3p0p1_v1p0.xsd" identifier="item_1" title="Test Assessment Item" adaptive="false" language="en-US" tool-name="kolibri" tool-version="0.1"><qti-item-body><p>Test Item Body Content</p></qti-item-body></qti-assessment-item>'  # noqa: E501
+        expected_xml = '<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqtiasi_v3p0 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqti_asiv3p0p1_v1p0.xsd" identifier="item_1" title="Test Assessment Item" adaptive="false" xml:lang="en-US" tool-name="kolibri" tool-version="0.1"><qti-item-body><p>Test Item Body Content</p></qti-item-body></qti-assessment-item>'  # noqa: E501
         self.assertEqual(assessment_item_element.to_xml_string(), expected_xml)
 
     def test_prompt_element(self):

@@ -56,7 +56,7 @@ class QTIAssessmentItemTests(unittest.TestCase):
         assessment_item = AssessmentItem(
             identifier="item1",
             title="Test",
-            language="en-US",
+            xml__lang="en-US",
             item_body=item_body,
             catalog_info=catalog_info,
             response_processing=response_processing,
@@ -78,7 +78,7 @@ class QTIAssessmentItemTests(unittest.TestCase):
  title="BG true false example "
  adaptive="false"
  time-dependent="false"
- language="en-US"
+ xml:lang="en-US"
  tool-name="kolibri"
  tool-version="0.1">
 <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
@@ -139,7 +139,7 @@ class QTIAssessmentItemTests(unittest.TestCase):
         assessment_item = AssessmentItem(
             identifier="beginnersguide007",
             title="BG true false example ",
-            language="EN-US",
+            xml__lang="EN-US",
             time_dependent=False,
             item_body=item_body,
             response_declaration=[response_declaration],
@@ -162,7 +162,7 @@ class QTIAssessmentItemTests(unittest.TestCase):
  title="BG Choice example"
  adaptive="false"
  time-dependent="false"
- language="en-US"
+ xml:lang="en-US"
  tool-name="kolibri"
  tool-version="0.1">
 <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="identifier">
@@ -257,7 +257,7 @@ class QTIAssessmentItemTests(unittest.TestCase):
         assessment_item = AssessmentItem(
             identifier="beginnersguide008",
             title="BG Choice example",
-            language="EN-US",
+            xml__lang="EN-US",
             time_dependent=False,
             item_body=item_body,
             response_declaration=[response_declaration],
@@ -277,7 +277,7 @@ class QTIAssessmentItemTests(unittest.TestCase):
  title="BG Postcard example"
  adaptive="false"
  time-dependent="false"
- language="en-US"
+ xml:lang="en-US"
  tool-name="kolibri"
  tool-version="0.1">
 <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string" />
@@ -350,7 +350,7 @@ Where do you go in the evenings?</p>
         assessment_item = AssessmentItem(
             identifier="beginnersguide009",
             title="BG Postcard example",
-            language="en-US",
+            xml__lang="en-US",
             time_dependent=False,
             item_body=item_body,
             response_declaration=[response_declaration],
@@ -369,7 +369,7 @@ Where do you go in the evenings?</p>
  title="BG Missing Word example"
  adaptive="false"
  time-dependent="false"
- language="en-US"
+ xml:lang="en-US"
  tool-name="kolibri"
  tool-version="0.1">
 <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string">
@@ -460,7 +460,7 @@ In the deep bosom of the ocean buried.</p>
         assessment_item = AssessmentItem(
             identifier="beginnersguide010",
             title="BG Missing Word example",
-            language="en-US",
+            xml__lang="en-US",
             time_dependent=False,
             item_body=item_body,
             response_declaration=[response_declaration],
@@ -480,7 +480,7 @@ In the deep bosom of the ocean buried.</p>
  title="Numerical Entry Question"
  adaptive="false"
  time-dependent="false"
- language="en-US"
+ xml:lang="en-US"
  tool-name="kolibri"
  tool-version="0.1">
 <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="float">
@@ -525,7 +525,7 @@ In the deep bosom of the ocean buried.</p>
         assessment_item = AssessmentItem(
             identifier="numerical-entry-item",
             title="Numerical Entry Question",
-            language="en-US",
+            xml__lang="en-US",
             time_dependent=False,
             item_body=ItemBody(
                 children=[
