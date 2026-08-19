@@ -7,6 +7,7 @@ from contentcuration.utils.assessment.qti.html.breaks import Br
 from contentcuration.utils.assessment.qti.html.breaks import Hr
 from contentcuration.utils.assessment.qti.html.content_types import FlowContent
 from contentcuration.utils.assessment.qti.html.content_types import FlowContentList
+from contentcuration.utils.assessment.qti.html.content_types import FlowGroupList
 from contentcuration.utils.assessment.qti.html.content_types import InlineContent
 from contentcuration.utils.assessment.qti.html.content_types import InlineContentList
 from contentcuration.utils.assessment.qti.html.content_types import InlineGroup
@@ -97,6 +98,7 @@ __all__ = [
     # Content type aliases
     "FlowContent",
     "FlowContentList",
+    "FlowGroupList",
     "InlineContent",
     "InlineContentList",
     "InlineGroup",
