@@ -1717,3 +1717,76 @@ class ChannelVersionViewsetTestCase(StudioAPITestCase):
         response = self.client.get(url)
         results = response.json()
         self.assertEqual(len(results), 0)
+
+    def make_community_library_submission(self, channel, version, status):
+        submission = CommunityLibrarySubmission.objects.create(
+            channel=channel,
+            channel_version=version,
+            author=self.user,
+        )
+        submission.status = status
+        submission.save()
+        return submission
+
+    def test_anonymous_user_cannot_access_non_community_channel_versions(self):
+        """Test that an anonymous user gets an empty list rather than a permission error."""
+        self.client.force_authenticate(user=None)
+        url = reverse("channelversion-list") + f"?channel={self.channel.id}"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()), 0)
+
+    def test_anonymous_user_can_access_live_community_library_version(self):
+        """Test that an anonymous user can read the version live in the Community Library."""
+        self.make_community_library_submission(
+            self.channel, 2, community_library_submission.STATUS_LIVE
+        )
+        self.client.force_authenticate(user=None)
+        url = reverse("channelversion-list") + f"?channel={self.channel.id}"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        results = response.json()
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["version"], 2)
+
+    def test_anonymous_user_cannot_access_unpublished_community_library_version(self):
+        """Test that submissions that never went live stay hidden from anonymous users."""
+        for status in (
+            community_library_submission.STATUS_PENDING,
+            community_library_submission.STATUS_APPROVED,
+            community_library_submission.STATUS_REJECTED,
+            community_library_submission.STATUS_SUPERSEDED,
+        ):
+            with self.subTest(status=status):
+                submission = self.make_community_library_submission(
+                    self.channel, 2, status
+                )
+                self.client.force_authenticate(user=None)
+                url = reverse("channelversion-list") + f"?channel={self.channel.id}"
+                response = self.client.get(url)
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(len(response.json()), 0)
+                submission.delete()
+
+    def test_non_channel_viewer_can_access_live_community_library_version(self):
+        """Test that a signed-in non-editor can read the live Community Library version."""
+        self.make_community_library_submission(
+            self.channel, 2, community_library_submission.STATUS_LIVE
+        )
+        other_user = testdata.user(email="otheruser@example.com")
+        self.client.force_authenticate(user=other_user)
+        url = reverse("channelversion-list") + f"?channel={self.channel.id}"
+        response = self.client.get(url)
+        results = response.json()
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["version"], 2)
+
+    def test_live_community_library_version_does_not_expose_other_versions(self):
+        """Test that going live exposes only that version, not the channel's other versions."""
+        self.make_community_library_submission(
+            self.channel, 2, community_library_submission.STATUS_LIVE
+        )
+        self.client.force_authenticate(user=None)
+        url = reverse("channelversion-list") + f"?channel={self.channel_2.id}"
+        response = self.client.get(url)
+        self.assertEqual(len(response.json()), 0)

@@ -1078,7 +1078,7 @@ class ChannelVersionFilter(RequiredFilterSet):
 
 class ChannelVersionViewSet(ReadOnlyValuesViewset):
     queryset = ChannelVersion.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     pagination_class = ChannelVersionListPagination
     filterset_class = ChannelVersionFilter
     ordering_fields = ["version"]
