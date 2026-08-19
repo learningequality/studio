@@ -282,7 +282,7 @@ class AssessmentItem(QTIBase):
     label: Optional[str] = None
     adaptive: bool = False
     time_dependent: Optional[bool] = None
-    language: BCP47Language
+    xml__lang: BCP47Language
     tool_name: str = "kolibri"
     tool_version: str = "0.1"
 

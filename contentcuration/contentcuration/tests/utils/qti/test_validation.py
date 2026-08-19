@@ -24,7 +24,7 @@ def _item_xml(identifier, title, response_declaration, item_body):
         'xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqtiasi_v3p0 '
         'https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqti_asiv3p0p1_v1p0.xsd" '
         'identifier="%s" title="%s" adaptive="false" time-dependent="false" '
-        'language="en-US" tool-name="kolibri" tool-version="0.1">'
+        'xml:lang="en-US" tool-name="kolibri" tool-version="0.1">'
         "%s"
         '<qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float" />'
         "<qti-item-body>%s</qti-item-body>"

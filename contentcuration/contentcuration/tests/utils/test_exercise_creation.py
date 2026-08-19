@@ -1637,7 +1637,7 @@ class TestQTIExerciseCreation(StudioTestCase):
             _normalize_xml(actual_manifest_xml),
         )
 
-        self.assertEqual(exercise_file.checksum, "cd5a770d35fa1c25092331ee00f4ce4a")
+        self.assertEqual(exercise_file.checksum, "08f316508478ea4710b96473d0e5e1f3")
 
     def test_image_resizing(self):
         # Create a base image file
@@ -1707,7 +1707,7 @@ class TestQTIExerciseCreation(StudioTestCase):
 
         # Expected QTI item XML content with MathML conversion
         expected_item_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
-        <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqtiasi_v3p0 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqti_asiv3p0p1_v1p0.xsd" identifier="{qti_id}" title="Test QTI Exercise 1" adaptive="false" time-dependent="false" language="en-US" tool-name="kolibri" tool-version="0.1">
+        <qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqtiasi_v3p0 https://purl.imsglobal.org/spec/qti/v3p0/schema/xsd/imsqti_asiv3p0p1_v1p0.xsd" identifier="{qti_id}" title="Test QTI Exercise 1" adaptive="false" time-dependent="false" xml:lang="en-US" tool-name="kolibri" tool-version="0.1">
         <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">
         <qti-correct-response>
         <qti-value>choice_0</qti-value>
@@ -1843,7 +1843,7 @@ class TestQTIExerciseCreation(StudioTestCase):
             _normalize_xml(actual_manifest_xml),
         )
 
-        self.assertEqual(exercise_file.checksum, "f15370f74b06b59bca6e289fe0e9cb87")
+        self.assertEqual(exercise_file.checksum, "f4689243ba9f9b5e1abdc874d2d7527d")
 
     def test_unsupported_question_type(self):
         """Test that unsupported question types raise appropriate errors"""
