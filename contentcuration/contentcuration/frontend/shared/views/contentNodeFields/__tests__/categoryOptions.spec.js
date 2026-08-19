@@ -2,17 +2,25 @@ import { render, screen, within } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import VueRouter from 'vue-router';
 import CategoryOptions from '../CategoryOptions.vue';
+import { commonStrings } from 'shared/strings/commonStrings';
+import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
+import { metadataTranslationMixin } from 'shared/mixins';
+
+const { translateMetadataString } = metadataTranslationMixin.methods;
+const { openMenuAction$ } = commonStrings;
+const { clearAllAction$ } = communityChannelsStrings;
 
 const SCHOOL = 'd&WXdXWF';
 const ARTS = 'd&WXdXWF.5QAjgfv7';
 const DANCE = 'd&WXdXWF.5QAjgfv7.BUMJJBnS';
 const MUSIC = 'd&WXdXWF.5QAjgfv7.u0aKjT4i';
 
-const SCHOOL_LABEL = 'School';
-const ARTS_LABEL = 'Arts';
-const DANCE_LABEL = 'Dance';
-const MUSIC_LABEL = 'Music';
-const DANCE_PATH = 'School - Arts - Dance';
+const SCHOOL_LABEL = translateMetadataString('school');
+const ARTS_LABEL = translateMetadataString('arts');
+const DANCE_LABEL = translateMetadataString('dance');
+const MUSIC_LABEL = translateMetadataString('music');
+const DANCE_PATH = `${SCHOOL_LABEL} - ${ARTS_LABEL} - ${DANCE_LABEL}`;
+const ARTS_PATH = `${SCHOOL_LABEL} - ${ARTS_LABEL}`;
 
 const NODE_1 = 'node1';
 const NODE_2 = 'node2';
@@ -32,7 +40,7 @@ function lastInput(emitted) {
 describe('CategoryOptions', () => {
   it('renders the category field', () => {
     renderComponent();
-    expect(screen.getByText('Category')).toBeInTheDocument();
+    expect(screen.getByText(translateMetadataString('category'))).toBeInTheDocument();
   });
 
   describe('dropdown mode (KMultiSelect)', () => {
@@ -46,6 +54,7 @@ describe('CategoryOptions', () => {
       });
 
       // The closed dropdown stays in the DOM (v-show), so queries must not look inside it.
+      // getAllByText because KChip nests two elements that both carry the chip text.
       const chipsArea = within(screen.getByRole('group'));
       expect(chipsArea.getAllByText(DANCE_LABEL).length).toBeGreaterThan(0);
       expect(chipsArea.queryByText(MUSIC_LABEL)).not.toBeInTheDocument();
@@ -67,35 +76,46 @@ describe('CategoryOptions', () => {
     });
 
     it('emits the selection as an object applying each category to all edited nodes', async () => {
-      const { emitted } = renderComponent({ nodeIds: [NODE_1, NODE_2] });
+      const { emitted } = renderComponent();
 
       await userEvent.click(screen.getByRole('combobox'));
       await userEvent.click(await screen.findByRole('option', { name: SCHOOL_LABEL }));
 
       expect(lastInput(emitted)).toEqual({
-        [SCHOOL]: [NODE_1, NODE_2],
+        [SCHOOL]: [NODE_1],
       });
     });
 
-    it('preserves partially applied categories when the selection changes', async () => {
-      const { emitted } = renderComponent({
-        value: { [MUSIC]: [NODE_1] },
-        nodeIds: [NODE_1, NODE_2],
-      });
+    it('adds only the parent when a partially selected parent is clicked', async () => {
+      const { emitted } = renderComponent({ value: { [DANCE]: [NODE_1] } });
 
       await userEvent.click(screen.getByRole('combobox'));
-      await userEvent.click(await screen.findByRole('option', { name: SCHOOL_LABEL }));
+      // An indeterminate option's accessible name includes the hidden
+      // "partially selected" text, so match on how the name starts.
+      await userEvent.click(
+        await screen.findByRole('option', { name: name => name.startsWith(SCHOOL_LABEL) }),
+      );
 
       expect(lastInput(emitted)).toEqual({
-        [MUSIC]: [NODE_1],
-        [SCHOOL]: [NODE_1, NODE_2],
+        [DANCE]: [NODE_1],
+        [SCHOOL]: [NODE_1],
       });
     });
 
     it('removes a category when its chip close button is clicked', async () => {
       const { emitted } = renderComponent({ value: { [DANCE]: [NODE_1] } });
 
-      await userEvent.click(screen.getByRole('button', { name: `Remove ${DANCE_LABEL}` }));
+      await userEvent.click(screen.getByRole('button', { name: `Remove ${DANCE_PATH}` }));
+
+      expect(lastInput(emitted)).toEqual({});
+    });
+
+    it('removes stored descendants when a parent chip is removed', async () => {
+      const { emitted } = renderComponent({
+        value: { [ARTS]: [NODE_1], [DANCE]: [NODE_1] },
+      });
+
+      await userEvent.click(screen.getByRole('button', { name: `Remove ${ARTS_PATH}` }));
 
       expect(lastInput(emitted)).toEqual({});
     });
@@ -103,20 +123,20 @@ describe('CategoryOptions', () => {
     it('emits an empty object when the selection is cleared', async () => {
       const { emitted } = renderComponent({ value: { [DANCE]: [NODE_1] } });
 
-      await userEvent.click(screen.getByRole('button', { name: 'Clear all' }));
+      await userEvent.click(screen.getByRole('button', { name: clearAllAction$() }));
 
       expect(lastInput(emitted)).toEqual({});
-    });
-
-    it('renders the flat checkbox list instead of KMultiSelect in expanded mode', () => {
-      renderComponent({ expanded: true });
-
-      expect(screen.queryByRole('button', { name: 'Open menu' })).not.toBeInTheDocument();
-      expect(screen.getAllByRole('checkbox').length).toBeGreaterThan(0);
     });
   });
 
   describe('expanded mode', () => {
+    it('renders the flat checkbox list instead of KMultiSelect', () => {
+      renderComponent({ expanded: true });
+
+      expect(screen.queryByRole('button', { name: openMenuAction$() })).not.toBeInTheDocument();
+      expect(screen.getByRole('checkbox', { name: DANCE_LABEL })).toBeInTheDocument();
+    });
+
     it('emits the added category applied to all edited nodes when checked', async () => {
       const { emitted } = renderComponent({ expanded: true, nodeIds: [NODE_1] });
 

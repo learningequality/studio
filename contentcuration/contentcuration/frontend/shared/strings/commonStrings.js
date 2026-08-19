@@ -46,10 +46,6 @@ export const commonStrings = createTranslator('CommonStrings', {
     message: 'Options',
     context: 'Tooltip for the generic options menu icon',
   },
-  clearAllAction: {
-    message: 'Clear all',
-    context: 'Accessible label for the button that clears every selection in a select field',
-  },
   openMenuAction: {
     message: 'Open menu',
     context: 'Accessible label for the button that opens a dropdown menu',

@@ -8,7 +8,6 @@
       itemValue="value"
       itemText="text"
       :label="translateMetadataString('category')"
-      :multiple="true"
       :autoPromoteParent="false"
       clearable
       :noResultsText="$tr('noCategoryFoundText')"
@@ -19,8 +18,10 @@
         <span :ref="'category-chip-' + option.value">
           <KChip
             :text="option.text"
+            :removeLabel="$tr('removeCategory', { label: tooltipText(option.value) })"
             close
             @close="removeChip"
+            @mousedown.native.prevent
           />
         </span>
         <KTooltip
@@ -75,34 +76,6 @@
               </div>
             </VTooltip>
           </template>
-
-          <template #no-data>
-            <VListTile v-if="categoryText && categoryText.trim()">
-              <VListTileContent>
-                <VListTileTitle>
-                  {{ $tr('noCategoryFoundText', { text: categoryText.trim() }) }}
-                </VListTileTitle>
-              </VListTileContent>
-            </VListTile>
-          </template>
-
-          <template #item="{ item }">
-            <VListTile
-              :value="isSelected(item.value)"
-              :class="{ parentOption: !item.value.includes('.') }"
-              @mousedown.prevent
-              @click="onChange(item.value)"
-            >
-              <KCheckbox
-                :checked="isSelected(item.value)"
-                :label="item.text"
-                :value="item.value"
-                style="margin-top: 10px"
-                :style="treeItemStyle(item)"
-                :ripple="false"
-              />
-            </VListTile>
-          </template>
         </VAutocomplete>
       </template>
     </DropdownWrapper>
@@ -139,6 +112,7 @@
   import KChip from 'kolibri-design-system/lib/candidate/multiselect/KChip';
   import { getSortedCategories } from 'shared/utils/helpers';
   import { commonStrings } from 'shared/strings/commonStrings';
+  import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
   import DropdownWrapper from 'shared/views/form/DropdownWrapper';
   import { constantsTranslationMixin, metadataTranslationMixin } from 'shared/mixins';
 
@@ -146,33 +120,6 @@
     name: 'CategoryOptions',
     components: { KMultiSelect, KChip, DropdownWrapper },
     mixins: [constantsTranslationMixin, metadataTranslationMixin],
-    setup() {
-      const {
-        clearAllAction$,
-        openMenuAction$,
-        closeMenuAction$,
-        optionsClickableLabel$,
-        allOptionsSelectedLabel$,
-        allOptionsDeselectedLabel$,
-        optionDeselectedLabel$,
-        partiallySelectedLabel$,
-        optionSelectedLabel$,
-        optionRemovedLabel$,
-      } = commonStrings;
-
-      return {
-        clearAllAction$,
-        openMenuAction$,
-        closeMenuAction$,
-        optionsClickableLabel$,
-        allOptionsSelectedLabel$,
-        allOptionsDeselectedLabel$,
-        optionDeselectedLabel$,
-        partiallySelectedLabel$,
-        optionSelectedLabel$,
-        optionRemovedLabel$,
-      };
-    },
     props: {
       /**
        * This prop receives an object with the following structure:
@@ -239,18 +186,30 @@
         );
       },
       messages() {
+        const {
+          openMenuAction$,
+          closeMenuAction$,
+          optionsClickableLabel$,
+          allOptionsSelectedLabel$,
+          allOptionsDeselectedLabel$,
+          optionDeselectedLabel$,
+          partiallySelectedLabel$,
+          optionSelectedLabel$,
+          optionRemovedLabel$,
+        } = commonStrings;
+        const { clearAllAction$ } = communityChannelsStrings;
         return {
-          clearText: this.clearAllAction$,
-          open: this.openMenuAction$,
-          close: this.closeMenuAction$,
-          clickable: this.optionsClickableLabel$,
-          allOptionsSelected: this.allOptionsSelectedLabel$,
-          allOptionsDeselected: this.allOptionsDeselectedLabel$,
-          optionDeselected: this.optionDeselectedLabel$,
-          partiallySelected: this.partiallySelectedLabel$,
+          clearText: clearAllAction$,
+          open: openMenuAction$,
+          close: closeMenuAction$,
+          clickable: optionsClickableLabel$,
+          allOptionsSelected: allOptionsSelectedLabel$,
+          allOptionsDeselected: allOptionsDeselectedLabel$,
+          optionDeselected: optionDeselectedLabel$,
+          partiallySelected: partiallySelectedLabel$,
           itemsSelected: ({ count }) => this.$tr('itemsSelected', { count }),
-          selected: this.optionSelectedLabel$,
-          removed: this.optionRemovedLabel$,
+          selected: optionSelectedLabel$,
+          removed: optionRemovedLabel$,
           cleared: () => this.$tr('allCategoriesCleared'),
         };
       },
@@ -278,20 +237,10 @@
       removeAll() {
         this.selected = {};
       },
-      // Rebuilds the { category: [nodeIds] } object from KMultiSelect's flat
-      // array. Categories not applied to every edited node are invisible to
-      // KMultiSelect (see autocompleteValues), so they are carried over untouched.
+      // Dropdown mode is only rendered when a single node is edited, so every
+      // selected category simply applies to all of nodeIds.
       onKMultiSelectInput(newValues) {
-        const newSelected = {};
-        Object.entries(this.selected).forEach(([category, ids]) => {
-          if (ids.length !== this.nodeIds.length) {
-            newSelected[category] = ids;
-          }
-        });
-        newValues.forEach(value => {
-          newSelected[value] = this.nodeIds;
-        });
-        this.selected = newSelected;
+        this.selected = Object.fromEntries(newValues.map(value => [value, this.nodeIds]));
       },
       tooltipText(optionId) {
         const option = this.categoriesList.find(option => option.value === optionId);
@@ -369,6 +318,7 @@
       noCategoryFoundText: 'Category not found',
       itemsSelected: '{count, plural, one {# category selected} other {# categories selected}}',
       allCategoriesCleared: 'All categories cleared',
+      removeCategory: 'Remove {label}',
     },
   };
 
@@ -376,10 +326,6 @@
 
 
 <style lang="scss" scoped>
-
-  .parentOption:not(:first-child) {
-    border-top: 1px solid rgba(0, 0, 0, 0.12);
-  }
 
   .checkbox-list-wrapper {
     height: 250px;
