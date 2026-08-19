@@ -4,11 +4,13 @@ import VueRouter from 'vue-router';
 import CategoryOptions from '../CategoryOptions.vue';
 import { commonStrings } from 'shared/strings/commonStrings';
 import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
+import { createTranslator } from 'shared/i18n';
 import { metadataTranslationMixin } from 'shared/mixins';
 
 const { translateMetadataString } = metadataTranslationMixin.methods;
 const { openMenuAction$ } = commonStrings;
 const { clearAllAction$ } = communityChannelsStrings;
+const { removeCategory$ } = createTranslator('CategoryOptions', CategoryOptions.$trs);
 
 const SCHOOL = 'd&WXdXWF';
 const ARTS = 'd&WXdXWF.5QAjgfv7';
@@ -105,7 +107,9 @@ describe('CategoryOptions', () => {
     it('removes a category when its chip close button is clicked', async () => {
       const { emitted } = renderComponent({ value: { [DANCE]: [NODE_1] } });
 
-      await userEvent.click(screen.getByRole('button', { name: `Remove ${DANCE_PATH}` }));
+      await userEvent.click(
+        screen.getByRole('button', { name: removeCategory$({ label: DANCE_PATH }) }),
+      );
 
       expect(lastInput(emitted)).toEqual({});
     });
@@ -115,7 +119,9 @@ describe('CategoryOptions', () => {
         value: { [ARTS]: [NODE_1], [DANCE]: [NODE_1] },
       });
 
-      await userEvent.click(screen.getByRole('button', { name: `Remove ${ARTS_PATH}` }));
+      await userEvent.click(
+        screen.getByRole('button', { name: removeCategory$({ label: ARTS_PATH }) }),
+      );
 
       expect(lastInput(emitted)).toEqual({});
     });
