@@ -1,5 +1,6 @@
-import { mount, createLocalVue } from '@vue/test-utils';
-import Vuex, { Store } from 'vuex';
+import { render, screen, waitFor, within, configure } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
+import { Store } from 'vuex';
 import router from '../../../router';
 import { RouteNames } from '../../../constants';
 import UserTable from '../UserTable';
@@ -10,285 +11,332 @@ jest.mock('shared/client', () => ({
 }));
 jest.mock('file-saver', () => ({ saveAs: jest.fn() }));
 
-const localVue = createLocalVue();
+// Studio's IconButton passes `ariaLabel="text"` as a literal rather than binding it
+// (shared/views/IconButton.vue), so icon buttons have no usable accessible name and
+// have to be reached by their existing data-test hooks.
+configure({ testIdAttribute: 'data-test' });
 
-localVue.use(Vuex);
-localVue.use(router);
+const USER_IDS = ['user-a', 'user-b', 'user-c'];
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-const userList = ['test', 'user', 'table'];
+const mockLoadUsers = jest.fn(() => Promise.resolve({}));
+const mockSendEmail = jest.fn(() => Promise.resolve());
 
-function makeWrapper(store) {
-  router.replace({ name: RouteNames.USERS });
-
-  const wrapper = mount(UserTable, {
-    router,
-    store,
-    localVue,
-    stubs: {
-      UserItem: true,
-      EmailUsersDialog: true,
-    },
-  });
-
-  return wrapper;
-}
-
-describe('userTable', () => {
-  let wrapper, store;
-  const loadUsers = jest.fn(() => Promise.resolve({}));
-
-  beforeEach(() => {
-    store = new Store({
-      modules: {
-        userAdmin: {
-          namespaced: true,
-          actions: {
-            loadUsers,
-          },
-          getters: {
-            users: () => userList,
-            count: () => userList.length,
-          },
+function createStore({ users = USER_IDS } = {}) {
+  return new Store({
+    modules: {
+      userAdmin: {
+        namespaced: true,
+        actions: {
+          loadUsers: mockLoadUsers,
+          sendEmail: mockSendEmail,
+        },
+        getters: {
+          users: () => users,
+          count: () => users.length,
+          getUsers: () => ids => ids.map(id => ({ id, email: `${id}@test.com` })),
         },
       },
-    });
-    wrapper = makeWrapper(store);
+    },
   });
-  afterEach(() => {
-    loadUsers.mockRestore();
+}
+
+function renderComponent({ users, query = {} } = {}) {
+  router.replace({ name: RouteNames.USERS, query }).catch(() => {});
+  return render(UserTable, {
+    store: createStore({ users }),
+    routes: router,
+    stubs: { UserItem: true },
+  });
+}
+
+/**
+ * Vuetify's VSelect menu does not open reliably under jsdom, so select-backed
+ * filters are reached through the URL the control would produce. A shared or
+ * bookmarked filter link is a real entry point, but it is navigation rather than
+ * a click — each test relying on it says so.
+ */
+const renderWithFilters = query => renderComponent({ query });
+
+/** Payload of the most recent user fetch. */
+function lastFetchParams() {
+  const { calls } = mockLoadUsers.mock;
+  return calls[calls.length - 1][1];
+}
+
+/**
+ * KButton renders `appearance="basic-link"` as an anchor with no href, which has
+ * no implicit role, so the clear action is matched by its text.
+ */
+const clearFiltersLink = () => screen.queryByText('Clear filters');
+
+/** The select-all checkbox lives in the table header, after the filter checkboxes. */
+const selectAllCheckbox = () => within(screen.getByRole('table')).getAllByRole('checkbox')[0];
+
+describe('UserTable', () => {
+  let user;
+
+  beforeEach(() => {
+    user = userEvent.setup();
+    jest.clearAllMocks();
+    require('shared/client').default.get.mockResolvedValue({
+      data: new Blob(['col1,col2\n1,2'], { type: 'text/csv' }),
+    });
   });
 
-  describe('filters', () => {
-    it('changing user type filter should set query params', () => {
-      wrapper.vm.userTypeFilter = 'administrator';
-      expect(router.currentRoute.query.userType).toBe('administrator');
+  describe('filter controls', () => {
+    it('renders every filter control', () => {
+      renderComponent();
+
+      expect(screen.getByLabelText('User Type')).toBeInTheDocument();
+      expect(screen.getByLabelText('Target location')).toBeInTheDocument();
+      expect(screen.getByLabelText('Search for a user...')).toBeInTheDocument();
+      expect(screen.getByLabelText('Joined within')).toBeInTheDocument();
+      expect(screen.getByLabelText('Active within')).toBeInTheDocument();
+      expect(screen.getByLabelText('Has published a channel')).toBeInTheDocument();
+      expect(screen.getByLabelText('Has Studio activity')).toBeInTheDocument();
     });
 
-    it('changing location filter should set query params', () => {
-      wrapper.vm.locationFilter = 'Afghanistan';
-      expect(router.currentRoute.query.location).toBe('Afghanistan');
+    it('typing a search term fetches users filtered by keyword', async () => {
+      renderComponent();
+
+      await user.type(screen.getByLabelText('Search for a user...'), 'keyword test');
+
+      await waitFor(() => {
+        expect(lastFetchParams()).toMatchObject({ keywords: 'keyword test' });
+      });
     });
 
-    it('changing search text should set query params', () => {
-      jest.useFakeTimers();
-      wrapper.vm.keywordInput = 'keyword test';
-      wrapper.vm.setKeywords();
-      jest.runAllTimers();
-      jest.useRealTimers();
+    it('ticking "has published a channel" fetches users filtered by published_channel', async () => {
+      renderComponent();
 
-      expect(router.currentRoute.query.keywords).toBe('keyword test');
+      await user.click(screen.getByLabelText('Has published a channel'));
+
+      await waitFor(() => {
+        expect(lastFetchParams()).toMatchObject({ published_channel: true });
+      });
     });
 
-    it('changing joined-within filter sets joined_since query param to an ISO date', () => {
-      wrapper.vm.joinedWithinFilter = '3mo';
-      const params = wrapper.vm.filterFetchQueryParams;
-      expect(params.joined_since).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    it('ticking "has Studio activity" fetches users filtered by has_edits', async () => {
+      renderComponent();
+
+      await user.click(screen.getByLabelText('Has Studio activity'));
+
+      await waitFor(() => {
+        expect(lastFetchParams()).toMatchObject({ has_edits: true });
+      });
     });
 
-    it('changing active-within filter sets active_since query param to an ISO date', () => {
-      wrapper.vm.activeWithinFilter = '1mo';
-      const params = wrapper.vm.filterFetchQueryParams;
-      expect(params.active_since).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    // Reached by URL rather than by opening the select — see renderWithFilters.
+    it('a user type selection fetches users filtered by that type', async () => {
+      renderWithFilters({ userType: 'administrator' });
+
+      await waitFor(() => {
+        expect(lastFetchParams()).toMatchObject({ is_admin: true });
+      });
     });
 
-    it('toggling has-published filter sets published_channel=true', () => {
-      wrapper.vm.hasPublishedFilter = true;
-      const params = wrapper.vm.filterFetchQueryParams;
-      expect(params.published_channel).toBe(true);
+    // Reached by URL rather than by opening the select — see renderWithFilters.
+    it('a joined-within selection fetches users filtered by an ISO joined_since date', async () => {
+      renderWithFilters({ joinedWithin: '3mo' });
+
+      await waitFor(() => {
+        expect(lastFetchParams().joined_since).toMatch(ISO_DATE);
+      });
     });
 
-    it('toggling has-edits filter sets has_edits=true', () => {
-      wrapper.vm.hasEditsFilter = true;
-      const params = wrapper.vm.filterFetchQueryParams;
-      expect(params.has_edits).toBe(true);
+    // Reached by URL rather than by opening the select — see renderWithFilters.
+    it('an active-within selection fetches users filtered by an ISO active_since date', async () => {
+      renderWithFilters({ activeWithin: '1mo' });
+
+      await waitFor(() => {
+        expect(lastFetchParams().active_since).toMatch(ISO_DATE);
+      });
+    });
+
+    // Reached by URL rather than by opening the select — see renderWithFilters.
+    it('a target location selection fetches users filtered by that location', async () => {
+      renderWithFilters({ location: 'Afghanistan' });
+
+      await waitFor(() => {
+        expect(lastFetchParams()).toMatchObject({ location: 'Afghanistan' });
+      });
     });
   });
 
   describe('clearing filters', () => {
-    it('is disabled while no filter is applied', () => {
-      expect(wrapper.vm.hasActiveFilters).toBe(false);
-      expect(wrapper.findComponent('[data-test="clear-filters"]').props().disabled).toBe(true);
+    it('is not offered on a page with no filters applied', () => {
+      renderComponent();
+
+      expect(clearFiltersLink()).not.toBeInTheDocument();
     });
 
-    it('is enabled once a filter is applied', async () => {
-      wrapper.vm.userTypeFilter = 'administrator';
-      await wrapper.vm.$nextTick();
+    it('is offered once a filter is applied', async () => {
+      renderComponent();
 
-      expect(wrapper.vm.hasActiveFilters).toBe(true);
-      expect(wrapper.findComponent('[data-test="clear-filters"]').props().disabled).toBe(false);
+      await user.click(screen.getByLabelText('Has published a channel'));
+
+      await waitFor(() => {
+        expect(clearFiltersLink()).toBeInTheDocument();
+      });
     });
 
-    it('is enabled by a user type of "All", which narrows nothing but is still a selection', async () => {
-      wrapper.vm.userTypeFilter = 'all';
-      await wrapper.vm.$nextTick();
+    // Reached by URL rather than by opening the select — see renderWithFilters.
+    it('is offered for a user type of "All", which narrows nothing but is still a selection', async () => {
+      renderWithFilters({ userType: 'all' });
 
-      expect(wrapper.vm.filterFetchQueryParams).toEqual({});
-      expect(wrapper.vm.hasActiveFilters).toBe(true);
-      expect(wrapper.findComponent('[data-test="clear-filters"]').props().disabled).toBe(false);
+      await waitFor(() => {
+        expect(clearFiltersLink()).toBeInTheDocument();
+      });
+      await waitFor(() => {
+        expect(mockLoadUsers).toHaveBeenCalled();
+      });
+      expect(lastFetchParams()).not.toHaveProperty('is_admin');
     });
 
-    it('stays disabled for date windows left at their default', async () => {
-      wrapper.vm.joinedWithinFilter = 'any';
-      wrapper.vm.activeWithinFilter = 'any';
-      await wrapper.vm.$nextTick();
+    // Reached by URL rather than by opening the select — see renderWithFilters.
+    it('stays unoffered for date windows left at their default', () => {
+      renderWithFilters({ joinedWithin: 'any', activeWithin: 'any' });
 
-      expect(wrapper.vm.hasActiveFilters).toBe(false);
+      expect(clearFiltersLink()).not.toBeInTheDocument();
     });
 
-    it('stays disabled after a checkbox is ticked and unticked again', async () => {
-      wrapper.vm.hasPublishedFilter = true;
-      await wrapper.vm.$nextTick();
-      expect(wrapper.vm.hasActiveFilters).toBe(true);
+    it('is withdrawn again after a checkbox is ticked and unticked', async () => {
+      renderComponent();
+      const checkbox = screen.getByLabelText('Has published a channel');
 
-      wrapper.vm.hasPublishedFilter = false;
-      await wrapper.vm.$nextTick();
+      await user.click(checkbox);
+      await waitFor(() => {
+        expect(clearFiltersLink()).toBeInTheDocument();
+      });
 
-      expect(wrapper.vm.hasActiveFilters).toBe(false);
+      await user.click(checkbox);
+
+      await waitFor(() => {
+        expect(clearFiltersLink()).not.toBeInTheDocument();
+      });
     });
 
-    it('drops every filter, including the keyword search', async () => {
-      jest.useFakeTimers();
-      wrapper.vm.keywordInput = 'keyword test';
-      wrapper.vm.setKeywords();
-      jest.runAllTimers();
-      jest.useRealTimers();
+    it('clears the checkboxes and the keyword search', async () => {
+      renderComponent();
 
-      wrapper.vm.userTypeFilter = 'administrator';
-      wrapper.vm.locationFilter = 'Afghanistan';
-      wrapper.vm.joinedWithinFilter = '3mo';
-      wrapper.vm.activeWithinFilter = '1mo';
-      wrapper.vm.hasPublishedFilter = true;
-      wrapper.vm.hasEditsFilter = true;
-      await wrapper.vm.$nextTick();
-      expect(wrapper.vm.filterFetchQueryParams).not.toEqual({});
+      await user.type(screen.getByLabelText('Search for a user...'), 'keyword test');
+      // The search is debounced; let it reach the URL before clearing, otherwise a
+      // pending write lands after the clear and restores the term.
+      await waitFor(() => {
+        expect(router.currentRoute.query.keywords).toBe('keyword test');
+      });
+      await user.click(screen.getByLabelText('Has published a channel'));
+      await user.click(screen.getByLabelText('Has Studio activity'));
+      await waitFor(() => {
+        expect(clearFiltersLink()).toBeInTheDocument();
+      });
 
-      await wrapper.findComponent('[data-test="clear-filters"]').trigger('click');
-      await wrapper.vm.$nextTick();
+      await user.click(clearFiltersLink());
 
-      expect(wrapper.vm.filterFetchQueryParams).toEqual({});
-      expect(wrapper.vm.keywordInput).toBe('');
-      expect(Object.keys(router.currentRoute.query).sort()).toEqual([
-        'descending',
-        'page',
-        'page_size',
-        'sortBy',
-      ]);
+      await waitFor(() => {
+        expect(screen.getByLabelText('Search for a user...')).toHaveValue('');
+      });
+      expect(screen.getByLabelText('Has published a channel')).not.toBeChecked();
+      expect(screen.getByLabelText('Has Studio activity')).not.toBeChecked();
+      expect(clearFiltersLink()).not.toBeInTheDocument();
     });
 
-    it('preserves pagination and sorting', async () => {
-      wrapper.vm.pagination = { ...wrapper.vm.pagination, page: 3, sortBy: 'email' };
-      wrapper.vm.userTypeFilter = 'administrator';
-      await wrapper.vm.$nextTick();
+    it('removes every filter query param while preserving pagination and sorting', async () => {
+      renderWithFilters({
+        userType: 'administrator',
+        location: 'Afghanistan',
+        joinedWithin: '3mo',
+        activeWithin: '1mo',
+        hasPublished: 'yes',
+        hasEdits: 'yes',
+        keywords: 'keyword test',
+        page: '3',
+        page_size: '25',
+        sortBy: 'email',
+        descending: 'false',
+      });
 
-      wrapper.vm.clearFilters();
-      await wrapper.vm.$nextTick();
+      await user.click(clearFiltersLink());
 
+      await waitFor(() => {
+        expect(Object.keys(router.currentRoute.query).sort()).toEqual([
+          'descending',
+          'page',
+          'page_size',
+          'sortBy',
+        ]);
+      });
       expect(router.currentRoute.query.sortBy).toBe('email');
-      expect(router.currentRoute.query.userType).toBeUndefined();
     });
   });
 
-  describe('selection', () => {
-    it('selectAll should set selected to channel list', () => {
-      wrapper.vm.selectAll = true;
-      expect(wrapper.vm.selected).toEqual(userList);
+  describe('selection and bulk actions', () => {
+    it('offers no bulk email action until users are selected', () => {
+      renderComponent();
+
+      expect(screen.queryByTestId('email')).not.toBeInTheDocument();
     });
 
-    it('removing selectAll should set selected to empty list', () => {
-      wrapper.vm.selected = userList;
-      wrapper.vm.selectAll = false;
-      wrapper.vm.$nextTick(() => {
-        expect(wrapper.vm.selected).toEqual([]);
+    it('selecting all users offers a bulk email action for them', async () => {
+      renderComponent();
+
+      await user.click(selectAllCheckbox());
+
+      expect(await screen.findByTestId('email')).toBeInTheDocument();
+      expect(screen.getByText(`(${USER_IDS.length})`)).toBeInTheDocument();
+    });
+
+    it('discards the selection when the filters change', async () => {
+      renderComponent();
+
+      await user.click(selectAllCheckbox());
+      expect(await screen.findByTestId('email')).toBeInTheDocument();
+
+      await user.click(screen.getByLabelText('Has published a channel'));
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('email')).not.toBeInTheDocument();
       });
     });
 
-    it('selectedCount should match the selected length', () => {
-      wrapper.vm.selected = ['test'];
-      expect(wrapper.vm.selectedCount).toBe(1);
-    });
+    it('the bulk email action opens the send email dialog', async () => {
+      renderComponent();
 
-    it('selected should clear on query changes', () => {
-      wrapper.vm.selected = ['test'];
-      router.push({
-        ...wrapper.vm.$route,
-        query: {
-          param: 'test',
-        },
-      });
-      wrapper.vm.$nextTick(() => {
-        expect(wrapper.vm.selected).toEqual([]);
-      });
+      await user.click(selectAllCheckbox());
+      await user.click(await screen.findByTestId('email'));
+
+      expect(await screen.findByRole('heading', { name: 'Send email' })).toBeInTheDocument();
     });
   });
 
-  describe('bulk actions', () => {
-    it('should be hidden if no items are selected', () => {
-      expect(wrapper.find('[data-test="email"]').exists()).toBe(false);
+  describe('CSV download', () => {
+    it('offers the download when there are users to export', () => {
+      renderComponent();
+
+      expect(screen.getByTestId('csv')).toBeEnabled();
     });
 
-    it('should be visible if items are selected', async () => {
-      wrapper.vm.selected = userList;
-      await wrapper.vm.$nextTick();
-      expect(wrapper.find('[data-test="email"]').exists()).toBe(true);
+    it('is unavailable when there are no users to export', () => {
+      renderComponent({ users: [] });
+
+      expect(screen.getByTestId('csv')).toBeDisabled();
     });
 
-    it('email should open email dialog', async () => {
-      wrapper.vm.selected = userList;
-      await wrapper.vm.$nextTick();
-      await wrapper.findComponent('[data-test="email"]').trigger('click');
-      expect(wrapper.vm.showEmailDialog).toBe(true);
-    });
-  });
-
-  describe('csv download', () => {
-    beforeEach(() => {
+    it('downloads a dated CSV built from the current filters', async () => {
       const client = require('shared/client').default;
       const { saveAs } = require('file-saver');
-      client.get.mockReset();
-      client.get.mockResolvedValue({
-        data: new Blob(['col1,col2\n1,2'], { type: 'text/csv' }),
+      renderComponent();
+
+      await user.click(screen.getByTestId('csv'));
+
+      await waitFor(() => {
+        expect(saveAs).toHaveBeenCalled();
       });
-      saveAs.mockClear();
-    });
-
-    it('renders the Download CSV button when count > 0', () => {
-      expect(wrapper.find('[data-test="csv"]').exists()).toBe(true);
-    });
-
-    it('clicking Download CSV calls the API with the current filter params', async () => {
-      await wrapper.findComponent('[data-test="csv"]').trigger('click');
-      // Flush the microtask queue so the chained .then() runs.
-      await new Promise(resolve => setImmediate(resolve));
-
-      const client = require('shared/client').default;
-      const { saveAs } = require('file-saver');
-      expect(client.get).toHaveBeenCalled();
-      const [, options] = client.get.mock.calls[0];
-      expect(options.responseType).toBe('blob');
-      expect(saveAs).toHaveBeenCalled();
+      expect(client.get.mock.calls[0][1].responseType).toBe('blob');
       const [savedBlob, savedName] = saveAs.mock.calls[0];
       expect(savedBlob).toBeInstanceOf(Blob);
       expect(savedName).toMatch(/^studio_users_\d{4}-\d{2}-\d{2}\.csv$/);
-    });
-  });
-
-  describe('csv download disabled state', () => {
-    it('disables Download CSV when count is zero', () => {
-      const emptyStore = new Store({
-        modules: {
-          userAdmin: {
-            namespaced: true,
-            actions: { loadUsers },
-            getters: {
-              users: () => [],
-              count: () => 0,
-            },
-          },
-        },
-      });
-      const emptyWrapper = makeWrapper(emptyStore);
-      const button = emptyWrapper.find('[data-test="csv"]');
-      expect(button.attributes('disabled') !== undefined || button.props().disabled).toBe(true);
     });
   });
 });
