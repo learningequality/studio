@@ -131,10 +131,10 @@
           label="Has Studio activity"
         />
         <KButton
+          v-if="hasActiveFilters"
           appearance="basic-link"
           text="Clear filters"
           data-test="clear-filters"
-          :disabled="!hasActiveFilters"
           @click="clearFilters"
         />
       </VFlex>
