@@ -239,6 +239,112 @@ class TextEntryInteractionConversionTests(unittest.TestCase):
         )
 
 
+class MarkdownContentConversionTests(unittest.TestCase):
+    """Markdown a legacy question can hold that the QTI models rejected."""
+
+    def _convert(self, question="Question", answers=None, hints=None):
+        item = _make_item(
+            type=exercises.SINGLE_SELECTION,
+            question=question,
+            answers=answers
+            if answers is not None
+            else [{"answer": "4", "correct": True, "order": 1}],
+            assessment_id="abcdef1234567890abcdef1234567890",
+            hints=hints,
+        )
+        return convert_legacy_assessment_item_to_qti(item)
+
+    def test_links_are_stripped(self):
+        # A QTI item is delivered offline, so the link text survives and the
+        # anchor does not.
+        cases = (
+            ("Read [the docs](https://learningequality.org).", "<p>Read the docs.</p>"),
+            ("Read [the docs](./docs.html).", "<p>Read the docs.</p>"),
+            (
+                "See <https://learningequality.org> for more.",
+                "<p>See https://learningequality.org for more.</p>",
+            ),
+            (
+                'Read <a href="https://learningequality.org">this</a>.',
+                "<p>Read this.</p>",
+            ),
+        )
+        for markdown, expected in cases:
+            with self.subTest(markdown=markdown):
+                result = self._convert(markdown)
+
+                self.assertIn(expected, result.xml)
+                self.assertNotIn("<a ", result.xml)
+                self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
+
+    def test_link_markup_inside_the_anchor_survives(self):
+        result = self._convert("Read [**the docs**](https://learningequality.org).")
+
+        self.assertIn("<p>Read <strong>the docs</strong>.</p>", result.xml)
+
+    def test_link_in_an_answer_is_stripped(self):
+        result = self._convert(
+            answers=[
+                {"answer": "See [here](https://learningequality.org)", "correct": True}
+            ]
+        )
+
+        self.assertIn("<p>See here</p>", result.xml)
+        self.assertNotIn("<a ", result.xml)
+        self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
+
+    def test_link_in_a_hint_is_stripped(self):
+        result = self._convert(
+            hints=[{"hint": "Look at [the docs](https://learningequality.org)"}]
+        )
+
+        self.assertIn("<p>Look at the docs</p>", result.xml)
+        self.assertNotIn("<a ", result.xml)
+        self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
+
+    def test_image_is_not_stripped(self):
+        result = self._convert("![alt](image.png) illustrates it.")
+
+        self.assertIn('<img alt="alt" src="image.png"', result.xml)
+
+    def test_strikethrough_is_stripped(self):
+        # The QTI 3.0 HTML profile has no element for a strikethrough, so the
+        # text survives and the mark does not.
+        result = self._convert("It is ~~not~~ four.")
+
+        self.assertIn("<p>It is not four.</p>", result.xml)
+        self.assertNotIn("<s>", result.xml)
+        self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
+
+    def test_raw_html_marks_are_stripped(self):
+        # Every inline mark the renderer passes through as raw HTML that the QTI
+        # 3.0 HTML profile has no element for.
+        for tag in ("s", "del", "ins", "u", "mark", "strike"):
+            with self.subTest(tag=tag):
+                result = self._convert(f"It is <{tag}>not</{tag}> four.")
+
+                self.assertIn("<p>It is not four.</p>", result.xml)
+                self.assertNotIn(f"<{tag}>", result.xml)
+                self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
+
+    def test_maths_in_a_list_item(self):
+        # Validity is not asserted here or below: rendered MathML carries no
+        # namespace, the same gap test_free_response_with_maths lives with.
+        result = self._convert("- $$x^2$$\n- two")
+
+        self.assertIn('<li><math display="block">', result.xml)
+
+    def test_maths_in_a_table_cell(self):
+        result = self._convert("| a |\n|---|\n| $$x^2$$ |")
+
+        self.assertIn('<td><math display="inline">', result.xml)
+
+    def test_maths_in_an_answer(self):
+        result = self._convert(answers=[{"answer": "$$x^2$$", "correct": True}])
+
+        self.assertIn('><math display="block">', result.xml)
+
+
 class CustomInteractionTests(unittest.TestCase):
     ASSESSMENT_ID = "2b1c3d4e5f60718293a4b5c6d7e8f900"
 
