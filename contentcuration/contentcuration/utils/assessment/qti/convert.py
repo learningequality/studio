@@ -164,9 +164,14 @@ def _create_choice_interaction_and_response(
 
     prompt = Prompt(children=_create_html_content_from_text(item.question))
 
+    # Every newly added question starts answerless, but the XSD requires at least one
+    # qti-simple-choice. Stand in the single empty choice the QTI editor opens a new
+    # choice interaction with.
+    answers = item.answers or [{}]
+
     choices = []
     correct_values = []
-    for i, answer in enumerate(item.answers):
+    for i, answer in enumerate(answers):
         choice_id = f"choice_{i}"
         choice_content = _create_html_content_from_text(answer.get("answer", ""))
 
