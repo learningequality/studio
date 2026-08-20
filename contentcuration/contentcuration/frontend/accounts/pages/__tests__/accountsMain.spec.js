@@ -2,11 +2,25 @@ import { render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import VueRouter from 'vue-router';
 import AccountsMain from '../AccountsMain.vue';
+import StudioPasswordField from '../../components/form/StudioPasswordField';
+import commonStrings from 'shared/translator';
+import { createTranslator } from 'shared/i18n';
 import { redirectBrowser } from 'shared/utils/navigation';
 
 jest.mock('shared/utils/navigation', () => ({
   redirectBrowser: jest.fn(),
 }));
+
+const { fieldRequired$ } = commonStrings;
+const {
+  emailLabel$,
+  signInButton$,
+  loginFailed$,
+  validEmailMessage$,
+  loginToProceed$,
+  loginFailedOffline$,
+} = createTranslator(AccountsMain.name, AccountsMain.$trs);
+const { passwordLabel$ } = createTranslator(StudioPasswordField.name, StudioPasswordField.$trs);
 
 window.Urls = {
   channels: () => '/channels/',
@@ -71,18 +85,18 @@ describe('AccountsMain', () => {
   it('should render sign-in form with email, password fields and sign in button', () => {
     makeWrapper();
 
-    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(emailLabel$())).toBeInTheDocument();
+    expect(screen.getByLabelText(passwordLabel$())).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: signInButton$() })).toBeInTheDocument();
   });
 
   it('should show error when submitting empty form', async () => {
     makeWrapper();
-    await user.click(screen.getByRole('button', { name: /sign in/i }));
+    await user.click(screen.getByRole('button', { name: signInButton$() }));
 
     // User sees validation errors (from StudioEmailField and StudioPasswordField components)
     await waitFor(() => {
-      const errorMessages = screen.queryAllByText(/required|field is required/i);
+      const errorMessages = screen.queryAllByText(fieldRequired$());
       expect(errorMessages.length).toBeGreaterThan(0);
     });
   });
@@ -91,16 +105,16 @@ describe('AccountsMain', () => {
     const loginMock = jest.fn();
     makeWrapper({ loginMock });
 
-    await user.click(screen.getByRole('button', { name: /sign in/i }));
+    await user.click(screen.getByRole('button', { name: signInButton$() }));
 
     expect(loginMock).not.toHaveBeenCalled();
   });
 
   it('should move focus to the email field when it is the first invalid field', async () => {
     makeWrapper();
-    const emailField = screen.getByLabelText(/email/i);
+    const emailField = screen.getByLabelText(emailLabel$());
 
-    await user.click(screen.getByRole('button', { name: /sign in/i }));
+    await user.click(screen.getByRole('button', { name: signInButton$() }));
 
     await waitFor(() => {
       expect(emailField).toHaveFocus();
@@ -109,10 +123,10 @@ describe('AccountsMain', () => {
 
   it('should move focus to the password field when only it is invalid', async () => {
     makeWrapper();
-    const passwordField = screen.getByLabelText(/password/i);
+    const passwordField = screen.getByLabelText(passwordLabel$());
 
-    await user.type(screen.getByLabelText(/email/i), 'test@test.com');
-    await user.click(screen.getByRole('button', { name: /sign in/i }));
+    await user.type(screen.getByLabelText(emailLabel$()), 'test@test.com');
+    await user.click(screen.getByRole('button', { name: signInButton$() }));
 
     await waitFor(() => {
       expect(passwordField).toHaveFocus();
@@ -122,41 +136,43 @@ describe('AccountsMain', () => {
   it('should not show the email error while the user is still typing', async () => {
     makeWrapper();
 
-    await user.type(screen.getByLabelText(/email/i), 'not-an-email');
+    await user.type(screen.getByLabelText(emailLabel$()), 'not-an-email');
 
-    expect(screen.queryByText('Please enter a valid email')).not.toBeInTheDocument();
+    expect(screen.queryByText(validEmailMessage$())).not.toBeInTheDocument();
   });
 
   it('should show the email error once the field loses focus', async () => {
     makeWrapper();
-    const emailField = screen.getByLabelText(/email/i);
+    const emailField = screen.getByLabelText(emailLabel$());
 
     await user.type(emailField, 'not-an-email');
     await user.tab();
 
     await waitFor(() => {
-      expect(screen.getByText('Please enter a valid email')).toBeInTheDocument();
+      expect(screen.getByText(validEmailMessage$())).toBeInTheDocument();
     });
   });
 
   it('should show and announce the offline banner when offline', () => {
     makeWrapper({ online: false });
 
-    expect(screen.getByRole('alert')).toHaveTextContent(/you seem to be offline/i);
+    expect(screen.getByRole('alert')).toHaveTextContent(loginFailedOffline$());
   });
 
   it('should preserve leading and trailing whitespace in the password', async () => {
+    const EMAIL = 'test@test.com';
+    const PASSWORD_WITH_SPACES = '  spaced  ';
     const loginMock = jest.fn().mockResolvedValue();
     makeWrapper({ loginMock });
 
-    await user.type(screen.getByLabelText(/email/i), 'test@test.com');
-    await user.type(screen.getByLabelText(/password/i), '  spaced  ');
-    await user.click(screen.getByRole('button', { name: /sign in/i }));
+    await user.type(screen.getByLabelText(emailLabel$()), EMAIL);
+    await user.type(screen.getByLabelText(passwordLabel$()), PASSWORD_WITH_SPACES);
+    await user.click(screen.getByRole('button', { name: signInButton$() }));
 
     await waitFor(() => {
       expect(loginMock).toHaveBeenCalledWith('login', {
-        username: 'test@test.com',
-        password: '  spaced  ',
+        username: EMAIL,
+        password: PASSWORD_WITH_SPACES,
       });
     });
   });
@@ -167,12 +183,12 @@ describe('AccountsMain', () => {
     });
     makeWrapper({ loginMock });
 
-    await user.type(screen.getByLabelText(/email/i), 'test@test.com');
-    await user.type(screen.getByLabelText(/password/i), 'wrongpassword');
-    await user.click(screen.getByRole('button', { name: /sign in/i }));
+    await user.type(screen.getByLabelText(emailLabel$()), 'test@test.com');
+    await user.type(screen.getByLabelText(passwordLabel$()), 'wrongpassword');
+    await user.click(screen.getByRole('button', { name: signInButton$() }));
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent('Email or password is incorrect');
+      expect(screen.getByRole('alert')).toHaveTextContent(loginFailed$());
     });
   });
 
@@ -180,9 +196,9 @@ describe('AccountsMain', () => {
     const loginMock = jest.fn().mockResolvedValue();
     makeWrapper({ loginMock });
 
-    await user.type(screen.getByLabelText(/email/i), 'test@test.com');
-    await user.type(screen.getByLabelText(/password/i), 'testpassword');
-    await user.click(screen.getByRole('button', { name: /sign in/i }));
+    await user.type(screen.getByLabelText(emailLabel$()), 'test@test.com');
+    await user.type(screen.getByLabelText(passwordLabel$()), 'testpassword');
+    await user.click(screen.getByRole('button', { name: signInButton$() }));
 
     // User is redirected to channels page
     await waitFor(() => {
@@ -193,7 +209,7 @@ describe('AccountsMain', () => {
   it('should show "You must sign in" banner when ?next= param is present', () => {
     makeWrapper({ nextParam: '/protected-page/' });
 
-    expect(screen.getByText('You must sign in to view that page')).toBeInTheDocument();
+    expect(screen.getByText(loginToProceed$())).toBeInTheDocument();
   });
 
   it('should redirect to next URL when provided after successful login', async () => {
@@ -201,9 +217,9 @@ describe('AccountsMain', () => {
     const nextUrl = '/protected-page/';
     makeWrapper({ loginMock, nextParam: nextUrl });
 
-    await user.type(screen.getByLabelText(/email/i), 'test@test.com');
-    await user.type(screen.getByLabelText(/password/i), 'testpassword');
-    await user.click(screen.getByRole('button', { name: /sign in/i }));
+    await user.type(screen.getByLabelText(emailLabel$()), 'test@test.com');
+    await user.type(screen.getByLabelText(passwordLabel$()), 'testpassword');
+    await user.click(screen.getByRole('button', { name: signInButton$() }));
 
     // User is redirected to next URL
     await waitFor(() => {
@@ -217,9 +233,9 @@ describe('AccountsMain', () => {
     });
     const { router } = makeWrapper({ loginMock });
 
-    await user.type(screen.getByLabelText(/email/i), 'test@test.com');
-    await user.type(screen.getByLabelText(/password/i), 'testpassword');
-    await user.click(screen.getByRole('button', { name: /sign in/i }));
+    await user.type(screen.getByLabelText(emailLabel$()), 'test@test.com');
+    await user.type(screen.getByLabelText(passwordLabel$()), 'testpassword');
+    await user.click(screen.getByRole('button', { name: signInButton$() }));
 
     // User is redirected to account not activated page
     await waitFor(() => {
@@ -230,6 +246,6 @@ describe('AccountsMain', () => {
   it('should disable sign in button when offline', () => {
     makeWrapper({ online: false });
 
-    expect(screen.getByRole('button', { name: /sign in/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: signInButton$() })).toBeDisabled();
   });
 });

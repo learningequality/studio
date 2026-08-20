@@ -58,6 +58,7 @@
               <StudioEmailField
                 v-model="username"
                 autofocus
+                :label="$tr('emailLabel')"
                 :errorMessages="touched.username && errors.username ? [usernameErrorText] : []"
                 :appearanceOverrides="{ maxWidth: '100%' }"
                 @blur="touched.username = true"
@@ -264,6 +265,9 @@
     },
     $trs: {
       kolibriStudio: 'Kolibri Studio',
+      // Matches the legacy EmailField's own label. StudioEmailField's default
+      // ('Email address') would otherwise change this page's visible text.
+      emailLabel: 'Email',
       forgotPasswordLink: 'Forgot your password?',
       signInButton: 'Sign in',
       createAccountButton: 'Create an account',
