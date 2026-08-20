@@ -8,10 +8,11 @@ import commonStrings from 'shared/translator';
 
 Vue.use(Vuex);
 Vue.use(VueRouter);
-let testStore;
 
-function createTestStore({ sendActivationLink = jest.fn(() => Promise.resolve()) } = {}) {
-  testStore = new Vuex.Store({
+const sendActivationLinkMock = jest.fn(() => Promise.resolve());
+
+function createTestStore({ sendActivationLink = sendActivationLinkMock } = {}) {
+  return new Vuex.Store({
     modules: {
       account: {
         namespaced: true,
@@ -21,7 +22,6 @@ function createTestStore({ sendActivationLink = jest.fn(() => Promise.resolve())
       },
     },
   });
-  return testStore;
 }
 
 function renderComponent(storeOptions) {
@@ -45,6 +45,10 @@ function renderComponent(storeOptions) {
 }
 
 describe('requestNewActivationLink', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should show a required-field error when submitting with an empty email', async () => {
     const user = userEvent.setup();
     renderComponent();
@@ -57,6 +61,7 @@ describe('requestNewActivationLink', () => {
     await waitFor(() => {
       expect(screen.getByText(commonStrings.$tr('fieldRequired'))).toBeInTheDocument();
     });
+    expect(sendActivationLinkMock).not.toHaveBeenCalled();
   });
 
   it('should show a validation error when submitting an invalid email', async () => {
@@ -76,12 +81,12 @@ describe('requestNewActivationLink', () => {
         screen.getByText(RequestNewActivationLink.$trs.emailValidationMessage),
       ).toBeInTheDocument();
     });
+    expect(sendActivationLinkMock).not.toHaveBeenCalled();
   });
 
   it('should submit when email is valid', async () => {
     const user = userEvent.setup();
     renderComponent();
-    const sendActivationLink = jest.spyOn(testStore, 'dispatch');
 
     const emailInput = screen.getByLabelText(RequestNewActivationLink.$trs.emailLabel);
     const submitButton = screen.getByRole('button', {
@@ -92,10 +97,7 @@ describe('requestNewActivationLink', () => {
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(sendActivationLink).toHaveBeenCalledWith(
-        'account/sendActivationLink',
-        'test@test.com',
-      );
+      expect(sendActivationLinkMock).toHaveBeenCalledWith(expect.anything(), 'test@test.com');
     });
   });
 
