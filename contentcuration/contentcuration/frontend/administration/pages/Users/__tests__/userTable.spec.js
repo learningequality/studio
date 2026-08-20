@@ -65,10 +65,6 @@ function renderComponent({ users, query = {} } = {}) {
   });
 }
 
-/**
- * KSelect mounts every dropdown into one shared Popper overlay, so the two date
- * windows offering identical labels cannot be told apart by a click.
- */
 const renderWithFilters = query => renderComponent({ query });
 
 function lastFetchParams() {
@@ -76,12 +72,7 @@ function lastFetchParams() {
   return calls[calls.length - 1][1];
 }
 
-/**
- * KButton renders `appearance="basic-link"` as an anchor with no href, which has
- * no implicit role, so the clear action is matched by its text.
- */
 const clearFiltersLink = () => screen.queryByText(clearFiltersAction$());
-
 const selectAllCheckbox = () => within(screen.getByRole('table')).getAllByRole('checkbox')[0];
 
 describe('UserTable', () => {
@@ -113,8 +104,6 @@ describe('UserTable', () => {
     it('renders every filter control', () => {
       renderComponent();
 
-      // KSelect renders its label as plain text in a div, with no <label> element
-      // and no aria-label, so its controls cannot be found by accessible name.
       expect(screen.getByText(userTypeLabel$())).toBeInTheDocument();
       expect(screen.getByText(joinedWithinLabel$())).toBeInTheDocument();
       expect(screen.getByText(activeWithinLabel$())).toBeInTheDocument();

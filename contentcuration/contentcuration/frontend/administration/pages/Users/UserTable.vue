@@ -31,7 +31,6 @@
     <KGrid class="filter-row">
       <KGridItem
         :layout12="{ span: 3 }"
-        :layout8="{ span: 2 }"
         :layout4="{ span: 4 }"
       >
         <KSelect
@@ -44,7 +43,6 @@
       </KGridItem>
       <KGridItem
         :layout12="{ span: 3 }"
-        :layout8="{ span: 2 }"
         :layout4="{ span: 4 }"
       >
         <CountryField
@@ -52,16 +50,17 @@
           v-model="locationFilter"
           :outline="false"
           :multiple="false"
+          fullWidth
           :label="targetLocationLabel$()"
         />
       </KGridItem>
       <KGridItem
         :layout12="{ span: 3 }"
-        :layout8="{ span: 2 }"
         :layout4="{ span: 4 }"
       >
         <KTextbox
           v-model="keywordInput"
+          :appearanceOverrides="{ maxWidth: '100%' }"
           :label="searchLabel$()"
           clearable
           :clearAriaLabel="clearAction$()"
@@ -81,7 +80,7 @@
     <KGrid class="filter-row">
       <KGridItem
         :layout12="{ span: 3 }"
-        :layout8="{ span: 2 }"
+        :layout8="{ span: 4 }"
         :layout4="{ span: 4 }"
       >
         <KSelect
@@ -93,7 +92,7 @@
       </KGridItem>
       <KGridItem
         :layout12="{ span: 3 }"
-        :layout8="{ span: 2 }"
+        :layout8="{ span: 4 }"
         :layout4="{ span: 4 }"
       >
         <KSelect
@@ -516,7 +515,7 @@
   }
 
   .filter-row .toggle-filters {
-    height: 54px;
+    min-height: 54px;
   }
 
   .filter-row .toggle-checkbox {
