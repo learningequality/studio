@@ -66,16 +66,11 @@ function renderComponent({ users, query = {} } = {}) {
 }
 
 /**
- * KSelect mounts its dropdown through Popper into a shared overlay element, so
- * every select's options land in the same detached container. Where two selects
- * offer identical option labels — the date windows both offer "Last month" and
- * friends — a click cannot be aimed unambiguously, so those filters are reached
- * through the URL the control would produce instead. A shared or bookmarked
- * filter link is a real entry point, but it is navigation rather than a click.
+ * KSelect mounts every dropdown into one shared Popper overlay, so the two date
+ * windows offering identical labels cannot be told apart by a click.
  */
 const renderWithFilters = query => renderComponent({ query });
 
-/** Payload of the most recent user fetch. */
 function lastFetchParams() {
   const { calls } = mockLoadUsers.mock;
   return calls[calls.length - 1][1];
@@ -87,7 +82,6 @@ function lastFetchParams() {
  */
 const clearFiltersLink = () => screen.queryByText(clearFiltersAction$());
 
-/** The select-all checkbox lives in the table header, after the filter checkboxes. */
 const selectAllCheckbox = () => within(screen.getByRole('table')).getAllByRole('checkbox')[0];
 
 describe('UserTable', () => {
@@ -188,7 +182,6 @@ describe('UserTable', () => {
       });
     });
 
-    // Reached by URL rather than by clicking — see renderWithFilters.
     it('a joined-within selection fetches users filtered by an ISO joined_since date', async () => {
       renderWithFilters({ joinedWithin: '3mo' });
 
@@ -197,7 +190,6 @@ describe('UserTable', () => {
       });
     });
 
-    // Reached by URL rather than by clicking — see renderWithFilters.
     it('an active-within selection fetches users filtered by an ISO active_since date', async () => {
       renderWithFilters({ activeWithin: '1mo' });
 
@@ -270,8 +262,7 @@ describe('UserTable', () => {
       renderComponent();
 
       await user.type(screen.getByLabelText(searchLabel$()), 'keyword test');
-      // The search is debounced; let it reach the URL before clearing, otherwise a
-      // pending write lands after the clear and restores the term.
+      // useKeywordSearch debounces, so a pending write would land after the clear.
       await waitFor(() => {
         expect(router.currentRoute.query.keywords).toBe('keyword test');
       });
