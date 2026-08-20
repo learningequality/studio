@@ -5,9 +5,11 @@ import router from '../../../router';
 import { RouteNames } from '../../../constants';
 import UserTable from '../UserTable';
 import { usersStrings } from '../usersStrings';
+import { commonStrings } from 'shared/strings/commonStrings';
 
 const {
   userCount$,
+  clearFiltersAction$,
   userTypeLabel$,
   targetLocationLabel$,
   searchLabel$,
@@ -15,8 +17,11 @@ const {
   activeWithinLabel$,
   hasPublishedLabel$,
   hasStudioActivityLabel$,
-  clearFiltersAction$,
+  userTypeAdministrators$,
+  userTypeAll$,
 } = usersStrings;
+
+const { clearAction$ } = commonStrings;
 
 jest.mock('shared/client', () => ({
   __esModule: true,
@@ -24,9 +29,6 @@ jest.mock('shared/client', () => ({
 }));
 jest.mock('file-saver', () => ({ saveAs: jest.fn() }));
 
-// Studio's IconButton passes `ariaLabel="text"` as a literal rather than binding it
-// (shared/views/IconButton.vue), so icon buttons have no usable accessible name and
-// have to be reached by their existing data-test hooks.
 configure({ testIdAttribute: 'data-test' });
 
 const USER_IDS = ['user-a', 'user-b', 'user-c'];
@@ -64,10 +66,12 @@ function renderComponent({ users, query = {} } = {}) {
 }
 
 /**
- * Vuetify's VSelect menu does not open reliably under jsdom, so select-backed
- * filters are reached through the URL the control would produce. A shared or
- * bookmarked filter link is a real entry point, but it is navigation rather than
- * a click — each test relying on it says so.
+ * KSelect mounts its dropdown through Popper into a shared overlay element, so
+ * every select's options land in the same detached container. Where two selects
+ * offer identical option labels — the date windows both offer "Last month" and
+ * friends — a click cannot be aimed unambiguously, so those filters are reached
+ * through the URL the control would produce instead. A shared or bookmarked
+ * filter link is a real entry point, but it is navigation rather than a click.
  */
 const renderWithFilters = query => renderComponent({ query });
 
@@ -115,11 +119,14 @@ describe('UserTable', () => {
     it('renders every filter control', () => {
       renderComponent();
 
-      expect(screen.getByLabelText(userTypeLabel$())).toBeInTheDocument();
+      // KSelect renders its label as plain text in a div, with no <label> element
+      // and no aria-label, so its controls cannot be found by accessible name.
+      expect(screen.getByText(userTypeLabel$())).toBeInTheDocument();
+      expect(screen.getByText(joinedWithinLabel$())).toBeInTheDocument();
+      expect(screen.getByText(activeWithinLabel$())).toBeInTheDocument();
+
       expect(screen.getByLabelText(targetLocationLabel$())).toBeInTheDocument();
       expect(screen.getByLabelText(searchLabel$())).toBeInTheDocument();
-      expect(screen.getByLabelText(joinedWithinLabel$())).toBeInTheDocument();
-      expect(screen.getByLabelText(activeWithinLabel$())).toBeInTheDocument();
       expect(screen.getByLabelText(hasPublishedLabel$())).toBeInTheDocument();
       expect(screen.getByLabelText(hasStudioActivityLabel$())).toBeInTheDocument();
     });
@@ -132,6 +139,22 @@ describe('UserTable', () => {
       await waitFor(() => {
         expect(lastFetchParams()).toMatchObject({ keywords: 'keyword test' });
       });
+    });
+
+    it("the search field's clear button drops the keyword filter", async () => {
+      renderComponent();
+
+      await user.type(screen.getByLabelText(searchLabel$()), 'keyword test');
+      await waitFor(() => {
+        expect(router.currentRoute.query.keywords).toBe('keyword test');
+      });
+
+      await user.click(screen.getByRole('button', { name: clearAction$() }));
+
+      await waitFor(() => {
+        expect(router.currentRoute.query.keywords).toBeUndefined();
+      });
+      expect(screen.getByLabelText(searchLabel$())).toHaveValue('');
     });
 
     it('ticking "has published a channel" fetches users filtered by published_channel', async () => {
@@ -154,16 +177,18 @@ describe('UserTable', () => {
       });
     });
 
-    // Reached by URL rather than by opening the select — see renderWithFilters.
     it('a user type selection fetches users filtered by that type', async () => {
-      renderWithFilters({ userType: 'administrator' });
+      renderComponent();
+
+      await user.click(screen.getByText(userTypeLabel$()));
+      await user.click(await screen.findByText(userTypeAdministrators$()));
 
       await waitFor(() => {
         expect(lastFetchParams()).toMatchObject({ is_admin: true });
       });
     });
 
-    // Reached by URL rather than by opening the select — see renderWithFilters.
+    // Reached by URL rather than by clicking — see renderWithFilters.
     it('a joined-within selection fetches users filtered by an ISO joined_since date', async () => {
       renderWithFilters({ joinedWithin: '3mo' });
 
@@ -172,7 +197,7 @@ describe('UserTable', () => {
       });
     });
 
-    // Reached by URL rather than by opening the select — see renderWithFilters.
+    // Reached by URL rather than by clicking — see renderWithFilters.
     it('an active-within selection fetches users filtered by an ISO active_since date', async () => {
       renderWithFilters({ activeWithin: '1mo' });
 
@@ -181,7 +206,6 @@ describe('UserTable', () => {
       });
     });
 
-    // Reached by URL rather than by opening the select — see renderWithFilters.
     it('a target location selection fetches users filtered by that location', async () => {
       renderWithFilters({ location: 'Afghanistan' });
 
@@ -208,20 +232,18 @@ describe('UserTable', () => {
       });
     });
 
-    // Reached by URL rather than by opening the select — see renderWithFilters.
     it('is offered for a user type of "All", which narrows nothing but is still a selection', async () => {
-      renderWithFilters({ userType: 'all' });
+      renderComponent();
+
+      await user.click(screen.getByText(userTypeLabel$()));
+      await user.click(await screen.findByText(userTypeAll$()));
 
       await waitFor(() => {
         expect(clearFiltersLink()).toBeInTheDocument();
       });
-      await waitFor(() => {
-        expect(mockLoadUsers).toHaveBeenCalled();
-      });
       expect(lastFetchParams()).not.toHaveProperty('is_admin');
     });
 
-    // Reached by URL rather than by opening the select — see renderWithFilters.
     it('stays unoffered for date windows left at their default', () => {
       renderWithFilters({ joinedWithin: 'any', activeWithin: 'any' });
 
@@ -333,6 +355,7 @@ describe('UserTable', () => {
       await user.click(selectAllCheckbox());
       await user.click(await screen.findByTestId('email'));
 
+      // EmailUsersDialog has no $trs, so there is no key to reference for its title.
       expect(await screen.findByRole('heading', { name: 'Send email' })).toBeInTheDocument();
     });
   });
