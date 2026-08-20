@@ -20,6 +20,8 @@
 
   import KMultiSelect from 'kolibri-design-system/lib/candidate/multiselect/KMultiSelect';
   import LanguagesMap, { LanguagesList } from 'shared/leUtils/Languages';
+  import { commonStrings } from 'shared/strings/commonStrings';
+  import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
 
   const publicLanguages = Object.entries(window.publicLanguages || {}).map(([langId, count]) => {
     const baseLanguage = LanguagesMap.get(langId);
@@ -61,17 +63,28 @@
         },
       },
       messages() {
+        const {
+          openMenuAction$,
+          closeMenuAction$,
+          optionsClickableLabel$,
+          allOptionsSelectedLabel$,
+          allOptionsDeselectedLabel$,
+          optionDeselectedLabel$,
+          optionSelectedLabel$,
+          optionRemovedLabel$,
+        } = commonStrings;
+        const { clearAllAction$ } = communityChannelsStrings;
         return {
-          clearText: () => this.$tr('clearText'),
-          open: () => this.$tr('openMenu'),
-          close: () => this.$tr('closeMenu'),
-          clickable: () => this.$tr('optionsClickable'),
-          allOptionsSelected: () => this.$tr('allOptionsSelected'),
-          allOptionsDeselected: () => this.$tr('allOptionsDeselected'),
-          optionDeselected: () => this.$tr('optionDeselected'),
+          clearText: clearAllAction$,
+          open: openMenuAction$,
+          close: closeMenuAction$,
+          clickable: optionsClickableLabel$,
+          allOptionsSelected: allOptionsSelectedLabel$,
+          allOptionsDeselected: allOptionsDeselectedLabel$,
+          optionDeselected: optionDeselectedLabel$,
           itemsSelected: ({ count }) => this.$tr('itemsSelected', { count }),
-          selected: ({ label }) => this.$tr('languageSelected', { label }),
-          removed: ({ label }) => this.$tr('languageRemoved', { label }),
+          selected: optionSelectedLabel$,
+          removed: optionRemovedLabel$,
           cleared: ({ count }) => this.$tr('selectionsCleared', { count }),
         };
       },
@@ -79,16 +92,7 @@
     $trs: {
       languageLabel: 'Languages',
       noMatchingLanguageText: 'No language matches the search',
-      clearText: 'Clear all',
-      openMenu: 'Open menu',
-      closeMenu: 'Close menu',
-      optionsClickable: 'Options are clickable',
-      allOptionsSelected: 'All options selected',
-      allOptionsDeselected: 'No options selected',
-      optionDeselected: 'Option deselected',
       itemsSelected: '{count, plural, one {# language selected} other {# languages selected}}',
-      languageSelected: 'Selected {label}',
-      languageRemoved: 'Removed {label}',
       selectionsCleared: '{count, plural, one {Cleared # selection} other {Cleared # selections}}',
     },
   };
