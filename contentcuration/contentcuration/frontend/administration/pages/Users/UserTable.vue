@@ -2,20 +2,20 @@
 
   <div>
     <h1 class="font-weight-bold px-4 py-2 title">
-      {{ `${$formatNumber(count)} ${count === 1 ? 'user' : 'users'}` }}
+      {{ userCount$({ count }) }}
       <IconButton
         v-if="count"
         icon="email"
         class="ma-0"
         :color="$themeTokens.primary"
-        :text="`Email ${$formatNumber(count)} ${count === 1 ? 'user' : 'users'}`"
+        :text="emailUsersAction$({ count })"
         @click="showMassEmailDialog = true"
       />
       <IconButton
         icon="download"
         class="ma-0"
         :color="$themeTokens.primary"
-        text="Download CSV"
+        :text="downloadCSVAction$()"
         data-test="csv"
         :disabled="!count"
         @click="onDownloadCSV"
@@ -43,7 +43,7 @@
           :items="userTypeOptions"
           item-text="label"
           item-value="key"
-          label="User Type"
+          :label="userTypeLabel$()"
           box
           :menu-props="{ offsetY: true }"
         />
@@ -59,7 +59,7 @@
           v-model="locationFilter"
           :outline="false"
           :multiple="false"
-          label="Target location"
+          :label="targetLocationLabel$()"
         />
       </VFlex>
       <VFlex
@@ -70,11 +70,11 @@
       >
         <VTextField
           v-model="keywordInput"
-          label="Search for a user..."
+          :label="searchLabel$()"
           prepend-inner-icon="search"
           clearable
           box
-          hint="Search for users by their names, emails, or channels"
+          :hint="searchHint$()"
           persistent-hint
           @input="setKeywords"
           @click:clear="clearSearch"
@@ -96,7 +96,7 @@
           :items="joinedWithinOptions"
           item-text="label"
           item-value="value"
-          label="Joined within"
+          :label="joinedWithinLabel$()"
           box
           :menu-props="{ offsetY: true }"
         />
@@ -112,7 +112,7 @@
           :items="activeWithinOptions"
           item-text="label"
           item-value="value"
-          label="Active within"
+          :label="activeWithinLabel$()"
           box
           :menu-props="{ offsetY: true }"
         />
@@ -124,16 +124,16 @@
       >
         <Checkbox
           v-model="hasPublishedFilter"
-          label="Has published a channel"
+          :label="hasPublishedLabel$()"
         />
         <Checkbox
           v-model="hasEditsFilter"
-          label="Has Studio activity"
+          :label="hasStudioActivityLabel$()"
         />
         <KButton
           v-if="hasActiveFilters"
           appearance="basic-link"
-          text="Clear filters"
+          :text="clearFiltersAction$()"
           data-test="clear-filters"
           @click="clearFilters"
         />
@@ -148,7 +148,7 @@
       :total-items="count"
       :rows-per-page-items="rowsPerPageItems"
       :items="users"
-      :no-data-text="loading ? 'Loading...' : 'No users found'"
+      :no-data-text="loading ? loadingMessage$() : noUsersFoundMessage$()"
       :class="{ expanded: $vuetify.breakpoint.mdAndUp }"
     >
       <template #progress>
@@ -177,7 +177,7 @@
           <IconButton
             icon="email"
             class="ma-0"
-            text="Email"
+            :text="emailAction$()"
             data-test="email"
             @click="showEmailDialog = true"
           />
@@ -215,6 +215,7 @@
   import { RouteNames, rowsPerPageItems } from '../../constants';
   import EmailUsersDialog from './EmailUsersDialog';
   import UserItem from './UserItem';
+  import { usersStrings } from './usersStrings';
   import client from 'shared/client';
   import { useFilter } from 'shared/composables/useFilter';
   import { useKeywordSearch } from 'shared/composables/useKeywordSearch';
@@ -224,12 +225,53 @@
   import Checkbox from 'shared/views/form/Checkbox';
   import CountryField from 'shared/views/form/CountryField';
 
+  const {
+    userCount$,
+    emailUsersAction$,
+    emailAction$,
+    downloadCSVAction$,
+    clearFiltersAction$,
+    userTypeLabel$,
+    targetLocationLabel$,
+    searchLabel$,
+    searchHint$,
+    joinedWithinLabel$,
+    activeWithinLabel$,
+    hasPublishedLabel$,
+    hasStudioActivityLabel$,
+    userTypeAll$,
+    userTypeActive$,
+    userTypeInactive$,
+    userTypeAdministrators$,
+    userTypeSushiChef$,
+    booleanFilterAny$,
+    dateWindowAnyTime$,
+    dateWindowLastMonth$,
+    dateWindowLast3Months$,
+    dateWindowLast6Months$,
+    dateWindowLastYear$,
+    nameHeader$,
+    emailHeader$,
+    diskSpaceHeader$,
+    canEditHeader$,
+    canViewHeader$,
+    dateJoinedHeader$,
+    lastActiveHeader$,
+    actionsHeader$,
+    loadingMessage$,
+    noUsersFoundMessage$,
+    generatingCSVMessage$,
+    noFiltersAppliedMessage$,
+    csvDownloadFailedMessage$,
+    tabTitle$,
+  } = usersStrings;
+
   const userTypeFilterMap = {
-    all: { label: 'All', params: {} },
-    active: { label: 'Active', params: { is_active: true } },
-    inactive: { label: 'Inactive', params: { is_active: false } },
-    administrator: { label: 'Administrators', params: { is_admin: true } },
-    sushichef: { label: 'Sushi chef', params: { chef: true } },
+    all: { label: userTypeAll$(), params: {} },
+    active: { label: userTypeActive$(), params: { is_active: true } },
+    inactive: { label: userTypeInactive$(), params: { is_active: false } },
+    administrator: { label: userTypeAdministrators$(), params: { is_admin: true } },
+    sushichef: { label: userTypeSushiChef$(), params: { chef: true } },
   };
 
   const TABLE_STATE_QUERY_PARAMS = ['page', 'page_size', 'sortBy', 'descending'];
@@ -246,23 +288,23 @@
   };
 
   const DATE_WINDOWS = [
-    { key: 'any', label: 'Any time', months: null },
-    { key: '1mo', label: 'Last month', months: 1 },
-    { key: '3mo', label: 'Last 3 months', months: 3 },
-    { key: '6mo', label: 'Last 6 months', months: 6 },
-    { key: '1yr', label: 'Last year', months: 12 },
+    { key: 'any', label: dateWindowAnyTime$, months: null },
+    { key: '1mo', label: dateWindowLastMonth$, months: 1 },
+    { key: '3mo', label: dateWindowLast3Months$, months: 3 },
+    { key: '6mo', label: dateWindowLast6Months$, months: 6 },
+    { key: '1yr', label: dateWindowLastYear$, months: 12 },
   ];
 
   function buildDateWindowFilterMap(paramName) {
     const map = {};
     for (const window of DATE_WINDOWS) {
       if (window.months === null) {
-        map[window.key] = { label: window.label, params: {} };
+        map[window.key] = { label: window.label(), params: {} };
       } else {
         const cutoff = new Date();
         cutoff.setMonth(cutoff.getMonth() - window.months);
         const iso = cutoff.toISOString().slice(0, 10);
-        map[window.key] = { label: window.label, params: { [paramName]: iso } };
+        map[window.key] = { label: window.label(), params: { [paramName]: iso } };
       }
     }
     return map;
@@ -285,7 +327,7 @@
 
   function useBooleanFilter({ name, label, paramName }) {
     const filterMap = {
-      no: { label: 'Any', params: {} },
+      no: { label: booleanFilterAny$(), params: {} },
       yes: { label, params: { [paramName]: true } },
     };
     const { filter, options, fetchQueryParams } = useFilter({
@@ -378,14 +420,14 @@
       const { filter: hasPublishedFilter, fetchQueryParams: hasPublishedFetchQueryParams } =
         useBooleanFilter({
           name: 'hasPublished',
-          label: 'Has published a channel',
+          label: hasPublishedLabel$(),
           paramName: 'published_channel',
         });
 
       const { filter: hasEditsFilter, fetchQueryParams: hasEditsFetchQueryParams } =
         useBooleanFilter({
           name: 'hasEdits',
-          label: 'Has Studio activity',
+          label: hasStudioActivityLabel$(),
           paramName: 'has_edits',
         });
 
@@ -438,6 +480,21 @@
       });
 
       return {
+        userCount$,
+        emailUsersAction$,
+        emailAction$,
+        downloadCSVAction$,
+        clearFiltersAction$,
+        userTypeLabel$,
+        targetLocationLabel$,
+        searchLabel$,
+        searchHint$,
+        joinedWithinLabel$,
+        activeWithinLabel$,
+        hasPublishedLabel$,
+        hasStudioActivityLabel$,
+        loadingMessage$,
+        noUsersFoundMessage$,
         userTypeFilter,
         userTypeOptions,
         locationDropdown,
@@ -490,18 +547,18 @@
           : [];
         return firstColumn.concat([
           {
-            text: 'Name',
+            text: nameHeader$(),
             align: 'left',
             value: 'last_name',
             class: `${this.$vuetify.breakpoint.smAndDown ? '' : 'first'}`,
           },
-          { text: 'Email', value: 'email' },
-          { text: 'Disk space', value: 'disk_space' },
-          { text: 'Can edit', value: 'edit_count', sortable: false },
-          { text: 'Can view', value: 'view_count', sortable: false },
-          { text: 'Date joined', value: 'date_joined' },
-          { text: 'Last active', value: 'last_login' },
-          { text: 'Actions', sortable: false, align: 'center' },
+          { text: emailHeader$(), value: 'email' },
+          { text: diskSpaceHeader$(), value: 'disk_space' },
+          { text: canEditHeader$(), value: 'edit_count', sortable: false },
+          { text: canViewHeader$(), value: 'view_count', sortable: false },
+          { text: dateJoinedHeader$(), value: 'date_joined' },
+          { text: lastActiveHeader$(), value: 'last_login' },
+          { text: actionsHeader$(), sortable: false, align: 'center' },
         ]);
       },
       selectedCount() {
@@ -524,11 +581,11 @@
       },
     },
     mounted() {
-      this.updateTabTitle('Users - Administration');
+      this.updateTabTitle(tabTitle$());
     },
     methods: {
       async onDownloadCSV() {
-        this.$store.dispatch('showSnackbarSimple', 'Generating CSV...');
+        this.$store.dispatch('showSnackbarSimple', generatingCSVMessage$());
         try {
           const response = await client.get(window.Urls.admin_users_download_csv(), {
             params: this.filterFetchQueryParams,
@@ -539,12 +596,9 @@
         } catch (error) {
           const status = error.response && error.response.status;
           if (status === 412) {
-            this.$store.dispatch(
-              'showSnackbarSimple',
-              'No filters applied. Pick at least one filter and try again.',
-            );
+            this.$store.dispatch('showSnackbarSimple', noFiltersAppliedMessage$());
           } else {
-            this.$store.dispatch('showSnackbarSimple', 'CSV download failed. Try again.');
+            this.$store.dispatch('showSnackbarSimple', csvDownloadFailedMessage$());
           }
         }
       },

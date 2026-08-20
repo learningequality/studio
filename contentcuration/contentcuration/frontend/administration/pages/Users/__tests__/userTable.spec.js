@@ -4,6 +4,19 @@ import { Store } from 'vuex';
 import router from '../../../router';
 import { RouteNames } from '../../../constants';
 import UserTable from '../UserTable';
+import { usersStrings } from '../usersStrings';
+
+const {
+  userCount$,
+  userTypeLabel$,
+  targetLocationLabel$,
+  searchLabel$,
+  joinedWithinLabel$,
+  activeWithinLabel$,
+  hasPublishedLabel$,
+  hasStudioActivityLabel$,
+  clearFiltersAction$,
+} = usersStrings;
 
 jest.mock('shared/client', () => ({
   __esModule: true,
@@ -68,7 +81,7 @@ function lastFetchParams() {
  * KButton renders `appearance="basic-link"` as an anchor with no href, which has
  * no implicit role, so the clear action is matched by its text.
  */
-const clearFiltersLink = () => screen.queryByText('Clear filters');
+const clearFiltersLink = () => screen.queryByText(clearFiltersAction$());
 
 /** The select-all checkbox lives in the table header, after the filter checkboxes. */
 const selectAllCheckbox = () => within(screen.getByRole('table')).getAllByRole('checkbox')[0];
@@ -84,23 +97,37 @@ describe('UserTable', () => {
     });
   });
 
+  describe('heading', () => {
+    it('pluralises the match count', () => {
+      renderComponent();
+
+      expect(screen.getByText(userCount$({ count: USER_IDS.length }))).toBeInTheDocument();
+    });
+
+    it('uses the singular form for one match', () => {
+      renderComponent({ users: [USER_IDS[0]] });
+
+      expect(screen.getByText(userCount$({ count: 1 }))).toBeInTheDocument();
+    });
+  });
+
   describe('filter controls', () => {
     it('renders every filter control', () => {
       renderComponent();
 
-      expect(screen.getByLabelText('User Type')).toBeInTheDocument();
-      expect(screen.getByLabelText('Target location')).toBeInTheDocument();
-      expect(screen.getByLabelText('Search for a user...')).toBeInTheDocument();
-      expect(screen.getByLabelText('Joined within')).toBeInTheDocument();
-      expect(screen.getByLabelText('Active within')).toBeInTheDocument();
-      expect(screen.getByLabelText('Has published a channel')).toBeInTheDocument();
-      expect(screen.getByLabelText('Has Studio activity')).toBeInTheDocument();
+      expect(screen.getByLabelText(userTypeLabel$())).toBeInTheDocument();
+      expect(screen.getByLabelText(targetLocationLabel$())).toBeInTheDocument();
+      expect(screen.getByLabelText(searchLabel$())).toBeInTheDocument();
+      expect(screen.getByLabelText(joinedWithinLabel$())).toBeInTheDocument();
+      expect(screen.getByLabelText(activeWithinLabel$())).toBeInTheDocument();
+      expect(screen.getByLabelText(hasPublishedLabel$())).toBeInTheDocument();
+      expect(screen.getByLabelText(hasStudioActivityLabel$())).toBeInTheDocument();
     });
 
     it('typing a search term fetches users filtered by keyword', async () => {
       renderComponent();
 
-      await user.type(screen.getByLabelText('Search for a user...'), 'keyword test');
+      await user.type(screen.getByLabelText(searchLabel$()), 'keyword test');
 
       await waitFor(() => {
         expect(lastFetchParams()).toMatchObject({ keywords: 'keyword test' });
@@ -110,7 +137,7 @@ describe('UserTable', () => {
     it('ticking "has published a channel" fetches users filtered by published_channel', async () => {
       renderComponent();
 
-      await user.click(screen.getByLabelText('Has published a channel'));
+      await user.click(screen.getByLabelText(hasPublishedLabel$()));
 
       await waitFor(() => {
         expect(lastFetchParams()).toMatchObject({ published_channel: true });
@@ -120,7 +147,7 @@ describe('UserTable', () => {
     it('ticking "has Studio activity" fetches users filtered by has_edits', async () => {
       renderComponent();
 
-      await user.click(screen.getByLabelText('Has Studio activity'));
+      await user.click(screen.getByLabelText(hasStudioActivityLabel$()));
 
       await waitFor(() => {
         expect(lastFetchParams()).toMatchObject({ has_edits: true });
@@ -174,7 +201,7 @@ describe('UserTable', () => {
     it('is offered once a filter is applied', async () => {
       renderComponent();
 
-      await user.click(screen.getByLabelText('Has published a channel'));
+      await user.click(screen.getByLabelText(hasPublishedLabel$()));
 
       await waitFor(() => {
         expect(clearFiltersLink()).toBeInTheDocument();
@@ -203,7 +230,7 @@ describe('UserTable', () => {
 
     it('is withdrawn again after a checkbox is ticked and unticked', async () => {
       renderComponent();
-      const checkbox = screen.getByLabelText('Has published a channel');
+      const checkbox = screen.getByLabelText(hasPublishedLabel$());
 
       await user.click(checkbox);
       await waitFor(() => {
@@ -220,14 +247,14 @@ describe('UserTable', () => {
     it('clears the checkboxes and the keyword search', async () => {
       renderComponent();
 
-      await user.type(screen.getByLabelText('Search for a user...'), 'keyword test');
+      await user.type(screen.getByLabelText(searchLabel$()), 'keyword test');
       // The search is debounced; let it reach the URL before clearing, otherwise a
       // pending write lands after the clear and restores the term.
       await waitFor(() => {
         expect(router.currentRoute.query.keywords).toBe('keyword test');
       });
-      await user.click(screen.getByLabelText('Has published a channel'));
-      await user.click(screen.getByLabelText('Has Studio activity'));
+      await user.click(screen.getByLabelText(hasPublishedLabel$()));
+      await user.click(screen.getByLabelText(hasStudioActivityLabel$()));
       await waitFor(() => {
         expect(clearFiltersLink()).toBeInTheDocument();
       });
@@ -235,10 +262,10 @@ describe('UserTable', () => {
       await user.click(clearFiltersLink());
 
       await waitFor(() => {
-        expect(screen.getByLabelText('Search for a user...')).toHaveValue('');
+        expect(screen.getByLabelText(searchLabel$())).toHaveValue('');
       });
-      expect(screen.getByLabelText('Has published a channel')).not.toBeChecked();
-      expect(screen.getByLabelText('Has Studio activity')).not.toBeChecked();
+      expect(screen.getByLabelText(hasPublishedLabel$())).not.toBeChecked();
+      expect(screen.getByLabelText(hasStudioActivityLabel$())).not.toBeChecked();
       expect(clearFiltersLink()).not.toBeInTheDocument();
     });
 
@@ -293,7 +320,7 @@ describe('UserTable', () => {
       await user.click(selectAllCheckbox());
       expect(await screen.findByTestId('email')).toBeInTheDocument();
 
-      await user.click(screen.getByLabelText('Has published a channel'));
+      await user.click(screen.getByLabelText(hasPublishedLabel$()));
 
       await waitFor(() => {
         expect(screen.queryByTestId('email')).not.toBeInTheDocument();
