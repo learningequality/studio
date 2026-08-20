@@ -77,6 +77,7 @@
         </KTextbox>
       </KGridItem>
     </KGrid>
+
     <KGrid class="filter-row">
       <KGridItem
         :layout12="{ span: 3 }"
@@ -130,7 +131,7 @@
     </KGrid>
     <VDataTable
       v-model="selected"
-      :headers="headers"
+      :headers="headersFor($vuetify.breakpoint.smAndDown)"
       :loading="loading"
       class="table-col-freeze"
       :pagination.sync="pagination"
@@ -161,7 +162,7 @@
         </div>
 
         <template v-if="header.class === 'first' && selected.length">
-          <span>({{ selectedCount }})</span>
+          <span>({{ selected.length }})</span>
           <IconButton
             icon="email"
             class="ma-0"
@@ -191,10 +192,9 @@
 </template>
 
 
-<script>
+<script setup>
 
-  import { ref, onMounted, computed, getCurrentInstance } from 'vue';
-  import { mapGetters } from 'vuex';
+  import { computed, onMounted, ref, watch } from 'vue';
   import pick from 'lodash/pick';
   import transform from 'lodash/transform';
   import { saveAs } from 'file-saver';
@@ -209,7 +209,8 @@
   import { useFilter } from 'shared/composables/useFilter';
   import { useKeywordSearch } from 'shared/composables/useKeywordSearch';
   import { useQueryParams } from 'shared/composables/useQueryParams';
-  import { routerMixin } from 'shared/mixins';
+  import useStore from 'shared/composables/useStore';
+  import { updateTabTitle } from 'shared/i18n';
   import IconButton from 'shared/views/IconButton';
   import Checkbox from 'shared/views/form/Checkbox';
   import CountryField from 'shared/views/form/CountryField';
@@ -256,18 +257,9 @@
 
   const { clearAction$ } = commonStrings;
 
-  const userTypeFilterMap = {
-    all: { label: userTypeAll$(), params: {} },
-    active: { label: userTypeActive$(), params: { is_active: true } },
-    inactive: { label: userTypeInactive$(), params: { is_active: false } },
-    administrator: { label: userTypeAdministrators$(), params: { is_admin: true } },
-    sushichef: { label: userTypeSushiChef$(), params: { chef: true } },
-  };
+  const tableStateQueryParams = ['page', 'page_size', 'sortBy', 'descending'];
 
-  const TABLE_STATE_QUERY_PARAMS = ['page', 'page_size', 'sortBy', 'descending'];
-
-  // Mirrors the defaultValue each filter below declares.
-  const FILTER_DEFAULTS = {
+  const filterDefaults = {
     userType: undefined,
     location: undefined,
     keywords: undefined,
@@ -277,308 +269,224 @@
     hasEdits: 'no',
   };
 
-  const DATE_WINDOWS = [
-    { key: 'any', label: dateWindowAnyTime$, months: null },
-    { key: '1mo', label: dateWindowLastMonth$, months: 1 },
-    { key: '3mo', label: dateWindowLast3Months$, months: 3 },
-    { key: '6mo', label: dateWindowLast6Months$, months: 6 },
-    { key: '1yr', label: dateWindowLastYear$, months: 12 },
+  const userTypeFilterMap = {
+    all: { label: userTypeAll$(), params: {} },
+    active: { label: userTypeActive$(), params: { is_active: true } },
+    inactive: { label: userTypeInactive$(), params: { is_active: false } },
+    administrator: { label: userTypeAdministrators$(), params: { is_admin: true } },
+    sushichef: { label: userTypeSushiChef$(), params: { chef: true } },
+  };
+
+  const dateWindows = [
+    { key: 'any', label: dateWindowAnyTime$, monthsAgo: null },
+    { key: '1mo', label: dateWindowLastMonth$, monthsAgo: 1 },
+    { key: '3mo', label: dateWindowLast3Months$, monthsAgo: 3 },
+    { key: '6mo', label: dateWindowLast6Months$, monthsAgo: 6 },
+    { key: '1yr', label: dateWindowLastYear$, monthsAgo: 12 },
   ];
 
+  function isoDateMonthsAgo(monthsAgo) {
+    const cutoff = new Date();
+    cutoff.setMonth(cutoff.getMonth() - monthsAgo);
+    return cutoff.toISOString().slice(0, 10);
+  }
+
   function buildDateWindowFilterMap(paramName) {
-    const map = {};
-    for (const window of DATE_WINDOWS) {
-      if (window.months === null) {
-        map[window.key] = { label: window.label(), params: {} };
-      } else {
-        const cutoff = new Date();
-        cutoff.setMonth(cutoff.getMonth() - window.months);
-        const iso = cutoff.toISOString().slice(0, 10);
-        map[window.key] = { label: window.label(), params: { [paramName]: iso } };
-      }
-    }
-    return map;
+    return transform(
+      dateWindows,
+      (map, { key, label, monthsAgo }) => {
+        const params = monthsAgo === null ? {} : { [paramName]: isoDateMonthsAgo(monthsAgo) };
+        map[key] = { label: label(), params };
+      },
+      {},
+    );
+  }
+
+  function buildLocationFilterMap(countries) {
+    return transform(
+      countries,
+      (map, { id, name }) => {
+        map[id] = { label: name, params: { location: id } };
+      },
+      {},
+    );
   }
 
   function useDateWindowFilter({ name, paramName }) {
-    const { filter, options, fetchQueryParams } = useFilter({
+    return useFilter({
       name,
       filterMap: buildDateWindowFilterMap(paramName),
       defaultValue: 'any',
     });
-    return { filter, options, fetchQueryParams };
   }
 
   function useBooleanFilter({ name, label, paramName }) {
-    const filterMap = {
-      no: { label: booleanFilterAny$(), params: {} },
-      yes: { label, params: { [paramName]: true } },
-    };
     const { filter, options, fetchQueryParams } = useFilter({
       name,
-      filterMap,
+      filterMap: {
+        no: { label: booleanFilterAny$(), params: {} },
+        yes: { label, params: { [paramName]: true } },
+      },
       defaultValue: 'no',
     });
-    const wrapped = computed({
+    const isChecked = computed({
       get: () => filter.value.value === 'yes',
-      set: value => {
-        const targetKey = value ? 'yes' : 'no';
-        filter.value = options.value.find(o => o.value === targetKey) || {};
+      set: checked => {
+        filter.value =
+          options.value.find(option => option.value === (checked ? 'yes' : 'no')) || {};
       },
     });
-    return { filter: wrapped, fetchQueryParams };
+    return { filter: isChecked, fetchQueryParams };
   }
 
-  export default {
-    name: 'UserTable',
-    components: {
-      Checkbox,
-      IconButton,
-      EmailUsersDialog,
-      UserItem,
-      CountryField,
+  const store = useStore();
+  const route = useRoute();
+  const { updateQueryParams } = useQueryParams();
+
+  const selected = ref([]);
+  const showEmailDialog = ref(false);
+  const showMassEmailDialog = ref(false);
+  const locationDropdown = ref(null);
+  const locationFilterMap = ref({});
+
+  const users = computed(() => store.getters['userAdmin/users']);
+  const count = computed(() => store.getters['userAdmin/count']);
+
+  const {
+    filter: userTypeFilter,
+    options: userTypeOptions,
+    fetchQueryParams: userTypeParams,
+  } = useFilter({ name: 'userType', filterMap: userTypeFilterMap });
+
+  const {
+    filter: locationOption,
+    options: locationOptions,
+    fetchQueryParams: locationParams,
+  } = useFilter({ name: 'location', filterMap: locationFilterMap });
+
+  const locationFilter = computed({
+    get: () => locationOption.value.value,
+    set: countryId => {
+      locationOption.value = locationOptions.value.find(option => option.value === countryId) || {};
     },
-    mixins: [routerMixin],
-    setup() {
-      const { proxy } = getCurrentInstance();
-      const store = proxy.$store;
-      const route = useRoute();
-      const { updateQueryParams } = useQueryParams();
+  });
 
-      const {
-        filter: userTypeFilter,
-        options: userTypeOptions,
-        fetchQueryParams: userTypeFetchQueryParams,
-      } = useFilter({
-        name: 'userType',
-        filterMap: userTypeFilterMap,
+  const { keywordInput, setKeywords, fetchQueryParams: keywordParams } = useKeywordSearch();
+
+  const {
+    filter: joinedWithinFilter,
+    options: joinedWithinOptions,
+    fetchQueryParams: joinedWithinParams,
+  } = useDateWindowFilter({ name: 'joinedWithin', paramName: 'joined_since' });
+
+  const {
+    filter: activeWithinFilter,
+    options: activeWithinOptions,
+    fetchQueryParams: activeWithinParams,
+  } = useDateWindowFilter({ name: 'activeWithin', paramName: 'active_since' });
+
+  const { filter: hasPublishedFilter, fetchQueryParams: hasPublishedParams } = useBooleanFilter({
+    name: 'hasPublished',
+    label: hasPublishedLabel$(),
+    paramName: 'published_channel',
+  });
+
+  const { filter: hasEditsFilter, fetchQueryParams: hasEditsParams } = useBooleanFilter({
+    name: 'hasEdits',
+    label: hasStudioActivityLabel$(),
+    paramName: 'has_edits',
+  });
+
+  const filterFetchQueryParams = computed(() => ({
+    ...userTypeParams.value,
+    ...locationParams.value,
+    ...keywordParams.value,
+    ...joinedWithinParams.value,
+    ...activeWithinParams.value,
+    ...hasPublishedParams.value,
+    ...hasEditsParams.value,
+  }));
+
+  const hasActiveFilters = computed(() =>
+    Object.entries(filterDefaults).some(
+      ([name, defaultValue]) => (route.query[name] ?? defaultValue) !== defaultValue,
+    ),
+  );
+
+  function clearFilters() {
+    updateQueryParams(pick(route.query, tableStateQueryParams));
+  }
+
+  const { pagination, loading, loadItems } = useTable({
+    fetchFunc: fetchParams => store.dispatch('userAdmin/loadUsers', fetchParams),
+    filterFetchQueryParams,
+  });
+
+  const selectAll = computed({
+    get: () =>
+      selected.value.length > 0 && selected.value.length === users.value.length && !loading.value,
+    set: checked => {
+      selected.value = checked ? users.value : [];
+    },
+  });
+
+  function headersFor(stackedForMobile) {
+    const selectionColumn = stackedForMobile ? [{ class: 'first', sortable: false }] : [];
+    return [
+      ...selectionColumn,
+      {
+        text: nameHeader$(),
+        align: 'left',
+        value: 'last_name',
+        class: stackedForMobile ? '' : 'first',
+      },
+      { text: emailHeader$(), value: 'email' },
+      { text: diskSpaceHeader$(), value: 'disk_space' },
+      { text: canEditHeader$(), value: 'edit_count', sortable: false },
+      { text: canViewHeader$(), value: 'view_count', sortable: false },
+      { text: dateJoinedHeader$(), value: 'date_joined' },
+      { text: lastActiveHeader$(), value: 'last_login' },
+      { text: actionsHeader$(), sortable: false, align: 'center' },
+    ];
+  }
+
+  async function onDownloadCSV() {
+    store.dispatch('showSnackbarSimple', generatingCSVMessage$());
+    try {
+      const response = await client.get(window.Urls.admin_users_download_csv(), {
+        params: filterFetchQueryParams.value,
+        responseType: 'blob',
       });
-
-      const {
-        keywordInput,
-        setKeywords,
-        fetchQueryParams: keywordSearchFetchQueryParams,
-      } = useKeywordSearch();
-
-      const locationFilterMap = ref({});
-      const locationDropdown = ref(null);
-
-      const {
-        filter: _locationFilter,
-        options: locationOptions,
-        fetchQueryParams: locationFetchQueryParams,
-      } = useFilter({
-        name: 'location',
-        filterMap: locationFilterMap,
-      });
-      // CountryField still wraps Vuetify's VAutocomplete, which binds a plain value
-      // rather than the option object useFilter holds.
-      const locationFilter = computed({
-        get: () => _locationFilter.value.value || undefined,
-        set: value => {
-          _locationFilter.value =
-            locationOptions.value.find(option => option.value === value) || {};
-        },
-      });
-
-      const {
-        filter: joinedWithinFilter,
-        options: joinedWithinOptions,
-        fetchQueryParams: joinedWithinFetchQueryParams,
-      } = useDateWindowFilter({ name: 'joinedWithin', paramName: 'joined_since' });
-
-      const {
-        filter: activeWithinFilter,
-        options: activeWithinOptions,
-        fetchQueryParams: activeWithinFetchQueryParams,
-      } = useDateWindowFilter({ name: 'activeWithin', paramName: 'active_since' });
-
-      const { filter: hasPublishedFilter, fetchQueryParams: hasPublishedFetchQueryParams } =
-        useBooleanFilter({
-          name: 'hasPublished',
-          label: hasPublishedLabel$(),
-          paramName: 'published_channel',
-        });
-
-      const { filter: hasEditsFilter, fetchQueryParams: hasEditsFetchQueryParams } =
-        useBooleanFilter({
-          name: 'hasEdits',
-          label: hasStudioActivityLabel$(),
-          paramName: 'has_edits',
-        });
-
-      onMounted(() => {
-        // The locationFilterMap is built from the options in the CountryField component,
-        // so we need to wait until it's mounted to access them.
-        const locationOptions = locationDropdown.value.options;
-
-        locationFilterMap.value = transform(
-          locationOptions,
-          (result, option) => {
-            result[option.id] = {
-              label: option.name,
-              params: { location: option.id },
-            };
-          },
-          {},
-        );
-      });
-
-      const filterFetchQueryParams = computed(() => {
-        return {
-          ...userTypeFetchQueryParams.value,
-          ...locationFetchQueryParams.value,
-          ...keywordSearchFetchQueryParams.value,
-          ...joinedWithinFetchQueryParams.value,
-          ...activeWithinFetchQueryParams.value,
-          ...hasPublishedFetchQueryParams.value,
-          ...hasEditsFetchQueryParams.value,
-        };
-      });
-
-      const hasActiveFilters = computed(() =>
-        Object.entries(FILTER_DEFAULTS).some(
-          ([name, defaultValue]) => (route.query[name] ?? defaultValue) !== defaultValue,
-        ),
+      saveAs(response.data, `studio_users_${new Date().toISOString().slice(0, 10)}.csv`);
+    } catch (error) {
+      const noFiltersApplied = error.response && error.response.status === 412;
+      store.dispatch(
+        'showSnackbarSimple',
+        noFiltersApplied ? noFiltersAppliedMessage$() : csvDownloadFailedMessage$(),
       );
+    }
+  }
 
-      function clearFilters() {
-        updateQueryParams(pick(route.query, TABLE_STATE_QUERY_PARAMS));
+  watch(
+    () => route.fullPath,
+    () => {
+      if (route.name === RouteNames.USERS) {
+        selected.value = [];
       }
+    },
+  );
 
-      function loadUsers(fetchParams) {
-        return store.dispatch('userAdmin/loadUsers', fetchParams);
-      }
+  watch(
+    () => users.value.length,
+    () => {
+      selected.value = [];
+    },
+  );
 
-      const { pagination, loading, loadItems } = useTable({
-        fetchFunc: fetchParams => loadUsers(fetchParams),
-        filterFetchQueryParams,
-      });
-
-      return {
-        userCount$,
-        emailUsersAction$,
-        emailAction$,
-        downloadCSVAction$,
-        clearFiltersAction$,
-        clearAction$,
-        userTypeLabel$,
-        targetLocationLabel$,
-        searchLabel$,
-        joinedWithinLabel$,
-        activeWithinLabel$,
-        hasPublishedLabel$,
-        hasStudioActivityLabel$,
-        loadingMessage$,
-        noUsersFoundMessage$,
-        userTypeFilter,
-        userTypeOptions,
-        locationDropdown,
-        locationFilter,
-        keywordInput,
-        setKeywords,
-        joinedWithinFilter,
-        joinedWithinOptions,
-        activeWithinFilter,
-        activeWithinOptions,
-        hasPublishedFilter,
-        hasEditsFilter,
-        hasActiveFilters,
-        clearFilters,
-        pagination,
-        loading,
-        loadItems,
-        filterFetchQueryParams,
-      };
-    },
-    data() {
-      return {
-        selected: [],
-        showEmailDialog: false,
-        showMassEmailDialog: false,
-      };
-    },
-    computed: {
-      ...mapGetters('userAdmin', ['users', 'count']),
-      selectAll: {
-        get() {
-          return (
-            Boolean(this.selected.length) &&
-            this.selected.length === this.users.length &&
-            !this.loading
-          );
-        },
-        set(value) {
-          if (value) {
-            this.selected = this.users;
-          } else {
-            this.selected = [];
-          }
-        },
-      },
-      headers() {
-        const firstColumn = this.$vuetify.breakpoint.smAndDown
-          ? [{ class: 'first', sortable: false }]
-          : [];
-        return firstColumn.concat([
-          {
-            text: nameHeader$(),
-            align: 'left',
-            value: 'last_name',
-            class: `${this.$vuetify.breakpoint.smAndDown ? '' : 'first'}`,
-          },
-          { text: emailHeader$(), value: 'email' },
-          { text: diskSpaceHeader$(), value: 'disk_space' },
-          { text: canEditHeader$(), value: 'edit_count', sortable: false },
-          { text: canViewHeader$(), value: 'view_count', sortable: false },
-          { text: dateJoinedHeader$(), value: 'date_joined' },
-          { text: lastActiveHeader$(), value: 'last_login' },
-          { text: actionsHeader$(), sortable: false, align: 'center' },
-        ]);
-      },
-      selectedCount() {
-        return this.selected.length;
-      },
-      rowsPerPageItems() {
-        return rowsPerPageItems;
-      },
-    },
-    watch: {
-      $route: {
-        deep: true,
-        handler(newRoute, oldRoute) {
-          if (newRoute.name === oldRoute.name && newRoute.name === RouteNames.USERS)
-            this.selected = [];
-        },
-      },
-      'users.length'() {
-        this.selected = [];
-      },
-    },
-    mounted() {
-      this.updateTabTitle(tabTitle$());
-    },
-    methods: {
-      async onDownloadCSV() {
-        this.$store.dispatch('showSnackbarSimple', generatingCSVMessage$());
-        try {
-          const response = await client.get(window.Urls.admin_users_download_csv(), {
-            params: this.filterFetchQueryParams,
-            responseType: 'blob',
-          });
-          const filename = `studio_users_${new Date().toISOString().slice(0, 10)}.csv`;
-          saveAs(response.data, filename);
-        } catch (error) {
-          const status = error.response && error.response.status;
-          if (status === 412) {
-            this.$store.dispatch('showSnackbarSimple', noFiltersAppliedMessage$());
-          } else {
-            this.$store.dispatch('showSnackbarSimple', csvDownloadFailedMessage$());
-          }
-        }
-      },
-    },
-  };
+  onMounted(() => {
+    updateTabTitle(tabTitle$());
+    locationFilterMap.value = buildLocationFilterMap(locationDropdown.value.options);
+  });
 
 </script>
 
