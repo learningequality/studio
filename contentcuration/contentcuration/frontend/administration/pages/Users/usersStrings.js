@@ -34,10 +34,6 @@ export const usersStrings = createTranslator('UsersStrings', {
     message: 'Search for a user...',
     context: 'Placeholder of the users search field',
   },
-  searchHint: {
-    message: 'Search for users by their names, emails, or channels',
-    context: 'Hint below the users search field explaining what it matches',
-  },
   joinedWithinLabel: {
     message: 'Joined within',
     context: 'Label of the dropdown filtering users by how recently they registered',

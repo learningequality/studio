@@ -28,31 +28,24 @@
       :keywordFilter="keywordInput"
       :usersFilterFetchQueryParams="filterFetchQueryParams"
     />
-    <VLayout
-      wrap
-      class="mb-2"
-    >
-      <VFlex
-        xs12
-        sm4
-        xl3
-        class="px-3"
+    <KGrid class="filter-row">
+      <KGridItem
+        :layout12="{ span: 3 }"
+        :layout8="{ span: 2 }"
+        :layout4="{ span: 4 }"
       >
-        <VSelect
-          v-model="userTypeFilter"
-          :items="userTypeOptions"
-          item-text="label"
-          item-value="key"
+        <KSelect
+          class="user-type-select"
+          :value="userTypeFilter"
+          :options="userTypeOptions"
           :label="userTypeLabel$()"
-          box
-          :menu-props="{ offsetY: true }"
+          @select="userTypeFilter = $event"
         />
-      </VFlex>
-      <VFlex
-        xs12
-        sm4
-        xl3
-        class="px-3"
+      </KGridItem>
+      <KGridItem
+        :layout12="{ span: 3 }"
+        :layout8="{ span: 2 }"
+        :layout4="{ span: 4 }"
       >
         <CountryField
           ref="locationDropdown"
@@ -61,84 +54,80 @@
           :multiple="false"
           :label="targetLocationLabel$()"
         />
-      </VFlex>
-      <VFlex
-        xs12
-        sm4
-        xl3
-        class="px-3"
+      </KGridItem>
+      <KGridItem
+        :layout12="{ span: 3 }"
+        :layout8="{ span: 2 }"
+        :layout4="{ span: 4 }"
       >
-        <VTextField
+        <KTextbox
           v-model="keywordInput"
           :label="searchLabel$()"
-          prepend-inner-icon="search"
           clearable
-          box
-          :hint="searchHint$()"
-          persistent-hint
+          :clearAriaLabel="clearAction$()"
           @input="setKeywords"
-          @click:clear="clearSearch"
-        />
-      </VFlex>
-    </VLayout>
-    <VLayout
-      wrap
-      class="mb-2"
-    >
-      <VFlex
-        xs12
-        sm6
-        md3
-        class="px-3"
+        >
+          <template #innerBefore>
+            <KIcon
+              class="search-icon"
+              icon="search"
+              :color="$themeTokens.annotation"
+            />
+          </template>
+        </KTextbox>
+      </KGridItem>
+    </KGrid>
+    <KGrid class="filter-row">
+      <KGridItem
+        :layout12="{ span: 3 }"
+        :layout8="{ span: 2 }"
+        :layout4="{ span: 4 }"
       >
-        <VSelect
-          v-model="joinedWithinFilter"
-          :items="joinedWithinOptions"
-          item-text="label"
-          item-value="value"
+        <KSelect
+          :value="joinedWithinFilter"
+          :options="joinedWithinOptions"
           :label="joinedWithinLabel$()"
-          box
-          :menu-props="{ offsetY: true }"
+          @select="joinedWithinFilter = $event"
         />
-      </VFlex>
-      <VFlex
-        xs12
-        sm6
-        md3
-        class="px-3"
+      </KGridItem>
+      <KGridItem
+        :layout12="{ span: 3 }"
+        :layout8="{ span: 2 }"
+        :layout4="{ span: 4 }"
       >
-        <VSelect
-          v-model="activeWithinFilter"
-          :items="activeWithinOptions"
-          item-text="label"
-          item-value="value"
+        <KSelect
+          :value="activeWithinFilter"
+          :options="activeWithinOptions"
           :label="activeWithinLabel$()"
-          box
-          :menu-props="{ offsetY: true }"
+          @select="activeWithinFilter = $event"
         />
-      </VFlex>
-      <VFlex
-        xs12
-        md6
-        class="px-3 toggle-filters"
+      </KGridItem>
+      <KGridItem
+        :layout12="{ span: 6 }"
+        :layout8="{ span: 4 }"
+        :layout4="{ span: 4 }"
       >
-        <Checkbox
-          v-model="hasPublishedFilter"
-          :label="hasPublishedLabel$()"
-        />
-        <Checkbox
-          v-model="hasEditsFilter"
-          :label="hasStudioActivityLabel$()"
-        />
-        <KButton
-          v-if="hasActiveFilters"
-          appearance="basic-link"
-          :text="clearFiltersAction$()"
-          data-test="clear-filters"
-          @click="clearFilters"
-        />
-      </VFlex>
-    </VLayout>
+        <div class="toggle-filters">
+          <Checkbox
+            v-model="hasPublishedFilter"
+            class="toggle-checkbox"
+            :label="hasPublishedLabel$()"
+          />
+          <Checkbox
+            v-model="hasEditsFilter"
+            class="toggle-checkbox"
+            :label="hasStudioActivityLabel$()"
+          />
+          <KButton
+            v-if="hasActiveFilters"
+            appearance="basic-link"
+            :text="clearFiltersAction$()"
+            data-test="clear-filters"
+            @click="clearFilters"
+          />
+        </div>
+      </KGridItem>
+    </KGrid>
     <VDataTable
       v-model="selected"
       :headers="headers"
@@ -152,10 +141,9 @@
       :class="{ expanded: $vuetify.breakpoint.mdAndUp }"
     >
       <template #progress>
-        <VProgressLinear
+        <KLinearLoader
           v-if="loading"
-          color="loading"
-          indeterminate
+          delay
         />
       </template>
 
@@ -216,6 +204,7 @@
   import EmailUsersDialog from './EmailUsersDialog';
   import UserItem from './UserItem';
   import { usersStrings } from './usersStrings';
+  import { commonStrings } from 'shared/strings/commonStrings';
   import client from 'shared/client';
   import { useFilter } from 'shared/composables/useFilter';
   import { useKeywordSearch } from 'shared/composables/useKeywordSearch';
@@ -234,7 +223,6 @@
     userTypeLabel$,
     targetLocationLabel$,
     searchLabel$,
-    searchHint$,
     joinedWithinLabel$,
     activeWithinLabel$,
     hasPublishedLabel$,
@@ -265,6 +253,8 @@
     csvDownloadFailedMessage$,
     tabTitle$,
   } = usersStrings;
+
+  const { clearAction$ } = commonStrings;
 
   const userTypeFilterMap = {
     all: { label: userTypeAll$(), params: {} },
@@ -316,13 +306,7 @@
       filterMap: buildDateWindowFilterMap(paramName),
       defaultValue: 'any',
     });
-    const wrapped = computed({
-      get: () => filter.value.value || 'any',
-      set: value => {
-        filter.value = options.value.find(o => o.value === value) || {};
-      },
-    });
-    return { filter: wrapped, options, fetchQueryParams };
+    return { filter, options, fetchQueryParams };
   }
 
   function useBooleanFilter({ name, label, paramName }) {
@@ -362,26 +346,17 @@
       const { updateQueryParams } = useQueryParams();
 
       const {
-        filter: _userTypeFilter,
+        filter: userTypeFilter,
         options: userTypeOptions,
         fetchQueryParams: userTypeFetchQueryParams,
       } = useFilter({
         name: 'userType',
         filterMap: userTypeFilterMap,
       });
-      // Temporal wrapper, must be removed after migrating to KSelect
-      const userTypeFilter = computed({
-        get: () => _userTypeFilter.value.value || undefined,
-        set: value => {
-          _userTypeFilter.value =
-            userTypeOptions.value.find(option => option.value === value) || {};
-        },
-      });
 
       const {
         keywordInput,
         setKeywords,
-        clearSearch,
         fetchQueryParams: keywordSearchFetchQueryParams,
       } = useKeywordSearch();
 
@@ -396,7 +371,8 @@
         name: 'location',
         filterMap: locationFilterMap,
       });
-      // Temporal wrapper, must be removed after migrating to KSelect
+      // CountryField still wraps Vuetify's VAutocomplete, which binds a plain value
+      // rather than the option object useFilter holds.
       const locationFilter = computed({
         get: () => _locationFilter.value.value || undefined,
         set: value => {
@@ -485,10 +461,10 @@
         emailAction$,
         downloadCSVAction$,
         clearFiltersAction$,
+        clearAction$,
         userTypeLabel$,
         targetLocationLabel$,
         searchLabel$,
-        searchHint$,
         joinedWithinLabel$,
         activeWithinLabel$,
         hasPublishedLabel$,
@@ -501,7 +477,6 @@
         locationFilter,
         keywordInput,
         setKeywords,
-        clearSearch,
         joinedWithinFilter,
         joinedWithinOptions,
         activeWithinFilter,
@@ -610,11 +585,34 @@
 
 <style lang="scss" scoped>
 
+  .filter-row {
+    margin-bottom: 8px;
+  }
+
+  .filter-row .user-type-select {
+    height: 57px;
+  }
+
+  .search-icon {
+    position: relative;
+    left: 4px;
+    margin: 4px;
+    font-size: 19px;
+  }
+
   .toggle-filters {
     display: flex;
     flex-wrap: wrap;
     gap: 16px;
-    align-items: center;
+    align-items: flex-end;
+  }
+
+  .filter-row .toggle-filters {
+    height: 54px;
+  }
+
+  .filter-row .toggle-checkbox {
+    margin-bottom: -5px;
   }
 
 </style>
