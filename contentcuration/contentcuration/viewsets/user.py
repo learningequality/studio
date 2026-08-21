@@ -463,7 +463,7 @@ CSV_HEADERS = [
     "Has viewable channels",
     "Has published a channel",
     "Most recent publish date",
-    "Has Studio edits",
+    "Has Studio activity",
     "Locations (country names)",
     "Primary location",
     "Location count",
@@ -500,6 +500,10 @@ def _iso_date(value):
     return value.date().isoformat() if hasattr(value, "date") else value.isoformat()
 
 
+def _storage_needed(info):
+    return info.get("latest_storage_request") or info.get("space_needed") or ""
+
+
 def _build_csv_row(values, country_names):
     """Translate one user .values() dict to a CSV row.
 
@@ -528,7 +532,7 @@ def _build_csv_row(values, country_names):
         ", ".join(location_names),
         location_names[0] if location_names else "",
         len(location_codes),
-        info.get("space_needed") or "",
+        _storage_needed(info),
         info.get("heard_from") or "",
     ]
 
