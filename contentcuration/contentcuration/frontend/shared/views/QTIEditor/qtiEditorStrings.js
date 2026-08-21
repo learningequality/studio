@@ -139,6 +139,14 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Add choice',
     context: 'Button that appends a new answer choice',
   },
+  editQuestionLabel: {
+    message: 'Edit question',
+    context: 'Accessible label for the clickable region to edit the question prompt',
+  },
+  editAnswerOptionLabel: {
+    message: 'Edit answer option {number}',
+    context: 'Accessible label for the clickable region to edit an answer choice',
+  },
   deleteChoiceBtn: {
     message: 'Delete choice',
     context: 'Accessible label for the delete-choice icon button',

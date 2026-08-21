@@ -13,17 +13,17 @@
         {{ questionLabel$() }}
       </div>
 
-      <div
+      <ClickableRegion
         :class="[
           isPromptOpen ? 'prompt-open-wrap' : 'answer-border',
-          { 'has-error': !isPromptOpen && questionHasError },
+          {
+            'has-error': !isPromptOpen && questionHasError,
+            'is-clickable': mode === 'edit' && !isPromptOpen,
+          },
         ]"
-        :style="{ cursor: mode === 'edit' && !isPromptOpen ? 'pointer' : undefined }"
-        :tabindex="mode === 'edit' && !isPromptOpen ? 0 : undefined"
-        :role="mode === 'edit' && !isPromptOpen ? 'button' : undefined"
+        :suppressed="mode !== 'edit' || isPromptOpen"
+        :aria-label="editQuestionLabel$()"
         @click="handlePromptClick"
-        @keydown.enter.prevent="handlePromptClick"
-        @keydown.space.prevent="handlePromptClick"
       >
         <TipTapEditor
           :value="state.prompt"
@@ -32,11 +32,12 @@
           :minHeight="'80px'"
           :autofocus="mode === 'edit' && isPromptOpen"
           :imageProcessor="EditorImageProcessor"
+          :tabindex="-1"
           class="editor"
           @update="setPrompt"
           @minimize="closePrompt"
         />
-      </div>
+      </ClickableRegion>
     </div>
 
     <!-- Acceptable answers (numeric and textEntry only) -->
@@ -185,13 +186,14 @@
   import { useTextEntryInteraction } from '../../composables/useTextEntryInteraction';
   import ValidationMessage from 'shared/views/QTIEditor/components/ValidationMessage';
   import AddListItemButton from 'shared/views/QTIEditor/components/AddListItemButton';
+  import ClickableRegion from 'shared/views/QTIEditor/components/ClickableRegion';
   import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor';
 
   export default {
     name: 'TextEntryEditor',
 
-    components: { TipTapEditor, ValidationMessage, AddListItemButton },
+    components: { TipTapEditor, ValidationMessage, AddListItemButton, ClickableRegion },
     inheritAttrs: false,
 
     setup(props, { emit }) {
@@ -212,6 +214,7 @@
         errorInvalidNumericValue$,
         errorEmptyAnswerContent$,
         errorDuplicateAnswerContent$,
+        editQuestionLabel$,
       } = qtiEditorStrings;
 
       const questionTypeRef = computed(() => props.questionType);
@@ -248,11 +251,9 @@
         runValidation();
       }
 
-      function handlePromptClick(event) {
+      function handlePromptClick() {
         if (props.mode !== 'edit') return;
-        if (event.target.closest('button') || event.target.closest('input')) return;
         if (!isPromptOpen.value) {
-          event.stopPropagation();
           openPrompt();
         }
       }
@@ -380,6 +381,7 @@
         errorInvalidNumericValue$,
         errorEmptyAnswerContent$,
         errorDuplicateAnswerContent$,
+        editQuestionLabel$,
         ValidationError,
         setAnswerInputRef,
         focusedAnswerId,
@@ -455,6 +457,14 @@
 
     &.has-error {
       border-color: v-bind('$themeTokens.error');
+    }
+
+    &.is-clickable {
+      cursor: pointer;
+
+      &:hover {
+        background-color: v-bind('$themeTokens.fineLine');
+      }
     }
   }
 

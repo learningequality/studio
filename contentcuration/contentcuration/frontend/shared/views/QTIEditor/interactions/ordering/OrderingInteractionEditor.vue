@@ -12,9 +12,11 @@
       >
         {{ questionLabel$() }}
       </div>
-      <div
+      <ClickableRegion
         :class="promptWrapperClass"
         :style="promptWrapperStyle"
+        :suppressed="mode !== 'edit' || isPromptOpen"
+        :aria-label="editQuestionLabel$()"
         @click="handlePromptClick"
       >
         <div
@@ -28,12 +30,13 @@
             :minHeight="'80px'"
             :autofocus="isPromptOpen"
             :imageProcessor="EditorImageProcessor"
+            :tabindex="-1"
             class="editor"
             @update="setPrompt"
             @minimize="closePrompt"
           />
         </div>
-      </div>
+      </ClickableRegion>
     </div>
 
     <!-- Items list — edit mode or view mode -->
@@ -73,11 +76,13 @@
           class="item-group"
         >
           <!-- Bordered item card -->
-          <div
+          <ClickableRegion
             class="item-border"
             :class="getItemClasses(item)"
             :style="getItemStyle(item)"
-            @click="handleItemClick($event, item.id)"
+            :suppressed="mode !== 'edit' || isItemOpen(item.id)"
+            :aria-label="editAnswerOptionLabel$({ number: index + 1 })"
+            @click="handleItemClick(item.id)"
           >
             <div
               class="item-card-text"
@@ -108,6 +113,7 @@
                     :minHeight="'48px'"
                     :autofocus="isItemOpen(item.id)"
                     :imageProcessor="EditorImageProcessor"
+                    :tabindex="-1"
                     class="editor"
                     @update="html => setItemContent(item.id, html)"
                     @minimize="closeItem"
@@ -138,7 +144,7 @@
             >
               {{ errorDuplicateItemContent$() }}
             </ValidationMessage>
-          </div>
+          </ClickableRegion>
         </li>
       </ol>
 
@@ -165,6 +171,7 @@
   import CollapsibleToolbar from '../../components/CollapsibleToolbar/index.vue';
   import ValidationMessage from '../../components/ValidationMessage/index.vue';
   import AddListItemButton from '../../components/AddListItemButton/index.vue';
+  import ClickableRegion from '../../components/ClickableRegion/index.vue';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor';
   import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
 
@@ -176,6 +183,7 @@
       CollapsibleToolbar,
       ValidationMessage,
       AddListItemButton,
+      ClickableRegion,
     },
 
     setup(props, { emit }) {
@@ -194,6 +202,8 @@
         errorTooFewChoices$,
         errorEmptyItemContent$,
         errorDuplicateItemContent$,
+        editQuestionLabel$,
+        editAnswerOptionLabel$,
       } = qtiEditorStrings;
 
       const questionTypeRef = computed(() => props.questionType);
@@ -232,20 +242,16 @@
         openItemId.value = null;
       }
 
-      function handlePromptClick(event) {
+      function handlePromptClick() {
         if (props.mode !== 'edit') return;
-        if (event.target.closest('button') || event.target.closest('input')) return;
         if (!isPromptOpen.value) {
-          event.stopPropagation();
           openPrompt();
         }
       }
 
-      function handleItemClick(event, itemId) {
+      function handleItemClick(itemId) {
         if (props.mode !== 'edit') return;
         if (openItemId.value === itemId) return;
-        if (event.target.closest('button') || event.target.closest('input')) return;
-        event.stopPropagation();
         openItem(itemId);
       }
 
@@ -307,15 +313,17 @@
 
       const isPromptEditing = computed(() => props.mode === 'edit' && isPromptOpen.value);
 
-      const promptWrapperClass = computed(() =>
-        isPromptEditing.value ? 'prompt-wrapper' : 'item-border',
-      );
+      const promptWrapperClass = computed(() => {
+        if (isPromptEditing.value) {
+          return 'prompt-wrapper';
+        }
+        return ['item-border', { 'is-clickable': props.mode === 'edit' }];
+      });
 
       const promptWrapperStyle = computed(() => {
         if (isPromptEditing.value) return {};
         return {
           borderColor: promptHasError.value ? tokens.error : tokens.fineLine,
-          cursor: props.mode === 'edit' ? 'pointer' : undefined,
         };
       });
 
@@ -404,6 +412,8 @@
         errorTooFewChoices$,
         errorEmptyItemContent$,
         errorDuplicateItemContent$,
+        editQuestionLabel$,
+        editAnswerOptionLabel$,
       };
     },
 
