@@ -4,26 +4,27 @@ import Vuex from 'vuex';
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 import RequestNewActivationLink from '../activateAccount/RequestNewActivationLink';
+import commonStrings from 'shared/translator';
 
 Vue.use(Vuex);
 Vue.use(VueRouter);
-let testStore;
 
-function createTestStore() {
-  testStore = new Vuex.Store({
+const sendActivationLinkMock = jest.fn(() => Promise.resolve());
+
+function createTestStore({ sendActivationLink = sendActivationLinkMock } = {}) {
+  return new Vuex.Store({
     modules: {
       account: {
         namespaced: true,
         actions: {
-          sendActivationLink: jest.fn(() => Promise.resolve()),
+          sendActivationLink,
         },
       },
     },
   });
-  return testStore;
 }
 
-function renderComponent() {
+function renderComponent(storeOptions) {
   const router = new VueRouter({
     routes: [
       {
@@ -38,40 +39,84 @@ function renderComponent() {
   });
 
   return render(RequestNewActivationLink, {
-    store: createTestStore(),
+    store: createTestStore(storeOptions),
     router,
   });
 }
 
 describe('requestNewActivationLink', () => {
-  it('should show validation error when submitting with invalid email', async () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should show a required-field error when submitting with an empty email', async () => {
     const user = userEvent.setup();
     renderComponent();
 
-    const submitButton = screen.getByRole('button', { name: /submit/i });
+    const submitButton = screen.getByRole('button', {
+      name: RequestNewActivationLink.$trs.submitButton,
+    });
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/activation failed/i)).toBeInTheDocument();
+      expect(screen.getByText(commonStrings.$tr('fieldRequired'))).toBeInTheDocument();
     });
+    expect(sendActivationLinkMock).not.toHaveBeenCalled();
+  });
+
+  it('should show a validation error when submitting an invalid email', async () => {
+    const user = userEvent.setup();
+    renderComponent();
+
+    const emailInput = screen.getByLabelText(RequestNewActivationLink.$trs.emailLabel);
+    const submitButton = screen.getByRole('button', {
+      name: RequestNewActivationLink.$trs.submitButton,
+    });
+
+    await user.type(emailInput, 'not-an-email');
+    await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(RequestNewActivationLink.$trs.emailValidationMessage),
+      ).toBeInTheDocument();
+    });
+    expect(sendActivationLinkMock).not.toHaveBeenCalled();
   });
 
   it('should submit when email is valid', async () => {
     const user = userEvent.setup();
     renderComponent();
-    const sendActivationLink = jest.spyOn(testStore, 'dispatch');
 
-    const emailInput = screen.getByLabelText(/email/i);
-    const submitButton = screen.getByRole('button', { name: /submit/i });
+    const emailInput = screen.getByLabelText(RequestNewActivationLink.$trs.emailLabel);
+    const submitButton = screen.getByRole('button', {
+      name: RequestNewActivationLink.$trs.submitButton,
+    });
 
     await user.type(emailInput, 'test@test.com');
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(sendActivationLink).toHaveBeenCalledWith(
-        'account/sendActivationLink',
-        'test@test.com',
-      );
+      expect(sendActivationLinkMock).toHaveBeenCalledWith(expect.anything(), 'test@test.com');
+    });
+  });
+
+  it('should show a banner when the request fails', async () => {
+    const user = userEvent.setup();
+    renderComponent({ sendActivationLink: jest.fn(() => Promise.reject(new Error('failed'))) });
+
+    const emailInput = screen.getByLabelText(RequestNewActivationLink.$trs.emailLabel);
+    const submitButton = screen.getByRole('button', {
+      name: RequestNewActivationLink.$trs.submitButton,
+    });
+
+    await user.type(emailInput, 'test@test.com');
+    await user.click(submitButton);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(RequestNewActivationLink.$trs.activationRequestFailed),
+      ).toBeInTheDocument();
     });
   });
 });
