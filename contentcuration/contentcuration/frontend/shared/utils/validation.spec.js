@@ -14,12 +14,16 @@ import {
   isNodeComplete,
   getNodeDetailsErrors,
   getNodeFilesErrors,
-  sanitizeAssessmentItemAnswers,
-  sanitizeAssessmentItemHints,
-  sanitizeAssessmentItem,
   getAssessmentItemErrors,
   getNodeLearningActivityErrors,
 } from './validation';
+import { ValidationError } from 'shared/views/QTIEditor/constants';
+import {
+  VALID_CHOICE_ITEM_DOCUMENT,
+  CHOICE_ITEM_DOCUMENT_NO_PROMPT,
+  CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER,
+  FREE_RESPONSE_ITEM_DOCUMENT,
+} from 'shared/views/QTIEditor/utils/testingFixtures';
 import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
@@ -403,12 +407,8 @@ describe('channelEdit utils', () => {
         };
         assessmentItems = [
           {
-            question: 'Question',
-            type: AssessmentItemTypes.SINGLE_SELECTION,
-            answers: [
-              { answer: 'Mayonnaise (I mean you can, but...)', correct: true, order: 1 },
-              { answer: 'Peanut butter', correct: false, order: 2 },
-            ],
+            type: AssessmentItemTypes.QTI,
+            raw_data: VALID_CHOICE_ITEM_DOCUMENT,
           },
         ];
       });
@@ -436,17 +436,13 @@ describe('channelEdit utils', () => {
 
       it('returns false if there is at least one invalid assessment item', () => {
         const invalidAssessmentItem = {
-          question: 'A question with missing answers',
-          type: AssessmentItemTypes.SINGLE_SELECTION,
-          answers: [],
+          type: AssessmentItemTypes.QTI,
+          raw_data: CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER,
         };
         expect(
           isNodeComplete({
             nodeDetails,
-            assessmentItems: {
-              ...assessmentItems,
-              invalidAssessmentItem,
-            },
+            assessmentItems: [...assessmentItems, invalidAssessmentItem],
           }),
         ).toBe(false);
       });
@@ -808,348 +804,69 @@ describe('channelEdit utils', () => {
     });
   });
 
-  describe('sanitizeAssessmentItemAnswers', () => {
-    it('trims answers', () => {
-      const answers = [
-        { answer: '', order: 1, correct: true },
-        { answer: ' 3 ', order: 2, correct: false },
-        { answer: '  ', order: 3, correct: true },
-      ];
-
-      expect(sanitizeAssessmentItemAnswers(answers)).toEqual([
-        { answer: '', order: 1, correct: true },
-        { answer: '3', order: 2, correct: false },
-        { answer: '', order: 3, correct: true },
-      ]);
-    });
-
-    it('removes all empty answers and reorders remaining answers if removeEmpty true', () => {
-      const answers = [
-        { answer: '', order: 1, correct: true },
-        { answer: ' 3 ', order: 2, correct: false },
-        { answer: '  ', order: 3, correct: true },
-      ];
-
-      expect(sanitizeAssessmentItemAnswers(answers, true)).toEqual([
-        { answer: '3', order: 1, correct: false },
-      ]);
-    });
-  });
-
-  describe('sanitizeAssessmentItemHints', () => {
-    it('trims hints', () => {
-      const hints = [
-        { hint: '', order: 1 },
-        { hint: ' Hint 1 ', order: 2 },
-        { hint: '  ', order: 3 },
-      ];
-
-      expect(sanitizeAssessmentItemHints(hints)).toEqual([
-        { hint: '', order: 1 },
-        { hint: 'Hint 1', order: 2 },
-        { hint: '', order: 3 },
-      ]);
-    });
-
-    it('removes all empty hints and reorders remaining hints if removeEmpty true', () => {
-      const hints = [
-        { hint: '', order: 1 },
-        { hint: ' Hint 1 ', order: 2 },
-        { hint: '  ', order: 3 },
-      ];
-
-      expect(sanitizeAssessmentItemHints(hints, true)).toEqual([{ hint: 'Hint 1', order: 1 }]);
-    });
-  });
-
-  describe('sanitizeAssessmentItem', () => {
-    it('trims question, hints and answers', () => {
-      const assessmentItem = {
-        order: 1,
-        question: ' Question text ',
-        answers: [
-          { answer: ' Answer 1', order: 1, correct: false },
-          { answer: '', order: 2, correct: true },
-          { answer: 'Answer 3    ', order: 3, correct: true },
-        ],
-        hints: [
-          { hint: ' ', order: 1 },
-          { hint: '', order: 2 },
-          { hint: ' Hint 3', order: 3 },
-        ],
-      };
-
-      expect(sanitizeAssessmentItem(assessmentItem)).toEqual({
-        order: 1,
-        question: 'Question text',
-        answers: [
-          { answer: 'Answer 1', order: 1, correct: false },
-          { answer: '', order: 2, correct: true },
-          { answer: 'Answer 3', order: 3, correct: true },
-        ],
-        hints: [
-          { hint: '', order: 1 },
-          { hint: '', order: 2 },
-          { hint: 'Hint 3', order: 3 },
-        ],
-      });
-    });
-
-    it('removes all empty hints and answers if removeEmpty true', () => {
-      const assessmentItem = {
-        order: 1,
-        question: ' Question text ',
-        answers: [
-          { answer: ' Answer 1', order: 1, correct: false },
-          { answer: '', order: 2, correct: true },
-          { answer: 'Answer 3    ', order: 3, correct: true },
-        ],
-        hints: [
-          { hint: ' ', order: 1 },
-          { hint: '', order: 2 },
-          { hint: ' Hint 3', order: 3 },
-        ],
-      };
-
-      expect(sanitizeAssessmentItem(assessmentItem, true)).toEqual({
-        order: 1,
-        question: 'Question text',
-        answers: [
-          { answer: 'Answer 1', order: 1, correct: false },
-          { answer: 'Answer 3', order: 2, correct: true },
-        ],
-        hints: [{ hint: 'Hint 3', order: 1 }],
-      });
-    });
-  });
-
   describe('getAssessmentItemErrors', () => {
-    describe('when question text is missing', () => {
-      it('returns negative validation results', () => {
-        const assessmentItem = {
-          question: '',
-          answers: [{ answer: 'Answer', correct: true, order: 1 }],
-        };
+    it('reports no errors for a complete question', () => {
+      const assessmentItem = {
+        type: AssessmentItemTypes.QTI,
+        raw_data: VALID_CHOICE_ITEM_DOCUMENT,
+      };
 
-        expect(getAssessmentItemErrors(assessmentItem)).toEqual([
-          ValidationErrors.QUESTION_REQUIRED,
-        ]);
-      });
+      expect(getAssessmentItemErrors(assessmentItem)).toEqual([]);
     });
 
-    describe('for single selection with no answers', () => {
-      it('returns negative validation results', () => {
-        const assessmentItem = {
-          question: 'Question',
-          type: AssessmentItemTypes.SINGLE_SELECTION,
-          answers: [],
-        };
+    it('reports the errors of the question it holds', () => {
+      const assessmentItem = {
+        type: AssessmentItemTypes.QTI,
+        raw_data: CHOICE_ITEM_DOCUMENT_NO_PROMPT,
+      };
 
-        expect(getAssessmentItemErrors(assessmentItem)).toEqual([
-          ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
-        ]);
-      });
+      expect(getAssessmentItemErrors(assessmentItem).map(error => error.code)).toContain(
+        ValidationError.PROMPT_REQUIRED,
+      );
     });
 
-    describe('for single selection with no correct answer', () => {
-      it('returns negative validation results', () => {
-        const assessmentItem = {
-          question: 'Question',
-          type: AssessmentItemTypes.SINGLE_SELECTION,
-          answers: [{ answer: 'Answer', correct: false, order: 1 }],
-        };
+    it('reports no errors for a Perseus question, which is authored elsewhere', () => {
+      const assessmentItem = {
+        type: AssessmentItemTypes.PERSEUS_QUESTION,
+        raw_data: 'not qti at all',
+      };
 
-        expect(getAssessmentItemErrors(assessmentItem)).toEqual([
-          ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
-        ]);
-      });
+      expect(getAssessmentItemErrors(assessmentItem)).toEqual([]);
     });
 
-    describe('for single selection with more correct answers', () => {
-      it('returns negative validation results', () => {
-        const assessmentItem = {
-          question: 'Question',
-          type: AssessmentItemTypes.SINGLE_SELECTION,
-          answers: [
-            { answer: 'Answer 1', correct: true, order: 1 },
-            { answer: 'Answer 2', correct: true, order: 2 },
-          ],
-        };
+    it('reports the same errors when asked about the same question again', () => {
+      const assessmentItem = {
+        type: AssessmentItemTypes.QTI,
+        raw_data: CHOICE_ITEM_DOCUMENT_NO_PROMPT,
+      };
 
-        expect(getAssessmentItemErrors(assessmentItem)).toEqual([
-          ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
-        ]);
-      });
+      expect(getAssessmentItemErrors(assessmentItem)).toEqual(
+        getAssessmentItemErrors(assessmentItem),
+      );
     });
 
-    describe('for single selection with one correct answer', () => {
-      it('returns positive validation results', () => {
-        const assessmentItem = {
-          question: 'Question',
-          type: AssessmentItemTypes.SINGLE_SELECTION,
-          answers: [
-            { answer: 'Answer 1', correct: false, order: 1 },
-            { answer: 'Answer 2', correct: true, order: 2 },
-          ],
-        };
+    it('reports the errors of the question as it is now, not as it was', () => {
+      const assessmentItem = {
+        type: AssessmentItemTypes.QTI,
+        raw_data: CHOICE_ITEM_DOCUMENT_NO_PROMPT,
+      };
+      getAssessmentItemErrors(assessmentItem);
 
-        expect(getAssessmentItemErrors(assessmentItem)).toEqual([]);
-      });
+      assessmentItem.raw_data = VALID_CHOICE_ITEM_DOCUMENT;
+
+      expect(getAssessmentItemErrors(assessmentItem)).toEqual([]);
     });
 
-    describe('for multiple selection with no answers', () => {
-      it('returns negative validation results', () => {
-        const assessmentItem = {
-          question: 'Question',
-          type: AssessmentItemTypes.MULTIPLE_SELECTION,
-          answers: [],
-        };
+    it('reports a free-response question differently depending on whether it is allowed', () => {
+      const assessmentItem = {
+        type: AssessmentItemTypes.QTI,
+        raw_data: FREE_RESPONSE_ITEM_DOCUMENT,
+      };
 
-        expect(getAssessmentItemErrors(assessmentItem)).toEqual([
-          ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
-        ]);
-      });
-    });
-
-    describe('for multiple selection with no correct answer', () => {
-      it('returns negative validation results', () => {
-        const assessmentItem = {
-          question: 'Question',
-          type: AssessmentItemTypes.MULTIPLE_SELECTION,
-          answers: [
-            { answer: 'Answer 1', correct: false, order: 1 },
-            { answer: 'Answer 2', correct: false, order: 2 },
-          ],
-        };
-
-        expect(getAssessmentItemErrors(assessmentItem)).toEqual([
-          ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
-        ]);
-      });
-    });
-
-    describe('for multiple selection with at least one correct answer', () => {
-      it('returns positive validation results', () => {
-        const assessmentItem = {
-          question: 'Question',
-          type: AssessmentItemTypes.MULTIPLE_SELECTION,
-          answers: [
-            { answer: 'Answer 1', correct: true, order: 1 },
-            { answer: 'Answer 2', correct: false, order: 2 },
-          ],
-        };
-
-        expect(getAssessmentItemErrors(assessmentItem)).toEqual([]);
-      });
-    });
-
-    describe('for input question with no answers', () => {
-      it('returns negative validation results', () => {
-        const assessmentItem = {
-          question: 'Question',
-          type: AssessmentItemTypes.INPUT_QUESTION,
-          answers: [],
-        };
-
-        expect(getAssessmentItemErrors(assessmentItem)).toEqual([
-          ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
-        ]);
-      });
-    });
-
-    describe('for input question with no correct answer', () => {
-      it('returns negative validation results', () => {
-        const assessmentItem = {
-          question: 'Question',
-          type: AssessmentItemTypes.INPUT_QUESTION,
-          answers: [
-            { answer: 'Answer 1', correct: false, order: 1 },
-            { answer: 'Answer 2', correct: false, order: 2 },
-          ],
-        };
-
-        expect(getAssessmentItemErrors(assessmentItem)).toEqual([
-          ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
-        ]);
-      });
-    });
-
-    describe('for input question with at least one correct answer', () => {
-      it('returns positive validation results', () => {
-        const assessmentItem = {
-          question: 'Question',
-          type: AssessmentItemTypes.INPUT_QUESTION,
-          answers: [
-            { answer: 'Answer 1', correct: true, order: 1 },
-            { answer: 'Answer 2', correct: true, order: 2 },
-          ],
-        };
-
-        expect(getAssessmentItemErrors(assessmentItem)).toEqual([]);
-      });
-    });
-
-    describe('for true/false with no answers', () => {
-      it('returns negative validation results', () => {
-        const assessmentItem = {
-          question: 'Question',
-          type: AssessmentItemTypes.TRUE_FALSE,
-          answers: [],
-        };
-
-        expect(getAssessmentItemErrors(assessmentItem)).toEqual([
-          ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
-        ]);
-      });
-    });
-
-    describe('for true/false with no correct answer', () => {
-      it('returns negative validation results', () => {
-        const assessmentItem = {
-          question: 'Question',
-          type: AssessmentItemTypes.TRUE_FALSE,
-          answers: [
-            { answer: 'True', correct: false, order: 1 },
-            { answer: 'False', correct: false, order: 2 },
-          ],
-        };
-
-        expect(getAssessmentItemErrors(assessmentItem)).toEqual([
-          ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
-        ]);
-      });
-    });
-
-    describe('for true/false with more correct answers', () => {
-      it('returns negative validation results', () => {
-        const assessmentItem = {
-          question: 'Question',
-          type: AssessmentItemTypes.TRUE_FALSE,
-          answers: [
-            { answer: 'True', correct: true, order: 1 },
-            { answer: 'False', correct: true, order: 2 },
-          ],
-        };
-
-        expect(getAssessmentItemErrors(assessmentItem)).toEqual([
-          ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS,
-        ]);
-      });
-    });
-
-    describe('for true/false with one correct answer', () => {
-      it('returns positive validation results', () => {
-        const assessmentItem = {
-          question: 'Question',
-          type: AssessmentItemTypes.TRUE_FALSE,
-          answers: [
-            { answer: 'True', correct: false, order: 1 },
-            { answer: 'False', correct: true, order: 2 },
-          ],
-        };
-
-        expect(getAssessmentItemErrors(assessmentItem)).toEqual([]);
-      });
+      expect(getAssessmentItemErrors(assessmentItem, { allowFreeResponse: true })).toEqual([]);
+      expect(
+        getAssessmentItemErrors(assessmentItem, { allowFreeResponse: false }).map(e => e.code),
+      ).toContain(ValidationError.FREE_RESPONSE_NOT_ALLOWED);
     });
   });
 });

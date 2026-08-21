@@ -36,11 +36,16 @@ describe('useTextEntryInteraction', () => {
       expect(state.value.answers[0].value).toBe('12');
     });
 
-    it('starts with empty errors', () => {
+    it('starts with no errors when the parsed state is already valid', () => {
       const { errors } = setupNumeric();
-      // errors populates asynchronously via debounced watcher;
-      // immediately after setup it is still empty.
+
       expect(errors.value).toEqual([]);
+    });
+
+    it('reports errors for an invalid parsed state without waiting', () => {
+      const { errors } = setupNumeric([]);
+
+      expect(errors.value.map(e => e.code)).toContain(ValidationError.NO_CORRECT_ANSWER);
     });
   });
 

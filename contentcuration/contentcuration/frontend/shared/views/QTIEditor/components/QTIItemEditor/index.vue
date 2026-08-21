@@ -22,18 +22,39 @@
       </h3>
 
       <div class="question-card-actions toolbar">
+        <span
+          v-if="isIncomplete"
+          class="incomplete-indicator"
+          :style="{ color: $themeTokens.error }"
+          data-testid="incompleteIndicator"
+        >
+          <KIcon
+            icon="error"
+            :color="$themeTokens.error"
+          />
+          <span>{{ incompleteItemIndicatorLabel$() }}</span>
+        </span>
         <slot name="toolbarActions"></slot>
       </div>
     </div>
 
     <div class="question-card-body">
+      <p
+        v-if="isUnsupported"
+        :style="{ color: $themePalette.grey.v_500, margin: 0, fontStyle: 'italic' }"
+        data-testid="unsupportedMessage"
+      >
+        {{ unsupportedItemMessage$() }}
+      </p>
       <InteractionSection
-        v-if="interactions.length > 0"
+        v-else-if="interactions.length > 0"
         :interaction="currentInteraction"
         :mode="mode"
         :showAnswers="showAnswers"
+        :allowFreeResponse="allowFreeResponse"
         @update:questionType="type => (currentQuestionType = type)"
         @update:interaction="onUpdateInteraction"
+        @update:errors="onUpdateErrors"
       />
       <p
         v-else
@@ -41,6 +62,13 @@
       >
         {{ questionContentPlaceholder$() }}
       </p>
+
+      <HintsSection
+        v-if="hasHints && (mode === 'edit' || showAnswers)"
+        :hints="hints"
+        :mode="mode"
+        @update:hints="onUpdateHints"
+      />
     </div>
 
     <div
@@ -62,14 +90,16 @@
 
   import { computed, ref, watch } from 'vue';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
-  import { QuestionType } from '../../constants';
+  import { AssessmentItemTypes, QuestionType } from '../../constants';
   import useQtiItem from '../../composables/useQtiItem';
+  import { validateItemShape } from '../../validateItem';
   import InteractionSection from '../InteractionSection/index.vue';
+  import HintsSection from '../HintsSection/index.vue';
 
   export default {
     name: 'QTIItemEditor',
 
-    components: { InteractionSection },
+    components: { InteractionSection, HintsSection },
 
     setup(props, { emit }) {
       const {
@@ -78,6 +108,8 @@
         closeBtnLabel$,
         questionContentPlaceholder$,
         unknownTypeLabel$,
+        incompleteItemIndicatorLabel$,
+        unsupportedItemMessage$,
       } = qtiEditorStrings;
 
       /**
@@ -92,14 +124,32 @@
       // Parse the item XML. rawData is a computed inside useQtiItem that
       // re-assembles the full XML whenever identifier/title/language or the
       // editor refs change — no need to duplicate assembleItemXml here.
-      const { interactions, rawData } = useQtiItem(props.item.raw_data, {
-        bodyXml: currentBodyXml,
-        responseDeclarations: currentResponseDeclarations,
-      });
+      const { interactions, itemBodyXml, hints, parseError, rawData } = useQtiItem(
+        props.item.raw_data,
+        {
+          bodyXml: currentBodyXml,
+          responseDeclarations: currentResponseDeclarations,
+        },
+      );
 
-      // Seed the editor refs from the parsed interactions (first interaction only).
+      /**
+       * Items authored outside this editor (e.g. Perseus questions) and items whose XML
+       * cannot be read are shown as read-only cards.
+       */
+      const isUnsupported = computed(
+        () => props.item.type !== AssessmentItemTypes.QTI || Boolean(parseError.value),
+      );
+
+      /*
+       * Seed the editor refs from the parsed item (first interaction only).
+       *
+       * The body is seeded even when there is no interaction to edit. Such an item still has
+       * content — its own text, and any interaction this editor has no descriptor for — and
+       * anything else the author can change, a hint, reassembles the whole item. Leaving the
+       * body unseeded would write an empty <qti-item-body/> over that text.
+       */
+      currentBodyXml.value = interactions.value[0]?.bodyXml ?? itemBodyXml.value;
       if (interactions.value.length > 0) {
-        currentBodyXml.value = interactions.value[0].bodyXml;
         currentResponseDeclarations.value = interactions.value[0].responseDeclarations;
       }
 
@@ -144,35 +194,92 @@
         }),
       );
 
+      /**
+       * Whether the change the watcher below is about to report came from an edit in this
+       * card. Recorded as the change happens rather than read from `mode` when the watcher
+       * flushes: closing the card sets the parent's active item to none, and that re-render
+       * lands first, so a change made just before the close would look like it came from a
+       * card nobody was editing.
+       */
+      let editedHere = false;
+
       // Emit only when the assembled XML actually changes after initial mount.
       watch(rawData, newVal => {
+        if (!editedHere) return;
+        editedHere = false;
         if (process.env.NODE_ENV === 'development') {
+          // debug to help devs understand what the editor is sending to the parent
           // eslint-disable-next-line no-console
-          console.log('[QTIItemEditor] assembled XML:\n', newVal);
+          console.debug('[QTIItemEditor] assembled XML:\n', newVal);
         }
         emit('update:rawData', newVal);
       });
 
       function onUpdateInteraction({ bodyXml, responseDeclarations }) {
+        editedHere = props.mode === 'edit';
         currentBodyXml.value = bodyXml;
         currentResponseDeclarations.value = responseDeclarations;
       }
+
+      /**
+       * Whether this question offers hints at all, which is settled by what the item arrived
+       * with: only a question that already has them shows the section (product decision).
+       *
+       * Read once from the parsed item rather than from the live list, so removing the last
+       * hint does not take the section away while the author is still working in it.
+       */
+      const hasHints = hints.value.length > 0;
+
+      function onUpdateHints(newHints) {
+        editedHere = props.mode === 'edit';
+        hints.value = newHints;
+      }
+
+      /** Errors the interaction editor reports about the state it holds. */
+      const errors = ref([]);
+
+      function onUpdateErrors(newErrors) {
+        errors.value = newErrors;
+      }
+
+      /**
+       * Whether the question is missing something an author still has to supply.
+       */
+      const isIncomplete = computed(() => {
+        if (isUnsupported.value) {
+          return false;
+        }
+        const itemErrors = validateItemShape({
+          interactions: interactions.value,
+          questionTypes: [currentQuestionType.value],
+          allowFreeResponse: props.allowFreeResponse,
+        });
+        return itemErrors.length > 0 || errors.value.length > 0;
+      });
 
       return {
         currentQuestionType,
         interactions,
         currentInteraction,
+        isUnsupported,
+        isIncomplete,
         questionNumberLabel,
         questionNumberAndTypeLabel,
         closeBtnLabel$,
         questionContentPlaceholder$,
+        incompleteItemIndicatorLabel$,
+        unsupportedItemMessage$,
         onUpdateInteraction,
+        onUpdateErrors,
+        hints,
+        hasHints,
+        onUpdateHints,
       };
     },
 
     props: {
       /**
-       * Assessment item: { assessment_id, type, raw_data? }
+       * Assessment item: { assessment_id, type, raw_data }
        * raw_data is the full QTI XML string; absent on blank newly-created items.
        */
       item: {
@@ -199,6 +306,14 @@
       showAnswers: {
         type: Boolean,
         default: false,
+      },
+      /**
+       * Whether a question with no correct answer counts as complete. Only a survey
+       * accepts those, so a consumer that scores its questions passes false.
+       */
+      allowFreeResponse: {
+        type: Boolean,
+        default: true,
       },
     },
 
@@ -235,7 +350,19 @@
     align-items: center;
   }
 
+  .incomplete-indicator {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
   .question-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
     min-width: 0;
     padding: 10px var(--question-card-horizontal-padding) 16px;
   }

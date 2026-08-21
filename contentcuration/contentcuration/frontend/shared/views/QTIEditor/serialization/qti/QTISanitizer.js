@@ -4,7 +4,7 @@
  * @module serialization/qti/QTISanitizer
  */
 
-import { parseXML } from '../parseItem';
+import { parseXML } from '../xml';
 
 // Valid QTI 3.0 base-type values — https://www.imsglobal.org/spec/qti/v3p0/impl/#h.wq4e8lbs4wa9
 const VALID_BASE_TYPES = new Set([
