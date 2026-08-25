@@ -1,23 +1,26 @@
 <template>
 
-  <MessageLayout
+  <StudioMessageLayout
     :header="$tr('activationExpiredTitle')"
     :text="$tr('activationExpiredText')"
   >
-    <VForm
-      ref="form"
-      lazy-validation
+    <form
+      class="request-activation-form"
+      novalidate
       @submit.prevent="requestActivationLink"
     >
-      <Banner
-        :text="$tr('activationRequestFailed')"
-        :value="error"
+      <StudioBanner
+        v-if="error"
         error
-        class="mb-4"
-      />
-      <EmailField
+        class="banner"
+      >
+        {{ $tr('activationRequestFailed') }}
+      </StudioBanner>
+      <StudioEmailField
         v-model="email"
         autofocus
+        :label="$tr('emailLabel')"
+        :errorMessages="errors.email ? [emailErrorText] : []"
       />
       <KButton
         primary
@@ -25,8 +28,8 @@
         :text="$tr('submitButton')"
         type="submit"
       />
-    </VForm>
-  </MessageLayout>
+    </form>
+  </StudioMessageLayout>
 
 </template>
 
@@ -34,29 +37,48 @@
 <script>
 
   import { mapActions } from 'vuex';
-  import MessageLayout from '../../components/MessageLayout';
-  import EmailField from 'shared/views/form/EmailField';
-  import Banner from 'shared/views/Banner';
+  import StudioMessageLayout from '../../components/StudioMessageLayout';
+  import StudioEmailField from '../../components/form/StudioEmailField';
+  import StudioBanner from 'shared/views/StudioBanner';
+  import commonStrings from 'shared/translator';
+  import { generateFormMixin } from 'shared/mixins';
+
+  const formMixin = generateFormMixin({
+    email: {
+      required: true,
+      validator: v => Boolean(v && v.trim()) && /.+@.+\..+/.test(v),
+    },
+  });
 
   export default {
     name: 'RequestNewActivationLink',
     components: {
-      MessageLayout,
-      EmailField,
-      Banner,
+      StudioMessageLayout,
+      StudioEmailField,
+      StudioBanner,
     },
+    mixins: [formMixin],
     data() {
       return {
-        email: '',
         error: false,
       };
+    },
+    computed: {
+      emailErrorText() {
+        if (!this.email || !this.email.trim()) {
+          /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+          return commonStrings.$tr('fieldRequired');
+        }
+        return this.$tr('emailValidationMessage');
+      },
     },
     methods: {
       ...mapActions('account', ['sendActivationLink']),
       requestActivationLink() {
         this.error = false;
-        if (this.$refs.form.validate()) {
-          this.sendActivationLink(this.email)
+        const formData = this.clean();
+        if (this.validate(formData)) {
+          this.sendActivationLink(formData.email)
             .then(() => {
               this.$router.replace({ name: 'ActivationLinkReSent' }).catch(() => {});
             })
@@ -71,6 +93,8 @@
       activationExpiredText: 'This activation link has been used already or has expired.',
       submitButton: 'Submit',
       activationRequestFailed: 'Failed to send a new activation link. Please try again.',
+      emailLabel: 'Email',
+      emailValidationMessage: 'Please enter a valid email address',
     },
   };
 
@@ -78,6 +102,17 @@
 
 
 <style lang="scss" scoped>
+
+  .request-activation-form {
+    width: 400px;
+    max-width: 100%;
+    text-align: left;
+  }
+
+  .banner {
+    width: 100%;
+    margin-bottom: 16px;
+  }
 
   .w-100 {
     width: 100%;
