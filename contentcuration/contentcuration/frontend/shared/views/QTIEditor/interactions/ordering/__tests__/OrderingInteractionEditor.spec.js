@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
 import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
 import OrderingInteractionEditor from '../OrderingInteractionEditor.vue';
@@ -11,21 +12,46 @@ import {
 } from '../../../utils/testingFixtures';
 import { QuestionType } from '../../../constants';
 import { qtiEditorStrings as tr } from '../../../qtiEditorStrings';
+import { dragSortStrings as dragTr } from 'shared/views/dragSort/dragSortStrings';
 
 jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor');
-jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
-  const { ref } = require('vue');
-  return {
-    __esModule: true,
-    default: () => ({ windowIsSmall: ref(false) }),
-  };
+// jsdom cannot produce the pointer events real SortableJS listens for, so the tests
+// call the captured `onEnd` instead.
+let mockSortableInstances;
+jest.mock('sortablejs', () =>
+  jest.fn().mockImplementation((el, options) => {
+    const instance = { el, options, option: jest.fn(), destroy: jest.fn() };
+    mockSortableInstances.push(instance);
+    return instance;
+  }),
+);
+
+beforeEach(() => {
+  mockSortableInstances = [];
 });
+
+const itemLabel = number => tr.$tr('orderingItemLabel', { number });
+const moveUpName = number => dragTr.$tr('moveItemUpLabel', { item: itemLabel(number) });
+const moveDownName = number => dragTr.$tr('moveItemDownLabel', { item: itemLabel(number) });
 
 const renderEditor = (props = {}) =>
   render(OrderingInteractionEditor, {
     props: { mode: 'edit', ...props },
     routes: new VueRouter(),
   });
+
+const dragFirstRowToLast = async () => {
+  const { options, el } = mockSortableInstances[mockSortableInstances.length - 1];
+  options.onEnd({
+    item: el.children[0],
+    from: el,
+    to: el,
+    oldIndex: 0,
+    oldDraggableIndex: 0,
+    newDraggableIndex: el.children.length - 1,
+  });
+  await nextTick();
+};
 
 describe('OrderingInteractionEditor', () => {
   describe('edit mode rendering', () => {
@@ -93,30 +119,45 @@ describe('OrderingInteractionEditor', () => {
       expect(screen.getByText('4')).toBeInTheDocument();
     });
 
-    it('disables move-up button for the first item', () => {
+    it('hides move-up on the first item and move-down on the last', () => {
       renderEditor({
         interaction: blockWithDecl(ORDERING_XML, ORDERING_DECL_XML),
         questionType: QuestionType.ORDERING,
       });
-      expect(
-        screen.getByRole('button', { name: tr.$tr('moveItemUpBtn', { number: 1 }) }),
-      ).toBeDisabled();
-      expect(
-        screen.getByRole('button', { name: tr.$tr('moveItemUpBtn', { number: 2 }) }),
-      ).toBeEnabled();
+      // `v-show` hides the out-of-range control, dropping it out of the accessibility tree
+      expect(screen.queryByRole('button', { name: moveUpName(1) })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: moveUpName(2) })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: moveUpName(3) })).toBeInTheDocument();
+
+      expect(screen.getByRole('button', { name: moveDownName(1) })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: moveDownName(2) })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: moveDownName(3) })).not.toBeInTheDocument();
     });
 
-    it('disables move-down button for the last item', () => {
-      renderEditor({
+    it('reorders the items when a row is dragged to a new position', async () => {
+      const { emitted } = renderEditor({
         interaction: blockWithDecl(ORDERING_XML, ORDERING_DECL_XML),
         questionType: QuestionType.ORDERING,
       });
-      expect(
-        screen.getByRole('button', { name: tr.$tr('moveItemDownBtn', { number: 3 }) }),
-      ).toBeDisabled();
-      expect(
-        screen.getByRole('button', { name: tr.$tr('moveItemDownBtn', { number: 1 }) }),
-      ).toBeEnabled();
+      await dragFirstRowToLast();
+
+      const { bodyXml } = emitted()['update:interaction'].pop()[0];
+      expect(bodyXml.indexOf('identifier="order_aaa11111"')).toBeGreaterThan(
+        bodyXml.indexOf('identifier="order_ccc33333"'),
+      );
+    });
+
+    it('reorders the items when a row is moved down by keyboard', async () => {
+      const user = userEvent.setup();
+      const { emitted } = renderEditor({
+        interaction: blockWithDecl(ORDERING_XML, ORDERING_DECL_XML),
+        questionType: QuestionType.ORDERING,
+      });
+      await user.click(screen.getByRole('button', { name: moveDownName(1) }));
+      const { bodyXml } = emitted()['update:interaction'].pop()[0];
+      expect(bodyXml.indexOf('identifier="order_bbb22222"')).toBeLessThan(
+        bodyXml.indexOf('identifier="order_aaa11111"'),
+      );
     });
 
     it('disables delete button when only one item remains', async () => {
@@ -176,6 +217,7 @@ describe('OrderingInteractionEditor', () => {
       expect(
         screen.queryByRole('button', { name: tr.$tr('deleteItemBtn', { number: 1 }) }),
       ).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: moveDownName(1) })).not.toBeInTheDocument();
     });
   });
 

@@ -79,13 +79,10 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Delete option {number}',
     context: 'Accessible label for the delete icon button next to an ordering item row',
   },
-  moveItemUpBtn: {
-    message: 'Move option {number} up',
-    context: 'Accessible label for the move-up icon button next to an ordering item row',
-  },
-  moveItemDownBtn: {
-    message: 'Move option {number} down',
-    context: 'Accessible label for the move-down icon button next to an ordering item row',
+  orderingItemLabel: {
+    message: 'Option {number}',
+    context:
+      'Names an ordering row in its reorder controls and in the screen reader announcement after it moves',
   },
   errorTooFewChoices: {
     message: 'At least 2 items are required for an ordering question.',
