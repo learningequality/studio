@@ -102,6 +102,37 @@ describe('useOrderingInteraction', () => {
     });
   });
 
+  describe('setItemOrder()', () => {
+    it('applies the given order', () => {
+      const { state, setItemOrder } = setup();
+      const [firstId, secondId, thirdId] = state.value.items.map(i => i.id);
+      setItemOrder([thirdId, firstId, secondId]);
+      expect(state.value.items.map(i => i.id)).toEqual([thirdId, firstId, secondId]);
+    });
+
+    it('is a no-op when the given order is not a permutation of the current ids', () => {
+      const { state, setItemOrder } = setup();
+      const [firstId, secondId, thirdId] = state.value.items.map(i => i.id);
+
+      setItemOrder([thirdId, firstId]);
+      expect(state.value.items.map(i => i.id)).toEqual([firstId, secondId, thirdId]);
+
+      setItemOrder([thirdId, firstId, 'order_zzzzzzzz']);
+      expect(state.value.items.map(i => i.id)).toEqual([firstId, secondId, thirdId]);
+    });
+
+    it('produces the same bodyXml as moveItemUp for the equivalent move', () => {
+      const { state, moveItemUp, bodyXml: chevronBodyXml } = setup();
+      const [firstId, secondId, thirdId] = state.value.items.map(i => i.id);
+      moveItemUp(secondId);
+
+      const { setItemOrder, bodyXml: dragBodyXml } = setup();
+      setItemOrder([secondId, firstId, thirdId]);
+
+      expect(dragBodyXml.value).toBe(chevronBodyXml.value);
+    });
+  });
+
   describe('setItemContent()', () => {
     it('updates only the targeted item content', () => {
       const { state, setItemContent } = setup();

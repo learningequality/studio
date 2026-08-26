@@ -44,6 +44,14 @@ export function useOrderingInteraction(interactionBlock, questionType) {
     state.value = { ...state.value, items };
   }
 
+  /** Apply a permutation of the current item ids; anything else is ignored. */
+  function setItemOrder(orderedIds) {
+    const byId = new Map(state.value.items.map(item => [item.id, item]));
+    const items = [...new Set(orderedIds)].map(id => byId.get(id));
+    if (items.length !== byId.size || items.includes(undefined)) return;
+    state.value = { ...state.value, items };
+  }
+
   function setItemContent(id, html) {
     state.value = {
       ...state.value,
@@ -62,6 +70,7 @@ export function useOrderingInteraction(interactionBlock, questionType) {
     removeItem,
     moveItemUp,
     moveItemDown,
+    setItemOrder,
     setItemContent,
     setPrompt,
   };

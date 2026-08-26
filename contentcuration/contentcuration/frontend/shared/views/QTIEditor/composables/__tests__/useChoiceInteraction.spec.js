@@ -112,6 +112,47 @@ describe('useChoiceInteraction', () => {
     });
   });
 
+  describe('setChoiceOrder()', () => {
+    it('applies the given order', () => {
+      const { state, setChoiceOrder } = setup([
+        makeAnswer({ id: 'a' }),
+        makeAnswer({ id: 'b' }),
+        makeAnswer({ id: 'c' }),
+      ]);
+      setChoiceOrder(['c', 'a', 'b']);
+      expect(state.value.choices.map(a => a.id)).toEqual(['c', 'a', 'b']);
+    });
+
+    it('is a no-op when the given order is not a permutation of the current ids', () => {
+      const { state, setChoiceOrder } = setup([
+        makeAnswer({ id: 'a' }),
+        makeAnswer({ id: 'b' }),
+        makeAnswer({ id: 'c' }),
+      ]);
+
+      setChoiceOrder(['c', 'a']);
+      expect(state.value.choices.map(a => a.id)).toEqual(['a', 'b', 'c']);
+
+      setChoiceOrder(['c', 'a', 'zzz']);
+      expect(state.value.choices.map(a => a.id)).toEqual(['a', 'b', 'c']);
+    });
+
+    it('produces the same bodyXml as moveChoiceUp for the equivalent move', () => {
+      const choices = [
+        makeAnswer({ id: 'a', content: 'A' }),
+        makeAnswer({ id: 'b', content: 'B' }),
+        makeAnswer({ id: 'c', content: 'C' }),
+      ];
+      const { moveChoiceUp, bodyXml: chevronBodyXml } = setup(choices);
+      moveChoiceUp('c');
+
+      const { setChoiceOrder, bodyXml: dragBodyXml } = setup(choices);
+      setChoiceOrder(['a', 'c', 'b']);
+
+      expect(dragBodyXml.value).toBe(chevronBodyXml.value);
+    });
+  });
+
   describe('toggleCorrectChoice()', () => {
     it('singleSelect: sets only the target as correct and clears others', () => {
       const { state, toggleCorrectChoice, questionTypeRef } = setup([
