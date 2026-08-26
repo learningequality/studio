@@ -1,4 +1,5 @@
 import { render, screen, fireEvent, within } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
 import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
 import ChoiceInteractionEditor from '../ChoiceInteractionEditor.vue';
@@ -14,8 +15,19 @@ import {
 } from '../../../utils/testingFixtures';
 import { QuestionType } from '../../../constants';
 import { qtiEditorStrings as tr } from '../../../qtiEditorStrings';
+import { dragSortStrings as dragTr } from 'shared/views/dragSort/dragSortStrings';
 
 jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor');
+// jsdom cannot produce the pointer events real SortableJS listens for, so the tests
+// call the captured `onEnd` instead.
+let mockSortableInstances;
+jest.mock('sortablejs', () =>
+  jest.fn().mockImplementation((el, options) => {
+    const instance = { el, options, option: jest.fn(), destroy: jest.fn() };
+    mockSortableInstances.push(instance);
+    return instance;
+  }),
+);
 jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
   const { ref } = require('vue');
   return {
@@ -27,6 +39,7 @@ jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
 let teleportContainer;
 
 beforeEach(() => {
+  mockSortableInstances = [];
   teleportContainer = document.createElement('div');
   teleportContainer.id = 'test-settings-target';
   document.body.appendChild(teleportContainer);
@@ -38,11 +51,28 @@ afterEach(() => {
   }
 });
 
+const choiceLabel = number => tr.$tr('choiceItemLabel', { number });
+const moveUpName = number => dragTr.$tr('moveItemUpLabel', { item: choiceLabel(number) });
+const moveDownName = number => dragTr.$tr('moveItemDownLabel', { item: choiceLabel(number) });
+
 const renderEditor = (props = {}) =>
   render(ChoiceInteractionEditor, {
     props: { mode: 'edit', teleportTargetId: 'test-settings-target', ...props },
     routes: new VueRouter(),
   });
+
+const dragFirstRowToLast = async () => {
+  const { options, el } = mockSortableInstances[mockSortableInstances.length - 1];
+  options.onEnd({
+    item: el.children[0],
+    from: el,
+    to: el,
+    oldIndex: 0,
+    oldDraggableIndex: 0,
+    newDraggableIndex: el.children.length - 1,
+  });
+  await nextTick();
+};
 
 describe('ChoiceInteractionEditor', () => {
   describe('prompt rendering', () => {
@@ -182,34 +212,84 @@ describe('ChoiceInteractionEditor', () => {
       expect(screen.getAllByRole('radio')).toHaveLength(4);
     });
 
-    it('renders move-up, move-down, and delete buttons for each non-fixed choice', () => {
+    it('gives every choice row its own delete button', () => {
       renderEditor({
         interaction: block(CHOICE_SINGLE_SELECT_XML),
         questionType: QuestionType.SINGLE_SELECT,
       });
-      expect(screen.getAllByRole('button', { name: tr.$tr('moveChoiceUpBtn') })).toHaveLength(3);
-      expect(screen.getAllByRole('button', { name: tr.$tr('moveChoiceDownBtn') })).toHaveLength(3);
       expect(screen.getAllByRole('button', { name: tr.$tr('deleteChoiceBtn') })).toHaveLength(3);
     });
 
-    it('disables move-up on the first choice', () => {
+    it('hides move-up on the first choice and move-down on the last', () => {
       renderEditor({
         interaction: block(CHOICE_SINGLE_SELECT_XML),
         questionType: QuestionType.SINGLE_SELECT,
       });
-      const moveUpBtns = screen.getAllByRole('button', { name: tr.$tr('moveChoiceUpBtn') });
-      expect(moveUpBtns[0]).toBeDisabled();
-      expect(moveUpBtns[1]).toBeEnabled();
+      // `v-show` hides the out-of-range control, dropping it out of the accessibility tree
+      expect(screen.queryByRole('button', { name: moveUpName(1) })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: moveUpName(2) })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: moveUpName(3) })).toBeInTheDocument();
+
+      expect(screen.getByRole('button', { name: moveDownName(1) })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: moveDownName(2) })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: moveDownName(3) })).not.toBeInTheDocument();
     });
 
-    it('disables move-down on the last choice', () => {
+    it('reorders the choices when a row is dragged to a new position', async () => {
+      const { emitted } = renderEditor({
+        interaction: block(CHOICE_SINGLE_SELECT_XML),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
+      await dragFirstRowToLast();
+
+      const { bodyXml } = emitted()['update:interaction'].pop()[0];
+      expect(bodyXml.indexOf('identifier="mercury"')).toBeGreaterThan(
+        bodyXml.indexOf('identifier="earth"'),
+      );
+    });
+
+    it('drops the reorder controls once the choices are shuffled', async () => {
+      const user = userEvent.setup();
       renderEditor({
         interaction: block(CHOICE_SINGLE_SELECT_XML),
         questionType: QuestionType.SINGLE_SELECT,
       });
-      const moveDownBtns = screen.getAllByRole('button', { name: tr.$tr('moveChoiceDownBtn') });
-      expect(moveDownBtns[2]).toBeDisabled();
-      expect(moveDownBtns[1]).toBeEnabled();
+      expect(screen.getByRole('button', { name: moveDownName(1) })).toBeInTheDocument();
+
+      await user.click(
+        within(teleportContainer).getByRole('checkbox', { name: tr.$tr('shuffleAnswersLabel') }),
+      );
+
+      expect(screen.queryByRole('button', { name: moveDownName(1) })).not.toBeInTheDocument();
+      const { option } = mockSortableInstances[mockSortableInstances.length - 1];
+      expect(option).toHaveBeenCalledWith('sort', false);
+    });
+
+    it('binds the drag list to the rendered element after the question type changes', async () => {
+      // Switching question type swaps KRadioButtonGroup for a plain div. Left bound to the
+      // detached element, drag silently stops working, so assert on the element SortableJS
+      // was handed rather than on anything the editor emits.
+      const { updateProps } = renderEditor({
+        interaction: block(CHOICE_SINGLE_SELECT_XML),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
+      await updateProps({ questionType: QuestionType.MULTI_SELECT });
+
+      const { el } = mockSortableInstances[mockSortableInstances.length - 1];
+      expect(document.body).toContainElement(el);
+    });
+
+    it('reorders the choices when a row is moved down by keyboard', async () => {
+      const user = userEvent.setup();
+      const { emitted } = renderEditor({
+        interaction: block(CHOICE_SINGLE_SELECT_XML),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
+      await user.click(screen.getByRole('button', { name: moveDownName(1) }));
+      const { bodyXml } = emitted()['update:interaction'].pop()[0];
+      expect(bodyXml.indexOf('identifier="venus"')).toBeLessThan(
+        bodyXml.indexOf('identifier="mercury"'),
+      );
     });
 
     it('disables delete when only one choice remains', async () => {
@@ -304,6 +384,7 @@ describe('ChoiceInteractionEditor', () => {
       expect(
         screen.queryByRole('button', { name: tr.$tr('deleteChoiceBtn') }),
       ).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: moveDownName(1) })).not.toBeInTheDocument();
     });
   });
 
@@ -477,9 +558,7 @@ describe('ChoiceInteractionEditor', () => {
         interaction: block(CHOICE_SINGLE_SELECT_XML),
         questionType: QuestionType.SINGLE_SELECT,
       });
-      screen
-        .getAllByRole('button', { name: tr.$tr('moveChoiceUpBtn') })
-        .forEach(b => expect(b).toHaveAccessibleName());
+      screen.getAllByRole('button').forEach(b => expect(b).toHaveAccessibleName());
     });
   });
 

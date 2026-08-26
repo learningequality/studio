@@ -81,115 +81,155 @@
         {{ answersDescription }}
       </div>
 
-      <component
-        :is="isSingleSelect ? 'KRadioButtonGroup' : 'div'"
-        class="choices-list"
-        :aria-labelledby="answersHeaderId"
-        :role="!isSingleSelect ? 'group' : undefined"
+      <!-- keyed on the list tag so the region remounts when it swaps: SortableJS binds
+           to that element once, on mount -->
+      <DraggableRegion
+        :key="listTag"
+        :items="state.choices"
+        :sortable="isReorderable"
+        @update:items="onReorderChoices"
       >
-        <div
-          v-for="(choice, index) in state.choices"
-          :key="choice.id"
-          class="choice-group"
+        <component
+          :is="listTag"
+          class="choices-list"
+          :aria-labelledby="answersHeaderId"
+          :role="!isSingleSelect ? 'group' : undefined"
         >
-          <!-- Bordered choice card -->
-          <ClickableRegion
-            class="choice-border"
-            :class="getChoiceClasses(choice)"
-            :style="getChoiceStyle(choice)"
-            :suppressed="mode !== 'edit' || isChoiceOpen(choice.id)"
-            :aria-label="editAnswerOptionLabel$({ number: index + 1 })"
-            @click="handleChoiceClick(choice.id)"
+          <DraggableItem
+            v-for="(choice, index) in state.choices"
+            :key="choice.id"
           >
-            <div
-              class="choice-card-text"
-              :class="{
-                'is-closed': isChoiceClosed(choice.id),
-                'small-screen': windowIsSmall,
-              }"
-            >
-              <div
-                class="choice-layout"
-                :class="{
-                  'is-open': isChoiceOpen(choice.id),
-                  'small-screen': windowIsSmall,
-                }"
+            <div class="choice-group">
+              <!-- Bordered choice card -->
+              <ClickableRegion
+                class="choice-border"
+                :class="getChoiceClasses(choice)"
+                :style="getChoiceStyle(choice)"
+                :suppressed="mode !== 'edit' || isChoiceOpen(choice.id)"
+                :aria-label="editAnswerOptionLabel$({ number: index + 1 })"
+                @click="handleChoiceClick(choice.id)"
               >
-                <!-- Selection control -->
                 <div
-                  class="choice-selection"
-                  @click.stop
+                  class="choice-card-text"
+                  :class="{
+                    'is-closed': isChoiceClosed(choice.id),
+                    'small-screen': windowIsSmall,
+                  }"
                 >
-                  <KIcon
-                    v-if="choiceHasError(choice.id)"
-                    icon="error"
-                    :color="$themeTokens.error"
-                    :style="{ width: '20px', height: '20px', marginTop: '2px', marginRight: '4px' }"
-                  />
-                  <KRadioButton
-                    v-if="isSingleSelect"
-                    :currentValue="correctChoiceId || ''"
-                    :buttonValue="choice.id"
-                    :label="markCorrectLabel$()"
-                    :showLabel="false"
-                    :disabled="mode !== 'edit'"
-                    :style="{ width: 'auto' }"
-                    :color="$themePalette.green.v_600"
-                    @change="onToggleCorrect(choice.id)"
-                  />
-                  <!-- KCheckbox color prop colors the checked icon green -->
-                  <KCheckbox
-                    v-else
-                    :checked="choice.correct"
-                    :label="markCorrectLabel$()"
-                    :showLabel="false"
-                    :disabled="mode !== 'edit'"
-                    :color="$themePalette.green.v_600"
-                    @change="onToggleCorrect(choice.id)"
-                  />
-                </div>
+                  <div
+                    class="choice-layout"
+                    :class="{
+                      'is-open': isChoiceOpen(choice.id),
+                      'small-screen': windowIsSmall,
+                    }"
+                  >
+                    <!-- `@click.stop` so using the handle does not open the choice for editing -->
+                    <DraggableHandle v-if="isReorderable">
+                      <div
+                        class="choice-drag"
+                        @click.stop
+                      >
+                        <DragSortWidget
+                          :color="$themePalette.grey.v_700"
+                          :isFirst="index === 0"
+                          :isLast="index === state.choices.length - 1"
+                          :itemLabel="choiceItemLabel$({ number: index + 1 })"
+                          :position="index + 1"
+                          :total="state.choices.length"
+                          @moveUp="moveChoiceUp(choice.id)"
+                          @moveDown="moveChoiceDown(choice.id)"
+                        />
+                      </div>
+                    </DraggableHandle>
 
-                <div class="choice-content">
-                  <TipTapEditor
-                    :value="choice.content"
-                    :mode="isChoiceOpen(choice.id) ? 'edit' : 'view'"
-                    format="html"
-                    :minHeight="'80px'"
-                    :autofocus="isChoiceOpen(choice.id)"
-                    :imageProcessor="EditorImageProcessor"
-                    :tabindex="-1"
-                    class="editor"
-                    @update="html => setChoiceContent(choice.id, html)"
-                    @minimize="closeChoice"
-                  />
-                </div>
+                    <!-- Selection control -->
+                    <div
+                      class="choice-selection"
+                      @click.stop
+                    >
+                      <KIcon
+                        v-if="choiceHasError(choice.id)"
+                        icon="error"
+                        :color="$themeTokens.error"
+                        :style="{
+                          width: '20px',
+                          height: '20px',
+                          marginTop: '2px',
+                          marginRight: '4px',
+                        }"
+                      />
+                      <KRadioButton
+                        v-if="isSingleSelect"
+                        :currentValue="correctChoiceId || ''"
+                        :buttonValue="choice.id"
+                        :label="markCorrectLabel$()"
+                        :showLabel="false"
+                        :disabled="mode !== 'edit'"
+                        :style="{ width: 'auto' }"
+                        :color="$themePalette.green.v_600"
+                        @change="onToggleCorrect(choice.id)"
+                      />
+                      <!-- KCheckbox color prop colors the checked icon green -->
+                      <KCheckbox
+                        v-else
+                        :checked="choice.correct"
+                        :label="markCorrectLabel$()"
+                        :showLabel="false"
+                        :disabled="mode !== 'edit'"
+                        :color="$themePalette.green.v_600"
+                        @change="onToggleCorrect(choice.id)"
+                      />
+                    </div>
 
-                <!-- Actions toolbar -->
-                <div
-                  v-if="mode === 'edit'"
-                  class="choice-actions toolbar"
-                  @click.stop
+                    <div class="choice-content">
+                      <TipTapEditor
+                        :value="choice.content"
+                        :mode="isChoiceOpen(choice.id) ? 'edit' : 'view'"
+                        format="html"
+                        :minHeight="'80px'"
+                        :autofocus="isChoiceOpen(choice.id)"
+                        :imageProcessor="EditorImageProcessor"
+                        :tabindex="-1"
+                        class="editor"
+                        @update="html => setChoiceContent(choice.id, html)"
+                        @minimize="closeChoice"
+                      />
+                    </div>
+
+                    <div
+                      v-if="mode === 'edit'"
+                      class="choice-actions"
+                      @click.stop
+                    >
+                      <KIconButton
+                        icon="close"
+                        :ariaLabel="deleteChoiceBtn$()"
+                        :tooltip="deleteChoiceBtn$()"
+                        :disabled="isOnlyChoice"
+                        :color="isOnlyChoice ? $themeTokens.textDisabled : $themePalette.grey.v_700"
+                        @click="onRemoveChoice(choice.id)"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <!-- Per-choice validation messages sit INSIDE the bordered card -->
+                <ValidationMessage
+                  v-if="emptyChoiceIds.has(choice.id)"
+                  class="choice-validation-message"
                 >
-                  <CollapsibleToolbar :actions="getChoiceRowActions(choice.id, index)" />
-                </div>
-              </div>
+                  {{ errorEmptyChoiceContent$() }}
+                </ValidationMessage>
+                <ValidationMessage
+                  v-if="duplicateChoiceIds.has(choice.id)"
+                  class="choice-validation-message"
+                >
+                  {{ errorDuplicateChoiceContent$() }}
+                </ValidationMessage>
+              </ClickableRegion>
             </div>
-            <!-- Per-choice validation messages sit INSIDE the bordered card -->
-            <ValidationMessage
-              v-if="emptyChoiceIds.has(choice.id)"
-              class="choice-validation-message"
-            >
-              {{ errorEmptyChoiceContent$() }}
-            </ValidationMessage>
-            <ValidationMessage
-              v-if="duplicateChoiceIds.has(choice.id)"
-              class="choice-validation-message"
-            >
-              {{ errorDuplicateChoiceContent$() }}
-            </ValidationMessage>
-          </ClickableRegion>
-        </div>
-      </component>
+          </DraggableItem>
+        </component>
+      </DraggableRegion>
 
       <!-- Add choice button (edit only) -->
       <AddListItemButton
@@ -214,11 +254,14 @@
   import { ValidationError } from '../../constants';
   import { generateRandomSlug } from '../../utils/generateRandomSlug';
   import { useChoiceInteraction } from '../../composables/useChoiceInteraction';
-  import CollapsibleToolbar from '../../components/CollapsibleToolbar/index.vue';
   import ValidationMessage from '../../components/ValidationMessage/index.vue';
   import AddListItemButton from '../../components/AddListItemButton/index.vue';
   import ClickableRegion from '../../components/ClickableRegion/index.vue';
   import AnswerSettings from './components/AnswerSettings/index.vue';
+  import DraggableRegion from 'shared/views/dragSort/DraggableRegion.vue';
+  import DraggableItem from 'shared/views/dragSort/DraggableItem.vue';
+  import DraggableHandle from 'shared/views/dragSort/DraggableHandle.vue';
+  import DragSortWidget from 'shared/views/dragSort/DragSortWidget/index.vue';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor';
   import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
 
@@ -228,7 +271,10 @@
     components: {
       ClickableRegion,
       TipTapEditor,
-      CollapsibleToolbar,
+      DraggableRegion,
+      DraggableItem,
+      DraggableHandle,
+      DragSortWidget,
       ValidationMessage,
       AddListItemButton,
       AnswerSettings,
@@ -241,8 +287,7 @@
       const {
         addChoiceBtn$,
         deleteChoiceBtn$,
-        moveChoiceUpBtn$,
-        moveChoiceDownBtn$,
+        choiceItemLabel$,
         markCorrectLabel$,
         errorPromptRequired$,
         errorNoCorrectAnswer$,
@@ -273,6 +318,7 @@
         removeChoice,
         moveChoiceUp,
         moveChoiceDown,
+        setChoiceOrder,
         toggleCorrectChoice,
         setPrompt,
         setChoiceContent,
@@ -345,6 +391,14 @@
 
       const correctChoiceId = computed(() => state.value.choices.find(a => a.correct)?.id ?? null);
 
+      const isOnlyChoice = computed(() => state.value.choices.length <= 1);
+
+      // Shuffled choices reach the learner in a random order, so an authored
+      // order has nothing to say.
+      const isReorderable = computed(() => props.mode === 'edit' && !state.value.shuffle);
+
+      const listTag = computed(() => (isSingleSelect.value ? 'KRadioButtonGroup' : 'div'));
+
       const errorCodes = computed(() => errors.value.map(e => e.code));
       const emptyChoiceIds = computed(
         () =>
@@ -395,33 +449,8 @@
         }
       }
 
-      function getChoiceRowActions(answerId, index) {
-        return [
-          {
-            id: 'up',
-            icon: 'chevronUp',
-            label: moveChoiceUpBtn$(),
-            disabled: index === 0,
-            handler: () => moveChoiceUp(answerId),
-            collapsed: windowIsSmall.value,
-          },
-          {
-            id: 'down',
-            icon: 'chevronDown',
-            label: moveChoiceDownBtn$(),
-            disabled: index === state.value.choices.length - 1,
-            handler: () => moveChoiceDown(answerId),
-            collapsed: windowIsSmall.value,
-          },
-          {
-            id: 'delete',
-            icon: 'close',
-            label: deleteChoiceBtn$(),
-            disabled: state.value.choices.length <= 1,
-            handler: () => onRemoveChoice(answerId),
-            collapsed: windowIsSmall.value,
-          },
-        ];
+      function onReorderChoices(nextChoices) {
+        setChoiceOrder(nextChoices.map(c => c.id));
       }
 
       const isPromptEditing = computed(() => props.mode === 'edit' && isQuestionOpen.value);
@@ -496,6 +525,9 @@
         closeQuestion,
         closeChoice,
         correctChoiceId,
+        isOnlyChoice,
+        isReorderable,
+        listTag,
         questionHasError,
         noCorrectAnswerError,
         tooManyCorrectError,
@@ -508,7 +540,10 @@
         setShowAnswerCount,
         onToggleCorrect,
         onAddChoice,
-        getChoiceRowActions,
+        onRemoveChoice,
+        onReorderChoices,
+        moveChoiceUp,
+        moveChoiceDown,
         isChoiceClosed,
         isChoiceOpen,
         getChoiceClasses,
@@ -516,6 +551,8 @@
         handlePromptClick,
         handleChoiceClick,
         addChoiceBtn$,
+        deleteChoiceBtn$,
+        choiceItemLabel$,
         markCorrectLabel$,
         errorPromptRequired$,
         errorNoCorrectAnswer$,
@@ -603,8 +640,10 @@
     flex-direction: column;
   }
 
+  /* Opaque, so a row dragged over the rows beneath it stays readable */
   .choice-border {
     position: relative;
+    background-color: v-bind('$themeTokens.surface');
     border: 1px solid;
     border-radius: 4px;
     transition: background-color 0.3s;
@@ -628,7 +667,7 @@
     padding: 7.5px;
   }
 
-  /* Flex row: [selection] [content] [actions] */
+  /* Flex row: [drag] [selection] [content] [actions] */
   .choice-layout {
     display: flex;
     align-items: center;
@@ -643,30 +682,48 @@
         flex-wrap: wrap;
         align-items: center;
 
-        .choice-selection {
-          flex: 0 0 auto;
-          order: 0;
-          margin-bottom: 4px;
-        }
-
+        .choice-drag,
+        .choice-selection,
         .choice-actions {
           flex: 0 0 auto;
-          order: 1;
           margin-bottom: 4px;
         }
 
         .choice-content {
           flex: 0 0 100%;
-          order: 2;
+          order: 1;
           min-width: 0;
         }
       }
     }
   }
 
-  .choice-selection {
+  .choice-drag {
+    display: flex;
     flex-shrink: 0;
+    align-items: center;
+    margin-right: 8px;
+
+    .small-screen & {
+      margin-right: 4px;
+    }
+  }
+
+  /* KRadioButton/KCheckbox wrap their 24px control in a table with 8px block margins,
+     and the inline icon adds descender space under it. Both push the control off the
+     row centre, out of line with the drag handle. */
+  .choice-selection {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
     margin-right: 16px;
+    line-height: 0;
+
+    ::v-deep .k-radio-button-container,
+    ::v-deep .k-checkbox-container {
+      margin-top: 0;
+      margin-bottom: 0;
+    }
 
     .small-screen & {
       margin-right: 6px;

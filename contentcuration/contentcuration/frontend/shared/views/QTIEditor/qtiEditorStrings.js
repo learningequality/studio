@@ -151,13 +151,10 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Delete choice',
     context: 'Accessible label for the delete-choice icon button',
   },
-  moveChoiceUpBtn: {
-    message: 'Move choice up',
-    context: 'Accessible label for the move-up icon button',
-  },
-  moveChoiceDownBtn: {
-    message: 'Move choice down',
-    context: 'Accessible label for the move-down icon button',
+  choiceItemLabel: {
+    message: 'Choice {number}',
+    context:
+      'Names a choice row in its reorder controls and in the screen reader announcement after it moves',
   },
   markCorrectLabel: {
     message: 'Mark as correct answer',
