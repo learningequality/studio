@@ -82,4 +82,20 @@ export const commonStrings = createTranslator('CommonStrings', {
     message: 'Removed {label}',
     context: 'Announced when an option is removed. {label} is the name of the option',
   },
+  moveUpLabel: {
+    message: 'Move up',
+    context: 'Label for the button that moves a resource up in the list. Not visible in the UI.',
+  },
+  moveDownLabel: {
+    message: 'Move down',
+    context: 'Label for the button that moves a resource down in the list. Not visible in the UI.',
+  },
+  moveLeftLabel: {
+    message: 'Move left',
+    context: 'Label for the button that moves a resource left in the list. Not visible in the UI.',
+  },
+  moveRightLabel: {
+    message: 'Move right',
+    context: 'Label for the button that moves a resource right in the list. Not visible in the UI.',
+  },
 });
