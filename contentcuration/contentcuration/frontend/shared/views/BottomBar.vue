@@ -36,6 +36,8 @@
 
 <style lang="scss" scoped>
 
+  @import '../styles/variables';
+
   .bottom-bar {
     position: fixed;
     bottom: 0;
@@ -44,7 +46,10 @@
     display: flex;
     align-items: center;
     width: 100%;
-    height: 64px;
+    // This value has impact on other modules that depend on it, if you need to change it,
+    // change the variable value instead, so that all modules that depend on it are
+    // updated accordingly.
+    height: $bottom-bar-height;
   }
 
 </style>
