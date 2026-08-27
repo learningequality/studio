@@ -375,7 +375,10 @@
     position: fixed;
     top: 0;
     left: 0;
-    z-index: 2;
+
+    /* KDS uses the Material elevation dp values as default z-indexes, and menus and popovers
+       sit at 8dp: https://design-system.learningequality.org/styling/#z-indexes */
+    z-index: 8;
     width: 100%;
     height: 100%;
     pointer-events: none;
