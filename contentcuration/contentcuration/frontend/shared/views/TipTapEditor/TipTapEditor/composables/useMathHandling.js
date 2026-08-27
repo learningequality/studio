@@ -1,7 +1,13 @@
 import { ref, onUnmounted, watch, nextTick } from 'vue';
 import { useModalPositioning } from './useModalPositioning';
 
-export function useMathHandling(editor, editorMode) {
+/**
+ * @param {Object} editor
+ * @param {Object} editorMode
+ * @param {Function} getModalElement returns the element of this editor's formulas menu, or a
+ *   nullish value while it is not rendered.
+ */
+export function useMathHandling(editor, editorMode, getModalElement) {
   const mathModalMode = ref('create');
   const mathModalInitialLatex = ref('');
   const editingMathNodePos = ref(null);
@@ -14,14 +20,14 @@ export function useMathHandling(editor, editorMode) {
     closeModal: closeModalBase,
     setupClickOutside,
     cleanup,
-  } = useModalPositioning();
+  } = useModalPositioning(getModalElement);
 
   const closeMathModal = () => {
     closeModalBase();
     editor.value?.commands.focus();
   };
 
-  setupClickOutside('.formulas-menu', closeMathModal);
+  setupClickOutside(closeMathModal);
 
   const openCreateMathModal = ({ targetElement = null } = {}) => {
     mathModalMode.value = 'create';

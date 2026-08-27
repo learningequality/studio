@@ -67,6 +67,7 @@
       @click.self="imageHandler.closeModal"
     >
       <ImageUploadModal
+        ref="imageUploadModal"
         :style="imageHandler.popoverStyle.value"
         :mode="imageHandler.modalMode.value"
         :initial-data="imageHandler.modalInitialData.value"
@@ -84,6 +85,7 @@
       @click.self="mathHandler.closeMathModal()"
     >
       <FormulasMenu
+        ref="formulasMenu"
         :style="mathHandler.popoverStyle.value"
         :mode="mathHandler.mathModalMode.value"
         :initial-latex="mathHandler.mathModalInitialLatex.value"
@@ -152,13 +154,19 @@
       const linkHandler = useLinkHandling(editor);
       provide('linkHandler', linkHandler);
 
+      // The anchored modals are measured and hit-tested through these refs, so that several
+      // editors mounted at once each work with their own modal.
+      const imageUploadModal = ref(null);
+      const formulasMenu = ref(null);
+
       const mathHandler = useMathHandling(
         editor,
         computed(() => props.mode),
+        () => formulasMenu.value?.$el,
       );
       provide('mathHandler', mathHandler);
 
-      const imageHandler = useImageHandling(editor);
+      const imageHandler = useImageHandling(editor, () => imageUploadModal.value?.$el);
       provide('imageProcessor', props.imageProcessor);
 
       const sharedEventHandlers = computed(() => ({
@@ -277,6 +285,8 @@
 
       return {
         editorContainer,
+        imageUploadModal,
+        formulasMenu,
         isReady,
         isFocused,
         handleDrop,
