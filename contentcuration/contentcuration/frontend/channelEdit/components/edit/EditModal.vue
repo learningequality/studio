@@ -13,6 +13,7 @@
     >
       <VCard class="edit-modal-wrapper">
         <Uploader
+          class="uploader-container"
           allowMultiple
           displayOnly
           :uploadingHandler="createNodesFromUploads"
@@ -96,7 +97,10 @@
             </ResizableNavigationDrawer>
 
             <!-- Main editing area -->
-            <VContent>
+            <VContent
+              class="edit-modal-content"
+              :class="{ 'has-bottom-bar': showBottomBar }"
+            >
               <VLayout
                 v-if="loadError"
                 align-center
@@ -126,7 +130,7 @@
           </template>
         </Uploader>
       </VCard>
-      <BottomBar v-if="!loading && !loadError && !showFileUploadDefault">
+      <BottomBar v-if="showBottomBar">
         <FileStorage
           v-if="showStorage"
           class="mx-2"
@@ -310,6 +314,9 @@
       },
       showFileUploadDefault() {
         return this.uploadMode && !this.nodeIds.length;
+      },
+      showBottomBar() {
+        return !this.loading && !this.loadError && !this.showFileUploadDefault;
       },
       nodeIds() {
         return (this.detailNodeIds && this.detailNodeIds.split(',')) || [];
@@ -656,6 +663,8 @@
 
 <style lang="scss" scoped>
 
+  @import '../../../shared/styles/variables';
+
   ::v-deep .v-toolbar__extension {
     padding: 0;
 
@@ -673,7 +682,6 @@
   }
 
   ::v-deep .v-content__wrap {
-    max-height: calc(100vh - 128px);
     overflow-y: auto;
   }
 
@@ -688,6 +696,19 @@
 
   ::v-deep .v-dialog__content {
     z-index: 5 !important;
+  }
+
+  .edit-modal-content {
+    height: 100%;
+
+    &.has-bottom-bar {
+      // Reserve room for the fixed BottomBar
+      padding-bottom: $bottom-bar-height !important;
+    }
+  }
+
+  .uploader-container {
+    height: 100%;
   }
 
 </style>

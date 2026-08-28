@@ -1,0 +1,6 @@
+// Shared SCSS variables. Import this partial wherever a value needs to stay in
+// sync across components.
+
+// Height of the fixed BottomBar. Content that sits behind the bar reserves the
+// same amount of room for it.
+$bottom-bar-height: 64px;

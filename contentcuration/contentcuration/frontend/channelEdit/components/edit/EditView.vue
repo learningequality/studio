@@ -24,8 +24,11 @@
         </VFlex>
       </VLayout>
     </VContainer>
-    <VLayout v-else>
-      <VFlex grow>
+    <div
+      v-else
+      class="edit-view-layout-wrapper"
+    >
+      <div class="edit-view-layout">
         <ToolBar
           v-if="showTabs"
           :flat="!tabsElevated"
@@ -116,6 +119,7 @@
         </ToolBar>
         <VContainer
           fluid
+          class="tab-content"
           :style="questionsTabStyles"
         >
           <VTabsItems v-model="currentTab">
@@ -174,8 +178,8 @@
             </VTabItem>
           </VTabsItems>
         </VContainer>
-      </VFlex>
-    </VLayout>
+      </div>
+    </div>
   </VContainer>
 
 </template>
@@ -441,8 +445,24 @@
     z-index: 5;
   }
 
+  .edit-view-layout-wrapper {
+    height: 100%;
+  }
+
+  .edit-view-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+  }
+
   .container {
     width: unset;
+  }
+
+  .tab-content {
+    // Override Vuetify's default margin for VContainer, which is not needed in this layout.
+    margin-right: 0;
+    margin-left: 0;
   }
 
   .v-alert {
@@ -473,7 +493,7 @@
 
   .wrapper {
     min-width: 100%;
-    max-height: inherit;
+    height: 100%;
     overflow: auto;
   }
 
