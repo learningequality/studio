@@ -1,7 +1,12 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useModalPositioning } from './useModalPositioning';
 
-export function useImageHandling(editor) {
+/**
+ * @param {Object} editor
+ * @param {Function} getModalElement returns the element of this editor's image upload modal,
+ *   or a nullish value while it is not rendered.
+ */
+export function useImageHandling(editor, getModalElement) {
   const modalMode = ref(null);
   const modalInitialData = ref({});
   const editingNodePos = ref(null);
@@ -14,7 +19,7 @@ export function useImageHandling(editor) {
     closeModal: closeModalBase,
     setupClickOutside,
     cleanup,
-  } = useModalPositioning();
+  } = useModalPositioning(getModalElement);
 
   const closeModal = () => {
     modalMode.value = null;
@@ -24,7 +29,7 @@ export function useImageHandling(editor) {
     editor.value?.commands.focus();
   };
 
-  setupClickOutside('.image-upload-modal', closeModal);
+  setupClickOutside(closeModal);
 
   const openCreateModal = ({ file = null, targetElement = null } = {}) => {
     modalInitialData.value = { file };

@@ -1,8 +1,18 @@
-import { ref, watch } from 'vue';
+import { nextTick, ref, watch } from 'vue';
 import throttle from 'lodash/throttle';
 import { isTouchDevice } from 'shared/utils/browserInfo';
 
-export function useModalPositioning() {
+// Gap between the anchor and the modal, and the smallest gap kept to the viewport edges.
+const ANCHOR_GAP = 5;
+const VIEWPORT_MARGIN = 8;
+
+/**
+ * @param {Function} getModalElement returns the element of the modal being positioned, or a
+ *   nullish value while the modal is not rendered. It is used to measure the modal, so that an
+ *   anchored modal can be kept inside the viewport, and to tell clicks inside it from clicks
+ *   outside of it.
+ */
+export function useModalPositioning(getModalElement) {
   const isModalOpen = ref(false);
   const popoverStyle = ref({});
   const isModalCentered = ref(false);
@@ -13,9 +23,19 @@ export function useModalPositioning() {
       return;
     }
     const rect = anchorElement.value.getBoundingClientRect();
+    // The modal is fixed-positioned, so overflow past the bottom of the viewport cannot be
+    // scrolled into view: pull the modal up by the overflowing amount instead. When the modal is
+    // taller than the viewport, it is aligned to the top so that its beginning stays visible.
+    const modalHeight = getModalElement()?.offsetHeight || 0;
+    const highestTop = window.innerHeight - modalHeight - VIEWPORT_MARGIN;
+
+    // Choose the top position that is at least VIEWPORT_MARGIN from the top of the viewport,
+    // and at most the bottom of the anchor element plus ANCHOR_GAP,
+    // but not overflowing past the bottom of the viewport.
+    const top = Math.max(VIEWPORT_MARGIN, Math.min(rect.bottom + ANCHOR_GAP, highestTop));
     popoverStyle.value = {
       position: 'fixed',
-      top: `${rect.bottom + 5}px`,
+      top: `${top}px`,
       left: `${rect.right}px`,
       transform: 'translateX(-100%)',
     };
@@ -61,6 +81,10 @@ export function useModalPositioning() {
       setAnchoredPosition(targetElement);
     }
     isModalOpen.value = true;
+    if (!isModalCentered.value) {
+      // The modal only renders once it is open, so re-position it once its height is known.
+      nextTick(updatePosition);
+    }
   };
 
   const closeModal = () => {
@@ -69,9 +93,9 @@ export function useModalPositioning() {
     anchorElement.value = null;
   };
 
-  const setupClickOutside = (modalSelector, closeFunction) => {
+  const setupClickOutside = closeFunction => {
     const clickOutsideHandler = event => {
-      const modalElement = document.querySelector(modalSelector);
+      const modalElement = getModalElement();
       if (isModalOpen.value && modalElement && !modalElement.contains(event.target)) {
         // Allow the consumer to do its own cleanup.
         closeFunction();
