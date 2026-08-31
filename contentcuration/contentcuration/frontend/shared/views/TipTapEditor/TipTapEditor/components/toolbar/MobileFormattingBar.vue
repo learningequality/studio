@@ -166,13 +166,14 @@
       onMounted(() => {
         if (editor.value) {
           // Use a timeout to allow the keyboard to start appearing
-          setTimeout(() => {
+          const scrollTimeout = setTimeout(() => {
             const { from } = editor.value.state.selection;
             editor.value.view.dom.querySelector(`[pos="${from}"]`)?.scrollIntoView({
               behavior: 'smooth',
               block: 'nearest',
             });
           }, 150);
+          onUnmounted(() => clearTimeout(scrollTimeout));
         }
 
         const vk = navigator.virtualKeyboard;
