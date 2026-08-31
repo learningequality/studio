@@ -25,3 +25,18 @@ export async function resetMockChannelScope() {
   Session.currentChannelId = Session._oldCurrentChannelId;
   delete Session._oldCurrentChannelId;
 }
+
+/**
+ * Tab into the component under test, entering backwards from a sentinel after it.
+ *
+ * Tabbing forward from the start of the document stops on the CSRF input the
+ * shared Jest setup leaves at the top of the body.
+ *
+ * @param {import('@testing-library/user-event').UserEvent} user
+ */
+export async function tabIn(user) {
+  const sentinel = document.body.appendChild(document.createElement('button'));
+  sentinel.focus();
+  await user.tab({ shift: true });
+  sentinel.remove();
+}

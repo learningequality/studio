@@ -4,8 +4,8 @@
     class="toolbar-btn"
     :title="title"
     :class="{ active: isActive, disabled: !isAvailable }"
-    :disabled="!isAvailable"
-    :tabindex="isAvailable ? 0 : -1"
+    data-toolbar-item
+    :aria-disabled="isAvailable ? 'false' : 'true'"
     :aria-label="title"
     :aria-pressed="isActive ? 'true' : 'false'"
     @mousedown.prevent
@@ -139,12 +139,6 @@
   }
 
   .toolbar-btn.disabled {
-    cursor: not-allowed;
-    opacity: 0.3;
-  }
-
-  .toolbar-btn:disabled {
-    pointer-events: none;
     cursor: not-allowed;
     opacity: 0.3;
   }

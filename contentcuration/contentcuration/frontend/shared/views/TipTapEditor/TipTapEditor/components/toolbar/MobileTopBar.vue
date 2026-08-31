@@ -1,6 +1,7 @@
 <template>
 
   <div
+    ref="toolbarRef"
     class="toolbar top-bar"
     role="toolbar"
     :aria-label="editorControls$()"
@@ -24,6 +25,7 @@
       <div class="topbar-actions">
         <button
           class="insert-button"
+          data-toolbar-item
           :title="insertContent$()"
           :aria-label="insertContentMenu$()"
           :aria-expanded="isInsertMenuOpen"
@@ -75,6 +77,7 @@
   import { defineComponent, ref, onMounted, onBeforeUnmount } from 'vue';
   import { useToolbarActions } from '../../composables/useToolbarActions';
   import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
+  import { useRovingTabIndex } from '../../composables/useRovingTabIndex';
   import ToolbarButton from './ToolbarButton.vue';
 
   export default defineComponent({
@@ -83,6 +86,9 @@
     setup(props, { emit }) {
       const isInsertMenuOpen = ref(false);
       const dropdown = ref(null);
+      const toolbarRef = ref(null);
+
+      useRovingTabIndex(toolbarRef);
 
       const { historyActions, insertTools, minimizeAction } = useToolbarActions(emit);
 
@@ -120,6 +126,7 @@
         minimizeAction,
         isInsertMenuOpen,
         dropdown,
+        toolbarRef,
         editorControls$,
         historyActions$,
         insertContent$,

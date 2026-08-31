@@ -7,6 +7,7 @@
   >
     <button
       class="paste-main-btn toolbar-btn"
+      data-toolbar-item
       :title="paste$()"
       :aria-label="paste$()"
       @click="handlePaste"
@@ -21,6 +22,7 @@
     <button
       ref="dropdownButton"
       class="paste-dropdown-btn"
+      data-toolbar-item
       :title="pasteOptions$()"
       :aria-expanded="isOpen"
       :aria-haspopup="true"

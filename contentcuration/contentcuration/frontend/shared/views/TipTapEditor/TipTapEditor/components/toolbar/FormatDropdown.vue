@@ -8,6 +8,7 @@
     <button
       ref="dropdownButton"
       class="format-dropdown"
+      data-toolbar-item
       :aria-expanded="isOpen"
       :aria-haspopup="true"
       :aria-label="textFormatOptions$()"
