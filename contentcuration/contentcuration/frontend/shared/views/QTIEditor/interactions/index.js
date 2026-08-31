@@ -2,6 +2,7 @@ import { QtiInteraction } from '../constants';
 import ChoiceEditor from './choice/Editor.vue';
 import TextEntryEditor from './textEntry/Editor.vue';
 import OrderingEditor from './ordering/Editor.vue';
+import AssociateEditor from './associate/Editor.vue';
 
 /**
  * Entry point for the editor tree: the descriptors, plus the Vue component that edits each
@@ -15,6 +16,7 @@ export const editors = Object.freeze({
   [QtiInteraction.CHOICE]: ChoiceEditor,
   [QtiInteraction.TEXT_ENTRY]: TextEntryEditor,
   [QtiInteraction.ORDER]: OrderingEditor,
+  [QtiInteraction.ASSOCIATE]: AssociateEditor,
 });
 
 export { DEFAULT_INTERACTION, descriptors, registry } from './descriptors';
