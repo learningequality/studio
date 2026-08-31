@@ -13,6 +13,8 @@
     :aria-label="editorMode === 'edit' ? TipTapEditorLabel$() : TipTapViewerLabel$()"
     aria-multiline="true"
     @keydown="handleContainerKeydown"
+    @focusin="hasFocusWithin = true"
+    @focusout="handleFocusout"
   >
     <div v-if="editorMode === 'edit'">
       <EditorToolbar
@@ -21,16 +23,11 @@
         @minimize="emitMinimize"
       />
 
-      <div v-else>
-        <MobileTopBar
-          v-on="sharedEventHandlers"
-          @minimize="emitMinimize"
-        />
-        <MobileFormattingBar
-          v-if="isFocused"
-          v-on="sharedEventHandlers"
-        />
-      </div>
+      <MobileTopBar
+        v-else
+        v-on="sharedEventHandlers"
+        @minimize="emitMinimize"
+      />
     </div>
 
     <div
@@ -96,6 +93,13 @@
       :inert="editorMode === 'view'"
       @drop.native.prevent="handleDrop"
       @dragover.native.prevent
+    />
+
+    <!-- After the content area: the bar is pinned below it on screen, so Tab out of
+      the content should reach it rather than leave the editor. -->
+    <MobileFormattingBar
+      v-if="isTouchDevice && editorMode === 'edit' && hasFocusWithin"
+      v-on="sharedEventHandlers"
     />
   </div>
 
@@ -166,6 +170,15 @@
         'insert-link': () => linkHandler.openLinkEditor(),
         'insert-math': target => mathHandler.openCreateMathModal({ targetElement: target }),
       }));
+
+      // Tracked on the container rather than on the editor content: tabbing out of
+      // the content blurs it, and the re-render that blur schedules would unmount
+      // the mobile formatting bar before focus could land on it. `focusout` is the
+      // only signal that names where focus is going, so it alone clears this.
+      const hasFocusWithin = ref(false);
+      const handleFocusout = event => {
+        hasFocusWithin.value = editorContainer.value.contains(event.relatedTarget);
+      };
 
       const handleDrop = event => {
         const file = event.dataTransfer.files[0];
@@ -278,7 +291,8 @@
       return {
         editorContainer,
         isReady,
-        isFocused,
+        hasFocusWithin,
+        handleFocusout,
         handleDrop,
         linkHandler,
         editor,

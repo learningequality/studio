@@ -1,6 +1,7 @@
 <template>
 
   <div
+    ref="toolbarRef"
     class="floating-panel"
     role="toolbar"
     :aria-label="textFormattingToolbar$()"
@@ -12,6 +13,7 @@
     >
       <button
         class="toggle-btn"
+        data-toolbar-item
         :title="isExpanded ? collapseFormattingBar$() : expandFormattingBar$()"
         :aria-label="isExpanded ? collapseFormattingBar$() : expandFormattingBar$()"
         :aria-expanded="isExpanded"
@@ -22,11 +24,14 @@
         {{ isExpanded ? '×' : '+' }}
       </button>
     </div>
+    <!-- Chrome gives a scroll container its own tab stop once the roving tabindex
+      has left every child at -1. -->
     <div
       v-if="isExpanded"
       id="formatting-tools"
       class="scrollable-tools"
       :aria-label="textFormattingToolbar$()"
+      tabindex="-1"
       @touchstart="event => event.stopPropagation()"
       @touchend="event => event.stopPropagation()"
     >
@@ -36,7 +41,8 @@
         :aria-label="formatSize$()"
       >
         <button
-          :disabled="!canDecreaseFormat"
+          data-toolbar-item
+          :aria-disabled="canDecreaseFormat ? 'false' : 'true'"
           :title="decreaseFormatSize$()"
           :aria-label="decreaseFormatSize$()"
           class="format-btn"
@@ -51,7 +57,8 @@
           aria-hidden="true"
         >
         <button
-          :disabled="!canIncreaseFormat"
+          data-toolbar-item
+          :aria-disabled="canIncreaseFormat ? 'false' : 'true'"
           :title="increaseFormatSize$()"
           :aria-label="increaseFormatSize$()"
           class="format-btn"
@@ -122,6 +129,7 @@
   import { useToolbarActions } from '../../composables/useToolbarActions';
   import { useFormatControls } from '../../composables/useFormatControls';
   import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
+  import { useRovingTabIndex } from '../../composables/useRovingTabIndex';
   import ToolbarButton from './ToolbarButton.vue';
   import ToolbarDivider from './ToolbarDivider.vue';
 
@@ -132,6 +140,9 @@
       const isExpanded = ref(true);
       const keyboardOffset = ref(0);
       const editor = inject('editor');
+      const toolbarRef = ref(null);
+
+      useRovingTabIndex(toolbarRef);
 
       const {
         collapseFormattingBar$,
@@ -207,6 +218,7 @@
       return {
         isExpanded,
         keyboardOffset,
+        toolbarRef,
         textActions,
         listActions,
         insertTools,
@@ -306,10 +318,16 @@
     border-radius: 0.25rem;
   }
 
-  .format-btn:disabled {
+  .format-btn[aria-disabled='true'] {
     color: #d1d5da;
     cursor: not-allowed;
     border-color: #e1e5e9;
+  }
+
+  .toggle-btn:focus-visible,
+  .format-btn:focus-visible {
+    background: #e6e6e6;
+    outline: 2px solid #0097f2;
   }
 
   .scrollable-tools {

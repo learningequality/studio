@@ -1,6 +1,7 @@
 <template>
 
   <div
+    ref="toolbarRef"
     class="link-bubble-menu"
     role="toolbar"
     :aria-label="linkActions$()"
@@ -9,6 +10,7 @@
       :href="href"
       target="_blank"
       class="link-url"
+      data-toolbar-item
       :aria-label="`${goToLink$()} ${opensInNewTab$()}`"
     >
       {{ goToLink$() }}
@@ -22,6 +24,7 @@
 
     <button
       class="bubble-menu-button"
+      data-toolbar-item
       :title="copyLink$()"
       :aria-label="copyLink$()"
       @click="copyToClipboard(href)"
@@ -35,6 +38,7 @@
 
     <button
       class="bubble-menu-button"
+      data-toolbar-item
       :title="editLink$()"
       :aria-label="editLink$()"
       @click="onEdit"
@@ -48,6 +52,7 @@
 
     <button
       class="bubble-menu-button"
+      data-toolbar-item
       :title="removeLink$()"
       :aria-label="removeLink$()"
       @click="onRemove"
@@ -65,12 +70,17 @@
 
 <script>
 
-  import { defineComponent, computed, inject } from 'vue';
+  import { defineComponent, computed, inject, ref } from 'vue';
   import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
+  import { useRovingTabIndex } from '../../composables/useRovingTabIndex';
 
   export default defineComponent({
     name: 'LinkBubbleMenu',
     setup(props) {
+      const toolbarRef = ref(null);
+
+      useRovingTabIndex(toolbarRef);
+
       const { goToLink$, copyLink$, editLink$, removeLink$, linkActions$, opensInNewTab$ } =
         getTipTapEditorStrings();
 
@@ -82,6 +92,7 @@
       };
 
       return {
+        toolbarRef,
         href,
         onEdit: () => openLinkEditor('edit'),
         onRemove: removeLink,
