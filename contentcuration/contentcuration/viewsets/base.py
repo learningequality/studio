@@ -38,7 +38,6 @@ from contentcuration.viewsets.sync.constants import TASK_ID
 from contentcuration.viewsets.sync.utils import generate_update_event
 from contentcuration.viewsets.sync.utils import log_sync_exception
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -598,6 +597,19 @@ class BaseValuesViewset(SimpleReprMixin, GenericViewSet):
             return queryset.model.filter_edit_queryset(queryset, self.request.user)
         return self.get_queryset()
 
+    def get_delete_queryset(self):
+        """
+        Return a filtered copy of the queryset to only the objects
+        that a user is able to delete.
+        """
+        queryset = self.get_edit_queryset()
+        if hasattr(queryset.model, "filter_delete_queryset"):
+            return queryset.model.filter_delete_queryset(
+                super(BaseValuesViewset, self).get_queryset(),
+                self.request.user,
+            )
+        return queryset
+
     def _get_lookup_filter(self):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
 
@@ -634,6 +646,9 @@ class BaseValuesViewset(SimpleReprMixin, GenericViewSet):
 
     def get_edit_object(self):
         return self._get_object_from_queryset(self.get_edit_queryset())
+
+    def get_delete_object(self):
+        return self._get_object_from_queryset(self.get_delete_queryset())
 
     def annotate_queryset(self, queryset):
         return queryset
@@ -747,7 +762,7 @@ class DestroyModelMixin(object):
 
     def delete_from_changes(self, changes):
         errors = []
-        queryset = self.get_edit_queryset().order_by()
+        queryset = self.get_delete_queryset().order_by()
         for change in changes:
             try:
                 instance = queryset.get(**dict(self.values_from_key(change["key"])))
@@ -766,7 +781,7 @@ class DestroyModelMixin(object):
 
 class RESTDestroyModelMixin(DestroyModelMixin):
     def destroy(self, request, *args, **kwargs):
-        instance = self.get_edit_object()
+        instance = self.get_delete_object()
         self.perform_destroy(instance)
         return Response(status=HTTP_204_NO_CONTENT)
 
