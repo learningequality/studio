@@ -22,8 +22,12 @@
   border-radius: $radius;
 }
 
+// `visibility` alone is not enough: a descendant can set `visibility: visible` on
+// itself and stay painted over the list — KListWithOverflow does exactly that for
+// the TipTap toolbar buttons. `opacity` cannot be overridden from inside.
 .draggable-item--ghost {
   visibility: hidden;
+  opacity: 0;
 }
 
 .draggable-item--placed {
