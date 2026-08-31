@@ -61,6 +61,23 @@ export const ORDERING_DECL_XML = `<qti-response-declaration identifier="RESPONSE
   </qti-correct-response>
 </qti-response-declaration>`;
 
+// choice_eee55555 (Lysander) is unpaired — it is the fixture's distractor.
+export const ASSOCIATE_XML = `<qti-associate-interaction response-identifier="RESPONSE" shuffle="true" max-associations="2">
+  <qti-prompt><p>Match each character to his adversary.</p></qti-prompt>
+  <qti-simple-associable-choice identifier="choice_aaa11111" match-max="1">Antonio</qti-simple-associable-choice>
+  <qti-simple-associable-choice identifier="choice_bbb22222" match-max="1">Prospero</qti-simple-associable-choice>
+  <qti-simple-associable-choice identifier="choice_ccc33333" match-max="1">Capulet</qti-simple-associable-choice>
+  <qti-simple-associable-choice identifier="choice_ddd44444" match-max="1">Montague</qti-simple-associable-choice>
+  <qti-simple-associable-choice identifier="choice_eee55555" match-max="1">Lysander</qti-simple-associable-choice>
+</qti-associate-interaction>`;
+
+export const ASSOCIATE_DECL_XML = `<qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="pair">
+  <qti-correct-response>
+    <qti-value>choice_aaa11111 choice_bbb22222</qti-value>
+    <qti-value>choice_ccc33333 choice_ddd44444</qti-value>
+  </qti-correct-response>
+</qti-response-declaration>`;
+
 // Full QTI Assessment Item XML Documents
 
 export const VALID_CHOICE_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
@@ -88,6 +105,22 @@ export const VALID_CHOICE_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?
       <qti-simple-choice identifier="choice-a">A</qti-simple-choice>
       <qti-simple-choice identifier="choice-b">B</qti-simple-choice>
     </qti-choice-interaction>
+  </qti-item-body>
+</qti-assessment-item>`;
+
+export const VALID_ASSOCIATE_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  identifier="item-test-associate"
+  title="Test Associate Question"
+  adaptive="false"
+  time-dependent="false"
+  xml:lang="en"
+>
+  ${ASSOCIATE_DECL_XML}
+
+  <qti-item-body>
+    ${ASSOCIATE_XML}
   </qti-item-body>
 </qti-assessment-item>`;
 
