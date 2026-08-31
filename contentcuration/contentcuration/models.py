@@ -824,7 +824,7 @@ def file_on_disk_name(instance, filename):
 
 
 def generate_file_on_disk_name(checksum, filename):
-    """ Separated from file_on_disk_name to allow for simple way to check if has already exists """
+    """Separated from file_on_disk_name to allow for simple way to check if has already exists"""
     h = checksum
     basename, ext = os.path.splitext(filename)
     directory = os.path.join(settings.STORAGE_ROOT, h[0], h[1])
@@ -851,7 +851,7 @@ def object_storage_name(instance, filename):
 
 
 def generate_object_storage_name(checksum, filename, default_ext=""):
-    """ Separated from file_on_disk_name to allow for simple way to check if has already exists """
+    """Separated from file_on_disk_name to allow for simple way to check if has already exists"""
     h = checksum
     basename, actual_ext = os.path.splitext(filename)
     ext = actual_ext if actual_ext else default_ext
@@ -1067,7 +1067,7 @@ class ChannelModelManager(models.Manager.from_queryset(ChannelModelQuerySet)):
 
 
 class Channel(models.Model):
-    """ Permissions come from association with organizations """
+    """Permissions come from association with organizations"""
 
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     name = models.CharField(max_length=200, blank=True)
@@ -1231,11 +1231,55 @@ class Channel(models.Model):
                 user_id=user_id, channel_id=OuterRef("id")
             )
         )
-        queryset = queryset.annotate(edit=edit)
+        organization_edit = Exists(
+            OrganizationRole.objects.filter(
+                user_id=user_id,
+                organization_id=OuterRef("organization_id"),
+                status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+                role__in=(
+                    ORGANIZATION_ADMIN,
+                    ORGANIZATION_EDITOR,
+                ),
+            )
+        )
+        queryset = queryset.annotate(
+            edit=edit,
+            organization_edit=organization_edit,
+        )
         if user.is_admin:
             return queryset
 
-        return queryset.filter(edit=True)
+        return queryset.filter(Q(edit=True) | Q(organization_edit=True))
+
+    @classmethod
+    def filter_delete_queryset(cls, queryset, user):
+        user_id = not user.is_anonymous and user.id
+
+        if not user_id:
+            return queryset.none()
+
+        edit = Exists(
+            User.editable_channels.through.objects.filter(
+                user_id=user_id, channel_id=OuterRef("id")
+            )
+        )
+        organization_delete = Exists(
+            OrganizationRole.objects.filter(
+                user_id=user_id,
+                organization_id=OuterRef("organization_id"),
+                status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+                role=ORGANIZATION_ADMIN,
+            )
+        )
+        queryset = queryset.annotate(
+            edit=edit,
+            organization_delete=organization_delete,
+        )
+
+        if user.is_admin:
+            return queryset
+
+        return queryset.filter(Q(edit=True) | Q(organization_delete=True))
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):
@@ -1244,35 +1288,60 @@ class Channel(models.Model):
 
         if user_id:
             filters = dict(user_id=user_id, channel_id=OuterRef("id"))
+
             edit = Exists(
                 User.editable_channels.through.objects.filter(**filters).values(
                     "user_id"
                 )
             )
+
             view = Exists(
                 User.view_only_channels.through.objects.filter(**filters).values(
                     "user_id"
                 )
             )
+
+            organization_view = Exists(
+                OrganizationRole.objects.filter(
+                    user_id=user_id,
+                    organization_id=OuterRef("organization_id"),
+                    status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+                    role__in=(
+                        ORGANIZATION_ADMIN,
+                        ORGANIZATION_EDITOR,
+                        ORGANIZATION_VIEWER,
+                    ),
+                )
+            )
         else:
             edit = boolean_val(False)
             view = boolean_val(False)
+            organization_view = boolean_val(False)
 
         queryset = queryset.annotate(
             edit=edit,
             view=view,
+            organization_view=organization_view,
         )
 
         if user_id and user.is_admin:
             return queryset
 
         permission_filter = Q()
+
         if user_id:
             pending_channels = Invitation.objects.filter(
-                email=user_email, revoked=False, declined=False, accepted=False
+                email=user_email,
+                revoked=False,
+                declined=False,
+                accepted=False,
             ).values_list("channel_id", flat=True)
+
             permission_filter = (
-                Q(view=True) | Q(edit=True) | Q(deleted=False, id__in=pending_channels)
+                Q(view=True)
+                | Q(edit=True)
+                | Q(organization_view=True)
+                | Q(deleted=False, id__in=pending_channels)
             )
 
         return queryset.filter(permission_filter | Q(deleted=False, public=True))
@@ -1887,16 +1956,28 @@ class Organization(models.Model):
 
     objects = CustomManager()
 
-    class Meta:
-        verbose_name = "Organization"
-        verbose_name_plural = "Organizations"
-        ordering = ["name"]
+    @classmethod
+    def filter_view_queryset(cls, queryset, user):
+        queryset = queryset.filter(deleted=False)
 
-    def __str__(self):
-        return self.name
+        if user.is_anonymous:
+            return queryset.filter(public=True)
+
+        if user.is_admin:
+            return queryset
+
+        return queryset.filter(
+            Q(public=True)
+            | Q(
+                user_roles__user=user,
+                user_roles__status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+            )
+        ).distinct()
 
     @classmethod
     def filter_edit_queryset(cls, queryset, user):
+        queryset = queryset.filter(deleted=False)
+
         if user.is_anonymous:
             return queryset.none()
 
@@ -1907,27 +1988,15 @@ class Organization(models.Model):
             user_roles__user=user,
             user_roles__role=ORGANIZATION_ADMIN,
             user_roles__status=ORGANIZATION_ROLE_STATUS_ACTIVE,
-            deleted=False,
         ).distinct()
 
-    @classmethod
-    def filter_view_queryset(cls, queryset, user):
-        if user.is_anonymous:
-            return queryset.none()
+    class Meta:
+        verbose_name = "Organization"
+        verbose_name_plural = "Organizations"
+        ordering = ["name"]
 
-        if user.is_admin:
-            return queryset
-
-        return queryset.filter(
-            user_roles__user=user,
-            user_roles__role__in=[
-                ORGANIZATION_ADMIN,
-                ORGANIZATION_EDITOR,
-                ORGANIZATION_VIEWER,
-            ],
-            user_roles__status=ORGANIZATION_ROLE_STATUS_ACTIVE,
-            deleted=False,
-        ).distinct()
+    def __str__(self):
+        return self.name
 
 
 class OrganizationRole(models.Model):
@@ -1975,6 +2044,43 @@ class OrganizationRole(models.Model):
         auto_now_add=True, help_text="Date user joined the organization"
     )
     updated_at = models.DateTimeField(auto_now=True, help_text="Last update timestamp")
+
+    @classmethod
+    def filter_view_queryset(cls, queryset, user):
+        queryset = queryset.filter(organization__deleted=False,).select_related(
+            "organization",
+            "user",
+        )
+
+        if user.is_anonymous:
+            return queryset.none()
+
+        if user.is_admin:
+            return queryset
+
+        return queryset.filter(
+            organization__user_roles__user=user,
+            organization__user_roles__status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+        ).distinct()
+
+    @classmethod
+    def filter_edit_queryset(cls, queryset, user):
+        queryset = queryset.filter(organization__deleted=False,).select_related(
+            "organization",
+            "user",
+        )
+
+        if user.is_anonymous:
+            return queryset.none()
+
+        if user.is_admin:
+            return queryset
+
+        return queryset.filter(
+            organization__user_roles__user=user,
+            organization__user_roles__role=ORGANIZATION_ADMIN,
+            organization__user_roles__status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+        ).distinct()
 
     class Meta:
         unique_together = ("user", "organization")
@@ -3763,7 +3869,7 @@ class RelatedContentRelationship(models.Model):
 
 
 class Invitation(models.Model):
-    """ Invitation to edit channel """
+    """Invitation to edit channel"""
 
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     accepted = models.BooleanField(default=False)
