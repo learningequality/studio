@@ -66,87 +66,120 @@
       </div>
 
       <!-- Item rows -->
-      <ol
-        class="items-list"
-        :aria-label="correctOrderLabel$()"
+      <DraggableRegion
+        :items="state.items"
+        :sortable="mode === 'edit'"
+        @update:items="onReorderItems"
       >
-        <li
-          v-for="(item, index) in state.items"
-          :key="item.id"
-          class="item-group"
+        <ol
+          class="items-list"
+          :aria-label="correctOrderLabel$()"
         >
-          <!-- Bordered item card -->
-          <ClickableRegion
-            class="item-border"
-            :class="getItemClasses(item)"
-            :style="getItemStyle(item)"
-            :suppressed="mode !== 'edit' || isItemOpen(item.id)"
-            :aria-label="editAnswerOptionLabel$({ number: index + 1 })"
-            @click="handleItemClick(item.id)"
+          <DraggableItem
+            v-for="(item, index) in state.items"
+            :key="item.id"
           >
-            <div
-              class="item-card-text"
-              :class="{ 'is-closed': isItemClosed(item.id) }"
-            >
-              <div
-                class="item-layout"
-                :class="{
-                  'is-open': isItemOpen(item.id),
-                }"
+            <li class="item-group">
+              <!-- Bordered item card -->
+              <ClickableRegion
+                class="item-border"
+                :class="getItemClasses(item)"
+                :style="getItemStyle(item)"
+                :suppressed="mode !== 'edit' || isItemOpen(item.id)"
+                :aria-label="editAnswerOptionLabel$({ number: index + 1 })"
+                @click="handleItemClick(item.id)"
               >
-                <!-- Position badge -->
                 <div
-                  class="position-badge"
-                  :style="{
-                    backgroundColor: $themePalette.green.v_100,
-                    color: $themePalette.grey.v_800,
-                  }"
-                  aria-hidden="true"
+                  class="item-card-text"
+                  :class="{ 'is-closed': isItemClosed(item.id) }"
                 >
-                  {{ index + 1 }}
-                </div>
-                <div class="item-content">
-                  <TipTapEditor
-                    :value="item.content"
-                    :mode="isItemOpen(item.id) ? 'edit' : 'view'"
-                    format="html"
-                    :minHeight="'48px'"
-                    :autofocus="isItemOpen(item.id)"
-                    :imageProcessor="EditorImageProcessor"
-                    :tabindex="-1"
-                    class="editor"
-                    @update="html => setItemContent(item.id, html)"
-                    @minimize="closeItem"
-                  />
+                  <div
+                    class="item-layout"
+                    :class="{
+                      'is-open': isItemOpen(item.id),
+                    }"
+                  >
+                    <!-- `@click.stop` so using the handle does not open the item for editing -->
+                    <DraggableHandle v-if="mode === 'edit'">
+                      <div
+                        class="item-drag"
+                        @click.stop
+                      >
+                        <DragSortWidget
+                          :color="$themePalette.grey.v_700"
+                          :isFirst="index === 0"
+                          :isLast="index === state.items.length - 1"
+                          :itemLabel="orderingItemLabel$({ number: index + 1 })"
+                          :position="index + 1"
+                          :total="state.items.length"
+                          @moveUp="moveItemUp(item.id)"
+                          @moveDown="moveItemDown(item.id)"
+                        />
+                      </div>
+                    </DraggableHandle>
+
+                    <!-- Position badge -->
+                    <div
+                      class="position-badge"
+                      :style="{
+                        backgroundColor: itemHasError(item.id)
+                          ? $themePalette.red.v_100
+                          : $themePalette.green.v_100,
+                      }"
+                      aria-hidden="true"
+                    >
+                      {{ index + 1 }}
+                    </div>
+                    <div class="item-content">
+                      <TipTapEditor
+                        :value="item.content"
+                        :mode="isItemOpen(item.id) ? 'edit' : 'view'"
+                        format="html"
+                        :minHeight="'48px'"
+                        :autofocus="isItemOpen(item.id)"
+                        :imageProcessor="EditorImageProcessor"
+                        :tabindex="-1"
+                        class="editor"
+                        @update="html => setItemContent(item.id, html)"
+                        @minimize="closeItem"
+                      />
+                    </div>
+
+                    <div
+                      v-if="mode === 'edit'"
+                      class="item-actions"
+                      @click.stop
+                    >
+                      <KIconButton
+                        icon="close"
+                        :ariaLabel="deleteItemBtn$({ number: index + 1 })"
+                        :tooltip="deleteItemBtn$({ number: index + 1 })"
+                        :disabled="isOnlyItem"
+                        :color="isOnlyItem ? $themeTokens.textDisabled : $themePalette.grey.v_700"
+                        @click="removeItem(item.id)"
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <!-- Action buttons -->
-                <div
-                  v-if="mode === 'edit'"
-                  class="item-actions"
-                  @click.stop
+                <!-- Per-item validation messages inside the bordered card -->
+                <ValidationMessage
+                  v-if="emptyItemIds.has(item.id)"
+                  class="item-validation-message"
                 >
-                  <CollapsibleToolbar :actions="getItemActions(item.id, index)" />
-                </div>
-              </div>
-            </div>
-
-            <!-- Per-item validation messages inside the bordered card -->
-            <ValidationMessage
-              v-if="emptyItemIds.has(item.id)"
-              class="item-validation-message"
-            >
-              {{ errorEmptyItemContent$() }}
-            </ValidationMessage>
-            <ValidationMessage
-              v-if="duplicateItemIds.has(item.id)"
-              class="item-validation-message"
-            >
-              {{ errorDuplicateItemContent$() }}
-            </ValidationMessage>
-          </ClickableRegion>
-        </li>
-      </ol>
+                  {{ errorEmptyItemContent$() }}
+                </ValidationMessage>
+                <ValidationMessage
+                  v-if="duplicateItemIds.has(item.id)"
+                  class="item-validation-message"
+                >
+                  {{ errorDuplicateItemContent$() }}
+                </ValidationMessage>
+              </ClickableRegion>
+            </li>
+          </DraggableItem>
+        </ol>
+      </DraggableRegion>
 
       <!-- Add option button (edit only) -->
       <AddListItemButton
@@ -163,15 +196,17 @@
 <script>
 
   import { computed, ref, watch } from 'vue';
-  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { themeTokens } from 'kolibri-design-system/lib/styles/theme';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { ValidationError } from '../../constants';
   import { useOrderingInteraction } from '../../composables/useOrderingInteraction';
-  import CollapsibleToolbar from '../../components/CollapsibleToolbar/index.vue';
   import ValidationMessage from '../../components/ValidationMessage/index.vue';
   import AddListItemButton from '../../components/AddListItemButton/index.vue';
   import ClickableRegion from '../../components/ClickableRegion/index.vue';
+  import DraggableRegion from 'shared/views/dragSort/DraggableRegion.vue';
+  import DraggableItem from 'shared/views/dragSort/DraggableItem.vue';
+  import DraggableHandle from 'shared/views/dragSort/DraggableHandle.vue';
+  import DragSortWidget from 'shared/views/dragSort/DragSortWidget/index.vue';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor';
   import EditorImageProcessor from 'shared/views/TipTapEditor/TipTapEditor/services/imageService';
 
@@ -180,14 +215,16 @@
 
     components: {
       TipTapEditor,
-      CollapsibleToolbar,
       ValidationMessage,
       AddListItemButton,
       ClickableRegion,
+      DraggableRegion,
+      DraggableItem,
+      DraggableHandle,
+      DragSortWidget,
     },
 
     setup(props, { emit }) {
-      const { windowIsSmall } = useKResponsiveWindow();
       const tokens = themeTokens();
 
       const {
@@ -197,8 +234,7 @@
         correctOrderDescription$,
         addItemBtn$,
         deleteItemBtn$,
-        moveItemUpBtn$,
-        moveItemDownBtn$,
+        orderingItemLabel$,
         errorTooFewChoices$,
         errorEmptyItemContent$,
         errorDuplicateItemContent$,
@@ -217,6 +253,7 @@
         removeItem,
         moveItemUp,
         moveItemDown,
+        setItemOrder,
         setItemContent,
         setPrompt,
       } = useOrderingInteraction(props.interaction, questionTypeRef);
@@ -283,6 +320,8 @@
         emit('update:interaction', newVal);
       });
 
+      const isOnlyItem = computed(() => state.value.items.length <= 1);
+
       const errorCodes = computed(() => errors.value.map(e => e.code));
 
       const promptHasError = computed(() =>
@@ -341,9 +380,12 @@
         };
       }
 
+      function itemHasError(id) {
+        return emptyItemIds.value.has(id) || duplicateItemIds.value.has(id);
+      }
+
       function getItemStyle(item) {
-        const hasError = emptyItemIds.value.has(item.id) || duplicateItemIds.value.has(item.id);
-        return { borderColor: hasError ? tokens.error : tokens.fineLine };
+        return { borderColor: itemHasError(item.id) ? tokens.error : tokens.fineLine };
       }
 
       function onAddItem() {
@@ -353,38 +395,14 @@
         if (newId) openItem(newId);
       }
 
-      function getItemActions(itemId, index) {
-        return [
-          {
-            id: 'up',
-            icon: 'chevronUp',
-            label: moveItemUpBtn$({ number: index + 1 }),
-            disabled: index === 0,
-            handler: () => moveItemUp(itemId),
-            collapsed: windowIsSmall.value,
-          },
-          {
-            id: 'down',
-            icon: 'chevronDown',
-            label: moveItemDownBtn$({ number: index + 1 }),
-            disabled: index === state.value.items.length - 1,
-            handler: () => moveItemDown(itemId),
-            collapsed: windowIsSmall.value,
-          },
-          {
-            id: 'delete',
-            icon: 'close',
-            label: deleteItemBtn$({ number: index + 1 }),
-            disabled: state.value.items.length <= 1,
-            handler: () => removeItem(itemId),
-            collapsed: windowIsSmall.value,
-          },
-        ];
+      function onReorderItems(nextItems) {
+        setItemOrder(nextItems.map(item => item.id));
       }
 
       return {
         EditorImageProcessor,
         state,
+        isOnlyItem,
         promptHasError,
         tooFewItemsError,
         emptyItemIds,
@@ -399,16 +417,22 @@
         isItemOpen,
         getItemClasses,
         getItemStyle,
+        itemHasError,
         handleItemClick,
         onAddItem,
         setItemContent,
         setPrompt,
-        getItemActions,
+        moveItemUp,
+        moveItemDown,
+        removeItem,
+        onReorderItems,
         questionLabel$,
         errorPromptRequired$,
         correctOrderLabel$,
         correctOrderDescription$,
         addItemBtn$,
+        deleteItemBtn$,
+        orderingItemLabel$,
         errorTooFewChoices$,
         errorEmptyItemContent$,
         errorDuplicateItemContent$,
@@ -481,7 +505,9 @@
     font-weight: 400;
   }
 
+  /* Opaque, so a row dragged over the rows beneath it stays readable */
   .item-border {
+    background-color: v-bind('$themeTokens.surface');
     border: 1px solid;
     border-radius: 4px;
     transition: background-color 0.3s;
@@ -540,6 +566,13 @@
     &.is-open {
       align-items: flex-start;
     }
+  }
+
+  .item-drag {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    margin-right: 8px;
   }
 
   .position-badge {

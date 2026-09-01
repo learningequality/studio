@@ -53,6 +53,14 @@ export function useChoiceInteraction(interactionBlock, questionType) {
     state.value = { ...state.value, choices };
   }
 
+  /** Apply a permutation of the current choice ids; anything else is ignored. */
+  function setChoiceOrder(orderedIds) {
+    const byId = new Map(state.value.choices.map(c => [c.id, c]));
+    const choices = [...new Set(orderedIds)].map(id => byId.get(id));
+    if (choices.length !== byId.size || choices.includes(undefined)) return;
+    state.value = { ...state.value, choices };
+  }
+
   /**
    * Toggle the correct flag for a single choice.
    *
@@ -98,6 +106,7 @@ export function useChoiceInteraction(interactionBlock, questionType) {
     removeChoice,
     moveChoiceUp,
     moveChoiceDown,
+    setChoiceOrder,
     toggleCorrectChoice,
     setPrompt,
     setChoiceContent,
