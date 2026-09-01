@@ -133,7 +133,7 @@
                   :ariaLabel="deleteAnswerBtn$({ number: index + 1 })"
                   :disabled="state.answers.length <= 1"
                   :color="
-                    state.answers.length <= 1 ? $themeTokens.textDisabled : $themePalette.grey.v_800
+                    state.answers.length <= 1 ? $themeTokens.textDisabled : $themePalette.grey.v_700
                   "
                   size="small"
                   @click="onRemoveAnswer(answer.id)"
