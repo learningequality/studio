@@ -156,6 +156,7 @@
                       />
                       <KRadioButton
                         v-else-if="isSingleSelect"
+                        class="margin-0"
                         :currentValue="correctChoiceId || ''"
                         :buttonValue="choice.id"
                         :label="markCorrectLabel$()"
@@ -168,6 +169,7 @@
                       <!-- KCheckbox color prop colors the checked icon green -->
                       <KCheckbox
                         v-else
+                        class="margin-0"
                         :checked="choice.correct"
                         :label="markCorrectLabel$()"
                         :showLabel="false"
@@ -705,6 +707,10 @@
     }
   }
 
+  .margin-0 {
+    margin: 0 !important;
+  }
+
   /* KRadioButton/KCheckbox wrap their 24px control in a table with 8px block margins,
      and the inline icon adds descender space under it. Both push the control off the
      row centre, out of line with the drag handle. */
@@ -714,12 +720,6 @@
     align-items: center;
     margin-right: 16px;
     line-height: 0;
-
-    ::v-deep .k-radio-button-container,
-    ::v-deep .k-checkbox-container {
-      margin-top: 0;
-      margin-bottom: 0;
-    }
 
     .small-screen & {
       margin-right: 6px;
