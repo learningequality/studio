@@ -81,6 +81,7 @@
       <template #more="{ overflowItems }">
         <button
           class="more-button"
+          data-toolbar-item
           :class="
             $computedClass({
               ':is([aria-expanded=\'true\'])': {
@@ -142,6 +143,7 @@
   import { useToolbarActions } from '../composables/useToolbarActions';
   import { getTipTapEditorStrings } from '../TipTapEditorStrings';
   import { useDropdowns } from '../composables/useDropdowns';
+  import { useRovingTabIndex } from '../composables/useRovingTabIndex';
   import ToolbarButton from './toolbar/ToolbarButton.vue';
   import FormatDropdown from './toolbar/FormatDropdown.vue';
   import PasteDropdown from './toolbar/PasteDropdown.vue';
@@ -157,6 +159,7 @@
     },
     setup(props, { emit }) {
       const toolbarRef = ref(null);
+      useRovingTabIndex(toolbarRef);
 
       const {
         handleCopy,

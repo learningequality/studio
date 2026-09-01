@@ -1,6 +1,7 @@
 <template>
 
   <div
+    ref="toolbarRef"
     class="toolbar top-bar"
     role="toolbar"
     :aria-label="editorControls$()"
@@ -20,50 +21,36 @@
       />
     </div>
 
-    <div class="insert-container">
-      <div class="topbar-actions">
-        <button
-          class="insert-button"
-          :title="insertContent$()"
-          :aria-label="insertContentMenu$()"
-          :aria-expanded="isInsertMenuOpen"
-          aria-haspopup="menu"
-          aria-controls="insert-menu"
-          @click="isInsertMenuOpen = !isInsertMenuOpen"
-        >
-          +
-        </button>
-        <ToolbarButton
-          :title="minimizeAction.title"
-          :icon="minimizeAction.icon"
-          @click="minimizeAction.handler"
-        />
-      </div>
-
-      <div
-        v-if="isInsertMenuOpen"
-        id="insert-menu"
-        ref="dropdown"
-        class="insert-dropdown"
-        role="menu"
-        :aria-label="insertContentOption$()"
+    <div class="topbar-actions">
+      <button
+        class="insert-button"
+        data-toolbar-item
+        :title="insertContent$()"
+        :aria-label="insertContentMenu$()"
       >
-        <button
-          v-for="tool in insertTools"
-          :key="tool.name"
-          class="dropdown-item"
-          role="menuitem"
-          @click="tool.handler($event)"
+        +
+        <KDropdownMenu
+          :options="insertOptions"
+          @select="onInsertSelect"
         >
-          <img
-            :src="tool.icon"
-            alt=""
-            class="dropdown-icon"
-            aria-hidden="true"
-          >
-          <span class="dropdown-title">{{ tool.title }}</span>
-        </button>
-      </div>
+          <template #option="{ option }">
+            <div class="insert-option">
+              <img
+                :src="option.icon"
+                alt=""
+                class="dropdown-icon"
+                aria-hidden="true"
+              >
+              <span>{{ option.label }}</span>
+            </div>
+          </template>
+        </KDropdownMenu>
+      </button>
+      <ToolbarButton
+        :title="minimizeAction.title"
+        :icon="minimizeAction.icon"
+        @click="minimizeAction.handler"
+      />
     </div>
   </div>
 
@@ -72,59 +59,48 @@
 
 <script>
 
-  import { defineComponent, ref, onMounted, onBeforeUnmount } from 'vue';
+  import { defineComponent, computed, ref } from 'vue';
   import { useToolbarActions } from '../../composables/useToolbarActions';
   import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
+  import { useRovingTabIndex } from '../../composables/useRovingTabIndex';
   import ToolbarButton from './ToolbarButton.vue';
 
   export default defineComponent({
     name: 'MobileTopBar',
     components: { ToolbarButton },
     setup(props, { emit }) {
-      const isInsertMenuOpen = ref(false);
-      const dropdown = ref(null);
+      const toolbarRef = ref(null);
+
+      useRovingTabIndex(toolbarRef);
 
       const { historyActions, insertTools, minimizeAction } = useToolbarActions(emit);
 
       // Get translation functions
-      const {
-        editorControls$,
-        historyActions$,
-        insertContent$,
-        insertContentMenu$,
-        insertContentOption$,
-      } = getTipTapEditorStrings();
+      const { editorControls$, historyActions$, insertContent$, insertContentMenu$ } =
+        getTipTapEditorStrings();
 
-      const handleClickOutside = event => {
-        if (
-          isInsertMenuOpen.value &&
-          dropdown.value &&
-          !dropdown.value.contains(event.target) &&
-          !event.target.classList.contains('insert-button')
-        ) {
-          isInsertMenuOpen.value = false;
-        }
+      const insertOptions = computed(() =>
+        insertTools.value.map(tool => ({ ...tool, label: tool.title })),
+      );
+
+      const onInsertSelect = (option, event) => {
+        // KDropdownMenu renders outside the editor, so this click would otherwise
+        // reach the RTE's outside-click handler and minimize the editor.
+        event.stopPropagation();
+        // Nothing to anchor a modal to: the menu item is gone once the menu closes.
+        option.handler(null);
       };
-
-      onMounted(() => {
-        document.addEventListener('mousedown', handleClickOutside);
-      });
-
-      onBeforeUnmount(() => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      });
 
       return {
         historyActions,
-        insertTools,
+        insertOptions,
         minimizeAction,
-        isInsertMenuOpen,
-        dropdown,
+        onInsertSelect,
+        toolbarRef,
         editorControls$,
         historyActions$,
         insertContent$,
         insertContentMenu$,
-        insertContentOption$,
       };
     },
   });
@@ -155,10 +131,6 @@
     align-items: center;
   }
 
-  .insert-container {
-    position: relative;
-  }
-
   .insert-button {
     display: flex;
     align-items: center;
@@ -173,50 +145,26 @@
     opacity: 0.8;
   }
 
-  .insert-dropdown {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    z-index: 2;
-    width: 200px;
-    padding: 0.5rem 0;
-    background: white;
-    border: 1px solid #e0e0e0;
-    border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-
-  .dropdown-item {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    min-height: 44px;
-    padding: 0.75rem 1rem;
-    text-align: left;
-    cursor: pointer;
-    background: none;
-    border: 0;
-  }
-
-  .dropdown-item:hover {
-    background: #f5f5f5;
-  }
-
-  .dropdown-item:focus-visible,
   .insert-button:focus-visible {
     background: #e6e6e6;
     border-radius: 4px;
     outline: 2px solid #0097f2;
   }
 
-  .dropdown-icon {
-    width: 20px;
-    height: 20px;
-    margin-right: 1rem;
+  /* Matches the overflow menu on EditorToolbar */
+  .insert-option {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 8px 12px;
+    font-size: 1.2rem;
+    line-height: 140%;
   }
 
-  .dropdown-title {
-    font-size: 1rem;
+  .dropdown-icon {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
   }
 
 </style>

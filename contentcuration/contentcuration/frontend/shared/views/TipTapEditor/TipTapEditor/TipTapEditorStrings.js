@@ -383,10 +383,6 @@ const MESSAGES = {
     message: 'Insert content menu',
     context: 'Accessibility label for the insert content menu button',
   },
-  insertContentOption: {
-    message: 'Insert content option',
-    context: 'Accessibility label for the insert content dropdown menu',
-  },
 };
 
 let TipTapEditorStrings = null;
