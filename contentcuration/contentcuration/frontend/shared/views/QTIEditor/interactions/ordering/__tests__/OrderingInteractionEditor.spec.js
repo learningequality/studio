@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
+import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
 import OrderingInteractionEditor from '../OrderingInteractionEditor.vue';
 
 import {
@@ -26,8 +27,16 @@ jest.mock('sortablejs', () =>
   }),
 );
 
+// `useDraggableUniverse` destructures this composable too, so the automock has to return
+// a usable object rather than undefined.
+jest.mock('kolibri-design-system/lib/composables/useKLiveRegion');
+
+let sendPoliteMessage;
+
 beforeEach(() => {
   mockSortableInstances = [];
+  sendPoliteMessage = jest.fn();
+  useKLiveRegion.mockReturnValue({ sendPoliteMessage });
 });
 
 const itemLabel = number => tr.$tr('orderingItemLabel', { number });
@@ -158,6 +167,43 @@ describe('OrderingInteractionEditor', () => {
       expect(bodyXml.indexOf('identifier="order_bbb22222"')).toBeLessThan(
         bodyXml.indexOf('identifier="order_aaa11111"'),
       );
+    });
+
+    it('announces the moved item and its new position', async () => {
+      const user = userEvent.setup();
+      renderEditor({
+        interaction: blockWithDecl(ORDERING_XML, ORDERING_DECL_XML),
+        questionType: QuestionType.ORDERING,
+      });
+      await user.click(screen.getByRole('button', { name: moveUpName(2) }));
+
+      expect(sendPoliteMessage).toHaveBeenCalledWith(
+        dragTr.$tr('itemMovedToPosition', { item: itemLabel(2), position: 1, total: 3 }),
+      );
+    });
+
+    it('keeps focus on the move-up button of the item that moved', async () => {
+      const user = userEvent.setup();
+      renderEditor({
+        interaction: blockWithDecl(ORDERING_XML, ORDERING_DECL_XML),
+        questionType: QuestionType.ORDERING,
+      });
+      await user.click(screen.getByRole('button', { name: moveUpName(3) }));
+
+      // The moved item is now second, so its widget is the one labelled for position 2.
+      expect(screen.getByRole('button', { name: moveUpName(2) })).toHaveFocus();
+    });
+
+    it('moves focus to the move-down button when an item lands first', async () => {
+      const user = userEvent.setup();
+      renderEditor({
+        interaction: blockWithDecl(ORDERING_XML, ORDERING_DECL_XML),
+        questionType: QuestionType.ORDERING,
+      });
+      await user.click(screen.getByRole('button', { name: moveUpName(2) }));
+
+      // First position hides move-up, so focus has to fall back to move-down.
+      expect(screen.getByRole('button', { name: moveDownName(1) })).toHaveFocus();
     });
 
     it('disables delete button when only one item remains', async () => {

@@ -2,6 +2,7 @@ import { render, screen, fireEvent, within } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
+import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
 import ChoiceInteractionEditor from '../ChoiceInteractionEditor.vue';
 
 import {
@@ -35,11 +36,17 @@ jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
     default: () => ({ windowIsSmall: ref(false) }),
   };
 });
+// `useDraggableUniverse` destructures this composable too, so the automock has to return
+// a usable object rather than undefined.
+jest.mock('kolibri-design-system/lib/composables/useKLiveRegion');
 
 let teleportContainer;
+let sendPoliteMessage;
 
 beforeEach(() => {
   mockSortableInstances = [];
+  sendPoliteMessage = jest.fn();
+  useKLiveRegion.mockReturnValue({ sendPoliteMessage });
   teleportContainer = document.createElement('div');
   teleportContainer.id = 'test-settings-target';
   document.body.appendChild(teleportContainer);
@@ -290,6 +297,43 @@ describe('ChoiceInteractionEditor', () => {
       expect(bodyXml.indexOf('identifier="venus"')).toBeLessThan(
         bodyXml.indexOf('identifier="mercury"'),
       );
+    });
+
+    it('announces the moved choice and its new position', async () => {
+      const user = userEvent.setup();
+      renderEditor({
+        interaction: block(CHOICE_SINGLE_SELECT_XML),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
+      await user.click(screen.getByRole('button', { name: moveDownName(1) }));
+
+      expect(sendPoliteMessage).toHaveBeenCalledWith(
+        dragTr.$tr('itemMovedToPosition', { item: choiceLabel(1), position: 2, total: 3 }),
+      );
+    });
+
+    it('keeps focus on the move-down button of the choice that moved', async () => {
+      const user = userEvent.setup();
+      renderEditor({
+        interaction: block(CHOICE_SINGLE_SELECT_XML),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
+      await user.click(screen.getByRole('button', { name: moveDownName(1) }));
+
+      // The moved choice is now second, so its widget is the one labelled for position 2.
+      expect(screen.getByRole('button', { name: moveDownName(2) })).toHaveFocus();
+    });
+
+    it('moves focus to the move-up button when a choice lands last', async () => {
+      const user = userEvent.setup();
+      renderEditor({
+        interaction: block(CHOICE_SINGLE_SELECT_XML),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
+      await user.click(screen.getByRole('button', { name: moveDownName(2) }));
+
+      // Last position hides move-down, so focus has to fall back to move-up.
+      expect(screen.getByRole('button', { name: moveUpName(3) })).toHaveFocus();
     });
 
     it('disables delete when only one choice remains', async () => {
