@@ -85,9 +85,11 @@
     }
   }
 
+  /* No z-index: the stacking context it opens would trap the fixed toolbars and
+    popovers of an editor in the slot. Being positioned and later in the DOM
+    already paints this above the overlay button. */
   .content-wrapper {
     position: relative;
-    z-index: 1;
   }
 
 </style>
