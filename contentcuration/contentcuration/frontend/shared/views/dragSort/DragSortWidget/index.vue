@@ -16,6 +16,7 @@
       class="btn up"
       size="mini"
       :ariaLabel="moveUpAriaLabel"
+      :color="color"
       :class="{ visuallyhidden: !hasFocus && !horizontal }"
       @click="clickUp"
       @keyup.space="clickUp"
@@ -28,6 +29,7 @@
       v-if="!horizontal"
       icon="dragHorizontal"
       class="grip"
+      :color="color"
       style="top: 0; width: 24px; height: 24px"
     />
     <KIconButton
@@ -37,6 +39,7 @@
       class="btn dn"
       size="mini"
       :ariaLabel="moveDownAriaLabel"
+      :color="color"
       :class="{ visuallyhidden: !hasFocus && !horizontal }"
       @click="clickDown"
       @keyup.space="clickDown"
@@ -129,6 +132,11 @@
       horizontal: {
         type: Boolean,
         default: false,
+      },
+      // Icon colour for the grip and chevrons; KIcon's default when unset
+      color: {
+        type: String,
+        default: null,
       },
       // Human-readable name of this item
       itemLabel: {
