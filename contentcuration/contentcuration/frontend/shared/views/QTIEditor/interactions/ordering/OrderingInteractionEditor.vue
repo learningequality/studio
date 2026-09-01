@@ -122,8 +122,9 @@
                     <div
                       class="position-badge"
                       :style="{
-                        backgroundColor: $themePalette.green.v_100,
-                        color: $themePalette.grey.v_800,
+                        backgroundColor: itemHasError(item.id)
+                          ? $themePalette.red.v_100
+                          : $themePalette.green.v_100,
                       }"
                       aria-hidden="true"
                     >
@@ -379,9 +380,12 @@
         };
       }
 
+      function itemHasError(id) {
+        return emptyItemIds.value.has(id) || duplicateItemIds.value.has(id);
+      }
+
       function getItemStyle(item) {
-        const hasError = emptyItemIds.value.has(item.id) || duplicateItemIds.value.has(item.id);
-        return { borderColor: hasError ? tokens.error : tokens.fineLine };
+        return { borderColor: itemHasError(item.id) ? tokens.error : tokens.fineLine };
       }
 
       function onAddItem() {
@@ -413,6 +417,7 @@
         isItemOpen,
         getItemClasses,
         getItemStyle,
+        itemHasError,
         handleItemClick,
         onAddItem,
         setItemContent,

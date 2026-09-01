@@ -142,7 +142,8 @@
                       </div>
                     </DraggableHandle>
 
-                    <!-- Selection control -->
+                    <!-- Selection control; an invalid choice shows the error icon
+                         in its place -->
                     <div
                       class="choice-selection"
                       @click.stop
@@ -150,16 +151,11 @@
                       <KIcon
                         v-if="choiceHasError(choice.id)"
                         icon="error"
+                        class="choice-error-icon"
                         :color="$themeTokens.error"
-                        :style="{
-                          width: '20px',
-                          height: '20px',
-                          marginTop: '2px',
-                          marginRight: '4px',
-                        }"
                       />
                       <KRadioButton
-                        v-if="isSingleSelect"
+                        v-else-if="isSingleSelect"
                         :currentValue="correctChoiceId || ''"
                         :buttonValue="choice.id"
                         :label="markCorrectLabel$()"
@@ -728,6 +724,12 @@
     .small-screen & {
       margin-right: 6px;
     }
+  }
+
+  .choice-error-icon {
+    top: 0;
+    width: 24px;
+    height: 24px;
   }
 
   .choice-content {

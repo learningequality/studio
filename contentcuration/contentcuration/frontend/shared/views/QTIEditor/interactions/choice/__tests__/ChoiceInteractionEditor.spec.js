@@ -416,6 +416,25 @@ describe('ChoiceInteractionEditor', () => {
       expect(screen.getAllByRole('alert').length).toBeGreaterThan(0);
     });
 
+    it('replaces the selection control with the error icon on an invalid choice', async () => {
+      jest.useFakeTimers();
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+      renderEditor({
+        interaction: block(CHOICE_SINGLE_SELECT_XML),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
+      expect(screen.getAllByRole('radio')).toHaveLength(3);
+      // The added choice starts empty, so the debounced validation flags it.
+      await user.click(screen.getByRole('button', { name: /add choice/i }));
+      await nextTick();
+      jest.advanceTimersByTime(400);
+      await nextTick();
+      jest.useRealTimers();
+      // Four rows, but the invalid one shows the error icon where its radio was
+      expect(screen.getAllByRole('button', { name: tr.$tr('deleteChoiceBtn') })).toHaveLength(4);
+      expect(screen.getAllByRole('radio')).toHaveLength(3);
+    });
+
     it('shows no-correct-choice error after toggling and running validation', async () => {
       jest.useFakeTimers();
       renderEditor({
