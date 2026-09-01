@@ -215,7 +215,6 @@ describe('ChoiceInteractionEditor', () => {
         questionType: QuestionType.SINGLE_SELECT,
       });
       await fireEvent.click(screen.getByRole('button', { name: tr.$tr('addChoiceBtn') }));
-      // 3 original choices + 1 newly added = 4 radios (choice list uses divs, not li elements)
       expect(screen.getAllByRole('radio')).toHaveLength(4);
     });
 
@@ -614,6 +613,43 @@ describe('ChoiceInteractionEditor', () => {
         questionType: QuestionType.MULTI_SELECT,
       });
       screen.getAllByRole('checkbox').forEach(c => expect(c).toHaveAccessibleName());
+    });
+
+    it('renders the options as a list', () => {
+      renderEditor({
+        interaction: block(CHOICE_SINGLE_SELECT_XML),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
+      const list = screen.getByRole('list');
+      // Asserted as an attribute, not a role: jsdom gives a bare <ol> the implicit list role,
+      // so the explicit one Safari needs would be deletable with this test still green.
+      expect(list).toHaveAttribute('role', 'list');
+      const items = within(list).getAllByRole('listitem');
+      expect(items).toHaveLength(3);
+      items.forEach(item => expect(within(item).getAllByRole('radio')).toHaveLength(1));
+    });
+
+    it('keeps the radiogroup around the list across a re-render', async () => {
+      renderEditor({
+        interaction: block(CHOICE_SINGLE_SELECT_XML),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
+      const radiogroup = () => screen.getByRole('radiogroup', { name: tr.$tr('answersLabel') });
+      expect(radiogroup()).toContainElement(screen.getByRole('list'));
+
+      // Binding an `undefined` role on the wrapper makes Vue strip the role
+      // KRadioButtonGroup set on its own root, but only on a later patch.
+      await fireEvent.click(screen.getByRole('button', { name: tr.$tr('addChoiceBtn') }));
+      expect(radiogroup()).toContainElement(screen.getByRole('list'));
+    });
+
+    it('groups multi-select options under the answers header', () => {
+      renderEditor({
+        interaction: block(CHOICE_MULTI_SELECT_XML),
+        questionType: QuestionType.MULTI_SELECT,
+      });
+      const group = screen.getByRole('group', { name: tr.$tr('answersLabel') });
+      expect(group).toContainElement(screen.getByRole('list'));
     });
 
     it('icon buttons have accessible labels', () => {

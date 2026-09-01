@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/vue';
+import { render, screen, fireEvent, within } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
@@ -141,6 +141,18 @@ describe('OrderingInteractionEditor', () => {
       expect(screen.getByRole('button', { name: moveDownName(1) })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: moveDownName(2) })).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: moveDownName(3) })).not.toBeInTheDocument();
+    });
+
+    it('renders the items as a list', () => {
+      renderEditor({
+        interaction: blockWithDecl(ORDERING_XML, ORDERING_DECL_XML),
+        questionType: QuestionType.ORDERING,
+      });
+      const list = screen.getByRole('list');
+      // Asserted as an attribute, not a role: jsdom gives a bare <ol> the implicit list role,
+      // so the explicit one Safari needs would be deletable with this test still green.
+      expect(list).toHaveAttribute('role', 'list');
+      expect(within(list).getAllByRole('listitem')).toHaveLength(3);
     });
 
     it('reorders the items when a row is dragged to a new position', async () => {

@@ -81,153 +81,161 @@
         {{ answersDescription }}
       </div>
 
-      <!-- keyed on the list tag so the region remounts when it swaps: SortableJS binds
-           to that element once, on mount -->
-      <DraggableRegion
-        :key="listTag"
-        :items="state.choices"
-        :sortable="isReorderable"
-        @update:items="onReorderChoices"
+      <!-- A group role would override the <ol>'s list role, so grouping sits on this wrapper.
+           `radiogroup` deliberately restates KRadioButtonGroup's own role: binding `undefined`
+           instead makes Vue strip the child's role on a later re-render. -->
+      <component
+        :is="listWrapperTag"
+        :aria-labelledby="answersHeaderId"
+        :role="isSingleSelect ? 'radiogroup' : 'group'"
       >
-        <component
-          :is="listTag"
-          class="choices-list"
-          :aria-labelledby="answersHeaderId"
-          :role="!isSingleSelect ? 'group' : undefined"
+        <DraggableRegion
+          :items="state.choices"
+          :sortable="isReorderable"
+          @update:items="onReorderChoices"
         >
-          <DraggableItem
-            v-for="(choice, index) in state.choices"
-            :key="choice.id"
+          <!-- role is explicit: `list-style: none` drops the implicit one in Safari -->
+          <ol
+            class="choices-list"
+            role="list"
           >
-            <div class="choice-group">
-              <!-- Bordered choice card -->
-              <ClickableRegion
-                class="choice-border"
-                :class="getChoiceClasses(choice)"
-                :style="getChoiceStyle(choice)"
-                :suppressed="mode !== 'edit' || isChoiceOpen(choice.id)"
-                :aria-label="editAnswerOptionLabel$({ number: index + 1 })"
-                @click="handleChoiceClick(choice.id)"
-              >
-                <div
-                  class="choice-card-text"
-                  :class="{
-                    'is-closed': isChoiceClosed(choice.id),
-                    'small-screen': windowIsSmall,
-                  }"
+            <DraggableItem
+              v-for="(choice, index) in state.choices"
+              :key="choice.id"
+            >
+              <li class="choice-group">
+                <!-- Bordered choice card -->
+                <ClickableRegion
+                  class="choice-border"
+                  :class="getChoiceClasses(choice)"
+                  :style="getChoiceStyle(choice)"
+                  :suppressed="mode !== 'edit' || isChoiceOpen(choice.id)"
+                  :aria-label="editAnswerOptionLabel$({ number: index + 1 })"
+                  @click="handleChoiceClick(choice.id)"
                 >
                   <div
-                    class="choice-layout"
+                    class="choice-card-text"
                     :class="{
-                      'is-open': isChoiceOpen(choice.id),
+                      'is-closed': isChoiceClosed(choice.id),
                       'small-screen': windowIsSmall,
                     }"
                   >
-                    <!-- `@click.stop` so using the handle does not open the choice for editing -->
-                    <DraggableHandle v-if="isReorderable">
+                    <div
+                      class="choice-layout"
+                      :class="{
+                        'is-open': isChoiceOpen(choice.id),
+                        'small-screen': windowIsSmall,
+                      }"
+                    >
+                      <!-- `@click.stop` so using the handle does not open the choice
+                           for editing -->
+                      <DraggableHandle v-if="isReorderable">
+                        <div
+                          class="choice-drag"
+                          @click.stop
+                        >
+                          <DragSortWidget
+                            :color="$themePalette.grey.v_700"
+                            :isFirst="index === 0"
+                            :isLast="index === state.choices.length - 1"
+                            :itemLabel="choiceItemLabel$({ number: index + 1 })"
+                            :position="index + 1"
+                            :total="state.choices.length"
+                            @moveUp="moveChoiceUp(choice.id)"
+                            @moveDown="moveChoiceDown(choice.id)"
+                          />
+                        </div>
+                      </DraggableHandle>
+
+                      <!-- Selection control; an invalid choice shows the error icon
+                           in its place -->
                       <div
-                        class="choice-drag"
+                        class="choice-selection"
                         @click.stop
                       >
-                        <DragSortWidget
-                          :color="$themePalette.grey.v_700"
-                          :isFirst="index === 0"
-                          :isLast="index === state.choices.length - 1"
-                          :itemLabel="choiceItemLabel$({ number: index + 1 })"
-                          :position="index + 1"
-                          :total="state.choices.length"
-                          @moveUp="moveChoiceUp(choice.id)"
-                          @moveDown="moveChoiceDown(choice.id)"
+                        <KIcon
+                          v-if="choiceHasError(choice.id)"
+                          icon="error"
+                          class="choice-error-icon"
+                          :color="$themeTokens.error"
+                        />
+                        <KRadioButton
+                          v-else-if="isSingleSelect"
+                          class="margin-0"
+                          :currentValue="correctChoiceId || ''"
+                          :buttonValue="choice.id"
+                          :label="markCorrectLabel$()"
+                          :showLabel="false"
+                          :disabled="mode !== 'edit'"
+                          :style="{ width: 'auto' }"
+                          :color="$themePalette.green.v_600"
+                          @change="onToggleCorrect(choice.id)"
+                        />
+                        <!-- KCheckbox color prop colors the checked icon green -->
+                        <KCheckbox
+                          v-else
+                          class="margin-0"
+                          :checked="choice.correct"
+                          :label="markCorrectLabel$()"
+                          :showLabel="false"
+                          :disabled="mode !== 'edit'"
+                          :color="$themePalette.green.v_600"
+                          @change="onToggleCorrect(choice.id)"
                         />
                       </div>
-                    </DraggableHandle>
 
-                    <!-- Selection control; an invalid choice shows the error icon
-                         in its place -->
-                    <div
-                      class="choice-selection"
-                      @click.stop
-                    >
-                      <KIcon
-                        v-if="choiceHasError(choice.id)"
-                        icon="error"
-                        class="choice-error-icon"
-                        :color="$themeTokens.error"
-                      />
-                      <KRadioButton
-                        v-else-if="isSingleSelect"
-                        class="margin-0"
-                        :currentValue="correctChoiceId || ''"
-                        :buttonValue="choice.id"
-                        :label="markCorrectLabel$()"
-                        :showLabel="false"
-                        :disabled="mode !== 'edit'"
-                        :style="{ width: 'auto' }"
-                        :color="$themePalette.green.v_600"
-                        @change="onToggleCorrect(choice.id)"
-                      />
-                      <!-- KCheckbox color prop colors the checked icon green -->
-                      <KCheckbox
-                        v-else
-                        class="margin-0"
-                        :checked="choice.correct"
-                        :label="markCorrectLabel$()"
-                        :showLabel="false"
-                        :disabled="mode !== 'edit'"
-                        :color="$themePalette.green.v_600"
-                        @change="onToggleCorrect(choice.id)"
-                      />
-                    </div>
+                      <div class="choice-content">
+                        <TipTapEditor
+                          :value="choice.content"
+                          :mode="isChoiceOpen(choice.id) ? 'edit' : 'view'"
+                          format="html"
+                          :minHeight="'80px'"
+                          :autofocus="isChoiceOpen(choice.id)"
+                          :imageProcessor="EditorImageProcessor"
+                          :tabindex="-1"
+                          class="editor"
+                          @update="html => setChoiceContent(choice.id, html)"
+                          @minimize="closeChoice"
+                        />
+                      </div>
 
-                    <div class="choice-content">
-                      <TipTapEditor
-                        :value="choice.content"
-                        :mode="isChoiceOpen(choice.id) ? 'edit' : 'view'"
-                        format="html"
-                        :minHeight="'80px'"
-                        :autofocus="isChoiceOpen(choice.id)"
-                        :imageProcessor="EditorImageProcessor"
-                        :tabindex="-1"
-                        class="editor"
-                        @update="html => setChoiceContent(choice.id, html)"
-                        @minimize="closeChoice"
-                      />
-                    </div>
-
-                    <div
-                      v-if="mode === 'edit'"
-                      class="choice-actions"
-                      @click.stop
-                    >
-                      <KIconButton
-                        icon="close"
-                        :ariaLabel="deleteChoiceBtn$()"
-                        :tooltip="deleteChoiceBtn$()"
-                        :disabled="isOnlyChoice"
-                        :color="isOnlyChoice ? $themeTokens.textDisabled : $themePalette.grey.v_700"
-                        @click="onRemoveChoice(choice.id)"
-                      />
+                      <div
+                        v-if="mode === 'edit'"
+                        class="choice-actions"
+                        @click.stop
+                      >
+                        <KIconButton
+                          icon="close"
+                          :ariaLabel="deleteChoiceBtn$()"
+                          :tooltip="deleteChoiceBtn$()"
+                          :disabled="isOnlyChoice"
+                          :color="
+                            isOnlyChoice ? $themeTokens.textDisabled : $themePalette.grey.v_700
+                          "
+                          @click="onRemoveChoice(choice.id)"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-                <!-- Per-choice validation messages sit INSIDE the bordered card -->
-                <ValidationMessage
-                  v-if="emptyChoiceIds.has(choice.id)"
-                  class="choice-validation-message"
-                >
-                  {{ errorEmptyChoiceContent$() }}
-                </ValidationMessage>
-                <ValidationMessage
-                  v-if="duplicateChoiceIds.has(choice.id)"
-                  class="choice-validation-message"
-                >
-                  {{ errorDuplicateChoiceContent$() }}
-                </ValidationMessage>
-              </ClickableRegion>
-            </div>
-          </DraggableItem>
-        </component>
-      </DraggableRegion>
+                  <!-- Per-choice validation messages sit INSIDE the bordered card -->
+                  <ValidationMessage
+                    v-if="emptyChoiceIds.has(choice.id)"
+                    class="choice-validation-message"
+                  >
+                    {{ errorEmptyChoiceContent$() }}
+                  </ValidationMessage>
+                  <ValidationMessage
+                    v-if="duplicateChoiceIds.has(choice.id)"
+                    class="choice-validation-message"
+                  >
+                    {{ errorDuplicateChoiceContent$() }}
+                  </ValidationMessage>
+                </ClickableRegion>
+              </li>
+            </DraggableItem>
+          </ol>
+        </DraggableRegion>
+      </component>
 
       <!-- Add choice button (edit only) -->
       <AddListItemButton
@@ -395,7 +403,7 @@
       // order has nothing to say.
       const isReorderable = computed(() => props.mode === 'edit' && !state.value.shuffle);
 
-      const listTag = computed(() => (isSingleSelect.value ? 'KRadioButtonGroup' : 'div'));
+      const listWrapperTag = computed(() => (isSingleSelect.value ? 'KRadioButtonGroup' : 'div'));
 
       const errorCodes = computed(() => errors.value.map(e => e.code));
       const emptyChoiceIds = computed(
@@ -525,7 +533,7 @@
         correctChoiceId,
         isOnlyChoice,
         isReorderable,
-        listTag,
+        listWrapperTag,
         questionHasError,
         noCorrectAnswerError,
         tooManyCorrectError,
@@ -630,6 +638,7 @@
     gap: 4px;
     padding: 0;
     margin: 0;
+    list-style: none;
   }
 
   /* Groups the bordered card with its per-choice error messages */

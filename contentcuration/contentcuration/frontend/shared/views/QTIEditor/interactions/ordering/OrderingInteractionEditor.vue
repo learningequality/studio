@@ -71,8 +71,10 @@
         :sortable="mode === 'edit'"
         @update:items="onReorderItems"
       >
+        <!-- role is explicit: `list-style: none` drops the implicit one in Safari -->
         <ol
           class="items-list"
+          role="list"
           :aria-label="correctOrderLabel$()"
         >
           <DraggableItem
