@@ -16,6 +16,7 @@ from automation.utils.appnexus.base import Backend
 from automation.utils.appnexus.base import BackendFactory
 from automation.utils.appnexus.base import BackendRequest
 from automation.utils.appnexus.base import BackendResponse
+from automation.utils.appnexus.base import CompositeBackend
 from django.conf import settings
 from django.db.models import Exists
 from django.db.models import F
@@ -108,10 +109,17 @@ class RecommendationsBackendFactory(BackendFactory):
         )
 
     def create_backend(self) -> Backend:
-        backend = Recommendations()
-        backend.base_url = self._prepare_url(settings.CURRICULUM_AUTOMATION_API_URL)
-        backend.connect_endpoint = "/connect"
-        return backend
+        if settings.SITE_ID == settings.PRODUCTION_SITE_ID:
+            backend = Recommendations()
+            backend.base_url = self._prepare_url(settings.CURRICULUM_AUTOMATION_API_URL)
+            backend.connect_endpoint = "/connect"
+            return backend
+        else:
+            backend = Recommendations()
+            backend.base_url = self._prepare_url(settings.CURRICULUM_AUTOMATION_API_URL)
+            backend.connect_endpoint = "/connect"
+
+            return CompositeBackend(backend, ["unstable", "stable"])
 
 
 class RecommendationsAdapter(Adapter):
