@@ -14,6 +14,7 @@ from contentcuration.tests.viewsets.base import generate_create_event
 from contentcuration.tests.viewsets.base import generate_delete_event
 from contentcuration.tests.viewsets.base import generate_update_event
 from contentcuration.tests.viewsets.base import SyncTestMixin
+from contentcuration.utils.assessment.qti.validation import validate_qti_item
 from contentcuration.viewsets.sync.constants import ASSESSMENTITEM
 
 
@@ -34,6 +35,14 @@ QTI_ITEM_WITH_FILES = _item_xml(
     '<a href="bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.pdf">Option B</a></qti-simple-choice>'
     "</qti-choice-interaction>",
 )
+
+CHOICE_ANSWERS = json.dumps(
+    [
+        {"answer": "4", "correct": True, "order": 1},
+        {"answer": "5", "correct": False, "order": 2},
+    ]
+)
+TEXT_ANSWERS = json.dumps([{"answer": "4", "correct": True, "order": 1}])
 
 
 class SyncTestCase(SyncTestMixin, StudioAPITestCase):
@@ -1175,6 +1184,220 @@ class CRUDTestCase(StudioAPITestCase):
             reverse("assessmentitem-detail", kwargs={"pk": assessmentitem.id})
         )
         self.assertEqual(response.status_code, 405, response.content)
+
+
+class DualReadTestCase(StudioAPITestCase):
+    def setUp(self):
+        super(DualReadTestCase, self).setUp()
+        self.channel = testdata.channel()
+        self.user = testdata.user()
+        self.channel.editors.add(self.user)
+        self.node = (
+            self.channel.main_tree.get_descendants()
+            .filter(kind_id=content_kinds.EXERCISE)
+            .first()
+        )
+        self.client.force_authenticate(user=self.user)
+
+    def _create_item(self, node=None, **kwargs):
+        return models.AssessmentItem.objects.create(
+            contentnode=node or self.node, assessment_id=uuid.uuid4().hex, **kwargs
+        )
+
+    def _list_items(self, **query):
+        # The fixture node carries its own assessment items, so key the response
+        # by assessment_id rather than indexing it.
+        response = self.client.get(reverse("assessmentitem-list"), query)
+        self.assertEqual(response.status_code, 200, response.content)
+        return {item["assessment_id"]: item for item in response.json()}
+
+    def _get_item(self, assessment_id):
+        return self._list_items(contentnode=self.node.id)[assessment_id]
+
+    def test_supported_legacy_types_returned_as_qti(self):
+        cases = [
+            (exercises.SINGLE_SELECTION, CHOICE_ANSWERS, "qti-choice-interaction"),
+            (exercises.MULTIPLE_SELECTION, CHOICE_ANSWERS, "qti-choice-interaction"),
+            ("true_false", CHOICE_ANSWERS, "qti-choice-interaction"),
+            (exercises.INPUT_QUESTION, TEXT_ANSWERS, "qti-text-entry-interaction"),
+            (exercises.FREE_RESPONSE, TEXT_ANSWERS, "qti-text-entry-interaction"),
+        ]
+        created = {
+            item_type: self._create_item(
+                type=item_type,
+                question="What is 2+2?",
+                answers=answers,
+                hints=json.dumps([{"hint": "Count.", "order": 1}]),
+            ).assessment_id
+            for item_type, answers, _ in cases
+        }
+
+        items = self._list_items(contentnode=self.node.id)
+
+        for item_type, _, interaction in cases:
+            with self.subTest(type=item_type):
+                item = items[created[item_type]]
+                self.assertEqual(item["type"], exercises.QTI)
+                self.assertTrue(validate_qti_item(item["raw_data"]).is_valid)
+                self.assertIn(interaction, item["raw_data"])
+
+    def test_answerless_choice_item_is_returned_as_valid_qti(self):
+        # The shape the editor writes for every newly added question.
+        assessment_id = self._create_item(type=exercises.SINGLE_SELECTION).assessment_id
+
+        item = self._get_item(assessment_id)
+
+        self.assertEqual(item["type"], exercises.QTI)
+        self.assertTrue(validate_qti_item(item["raw_data"]).is_valid)
+
+    def test_converted_item_has_no_legacy_field_content(self):
+        assessment_id = self._create_item(
+            type=exercises.SINGLE_SELECTION,
+            question="What is 2+2?",
+            answers=CHOICE_ANSWERS,
+            hints=json.dumps([{"hint": "Count.", "order": 1}]),
+        ).assessment_id
+
+        item = self._get_item(assessment_id)
+
+        self.assertEqual(item["question"], "")
+        self.assertEqual(item["answers"], "[]")
+        self.assertEqual(item["hints"], "[]")
+        # The node language is only in the values tuple to feed the conversion.
+        self.assertNotIn("contentnode__language__lang_code", item)
+
+    def test_converted_items_are_tagged_with_their_own_node_language(self):
+        # A contentnode__in read spans several nodes, so each item must pick up its own
+        # node's language. pt-BR's bare lang_code differs from its primary key, so the
+        # assertions also pin which of the two publish tags an item with.
+        self.node.language = models.Language.objects.get(id="pt-BR")
+        self.node.save()
+        other_node = models.ContentNode.objects.create(
+            id=uuid.uuid4().hex,
+            title="Exercise 2",
+            kind_id=content_kinds.EXERCISE,
+            parent=self.node.parent,
+            language=models.Language.objects.get(id="fr"),
+        )
+        first = self._create_item(
+            type=exercises.SINGLE_SELECTION,
+            question="What is 2+2?",
+            answers=CHOICE_ANSWERS,
+        )
+        second = self._create_item(
+            node=other_node,
+            type=exercises.SINGLE_SELECTION,
+            question="What is 3+3?",
+            answers=CHOICE_ANSWERS,
+        )
+
+        items = self._list_items(
+            contentnode__in=f"{self.node.id},{other_node.id}",
+        )
+
+        self.assertIn('xml:lang="pt"', items[first.assessment_id]["raw_data"])
+        self.assertNotIn("pt-BR", items[first.assessment_id]["raw_data"])
+        self.assertIn('xml:lang="fr"', items[second.assessment_id]["raw_data"])
+
+    def test_converted_item_falls_back_to_the_channel_language(self):
+        # What publish does for a node with no language of its own.
+        self.channel.language = models.Language.objects.get(id="pt-BR")
+        self.channel.save()
+        assessment_id = self._create_item(
+            type=exercises.SINGLE_SELECTION,
+            question="What is 2+2?",
+            answers=CHOICE_ANSWERS,
+        ).assessment_id
+
+        item = self._get_item(assessment_id)
+
+        self.assertIn('xml:lang="pt"', item["raw_data"])
+        self.assertNotIn("pt-BR", item["raw_data"])
+
+    def test_converted_item_defaults_to_english_without_any_language(self):
+        self.channel.language = None
+        self.channel.save()
+        assessment_id = self._create_item(
+            type=exercises.SINGLE_SELECTION,
+            question="What is 2+2?",
+            answers=CHOICE_ANSWERS,
+        ).assessment_id
+
+        item = self._get_item(assessment_id)
+
+        self.assertIn('xml:lang="en"', item["raw_data"])
+
+    def test_perseus_question_returned_unchanged(self):
+        raw_data = '{"question": {"content": "raw perseus"}}'
+        assessment_id = self._create_item(
+            type=exercises.PERSEUS_QUESTION, raw_data=raw_data
+        ).assessment_id
+
+        item = self._get_item(assessment_id)
+
+        self.assertEqual(item["type"], exercises.PERSEUS_QUESTION)
+        self.assertEqual(item["raw_data"], raw_data)
+        # A passed-through row must shed the node language too.
+        self.assertNotIn("contentnode__language__lang_code", item)
+
+    def test_native_qti_item_returned_unchanged(self):
+        assessment_id = self._create_item(
+            type=exercises.QTI, raw_data=VALID_CHOICE_ITEM
+        ).assessment_id
+
+        item = self._get_item(assessment_id)
+
+        self.assertEqual(item["type"], exercises.QTI)
+        self.assertEqual(item["raw_data"], VALID_CHOICE_ITEM)
+
+    def test_detail_route_converts(self):
+        assessmentitem = self._create_item(
+            type=exercises.SINGLE_SELECTION,
+            question="What is 2+2?",
+            answers=CHOICE_ANSWERS,
+        )
+
+        response = self.client.get(
+            reverse("assessmentitem-detail", kwargs={"pk": assessmentitem.id})
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.json()["type"], exercises.QTI)
+        self.assertTrue(validate_qti_item(response.json()["raw_data"]).is_valid)
+
+    def test_unconvertible_item_is_left_legacy_and_the_rest_convert(self):
+        unconvertible = self._create_item(
+            type="not_a_real_type", question="What is 2+2?"
+        )
+        convertible = self._create_item(
+            type=exercises.SINGLE_SELECTION,
+            question="What is 3+3?",
+            answers=CHOICE_ANSWERS,
+        )
+
+        with self.assertLogs(
+            "contentcuration.viewsets.assessmentitem", level="ERROR"
+        ) as logs:
+            items = self._list_items(contentnode=self.node.id)
+
+        self.assertIn(unconvertible.assessment_id, logs.output[0])
+        self.assertEqual(items[unconvertible.assessment_id]["type"], "not_a_real_type")
+        self.assertEqual(items[unconvertible.assessment_id]["question"], "What is 2+2?")
+        self.assertEqual(items[convertible.assessment_id]["type"], exercises.QTI)
+
+    def test_unconvertible_item_is_not_a_404_on_detail_route(self):
+        # Only this route goes through serialize_object(), which turns an error raised
+        # here into "No AssessmentItem matches the given query".
+        assessmentitem = self._create_item(
+            type="not_a_real_type", question="What is 2+2?"
+        )
+
+        response = self.client.get(
+            reverse("assessmentitem-detail", kwargs={"pk": assessmentitem.id})
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.json()["type"], "not_a_real_type")
 
 
 class ContentIDTestCase(SyncTestMixin, StudioAPITestCase):
