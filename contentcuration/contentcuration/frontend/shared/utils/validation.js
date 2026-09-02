@@ -2,6 +2,7 @@ import get from 'lodash/get';
 import CompletionCriteriaModels from 'kolibri-constants/CompletionCriteria';
 import translator from '../translator';
 import { AssessmentItemTypes, ValidationErrors, ContentModalities } from '../constants';
+import { validateQtiItem } from 'shared/views/QTIEditor/validateItem';
 import Licenses from 'shared/leUtils/Licenses';
 import { MasteryModelsNames } from 'shared/leUtils/MasteryModels';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
@@ -90,10 +91,7 @@ export function isNodeComplete({ nodeDetails, assessmentItems, files }) {
       return false;
     }
 
-    const isInvalid = assessmentItem => {
-      const sanitizedAssessmentItem = sanitizeAssessmentItem(assessmentItem, true);
-      return getAssessmentItemErrors(sanitizedAssessmentItem).length;
-    };
+    const isInvalid = assessmentItem => getAssessmentItemErrors(assessmentItem).length;
     if (assessmentItems.some(isInvalid)) {
       if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
         // eslint-disable-next-line no-console
@@ -432,151 +430,44 @@ export function getNodeFilesErrors(files) {
 }
 
 /**
- * Sanitize assesment item answers
- * - trim answers
- * - (optional) remove empty answers
- * @param {Array} answers Assessment item answers
- * @param {Boolean} removeEmpty Remove all empty answers?
- * @returns {Array} Cleaned answers
+ * The last verdict reached for an item. Keyed by the item,
+ *
+ * @type {WeakMap<Object, { rawData: string, allowFreeResponse: boolean, errors: Array }>}
  */
-export function sanitizeAssessmentItemAnswers(answers, removeEmpty = false) {
-  if (!answers || !answers.length) {
-    return [];
-  }
-
-  let sanitizedAnswers = answers.map(answer => {
-    let answerText = answer.answer;
-    if (typeof answerText !== 'number') {
-      answerText = answerText ? answerText.trim() : '';
-    }
-
-    return {
-      ...answer,
-      answer: answerText,
-    };
-  });
-
-  if (removeEmpty) {
-    sanitizedAnswers = sanitizedAnswers.filter(answer => answer.answer.length > 0);
-  }
-
-  sanitizedAnswers = sanitizedAnswers.map((answer, answerIdx) => {
-    return {
-      ...answer,
-      order: answerIdx + 1,
-    };
-  });
-
-  return sanitizedAnswers;
-}
-
-/**
- * Sanitize assesment item hints
- *  - trim hints
- *  - (optional) remove empty hints
- * @param {Array} hints Assessment item hints
- * @param {Boolean} removeEmpty Remove all empty hints?
- * @returns {Array} Cleaned hints
- */
-export function sanitizeAssessmentItemHints(hints, removeEmpty = false) {
-  if (!hints || !hints.length) {
-    return [];
-  }
-
-  let sanitizedHints = hints.map(hint => {
-    const hintText = hint.hint ? hint.hint.trim() : '';
-
-    return {
-      ...hint,
-      hint: hintText,
-    };
-  });
-
-  if (removeEmpty) {
-    sanitizedHints = sanitizedHints.filter(hint => hint.hint.length > 0);
-  }
-
-  sanitizedHints = sanitizedHints.map((hint, hintIdx) => {
-    return {
-      ...hint,
-      order: hintIdx + 1,
-    };
-  });
-
-  return sanitizedHints;
-}
-
-/**
- * Sanitize an assesment item
- *  - trim question text
- *  - sanitize answers and hints
- * @param {Array} assessmentItem An assessment item
- * @param {Boolean} removeEmpty Remove empty answers and hints?
- * @returns {Array} Cleaned assessment item
- */
-export function sanitizeAssessmentItem(assessmentItem, removeEmpty = false) {
-  const question = assessmentItem.question ? assessmentItem.question.trim() : '';
-  const answers = assessmentItem.answers
-    ? sanitizeAssessmentItemAnswers(assessmentItem.answers, removeEmpty)
-    : [];
-  const hints = assessmentItem.hints
-    ? sanitizeAssessmentItemHints(assessmentItem.hints, removeEmpty)
-    : [];
-
-  return {
-    ...assessmentItem,
-    question,
-    answers,
-    hints,
-  };
-}
+const errorsByAssessmentItem = new WeakMap();
 
 /**
  * Validate an assessment item.
+ *
+ * Questions are authored and stored as QTI, so the QTI editor owns what makes one valid;
+ * this reads its verdict without rendering anything. Perseus questions come from other
+ * tools and are not validated here.
+ *
  * @param {Object} assessmentItem An assessment item.
- * @returns {Array} An array of error codes.
+ * @param {Object} [options]
+ * @param {Boolean} [options.allowFreeResponse] Whether free-response questions are
+ *   permitted — they are only meaningful on surveys.
+ * @returns {Array} An array of errors.
  */
-export function getAssessmentItemErrors(assessmentItem, freeResponseInvalid = false) {
-  const errors = [];
-
-  // Don't validate perseus questions
+export function getAssessmentItemErrors(assessmentItem, { allowFreeResponse = true } = {}) {
   if (assessmentItem.type === AssessmentItemTypes.PERSEUS_QUESTION) {
-    return errors;
-  }
-  // Convert answers to string to handle numeric responses
-  const hasOneCorrectAnswer =
-    assessmentItem.answers &&
-    assessmentItem.answers.filter(
-      answer => answer.answer && String(answer.answer).trim() && answer.correct === true,
-    ).length === 1;
-  const hasAtLeatOneCorrectAnswer =
-    assessmentItem.answers &&
-    assessmentItem.answers.filter(
-      answer => answer.answer && String(answer.answer).trim() && answer.correct === true,
-    ).length > 0;
-
-  if (!assessmentItem.question || !assessmentItem.question.trim()) {
-    errors.push(ValidationErrors.QUESTION_REQUIRED);
-  }
-  if (freeResponseInvalid) {
-    errors.push(ValidationErrors.INVALID_COMPLETION_TYPE_FOR_FREE_RESPONSE_QUESTION);
+    return [];
   }
 
-  switch (assessmentItem.type) {
-    case AssessmentItemTypes.MULTIPLE_SELECTION:
-    case AssessmentItemTypes.INPUT_QUESTION:
-      if (!hasAtLeatOneCorrectAnswer) {
-        errors.push(ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS);
-      }
-      break;
-
-    case AssessmentItemTypes.TRUE_FALSE:
-    case AssessmentItemTypes.SINGLE_SELECTION:
-      if (!hasOneCorrectAnswer) {
-        errors.push(ValidationErrors.INVALID_NUMBER_OF_CORRECT_ANSWERS);
-      }
-      break;
+  const cached = errorsByAssessmentItem.get(assessmentItem);
+  if (
+    cached &&
+    cached.rawData === assessmentItem.raw_data &&
+    cached.allowFreeResponse === allowFreeResponse
+  ) {
+    return cached.errors;
   }
 
+  const errors = validateQtiItem(assessmentItem.raw_data, { allowFreeResponse });
+  errorsByAssessmentItem.set(assessmentItem, {
+    rawData: assessmentItem.raw_data,
+    allowFreeResponse,
+    errors,
+  });
   return errors;
 }

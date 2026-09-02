@@ -25,6 +25,12 @@ export function useEditor() {
         StarterKitExtension.configure({
           codeBlock: false, // Disable default code block to use the extended version
           link: false, // Disable default link to use the custom link extension
+          // The QTI 3.0 HTML profile has no <u> or <s>, so the item schema rejects an
+          // item carrying either and the save fails. Dropping the marks rather than only
+          // their toolbar buttons also takes away the keyboard shortcuts and the paste
+          // path, which would otherwise still produce content that cannot be saved.
+          strike: false,
+          underline: false,
         }),
         CodeBlockSyntaxHighlight,
         Small,

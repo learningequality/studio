@@ -1,5 +1,4 @@
-import { ref, computed, watch, onUnmounted } from 'vue';
-import debounce from 'lodash/debounce';
+import { ref, computed, watch } from 'vue';
 
 /**
  * Base composable for all interaction editors.
@@ -8,12 +7,11 @@ import debounce from 'lodash/debounce';
  * interaction plugin must go through. Individual interaction composables
  * (e.g. useChoiceInteraction) call this and add mutation methods on top.
  *
- * Validation runs immediately when called explicitly (e.g. when closing a
- * panel), but is debounced when triggered by state changes so that errors
- * only appear after the user pauses typing (400 ms), avoiding noisy
- * inline error flicker on every keystroke.
+ * Validation runs on every state or questionType change, so errors always describe the
+ * state the editor is showing. runValidation is exposed for explicit triggers, such as
+ * closing a panel.
  *
- * @param {import('../interactions/defineInteraction').InteractionDescriptor} descriptor
+ * @param {import('../interactions/InteractionDescriptor').InteractionDescriptor} descriptor
  * @param {{ bodyXml: string, responseDeclarations: string[] }} interactionBlock
  * @param {import('vue').Ref<string|null>} questionType
  * @returns {{
@@ -43,21 +41,12 @@ export function useInteraction(descriptor, interactionBlock, questionType) {
 
   const errors = ref([]);
 
-  /** Immediately validates and updates errors. Use this for explicit triggers (e.g. close). */
+  /** Validates and updates errors. Exposed for explicit triggers (e.g. close). */
   function runValidation() {
     errors.value = descriptor.validate(state.value, questionType.value);
   }
 
-  /**
-   * Debounced version used by the state watcher — waits 400 ms after the user
-   * stops typing before showing inline errors.
-   */
-  const debouncedValidation = debounce(runValidation, 400);
-
-  // Cancel any pending debounce when the component is torn down.
-  onUnmounted(() => debouncedValidation.cancel());
-
-  watch([state, questionType], debouncedValidation, { deep: true, immediate: true });
+  watch([state, questionType], runValidation, { deep: true, immediate: true });
 
   return { state, bodyXml, responseDeclarations, errors, runValidation };
 }
