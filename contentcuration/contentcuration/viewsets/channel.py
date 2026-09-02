@@ -29,6 +29,7 @@ from le_utils.constants import content_kinds
 from le_utils.constants import roles
 from rest_framework import serializers
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated
@@ -483,6 +484,9 @@ class ChannelViewSet(ValuesViewset):
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_edit_object()
+        if not self.get_delete_queryset().filter(pk=instance.pk).exists():
+            raise PermissionDenied("You do not have permission to delete this channel.")
+
         self.perform_destroy(instance)
         Change.create_change(
             generate_update_event(
@@ -686,9 +690,9 @@ class ChannelViewSet(ValuesViewset):
                             channel.id,
                             CHANNEL,
                             {
-                                "draft_token": draft_token.token
-                                if draft_token
-                                else None,
+                                "draft_token": (
+                                    draft_token.token if draft_token else None
+                                ),
                             },
                             channel_id=channel.id,
                         ),
@@ -1349,7 +1353,7 @@ class AdminChannelViewSet(ChannelViewSet, RESTUpdateModelMixin, RESTDestroyModel
 
 
 class SettingsChannelSerializer(BulkModelSerializer):
-    """ Used for displaying list of user's channels on settings page """
+    """Used for displaying list of user's channels on settings page"""
 
     editor_count = serializers.SerializerMethodField()
 
