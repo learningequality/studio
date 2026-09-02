@@ -96,6 +96,88 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Duplicate items are not allowed',
     context: 'Validation error when two or more ordering items have identical content',
   },
+
+  associateLabel: {
+    message: 'Associate',
+    context: 'Display name for an associate question type shown in the question type selector',
+  },
+  associateDescription: {
+    message: 'Learners must associate pairs of items.',
+    context: 'Description for the associate question type in the info modal',
+  },
+  correctPairsLabel: {
+    message: 'Matching pairs',
+    context: 'Section header above the list of correctly associated pairs',
+  },
+  correctPairsDescription: {
+    message:
+      'Learners match responses from a shuffled set to each prompt. Include distractors to increase difficulty.',
+    context: 'Subtitle under the matching pairs header',
+  },
+  distractorsLabel: {
+    message: 'Distractors (optional)',
+    context: 'Section header above the choices that belong to no correct pair',
+  },
+  distractorsDescription: {
+    message: "Extra items shown in the response pool that don't match any prompt",
+    context: 'Subtitle under the distractors header',
+  },
+  responsePoolLabel: {
+    message: 'Response pool (shuffled)',
+    context: 'Header above the shuffled pool of choices learners will pick from',
+  },
+  correctAnswersLabel: {
+    message: 'Answers',
+    context: 'Header above the list of correct pairs shown when answers are revealed',
+  },
+  pairNumberLabel: {
+    message: 'Pair {number}',
+    context: 'Label to the left of a pair row, e.g. "Pair 2"',
+  },
+  addPairBtn: {
+    message: 'Add pair',
+    context: 'Button that appends a new pair',
+  },
+  deletePairBtn: {
+    message: 'Delete pair {number}',
+    context: 'Accessible label for the delete icon button next to a pair row',
+  },
+  addDistractorBtn: {
+    message: 'Add distractor',
+    context: 'Button that opens the editor for a new distractor',
+  },
+  saveDistractorBtn: {
+    message: 'Save',
+    context: 'Button that adds the distractor being written to the distractor pool',
+  },
+  newDistractorLabel: {
+    message: 'New distractor',
+    context: 'Label on the placeholder chip for a distractor that has not been saved yet',
+  },
+  editNewDistractorLabel: {
+    message: 'Edit new distractor',
+    context: 'Accessible label for the clickable region that reopens the unsaved distractor',
+  },
+  deleteDistractorBtn: {
+    message: 'Delete distractor {number}',
+    context: 'Accessible label for the delete icon button on a distractor',
+  },
+  editPairItemLabel: {
+    message: 'Edit pair {number}, item {position}',
+    context: 'Accessible label for the clickable region to edit one item of a pair',
+  },
+  editDistractorLabel: {
+    message: 'Edit distractor {number}',
+    context: 'Accessible label for the clickable region to edit a distractor',
+  },
+  errorTooFewPairs: {
+    message: '1 or more valid pairs are required',
+    context: 'Validation error when no pair has two distinct, non-empty items',
+  },
+  errorDuplicatePairContent: {
+    message: 'Answers within a pair cannot be the same',
+    context: 'Validation error when both items of a pair have identical content',
+  },
   matchLabel: {
     message: 'Match',
     context: 'Display name for a match question type',

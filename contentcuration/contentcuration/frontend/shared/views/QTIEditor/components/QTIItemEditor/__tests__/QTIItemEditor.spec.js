@@ -3,6 +3,7 @@ import VueRouter from 'vue-router';
 import QTIItemEditor from '../index.vue';
 import { qtiEditorStrings } from '../../../qtiEditorStrings';
 import { AssessmentItemTypes } from '../../../constants';
+import { VALID_ASSOCIATE_ITEM_DOCUMENT } from '../../../utils/testingFixtures';
 
 jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor');
 jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
@@ -13,7 +14,13 @@ jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
   };
 });
 
-const { closeBtnLabel$, questionContentPlaceholder$ } = qtiEditorStrings;
+const {
+  closeBtnLabel$,
+  questionContentPlaceholder$,
+  associateLabel$,
+  unknownTypeLabel$,
+  responsePoolLabel$,
+} = qtiEditorStrings;
 
 const defaultProps = {
   item: {
@@ -74,6 +81,29 @@ describe('QTIItemEditor', () => {
     test('does not show the close button even when showAnswers is true', () => {
       renderComponent({ mode: 'view', showAnswers: true });
       expect(screen.queryByRole('button', { name: closeBtnLabel$() })).not.toBeInTheDocument();
+    });
+  });
+
+  describe('associate interaction', () => {
+    const renderAssociateItem = () =>
+      renderComponent({
+        item: {
+          assessment_id: 'test-item-id',
+          type: AssessmentItemTypes.QTI,
+          raw_data: VALID_ASSOCIATE_ITEM_DOCUMENT,
+        },
+      });
+
+    test('names the associate question type rather than falling back to unknown', async () => {
+      renderAssociateItem();
+      expect(await screen.findByText(new RegExp(associateLabel$()))).toBeInTheDocument();
+      expect(screen.queryByText(new RegExp(unknownTypeLabel$()))).not.toBeInTheDocument();
+    });
+
+    test('renders the associate editor for the parsed interaction', async () => {
+      renderAssociateItem();
+      expect(await screen.findByText(responsePoolLabel$())).toBeInTheDocument();
+      expect(screen.getByText('Antonio')).toBeInTheDocument();
     });
   });
 

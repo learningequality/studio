@@ -216,6 +216,50 @@ export const ORDERING_ITEM_XML = `<?xml version="1.0" encoding="UTF-8"?>
 </qti-assessment-item>`;
 
 /**
+ * Demo item 7: associate interaction — learner connects countries to capitals.
+ * Uses cardinality="multiple" and base-type="pair" per QTI 3.0 §3.2.13.
+ */
+export const ASSOCIATE_ITEM_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  identifier="item-associate"
+  title="Match each country with its capital city"
+  adaptive="false"
+  time-dependent="false"
+  xml:lang="en"
+>
+  <qti-response-declaration
+    identifier="RESPONSE"
+    cardinality="multiple"
+    base-type="pair"
+  >
+    <qti-correct-response>
+      <qti-value>choice_kenya choice_nairobi</qti-value>
+      <qti-value>choice_japan choice_tokyo</qti-value>
+      <qti-value>choice_brazil choice_brasilia</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+
+  <qti-item-body>
+    <qti-associate-interaction
+      response-identifier="RESPONSE"
+      shuffle="true"
+      max-associations="3"
+    >
+      <qti-prompt><p>Match each country with its capital city:</p></qti-prompt>
+      <qti-simple-associable-choice identifier="choice_kenya" match-max="1">Kenya</qti-simple-associable-choice>
+      <qti-simple-associable-choice identifier="choice_nairobi" match-max="1">Nairobi</qti-simple-associable-choice>
+      <qti-simple-associable-choice identifier="choice_japan" match-max="1">Japan</qti-simple-associable-choice>
+      <qti-simple-associable-choice identifier="choice_tokyo" match-max="1">Tokyo</qti-simple-associable-choice>
+      <qti-simple-associable-choice identifier="choice_brazil" match-max="1">Brazil</qti-simple-associable-choice>
+      <qti-simple-associable-choice identifier="choice_brasilia" match-max="1">Brasília</qti-simple-associable-choice>
+      <qti-simple-associable-choice identifier="choice_mombasa" match-max="1">Mombasa</qti-simple-associable-choice>
+      <qti-simple-associable-choice identifier="choice_osaka" match-max="1">Osaka</qti-simple-associable-choice>
+    </qti-associate-interaction>
+  </qti-item-body>
+</qti-assessment-item>`;
+
+/**
  * Hardcoded items covering different states:
  *  - item-1: single-select choice interaction
  *  - item-2: multi-select choice interaction
@@ -223,6 +267,7 @@ export const ORDERING_ITEM_XML = `<?xml version="1.0" encoding="UTF-8"?>
  *  - item-text-entry: string text-entry with case-sensitive answers
  *  - item-free-response: free-response text-entry (no correct answer)
  *  - item-ordering: ordering interaction (planets by distance from the Sun)
+ *  - item-associate: associate interaction (countries to capitals, with distractors)
  */
 export const INITIAL_ASSESSMENTS = [
   {
@@ -254,5 +299,10 @@ export const INITIAL_ASSESSMENTS = [
     assessment_id: 'demo-item-ordering',
     type: AssessmentItemTypes.QTI,
     raw_data: ORDERING_ITEM_XML,
+  },
+  {
+    assessment_id: 'demo-item-associate',
+    type: AssessmentItemTypes.QTI,
+    raw_data: ASSOCIATE_ITEM_XML,
   },
 ];
