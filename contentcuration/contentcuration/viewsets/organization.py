@@ -1,4 +1,6 @@
 from django.db import transaction
+from django.db.models import OuterRef
+from django.db.models import Subquery
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import FilterSet
 from django_filters.rest_framework import NumberFilter
@@ -150,6 +152,7 @@ class OrganizationViewSet(
         "public",
         "created_at",
         "updated_at",
+        "role",
     )
 
     def get_queryset(self):
@@ -157,6 +160,14 @@ class OrganizationViewSet(
             Organization.objects.all(),
             self.request.user,
         )
+
+    def annotate_queryset(self, queryset):
+        role = OrganizationRole.objects.filter(
+            organization=OuterRef("id"),
+            user=self.request.user,
+            status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+        )
+        return queryset.annotate(role=Subquery(role.values("role")[:1]))
 
     def perform_create(self, serializer, change=None):
         """Create the organization and its initial administrator atomically."""

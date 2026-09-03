@@ -130,6 +130,16 @@
             badgeValue: this.invitationsByListCounts[listType] || 0,
             analyticsLabel: ListTypeToAnalyticsLabel[listType],
           });
+
+          if (listType === ChannelListTypes.EDITABLE) {
+            tabs.push({
+              id: 'myOrganizations',
+              label: this.$tr('myOrganizations'),
+              to: this.myOrganizationsLink,
+              badgeValue: 0,
+              analyticsLabel: 'MY_ORGANIZATIONS',
+            });
+          }
         });
 
         tabs.push({
@@ -195,6 +205,9 @@
       channelSetLink() {
         return { name: RouteNames.CHANNEL_SETS };
       },
+      myOrganizationsLink() {
+        return { name: RouteNames.MY_ORGANIZATIONS };
+      },
       catalogLink() {
         return { name: RouteNames.CATALOG_ITEMS };
       },
@@ -240,11 +253,12 @@
         return { name: ListTypeToRouteMapping[listType] };
       },
       updateTitleForPage() {
-        // Updates the tab title every time the top-level route changes
         let title;
         const routeName = this.$route.name;
         if (routeName === RouteNames.CHANNEL_SETS) {
           title = this.$tr('channelSets');
+        } else if (routeName === RouteNames.MY_ORGANIZATIONS) {
+          title = this.$tr('myOrganizations');
         } else if (routeName === RouteNames.CATALOG_ITEMS) {
           title = this.translateConstant('public');
         } else if (routeName === RouteNames.CHANNELS_VIEW_ONLY) {
@@ -265,6 +279,7 @@
     },
     $trs: {
       channelSets: 'Collections',
+      myOrganizations: 'My organizations',
       catalog: 'Kolibri Library',
       libraryTitle: 'Kolibri Content Library Catalog',
       frequentlyAskedQuestions: 'Frequently asked questions',

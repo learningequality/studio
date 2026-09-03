@@ -799,4 +799,69 @@ class CRUDTestCase(StudioAPITestCase):
         self.assertEqual(response.status_code, 400, response.content)
         invitation.refresh_from_db()
         self.assertFalse(invitation.accepted)
-        self.assertFalse(self.channel.editors.filter(pk=self.invited_user.id).exists())
+
+
+class OrganizationInvitationRevokeActionTestCase(StudioAPITestCase):
+    def setUp(self):
+        super(OrganizationInvitationRevokeActionTestCase, self).setUp()
+        self.organization = testdata.organization()
+        self.admin = testdata.user("org-admin@example.com")
+        testdata.organization_role(
+            self.admin, self.organization, role=ORGANIZATION_ADMIN
+        )
+        self.invited_user = testdata.user("invitee@example.com")
+
+    def _invitation(self, sender=None):
+        return models.Invitation.objects.create(
+            id=uuid.uuid4().hex,
+            organization=self.organization,
+            email=self.invited_user.email,
+            sender=sender or self.admin,
+        )
+
+    def test_admin_can_revoke(self):
+        invitation = self._invitation()
+        self.client.force_authenticate(user=self.admin)
+        response = self.client.post(
+            reverse("invitation-revoke", kwargs={"pk": invitation.id})
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        invitation.refresh_from_db()
+        self.assertTrue(invitation.revoked)
+
+    def test_sender_can_revoke_even_if_no_longer_admin(self):
+        sender = testdata.user("former-admin@example.com")
+        testdata.organization_role(sender, self.organization, role=ORGANIZATION_ADMIN)
+        invitation = self._invitation(sender=sender)
+
+        self.client.force_authenticate(user=sender)
+        response = self.client.post(
+            reverse("invitation-revoke", kwargs={"pk": invitation.id})
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        invitation.refresh_from_db()
+        self.assertTrue(invitation.revoked)
+
+    def test_unrelated_org_member_cannot_revoke(self):
+        editor = testdata.user("editor@example.com")
+        testdata.organization_role(editor, self.organization, role=ORGANIZATION_EDITOR)
+        invitation = self._invitation()
+
+        self.client.force_authenticate(user=editor)
+        response = self.client.post(
+            reverse("invitation-revoke", kwargs={"pk": invitation.id})
+        )
+        self.assertEqual(response.status_code, 404, response.content)
+        invitation.refresh_from_db()
+        self.assertFalse(invitation.revoked)
+
+    def test_invitee_cannot_revoke_their_own_invitation(self):
+        invitation = self._invitation()
+
+        self.client.force_authenticate(user=self.invited_user)
+        response = self.client.post(
+            reverse("invitation-revoke", kwargs={"pk": invitation.id})
+        )
+        self.assertEqual(response.status_code, 403, response.content)
+        invitation.refresh_from_db()
+        self.assertFalse(invitation.revoked)

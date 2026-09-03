@@ -37,6 +37,7 @@ from contentcuration.forms import ForgotPasswordForm
 from contentcuration.forms import RegistrationForm
 from contentcuration.models import Channel
 from contentcuration.models import Invitation
+from contentcuration.models import Organization
 from contentcuration.models import User
 from contentcuration.viewsets.invitation import InvitationSerializer
 
@@ -71,7 +72,6 @@ def send_invitation_email(request):
             "last_name": recipient.last_name if recipient else "",
         }
 
-        # Need to break into two steps to avoid MultipleObjectsReturned error
         invitation = Invitation.objects.filter(
             channel_id=channel_id,
             email=user_email,
@@ -83,7 +83,6 @@ def send_invitation_email(request):
         if not invitation:
             invitation = Invitation.objects.create(**fields)
 
-        # Handle these values separately as different users might invite the same user again
         invitation.share_mode = share_mode
         invitation.sender = invitation.sender or request.user
         invitation.save()
@@ -108,6 +107,57 @@ def send_invitation_email(request):
         send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user_email])
     except KeyError:
         logger.warning("send_invitation_email missing required field", exc_info=True)
+        return HttpResponseBadRequest(
+            "Missing attribute from data", content_type="text/plain"
+        )
+
+    return Response(InvitationSerializer(invitation).data)
+
+
+@api_view(["POST"])
+@authentication_classes(
+    (SessionAuthentication, BasicAuthentication, TokenAuthentication)
+)
+@permission_classes((IsAuthenticated,))
+def send_organization_invitation_email(request):
+    try:
+        user_email = request.data["user_email"].lower()
+        organization_id = request.data["organization_id"]
+        share_mode = request.data["share_mode"]
+
+        if not Organization.filter_edit_queryset(
+            Organization.objects.filter(id=organization_id), request.user
+        ).exists():
+            raise PermissionDenied()
+
+        recipient = User.get_for_email(user_email)
+
+        fields = {
+            "invited": recipient,
+            "email": user_email,
+            "organization_id": organization_id,
+            "first_name": recipient.first_name if recipient else "",
+            "last_name": recipient.last_name if recipient else "",
+        }
+
+        invitation = Invitation.objects.filter(
+            organization_id=organization_id,
+            email=user_email,
+            revoked=False,
+            accepted=False,
+            declined=False,
+        ).first()
+
+        if not invitation:
+            invitation = Invitation.objects.create(**fields)
+
+        invitation.share_mode = share_mode
+        invitation.sender = invitation.sender or request.user
+        invitation.save()
+    except KeyError:
+        logger.warning(
+            "send_organization_invitation_email missing required field", exc_info=True
+        )
         return HttpResponseBadRequest(
             "Missing attribute from data", content_type="text/plain"
         )
