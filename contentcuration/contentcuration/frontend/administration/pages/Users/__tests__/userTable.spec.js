@@ -1,8 +1,27 @@
-import { mount, createLocalVue } from '@vue/test-utils';
-import Vuex, { Store } from 'vuex';
+import { render, screen, waitFor, within, configure } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
+import { Store } from 'vuex';
 import router from '../../../router';
 import { RouteNames } from '../../../constants';
 import UserTable from '../UserTable';
+import { usersStrings } from '../usersStrings';
+import { commonStrings } from 'shared/strings/commonStrings';
+
+const {
+  userCount$,
+  clearFiltersAction$,
+  userTypeLabel$,
+  targetLocationLabel$,
+  searchLabel$,
+  joinedWithinLabel$,
+  activeWithinLabel$,
+  hasPublishedLabel$,
+  hasStudioActivityLabel$,
+  userTypeAdministrators$,
+  userTypeAll$,
+} = usersStrings;
+
+const { clearAction$ } = commonStrings;
 
 jest.mock('shared/client', () => ({
   __esModule: true,
@@ -10,201 +29,344 @@ jest.mock('shared/client', () => ({
 }));
 jest.mock('file-saver', () => ({ saveAs: jest.fn() }));
 
-const localVue = createLocalVue();
+configure({ testIdAttribute: 'data-test' });
 
-localVue.use(Vuex);
-localVue.use(router);
+const USER_IDS = ['user-a', 'user-b', 'user-c'];
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-const userList = ['test', 'user', 'table'];
+const mockLoadUsers = jest.fn(() => Promise.resolve({}));
+const mockSendEmail = jest.fn(() => Promise.resolve());
 
-function makeWrapper(store) {
-  router.replace({ name: RouteNames.USERS });
-
-  const wrapper = mount(UserTable, {
-    router,
-    store,
-    localVue,
-    stubs: {
-      UserItem: true,
-      EmailUsersDialog: true,
-    },
-  });
-
-  return wrapper;
-}
-
-describe('userTable', () => {
-  let wrapper, store;
-  const loadUsers = jest.fn(() => Promise.resolve({}));
-
-  beforeEach(() => {
-    store = new Store({
-      modules: {
-        userAdmin: {
-          namespaced: true,
-          actions: {
-            loadUsers,
-          },
-          getters: {
-            users: () => userList,
-            count: () => userList.length,
-          },
+function createStore({ users = USER_IDS } = {}) {
+  return new Store({
+    modules: {
+      userAdmin: {
+        namespaced: true,
+        actions: {
+          loadUsers: mockLoadUsers,
+          sendEmail: mockSendEmail,
+        },
+        getters: {
+          users: () => users,
+          count: () => users.length,
+          getUsers: () => ids => ids.map(id => ({ id, email: `${id}@test.com` })),
         },
       },
-    });
-    wrapper = makeWrapper(store);
+    },
   });
-  afterEach(() => {
-    loadUsers.mockRestore();
+}
+
+function renderComponent({ users, query = {} } = {}) {
+  router.replace({ name: RouteNames.USERS, query }).catch(() => {});
+  return render(UserTable, {
+    store: createStore({ users }),
+    routes: router,
+    stubs: { UserItem: true },
   });
+}
 
-  describe('filters', () => {
-    it('changing user type filter should set query params', () => {
-      wrapper.vm.userTypeFilter = 'administrator';
-      expect(router.currentRoute.query.userType).toBe('administrator');
-    });
+const renderWithFilters = query => renderComponent({ query });
 
-    it('changing location filter should set query params', () => {
-      wrapper.vm.locationFilter = 'Afghanistan';
-      expect(router.currentRoute.query.location).toBe('Afghanistan');
-    });
+function lastFetchParams() {
+  const { calls } = mockLoadUsers.mock;
+  return calls[calls.length - 1][1];
+}
 
-    it('changing search text should set query params', () => {
-      jest.useFakeTimers();
-      wrapper.vm.keywordInput = 'keyword test';
-      wrapper.vm.setKeywords();
-      jest.runAllTimers();
-      jest.useRealTimers();
+const clearFiltersLink = () => screen.queryByText(clearFiltersAction$());
+const selectAllCheckbox = () => within(screen.getByRole('table')).getAllByRole('checkbox')[0];
 
-      expect(router.currentRoute.query.keywords).toBe('keyword test');
-    });
+describe('UserTable', () => {
+  let user;
 
-    it('changing joined-within filter sets joined_since query param to an ISO date', () => {
-      wrapper.vm.joinedWithinFilter = '3mo';
-      const params = wrapper.vm.filterFetchQueryParams;
-      expect(params.joined_since).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    });
-
-    it('changing active-within filter sets active_since query param to an ISO date', () => {
-      wrapper.vm.activeWithinFilter = '1mo';
-      const params = wrapper.vm.filterFetchQueryParams;
-      expect(params.active_since).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    });
-
-    it('toggling has-published filter sets published_channel=true', () => {
-      wrapper.vm.hasPublishedFilter = true;
-      const params = wrapper.vm.filterFetchQueryParams;
-      expect(params.published_channel).toBe(true);
-    });
-
-    it('toggling has-edits filter sets has_edits=true', () => {
-      wrapper.vm.hasEditsFilter = true;
-      const params = wrapper.vm.filterFetchQueryParams;
-      expect(params.has_edits).toBe(true);
+  beforeEach(() => {
+    user = userEvent.setup();
+    jest.clearAllMocks();
+    require('shared/client').default.get.mockResolvedValue({
+      data: new Blob(['col1,col2\n1,2'], { type: 'text/csv' }),
     });
   });
 
-  describe('selection', () => {
-    it('selectAll should set selected to channel list', () => {
-      wrapper.vm.selectAll = true;
-      expect(wrapper.vm.selected).toEqual(userList);
+  describe('heading', () => {
+    it('pluralises the match count', () => {
+      renderComponent();
+
+      expect(screen.getByText(userCount$({ count: USER_IDS.length }))).toBeInTheDocument();
     });
 
-    it('removing selectAll should set selected to empty list', () => {
-      wrapper.vm.selected = userList;
-      wrapper.vm.selectAll = false;
-      wrapper.vm.$nextTick(() => {
-        expect(wrapper.vm.selected).toEqual([]);
+    it('uses the singular form for one match', () => {
+      renderComponent({ users: [USER_IDS[0]] });
+
+      expect(screen.getByText(userCount$({ count: 1 }))).toBeInTheDocument();
+    });
+  });
+
+  describe('filter controls', () => {
+    it('renders every filter control', () => {
+      renderComponent();
+
+      expect(screen.getByText(userTypeLabel$())).toBeInTheDocument();
+      expect(screen.getByText(joinedWithinLabel$())).toBeInTheDocument();
+      expect(screen.getByText(activeWithinLabel$())).toBeInTheDocument();
+
+      expect(screen.getByLabelText(targetLocationLabel$())).toBeInTheDocument();
+      expect(screen.getByLabelText(searchLabel$())).toBeInTheDocument();
+      expect(screen.getByLabelText(hasPublishedLabel$())).toBeInTheDocument();
+      expect(screen.getByLabelText(hasStudioActivityLabel$())).toBeInTheDocument();
+    });
+
+    it('typing a search term fetches users filtered by keyword', async () => {
+      renderComponent();
+
+      await user.type(screen.getByLabelText(searchLabel$()), 'keyword test');
+
+      await waitFor(() => {
+        expect(lastFetchParams()).toMatchObject({ keywords: 'keyword test' });
       });
     });
 
-    it('selectedCount should match the selected length', () => {
-      wrapper.vm.selected = ['test'];
-      expect(wrapper.vm.selectedCount).toBe(1);
+    it("the search field's clear button drops the keyword filter", async () => {
+      renderComponent();
+
+      await user.type(screen.getByLabelText(searchLabel$()), 'keyword test');
+      await waitFor(() => {
+        expect(router.currentRoute.query.keywords).toBe('keyword test');
+      });
+
+      await user.click(screen.getByRole('button', { name: clearAction$() }));
+
+      await waitFor(() => {
+        expect(router.currentRoute.query.keywords).toBeUndefined();
+      });
+      expect(screen.getByLabelText(searchLabel$())).toHaveValue('');
     });
 
-    it('selected should clear on query changes', () => {
-      wrapper.vm.selected = ['test'];
-      router.push({
-        ...wrapper.vm.$route,
-        query: {
-          param: 'test',
-        },
+    it('ticking "has published a channel" fetches users filtered by published_channel', async () => {
+      renderComponent();
+
+      await user.click(screen.getByLabelText(hasPublishedLabel$()));
+
+      await waitFor(() => {
+        expect(lastFetchParams()).toMatchObject({ published_channel: true });
       });
-      wrapper.vm.$nextTick(() => {
-        expect(wrapper.vm.selected).toEqual([]);
+    });
+
+    it('ticking "has Studio activity" fetches users filtered by has_edits', async () => {
+      renderComponent();
+
+      await user.click(screen.getByLabelText(hasStudioActivityLabel$()));
+
+      await waitFor(() => {
+        expect(lastFetchParams()).toMatchObject({ has_edits: true });
+      });
+    });
+
+    it('a user type selection fetches users filtered by that type', async () => {
+      renderComponent();
+
+      await user.click(screen.getByText(userTypeLabel$()));
+      await user.click(await screen.findByText(userTypeAdministrators$()));
+
+      await waitFor(() => {
+        expect(lastFetchParams()).toMatchObject({ is_admin: true });
+      });
+    });
+
+    it('a joined-within selection fetches users filtered by an ISO joined_since date', async () => {
+      renderWithFilters({ joinedWithin: '3mo' });
+
+      await waitFor(() => {
+        expect(lastFetchParams().joined_since).toMatch(ISO_DATE);
+      });
+    });
+
+    it('an active-within selection fetches users filtered by an ISO active_since date', async () => {
+      renderWithFilters({ activeWithin: '1mo' });
+
+      await waitFor(() => {
+        expect(lastFetchParams().active_since).toMatch(ISO_DATE);
+      });
+    });
+
+    it('a target location selection fetches users filtered by that location', async () => {
+      renderWithFilters({ location: 'Afghanistan' });
+
+      await waitFor(() => {
+        expect(lastFetchParams()).toMatchObject({ location: 'Afghanistan' });
       });
     });
   });
 
-  describe('bulk actions', () => {
-    it('should be hidden if no items are selected', () => {
-      expect(wrapper.find('[data-test="email"]').exists()).toBe(false);
+  describe('clearing filters', () => {
+    it('is not offered on a page with no filters applied', () => {
+      renderComponent();
+
+      expect(clearFiltersLink()).not.toBeInTheDocument();
     });
 
-    it('should be visible if items are selected', async () => {
-      wrapper.vm.selected = userList;
-      await wrapper.vm.$nextTick();
-      expect(wrapper.find('[data-test="email"]').exists()).toBe(true);
+    it('is offered once a filter is applied', async () => {
+      renderComponent();
+
+      await user.click(screen.getByLabelText(hasPublishedLabel$()));
+
+      await waitFor(() => {
+        expect(clearFiltersLink()).toBeInTheDocument();
+      });
     });
 
-    it('email should open email dialog', async () => {
-      wrapper.vm.selected = userList;
-      await wrapper.vm.$nextTick();
-      await wrapper.findComponent('[data-test="email"]').trigger('click');
-      expect(wrapper.vm.showEmailDialog).toBe(true);
+    it('is offered for a user type of "All", which narrows nothing but is still a selection', async () => {
+      renderComponent();
+
+      await user.click(screen.getByText(userTypeLabel$()));
+      await user.click(await screen.findByText(userTypeAll$()));
+
+      await waitFor(() => {
+        expect(clearFiltersLink()).toBeInTheDocument();
+      });
+      expect(lastFetchParams()).not.toHaveProperty('is_admin');
+    });
+
+    it('stays unoffered for date windows left at their default', () => {
+      renderWithFilters({ joinedWithin: 'any', activeWithin: 'any' });
+
+      expect(clearFiltersLink()).not.toBeInTheDocument();
+    });
+
+    it('is withdrawn again after a checkbox is ticked and unticked', async () => {
+      renderComponent();
+      const checkbox = screen.getByLabelText(hasPublishedLabel$());
+
+      await user.click(checkbox);
+      await waitFor(() => {
+        expect(clearFiltersLink()).toBeInTheDocument();
+      });
+
+      await user.click(checkbox);
+
+      await waitFor(() => {
+        expect(clearFiltersLink()).not.toBeInTheDocument();
+      });
+    });
+
+    it('clears the checkboxes and the keyword search', async () => {
+      renderComponent();
+
+      await user.type(screen.getByLabelText(searchLabel$()), 'keyword test');
+      // useKeywordSearch debounces, so a pending write would land after the clear.
+      await waitFor(() => {
+        expect(router.currentRoute.query.keywords).toBe('keyword test');
+      });
+      await user.click(screen.getByLabelText(hasPublishedLabel$()));
+      await user.click(screen.getByLabelText(hasStudioActivityLabel$()));
+      await waitFor(() => {
+        expect(clearFiltersLink()).toBeInTheDocument();
+      });
+
+      await user.click(clearFiltersLink());
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(searchLabel$())).toHaveValue('');
+      });
+      expect(screen.getByLabelText(hasPublishedLabel$())).not.toBeChecked();
+      expect(screen.getByLabelText(hasStudioActivityLabel$())).not.toBeChecked();
+      expect(clearFiltersLink()).not.toBeInTheDocument();
+    });
+
+    it('removes every filter query param while preserving pagination and sorting', async () => {
+      renderWithFilters({
+        userType: 'administrator',
+        location: 'Afghanistan',
+        joinedWithin: '3mo',
+        activeWithin: '1mo',
+        hasPublished: 'yes',
+        hasEdits: 'yes',
+        keywords: 'keyword test',
+        page: '3',
+        page_size: '25',
+        sortBy: 'email',
+        descending: 'false',
+      });
+
+      await user.click(clearFiltersLink());
+
+      await waitFor(() => {
+        expect(Object.keys(router.currentRoute.query).sort()).toEqual([
+          'descending',
+          'page',
+          'page_size',
+          'sortBy',
+        ]);
+      });
+      expect(router.currentRoute.query.sortBy).toBe('email');
     });
   });
 
-  describe('csv download', () => {
-    beforeEach(() => {
+  describe('selection and bulk actions', () => {
+    it('offers no bulk email action until users are selected', () => {
+      renderComponent();
+
+      expect(screen.queryByTestId('email')).not.toBeInTheDocument();
+    });
+
+    it('selecting all users offers a bulk email action for them', async () => {
+      renderComponent();
+
+      await user.click(selectAllCheckbox());
+
+      expect(await screen.findByTestId('email')).toBeInTheDocument();
+      expect(screen.getByText(`(${USER_IDS.length})`)).toBeInTheDocument();
+    });
+
+    it('discards the selection when the filters change', async () => {
+      renderComponent();
+
+      await user.click(selectAllCheckbox());
+      expect(await screen.findByTestId('email')).toBeInTheDocument();
+
+      await user.click(screen.getByLabelText(hasPublishedLabel$()));
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('email')).not.toBeInTheDocument();
+      });
+    });
+
+    it('the bulk email action opens the send email dialog', async () => {
+      renderComponent();
+
+      await user.click(selectAllCheckbox());
+      await user.click(await screen.findByTestId('email'));
+
+      // EmailUsersDialog has no $trs, so there is no key to reference for its title.
+      expect(await screen.findByRole('heading', { name: 'Send email' })).toBeInTheDocument();
+    });
+  });
+
+  describe('CSV download', () => {
+    it('offers the download when there are users to export', () => {
+      renderComponent();
+
+      expect(screen.getByTestId('csv')).toBeEnabled();
+    });
+
+    it('is unavailable when there are no users to export', () => {
+      renderComponent({ users: [] });
+
+      expect(screen.getByTestId('csv')).toBeDisabled();
+    });
+
+    it('downloads a dated CSV built from the current filters', async () => {
       const client = require('shared/client').default;
       const { saveAs } = require('file-saver');
-      client.get.mockReset();
-      client.get.mockResolvedValue({
-        data: new Blob(['col1,col2\n1,2'], { type: 'text/csv' }),
+      renderComponent();
+
+      await user.click(screen.getByTestId('csv'));
+
+      await waitFor(() => {
+        expect(saveAs).toHaveBeenCalled();
       });
-      saveAs.mockClear();
-    });
-
-    it('renders the Download CSV button when count > 0', () => {
-      expect(wrapper.find('[data-test="csv"]').exists()).toBe(true);
-    });
-
-    it('clicking Download CSV calls the API with the current filter params', async () => {
-      await wrapper.findComponent('[data-test="csv"]').trigger('click');
-      // Flush the microtask queue so the chained .then() runs.
-      await new Promise(resolve => setImmediate(resolve));
-
-      const client = require('shared/client').default;
-      const { saveAs } = require('file-saver');
-      expect(client.get).toHaveBeenCalled();
-      const [, options] = client.get.mock.calls[0];
-      expect(options.responseType).toBe('blob');
-      expect(saveAs).toHaveBeenCalled();
+      expect(client.get.mock.calls[0][1].responseType).toBe('blob');
       const [savedBlob, savedName] = saveAs.mock.calls[0];
       expect(savedBlob).toBeInstanceOf(Blob);
       expect(savedName).toMatch(/^studio_users_\d{4}-\d{2}-\d{2}\.csv$/);
-    });
-  });
-
-  describe('csv download disabled state', () => {
-    it('disables Download CSV when count is zero', () => {
-      const emptyStore = new Store({
-        modules: {
-          userAdmin: {
-            namespaced: true,
-            actions: { loadUsers },
-            getters: {
-              users: () => [],
-              count: () => 0,
-            },
-          },
-        },
-      });
-      const emptyWrapper = makeWrapper(emptyStore);
-      const button = emptyWrapper.find('[data-test="csv"]');
-      expect(button.attributes('disabled') !== undefined || button.props().disabled).toBe(true);
     });
   });
 });
