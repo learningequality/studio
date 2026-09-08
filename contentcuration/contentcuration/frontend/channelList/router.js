@@ -1,6 +1,9 @@
 import VueRouter from 'vue-router';
 import CommunityChannelDetailsModal from './views/Channel/CommunityLibraryList/CommunityChannelDetailsModal.vue';
 import StudioMyChannels from './views/Channel/StudioMyChannels';
+import StudioOrganizations from './views/Organization/StudioOrganizations.vue';
+import NewOrganization from './views/Organization/NewOrganization.vue';
+import OrganizationDetails from './views/Organization/OrganizationDetails.vue';
 import StudioStarredChannels from './views/Channel/StudioStarredChannels';
 import StudioViewOnlyChannels from './views/Channel/StudioViewOnlyChannels';
 import StudioCollectionsTable from './views/ChannelSet/StudioCollectionsTable';
@@ -19,6 +22,22 @@ const router = new VueRouter({
       name: RouteNames.CHANNELS_EDITABLE,
       path: '/my-channels',
       component: StudioMyChannels,
+    },
+    {
+      name: RouteNames.ORGANIZATIONS,
+      path: '/organizations',
+      component: StudioOrganizations,
+    },
+    {
+      name: RouteNames.NEW_ORGANIZATION,
+      path: '/organizations/new',
+      component: NewOrganization,
+    },
+    {
+      name: RouteNames.ORGANIZATION_DETAILS,
+      path: '/organizations/:organizationId',
+      component: OrganizationDetails,
+      props: true,
     },
     {
       name: RouteNames.CHANNEL_SETS,
