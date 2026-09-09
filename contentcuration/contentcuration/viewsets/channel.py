@@ -381,7 +381,7 @@ class ChannelSerializer(BulkModelSerializer):
     @staticmethod
     def _handle_organization_change(instance, organization, user):
         if getattr(organization, "id", None) == instance.organization_id:
-            return organization
+            return organization, None
 
         if organization is None:
             has_org_admin_access = models.Organization.filter_edit_queryset(
@@ -389,8 +389,8 @@ class ChannelSerializer(BulkModelSerializer):
                 user,
             ).exists()
             if user.is_admin or has_org_admin_access:
-                return organization
-            return instance.organization
+                return organization, None
+            return instance.organization, None
 
         all_editors_have_access = not instance.editors.exclude(
             organization_roles__organization=organization,
@@ -399,7 +399,7 @@ class ChannelSerializer(BulkModelSerializer):
         ).exists()
 
         if instance.organization_id or not all_editors_have_access:
-            models.Invitation.objects.get_or_create(
+            invitation, _ = models.Invitation.objects.get_or_create(
                 channel=instance,
                 organization=organization,
                 revoked=False,
@@ -407,9 +407,9 @@ class ChannelSerializer(BulkModelSerializer):
                 accepted=False,
                 defaults={"sender": user},
             )
-            return instance.organization
+            return instance.organization, invitation
 
-        return organization
+        return organization, None
 
     def update(self, instance, validated_data):
         content_defaults = validated_data.pop("content_defaults", None)
@@ -418,12 +418,27 @@ class ChannelSerializer(BulkModelSerializer):
                 instance.content_defaults, content_defaults
             )
 
+        invitation = None
         if "organization" in validated_data:
-            organization = self._handle_organization_change(
+            organization, invitation = self._handle_organization_change(
                 instance, validated_data["organization"], self.context["request"].user
             )
             if getattr(organization, "id", None) == instance.organization_id:
                 validated_data.pop("organization")
+                if invitation is not None:
+                    self.changes.append(
+                        generate_update_event(
+                            instance.id,
+                            CHANNEL,
+                            {
+                                "organization_status": "pending_invitation",
+                                "requested_organization_id": invitation.organization_id,
+                                "invitation_id": invitation.id,
+                            },
+                            channel_id=instance.id,
+                            user_id=self.context["request"].user.id,
+                        )
+                    )
             else:
                 validated_data["organization"] = organization
 

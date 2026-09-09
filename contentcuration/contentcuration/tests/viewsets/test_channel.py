@@ -196,11 +196,21 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         self.assertEqual(response.status_code, 200, response.content)
         channel.refresh_from_db()
         self.assertIsNone(channel.organization_id)
-        self.assertTrue(
-            models.Invitation.objects.filter(
-                channel=channel, organization=organization
-            ).exists()
+        invitation = models.Invitation.objects.get(
+            channel=channel, organization=organization
         )
+        self.assertTrue(invitation)
+
+        change = models.Change.objects.filter(channel=channel, table=CHANNEL).latest(
+            "server_rev"
+        )
+        self.assertEqual(
+            change.kwargs["mods"]["organization_status"], "pending_invitation"
+        )
+        self.assertEqual(
+            change.kwargs["mods"]["requested_organization_id"], organization.id
+        )
+        self.assertEqual(change.kwargs["mods"]["invitation_id"], invitation.id)
 
     def test_update_channel_organization_migration_creates_contested_invitation(self):
         user = testdata.user()
