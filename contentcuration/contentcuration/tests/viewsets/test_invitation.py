@@ -450,6 +450,32 @@ class OrganizationInvitationSyncTestCase(SyncTestMixin, StudioAPITestCase):
         )
         self.assertEqual(response.status_code, 200, response.content)
         invitation.refresh_from_db()
+        self.assertTrue(invitation.revoked, response.content)
+
+    def test_update_contested_invitation_by_admin(self):
+        channel = models.Channel.objects.create(
+            actor_id=self.org_admin.id, organization=self.organization
+        )
+        invitation = models.Invitation.objects.create(
+            id=uuid.uuid4().hex,
+            channel=channel,
+            organization=self.organization,
+            sender=self.org_admin,
+        )
+        response = self.sync_changes(
+            [
+                generate_update_event(
+                    invitation.id,
+                    INVITATION,
+                    {"revoked": True},
+                    channel_id=channel.id,
+                    user_id=self.org_admin.id,
+                )
+            ]
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        invitation.refresh_from_db()
         self.assertTrue(invitation.revoked)
 
     def test_revoke_organization_invitation_by_non_admin_rejected(self):
@@ -774,6 +800,31 @@ class CRUDTestCase(StudioAPITestCase):
         self.assertEqual(response.status_code, 200, response.content)
         invitation.refresh_from_db()
         self.assertTrue(invitation.accepted)
+
+    def test_accept_contested_channel_organization_invitation_by_admin_migrates_channel(
+        self,
+    ):
+        current_organization = testdata.organization()
+        target_organization = testdata.organization("Target Organization")
+        invitation = models.Invitation.objects.create(
+            channel=self.channel,
+            organization=target_organization,
+            sender=self.user,
+        )
+        self.channel.organization = current_organization
+        self.channel.save(update_fields=["organization"])
+        admin_user = self._make_admin()
+
+        self.client.force_authenticate(user=admin_user)
+        response = self.client.post(
+            reverse("invitation-accept", kwargs={"pk": invitation.id})
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        invitation.refresh_from_db()
+        self.channel.refresh_from_db()
+        self.assertTrue(invitation.accepted)
+        self.assertEqual(self.channel.organization_id, target_organization.id)
 
     def test_decline_invitation_by_admin_succeeds(self):
         invitation = models.Invitation.objects.create(**self.invitation_db_metadata)

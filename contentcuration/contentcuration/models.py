@@ -3903,6 +3903,11 @@ class Invitation(models.Model):
         verbose_name_plural = "Invitations"
 
     def accept(self):
+        if self.channel and self.organization:
+            self.channel.organization = self.organization
+            self.channel.save(update_fields=["organization"])
+            return
+
         user = User.objects.filter(email__iexact=self.email).first()
         if self.channel:
             self._accept_channel_invitation(user)

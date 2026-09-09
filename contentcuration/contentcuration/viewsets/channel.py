@@ -47,6 +47,9 @@ import contentcuration.models as models
 from contentcuration.constants import (
     community_library_submission as community_library_submission_constants,
 )
+from contentcuration.constants.organization_roles import ORGANIZATION_ADMIN
+from contentcuration.constants.organization_roles import ORGANIZATION_EDITOR
+from contentcuration.constants.organization_roles import ORGANIZATION_ROLE_STATUS_ACTIVE
 from contentcuration.decorators import cache_no_user_data
 from contentcuration.models import Change
 from contentcuration.models import Channel
@@ -288,6 +291,14 @@ class ChannelSerializer(BulkModelSerializer):
     operations, but read operations are handled by the Viewset.
     """
 
+    # Allow channel assignments to private organizations to flow through the
+    # organization-change logic; permission and contested-invitation behavior is
+    # enforced in validate_organization/_handle_organization_change instead.
+    organization = serializers.PrimaryKeyRelatedField(
+        queryset=models.Organization.objects.all(),
+        required=False,
+        allow_null=True,
+    )
     thumbnail_encoding = ThumbnailEncodingFieldsSerializer(required=False)
     content_defaults = ContentDefaultsSerializer(partial=True, required=False)
 
@@ -304,6 +315,7 @@ class ChannelSerializer(BulkModelSerializer):
             "language",
             "content_defaults",
             "source_domain",
+            "organization",
         )
         read_only_fields = ("version",)
         list_serializer_class = BulkListSerializer
@@ -311,6 +323,7 @@ class ChannelSerializer(BulkModelSerializer):
 
     def create(self, validated_data):
         content_defaults = validated_data.pop("content_defaults", {})
+        validated_data.pop("organization", None)
         validated_data["content_defaults"] = self.fields["content_defaults"].create(
             content_defaults
         )
@@ -342,12 +355,77 @@ class ChannelSerializer(BulkModelSerializer):
         )
         return instance
 
+    def validate_organization(self, value):
+        if value is not None and getattr(value, "deleted", False):
+            raise serializers.ValidationError(
+                "Cannot assign a channel to a deleted organization."
+            )
+
+        if (
+            value is None
+            and self.instance
+            and self.instance.organization_id is not None
+            and "request" in self.context
+        ):
+            user = self.context["request"].user
+            has_org_admin_access = models.Organization.filter_edit_queryset(
+                models.Organization.objects.filter(id=self.instance.organization_id),
+                user,
+            ).exists()
+            if not user.is_admin and not has_org_admin_access:
+                raise serializers.ValidationError(
+                    "Only organization admins can remove a channel from an organization."
+                )
+        return value
+
+    @staticmethod
+    def _handle_organization_change(instance, organization, user):
+        if getattr(organization, "id", None) == instance.organization_id:
+            return organization
+
+        if organization is None:
+            has_org_admin_access = models.Organization.filter_edit_queryset(
+                models.Organization.objects.filter(id=instance.organization_id),
+                user,
+            ).exists()
+            if user.is_admin or has_org_admin_access:
+                return organization
+            return instance.organization
+
+        all_editors_have_access = not instance.editors.exclude(
+            organization_roles__organization=organization,
+            organization_roles__role__in=(ORGANIZATION_ADMIN, ORGANIZATION_EDITOR),
+            organization_roles__status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+        ).exists()
+
+        if instance.organization_id or not all_editors_have_access:
+            models.Invitation.objects.get_or_create(
+                channel=instance,
+                organization=organization,
+                revoked=False,
+                declined=False,
+                accepted=False,
+                defaults={"sender": user},
+            )
+            return instance.organization
+
+        return organization
+
     def update(self, instance, validated_data):
         content_defaults = validated_data.pop("content_defaults", None)
         if content_defaults is not None:
             validated_data["content_defaults"] = self.fields["content_defaults"].update(
                 instance.content_defaults, content_defaults
             )
+
+        if "organization" in validated_data:
+            organization = self._handle_organization_change(
+                instance, validated_data["organization"], self.context["request"].user
+            )
+            if getattr(organization, "id", None) == instance.organization_id:
+                validated_data.pop("organization")
+            else:
+                validated_data["organization"] = organization
 
         user_id = None
         if "request" in self.context:

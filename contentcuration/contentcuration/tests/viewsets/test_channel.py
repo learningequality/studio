@@ -13,6 +13,7 @@ from contentcuration import models
 from contentcuration import models as cc
 from contentcuration.constants import channel_history
 from contentcuration.constants import community_library_submission
+from contentcuration.constants.organization_roles import ORGANIZATION_EDITOR
 from contentcuration.models import AuditedSpecialPermissionsLicense
 from contentcuration.models import Change
 from contentcuration.models import Channel
@@ -34,6 +35,7 @@ from contentcuration.tests.viewsets.base import generate_update_event
 from contentcuration.tests.viewsets.base import SyncTestMixin
 from contentcuration.viewsets.channel import _unpublished_changes_query
 from contentcuration.viewsets.sync.constants import CHANNEL
+from contentcuration.viewsets.sync.constants import INVITATION
 from contentcuration.viewsets.sync.utils import (
     generate_added_to_community_library_event,
 )
@@ -75,6 +77,24 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
             models.Channel.objects.get(id=channel["id"])
         except models.Channel.DoesNotExist:
             self.fail("Channel was not created")
+
+    def test_create_channel_ignores_organization(self):
+        user = testdata.user()
+        organization = testdata.organization()
+        channel = self.channel_metadata
+        channel["organization"] = organization.id
+        self.client.force_authenticate(user=user)
+
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    channel["id"], CHANNEL, channel, channel_id=channel["id"]
+                )
+            ]
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertIsNone(models.Channel.objects.get(id=channel["id"]).organization_id)
 
     def test_create_channels(self):
         user = testdata.user()
@@ -120,6 +140,233 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(models.Channel.objects.get(id=channel.id).name, new_name)
+
+    def test_update_channel_organization_when_all_editors_have_access(self):
+        user = testdata.user()
+        organization = testdata.organization()
+        testdata.organization_role(user, organization, role=ORGANIZATION_EDITOR)
+        channel = models.Channel.objects.create(
+            actor_id=user.id, **self.channel_metadata
+        )
+        channel.editors.add(user)
+
+        self.client.force_authenticate(user=user)
+        response = self.sync_changes(
+            [
+                generate_update_event(
+                    channel.id,
+                    CHANNEL,
+                    {"organization": organization.id},
+                    channel_id=channel.id,
+                )
+            ]
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(
+            models.Channel.objects.get(id=channel.id).organization_id,
+            organization.id,
+        )
+        self.assertFalse(
+            models.Invitation.objects.filter(
+                channel=channel, organization=organization
+            ).exists()
+        )
+
+    def test_update_channel_organization_creates_contested_invitation(self):
+        user = testdata.user()
+        organization = testdata.organization()
+        channel = models.Channel.objects.create(
+            actor_id=user.id, **self.channel_metadata
+        )
+        channel.editors.add(user)
+
+        self.client.force_authenticate(user=user)
+        response = self.sync_changes(
+            [
+                generate_update_event(
+                    channel.id,
+                    CHANNEL,
+                    {"organization": organization.id},
+                    channel_id=channel.id,
+                )
+            ]
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        channel.refresh_from_db()
+        self.assertIsNone(channel.organization_id)
+        self.assertTrue(
+            models.Invitation.objects.filter(
+                channel=channel, organization=organization
+            ).exists()
+        )
+
+    def test_update_channel_organization_migration_creates_contested_invitation(self):
+        user = testdata.user()
+        current_organization = testdata.organization()
+        target_organization = testdata.organization("Target Organization")
+        testdata.organization_role(user, target_organization, role=ORGANIZATION_EDITOR)
+        channel = models.Channel.objects.create(
+            actor_id=user.id,
+            organization=current_organization,
+            **self.channel_metadata,
+        )
+        channel.editors.add(user)
+
+        self.client.force_authenticate(user=user)
+        response = self.sync_changes(
+            [
+                generate_update_event(
+                    channel.id,
+                    CHANNEL,
+                    {"organization": target_organization.id},
+                    channel_id=channel.id,
+                )
+            ]
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        channel.refresh_from_db()
+        self.assertEqual(channel.organization_id, current_organization.id)
+        self.assertTrue(
+            models.Invitation.objects.filter(
+                channel=channel, organization=target_organization
+            ).exists()
+        )
+
+    def test_update_channel_organization_recreates_live_invitation_after_revocation(
+        self,
+    ):
+        user = testdata.user()
+        current_organization = testdata.organization()
+        target_organization = testdata.organization("Target Organization")
+        testdata.organization_role(user, target_organization, role=ORGANIZATION_EDITOR)
+        channel = models.Channel.objects.create(
+            actor_id=user.id,
+            organization=current_organization,
+            **self.channel_metadata,
+        )
+        channel.editors.add(user)
+
+        self.client.force_authenticate(user=user)
+        response = self.sync_changes(
+            [
+                generate_update_event(
+                    channel.id,
+                    CHANNEL,
+                    {"organization": target_organization.id},
+                    channel_id=channel.id,
+                )
+            ]
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+
+        invitation = models.Invitation.objects.get(
+            channel=channel, organization=target_organization
+        )
+        response = self.sync_changes(
+            [
+                generate_update_event(
+                    invitation.id,
+                    INVITATION,
+                    {"revoked": True},
+                    channel_id=channel.id,
+                    user_id=user.id,
+                )
+            ]
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        invitation.refresh_from_db()
+        self.assertTrue(invitation.revoked)
+
+        response = self.sync_changes(
+            [
+                generate_update_event(
+                    channel.id,
+                    CHANNEL,
+                    {"organization": target_organization.id},
+                    channel_id=channel.id,
+                )
+            ]
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(
+            models.Invitation.objects.filter(
+                channel=channel,
+                organization=target_organization,
+                revoked=False,
+                declined=False,
+                accepted=False,
+            ).count(),
+            1,
+        )
+
+    def test_channel_cannot_move_into_deleted_organization(self):
+        user = testdata.user()
+        organization = testdata.organization()
+        deleted_organization = testdata.organization("Deleted Org")
+        testdata.organization_role(user, deleted_organization, role=ORGANIZATION_EDITOR)
+        deleted_organization.deleted = True
+        deleted_organization.save(update_fields=["deleted"])
+        channel = models.Channel.objects.create(
+            actor_id=user.id,
+            organization=organization,
+            **self.channel_metadata,
+        )
+        channel.editors.add(user)
+
+        self.client.force_authenticate(user=user)
+        response = self.sync_changes(
+            [
+                generate_update_event(
+                    channel.id,
+                    CHANNEL,
+                    {"organization": deleted_organization.id},
+                    channel_id=channel.id,
+                )
+            ]
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(len(response.json()["errors"]), 1, response.content)
+        self.assertEqual(
+            models.Channel.objects.get(id=channel.id).organization_id,
+            organization.id,
+        )
+
+    def test_non_admin_cannot_remove_channel_from_organization(self):
+        user = testdata.user()
+        organization = testdata.organization()
+        channel = models.Channel.objects.create(
+            actor_id=user.id,
+            organization=organization,
+            **self.channel_metadata,
+        )
+        channel.editors.add(user)
+
+        self.client.force_authenticate(user=user)
+        response = self.sync_changes(
+            [
+                generate_update_event(
+                    channel.id,
+                    CHANNEL,
+                    {"organization": None},
+                    channel_id=channel.id,
+                )
+            ]
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(len(response.json()["errors"]), 1, response.content)
+        self.assertEqual(
+            response.json()["errors"][0]["errors"]["organization"][0],
+            "Only organization admins can remove a channel from an organization.",
+        )
+        self.assertEqual(
+            models.Channel.objects.get(id=channel.id).organization_id,
+            organization.id,
+        )
 
     def test_update_channel_thumbnail_encoding(self):
         user = testdata.user()

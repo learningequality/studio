@@ -15,6 +15,7 @@ from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
+from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import INVITATION
 from contentcuration.viewsets.sync.utils import generate_update_event
 
@@ -58,7 +59,10 @@ class InvitationSerializer(BulkModelSerializer):
             raise serializers.ValidationError(
                 "Invitation must specify either a channel or an organization."
             )
-        if channel and organization:
+        is_existing_contested_invitation = (
+            self.instance and self.instance.channel_id and self.instance.organization_id
+        )
+        if channel and organization and not is_existing_contested_invitation:
             raise serializers.ValidationError(
                 "Invitation cannot specify both a channel and an organization."
             )
@@ -205,6 +209,18 @@ class InvitationViewSet(ValuesViewset):
         invitation.accept()
         invitation.accepted = True
         invitation.save()
+        if invitation.channel and invitation.organization:
+            Change.create_change(
+                generate_update_event(
+                    invitation.channel_id,
+                    CHANNEL,
+                    {"organization": invitation.organization_id},
+                    channel_id=invitation.channel_id,
+                    user_id=request.user.id,
+                ),
+                applied=True,
+                created_by_id=request.user.id,
+            )
         Change.create_change(
             generate_update_event(
                 invitation.id,
