@@ -1,4 +1,5 @@
 <template>
+
   <StudioMessageLayout
     :header="$tr('forgotPasswordTitle')"
     :text="$tr('forgotPasswordPrompt')"
@@ -34,99 +35,105 @@
       />
     </form>
   </StudioMessageLayout>
+
 </template>
 
+
 <script>
-import { mapActions } from 'vuex';
-import StudioMessageLayout from '../../components/StudioMessageLayout';
-import StudioEmailField from '../../components/form/StudioEmailField';
-import StudioBanner from '../../../shared/views/StudioBanner';
-import { generateFormMixin } from '../../../shared/mixins.js';
 
-const formFields = {
-  email: {
-    required: true,
-    validator: value => Boolean(value && /.+@.+\..+/.test(value)),
-  },
-};
+  import { mapActions } from 'vuex';
+  import StudioMessageLayout from '../../components/StudioMessageLayout';
+  import StudioEmailField from '../../components/form/StudioEmailField';
+  import StudioBanner from '../../../shared/views/StudioBanner';
+  import { generateFormMixin } from '../../../shared/mixins.js';
 
-export default {
-  name: 'ForgotPassword',
-
-  mixins: [generateFormMixin(formFields)],
-
-  components: {
-    StudioMessageLayout,
-    StudioEmailField,
-    StudioBanner,
-  },
-
-  data() {
-    return {
-      error: false,
-      emailValidationVisible: false,
-    };
-  },
-
-  computed: {
-    emailErrors() {
-      if (!this.emailValidationVisible || !this.errors.email) {
-        return [];
-      }
-
-      return [this.$tr('validEmailMessage')];
+  const formFields = {
+    email: {
+      required: true,
+      validator: value => Boolean(value && /.+@.+\..+/.test(value)),
     },
-  },
+  };
 
-  methods: {
-    ...mapActions('account', ['sendPasswordResetLink']),
+  export default {
+    name: 'ForgotPassword',
 
-    hideEmailError() {
-      this.emailValidationVisible = false;
+    mixins: [generateFormMixin(formFields)],
+
+    components: {
+      StudioMessageLayout,
+      StudioEmailField,
+      StudioBanner,
     },
 
-    showEmailError() {
-      this.emailValidationVisible = true;
+    data() {
+      return {
+        error: false,
+        emailValidationVisible: false,
+      };
     },
 
-    submit() {
-      this.error = false;
+    computed: {
+      emailErrors() {
+        if (!this.emailValidationVisible || !this.errors.email) {
+          return [];
+        }
 
-      const formData = this.clean();
+        return [this.$tr('validEmailMessage')];
+      },
+    },
 
-      if (!this.validate(formData)) {
+    methods: {
+      ...mapActions('account', ['sendPasswordResetLink']),
+
+      hideEmailError() {
+        this.emailValidationVisible = false;
+      },
+
+      showEmailError() {
         this.emailValidationVisible = true;
-        return;
-      }
+      },
 
-      this.sendPasswordResetLink(formData.email)
-        .then(() => {
-          this.$router
-            .push({
-              name: 'PasswordInstructionsSent',
-            })
-            .catch(() => {});
-        })
-        .catch(() => {
-          this.error = true;
-        });
+      submit() {
+        this.error = false;
+
+        const formData = this.clean();
+
+        if (!this.validate(formData)) {
+          this.emailValidationVisible = true;
+          return;
+        }
+
+        this.sendPasswordResetLink(formData.email)
+          .then(() => {
+            this.$router
+              .push({
+                name: 'PasswordInstructionsSent',
+              })
+              .catch(() => {});
+          })
+          .catch(() => {
+            this.error = true;
+          });
+      },
     },
-  },
 
-  $trs: {
-    forgotPasswordTitle: 'Reset your password',
-    forgotPasswordPrompt:
-      'Please enter your email address to receive instructions for resetting your password',
-    submitButton: 'Submit',
-    forgotPasswordFailed:
-      'Failed to send a password reset link. Please try again.',
-    validEmailMessage: 'Please enter a valid email',
-  },
-};
+    $trs: {
+      forgotPasswordTitle: 'Reset your password',
+      forgotPasswordPrompt:
+        'Please enter your email address to receive instructions for resetting your password',
+      submitButton: 'Submit',
+      forgotPasswordFailed: 'Failed to send a password reset link. Please try again.',
+      validEmailMessage: 'Please enter a valid email',
+    },
+  };
+
 </script>
 
+
 <style lang="scss" scoped>
-.w-100 {
-  width: 100%;
-}
+
+  .w-100 {
+    width: 100%;
+  }
+
 </style>
