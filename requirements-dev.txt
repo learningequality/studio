@@ -50,7 +50,7 @@ nodeenv==1.10.0
     # via
     #   -r requirements-dev.in
     #   pre-commit
-packaging==26.2
+packaging==26.3
     # via
     #   -c requirements.txt
     #   drf-yasg
