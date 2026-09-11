@@ -1,7 +1,10 @@
 import json
+import logging
 import re
 
 from django.db import transaction
+from django.db.models import OuterRef
+from django.db.models import Subquery
 from le_utils.constants import exercises
 from le_utils.constants import format_presets
 from rest_framework import serializers
@@ -9,9 +12,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.serializers import ValidationError
 
 from contentcuration.models import AssessmentItem
+from contentcuration.models import Channel
 from contentcuration.models import ContentNode
 from contentcuration.models import File
 from contentcuration.models import generate_object_storage_name
+from contentcuration.utils.assessment.qti.ingest import convert_legacy_question_to_qti
 from contentcuration.utils.assessment.qti.media import get_qti_media_references
 from contentcuration.utils.assessment.qti.validation import validate_qti_item
 from contentcuration.viewsets.base import BulkCreateMixin
@@ -25,11 +30,17 @@ from contentcuration.viewsets.common import UUIDInFilter
 from contentcuration.viewsets.common import UUIDRegexField
 
 
+logger = logging.getLogger(__name__)
+
 exercise_image_filename_regex = re.compile(
     r"\!\[[^]]*\]\(\${placeholder}/([a-f0-9]{{32}}\.[0-9a-z]+)\)".format(
         placeholder=exercises.CONTENT_STORAGE_PLACEHOLDER
     )
 )
+
+# Everything else is a legacy type, converted to QTI on read until the global
+# backfill (#6007) makes that permanent and consolidate() goes away.
+PASSTHROUGH_TYPES = (exercises.QTI, exercises.PERSEUS_QUESTION)
 
 
 class AssessmentItemFilter(RequiredFilterSet):
@@ -332,8 +343,49 @@ class AssessmentItemViewSet(BulkCreateMixin, BulkUpdateMixin, ValuesViewset):
         "source_url",
         "randomize",
         "deleted",
+        # Only consumed by consolidate(), which pops them back off. Publish tags an
+        # item with the bare lang_code of its content node's language, falling back to
+        # the channel's (utils/assessment/qti/archive.py), so the read path matches.
+        "contentnode__language__lang_code",
+        "channel_lang_code",
     )
 
     field_map = {
         "contentnode": "contentnode_id",
     }
+
+    def annotate_queryset(self, queryset):
+        return queryset.annotate(
+            channel_lang_code=Subquery(
+                Channel.objects.filter(
+                    main_tree__tree_id=OuterRef("contentnode__tree_id")
+                ).values("language__lang_code")[:1]
+            )
+        )
+
+    def consolidate(self, items, queryset):
+        for item in items:
+            node_language = item.pop("contentnode__language__lang_code")
+            channel_language = item.pop("channel_lang_code")
+            language = node_language or channel_language
+            if item["type"] in PASSTHROUGH_TYPES:
+                continue
+            try:
+                # A new dict, so the language does not leak into the response.
+                result = convert_legacy_question_to_qti(dict(item, language=language))
+            except Exception:
+                # One item Studio cannot represent in QTI must not take out every other
+                # item on the node, so leave it as the legacy row it is; the editor
+                # renders a non-QTI item as unsupported.
+                logger.exception(
+                    "Could not convert assessment item %s to QTI", item["assessment_id"]
+                )
+                continue
+            item.update(
+                type=exercises.QTI,
+                raw_data=result.xml,
+                question="",
+                answers="[]",
+                hints="[]",
+            )
+        return items
