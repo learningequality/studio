@@ -330,7 +330,11 @@ export class QTIDeclaration {
       attrs['base-type'] = this.baseType;
     }
 
-    const children = Object.values(this._capabilities).map(cap => cap.getXML());
+    // A capability returns null when it has nothing valid to serialize (e.g. a correct
+    // response with no values); those are dropped rather than emitted empty.
+    const children = Object.values(this._capabilities)
+      .map(cap => cap.getXML())
+      .filter(Boolean);
 
     return buildXmlNode({ tag: this.tag, attrs, children });
   }

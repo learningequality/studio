@@ -3,7 +3,6 @@
   <div
     class="question-type-selector"
     :class="{ 'small-screen': windowIsSmall }"
-    :style="{ borderBottom: `1px solid ${$themeTokens.fineLine}` }"
   >
     <div
       class="type-selector-group"
@@ -48,6 +47,10 @@
           @click="showTypeInfoModal = true"
         />
       </div>
+
+      <ValidationMessage v-if="freeResponseNotAllowed">
+        {{ errorFreeResponseNotAllowed$() }}
+      </ValidationMessage>
     </div>
 
     <div
@@ -93,23 +96,52 @@
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { descriptors } from '../../interactions';
+  import { QuestionType } from '../../constants';
   import { generateRandomSlug } from '../../utils/generateRandomSlug';
+  import ValidationMessage from '../ValidationMessage/index.vue';
 
   export default {
     name: 'QuestionTypeSelector',
 
+    components: { ValidationMessage },
+
     setup(props) {
       const { windowIsSmall } = useKResponsiveWindow();
-      const { typeLabel$, responseTypeLabel$, responseTypeInfoTitle$, closeBtnLabel$ } =
-        qtiEditorStrings;
+      const {
+        typeLabel$,
+        responseTypeLabel$,
+        responseTypeInfoTitle$,
+        closeBtnLabel$,
+        errorFreeResponseNotAllowed$,
+      } = qtiEditorStrings;
 
       const showTypeInfoModal = ref(false);
 
       const labelId = generateRandomSlug('type-selector');
 
+      /** Whether the question already is a free response, whatever the consumer allows. */
+      const isFreeResponse = computed(() => props.questionType === QuestionType.FREE_RESPONSE);
+
       const questionTypeOptions = computed(() => {
-        return descriptors.flatMap(d => d.getTypeOptions?.(qtiEditorStrings) ?? []);
+        const options = descriptors.flatMap(d => d.getTypeOptions?.(qtiEditorStrings) ?? []);
+        if (props.allowFreeResponse) {
+          return options;
+        }
+        /**
+         * A free response has no correct answer, so it is not offered where the questions are
+         * scored. A question that already is one keeps the option: dropping it would leave the
+         * select showing some other type as if that were the question, and the author with no
+         * way to see what they have — or to deliberately change it.
+         */
+        return options.filter(
+          option => option.value !== QuestionType.FREE_RESPONSE || isFreeResponse.value,
+        );
       });
+
+      /** Shown under the select for a question that is a free response where it cannot be. */
+      const freeResponseNotAllowed = computed(
+        () => !props.allowFreeResponse && isFreeResponse.value,
+      );
 
       const selectedOption = computed(
         () =>
@@ -127,6 +159,8 @@
         labelId,
         questionTypeOptions,
         selectedOption,
+        freeResponseNotAllowed,
+        errorFreeResponseNotAllowed$,
       };
     },
 
@@ -139,6 +173,15 @@
       settingsTargetId: {
         type: String,
         required: true,
+      },
+
+      /**
+       * Whether a question with no correct answer is acceptable here. False on an exercise,
+       * whose questions are scored, and true on a survey.
+       */
+      allowFreeResponse: {
+        type: Boolean,
+        default: true,
       },
     },
 

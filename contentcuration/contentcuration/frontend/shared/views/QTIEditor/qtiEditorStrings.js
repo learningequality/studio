@@ -29,6 +29,15 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Show answers',
     context: 'Checkbox label to toggle displaying answers/previews',
   },
+  incompleteItemIndicatorLabel: {
+    message: 'Incomplete',
+    context: 'Shown in a question card header when the question is missing something',
+  },
+  unsupportedItemMessage: {
+    message: 'This question cannot be edited here',
+    context:
+      'Shown in place of the editor for questions authored elsewhere, or whose content could not be read',
+  },
   singleSelectLabel: {
     message: 'Single Choice',
     context: 'Display name for a single-select question type',
@@ -144,6 +153,10 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Edit answer option {number}',
     context: 'Accessible label for the clickable region to edit an answer choice',
   },
+  editHintLabel: {
+    message: 'Edit hint {number}',
+    context: 'Accessible label for the clickable region to edit a hint',
+  },
   deleteChoiceBtn: {
     message: 'Delete choice',
     context: 'Accessible label for the delete-choice icon button',
@@ -156,6 +169,34 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
   markCorrectLabel: {
     message: 'Mark as correct answer',
     context: 'Accessible label for radio / checkbox that marks a choice as correct',
+  },
+  hintsLabel: {
+    message: 'Hints',
+    context: 'Header of the collapsible hints section of a question',
+  },
+  noHintsPlaceholder: {
+    message: 'Question has no hints',
+    context: 'Shown in the hints section when the question has no hints',
+  },
+  hintPlaceholder: {
+    message: 'Enter hint {index}...',
+    context: 'Placeholder shown in place of a hint that has no text yet',
+  },
+  addHintBtn: {
+    message: 'Add hint',
+    context: 'Button that appends a new hint to the question',
+  },
+  deleteHintBtn: {
+    message: 'Delete hint',
+    context: 'Accessible label for the delete-hint icon button',
+  },
+  moveHintUpBtn: {
+    message: 'Move hint up',
+    context: 'Accessible label for the move-hint-up icon button',
+  },
+  moveHintDownBtn: {
+    message: 'Move hint down',
+    context: 'Accessible label for the move-hint-down icon button',
   },
   errorPromptRequired: {
     message: 'Question is required',
@@ -204,6 +245,11 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
   freeResponseLabel: {
     message: 'Free response',
     context: 'Display name for a free-response text-entry question type',
+  },
+  errorFreeResponseNotAllowed: {
+    message: 'Free response is only available on surveys. Choose another type.',
+    context:
+      'Validation error shown under the type selector when a question is a free response but the exercise scores its questions',
   },
   freeResponseDescription: {
     message: 'Learners can write an open-ended response. No correct answer is enforced.',

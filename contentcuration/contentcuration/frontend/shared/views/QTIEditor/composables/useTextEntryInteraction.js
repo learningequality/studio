@@ -1,6 +1,6 @@
 import { readonly } from 'vue';
 import { generateRandomSlug } from '../utils/generateRandomSlug';
-import { textEntryInteractionDescriptor } from '../interactions/textEntry/TextEntryInteractionDescriptor';
+import { textEntryInteractionDescriptor } from '../interactions/textEntry/Descriptor';
 import { useInteraction } from './useInteraction';
 
 /**

@@ -9,6 +9,7 @@ from typing import Optional
 from typing import Tuple
 
 from le_utils.constants import exercises
+from lxml import etree
 
 from contentcuration.utils.assessment.markdown import render_markdown
 from contentcuration.utils.assessment.qti.assessment_item import AssessmentItem
@@ -85,11 +86,26 @@ class QTIConversionResult:
     file_dependencies: List[str]
 
 
+def _strip_unsupported_markup(markup: str) -> str:
+    """
+    Unwrap every tag a QTI item body cannot carry, keeping its content.
+
+    An anchor has nothing to navigate to on a device with no internet access.
+    The QTI 3.0 HTML profile has no element for the inline marks.
+    Runs on the rendered markup, so tags typed as raw HTML are stripped too.
+    """
+    root = etree.fromstring(f"<root>{markup}</root>")
+    etree.strip_tags(root, "a", "s", "del", "ins", "u", "mark", "strike")
+    return (root.text or "") + "".join(
+        etree.tostring(child, encoding="unicode") for child in root
+    )
+
+
 def _create_html_content_from_text(text: str) -> FlowContentList:
     """Convert text content to QTI HTML flow content."""
     if not text.strip():
         return []
-    markup = render_markdown(text)
+    markup = _strip_unsupported_markup(render_markdown(text))
     return ElementTreeBase.from_string(markup)
 
 
@@ -148,9 +164,14 @@ def _create_choice_interaction_and_response(
 
     prompt = Prompt(children=_create_html_content_from_text(item.question))
 
+    # Every newly added question starts answerless, but the XSD requires at least one
+    # qti-simple-choice. Stand in the single empty choice the QTI editor opens a new
+    # choice interaction with.
+    answers = item.answers or [{}]
+
     choices = []
     correct_values = []
-    for i, answer in enumerate(item.answers):
+    for i, answer in enumerate(answers):
         choice_id = f"choice_{i}"
         choice_content = _create_html_content_from_text(answer.get("answer", ""))
 

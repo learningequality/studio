@@ -40,9 +40,15 @@ export default class DefaultValue {
   }
 
   /**
-   * @returns {Element}
+   * Like `qti-correct-response`, the element is optional but must hold at least one
+   * `qti-value`, so an empty one is omitted rather than emitted.
+   *
+   * @returns {Element|null}
    */
   getXML() {
+    if (!this._values.length) {
+      return null;
+    }
     return buildXmlNode({
       tag: 'qti-default-value',
       children: this._declaration

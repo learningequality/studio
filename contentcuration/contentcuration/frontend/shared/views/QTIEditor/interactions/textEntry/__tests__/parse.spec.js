@@ -243,6 +243,28 @@ describe('buildTextEntryInteractionXML', () => {
       expect(doc.querySelector('qti-item-body')).not.toBeNull();
     });
 
+    it('leaves no xhtml namespace on the prompt markup', () => {
+      // The prompt comes from the HTML parser; an explicit xmlns on it makes the whole
+      // item fail schema validation on the server.
+      const { bodyXml } = buildTextEntryInteractionXML(
+        { prompt: '<p>What is <strong>H2O</strong>?</p>', answers: [], expectedLength: 0 },
+        QuestionType.FREE_RESPONSE,
+        FREE_SCHEMA,
+      );
+      expect(bodyXml).not.toContain('http://www.w3.org/1999/xhtml');
+    });
+
+    it('keeps the prompt before the interaction', () => {
+      const { bodyXml } = buildTextEntryInteractionXML(
+        { prompt: '<p>Question</p>', answers: [], expectedLength: 0 },
+        QuestionType.FREE_RESPONSE,
+        FREE_SCHEMA,
+      );
+      expect(bodyXml.indexOf('Question')).toBeLessThan(
+        bodyXml.indexOf('qti-text-entry-interaction'),
+      );
+    });
+
     it('contains a <qti-text-entry-interaction> element', () => {
       const { bodyXml } = buildTextEntryInteractionXML(
         { prompt: '', answers: [], expectedLength: 0 },
