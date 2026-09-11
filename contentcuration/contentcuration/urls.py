@@ -395,6 +395,11 @@ urlpatterns += i18n_patterns(
         name="send_invitation_email",
     ),
     re_path(
+        r"^api/send_organization_invitation_email/$",
+        registration_views.send_organization_invitation_email,
+        name="send_organization_invitation_email",
+    ),
+    re_path(
         r"^new/accept_invitation/(?P<email>[^/]+)/",
         registration_views.new_user_redirect,
         name="accept_invitation_and_registration",
