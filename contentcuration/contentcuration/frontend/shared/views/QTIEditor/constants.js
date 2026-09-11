@@ -53,6 +53,7 @@ export const QtiInteraction = Object.freeze({
   CHOICE: 'qti-choice-interaction',
   ORDER: 'qti-order-interaction',
   MATCH: 'qti-match-interaction',
+  ASSOCIATE: 'qti-associate-interaction',
   TEXT_ENTRY: 'qti-text-entry-interaction',
   EXTENDED_TEXT: 'qti-extended-text-interaction',
 });
@@ -81,6 +82,7 @@ export const QuestionType = Object.freeze({
   TEXT_ENTRY: 'textEntry',
   FREE_RESPONSE: 'freeResponse',
   ORDERING: 'ordering',
+  ASSOCIATE: 'associate',
 });
 
 /**
@@ -98,6 +100,8 @@ export const ValidationError = Object.freeze({
   EMPTY_ANSWER_CONTENT: 'EMPTY_ANSWER_CONTENT',
   DUPLICATE_ANSWER_CONTENT: 'DUPLICATE_ANSWER_CONTENT',
   TOO_FEW_CHOICES: 'TOO_FEW_CHOICES',
+  TOO_FEW_PAIRS: 'TOO_FEW_PAIRS',
+  DUPLICATE_PAIR_CONTENT: 'DUPLICATE_PAIR_CONTENT',
 });
 
 export const RESPONSE_IDENTIFIER = 'RESPONSE';
