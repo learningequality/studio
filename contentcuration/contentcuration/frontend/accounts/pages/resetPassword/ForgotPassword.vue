@@ -1,33 +1,40 @@
 <template>
 
-  <MessageLayout
+  <StudioMessageLayout
     :header="$tr('forgotPasswordTitle')"
     :text="$tr('forgotPasswordPrompt')"
   >
-    <VForm
+    <form
       ref="form"
-      lazy-validation
+      novalidate
       @submit.prevent="submit"
     >
-      <Banner
-        :text="$tr('forgotPasswordFailed')"
-        :value="error"
+      <StudioBanner
+        v-if="error"
         error
         class="mb-4"
         data-testid="error-banner"
-      />
-      <EmailField
+      >
+        {{ $tr('forgotPasswordFailed') }}
+      </StudioBanner>
+
+      <StudioEmailField
         v-model="email"
         autofocus
+        :error-messages="emailErrors"
+        @blur="showEmailError"
+        @input="hideEmailError"
+        @click.native="hideEmailError"
       />
+
       <KButton
         primary
         class="w-100"
         :text="$tr('submitButton')"
         type="submit"
       />
-    </VForm>
-  </MessageLayout>
+    </form>
+  </StudioMessageLayout>
 
 </template>
 
@@ -35,48 +42,88 @@
 <script>
 
   import { mapActions } from 'vuex';
-  import MessageLayout from '../../components/MessageLayout';
-  import EmailField from 'shared/views/form/EmailField';
-  import Banner from 'shared/views/Banner';
+  import StudioMessageLayout from '../../components/StudioMessageLayout';
+  import StudioEmailField from '../../components/form/StudioEmailField';
+  import StudioBanner from '../../../shared/views/StudioBanner';
+  import { generateFormMixin } from '../../../shared/mixins.js';
+
+  const formFields = {
+    email: {
+      required: true,
+      validator: value => Boolean(value && /.+@.+\..+/.test(value)),
+    },
+  };
 
   export default {
     name: 'ForgotPassword',
+
+    mixins: [generateFormMixin(formFields)],
+
     components: {
-      MessageLayout,
-      EmailField,
-      Banner,
+      StudioMessageLayout,
+      StudioEmailField,
+      StudioBanner,
     },
+
     data() {
       return {
-        email: '',
         error: false,
+        emailValidationVisible: false,
       };
     },
-    methods: {
-      ...mapActions('account', ['sendPasswordResetLink']),
-      submit() {
-        this.error = false;
-        if (this.$refs.form.validate()) {
-          this.sendPasswordResetLink(this.email)
-            .then(() => {
-              this.$router
-                .push({
-                  name: 'PasswordInstructionsSent',
-                })
-                .catch(() => {});
-            })
-            .catch(() => {
-              this.error = true;
-            });
+
+    computed: {
+      emailErrors() {
+        if (!this.emailValidationVisible || !this.errors.email) {
+          return [];
         }
+
+        return [this.$tr('validEmailMessage')];
       },
     },
+
+    methods: {
+      ...mapActions('account', ['sendPasswordResetLink']),
+
+      hideEmailError() {
+        this.emailValidationVisible = false;
+      },
+
+      showEmailError() {
+        this.emailValidationVisible = true;
+      },
+
+      submit() {
+        this.error = false;
+
+        const formData = this.clean();
+
+        if (!this.validate(formData)) {
+          this.emailValidationVisible = true;
+          return;
+        }
+
+        this.sendPasswordResetLink(formData.email)
+          .then(() => {
+            this.$router
+              .push({
+                name: 'PasswordInstructionsSent',
+              })
+              .catch(() => {});
+          })
+          .catch(() => {
+            this.error = true;
+          });
+      },
+    },
+
     $trs: {
       forgotPasswordTitle: 'Reset your password',
       forgotPasswordPrompt:
         'Please enter your email address to receive instructions for resetting your password',
       submitButton: 'Submit',
       forgotPasswordFailed: 'Failed to send a password reset link. Please try again.',
+      validEmailMessage: 'Please enter a valid email',
     },
   };
 
