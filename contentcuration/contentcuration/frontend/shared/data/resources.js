@@ -2426,6 +2426,26 @@ export const CommunityLibrarySubmission = new APIResource({
   },
 });
 
+export const Organization = new APIResource({
+  urlName: 'organization',
+  fetchCollection(params) {
+    return client.get(this.collectionUrl(), { params }).then(response => response.data);
+  },
+  fetchModel(id) {
+    return client.get(this.modelUrl(id)).then(response => response.data);
+  },
+  create(data) {
+    return client.post(this.collectionUrl(), data).then(response => response.data);
+  },
+});
+
+export const OrganizationMember = new APIResource({
+  urlName: 'organization_members',
+  fetchCollection(params) {
+    return client.get(this.collectionUrl(), { params }).then(response => response.data);
+  },
+});
+
 export const AdminCommunityLibrarySubmission = new APIResource({
   urlName: 'admin_community_library_submission',
   fetchCollection(params) {

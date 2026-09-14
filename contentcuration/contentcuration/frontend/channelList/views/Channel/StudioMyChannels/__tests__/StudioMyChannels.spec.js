@@ -13,6 +13,7 @@ jest.mock('shared/utils/navigation', () => ({
 const router = new VueRouter({
   routes: [
     { name: 'NEW_CHANNEL', path: '/new' },
+    { name: 'NEW_ORGANIZATION', path: '/organizations/new' },
     { name: 'CHANNEL_DETAILS', path: '/:channelId/details' },
     { name: 'CHANNEL_EDIT', path: '/:channelId/:tab' },
   ],
@@ -22,6 +23,8 @@ const CHANNELS = [
   {
     id: 'channel-id-1',
     name: 'Channel title 1',
+    organization: 'organization-1',
+    organization_name: 'Learning Together',
     language: 'en',
     description: 'Channel description',
     edit: true,
@@ -53,7 +56,7 @@ const mockLoadInvitationList = jest.fn();
 const mockDeleteChannel = jest.fn();
 const mockBookmarkChannel = jest.fn();
 
-function createStore() {
+function createStore(channelData = CHANNELS) {
   return new Store({
     state: {
       session: {
@@ -67,8 +70,8 @@ function createStore() {
       channel: {
         namespaced: true,
         getters: {
-          channels: () => CHANNELS,
-          getChannel: () => id => CHANNELS.find(c => c.id === id),
+          channels: () => channelData,
+          getChannel: () => id => channelData.find(c => c.id === id),
         },
         actions: {
           loadChannelList: mockLoadChannelList,
@@ -90,9 +93,9 @@ function createStore() {
   });
 }
 
-function renderComponent(props = {}) {
+function renderComponent(props = {}, channelData = CHANNELS) {
   return render(StudioMyChannels, {
-    store: createStore(),
+    store: createStore(channelData),
     routes: router,
     props: {
       ...props,
@@ -123,6 +126,119 @@ describe('StudioMyChannels', () => {
     expect(mockLoadInvitationList).toHaveBeenCalled();
   });
 
+  describe('organization filter', () => {
+    it('keeps legacy channels without association metadata visible by default', async () => {
+      const legacyChannels = CHANNELS.map(channel => ({
+        ...channel,
+        organization: undefined,
+        organization_name: undefined,
+      }));
+      renderComponent({}, legacyChannels);
+      expect(await screen.findAllByTestId('channel-card')).toHaveLength(2);
+      expect(
+        await screen.findByText('All organizations', { selector: '.ui-select-display-value' }),
+      ).toBeInTheDocument();
+    });
+
+    it('deduplicates organization options and keeps options after filtering', async () => {
+      renderComponent({}, [
+        ...CHANNELS,
+        { ...CHANNELS[0], id: 'channel-id-3', name: 'Third channel' },
+        {
+          ...CHANNELS[0],
+          id: 'channel-id-4',
+          name: 'Fourth channel',
+          organization: 'organization-2',
+          organization_name: 'Another organization',
+        },
+      ]);
+      await screen.findAllByTestId('channel-card');
+      await userEvent.click(screen.getByText('Filter by organization'));
+      expect(
+        screen.getAllByText('Learning Together', { selector: '.ui-select-option-basic' }),
+      ).toHaveLength(1);
+      await userEvent.click(
+        screen.getByText('Learning Together', { selector: '.ui-select-option-basic' }),
+      );
+      await waitFor(() => expect(screen.getAllByTestId('channel-card')).toHaveLength(2));
+      await userEvent.click(screen.getByText('Filter by organization'));
+      await userEvent.click(
+        screen.getByText('Another organization', { selector: '.ui-select-option-basic' }),
+      );
+      await waitFor(() => expect(screen.getAllByTestId('channel-card')).toHaveLength(1));
+      expect(screen.getByTestId('channel-card')).toHaveTextContent('Fourth channel');
+    });
+
+    it('does not include deleted or noneditable channels in organization options', async () => {
+      renderComponent({}, [
+        ...CHANNELS,
+        {
+          ...CHANNELS[0],
+          id: 'deleted',
+          deleted: true,
+          organization: 'deleted-org',
+          organization_name: 'Deleted organization',
+        },
+        {
+          ...CHANNELS[0],
+          id: 'view-only',
+          edit: false,
+          organization: 'viewer-org',
+          organization_name: 'Viewer organization',
+        },
+      ]);
+      expect(await screen.findAllByTestId('channel-card')).toHaveLength(2);
+      await userEvent.click(screen.getByText('Filter by organization'));
+      expect(screen.queryByText('Deleted organization')).not.toBeInTheDocument();
+      expect(screen.queryByText('Viewer organization')).not.toBeInTheDocument();
+    });
+
+    it('filters channels from the URL and preserves unrelated query parameters when cleared', async () => {
+      await router.push({ query: { organization: 'organization-1', other: 'keep' } });
+      renderComponent();
+
+      const cards = await screen.findAllByTestId('channel-card');
+      expect(cards).toHaveLength(1);
+      expect(cards[0]).toHaveTextContent('Channel title 1');
+
+      await userEvent.click(screen.getByText('Filter by organization'));
+      await userEvent.click(
+        await screen.findByText('All organizations', { selector: '.ui-select-option-basic' }),
+      );
+
+      await waitFor(() => expect(screen.getAllByTestId('channel-card')).toHaveLength(2));
+      expect(router.currentRoute.query).toEqual({ other: 'keep' });
+    });
+
+    it('selects an organization and restores the list when navigating back', async () => {
+      renderComponent();
+      await screen.findAllByTestId('channel-card');
+      await userEvent.click(screen.getByText('Filter by organization'));
+      await userEvent.click(
+        await screen.findByText('Learning Together', { selector: '.ui-select-option-basic' }),
+      );
+
+      await waitFor(() => expect(screen.getAllByTestId('channel-card')).toHaveLength(1));
+      expect(router.currentRoute.query.organization).toBe('organization-1');
+
+      router.back();
+      await waitFor(() => expect(screen.getAllByTestId('channel-card')).toHaveLength(2));
+    });
+
+    it('does not silently show all channels for an unavailable organization', async () => {
+      await router.push({ query: { organization: 'unavailable' } });
+      renderComponent();
+
+      await waitFor(() => expect(screen.getByText('No channels found')).toBeInTheDocument());
+      expect(screen.queryAllByTestId('channel-card')).toHaveLength(0);
+      expect(
+        await screen.findByText('Unavailable organization', {
+          selector: '.ui-select-display-value',
+        }),
+      ).toBeInTheDocument();
+    });
+  });
+
   it('shows the visually hidden title and all channel cards in correct semantic structure', async () => {
     renderComponent();
     const title = screen.getByRole('heading', { name: /my channels/i });
@@ -151,6 +267,17 @@ describe('StudioMyChannels', () => {
     await userEvent.click(newChannelButton);
     await waitFor(() => {
       expect(router.currentRoute.path).toBe('/new');
+    });
+  });
+
+  it('navigates to the new organization route from the filter actions', async () => {
+    renderComponent();
+    await screen.findAllByTestId('channel-card');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Create' }));
+
+    await waitFor(() => {
+      expect(router.currentRoute.path).toBe('/organizations/new');
     });
   });
 

@@ -16,6 +16,19 @@
           :text="$tr('newChannel')"
           @click="newChannel"
         />
+        <div class="organization-actions">
+          <KSelect
+            v-model="organizationFilter"
+            class="organization-filter"
+            :label="filterByOrganization$()"
+            :options="organizationOptions"
+          />
+          <KButton
+            primary
+            :text="$tr('createOrganization')"
+            @click="newOrganization"
+          />
+        </div>
       </div>
     </template>
 
@@ -77,6 +90,7 @@
 
   import { mapActions, mapGetters } from 'vuex';
   import { useChannelList } from '../../../composables/useChannelList';
+  import { useChannelOrganizationFilter } from '../../../composables/useChannelOrganizationFilter';
   import { RouteNames, InvitationShareModes } from '../../../constants';
   import StudioChannelsPage from '../StudioChannelsPage';
   import StudioChannelCard from '../StudioChannelCard';
@@ -102,9 +116,15 @@
         orderFields: ['desc'],
       });
 
+      const { organizationFilter, organizationOptions, filteredChannels, filterByOrganization$ } =
+        useChannelOrganizationFilter(channels);
+
       return {
         loading,
-        editableChannels: channels,
+        editableChannels: filteredChannels,
+        organizationFilter,
+        organizationOptions,
+        filterByOrganization$,
       };
     },
     data() {
@@ -137,6 +157,9 @@
           name: RouteNames.NEW_CHANNEL,
           query: { last: this.$route.name },
         });
+      },
+      newOrganization() {
+        this.$router.push({ name: RouteNames.NEW_ORGANIZATION });
       },
       onCardClick(channel) {
         redirectBrowser(window.Urls.channel(channel.id));
@@ -177,6 +200,7 @@
     },
     $trs: {
       newChannel: 'New channel',
+      createOrganization: 'Create',
       title: 'My channels',
       moreOptions: 'More options',
       editChannel: 'Edit channel details',
@@ -194,9 +218,36 @@
 
   .button-container {
     display: flex;
-    justify-content: end;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
     width: 100%;
     margin-top: 20px;
+  }
+
+  .organization-actions {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-inline-start: auto;
+  }
+
+  .organization-filter {
+    width: 280px;
+    max-width: calc(100vw - 160px);
+  }
+
+  @media (max-width: 600px) {
+    .organization-actions {
+      width: 100%;
+    }
+
+    .organization-filter {
+      flex: 1 1 auto;
+      width: auto;
+      min-width: 0;
+    }
   }
 
 </style>
