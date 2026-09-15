@@ -15,7 +15,7 @@
  */
 
 import { generateRandomSlug } from '../utils/generateRandomSlug';
-import { stripTags } from '../utils/stripTags';
+import { hasRichTextContent } from '../utils/richText';
 
 /** The catalog this editor writes hints into. */
 export const HINT_CATALOG_ID = 'kolibri-hints';
@@ -59,9 +59,6 @@ export function parseHints(doc) {
   });
 }
 
-/** Markup that is content in its own right, with no text to find. */
-const EMBEDDED_MEDIA = /<(img|math|svg)\b/i;
-
 /**
  * Whether a hint holds anything worth writing.
  *
@@ -69,15 +66,9 @@ const EMBEDDED_MEDIA = /<(img|math|svg)\b/i;
  * yet stays in the editor without reaching the item — the same log-and-skip rule the
  * legacy conversion applies to a hint with no text.
  *
- * A hint can say something without saying it in words: an image, or a formula from the
- * editor's own formula button, is the whole hint. Reading only the text would drop those
- * on the next save, and show them as the empty-hint placeholder in the meantime.
- *
  * @param {{ content: string }} hint
  * @returns {boolean}
  */
 export function hintHasContent(hint) {
-  const content = hint.content || '';
-  const text = stripTags(content).replace(/&nbsp;/g, ' ');
-  return text.trim().length > 0 || EMBEDDED_MEDIA.test(content);
+  return hasRichTextContent(hint.content);
 }

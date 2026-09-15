@@ -49,6 +49,14 @@ describe('validateOrderingInteraction()', () => {
         errorCodes(validateOrderingInteraction(makeState({ prompt: '<p>Arrange these.</p>' }))),
       ).not.toContain(ValidationError.PROMPT_REQUIRED);
     });
+
+    it('does not return error when the prompt asks its question in a picture', () => {
+      expect(
+        errorCodes(
+          validateOrderingInteraction(makeState({ prompt: '<p><img src="abc123.png"/></p>' })),
+        ),
+      ).not.toContain(ValidationError.PROMPT_REQUIRED);
+    });
   });
 
   describe('TOO_FEW_CHOICES', () => {
@@ -74,6 +82,29 @@ describe('validateOrderingInteraction()', () => {
   });
 
   describe('EMPTY_CHOICE_CONTENT', () => {
+    it('accepts an item that is nothing but an image', () => {
+      const state = makeState({
+        items: [
+          makeItem({ id: 'a', content: '<p><img src="abc123.png"/></p>' }),
+          makeItem({ id: 'b', content: '<p><img src="def456.png"/></p>' }),
+        ],
+      });
+      expect(validateOrderingInteraction(state)).toEqual([]);
+    });
+
+    it('still flags two items that are the same image', () => {
+      const state = makeState({
+        items: [
+          makeItem({ id: 'a', content: '<p><img src="abc123.png"/></p>' }),
+          makeItem({ id: 'b', content: '<p><img src="abc123.png"/></p>' }),
+        ],
+      });
+      const errors = validateOrderingInteraction(state).filter(
+        e => e.code === ValidationError.DUPLICATE_CHOICE_CONTENT,
+      );
+      expect(errors).toHaveLength(2);
+    });
+
     it('returns error for each item with empty content', () => {
       const state = makeState({
         items: [makeItem({ id: 'a', content: '' }), makeItem({ id: 'b', content: '  ' })],

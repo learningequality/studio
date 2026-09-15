@@ -45,22 +45,18 @@ describe('parseHints', () => {
 });
 
 describe('hintHasContent', () => {
-  it.each([
-    ['<p>text</p>', true],
-    ['plain text', true],
-    ['', false],
-    ['   ', false],
-    ['<p></p>', false],
-    ['<p>&nbsp;</p>', false],
-    // A hint can be entirely an image or a formula — from a converted Perseus hint, or
-    // from the editor's own image and formula buttons. Reading only the text would drop it.
-    ['<p><img src="abc123.png"/></p>', true],
-    ['<p><img src="abc123.png" alt=""/></p>', true],
-    ['<p><math xmlns="http://www.w3.org/1998/Math/MathML"><mi>x</mi></math></p>', true],
-    ['<p><svg viewBox="0 0 1 1"></svg></p>', true],
-    ['<p>see <img src="abc123.png"/></p>', true],
-  ])('%s -> %s', (content, expected) => {
-    expect(hintHasContent({ content })).toBe(expected);
+  it('reads the content off the hint', () => {
+    expect(hintHasContent({ content: '<p>Try halving it first</p>' })).toBe(true);
+  });
+
+  it('is false for a hint the author has not written yet', () => {
+    expect(hintHasContent({ content: '<p></p>' })).toBe(false);
+  });
+
+  // A hint can be entirely an image or a formula, which hasRichTextContent covers in
+  // full — see utils/__tests__/richText.spec.js.
+  it('is true for a hint that is nothing but an image', () => {
+    expect(hintHasContent({ content: '<p><img src="abc123.png"/></p>' })).toBe(true);
   });
 });
 

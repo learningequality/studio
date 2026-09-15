@@ -85,6 +85,11 @@
                   :aria-label="isNumeric ? answerValuePlaceholder$() : answerTextPlaceholder$()"
                   :placeholder="isNumeric ? answerValuePlaceholder$() : answerTextPlaceholder$()"
                   class="answer-native-input"
+                  :class="
+                    $computedClass({
+                      ':focus': { ...$coreOutline, 'outline-offset': '-2px' },
+                    })
+                  "
                   dir="auto"
                   :maxlength="state.expectedLength"
                   :disabled="mode !== 'edit'"
@@ -453,11 +458,6 @@
     transition:
       background-color 0.3s,
       border-color 0.3s;
-
-    &:not(.has-error):hover,
-    &:not(.has-error):focus-within {
-      border-color: v-bind('$themeTokens.primaryDark');
-    }
 
     &.has-error {
       border-color: v-bind('$themeTokens.error');

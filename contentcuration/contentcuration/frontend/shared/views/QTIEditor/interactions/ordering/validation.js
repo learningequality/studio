@@ -1,5 +1,5 @@
 import { ValidationError } from '../../constants';
-import { stripTags } from '../../utils/stripTags';
+import { hasRichTextContent, richTextComparisonKey } from '../../utils/richText';
 
 /**
  * Validate OrderingState → ValidationError[].
@@ -11,7 +11,7 @@ export function validateOrderingInteraction(state) {
   const errors = [];
   const { prompt, items } = state;
 
-  if (!stripTags(prompt).trim()) {
+  if (!hasRichTextContent(prompt)) {
     errors.push({ code: ValidationError.PROMPT_REQUIRED });
   }
 
@@ -23,14 +23,17 @@ export function validateOrderingInteraction(state) {
   const duplicateIds = new Set();
 
   for (const item of items) {
-    const textContent = stripTags(item.content).trim();
-    if (!textContent) {
+    if (!hasRichTextContent(item.content)) {
       errors.push({ code: ValidationError.EMPTY_CHOICE_CONTENT, id: item.id });
-    } else if (firstSeenId.has(textContent)) {
-      duplicateIds.add(firstSeenId.get(textContent));
+      continue;
+    }
+
+    const key = richTextComparisonKey(item.content);
+    if (firstSeenId.has(key)) {
+      duplicateIds.add(firstSeenId.get(key));
       duplicateIds.add(item.id);
     } else {
-      firstSeenId.set(textContent, item.id);
+      firstSeenId.set(key, item.id);
     }
   }
 

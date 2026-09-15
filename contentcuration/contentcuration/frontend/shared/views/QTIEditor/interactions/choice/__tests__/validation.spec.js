@@ -64,6 +64,17 @@ describe('validate()', () => {
         errorCodes(validate(makeState({ prompt: '<p>Hello</p>' }), QuestionType.SINGLE_SELECT)),
       ).not.toContain(ValidationError.PROMPT_REQUIRED);
     });
+
+    it('does not return error when the prompt asks its question in a picture', () => {
+      expect(
+        errorCodes(
+          validate(
+            makeState({ prompt: '<p><img src="abc123.png"/></p>' }),
+            QuestionType.SINGLE_SELECT,
+          ),
+        ),
+      ).not.toContain(ValidationError.PROMPT_REQUIRED);
+    });
   });
 
   describe('DUPLICATE_CHOICE_CONTENT', () => {
@@ -105,6 +116,29 @@ describe('validate()', () => {
   });
 
   describe('EMPTY_CHOICE_CONTENT', () => {
+    it('accepts a choice that is nothing but an image', () => {
+      const state = makeState({
+        choices: [
+          makeAnswer({ id: 'a', content: '<p><img src="abc123.png"/></p>', correct: true }),
+          makeAnswer({ id: 'b', content: '<p><img src="def456.png"/></p>', correct: false }),
+        ],
+      });
+      expect(validate(state, QuestionType.SINGLE_SELECT)).toEqual([]);
+    });
+
+    it('still flags two choices that are the same image', () => {
+      const state = makeState({
+        choices: [
+          makeAnswer({ id: 'a', content: '<p><img src="abc123.png"/></p>', correct: true }),
+          makeAnswer({ id: 'b', content: '<p><img src="abc123.png"/></p>', correct: false }),
+        ],
+      });
+      const errors = validate(state, QuestionType.SINGLE_SELECT);
+      expect(errors.filter(e => e.code === ValidationError.DUPLICATE_CHOICE_CONTENT)).toHaveLength(
+        2,
+      );
+    });
+
     it('returns an error for each choice with empty content', () => {
       const state = makeState({
         choices: [
