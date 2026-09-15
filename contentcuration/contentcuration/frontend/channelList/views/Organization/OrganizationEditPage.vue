@@ -6,7 +6,13 @@
   >
     <template #header>
       <span class="notranslate">
-        {{ isNew ? organizationStrings.newOrganizationTitle$() : organization ? organization.name : '' }}
+        {{
+          isNew
+            ? organizationStrings.newOrganizationTitle$()
+            : organization
+              ? organization.name
+              : ''
+        }}
       </span>
     </template>
 

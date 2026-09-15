@@ -52,7 +52,9 @@
         appearance="raised-button"
         primary
         class="save-button"
-        :text="isNew ? organizationStrings.createOrganization$() : organizationStrings.saveChanges$()"
+        :text="
+          isNew ? organizationStrings.createOrganization$() : organizationStrings.saveChanges$()
+        "
         :disabled="saving"
         @click="submit"
       />

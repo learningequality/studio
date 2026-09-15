@@ -31,7 +31,8 @@ export const organizationStrings = createTranslator('OrganizationStrings', {
   },
   moreOptions: {
     message: 'More options for {name}',
-    context: 'Accessible label for the options button on an organization card, naming the organization',
+    context:
+      'Accessible label for the options button on an organization card, naming the organization',
   },
   editOrganization: {
     message: 'Edit organization',
@@ -55,7 +56,8 @@ export const organizationStrings = createTranslator('OrganizationStrings', {
   },
   adminAccessRequiredForEdits: {
     message: 'Only organization admins can edit these details.',
-    context: 'Notice shown to non-admin members viewing an organization\'s details in read-only mode',
+    context:
+      "Notice shown to non-admin members viewing an organization's details in read-only mode",
   },
   saveChanges: {
     message: 'Save changes',
@@ -123,7 +125,8 @@ export const organizationStrings = createTranslator('OrganizationStrings', {
   },
   decliningInvitationMessage: {
     message: 'Are you sure you want to decline this invitation?',
-    context: 'Body text for the confirmation dialog shown when declining an organization invitation',
+    context:
+      'Body text for the confirmation dialog shown when declining an organization invitation',
   },
   notAdmin: {
     message: 'Only organization admins can manage sharing settings.',
@@ -135,15 +138,15 @@ export const organizationStrings = createTranslator('OrganizationStrings', {
   },
   name: {
     message: 'Name',
-    context: 'Column header for a member\'s name in the organization members table',
+    context: "Column header for a member's name in the organization members table",
   },
   email: {
     message: 'Email',
-    context: 'Column header for a member\'s email in the organization members table',
+    context: "Column header for a member's email in the organization members table",
   },
   role: {
     message: 'Role',
-    context: 'Column header for a member\'s role in the organization members table',
+    context: "Column header for a member's role in the organization members table",
   },
   options: {
     message: 'Options',
@@ -151,7 +154,8 @@ export const organizationStrings = createTranslator('OrganizationStrings', {
   },
   optionsFor: {
     message: 'Options for {email}',
-    context: 'Accessible label for a row\'s options button in the organization members table, naming the member\'s email',
+    context:
+      "Accessible label for a row's options button in the organization members table, naming the member's email",
   },
   resendInvitation: {
     message: 'Resend invitation',
@@ -163,15 +167,15 @@ export const organizationStrings = createTranslator('OrganizationStrings', {
   },
   makeViewer: {
     message: 'Make viewer',
-    context: 'Label for the menu option that changes a member\'s role to viewer',
+    context: "Label for the menu option that changes a member's role to viewer",
   },
   makeEditor: {
     message: 'Make editor',
-    context: 'Label for the menu option that changes a member\'s role to editor',
+    context: "Label for the menu option that changes a member's role to editor",
   },
   makeAdmin: {
     message: 'Make admin',
-    context: 'Label for the menu option that changes a member\'s role to admin',
+    context: "Label for the menu option that changes a member's role to admin",
   },
   closeRole: {
     message: 'Remove from organization',
@@ -191,7 +195,8 @@ export const organizationStrings = createTranslator('OrganizationStrings', {
   },
   genericMembershipError: {
     message: 'Unable to update this member',
-    context: 'Fallback error message shown when a membership action fails without a specific server message',
+    context:
+      'Fallback error message shown when a membership action fails without a specific server message',
   },
   closeRoleTitle: {
     message: 'Remove from organization',
@@ -199,7 +204,8 @@ export const organizationStrings = createTranslator('OrganizationStrings', {
   },
   closeRoleText: {
     message: 'Are you sure you want to remove {email} from this organization?',
-    context: 'Body text for the confirmation dialog shown when removing a member from the organization',
+    context:
+      'Body text for the confirmation dialog shown when removing a member from the organization',
   },
   closeRoleConfirm: {
     message: 'Remove',
@@ -207,11 +213,13 @@ export const organizationStrings = createTranslator('OrganizationStrings', {
   },
   revokeInvitationTitle: {
     message: 'Revoke invitation',
-    context: 'Title for the confirmation dialog shown when revoking a pending organization invitation',
+    context:
+      'Title for the confirmation dialog shown when revoking a pending organization invitation',
   },
   revokeInvitationText: {
     message: 'Are you sure you want to revoke the invitation for {email}?',
-    context: 'Body text for the confirmation dialog shown when revoking a pending organization invitation',
+    context:
+      'Body text for the confirmation dialog shown when revoking a pending organization invitation',
   },
   revokeInvitationConfirm: {
     message: 'Revoke',
@@ -227,7 +235,7 @@ export const organizationStrings = createTranslator('OrganizationStrings', {
   },
   emailRequired: {
     message: 'Email is required',
-    context: 'Validation message shown when the invite form\'s email field is left blank',
+    context: "Validation message shown when the invite form's email field is left blank",
   },
   roleLabel: {
     message: 'Role type',
@@ -251,7 +259,8 @@ export const organizationStrings = createTranslator('OrganizationStrings', {
   },
   newOrganization: {
     message: 'New organization',
-    context: 'Label for the button on the My Organizations page that starts creating a new organization',
+    context:
+      'Label for the button on the My Organizations page that starts creating a new organization',
   },
   noOrganizationsFound: {
     message: 'You are not a member of any organizations yet.',
@@ -259,10 +268,11 @@ export const organizationStrings = createTranslator('OrganizationStrings', {
   },
   invitations: {
     message: 'You have {count, plural,\n =1 {# invitation}\n other {# invitations}}',
-    context: 'Header for the banner listing the user\'s pending organization invitations',
+    context: "Header for the banner listing the user's pending organization invitations",
   },
   invitationActionError: {
     message: 'Unable to complete this action',
-    context: 'Fallback error message shown when accepting or declining an organization invitation fails',
+    context:
+      'Fallback error message shown when accepting or declining an organization invitation fails',
   },
 });

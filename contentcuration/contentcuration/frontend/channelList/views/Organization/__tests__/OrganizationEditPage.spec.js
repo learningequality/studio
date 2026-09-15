@@ -55,7 +55,9 @@ const createRouter = initialPath => {
 
 describe('OrganizationEditPage', () => {
   beforeEach(() => {
-    jest.spyOn(Organization, 'fetchModel').mockResolvedValue({ id: 'org-1', name: 'Acme', description: '' });
+    jest
+      .spyOn(Organization, 'fetchModel')
+      .mockResolvedValue({ id: 'org-1', name: 'Acme', description: '' });
   });
 
   afterEach(() => {
@@ -105,7 +107,9 @@ describe('OrganizationEditPage', () => {
   });
 
   it("navigates to the new organization's edit page after creating it, with no Sharing tab while creating", async () => {
-    jest.spyOn(Organization, 'create').mockResolvedValue({ id: 'org-2', name: 'New Org', description: '' });
+    jest
+      .spyOn(Organization, 'create')
+      .mockResolvedValue({ id: 'org-2', name: 'New Org', description: '' });
     const router = createRouter('/organization/new');
     render(OrganizationEditPage, {
       localVue,
@@ -114,7 +118,9 @@ describe('OrganizationEditPage', () => {
       props: {},
     });
 
-    expect(screen.queryByRole('tab', { name: organizationStrings.sharingTab$() })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('tab', { name: organizationStrings.sharingTab$() }),
+    ).not.toBeInTheDocument();
 
     const user = userEvent.setup();
     await user.type(screen.getByRole('textbox', { name: 'Organization name' }), 'New Org');

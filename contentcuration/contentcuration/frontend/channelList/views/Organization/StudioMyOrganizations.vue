@@ -77,9 +77,9 @@
   import { useOrganizationList } from '../../composables/useOrganizationList';
   import { useOrganizationInvitations } from '../../composables/useOrganizationInvitations';
   import { getApiErrorMessage } from '../../utils';
-  import { organizationStrings } from 'shared/strings/organizationStrings';
   import OrganizationCard from './OrganizationCard.vue';
   import OrganizationInvitation from './OrganizationInvitation.vue';
+  import { organizationStrings } from 'shared/strings/organizationStrings';
   import StudioRaisedBox from 'shared/views/StudioRaisedBox';
   import useSnackbar from 'shared/composables/useSnackbar';
 

@@ -106,8 +106,6 @@ describe('StudioMyOrganizations', () => {
 
     expect((await screen.findAllByText('Org One')).length).toBeGreaterThan(0);
     expect(fetchCollection).toHaveBeenCalledTimes(2);
-    expect(
-      screen.queryByText(organizationStrings.noOrganizationsFound$()),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(organizationStrings.noOrganizationsFound$())).not.toBeInTheDocument();
   });
 });

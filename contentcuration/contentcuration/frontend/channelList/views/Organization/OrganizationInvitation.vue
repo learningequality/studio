@@ -19,7 +19,9 @@
         </div>
         <div class="invitation__main--right__btn-two">
           <KIconButton
-            :tooltip="organizationStrings.declineTooltip$({ organization: invitation.organization_name })"
+            :tooltip="
+              organizationStrings.declineTooltip$({ organization: invitation.organization_name })
+            "
             :primary="true"
             icon="close"
             :color="$themePalette.red.v_500"
