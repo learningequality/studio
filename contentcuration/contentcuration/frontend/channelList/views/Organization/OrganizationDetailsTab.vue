@@ -17,19 +17,19 @@
         />
       </span>
 
-      <h2>{{ $tr('organizationDetails') }}</h2>
+      <h2>{{ organizationStrings.organizationDetails$() }}</h2>
 
       <p
         v-if="!isAdmin"
         class="view-only-notice"
       >
-        {{ $tr('viewOnlyNotice') }}
+        {{ organizationStrings.adminAccessRequiredForEdits$() }}
       </p>
 
       <KTextbox
         v-model="name"
         data-test="name-input"
-        :label="$tr('nameLabel')"
+        :label="organizationStrings.nameLabel$()"
         :maxlength="200"
         :disabled="!isAdmin"
         :invalid="Boolean(nameError)"
@@ -42,18 +42,9 @@
         v-model="description"
         data-test="description-input"
         textArea
-        :label="$tr('descriptionLabel')"
+        :label="organizationStrings.descriptionLabel$()"
         :disabled="!isAdmin"
         style="margin-top: 16px"
-      />
-
-      <KCheckbox
-        :checked="isPublic"
-        :label="$tr('publicLabel')"
-        :description="$tr('publicDescription')"
-        :disabled="!isAdmin"
-        style="margin-top: 16px"
-        @change="value => (isPublic = value)"
       />
 
       <KButton
@@ -61,7 +52,7 @@
         appearance="raised-button"
         primary
         class="save-button"
-        :text="isNew ? $tr('createOrganization') : $tr('saveChanges')"
+        :text="isNew ? organizationStrings.createOrganization$() : organizationStrings.saveChanges$()"
         :disabled="saving"
         @click="submit"
       />
@@ -74,13 +65,14 @@
 <script>
 
   import { getApiErrorMessage } from '../../utils';
+  import { organizationStrings } from 'shared/strings/organizationStrings';
   import useSnackbar from 'shared/composables/useSnackbar';
 
   export default {
     name: 'OrganizationDetailsTab',
     setup() {
       const { createSnackbar } = useSnackbar();
-      return { createSnackbar };
+      return { createSnackbar, organizationStrings };
     },
     props: {
       organization: {
@@ -108,7 +100,6 @@
       return {
         name: '',
         description: '',
-        isPublic: false,
         nameError: '',
         saving: false,
       };
@@ -120,7 +111,6 @@
           if (organization) {
             this.name = organization.name || '';
             this.description = organization.description || '';
-            this.isPublic = Boolean(organization.public);
           }
         },
       },
@@ -128,44 +118,29 @@
     methods: {
       submit() {
         if (!this.name.trim()) {
-          this.nameError = this.$tr('nameRequired');
+          this.nameError = organizationStrings.nameRequired$();
           return;
         }
         this.saving = true;
         this.save({
           name: this.name.trim(),
           description: this.description.trim(),
-          public: this.isPublic,
         })
           .then(organization => {
             if (this.isNew) {
-              this.createSnackbar(this.$tr('organizationCreated'));
+              this.createSnackbar(organizationStrings.organizationCreated$());
               this.$emit('created', organization.id);
             } else {
-              this.createSnackbar(this.$tr('changesSaved'));
+              this.createSnackbar(organizationStrings.changesSaved$());
             }
           })
           .catch(error => {
-            this.createSnackbar(getApiErrorMessage(error, this.$tr('saveError')));
+            this.createSnackbar(getApiErrorMessage(error, organizationStrings.saveError$()));
           })
           .finally(() => {
             this.saving = false;
           });
       },
-    },
-    $trs: {
-      organizationDetails: 'Organization details',
-      nameLabel: 'Organization name',
-      descriptionLabel: 'Organization description',
-      nameRequired: 'Organization name is required',
-      viewOnlyNotice: 'Only organization admins can edit these details.',
-      publicLabel: 'Public',
-      publicDescription: 'If this organization can be seen by users outside the organization',
-      saveChanges: 'Save changes',
-      createOrganization: 'Create organization',
-      changesSaved: 'Changes saved',
-      organizationCreated: 'Organization created',
-      saveError: 'Unable to save these changes',
     },
   };
 

@@ -6,7 +6,7 @@
   >
     <template #header>
       <span class="notranslate">
-        {{ isNew ? $tr('newOrganizationTitle') : organization ? organization.name : '' }}
+        {{ isNew ? organizationStrings.newOrganizationTitle$() : organization ? organization.name : '' }}
       </span>
     </template>
 
@@ -18,7 +18,7 @@
         tabsId="organization-edit-tabs"
         :tabs="tabs"
         :activeTabId="tab"
-        :ariaLabel="$tr('tabsLabel')"
+        :ariaLabel="organizationStrings.tabsLabel$()"
       />
     </nav>
 
@@ -62,6 +62,7 @@
   import { useOrganization } from '../../composables/useOrganization';
   import OrganizationDetailsTab from './OrganizationDetailsTab.vue';
   import OrganizationSharingTab from './OrganizationSharingTab.vue';
+  import { organizationStrings } from 'shared/strings/organizationStrings';
   import { routerMixin } from 'shared/mixins';
   import StudioImmersiveModal from 'shared/views/StudioImmersiveModal';
 
@@ -82,6 +83,7 @@
         update,
         create,
         tabIds: OrganizationEditTabs,
+        organizationStrings,
       };
     },
     props: {
@@ -113,12 +115,12 @@
         return [
           {
             id: OrganizationEditTabs.DETAILS,
-            label: this.$tr('detailsTab'),
+            label: organizationStrings.detailsTab$(),
             to: this.tabLink(OrganizationEditTabs.DETAILS),
           },
           {
             id: OrganizationEditTabs.SHARING,
-            label: this.$tr('sharingTab'),
+            label: organizationStrings.sharingTab$(),
             to: this.tabLink(OrganizationEditTabs.SHARING),
           },
         ];
@@ -170,22 +172,16 @@
       },
       updateTitle() {
         if (this.isNew) {
-          this.updateTabTitle(this.$tr('newOrganizationTitle'));
+          this.updateTabTitle(organizationStrings.newOrganizationTitle$());
           return;
         }
         const orgName = this.organization ? this.organization.name : '';
         const tabLabel =
           this.tab === OrganizationEditTabs.SHARING
-            ? this.$tr('sharingTab')
-            : this.$tr('detailsTab');
+            ? organizationStrings.sharingTab$()
+            : organizationStrings.detailsTab$();
         this.updateTabTitle(orgName ? `${tabLabel} - ${orgName}` : tabLabel);
       },
-    },
-    $trs: {
-      tabsLabel: 'Organization edit tabs',
-      detailsTab: 'Details',
-      sharingTab: 'Sharing',
-      newOrganizationTitle: 'New organization',
     },
   };
 

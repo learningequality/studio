@@ -6,7 +6,7 @@
       class="invitations"
     >
       <template #header>
-        {{ $tr('invitations', { count: invitations.length }) }}
+        {{ organizationStrings.invitations$({ count: invitations.length }) }}
       </template>
       <template #main>
         <ul>
@@ -26,12 +26,12 @@
         class="header"
         :class="{ 'larger-window': !windowIsSmall }"
       >
-        <h1>{{ $tr('title') }}</h1>
+        <h1>{{ organizationStrings.title$() }}</h1>
         <KButton
           appearance="raised-button"
           primary
           class="new-organization-button"
-          :text="$tr('newOrganization')"
+          :text="organizationStrings.newOrganization$()"
           @click="newOrganization"
         />
       </div>
@@ -47,7 +47,7 @@
         v-else-if="!organizations.length"
         class="no-organizations"
       >
-        {{ $tr('noOrganizationsFound') }}
+        {{ organizationStrings.noOrganizationsFound$() }}
       </p>
 
       <KCardGrid
@@ -77,6 +77,7 @@
   import { useOrganizationList } from '../../composables/useOrganizationList';
   import { useOrganizationInvitations } from '../../composables/useOrganizationInvitations';
   import { getApiErrorMessage } from '../../utils';
+  import { organizationStrings } from 'shared/strings/organizationStrings';
   import OrganizationCard from './OrganizationCard.vue';
   import OrganizationInvitation from './OrganizationInvitation.vue';
   import StudioRaisedBox from 'shared/views/StudioRaisedBox';
@@ -110,6 +111,7 @@
         accept,
         decline,
         createSnackbar,
+        organizationStrings,
       };
     },
     methods: {
@@ -127,21 +129,18 @@
         this.accept(invitationId)
           .then(() => this.refreshOrganizations())
           .catch(error => {
-            this.createSnackbar(getApiErrorMessage(error, this.$tr('invitationActionError')));
+            this.createSnackbar(
+              getApiErrorMessage(error, organizationStrings.invitationActionError$()),
+            );
           });
       },
       declineInvitation(invitationId) {
         this.decline(invitationId).catch(error => {
-          this.createSnackbar(getApiErrorMessage(error, this.$tr('invitationActionError')));
+          this.createSnackbar(
+            getApiErrorMessage(error, organizationStrings.invitationActionError$()),
+          );
         });
       },
-    },
-    $trs: {
-      title: 'Organizations',
-      newOrganization: 'New organization',
-      noOrganizationsFound: 'You are not a member of any organizations yet.',
-      invitations: 'You have {count, plural,\n =1 {# invitation}\n other {# invitations}}',
-      invitationActionError: 'Unable to complete this action',
     },
   };
 

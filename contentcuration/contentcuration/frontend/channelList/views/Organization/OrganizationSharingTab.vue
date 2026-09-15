@@ -23,7 +23,7 @@
       v-else
       class="not-admin"
     >
-      {{ $tr('notAdmin') }}
+      {{ organizationStrings.notAdmin$() }}
     </p>
   </div>
 
@@ -36,6 +36,7 @@
   import { useOrganizationInvitations } from '../../composables/useOrganizationInvitations';
   import InviteOrganizationUserForm from './InviteOrganizationUserForm.vue';
   import OrganizationUsersTable from './OrganizationUsersTable.vue';
+  import { organizationStrings } from 'shared/strings/organizationStrings';
   import { Invitation } from 'shared/data/resources';
 
   export default {
@@ -83,6 +84,7 @@
         revokeInvitation,
         sendOrganizationInvitation,
         resendInvitation,
+        organizationStrings,
       };
     },
     props: {
@@ -94,9 +96,6 @@
         type: Boolean,
         default: false,
       },
-    },
-    $trs: {
-      notAdmin: 'Only organization admins can manage sharing settings.',
     },
   };
 

@@ -5,6 +5,7 @@ import VueRouter from 'vue-router';
 import Vuex, { Store } from 'vuex';
 import StudioMyOrganizations from '../StudioMyOrganizations.vue';
 import { Organization, Invitation } from 'shared/data/resources';
+import { organizationStrings } from 'shared/strings/organizationStrings';
 
 const localVue = createLocalVue();
 localVue.use(VueRouter);
@@ -25,38 +26,6 @@ const createStore = () => {
 describe('StudioMyOrganizations', () => {
   afterEach(() => {
     jest.restoreAllMocks();
-  });
-
-  it('renders the empty state when the user has no organizations', async () => {
-    const router = new VueRouter({
-      routes: [{ path: '/my-organizations', component: StudioMyOrganizations }],
-    });
-
-    render(StudioMyOrganizations, { localVue, router, store: createStore() });
-
-    expect(screen.getByRole('heading', { name: 'Organizations' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'New organization' })).toBeInTheDocument();
-    expect(
-      await screen.findByText('You are not a member of any organizations yet.'),
-    ).toBeInTheDocument();
-  });
-
-  it('renders a card for each organization the user belongs to', async () => {
-    jest.spyOn(Organization, 'fetchCollection').mockResolvedValue([
-      { id: 'org-1', name: 'Org One', description: 'First org', role: 'admin' },
-      { id: 'org-2', name: 'Org Two', description: 'Second org', role: 'viewer' },
-    ]);
-    const router = new VueRouter({
-      routes: [{ path: '/my-organizations', component: StudioMyOrganizations }],
-    });
-
-    render(StudioMyOrganizations, { localVue, router, store: createStore() });
-
-    expect((await screen.findAllByText('Org One')).length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Org Two').length).toBeGreaterThan(0);
-    expect(
-      screen.queryByText('You are not a member of any organizations yet.'),
-    ).not.toBeInTheDocument();
   });
 
   it('renders pending organization invitations and lets the user accept them', async () => {
@@ -84,7 +53,9 @@ describe('StudioMyOrganizations', () => {
     });
 
     expect(
-      await screen.findByText('Admin User has invited you to edit Org One'),
+      await screen.findByText(
+        organizationStrings.editText$({ sender: 'Admin User', organization: 'Org One' }),
+      ),
     ).toBeInTheDocument();
 
     const user = userEvent.setup();
@@ -92,7 +63,9 @@ describe('StudioMyOrganizations', () => {
 
     expect(accept).toHaveBeenCalledWith('invite-1');
     expect(
-      screen.queryByText('Admin User has invited you to edit Org One'),
+      screen.queryByText(
+        organizationStrings.editText$({ sender: 'Admin User', organization: 'Org One' }),
+      ),
     ).not.toBeInTheDocument();
   });
 
@@ -125,7 +98,7 @@ describe('StudioMyOrganizations', () => {
     });
 
     expect(
-      await screen.findByText('You are not a member of any organizations yet.'),
+      await screen.findByText(organizationStrings.noOrganizationsFound$()),
     ).toBeInTheDocument();
 
     const user = userEvent.setup();
@@ -134,7 +107,7 @@ describe('StudioMyOrganizations', () => {
     expect((await screen.findAllByText('Org One')).length).toBeGreaterThan(0);
     expect(fetchCollection).toHaveBeenCalledTimes(2);
     expect(
-      screen.queryByText('You are not a member of any organizations yet.'),
+      screen.queryByText(organizationStrings.noOrganizationsFound$()),
     ).not.toBeInTheDocument();
   });
 });

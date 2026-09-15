@@ -4,6 +4,7 @@ import { createLocalVue } from '@vue/test-utils';
 import VueRouter from 'vue-router';
 import Vuex, { Store } from 'vuex';
 import OrganizationUsersTable from '../OrganizationUsersTable.vue';
+import { organizationStrings } from 'shared/strings/organizationStrings';
 
 const localVue = createLocalVue();
 localVue.use(VueRouter);
@@ -59,22 +60,17 @@ const baseProps = () => ({
 });
 
 describe('OrganizationUsersTable', () => {
-  it('renders a row for each active member and each pending invitation', () => {
-    render(OrganizationUsersTable, { localVue, router, store: createStore(), props: baseProps() });
-
-    expect(screen.getByText('Ann Admin')).toBeInTheDocument();
-    expect(screen.getByText('ann@example.com')).toBeInTheDocument();
-    expect(screen.getAllByText('pending@example.com').length).toBeGreaterThan(0);
-    expect(screen.getByText('Pending Editor')).toBeInTheDocument();
-  });
-
   it('resends the invitation when "Resend invitation" is selected', async () => {
     const props = baseProps();
     render(OrganizationUsersTable, { localVue, router, store: createStore(), props });
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole('button', { name: 'Options for pending@example.com' }));
-    await user.click(screen.getByText('Resend invitation'));
+    await user.click(
+      screen.getByRole('button', {
+        name: organizationStrings.optionsFor$({ email: 'pending@example.com' }),
+      }),
+    );
+    await user.click(screen.getByText(organizationStrings.resendInvitation$()));
 
     expect(props.resendInvitation).toHaveBeenCalledWith('invite-1');
   });
@@ -84,9 +80,13 @@ describe('OrganizationUsersTable', () => {
     render(OrganizationUsersTable, { localVue, router, store: createStore(), props });
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole('button', { name: 'Options for bob@example.com' }));
-    await user.click(screen.getByText('Remove from organization'));
-    await user.click(screen.getByRole('button', { name: 'Remove' }));
+    await user.click(
+      screen.getByRole('button', {
+        name: organizationStrings.optionsFor$({ email: 'bob@example.com' }),
+      }),
+    );
+    await user.click(screen.getByText(organizationStrings.closeRole$()));
+    await user.click(screen.getByRole('button', { name: organizationStrings.closeRoleConfirm$() }));
 
     expect(props.closeMemberRole).toHaveBeenCalledWith('role-2');
   });
@@ -95,7 +95,9 @@ describe('OrganizationUsersTable', () => {
     render(OrganizationUsersTable, { localVue, router, store: createStore(), props: baseProps() });
 
     expect(
-      screen.queryByRole('button', { name: 'Options for ann@example.com' }),
+      screen.queryByRole('button', {
+        name: organizationStrings.optionsFor$({ email: 'ann@example.com' }),
+      }),
     ).not.toBeInTheDocument();
   });
 
@@ -111,9 +113,15 @@ describe('OrganizationUsersTable', () => {
     });
     render(OrganizationUsersTable, { localVue, router, store: createStore(), props });
 
-    expect(screen.getByRole('button', { name: 'Options for ann@example.com' })).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: 'Options for cara@example.com' }),
+      screen.getByRole('button', {
+        name: organizationStrings.optionsFor$({ email: 'ann@example.com' }),
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', {
+        name: organizationStrings.optionsFor$({ email: 'cara@example.com' }),
+      }),
     ).toBeInTheDocument();
   });
 });

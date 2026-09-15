@@ -4,6 +4,7 @@ import { createLocalVue } from '@vue/test-utils';
 import VueRouter from 'vue-router';
 import Vuex, { Store } from 'vuex';
 import InviteOrganizationUserForm from '../InviteOrganizationUserForm.vue';
+import { organizationStrings } from 'shared/strings/organizationStrings';
 
 const localVue = createLocalVue();
 localVue.use(VueRouter);
@@ -34,10 +35,10 @@ describe('InviteOrganizationUserForm', () => {
     });
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole('button', { name: 'Send invitation' }));
+    await user.click(screen.getByRole('button', { name: organizationStrings.sendInvitation$() }));
 
     expect(sendInvitation).not.toHaveBeenCalled();
-    expect(await screen.findByText('Email is required')).toBeInTheDocument();
+    expect(await screen.findByText(organizationStrings.emailRequired$())).toBeInTheDocument();
   });
 
   it('sends the invitation with the entered email and selected role', async () => {
@@ -50,8 +51,11 @@ describe('InviteOrganizationUserForm', () => {
     });
 
     const user = userEvent.setup();
-    await user.type(screen.getByRole('textbox', { name: 'Email' }), 'new@example.com');
-    await user.click(screen.getByRole('button', { name: 'Send invitation' }));
+    await user.type(
+      screen.getByRole('textbox', { name: organizationStrings.emailLabel$() }),
+      'new@example.com',
+    );
+    await user.click(screen.getByRole('button', { name: organizationStrings.sendInvitation$() }));
 
     expect(sendInvitation).toHaveBeenCalledWith({
       organizationId: 'org-1',

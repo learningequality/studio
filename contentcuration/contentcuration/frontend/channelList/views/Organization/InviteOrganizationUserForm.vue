@@ -1,14 +1,14 @@
 <template>
 
   <div class="invite-organization-user-form">
-    <h2>{{ $tr('inviteUsers') }}</h2>
+    <h2>{{ organizationStrings.inviteUsers$() }}</h2>
 
     <div class="fields">
       <KTextbox
         v-model="email"
         type="email"
         data-test="email-input"
-        :label="$tr('emailLabel')"
+        :label="organizationStrings.emailLabel$()"
         :invalid="Boolean(emailError)"
         :invalidText="emailError"
         :showInvalidText="Boolean(emailError)"
@@ -17,7 +17,7 @@
       <KSelect
         v-model="role"
         data-test="role-select"
-        :label="$tr('roleLabel')"
+        :label="organizationStrings.roleLabel$()"
         :options="roleOptions"
       />
     </div>
@@ -25,7 +25,7 @@
     <KButton
       appearance="raised-button"
       primary
-      :text="$tr('sendInvitation')"
+      :text="organizationStrings.sendInvitation$()"
       :disabled="sending"
       @click="submit"
     />
@@ -38,13 +38,14 @@
 
   import { InvitationShareModes } from '../../constants';
   import { getApiErrorMessage } from '../../utils';
+  import { organizationStrings } from 'shared/strings/organizationStrings';
   import useSnackbar from 'shared/composables/useSnackbar';
 
   export default {
     name: 'InviteOrganizationUserForm',
     setup() {
       const { createSnackbar } = useSnackbar();
-      return { createSnackbar };
+      return { createSnackbar, organizationStrings };
     },
     props: {
       organizationId: {
@@ -67,9 +68,9 @@
     computed: {
       roleOptions() {
         return [
-          { label: this.$tr('viewerRole'), value: InvitationShareModes.VIEW_ONLY },
-          { label: this.$tr('editorRole'), value: InvitationShareModes.EDIT },
-          { label: this.$tr('adminRole'), value: InvitationShareModes.ADMIN },
+          { label: organizationStrings.viewerRole$(), value: InvitationShareModes.VIEW_ONLY },
+          { label: organizationStrings.editorRole$(), value: InvitationShareModes.EDIT },
+          { label: organizationStrings.adminRole$(), value: InvitationShareModes.ADMIN },
         ];
       },
     },
@@ -80,7 +81,7 @@
       submit() {
         const email = this.email.trim();
         if (!email) {
-          this.emailError = this.$tr('emailRequired');
+          this.emailError = organizationStrings.emailRequired$();
           return;
         }
         this.sending = true;
@@ -92,27 +93,15 @@
           .then(() => {
             this.email = '';
             this.role = this.roleOptions[0];
-            this.createSnackbar(this.$tr('invitationSent'));
+            this.createSnackbar(organizationStrings.invitationSent$());
           })
           .catch(error => {
-            this.createSnackbar(getApiErrorMessage(error, this.$tr('invitationError')));
+            this.createSnackbar(getApiErrorMessage(error, organizationStrings.invitationError$()));
           })
           .finally(() => {
             this.sending = false;
           });
       },
-    },
-    $trs: {
-      inviteUsers: 'Invite users',
-      emailLabel: 'Email',
-      emailRequired: 'Email is required',
-      roleLabel: 'Role type',
-      viewerRole: 'Viewer',
-      editorRole: 'Editor',
-      adminRole: 'Admin',
-      sendInvitation: 'Send invitation',
-      invitationSent: 'Invitation sent',
-      invitationError: 'Unable to send this invitation',
     },
   };
 

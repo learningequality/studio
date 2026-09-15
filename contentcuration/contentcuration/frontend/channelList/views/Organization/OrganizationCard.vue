@@ -36,7 +36,7 @@
         <KIconButton
           icon="optionsVertical"
           appearance="flat-button"
-          :ariaLabel="$tr('moreOptions', { name: organization.name })"
+          :ariaLabel="organizationStrings.moreOptions$({ name: organization.name })"
           data-test="organization-options"
           @click.stop
         >
@@ -57,6 +57,7 @@
 <script>
 
   import { OrganizationRoles, OrganizationEditTabs, RouteNames } from '../../constants';
+  import { organizationStrings } from 'shared/strings/organizationStrings';
 
   export default {
     name: 'OrganizationCard',
@@ -70,17 +71,20 @@
         required: true,
       },
     },
+    data() {
+      return { organizationStrings };
+    },
     computed: {
       roleLabel() {
         const labels = {
-          [OrganizationRoles.ADMIN]: this.$tr('adminRole'),
-          [OrganizationRoles.EDITOR]: this.$tr('editorRole'),
-          [OrganizationRoles.VIEWER]: this.$tr('viewerRole'),
+          [OrganizationRoles.ADMIN]: organizationStrings.adminRole$(),
+          [OrganizationRoles.EDITOR]: organizationStrings.editorRole$(),
+          [OrganizationRoles.VIEWER]: organizationStrings.viewerRole$(),
         };
         return labels[this.organization.role] || '';
       },
       dropdownOptions() {
-        return [{ label: this.$tr('editOrganization'), icon: 'edit', value: 'edit' }];
+        return [{ label: organizationStrings.editOrganization$(), icon: 'edit', value: 'edit' }];
       },
     },
     methods: {
@@ -93,13 +97,6 @@
           });
         }
       },
-    },
-    $trs: {
-      adminRole: 'Admin',
-      editorRole: 'Editor',
-      viewerRole: 'Viewer',
-      moreOptions: 'More options for {name}',
-      editOrganization: 'Edit organization',
     },
   };
 

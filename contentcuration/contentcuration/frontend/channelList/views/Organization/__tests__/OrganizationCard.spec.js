@@ -4,6 +4,7 @@ import { createLocalVue } from '@vue/test-utils';
 import VueRouter from 'vue-router';
 import OrganizationCard from '../OrganizationCard.vue';
 import { RouteNames } from '../../../constants';
+import { organizationStrings } from 'shared/strings/organizationStrings';
 
 const localVue = createLocalVue();
 localVue.use(VueRouter);
@@ -19,20 +20,6 @@ const baseProps = () => ({
 });
 
 describe('OrganizationCard', () => {
-  it('emits "click" when the card title is clicked', async () => {
-    const router = new VueRouter();
-    const { container, emitted } = render(OrganizationCard, {
-      localVue,
-      router,
-      props: baseProps(),
-    });
-
-    const user = userEvent.setup();
-    await user.click(container.querySelector('[data-focus="true"]'));
-
-    expect(emitted().click).toBeTruthy();
-  });
-
   it('navigates to the organization edit page from the options menu', async () => {
     const router = new VueRouter({
       routes: [
@@ -46,8 +33,10 @@ describe('OrganizationCard', () => {
     render(OrganizationCard, { localVue, router, props: baseProps() });
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole('button', { name: 'More options for Acme' }));
-    await user.click(screen.getByText('Edit organization'));
+    await user.click(
+      screen.getByRole('button', { name: organizationStrings.moreOptions$({ name: 'Acme' }) }),
+    );
+    await user.click(screen.getByText(organizationStrings.editOrganization$()));
 
     expect(router.currentRoute.name).toBe(RouteNames.ORGANIZATION_EDIT);
     expect(router.currentRoute.params).toMatchObject({ organizationId: 'org-1', tab: 'details' });

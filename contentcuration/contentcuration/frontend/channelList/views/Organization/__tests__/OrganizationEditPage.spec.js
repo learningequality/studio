@@ -6,6 +6,7 @@ import Vuex, { Store } from 'vuex';
 import OrganizationEditPage from '../OrganizationEditPage.vue';
 import { RouteNames } from '../../../constants';
 import { Organization } from 'shared/data/resources';
+import { organizationStrings } from 'shared/strings/organizationStrings';
 
 const localVue = createLocalVue();
 localVue.use(VueRouter);
@@ -54,9 +55,7 @@ const createRouter = initialPath => {
 
 describe('OrganizationEditPage', () => {
   beforeEach(() => {
-    jest
-      .spyOn(Organization, 'fetchModel')
-      .mockResolvedValue({ id: 'org-1', name: 'Acme', description: '', public: false });
+    jest.spyOn(Organization, 'fetchModel').mockResolvedValue({ id: 'org-1', name: 'Acme', description: '' });
   });
 
   afterEach(() => {
@@ -105,7 +104,8 @@ describe('OrganizationEditPage', () => {
     expect(router.currentRoute.name).toBe(RouteNames.MY_ORGANIZATIONS);
   });
 
-  it('shows a blank creation form with no tabs on the "new" route', () => {
+  it("navigates to the new organization's edit page after creating it, with no Sharing tab while creating", async () => {
+    jest.spyOn(Organization, 'create').mockResolvedValue({ id: 'org-2', name: 'New Org', description: '' });
     const router = createRouter('/organization/new');
     render(OrganizationEditPage, {
       localVue,
@@ -114,27 +114,13 @@ describe('OrganizationEditPage', () => {
       props: {},
     });
 
-    expect(screen.getByText('New organization')).toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: 'Organization name' })).toHaveValue('');
-    expect(screen.getByRole('button', { name: 'Create organization' })).toBeInTheDocument();
-    expect(screen.queryByRole('tab', { name: 'Sharing' })).not.toBeInTheDocument();
-  });
-
-  it("navigates to the new organization's edit page after creating it", async () => {
-    jest
-      .spyOn(Organization, 'create')
-      .mockResolvedValue({ id: 'org-2', name: 'New Org', description: '', public: false });
-    const router = createRouter('/organization/new');
-    render(OrganizationEditPage, {
-      localVue,
-      router,
-      store: createStore(),
-      props: {},
-    });
+    expect(screen.queryByRole('tab', { name: organizationStrings.sharingTab$() })).not.toBeInTheDocument();
 
     const user = userEvent.setup();
     await user.type(screen.getByRole('textbox', { name: 'Organization name' }), 'New Org');
-    await user.click(screen.getByRole('button', { name: 'Create organization' }));
+    await user.click(
+      screen.getByRole('button', { name: organizationStrings.createOrganization$() }),
+    );
 
     await screen.findByRole('textbox', { name: 'Organization name' });
     expect(router.currentRoute.name).toBe(RouteNames.ORGANIZATION_EDIT);

@@ -8,7 +8,7 @@
       <div class="invitation__main--right">
         <div class="invitation__main--right__btn-one">
           <KIconButton
-            :tooltip="$tr('accept', { organization: invitation.organization_name })"
+            :tooltip="organizationStrings.accept$({ organization: invitation.organization_name })"
             :primary="true"
             icon="check"
             :color="$themePalette.green.v_600"
@@ -19,7 +19,7 @@
         </div>
         <div class="invitation__main--right__btn-two">
           <KIconButton
-            :tooltip="$tr('declineTooltip', { organization: invitation.organization_name })"
+            :tooltip="organizationStrings.declineTooltip$({ organization: invitation.organization_name })"
             :primary="true"
             icon="close"
             :color="$themePalette.red.v_500"
@@ -34,15 +34,15 @@
     <KModal
       v-if="dialog"
       size="small"
-      :submitText="$tr('decline')"
-      :cancelText="$tr('cancel')"
-      :title="$tr('decliningInvitation')"
+      :submitText="organizationStrings.decline$()"
+      :cancelText="organizationStrings.cancel$()"
+      :title="organizationStrings.decliningInvitation$()"
       data-testid="organization-invitation-modal"
       @submit="declineAndClose"
       @cancel="dialog = false"
     >
       <template>
-        {{ $tr('decliningInvitationMessage') }}
+        {{ organizationStrings.decliningInvitationMessage$() }}
       </template>
     </KModal>
   </li>
@@ -53,6 +53,7 @@
 <script>
 
   import { InvitationShareModes } from '../../constants';
+  import { organizationStrings } from 'shared/strings/organizationStrings';
 
   export default {
     name: 'OrganizationInvitation',
@@ -65,6 +66,7 @@
     data() {
       return {
         dialog: false,
+        organizationStrings,
       };
     },
     computed: {
@@ -74,11 +76,11 @@
           sender: this.invitation.sender_name,
         };
         if (this.invitation.share_mode === InvitationShareModes.ADMIN) {
-          return this.$tr('ownText', messageParams);
+          return organizationStrings.ownText$(messageParams);
         } else if (this.invitation.share_mode === InvitationShareModes.EDIT) {
-          return this.$tr('editText', messageParams);
+          return organizationStrings.editText$(messageParams);
         }
-        return this.$tr('viewText', messageParams);
+        return organizationStrings.viewText$(messageParams);
       },
     },
     methods: {
@@ -86,17 +88,6 @@
         this.$emit('decline');
         this.dialog = false;
       },
-    },
-    $trs: {
-      editText: '{sender} has invited you to edit {organization}',
-      viewText: '{sender} has invited you to view {organization}',
-      ownText: '{sender} has invited you to own {organization}',
-      accept: 'Accept invitation to {organization}',
-      declineTooltip: 'Decline invitation to {organization}',
-      decline: 'Decline',
-      cancel: 'Cancel',
-      decliningInvitation: 'Declining invitation',
-      decliningInvitationMessage: 'Are you sure you want to decline this invitation?',
     },
   };
 
