@@ -38,10 +38,14 @@
 <!-- Scoped styles for the wrapper component itself -->
 <style scoped>
 
+  /* A formula or a long URL is one unbreakable inline node, so it can be wider than
+     the editor and paint over whatever bounds it. Toolbars and popovers are siblings
+     of this element, so clipping here leaves them whole. */
   .editor-content {
     padding: 16px;
     padding-inline: 24px;
     margin-inline: 0 auto;
+    overflow: hidden;
   }
 
   .tiptap-editor {

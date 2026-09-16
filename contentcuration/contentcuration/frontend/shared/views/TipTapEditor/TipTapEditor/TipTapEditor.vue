@@ -368,6 +368,10 @@
 
   .editor-container {
     position: relative;
+
+    /* Laid out as a flex item, this would otherwise refuse to shrink below the
+       widest thing typed into it, pushing the row it sits in past its bounds. */
+    min-width: 0;
     min-height: 200px;
     margin: auto;
     font-family:
