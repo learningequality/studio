@@ -2065,12 +2065,29 @@ export const Invitation = new Resource({
     const changes = { declined: true };
     return this._handleInvitation(id, window.Urls.invitationDecline(id), changes);
   },
+  revoke(id) {
+    const changes = { revoked: true };
+    return this._handleInvitation(id, window.Urls.invitationRevoke(id), changes);
+  },
   _handleInvitation(id, url, changes) {
     return client.post(url).then(() => {
       return this.transaction({ mode: 'rw' }, () => {
         return this.table.update(id, changes);
       });
     });
+  },
+  sendOrganizationInvitation({ organizationId, email, shareMode }) {
+    return client
+      .post(window.Urls.send_organization_invitation_email(), {
+        user_email: email,
+        organization_id: organizationId,
+        share_mode: shareMode,
+      })
+      .then(response => {
+        return this.transaction({ mode: 'rw' }, () => {
+          return this.table.put(response.data);
+        }).then(() => response.data);
+      });
   },
   getChannelId(obj) {
     return obj.channel;
@@ -2423,6 +2440,39 @@ export const CommunityLibrarySubmission = new APIResource({
     return client.post(this.collectionUrl(), params).then(response => {
       return response.data;
     });
+  },
+});
+
+export const Organization = new APIResource({
+  urlName: 'organization',
+  fetchCollection(params) {
+    return client.get(this.collectionUrl(), { params }).then(response => {
+      return (response.data && response.data.results) || [];
+    });
+  },
+  fetchModel(id) {
+    return client.get(this.modelUrl(id)).then(response => response.data);
+  },
+  create(data) {
+    return client.post(this.collectionUrl(), data).then(response => response.data);
+  },
+  update(id, data) {
+    return client.patch(this.modelUrl(id), data).then(response => response.data);
+  },
+});
+
+export const OrganizationRole = new APIResource({
+  urlName: 'organization_members',
+  fetchCollection(params) {
+    return client.get(this.collectionUrl(), { params }).then(response => {
+      return (response.data && response.data.results) || [];
+    });
+  },
+  update(id, data) {
+    return client.patch(this.modelUrl(id), data).then(response => response.data);
+  },
+  delete(id) {
+    return client.delete(this.modelUrl(id));
   },
 });
 

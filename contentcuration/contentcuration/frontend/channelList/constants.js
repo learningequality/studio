@@ -5,6 +5,7 @@ import { ChannelListTypes } from 'shared/constants';
 export const InvitationShareModes = {
   EDIT: 'edit',
   VIEW_ONLY: 'view',
+  ADMIN: 'admin',
 };
 
 export const ChannelInvitationMapping = {
@@ -14,6 +15,9 @@ export const ChannelInvitationMapping = {
 
 export const RouteNames = {
   CHANNELS_EDITABLE: 'CHANNELS_EDITABLE',
+  MY_ORGANIZATIONS: 'MY_ORGANIZATIONS',
+  ORGANIZATION_EDIT: 'ORGANIZATION_EDIT',
+  NEW_ORGANIZATION: 'NEW_ORGANIZATION',
   CHANNELS_STARRED: 'CHANNELS_STARRED',
   CHANNELS_VIEW_ONLY: 'CHANNELS_VIEW_ONLY',
   CHANNELS_PUBLIC: 'CHANNELS_PUBLIC',
@@ -41,3 +45,19 @@ export const ListTypeToRouteMapping = {
 export const RouteToListTypeMapping = invert(ListTypeToRouteMapping);
 
 export const CHANNEL_PAGE_SIZE = 25;
+
+export const OrganizationEditTabs = {
+  DETAILS: 'details',
+  SHARING: 'sharing',
+};
+
+export const OrganizationRoles = {
+  ADMIN: 'admin',
+  EDITOR: 'editor',
+  VIEWER: 'viewer',
+};
+
+export const OrganizationRoleStatuses = {
+  ACTIVE: 'active',
+  INACTIVE: 'inactive',
+};
