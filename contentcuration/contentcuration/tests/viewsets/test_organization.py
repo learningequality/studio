@@ -16,10 +16,14 @@ from contentcuration.constants.organization_roles import (
 )
 from contentcuration.constants.organization_roles import ORGANIZATION_VIEWER
 from contentcuration.models import Channel
+from contentcuration.models import ContentNode
 from contentcuration.models import Organization
 from contentcuration.models import OrganizationRole
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
+from contentcuration.tests.viewsets.base import generate_update_event
+from contentcuration.tests.viewsets.base import SyncTestMixin
+from contentcuration.viewsets.sync.constants import CONTENTNODE
 
 
 class OrganizationAPITestCase(StudioAPITestCase):
@@ -602,7 +606,7 @@ class OrganizationMembershipDeleteTestCase(OrganizationAPITestCase):
         )
 
 
-class OrganizationChannelPermissionTestCase(OrganizationAPITestCase):
+class OrganizationChannelPermissionTestCase(SyncTestMixin, OrganizationAPITestCase):
     def setUp(self):
         super().setUp()
         self.channel = Channel.objects.create(
@@ -701,6 +705,71 @@ class OrganizationChannelPermissionTestCase(OrganizationAPITestCase):
     def test_pending_role_grants_no_channel_access(self):
         self.assertFalse(self._viewable_channel(self.pending_user).exists())
         self.assertFalse(self._editable_channel(self.pending_user).exists())
+
+    def test_org_role_channel_content_permissions(self):
+        node = self.channel.main_tree
+        self.assertTrue(
+            ContentNode.filter_edit_queryset(
+                ContentNode.objects.filter(pk=node.pk), self.editor_user
+            ).exists()
+        )
+        self.assertFalse(
+            ContentNode.filter_edit_queryset(
+                ContentNode.objects.filter(pk=node.pk), self.viewer_user
+            ).exists()
+        )
+        self.assertTrue(
+            ContentNode.filter_view_queryset(
+                ContentNode.objects.filter(pk=node.pk), self.viewer_user
+            ).exists()
+        )
+
+    def test_channel_detail_reports_edit_view_by_org_role(self):
+        detail_url = reverse("channel-detail", kwargs={"pk": self.channel.id})
+
+        self.authenticate_as(self.editor_user)
+        response = self.client.get(detail_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["edit"])
+
+        self.authenticate_as(self.viewer_user)
+        response = self.client.get(detail_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data["edit"])
+        self.assertTrue(response.data["view"])
+
+    def test_org_editor_channel_list_filters(self):
+        self.authenticate_as(self.editor_user)
+
+        response = self.client.get(reverse("channel-list"), {"view": True})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotIn(
+            str(self.channel.id), [result["id"] for result in response.data]
+        )
+
+        response = self.client.get(reverse("channel-list"), {"edit": True})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn(str(self.channel.id), [result["id"] for result in response.data])
+
+    def test_org_editor_can_edit_channel_content_via_sync(self):
+        self.authenticate_as(self.editor_user)
+        node = self.channel.main_tree
+        new_title = "Updated by org editor"
+
+        response = self.sync_changes(
+            [
+                generate_update_event(
+                    node.id,
+                    CONTENTNODE,
+                    {"title": new_title},
+                    channel_id=self.channel.id,
+                )
+            ]
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        node.refresh_from_db()
+        self.assertEqual(node.title, new_title)
 
 
 class OrganizationPaginationTestCase(OrganizationAPITestCase):

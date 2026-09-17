@@ -29,6 +29,7 @@ from django.db import IntegrityError
 from django.db import models
 from django.db.models import Count
 from django.db.models import Exists
+from django.db.models import ExpressionWrapper
 from django.db.models import F
 from django.db.models import Index
 from django.db.models import JSONField
@@ -80,6 +81,7 @@ from contentcuration.constants import feedback
 from contentcuration.constants import user_history
 from contentcuration.constants.contentnode import kind_activity_map
 from contentcuration.constants.organization_roles import ORGANIZATION_ADMIN
+from contentcuration.constants.organization_roles import ORGANIZATION_CHANNEL_EDIT_ROLES
 from contentcuration.constants.organization_roles import ORGANIZATION_EDITOR
 from contentcuration.constants.organization_roles import organization_role_choices
 from contentcuration.constants.organization_roles import ORGANIZATION_ROLE_STATUS_ACTIVE
@@ -1006,29 +1008,63 @@ class PermissionCTE(With):
     tree_id_fields = [
         "channel__{}__tree_id".format(tree_name) for tree_name in CHANNEL_TREES
     ]
+    channel_tree_id_fields = [
+        "{}__tree_id".format(tree_name) for tree_name in CHANNEL_TREES
+    ]
 
-    def __init__(self, model, user_id, **kwargs):
-        queryset = model.objects.filter(user_id=user_id).annotate(
-            tree_id=Unnest(
-                ArrayRemove(Array(*self.tree_id_fields), None),
-                output_field=models.IntegerField(),
+    @classmethod
+    def _personal_channels(cls, model, user_id):
+        return (
+            model.objects.filter(user_id=user_id)
+            .annotate(
+                tree_id=Unnest(
+                    ArrayRemove(Array(*cls.tree_id_fields), None),
+                    output_field=models.IntegerField(),
+                )
             )
+            .values("user_id", "channel_id", "tree_id")
         )
-        super(PermissionCTE, self).__init__(
-            queryset=queryset.values("user_id", "channel_id", "tree_id"), **kwargs
+
+    @classmethod
+    def _organization_channels(cls, user_id, roles):
+        # Organizations grant channel permissions to their members, on top of
+        # whatever personal editor/viewer access a user already has.
+        return (
+            Channel.objects.filter(
+                organization__user_roles__user_id=user_id,
+                organization__user_roles__role__in=roles,
+                organization__user_roles__status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+            )
+            .annotate(
+                user_id=Value(user_id, output_field=models.IntegerField()),
+                channel_id=F("id"),
+                tree_id=Unnest(
+                    ArrayRemove(Array(*cls.channel_tree_id_fields), None),
+                    output_field=models.IntegerField(),
+                ),
+            )
+            .values("user_id", "channel_id", "tree_id")
         )
 
     @classmethod
     def editable_channels(cls, user_id):
-        return PermissionCTE(
-            User.editable_channels.through, user_id, name="editable_channels_cte"
+        queryset = cls._personal_channels(
+            User.editable_channels.through, user_id
+        ).union(
+            cls._organization_channels(user_id, ORGANIZATION_CHANNEL_EDIT_ROLES),
+            all=True,
         )
+        return PermissionCTE(queryset, name="editable_channels_cte")
 
     @classmethod
     def view_only_channels(cls, user_id):
-        return PermissionCTE(
-            User.view_only_channels.through, user_id, name="view_only_channels_cte"
+        queryset = cls._personal_channels(
+            User.view_only_channels.through, user_id
+        ).union(
+            cls._organization_channels(user_id, (ORGANIZATION_VIEWER,)),
+            all=True,
         )
+        return PermissionCTE(queryset, name="view_only_channels_cte")
 
     def exists(self, *filters):
         return Exists(self.queryset().filter(*filters).values("user_id"))
@@ -1219,6 +1255,17 @@ class Channel(models.Model):
         return cls.filter_edit_queryset(cls.objects.all(), user).get(id=channel_id)
 
     @classmethod
+    def _organization_role_exists(cls, user_id, roles):
+        return Exists(
+            OrganizationRole.objects.filter(
+                user_id=user_id,
+                organization_id=OuterRef("organization_id"),
+                status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+                role__in=roles,
+            )
+        )
+
+    @classmethod
     def filter_edit_queryset(cls, queryset, user):
         user_id = not user.is_anonymous and user.id
 
@@ -1231,16 +1278,8 @@ class Channel(models.Model):
                 user_id=user_id, channel_id=OuterRef("id")
             )
         )
-        organization_edit = Exists(
-            OrganizationRole.objects.filter(
-                user_id=user_id,
-                organization_id=OuterRef("organization_id"),
-                status=ORGANIZATION_ROLE_STATUS_ACTIVE,
-                role__in=(
-                    ORGANIZATION_ADMIN,
-                    ORGANIZATION_EDITOR,
-                ),
-            )
+        organization_edit = cls._organization_role_exists(
+            user_id, ORGANIZATION_CHANNEL_EDIT_ROLES
         )
         queryset = queryset.annotate(
             edit=edit,
@@ -1263,13 +1302,10 @@ class Channel(models.Model):
                 user_id=user_id, channel_id=OuterRef("id")
             )
         )
-        organization_delete = Exists(
-            OrganizationRole.objects.filter(
-                user_id=user_id,
-                organization_id=OuterRef("organization_id"),
-                status=ORGANIZATION_ROLE_STATUS_ACTIVE,
-                role=ORGANIZATION_ADMIN,
-            )
+        # Deleting a channel is restricted to organization admins, unlike
+        # editing it, which organization editors may also do.
+        organization_delete = cls._organization_role_exists(
+            user_id, (ORGANIZATION_ADMIN,)
         )
         queryset = queryset.annotate(
             edit=edit,
@@ -1289,40 +1325,26 @@ class Channel(models.Model):
         if user_id:
             filters = dict(user_id=user_id, channel_id=OuterRef("id"))
 
-            edit = Exists(
-                User.editable_channels.through.objects.filter(**filters).values(
-                    "user_id"
-                )
+            # Fold organization grants into edit/view (viewer-only for view; an org editor/admin is admitted via the edit check instead).
+            edit = ExpressionWrapper(
+                Q(Exists(User.editable_channels.through.objects.filter(**filters)))
+                | Q(
+                    cls._organization_role_exists(
+                        user_id, ORGANIZATION_CHANNEL_EDIT_ROLES
+                    )
+                ),
+                output_field=models.BooleanField(),
             )
-
-            view = Exists(
-                User.view_only_channels.through.objects.filter(**filters).values(
-                    "user_id"
-                )
-            )
-
-            organization_view = Exists(
-                OrganizationRole.objects.filter(
-                    user_id=user_id,
-                    organization_id=OuterRef("organization_id"),
-                    status=ORGANIZATION_ROLE_STATUS_ACTIVE,
-                    role__in=(
-                        ORGANIZATION_ADMIN,
-                        ORGANIZATION_EDITOR,
-                        ORGANIZATION_VIEWER,
-                    ),
-                )
+            view = ExpressionWrapper(
+                Q(Exists(User.view_only_channels.through.objects.filter(**filters)))
+                | Q(cls._organization_role_exists(user_id, (ORGANIZATION_VIEWER,))),
+                output_field=models.BooleanField(),
             )
         else:
             edit = boolean_val(False)
             view = boolean_val(False)
-            organization_view = boolean_val(False)
 
-        queryset = queryset.annotate(
-            edit=edit,
-            view=view,
-            organization_view=organization_view,
-        )
+        queryset = queryset.annotate(edit=edit, view=view)
 
         if user_id and user.is_admin:
             return queryset
@@ -1338,10 +1360,7 @@ class Channel(models.Model):
             ).values_list("channel_id", flat=True)
 
             permission_filter = (
-                Q(view=True)
-                | Q(edit=True)
-                | Q(organization_view=True)
-                | Q(deleted=False, id__in=pending_channels)
+                Q(view=True) | Q(edit=True) | Q(deleted=False, id__in=pending_channels)
             )
 
         return queryset.filter(permission_filter | Q(deleted=False, public=True))
