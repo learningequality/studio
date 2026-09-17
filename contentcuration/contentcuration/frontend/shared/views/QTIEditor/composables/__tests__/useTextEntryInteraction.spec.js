@@ -42,7 +42,7 @@ describe('useTextEntryInteraction', () => {
       expect(errors.value).toEqual([]);
     });
 
-    it('reports errors for an invalid parsed state without waiting', () => {
+    it('reports errors for an invalid parsed state', () => {
       const { errors } = setupNumeric([]);
 
       expect(errors.value.map(e => e.code)).toContain(ValidationError.NO_CORRECT_ANSWER);

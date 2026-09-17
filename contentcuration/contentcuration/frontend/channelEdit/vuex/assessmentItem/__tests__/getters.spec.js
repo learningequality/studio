@@ -144,7 +144,7 @@ describe('assessmentItem getters', () => {
       ).toBe(2);
     });
 
-    it('counts an item the author has only just added like any other', () => {
+    it('does not delay validation of new items', () => {
       state.assessmentItemsMap['content-node-id-3'] = {
         'assessment-id-7': item('assessment-id-7', 'content-node-id-3', ''),
       };
