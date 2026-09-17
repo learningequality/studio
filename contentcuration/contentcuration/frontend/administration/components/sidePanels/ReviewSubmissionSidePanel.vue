@@ -241,6 +241,7 @@
 
   import { computed, ref, watch, getCurrentInstance } from 'vue';
   import { themeTokens, themePalette } from 'kolibri-design-system/lib/styles/theme';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 
   import camelCase from 'lodash/camelCase';
 
@@ -271,6 +272,7 @@
       CommunityLibraryStatusChip,
     },
     setup(props, { emit }) {
+      const { createSnackbar } = useKSnackbar();
       const isModalVisible = ref(true);
       const tokensTheme = themeTokens();
       const paletteTheme = themePalette();
@@ -471,10 +473,6 @@
         }
       });
 
-      function showSnackbar(params) {
-        return store.dispatch('showSnackbar', params);
-      }
-
       function updateStatusInStore(newStatus) {
         return store.commit('channel/UPDATE_CHANNEL', {
           id: props.channel.id,
@@ -507,20 +505,30 @@
                 ? 'Submission approved'
                 : 'Submission flagged for review';
 
-            showSnackbar({ text: snackbarText });
+            createSnackbar({
+              text: snackbarText,
+              duration: 6000,
+              announce: true,
+            });
             updateStatusInStore(statusChoice.value);
             emit('change');
             emit('close');
           } catch (error) {
-            showSnackbar({ text: 'Changing channel status failed' });
+            createSnackbar({
+              text: 'Changing channel status failed',
+              duration: 6000,
+              announce: true,
+            });
           } finally {
             currentlySubmitting.value = false;
           }
         }, submitDelayMs);
 
-        showSnackbar({
+        createSnackbar({
           text: 'Channel status is changing',
           duration: null,
+          autoDismiss: false,
+          announce: true,
           actionText: 'Cancel',
           actionCallback: () => {
             clearTimeout(timer);
@@ -531,8 +539,10 @@
             // on the component, and show the side panel in the same state if the user cancels
             isModalVisible.value = true;
             currentlySubmitting.value = false;
-            showSnackbar({
+            createSnackbar({
               text: 'Action cancelled',
+              duration: 6000,
+              announce: true,
             });
           },
         });

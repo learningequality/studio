@@ -39,8 +39,14 @@
 
 <script>
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
+
   export default {
     name: 'TechnicalTextBlock',
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       text: {
         type: String,
@@ -77,12 +83,20 @@
           navigator.clipboard
             .writeText(this.formattedText)
             .then(() => {
-              this.$store.dispatch('showSnackbar', {
+              this.createSnackbar({
                 text: this.$tr('copiedToClipboardConfirmation'),
+                autoDismiss: true,
+                announce: true,
+                duration: 6000,
               });
             })
             .catch(() => {
-              this.$store.dispatch('showSnackbar', { text: this.$tr('copiedToClipboardFailure') });
+              this.createSnackbar({
+                text: this.$tr('copiedToClipboardFailure'),
+                autoDismiss: true,
+                announce: true,
+                duration: 6000,
+              });
             });
         }
       },

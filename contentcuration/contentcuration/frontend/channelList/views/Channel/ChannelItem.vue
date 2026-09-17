@@ -236,6 +236,8 @@
 
 <script>
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
+
   import { mapActions, mapGetters, mapMutations } from 'vuex';
   import { RouteNames } from '../../constants';
   import ChannelStar from './ChannelStar';
@@ -246,6 +248,10 @@
 
   export default {
     name: 'ChannelItem',
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     components: {
       ChannelStar,
       ChannelTokenModal,
@@ -364,12 +370,22 @@
           const currentUserId = this.$store.state.session.currentUser.id;
           this.removeViewer({ channelId: this.channelId, userId: currentUserId }).then(() => {
             this.deleteDialog = false;
-            this.$store.dispatch('showSnackbarSimple', this.$tr('channelRemovedSnackbar'));
+            this.createSnackbar({
+              text: this.$tr('channelRemovedSnackbar'),
+              autoDismiss: true,
+              announce: true,
+              duration: 6000,
+            });
           });
         } else {
           this.deleteChannel(this.channelId).then(() => {
             this.deleteDialog = false;
-            this.$store.dispatch('showSnackbarSimple', this.$tr('channelDeletedSnackbar'));
+            this.createSnackbar({
+              text: this.$tr('channelDeletedSnackbar'),
+              autoDismiss: true,
+              announce: true,
+              duration: 6000,
+            });
           });
         }
       },

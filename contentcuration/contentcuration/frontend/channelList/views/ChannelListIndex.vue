@@ -68,6 +68,8 @@
 
 <script>
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
+
   import { mapActions, mapGetters, mapState } from 'vuex';
   import { RouteNames, ChannelInvitationMapping, ListTypeToRouteMapping } from '../constants';
   import ChannelListAppError from './ChannelListAppError';
@@ -105,8 +107,10 @@
     },
     mixins: [constantsTranslationMixin, routerMixin],
     setup() {
+      const { createSnackbar } = useKSnackbar();
       const { communityLibraryLabel$ } = communityChannelsStrings;
       return {
+        createSnackbar,
         communityLibraryLabel$,
       };
     },
@@ -230,7 +234,12 @@
     },
     mounted() {
       if (localStorage.snackbar) {
-        this.$store.dispatch('showSnackbarSimple', localStorage.snackbar);
+        this.createSnackbar({
+          text: localStorage.snackbar,
+          autoDismiss: true,
+          announce: true,
+          duration: 6000,
+        });
         delete localStorage.snackbar;
       }
     },

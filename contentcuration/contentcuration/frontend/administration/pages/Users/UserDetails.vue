@@ -191,6 +191,8 @@
 
 <script>
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
+
   import capitalize from 'lodash/capitalize';
   import { mapActions, mapGetters } from 'vuex';
   import { RouteNames } from '../../constants';
@@ -216,6 +218,10 @@
 
   export default {
     name: 'UserDetails',
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     components: {
       FullscreenModal,
       DetailsRow,
@@ -416,10 +422,12 @@
           id: this.userId,
           feature_flags: update,
         }).then(() => {
-          this.$store.dispatch(
-            'showSnackbarSimple',
-            value ? 'Feature enabled' : 'Feature disabled',
-          );
+          this.createSnackbar({
+            text: value ? 'Feature enabled' : 'Feature disabled',
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
+          });
         });
       },
     },

@@ -164,6 +164,8 @@
 
 <script>
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
+
   import { mapActions, mapGetters } from 'vuex';
   import useKShow from 'kolibri-design-system/lib/composables/useKShow';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
@@ -177,11 +179,13 @@
       StudioCopyToken,
     },
     setup() {
+      const { createSnackbar } = useKSnackbar();
       const { show } = useKShow();
       const { windowIsSmall, windowBreakpoint } = useKResponsiveWindow();
       const { copyTokenToClipboard } = useToken();
 
       return {
+        createSnackbar,
         show,
         windowIsSmall,
         windowBreakpoint,
@@ -328,12 +332,22 @@
               this.loadChannelSetList();
               this.deleteDialog = false;
               this.collectionToDelete = null;
-              this.$store.dispatch('showSnackbarSimple', this.$tr('collectionDeleted'));
+              this.createSnackbar({
+                text: this.$tr('collectionDeleted'),
+                autoDismiss: true,
+                announce: true,
+                duration: 6000,
+              });
             })
             .catch(() => {
               this.deleteDialog = false;
               this.collectionToDelete = null;
-              this.$store.dispatch('showSnackbarSimple', this.$tr('deleteError'));
+              this.createSnackbar({
+                text: this.$tr('deleteError'),
+                autoDismiss: true,
+                announce: true,
+                duration: 6000,
+              });
             });
         }
       },

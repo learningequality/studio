@@ -74,6 +74,7 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import FileStatusText from 'shared/views/files/FileStatusText';
   import Uploader from 'shared/views/files/Uploader';
   import { constantsTranslationMixin, fileSizeMixin, fileStatusMixin } from 'shared/mixins';
@@ -81,6 +82,10 @@
 
   export default {
     name: 'FileUploadItem',
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     components: {
       Uploader,
       FileDropzone,
@@ -189,7 +194,6 @@
     },
     methods: {
       ...mapActions('file', ['downloadFile']),
-      ...mapActions(['showSnackbar']),
       completeUpload(fileUpload) {
         if (fileUpload.id === this.fileUploadId) {
           this.uploadCompleteHandler(fileUpload);
@@ -205,8 +209,11 @@
             fileName: this.formattedFileDisplay,
           });
         } catch (e) {
-          this.showSnackbar({
+          this.createSnackbar({
             text: this.$tr('downloadFailed'),
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
           });
         }
       },

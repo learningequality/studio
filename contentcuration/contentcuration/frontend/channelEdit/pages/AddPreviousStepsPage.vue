@@ -12,6 +12,8 @@
 
 <script>
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
+
   import { mapActions } from 'vuex';
   import { RouteNames, TabNames } from '../constants';
   import AddRelatedResourcesModal from '../components/AddRelatedResourcesModal';
@@ -19,6 +21,10 @@
 
   export default {
     name: 'AddPreviousStepsPage',
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     components: {
       AddRelatedResourcesModal,
     },
@@ -40,7 +46,12 @@
           previousStepId: nodeId,
         }).then(() => {
           this.onCancelClick();
-          this.$store.dispatch('showSnackbarSimple', this.$tr('addedPreviousStepSnackbar'));
+          this.createSnackbar({
+            text: this.$tr('addedPreviousStepSnackbar'),
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
+          });
         });
       },
       onCancelClick() {

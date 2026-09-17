@@ -175,6 +175,7 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import sortBy from 'lodash/sortBy';
   import NodePanel from '../NodePanel';
   import MoveModal from '../../components/move/MoveModal';
@@ -191,6 +192,10 @@
 
   export default {
     name: 'TrashModal',
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     components: {
       ContentNodeIcon,
       ResourceDrawer,
@@ -321,7 +326,12 @@
         this.deleteContentNodes(this.selected).then(() => {
           this.showConfirmationDialog = false;
           this.reset();
-          this.$store.dispatch('showSnackbar', { text });
+          this.createSnackbar({
+            text,
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
+          });
           // Reload after this to ensure that anything over the pagination fold is loaded now
           this.loadNodes();
         });

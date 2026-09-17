@@ -131,6 +131,7 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import StudioChip from 'shared/views/StudioChip';
   import ExpandableList from 'shared/views/ExpandableList';
   import { generateFormMixin } from 'shared/mixins';
@@ -142,6 +143,10 @@
 
   export default {
     name: 'EmailUsersDialog',
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     components: {
       ExpandableList,
       StudioChip,
@@ -287,10 +292,20 @@
         })
           .then(() => {
             this.close();
-            this.$store.dispatch('showSnackbarSimple', 'Email sent');
+            this.createSnackbar({
+              text: 'Email sent',
+              autoDismiss: true,
+              announce: true,
+              duration: 6000,
+            });
           })
           .catch(() => {
-            this.$store.dispatch('showSnackbarSimple', 'Email failed to send');
+            this.createSnackbar({
+              text: 'Email failed to send',
+              autoDismiss: true,
+              announce: true,
+              duration: 6000,
+            });
           });
       },
     },

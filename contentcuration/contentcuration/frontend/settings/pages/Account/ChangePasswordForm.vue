@@ -34,6 +34,7 @@
 <script>
 
   import { mapActions } from 'vuex';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import { generateFormMixin } from 'shared/mixins';
 
   const formMixin = generateFormMixin({
@@ -54,6 +55,10 @@
 
   export default {
     name: 'ChangePasswordForm',
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     mixins: [formMixin],
     props: {
       value: {
@@ -80,7 +85,6 @@
       },
     },
     methods: {
-      ...mapActions(['showSnackbar']),
       ...mapActions('settings', ['updateUserPassword']),
 
       // This is called from formMixin
@@ -89,10 +93,20 @@
         return this.updateUserPassword(this.password)
           .then(() => {
             this.dialog = false;
-            this.showSnackbar({ text: this.$tr('paswordChangeSuccess') });
+            this.createSnackbar({
+              text: this.$tr('paswordChangeSuccess'),
+              autoDismiss: true,
+              announce: true,
+              duration: 6000,
+            });
           })
           .catch(() => {
-            this.showSnackbar({ text: this.$tr('passwordChangeFailed') });
+            this.createSnackbar({
+              text: this.$tr('passwordChangeFailed'),
+              autoDismiss: true,
+              announce: true,
+              duration: 6000,
+            });
           });
       },
     },

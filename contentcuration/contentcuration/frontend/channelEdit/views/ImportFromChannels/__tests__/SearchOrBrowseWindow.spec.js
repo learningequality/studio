@@ -4,6 +4,15 @@ import VueRouter from 'vue-router';
 import SearchOrBrowseWindow from '../SearchOrBrowseWindow';
 import { RouteNames } from '../../../constants';
 
+const mockCreateSnackbar = jest.fn();
+jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
+  __esModule: true,
+  default: () => ({
+    createSnackbar: mockCreateSnackbar,
+  }),
+}));
+
+
 // Mock the jsonSchema compile function to always return true
 jest.mock('shared/utils/jsonSchema', () => ({
   compile: () => () => true,
@@ -37,7 +46,6 @@ describe('SearchOrBrowseWindow', () => {
 
   beforeEach(() => {
     actions = {
-      showSnackbar: jest.fn(),
       'clipboard/copy': jest.fn().mockResolvedValue(),
       'contentNode/loadPublicContentNode': jest.fn().mockImplementation(({ id }) =>
         Promise.resolve({
@@ -128,9 +136,7 @@ describe('SearchOrBrowseWindow', () => {
           },
         },
       },
-      actions: {
-        showSnackbar: actions.showSnackbar,
-      },
+      actions: {},
       getters: {},
     });
 

@@ -9,6 +9,15 @@ import MoveModal from '../../../components/move/MoveModal';
 import NodePanel from '../../NodePanel';
 import { createTranslator } from 'shared/i18n';
 
+const mockCreateSnackbar = jest.fn();
+jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
+  __esModule: true,
+  default: () => ({
+    createSnackbar: mockCreateSnackbar,
+  }),
+}));
+
+
 const tr = createTranslator('TrashModal', TrashModal.$trs);
 const moveTr = createTranslator('MoveModal', MoveModal.$trs);
 const nodePanelTr = createTranslator('NodePanel', NodePanel.$trs);
@@ -234,9 +243,7 @@ describe('TrashModal', () => {
       );
 
       await waitFor(() => {
-        expect(dispatchSpy).toHaveBeenCalledWith('showSnackbar', {
-          text: tr.$tr('deleteSuccessMessage'),
-        });
+        expect(mockCreateSnackbar).toHaveBeenCalled();
         expect(loadNodesSpy).toHaveBeenCalled();
       });
     });

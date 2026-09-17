@@ -141,6 +141,7 @@
 <script>
 
   import { mapGetters, mapActions } from 'vuex';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import { getCurrentInstance, onMounted, ref, computed, watch } from 'vue';
   import transform from 'lodash/transform';
   import { ChannelTypeFilter, RouteNames, rowsPerPageItems } from '../../constants';
@@ -184,6 +185,7 @@
     },
     mixins: [channelExportMixin, routerMixin],
     setup() {
+      const { createSnackbar } = useKSnackbar();
       const { proxy } = getCurrentInstance();
       const store = proxy.$store;
 
@@ -332,6 +334,7 @@
       });
 
       return {
+        createSnackbar,
         channelTypeFilter,
         channelTypeOptions,
         channelStatusFilter,
@@ -421,12 +424,22 @@
     methods: {
       ...mapActions('channelAdmin', ['getAdminChannelListDetails']),
       async downloadPDF() {
-        this.$store.dispatch('showSnackbarSimple', 'Generating PDF...');
+        this.createSnackbar({
+          text: 'Generating PDF...',
+          autoDismiss: true,
+          announce: true,
+          duration: 6000,
+        });
         const channelList = await this.getAdminChannelListDetails(this.selected);
         return this.generateChannelsPDF(channelList);
       },
       async downloadCSV() {
-        this.$store.dispatch('showSnackbarSimple', 'Generating CSV...');
+        this.createSnackbar({
+          text: 'Generating CSV...',
+          autoDismiss: true,
+          announce: true,
+          duration: 6000,
+        });
         const channelList = await this.getAdminChannelListDetails(this.selected);
         return this.generateChannelsCSV(channelList);
       },

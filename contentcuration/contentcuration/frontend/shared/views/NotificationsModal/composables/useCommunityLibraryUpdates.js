@@ -4,7 +4,7 @@ import { useFetch } from 'shared/composables/useFetch';
 import { CommunityLibrarySubmission } from 'shared/data/resources';
 import { CommunityLibraryStatus, NotificationType } from 'shared/constants';
 import { commonStrings } from 'shared/strings/commonStrings';
-import useSnackbar from 'shared/composables/useSnackbar';
+import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 
 const MAX_RESULTS_PER_PAGE = 10;
 
@@ -55,7 +55,7 @@ const statusToNotificationType = {
 export default function useCommunityLibraryUpdates({ queryParams } = {}) {
   const moreObject = ref(null);
   const isLoadingMore = ref(false);
-  const { createSnackbar } = useSnackbar();
+  const { createSnackbar } = useKSnackbar();
   /**
    * Community Library Submissions are objects that may represent two types of updates:
    * 1. Creation of a new submission (status: PENDING or SUPERSEDED)
@@ -175,7 +175,11 @@ export default function useCommunityLibraryUpdates({ queryParams } = {}) {
     } catch (error) {
       const returnedResults = wasLoadingMore ? submissionsUpdates.value : [];
       isLoadingMore.value = false;
-      createSnackbar(commonStrings.genericErrorMessage$());
+      createSnackbar({
+        text: commonStrings.genericErrorMessage$(),
+        autoDismiss: true,
+        announce: true,
+      });
       // Do not manage any error state in the useFetch composable, just return the current results
       return returnedResults;
     }

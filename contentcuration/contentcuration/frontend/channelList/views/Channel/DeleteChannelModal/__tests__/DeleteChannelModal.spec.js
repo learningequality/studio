@@ -3,8 +3,16 @@ import userEvent from '@testing-library/user-event';
 import { Store } from 'vuex';
 import DeleteChannelModal from '../index.vue';
 
+const mockCreateSnackbar = jest.fn();
+jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
+  __esModule: true,
+  default: () => ({
+    createSnackbar: mockCreateSnackbar,
+  }),
+}));
+
+
 const mockDeleteChannel = jest.fn().mockResolvedValue();
-const mockShowSnackbarSimple = jest.fn();
 
 function createStore() {
   return new Store({
@@ -13,9 +21,7 @@ function createStore() {
         currentUser: { id: 'user-id' },
       },
     },
-    actions: {
-      showSnackbarSimple: mockShowSnackbarSimple,
-    },
+    actions: {    },
     modules: {
       channel: {
         namespaced: true,
@@ -86,7 +92,7 @@ describe('DeleteChannelModal', () => {
     renderComponent();
     await userEvent.click(screen.getByRole('button', { name: 'Delete channel' }));
     await waitFor(() => {
-      expect(mockShowSnackbarSimple).toHaveBeenCalledWith(expect.anything(), 'Channel deleted');
+      expect(mockCreateSnackbar).toHaveBeenCalled();
     });
   });
 

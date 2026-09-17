@@ -38,6 +38,7 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import { RouteNames } from '../../constants';
   import MoveModal from '../move/MoveModal';
   import clipboardMixin from './mixins';
@@ -49,6 +50,10 @@
       MoveModal,
     },
     mixins: [clipboardMixin],
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     data() {
       return {
         moveModalOpen: false,
@@ -93,7 +98,6 @@
       },
     },
     methods: {
-      ...mapActions(['showSnackbar']),
       ...mapActions('clipboard', ['copyAll', 'deleteClipboardNode', 'moveClipboardNodes']),
       calculateMoveNodes() {
         const trees = this.getMoveTrees(this.nodeId, true);
@@ -121,12 +125,16 @@
         return this.deleteClipboardNode({
           id: this.nodeId,
         }).then(() => {
-          this.showSnackbar({
+          this.createSnackbar({
             text: this.$tr('removedFromClipboard'),
+            duration: 6000,
             // TODO: implement revert functionality for clipboard
             // actionText: this.$tr('undo'),
             // actionCallback: () => changeTracker.revert(),
-          }).then(() => changeTracker.cleanUp());
+            // Keep cleanup deferred, as with the previous dismissal Promise.
+            hideCallback: () => Promise.resolve().then(() => changeTracker.cleanUp()),
+            announce: true,
+          });
         });
       }),
       duplicateNode: withChangeTracker(function (changeTracker) {
@@ -135,12 +143,16 @@
         return this.copyAll({
           nodes: [this.contentNode],
         }).then(() => {
-          this.showSnackbar({
+          this.createSnackbar({
             text: this.$tr('copiedItemsToClipboard'),
+            duration: 6000,
             // TODO: implement revert functionality for clipboard
             // actionText: this.$tr('undo'),
             // actionCallback: () => changeTracker.revert(),
-          }).then(() => changeTracker.cleanUp());
+            // Keep cleanup deferred, as with the previous dismissal Promise.
+            hideCallback: () => Promise.resolve().then(() => changeTracker.cleanUp()),
+            announce: true,
+          });
         });
       }),
       track(label) {

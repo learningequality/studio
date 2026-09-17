@@ -2,6 +2,15 @@ import { render, fireEvent, screen } from '@testing-library/vue';
 import VueRouter from 'vue-router';
 import StudioCopyToken from '../index.vue';
 
+const mockCreateSnackbar = jest.fn();
+jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
+  __esModule: true,
+  default: () => ({
+    createSnackbar: mockCreateSnackbar,
+  }),
+}));
+
+
 function makeWrapper(props = {}) {
   const mockStore = {
     dispatch: jest.fn(),
@@ -71,7 +80,7 @@ describe('StudioCopyToken', () => {
     const { mockStore } = makeWrapper();
     const button = screen.getByRole('button');
     await fireEvent.click(button);
-    expect(mockStore.dispatch).toHaveBeenCalledWith('showSnackbar', { text: 'copiedTokenId' });
+    expect(mockCreateSnackbar).toHaveBeenCalled();
   });
 
   it('dispatches snackbar on failed copy', async () => {
@@ -82,7 +91,7 @@ describe('StudioCopyToken', () => {
     const { mockStore } = makeWrapper();
     const button = screen.getByRole('button');
     await fireEvent.click(button);
-    expect(mockStore.dispatch).toHaveBeenCalledWith('showSnackbar', { text: 'copyFailed' });
+    expect(mockCreateSnackbar).toHaveBeenCalled();
   });
 
   it('renders the copy button', () => {

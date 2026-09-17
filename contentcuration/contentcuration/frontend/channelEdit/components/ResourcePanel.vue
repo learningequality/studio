@@ -501,6 +501,7 @@
 
 <script>
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import orderBy from 'lodash/orderBy';
   import sortBy from 'lodash/sortBy';
   import { mapActions, mapGetters } from 'vuex';
@@ -538,6 +539,10 @@
 
   export default {
     name: 'ResourcePanel',
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     components: {
       ContentNodeLearningActivityIcon,
       LoadingText,
@@ -848,8 +853,11 @@
             if (nodes.length > 0) {
               window.open(this.importedChannelLink, '_blank');
             } else {
-              this.$store.dispatch('showSnackbar', {
+              this.createSnackbar({
                 text: this.$tr('sourceContentDoesntExist'),
+                autoDismiss: true,
+                announce: true,
+                duration: 6000,
               });
             }
           });

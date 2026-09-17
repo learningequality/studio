@@ -123,6 +123,8 @@
 
 <script>
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
+
   import { mapActions, mapGetters, mapState } from 'vuex';
   import debounce from 'lodash/debounce';
   import find from 'lodash/find';
@@ -139,6 +141,10 @@
 
   export default {
     name: 'SearchResultsList',
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     components: {
       BrowsingCard,
       Pagination,
@@ -270,7 +276,12 @@
       ),
       handleClickSaveSearch() {
         this.createSearch(this.savedSearchParams).then(() => {
-          this.$store.dispatch('showSnackbarSimple', this.$tr('searchSavedSnackbar'));
+          this.createSnackbar({
+            text: this.$tr('searchSavedSnackbar'),
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
+          });
         });
       },
       toggleSelected(node) {

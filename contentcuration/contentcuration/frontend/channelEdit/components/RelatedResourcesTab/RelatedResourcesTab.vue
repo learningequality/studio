@@ -120,6 +120,8 @@
 
 <script>
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
+
   import { mapGetters, mapActions } from 'vuex';
 
   import { RouteNames } from '../../constants';
@@ -129,6 +131,10 @@
 
   export default {
     name: 'RelatedResourcesTab',
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     components: {
       ContentNodeIcon,
       RelatedResourcesList,
@@ -173,12 +179,22 @@
       },
       onRemovePreviousStepClick(previousStepId) {
         this.removePreviousStepFromNode({ targetId: this.nodeId, previousStepId }).then(() => {
-          this.$store.dispatch('showSnackbarSimple', this.$tr('removedPreviousStepSnackbar'));
+          this.createSnackbar({
+            text: this.$tr('removedPreviousStepSnackbar'),
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
+          });
         });
       },
       onRemoveNextStepClick(nextStepId) {
         this.removeNextStepFromNode({ targetId: this.nodeId, nextStepId }).then(() => {
-          this.$store.dispatch('showSnackbarSimple', this.$tr('removedNextStepSnackbar'));
+          this.createSnackbar({
+            text: this.$tr('removedNextStepSnackbar'),
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
+          });
         });
       },
       onAddPreviousStepClick() {

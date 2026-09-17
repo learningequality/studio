@@ -261,6 +261,7 @@
 
   import { mapActions, mapGetters, mapState } from 'vuex';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import PreviewDraftChannelModal from '../../components/modals/PreviewDraftChannelModal.vue';
   import Clipboard from '../../components/Clipboard';
   import SyncResourcesModal from '../sync/SyncResourcesModal';
@@ -329,8 +330,10 @@
     mixins: [titleMixin],
     setup() {
       const { windowIsSmall } = useKResponsiveWindow();
+      const { createSnackbar } = useKSnackbar();
       const { getDraftTokenAction$ } = communityChannelsStrings;
       return {
+        createSnackbar,
         windowIsSmall,
         getDraftTokenAction$,
       };
@@ -568,7 +571,11 @@
         handler(id) {
           if (!id) {
             this.loadChannel().catch(() => {
-              this.$store.dispatch('showSnackbarSimple', 'Failed to load channel');
+              this.createSnackbar({
+                text: 'Failed to load channel',
+                duration: 6000,
+                announce: true,
+              });
             });
           }
         },
@@ -580,6 +587,8 @@
           const { previewAction$ } = commonStrings;
           const snackbarData = {
             text: draftPublishedNotice$(),
+            duration: 6000,
+            announce: true,
           };
           if (this.currentChannel.draft_token) {
             snackbarData.actionText = previewAction$();
@@ -587,7 +596,7 @@
               this.showPreviewDraftModal = true;
             };
           }
-          this.$store.dispatch('showSnackbar', snackbarData);
+          this.createSnackbar(snackbarData);
         }
       },
     },

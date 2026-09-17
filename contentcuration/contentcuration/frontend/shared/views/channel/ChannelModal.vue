@@ -144,6 +144,7 @@
 <script>
 
   import { set } from 'vue';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import ChannelThumbnail from './ChannelThumbnail';
   import ChannelSharing from './ChannelSharing';
@@ -158,6 +159,10 @@
 
   export default {
     name: 'ChannelModal',
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     components: {
       LanguageDropdown,
       ContentDefaults,
@@ -344,7 +349,12 @@
 
               window.location.replace(window.Urls.channel(newChannelId));
             } else {
-              this.$store.dispatch('showSnackbarSimple', this.$tr('changesSaved'));
+              this.createSnackbar({
+                text: this.$tr('changesSaved'),
+                autoDismiss: true,
+                announce: true,
+                duration: 6000,
+              });
               this.header = this.channel.name;
             }
             this.isDisable = false;

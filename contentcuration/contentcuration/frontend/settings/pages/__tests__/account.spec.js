@@ -1,6 +1,14 @@
 import { mount } from '@vue/test-utils';
 import Account from '../Account/index';
 
+const mockCreateSnackbar = jest.fn();
+jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
+  __esModule: true,
+  default: () => ({
+    createSnackbar: mockCreateSnackbar,
+  }),
+}));
+
 function makeWrapper(currentUser = {}) {
   return mount(Account, {
     computed: {
@@ -110,9 +118,12 @@ describe('account tab', () => {
       expect(notice.exists()).toBe(false);
     });
 
-    it(`should call 'showSnackbar' with a correct message`, () => {
-      expect(wrapper.vm.$store.dispatch).toHaveBeenCalledWith('showSnackbar', {
+    it(`should call 'createSnackbar' with a correct message`, () => {
+      expect(mockCreateSnackbar).toHaveBeenCalledWith({
         text: 'Unable to export data. Please try again.',
+        autoDismiss: true,
+        announce: true,
+        duration: 6000,
       });
     });
   });

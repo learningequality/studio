@@ -5,6 +5,15 @@ import Vuex from 'vuex';
 import VueRouter from 'vue-router';
 import EmailUsersDialog from '../EmailUsersDialog';
 
+const mockCreateSnackbar = jest.fn();
+jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
+  __esModule: true,
+  default: () => ({
+    createSnackbar: mockCreateSnackbar,
+  }),
+}));
+
+
 const localVue = createLocalVue();
 localVue.use(Vuex);
 localVue.use(VueRouter);
@@ -24,7 +33,6 @@ const user2 = {
 
 const mockActions = {
   sendEmail: jest.fn(() => Promise.resolve()),
-  showSnackbarSimple: jest.fn(() => Promise.resolve()),
 };
 
 const createMockStore = () => {
@@ -46,9 +54,7 @@ const createMockStore = () => {
         },
       },
     },
-    actions: {
-      showSnackbarSimple: mockActions.showSnackbarSimple,
-    },
+    actions: {    },
   });
 };
 
@@ -264,7 +270,7 @@ describe('EmailUsersDialog', () => {
       await user.type(screen.getByLabelText(/email body/i), 'Test Message');
       await user.click(screen.getByRole('button', { name: 'Send email' }));
 
-      expect(mockActions.showSnackbarSimple).toHaveBeenCalledWith(expect.any(Object), 'Email sent');
+      expect(mockCreateSnackbar).toHaveBeenCalledWith({ text: 'Email sent', autoDismiss: true, announce: true, duration: 6000 });
     });
 
     it('shows error snackbar when sending fails', async () => {
@@ -276,10 +282,7 @@ describe('EmailUsersDialog', () => {
       await user.type(screen.getByLabelText(/email body/i), 'Test Message');
       await user.click(screen.getByRole('button', { name: 'Send email' }));
 
-      expect(mockActions.showSnackbarSimple).toHaveBeenCalledWith(
-        expect.any(Object),
-        'Email failed to send',
-      );
+      expect(mockCreateSnackbar).toHaveBeenCalledWith({ text: 'Email failed to send', autoDismiss: true, announce: true, duration: 6000 });
     });
   });
 });

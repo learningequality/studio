@@ -347,6 +347,7 @@
 <script>
 
   import { mapGetters, mapMutations, mapActions } from 'vuex';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 
   import ResourceDrawer from '../../components/ResourceDrawer';
   import StudioTree from '../../components/StudioTree/StudioTree';
@@ -369,6 +370,10 @@
 
   export default {
     name: 'StagingTreePage',
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     components: {
       BottomBar,
       Breadcrumbs,
@@ -553,7 +558,7 @@
       this.updateTabTitle(this.$store.getters.appendChannelName(this.$tr('deployChannel')));
     },
     methods: {
-      ...mapActions(['showSnackbar', 'addViewModeOverride', 'removeViewModeOverride']),
+      ...mapActions(['addViewModeOverride', 'removeViewModeOverride']),
       ...mapActions('currentChannel', [
         'loadCurrentChannelStagingDiff',
         'deployCurrentChannel',
@@ -640,8 +645,11 @@
               nodeId: rootId,
             },
           });
-          this.showSnackbar({
+          this.createSnackbar({
             text: this.$tr('channelDeployed'),
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
           });
         });
 
@@ -654,14 +662,20 @@
         this.publishStagingChannel()
           .then(() => {
             this.isPublishingDraft = false;
-            this.showSnackbar({
+            this.createSnackbar({
               text: this.$tr('draftPublished'),
+              autoDismiss: true,
+              announce: true,
+              duration: 6000,
             });
           })
           .catch(error => {
             this.isPublishingDraft = false;
-            this.showSnackbar({
+            this.createSnackbar({
               text: error.response?.data?.message || this.$tr('publishDraftError'),
+              autoDismiss: true,
+              announce: true,
+              duration: 6000,
               color: 'error',
             });
           });
