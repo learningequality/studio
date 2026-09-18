@@ -13,7 +13,12 @@ x-studio-environment:
     CELERY_RESULT_BACKEND_ENDPOINT: redis
     CELERY_REDIS_PASSWORD: ""
     REMAP_SIGTERM: "SIGQUIT"
+    # The dev server binds inside the container; the browser reaches it on the published side of
+    # the mapping below. Override the public values to serve a browser on another host.
     WEBPACK_DEV_HOST: 0.0.0.0
+    WEBPACK_DEV_PORT: ${WEBPACK_DEV_PORT:-4000}
+    WEBPACK_DEV_PUBLIC_HOST: ${WEBPACK_DEV_PUBLIC_HOST:-localhost}
+    WEBPACK_DEV_PUBLIC_PORT: ${WEBPACK_DEV_PUBLIC_PORT:-${WEBPACK_DEV_PORT:-4000}}
 
 x-studio-worker:
   &studio-worker
@@ -47,7 +52,7 @@ services:
     command: pnpm run devserver
     ports:
       - "8080:8080"
-      - "4000:4000"
+      - "${WEBPACK_DEV_PUBLIC_PORT:-${WEBPACK_DEV_PORT:-4000}}:${WEBPACK_DEV_PORT:-4000}"
 
   celery-worker:
     <<: *studio-worker
