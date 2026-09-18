@@ -46,6 +46,38 @@ WEBPACK_LOADER = {
     }
 }
 
+
+def _dev_server_port(name, default):
+    # Runs on every boot, production included, so a bad value warns rather than raising.
+    value = os.getenv(name)
+    if not value:
+        return default
+    try:
+        return int(value)
+    except ValueError:
+        logging.warning("Ignoring non-numeric %s=%r, using %s", name, value, default)
+        return default
+
+
+# Bind versus advertised address; webpackDevServerAddress.js says why they differ. DEBUG only.
+WEBPACK_DEV_PORT = _dev_server_port("WEBPACK_DEV_PORT", 4000)
+WEBPACK_DEV_PUBLIC_PORT = _dev_server_port("WEBPACK_DEV_PUBLIC_PORT", WEBPACK_DEV_PORT)
+
+# Under WSL webpack detects the bind host; set WEBPACK_DEV_PUBLIC_HOST to match it.
+_WEBPACK_DEV_HOST = os.getenv("WEBPACK_DEV_HOST") or "127.0.0.1"
+
+
+def _resolve_webpack_dev_public_host(bind_host, public_host_env):
+    # Kept in step with webpackDevServerAddress.js; a test pins the two together.
+    return public_host_env or (
+        "127.0.0.1" if bind_host in ("0.0.0.0", "::", "[::]") else bind_host
+    )
+
+
+WEBPACK_DEV_PUBLIC_HOST = _resolve_webpack_dev_public_host(
+    _WEBPACK_DEV_HOST, os.getenv("WEBPACK_DEV_PUBLIC_HOST")
+)
+
 PERMISSION_TEMPLATE_ROOT = os.path.join(
     BASE_DIR, "contentcuration", "templates", "permissions"
 )
