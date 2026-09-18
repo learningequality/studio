@@ -32,11 +32,12 @@ def file_server(request, storage_path=None):
         return HttpResponseNotFound()
 
     params = urllib.parse.urlparse(default_storage.url(storage_path)).query
-    host = request.META["HTTP_HOST"].split(":")[0]
-    port = 9000  # hardcoded to the default minio IP address
-    url = "http://{host}:{port}/{bucket}/{path}?{params}".format(
-        host=host,
-        port=port,
+    # Unset: minio published beside Studio, not on the browser's own machine.
+    endpoint = settings.AWS_S3_PUBLIC_ENDPOINT_URL or "http://{host}:9000".format(
+        host=request.META["HTTP_HOST"].split(":")[0]
+    )
+    url = "{endpoint}/{bucket}/{path}?{params}".format(
+        endpoint=endpoint.rstrip("/"),
         bucket=settings.AWS_S3_BUCKET_NAME,
         path=storage_path,
         params=params,

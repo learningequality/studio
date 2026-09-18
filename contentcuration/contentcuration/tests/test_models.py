@@ -1,3 +1,4 @@
+import os
 import uuid
 
 import mock
@@ -8,6 +9,7 @@ from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.db.models import Q
 from django.db.utils import IntegrityError
+from django.test import override_settings
 from django.utils import timezone
 from le_utils.constants import content_kinds
 from le_utils.constants import format_presets
@@ -39,6 +41,7 @@ from contentcuration.models import File
 from contentcuration.models import FILE_DURATION_CONSTRAINT
 from contentcuration.models import FlagFeedbackEvent
 from contentcuration.models import generate_object_storage_name
+from contentcuration.models import generate_storage_url
 from contentcuration.models import Invitation
 from contentcuration.models import Language
 from contentcuration.models import License
@@ -111,6 +114,21 @@ def test_generate_object_storage_name(object_storage_name_tests):
         ), "Storage names don't match: Expected: '{}' Actual '{}'".format(
             expected_name, actual_name
         )
+
+
+def test_generate_storage_url_uses_public_endpoint():
+    checksum = "8818ed27d0a84b016eb7907b5b4766c4"
+    with mock.patch.dict(os.environ), override_settings(
+        AWS_S3_PUBLIC_ENDPOINT_URL="http://studio.test:32768"
+    ):
+        os.environ.pop("RUN_MODE", None)
+        url = generate_storage_url("{}.vtt".format(checksum))
+
+    assert url.startswith(
+        "http://studio.test:32768/{}/storage/8/8/{}.vtt?".format(
+            settings.AWS_S3_BUCKET_NAME, checksum
+        )
+    )
 
 
 def create_contentnode(parent_id):

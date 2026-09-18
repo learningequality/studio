@@ -19,6 +19,8 @@ x-studio-environment:
     WEBPACK_DEV_PORT: ${WEBPACK_DEV_PORT:-4000}
     WEBPACK_DEV_PUBLIC_HOST: ${WEBPACK_DEV_PUBLIC_HOST:-localhost}
     WEBPACK_DEV_PUBLIC_PORT: ${WEBPACK_DEV_PUBLIC_PORT:-${WEBPACK_DEV_PORT:-4000}}
+    # The browser's route to minio; AWS_S3_ENDPOINT_URL above is the server's.
+    AWS_S3_PUBLIC_ENDPOINT_URL: ${AWS_S3_PUBLIC_ENDPOINT_URL:-http://localhost:9000}
 
 x-studio-worker:
   &studio-worker
