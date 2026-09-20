@@ -220,12 +220,15 @@
             ref="language"
             v-model="language"
             class="mb-2"
-            :hint="languageHint"
             :placeholder="getPlaceholder('language')"
-            clearable
-            persistent-hint
             @focus="trackClick('Language')"
           />
+          <p
+            v-if="languageHint"
+            :style="{ color: $themeTokens.annotation }"
+          >
+            {{ languageHint }}
+          </p>
 
           <!-- Visibility -->
           <VisibilityDropdown

@@ -42,9 +42,7 @@
               id="captionLanguage"
               v-model="selectedLanguage"
               data-test="select-language"
-              dropAbove
               :excludeLanguages="currentLanguages"
-              hide-details
             />
           </VListTileContent>
           <VListTileContent v-if="selectedLanguage">

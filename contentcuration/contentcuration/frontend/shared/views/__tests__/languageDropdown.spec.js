@@ -1,95 +1,63 @@
-import { mount, shallowMount } from '@vue/test-utils';
+import { render, screen } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
+import VueRouter from 'vue-router';
 import LanguageDropdown from '../LanguageDropdown.vue';
-import TestForm from './TestForm.vue';
-import { LanguagesList } from 'shared/leUtils/Languages';
+import { commonStrings } from 'shared/strings/commonStrings';
+import { createTranslator } from 'shared/i18n';
 
-function makeWrapper(required = false) {
-  const form = mount(TestForm, {
-    slots: {
-      testComponent: `<LanguageDropdown :required="${String(required)}" />`,
-    },
-    stubs: {
-      LanguageDropdown,
-    },
-  });
-  const dropdown = form.findComponent(LanguageDropdown);
-  return [form, dropdown];
+const { languageItemText$ } = createTranslator('LanguageDropdown', LanguageDropdown.$trs);
+const { clearAction$ } = commonStrings;
+
+const ENGLISH = languageItemText$({ language: 'English', code: 'en' });
+const SPANISH = languageItemText$({ language: 'Español', code: 'es' });
+
+function renderComponent(props = {}) {
+  return render(LanguageDropdown, { router: new VueRouter(), props });
 }
 
-const testLanguages = LanguagesList.slice(0, 10);
+function lastInput(emitted) {
+  const events = emitted().input;
+  return events[events.length - 1][0];
+}
 
-describe('languageDropdown', () => {
-  let wrapper;
-  let formWrapper;
-
-  beforeEach(() => {
-    [formWrapper, wrapper] = makeWrapper();
+describe('LanguageDropdown', () => {
+  it('renders the language field', () => {
+    renderComponent();
+    expect(screen.getByText('Language')).toBeInTheDocument();
   });
 
-  it.each(testLanguages)('updating language $id should emit input event', language => {
-    expect(wrapper.emitted('input')).toBeFalsy();
-    // It looks like v-autocomplete doesn't trigger correctly, so call
-    // method directly until resolved
-    wrapper.find('.v-autocomplete').vm.$emit('input', language.id);
-    expect(wrapper.emitted('input')).toBeTruthy();
-    expect(wrapper.emitted('input')[0][0]).toEqual(language.id);
+  it('emits the selected language id in single mode', async () => {
+    const { emitted } = renderComponent();
+
+    await userEvent.click(screen.getByRole('combobox'));
+    await userEvent.click(await screen.findByRole('option', { name: ENGLISH }));
+
+    expect(lastInput(emitted)).toEqual('en');
   });
 
-  it('setting readonly should prevent any edits', () => {
-    expect(wrapper.find('input[readonly]').exists()).toBe(false);
-    wrapper = mount(LanguageDropdown, {
-      attrs: {
-        readonly: true,
-      },
-    });
-    expect(wrapper.find('input[readonly]').exists()).toBe(true);
+  it('emits an array of language ids in multiple mode', async () => {
+    const { emitted } = renderComponent({ multiple: true, value: ['en'] });
+
+    await userEvent.click(screen.getByRole('combobox'));
+    await userEvent.click(await screen.findByRole('option', { name: SPANISH }));
+
+    expect(lastInput(emitted)).toEqual(['en', 'es']);
   });
 
-  it('setting required should make field required', async () => {
-    expect(wrapper.find('input:required').exists()).toBe(false);
-    [formWrapper, wrapper] = makeWrapper(true);
-    await wrapper.vm.$nextTick();
-    expect(wrapper.find('input:required').exists()).toBe(true);
+  it('hides languages passed in excludeLanguages', async () => {
+    renderComponent({ excludeLanguages: ['en'] });
+
+    await userEvent.click(screen.getByRole('combobox'));
+
+    expect(await screen.findByRole('option', { name: SPANISH })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: ENGLISH })).not.toBeInTheDocument();
   });
 
-  it('validation should catch empty required languages', async () => {
-    formWrapper.vm.validate();
-    expect(wrapper.find('.error--text').exists()).toBe(false);
-    [formWrapper, wrapper] = makeWrapper(true);
-    await wrapper.vm.$nextTick();
-    formWrapper.vm.validate();
-    await wrapper.vm.$nextTick();
-    expect(wrapper.find('.error--text').exists()).toBe(true);
-  });
+  it('clears the selection when the clear button is clicked', async () => {
+    const { emitted } = renderComponent({ value: 'en' });
 
-  it('returns formatted language text when native_name is present', () => {
-    const wrapper = shallowMount(LanguageDropdown, {
-      mocks: {
-        $tr: (key, params) => `${params.language} (${params.code})`,
-      },
-    });
-    const item = { native_name: 'Español,Spanish', id: 'es' };
-    expect(wrapper.vm.languageText(item)).toBe('Español (es)');
-  });
+    await userEvent.click(screen.getByRole('button', { name: clearAction$() }));
 
-  it('returns formatted language text when native_name is an empty string', () => {
-    const wrapper = shallowMount(LanguageDropdown, {
-      mocks: {
-        $tr: (key, params) => `${params.language} (${params.code})`,
-      },
-    });
-    const item = { native_name: '', id: 'de' };
-    expect(wrapper.vm.languageText(item)).toBe(' (de)');
-  });
-
-  it('returns empty string when called with an array (multiple mode VAutocomplete internal call)', () => {
-    const wrapper = shallowMount(LanguageDropdown, {
-      mocks: {
-        $tr: (key, params) => `${params.language} (${params.code})`,
-      },
-    });
-    // VAutocomplete eagerly evaluates getText(internalValue) as a fallback to getValue.
-    // In multiple mode, internalValue is an Array, so languageText receives the array.
-    expect(wrapper.vm.languageText(['en', 'fr'])).toBe('');
+    expect(lastInput(emitted)).toBeNull();
   });
 });
