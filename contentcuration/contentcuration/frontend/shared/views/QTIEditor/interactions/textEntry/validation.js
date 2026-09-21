@@ -1,6 +1,6 @@
 import { QuestionType, ValidationError } from '../../constants';
-import { QTISanitizer } from '../../serialization/qti/QTISanitizer';
 import { floatOrIntRegex } from '../../utils/math';
+import { hasRichTextContent } from '../../utils/richText';
 
 /**
  * Validate TextEntryState → ValidationError[].
@@ -17,7 +17,7 @@ export function validateTextEntryInteraction(state, questionType) {
   const errors = [];
   const { prompt, answers } = state;
 
-  if (!QTISanitizer.stripTags(prompt).trim()) {
+  if (!hasRichTextContent(prompt)) {
     errors.push({ code: ValidationError.PROMPT_REQUIRED });
   }
 

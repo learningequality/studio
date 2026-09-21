@@ -88,17 +88,16 @@
         :is-active="action.isActive"
         @click="action.handler"
       />
-      <!-- Perseus flavoured markdown does not support alignment,
-        so we disable this for now until we stop using markdown as the primary target
-      <ToolbarDivider />
-      <ToolbarButton
-        :title="alignAction.title"
-        :icon="alignAction.icon"
-        :is-active="alignAction.isActive"
-        @click="alignAction.handler"
-      /> -->
-      <!-- Perseus flavoured markdown does not support super and sub script,
-        so we disable this for now until we stop using markdown as the primary target
+      <!-- Hidden while alignActionHidden is set; see useToolbarActions.js. -->
+      <template v-if="!alignActionHidden">
+        <ToolbarDivider />
+        <ToolbarButton
+          :title="alignAction.title"
+          :icon="alignAction.icon"
+          :is-active="alignAction.isActive"
+          @click="alignAction.handler"
+        />
+      </template>
       <ToolbarDivider />
       <ToolbarButton
         v-for="action in scriptActions"
@@ -107,7 +106,7 @@
         :icon="action.icon"
         :is-active="action.isActive"
         @click="action.handler"
-      /> -->
+      />
       <ToolbarDivider />
       <ToolbarButton
         v-for="tool in insertTools"
@@ -153,7 +152,14 @@
         textFormattingToolbar$,
       } = getTipTapEditorStrings();
 
-      const { textActions, listActions, insertTools } = useToolbarActions(emit);
+      const {
+        textActions,
+        listActions,
+        scriptActions,
+        alignAction,
+        alignActionHidden,
+        insertTools,
+      } = useToolbarActions(emit);
 
       const { canIncreaseFormat, canDecreaseFormat, increaseFormat, decreaseFormat } =
         useFormatControls();
@@ -222,6 +228,9 @@
         toolbarRef,
         textActions,
         listActions,
+        scriptActions,
+        alignAction,
+        alignActionHidden,
         insertTools,
         toggleToolbar,
         canIncreaseFormat,
