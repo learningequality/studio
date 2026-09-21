@@ -272,7 +272,7 @@
         { immediate: true },
       );
 
-      // sync changes from the editor to the parent component, only on blur
+      // sync changes from the editor to the parent component
       const emitContentUpdate = () => {
         if (!editor.value || !isReady.value) {
           return;
@@ -316,6 +316,10 @@
         sharedEventHandlers,
         editorMode: computed(() => props.mode),
         emitMinimize: () => {
+          // Toolbar buttons suppress blur to keep the caret, so content written since
+          // the last blur is still unsynced. Flush it first: a parent acting on the
+          // close would otherwise read the content as it stood before that edit.
+          emitContentUpdate();
           emit('minimize');
         },
         handleContainerKeydown,
