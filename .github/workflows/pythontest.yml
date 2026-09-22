@@ -91,7 +91,7 @@ jobs:
         git fetch --no-tags origin "$BASE_REF"
         base="$(git merge-base "origin/$BASE_REF" HEAD)"
         test -n "$base"
-        python contentcuration/manage.py lintmigrations --git-commit-id "$base" --no-cache --warnings-as-errors
+        python contentcuration/manage.py lintmigrations --project-root-path . --git-commit-id "$base" --no-cache --warnings-as-errors
     - name: Test pytest
       run: |
         sh -c './contentcuration/manage.py makemigrations --check'
