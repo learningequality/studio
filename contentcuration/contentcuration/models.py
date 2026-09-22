@@ -468,11 +468,15 @@ class User(AbstractBaseUser, PermissionsMixin):
             .aggregate(size=Sum("file_size"))["size"]
             or 0
         )
-        return float(max(self.disk_space - space_used, 0))
+        return float(max(self.get_effective_disk_space() - space_used, 0))
 
     def get_available_space(self, active_files=None):
         return float(
-            max(self.disk_space - self.get_space_used(active_files=active_files), 0)
+            max(
+                self.get_effective_disk_space()
+                - self.get_space_used(active_files=active_files),
+                0,
+            )
         )
 
     def get_user_active_trees(self):
