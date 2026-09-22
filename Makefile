@@ -39,8 +39,7 @@ migrate:
 # 4) Remove the management command from this `deploy-migrate` recipe
 # 5) Repeat!
 deploy-migrate:
-	# studio#5974: remove at cutover.
-	python contentcuration/manage.py backfill_column --model contentcuration.File --source-field file_size --target-field file_size_bigint
+	echo "Nothing to do here!"
 
 contentnodegc:
 	python contentcuration/manage.py garbage_collect
