@@ -66,6 +66,13 @@
               @submit.prevent="saveChannel"
             >
               <ChannelThumbnail v-model="thumbnail" />
+              <ChannelOrganization
+                v-if="!isNew"
+                ref="organizationField"
+                :channelId="channelId"
+                @blocked="migrationBlocked = $event"
+                @changed="changed = changed || $event"
+              />
               <fieldset class="channel-info mt-3 py-1">
                 <legend class="font-weight-bold legend-title mb-2 py-1">
                   {{ $tr('details') }}
@@ -102,7 +109,7 @@
                 class="mt-5"
                 primary
                 type="submit"
-                :disabled="isDisable"
+                :disabled="isDisable || migrationBlocked"
               >
                 {{ isNew ? $tr('createButton') : $tr('saveChangesButton') }}
               </KButton>
@@ -143,8 +150,9 @@
 
 <script>
 
-  import { set } from 'vue';
+  import { ref, set } from 'vue';
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
+  import ChannelOrganization from './ChannelOrganization.vue';
   import ChannelThumbnail from './ChannelThumbnail';
   import ChannelSharing from './ChannelSharing';
   import { ErrorTypes } from 'shared/constants';
@@ -159,6 +167,7 @@
   export default {
     name: 'ChannelModal',
     components: {
+      ChannelOrganization,
       LanguageDropdown,
       ContentDefaults,
       ChannelThumbnail,
@@ -169,6 +178,9 @@
       ToolBar,
     },
     mixins: [routerMixin],
+    setup() {
+      return { migrationBlocked: ref(false) };
+    },
     props: {
       channelId: {
         type: String,
@@ -328,10 +340,14 @@
     methods: {
       ...mapActions('channel', ['updateChannel', 'loadChannel', 'commitChannel']),
       ...mapMutations('channel', ['REMOVE_CHANNEL']),
-      saveChannel() {
+      async saveChannel() {
         this.isDisable = true;
 
         if (this.$refs.detailsform.validate()) {
+          if (this.$refs.organizationField && !(await this.$refs.organizationField.save())) {
+            this.isDisable = false;
+            return;
+          }
           this.changed = false;
 
           const commitOrUpdateChannel = this.isNew

@@ -1166,6 +1166,20 @@ export const Bookmark = new Resource({
 export const Channel = new CreateModelResource({
   tableName: TABLE_NAMES.CHANNEL,
   urlName: 'channel',
+  checkOrganizationMigration(id, organization) {
+    return client
+      .get(this.getUrlFunction('organization_migration')(id), {
+        params: organization ? { organization } : {},
+      })
+      .then(response => response.data);
+  },
+  async migrateOrganization(id, organization) {
+    const response = await client.post(this.getUrlFunction('organization_migration')(id), {
+      organization,
+    });
+    await this.transaction({ mode: 'rw' }, () => this.table.update(id, response.data));
+    return response.data;
+  },
   indexFields: ['name', 'language'],
   searchCatalog(params) {
     params.page_size = params.page_size || 100;
@@ -2055,6 +2069,26 @@ export const ChannelSet = new CreateModelResource({
 export const Invitation = new Resource({
   tableName: TABLE_NAMES.INVITATION,
   urlName: 'invitation',
+  where(params = {}, doRefresh = true) {
+    return Resource.prototype.where.call(this, params, doRefresh).then(data => {
+      const filter = items =>
+        items.filter(item =>
+          params.migration
+            ? Boolean(item.channel && item.organization)
+            : !(item.channel && item.organization),
+        );
+      return Array.isArray(data) ? filter(data) : { ...data, results: filter(data.results) };
+    });
+  },
+  async createMigration(channel, organization) {
+    const response = await client.post(this.getUrlFunction('migration')(), {
+      channel,
+      organization,
+    });
+    await this.transaction({ mode: 'rw' }, () => this.table.put(response.data));
+    this._requests = {};
+    return response.data;
+  },
   indexFields: ['channel'],
 
   accept(id) {
@@ -2067,6 +2101,7 @@ export const Invitation = new Resource({
   },
   _handleInvitation(id, url, changes) {
     return client.post(url).then(() => {
+      this._requests = {};
       return this.transaction({ mode: 'rw' }, () => {
         return this.table.update(id, changes);
       });

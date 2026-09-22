@@ -1,3 +1,5 @@
+from django.db import transaction
+from django_filters.rest_framework import BooleanFilter
 from django_filters.rest_framework import CharFilter
 from django_filters.rest_framework import FilterSet
 from rest_framework import serializers
@@ -15,7 +17,10 @@ from contentcuration.viewsets.base import BulkListSerializer
 from contentcuration.viewsets.base import BulkModelSerializer
 from contentcuration.viewsets.base import ValuesViewset
 from contentcuration.viewsets.common import UserFilteredPrimaryKeyRelatedField
+from contentcuration.viewsets.organization_migration import validate_migration
+from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import INVITATION
+from contentcuration.viewsets.sync.utils import generate_create_event
 from contentcuration.viewsets.sync.utils import generate_update_event
 
 
@@ -30,7 +35,7 @@ class InvitationSerializer(BulkModelSerializer):
         queryset=Channel.objects.all(), required=False
     )
     organization = UserFilteredPrimaryKeyRelatedField(
-        queryset=Organization.objects.all(), required=False
+        queryset=Organization.objects.all(), required=False, edit=False
     )
 
     class Meta:
@@ -50,6 +55,19 @@ class InvitationSerializer(BulkModelSerializer):
         list_serializer_class = BulkListSerializer
 
     def validate(self, data):
+        if self.instance:
+            for field in ("channel", "organization"):
+                if field in data and data[field].pk != getattr(
+                    self.instance, f"{field}_id"
+                ):
+                    raise serializers.ValidationError(
+                        "Invitation targets cannot be changed."
+                    )
+        if (
+            sum(bool(data.get(field)) for field in ("accepted", "declined", "revoked"))
+            > 1
+        ):
+            raise serializers.ValidationError("Choose one invitation decision.")
         channel = data.get("channel", getattr(self.instance, "channel_id", None))
         organization = data.get(
             "organization", getattr(self.instance, "organization_id", None)
@@ -58,21 +76,77 @@ class InvitationSerializer(BulkModelSerializer):
             raise serializers.ValidationError(
                 "Invitation must specify either a channel or an organization."
             )
-        if channel and organization:
-            raise serializers.ValidationError(
-                "Invitation cannot specify both a channel and an organization."
+        if channel and organization and not self.instance:
+            validate_migration(
+                channel, organization, self.context["request"].user, contested=True
             )
+        elif organization and not self.instance:
+            if not Organization.filter_edit_queryset(
+                Organization.objects.filter(pk=organization.pk),
+                self.context["request"].user,
+            ).exists():
+                raise PermissionDenied(
+                    "Only organization administrators may invite members."
+                )
         return data
 
+    @transaction.atomic
     def create(self, validated_data):
+        if validated_data.get("channel") and validated_data.get("organization"):
+            channel = Channel.objects.select_for_update().get(
+                pk=validated_data["channel"].pk
+            )
+            validate_migration(
+                channel,
+                validated_data["organization"],
+                self.context["request"].user,
+                contested=True,
+            )
         # Need to remove default values for these non-model fields here
         if "request" in self.context:
             # If this has been newly created add the current user as the sender
-            self.validated_data["sender"] = self.context["request"].user
+            validated_data["sender"] = self.context["request"].user
 
         return super(InvitationSerializer, self).create(validated_data)
 
+    @transaction.atomic
     def update(self, instance, validated_data):
+        if instance.channel_id and instance.organization_id:
+            channel = Channel.objects.select_for_update().get(pk=instance.channel_id)
+            instance.refresh_from_db()
+            user = self.context["request"].user
+            if instance.accepted or instance.declined or instance.revoked:
+                raise serializers.ValidationError(
+                    "Migration request is already resolved."
+                )
+            if validated_data.get("accepted"):
+                if not user.is_admin:
+                    raise PermissionDenied(
+                        "Only website administrators may approve migrations."
+                    )
+                if instance.organization.deleted:
+                    raise serializers.ValidationError(
+                        "The target organization was deleted."
+                    )
+                channel.organization = instance.organization
+                channel.save(actor_id=user.id)
+                self.changes.append(
+                    generate_update_event(
+                        channel.id,
+                        CHANNEL,
+                        {
+                            "organization": instance.organization_id,
+                            "organization_name": instance.organization.name,
+                        },
+                        channel_id=channel.id,
+                    )
+                )
+            elif validated_data.get("declined") or validated_data.get("revoked"):
+                if not user.is_admin and instance.sender_id != user.id:
+                    raise PermissionDenied(
+                        "Only the requestor or website administrators may decline migrations."
+                    )
+            return super().update(instance, validated_data)
         instance = super(InvitationSerializer, self).update(instance, validated_data)
         # validated_data, not initial_data, respects get_fields' read-only
         # flags; only trigger accept() on an actual incoming toggle.
@@ -98,6 +172,16 @@ class InvitationSerializer(BulkModelSerializer):
     def get_fields(self):
         fields = super().get_fields()
         request = self.context.get("request")
+
+        if (
+            request
+            and self.instance
+            and self.instance.channel_id
+            and self.instance.organization_id
+        ):
+            for name in fields:
+                fields[name].read_only = name not in ("accepted", "declined", "revoked")
+            return fields
 
         # allow invitation state to be modified under the right conditions
         if request and request.user and self.instance:
@@ -127,6 +211,7 @@ class InvitationSerializer(BulkModelSerializer):
 
 
 class InvitationFilter(FilterSet):
+    migration = BooleanFilter(method="filter_migration")
     invited = CharFilter(method="filter_invited")
     channel = CharFilter(method="filter_channel")
     organization = CharFilter(method="filter_organization")
@@ -135,9 +220,21 @@ class InvitationFilter(FilterSet):
         model = Invitation
         fields = (
             "invited",
+            "migration",
             "channel",
             "organization",
         )
+
+    def filter_migration(self, queryset, name, value):
+        if value:
+            return queryset.filter(
+                channel__isnull=False,
+                organization__isnull=False,
+                accepted=False,
+                declined=False,
+                revoked=False,
+            )
+        return queryset.exclude(channel__isnull=False, organization__isnull=False)
 
     def filter_invited(self, queryset, name, value):
         return queryset.filter(email__iexact=self.request.user.email)
@@ -173,6 +270,9 @@ class InvitationViewSet(ValuesViewset):
         "organization_id",
         "share_mode",
         "channel__name",
+        "organization__name",
+        "sender_id",
+        "sender__email",
     )
     field_map = {
         "first_name": "invited__first_name",
@@ -181,7 +281,71 @@ class InvitationViewSet(ValuesViewset):
         "channel_name": "channel__name",
         "channel": "channel_id",
         "organization": "organization_id",
+        "organization_name": "organization__name",
+        "sender": "sender_id",
+        "sender_email": "sender__email",
     }
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.action == "list" and "migration" not in self.request.query_params:
+            return queryset.exclude(channel__isnull=False, organization__isnull=False)
+        return queryset
+
+    @action(detail=False, methods=["post"])
+    @transaction.atomic
+    def migration(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        if not serializer.validated_data.get(
+            "channel"
+        ) or not serializer.validated_data.get("organization"):
+            raise serializers.ValidationError(
+                "A channel and an organization are required."
+            )
+        instance = serializer.save()
+        obj = self.serialize_object(pk=instance.pk)
+        Change.create_change(
+            generate_create_event(
+                instance.id,
+                INVITATION,
+                obj,
+                channel_id=instance.channel_id,
+            ),
+            applied=True,
+            created_by_id=request.user.id,
+        )
+        return Response(obj, status=status.HTTP_201_CREATED)
+
+    def perform_destroy(self, instance):
+        if instance.channel_id and instance.organization_id:
+            if (
+                not self.request.user.is_admin
+                and instance.sender_id != self.request.user.id
+            ):
+                raise PermissionDenied(
+                    "Only the requestor or website administrators may remove migrations."
+                )
+        super().perform_destroy(instance)
+
+    @transaction.atomic
+    def _resolve_migration(self, request, invitation, decision):
+        serializer = self.get_serializer(
+            invitation, data={decision: True}, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        Change.create_change(
+            generate_update_event(
+                invitation.id,
+                INVITATION,
+                {decision: True},
+                channel_id=invitation.channel_id,
+            ),
+            applied=True,
+            created_by_id=request.user.id,
+        )
+        return Response({"status": "success"})
 
     def perform_update(self, serializer):
         instance = serializer.save()
@@ -196,6 +360,8 @@ class InvitationViewSet(ValuesViewset):
     @action(detail=True, methods=["post"])
     def accept(self, request, pk=None):
         invitation = self.get_edit_object()
+        if invitation.channel_id and invitation.organization_id:
+            return self._resolve_migration(request, invitation, "accepted")
         self._ensure_invitee(request, invitation)
         if invitation.revoked:
             return Response(
@@ -221,6 +387,8 @@ class InvitationViewSet(ValuesViewset):
     @action(detail=True, methods=["post"])
     def decline(self, request, pk=None):
         invitation = self.get_edit_object()
+        if invitation.channel_id and invitation.organization_id:
+            return self._resolve_migration(request, invitation, "declined")
         self._ensure_invitee(request, invitation)
         invitation.declined = True
         invitation.save()

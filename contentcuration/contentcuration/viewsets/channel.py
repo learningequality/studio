@@ -7,6 +7,7 @@ from typing import Union
 
 from django.conf import settings
 from django.db import IntegrityError
+from django.db import transaction
 from django.db.models import Exists
 from django.db.models import FilteredRelation
 from django.db.models import OuterRef
@@ -56,6 +57,7 @@ from contentcuration.models import ContentNode
 from contentcuration.models import Country
 from contentcuration.models import File
 from contentcuration.models import generate_storage_url
+from contentcuration.models import Organization
 from contentcuration.models import SecretToken
 from contentcuration.models import User
 from contentcuration.utils.garbage_collect import get_deleted_chefs_root
@@ -78,6 +80,10 @@ from contentcuration.viewsets.common import JSONFieldDictSerializer
 from contentcuration.viewsets.common import SQCount
 from contentcuration.viewsets.common import SQSum
 from contentcuration.viewsets.common import UUIDInFilter
+from contentcuration.viewsets.organization_migration import is_uncontested
+from contentcuration.viewsets.organization_migration import migration_organizations
+from contentcuration.viewsets.organization_migration import pending_migrations
+from contentcuration.viewsets.organization_migration import validate_migration
 from contentcuration.viewsets.sync.constants import CHANNEL
 from contentcuration.viewsets.sync.constants import PUBLISHED
 from contentcuration.viewsets.sync.utils import generate_create_event
@@ -288,6 +294,10 @@ class ChannelSerializer(BulkModelSerializer):
     operations, but read operations are handled by the Viewset.
     """
 
+    organization = serializers.PrimaryKeyRelatedField(
+        queryset=Organization.objects.filter(deleted=False), required=False
+    )
+
     thumbnail_encoding = ThumbnailEncodingFieldsSerializer(required=False)
     content_defaults = ContentDefaultsSerializer(partial=True, required=False)
 
@@ -304,10 +314,16 @@ class ChannelSerializer(BulkModelSerializer):
             "language",
             "content_defaults",
             "source_domain",
+            "organization",
         )
         read_only_fields = ("version",)
         list_serializer_class = BulkListSerializer
         nested_writes = True
+
+    def validate(self, data):
+        if "organization" in data and not self.instance:
+            raise ValidationError("Assign an organization after creating the channel.")
+        return data
 
     def create(self, validated_data):
         content_defaults = validated_data.pop("content_defaults", {})
@@ -342,7 +358,13 @@ class ChannelSerializer(BulkModelSerializer):
         )
         return instance
 
+    @transaction.atomic
     def update(self, instance, validated_data):
+        if "organization" in validated_data:
+            instance = Channel.objects.select_for_update().get(pk=instance.pk)
+            validate_migration(
+                instance, validated_data["organization"], self.context["request"].user
+            )
         content_defaults = validated_data.pop("content_defaults", None)
         if content_defaults is not None:
             validated_data["content_defaults"] = self.fields["content_defaults"].update(
@@ -454,13 +476,68 @@ class ChannelViewSet(ValuesViewset):
     ordering_fields = ["modified", "name"]
     ordering = "-modified"
 
-    field_map = channel_field_map
+    field_map = {
+        **channel_field_map,
+        "organization": "organization_id",
+        "organization_name": "organization__name",
+    }
     values = base_channel_values + (
+        "organization_id",
+        "organization__name",
         "edit",
         "view",
         "unpublished_changes",
         "draft_token",
     )
+
+    @action(detail=True, methods=["get", "post"])
+    @transaction.atomic
+    def organization_migration(self, request, pk=None):
+        channel = self.get_edit_object()
+        if request.method == "POST":
+            serializer = self.get_serializer(
+                channel,
+                data={"organization": request.data.get("organization")},
+                partial=True,
+            )
+            serializer.is_valid(raise_exception=True)
+            channel = serializer.save()
+            mods = {
+                "organization": channel.organization_id,
+                "organization_name": channel.organization.name,
+            }
+            Change.create_change(
+                generate_update_event(channel.id, CHANNEL, mods, channel_id=channel.id),
+                applied=True,
+                created_by_id=request.user.id,
+            )
+            return Response(mods)
+        pending = pending_migrations(channel).select_related("organization").first()
+        result = {
+            "organization": channel.organization_id,
+            "organization_name": channel.organization.name
+            if channel.organization_id
+            else None,
+            "organizations": list(
+                migration_organizations(request.user).values("id", "name")
+            ),
+            "pending": None,
+        }
+        if pending:
+            result["pending"] = {
+                "id": pending.id,
+                "organization": pending.organization_id,
+                "organization_name": pending.organization.name,
+                "can_decline": request.user.is_admin
+                or pending.sender_id == request.user.id,
+            }
+        if "organization" in request.query_params:
+            field = serializers.PrimaryKeyRelatedField(
+                queryset=migration_organizations(request.user)
+            )
+            organization = field.run_validation(request.query_params["organization"])
+            result["uncontested"] = is_uncontested(channel, organization, request.user)
+        return Response(result)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -1208,6 +1285,7 @@ class AdminChannelSerializer(ChannelSerializer):
         model = Channel
         fields = (
             "id",
+            "organization",
             "deleted",
             "source_domain",
             "source_url",
