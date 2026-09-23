@@ -5,11 +5,17 @@ import VueRouter from 'vue-router';
 import SearchResultsList from '../SearchResultsList';
 import { RouteNames } from '../../../constants';
 
+jest.mock('lodash/debounce', () => fn => {
+  function debounced(...args) {
+    return fn.apply(this, args);
+  }
+  debounced.cancel = jest.fn();
+  return debounced;
+});
+
 const localVue = createLocalVue();
 localVue.use(Vuex);
 localVue.use(VueRouter);
-
-window.HTMLElement.prototype.scrollIntoView = jest.fn();
 
 const NODES = [
   { id: 'node-1', title: 'First result' },
@@ -17,7 +23,8 @@ const NODES = [
 ];
 
 async function renderComponent() {
-  SearchResultsList.methods.fetchResultsDebounced.cancel();
+  jest.restoreAllMocks();
+  window.HTMLElement.prototype.scrollIntoView = jest.fn();
 
   jest.spyOn(SearchResultsList.methods, 'fetchResourceSearchResults').mockResolvedValue({
     results: NODES,
@@ -56,7 +63,7 @@ async function renderComponent() {
       },
     ],
   });
-  router.push({
+  await router.push({
     name: RouteNames.IMPORT_FROM_CHANNELS_SEARCH,
     params: { searchTerm: 'fractions', destNodeId: 'dest-1' },
   });
@@ -67,7 +74,7 @@ async function renderComponent() {
     router,
     props: { selected: [] },
     stubs: {
-      SearchFilters: true,
+      SearchFilters: { template: '<button>Filter</button>' },
       SearchFilterBar: true,
       BrowsingCard: true,
       Pagination: true,
@@ -82,18 +89,46 @@ async function renderComponent() {
 }
 
 describe('SearchResultsList', () => {
-  it('focuses the first result after the initial search, then leaves focus alone on a filter-only change', async () => {
+  it('focuses the first result after the initial search', async () => {
+    await renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('checkbox')[0]).toHaveFocus();
+    });
+  });
+
+  it('refocuses the first result after a page query change', async () => {
     const { router } = await renderComponent();
 
-    await waitFor(
-      () => {
-        expect(screen.getAllByRole('checkbox')[0]).toHaveFocus();
-      },
-      { timeout: 3000 },
-    );
+    await waitFor(() => {
+      expect(screen.getAllByRole('checkbox')[0]).toHaveFocus();
+    });
 
-    const filterControl = document.createElement('button');
-    document.body.appendChild(filterControl);
+    document.body.focus();
+
+    await router.push({
+      name: RouteNames.IMPORT_FROM_CHANNELS_SEARCH,
+      params: { searchTerm: 'fractions', destNodeId: 'dest-1' },
+      query: { page: '2' },
+    });
+
+    await waitFor(() => {
+      expect(SearchResultsList.methods.fetchResourceSearchResults).toHaveBeenCalledTimes(2);
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('checkbox')[0]).toHaveFocus();
+    });
+  });
+
+  it('does not steal focus from the filters panel when only a filter changes', async () => {
+    const { router } = await renderComponent();
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('checkbox')[0]).toHaveFocus();
+    });
+
+    const filterControl = screen.getByRole('button', { name: 'Filter' });
     filterControl.focus();
     expect(filterControl).toHaveFocus();
 
@@ -103,15 +138,10 @@ describe('SearchResultsList', () => {
       query: { language: 'en' },
     });
 
-    await waitFor(
-      () => {
-        expect(SearchResultsList.methods.fetchResourceSearchResults).toHaveBeenCalledTimes(2);
-      },
-      { timeout: 3000 },
-    );
+    await waitFor(() => {
+      expect(SearchResultsList.methods.fetchResourceSearchResults).toHaveBeenCalledTimes(2);
+    });
 
     expect(filterControl).toHaveFocus();
-
-    document.body.removeChild(filterControl);
   });
 });

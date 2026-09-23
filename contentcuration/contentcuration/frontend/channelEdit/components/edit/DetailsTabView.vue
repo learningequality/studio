@@ -219,6 +219,7 @@
           <LanguageDropdown
             ref="language"
             v-model="language"
+            :placeholder="getPlaceholder('language')"
             @focus="trackClick('Language')"
           />
           <p

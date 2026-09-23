@@ -1,6 +1,7 @@
 <template>
 
   <KMultiSelect
+    ref="multiselect"
     v-model="language"
     class="language-dropdown"
     :options="languages"
@@ -9,6 +10,7 @@
     itemText="text"
     :searchKeys="['native_name', 'readable_name', 'id']"
     :multiple="multiple"
+    :placeholder="placeholder"
     clearable
     :noResultsText="$tr('noDataText')"
     :invalid="invalid"
@@ -60,6 +62,10 @@
         type: Boolean,
         default: false,
       },
+      placeholder: {
+        type: String,
+        default: '',
+      },
     },
     data() {
       return {
@@ -109,7 +115,25 @@
         });
       },
     },
+    mounted() {
+      this.updateAriaRequired();
+    },
+    updated() {
+      this.updateAriaRequired();
+    },
     methods: {
+      updateAriaRequired() {
+        const multiselectEl = this.$refs.multiselect && this.$refs.multiselect.$el;
+        const input = multiselectEl && multiselectEl.querySelector('.kmselect-native-input');
+        if (!input) {
+          return;
+        }
+        if (this.required) {
+          input.setAttribute('aria-required', 'true');
+        } else {
+          input.removeAttribute('aria-required');
+        }
+      },
       languageText(item) {
         const firstNativeName = item.native_name.split(',')[0].trim();
         return this.$tr('languageItemText', { language: firstNativeName, code: item.id });

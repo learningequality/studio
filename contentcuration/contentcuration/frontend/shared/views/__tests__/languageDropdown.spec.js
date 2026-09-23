@@ -69,6 +69,25 @@ describe('LanguageDropdown', () => {
     expect(await screen.findByRole('option', { name: SPANISH })).toBeInTheDocument();
   });
 
+  it('hides languages passed in excludeLanguages', async () => {
+    renderComponent({ excludeLanguages: ['en'] });
+
+    await userEvent.click(screen.getByRole('combobox'));
+
+    expect(await screen.findByRole('option', { name: SPANISH })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: ENGLISH })).not.toBeInTheDocument();
+  });
+
+  it('sets aria-required on the combobox input when required', () => {
+    renderComponent({ required: true });
+    expect(screen.getByRole('combobox')).toBeRequired();
+  });
+
+  it('does not set aria-required on the combobox input by default', () => {
+    renderComponent();
+    expect(screen.getByRole('combobox')).not.toBeRequired();
+  });
+
   it('clears the selection when the clear button is clicked', async () => {
     const { emitted } = renderComponent({ value: 'en' });
 
