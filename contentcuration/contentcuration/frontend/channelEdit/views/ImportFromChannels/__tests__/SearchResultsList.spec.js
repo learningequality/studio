@@ -9,8 +9,6 @@ const localVue = createLocalVue();
 localVue.use(Vuex);
 localVue.use(VueRouter);
 
-// jsdom doesn't implement scrollIntoView, which SearchResultsList calls on
-// re-fetches after the initial load.
 window.HTMLElement.prototype.scrollIntoView = jest.fn();
 
 const NODES = [
@@ -19,9 +17,6 @@ const NODES = [
 ];
 
 async function renderComponent() {
-  // fetchResultsDebounced is created once, at component-definition time, so its
-  // internal lodash debounce timer is shared across every instance/test. Cancel
-  // any pending invocation left over from a previous test before starting.
   SearchResultsList.methods.fetchResultsDebounced.cancel();
 
   jest.spyOn(SearchResultsList.methods, 'fetchResourceSearchResults').mockResolvedValue({
@@ -97,14 +92,11 @@ describe('SearchResultsList', () => {
       { timeout: 3000 },
     );
 
-    // Simulate the user having moved focus into the filters panel, e.g. a
-    // KMultiSelect option that stays open until it loses focus.
     const filterControl = document.createElement('button');
     document.body.appendChild(filterControl);
     filterControl.focus();
     expect(filterControl).toHaveFocus();
 
-    // A filter change updates the route query but not the search term.
     await router.push({
       name: RouteNames.IMPORT_FROM_CHANNELS_SEARCH,
       params: { searchTerm: 'fractions', destNodeId: 'dest-1' },
@@ -118,7 +110,6 @@ describe('SearchResultsList', () => {
       { timeout: 3000 },
     );
 
-    // Focus should remain in the filters panel, not jump back to the results list.
     expect(filterControl).toHaveFocus();
 
     document.body.removeChild(filterControl);

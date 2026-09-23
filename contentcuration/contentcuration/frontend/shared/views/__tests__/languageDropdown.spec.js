@@ -5,7 +5,19 @@ import LanguageDropdown from '../LanguageDropdown.vue';
 import { commonStrings } from 'shared/strings/commonStrings';
 import { createTranslator } from 'shared/i18n';
 
-const { languageItemText$ } = createTranslator('LanguageDropdown', LanguageDropdown.$trs);
+const mockSendPoliteMessage = jest.fn();
+jest.mock('kolibri-design-system/lib/composables/useKLiveRegion', () => ({
+  __esModule: true,
+  default: () => ({
+    sendPoliteMessage: mockSendPoliteMessage,
+    sendAssertiveMessage: jest.fn(),
+  }),
+}));
+
+const { languageItemText$, languageRequired$ } = createTranslator(
+  'LanguageDropdown',
+  LanguageDropdown.$trs,
+);
 const { clearAction$, optionRemovedLabel$ } = commonStrings;
 
 const ENGLISH = languageItemText$({ language: 'English', code: 'en' });
@@ -44,13 +56,17 @@ describe('LanguageDropdown', () => {
     expect(lastInput(emitted)).toEqual(['en', 'es']);
   });
 
-  it('hides languages passed in excludeLanguages', async () => {
-    renderComponent({ excludeLanguages: ['en'] });
+  it('filters options using the configured searchKeys', async () => {
+    renderComponent();
+    const combobox = screen.getByRole('combobox');
 
-    await userEvent.click(screen.getByRole('combobox'));
-
+    await userEvent.click(combobox);
+    await userEvent.type(combobox, 'Spanish');
     expect(await screen.findByRole('option', { name: SPANISH })).toBeInTheDocument();
-    expect(screen.queryByRole('option', { name: ENGLISH })).not.toBeInTheDocument();
+
+    await userEvent.clear(combobox);
+    await userEvent.type(combobox, 'es');
+    expect(await screen.findByRole('option', { name: SPANISH })).toBeInTheDocument();
   });
 
   it('clears the selection when the clear button is clicked', async () => {
@@ -62,11 +78,35 @@ describe('LanguageDropdown', () => {
   });
 
   it('announces the removed option label, not a count, when clearing in single mode', async () => {
+    mockSendPoliteMessage.mockClear();
     renderComponent({ value: 'en' });
 
     await userEvent.click(screen.getByRole('button', { name: clearAction$() }));
 
-    const liveRegion = document.querySelector('#k-live-region [aria-live="polite"]');
-    expect(liveRegion).toHaveTextContent(optionRemovedLabel$({ label: ENGLISH }));
+    expect(mockSendPoliteMessage).toHaveBeenCalledWith(optionRemovedLabel$({ label: ENGLISH }));
+  });
+
+  it('validates a required language, then clears the error once one is picked', async () => {
+    const HostForm = {
+      components: { LanguageDropdown },
+      data() {
+        return { value: null };
+      },
+      template: `
+        <div>
+          <LanguageDropdown ref="dropdown" v-model="value" required />
+          <button @click="$refs.dropdown.validate()">Validate</button>
+        </div>
+      `,
+    };
+    render(HostForm, { router: new VueRouter() });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Validate' }));
+    expect(await screen.findByText(languageRequired$())).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('combobox'));
+    await userEvent.click(await screen.findByRole('option', { name: ENGLISH }));
+
+    expect(screen.queryByText(languageRequired$())).not.toBeInTheDocument();
   });
 });

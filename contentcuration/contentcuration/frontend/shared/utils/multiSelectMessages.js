@@ -1,12 +1,5 @@
 import { commonStrings } from 'shared/strings/commonStrings';
 
-/**
- * Builds the `messages` prop for KDS's KMultiSelect out of the standard
- * commonStrings, so each consumer only needs to supply the parts that
- * genuinely vary: the clear-button label, and the itemsSelected/cleared
- * counts, which need access to the consuming component's own translator
- * for their plural forms.
- */
 export function createMultiSelectMessages({
   clearText,
   itemsSelected,

@@ -1023,9 +1023,6 @@
     margin-top: 6px !important;
   }
 
-  // Pull the language hint up against the field it describes instead of
-  // relying on the <p>'s default margin, which visually grouped it with
-  // the unrelated field below.
   .language-hint {
     margin: 0 0 16px;
   }
