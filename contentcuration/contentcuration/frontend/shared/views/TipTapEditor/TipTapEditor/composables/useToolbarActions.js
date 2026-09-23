@@ -7,22 +7,10 @@ export function useToolbarActions(emit) {
 
   /**
    * Drop the actions marked `hide`, which every toolbar honours — the desktop one and
-   * the mobile bars alike. Same convention as the hidden groups in EditorToolbar.vue:
-   * the action stays defined, with the reason it is not offered, so restoring it is a
-   * matter of deleting one flag.
+   * the mobile bars alike. The action stays defined, with the reason it is not offered,
+   * so restoring it is a matter of deleting one flag.
    */
   const visible = actions => actions.filter(action => !action.hide);
-
-  /*
-   * TextAlign writes `style="text-align: …"`, and the QTI 3.0 HTML profile declares no
-   * style attribute — the item schema admits one only through its lax wildcard, so an
-   * aligned paragraph saves and then ships as non-conformant QTI. The image extension
-   * carries alignment as `data-text-align` instead, which the schema does allow.
-   *
-   * Kept out of `alignAction` so a toolbar can ask whether to offer the control without
-   * evaluating the action, which reads the editor's current selection to pick its icon.
-   */
-  const alignActionHidden = true;
 
   // helper
   const getEffectiveAlignment = editorInstance => {
@@ -364,44 +352,36 @@ export function useToolbarActions(emit) {
     },
   ]);
 
-  const textActions = computed(() =>
-    visible([
-      {
-        name: 'bold',
-        title: bold$(),
-        icon: require('../../assets/icon-bold.svg'),
-        handler: handleBold,
-        isActive: isMarkActive('bold'),
-      },
-      {
-        name: 'italic',
-        title: italic$(),
-        icon: require('../../assets/icon-italic.svg'),
-        handler: handleItalic,
-        isActive: isMarkActive('italic'),
-      },
-      {
-        name: 'underline',
-        title: underline$(),
-        icon: require('../../assets/icon-underline.svg'),
-        handler: handleUnderline,
-        isActive: isMarkActive('underline'),
-        // The QTI 3.0 HTML profile has no <u> or <s>, so the item schema rejects an item
-        // carrying either and the save fails. Both marks are switched off in useEditor.js
-        // as well, since hiding a button leaves its keyboard shortcut behind — offering
-        // these again means undoing both halves.
-        hide: true,
-      },
-      {
-        name: 'strikethrough',
-        title: strikethrough$(),
-        icon: require('../../assets/icon-strikethrough.svg'),
-        handler: handleStrikethrough,
-        isActive: isMarkActive('strike'),
-        hide: true,
-      },
-    ]),
-  );
+  const textActions = computed(() => [
+    {
+      name: 'bold',
+      title: bold$(),
+      icon: require('../../assets/icon-bold.svg'),
+      handler: handleBold,
+      isActive: isMarkActive('bold'),
+    },
+    {
+      name: 'italic',
+      title: italic$(),
+      icon: require('../../assets/icon-italic.svg'),
+      handler: handleItalic,
+      isActive: isMarkActive('italic'),
+    },
+    {
+      name: 'underline',
+      title: underline$(),
+      icon: require('../../assets/icon-underline.svg'),
+      handler: handleUnderline,
+      isActive: isMarkActive('underline'),
+    },
+    {
+      name: 'strikethrough',
+      title: strikethrough$(),
+      icon: require('../../assets/icon-strikethrough.svg'),
+      handler: handleStrikethrough,
+      isActive: isMarkActive('strike'),
+    },
+  ]);
 
   const listActions = computed(() => [
     {
@@ -528,7 +508,6 @@ export function useToolbarActions(emit) {
     historyActions,
     textActions,
     alignAction,
-    alignActionHidden,
     listActions,
     scriptActions,
     insertTools,
