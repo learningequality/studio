@@ -12,6 +12,7 @@ import {
   NO_INTERACTION_ITEM_DOCUMENT,
   CHOICE_ITEM_DOCUMENT_WITH_HINTS,
   NO_INTERACTION_ITEM_WITH_HINTS,
+  VALID_ASSOCIATE_ITEM_DOCUMENT,
 } from '../../../utils/testingFixtures';
 
 jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor');
@@ -29,6 +30,9 @@ const {
   unsupportedItemMessage$,
   incompleteItemIndicatorLabel$,
   hintsLabel$,
+  associateLabel$,
+  unknownTypeLabel$,
+  responsePoolLabel$,
 } = qtiEditorStrings;
 
 const defaultProps = {
@@ -288,6 +292,29 @@ describe('QTIItemEditor', () => {
       const [xml] = emitted()['update:rawData'].at(-1);
       expect(xml).toContain('<p>test2 2</p>');
       expect(xml).not.toContain('<p>test</p>');
+    });
+  });
+
+  describe('associate interaction', () => {
+    const renderAssociateItem = () =>
+      renderComponent({
+        item: {
+          assessment_id: 'test-item-id',
+          type: AssessmentItemTypes.QTI,
+          raw_data: VALID_ASSOCIATE_ITEM_DOCUMENT,
+        },
+      });
+
+    test('names the associate question type rather than falling back to unknown', async () => {
+      renderAssociateItem();
+      expect(await screen.findByText(associateLabel$(), { exact: false })).toBeInTheDocument();
+      expect(screen.queryByText(unknownTypeLabel$(), { exact: false })).not.toBeInTheDocument();
+    });
+
+    test('renders the associate editor for the parsed interaction', async () => {
+      renderAssociateItem();
+      expect(await screen.findByText(responsePoolLabel$())).toBeInTheDocument();
+      expect(screen.getByText('Antonio')).toBeInTheDocument();
     });
   });
 
