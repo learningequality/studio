@@ -128,8 +128,8 @@
               <ClickableRegion
                 v-for="(choice, position) in pair"
                 :key="`${choice.id}-${position}`"
-                class="item-border pair-card"
-                :class="{ 'is-clickable': !isPairItemOpen(index, position) }"
+                class="pair-card"
+                :class="{ 'is-clickable item-border': !isPairItemOpen(index, position) }"
                 :style="pairItemStyles[index][position]"
                 :suppressed="isPairItemOpen(index, position)"
                 :aria-label="editPairItemLabel$({ number: index + 1, position: position + 1 })"
@@ -676,8 +676,10 @@
       // items of an identical pair are both marked.
       const pairItemStyles = computed(() =>
         state.value.pairs.map((pair, index) =>
-          pair.map(choice =>
-            borderStyle(duplicatePairIndexes.value.has(index) || choiceHasError(choice)),
+          pair.map((choice, choiceIndex) =>
+            isPairItemOpen(index, choiceIndex)
+              ? {}
+              : borderStyle(duplicatePairIndexes.value.has(index) || choiceHasError(choice)),
           ),
         ),
       );
@@ -1035,6 +1037,7 @@
     display: flex;
     gap: 8px;
     align-items: center;
+    min-width: 0;
     max-width: 100%;
     padding: 4px 12px;
     background-color: v-bind('$themeTokens.surface');
