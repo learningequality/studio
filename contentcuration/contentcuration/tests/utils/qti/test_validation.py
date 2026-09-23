@@ -246,6 +246,34 @@ class HintedEditorItemTests(unittest.TestCase):
         self.assertIn("qti-item-body", result.errors[0].message)
 
 
+STYLED_ITEM = _item_xml(
+    "item_styled",
+    "Styled Item",
+    '<qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="identifier">'
+    "<qti-correct-response><qti-value>choice_0</qti-value></qti-correct-response>"
+    "</qti-response-declaration>",
+    '<qti-choice-interaction response-identifier="RESPONSE" max-choices="1" min-choices="0" '
+    'orientation="vertical">'
+    "<qti-prompt>"
+    '<p style="text-align: right">Which is <span style="text-decoration: underline">not</span>'
+    ' <span style="text-decoration: line-through">wrong</span>?</p>'
+    "</qti-prompt>"
+    '<qti-simple-choice identifier="choice_0" show-hide="show" fixed="false">Option A</qti-simple-choice>'
+    "</qti-choice-interaction>",
+)
+
+
+class StyledItemTests(unittest.TestCase):
+    """The QTI 3.0 HTML profile has no <u>, no <s> and no alignment attribute, so the
+    editor writes all three as a style. QTI declares no style attribute either, but its
+    element definitions carry a lax attribute wildcard that admits one."""
+
+    def test_accepts_style_attribute(self):
+        result = validate_qti_item(STYLED_ITEM)
+        self.assertTrue(result.is_valid)
+        self.assertEqual(result.errors, [])
+
+
 class SchemaReuseTests(unittest.TestCase):
     def test_schema_compiled_once_across_multiple_validate_calls(self):
         _compiled_schema.cache_clear()

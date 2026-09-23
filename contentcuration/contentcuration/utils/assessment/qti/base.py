@@ -167,6 +167,10 @@ class BaseSequence(XMLElement):
     label: Optional[str] = None
     # We explicitly do not set the base value.
     dir_: Optional[Dir] = None
+    # QTI 3.0 declares no style attribute but the item XSD allows it.
+    # Studio uses it for what the HTML profile has no element for — a text decoration, an
+    # alignment — rather than shipping a qti-stylesheet and a vocabulary of classes.
+    style: Optional[str] = None
 
 
 # Pydantic's BaseModel Metaclass is only importable from an internal module,
