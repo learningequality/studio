@@ -123,6 +123,8 @@
     },
     methods: {
       updateAriaRequired() {
+        // Workaround: KMultiSelect (KDS 5.9.0) has no `required` prop and doesn't
+        // forward it to its input, so we reach into its private markup directly.
         const multiselectEl = this.$refs.multiselect && this.$refs.multiselect.$el;
         const input = multiselectEl && multiselectEl.querySelector('.kmselect-native-input');
         if (!input) {
