@@ -65,6 +65,17 @@ describe('the editor schema', () => {
     ]);
   });
 
+  it('carries no link mark, so a pasted anchor arrives as its text', () => {
+    // A link has nothing to navigate to on a device with no internet access, and the
+    // legacy conversion unwraps the ones it finds. Removing the button is not enough
+    // on its own — the mark has to leave the schema, or a paste still brings one in.
+    const editor = createEditor('<p>see <a href="https://example.com">the docs</a></p>');
+
+    expect(Object.keys(editor.schema.marks)).not.toContain('link');
+    expect(editor.getHTML()).not.toContain('<a ');
+    expect(editor.getText()).toBe('see the docs');
+  });
+
   it('turns a pasted <u> or <s> into a decorated span', () => {
     const editor = createEditor('<p>a <u>b</u> and <s>c</s></p>');
 
