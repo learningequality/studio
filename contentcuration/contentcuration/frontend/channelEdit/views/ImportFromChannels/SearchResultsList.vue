@@ -163,6 +163,7 @@
         pageCount: 0,
         totalCount: 0,
         firstCardCheckboxRef: null,
+        lastFocusedSearchTerm: null,
       };
     },
     computed: {
@@ -258,7 +259,14 @@
               this.pageCount = page.total_pages;
               this.totalCount = page.count;
               this.hasLoaded = true;
-              this.$nextTick(() => this.focus());
+              // Only steal focus into the results when the search term itself changed.
+              // Filter changes (language, format, etc.) also trigger a re-fetch, and
+              // moving focus then would close open filter menus like KMultiSelect,
+              // which closes on blur.
+              if (this.currentSearchTerm !== this.lastFocusedSearchTerm) {
+                this.lastFocusedSearchTerm = this.currentSearchTerm;
+                this.$nextTick(() => this.focus());
+              }
             })
             .catch(e => {
               this.loadFailed = true;

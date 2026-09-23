@@ -6,7 +6,7 @@ import { commonStrings } from 'shared/strings/commonStrings';
 import { createTranslator } from 'shared/i18n';
 
 const { languageItemText$ } = createTranslator('LanguageDropdown', LanguageDropdown.$trs);
-const { clearAction$ } = commonStrings;
+const { clearAction$, optionRemovedLabel$ } = commonStrings;
 
 const ENGLISH = languageItemText$({ language: 'English', code: 'en' });
 const SPANISH = languageItemText$({ language: 'Español', code: 'es' });
@@ -59,5 +59,14 @@ describe('LanguageDropdown', () => {
     await userEvent.click(screen.getByRole('button', { name: clearAction$() }));
 
     expect(lastInput(emitted)).toBeNull();
+  });
+
+  it('announces the removed option label, not a count, when clearing in single mode', async () => {
+    renderComponent({ value: 'en' });
+
+    await userEvent.click(screen.getByRole('button', { name: clearAction$() }));
+
+    const liveRegion = document.querySelector('#k-live-region [aria-live="polite"]');
+    expect(liveRegion).toHaveTextContent(optionRemovedLabel$({ label: ENGLISH }));
   });
 });

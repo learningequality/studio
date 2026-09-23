@@ -219,12 +219,10 @@
           <LanguageDropdown
             ref="language"
             v-model="language"
-            class="mb-2"
-            :placeholder="getPlaceholder('language')"
             @focus="trackClick('Language')"
           />
           <p
-            v-if="languageHint"
+            class="language-hint"
             :style="{ color: $themeTokens.annotation }"
           >
             {{ languageHint }}
@@ -1023,6 +1021,13 @@
   // alignment of help and info icons
   ::v-deep .v-input__append-outer {
     margin-top: 6px !important;
+  }
+
+  // Pull the language hint up against the field it describes instead of
+  // relying on the <p>'s default margin, which visually grouped it with
+  // the unrelated field below.
+  .language-hint {
+    margin: 0 0 16px;
   }
 
   ::v-deep a,

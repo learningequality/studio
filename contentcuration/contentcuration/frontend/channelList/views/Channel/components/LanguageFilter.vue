@@ -22,6 +22,7 @@
   import LanguagesMap, { LanguagesList } from 'shared/leUtils/Languages';
   import { commonStrings } from 'shared/strings/commonStrings';
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
+  import { createMultiSelectMessages } from 'shared/utils/multiSelectMessages';
 
   const publicLanguages = Object.entries(window.publicLanguages || {}).map(([langId, count]) => {
     const baseLanguage = LanguagesMap.get(langId);
@@ -63,37 +64,18 @@
         },
       },
       messages() {
-        const {
-          openMenuAction$,
-          closeMenuAction$,
-          optionsClickableLabel$,
-          allOptionsSelectedLabel$,
-          allOptionsDeselectedLabel$,
-          optionDeselectedLabel$,
-          optionSelectedLabel$,
-          optionRemovedLabel$,
-        } = commonStrings;
+        const { languageItemsSelectedLabel$, languageSelectionsClearedLabel$ } = commonStrings;
         const { clearAllAction$ } = communityChannelsStrings;
-        return {
+        return createMultiSelectMessages({
           clearText: clearAllAction$,
-          open: openMenuAction$,
-          close: closeMenuAction$,
-          clickable: optionsClickableLabel$,
-          allOptionsSelected: allOptionsSelectedLabel$,
-          allOptionsDeselected: allOptionsDeselectedLabel$,
-          optionDeselected: optionDeselectedLabel$,
-          itemsSelected: ({ count }) => this.$tr('itemsSelected', { count }),
-          selected: optionSelectedLabel$,
-          removed: optionRemovedLabel$,
-          cleared: ({ count }) => this.$tr('selectionsCleared', { count }),
-        };
+          itemsSelected: languageItemsSelectedLabel$,
+          cleared: languageSelectionsClearedLabel$,
+        });
       },
     },
     $trs: {
       languageLabel: 'Languages',
       noMatchingLanguageText: 'No language matches the search',
-      itemsSelected: '{count, plural, one {# language selected} other {# languages selected}}',
-      selectionsCleared: '{count, plural, one {Cleared # selection} other {Cleared # selections}}',
     },
   };
 

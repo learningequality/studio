@@ -27,6 +27,7 @@
   import isArray from 'lodash/isArray';
   import Languages, { LanguagesList } from 'shared/leUtils/Languages';
   import { commonStrings } from 'shared/strings/commonStrings';
+  import { createMultiSelectMessages } from 'shared/utils/multiSelectMessages';
 
   export default {
     name: 'LanguageDropdown',
@@ -93,29 +94,19 @@
       },
       messages() {
         const {
-          openMenuAction$,
-          closeMenuAction$,
           clearAction$,
-          optionsClickableLabel$,
-          allOptionsSelectedLabel$,
-          allOptionsDeselectedLabel$,
-          optionDeselectedLabel$,
-          optionSelectedLabel$,
           optionRemovedLabel$,
+          languageItemsSelectedLabel$,
+          languageSelectionsClearedLabel$,
         } = commonStrings;
-        return {
+        return createMultiSelectMessages({
           clearText: clearAction$,
-          open: openMenuAction$,
-          close: closeMenuAction$,
-          clickable: optionsClickableLabel$,
-          allOptionsSelected: allOptionsSelectedLabel$,
-          allOptionsDeselected: allOptionsDeselectedLabel$,
-          optionDeselected: optionDeselectedLabel$,
-          itemsSelected: ({ count }) => this.$tr('itemsSelected', { count }),
-          selected: optionSelectedLabel$,
-          removed: optionRemovedLabel$,
-          cleared: ({ count }) => this.$tr('selectionsCleared', { count }),
-        };
+          itemsSelected: languageItemsSelectedLabel$,
+          cleared: ({ label, count }) =>
+            this.multiple
+              ? languageSelectionsClearedLabel$({ count })
+              : optionRemovedLabel$({ label }),
+        });
       },
     },
     methods: {
@@ -143,8 +134,6 @@
       languageItemText: '{language} ({code})',
       languageRequired: 'Field is required',
       noDataText: 'Language not found',
-      itemsSelected: '{count, plural, one {# language selected} other {# languages selected}}',
-      selectionsCleared: '{count, plural, one {Cleared # selection} other {Cleared # selections}}',
     },
   };
 
