@@ -339,3 +339,61 @@ class SizedImageTests(unittest.TestCase):
         self.assertEqual(img.src, "cs.png")
         self.assertEqual(img.alt, "a")
         self.assertEqual((img.width, img.height), (230, 287))
+
+
+class StrikethroughTests(unittest.TestCase):
+    """The QTI 3.0 HTML profile has no <s>, so ~~…~~ renders as a decorated span."""
+
+    def test_strikethrough_renders_as_a_decorated_span(self):
+        self.assertEqual(
+            render_markdown("It is ~~not~~ four."),
+            '<p>It is <span style="text-decoration: line-through">not</span>'
+            " four.</p>\n",
+        )
+
+    def test_strikethrough_keeps_its_inner_markup(self):
+        self.assertEqual(
+            render_markdown("~~**gone**~~"),
+            '<p><span style="text-decoration: line-through">'
+            "<strong>gone</strong></span></p>\n",
+        )
+
+    def test_strikethrough_survives_the_model_layer(self):
+        # The converter builds its item body by parsing this HTML into the QTI
+        # models, which reject an attribute they do not declare.
+        paragraph = ElementTreeBase.from_string(render_markdown("~~gone~~"))[0]
+        span = paragraph.children[0]
+        self.assertEqual(span.style, "text-decoration: line-through")
+
+
+class UnderlineTests(unittest.TestCase):
+    """Perseus simple-markdown reads __…__ as an underline, not as strong.
+
+    Studio's editor writes the underline mark that way, and Kolibri renders the
+    legacy exercise through Perseus, so that is the grammar the stored markdown
+    follows. The QTI 3.0 HTML profile has no <u>, so it renders as a decorated span.
+    """
+
+    def test_underline_renders_as_a_decorated_span(self):
+        self.assertEqual(
+            render_markdown("It is __not__ four."),
+            '<p>It is <span style="text-decoration: underline">not</span> four.</p>\n',
+        )
+
+    def test_double_asterisk_is_still_strong(self):
+        self.assertEqual(
+            render_markdown("It is **very** four."),
+            "<p>It is <strong>very</strong> four.</p>\n",
+        )
+
+    def test_underline_keeps_its_inner_markup(self):
+        self.assertEqual(
+            render_markdown("__**both**__"),
+            '<p><span style="text-decoration: underline">'
+            "<strong>both</strong></span></p>\n",
+        )
+
+    def test_underline_survives_the_model_layer(self):
+        paragraph = ElementTreeBase.from_string(render_markdown("__under__"))[0]
+        span = paragraph.children[0]
+        self.assertEqual(span.style, "text-decoration: underline")
