@@ -358,25 +358,156 @@ class MarkdownContentConversionTests(unittest.TestCase):
 
         self.assertIn('<img alt="alt" src="image.png"', result.xml)
 
-    def test_strikethrough_is_stripped(self):
-        # The QTI 3.0 HTML profile has no element for a strikethrough, so the
-        # text survives and the mark does not.
+    def test_strikethrough_becomes_a_decorated_span(self):
+        # The QTI 3.0 HTML profile has no <s>, so the decoration travels as a
+        # style on a <span>, which the profile does have.
         result = self._convert("It is ~~not~~ four.")
 
-        self.assertIn("<p>It is not four.</p>", result.xml)
+        self.assertIn(
+            '<p>It is <span style="text-decoration: line-through">not</span> four.</p>',
+            result.xml,
+        )
         self.assertNotIn("<s>", result.xml)
         self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
-    def test_raw_html_marks_are_stripped(self):
-        # Every inline mark the renderer passes through as raw HTML that the QTI
-        # 3.0 HTML profile has no element for.
-        for tag in ("s", "del", "ins", "u", "mark", "strike"):
+    def test_raw_html_decorations_become_decorated_spans(self):
+        # Every inline decoration the renderer passes through as raw HTML, with
+        # the style a browser renders the tag with.
+        cases = (
+            ("s", "line-through"),
+            ("del", "line-through"),
+            ("strike", "line-through"),
+            ("u", "underline"),
+            ("ins", "underline"),
+        )
+        for tag, decoration in cases:
             with self.subTest(tag=tag):
                 result = self._convert(f"It is <{tag}>not</{tag}> four.")
 
-                self.assertIn("<p>It is not four.</p>", result.xml)
+                self.assertIn(
+                    f'<p>It is <span style="text-decoration: {decoration}">not</span>'
+                    " four.</p>",
+                    result.xml,
+                )
                 self.assertNotIn(f"<{tag}>", result.xml)
                 self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
+
+    def test_a_space_between_two_decorated_runs_survives(self):
+        # Whitespace between inline elements is a word gap the reader sees. Until the
+        # decorations became elements of their own, strip_tags flattened them into the
+        # surrounding text and the gap came along with it.
+        result = self._convert("It is ~~wrong~~ __under__ here.")
+
+        self.assertIn(
+            '<p>It is <span style="text-decoration: line-through">wrong</span>'
+            ' <span style="text-decoration: underline">under</span> here.</p>',
+            result.xml,
+        )
+        self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
+
+    def test_a_space_between_two_raw_decoration_tags_survives(self):
+        result = self._convert("It is <u>a</u> <s>b</s> here.")
+
+        self.assertIn(
+            '<p>It is <span style="text-decoration: underline">a</span>'
+            ' <span style="text-decoration: line-through">b</span> here.</p>',
+            result.xml,
+        )
+
+    def test_a_space_between_two_emphasis_runs_survives(self):
+        result = self._convert("It is **a** *b* here.")
+
+        self.assertIn("<p>It is <strong>a</strong> <em>b</em> here.</p>", result.xml)
+
+    def test_a_space_before_inline_math_survives(self):
+        # Math is not an HTML inline element, but the schema's InlineGroup lets it sit
+        # inline all the same, so the gap before it is a gap the reader sees.
+        result = self._convert("It is ~~wrong~~ $$x$$ here.")
+
+        # No validity assertion here: inline math does not validate against the item
+        # XSD on unstable either, because the <math> is serialized into the QTI
+        # namespace rather than the MathML one. That is its own bug, not this gap.
+        self.assertIn(
+            '<p>It is <span style="text-decoration: line-through">wrong</span> <math',
+            result.xml,
+        )
+
+    def test_a_space_before_an_inline_image_survives(self):
+        result = self._convert("It is ~~wrong~~ ![i](x.png) here.")
+
+        self.assertIn(
+            '<p>It is <span style="text-decoration: line-through">wrong</span> <img',
+            result.xml,
+        )
+
+    def test_markup_indentation_between_block_elements_is_not_content(self):
+        # The newlines a renderer puts between block elements are the markup's own
+        # indentation, not a gap the reader sees, so they do not become text.
+        result = self._convert("- one\n- two")
+
+        self.assertIn("<ul><li>one</li><li>two</li></ul>", result.xml)
+        self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
+
+    def test_style_is_filtered_to_the_allowed_properties(self):
+        # Kolibri renders an item through SafeHTML, which keeps only these
+        # properties, so a declaration it would drop is dropped here instead of
+        # travelling as far as the learner.
+        result = self._convert(
+            '<p style="font-size: 40pt; text-align: right; color: red">big</p>'
+        )
+
+        self.assertIn('<p style="text-align: right; color: red">big</p>', result.xml)
+        self.assertNotIn("font-size", result.xml)
+        self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
+
+    def test_style_property_names_are_normalized_to_lowercase(self):
+        # CSS property names are case-insensitive, so an authored declaration may
+        # arrive in any casing. It leaves in one, because the reverse conversion and
+        # Kolibri's own allowlist both match a property by name.
+        result = self._convert('<p style="TEXT-ALIGN: right; Color: red">big</p>')
+
+        self.assertIn('<p style="text-align: right; color: red">big</p>', result.xml)
+        self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
+
+    def test_style_is_dropped_when_no_property_is_allowed(self):
+        result = self._convert('<p style="font-size: 40pt">big</p>')
+
+        self.assertIn("<p>big</p>", result.xml)
+        self.assertNotIn("style", result.xml)
+        self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
+
+    def test_a_decorated_tag_keeps_its_own_allowed_style(self):
+        result = self._convert('It is <u style="color: red">not</u> four.')
+
+        self.assertIn(
+            '<span style="color: red; text-decoration: underline">not</span>',
+            result.xml,
+        )
+        self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
+
+    def test_a_decorated_tag_carrying_its_own_decoration_combines_the_two(self):
+        # Two text-decoration declarations do not stack in CSS -- the last one wins,
+        # so the tag's own decoration would be lost. One declaration holds both
+        # keywords, which is also what the reverse conversion reads back.
+        result = self._convert(
+            'It is <s style="text-decoration: underline">not</s> it.'
+        )
+
+        self.assertIn(
+            '<span style="text-decoration: underline line-through">not</span>',
+            result.xml,
+        )
+        self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
+
+    def test_raw_html_highlight_is_stripped(self):
+        # <mark> is the one inline mark left with nothing to express it: the QTI
+        # 3.0 HTML profile has no element for it, and no single declaration says
+        # "highlighted" the way a text-decoration says underlined.
+        result = self._convert("It is <mark>not</mark> four.")
+
+        self.assertIn("<p>It is not four.</p>", result.xml)
+        self.assertNotIn("<mark>", result.xml)
+        self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
     def test_maths_in_a_list_item(self):
         # Validity is not asserted here or below: rendered MathML carries no

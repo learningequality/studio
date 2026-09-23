@@ -12,6 +12,8 @@ from le_utils.constants import exercises
 from lxml import etree
 
 from contentcuration.utils.assessment.markdown import render_markdown
+from contentcuration.utils.assessment.markdown import STRIKETHROUGH_DECORATION
+from contentcuration.utils.assessment.markdown import UNDERLINE_DECORATION
 from contentcuration.utils.assessment.qti.assessment_item import AssessmentItem
 from contentcuration.utils.assessment.qti.assessment_item import BaseValue
 from contentcuration.utils.assessment.qti.assessment_item import CorrectResponse
@@ -31,6 +33,7 @@ from contentcuration.utils.assessment.qti.catalog import Card
 from contentcuration.utils.assessment.qti.catalog import Catalog
 from contentcuration.utils.assessment.qti.catalog import CatalogInfo
 from contentcuration.utils.assessment.qti.catalog import HtmlContent
+from contentcuration.utils.assessment.qti.constants import ALLOWED_STYLE_PROPERTIES
 from contentcuration.utils.assessment.qti.constants import BaseType
 from contentcuration.utils.assessment.qti.constants import Cardinality
 from contentcuration.utils.assessment.qti.constants import Orientation
@@ -86,16 +89,84 @@ class QTIConversionResult:
     file_dependencies: List[str]
 
 
-def _strip_unsupported_markup(markup: str) -> str:
-    """
-    Unwrap every tag a QTI item body cannot carry, keeping its content.
+# Tags the QTI 3.0 HTML profile has no element for, but whose rendering is a text
+# decoration a <span> can carry as a style. `render_markdown` writes the
+# strikethrough it parses as such a span already; these are the ones an author typed
+# as raw HTML, which the renderer passes through untouched.
+_DECORATION_TAGS = {
+    "s": STRIKETHROUGH_DECORATION,
+    "del": STRIKETHROUGH_DECORATION,
+    "strike": STRIKETHROUGH_DECORATION,
+    "u": UNDERLINE_DECORATION,
+    "ins": UNDERLINE_DECORATION,
+}
 
-    An anchor has nothing to navigate to on a device with no internet access.
-    The QTI 3.0 HTML profile has no element for the inline marks.
-    Runs on the rendered markup, so tags typed as raw HTML are stripped too.
+# Tags with nothing left to express them: the profile has no element, and no single
+# style declaration says what they mean. The text survives, the tag does not. An
+# anchor has nothing to navigate to on a device with no internet access.
+_UNWRAPPED_TAGS = ("a", "mark")
+
+
+def _filter_style(element) -> None:
+    """Reduce an element's style to the declarations Kolibri will render.
+
+    The property name is lowercased on the way out. CSS does not care, but the
+    reverse conversion in ``html_to_markdown`` and Kolibri's own allowlist both
+    match a property by name, so an authored ``TEXT-DECORATION`` leaves here in the
+    one spelling everything downstream looks for. The value is passed through
+    untouched: nothing reads it by name, and normalizing it would edit content.
+    """
+    kept = "; ".join(
+        f"{prop.strip().lower()}:{value}"
+        for prop, sep, value in (
+            declaration.partition(":")
+            for declaration in element.get("style", "").split(";")
+        )
+        if sep and prop.strip().lower() in ALLOWED_STYLE_PROPERTIES
+    )
+    if kept:
+        element.set("style", kept)
+    else:
+        element.attrib.pop("style", None)
+
+
+def _add_decoration(element, decoration: str) -> None:
+    """Add a text decoration to an element, keeping any the style already sets.
+
+    Merged into one declaration rather than appended as a second: two
+    ``text-decoration`` declarations do not stack in CSS, the last one simply wins,
+    so a tag carrying its own decoration would lose it. One declaration holding both
+    keywords is what a browser renders and what ``_text_decorations`` reads back.
+    """
+    kept = []
+    decorations = [decoration]
+    for declaration in element.get("style", "").split(";"):
+        prop, sep, value = declaration.partition(":")
+        if not sep:
+            continue
+        if prop.strip() == "text-decoration":
+            decorations = value.split() + decorations
+        else:
+            kept.append(declaration.strip())
+    kept.append("text-decoration: {}".format(" ".join(dict.fromkeys(decorations))))
+    element.set("style", "; ".join(kept))
+
+
+def _adapt_unsupported_markup(markup: str) -> str:
+    """
+    Rewrite every tag a QTI item body cannot carry, keeping its content.
+
+    Runs on the rendered markup, so tags typed as raw HTML are adapted too — an
+    author's own style attribute included, which is filtered rather than refused.
     """
     root = etree.fromstring(f"<root>{markup}</root>")
-    etree.strip_tags(root, "a", "s", "del", "ins", "u", "mark", "strike")
+    for element in list(root.iter("*")):
+        if element.get("style") is not None:
+            _filter_style(element)
+    for element in list(root.iter(*_DECORATION_TAGS)):
+        _add_decoration(element, _DECORATION_TAGS[element.tag])
+        element.tag = "span"
+    etree.strip_tags(root, *_UNWRAPPED_TAGS)
     return (root.text or "") + "".join(
         etree.tostring(child, encoding="unicode") for child in root
     )
@@ -105,7 +176,7 @@ def _create_html_content_from_text(text: str) -> FlowContentList:
     """Convert text content to QTI HTML flow content."""
     if not text.strip():
         return []
-    markup = _strip_unsupported_markup(render_markdown(text))
+    markup = _adapt_unsupported_markup(render_markdown(text))
     return ElementTreeBase.from_string(markup)
 
 

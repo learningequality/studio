@@ -11,6 +11,11 @@ one deliberate exception is images — a QTI ``raw_data`` ``<img>`` carries a ba
 ``<checksum>.<ext>`` ``src``, which is re-prefixed with the Perseus content-storage
 placeholder here (see ``test_html_to_markdown`` for the round-trip coverage).
 
+Both decorations round-trip through their span: ``~~…~~`` and ``__…__``, the
+latter written by ``underline_as_style_plugin`` and read back here, since Perseus
+simple-markdown — which renders the derived exercise — treats ``__text__`` as
+``<u>``.
+
 This module has no knowledge of QTI items — it operates on a sequence of sibling
 lxml elements.
 """
@@ -19,6 +24,9 @@ from typing import Iterable
 
 from le_utils.constants import exercises
 from lxml import etree
+
+from contentcuration.utils.assessment.markdown import STRIKETHROUGH_DECORATION
+from contentcuration.utils.assessment.markdown import UNDERLINE_DECORATION
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +76,38 @@ def _render_img(el):
     if not src:
         return ""
     return "![{}]({}{})".format(el.get("alt", ""), CONTENT_STORAGE_PREFIX, src)
+
+
+def _text_decorations(el):
+    """The decoration keywords an element's style sets, whichever property carries them.
+
+    Matched case-insensitively. A span written by ``convert.py`` is already
+    lowercased, but a foreign QTI package is under no obligation to be, and CSS
+    does not require it: both the property and the keyword are case-insensitive.
+    """
+    decorations = set()
+    for declaration in el.get("style", "").split(";"):
+        prop, _, values = declaration.partition(":")
+        if prop.strip().lower().startswith("text-decoration"):
+            decorations.update(value.lower() for value in values.split())
+    return decorations
+
+
+def _render_span(el):
+    """A decorated span is how a strikethrough and an underline are carried.
+
+    ``render_markdown`` writes the first; the editor writes either, since the QTI
+    HTML profile has no ``<s>`` and no ``<u>``. Any other span unwraps, keeping its
+    content: whatever a foreign QTI package styles a span with has nothing in
+    Perseus markdown to say it.
+    """
+    decorations = _text_decorations(el)
+    rendered = _render_inline(el)
+    if UNDERLINE_DECORATION in decorations:
+        rendered = "__{}__".format(rendered)
+    if STRIKETHROUGH_DECORATION in decorations:
+        rendered = "~~{}~~".format(rendered)
+    return rendered
 
 
 def _render_heading(el):
@@ -176,6 +216,7 @@ _ELEMENT_RENDERERS = {
     "ul": _render_list,
     "ol": _render_list,
     "table": _render_table,
+    "span": _render_span,
     "p": lambda el: "{}\n\n".format(_render_inline(el)),
     "div": lambda el: "{}\n\n".format(_render_inline(el)),
     **{"h{}".format(level): _render_heading for level in range(1, 7)},

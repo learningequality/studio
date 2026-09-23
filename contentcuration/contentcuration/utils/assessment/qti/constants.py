@@ -67,3 +67,19 @@ class ResourceType(Enum):
     ASSESSMENT_TEST = "imsqti_test_xmlv3p0"
     ASSESSMENT_ITEM = "imsqti_item_xmlv3p0"
     RESPONSE_TEMPLATE = "imsqti_rptemplate_xmlv3p0"
+
+
+# Inline style properties an item may carry. Kolibri's SafeHTML rebuilds every style
+# attribute from this same list before rendering an item (its ALLOWED_STYLE_PROPS, in
+# kolibri-common/components/SafeHTML/index.js, which the qti_viewer renders through),
+# dropping whatever is not on it — so a declaration outside this list never reaches the
+# learner. Hand-synced with that list and with the ricecooker/le_utils KPUB ingest
+# allowlist (learningequality/ricecooker#685); no shared package carries it yet.
+ALLOWED_STYLE_PROPERTIES = frozenset(
+    {
+        "text-align",
+        "color",
+        "background-color",
+        "text-decoration",
+    }
+)
