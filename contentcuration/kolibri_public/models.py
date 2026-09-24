@@ -6,6 +6,7 @@ from kolibri_public.search import channelmetadata_metadata_bitmasks
 from kolibri_public.search import contentnode_bitmask_fieldnames
 from kolibri_public.search import contentnode_metadata_bitmasks
 from kolibri_public.search import has_all_labels
+from le_utils.constants import modalities
 from mptt.managers import TreeManager
 from mptt.querysets import TreeQuerySet
 
@@ -53,8 +54,14 @@ class ContentNode(base_models.ContentNode):
     ancestors = JSONField(
         default=[], null=True, blank=True, load_kwargs={"strict": False}
     )
+    modality = models.CharField(
+        max_length=50, blank=True, null=True, choices=modalities.choices
+    )
 
     objects = ContentNodeManager()
+
+    class Meta:
+        indexes = [models.Index(fields=["modality"])]
 
 
 for field_name in contentnode_bitmask_fieldnames:
