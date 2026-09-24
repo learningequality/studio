@@ -1,5 +1,4 @@
 <template>
-
   <StudioMessageLayout
     :header="$tr('forgotPasswordTitle')"
     :text="$tr('forgotPasswordPrompt')"
@@ -7,6 +6,7 @@
     <form
       ref="form"
       novalidate
+      class="forgot-password-form"
       @submit.prevent="submit"
     >
       <StudioBanner
@@ -21,6 +21,7 @@
       <StudioEmailField
         v-model="email"
         autofocus
+        class="w-100 email-field"
         :error-messages="emailErrors"
         @blur="showEmailError"
         @input="hideEmailError"
@@ -35,105 +36,110 @@
       />
     </form>
   </StudioMessageLayout>
-
 </template>
 
-
 <script>
+import { mapActions } from 'vuex';
+import StudioMessageLayout from '../../components/StudioMessageLayout';
+import StudioEmailField from '../../components/form/StudioEmailField';
+import StudioBanner from '../../../shared/views/StudioBanner';
+import { generateFormMixin } from '../../../shared/mixins.js';
 
-  import { mapActions } from 'vuex';
-  import StudioMessageLayout from '../../components/StudioMessageLayout';
-  import StudioEmailField from '../../components/form/StudioEmailField';
-  import StudioBanner from '../../../shared/views/StudioBanner';
-  import { generateFormMixin } from '../../../shared/mixins.js';
+const formFields = {
+  email: {
+    required: true,
+    validator: value => Boolean(value && /.+@.+\..+/.test(value)),
+  },
+};
 
-  const formFields = {
-    email: {
-      required: true,
-      validator: value => Boolean(value && /.+@.+\..+/.test(value)),
+export default {
+  name: 'ForgotPassword',
+
+  mixins: [generateFormMixin(formFields)],
+
+  components: {
+    StudioMessageLayout,
+    StudioEmailField,
+    StudioBanner,
+  },
+
+  data() {
+    return {
+      error: false,
+      emailValidationVisible: false,
+    };
+  },
+
+  computed: {
+    emailErrors() {
+      if (!this.emailValidationVisible || !this.errors.email) {
+        return [];
+      }
+
+      return [this.$tr('validEmailMessage')];
     },
-  };
+  },
 
-  export default {
-    name: 'ForgotPassword',
+  methods: {
+    ...mapActions('account', ['sendPasswordResetLink']),
 
-    mixins: [generateFormMixin(formFields)],
-
-    components: {
-      StudioMessageLayout,
-      StudioEmailField,
-      StudioBanner,
+    hideEmailError() {
+      this.emailValidationVisible = false;
     },
 
-    data() {
-      return {
-        error: false,
-        emailValidationVisible: false,
-      };
+    showEmailError() {
+      this.emailValidationVisible = true;
     },
 
-    computed: {
-      emailErrors() {
-        if (!this.emailValidationVisible || !this.errors.email) {
-          return [];
-        }
+    submit() {
+      this.error = false;
 
-        return [this.$tr('validEmailMessage')];
-      },
-    },
+      const formData = this.clean();
 
-    methods: {
-      ...mapActions('account', ['sendPasswordResetLink']),
-
-      hideEmailError() {
-        this.emailValidationVisible = false;
-      },
-
-      showEmailError() {
+      if (!this.validate(formData)) {
         this.emailValidationVisible = true;
-      },
+        return;
+      }
 
-      submit() {
-        this.error = false;
-
-        const formData = this.clean();
-
-        if (!this.validate(formData)) {
-          this.emailValidationVisible = true;
-          return;
-        }
-
-        this.sendPasswordResetLink(formData.email)
-          .then(() => {
-            this.$router
-              .push({
-                name: 'PasswordInstructionsSent',
-              })
-              .catch(() => {});
-          })
-          .catch(() => {
-            this.error = true;
-          });
-      },
+      this.sendPasswordResetLink(formData.email)
+        .then(() => {
+          this.$router
+            .push({
+              name: 'PasswordInstructionsSent',
+            })
+            .catch(() => {});
+        })
+        .catch(() => {
+          this.error = true;
+        });
     },
+  },
 
-    $trs: {
-      forgotPasswordTitle: 'Reset your password',
-      forgotPasswordPrompt:
-        'Please enter your email address to receive instructions for resetting your password',
-      submitButton: 'Submit',
-      forgotPasswordFailed: 'Failed to send a password reset link. Please try again.',
-      validEmailMessage: 'Please enter a valid email',
-    },
-  };
-
+  $trs: {
+    forgotPasswordTitle: 'Reset your password',
+    forgotPasswordPrompt:
+      'Please enter your email address to receive instructions for resetting your password',
+    submitButton: 'Submit',
+    forgotPasswordFailed:
+      'Failed to send a password reset link. Please try again.',
+    validEmailMessage: 'Please enter a valid email',
+  },
+};
 </script>
 
-
 <style lang="scss" scoped>
+.forgot-password-form {
+  width: 400px;
+  max-width: 100%;
+  margin: 0 auto;
+}
 
-  .w-100 {
-    width: 100%;
-  }
+.email-field {
+  margin-bottom: 24px;
+}
 
+.w-100 {
+  display: block;
+  width: 100% !important;
+}
 </style>
