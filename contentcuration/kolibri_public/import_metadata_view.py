@@ -6,19 +6,20 @@ from uuid import UUID
 
 from django.db import connection
 from django.db.models import Q
-from django.http import HttpResponseBadRequest
 from django.utils.decorators import method_decorator
-from kolibri_content import base_models
 from kolibri_content import models as kolibri_content_models
 from kolibri_content.constants.schema_versions import (
     CONTENT_SCHEMA_VERSION,
 )  # Use kolibri_content
+from kolibri_content.constants.schema_versions import EXPORT_SCHEMA_VERSIONS
 from kolibri_content.constants.schema_versions import (
     MIN_CONTENT_SCHEMA_VERSION,
 )  # Use kolibri_content
+from kolibri_content.contentschema.columns import for_version
 from kolibri_public import models  # Use kolibri_public models
 from kolibri_public.views import metadata_cache
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -27,20 +28,26 @@ from rest_framework.viewsets import GenericViewSet
 from contentcuration.utils.pagination import ValuesViewsetCursorPagination
 
 
-def _get_kc_and_base_models(model):
+# Clients that send no schema_version predate kolibri#15358 and may read any supported version.
+DEFAULT_COLUMNS = {
+    table: tuple(
+        dict.fromkeys(
+            column
+            for version in EXPORT_SCHEMA_VERSIONS
+            for column in for_version(version)[table]
+        )
+    )
+    for table in for_version(CONTENT_SCHEMA_VERSION)
+}
+
+
+def _get_kc_model(model):
     try:
-        kc_model = getattr(kolibri_content_models, model.__name__)
-        base_model = getattr(base_models, model.__name__)
+        return getattr(kolibri_content_models, model.__name__)
     except AttributeError:
         # This will happen if it's a M2M through model, which only exist on ContentNode
         through_model_name = model.__name__.replace("ContentNode_", "")
-        kc_model = getattr(
-            kolibri_content_models.ContentNode, through_model_name
-        ).through
-        # Through models are not defined for the abstract base models, so we just cheat and
-        # use these instead.
-        base_model = kc_model
-    return kc_model, base_model
+        return getattr(kolibri_content_models.ContentNode, through_model_name).through
 
 
 class ImportMetadataPagination(ValuesViewsetCursorPagination):
@@ -75,7 +82,20 @@ class ImportMetadataViewset(GenericViewSet):
             )
         return error
 
-    def retrieve(self, request, pk=None):  # noqa: C901
+    def _validate_content_schema(self, content_schema):
+        try:
+            version = int(content_schema)
+        except ValueError as e:
+            raise ValidationError(
+                "Schema version is not parseable by this version of Kolibri"
+            ) from e
+        if version > int(self.default_content_schema):
+            raise ValidationError(self._error_message(False))
+        if version < int(self.min_content_schema):
+            raise ValidationError(self._error_message(True))
+        return str(version)
+
+    def retrieve(self, request, pk=None):
         """
         An endpoint to retrieve all content metadata required for importing a content node
         all of its ancestors, and any relevant needed metadata.
@@ -92,24 +112,13 @@ class ImportMetadataViewset(GenericViewSet):
                 {"error": "Invalid UUID format."}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        content_schema = request.query_params.get(
-            "schema_version", self.default_content_schema
-        )
-
-        try:
-            if int(content_schema) > int(self.default_content_schema):
-                return HttpResponseBadRequest(self._error_message(False))
-            if int(content_schema) < int(self.min_content_schema):
-                return HttpResponseBadRequest(self._error_message(True))
-            # Remove reference to SQLAlchemy schema bases
-        except ValueError:
-            return HttpResponseBadRequest(
-                "Schema version is not parseable by this version of Kolibri"
-            )
-        except AttributeError:
-            return HttpResponseBadRequest(
-                "Schema version is not known by this version of Kolibri"
-            )
+        content_schema = request.query_params.get("schema_version")
+        if content_schema is None:
+            content_schema = self.default_content_schema
+            columns = DEFAULT_COLUMNS
+        else:
+            content_schema = self._validate_content_schema(content_schema)
+            columns = for_version(content_schema)
 
         # Get the model for the target node here - we do this so that we trigger a 404 immediately if the node
         # does not exist.
@@ -163,32 +172,17 @@ class ImportMetadataViewset(GenericViewSet):
             related,
             channel_metadata,
         ]:
-            # First get the kolibri_content model and base model to which this is equivalent
-            kc_model, base_model = _get_kc_and_base_models(qs.model)
             # Map the table name from the kolibri_public table name to the equivalent Kolibri table name
-            table_name = kc_model._meta.db_table
-            # Tweak our introspection here to rely on Django model meta instead of SQLAlchemy
-            # Read valid field names from the combination of the base model, and the mptt tree fields
-            # of the kc_model - because the base model is abstract, it does not get the mptt fields applied
-            # to its meta fields attribute, so we need to read the actual fields from the kc_model, but filter
-            # them only to names valid for the base model.
-            field_names = {field.column for field in base_model._meta.fields}
-            if hasattr(base_model, "_mptt_meta"):
-                field_names.add(base_model._mptt_meta.parent_attr)
-                field_names.add(base_model._mptt_meta.tree_id_attr)
-                field_names.add(base_model._mptt_meta.left_attr)
-                field_names.add(base_model._mptt_meta.right_attr)
-                field_names.add(base_model._mptt_meta.level_attr)
-            raw_fields = [
-                field.column
-                for field in kc_model._meta.fields
-                if field.column in field_names
-            ]
+            table_name = _get_kc_model(qs.model)._meta.db_table
+            raw_fields = columns[table_name]
+            value_fields = raw_fields
             if qs.model is models.Language:
-                raw_fields = [rf for rf in raw_fields if rf != "lang_name"] + [
-                    "native_name"
+                # Studio's Language keeps the name Kolibri calls lang_name in native_name
+                value_fields = [
+                    "native_name" if field == "lang_name" else field
+                    for field in raw_fields
                 ]
-            qs = qs.values(*raw_fields)
+            qs = qs.values(*value_fields)
             # Avoid using the Django queryset directly, as it will coerce the database values
             # via its field 'from_db_value' transformers, whereas import metadata is read
             # directly from the database.
@@ -208,10 +202,6 @@ class ImportMetadataViewset(GenericViewSet):
                 )
                 for row in cursor
             ]
-            if qs.model is models.Language:
-                for lang in data[table_name]:
-                    lang["lang_name"] = lang["native_name"]
-                    del lang["native_name"]
 
         data["schema_version"] = content_schema
 
