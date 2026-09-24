@@ -159,6 +159,11 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Delete distractor {number}',
     context: 'Accessible label for the delete icon button on a distractor',
   },
+  saveChipBtn: {
+    message: 'Save',
+    context:
+      'Button that saves the answer or distractor being edited and closes its editor; a new one joins its list',
+  },
   editPairItemLabel: {
     message: 'Edit pair {number}, item {position}',
     context: 'Accessible label for the clickable region to edit one item of a pair',

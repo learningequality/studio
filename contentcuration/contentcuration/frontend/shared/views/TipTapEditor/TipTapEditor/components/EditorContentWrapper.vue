@@ -1,6 +1,9 @@
 <template>
 
-  <div class="editor-content">
+  <div
+    class="editor-content"
+    :class="{ 'padding-small': padding === 'small', 'padding-none': padding === 'none' }"
+  >
     <EditorContent
       v-if="isReady && editor"
       :editor="editor"
@@ -30,6 +33,12 @@
         isReady,
       };
     },
+    props: {
+      padding: {
+        type: String,
+        default: 'default',
+      },
+    },
   });
 
 </script>
@@ -46,6 +55,14 @@
     padding-inline: 24px;
     margin-inline: 0 auto;
     overflow: hidden;
+  }
+
+  .editor-content.padding-small {
+    padding: 8px;
+  }
+
+  .editor-content.padding-none {
+    padding: 0;
   }
 
   .tiptap-editor {

@@ -385,6 +385,20 @@ describe('AssociateEditor', () => {
       expect(screen.getAllByText('Prospero')).toHaveLength(1);
     });
 
+    it('keeps the pool order across a round trip through edit mode', async () => {
+      const { updateProps } = renderEditor(viewProps);
+      const order = () =>
+        within(screen.getByRole('list', { name: tr.$tr('responsePoolLabel') }))
+          .getAllByRole('listitem')
+          .map(el => el.textContent.trim());
+      const initial = order();
+      for (let i = 0; i < 3; i++) {
+        await updateProps({ mode: 'edit' });
+        await updateProps({ mode: 'view' });
+        expect(order()).toEqual(initial);
+      }
+    });
+
     it('hides the editing controls', () => {
       renderEditor(viewProps);
       expect(queryButton(tr.$tr('addPairBtn'))).not.toBeInTheDocument();
