@@ -13,6 +13,8 @@ from kolibri_public.tests.test_content_app import ChannelBuilder
 from le_utils.constants import content_kinds
 from rest_framework.test import APITestCase
 
+from contentcuration.tests.helpers import reverse_with_query
+
 
 class ImportMetadataTestCase(APITestCase):
     @classmethod
@@ -38,6 +40,11 @@ class ImportMetadataTestCase(APITestCase):
         cls.tags = public.ContentTag.objects.filter(
             id__in=cls.through_tags.values_list("contenttag_id", flat=True)
         ).distinct()
+        cls.topic = cls.node.parent
+        cls.ancestor_ids = list(
+            cls.topic.get_ancestors(include_self=True).values_list("id", flat=True)
+        )
+        cls.family_ids = list(cls.topic.get_family().values_list("id", flat=True))
 
     def _assert_data(self, Model, ContentModel, queryset):
         response = self.client.get(
@@ -63,6 +70,60 @@ class ImportMetadataTestCase(APITestCase):
                     if hasattr(field, "from_db_value"):
                         value = field.from_db_value(value, None, connection)
                     self.assertEqual(value, getattr(obj, field.column))
+
+    def _node_ids(self, data):
+        return [row["id"] for row in data[content.ContentNode._meta.db_table]]
+
+    def _get_topic(self, query):
+        return self.client.get(
+            reverse_with_query(
+                "publicimportmetadata-detail",
+                kwargs={"pk": self.topic.id},
+                query=query,
+            )
+        )
+
+    def _get_paged_node_ids(self, query):
+        page_size = int(query["max_results"])
+        node_ids = []
+        for _ in self.family_ids:
+            response = self._get_topic(query)
+            self.assertEqual(set(response.data), {"more", "results"})
+            page = response.data["results"]
+            page_node_ids = self._node_ids(page)
+            self.assertLessEqual(len(page_node_ids), page_size)
+            self.assertEqual(
+                {f["contentnode_id"] for f in page[content.File._meta.db_table]},
+                set(page_node_ids),
+            )
+            node_ids.extend(page_node_ids)
+            query = response.data["more"]
+            if query is None:
+                return node_ids
+        self.fail("more never became None")
+
+    def test_import_metadata_unpaginated(self):
+        for query, expected in (
+            ({}, self.ancestor_ids),
+            ({"max_results": "0"}, self.ancestor_ids),
+            ({"max_results": "abc"}, self.ancestor_ids),
+            ({"descendants": "true"}, self.family_ids),
+        ):
+            with self.subTest(query=query):
+                response = self._get_topic(query)
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(self._node_ids(response.data), expected)
+
+    def test_import_metadata_paginated(self):
+        self.assertEqual(
+            self._get_paged_node_ids({"max_results": 3}), self.ancestor_ids
+        )
+
+    def test_import_metadata_paginated_descendants(self):
+        self.assertEqual(
+            self._get_paged_node_ids({"max_results": 2, "descendants": "true"}),
+            self.family_ids,
+        )
 
     def test_import_metadata_nodes(self):
         self._assert_data(public.ContentNode, content.ContentNode, self.all_nodes)
