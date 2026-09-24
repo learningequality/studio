@@ -66,4 +66,23 @@ describe('ClickableRegion', () => {
 
     expect(emitted().click).toHaveLength(1);
   });
+
+  it('focuses its button when asked to', async () => {
+    render(
+      {
+        components: { ClickableRegion },
+        template: `
+          <div>
+            <button @click="$refs.region.focus()">Elsewhere</button>
+            <ClickableRegion ref="region" ariaLabel="Test label" />
+          </div>
+        `,
+      },
+      { routes: new VueRouter() },
+    );
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Elsewhere' }));
+
+    expect(screen.getByRole('button', { name: 'Test label' })).toHaveFocus();
+  });
 });

@@ -10,8 +10,10 @@
   >
     <button
       v-if="!suppressed"
+      ref="button"
       type="button"
       class="overlay-button"
+      :class="{ 'is-text-target': textCursor }"
       :aria-label="ariaLabel"
       @click.stop="onClick"
     ></button>
@@ -25,9 +27,13 @@
 
 <script>
 
+  import { ref } from 'vue';
+
   export default {
     name: 'ClickableRegion',
     setup(props, { emit }) {
+      const button = ref(null);
+
       function onClick(event) {
         if (props.suppressed) return;
         if (event && event.stopPropagation) {
@@ -35,7 +41,13 @@
         }
         emit('click', event);
       }
-      return { onClick };
+      return {
+        button,
+        onClick,
+        // Public: lets a parent move focus to the region.
+        // eslint-disable-next-line vue/no-unused-properties
+        focus: () => button.value?.focus(),
+      };
     },
     props: {
       ariaLabel: {
@@ -43,6 +55,11 @@
         required: true,
       },
       suppressed: {
+        type: Boolean,
+        default: false,
+      },
+      /** A text cursor and no hover tint, for a region that opens an editor where it is clicked */
+      textCursor: {
         type: Boolean,
         default: false,
       },
@@ -75,8 +92,12 @@
     border-radius: inherit;
     outline: none;
 
-    &:hover {
+    &:hover:not(.is-text-target) {
       background-color: v-bind('$themeTokens.fineLine');
+    }
+
+    &.is-text-target {
+      cursor: text;
     }
 
     &:focus-visible {
