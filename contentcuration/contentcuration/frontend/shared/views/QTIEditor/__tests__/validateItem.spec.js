@@ -5,6 +5,9 @@ import {
   CHOICE_ITEM_DOCUMENT_NO_PROMPT,
   CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER,
   NO_INTERACTION_ITEM_DOCUMENT,
+  VALID_MATCH_ITEM_DOCUMENT,
+  MATCH_THREE_SETS_XML,
+  MATCH_XML,
 } from '../utils/testingFixtures';
 
 const codesOf = errors => errors.map(error => error.code);
@@ -35,6 +38,22 @@ describe('validateQtiItem', () => {
   it('reports an item with no raw data at all', () => {
     expect(validateQtiItem('')).toEqual([{ code: ValidationError.NO_INTERACTION }]);
     expect(validateQtiItem(undefined)).toEqual([{ code: ValidationError.NO_INTERACTION }]);
+  });
+
+  describe('match interaction', () => {
+    it('returns no errors for a complete match item', () => {
+      expect(validateQtiItem(VALID_MATCH_ITEM_DOCUMENT)).toEqual([]);
+    });
+
+    it('runs the match validator', () => {
+      const noPrompt = VALID_MATCH_ITEM_DOCUMENT.replace(/<qti-prompt>.*<\/qti-prompt>/, '');
+      expect(codesOf(validateQtiItem(noPrompt))).toContain(ValidationError.PROMPT_REQUIRED);
+    });
+
+    it('reports a match interaction without exactly two match sets as unparseable', () => {
+      const threeSets = VALID_MATCH_ITEM_DOCUMENT.replace(MATCH_XML, MATCH_THREE_SETS_XML);
+      expect(validateQtiItem(threeSets)).toEqual([{ code: ValidationError.PARSE_ERROR }]);
+    });
   });
 
   it('reports unparseable XML', () => {
