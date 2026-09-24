@@ -1,10 +1,10 @@
 import { ref, computed, unref } from 'vue';
 import pickBy from 'lodash/pickBy';
+import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 import { useFetch } from 'shared/composables/useFetch';
 import { CommunityLibrarySubmission } from 'shared/data/resources';
 import { CommunityLibraryStatus, NotificationType } from 'shared/constants';
 import { commonStrings } from 'shared/strings/commonStrings';
-import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 
 const MAX_RESULTS_PER_PAGE = 10;
 

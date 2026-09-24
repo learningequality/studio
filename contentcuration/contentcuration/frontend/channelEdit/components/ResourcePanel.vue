@@ -539,10 +539,6 @@
 
   export default {
     name: 'ResourcePanel',
-    setup() {
-      const { createSnackbar } = useKSnackbar();
-      return { createSnackbar };
-    },
     components: {
       ContentNodeLearningActivityIcon,
       LoadingText,
@@ -556,6 +552,10 @@
       Tabs,
     },
     mixins: [constantsTranslationMixin, metadataTranslationMixin, fileSizeMixin, titleMixin],
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       nodeId: {
         type: String,

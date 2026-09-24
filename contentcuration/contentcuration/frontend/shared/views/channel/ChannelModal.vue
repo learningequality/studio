@@ -159,10 +159,6 @@
 
   export default {
     name: 'ChannelModal',
-    setup() {
-      const { createSnackbar } = useKSnackbar();
-      return { createSnackbar };
-    },
     components: {
       LanguageDropdown,
       ContentDefaults,
@@ -174,6 +170,10 @@
       ToolBar,
     },
     mixins: [routerMixin],
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       channelId: {
         type: String,

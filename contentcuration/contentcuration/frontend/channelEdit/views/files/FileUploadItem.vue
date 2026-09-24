@@ -82,16 +82,16 @@
 
   export default {
     name: 'FileUploadItem',
-    setup() {
-      const { createSnackbar } = useKSnackbar();
-      return { createSnackbar };
-    },
     components: {
       Uploader,
       FileDropzone,
       FileStatusText,
     },
     mixins: [constantsTranslationMixin, fileSizeMixin, fileStatusMixin],
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       file: {
         type: Object,

@@ -12,7 +12,6 @@ jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
   }),
 }));
 
-
 // Mock the jsonSchema compile function to always return true
 jest.mock('shared/utils/jsonSchema', () => ({
   compile: () => () => true,

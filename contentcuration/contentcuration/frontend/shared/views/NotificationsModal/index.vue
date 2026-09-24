@@ -80,6 +80,7 @@
   import { useRoute, useRouter } from 'vue-router/composables';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import NotificationFilters from './NotificationFilters.vue';
   import NotificationList from './NotificationList.vue';
   import useCommunityLibraryUpdates from './composables/useCommunityLibraryUpdates';
@@ -90,7 +91,6 @@
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
   import { Modals } from 'shared/constants';
   import useStore from 'shared/composables/useStore';
-  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 
   const NotificationsTab = {
     UNREAD: 0,

@@ -12,7 +12,6 @@ jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
   }),
 }));
 
-
 let nodes;
 
 let store;
@@ -69,8 +68,7 @@ describe('EditSourceModal', () => {
     contentNodeActions = {
       updateContentNode: jest.fn(),
     };
-    generalActions = {
-    };
+    generalActions = {};
     store = new Store({
       actions: generalActions,
       modules: {

@@ -14,7 +14,6 @@ jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
   }),
 }));
 
-
 const localVue = createLocalVue();
 localVue.use(Vuex);
 
@@ -70,7 +69,7 @@ const createMockStore = (users = [currentUser, otherUser], invitations = [pendin
         },
       },
     },
-    actions: {    },
+    actions: {},
   });
 };
 

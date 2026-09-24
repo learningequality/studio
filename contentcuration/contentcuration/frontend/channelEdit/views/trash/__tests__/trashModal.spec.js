@@ -17,7 +17,6 @@ jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
   }),
 }));
 
-
 const tr = createTranslator('TrashModal', TrashModal.$trs);
 const moveTr = createTranslator('MoveModal', MoveModal.$trs);
 const nodePanelTr = createTranslator('NodePanel', NodePanel.$trs);

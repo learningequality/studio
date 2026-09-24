@@ -34,12 +34,12 @@
 
   export default {
     name: 'EditCompletionModal',
+    components: {
+      CompletionOptions,
+    },
     setup() {
       const { createSnackbar } = useKSnackbar();
       return { createSnackbar };
-    },
-    components: {
-      CompletionOptions,
     },
     props: {
       nodeId: {

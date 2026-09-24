@@ -13,7 +13,6 @@ jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
   }),
 }));
 
-
 const localVue = createLocalVue();
 localVue.use(Vuex);
 localVue.use(VueRouter);
@@ -54,7 +53,7 @@ const createMockStore = () => {
         },
       },
     },
-    actions: {    },
+    actions: {},
   });
 };
 
@@ -270,7 +269,12 @@ describe('EmailUsersDialog', () => {
       await user.type(screen.getByLabelText(/email body/i), 'Test Message');
       await user.click(screen.getByRole('button', { name: 'Send email' }));
 
-      expect(mockCreateSnackbar).toHaveBeenCalledWith({ text: 'Email sent', autoDismiss: true, announce: true, duration: 6000 });
+      expect(mockCreateSnackbar).toHaveBeenCalledWith({
+        text: 'Email sent',
+        autoDismiss: true,
+        announce: true,
+        duration: 6000,
+      });
     });
 
     it('shows error snackbar when sending fails', async () => {
@@ -282,7 +286,12 @@ describe('EmailUsersDialog', () => {
       await user.type(screen.getByLabelText(/email body/i), 'Test Message');
       await user.click(screen.getByRole('button', { name: 'Send email' }));
 
-      expect(mockCreateSnackbar).toHaveBeenCalledWith({ text: 'Email failed to send', autoDismiss: true, announce: true, duration: 6000 });
+      expect(mockCreateSnackbar).toHaveBeenCalledWith({
+        text: 'Email failed to send',
+        autoDismiss: true,
+        announce: true,
+        duration: 6000,
+      });
     });
   });
 });

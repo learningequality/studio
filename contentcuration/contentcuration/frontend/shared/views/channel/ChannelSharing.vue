@@ -90,14 +90,14 @@
 
   export default {
     name: 'ChannelSharing',
-    setup() {
-      const { createSnackbar } = useKSnackbar();
-      return { createSnackbar };
-    },
     components: {
       DropdownWrapper,
       LoadingText,
       ChannelSharingTable,
+    },
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
     },
     props: {
       channelId: {

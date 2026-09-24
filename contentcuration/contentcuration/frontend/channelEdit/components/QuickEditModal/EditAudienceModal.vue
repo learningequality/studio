@@ -62,11 +62,11 @@
 
   export default {
     name: 'EditAudienceModal',
+    mixins: [constantsTranslationMixin],
     setup() {
       const { createSnackbar } = useKSnackbar();
       return { createSnackbar };
     },
-    mixins: [constantsTranslationMixin],
     props: {
       nodeIds: {
         type: Array,

@@ -46,11 +46,11 @@
 
   export default {
     name: 'FullNameForm',
+    mixins: [formMixin],
     setup() {
       const { createSnackbar } = useKSnackbar();
       return { createSnackbar };
     },
-    mixins: [formMixin],
     props: {
       value: {
         type: Boolean,

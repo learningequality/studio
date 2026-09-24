@@ -141,10 +141,6 @@
 
   export default {
     name: 'SearchResultsList',
-    setup() {
-      const { createSnackbar } = useKSnackbar();
-      return { createSnackbar };
-    },
     components: {
       BrowsingCard,
       Pagination,
@@ -154,6 +150,10 @@
       LoadingText,
     },
     mixins: [constantsTranslationMixin],
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       selected: {
         type: Array,

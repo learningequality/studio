@@ -143,15 +143,15 @@
 
   export default {
     name: 'EmailUsersDialog',
-    setup() {
-      const { createSnackbar } = useKSnackbar();
-      return { createSnackbar };
-    },
     components: {
       ExpandableList,
       StudioChip,
     },
     mixins: [formMixin],
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       value: {
         type: Boolean,

@@ -167,13 +167,13 @@
 
   export default {
     name: 'EditSourceModal',
-    setup() {
-      const { createSnackbar } = useKSnackbar();
-      return { createSnackbar };
-    },
     components: {
       HelpTooltip,
       LicenseDropdown,
+    },
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
     },
     props: {
       nodeIds: {

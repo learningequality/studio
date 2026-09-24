@@ -14,7 +14,6 @@ jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
   }),
 }));
 
-
 jest.mock('shared/utils/navigation', () => ({
   redirectBrowser: jest.fn(),
 }));
@@ -69,8 +68,7 @@ function createStore() {
         currentUser: { id: 'user-id' },
       },
     },
-    actions: {
-    },
+    actions: {},
     modules: {
       channel: {
         namespaced: true,

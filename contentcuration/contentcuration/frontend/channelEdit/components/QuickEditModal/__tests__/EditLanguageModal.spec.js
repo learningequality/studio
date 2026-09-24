@@ -12,7 +12,6 @@ jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
   }),
 }));
 
-
 const nodes = [
   { id: 'test-en-res', language: 'en' },
   { id: 'test-es-res', language: 'es' },
@@ -42,13 +41,9 @@ function makeWrapper(nodeIds) {
   const updateContentNodeDescendants = jest.spyOn(wrapper.vm, 'updateContentNodeDescendants');
   updateContentNodeDescendants.mockResolvedValue(null);
 
-
   const handleSave = jest.spyOn(wrapper.vm, 'handleSave');
 
-  return [
-    wrapper,
-    { updateContentNode, updateContentNodeDescendants, handleSave },
-  ];
+  return [wrapper, { updateContentNode, updateContentNodeDescendants, handleSave }];
 }
 
 async function chooseLanguage(wrapper, language) {

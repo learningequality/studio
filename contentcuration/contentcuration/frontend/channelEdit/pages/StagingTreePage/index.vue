@@ -370,10 +370,6 @@
 
   export default {
     name: 'StagingTreePage',
-    setup() {
-      const { createSnackbar } = useKSnackbar();
-      return { createSnackbar };
-    },
     components: {
       BottomBar,
       Breadcrumbs,
@@ -390,6 +386,10 @@
       OfflineText,
     },
     mixins: [fileSizeMixin, titleMixin, routerMixin],
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       nodeId: {
         type: String,

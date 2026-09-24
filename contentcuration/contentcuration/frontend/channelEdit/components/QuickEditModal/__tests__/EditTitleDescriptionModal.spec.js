@@ -10,7 +10,6 @@ jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
   }),
 }));
 
-
 const nodeId = 'test-id';
 
 const node = {

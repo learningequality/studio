@@ -123,13 +123,13 @@
 
   export default {
     name: 'UserActionsDropdown',
-    setup() {
-      const { createSnackbar } = useKSnackbar();
-      return { createSnackbar };
-    },
     components: {
       EmailUsersDialog,
       UserPrivilegeModal,
+    },
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
     },
     props: {
       userId: {

@@ -218,10 +218,6 @@
 
   export default {
     name: 'UserDetails',
-    setup() {
-      const { createSnackbar } = useKSnackbar();
-      return { createSnackbar };
-    },
     components: {
       FullscreenModal,
       DetailsRow,
@@ -239,6 +235,10 @@
       },
     },
     mixins: [fileSizeMixin, routerMixin],
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       userId: {
         type: String,

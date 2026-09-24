@@ -163,15 +163,15 @@
 
   export default {
     name: 'Account',
-    setup() {
-      const { createSnackbar } = useKSnackbar();
-      return { createSnackbar };
-    },
     components: {
       ChangePasswordForm,
       FullNameForm,
       DeleteAccountForm,
       StudioCopyToken,
+    },
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
     },
     data() {
       return {

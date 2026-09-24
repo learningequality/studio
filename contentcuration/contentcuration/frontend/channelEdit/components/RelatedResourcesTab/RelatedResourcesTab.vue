@@ -131,13 +131,13 @@
 
   export default {
     name: 'RelatedResourcesTab',
-    setup() {
-      const { createSnackbar } = useKSnackbar();
-      return { createSnackbar };
-    },
     components: {
       ContentNodeIcon,
       RelatedResourcesList,
+    },
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
     },
     props: {
       nodeId: {

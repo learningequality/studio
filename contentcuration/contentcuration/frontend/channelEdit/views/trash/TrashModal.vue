@@ -192,10 +192,6 @@
 
   export default {
     name: 'TrashModal',
-    setup() {
-      const { createSnackbar } = useKSnackbar();
-      return { createSnackbar };
-    },
     components: {
       ContentNodeIcon,
       ResourceDrawer,
@@ -205,6 +201,10 @@
       MoveModal,
     },
     mixins: [titleMixin, routerMixin],
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       nodeId: {
         type: String,

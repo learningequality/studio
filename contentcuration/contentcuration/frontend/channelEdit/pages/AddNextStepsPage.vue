@@ -21,14 +21,14 @@
 
   export default {
     name: 'AddNextStepsPage',
-    setup() {
-      const { createSnackbar } = useKSnackbar();
-      return { createSnackbar };
-    },
     components: {
       AddRelatedResourcesModal,
     },
     mixins: [routerMixin, titleMixin],
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       targetNodeId: {
         type: String,

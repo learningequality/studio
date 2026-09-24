@@ -11,7 +11,6 @@ jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
   }),
 }));
 
-
 const mockDeleteChannel = jest.fn().mockResolvedValue();
 
 function createStore() {
@@ -21,7 +20,7 @@ function createStore() {
         currentUser: { id: 'user-id' },
       },
     },
-    actions: {    },
+    actions: {},
     modules: {
       channel: {
         namespaced: true,

@@ -248,15 +248,15 @@
 
   export default {
     name: 'ChannelItem',
-    setup() {
-      const { createSnackbar } = useKSnackbar();
-      return { createSnackbar };
-    },
     components: {
       ChannelStar,
       ChannelTokenModal,
       RemoveChannelModal,
       Thumbnail,
+    },
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
     },
     props: {
       channelId: {

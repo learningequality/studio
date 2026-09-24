@@ -230,10 +230,6 @@
 
   export default {
     name: 'ChannelItem',
-    setup() {
-      const { createSnackbar } = useKSnackbar();
-      return { createSnackbar };
-    },
     components: {
       ChannelActionsDropdown,
       ClipboardChip,
@@ -241,6 +237,10 @@
       CommunityLibraryStatusButton,
     },
     mixins: [fileSizeMixin],
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       value: {
         type: Array,
