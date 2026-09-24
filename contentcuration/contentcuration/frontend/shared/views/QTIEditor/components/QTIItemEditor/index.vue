@@ -183,6 +183,7 @@
           [QuestionType.FREE_RESPONSE]: qtiEditorStrings.freeResponseLabel$,
           [QuestionType.ORDERING]: qtiEditorStrings.orderingLabel$,
           [QuestionType.ASSOCIATE]: qtiEditorStrings.associateLabel$,
+          [QuestionType.MATCH]: qtiEditorStrings.matchLabel$,
         };
         return (QUESTION_TYPE_LABELS[type] ?? unknownTypeLabel$)();
       });

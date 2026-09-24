@@ -1,6 +1,6 @@
 import { descriptors, editors, registry, DEFAULT_INTERACTION } from '../index';
 import { isInlineInteraction } from '../descriptors';
-import { Placement } from '../../constants';
+import { Placement, QtiInteraction } from '../../constants';
 
 /**
  * An interaction is registered in two places: its descriptor in `descriptors.js` and its
@@ -42,7 +42,7 @@ describe('interaction registry', () => {
     });
 
     it('reports an interaction with no descriptor as not inline', () => {
-      expect(isInlineInteraction('qti-match-interaction')).toBe(false);
+      expect(isInlineInteraction(QtiInteraction.EXTENDED_TEXT)).toBe(false);
     });
   });
 });

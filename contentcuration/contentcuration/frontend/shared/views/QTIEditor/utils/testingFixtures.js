@@ -78,6 +78,36 @@ export const ASSOCIATE_DECL_XML = `<qti-response-declaration identifier="RESPONS
   </qti-correct-response>
 </qti-response-declaration>`;
 
+// choice_reptile is named by no correct-response value — the fixture's distractor.
+export const MATCH_XML = `<qti-match-interaction response-identifier="RESPONSE" shuffle="true" max-associations="3">
+  <qti-prompt><p>Match each animal to its biological classification class.</p></qti-prompt>
+  <qti-simple-match-set>
+    <qti-simple-associable-choice identifier="row_dog" match-max="1">Dog</qti-simple-associable-choice>
+    <qti-simple-associable-choice identifier="row_eagle" match-max="1">Eagle</qti-simple-associable-choice>
+    <qti-simple-associable-choice identifier="row_frog" match-max="1">Frog</qti-simple-associable-choice>
+  </qti-simple-match-set>
+  <qti-simple-match-set>
+    <qti-simple-associable-choice identifier="choice_bird" match-max="1">Bird</qti-simple-associable-choice>
+    <qti-simple-associable-choice identifier="choice_mammal" match-max="1">Mammal</qti-simple-associable-choice>
+    <qti-simple-associable-choice identifier="choice_amphibian" match-max="1">Amphibian</qti-simple-associable-choice>
+    <qti-simple-associable-choice identifier="choice_reptile" match-max="1">Reptile</qti-simple-associable-choice>
+  </qti-simple-match-set>
+</qti-match-interaction>`;
+
+export const MATCH_DECL_XML = `<qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair">
+  <qti-correct-response>
+    <qti-value>row_dog choice_mammal</qti-value>
+    <qti-value>row_eagle choice_bird</qti-value>
+    <qti-value>row_frog choice_amphibian</qti-value>
+  </qti-correct-response>
+</qti-response-declaration>`;
+
+// A third match set is outside what the editor can represent.
+export const MATCH_THREE_SETS_XML = MATCH_XML.replace(
+  '</qti-match-interaction>',
+  '<qti-simple-match-set/></qti-match-interaction>',
+);
+
 // Full QTI Assessment Item XML Documents
 
 export const VALID_CHOICE_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
@@ -311,6 +341,22 @@ export const VALID_ASSOCIATE_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-
 
   <qti-item-body>
     ${ASSOCIATE_XML}
+  </qti-item-body>
+</qti-assessment-item>`;
+
+export const VALID_MATCH_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  identifier="item-test-match"
+  title="Test Match Question"
+  adaptive="false"
+  time-dependent="false"
+  xml:lang="en"
+>
+  ${MATCH_DECL_XML}
+
+  <qti-item-body>
+    ${MATCH_XML}
   </qti-item-body>
 </qti-assessment-item>`;
 
