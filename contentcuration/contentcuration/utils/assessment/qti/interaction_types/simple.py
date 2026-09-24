@@ -13,7 +13,7 @@ from contentcuration.utils.assessment.qti.base import QTIBase
 from contentcuration.utils.assessment.qti.constants import Orientation
 from contentcuration.utils.assessment.qti.constants import ShowHide
 from contentcuration.utils.assessment.qti.fields import QTIIdentifier
-from contentcuration.utils.assessment.qti.html import FlowContentList
+from contentcuration.utils.assessment.qti.html import FlowGroupList
 from contentcuration.utils.assessment.qti.interaction_types.base import BlockInteraction
 from contentcuration.utils.assessment.qti.prompt import Prompt
 
@@ -29,7 +29,7 @@ class SimpleChoice(QTIBase, BaseSequence):
     template_identifier: Optional[str] = None
     show_hide: ShowHide = ShowHide.SHOW
     fixed: bool = False
-    children: FlowContentList = Field(default_factory=list)
+    children: FlowGroupList = Field(default_factory=list)
 
 
 class ChoiceInteraction(BlockInteraction):

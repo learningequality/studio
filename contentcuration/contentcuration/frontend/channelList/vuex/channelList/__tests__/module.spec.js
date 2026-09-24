@@ -52,6 +52,25 @@ describe('invitation actions', () => {
         ]);
       });
     });
+    it('should exclude organization invitations', () => {
+      return Invitation.add({
+        organization: 'org-1',
+        invited: userId,
+        share_mode: 'edit',
+      }).then(() => {
+        return store.dispatch('channelList/loadInvitationList').then(() => {
+          expect(store.getters['channelList/invitations']).toEqual([
+            {
+              id,
+              ...invitation,
+              accepted: false,
+              declined: false,
+              revoked: false,
+            },
+          ]);
+        });
+      });
+    });
   });
   describe('acceptInvitation action', () => {
     const channel = { id: channel_id, name: 'test', deleted: false, edit: true };

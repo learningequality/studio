@@ -9,7 +9,7 @@
     :aria-label="title"
     :aria-pressed="isActive ? 'true' : 'false'"
     @mousedown.prevent
-    @click="handleClick"
+    @click.stop="handleClick"
     @keydown="handleKeydown"
   >
     <img

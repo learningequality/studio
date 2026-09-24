@@ -66,4 +66,52 @@ describe('QuestionTypeSelector', () => {
     expect(emitted()['update:questionType']).toBeTruthy();
     expect(emitted()['update:questionType'][0]).toEqual([QuestionType.MULTI_SELECT]);
   });
+
+  describe('free response', () => {
+    const openDropdown = async () => fireEvent.click(screen.getByText(tr.$tr('singleSelectLabel')));
+
+    it('is offered where a question need not be scored', async () => {
+      renderHeader({ allowFreeResponse: true });
+      await openDropdown();
+      expect(screen.getByText(tr.$tr('freeResponseLabel'))).toBeInTheDocument();
+    });
+
+    it('is not offered where the questions are scored', async () => {
+      renderHeader({ allowFreeResponse: false });
+      await openDropdown();
+      expect(screen.queryByText(tr.$tr('freeResponseLabel'))).not.toBeInTheDocument();
+    });
+
+    it('leaves the other types alone', async () => {
+      renderHeader({ allowFreeResponse: false });
+      await openDropdown();
+      expect(screen.getByText(tr.$tr('multiSelectLabel'))).toBeInTheDocument();
+      expect(screen.getByText(tr.$tr('numericLabel'))).toBeInTheDocument();
+      expect(screen.getByText(tr.$tr('textEntryLabel'))).toBeInTheDocument();
+    });
+
+    it('stays available to a question that already is one, so it can be changed', async () => {
+      renderHeader({ allowFreeResponse: false, questionType: QuestionType.FREE_RESPONSE });
+      // Shown as the selection, rather than the select falling back to another type
+      expect(screen.getByText(tr.$tr('freeResponseLabel'))).toBeInTheDocument();
+
+      await fireEvent.click(screen.getByText(tr.$tr('freeResponseLabel')));
+      expect(screen.getByText(tr.$tr('multiSelectLabel'))).toBeInTheDocument();
+    });
+
+    it('says why it cannot stay, for a question that already is one', () => {
+      renderHeader({ allowFreeResponse: false, questionType: QuestionType.FREE_RESPONSE });
+      expect(screen.getByRole('alert')).toHaveTextContent(tr.$tr('errorFreeResponseNotAllowed'));
+    });
+
+    it('says nothing when the type is allowed', () => {
+      renderHeader({ allowFreeResponse: true, questionType: QuestionType.FREE_RESPONSE });
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+
+    it('says nothing about a question that is not a free response', () => {
+      renderHeader({ allowFreeResponse: false });
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+  });
 });

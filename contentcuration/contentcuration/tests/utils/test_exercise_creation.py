@@ -1922,7 +1922,12 @@ class TestQTIExerciseCreation(StudioTestCase):
         )
 
     def test_native_qti_item_written_verbatim(self):
-        """The item XML in the zip must byte-match the authored raw_data."""
+        """The item XML in the zip is the authored raw_data, not a rebuild of it.
+
+        Publishing rewrites the root's xml:lang to the node's language, which here is the
+        language the item already declares, so every byte of it — formatting included — has
+        to survive. Stamping an item that declares none is covered in test_exportchannel.
+        """
         raw_data = _item_xml(
             "native_item_1",
             "Native Item",
@@ -1948,9 +1953,8 @@ class TestQTIExerciseCreation(StudioTestCase):
         exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
         zip_file = self._validate_qti_zip_structure(exercise_file)
         self.assertIn("items/native_item_1.xml", zip_file.namelist())
-        self.assertEqual(
-            zip_file.read("items/native_item_1.xml").decode("utf-8"), raw_data
-        )
+        item_xml = zip_file.read("items/native_item_1.xml").decode("utf-8")
+        self.assertEqual(item_xml, raw_data)
 
     def test_native_qti_item_media_included_and_addressed(self):
         # fileobj_exercise_image() writes real bytes to storage keyed by their
@@ -1984,8 +1988,10 @@ class TestQTIExerciseCreation(StudioTestCase):
         self.assertIn(f"images/{media_filename}", manifest)
 
         item_xml = zip_file.read("items/native_item_1.xml").decode("utf-8")
+        # The media path is remapped; nothing else about the item changes.
         self.assertEqual(
-            item_xml, raw_data.replace(media_filename, f"images/{media_filename}")
+            item_xml,
+            raw_data.replace(media_filename, f"images/{media_filename}"),
         )
 
     def test_native_qti_item_invalid_raw_data_is_skipped(self):

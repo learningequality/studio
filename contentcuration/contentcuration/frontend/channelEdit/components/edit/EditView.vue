@@ -285,8 +285,7 @@
       },
       areAssessmentItemsValid() {
         return (
-          !this.oneSelected ||
-          this.getAssessmentItemsAreValid({ contentNodeId: this.nodeIds[0], ignoreDelayed: true })
+          !this.oneSelected || this.getAssessmentItemsAreValid({ contentNodeId: this.nodeIds[0] })
         );
       },
       areFilesValid() {

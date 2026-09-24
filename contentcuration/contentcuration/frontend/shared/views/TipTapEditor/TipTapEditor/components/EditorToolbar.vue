@@ -167,6 +167,7 @@
         canClearFormat,
         historyActions,
         alignAction,
+        alignActionHidden,
         textActions,
         listActions,
         insertTools,
@@ -240,9 +241,8 @@
         {
           name: 'align',
           groupActions: [alignAction.value],
-          // Perseus flavoured markdown does not support alignment,
-          // so we disable this for now until we stop using markdown as the primary target
-          hide: true,
+          // Reason on the flag, in useToolbarActions.js.
+          hide: alignActionHidden,
         },
         {
           name: 'clearFormat',
@@ -267,9 +267,6 @@
           role: 'group',
           label: scriptFormatting$(),
           groupActions: scriptActions.value,
-          // Perseus flavoured markdown does not support super and sub script,
-          // so we disable this for now until we stop using markdown as the primary target
-          hide: true,
         },
         {
           name: 'insert',

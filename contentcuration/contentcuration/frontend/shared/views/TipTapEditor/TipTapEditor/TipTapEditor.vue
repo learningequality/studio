@@ -132,6 +132,7 @@
   import { useMathHandling } from './composables/useMathHandling';
   import FormulasMenu from './components/math/FormulasMenu.vue';
   import { preprocessMarkdown } from './utils/markdown';
+  import { resolveImageSrcs, toStoredImageSrcs } from './utils/imageSrc';
   import MobileTopBar from './components/toolbar/MobileTopBar.vue';
   import MobileFormattingBar from './components/toolbar/MobileFormattingBar.vue';
   import { getTipTapEditorStrings } from './TipTapEditorStrings';
@@ -216,7 +217,10 @@
 
       const getContent = () => {
         if (!editor.value || !isReady.value) return '';
-        if (props.format === 'html') return editor.value.getHTML();
+        // Image srcs are resolved for display on the way in, so they are reduced
+        // back to their stored form here — leaving this the one place that reads
+        // content out, whichever form the editor happens to be holding.
+        if (props.format === 'html') return toStoredImageSrcs(editor.value.getHTML());
         if (!editor.value.storage?.markdown) return '';
         return editor.value.storage.markdown.getMarkdown();
       };
@@ -252,7 +256,7 @@
           }
 
           const processedContent =
-            props.format === 'html' ? newValue : preprocessMarkdown(newValue);
+            props.format === 'html' ? resolveImageSrcs(newValue) : preprocessMarkdown(newValue);
 
           if (!editor.value) {
             initializeEditor(processedContent, props.mode, {
@@ -268,7 +272,7 @@
         { immediate: true },
       );
 
-      // sync changes from the editor to the parent component, only on blur
+      // sync changes from the editor to the parent component
       const emitContentUpdate = () => {
         if (!editor.value || !isReady.value) {
           return;
@@ -312,6 +316,10 @@
         sharedEventHandlers,
         editorMode: computed(() => props.mode),
         emitMinimize: () => {
+          // Toolbar buttons suppress blur to keep the caret, so content written since
+          // the last blur is still unsynced. Flush it first: a parent acting on the
+          // close would otherwise read the content as it stood before that edit.
+          emitContentUpdate();
           emit('minimize');
         },
         handleContainerKeydown,
@@ -360,6 +368,10 @@
 
   .editor-container {
     position: relative;
+
+    /* Laid out as a flex item, this would otherwise refuse to shrink below the
+       widest thing typed into it, pushing the row it sits in past its bounds. */
+    min-width: 0;
     min-height: 200px;
     margin: auto;
     font-family:

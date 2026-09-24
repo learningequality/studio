@@ -7,11 +7,11 @@ from pydantic import Field
 
 from contentcuration.utils.assessment.qti.html.base import BlockContentElement
 from contentcuration.utils.assessment.qti.html.base import HTMLElement
-from contentcuration.utils.assessment.qti.html.content_types import FlowContentList
+from contentcuration.utils.assessment.qti.html.content_types import FlowGroupList
 
 
 class Caption(HTMLElement):
-    children: FlowContentList = Field(default_factory=list)
+    children: FlowGroupList = Field(default_factory=list)
 
 
 class Col(HTMLElement):  # Void element
@@ -27,7 +27,7 @@ class Td(HTMLElement):
     colspan: Optional[int] = None
     rowspan: Optional[int] = None
     headers: Optional[str] = None
-    children: FlowContentList = Field(default_factory=list)
+    children: FlowGroupList = Field(default_factory=list)
 
 
 class ThScope(Enum):
@@ -44,7 +44,7 @@ class Th(HTMLElement):
     headers: Optional[str] = None
     scope: Optional[ThScope] = None
     abbr: Optional[str] = None
-    children: FlowContentList = Field(default_factory=list)
+    children: FlowGroupList = Field(default_factory=list)
 
 
 class Tr(HTMLElement):

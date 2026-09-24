@@ -54,6 +54,14 @@ describe('validateTextEntryInteraction', () => {
       const errors = validateTextEntryInteraction(VALID_NUMERIC_STATE, QuestionType.NUMERIC);
       expect(errors.some(e => e.code === ValidationError.PROMPT_REQUIRED)).toBe(false);
     });
+
+    it('does not return PROMPT_REQUIRED when the prompt asks its question in a picture', () => {
+      const errors = validateTextEntryInteraction(
+        { ...VALID_NUMERIC_STATE, prompt: '<p><img src="abc123.png"/></p>' },
+        QuestionType.NUMERIC,
+      );
+      expect(errors.some(e => e.code === ValidationError.PROMPT_REQUIRED)).toBe(false);
+    });
   });
 
   describe('TEXT_ENTRY constraints', () => {

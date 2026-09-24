@@ -1,4 +1,5 @@
 import VueRouter from 'vue-router';
+import { Workbox } from 'workbox-window';
 
 import startApp from '../app';
 import { CURRENT_USER } from 'shared/data/constants';
@@ -7,6 +8,7 @@ import { resetDB } from 'shared/data';
 import storeFactory from 'shared/vuex/baseStore';
 
 jest.mock('shared/data');
+jest.mock('workbox-window');
 
 const router = new VueRouter();
 
@@ -106,6 +108,35 @@ describe('startApp', () => {
         cleanup = await startApp({ router, store });
         expect(resetDB).toHaveBeenCalledTimes(1);
       });
+    });
+  });
+
+  describe('when service worker registration fails', () => {
+    let originalServiceWorker;
+
+    beforeEach(() => {
+      global.user = USER_1;
+      originalServiceWorker = navigator.serviceWorker;
+      Object.defineProperty(navigator, 'serviceWorker', {
+        value: {},
+        configurable: true,
+      });
+      Workbox.mockImplementation(() => ({
+        register: () => Promise.reject(new Error('registration failed')),
+        addEventListener: jest.fn(),
+      }));
+    });
+
+    afterEach(() => {
+      Object.defineProperty(navigator, 'serviceWorker', {
+        value: originalServiceWorker,
+        configurable: true,
+      });
+    });
+
+    it('still finishes starting the app instead of hanging', async () => {
+      cleanup = await startApp({ router, store });
+      expect(cleanup).toEqual(expect.any(Function));
     });
   });
 });

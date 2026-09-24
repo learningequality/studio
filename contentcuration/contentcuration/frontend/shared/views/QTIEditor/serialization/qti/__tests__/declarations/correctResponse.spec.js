@@ -110,10 +110,10 @@ describe('CorrectResponse', () => {
       expect(values).toEqual(['ChoiceA', 'ChoiceC']);
     });
 
-    it('produces an empty qti-correct-response when values is empty', () => {
-      expect(
-        new CorrectResponse([], makeDeclaration()).getXML().querySelectorAll('qti-value').length,
-      ).toBe(0);
+    it('produces no element at all when values is empty', () => {
+      // The schema requires at least one qti-value inside qti-correct-response, so an
+      // answer-less declaration omits the element instead of emitting an empty one.
+      expect(new CorrectResponse([], makeDeclaration()).getXML()).toBeNull();
     });
 
     it('round-trips: qti-value child carries correct text', () => {

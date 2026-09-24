@@ -1,6 +1,14 @@
 import { UPDATE_ASSESSMENTITEM, DELETE_ASSESSMENTITEM } from '../mutations';
 import { AssessmentItemTypes } from 'shared/constants';
 
+const item = (assessment_id, contentnode, extra = {}) => ({
+  assessment_id,
+  contentnode,
+  type: AssessmentItemTypes.QTI,
+  raw_data: `<xml>${assessment_id}</xml>`,
+  ...extra,
+});
+
 describe('assessmentItem mutations', () => {
   let state;
 
@@ -8,223 +16,67 @@ describe('assessmentItem mutations', () => {
     state = {
       assessmentItemsMap: {
         'content-node-id-1': {
-          'assessment-id-1': {
-            assessment_id: 'assessment-id-1',
-            contentnode: 'content-node-id-1',
-            type: AssessmentItemTypes.SINGLE_SELECTION,
-            question: '1+1=?',
-            answers: [
-              {
-                answer: '2',
-                correct: false,
-                order: 1,
-              },
-              {
-                answer: '11',
-                correct: true,
-                order: 2,
-              },
-            ],
-            hints: [],
-          },
+          'assessment-id-1': item('assessment-id-1', 'content-node-id-1'),
         },
         'content-node-id-2': {
-          'assessment-id-2': {
-            assessment_id: 'assessment-id-2',
-            contentnode: 'content-node-id-2',
-            type: AssessmentItemTypes.SINGLE_SELECTION,
-            question: '',
-            answers: [],
-            hints: [],
-          },
-          'assessment-id-3': {
-            assessment_id: 'assessment-id-3',
-            contentnode: 'content-node-id-2',
-            type: AssessmentItemTypes.SINGLE_SELECTION,
-            question: 'What color are minions?',
-            answers: [
-              {
-                answer: 'Blue',
-                correct: false,
-                order: 1,
-              },
-              {
-                answer: 'Yellow',
-                correct: true,
-                order: 2,
-              },
-            ],
-            hints: [],
-          },
+          'assessment-id-2': item('assessment-id-2', 'content-node-id-2'),
         },
       },
     };
   });
 
   describe('UPDATE_ASSESSMENTITEM', () => {
-    it('adds a new assessment item, parses and sorts answers and hints', () => {
-      UPDATE_ASSESSMENTITEM(state, {
-        assessment_id: 'assessment-id-4',
-        contentnode: 'content-node-id-1',
-        type: AssessmentItemTypes.SINGLE_SELECTION,
-        question: 'Question',
-        answers: JSON.stringify([
-          {
-            answer: 'Answer 2',
-            correct: false,
-            order: 2,
-          },
-          {
-            answer: 'Answer 1',
-            correct: true,
-            order: 1,
-          },
-        ]),
-        hints: JSON.stringify([
-          {
-            answer: 'Hint 2',
-            order: 2,
-          },
-          {
-            answer: 'Hint 1',
-            order: 1,
-          },
-        ]),
-      });
+    it('throws if the item cannot be identified', () => {
+      expect(() => UPDATE_ASSESSMENTITEM(state, { contentnode: 'content-node-id-1' })).toThrow(
+        ReferenceError,
+      );
+      expect(() => UPDATE_ASSESSMENTITEM(state, { assessment_id: 'assessment-id-9' })).toThrow(
+        ReferenceError,
+      );
+    });
 
-      expect(state.assessmentItemsMap['content-node-id-1']['assessment-id-4']).toEqual({
-        assessment_id: 'assessment-id-4',
-        contentnode: 'content-node-id-1',
-        type: AssessmentItemTypes.SINGLE_SELECTION,
-        question: 'Question',
-        answers: [
-          {
-            answer: 'Answer 1',
-            correct: true,
-            order: 1,
-          },
-          {
-            answer: 'Answer 2',
-            correct: false,
-            order: 2,
-          },
-        ],
-        hints: [
-          {
-            answer: 'Hint 1',
-            order: 1,
-          },
-          {
-            answer: 'Hint 2',
-            order: 2,
-          },
-        ],
+    it('adds an assessment item to a content node that has some already', () => {
+      const newItem = item('assessment-id-3', 'content-node-id-1');
+
+      UPDATE_ASSESSMENTITEM(state, newItem);
+
+      expect(state.assessmentItemsMap['content-node-id-1']).toEqual({
+        'assessment-id-1': item('assessment-id-1', 'content-node-id-1'),
+        'assessment-id-3': newItem,
       });
     });
 
-    it('updates an assessment item, parses and sorts answers and hints', () => {
+    it('adds an assessment item to a content node with none yet', () => {
+      const newItem = item('assessment-id-4', 'content-node-id-3');
+
+      UPDATE_ASSESSMENTITEM(state, newItem);
+
+      expect(state.assessmentItemsMap['content-node-id-3']).toEqual({
+        'assessment-id-4': newItem,
+      });
+    });
+
+    it('merges the given fields into an existing assessment item', () => {
       UPDATE_ASSESSMENTITEM(state, {
-        assessment_id: 'assessment-id-3',
-        contentnode: 'content-node-id-2',
-        type: AssessmentItemTypes.SINGLE_SELECTION,
-        question: 'What color are minions?',
-        answers: JSON.stringify([
-          {
-            answer: 'Blue',
-            correct: false,
-            order: 3,
-          },
-          {
-            answer: 'Yellow',
-            correct: true,
-            order: 1,
-          },
-          {
-            answer: 'Red',
-            correct: false,
-            order: 2,
-          },
-        ]),
-        hints: JSON.stringify([
-          {
-            answer: 'Not red',
-            order: 2,
-          },
-          {
-            answer: 'Not blue',
-            order: 1,
-          },
-        ]),
+        assessment_id: 'assessment-id-1',
+        contentnode: 'content-node-id-1',
+        raw_data: '<xml>edited</xml>',
       });
 
-      expect(state.assessmentItemsMap['content-node-id-2']['assessment-id-3']).toEqual({
-        assessment_id: 'assessment-id-3',
-        contentnode: 'content-node-id-2',
-        type: AssessmentItemTypes.SINGLE_SELECTION,
-        question: 'What color are minions?',
-        answers: [
-          {
-            answer: 'Yellow',
-            correct: true,
-            order: 1,
-          },
-          {
-            answer: 'Red',
-            correct: false,
-            order: 2,
-          },
-          {
-            answer: 'Blue',
-            correct: false,
-            order: 3,
-          },
-        ],
-        hints: [
-          {
-            answer: 'Not blue',
-            order: 1,
-          },
-          {
-            answer: 'Not red',
-            order: 2,
-          },
-        ],
-      });
+      expect(state.assessmentItemsMap['content-node-id-1']['assessment-id-1']).toEqual(
+        item('assessment-id-1', 'content-node-id-1', { raw_data: '<xml>edited</xml>' }),
+      );
     });
   });
 
   describe('DELETE_ASSESSMENTITEM', () => {
     it('removes an assessment item', () => {
       DELETE_ASSESSMENTITEM(state, {
-        assessment_id: 'assessment-id-3',
-        contentnode: 'content-node-id-2',
-        type: AssessmentItemTypes.SINGLE_SELECTION,
-        question: 'What color are minions?',
-        answers: [
-          {
-            answer: 'Blue',
-            correct: false,
-            order: 1,
-          },
-          {
-            answer: 'Yellow',
-            correct: true,
-            order: 2,
-          },
-        ],
-        hints: [],
+        assessment_id: 'assessment-id-1',
+        contentnode: 'content-node-id-1',
       });
 
-      expect(state.assessmentItemsMap['content-node-id-2']).toEqual({
-        'assessment-id-2': {
-          assessment_id: 'assessment-id-2',
-          contentnode: 'content-node-id-2',
-          type: AssessmentItemTypes.SINGLE_SELECTION,
-          question: '',
-          answers: [],
-          hints: [],
-        },
-      });
+      expect(state.assessmentItemsMap['content-node-id-1']).toEqual({});
     });
   });
 });

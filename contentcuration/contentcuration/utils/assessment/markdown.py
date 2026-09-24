@@ -18,6 +18,52 @@ from contentcuration.utils.assessment.qti.mathml.core import Semantics
 INLINE_PATTERN = re.compile(r"^\$\$([\s\S]+?)\$\$")
 BLOCK_PATTERN = re.compile(r"^\$\$([\s\S]+?)\$\$", re.M)
 
+# Perseus extends the CommonMark image with a trailing size and alignment:
+#   ![alt](<checksum>.<ext> =550x364 align=center)
+# Neither suffix is valid CommonMark, so the whole construct fails to parse as an
+# image and markdown-it emits it as literal text. Mirrors IMAGE_REGEX in the
+# editor's TipTapEditor/utils/markdown.js, which reads the same syntax.
+SIZED_IMAGE_PATTERN = re.compile(
+    r"^!\[(?P<alt>[^\]]*)\]\("
+    r"(?P<src>[^\s=)]+)"
+    r"(?:\s*=\s*(?P<width>[0-9.]+)x(?P<height>[0-9.]+))?"
+    r"(?:\s+align=(?P<align>\w+))?"
+    r"\)"
+)
+
+
+def sized_image_func(state: StateInline, silent: bool) -> bool:
+    """Parse a Perseus image with a size and/or alignment suffix."""
+    if not state.src.startswith("![", state.pos):
+        return False
+
+    match = SIZED_IMAGE_PATTERN.match(state.src[state.pos :])
+    # Without a suffix this is an ordinary CommonMark image; leave it to the
+    # built-in rule, which handles reference links and nested labels too.
+    if not match or not (match["width"] or match["align"]):
+        return False
+
+    if not silent:
+        token = state.push("sized_image", "img", 0)
+        # A QTI item references media by bare "<checksum>.<ext>" filename, which
+        # publishing rewrites to the package's images/ directory. Legacy markdown
+        # writes it under the content-storage placeholder, stripped by the time we
+        # get here, so drop any remaining directory the same way the editor does.
+        token.attrs = {
+            "src": match["src"].rsplit("/", 1)[-1],
+            "alt": match["alt"],
+        }
+        if match["width"]:
+            # Perseus allows fractional sizes; HTML's width/height are integers,
+            # as is the Img model these end up in.
+            token.attrs["width"] = str(round(float(match["width"])))
+            token.attrs["height"] = str(round(float(match["height"])))
+        # An align suffix is consumed but dropped: QTI's Img has no attribute to
+        # carry it, and the reverse conversion does not emit one either.
+
+    state.pos += match.end()
+    return True
+
 
 def math_inline_func(state: StateInline, silent: bool) -> bool:
     """Parse inline math: $$expression$$"""
@@ -128,7 +174,21 @@ def texmath_to_mathml_plugin(md: MarkdownIt) -> None:
     md.add_render_rule("math_block", render_math_block)
 
 
-md = MarkdownIt("gfm-like").disable("linkify").use(texmath_to_mathml_plugin)
+def sized_image_plugin(md: MarkdownIt) -> None:
+    """Plugin for Perseus images carrying a size and/or alignment suffix.
+
+    The token renders through the renderer's generic path, which emits the tag and
+    its attributes, so no render rule of its own is needed.
+    """
+    md.inline.ruler.before("image", "sized_image", sized_image_func)
+
+
+md = (
+    MarkdownIt("gfm-like")
+    .disable("linkify")
+    .use(texmath_to_mathml_plugin)
+    .use(sized_image_plugin)
+)
 
 
 def render_markdown(markdown):
