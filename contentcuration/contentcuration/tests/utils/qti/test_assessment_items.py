@@ -40,7 +40,7 @@ class QTIAssessmentItemTests(unittest.TestCase):
     ):
         item_body = ItemBody(children=[P(children=["Question."])])
         response_processing = ResponseProcessing(
-            template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"
+            template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct.xml"
         )
         catalog_info = CatalogInfo(
             catalog=[
@@ -98,7 +98,7 @@ class QTIAssessmentItemTests(unittest.TestCase):
 <qti-simple-choice identifier="false" show-hide="show" fixed="false">False</qti-simple-choice>
 </qti-choice-interaction>
 </qti-item-body>
-<qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct" /></qti-assessment-item>
+<qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct.xml" /></qti-assessment-item>
 """.replace(
             "\n", ""
         )
@@ -133,7 +133,7 @@ class QTIAssessmentItemTests(unittest.TestCase):
             ]
         )
         response_processing = ResponseProcessing(
-            template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"
+            template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct.xml"
         )
 
         assessment_item = AssessmentItem(
@@ -191,7 +191,7 @@ class QTIAssessmentItemTests(unittest.TestCase):
 <qti-simple-choice identifier="E" show-hide="show" fixed="false">A subset of HTML5 elements</qti-simple-choice>
 </qti-choice-interaction>
 </qti-item-body>
-<qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct" />
+<qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct.xml" />
 </qti-assessment-item>""".replace(
             "\n", ""
         )
@@ -251,7 +251,7 @@ class QTIAssessmentItemTests(unittest.TestCase):
             ]
         )
         response_processing = ResponseProcessing(
-            template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"
+            template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct.xml"
         )
 
         assessment_item = AssessmentItem(
@@ -394,7 +394,7 @@ In the deep bosom of the ocean buried.</p>
 </blockquote>
 </div>
 </qti-item-body>
-<qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response" />
+<qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response.xml" />
 </qti-assessment-item>""".replace(
             "\n", ""
         )
@@ -454,7 +454,7 @@ In the deep bosom of the ocean buried.</p>
         )
 
         response_processing = ResponseProcessing(
-            template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response"
+            template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response.xml"
         )
 
         assessment_item = AssessmentItem(

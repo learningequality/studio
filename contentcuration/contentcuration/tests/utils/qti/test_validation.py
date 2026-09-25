@@ -28,7 +28,7 @@ def _item_xml(identifier, title, response_declaration, item_body):
         "%s"
         '<qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float" />'
         "<qti-item-body>%s</qti-item-body>"
-        '<qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct" />'
+        '<qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct.xml" />'
         "</qti-assessment-item>"
     ) % (identifier, title, response_declaration, item_body)
 
@@ -170,7 +170,7 @@ BLANK_EDITOR_ITEM = (
     "</qti-choice-interaction>"
     "</qti-item-body>"
     "<qti-response-processing "
-    'template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct" />'
+    'template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct.xml" />'
     "</qti-assessment-item>"
 )
 

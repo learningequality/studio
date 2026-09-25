@@ -340,7 +340,7 @@ def convert_legacy_assessment_item_to_qti(
     )
 
     response_processing = ResponseProcessing(
-        template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct"
+        template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct.xml"
     )
 
     qti_item_id = hex_to_qti_id(item.assessment_id)
