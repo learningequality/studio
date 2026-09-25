@@ -5,6 +5,7 @@
     <SearchFilterBar />
     <KGrid>
       <KGridItem
+        ref="filtersPanel"
         :layout4="{ span: 4 }"
         :layout8="{ span: 3 }"
         :layout12="{ span: 5 }"
@@ -258,7 +259,9 @@
               this.pageCount = page.total_pages;
               this.totalCount = page.count;
               this.hasLoaded = true;
-              this.$nextTick(() => this.focus());
+              if (!this.isFocusInFiltersPanel()) {
+                this.$nextTick(() => this.focus());
+              }
             })
             .catch(e => {
               this.loadFailed = true;
@@ -280,6 +283,10 @@
         if (!this.firstCardCheckboxRef) {
           this.firstCardCheckboxRef = ref;
         }
+      },
+      isFocusInFiltersPanel() {
+        const filtersEl = this.$refs.filtersPanel && this.$refs.filtersPanel.$el;
+        return Boolean(filtersEl && filtersEl.contains(document.activeElement));
       },
       /**
        * @public

@@ -99,4 +99,32 @@ describe('channelModal', () => {
         .isVisible(),
     ).toBe(false);
   });
+
+  it('does not save a channel with an empty language, and shows the language error', async () => {
+    await wrapper.setProps({ tab: 'edit' });
+    wrapper.vm.language = null;
+    await wrapper.vm.$nextTick();
+
+    const updateChannel = jest.spyOn(wrapper.vm, 'updateChannel');
+    const languageField = wrapper.findComponent({ ref: 'language' });
+
+    wrapper.vm.saveChannel();
+    await wrapper.vm.$nextTick();
+
+    expect(updateChannel).not.toHaveBeenCalled();
+    expect(languageField.text()).toContain('Field is required');
+  });
+
+  it('saves a channel when a language is set', async () => {
+    await wrapper.setProps({ tab: 'edit' });
+    wrapper.vm.language = 'en';
+    await wrapper.vm.$nextTick();
+
+    const updateChannel = jest.spyOn(wrapper.vm, 'updateChannel').mockResolvedValue({});
+
+    wrapper.vm.saveChannel();
+    await wrapper.vm.$nextTick();
+
+    expect(updateChannel).toHaveBeenCalled();
+  });
 });

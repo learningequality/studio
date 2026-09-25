@@ -1,64 +1,39 @@
 <template>
 
-  <DropdownWrapper>
-    <template #default="{ attach, menuProps }">
-      <VAutocomplete
-        v-model="language"
-        class="language-dropdown"
-        box
-        v-bind="$attrs"
-        :items="languages"
-        :label="$tr('labelText')"
-        color="primary"
-        itemValue="id"
-        :itemText="languageText"
-        autoSelectFirst
-        :allowOverflow="false"
-        clearable
-        :rules="rules"
-        :required="required"
-        :no-data-text="$tr('noDataText')"
-        :search-input.sync="input"
-        :menu-props="{ ...menuProps, maxWidth: 300 }"
-        :multiple="multiple"
-        :chips="multiple"
-        :attach="attach"
-        @change="input = ''"
-        @focus="$emit('focus')"
-      >
-        <template #item="{ item }">
-          <VTooltip
-            bottom
-            lazy
-          >
-            <template #activator="{ on }">
-              <span
-                class="text-truncate"
-                dir="auto"
-                v-on="on"
-              >{{ languageText(item) }}</span>
-            </template>
-            <span>{{ languageText(item) }}</span>
-          </VTooltip>
-        </template>
-      </VAutocomplete>
-    </template>
-  </DropdownWrapper>
+  <KMultiSelect
+    ref="multiselect"
+    v-model="language"
+    class="language-dropdown"
+    :options="languages"
+    :label="$tr('labelText')"
+    itemValue="id"
+    itemText="text"
+    :searchKeys="['native_name', 'readable_name', 'id']"
+    :multiple="multiple"
+    :placeholder="placeholder"
+    clearable
+    :noResultsText="$tr('noDataText')"
+    :invalid="invalid"
+    :invalidText="invalidText"
+    :messages="messages"
+    :appearanceOverrides="appearanceOverrides"
+    @focus="$emit('focus')"
+  />
 
 </template>
 
 
 <script>
 
+  import KMultiSelect from 'kolibri-design-system/lib/candidate/multiselect/KMultiSelect';
   import isArray from 'lodash/isArray';
   import Languages, { LanguagesList } from 'shared/leUtils/Languages';
-  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
+  import { commonStrings } from 'shared/strings/commonStrings';
+  import { createMultiSelectMessages } from 'shared/utils/multiSelectMessages';
 
   export default {
     name: 'LanguageDropdown',
-    components: { DropdownWrapper },
-    // $attrs are rebound to a descendent component
-    inheritAttrs: false,
+    components: { KMultiSelect },
     props: {
       value: {
         type: [String, Array, Object],
@@ -87,10 +62,14 @@
         type: Boolean,
         default: false,
       },
+      placeholder: {
+        type: String,
+        default: '',
+      },
     },
     data() {
       return {
-        input: '',
+        invalidText: '',
       };
     },
     computed: {
@@ -99,29 +78,81 @@
           return this.value;
         },
         set(val) {
-          const value = val || null; // Ensure null is returned if no value is selected
+          const value = val || (this.multiple ? [] : null);
           this.$emit('input', value);
+          if (this.invalidText) {
+            this.invalidText = this.getRequiredError(value);
+          }
         },
       },
       languages() {
         const excludeLanguages = new Set(this.excludeLanguages);
-        return LanguagesList.filter(l => !excludeLanguages.has(l.id));
+        return LanguagesList.filter(l => !excludeLanguages.has(l.id)).map(language => ({
+          ...language,
+          text: this.languageText(language),
+        }));
       },
-      rules() {
-        return this.required ? [v => Boolean(v) || this.$tr('languageRequired')] : [];
+      invalid() {
+        return Boolean(this.invalidText);
+      },
+      appearanceOverrides() {
+        return { width: '100%' };
+      },
+      messages() {
+        const {
+          clearAction$,
+          optionRemovedLabel$,
+          languageItemsSelectedLabel$,
+          languageSelectionsClearedLabel$,
+        } = commonStrings;
+        return createMultiSelectMessages({
+          clearText: clearAction$,
+          itemsSelected: languageItemsSelectedLabel$,
+          cleared: ({ label, count }) =>
+            this.multiple
+              ? languageSelectionsClearedLabel$({ count })
+              : optionRemovedLabel$({ label }),
+        });
       },
     },
+    mounted() {
+      this.updateAriaRequired();
+    },
+    updated() {
+      this.updateAriaRequired();
+    },
     methods: {
-      languageText(item) {
-        // VAutocomplete eagerly evaluates getText(internalValue) as a fallback arg to
-        // getValue, even when that fallback isn't needed. In multiple mode, internalValue
-        // is an Array, so languageText receives the array directly. Return early to avoid
-        // calling .split() on undefined.
-        if (Array.isArray(item)) {
-          return '';
+      updateAriaRequired() {
+        // Workaround: KMultiSelect (KDS 5.9.0) has no `required` prop and doesn't
+        // forward it to its input, so we reach into its private markup directly.
+        const multiselectEl = this.$refs.multiselect && this.$refs.multiselect.$el;
+        const input = multiselectEl && multiselectEl.querySelector('.kmselect-native-input');
+        if (!input) {
+          return;
         }
+        if (this.required) {
+          input.setAttribute('aria-required', 'true');
+        } else {
+          input.removeAttribute('aria-required');
+        }
+      },
+      languageText(item) {
         const firstNativeName = item.native_name.split(',')[0].trim();
         return this.$tr('languageItemText', { language: firstNativeName, code: item.id });
+      },
+      getRequiredError(value) {
+        if (!this.required) {
+          return '';
+        }
+        const hasValue = this.multiple ? Boolean(value && value.length) : Boolean(value);
+        return hasValue ? '' : this.$tr('languageRequired');
+      },
+      /**
+       * @public
+       */
+      validate() {
+        this.invalidText = this.getRequiredError(this.value);
+        return this.invalidText;
       },
     },
     $trs: {
@@ -133,19 +164,3 @@
   };
 
 </script>
-
-
-<style lang="scss" scoped>
-
-  ::v-deep .v-select__selections {
-    width: calc(100% - 48px);
-    min-height: 0 !important;
-  }
-
-  .v-chip,
-  ::v-deep .v-chip__content,
-  .text-truncate {
-    max-width: 100%;
-  }
-
-</style>
