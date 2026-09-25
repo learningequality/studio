@@ -80,7 +80,11 @@
         getTipTapEditorStrings();
 
       const insertOptions = computed(() =>
-        insertTools.value.map(tool => ({ ...tool, label: tool.title })),
+        insertTools.value.map(tool => ({
+          ...tool,
+          label: tool.title,
+          disabled: tool.isAvailable === false,
+        })),
       );
 
       const onInsertSelect = (option, event) => {

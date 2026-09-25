@@ -127,6 +127,19 @@
     </KListWithOverflow>
 
     <ToolbarButton
+      v-for="action in prominentInsertTools"
+      :key="action.name"
+      :title="action.title"
+      :icon="action.icon"
+      :is-active="action.isActive"
+      :isAvailable="action.isAvailable"
+      :rtlIcon="action.rtlIcon"
+      :shouldFlipInRtl="action.shouldFlipInRtl"
+      showTitle
+      @click="action.handler"
+    />
+
+    <ToolbarButton
       class="minimize-button"
       :title="minimizeAction.title"
       :icon="minimizeAction.icon"
@@ -272,12 +285,17 @@
           name: 'insert',
           role: 'group',
           label: insertTools$(),
-          groupActions: insertTools.value.map(tool => ({
-            ...tool,
-            handler: (e, { fromOverflow } = {}) => onInsertToolClick(tool, e, { fromOverflow }),
-          })),
+          groupActions: insertTools.value
+            .filter(tool => !tool.prominent)
+            .map(tool => ({
+              ...tool,
+              handler: (e, { fromOverflow } = {}) => onInsertToolClick(tool, e, { fromOverflow }),
+            })),
         },
       ]);
+
+      // Outside KListWithOverflow, so they never collapse into More.
+      const prominentInsertTools = computed(() => insertTools.value.filter(tool => tool.prominent));
 
       // Flattens the visible overflow groups into a KDropdownMenu-compatible
       // options array. Maps `title` → `label` and `isAvailable` → `disabled`.
@@ -342,6 +360,7 @@
         toolbarGroupsWithDividers,
         flatOverflowOptions,
         historyActions,
+        prominentInsertTools,
         minimizeAction,
         onOverflowSelect,
         textFormattingToolbar$,

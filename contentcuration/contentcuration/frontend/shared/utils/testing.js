@@ -40,3 +40,14 @@ export async function tabIn(user) {
   await user.tab({ shift: true });
   sentinel.remove();
 }
+
+/**
+ * Stub the layout APIs a focused ProseMirror editor needs. jsdom implements none
+ * of these, and ProseMirror measures the selection to scroll it into view
+ * whenever the editor takes focus.
+ */
+export function stubProseMirrorLayout() {
+  Range.prototype.getClientRects = () => [];
+  Range.prototype.getBoundingClientRect = () => ({ top: 0, bottom: 0, left: 0, right: 0 });
+  Element.prototype.scrollIntoView = () => {};
+}

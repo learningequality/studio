@@ -1,4 +1,5 @@
-import { ref, onUnmounted } from 'vue';
+import { computed, ref, shallowRef, onUnmounted } from 'vue';
+import { canInsertNode } from '@tiptap/core';
 import { Editor } from '@tiptap/vue-2';
 import StarterKitExtension from '@tiptap/starter-kit';
 import { Superscript } from '@tiptap/extension-superscript';
@@ -12,12 +13,33 @@ import { Math } from '../extensions/Math';
 import { createCustomMarkdownSerializer } from '../utils/markdownSerializer';
 import { transformPastedHTML } from '../utils/pasteTransform';
 
+// Replacing this range deletes a line break: it leaves its block, touches two
+// textblocks (select-all keeps both ends in `doc`), or contains a hard break.
+function spansLines({ doc, selection }) {
+  if (selection.empty) return false;
+  if (!selection.$from.sameParent(selection.$to)) return true;
+  let textblocks = 0;
+  let spans = false;
+  doc.nodesBetween(selection.from, selection.to, node => {
+    if (node.isTextblock) textblocks += 1;
+    spans = spans || textblocks > 1 || node.type.name === 'hardBreak';
+    return !spans;
+  });
+  return spans;
+}
+
 export function useEditor() {
   const editor = ref(null);
   const isReady = ref(false);
   const isFocused = ref(false);
+  const hasCursor = ref(false);
+  const editorState = shallowRef(null);
 
-  const initializeEditor = (content, mode = 'edit', { autofocus = false } = {}) => {
+  const initializeEditor = (
+    content,
+    mode = 'edit',
+    { autofocus = false, extensions = [] } = {},
+  ) => {
     editor.value = new Editor({
       autofocus,
       editable: mode === 'edit',
@@ -42,6 +64,7 @@ export function useEditor() {
         TextAlign.configure({
           types: ['heading', 'paragraph', 'image', 'small'],
         }),
+        ...extensions,
       ],
       content: content || '<p></p>',
       editorProps: {
@@ -63,11 +86,17 @@ export function useEditor() {
 
       onFocus: () => {
         isFocused.value = true;
+        hasCursor.value = true;
       },
       onBlur: () => {
         isFocused.value = false;
       },
+      onTransaction: ({ editor: instance }) => {
+        editorState.value = instance.state;
+      },
     });
+    // Plugin setup replaces the state without a transaction.
+    editorState.value = editor.value.state;
   };
 
   const destroyEditor = () => {
@@ -75,8 +104,28 @@ export function useEditor() {
       editor.value.destroy();
       editor.value = null;
       isReady.value = false;
+      editorState.value = null;
     }
   };
+
+  // Reads the transaction-driven `editorState`: toolbar state must not depend on
+  // Vue deep-observing the editor instance.
+  const insertContext = computed(() => {
+    const state = editorState.value;
+    if (!state) return null;
+    return {
+      editor: editor.value,
+      selection: {
+        empty: state.selection.empty,
+        spansLines: spansLines(state),
+        hasCursor: hasCursor.value,
+      },
+      canInsertNode: typeName => {
+        const type = state.schema.nodes[typeName];
+        return Boolean(type) && canInsertNode(state, type);
+      },
+    };
+  });
 
   onUnmounted(() => {
     destroyEditor();
@@ -86,6 +135,7 @@ export function useEditor() {
     editor,
     isReady,
     isFocused,
+    insertContext,
     initializeEditor,
     destroyEditor,
   };
