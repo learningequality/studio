@@ -5,6 +5,7 @@ import {
   CHOICE_ITEM_DOCUMENT_NO_PROMPT,
   CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER,
   NO_INTERACTION_ITEM_DOCUMENT,
+  MULTI_TEXT_ENTRY_ITEM_DOCUMENT,
 } from '../utils/testingFixtures';
 
 const codesOf = errors => errors.map(error => error.code);
@@ -41,6 +42,15 @@ describe('validateQtiItem', () => {
     expect(validateQtiItem('<qti-assessment-item><oops>')).toEqual([
       { code: ValidationError.PARSE_ERROR },
     ]);
+  });
+
+  it('validates the body of several inline interactions of one type once', () => {
+    const noPrompt = MULTI_TEXT_ENTRY_ITEM_DOCUMENT.replace(
+      /<qti-item-body>[\s\S]*<\/qti-item-body>/,
+      '<qti-item-body><p><qti-text-entry-interaction response-identifier="response_xq7tbn2c" />' +
+        '<qti-text-entry-interaction response-identifier="response_pw4rzk8d" /></p></qti-item-body>',
+    );
+    expect(validateQtiItem(noPrompt)).toEqual([{ code: ValidationError.PROMPT_REQUIRED }]);
   });
 });
 

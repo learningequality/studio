@@ -8,13 +8,13 @@ const serializer = new XMLSerializer();
 /**
  * Parses a raw QTI XML string into the structured ItemModel.
  *
- * Each interaction block in the item body becomes one entry in `interactions`.
+ * Each block interaction in the item body becomes one entry in `interactions`.
  * A response declaration belongs to an interaction when the declaration's
  * `identifier` matches the interaction's `response-identifier` attribute.
  *
- * An interaction its descriptor declares as inline gets the serialized
- * `<qti-item-body>` as its `bodyXml` rather than the interaction element alone,
- * so its parse() can recover prompt content from body siblings.
+ * Inline interactions of one type share one entry, holding all their declarations
+ * in body order. Its `bodyXml` is the serialized `<qti-item-body>` rather than an
+ * interaction element, so its parse() can recover prompt content from body siblings.
  *
  * Hints belong to the item rather than to any one interaction, so they come back
  * alongside `interactions` rather than inside them. So does the body: an item can carry
@@ -50,19 +50,24 @@ export function parseItem(rawData) {
     const selector = QTI_INTERACTION_TAGS.join(', ');
     const interactionEls = [...body.querySelectorAll(selector)];
 
+    const inlineBlocks = new Map();
     for (const el of interactionEls) {
+      const tagName = el.tagName.toLowerCase();
       const responseId = el.getAttribute('response-identifier');
 
       const responseDeclarations = allDeclarations
         .filter(d => d.getAttribute('identifier') === responseId)
         .map(d => serializer.serializeToString(d));
 
-      const isInline = isInlineInteraction(el.tagName.toLowerCase());
-
-      interactions.push({
-        bodyXml: isInline ? serializer.serializeToString(body) : serializer.serializeToString(el),
-        responseDeclarations,
-      });
+      if (!isInlineInteraction(tagName)) {
+        interactions.push({ bodyXml: serializer.serializeToString(el), responseDeclarations });
+      } else if (inlineBlocks.has(tagName)) {
+        inlineBlocks.get(tagName).responseDeclarations.push(...responseDeclarations);
+      } else {
+        const block = { bodyXml: serializer.serializeToString(body), responseDeclarations };
+        inlineBlocks.set(tagName, block);
+        interactions.push(block);
+      }
     }
   }
 

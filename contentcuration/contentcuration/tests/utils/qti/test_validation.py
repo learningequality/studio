@@ -182,6 +182,67 @@ class BlankEditorItemTests(unittest.TestCase):
         self.assertEqual(result.errors, [])
 
 
+def _scoring_rule(identifier):
+    return (
+        "<qti-response-condition><qti-response-if><qti-match>"
+        f'<qti-variable identifier="{identifier}"/>'
+        f'<qti-correct identifier="{identifier}"/>'
+        "</qti-match>"
+        '<qti-set-outcome-value identifier="RAW_SCORE"><qti-sum>'
+        '<qti-variable identifier="RAW_SCORE"/>'
+        '<qti-base-value base-type="float">1.0</qti-base-value>'
+        "</qti-sum></qti-set-outcome-value>"
+        "</qti-response-if></qti-response-condition>"
+    )
+
+
+# Mirrors what assembleItem.js writes for an item with two responses. The schema does not
+# follow outcome references, so the Jest tests are what guard the RAW_SCORE declaration.
+MULTI_RESPONSE_EDITOR_ITEM = (
+    '<?xml version="1.0" encoding="UTF-8"?>\n'
+    '<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" '
+    'identifier="item_k2lm9qaz" title="Question" adaptive="false" time-dependent="false">'
+    '<qti-response-declaration identifier="response_xq7tbn2c" cardinality="single" '
+    'base-type="identifier">'
+    "<qti-correct-response><qti-value>choice_a1b2c3d4</qti-value></qti-correct-response>"
+    "</qti-response-declaration>"
+    '<qti-response-declaration identifier="response_pw4rzk8d" cardinality="single" '
+    'base-type="identifier">'
+    "<qti-correct-response><qti-value>choice_m0o0n0aa</qti-value></qti-correct-response>"
+    "</qti-response-declaration>"
+    '<qti-outcome-declaration identifier="SCORE" cardinality="single" base-type="float"/>'
+    '<qti-outcome-declaration identifier="RAW_SCORE" cardinality="single" base-type="float"/>'
+    "<qti-item-body><p>The Earth "
+    '<qti-inline-choice-interaction response-identifier="response_xq7tbn2c" shuffle="true">'
+    '<qti-inline-choice identifier="choice_a1b2c3d4">revolves</qti-inline-choice>'
+    '<qti-inline-choice identifier="choice_e5f6g7h8">stays</qti-inline-choice>'
+    "</qti-inline-choice-interaction> around the Sun, and the "
+    '<qti-inline-choice-interaction response-identifier="response_pw4rzk8d" shuffle="true">'
+    '<qti-inline-choice identifier="choice_s0u0n0aa">Sun</qti-inline-choice>'
+    '<qti-inline-choice identifier="choice_m0o0n0aa">Moon</qti-inline-choice>'
+    "</qti-inline-choice-interaction> orbits the Earth.</p></qti-item-body>"
+    "<qti-response-processing>"
+    '<qti-set-outcome-value identifier="RAW_SCORE">'
+    '<qti-base-value base-type="float">0.0</qti-base-value>'
+    "</qti-set-outcome-value>"
+    + _scoring_rule("response_xq7tbn2c")
+    + _scoring_rule("response_pw4rzk8d")
+    + '<qti-set-outcome-value identifier="SCORE"><qti-divide>'
+    '<qti-variable identifier="RAW_SCORE"/>'
+    '<qti-base-value base-type="float">2.0</qti-base-value>'
+    "</qti-divide></qti-set-outcome-value>"
+    "</qti-response-processing>"
+    "</qti-assessment-item>"
+)
+
+
+class MultiResponseEditorItemTests(unittest.TestCase):
+    def test_accepts_generated_response_processing(self):
+        result = validate_qti_item(MULTI_RESPONSE_EDITOR_ITEM)
+        self.assertTrue(result.is_valid)
+        self.assertEqual(result.errors, [])
+
+
 # The exact document the QTI editor writes back for a converted legacy question whose
 # hints it re-serialized - see HintsSection and serialization/hints.js. Assembled from
 # named parts because the schema fixes the order of the item's children, and putting the
