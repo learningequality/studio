@@ -116,6 +116,7 @@
     watch,
     computed,
     ref,
+    toRef,
     nextTick,
     onMounted,
     onUnmounted,
@@ -152,9 +153,11 @@
     },
     setup(props, { emit }) {
       const editorContainer = ref(null);
-      const { editor, isReady, isFocused, initializeEditor } = useEditor();
+      const { editor, isReady, isFocused, insertContext, initializeEditor } = useEditor();
       provide('editor', editor);
       provide('isReady', isReady);
+      provide('insertContext', insertContext);
+      provide('insertActions', toRef(props, 'insertActions'));
 
       const linkHandler = useLinkHandling(editor);
       provide('linkHandler', linkHandler);
@@ -261,6 +264,7 @@
           if (!editor.value) {
             initializeEditor(processedContent, props.mode, {
               autofocus: props.autofocus,
+              extensions: props.extensions,
             });
             return;
           }
@@ -284,6 +288,15 @@
           emit('update', content);
         }
       };
+
+      /**
+       * `ready`: emitted once, with the tiptap `Editor`, when commands can be issued.
+       */
+      watch(isReady, ready => {
+        if (ready) {
+          emit('ready', editor.value);
+        }
+      });
 
       // Emit the content update only when the editor loses focus (blur).
       watch(isFocused, (focused, wasFocused) => {
@@ -348,6 +361,34 @@
         type: Object,
         default: () => ({}),
       },
+      /**
+       * tiptap extensions (`Node`, `Mark` or `Extension`), registered after the
+       * built-in ones. Read once, when the editor is created.
+       * @type {import('@tiptap/core').AnyExtension[]}
+       */
+      extensions: {
+        type: Array,
+        default: () => [],
+      },
+      /**
+       * Actions appended to the insert tools of every toolbar. Each is
+       * `{ name, title, icon, handler, isActive?, isAvailable?, prominent? }`:
+       * - `name` {string}: unique among the insert tools.
+       * - `title` {string}: translated label and accessible name.
+       * - `icon` {string}: a KDS icon name, rendered with `KIcon`.
+       * - `handler` {(context) => void}: runs on click; not called while unavailable.
+       * - `isActive`, `isAvailable` {boolean | (context) => boolean}: re-evaluated on
+       *   every transaction.
+       * - `prominent` {boolean}: on desktop, a labelled button before minimize that
+       *   never moves into More.
+       * `context` is `{ editor, selection: { empty, spansLines, hasCursor },
+       * canInsertNode(typeName) }`; see docs/rich_text_editor.md.
+       * @type {Object[]}
+       */
+      insertActions: {
+        type: Array,
+        default: () => [],
+      },
       minHeight: {
         type: String,
         default: null,
@@ -358,7 +399,7 @@
         validator: v => ['markdown', 'html'].includes(v),
       },
     },
-    emits: ['update', 'minimize', 'open-editor'],
+    emits: ['update', 'minimize', 'open-editor', 'ready'],
   });
 
 </script>

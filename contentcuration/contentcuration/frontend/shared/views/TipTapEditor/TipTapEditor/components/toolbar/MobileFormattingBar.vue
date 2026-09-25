@@ -113,7 +113,9 @@
         :key="tool.name"
         :title="tool.title"
         :icon="tool.icon"
+        :k-icon="tool.kIcon"
         :is-active="tool.isActive"
+        :is-available="tool.isAvailable"
         @click="tool.handler($event)"
       />
     </div>
