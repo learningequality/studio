@@ -163,7 +163,7 @@ function buildResponseProcessingNode(declarationCount) {
   return buildXmlNode({
     tag: 'qti-response-processing',
     attrs: {
-      template: 'https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct',
+      template: 'https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct.xml',
     },
   });
 }
