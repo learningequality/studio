@@ -7,7 +7,9 @@ import io
 import json
 import sys
 import tempfile
+import uuid
 
+from django.core.exceptions import PermissionDenied
 from django.core.management import call_command
 from django.test import TransactionTestCase
 from django.urls import reverse_lazy
@@ -269,3 +271,38 @@ class UserEffectiveDiskSpaceTest(StudioTestCase):
             subscription_disk_space=50 * 1024 * 1024 * 1024,
         )
         self.assertEqual(self.user.get_effective_disk_space(), 500 * 1024 * 1024)
+
+    def test_available_space_includes_subscription(self):
+        UserSubscription.objects.create(
+            user=self.user,
+            stripe_subscription_status="active",
+            subscription_disk_space=50 * 1024 * 1024 * 1024,
+        )
+        self.assertEqual(
+            self.user.get_available_space(),
+            float(500 * 1024 * 1024 + 50 * 1024 * 1024 * 1024),
+        )
+
+    def test_check_space_allows_upload_within_subscription(self):
+        UserSubscription.objects.create(
+            user=self.user,
+            stripe_subscription_status="active",
+            subscription_disk_space=50 * 1024 * 1024 * 1024,
+        )
+        try:
+            self.user.check_space(1024 * 1024 * 1024, uuid.uuid4().hex)
+        except PermissionDenied:
+            self.fail("Subscription space was not counted towards the upload quota")
+
+    def test_check_space_rejects_upload_beyond_subscription(self):
+        UserSubscription.objects.create(
+            user=self.user,
+            stripe_subscription_status="active",
+            subscription_disk_space=50 * 1024 * 1024 * 1024,
+        )
+        with self.assertRaises(PermissionDenied):
+            self.user.check_space(51 * 1024 * 1024 * 1024, uuid.uuid4().hex)
+
+    def test_check_space_rejects_upload_without_subscription(self):
+        with self.assertRaises(PermissionDenied):
+            self.user.check_space(1024 * 1024 * 1024, uuid.uuid4().hex)

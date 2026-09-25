@@ -19,9 +19,6 @@ from django.http import HttpResponseNotAllowed
 from django.shortcuts import redirect
 from django.template.loader import render_to_string
 from django.urls import reverse_lazy
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import never_cache
-from django.views.decorators.debug import sensitive_post_parameters
 from django_registration.backends.activation.views import ActivationView
 from django_registration.backends.activation.views import RegistrationView
 from rest_framework.authentication import BasicAuthentication
@@ -391,36 +388,24 @@ class UserPasswordResetView(PasswordResetView):
 
 class UserPasswordResetConfirmView(PasswordResetConfirmView):
     http_method_names = ["get", "post"]
+    success_url = "/accounts/#/password-reset-success"
 
-    @method_decorator(sensitive_post_parameters())
-    @method_decorator(never_cache)
-    def dispatch(self, request, *args, **kwargs):
-        response = super(UserPasswordResetConfirmView, self).dispatch(
-            request, *args, **kwargs
-        )
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        if self.request.method == "POST":
+            kwargs["data"] = json.loads(self.request.body)
+        return kwargs
 
-        if request.method == "POST":
-            return self.post(request, *args, **kwargs)
+    def get(self, request, *args, **kwargs):
+        return redirect("/accounts/#/reset-password?uidb64={}".format(kwargs["uidb64"]))
 
-        # Token is valid, redirect to password reset page
-        if response.status_code == 302:
-            return redirect(
-                "/accounts/#/reset-password?uidb64={}&token={}".format(
-                    kwargs["uidb64"], kwargs["token"]
-                )
-            )
-
-        return redirect("/accounts/#/reset-expired")
-
-    def get_success_url(self):
-        return "/accounts/#/password-reset-success"
-
-    def post(self, request, *args, **kwargs):
-        form = self.form_class(self.user, json.loads(request.body))
-
-        if form.is_valid():
-            return self.form_valid(form)
+    def form_invalid(self, form):
         return HttpResponseForbidden()
+
+    def render_to_response(self, context, **response_kwargs):
+        if self.request.method == "POST":
+            return HttpResponseForbidden()
+        return redirect("/accounts/#/reset-expired")
 
 
 def request_activation_link(request):

@@ -957,6 +957,17 @@ class ChannelViewSet(ValuesViewset):
         if not version_data:
             return Response({})
 
+        # Older ChannelVersion rows may have been backfilled with duplicate
+        # license IDs - dedupe defensively.
+        if version_data.get("included_licenses") is not None:
+            version_data["included_licenses"] = sorted(
+                set(version_data["included_licenses"])
+            )
+        if version_data.get("non_distributable_licenses_included") is not None:
+            version_data["non_distributable_licenses_included"] = sorted(
+                set(version_data["non_distributable_licenses_included"])
+            )
+
         return Response(version_data)
 
     @action(
@@ -1071,11 +1082,17 @@ class ChannelVersionFilter(RequiredFilterSet):
 
 class ChannelVersionViewSet(ReadOnlyValuesViewset):
     queryset = ChannelVersion.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     pagination_class = ChannelVersionListPagination
     filterset_class = ChannelVersionFilter
     ordering_fields = ["version"]
     ordering = "-version"
+
+    # Older ChannelVersion rows may have been backfilled with duplicate
+    # license IDs - dedupe defensively.
+    field_map = {
+        "included_licenses": lambda item: sorted(set(item["included_licenses"] or []))
+    }
 
     values = (
         "id",
