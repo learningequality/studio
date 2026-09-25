@@ -204,11 +204,17 @@
        * card nobody was editing.
        */
       let editedHere = false;
+      let lastReported = null;
 
+      // Watch the inputs, not rawData: watching the computed would assemble it for every card
+      // on screen, logging assembly warnings for items nobody is saving.
       // Emit only when the assembled XML actually changes after initial mount.
-      watch(rawData, newVal => {
+      watch([currentBodyXml, currentResponseDeclarations, hints], () => {
         if (!editedHere) return;
         editedHere = false;
+        const newVal = rawData.value;
+        if (newVal === lastReported) return;
+        lastReported = newVal;
         if (process.env.NODE_ENV === 'development') {
           // debug to help devs understand what the editor is sending to the parent
           // eslint-disable-next-line no-console
