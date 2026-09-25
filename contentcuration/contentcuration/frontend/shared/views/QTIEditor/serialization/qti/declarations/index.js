@@ -7,7 +7,7 @@
  * the strategy-class pattern in Kolibri's declarationParsers.
  *
  * qti-interpolation-table, qti-match-table, and ruleHandlers are intentionally
- * omitted — the authoring editor has no lookup-table or response-processing support.
+ * omitted — the editor writes response processing (assembleItem.js) rather than reading it.
  */
 import CorrectResponse from './correctResponse.js';
 import DefaultValue from './defaultValue.js';

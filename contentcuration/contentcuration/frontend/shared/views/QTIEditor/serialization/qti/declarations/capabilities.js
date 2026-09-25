@@ -5,8 +5,9 @@
  * QTIDeclaration, and when QTIDeclaration looks them up via its getters.
  * Constants prevent silent failures from typos in capability key names.
  *
- * SCORE and LOOKUP from the Kolibri original are intentionally omitted —
- * the authoring editor carries no runtime scoring or lookup-table logic.
+ * A capability may provide getScoringRule(outcomeIdentifier), chosen by
+ * QTIDeclaration's SCORING_PRECEDENCE. SCORE and LOOKUP from the Kolibri original
+ * are intentionally omitted — the editor writes scoring rules, never evaluates them.
  */
 
 /** @enum {string} */

@@ -13,6 +13,7 @@ import {
   CHOICE_ITEM_DOCUMENT_WITH_HINTS,
   NO_INTERACTION_ITEM_WITH_HINTS,
   VALID_ASSOCIATE_ITEM_DOCUMENT,
+  MULTI_TEXT_ENTRY_ITEM_DOCUMENT,
 } from '../../../utils/testingFixtures';
 
 jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor');
@@ -55,6 +56,8 @@ const renderComponent = (props = {}, slots = {}) => {
 };
 
 describe('QTIItemEditor', () => {
+  afterEach(() => jest.restoreAllMocks());
+
   describe('view mode', () => {
     test('shows the card body (placeholder) even in view mode', () => {
       renderComponent({ mode: 'view' });
@@ -197,6 +200,23 @@ describe('QTIItemEditor', () => {
       await nextTick();
 
       expect(emitted()['update:rawData']).toBeUndefined();
+    });
+
+    test('a card that is only being viewed does not warn about scoring it will not write', async () => {
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      renderComponent({
+        item: {
+          assessment_id: 'item-id',
+          type: AssessmentItemTypes.QTI,
+          raw_data: MULTI_TEXT_ENTRY_ITEM_DOCUMENT.replace(
+            /<qti-correct-response>\s*<qti-value>Moon<\/qti-value>\s*<\/qti-correct-response>/,
+            '',
+          ),
+        },
+      });
+      await nextTick();
+
+      expect(warn).not.toHaveBeenCalled();
     });
 
     test('a change made while editing is still reported once the card closes', async () => {
