@@ -5,9 +5,9 @@ import { Superscript } from '@tiptap/extension-superscript';
 import { Subscript } from '@tiptap/extension-subscript';
 import { TextAlign } from '@tiptap/extension-text-align';
 import { Small } from '../extensions/SmallTextExtension';
+import { StyledStrike, StyledUnderline } from '../extensions/TextDecoration';
 import { Image } from '../extensions/Image';
 import { CodeBlockSyntaxHighlight } from '../extensions/CodeBlockSyntaxHighlight';
-import { CustomLink } from '../extensions/Link';
 import { Math } from '../extensions/Math';
 import { createCustomMarkdownSerializer } from '../utils/markdownSerializer';
 import { transformPastedHTML } from '../utils/pasteTransform';
@@ -24,20 +24,23 @@ export function useEditor() {
       extensions: [
         StarterKitExtension.configure({
           codeBlock: false, // Disable default code block to use the extended version
-          link: false, // Disable default link to use the custom link extension
-          // The QTI 3.0 HTML profile has no <u> or <s>, so the item schema rejects an
-          // item carrying either and the save fails. Dropping the marks rather than only
-          // their toolbar buttons also takes away the keyboard shortcuts and the paste
-          // path, which would otherwise still produce content that cannot be saved.
+          // A link has nothing to navigate to on a device with no internet access, so
+          // the editor offers none and the legacy conversion unwraps the ones it finds
+          // (utils/assessment/qti/convert.py). Dropping the mark rather than only the
+          // toolbar button is what keeps a pasted anchor from arriving as one.
+          link: false,
+          // Replaced by the versions in extensions/TextDecoration.js, which write the
+          // decoration as a style on a <span> — the QTI 3.0 HTML profile has no <u> or <s>.
           strike: false,
           underline: false,
         }),
         CodeBlockSyntaxHighlight,
         Small,
+        StyledStrike,
+        StyledUnderline,
         Superscript,
         Subscript,
         Image,
-        CustomLink, // Use our custom Link extension
         Math,
         TextAlign.configure({
           types: ['heading', 'paragraph', 'image', 'small'],

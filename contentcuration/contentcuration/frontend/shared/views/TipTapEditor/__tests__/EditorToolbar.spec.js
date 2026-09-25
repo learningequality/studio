@@ -6,7 +6,7 @@ import EditorToolbar from '../TipTapEditor/components/EditorToolbar.vue';
 import { getTipTapEditorStrings } from '../TipTapEditor/TipTapEditorStrings';
 import { tabIn } from 'shared/utils/testing';
 
-const { textFormatOptions$ } = getTipTapEditorStrings();
+const { textFormatOptions$, alignRight$ } = getTipTapEditorStrings();
 
 // Every editor read the toolbar makes while rendering: undo/redo availability,
 // mark state, the alignment probe in `getEffectiveAlignment`, and the
@@ -98,5 +98,15 @@ describe('EditorToolbar roving tabindex', () => {
 
     expect(controls[0]).toHaveAttribute('aria-disabled', 'true');
     expect(controls[0]).toHaveFocus();
+  });
+});
+
+describe('EditorToolbar alignment control', () => {
+  // The action itself was always defined; what changed is that the toolbar no longer
+  // hides it, so the assertion has to be on what renders.
+  it('renders the alignment control', async () => {
+    await renderToolbar();
+
+    expect(screen.getByRole('button', { name: alignRight$() })).toBeInTheDocument();
   });
 });

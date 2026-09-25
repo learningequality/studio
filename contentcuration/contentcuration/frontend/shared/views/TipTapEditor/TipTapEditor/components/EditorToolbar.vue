@@ -167,7 +167,6 @@
         canClearFormat,
         historyActions,
         alignAction,
-        alignActionHidden,
         textActions,
         listActions,
         insertTools,
@@ -241,8 +240,6 @@
         {
           name: 'align',
           groupActions: [alignAction.value],
-          // Reason on the flag, in useToolbarActions.js.
-          hide: alignActionHidden,
         },
         {
           name: 'clearFormat',
@@ -318,9 +315,6 @@
       const toolbarGroupsWithDividers = computed(() => {
         const groups = [];
         toolbarGroups.value.forEach((group, index) => {
-          if (group.hide) {
-            return;
-          }
           groups.push(group);
           if (index < toolbarGroups.value.length - 1) {
             groups.push({ type: 'divider' });

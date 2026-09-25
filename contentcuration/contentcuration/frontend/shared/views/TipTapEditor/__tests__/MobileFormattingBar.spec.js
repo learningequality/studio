@@ -15,17 +15,21 @@ jest.mock('shared/utils/browserInfo.js', () => {
   return jest.requireActual('shared/utils/browserInfo.js');
 });
 
-const { decreaseFormatSize$, textFormattingToolbar$ } = getTipTapEditorStrings();
+const { decreaseFormatSize$, textFormattingToolbar$, alignRight$ } = getTipTapEditorStrings();
 
 const formattingBar = () => screen.queryByRole('toolbar', { name: textFormattingToolbar$() });
 
-// Every editor read the bar makes: the format level in `useFormatControls`, and
-// the selection the mount hook scrolls into view.
+// Every editor read the bar makes: the format level in `useFormatControls`, the
+// selection the mount hook scrolls into view, and the node under the cursor that the
+// alignment control reads to pick its icon.
 function makeEditorStub({ smallText = false } = {}) {
   return {
     isActive: name => smallText && name === 'small',
     state: { selection: { from: 0, to: 0 } },
-    view: { dom: document.createElement('div') },
+    view: {
+      dom: document.createElement('div'),
+      domAtPos: () => ({ node: document.createElement('div') }),
+    },
   };
 }
 
@@ -119,5 +123,17 @@ describe('MobileFormattingBar keyboard reachability', () => {
     await nextTick();
 
     expect(formattingBar()).not.toBeInTheDocument();
+  });
+});
+
+describe('MobileFormattingBar alignment control', () => {
+  it('renders the alignment control', async () => {
+    render(MobileFormattingBar, {
+      provide: { editor: ref(makeEditorStub()) },
+      router: new VueRouter(),
+    });
+    await nextTick();
+
+    expect(screen.getByRole('button', { name: alignRight$() })).toBeInTheDocument();
   });
 });

@@ -31,33 +31,6 @@
     </div>
 
     <div
-      v-if="linkHandler.isBubbleMenuOpen.value"
-      :style="linkHandler.popoverStyle.value"
-    >
-      <LinkBubbleMenu
-        v-if="isReady"
-        :editor="editor"
-      />
-    </div>
-
-    <div
-      v-if="linkHandler.isEditorOpen.value"
-      class="link-editor-popover-wrapper"
-      :class="{ 'has-overlay': linkHandler.isEditorCentered.value }"
-      :style="linkHandler.isEditorCentered.value ? {} : linkHandler.popoverStyle.value"
-      @click.self="linkHandler.closeLinkEditor"
-    >
-      <LinkEditor
-        :style="linkHandler.isEditorCentered.value ? linkHandler.popoverStyle.value : {}"
-        :mode="linkHandler.editorMode.value"
-        :initial-state="linkHandler.editorInitialState.value"
-        @save="linkHandler.saveLink"
-        @remove="linkHandler.removeLink"
-        @close="linkHandler.closeLinkEditor"
-      />
-    </div>
-
-    <div
       v-if="imageHandler.modalMode.value"
       class="image-upload-popover-wrapper"
       :class="{ 'has-overlay': imageHandler.isModalCentered.value }"
@@ -126,9 +99,6 @@
   import ImageUploadModal from './components/image/ImageUploadModal.vue';
   import { useImageHandling } from './composables/useImageHandling';
   import '../assets/styles/code-theme-dark.css';
-  import { useLinkHandling } from './composables/useLinkHandling';
-  import LinkBubbleMenu from './components/link/LinkBubbleMenu.vue';
-  import LinkEditor from './components/link/LinkEditor.vue';
   import { useMathHandling } from './composables/useMathHandling';
   import FormulasMenu from './components/math/FormulasMenu.vue';
   import { preprocessMarkdown } from './utils/markdown';
@@ -144,8 +114,6 @@
       EditorToolbar,
       EditorContentWrapper,
       ImageUploadModal,
-      LinkBubbleMenu,
-      LinkEditor,
       FormulasMenu,
       MobileTopBar,
       MobileFormattingBar,
@@ -155,9 +123,6 @@
       const { editor, isReady, isFocused, initializeEditor } = useEditor();
       provide('editor', editor);
       provide('isReady', isReady);
-
-      const linkHandler = useLinkHandling(editor);
-      provide('linkHandler', linkHandler);
 
       // The anchored modals are measured and hit-tested through these refs, so that several
       // editors mounted at once each work with their own modal.
@@ -176,7 +141,6 @@
 
       const sharedEventHandlers = computed(() => ({
         'insert-image': target => imageHandler.openCreateModal({ targetElement: target }),
-        'insert-link': () => linkHandler.openLinkEditor(),
         'insert-math': target => mathHandler.openCreateMathModal({ targetElement: target }),
       }));
 
@@ -304,12 +268,9 @@
         editorContainer,
         imageUploadModal,
         formulasMenu,
-        isReady,
         hasFocusWithin,
         handleFocusout,
         handleDrop,
-        linkHandler,
-        editor,
         mathHandler,
         isTouchDevice,
         imageHandler,
@@ -395,7 +356,6 @@
     outline-color: #007bff;
   }
 
-  .link-editor-popover-wrapper,
   .image-upload-popover-wrapper,
   .math-modal-popover-wrapper {
     position: fixed;
@@ -410,7 +370,6 @@
     pointer-events: none;
   }
 
-  .link-editor-popover-wrapper > *,
   .image-upload-popover-wrapper > *,
   .math-modal-popover-wrapper > * {
     pointer-events: auto;

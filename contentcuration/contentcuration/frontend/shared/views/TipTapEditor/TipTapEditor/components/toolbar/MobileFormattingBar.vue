@@ -88,16 +88,13 @@
         :is-active="action.isActive"
         @click="action.handler"
       />
-      <!-- Hidden while alignActionHidden is set; see useToolbarActions.js. -->
-      <template v-if="!alignActionHidden">
-        <ToolbarDivider />
-        <ToolbarButton
-          :title="alignAction.title"
-          :icon="alignAction.icon"
-          :is-active="alignAction.isActive"
-          @click="alignAction.handler"
-        />
-      </template>
+      <ToolbarDivider />
+      <ToolbarButton
+        :title="alignAction.title"
+        :icon="alignAction.icon"
+        :is-active="alignAction.isActive"
+        @click="alignAction.handler"
+      />
       <ToolbarDivider />
       <ToolbarButton
         v-for="action in scriptActions"
@@ -152,14 +149,8 @@
         textFormattingToolbar$,
       } = getTipTapEditorStrings();
 
-      const {
-        textActions,
-        listActions,
-        scriptActions,
-        alignAction,
-        alignActionHidden,
-        insertTools,
-      } = useToolbarActions(emit);
+      const { textActions, listActions, scriptActions, alignAction, insertTools } =
+        useToolbarActions(emit);
 
       const { canIncreaseFormat, canDecreaseFormat, increaseFormat, decreaseFormat } =
         useFormatControls();
@@ -230,7 +221,6 @@
         listActions,
         scriptActions,
         alignAction,
-        alignActionHidden,
         insertTools,
         toggleToolbar,
         canIncreaseFormat,
