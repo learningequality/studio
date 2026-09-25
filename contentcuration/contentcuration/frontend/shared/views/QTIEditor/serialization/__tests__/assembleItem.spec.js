@@ -3,6 +3,9 @@
 /* eslint-disable jest-dom/prefer-to-have-attribute, jest-dom/prefer-to-have-text-content */
 import { buildXmlNode, assembleItemXml } from '../assembleItem.js';
 import { parseItem } from '../parseItem.js';
+import { parseXML } from '../xml.js';
+import { normalizeXML } from '../qti/__tests__/testUtils.js';
+import { MULTI_TEXT_ENTRY_ITEM_DOCUMENT } from '../../utils/testingFixtures';
 
 const serializer = new XMLSerializer();
 
@@ -236,6 +239,9 @@ describe('assembleItemXml', () => {
     responseDeclarations: [],
   };
 
+  const identifiersOf = (xml, selector) =>
+    [...parseXML(xml).querySelectorAll(selector)].map(el => el.getAttribute('identifier'));
+
   it('escapes & in the title so the output is well-formed XML', () => {
     const xml = assembleItemXml({
       ...BASE,
@@ -354,6 +360,191 @@ describe('assembleItemXml', () => {
       expect(
         new DOMParser().parseFromString(xml, 'text/xml').querySelector('math').namespaceURI,
       ).toBe(MATHML_NS);
+    });
+  });
+
+  describe('response processing', () => {
+    const INLINE_CHOICE_BODY =
+      '<qti-item-body><p>The Earth ' +
+      '<qti-inline-choice-interaction response-identifier="response_xq7tbn2c" shuffle="true">' +
+      '<qti-inline-choice identifier="choice_a1b2c3d4">revolves</qti-inline-choice>' +
+      '<qti-inline-choice identifier="choice_e5f6g7h8">stays</qti-inline-choice>' +
+      '</qti-inline-choice-interaction> around the Sun, and the ' +
+      '<qti-inline-choice-interaction response-identifier="response_pw4rzk8d" shuffle="true">' +
+      '<qti-inline-choice identifier="choice_s0u0n0aa">Sun</qti-inline-choice>' +
+      '<qti-inline-choice identifier="choice_m0o0n0aa">Moon</qti-inline-choice>' +
+      '</qti-inline-choice-interaction> orbits the Earth.</p></qti-item-body>';
+
+    const declaration = (identifier, correct) =>
+      `<qti-response-declaration identifier="${identifier}" cardinality="single" base-type="identifier">` +
+      (correct
+        ? `<qti-correct-response><qti-value>${correct}</qti-value></qti-correct-response>`
+        : '') +
+      '</qti-response-declaration>';
+
+    const rule = identifier => `
+      <qti-response-condition>
+        <qti-response-if>
+          <qti-match>
+            <qti-variable identifier="${identifier}"/>
+            <qti-correct identifier="${identifier}"/>
+          </qti-match>
+          <qti-set-outcome-value identifier="RAW_SCORE">
+            <qti-sum>
+              <qti-variable identifier="RAW_SCORE"/>
+              <qti-base-value base-type="float">1.0</qti-base-value>
+            </qti-sum>
+          </qti-set-outcome-value>
+        </qti-response-if>
+      </qti-response-condition>`;
+
+    const EXPECTED_PROCESSING = normalizeXML(`
+      <qti-response-processing>
+        <qti-set-outcome-value identifier="RAW_SCORE">
+          <qti-base-value base-type="float">0.0</qti-base-value>
+        </qti-set-outcome-value>
+        ${rule('response_xq7tbn2c')}
+        ${rule('response_pw4rzk8d')}
+        <qti-set-outcome-value identifier="SCORE">
+          <qti-divide>
+            <qti-variable identifier="RAW_SCORE"/>
+            <qti-base-value base-type="float">2.0</qti-base-value>
+          </qti-divide>
+        </qti-set-outcome-value>
+      </qti-response-processing>`);
+
+    const assembleWith = (responseDeclarations, hints) =>
+      assembleItemXml({
+        identifier: 'item_k2lm9qaz',
+        title: 'Question',
+        language: '',
+        bodyXml: INLINE_CHOICE_BODY,
+        responseDeclarations,
+        hints,
+      });
+
+    afterEach(() => jest.restoreAllMocks());
+
+    it('scores a single response declaration with the match_correct template', () => {
+      const xml = assembleWith([declaration('RESPONSE', 'choice_a1b2c3d4')]);
+      const processing = parseXML(xml).querySelector('qti-response-processing');
+      expect(processing.getAttribute('template')).toContain('rptemplates/match_correct');
+      expect(processing.children).toHaveLength(0);
+      expect(identifiersOf(xml, 'qti-outcome-declaration')).toEqual(['SCORE']);
+    });
+
+    it('averages the scoring rules of several scorable response declarations', () => {
+      const xml = assembleWith([
+        declaration('response_xq7tbn2c', 'choice_a1b2c3d4'),
+        declaration('response_pw4rzk8d', 'choice_m0o0n0aa'),
+      ]);
+      expect(identifiersOf(xml, 'qti-outcome-declaration')).toEqual(['SCORE', 'RAW_SCORE']);
+      expect(xml).toContain(EXPECTED_PROCESSING);
+    });
+
+    it('writes no processing and warns when a response declaration cannot be scored', () => {
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      const xml = assembleWith([
+        declaration('response_xq7tbn2c', 'choice_a1b2c3d4'),
+        declaration('response_pw4rzk8d'),
+      ]);
+      expect(parseXML(xml).querySelector('qti-response-processing')).toBeNull();
+      expect(identifiersOf(xml, 'qti-outcome-declaration')).toEqual(['SCORE']);
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0][0]).toContain('response_pw4rzk8d');
+      expect(warn.mock.calls[0][0]).not.toContain('response_xq7tbn2c');
+    });
+
+    it('treats a response declaration it cannot read as unscorable', () => {
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      const xml = assembleWith([
+        declaration('response_xq7tbn2c', 'choice_a1b2c3d4'),
+        '<qti-response-declaration identifier="response_pw4rzk8d" cardinality="record"/>',
+      ]);
+      expect(parseXML(xml).querySelector('qti-response-processing')).toBeNull();
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0][0]).toContain('response_pw4rzk8d');
+    });
+
+    describe('element order', () => {
+      const childTagsOf = xml => [...parseXML(xml).documentElement.children].map(el => el.tagName);
+
+      it.each([
+        [
+          'one response declaration',
+          [declaration('RESPONSE', 'choice_a1b2c3d4')],
+          ['qti-response-declaration', 'qti-outcome-declaration'],
+        ],
+        [
+          'several response declarations',
+          [
+            declaration('response_xq7tbn2c', 'choice_a1b2c3d4'),
+            declaration('response_pw4rzk8d', 'choice_m0o0n0aa'),
+          ],
+          [
+            'qti-response-declaration',
+            'qti-response-declaration',
+            'qti-outcome-declaration',
+            'qti-outcome-declaration',
+          ],
+        ],
+      ])(
+        'writes declarations, body, catalog, then processing for %s',
+        (_, responseDeclarations, declarationTags) => {
+          const xml = assembleWith(responseDeclarations, [{ id: 'h', content: '<p>Look up</p>' }]);
+          expect(childTagsOf(xml)).toEqual([
+            ...declarationTags,
+            'qti-item-body',
+            'qti-catalog-info',
+            'qti-response-processing',
+          ]);
+        },
+      );
+
+      it('keeps the response declarations in the order given', () => {
+        const xml = assembleWith([
+          declaration('response_pw4rzk8d', 'choice_m0o0n0aa'),
+          declaration('response_xq7tbn2c', 'choice_a1b2c3d4'),
+        ]);
+        expect(identifiersOf(xml, 'qti-response-declaration')).toEqual([
+          'response_pw4rzk8d',
+          'response_xq7tbn2c',
+        ]);
+        expect(identifiersOf(xml, 'qti-match qti-variable')).toEqual([
+          'response_pw4rzk8d',
+          'response_xq7tbn2c',
+        ]);
+      });
+    });
+  });
+
+  describe('an item with several inline interactions', () => {
+    // A hint edit reassembles the item from its first block.
+    const reassemble = xml => {
+      const item = parseItem(xml);
+      return assembleItemXml({
+        identifier: item.identifier,
+        title: item.title,
+        language: item.language,
+        bodyXml: item.interactions[0].bodyXml,
+        responseDeclarations: item.interactions[0].responseDeclarations,
+        hints: [{ id: 'h', content: '<p>Look up</p>' }],
+      });
+    };
+
+    it('keeps every declaration, in body order, and scores them all', () => {
+      const xml = reassemble(MULTI_TEXT_ENTRY_ITEM_DOCUMENT);
+      expect(identifiersOf(xml, 'qti-response-declaration')).toEqual([
+        'response_xq7tbn2c',
+        'response_pw4rzk8d',
+      ]);
+      expect(identifiersOf(xml, 'qti-outcome-declaration')).toEqual(['SCORE', 'RAW_SCORE']);
+    });
+
+    it('does not duplicate generated processing when saved again', () => {
+      const xml = reassemble(reassemble(MULTI_TEXT_ENTRY_ITEM_DOCUMENT));
+      expect(identifiersOf(xml, 'qti-outcome-declaration')).toEqual(['SCORE', 'RAW_SCORE']);
+      expect(parseXML(xml).querySelectorAll('qti-response-processing')).toHaveLength(1);
     });
   });
 });
