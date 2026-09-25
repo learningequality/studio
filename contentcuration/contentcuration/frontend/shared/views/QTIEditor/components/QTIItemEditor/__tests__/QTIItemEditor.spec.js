@@ -13,6 +13,7 @@ import {
   CHOICE_ITEM_DOCUMENT_WITH_HINTS,
   NO_INTERACTION_ITEM_WITH_HINTS,
   VALID_ASSOCIATE_ITEM_DOCUMENT,
+  VALID_MATCH_ITEM_DOCUMENT,
 } from '../../../utils/testingFixtures';
 
 jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor');
@@ -20,7 +21,7 @@ jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
   const { ref } = require('vue');
   return {
     __esModule: true,
-    default: () => ({ windowIsSmall: ref(false) }),
+    default: () => ({ windowIsSmall: ref(false), windowIsLarge: ref(true) }),
   };
 });
 
@@ -31,6 +32,8 @@ const {
   incompleteItemIndicatorLabel$,
   hintsLabel$,
   associateLabel$,
+  matchLabel$,
+  questionNumberAndTypeLabel$,
   unknownTypeLabel$,
   responsePoolLabel$,
 } = qtiEditorStrings;
@@ -315,6 +318,29 @@ describe('QTIItemEditor', () => {
       renderAssociateItem();
       expect(await screen.findByText(responsePoolLabel$())).toBeInTheDocument();
       expect(screen.getByText('Antonio')).toBeInTheDocument();
+    });
+  });
+
+  describe('match interaction', () => {
+    const renderMatchItem = () =>
+      renderComponent({
+        item: {
+          assessment_id: 'test-item-id',
+          type: AssessmentItemTypes.QTI,
+          raw_data: VALID_MATCH_ITEM_DOCUMENT,
+        },
+      });
+
+    test('names the match question type rather than falling back to unknown', async () => {
+      renderMatchItem();
+      const heading = questionNumberAndTypeLabel$({ number: 1, total: 5, type: matchLabel$() });
+      expect(await screen.findByText(heading)).toBeInTheDocument();
+    });
+
+    test('renders the match editor for the parsed interaction', async () => {
+      renderMatchItem();
+      expect(await screen.findByText(responsePoolLabel$())).toBeInTheDocument();
+      expect(screen.getByText('Dog')).toBeInTheDocument();
     });
   });
 

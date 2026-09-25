@@ -159,6 +159,10 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Delete distractor {number}',
     context: 'Accessible label for the delete icon button on a distractor',
   },
+  saveChipBtn: {
+    message: 'Save',
+    context: 'Button that adds the answer or distractor being written to its list',
+  },
   editPairItemLabel: {
     message: 'Edit pair {number}, item {position}',
     context: 'Accessible label for the clickable region to edit one item of a pair',
@@ -180,9 +184,82 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     context:
       'Validation error when a distractor has the same content as another distractor or as an item in a pair',
   },
+  matchingRowsLabel: {
+    message: 'Matching rows',
+    context: 'Section header above the list of prompts and their correct answers',
+  },
+  matchingRowsDescription: {
+    message:
+      'Learners match responses from a shuffled set to each prompt. A prompt can have more than one answer. Include distractors to increase difficulty.',
+    context: 'Subtitle under the matching rows header',
+  },
+  addRowBtn: {
+    message: 'Add row',
+    context: 'Button that appends a new matching row',
+  },
+  deleteRowBtn: {
+    message: 'Delete row {number}',
+    context: 'Accessible label for the delete icon button next to a matching row',
+  },
+  editRowLabel: {
+    message: 'Edit row {number} prompt',
+    context: "Accessible label for the clickable region to edit a matching row's prompt",
+  },
+  promptColumnLabel: {
+    message: 'Prompt',
+    context: 'Column header above the prompts of the matching rows',
+  },
+  answersColumnLabel: {
+    message: 'Answers',
+    context: 'Column header above the correct answers of the matching rows',
+  },
+  answerPlaceholder: {
+    message: 'Enter an answer',
+    context: 'Placeholder shown in a matching row answer that has no content yet',
+  },
+  rowAnswersLabel: {
+    message: 'Answers for row {number}',
+    context: 'Accessible label for the list of correct answers in a matching row',
+  },
+  addMatchLabel: {
+    message: 'Add answer to row {number}',
+    context: 'Accessible label for the area that starts a new answer in a matching row',
+  },
+  editMatchLabel: {
+    message: 'Edit row {number}, answer {position}',
+    context: 'Accessible label for the clickable region to edit one answer of a matching row',
+  },
+  deleteMatchBtn: {
+    message: 'Delete row {number}, answer {position}',
+    context: "Accessible label for the delete icon button on a matching row's answer",
+  },
+  errorEmptyRowContent: {
+    message: 'Prompt cannot be blank',
+    context: "Validation error when a matching row's prompt is empty",
+  },
+  errorRowWithoutMatch: {
+    message: 'Add at least one answer',
+    context: 'Validation error when a matching row has no non-blank answer',
+  },
+  errorTooFewRows: {
+    message: '1 or more valid rows are required',
+    context: 'Validation error when no row has both a prompt and an answer',
+  },
+  errorDuplicateMatchContent: {
+    message: 'Answers within a row cannot be the same',
+    context: 'Validation error when two answers in one row have identical content',
+  },
+  errorDuplicateRowContent: {
+    message: 'Rows cannot repeat the same prompt',
+    context: 'Validation error when two rows have identical prompts',
+  },
   matchLabel: {
     message: 'Match',
-    context: 'Display name for a match question type',
+    context: 'Display name for a match question type shown in the question type selector',
+  },
+  matchDescription: {
+    message: 'Learners must match each prompt with its correct answers.',
+    context: 'Description for the match question type in the info modal',
   },
   extendedTextLabel: {
     message: 'Extended text',
