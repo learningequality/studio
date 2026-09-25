@@ -279,8 +279,9 @@
 
 <script>
 
-  import { computed, getCurrentInstance, onMounted, ref, watch } from 'vue';
+  import { computed, onMounted, ref, watch } from 'vue';
   import { themeTokens, themePalette } from 'kolibri-design-system/lib/styles/theme';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 
   import camelCase from 'lodash/camelCase';
 
@@ -319,11 +320,9 @@
     },
     emits: ['close'],
     setup(props, { emit }) {
+      const { createSnackbar } = useKSnackbar();
       const tokensTheme = themeTokens();
       const paletteTheme = themePalette();
-
-      const { proxy } = getCurrentInstance();
-      const store = proxy.$store;
 
       // Destructure translation functions from communityChannelsStrings
       const {
@@ -560,10 +559,6 @@
           .join(', ');
       });
 
-      function showSnackbar(params) {
-        return store.dispatch('showSnackbar', params);
-      }
-
       function onReplacementChange(value) {
         replacementConfirmed.value = value;
       }
@@ -588,16 +583,26 @@
             categories,
           })
             .then(() => {
-              showSnackbar({ text: submittedSnackbar$() });
+              createSnackbar({
+                text: submittedSnackbar$(),
+                duration: 6000,
+                announce: true,
+              });
             })
             .catch(() => {
-              showSnackbar({ text: errorSnackbar$() });
+              createSnackbar({
+                text: errorSnackbar$(),
+                duration: 6000,
+                announce: true,
+              });
             });
         }, submitDelayMs);
 
-        showSnackbar({
+        createSnackbar({
           text: submittingSnackbar$(),
           duration: null,
+          autoDismiss: false,
+          announce: true,
           actionText: cancelAction$(),
           actionCallback: () => {
             clearTimeout(timer);

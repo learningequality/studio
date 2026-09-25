@@ -80,6 +80,7 @@
   import { useRoute, useRouter } from 'vue-router/composables';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import NotificationFilters from './NotificationFilters.vue';
   import NotificationList from './NotificationList.vue';
   import useCommunityLibraryUpdates from './composables/useCommunityLibraryUpdates';
@@ -90,7 +91,6 @@
   import { communityChannelsStrings } from 'shared/strings/communityChannelsStrings';
   import { Modals } from 'shared/constants';
   import useStore from 'shared/composables/useStore';
-  import useSnackbar from 'shared/composables/useSnackbar';
 
   const NotificationsTab = {
     UNREAD: 0,
@@ -102,7 +102,7 @@
   const router = useRouter();
   const route = useRoute();
   const store = useStore();
-  const { createSnackbar } = useSnackbar();
+  const { createSnackbar } = useKSnackbar();
 
   const previousQuery = ref(null);
   const isSaving = ref(false);
@@ -175,7 +175,11 @@
         await store.dispatch('markNotificationsRead', timestamp.toISOString());
       }
     } catch (error) {
-      createSnackbar(commonStrings.genericErrorMessage$());
+      createSnackbar({
+        text: commonStrings.genericErrorMessage$(),
+        autoDismiss: true,
+        announce: true,
+      });
     } finally {
       isSaving.value = false;
     }

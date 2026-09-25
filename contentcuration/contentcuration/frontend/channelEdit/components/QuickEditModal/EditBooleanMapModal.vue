@@ -50,6 +50,8 @@
 
 <script>
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
+
   /**
    * EditBooleanMapModal
    * This component is a modal responsible for reusing the logic of saving
@@ -63,6 +65,10 @@
 
   export default {
     name: 'EditBooleanMapModal',
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       nodeIds: {
         type: Array,
@@ -204,7 +210,12 @@
             });
           }),
         );
-        this.$store.dispatch('showSnackbarSimple', this.confirmationMessage || '');
+        this.createSnackbar({
+          text: this.confirmationMessage || '',
+          autoDismiss: true,
+          announce: true,
+          duration: 6000,
+        });
         this.close(this.changed);
       },
     },

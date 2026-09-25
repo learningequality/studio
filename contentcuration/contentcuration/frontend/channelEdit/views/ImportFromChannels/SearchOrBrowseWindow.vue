@@ -261,6 +261,7 @@
   import { mapActions, mapGetters, mapMutations, mapState } from 'vuex';
   import { computed } from 'vue';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import { SCHEMA } from 'kolibri-constants/EmbedTopicsRequest';
   import { RouteNames } from '../../constants';
   import ChannelList from './ChannelList';
@@ -290,6 +291,7 @@
     },
     setup() {
       const { windowWidth } = useKResponsiveWindow();
+      const { createSnackbar } = useKSnackbar();
 
       const {
         otherLabel$,
@@ -362,6 +364,7 @@
         notSuitableForCulturalBackgroundLabel$,
         aboutRecommendationsFeedbackDescription$,
         layoutFitsTwoColumns,
+        createSnackbar,
       };
     },
     data() {
@@ -658,7 +661,6 @@
       this.loadRecommendations(this.recommendationsBelowThreshold);
     },
     methods: {
-      ...mapActions(['showSnackbar']),
       ...mapActions('clipboard', ['copy']),
       ...mapActions('contentNode', ['loadPublicContentNode']),
       ...mapActions('importFromChannels', [
@@ -745,17 +747,23 @@
       copyToClipboard: withChangeTracker(function (changeTracker) {
         return this.copy({ node_id: this.copyNode.node_id, channel_id: this.copyNode.channel_id })
           .then(() => {
-            this.$store
-              .dispatch('showSnackbar', {
-                text: this.$tr('copiedToClipboard'),
-                // TODO: implement revert functionality for clipboard
-                // actionText: this.$tr('undo'),
-                // actionCallback: () => changeTracker.revert(),
-              })
-              .then(() => changeTracker.cleanUp());
+            this.createSnackbar({
+              text: this.$tr('copiedToClipboard'),
+              duration: 6000,
+              // TODO: implement revert functionality for clipboard
+              // actionText: this.$tr('undo'),
+              // actionCallback: () => changeTracker.revert(),
+              // Keep cleanup deferred, as with the previous dismissal Promise.
+              hideCallback: () => Promise.resolve().then(() => changeTracker.cleanUp()),
+              announce: true,
+            });
           })
           .catch(error => {
-            this.$store.dispatch('showSnackbarSimple', this.$tr('copyFailed'));
+            this.createSnackbar({
+              text: this.$tr('copyFailed'),
+              duration: 6000,
+              announce: true,
+            });
             throw error;
           });
       }),
@@ -914,13 +922,19 @@
           this.formatNotRelevantRecommendationEventData(node),
         );
         if (this.recommendationsInteractionEvent) {
-          this.showSnackbar({
+          this.createSnackbar({
             text: this.feedbackConfirmationMessage$(),
+            duration: 6000,
             actionText: this.giveFeedbackText$(),
             actionCallback: () => (this.showFeedbackModal = true),
+            announce: true,
           });
         } else {
-          this.showSnackbar({ text: this.feedbackFailedMessage$() });
+          this.createSnackbar({
+            text: this.feedbackFailedMessage$(),
+            duration: 6000,
+            announce: true,
+          });
         }
       },
       isFeedbackReasonSelected(value) {
@@ -962,9 +976,17 @@
             this.formatRejectedRecommendationFeedbackEventData(),
           );
           if (rejectedEvent) {
-            this.showSnackbar({ text: this.feedbackSubmittedMessage$() });
+            this.createSnackbar({
+              text: this.feedbackSubmittedMessage$(),
+              duration: 6000,
+              announce: true,
+            });
           } else {
-            this.showSnackbar({ text: this.feedbackFailedMessage$() });
+            this.createSnackbar({
+              text: this.feedbackFailedMessage$(),
+              duration: 6000,
+              announce: true,
+            });
           }
           this.showFeedbackModal = false;
           this.clearGiveFeedbackForm();

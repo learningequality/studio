@@ -121,6 +121,8 @@
 
 <script>
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
+
   import { mapActions, mapGetters } from 'vuex';
   import { isDisableSourceEdits } from '../../utils';
   import { nonUniqueValue } from 'shared/constants';
@@ -168,6 +170,10 @@
     components: {
       HelpTooltip,
       LicenseDropdown,
+    },
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
     },
     props: {
       nodeIds: {
@@ -303,8 +309,13 @@
             return this.updateContentNode(payload);
           }),
         );
-        /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
-        this.$store.dispatch('showSnackbarSimple', commonStrings.$tr('changesSaved'));
+        this.createSnackbar({
+          /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+          text: commonStrings.$tr('changesSaved'),
+          autoDismiss: true,
+          announce: true,
+          duration: 6000,
+        });
         this.close(this.changed);
       },
     },

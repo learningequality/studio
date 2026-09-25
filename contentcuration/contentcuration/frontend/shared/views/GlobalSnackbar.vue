@@ -1,67 +1,43 @@
 <template>
 
-  <VSnackbar
-    v-if="snackbarIsVisible"
-    :key="key"
-    :timeout="snackbarOptions.duration"
-    left
-    multi-line
-    :value="snackbarIsVisible"
-    @input="visibilityToggled"
-  >
-    {{ snackbarOptions.text }}
-    <VBtn
-      v-if="snackbarOptions.actionText"
-      flat
-      text
-      @click="hideCallback"
-    >
-      {{ snackbarOptions.actionText }}
-    </VBtn>
-  </VSnackbar>
+  <KSnackbar
+    :isOpen="snackbarIsVisible"
+    :text="snackbarOptions.text"
+    :actionText="snackbarOptions.actionText"
+    :duration="snackbarOptions.duration"
+    :autoDismiss="snackbarOptions.autoDismiss"
+    :bottomOffset="snackbarOptions.bottomOffset"
+    :backdrop="snackbarOptions.backdrop"
+    :autofocus="snackbarOptions.autofocus"
+    :announce="snackbarOptions.announce"
+    :assertive="snackbarOptions.assertive"
+    @close="clearSnackbar"
+    @actionClick="snackbarOptions.actionCallback && snackbarOptions.actionCallback($event)"
+    @blur="snackbarOptions.onBlur && snackbarOptions.onBlur($event)"
+  />
 
 </template>
 
 
 <script>
 
-  import { mapGetters } from 'vuex';
+  import KSnackbar from 'kolibri-design-system/lib/KSnackbar/KSnackbar.vue';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 
   export default {
     name: 'GlobalSnackbar',
-    computed: {
-      ...mapGetters(['snackbarIsVisible', 'snackbarOptions']),
-      key() {
-        const options = Object.assign({}, this.snackbarOptions);
-        // The forceReuse option is used to force the reuse of the snackbar
-        // This is helpful when we want to just update the text but not re-run the transition
-        // This is used in the disconnected snackbar
-        if (options.forceReuse) {
-          options.text = '';
-          return JSON.stringify(options);
-        }
-        return JSON.stringify(options) + new Date();
-      },
+    components: {
+      KSnackbar,
     },
-    methods: {
-      hideCallback() {
-        if (this.snackbarOptions.actionCallback) {
-          this.snackbarOptions.actionCallback();
-        }
-        this.$store.dispatch('clearSnackbar');
-      },
-      visibilityToggled(visible) {
-        if (!visible) {
-          if (this.snackbarOptions.hideCallback) {
-            this.snackbarOptions.hideCallback();
-          }
-          this.$store.dispatch('clearSnackbar');
-        }
-      },
+    setup() {
+      const { snackbarIsVisible, snackbarOptions, clearSnackbar } = useKSnackbar();
+
+      return {
+        snackbarIsVisible,
+        snackbarOptions,
+        clearSnackbar,
+      };
     },
   };
 
 </script>
-
-
-<style lang="scss" scoped></style>

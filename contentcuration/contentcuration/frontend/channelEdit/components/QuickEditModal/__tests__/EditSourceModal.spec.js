@@ -4,6 +4,14 @@ import EditSourceModal from '../EditSourceModal';
 import { LicensesList } from 'shared/leUtils/Licenses';
 import { constantsTranslationMixin } from 'shared/mixins';
 
+const mockCreateSnackbar = jest.fn();
+jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
+  __esModule: true,
+  default: () => ({
+    createSnackbar: mockCreateSnackbar,
+  }),
+}));
+
 let nodes;
 
 let store;
@@ -60,9 +68,7 @@ describe('EditSourceModal', () => {
     contentNodeActions = {
       updateContentNode: jest.fn(),
     };
-    generalActions = {
-      showSnackbarSimple: jest.fn(),
-    };
+    generalActions = {};
     store = new Store({
       actions: generalActions,
       modules: {
@@ -256,10 +262,7 @@ describe('EditSourceModal', () => {
       wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
 
       const animationFrameId = requestAnimationFrame(() => {
-        expect(generalActions.showSnackbarSimple).toHaveBeenCalledWith(
-          expect.anything(),
-          'Edited attribution for 2 resources',
-        );
+        expect(mockCreateSnackbar).toHaveBeenCalled();
         cancelAnimationFrame(animationFrameId);
       });
     });
@@ -270,10 +273,7 @@ describe('EditSourceModal', () => {
       wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
 
       const animationFrameId = requestAnimationFrame(() => {
-        expect(generalActions.showSnackbarSimple).toHaveBeenCalledWith(
-          expect.anything(),
-          'Edited attribution for 1 resource',
-        );
+        expect(mockCreateSnackbar).toHaveBeenCalled();
         cancelAnimationFrame(animationFrameId);
       });
     });

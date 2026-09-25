@@ -136,6 +136,7 @@
 <script>
 
   import { mapGetters, mapActions } from 'vuex';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 
   import ContentNodeListItem from './ContentNodeListItem';
   import ContentNodeOptions from './ContentNodeOptions';
@@ -158,6 +159,10 @@
       ContentNodeContextMenu,
       Checkbox,
       IconButton,
+    },
+    setup() {
+      const { createSnackbar, clearSnackbar } = useKSnackbar();
+      return { createSnackbar, clearSnackbar };
     },
     props: {
       nodeId: {
@@ -270,7 +275,6 @@
       }
     },
     methods: {
-      ...mapActions(['showSnackbar', 'clearSnackbar']),
       ...mapActions('contentNode', [
         'updateContentNode',
         'waitForCopyingStatus',
@@ -290,9 +294,11 @@
           [COPYING_STATUS]: COPYING_STATUS_VALUES.COPYING,
         });
 
-        this.showSnackbar({
+        this.createSnackbar({
           duration: null,
+          autoDismiss: false,
           text: this.$tr('creatingCopies'),
+          announce: true,
           // TODO: determine how to cancel copying while it's in progress,
           // TODO: if that's something we want
           // actionText: this.$tr('cancel'),
@@ -306,11 +312,15 @@
           startingRev: changeTracker._startingRev,
         })
           .then(() => {
-            this.showSnackbar({
+            this.createSnackbar({
               text: this.$tr('copiedSnackbar'),
+              duration: 6000,
               actionText: this.$tr('undo'),
               actionCallback: () => changeTracker.revert(),
-            }).then(() => changeTracker.cleanUp());
+              // Keep cleanup deferred, as with the previous dismissal Promise.
+              hideCallback: () => Promise.resolve().then(() => changeTracker.cleanUp()),
+              announce: true,
+            });
           })
           .catch(() => {
             this.clearSnackbar();

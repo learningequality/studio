@@ -1,10 +1,12 @@
 import { getCurrentInstance } from 'vue';
+import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 
 /**
  * Composable for handling channel token
  * @returns {Object} - Object containing hyphenateToken and copyTokenToClipboard functions
  */
 export default function useToken() {
+  const { createSnackbar } = useKSnackbar();
   const clipboardAvailable = Boolean(navigator.clipboard);
   const instance = getCurrentInstance();
 
@@ -37,7 +39,12 @@ export default function useToken() {
   ) {
     if (!clipboardAvailable) {
       if (errorMessage) {
-        store.dispatch('showSnackbar', { text: errorMessage });
+        createSnackbar({
+          text: errorMessage,
+          autoDismiss: true,
+          announce: true,
+          duration: 6000,
+        });
       }
       if (onError) {
         onError();
@@ -45,7 +52,6 @@ export default function useToken() {
       return Promise.reject(new Error('Clipboard API not available'));
     }
 
-    const store = instance.proxy.$store;
     const analytics = instance.proxy.$analytics;
 
     let tokenToCopy = token;
@@ -58,7 +64,12 @@ export default function useToken() {
       .then(() => {
         analytics.trackEvent('copy_token');
         if (successMessage) {
-          store.dispatch('showSnackbar', { text: successMessage });
+          createSnackbar({
+            text: successMessage,
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
+          });
         }
         if (onSuccess) {
           onSuccess();
@@ -66,7 +77,12 @@ export default function useToken() {
       })
       .catch(error => {
         if (errorMessage) {
-          store.dispatch('showSnackbar', { text: errorMessage });
+          createSnackbar({
+            text: errorMessage,
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
+          });
         }
         if (onError) {
           onError(error);

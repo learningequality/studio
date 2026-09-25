@@ -16,10 +16,16 @@
 
 <script>
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
+
   import { mapActions } from 'vuex';
 
   export default {
     name: 'RemoveChannelFromListModal',
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       channelId: {
         type: String,
@@ -31,7 +37,12 @@
       handleRemove() {
         const currentUserId = this.$store.state.session.currentUser.id;
         this.removeViewer({ channelId: this.channelId, userId: currentUserId }).then(() => {
-          this.$store.dispatch('showSnackbarSimple', this.$tr('channelRemovedSnackbar'));
+          this.createSnackbar({
+            text: this.$tr('channelRemovedSnackbar'),
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
+          });
           this.$emit('close');
         });
       },

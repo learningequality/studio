@@ -82,6 +82,7 @@
 <script>
 
   import { mapGetters, mapActions } from 'vuex';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import ChannelSharingTable from './ChannelSharingTable';
   import LoadingText from 'shared/views/LoadingText';
   import { SharingPermissions } from 'shared/constants';
@@ -93,6 +94,10 @@
       DropdownWrapper,
       LoadingText,
       ChannelSharingTable,
+    },
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
     },
     props: {
       channelId: {
@@ -156,7 +161,12 @@
             });
 
             this.sharing = false;
-            this.$store.dispatch('showSnackbar', { text: this.$tr('invitationSentMessage') });
+            this.createSnackbar({
+              text: this.$tr('invitationSentMessage'),
+              autoDismiss: true,
+              announce: true,
+              duration: 6000,
+            });
             this.email = '';
             this.$refs.form.resetValidation();
           } catch (e) {

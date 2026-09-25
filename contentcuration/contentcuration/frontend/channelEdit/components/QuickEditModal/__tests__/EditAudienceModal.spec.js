@@ -4,6 +4,14 @@ import EditAudienceModal from '../EditAudienceModal';
 import { ResourcesNeededTypes } from 'shared/constants';
 import { RolesNames } from 'shared/leUtils/Roles';
 
+const mockCreateSnackbar = jest.fn();
+jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
+  __esModule: true,
+  default: () => ({
+    createSnackbar: mockCreateSnackbar,
+  }),
+}));
+
 let nodes;
 
 let store;
@@ -52,9 +60,7 @@ describe('EditAudienceModal', () => {
     contentNodeActions = {
       updateContentNode: jest.fn(),
     };
-    generalActions = {
-      showSnackbarSimple: jest.fn(),
-    };
+    generalActions = {};
     store = new Store({
       actions: generalActions,
       modules: {
@@ -251,7 +257,7 @@ describe('EditAudienceModal', () => {
     wrapper.find('[data-test="edit-audience-modal"]').vm.$emit('submit');
 
     const animationFrameId = requestAnimationFrame(() => {
-      expect(generalActions.showSnackbarSimple).toHaveBeenCalled();
+      expect(mockCreateSnackbar).toHaveBeenCalled();
       cancelAnimationFrame(animationFrameId);
     });
   });

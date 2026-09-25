@@ -16,10 +16,16 @@
 
 <script>
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
+
   import { mapActions, mapGetters } from 'vuex';
 
   export default {
     name: 'ChannelStar',
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
 
     props: {
       channelId: {
@@ -46,10 +52,12 @@
       toggleStar() {
         const isBookmarked = this.bookmark;
         this.bookmarkChannel({ id: this.channelId, bookmark: !this.bookmark }).then(() => {
-          this.$store.dispatch(
-            'showSnackbarSimple',
-            isBookmarked ? this.$tr('unstarred') : this.$tr('starred'),
-          );
+          this.createSnackbar({
+            text: isBookmarked ? this.$tr('unstarred') : this.$tr('starred'),
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
+          });
 
           this.$analytics.trackAction('channel_list', isBookmarked ? 'Unstar' : 'Star', {
             eventLabel: this.channelName,
