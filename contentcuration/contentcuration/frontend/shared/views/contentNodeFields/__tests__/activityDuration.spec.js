@@ -43,8 +43,7 @@ describe('ActivityDuration', () => {
         },
       });
       it(`should increment by 5-minute intervals`, () => {
-        expect(wrapper.html()).toContain(`step="5"`);
-        expect(wrapper.html()).not.toContain(`step="10"`);
+        expect(wrapper.vm.increments).toBe(5);
       });
       it(`minimum accepted input should be 5 minutes`, () => {
         expect(wrapper.vm.minRange).toBe(shortActivityMin);
@@ -63,8 +62,7 @@ describe('ActivityDuration', () => {
         },
       });
       it(`should increment by 10-minute intervals`, () => {
-        expect(wrapper.html()).toContain(`step="10"`);
-        expect(wrapper.html()).not.toContain(`step="5"`);
+        expect(wrapper.vm.increments).toBe(10);
       });
       it(`minimum accepted input should be 40 minutes`, () => {
         expect(wrapper.vm.minRange).not.toBe(shortActivityMin);
