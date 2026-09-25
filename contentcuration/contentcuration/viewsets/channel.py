@@ -1352,7 +1352,10 @@ class AdminChannelViewSet(ChannelViewSet, RESTUpdateModelMixin, RESTDestroyModel
         file_query = (
             nodes.join(File, contentnode_id=nodes.col.id)
             .with_cte(nodes)
-            .filter(contentnode__tree_id=OuterRef("main_tree__tree_id"))
+            .filter(
+                contentnode__tree_id=OuterRef("main_tree__tree_id"),
+                file_size__isnull=False,
+            )
             .values("checksum", "file_size")
             .distinct()
         )

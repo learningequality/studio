@@ -409,17 +409,9 @@ class ExportChannelTestCase(StudioTestCase):
         large_db_file = create_studio_file(
             b"large file body", preset="document", ext="pdf"
         )["db_file"]
-        # A >2.1 GB file cannot fit the legacy 32-bit File.file_size column; its
-        # true size lives in the studio#5974 file_size_bigint shadow, with the
-        # legacy file_size left NULL.
-        large_db_file.file_size = None
+        large_db_file.file_size = LARGE_FILE_SIZE
         large_db_file.contentnode = large_file_node
         large_db_file.save()
-        # Set the shadow directly; the mirror trigger leaves it alone because
-        # file_size is unchanged (NULL).
-        cc.File.objects.filter(pk=large_db_file.pk).update(
-            file_size_bigint=LARGE_FILE_SIZE
-        )
         self.large_file_checksum = large_db_file.checksum
 
         set_channel_icon_encoding(self.content_channel)
@@ -551,8 +543,8 @@ class ExportChannelTestCase(StudioTestCase):
             self.assertEqual(local_file.file_size_bigint, local_file.file_size)
 
     def test_localfile_large_file_size_bigint(self):
-        # A >2.1 GB file keeps its real size in file_size_bigint and NULLs the
-        # legacy 32-bit file_size.
+        # Kolibri's LocalFile.file_size is still 32-bit, so a >2.1 GB size is
+        # exported to the bigint shadow only.
         local_file = kolibri_models.LocalFile.objects.get(pk=self.large_file_checksum)
         self.assertEqual(local_file.file_size_bigint, LARGE_FILE_SIZE)
         self.assertIsNone(local_file.file_size)
