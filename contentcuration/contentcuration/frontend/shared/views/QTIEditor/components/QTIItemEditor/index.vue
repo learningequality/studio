@@ -141,7 +141,8 @@
       );
 
       /*
-       * Seed the editor refs from the parsed item (first interaction only).
+       * Seed the editor refs from the parsed item's first block, which for an inline
+       * passage holds every declaration.
        *
        * The body is seeded even when there is no interaction to edit. Such an item still has
        * content — its own text, and any interaction this editor has no descriptor for — and

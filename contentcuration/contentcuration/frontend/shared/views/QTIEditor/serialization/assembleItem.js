@@ -9,6 +9,7 @@
  */
 
 import { HINT_CATALOG_ID, HINT_SUPPORT, hintHasContent } from './hints';
+import { QTIDeclaration } from './qti/QTIDeclaration';
 import { parseXML } from './xml';
 
 const xmlDoc = new DOMParser().parseFromString('<root/>', 'text/xml');
@@ -140,32 +141,93 @@ function buildHintCatalogNode(hints) {
   });
 }
 
-/** The scoring outcome every item carries, matching what the legacy conversion emits. */
-function buildOutcomeDeclarationNode() {
+const SCORE = 'SCORE';
+const RAW_SCORE = 'RAW_SCORE';
+
+/** SCORE matches what the legacy conversion emits; RAW_SCORE sums several responses. */
+function buildOutcomeDeclarationNode(identifier) {
   return buildXmlNode({
     tag: 'qti-outcome-declaration',
-    attrs: { identifier: 'SCORE', cardinality: 'single', 'base-type': 'float' },
+    attrs: { identifier, cardinality: 'single', 'base-type': 'float' },
+  });
+}
+
+export function buildFloatNode(value) {
+  return buildXmlNode({
+    tag: 'qti-base-value',
+    attrs: { 'base-type': 'float' },
+    children: [value.toFixed(1)],
   });
 }
 
 /**
- * How the item is scored, or null when there is nothing to score against.
+ * Regenerated on every save rather than carried over: an author's edit can invalidate the
+ * rules a previous tool recorded. No response declaration — nothing to answer — means no
+ * processing, as the converter does. One keeps match_correct. Several are each scored by
+ * their declaration's rule and averaged; if any cannot be scored there is no processing,
+ * since an average that skips a response would misgrade the item.
  *
- * Written rather than carried over from whatever the item arrived with: an author's edit
- * can invalidate the rules a previous tool recorded, and match_correct is the one template
- * this editor knows how to keep true. An item with no response declaration — a question
- * with nothing to answer — gets no processing at all, which is what the converter does too.
+ * @param {Element[]} declNodes
+ * @returns {{ outcomeDeclarations: Element[], responseProcessing: Element|null }}
  */
-function buildResponseProcessingNode(declarationCount) {
-  if (!declarationCount) {
-    return null;
+function buildScoringNodes(declNodes) {
+  const outcomeDeclarations = [buildOutcomeDeclarationNode(SCORE)];
+  if (!declNodes.length) {
+    return { outcomeDeclarations, responseProcessing: null };
   }
-  return buildXmlNode({
-    tag: 'qti-response-processing',
-    attrs: {
-      template: 'https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct.xml',
-    },
+  if (declNodes.length === 1) {
+    return {
+      outcomeDeclarations,
+      responseProcessing: buildXmlNode({
+        tag: 'qti-response-processing',
+        attrs: {
+          template: 'https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct.xml',
+        },
+      }),
+    };
+  }
+
+  const scored = declNodes.map(node => {
+    const declaration = QTIDeclaration.fromXML(node);
+    return { identifier: declaration.identifier, rule: declaration.getScoringRule(RAW_SCORE) };
   });
+  const unscorable = scored.filter(({ rule }) => !rule).map(({ identifier }) => identifier);
+  if (unscorable.length) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[QTI Editor] Writing no response processing: cannot score ${unscorable.join(', ')}`,
+    );
+    return { outcomeDeclarations, responseProcessing: null };
+  }
+
+  return {
+    outcomeDeclarations: [...outcomeDeclarations, buildOutcomeDeclarationNode(RAW_SCORE)],
+    responseProcessing: buildXmlNode({
+      tag: 'qti-response-processing',
+      children: [
+        // Outcomes with no default start as NULL, and qti-sum with a NULL operand is NULL.
+        buildXmlNode({
+          tag: 'qti-set-outcome-value',
+          attrs: { identifier: RAW_SCORE },
+          children: [buildFloatNode(0)],
+        }),
+        ...scored.map(({ rule }) => rule),
+        buildXmlNode({
+          tag: 'qti-set-outcome-value',
+          attrs: { identifier: SCORE },
+          children: [
+            buildXmlNode({
+              tag: 'qti-divide',
+              children: [
+                buildXmlNode({ tag: 'qti-variable', attrs: { identifier: RAW_SCORE } }),
+                buildFloatNode(declNodes.length),
+              ],
+            }),
+          ],
+        }),
+      ],
+    }),
+  };
 }
 
 /**
@@ -211,7 +273,7 @@ export function assembleItemXml({
         });
 
   const catalogInfoNode = buildHintCatalogNode(hints);
-  const responseProcessingNode = buildResponseProcessingNode(declNodes.length);
+  const { outcomeDeclarations, responseProcessing } = buildScoringNodes(declNodes);
 
   const assessmentItemNode = buildXmlNode({
     tag: 'qti-assessment-item',
@@ -230,10 +292,10 @@ export function assembleItemXml({
     // The schema fixes this order: declarations, the body, the catalog, the processing.
     children: [
       ...declNodes,
-      buildOutcomeDeclarationNode(),
+      ...outcomeDeclarations,
       itemBodyNode,
       ...(catalogInfoNode ? [catalogInfoNode] : []),
-      ...(responseProcessingNode ? [responseProcessingNode] : []),
+      ...(responseProcessing ? [responseProcessing] : []),
     ],
   });
 

@@ -337,6 +337,35 @@ export const TWO_INTERACTIONS_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
 </qti-assessment-item>`;
 
 /**
+ * Two text entries whose declarations are listed out of body order.
+ */
+export const MULTI_TEXT_ENTRY_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  identifier="item-multi-text-entry"
+  title="Multi Text Entry"
+  adaptive="false"
+  time-dependent="false"
+  xml:lang="en"
+>
+  <qti-response-declaration identifier="response_pw4rzk8d" cardinality="single" base-type="string">
+    <qti-correct-response>
+      <qti-value>Moon</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+  <qti-response-declaration identifier="response_xq7tbn2c" cardinality="single" base-type="string">
+    <qti-correct-response>
+      <qti-value>Sun</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+
+  <qti-item-body>
+    <p>The Earth orbits the <qti-text-entry-interaction response-identifier="response_xq7tbn2c" />.</p>
+    <p>The <qti-text-entry-interaction response-identifier="response_pw4rzk8d" /> orbits the Earth.</p>
+  </qti-item-body>
+</qti-assessment-item>`;
+
+/**
  * Wraps a snippet of interaction XML into a mock 'block' object
  * simulating the output of useQtiItem()
  * @param {string} bodyXml

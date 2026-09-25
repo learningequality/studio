@@ -1,6 +1,14 @@
 /* eslint-disable jest-dom/prefer-to-have-attribute, jest-dom/prefer-to-have-text-content */
 import { parseItem } from '../parseItem';
-import { VALID_CHOICE_ITEM_DOCUMENT, TWO_INTERACTIONS_DOCUMENT } from '../../utils/testingFixtures';
+import { parseXML } from '../xml';
+import {
+  VALID_CHOICE_ITEM_DOCUMENT,
+  TWO_INTERACTIONS_DOCUMENT,
+  MULTI_TEXT_ENTRY_ITEM_DOCUMENT,
+} from '../../utils/testingFixtures';
+
+const declarationIdentifiers = declarations =>
+  declarations.map(xml => parseXML(xml).documentElement.getAttribute('identifier'));
 
 // Fixtures
 const ITEM_NO_INTERACTIONS = `<?xml version="1.0" encoding="UTF-8"?>
@@ -49,6 +57,34 @@ describe('parseItem — interaction blocks', () => {
   it('returns two blocks for an item with two interactions', () => {
     const model = parseItem(TWO_INTERACTIONS_DOCUMENT);
     expect(model.interactions).toHaveLength(2);
+  });
+
+  it('merges inline interactions of one type into one block, in body order', () => {
+    const model = parseItem(MULTI_TEXT_ENTRY_ITEM_DOCUMENT);
+    expect(model.interactions).toHaveLength(1);
+
+    const [block] = model.interactions;
+    expect(declarationIdentifiers(block.responseDeclarations)).toEqual([
+      'response_xq7tbn2c',
+      'response_pw4rzk8d',
+    ]);
+    expect(block.bodyXml).toContain('response-identifier="response_xq7tbn2c"');
+    expect(block.bodyXml).toContain('response-identifier="response_pw4rzk8d"');
+  });
+
+  it('keeps block interactions of one type as separate blocks', () => {
+    const xml = `<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" identifier="x" title="" adaptive="false" time-dependent="false" xml:lang="en">
+      <qti-response-declaration identifier="RESP1" cardinality="single" base-type="identifier" />
+      <qti-response-declaration identifier="RESP2" cardinality="single" base-type="identifier" />
+      <qti-item-body>
+        <qti-choice-interaction response-identifier="RESP1" max-choices="1" />
+        <qti-choice-interaction response-identifier="RESP2" max-choices="1" />
+      </qti-item-body>
+    </qti-assessment-item>`;
+    const model = parseItem(xml);
+    expect(
+      model.interactions.map(block => declarationIdentifiers(block.responseDeclarations)),
+    ).toEqual([['RESP1'], ['RESP2']]);
   });
 
   it('returns empty interactions array for an item with no interactions', () => {

@@ -190,4 +190,25 @@ describe('CorrectResponse', () => {
       expect(reparsed.querySelector('qti-value').textContent).toBe('A & B');
     });
   });
+
+  describe('getScoringRule', () => {
+    // No whitespace between tags: whitespace text nodes would fail isEqualNode
+    const EXPECTED_RULE =
+      '<qti-response-condition><qti-response-if>' +
+      '<qti-match><qti-variable identifier="RESPONSE"/><qti-correct identifier="RESPONSE"/></qti-match>' +
+      '<qti-set-outcome-value identifier="OUTCOME"><qti-sum>' +
+      '<qti-variable identifier="OUTCOME"/><qti-base-value base-type="float">1.0</qti-base-value>' +
+      '</qti-sum></qti-set-outcome-value>' +
+      '</qti-response-if></qti-response-condition>';
+
+    it('adds 1.0 to the outcome when the response matches the correct response', () => {
+      const cr = new CorrectResponse(['ChoiceA'], makeDeclaration());
+      expect(cr.getScoringRule('OUTCOME')).toEqual(parseXML(EXPECTED_RULE));
+    });
+
+    it('returns null when there is no correct response', () => {
+      const cr = new CorrectResponse([], makeDeclaration());
+      expect(cr.getScoringRule('OUTCOME')).toBeNull();
+    });
+  });
 });

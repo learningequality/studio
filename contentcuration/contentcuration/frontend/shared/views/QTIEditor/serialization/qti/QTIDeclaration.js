@@ -4,7 +4,8 @@
  * Reads identifier, base-type, cardinality and capability children (correctResponse,
  * defaultValue, mapping, areaMapping) from XML, holds them as plain JS data with
  * native JS types (number, boolean, string) based on the declaration's base-type,
- * and serializes back to XML on demand. Carries no runtime value state or scoring logic.
+ * and serializes back to XML on demand. Carries no runtime value state. Scoring leaves
+ * only as response-processing rules (getScoringRule); it is never evaluated here.
  *
  */
 import { buildXmlNode } from '../assembleItem.js';
@@ -17,6 +18,19 @@ import { declarationParsers, CAPABILITY } from './declarations/index.js';
  * Distinguished from container arrays (multiple/ordered cardinality, N elements).
  */
 const COMPOUND_VALUE_TYPES = new Set([BaseType.POINT, BaseType.PAIR, BaseType.DIRECTED_PAIR]);
+
+/**
+ * Capabilities that can score a response, preferred first. Registration follows the
+ * XML's child order, so it cannot decide between a correct response and a mapping.
+ */
+const SCORING_PRECEDENCE = Object.freeze([CAPABILITY.CORRECT_RESPONSE]);
+
+/**
+ * @typedef {object} Capability
+ * @property {function(): *} get
+ * @property {function(): (Element|null)} getXML
+ * @property {function(string): (Element|null)} [getScoringRule]
+ */
 
 export class QTIDeclaration {
   /**
@@ -73,7 +87,7 @@ export class QTIDeclaration {
     this.baseType = baseType;
     this.cardinality = cardinality;
 
-    /** @type {Object.<string, { get(): *, getXML(): Element }>} */
+    /** @type {Object.<string, Capability>} */
     this._capabilities = {};
   }
 
@@ -86,7 +100,7 @@ export class QTIDeclaration {
    * Called as a side-effect by declaration strategy classes during their constructors.
    *
    * @param {string} name - One of the CAPABILITY constants
-   * @param {{ get(): *, getXML(): Element }} declarationObject
+   * @param {Capability} declarationObject
    */
   registerCapability(name, declarationObject) {
     this._capabilities[name] = declarationObject;
@@ -114,6 +128,20 @@ export class QTIDeclaration {
   /** @type {object|null} */
   get areaMapping() {
     return this._capabilities[CAPABILITY.AREA_MAPPING]?.get() ?? null;
+  }
+
+  /**
+   * @param {string} outcomeIdentifier
+   * @returns {Element|null} null when no capability in SCORING_PRECEDENCE can score
+   */
+  getScoringRule(outcomeIdentifier) {
+    for (const name of SCORING_PRECEDENCE) {
+      const rule = this._capabilities[name]?.getScoringRule?.(outcomeIdentifier);
+      if (rule) {
+        return rule;
+      }
+    }
+    return null;
   }
 
   // ---------------------------------------------------------------------------

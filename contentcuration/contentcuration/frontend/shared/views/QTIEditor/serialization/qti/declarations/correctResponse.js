@@ -5,7 +5,7 @@
  * to its native JS type (number, boolean, or string) based on the parent
  * declaration's base-type. Re-serializes values back to XML strings on demand.
  */
-import { buildXmlNode } from '../../assembleItem.js';
+import { buildFloatNode, buildXmlNode } from '../../assembleItem.js';
 import { CAPABILITY } from './capabilities.js';
 
 export default class CorrectResponse {
@@ -57,6 +57,48 @@ export default class CorrectResponse {
       children: this._declaration
         .formatValues(this._values)
         .map(v => buildXmlNode({ tag: 'qti-value', children: [v] })),
+    });
+  }
+
+  /**
+   * @param {string} outcomeIdentifier - The outcome this response's score is added to
+   * @returns {Element|null} null when there is no correct response to match against
+   */
+  getScoringRule(outcomeIdentifier) {
+    if (!this._values.length) {
+      return null;
+    }
+    const response = { identifier: this._declaration.identifier };
+    const outcome = { identifier: outcomeIdentifier };
+    return buildXmlNode({
+      tag: 'qti-response-condition',
+      children: [
+        buildXmlNode({
+          tag: 'qti-response-if',
+          children: [
+            buildXmlNode({
+              tag: 'qti-match',
+              children: [
+                buildXmlNode({ tag: 'qti-variable', attrs: response }),
+                buildXmlNode({ tag: 'qti-correct', attrs: response }),
+              ],
+            }),
+            buildXmlNode({
+              tag: 'qti-set-outcome-value',
+              attrs: outcome,
+              children: [
+                buildXmlNode({
+                  tag: 'qti-sum',
+                  children: [
+                    buildXmlNode({ tag: 'qti-variable', attrs: outcome }),
+                    buildFloatNode(1),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        }),
+      ],
     });
   }
 }
