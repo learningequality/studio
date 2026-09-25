@@ -114,6 +114,7 @@
         :title="tool.title"
         :icon="tool.icon"
         :is-active="tool.isActive"
+        :is-available="tool.isAvailable"
         @click="tool.handler($event)"
       />
     </div>

@@ -116,6 +116,7 @@
     watch,
     computed,
     ref,
+    toRef,
     nextTick,
     onMounted,
     onUnmounted,
@@ -152,9 +153,11 @@
     },
     setup(props, { emit }) {
       const editorContainer = ref(null);
-      const { editor, isReady, isFocused, initializeEditor } = useEditor();
+      const { editor, isReady, isFocused, insertContext, initializeEditor } = useEditor();
       provide('editor', editor);
       provide('isReady', isReady);
+      provide('insertContext', insertContext);
+      provide('insertActions', toRef(props, 'insertActions'));
 
       const linkHandler = useLinkHandling(editor);
       provide('linkHandler', linkHandler);
@@ -261,6 +264,7 @@
           if (!editor.value) {
             initializeEditor(processedContent, props.mode, {
               autofocus: props.autofocus,
+              extensions: props.extensions,
             });
             return;
           }
@@ -284,6 +288,12 @@
           emit('update', content);
         }
       };
+
+      watch(isReady, ready => {
+        if (ready) {
+          emit('ready', editor.value);
+        }
+      });
 
       // Emit the content update only when the editor loses focus (blur).
       watch(isFocused, (focused, wasFocused) => {
@@ -348,6 +358,14 @@
         type: Object,
         default: () => ({}),
       },
+      extensions: {
+        type: Array,
+        default: () => [],
+      },
+      insertActions: {
+        type: Array,
+        default: () => [],
+      },
       minHeight: {
         type: String,
         default: null,
@@ -358,7 +376,7 @@
         validator: v => ['markdown', 'html'].includes(v),
       },
     },
-    emits: ['update', 'minimize', 'open-editor'],
+    emits: ['update', 'minimize', 'open-editor', 'ready'],
   });
 
 </script>

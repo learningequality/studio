@@ -2,8 +2,24 @@ import { computed, inject } from 'vue';
 import { getTipTapEditorStrings } from '../TipTapEditorStrings';
 import { transformPastedHTML } from '../utils/pasteTransform';
 
+/**
+ * Evaluates a contributed insert action against the editor's insert context.
+ * `isActive` and `isAvailable` may be booleans or predicates of the context.
+ */
+export function resolveInsertAction(action, insertContext) {
+  const evaluate = value => (typeof value === 'function' ? value(insertContext.value) : value);
+  return {
+    ...action,
+    isActive: evaluate(action.isActive),
+    isAvailable: evaluate(action.isAvailable),
+    handler: () => action.handler(insertContext.value),
+  };
+}
+
 export function useToolbarActions(emit) {
   const editor = inject('editor', null);
+  const insertContext = inject('insertContext', null);
+  const contributedInsertActions = inject('insertActions', null);
 
   /**
    * Drop the actions marked `hide`, which every toolbar honours — the desktop one and
@@ -441,7 +457,7 @@ export function useToolbarActions(emit) {
     },
   ]);
 
-  const insertTools = computed(() =>
+  const builtInInsertTools = computed(() =>
     visible([
       {
         name: 'image',
@@ -475,6 +491,18 @@ export function useToolbarActions(emit) {
       },
     ]),
   );
+
+  // Kept apart from the built-ins: a predicate reads the insert context, which
+  // changes on every transaction.
+  const resolvedInsertActions = computed(() =>
+    visible(
+      (contributedInsertActions?.value ?? []).map(action =>
+        resolveInsertAction(action, insertContext),
+      ),
+    ),
+  );
+
+  const insertTools = computed(() => [...builtInInsertTools.value, ...resolvedInsertActions.value]);
 
   const minimizeAction = {
     name: 'minimize',

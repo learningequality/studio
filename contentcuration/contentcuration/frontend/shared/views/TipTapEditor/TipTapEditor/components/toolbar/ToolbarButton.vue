@@ -3,7 +3,7 @@
   <button
     class="toolbar-btn"
     :title="title"
-    :class="{ active: isActive, disabled: !isAvailable }"
+    :class="{ active: isActive, disabled: !isAvailable, labelled: showTitle }"
     data-toolbar-item
     :aria-disabled="isAvailable ? 'false' : 'true'"
     :aria-label="title"
@@ -14,10 +14,11 @@
   >
     <img
       :src="currentIcon"
-      :alt="title"
+      :alt="showTitle ? '' : title"
       class="toolbar-icon"
       :class="{ 'rtl-flip': shouldFlipInRtl && isRtl }"
     >
+    <span v-if="showTitle">{{ title }}</span>
   </button>
 
 </template>
@@ -89,6 +90,10 @@
         type: Boolean,
         default: false,
       },
+      showTitle: {
+        type: Boolean,
+        default: false,
+      },
     },
     emits: ['click'],
   });
@@ -109,6 +114,14 @@
     border: 0;
     border-radius: 4px;
     transition: background-color 0.2s ease;
+  }
+
+  .toolbar-btn.labelled {
+    flex-shrink: 0;
+    gap: 4px;
+    width: auto;
+    padding: 4px 8px;
+    white-space: nowrap;
   }
 
   .toolbar-btn:hover:not(.disabled) {
