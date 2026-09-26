@@ -24,6 +24,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from contentcuration.utils.pagination import ValuesViewsetCursorPagination
+
 
 def _get_kc_and_base_models(model):
     try:
@@ -41,12 +43,19 @@ def _get_kc_and_base_models(model):
     return kc_model, base_model
 
 
+class ImportMetadataPagination(ValuesViewsetCursorPagination):
+    # All nodes in one request share a tree, so lft needs no id tie-break.
+    ordering = ("lft",)
+    page_size_query_param = "max_results"
+
+
 # Add the standard metadata_cache decorator to this endpoint to align
 # with other public endpoints
 @method_decorator(metadata_cache, name="dispatch")
 class ImportMetadataViewset(GenericViewSet):
     # Add an explicit allow any permission class to override the Studio default
     permission_classes = (AllowAny,)
+    pagination_class = ImportMetadataPagination
     default_content_schema = CONTENT_SCHEMA_VERSION
     min_content_schema = MIN_CONTENT_SCHEMA_VERSION
 
@@ -106,7 +115,13 @@ class ImportMetadataViewset(GenericViewSet):
         # does not exist.
         node = get_object_or_404(models.ContentNode.objects.all(), pk=pk)
 
-        nodes = node.get_ancestors(include_self=True)
+        if request.query_params.get("descendants"):
+            nodes = node.get_family()
+        else:
+            nodes = node.get_ancestors(include_self=True)
+        page = self.paginate_queryset(nodes.only("id", "lft"))
+        if page is not None:
+            nodes = page
 
         data = {}
 
@@ -200,4 +215,6 @@ class ImportMetadataViewset(GenericViewSet):
 
         data["schema_version"] = content_schema
 
+        if page is not None:
+            return self.get_paginated_response(data)
         return Response(data)
