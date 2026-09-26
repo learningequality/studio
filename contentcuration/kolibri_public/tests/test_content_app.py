@@ -13,6 +13,7 @@ from kolibri_public import models
 from kolibri_public.tests.base import ChannelBuilder
 from kolibri_public.tests.base import OKAY_TAG
 from le_utils.constants import content_kinds
+from le_utils.constants import modalities
 from rest_framework.test import APITestCase
 
 from contentcuration.models import generate_storage_url
@@ -165,6 +166,7 @@ class ContentNodeAPIBase(object):
                 "lft": expected.lft,
                 "rght": expected.rght,
                 "tree_id": expected.tree_id,
+                "modality": expected.modality,
                 "ancestors": [],
                 "tags": list(
                     expected.tags.all()
@@ -332,6 +334,137 @@ class ContentNodeAPITestCase(ContentNodeAPIBase, APITestCase):
     Testcase for content API methods
     """
 
+    def _list_ids(self, **params):
+        response = self._get(reverse("publiccontentnode-list"), data=params)
+        self.assertEqual(response.status_code, 200)
+        return {node["id"] for node in response.data}
+
+    def _available_ids(self):
+        return set(
+            models.ContentNode.objects.filter(available=True).values_list(
+                "id", flat=True
+            )
+        )
+
+    def _insert_second_tree(self):
+        # Its lft/rght ranges overlap the fixture tree's; only tree_id tells them apart.
+        ChannelBuilder(levels=2, num_children=2).insert_into_default_db()
+        models.ContentNode.objects.all().update(available=True)
+
+    def _set_modality(self, node, modality):
+        models.ContentNode.objects.filter(id=node.id).update(modality=modality)
+
+    def _mark_lesson_and_course(self):
+        lesson, course = (
+            models.ContentNode.objects.filter(kind=content_kinds.TOPIC)
+            .exclude(parent=None)
+            .order_by("lft")[:2]
+        )
+        self._set_modality(lesson, modalities.LESSON)
+        self._set_modality(course, modalities.COURSE)
+        return lesson, course
+
+    def test_contentnode_modality_filter(self):
+        lesson, _ = self._mark_lesson_and_course()
+
+        response = self.client.get(
+            reverse("publiccontentnode-list"), data={"modality": modalities.LESSON}
+        )
+
+        self.assertEqual([node["id"] for node in response.data], [lesson.id])
+        self.assertEqual(response.data[0]["modality"], modalities.LESSON)
+
+    def test_contentnode_exclude_modalities_filter(self):
+        lesson, course = self._mark_lesson_and_course()
+
+        self.assertEqual(
+            self._list_ids(exclude_modalities=modalities.COURSE),
+            self._available_ids() - {course.id},
+        )
+        self.assertEqual(
+            self._list_ids(
+                exclude_modalities="{},{}".format(modalities.COURSE, modalities.LESSON)
+            ),
+            self._available_ids() - {course.id, lesson.id},
+        )
+
+    def test_contentnode_exclude_course_ancestry_filter(self):
+        course = self.root.get_children().first()
+        self._set_modality(course, modalities.COURSE)
+        self._insert_second_tree()
+        descendant_ids = set(course.get_descendants().values_list("id", flat=True))
+
+        self.assertEqual(
+            self._list_ids(exclude_course_ancestry=True),
+            self._available_ids() - descendant_ids,
+        )
+        self.assertEqual(
+            self._list_ids(exclude_course_ancestry=False), self._available_ids()
+        )
+
+    def test_contentnode_contains_quiz_filter(self):
+        quiz = models.ContentNode.objects.exclude(kind=content_kinds.TOPIC).first()
+        self._set_modality(quiz, modalities.QUIZ)
+        self._insert_second_tree()
+
+        self.assertEqual(
+            self._list_ids(contains_quiz=True),
+            set(quiz.get_ancestors(include_self=True).values_list("id", flat=True)),
+        )
+        self.assertEqual(self._list_ids(contains_quiz="false"), self._available_ids())
+
+    def _set_search_fixtures(self):
+        photo, resp = models.ContentNode.objects.exclude(
+            kind=content_kinds.TOPIC
+        ).order_by("lft")[:2]
+        models.ContentNode.objects.filter(id=photo.id).update(
+            title="Photosynthesis basics", description="Chlorophyll absorbs light"
+        )
+        models.ContentNode.objects.filter(id=resp.id).update(
+            title="Energy", description="Cellular respiration"
+        )
+        return photo.id, resp.id
+
+    def test_contentnode_search_terms_match_across_fields(self):
+        photo, _ = self._set_search_fixtures()
+        self.assertEqual(self._list_ids(search="photosynthesis chlorophyll"), {photo})
+
+    def test_contentnode_search_every_term_must_match(self):
+        self._set_search_fixtures()
+        self.assertEqual(self._list_ids(search="photosynthesis respiration"), set())
+
+    def test_contentnode_search_quoted_phrase(self):
+        photo, _ = self._set_search_fixtures()
+        self.assertEqual(self._list_ids(search='"photosynthesis basics"'), {photo})
+        self.assertEqual(self._list_ids(search='"basics photosynthesis"'), set())
+
+    def test_contentnode_search_drops_stopwords(self):
+        _, resp = self._set_search_fixtures()
+        self.assertEqual(self._list_ids(search="which respiration"), {resp})
+
+    def test_contentnode_search_keywords_param(self):
+        _, resp = self._set_search_fixtures()
+        self.assertEqual(self._list_ids(keywords="respiration"), {resp})
+
+    def test_contentnode_search_precedence(self):
+        photo, _ = self._set_search_fixtures()
+        self.assertEqual(
+            self._list_ids(
+                search="photosynthesis",
+                question="respiration",
+                keywords="respiration",
+            ),
+            {photo},
+        )
+        self.assertEqual(
+            self._list_ids(question="photosynthesis", keywords="respiration"),
+            {photo},
+        )
+
+    def test_contentnode_search_punctuation_only_is_unfiltered(self):
+        self.assertEqual(self._list_ids(search="!?,"), self._available_ids())
+        self.assertEqual(self._list_ids(keywords="!?,"), self._available_ids())
+
     def test_prerequisite_for_filter(self):
         response = self.client.get(
             reverse("publiccontentnode-list"),
@@ -466,7 +599,7 @@ class ContentNodeAPITestCase(ContentNodeAPIBase, APITestCase):
         response = self.client.get(reverse("publicchannel-list"))
         self.assertEqual(response.data[0]["available"], False)
 
-    def test_channelmetadata_has_exercises_filter(self):
+    def test_channelmetadata_exercise_filters(self):
         # Has nothing else for that matter...
         no_exercise_channel = models.ContentNode.objects.create(
             pk="6a406ac66b224106aa2e93f73a94333d",
@@ -492,13 +625,12 @@ class ContentNodeAPITestCase(ContentNodeAPIBase, APITestCase):
         )
         no_filter_response = self.client.get(reverse("publicchannel-list"))
         self.assertEqual(len(no_filter_response.data), 2)
-        with_filter_response = self.client.get(
-            reverse("publicchannel-list"), {"has_exercise": True}
-        )
-        self.assertEqual(len(with_filter_response.data), 1)
-        self.assertEqual(
-            with_filter_response.data[0]["name"], self.channel_data["name"]
-        )
+        for param in ("has_exercise", "contains_exercise"):
+            with self.subTest(param=param):
+                response = self.client.get(reverse("publicchannel-list"), {param: True})
+                self.assertEqual(
+                    [c["name"] for c in response.data], [self.channel_data["name"]]
+                )
 
     def test_channelmetadata_public_filter_default_true(self):
         community_channel = models.ContentNode.objects.create(

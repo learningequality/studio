@@ -41,6 +41,8 @@ migrate:
 deploy-migrate:
 	# studio#5974: remove at cutover.
 	python contentcuration/manage.py backfill_column --model contentcuration.File --source-field file_size --target-field file_size_bigint
+	# studio#6171: remove after release.
+	python contentcuration/manage.py backfill_public_contentnode_modality
 
 contentnodegc:
 	python contentcuration/manage.py garbage_collect

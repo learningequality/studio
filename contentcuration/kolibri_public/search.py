@@ -17,6 +17,7 @@ from django.db.models import F
 from django.db.models import Max
 from django.db.models import Value
 from django.db.models import When
+from le_utils.constants import modalities
 from le_utils.constants.labels.accessibility_categories import (
     ACCESSIBILITYCATEGORIESLIST,
 )
@@ -217,6 +218,21 @@ def annotate_label_bitmasks(queryset, bitmask_fieldnames):
 
 def annotate_contentnode_label_bitmasks(queryset):
     return annotate_label_bitmasks(queryset, contentnode_bitmask_fieldnames)
+
+
+def annotate_modality(queryset):
+    """Update queryset to annotate `modality` field based on `options.modality`"""
+    queryset = queryset.filter(options__contains='"modality":')
+
+    when_statements = [
+        When(
+            options__contains=f'"modality": "{modality_value}"',
+            then=Value(modality_value),
+        )
+        for modality_value, _ in modalities.choices
+    ]
+
+    queryset.update(modality=Case(*when_statements))
 
 
 def annotate_channelmetadata_label_bitmasks(queryset):

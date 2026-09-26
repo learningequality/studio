@@ -9,7 +9,6 @@ https://github.com/learningequality/kolibri/blob/b8ef7212f9ab44660e2c7cabeb01223
 import logging
 import re
 from collections import OrderedDict
-from functools import reduce
 from uuid import UUID
 
 from django.core.exceptions import ValidationError
@@ -22,6 +21,8 @@ from django.http import Http404
 from django.utils.cache import patch_cache_control
 from django.utils.cache import patch_response_headers
 from django.utils.decorators import method_decorator
+from django.utils.text import smart_split
+from django.utils.text import unescape_string_literal
 from django.utils.translation import ugettext as _
 from django.views.decorators.http import last_modified
 from django_filters.rest_framework import BaseInFilter
@@ -38,11 +39,13 @@ from kolibri_public.search import get_contentnode_available_metadata_labels
 from kolibri_public.stopwords import stopwords_set
 from le_utils.constants import content_kinds
 from le_utils.constants import library as library_constants
+from le_utils.constants import modalities
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.serializers import CharField
 
 from contentcuration.middleware.locale import locale_exempt
 from contentcuration.middleware.session import session_exempt
@@ -86,9 +89,6 @@ def metadata_cache(some_func):
     return locale_exempt(session_exempt(wrapper_func))
 
 
-MODALITIES = set(["QUIZ"])
-
-
 def bitmask_contains_and(queryset, name, value):
     """
     A filtering method that filters instances matching all provided
@@ -102,6 +102,10 @@ class UUIDInFilter(BaseInFilter, UUIDFilter):
 
 
 class CharInFilter(BaseInFilter, CharFilter):
+    pass
+
+
+class ChoiceInFilter(BaseInFilter, ChoiceFilter):
     pass
 
 
@@ -119,6 +123,9 @@ class ChannelMetadataFilter(FilterSet):
 
     available = BooleanFilter(method="filter_available", label="Available")
     has_exercise = BooleanFilter(method="filter_has_exercise", label="Has exercises")
+    contains_exercise = BooleanFilter(
+        method="filter_has_exercise", label="Has exercises"
+    )
     categories = CharFilter(method=bitmask_contains_and, label="Categories")
     countries = CharInFilter(field_name="countries", label="Countries")
     public = BooleanFilter(field_name="public", label="Public", initial=True)
@@ -129,6 +136,7 @@ class ChannelMetadataFilter(FilterSet):
         fields = (
             "available",
             "has_exercise",
+            "contains_exercise",
             "categories",
             "countries",
             "public",
@@ -294,26 +302,14 @@ contentnode_filter_fields = [
     "accessibility_labels",
     "categories",
     "learner_needs",
-    "keywords",
     "channels",
     "languages",
     "tree_id",
     "lft__gt",
     "rght__lt",
+    "modality",
+    "exclude_course_ancestry",
 ]
-
-
-# return the result of and-ing a list of queries
-def intersection(queries):
-    if queries:
-        return reduce(lambda x, y: x & y, queries)
-    return None
-
-
-def union(queries):
-    if queries:
-        return reduce(lambda x, y: x | y, queries)
-    return None
 
 
 class ContentNodeFilter(FilterSet):
@@ -327,14 +323,13 @@ class ContentNodeFilter(FilterSet):
     parent = UUIDFilter("parent")
     parent__isnull = BooleanFilter(field_name="parent", lookup_expr="isnull")
     include_coach_content = BooleanFilter(method="filter_include_coach_content")
-    contains_quiz = CharFilter(method="filter_contains_quiz")
+    contains_quiz = BooleanFilter(method="filter_contains_quiz")
     grade_levels = CharFilter(method=bitmask_contains_and)
     resource_types = CharFilter(method=bitmask_contains_and)
     learning_activities = CharFilter(method=bitmask_contains_and)
     accessibility_labels = CharFilter(method=bitmask_contains_and)
     categories = CharFilter(method=bitmask_contains_and)
     learner_needs = CharFilter(method=bitmask_contains_and)
-    keywords = CharFilter(method="filter_keywords")
     channels = UUIDInFilter(field_name="channel_id")
     languages = CharInFilter(field_name="lang_id")
     categories__isnull = BooleanFilter(field_name="categories", lookup_expr="isnull")
@@ -343,6 +338,10 @@ class ContentNodeFilter(FilterSet):
     authors = CharFilter(method="filter_by_authors")
     tags = CharFilter(method="filter_by_tags")
     descendant_of = UUIDFilter(method="filter_descendant_of")
+    exclude_modalities = ChoiceInFilter(
+        field_name="modality", choices=modalities.choices, exclude=True
+    )
+    exclude_course_ancestry = BooleanFilter(method="filter_exclude_course_ancestry")
 
     class Meta:
         model = models.ContentNode
@@ -419,30 +418,78 @@ class ContentNodeFilter(FilterSet):
             return queryset
         return queryset.filter(coach_content=False)
 
-    def filter_contains_quiz(self, queryset, name, value):
-        if value:
-            quizzes = models.ContentNode.objects.filter(
-                options__contains='"modality": "QUIZ"'
-            ).get_ancestors(include_self=True)
-            return queryset.filter(pk__in=quizzes.values_list("pk", flat=True))
-        return queryset
-
-    def filter_keywords(self, queryset, name, value):
-        # all words with punctuation removed
-        all_words = [w for w in re.split('[?.,!";: ]', value) if w]
-        # words in all_words that are not stopwords
-        critical_words = [w for w in all_words if w not in stopwords_set]
-        words = critical_words if critical_words else all_words
-        query = union(
-            [
-                # all critical words in title
-                intersection([Q(title__icontains=w) for w in words]),
-                # all critical words in description
-                intersection([Q(description__icontains=w) for w in words]),
-            ]
+    def filter_exclude_course_ancestry(self, queryset, name, value):
+        if not value:
+            return queryset
+        has_course_ancestor = models.ContentNode.objects.filter(
+            modality=modalities.COURSE,
+            available=True,
+            tree_id=OuterRef("tree_id"),
+            lft__lt=OuterRef("lft"),
+            rght__gt=OuterRef("rght"),
         )
+        return queryset.exclude(Exists(has_course_ancestor))
 
-        return queryset.filter(query)
+    def filter_contains_quiz(self, queryset, name, value):
+        if not value:
+            return queryset
+        # Not get_ancestors() over quizzes: unusably slow (kolibri#13267).
+        quiz_descendants = models.ContentNode.objects.filter(
+            modality=modalities.QUIZ,
+            available=True,
+            tree_id=OuterRef("tree_id"),
+            lft__gte=OuterRef("lft"),
+            rght__lte=OuterRef("rght"),
+        )
+        return queryset.filter(Exists(quiz_descendants))
+
+
+def search_smart_split(search_terms):
+    """
+    Returns sanitized search terms as a list.
+    Vendored and modified from https://github.com/encode/django-rest-framework/blob/main/rest_framework/filters.py#L23
+    to add splitting by more punctuation types.
+    """
+    split_terms = []
+    for term in smart_split(search_terms):
+        # trim commas to avoid bad matching for quoted phrases
+        term = term.strip(",")
+        if term.startswith(('"', "'")) and term[0] == term[-1]:
+            # quoted phrases are kept together without any other split
+            split_terms.append(unescape_string_literal(term))
+        else:
+            # non-quoted tokens are split by ?.,!;:, keeping only non-empty ones
+            for sub_term in re.split("[?.,!;:]", term):
+                if sub_term:
+                    split_terms.append(sub_term.strip())
+    return split_terms
+
+
+class ContentNodeSearchFilter(SearchFilter):
+    def get_search_fields(self, view, request):
+        return ["title", "description"]
+
+    def get_cleaned_search_value(self, request):
+        value = request.query_params.get(
+            self.search_param,
+            request.query_params.get(
+                "question", request.query_params.get("keywords", "")
+            ),
+        )
+        field = CharField(trim_whitespace=False, allow_blank=True)
+        return field.run_validation(value)
+
+    def get_search_terms(self, request):
+        """
+        Search terms are set by a ?search=... query parameter,
+        and may be whitespace delimited.
+        For backwards compatibility, we also allow the question and keywords
+        parameters, but search will take precedence.
+        """
+        cleaned_value = self.get_cleaned_search_value(request)
+        split_terms = search_smart_split(cleaned_value)
+        critical_terms = [w for w in split_terms if w not in stopwords_set]
+        return critical_terms if critical_terms else split_terms
 
 
 def map_file(file):
@@ -467,7 +514,7 @@ class BaseContentNodeMixin(object):
     serialization for ContentNodes.
     """
 
-    filter_backends = (DjangoFilterBackend,)
+    filter_backends = (DjangoFilterBackend, ContentNodeSearchFilter)
     # Update from filter_class to filterset_class for newer version of Django Filters
     filterset_class = ContentNodeFilter
     # Add an explicit allow any permission class to override the Studio default
@@ -502,6 +549,7 @@ class BaseContentNodeMixin(object):
         "categories",
         "duration",
         "ancestors",
+        "modality",
     )
 
     field_map = {
