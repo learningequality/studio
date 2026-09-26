@@ -1,6 +1,8 @@
 """
 This is a direct copy of the constants file of the same name in kolibri.core.content
 https://github.com/learningequality/kolibri/blob/c7417e1d558a1e1e52ac8423927d61a0e44da576/kolibri/core/content/constants/schema_versions.py
+EXPORT_SCHEMA_VERSIONS is copied from
+https://github.com/learningequality/kolibri/blob/deeec22db9f9e607714bb8ea2c8b3b377f02a5ab/kolibri/core/content/constants/schema_versions.py
 """
 
 V020BETA1 = "v0.2.0-beta1"
@@ -48,3 +50,11 @@ CURRENT_SCHEMA_VERSION = "current"
 # exceptionally difficult for us to backfill, such as deleting a model field that
 # we cannot meaningfully infer the content of from other metadata.
 MIN_CONTENT_SCHEMA_VERSION = VERSION_5
+
+# Every version we can provide import metadata for, oldest first.
+EXPORT_SCHEMA_VERSIONS = [
+    str(version)
+    for version in range(
+        int(MIN_CONTENT_SCHEMA_VERSION), int(CONTENT_SCHEMA_VERSION) + 1
+    )
+]
