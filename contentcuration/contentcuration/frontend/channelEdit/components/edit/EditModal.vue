@@ -219,7 +219,6 @@
   import BottomBar from 'shared/views/BottomBar';
   import FileDropzone from 'shared/views/files/FileDropzone';
   import { isNodeComplete } from 'shared/utils/validation';
-  import { DELAYED_VALIDATION } from 'shared/constants';
 
   const CHECK_STORAGE_INTERVAL = 10000;
 
@@ -276,6 +275,8 @@
     },
     computed: {
       ...mapGetters('contentNode', ['getContentNode', 'getContentNodeIsValid']),
+      // Read through `vm` in the route guard below, which the lint rule cannot see.
+      // eslint-disable-next-line vue/no-unused-properties
       ...mapGetters('assessmentItem', ['getAssessmentItems']),
       // eslint-disable-next-line vue/no-unused-properties
       ...mapGetters('currentChannel', ['currentChannel', 'canEdit']),
@@ -452,7 +453,7 @@
         'createContentNode',
       ]),
       ...mapActions('file', ['loadFiles', 'updateFile']),
-      ...mapActions('assessmentItem', ['loadAssessmentItems', 'updateAssessmentItems']),
+      ...mapActions('assessmentItem', ['loadAssessmentItems']),
       /* eslint-enable vue/no-unused-properties */
       ...mapMutations('contentNode', { enableValidation: 'ENABLE_VALIDATION_ON_NODES' }),
       closeModal(changed = false) {
@@ -495,11 +496,6 @@
         this.selected = this.nodeIds;
         this.$nextTick(() => {
           this.enableValidation(this.nodeIds);
-          const assessmentItems = this.getAssessmentItems(this.nodeIds);
-          assessmentItems.forEach(item =>
-            item.question ? (item[DELAYED_VALIDATION] = false) : '',
-          );
-          this.updateAssessmentItems(assessmentItems);
 
           // reaches into Details Tab to run save of diffTracker
           // before the validation pop up is executed

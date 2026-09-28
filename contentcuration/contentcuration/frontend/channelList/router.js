@@ -1,9 +1,8 @@
 import VueRouter from 'vue-router';
 import CommunityChannelDetailsModal from './views/Channel/CommunityLibraryList/CommunityChannelDetailsModal.vue';
 import StudioMyChannels from './views/Channel/StudioMyChannels';
-import StudioOrganizations from './views/Organization/StudioOrganizations.vue';
-import NewOrganization from './views/Organization/NewOrganization.vue';
-import OrganizationDetails from './views/Organization/OrganizationDetails.vue';
+import StudioMyOrganizations from './views/Organization/StudioMyOrganizations.vue';
+import OrganizationEditPage from './views/Organization/OrganizationEditPage.vue';
 import StudioStarredChannels from './views/Channel/StudioStarredChannels';
 import StudioViewOnlyChannels from './views/Channel/StudioViewOnlyChannels';
 import StudioCollectionsTable from './views/ChannelSet/StudioCollectionsTable';
@@ -24,19 +23,30 @@ const router = new VueRouter({
       component: StudioMyChannels,
     },
     {
-      name: RouteNames.ORGANIZATIONS,
-      path: '/organizations',
-      component: StudioOrganizations,
+      name: RouteNames.MY_ORGANIZATIONS,
+      path: '/my-organizations',
+      alias: '/organizations',
+      component: StudioMyOrganizations,
     },
     {
       name: RouteNames.NEW_ORGANIZATION,
-      path: '/organizations/new',
-      component: NewOrganization,
+      path: '/organization/new',
+      alias: '/organizations/new',
+      component: OrganizationEditPage,
+      props: true,
     },
     {
-      name: RouteNames.ORGANIZATION_DETAILS,
       path: '/organizations/:organizationId',
-      component: OrganizationDetails,
+      redirect: to => ({
+        name: RouteNames.ORGANIZATION_EDIT,
+        params: { organizationId: to.params.organizationId, tab: 'details' },
+        query: to.query,
+      }),
+    },
+    {
+      name: RouteNames.ORGANIZATION_EDIT,
+      path: '/organization/:organizationId/:tab',
+      component: OrganizationEditPage,
       props: true,
     },
     {

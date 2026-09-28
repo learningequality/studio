@@ -1,35 +1,52 @@
 <template>
 
   <KCard
-    class="organization-card"
+    class="organization"
+    :headingLevel="headingLevel"
     data-testid="organization-card"
     thumbnailDisplay="none"
-    :headingLevel="2"
     :title="organization.name"
     @click="$emit('click')"
   >
+    <template #title="{ titleText }">
+      <KTextTruncator
+        class="notranslate"
+        dir="auto"
+        :text="titleText"
+        :maxLines="2"
+      />
+    </template>
+
     <template #belowTitle>
-      <div class="card-content">
-        <span :style="{ color: $themeTokens.annotation }">
-          {{ organization.public ? $tr('publicOrganization') : $tr('privateOrganization') }}
-        </span>
+      <div class="below-title">
+        <span>{{ roleLabel }}</span>
         <div
-          class="thumbnail-placeholder"
-          :style="{ backgroundColor: $themePalette.grey.v_100 }"
-        >
-          <KIcon
-            icon="image"
-            class="thumbnail-icon"
-            :color="$themePalette.grey.v_400"
-          />
-        </div>
-        <p
           v-if="organization.description"
-          class="description notranslate"
+          class="desc notranslate"
           dir="auto"
+          :style="{ color: $themeTokens.text }"
         >
           {{ organization.description }}
-        </p>
+        </div>
+      </div>
+    </template>
+
+    <template #footer>
+      <div class="footer">
+        <KIconButton
+          icon="optionsVertical"
+          appearance="flat-button"
+          :ariaLabel="organizationStrings.moreOptions$({ name: organization.name })"
+          data-test="organization-options"
+          @click.stop
+        >
+          <template #menu>
+            <KDropdownMenu
+              :options="dropdownOptions"
+              @select="handleDropdownSelect"
+            />
+          </template>
+        </KIconButton>
       </div>
     </template>
   </KCard>
@@ -39,6 +56,9 @@
 
 <script>
 
+  import { OrganizationRoles, OrganizationEditTabs, RouteNames } from '../../constants';
+  import { organizationStrings } from 'shared/strings/organizationStrings';
+
   export default {
     name: 'OrganizationCard',
     props: {
@@ -46,49 +66,60 @@
         type: Object,
         required: true,
       },
+      headingLevel: {
+        type: Number,
+        required: true,
+      },
     },
-    $trs: {
-      publicOrganization: 'Public organization',
-      privateOrganization: 'Private organization',
+    data() {
+      return { organizationStrings };
+    },
+    computed: {
+      roleLabel() {
+        const labels = {
+          [OrganizationRoles.ADMIN]: organizationStrings.adminRole$(),
+          [OrganizationRoles.EDITOR]: organizationStrings.editorRole$(),
+          [OrganizationRoles.VIEWER]: organizationStrings.viewerRole$(),
+        };
+        return labels[this.organization.role] || '';
+      },
+      dropdownOptions() {
+        return [{ label: organizationStrings.editOrganization$(), icon: 'edit', value: 'edit' }];
+      },
+    },
+    methods: {
+      handleDropdownSelect(option) {
+        if (option.value === 'edit') {
+          this.$router.push({
+            name: RouteNames.ORGANIZATION_EDIT,
+            params: { organizationId: this.organization.id, tab: OrganizationEditTabs.DETAILS },
+            query: { ...this.$route.query, last: this.$route.name },
+          });
+        }
+      },
     },
   };
 
 </script>
 
 
-<style scoped>
+<style lang="scss" scoped>
 
-  .organization-card {
+  .organization {
     width: 100%;
-    max-width: 360px;
-    min-height: 480px;
-    aspect-ratio: 3 / 4;
   }
 
-  .card-content {
+  .below-title {
+    font-size: 14px;
+  }
+
+  .desc {
+    margin-top: 12px;
+  }
+
+  .footer {
     display: flex;
-    flex-direction: column;
-    height: 100%;
-    padding-top: 8px;
-  }
-
-  .thumbnail-placeholder {
-    display: flex;
-    flex: 1 1 auto;
-    align-items: center;
-    justify-content: center;
-    min-height: 220px;
-    margin-top: 24px;
-    border-radius: 4px;
-  }
-
-  .thumbnail-icon {
-    width: 48px;
-    height: 48px;
-  }
-
-  .description {
-    margin: 24px 0 0;
+    justify-content: flex-end;
   }
 
 </style>

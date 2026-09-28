@@ -2,6 +2,8 @@ import os
 import tempfile
 import zipfile
 
+from django.test import override_settings
+
 from .base import StudioTestCase
 
 
@@ -46,6 +48,29 @@ class ZipFileTestCase(StudioTestCase):
         url = "{}{}/".format(self.zipfile_url, temp_file["name"])
         response = self.get(url)
         assert response.status_code == 200
+
+    @override_settings(
+        DEBUG=True,
+        WEBPACK_DEV_PORT=34567,
+        WEBPACK_DEV_PUBLIC_HOST="studio.test",
+        WEBPACK_DEV_PUBLIC_PORT=45678,
+    )
+    def test_valid_zipfile_debug_csp_uses_advertised_dev_server(self):
+        # Asserting the header says nothing about whether the HMR socket agrees with it.
+        myzip = self.do_create_zip()
+
+        self.sign_in()
+        temp_file, response = self.upload_temp_file(
+            open(myzip, "rb").read(), preset="html5_zip", ext="zip"
+        )
+        assert response.status_code == 200
+        url = "{}{}/".format(self.zipfile_url, temp_file["name"])
+        response = self.get(url)
+        assert response.status_code == 200
+        assert (
+            " http://studio.test:45678 ws://studio.test:45678"
+            in response["Content-Security-Policy"]
+        )
 
     def test_valid_zipfile_file_access(self):
         myzip = self.do_create_zip()

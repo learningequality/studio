@@ -1,5 +1,5 @@
 import { QuestionType, ValidationError } from '../../constants';
-import { stripTags } from '../../utils/stripTags';
+import { hasRichTextContent, richTextComparisonKey } from '../../utils/richText';
 
 /**
  * Validate ChoiceState → ValidationError[].
@@ -12,24 +12,27 @@ export function validateChoiceInteraction(state, questionType) {
   const errors = [];
   const { prompt, choices } = state;
 
-  if (!stripTags(prompt).trim()) {
+  if (!hasRichTextContent(prompt)) {
     errors.push({ code: ValidationError.PROMPT_REQUIRED });
   }
 
-  // Map each normalised text → the id of the first choice that had that text.
-  // When a later choice matches, both ids are flagged as duplicates in O(1).
+  // Map each comparison key → the id of the first choice that had it. When a later
+  // choice matches, both ids are flagged as duplicates in O(1).
   const firstSeenId = new Map();
   const duplicateIds = new Set();
 
   for (const choice of choices) {
-    const textContent = stripTags(choice.content).trim();
-    if (!textContent) {
+    if (!hasRichTextContent(choice.content)) {
       errors.push({ code: ValidationError.EMPTY_CHOICE_CONTENT, id: choice.id });
-    } else if (firstSeenId.has(textContent)) {
-      duplicateIds.add(firstSeenId.get(textContent));
+      continue;
+    }
+
+    const key = richTextComparisonKey(choice.content);
+    if (firstSeenId.has(key)) {
+      duplicateIds.add(firstSeenId.get(key));
       duplicateIds.add(choice.id);
     } else {
-      firstSeenId.set(textContent, choice.id);
+      firstSeenId.set(key, choice.id);
     }
   }
 

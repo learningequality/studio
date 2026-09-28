@@ -19,7 +19,10 @@ class ServiceWorkerView(TemplateView):
             import requests
 
             try:
-                request = requests.get("http://127.0.0.1:4000/dist/serviceWorker.js")
+                # Fetched by Django alongside the dev server, not by a browser: the bind port.
+                request = requests.get(
+                    f"http://127.0.0.1:{settings.WEBPACK_DEV_PORT}/dist/serviceWorker.js"
+                )
                 content = request.content.decode("utf-8")
             except requests.exceptions.RequestException:
                 pass

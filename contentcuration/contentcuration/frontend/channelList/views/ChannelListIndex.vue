@@ -133,11 +133,11 @@
 
           if (listType === ChannelListTypes.EDITABLE) {
             tabs.push({
-              id: 'organizations',
+              id: 'myOrganizations',
               label: this.$tr('myOrganizations'),
-              to: { name: RouteNames.ORGANIZATIONS },
+              to: this.myOrganizationsLink,
               badgeValue: 0,
-              analyticsLabel: 'ORGANIZATIONS',
+              analyticsLabel: 'MY_ORGANIZATIONS',
             });
           }
         });
@@ -205,6 +205,9 @@
       channelSetLink() {
         return { name: RouteNames.CHANNEL_SETS };
       },
+      myOrganizationsLink() {
+        return { name: RouteNames.MY_ORGANIZATIONS };
+      },
       catalogLink() {
         return { name: RouteNames.CATALOG_ITEMS };
       },
@@ -255,8 +258,8 @@
         const routeName = this.$route.name;
         if (routeName === RouteNames.CHANNEL_SETS) {
           title = this.$tr('channelSets');
-        } else if (routeName === RouteNames.ORGANIZATIONS) {
-          title = this.$tr('organizations');
+        } else if (routeName === RouteNames.MY_ORGANIZATIONS) {
+          title = this.$tr('myOrganizations');
         } else if (routeName === RouteNames.CATALOG_ITEMS) {
           title = this.translateConstant('public');
         } else if (routeName === RouteNames.CHANNELS_VIEW_ONLY) {
@@ -277,7 +280,6 @@
     },
     $trs: {
       channelSets: 'Collections',
-      organizations: 'Organizations',
       myOrganizations: 'My organizations',
       catalog: 'Kolibri Library',
       libraryTitle: 'Kolibri Content Library Catalog',
