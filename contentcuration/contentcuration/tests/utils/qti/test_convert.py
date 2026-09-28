@@ -364,7 +364,7 @@ class MarkdownContentConversionTests(unittest.TestCase):
         result = self._convert("It is ~~not~~ four.")
 
         self.assertIn(
-            '<p>It is <span style="text-decoration: line-through">not</span> four.</p>',
+            '<p>It is <span style="text-decoration: line-through;">not</span> four.</p>',
             result.xml,
         )
         self.assertNotIn("<s>", result.xml)
@@ -385,7 +385,7 @@ class MarkdownContentConversionTests(unittest.TestCase):
                 result = self._convert(f"It is <{tag}>not</{tag}> four.")
 
                 self.assertIn(
-                    f'<p>It is <span style="text-decoration: {decoration}">not</span>'
+                    f'<p>It is <span style="text-decoration: {decoration};">not</span>'
                     " four.</p>",
                     result.xml,
                 )
@@ -399,8 +399,8 @@ class MarkdownContentConversionTests(unittest.TestCase):
         result = self._convert("It is ~~wrong~~ __under__ here.")
 
         self.assertIn(
-            '<p>It is <span style="text-decoration: line-through">wrong</span>'
-            ' <span style="text-decoration: underline">under</span> here.</p>',
+            '<p>It is <span style="text-decoration: line-through;">wrong</span>'
+            ' <span style="text-decoration: underline;">under</span> here.</p>',
             result.xml,
         )
         self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
@@ -409,8 +409,8 @@ class MarkdownContentConversionTests(unittest.TestCase):
         result = self._convert("It is <u>a</u> <s>b</s> here.")
 
         self.assertIn(
-            '<p>It is <span style="text-decoration: underline">a</span>'
-            ' <span style="text-decoration: line-through">b</span> here.</p>',
+            '<p>It is <span style="text-decoration: underline;">a</span>'
+            ' <span style="text-decoration: line-through;">b</span> here.</p>',
             result.xml,
         )
 
@@ -428,7 +428,7 @@ class MarkdownContentConversionTests(unittest.TestCase):
         # XSD on unstable either, because the <math> is serialized into the QTI
         # namespace rather than the MathML one. That is its own bug, not this gap.
         self.assertIn(
-            '<p>It is <span style="text-decoration: line-through">wrong</span> <math',
+            '<p>It is <span style="text-decoration: line-through;">wrong</span> <math',
             result.xml,
         )
 
@@ -436,7 +436,7 @@ class MarkdownContentConversionTests(unittest.TestCase):
         result = self._convert("It is ~~wrong~~ ![i](x.png) here.")
 
         self.assertIn(
-            '<p>It is <span style="text-decoration: line-through">wrong</span> <img',
+            '<p>It is <span style="text-decoration: line-through;">wrong</span> <img',
             result.xml,
         )
 
@@ -456,7 +456,7 @@ class MarkdownContentConversionTests(unittest.TestCase):
             '<p style="font-size: 40pt; text-align: right; color: red">big</p>'
         )
 
-        self.assertIn('<p style="text-align: right; color: red">big</p>', result.xml)
+        self.assertIn('<p style="text-align: right; color: red;">big</p>', result.xml)
         self.assertNotIn("font-size", result.xml)
         self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
@@ -466,7 +466,7 @@ class MarkdownContentConversionTests(unittest.TestCase):
         # Kolibri's own allowlist both match a property by name.
         result = self._convert('<p style="TEXT-ALIGN: right; Color: red">big</p>')
 
-        self.assertIn('<p style="text-align: right; color: red">big</p>', result.xml)
+        self.assertIn('<p style="text-align: right; color: red;">big</p>', result.xml)
         self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
     def test_style_is_dropped_when_no_property_is_allowed(self):
@@ -480,7 +480,7 @@ class MarkdownContentConversionTests(unittest.TestCase):
         result = self._convert('It is <u style="color: red">not</u> four.')
 
         self.assertIn(
-            '<span style="color: red; text-decoration: underline">not</span>',
+            '<span style="color: red; text-decoration: underline;">not</span>',
             result.xml,
         )
         self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
@@ -494,7 +494,7 @@ class MarkdownContentConversionTests(unittest.TestCase):
         )
 
         self.assertIn(
-            '<span style="text-decoration: underline line-through">not</span>',
+            '<span style="text-decoration: underline line-through;">not</span>',
             result.xml,
         )
         self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)

@@ -347,14 +347,14 @@ class StrikethroughTests(unittest.TestCase):
     def test_strikethrough_renders_as_a_decorated_span(self):
         self.assertEqual(
             render_markdown("It is ~~not~~ four."),
-            '<p>It is <span style="text-decoration: line-through">not</span>'
+            '<p>It is <span style="text-decoration: line-through;">not</span>'
             " four.</p>\n",
         )
 
     def test_strikethrough_keeps_its_inner_markup(self):
         self.assertEqual(
             render_markdown("~~**gone**~~"),
-            '<p><span style="text-decoration: line-through">'
+            '<p><span style="text-decoration: line-through;">'
             "<strong>gone</strong></span></p>\n",
         )
 
@@ -363,7 +363,7 @@ class StrikethroughTests(unittest.TestCase):
         # models, which reject an attribute they do not declare.
         paragraph = ElementTreeBase.from_string(render_markdown("~~gone~~"))[0]
         span = paragraph.children[0]
-        self.assertEqual(span.style, "text-decoration: line-through")
+        self.assertEqual(span.style, "text-decoration: line-through;")
 
 
 class UnderlineTests(unittest.TestCase):
@@ -377,7 +377,7 @@ class UnderlineTests(unittest.TestCase):
     def test_underline_renders_as_a_decorated_span(self):
         self.assertEqual(
             render_markdown("It is __not__ four."),
-            '<p>It is <span style="text-decoration: underline">not</span> four.</p>\n',
+            '<p>It is <span style="text-decoration: underline;">not</span> four.</p>\n',
         )
 
     def test_double_asterisk_is_still_strong(self):
@@ -389,11 +389,11 @@ class UnderlineTests(unittest.TestCase):
     def test_underline_keeps_its_inner_markup(self):
         self.assertEqual(
             render_markdown("__**both**__"),
-            '<p><span style="text-decoration: underline">'
+            '<p><span style="text-decoration: underline;">'
             "<strong>both</strong></span></p>\n",
         )
 
     def test_underline_survives_the_model_layer(self):
         paragraph = ElementTreeBase.from_string(render_markdown("__under__"))[0]
         span = paragraph.children[0]
-        self.assertEqual(span.style, "text-decoration: underline")
+        self.assertEqual(span.style, "text-decoration: underline;")

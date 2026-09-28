@@ -187,7 +187,7 @@ def render_strikethrough_open(
     options: OptionsDict,
     env: EnvType,
 ) -> str:
-    return f'<span style="text-decoration: {STRIKETHROUGH_DECORATION}">'
+    return f'<span style="text-decoration: {STRIKETHROUGH_DECORATION};">'
 
 
 def render_strikethrough_close(
@@ -229,7 +229,7 @@ def render_strong_open(
     env: EnvType,
 ) -> str:
     if tokens[idx].markup == UNDERLINE_MARKUP:
-        return f'<span style="text-decoration: {UNDERLINE_DECORATION}">'
+        return f'<span style="text-decoration: {UNDERLINE_DECORATION};">'
     return self.renderToken(tokens, idx, options, env)
 
 

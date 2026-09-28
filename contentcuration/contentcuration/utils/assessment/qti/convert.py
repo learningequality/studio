@@ -125,7 +125,7 @@ def _filter_style(element) -> None:
         if sep and prop.strip().lower() in ALLOWED_STYLE_PROPERTIES
     )
     if kept:
-        element.set("style", kept)
+        element.set("style", f"{kept};")
     else:
         element.attrib.pop("style", None)
 
@@ -149,7 +149,7 @@ def _add_decoration(element, decoration: str) -> None:
         else:
             kept.append(declaration.strip())
     kept.append("text-decoration: {}".format(" ".join(dict.fromkeys(decorations))))
-    element.set("style", "; ".join(kept))
+    element.set("style", "; ".join(kept) + ";")
 
 
 def _adapt_unsupported_markup(markup: str) -> str:
