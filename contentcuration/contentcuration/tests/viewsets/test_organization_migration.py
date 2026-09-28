@@ -46,6 +46,73 @@ class OrganizationMigrationTestCase(SyncTestMixin, StudioAPITestCase):
         self.channel.editors.add(self.other)
         self.assertFalse(self.check().data["uncontested"])
 
+    def test_source_organization_editors_require_review(self):
+        source = Organization.objects.create(name="Source")
+        self.channel.organization = source
+        self.channel.save()
+        self.channel.editors.clear()
+        OrganizationRole.objects.create(
+            organization=source,
+            user=self.user,
+            role=ORGANIZATION_EDITOR,
+            status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+        )
+        colleague = OrganizationRole.objects.create(
+            organization=source,
+            user=self.other,
+            role=ORGANIZATION_EDITOR,
+            status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+        )
+        for role in ("editor", "admin"):
+            with self.subTest(role=role):
+                colleague.role = role
+                colleague.save()
+                self.assertFalse(self.check().data["uncontested"])
+                self.sync_changes(
+                    [
+                        generate_update_event(
+                            self.channel.id,
+                            CHANNEL,
+                            {"organization": self.organization.id},
+                            channel_id=self.channel.id,
+                        )
+                    ]
+                )
+                self.channel.refresh_from_db()
+                self.assertEqual(self.channel.organization_id, source.id)
+                self.assertEqual(
+                    self.client.post(
+                        reverse(
+                            "channel-organization-migration", args=[self.channel.id]
+                        ),
+                        {"organization": self.organization.id},
+                    ).status_code,
+                    400,
+                )
+        OrganizationRole.objects.create(
+            organization=self.organization,
+            user=self.other,
+            role=ORGANIZATION_EDITOR,
+            status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+        )
+        self.assertTrue(self.check().data["uncontested"])
+
+    def test_source_viewers_and_inactive_editors_do_not_require_review(self):
+        source = Organization.objects.create(name="Source")
+        self.channel.organization = source
+        self.channel.save()
+        colleague = OrganizationRole.objects.create(
+            organization=source,
+            user=self.other,
+            role="viewer",
+            status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+        )
+        self.assertTrue(self.check().data["uncontested"])
+        colleague.role = ORGANIZATION_EDITOR
+        colleague.status = "inactive"
+        colleague.save()
+        self.assertTrue(self.check().data["uncontested"])
+
     def test_non_editor_cannot_check_or_request(self):
         self.client.force_authenticate(self.other)
         self.assertEqual(self.check().status_code, 404)

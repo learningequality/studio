@@ -35,6 +35,40 @@ describe('MigrationTable', () => {
     await userEvent.click(await screen.findByText(label));
     await waitFor(() => expect(Invitation[method]).toHaveBeenCalledWith('request'));
     expect(await screen.findByText('No contested migrations')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('heading')).toHaveFocus());
+    expect(screen.getByRole('status')).toHaveTextContent('Example channel');
+  });
+
+  it('uses the singular heading for one request', async () => {
+    render(MigrationTable, { routes: [{ name: 'CHANNEL', path: '/channels/:channelId' }] });
+    expect(
+      await screen.findByRole('heading', { name: '1 contested migration' }),
+    ).toBeInTheDocument();
+  });
+
+  it.each(['Accept', 'Decline'])('focuses the next row after keyboard %s', async label => {
+    Invitation.fetchCollection.mockResolvedValue([
+      migration,
+      { ...migration, id: 'second', channel_name: 'Next channel' },
+    ]);
+    render(MigrationTable, { routes: [{ name: 'CHANNEL', path: '/channels/:channelId' }] });
+    const buttons = await screen.findAllByRole('button', { name: 'Options' });
+    buttons[0].focus();
+    await userEvent.keyboard('{Enter}');
+    await screen.findByText(label);
+    if (label === 'Decline') await userEvent.keyboard('{ArrowDown}');
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(screen.getAllByRole('button', { name: 'Options' })).toHaveLength(1));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Options' })).toHaveFocus());
+    expect(screen.getByRole('status')).toHaveTextContent('Example channel');
+  });
+
+  it('uses the title when the initial list request fails', async () => {
+    Invitation.fetchCollection.mockRejectedValue(new Error('Network error'));
+    render(MigrationTable, { routes: [] });
+    await screen.findByRole('alert');
+    expect(screen.getByRole('heading')).toHaveTextContent('Contested migrations');
+    expect(screen.queryByText('0 contested migrations')).not.toBeInTheDocument();
   });
 
   it('shows a recoverable error when resolution fails', async () => {
@@ -43,6 +77,7 @@ describe('MigrationTable', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Options' }));
     await userEvent.click(await screen.findByText('Accept'));
     expect(await screen.findByRole('alert')).toBeInTheDocument();
+    expect(screen.getByRole('heading')).toHaveTextContent('Contested migrations');
     await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(await screen.findByText('Example channel')).toBeInTheDocument();
   });

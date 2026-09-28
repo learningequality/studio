@@ -39,7 +39,15 @@ def is_uncontested(channel, organization, user):
         role__in=(ORGANIZATION_ADMIN, ORGANIZATION_EDITOR),
         status=ORGANIZATION_ROLE_STATUS_ACTIVE,
     ).values_list("user_id", flat=True)
-    return not channel.editors.exclude(id__in=members).exists()
+    source_editors = OrganizationRole.objects.filter(
+        organization_id=channel.organization_id,
+        role__in=(ORGANIZATION_ADMIN, ORGANIZATION_EDITOR),
+        status=ORGANIZATION_ROLE_STATUS_ACTIVE,
+    )
+    return not (
+        channel.editors.exclude(id__in=members).exists()
+        or source_editors.exclude(user_id__in=members).exists()
+    )
 
 
 def validate_migration(channel, organization, user, contested=False):

@@ -49,8 +49,9 @@ describe('ChannelOrganization', () => {
     });
     await userEvent.click(await screen.findByRole('button', { name: 'Create ticket' }));
     await waitFor(() => expect(Invitation.createMigration).toHaveBeenCalledWith('channel', 'org'));
-    expect(await screen.findByRole('button', { name: 'Decline' })).toBeInTheDocument();
-    expect(screen.getByText(/close the current migration request/i)).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Decline' })).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Decline' })).toHaveAttribute('aria-describedby');
+    expect(screen.getByText(/Migration to Destination is awaiting review/i)).toBeInTheDocument();
   });
 
   it('does not offer decline to another channel editor', async () => {
@@ -64,9 +65,78 @@ describe('ChannelOrganization', () => {
       },
     });
     render(ChannelOrganization, { routes: [], props: { channelId: 'channel' } });
-    expect(await screen.findByText(/close the current migration request/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Migration to Destination is awaiting review/i),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Decline' })).not.toBeInTheDocument();
   });
+  it('keeps the current organization visible and restores focus after decline', async () => {
+    Channel.checkOrganizationMigration.mockResolvedValue({
+      ...state,
+      organization: 'source',
+      organization_name: 'Aurora',
+      pending: {
+        id: 'request',
+        organization: 'org',
+        organization_name: 'Destination',
+        can_decline: true,
+      },
+    });
+    const { container } = render(ChannelOrganization, {
+      routes: [],
+      props: { channelId: 'channel' },
+    });
+    expect(
+      await screen.findByText('Aurora', { selector: '.ui-select-display-value' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Migration to Destination is awaiting review',
+    );
+    Channel.checkOrganizationMigration.mockResolvedValue({
+      ...state,
+      organization: 'source',
+      organization_name: 'Aurora',
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'Decline' }));
+    await waitFor(() => expect(container.querySelector('.ui-select-label')).toHaveFocus());
+    expect(
+      screen.getByText('Aurora', { selector: '.ui-select-display-value' }),
+    ).toBeInTheDocument();
+  });
+
+  it('keeps keyboard focus on the select while checking and announces the result', async () => {
+    const { container } = render(ChannelOrganization, {
+      routes: [],
+      props: { channelId: 'channel', standalone: true },
+    });
+    await screen.findByText('Select an organization', { selector: '.ui-select-display-value' });
+    let finish;
+    Channel.checkOrganizationMigration.mockReturnValue(
+      new Promise(resolve => {
+        finish = resolve;
+      }),
+    );
+    const select = container.querySelector('.ui-select-label');
+    select.focus();
+    await userEvent.keyboard('{Enter}{ArrowDown}{Enter}');
+    await waitFor(() =>
+      expect(Channel.checkOrganizationMigration).toHaveBeenCalledWith('channel', 'org'),
+    );
+    expect(select).toHaveAttribute('tabindex', '0');
+    expect(select).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Save organization' })).toBeDisabled();
+    finish({ ...state, uncontested: false });
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent(
+        'Migration cannot be done automatically',
+      ),
+    );
+    expect(screen.getByRole('button', { name: 'Create ticket' })).toHaveAttribute(
+      'aria-describedby',
+      screen.getByRole('status').id,
+    );
+  });
+
   it('saves an uncontested selection only after the save action', async () => {
     Channel.checkOrganizationMigration.mockImplementation((id, organization) =>
       Promise.resolve({ ...state, ...(organization ? { uncontested: true } : {}) }),

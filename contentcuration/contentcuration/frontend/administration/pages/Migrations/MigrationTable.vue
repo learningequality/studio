@@ -1,7 +1,19 @@
 <template>
 
-  <section>
-    <h1>{{ loading ? strings.title$() : strings.count$({ count: migrations.length }) }}</h1>
+  <section ref="tableRoot">
+    <h1
+      ref="heading"
+      tabindex="-1"
+    >
+      {{ loading || error ? strings.title$() : strings.count$({ count: migrations.length }) }}
+    </h1>
+    <p
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      {{ confirmation }}
+    </p>
     <KCircularLoader v-if="loading" />
     <p
       v-else-if="error"
@@ -30,6 +42,7 @@
         <KButton
           v-else-if="colIndex === 3"
           :text="strings.options$()"
+          :data-migration-id="content"
           hasDropdown
           :disabled="Boolean(resolving)"
         >
@@ -54,7 +67,7 @@
 
 <script>
 
-  import { computed, onMounted, ref } from 'vue';
+  import { computed, nextTick, onMounted, ref } from 'vue';
   import { RouteNames } from '../../constants';
   import { Invitation } from 'shared/data/resources';
   import { createTranslator } from 'shared/i18n';
@@ -62,7 +75,8 @@
   const strings = createTranslator('MigrationTable', {
     title: { message: 'Contested migrations', context: 'Administration migration table heading' },
     count: {
-      message: '{count, number} contested migrations',
+      message:
+        '{count, number} {count, plural, one {contested migration} other {contested migrations}}',
       context: 'Number of pending migration requests',
     },
     channel: { message: 'Channel', context: 'Migration table column' },
@@ -71,6 +85,14 @@
     options: { message: 'Options', context: 'Migration actions menu' },
     accept: { message: 'Accept', context: 'Approve channel migration' },
     decline: { message: 'Decline', context: 'Reject channel migration' },
+    accepted: {
+      message: 'Migration for {channel} accepted.',
+      context: 'Confirmation after approving a channel migration',
+    },
+    declined: {
+      message: 'Migration for {channel} declined.',
+      context: 'Confirmation after rejecting a channel migration',
+    },
     empty: { message: 'No contested migrations', context: 'Empty migration table' },
     error: {
       message: 'Unable to load or resolve migrations. Please try again.',
@@ -82,6 +104,9 @@
   export default {
     name: 'MigrationTable',
     setup() {
+      const tableRoot = ref(null);
+      const heading = ref(null);
+      const confirmation = ref('');
       const migrations = ref([]);
       const loading = ref(true);
       const error = ref(false);
@@ -118,19 +143,35 @@
         }
       }
       async function resolve(id, action) {
+        if (resolving.value) return;
+        const index = migrations.value.findIndex(item => item.id === id);
+        const migration = migrations.value[index];
+        if (!migration) return;
+        confirmation.value = '';
         resolving.value = id;
         error.value = false;
         try {
           await Invitation[action](id);
           migrations.value = migrations.value.filter(item => item.id !== id);
+          confirmation.value =
+            action === 'accept'
+              ? strings.accepted$({ channel: migration.channel_name })
+              : strings.declined$({ channel: migration.channel_name });
         } catch (e) {
           error.value = true;
         } finally {
           resolving.value = null;
+          await nextTick();
+          const buttons = tableRoot.value?.querySelectorAll('[data-migration-id]');
+          const target = buttons?.[Math.min(index, buttons.length - 1)] || heading.value;
+          target?.focus();
         }
       }
       onMounted(load);
       return {
+        tableRoot,
+        heading,
+        confirmation,
         strings,
         channelRoute: RouteNames.CHANNEL,
         migrations,
