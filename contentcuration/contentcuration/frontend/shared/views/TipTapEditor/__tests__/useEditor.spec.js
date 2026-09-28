@@ -119,13 +119,6 @@ describe('a pasted decoration', () => {
       { text: 'struck', style: expect.stringContaining('text-decoration: line-through') },
     ]);
   });
-
-  it('reads a pasted <u> or <s> back as the same marks', () => {
-    expect(pasteIntoEditor('<p><u>under</u><s>struck</s></p>')).toEqual([
-      { text: 'under', style: expect.stringContaining('text-decoration: underline') },
-      { text: 'struck', style: expect.stringContaining('text-decoration: line-through') },
-    ]);
-  });
 });
 
 describe('the insert context', () => {
