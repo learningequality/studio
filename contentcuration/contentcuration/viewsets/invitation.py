@@ -279,9 +279,9 @@ class InvitationViewSet(ValuesViewset):
         "last_name": "invited__last_name",
         "sender_name": get_sender_name,
         "channel_name": "channel__name",
+        "organization_name": "organization__name",
         "channel": "channel_id",
         "organization": "organization_id",
-        "organization_name": "organization__name",
         "sender": "sender_id",
         "sender_email": "sender__email",
     }
@@ -397,6 +397,39 @@ class InvitationViewSet(ValuesViewset):
                 invitation.id,
                 INVITATION,
                 {"declined": True},
+                channel_id=invitation.channel_id,
+                user_id=request.user.id,
+            ),
+            applied=True,
+            created_by_id=request.user.id,
+        )
+        return Response({"status": "success"})
+
+    @action(detail=True, methods=["post"])
+    def revoke(self, request, pk=None):
+        invitation = self.get_edit_object()
+        is_org_admin = (
+            invitation.organization_id
+            and Organization.filter_edit_queryset(
+                Organization.objects.filter(id=invitation.organization_id),
+                request.user,
+            ).exists()
+        )
+        if (
+            invitation.sender_id != request.user.id
+            and not is_org_admin
+            and not request.user.is_admin
+        ):
+            raise PermissionDenied(
+                "Only the sender or an organization admin may revoke this invitation."
+            )
+        invitation.revoked = True
+        invitation.save()
+        Change.create_change(
+            generate_update_event(
+                invitation.id,
+                INVITATION,
+                {"revoked": True},
                 channel_id=invitation.channel_id,
                 user_id=request.user.id,
             ),

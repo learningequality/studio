@@ -34,14 +34,14 @@ export const Orientation = Object.freeze({
  * 2. QuestionType -> The type editors will select per assessment item.
  *    It's different from AssessmentItemType because we will extend this for all
  *    new question types without confusing it with values stored in the database
- *    (all of these will be assessment item type: "qti"). Value is related to how
+ *    (all of these will be assessment item type: "QTI"). Value is related to how
  *    Studio presents different question options to users in the UI.
  *
  * 3. InteractionType (QtiInteraction) -> The actual interactions defined by QTI,
  *    and the ones that dictate how to parse and what descriptor we will use.
  *    Each QTI interaction can have multiple related question types (e.g., choice
  *    can be singleSelect or multiSelect), but all of them will have assessment
- *    item type "qti".
+ *    item type "QTI".
  */
 
 /**
@@ -53,6 +53,7 @@ export const QtiInteraction = Object.freeze({
   CHOICE: 'qti-choice-interaction',
   ORDER: 'qti-order-interaction',
   MATCH: 'qti-match-interaction',
+  ASSOCIATE: 'qti-associate-interaction',
   TEXT_ENTRY: 'qti-text-entry-interaction',
   EXTENDED_TEXT: 'qti-extended-text-interaction',
 });
@@ -66,7 +67,8 @@ export const QTI_INTERACTION_TAGS = Object.freeze(Object.values(QtiInteraction))
  * by the broader Studio assessment system, not by this editor.
  */
 export const AssessmentItemTypes = Object.freeze({
-  QTI: 'qti',
+  // Matches the value the API stores and returns (le_utils exercises.QTI).
+  QTI: 'QTI',
 });
 
 /**
@@ -81,6 +83,7 @@ export const QuestionType = Object.freeze({
   TEXT_ENTRY: 'textEntry',
   FREE_RESPONSE: 'freeResponse',
   ORDERING: 'ordering',
+  ASSOCIATE: 'associate',
 });
 
 /**
@@ -89,6 +92,10 @@ export const QuestionType = Object.freeze({
  * this set in their own validate.js module.
  */
 export const ValidationError = Object.freeze({
+  // Item-level codes, produced by validateItem.js rather than an interaction
+  PARSE_ERROR: 'PARSE_ERROR',
+  NO_INTERACTION: 'NO_INTERACTION',
+  FREE_RESPONSE_NOT_ALLOWED: 'FREE_RESPONSE_NOT_ALLOWED',
   PROMPT_REQUIRED: 'PROMPT_REQUIRED',
   NO_CORRECT_ANSWER: 'NO_CORRECT_ANSWER',
   TOO_MANY_CORRECT_ANSWERS: 'TOO_MANY_CORRECT_ANSWERS',
@@ -98,14 +105,14 @@ export const ValidationError = Object.freeze({
   EMPTY_ANSWER_CONTENT: 'EMPTY_ANSWER_CONTENT',
   DUPLICATE_ANSWER_CONTENT: 'DUPLICATE_ANSWER_CONTENT',
   TOO_FEW_CHOICES: 'TOO_FEW_CHOICES',
+  TOO_FEW_PAIRS: 'TOO_FEW_PAIRS',
+  DUPLICATE_PAIR_CONTENT: 'DUPLICATE_PAIR_CONTENT',
+  DUPLICATE_DISTRACTOR_CONTENT: 'DUPLICATE_DISTRACTOR_CONTENT',
 });
 
 export const RESPONSE_IDENTIFIER = 'RESPONSE';
 
-/**
- * Set of QTI interaction tag names that have `placement: 'inline'`.
- * Used by parseItem to decide whether to serialize the full `<qti-item-body>`
- * (inline) or just the interaction element (block).
- * Kept here to avoid a circular dependency with the descriptor registry.
- */
-export const INLINE_INTERACTION_TAGS = new Set([QtiInteraction.TEXT_ENTRY]);
+export const Placement = Object.freeze({
+  BLOCK: 'block',
+  INLINE: 'inline',
+});

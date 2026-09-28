@@ -116,6 +116,27 @@ class OrganizationListCreateTestCase(OrganizationAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["count"], 1)
 
+    def test_member_filter_excludes_public_organizations_the_user_does_not_belong_to(
+        self,
+    ):
+        self.organization.public = True
+        self.organization.save(update_fields=["public"])
+        self.authenticate_as(self.other_user)
+
+        response = self.client.get(self.organization_list_url, {"member": True})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["results"], [])
+
+    def test_member_filter_includes_the_users_own_organizations(self):
+        self.authenticate_as(self.organization_admin)
+
+        response = self.client.get(self.organization_list_url, {"member": True})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(response.data["results"][0]["name"], self.organization.name)
+
     def test_inactive_membership_does_not_grant_organization_access(self):
         self.authenticate_as(self.inactive_user)
 

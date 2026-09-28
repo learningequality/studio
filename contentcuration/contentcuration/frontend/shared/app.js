@@ -109,6 +109,7 @@ import { Workbox, messageSW } from 'workbox-window';
 import KThemePlugin from 'kolibri-design-system/lib/KThemePlugin';
 import trackInputModality from 'kolibri-design-system/lib/styles/trackInputModality';
 
+import logging from './logging';
 import AnalyticsPlugin from './analytics/plugin';
 import { theme, icons } from 'shared/vuetify';
 
@@ -309,7 +310,11 @@ export let rootVue;
 
 export default async function startApp({ store, router, index }) {
   trackInputModality();
-  await initiateServiceWorker();
+  try {
+    await initiateServiceWorker();
+  } catch (error) {
+    logging.error(error);
+  }
   await initializeDB();
   await i18nSetup();
 

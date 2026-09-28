@@ -11,8 +11,8 @@ localVue.use(router);
 
 const channelList = ['test', 'channel', 'table'];
 
-function makeWrapper(store) {
-  router.replace({ name: RouteNames.CHANNELS });
+function makeWrapper(store, query = {}) {
+  router.replace({ name: RouteNames.CHANNELS, query });
 
   return mount(ChannelTable, {
     router,
@@ -71,13 +71,32 @@ describe('channelTable', () => {
 
       expect(router.currentRoute.query.keywords).toBe('keyword test');
     });
-    it('changing channel type filter should reset channel status filter', async () => {
+    it('changing channel type filter should reset channel status filter when it is no longer valid', async () => {
+      wrapper.vm.channelTypeFilter = ChannelTypeFilter.COMMUNITY_LIBRARY;
+      wrapper.vm.channelStatusFilter = 'needsReview';
+      await wrapper.vm.$nextTick();
+      // Kolibri library channels have no "needs review" status
+      wrapper.vm.channelTypeFilter = ChannelTypeFilter.KOLIBRI_LIBRARY;
+      await wrapper.vm.$nextTick();
+      expect(wrapper.vm.channelStatusFilter).toBe('live');
+    });
+    it('changing channel type filter should keep the channel status filter when it is still valid', async () => {
       wrapper.vm.channelTypeFilter = ChannelTypeFilter.COMMUNITY_LIBRARY;
       wrapper.vm.channelStatusFilter = 'published';
       await wrapper.vm.$nextTick();
+      // "published" is a valid status for unlisted channels too
       wrapper.vm.channelTypeFilter = ChannelTypeFilter.UNLISTED;
       await wrapper.vm.$nextTick();
-      expect(wrapper.vm.channelStatusFilter).toBe('live');
+      expect(wrapper.vm.channelStatusFilter).toBe('published');
+    });
+    it('should preserve a valid channel status filter already present in the URL on mount', () => {
+      // Simulates navigating back to this page with filters still in the URL
+      // (e.g. after opening a channel and hitting the browser back button).
+      const backNavWrapper = makeWrapper(store, {
+        channelType: ChannelTypeFilter.COMMUNITY_LIBRARY,
+        channelStatus: 'needsReview',
+      });
+      expect(backNavWrapper.vm.channelStatusFilter).toBe('needsReview');
     });
   });
   describe('selection', () => {

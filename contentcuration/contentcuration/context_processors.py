@@ -18,7 +18,8 @@ def site_variables(request):
         "STORAGE_BASE_URL": "{bucket}/{storage_root}/".format(
             bucket=settings.AWS_S3_BUCKET_NAME, storage_root=settings.STORAGE_ROOT
         ),
-        "STORAGE_HOST": settings.AWS_S3_ENDPOINT_URL,
+        "STORAGE_HOST": settings.AWS_S3_PUBLIC_ENDPOINT_URL
+        or settings.AWS_S3_ENDPOINT_URL,
         "DEBUG": settings.DEBUG,
         "LANG_INFO": json_for_parse_from_data(language_globals()),
         "LOGGED_IN": not request.user.is_anonymous,

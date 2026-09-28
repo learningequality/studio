@@ -267,3 +267,75 @@ class TestTexMathPluginRoundtrip(TexMathTestMixin, unittest.TestCase):
             roundtrip_result.replace("\n", "").strip(),
             expected.replace("\n", "").strip(),
         )
+
+
+class SizedImageTests(unittest.TestCase):
+    """Perseus images, whose size and alignment suffixes are not valid CommonMark."""
+
+    def test_size_suffix_becomes_width_and_height(self):
+        self.assertEqual(
+            render_markdown("![Test](83ab37e959e03fec7be3e1bf834cb169.jpg =550x364)"),
+            '<p><img src="83ab37e959e03fec7be3e1bf834cb169.jpg" alt="Test"'
+            ' width="550" height="364" /></p>\n',
+        )
+
+    def test_image_without_alt_text(self):
+        self.assertEqual(
+            render_markdown("![](cs.png =12x34)"),
+            '<p><img src="cs.png" alt="" width="12" height="34" /></p>\n',
+        )
+
+    def test_align_suffix_is_consumed_but_dropped(self):
+        # Consumed so the image parses at all; dropped because QTI's Img has no
+        # attribute to carry it.
+        self.assertEqual(
+            render_markdown("![a](cs.png align=center)"),
+            '<p><img src="cs.png" alt="a" /></p>\n',
+        )
+
+    def test_size_and_align_together(self):
+        self.assertEqual(
+            render_markdown("![a](cs.png =12x34 align=right)"),
+            '<p><img src="cs.png" alt="a" width="12" height="34" /></p>\n',
+        )
+
+    def test_fractional_size_is_rounded(self):
+        self.assertEqual(
+            render_markdown("![a](cs.png =229.5x287.2)"),
+            '<p><img src="cs.png" alt="a" width="230" height="287" /></p>\n',
+        )
+
+    def test_src_is_reduced_to_the_bare_filename(self):
+        self.assertEqual(
+            render_markdown("![a](images/cs.png =12x34)"),
+            '<p><img src="cs.png" alt="a" width="12" height="34" /></p>\n',
+        )
+
+    def test_image_keeps_its_surrounding_text(self):
+        self.assertEqual(
+            render_markdown("before ![a](cs.png =1x2) after"),
+            '<p>before <img src="cs.png" alt="a" width="1" height="2" /> after</p>\n',
+        )
+
+    def test_alt_text_is_escaped(self):
+        self.assertEqual(
+            render_markdown('![<script>"](cs.png =1x2)'),
+            '<p><img src="cs.png" alt="&lt;script&gt;&quot;"'
+            ' width="1" height="2" /></p>\n',
+        )
+
+    def test_suffixless_image_still_goes_through_the_builtin_rule(self):
+        self.assertEqual(
+            render_markdown("![a](cs.png)"), '<p><img src="cs.png" alt="a" /></p>\n'
+        )
+
+    def test_sized_image_survives_the_model_layer(self):
+        # The converter builds its item body by parsing this HTML into the QTI
+        # models, which take an integer width and reject an absolute src.
+        paragraph = ElementTreeBase.from_string(
+            render_markdown("![a](cs.png =229.5x287 align=center)")
+        )[0]
+        img = paragraph.children[0]
+        self.assertEqual(img.src, "cs.png")
+        self.assertEqual(img.alt, "a")
+        self.assertEqual((img.width, img.height), (230, 287))

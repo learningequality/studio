@@ -224,8 +224,11 @@ class ZipContentView(View):
         )
 
         if getattr(settings, "DEBUG", False):
+            dev_server = (
+                f"{settings.WEBPACK_DEV_PUBLIC_HOST}:{settings.WEBPACK_DEV_PUBLIC_PORT}"
+            )
             response[
                 "Content-Security-Policy"
-            ] += " http://127.0.0.1:4000 ws://127.0.0.1:4000"
+            ] += f" http://{dev_server} ws://{dev_server}"
 
         return response

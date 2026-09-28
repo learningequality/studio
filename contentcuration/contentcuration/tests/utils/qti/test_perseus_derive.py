@@ -4,6 +4,7 @@ import pytest
 from le_utils.constants import exercises
 
 from contentcuration.tests.utils.qti.test_validation import _item_xml
+from contentcuration.tests.utils.qti.test_validation import HINTED_EDITOR_ITEM
 from contentcuration.utils.assessment.qti.perseus_derive import derive_perseus_item
 from contentcuration.utils.assessment.qti.perseus_derive import is_perseus_derivable
 
@@ -141,6 +142,20 @@ def test_math_prompt_survives_into_question():
     item = _Item(_text_item("single", ["4"], prompt=prompt))
     result = derive_perseus_item(item)
     assert "$$x^2$$" in result.question
+
+
+def test_hints_survive_a_round_trip_through_the_editor():
+    """The hints an author edits in the QTI editor still publish as legacy hints.
+
+    Studio's own conversion writes them into the catalog on read; this asserts the
+    document the editor writes back is still one publishing can read them out of, which
+    is what makes editing a converted question safe.
+    """
+    result = derive_perseus_item(_Item(HINTED_EDITOR_ITEM))
+
+    hints = json.loads(result.hints)
+    assert [h["hint"] for h in hints] == ["test", "test2 2", "test3 3"]
+    assert [h["order"] for h in hints] == [0, 1, 2]
 
 
 def test_hint_derivation():

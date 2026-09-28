@@ -144,14 +144,7 @@ export function getContentNodeIsValid(state, getters, rootState, rootGetters) {
       (contentNode[NEW_OBJECT] ||
         (getContentNodeDetailsAreValid(state)(contentNodeId) &&
           getContentNodeFilesAreValid(state, getters, rootState, rootGetters)(contentNodeId) &&
-          rootGetters['assessmentItem/getAssessmentItemsAreValid']({
-            contentNodeId,
-            // Because this is called after items have been created,
-            // and it is not used within a form to run field validations,
-            //  it's okay to set this to false. This also accounts for
-            // any async delays with the node creation
-            ignoreDelayed: false,
-          })))
+          rootGetters['assessmentItem/getAssessmentItemsAreValid']({ contentNodeId })))
     );
   };
 }

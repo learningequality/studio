@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue';
-import { parseXML } from '../serialization/parseItem';
 import { descriptors, registry, DEFAULT_INTERACTION } from '../interactions/index';
+import { resolveDescriptor } from '../interactions/resolveDescriptor';
 import { qtiEditorStrings } from '../qtiEditorStrings';
 
 const { errorParsingQuestion$ } = qtiEditorStrings;
@@ -14,48 +14,20 @@ const { errorParsingQuestion$ } = qtiEditorStrings;
  */
 export default function useInteractionDescriptor(interactionRef) {
   /**
-   * Parses bodyXml and returns the matching descriptor, resolved
-   * question type, and any parse error without touching reactive state.
-   */
-  function inferFromXml(xml, declarations) {
-    if (!xml) {
-      return { descriptor: registry[DEFAULT_INTERACTION], questionType: null, error: null };
-    }
-    try {
-      const doc = parseXML(xml);
-      const interactionEl = doc.documentElement;
-      const desc = descriptors.find(d => d.matches(interactionEl)) ?? registry[DEFAULT_INTERACTION];
-      return {
-        descriptor: desc,
-        questionType: desc.getQuestionType(interactionEl, declarations) ?? null,
-        error: null,
-      };
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error('[QTI] Failed to parse interaction XML:', e.message);
-      return {
-        descriptor: registry[DEFAULT_INTERACTION],
-        questionType: null,
-        error: errorParsingQuestion$(),
-      };
-    }
-  }
-
-  /**
-   * Parse the initial XML synchronously during component setup.
+   * Resolve the initial XML synchronously during component setup.
    *
    * This ensures `questionType` is immediately available for downstream components
    * on first render, avoiding prop validation warnings that would occur if
    * initialization was deferred to a lifecycle hook.
    */
-  const initial = inferFromXml(
+  const initial = resolveDescriptor(
     interactionRef.value?.bodyXml,
     interactionRef.value?.responseDeclarations,
   );
 
   /** Writable ref driven by UI selections after initial parse. */
   const questionType = ref(initial.questionType);
-  const parseError = ref(initial.error);
+  const parseError = ref(initial.error ? errorParsingQuestion$() : null);
 
   /**
    * Derived from questionType so the descriptor updates when the user switches

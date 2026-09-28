@@ -26,6 +26,7 @@ from contentcuration.utils.assessment.qti.imsmanifest import Resource
 from contentcuration.utils.assessment.qti.imsmanifest import Resources
 from contentcuration.utils.assessment.qti.media import get_qti_media_references
 from contentcuration.utils.assessment.qti.media import rewrite_qti_media_paths
+from contentcuration.utils.assessment.qti.media import set_qti_item_language
 from contentcuration.utils.assessment.qti.validation import parse_qti_xml
 from contentcuration.utils.assessment.qti.validation import validate_qti_item
 
@@ -106,6 +107,11 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
 
         filepath = f"items/{identifier}.xml"
         item_xml, file_dependencies = self._write_qti_media_files(assessment_item)
+        # The other two paths through this generator build their items here and stamp the
+        # node's language as they go; this one is handed raw_data, so it stamps it too.
+        # Otherwise one package declares a language for some items and not others,
+        # depending only on which editor wrote them.
+        item_xml = set_qti_item_language(item_xml, self._node_language())
 
         self._add_resource(
             QTIResource(

@@ -48,7 +48,10 @@ from django.db.models.indexes import IndexExpression
 from django.db.models.query_utils import DeferredAttribute
 from django.db.models.sql import Query
 from django.dispatch import receiver
+from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import timezone
+from django.utils import translation
 from django.utils.translation import gettext as _
 from django_cte import CTEManager
 from django_cte import CTEQuerySet
@@ -97,7 +100,9 @@ from contentcuration.db.models.functions import Unnest
 from contentcuration.db.models.manager import CustomContentNodeTreeManager
 from contentcuration.db.models.manager import CustomManager
 from contentcuration.utils.cache import delete_public_channel_cache_keys
+from contentcuration.utils.i18n import closest_supported_locale
 from contentcuration.utils.parser import load_json_string
+from contentcuration.utils.urls import canonical_url
 from contentcuration.viewsets.sync.constants import ALL_CHANGES
 from contentcuration.viewsets.sync.constants import ALL_TABLES
 from contentcuration.viewsets.sync.constants import PUBLISHABLE_CHANGE_TABLES
@@ -475,11 +480,15 @@ class User(AbstractBaseUser, PermissionsMixin):
             .aggregate(size=Sum("file_size"))["size"]
             or 0
         )
-        return float(max(self.disk_space - space_used, 0))
+        return float(max(self.get_effective_disk_space() - space_used, 0))
 
     def get_available_space(self, active_files=None):
         return float(
-            max(self.disk_space - self.get_space_used(active_files=active_files), 0)
+            max(
+                self.get_effective_disk_space()
+                - self.get_space_used(active_files=active_files),
+                0,
+            )
         )
 
     def get_user_active_trees(self):
@@ -873,8 +882,8 @@ def generate_storage_url(filename, request=None, *args):
     # 1. In normal kubernetes, nginx will proxy for us. We'll know we're in kubernetes when the
     # environment variable RUN_MODE=k8s
     #
-    # 2. In Docker Compose and bare metal runserver, we'll be running in runserver, and minio
-    # will be exposed in port 9000 in the host's localhost network.
+    # 2. In Docker Compose and bare metal runserver, minio is exposed to the browser at
+    # settings.AWS_S3_PUBLIC_ENDPOINT_URL, or localhost:9000 when that is unset.
 
     # Note (aron): returning the true storage URL (e.g. https://storage.googleapis.com/storage/a.mp4)
     # isn't too important, because we have CDN in front of our servers, so it should be cached.
@@ -890,16 +899,14 @@ def generate_storage_url(filename, request=None, *args):
             path=path,
         )
 
-    # if we're in docker-compose or in baremetal, just return the object storage URL as localhost:9000
+    # if we're in docker-compose or in baremetal, hand the browser the object storage URL directly
     elif run_mode == "docker-compose" or run_mode is None:
         # generate the minio storage URL, so we can get the GET parameters that give everyone
         # access even if they don't need to log in
         params = urllib.parse.urlparse(default_storage.url(path)).query
-        host = "localhost"
-        port = 9000  # hardcoded to the default minio IP address
-        url = "http://{host}:{port}/{bucket}/{path}?{params}".format(
-            host=host,
-            port=port,
+        endpoint = settings.AWS_S3_PUBLIC_ENDPOINT_URL or "http://localhost:9000"
+        url = "{endpoint}/{bucket}/{path}?{params}".format(
+            endpoint=endpoint.rstrip("/"),
             bucket=settings.AWS_S3_BUCKET_NAME,
             path=path,
             params=params,
@@ -1786,13 +1793,27 @@ class ChannelVersion(models.Model):
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):
+        live_in_community_library = Q(
+            Exists(
+                CommunityLibrarySubmission.objects.filter(
+                    channel=OuterRef("channel"),
+                    channel_version=OuterRef("version"),
+                    status=community_library_submission.STATUS_LIVE,
+                )
+            )
+        )
+
         if user.is_anonymous:
-            return queryset.none()
+            return queryset.filter(live_in_community_library)
 
         if user.is_admin:
             return queryset
 
-        return queryset.filter(Q(channel__viewers=user) | Q(channel__editors=user))
+        return queryset.filter(
+            live_in_community_library
+            | Q(channel__viewers=user)
+            | Q(channel__editors=user)
+        )
 
     @classmethod
     def filter_edit_queryset(cls, queryset, user):
@@ -3299,6 +3320,49 @@ class CommunityLibrarySubmission(models.Model):
             editors = editors.exclude(id=exclude_user_id)
 
         User.notify_users(editors, date=self.date_updated)
+
+    def send_resolution_email(self):
+        """
+        Send an email to the submission author letting them know their
+        Community Library submission has been resolved (approved or
+        rejected).
+        """
+        is_approved = self.status == community_library_submission.STATUS_APPROVED
+
+        channel_language = self.channel.language
+        locale_code = (
+            closest_supported_locale(channel_language.lang_code)
+            if channel_language
+            else None
+        ) or settings.LANGUAGE_CODE
+        with translation.override(locale_code):
+            if is_approved:
+                subject_text = _("Your Community Library submission has been approved")
+            else:
+                subject_text = _("Your Community Library submission needs changes")
+
+            subject = render_to_string(
+                "registration/custom_email_subject.txt",
+                {"subject": subject_text},
+            )
+            subject = "".join(subject.splitlines())
+
+            message = render_to_string(
+                "community_library/submission_resolved_email.html",
+                {
+                    "name": self.author.get_full_name(),
+                    "channel": self.channel,
+                    "channel_url": canonical_url(
+                        reverse("channel", kwargs={"channel_id": self.channel.pk})
+                    ),
+                    "approved": is_approved,
+                    "feedback_notes": self.feedback_notes,
+                },
+            )
+
+        self.author.email_user(
+            subject, message, settings.DEFAULT_FROM_EMAIL, html_message=message
+        )
 
     @classmethod
     def filter_view_queryset(cls, queryset, user):

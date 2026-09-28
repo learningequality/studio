@@ -29,6 +29,15 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Show answers',
     context: 'Checkbox label to toggle displaying answers/previews',
   },
+  incompleteItemIndicatorLabel: {
+    message: 'Incomplete',
+    context: 'Shown in a question card header when the question is missing something',
+  },
+  unsupportedItemMessage: {
+    message: 'This question cannot be edited here',
+    context:
+      'Shown in place of the editor for questions authored elsewhere, or whose content could not be read',
+  },
   singleSelectLabel: {
     message: 'Single Choice',
     context: 'Display name for a single-select question type',
@@ -96,6 +105,81 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Duplicate items are not allowed',
     context: 'Validation error when two or more ordering items have identical content',
   },
+
+  associateLabel: {
+    message: 'Associate',
+    context: 'Display name for an associate question type shown in the question type selector',
+  },
+  associateDescription: {
+    message: 'Learners must associate pairs of items.',
+    context: 'Description for the associate question type in the info modal',
+  },
+  correctPairsLabel: {
+    message: 'Matching pairs',
+    context: 'Section header above the list of correctly associated pairs',
+  },
+  correctPairsDescription: {
+    message:
+      'Learners match responses from a shuffled set to each prompt. Include distractors to increase difficulty.',
+    context: 'Subtitle under the matching pairs header',
+  },
+  distractorsLabel: {
+    message: 'Distractors (optional)',
+    context: 'Section header above the choices that belong to no correct pair',
+  },
+  distractorsDescription: {
+    message: "Extra items shown in the response pool that don't match any prompt",
+    context: 'Subtitle under the distractors header',
+  },
+  responsePoolLabel: {
+    message: 'Response pool (shuffled)',
+    context: 'Header above the shuffled pool of choices learners will pick from',
+  },
+  correctAnswersLabel: {
+    message: 'Answers',
+    context: 'Header above the list of correct pairs shown when answers are revealed',
+  },
+  pairNumberLabel: {
+    message: 'Pair {number}',
+    context: 'Label to the left of a pair row, e.g. "Pair 2"',
+  },
+  addPairBtn: {
+    message: 'Add pair',
+    context: 'Button that appends a new pair',
+  },
+  deletePairBtn: {
+    message: 'Delete pair {number}',
+    context: 'Accessible label for the delete icon button next to a pair row',
+  },
+  addDistractorBtn: {
+    message: 'Add distractor',
+    context: 'Button that opens the editor for a new distractor',
+  },
+  deleteDistractorBtn: {
+    message: 'Delete distractor {number}',
+    context: 'Accessible label for the delete icon button on a distractor',
+  },
+  editPairItemLabel: {
+    message: 'Edit pair {number}, item {position}',
+    context: 'Accessible label for the clickable region to edit one item of a pair',
+  },
+  editDistractorLabel: {
+    message: 'Edit distractor {number}',
+    context: 'Accessible label for the clickable region to edit a distractor',
+  },
+  errorTooFewPairs: {
+    message: '1 or more valid pairs are required',
+    context: 'Validation error when no pair has two distinct, non-empty items',
+  },
+  errorDuplicatePairContent: {
+    message: 'Answers within a pair cannot be the same',
+    context: 'Validation error when both items of a pair have identical content',
+  },
+  errorDuplicateDistractorContent: {
+    message: 'Distractors cannot repeat another item',
+    context:
+      'Validation error when a distractor has the same content as another distractor or as an item in a pair',
+  },
   matchLabel: {
     message: 'Match',
     context: 'Display name for a match question type',
@@ -144,6 +228,10 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Edit answer option {number}',
     context: 'Accessible label for the clickable region to edit an answer choice',
   },
+  editHintLabel: {
+    message: 'Edit hint {number}',
+    context: 'Accessible label for the clickable region to edit a hint',
+  },
   deleteChoiceBtn: {
     message: 'Delete choice',
     context: 'Accessible label for the delete-choice icon button',
@@ -156,6 +244,34 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
   markCorrectLabel: {
     message: 'Mark as correct answer',
     context: 'Accessible label for radio / checkbox that marks a choice as correct',
+  },
+  hintsLabel: {
+    message: 'Hints',
+    context: 'Header of the collapsible hints section of a question',
+  },
+  noHintsPlaceholder: {
+    message: 'Question has no hints',
+    context: 'Shown in the hints section when the question has no hints',
+  },
+  hintPlaceholder: {
+    message: 'Enter hint {index}...',
+    context: 'Placeholder shown in place of a hint that has no text yet',
+  },
+  addHintBtn: {
+    message: 'Add hint',
+    context: 'Button that appends a new hint to the question',
+  },
+  deleteHintBtn: {
+    message: 'Delete hint',
+    context: 'Accessible label for the delete-hint icon button',
+  },
+  moveHintUpBtn: {
+    message: 'Move hint up',
+    context: 'Accessible label for the move-hint-up icon button',
+  },
+  moveHintDownBtn: {
+    message: 'Move hint down',
+    context: 'Accessible label for the move-hint-down icon button',
   },
   errorPromptRequired: {
     message: 'Question is required',
@@ -204,6 +320,11 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
   freeResponseLabel: {
     message: 'Free response',
     context: 'Display name for a free-response text-entry question type',
+  },
+  errorFreeResponseNotAllowed: {
+    message: 'Free response is only available on surveys. Choose another type.',
+    context:
+      'Validation error shown under the type selector when a question is a free response but the exercise scores its questions',
   },
   freeResponseDescription: {
     message: 'Learners can write an open-ended response. No correct answer is enforced.',

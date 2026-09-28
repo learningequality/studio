@@ -41,7 +41,6 @@ describe('account store', () => {
       const passwordData = {
         new_password1: 'testing password',
         new_password2: 'testing password',
-        token: 'testing token',
         uidb64: 'testing uidb64',
       };
       return store.dispatch('account/setPassword', passwordData).then(() => {
