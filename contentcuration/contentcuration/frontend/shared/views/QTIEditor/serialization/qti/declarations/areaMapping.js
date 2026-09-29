@@ -6,7 +6,7 @@
  * formatting changes on re-serialization. Geometry evaluation is out of scope
  * for the authoring editor.
  */
-import { buildXmlNode } from '../../assembleItem.js';
+import { buildXmlNode } from '../../xml.js';
 import { CAPABILITY } from './capabilities.js';
 import { parseScoringAttrs } from './mapping.js';
 

@@ -8,7 +8,7 @@
  * base class from the Kolibri original are intentionally omitted — the
  * authoring editor does not evaluate responses at runtime.
  */
-import { buildXmlNode } from '../../assembleItem.js';
+import { buildXmlNode } from '../../xml.js';
 import { CAPABILITY } from './capabilities.js';
 
 /**

@@ -8,7 +8,7 @@
  * only as response-processing rules (getScoringRule); it is never evaluated here.
  *
  */
-import { buildXmlNode } from '../assembleItem.js';
+import { buildXmlNode } from '../xml.js';
 import { BaseType, Cardinality } from '../../constants.js';
 import { declarationParsers, CAPABILITY } from './declarations/index.js';
 

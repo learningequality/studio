@@ -5,7 +5,7 @@
  * to its native JS type (number, boolean, or string) based on the parent
  * declaration's base-type. Re-serializes values back to XML strings on demand.
  */
-import { buildFloatNode, buildXmlNode } from '../../assembleItem.js';
+import { buildFloatNode, buildXmlNode } from '../../xml.js';
 import { CAPABILITY } from './capabilities.js';
 
 export default class CorrectResponse {
