@@ -23,7 +23,51 @@ const renderComponent = (actions = [], optionsLabel = null) => {
   });
 };
 
+// A parent that holds a ref to the toolbar, which is how focusAction is reached.
+const renderWithFocusTrigger = (actions, id) =>
+  render(
+    {
+      components: { CollapsibleToolbar },
+      data: () => ({ actions }),
+      methods: {
+        focus() {
+          this.$refs.toolbar.focusAction(id);
+        },
+      },
+      template: `
+        <div>
+          <CollapsibleToolbar ref="toolbar" :actions="actions" />
+          <button @click="focus">trigger</button>
+        </div>
+      `,
+    },
+    { routes: new VueRouter() },
+  );
+
 describe('CollapsibleToolbar', () => {
+  describe('focusAction', () => {
+    const focusEdit = async actions => {
+      const user = userEvent.setup();
+      renderWithFocusTrigger(actions, 'edit');
+      await user.click(screen.getByRole('button', { name: 'trigger' }));
+    };
+
+    test('moves focus to the button of a visible action', async () => {
+      await focusEdit([makeAction({ id: 'edit', label: 'Edit', collapsed: false })]);
+      expect(screen.getByRole('button', { name: 'Edit' })).toHaveFocus();
+    });
+
+    test('moves focus to the options menu for an action collapsed into it', async () => {
+      await focusEdit([makeAction({ id: 'edit', label: 'Edit', collapsed: true })]);
+      expect(screen.getByRole('button', { name: optionsLabel$() })).toHaveFocus();
+    });
+
+    test('moves focus nowhere for an action the toolbar does not have', async () => {
+      await focusEdit([makeAction({ id: 'delete', label: 'Delete', collapsed: true })]);
+      expect(screen.getByRole('button', { name: optionsLabel$() })).not.toHaveFocus();
+    });
+  });
+
   describe('visible icon actions', () => {
     test('renders icon buttons for non-collapsed actions with icons', () => {
       const actions = [

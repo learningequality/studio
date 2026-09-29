@@ -1,9 +1,17 @@
 <template>
 
+  <!--
+    a11y: The whole closed card opens on click, as a shortcut for pointer users only. It is
+    deliberately not a ClickableRegion: keyboard and screen reader users already have the
+    Edit button in the card's toolbar, which does the same thing, so a second focusable
+    control covering the card would just add a redundant tab stop and announcement.
+  -->
   <KPageContainer
     noPadding
     :topMargin="0"
     class="item question-card"
+    :class="{ 'is-clickable': canOpen }"
+    @click.native="onCardClick"
   >
     <div
       class="question-card-header"
@@ -34,7 +42,13 @@
           />
           <span>{{ incompleteItemIndicatorLabel$() }}</span>
         </span>
-        <slot name="toolbarActions"></slot>
+        <!-- .stop: the toolbar actions handle their own clicks, which must not open the card -->
+        <div @click.stop>
+          <slot
+            name="toolbarActions"
+            :canOpen="canOpen"
+          ></slot>
+        </div>
       </div>
     </div>
 
@@ -63,11 +77,13 @@
         {{ questionContentPlaceholder$() }}
       </p>
 
+      <!-- .stop: expanding or collapsing the hints must not open the card -->
       <HintsSection
         v-if="hasHints && (mode === 'edit' || showAnswers)"
         :hints="hints"
         :mode="mode"
         @update:hints="onUpdateHints"
+        @click.native.stop
       />
     </div>
 
@@ -75,10 +91,16 @@
       v-if="mode === 'edit'"
       class="question-card-footer"
     >
+      <!--
+        .stop: closing re-renders the card closed, and removes this footer, before the click
+        finishes bubbling, so it would reach the card as a click on a closed card and reopen
+        it. It has to stop here, in the button's own listener: one on the footer is detached
+        by that re-render before the click gets to it.
+      -->
       <KButton
         :text="closeBtnLabel$()"
         class="close-item-btn"
-        @click="$emit('close')"
+        @click.stop="$emit('close')"
       />
     </div>
   </KPageContainer>
@@ -101,7 +123,7 @@
 
     components: { InteractionSection, HintsSection },
 
-    setup(props, { emit }) {
+    setup(props, { emit, listeners }) {
       const {
         questionNumberLabel$,
         questionNumberAndTypeLabel$,
@@ -244,6 +266,23 @@
         hints.value = newHints;
       }
 
+      /**
+       * Whether this card can be opened for editing, by a click on the card or by its toolbar's
+       * Edit action. Only the card knows whether its XML could be read, and a consumer that
+       * does not listen for `open` gets no affordance.
+       */
+      const canOpen = computed(
+        () => props.mode === 'view' && !isUnsupported.value && Boolean(listeners.open),
+      );
+
+      function onCardClick(event) {
+        if (!canOpen.value) return;
+        // The click would otherwise carry on to the rich text editor's click-outside handler
+        // on `document`, which minimizes the question this just opened.
+        event.stopPropagation();
+        emit('open');
+      }
+
       /** Errors the interaction editor reports about the state it holds. */
       const errors = ref([]);
 
@@ -272,6 +311,8 @@
         currentInteraction,
         isUnsupported,
         isIncomplete,
+        canOpen,
+        onCardClick,
         questionNumberLabel,
         questionNumberAndTypeLabel,
         closeBtnLabel$,
@@ -326,7 +367,7 @@
       },
     },
 
-    emits: ['close', 'update:rawData'],
+    emits: ['open', 'close', 'update:rawData'],
   };
 
 </script>
@@ -334,10 +375,21 @@
 
 <style lang="scss" scoped>
 
+  @import '~kolibri-design-system/lib/styles/definitions';
+
   .question-card {
     --question-card-horizontal-padding: 20px;
 
     padding: 0;
+
+    &.is-clickable {
+      cursor: pointer;
+      transition: box-shadow $core-time ease;
+
+      &:hover {
+        @extend %dropshadow-6dp;
+      }
+    }
   }
 
   .question-card-header {
