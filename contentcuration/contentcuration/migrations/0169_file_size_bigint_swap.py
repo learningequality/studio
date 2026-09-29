@@ -43,6 +43,10 @@ class Migration(migrations.Migration):
             database_operations=[
                 migrations.RunSQL(
                     sql=(
+                        # Legacy view created outside migrations; exists only on
+                        # long-lived deployed DBs and blocks dropping file_size.
+                        "DROP MATERIALIZED VIEW IF EXISTS"
+                        " contentcuration_channel_resource_sizes;"
                         "DROP TRIGGER IF EXISTS"
                         " pgtrigger_mirror_file_size_to_file_size_bigint_54326"
                         " ON contentcuration_file;"
