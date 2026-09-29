@@ -5,11 +5,12 @@
  * defaultValue, mapping, areaMapping) from XML, holds them as plain JS data with
  * native JS types (number, boolean, string) based on the declaration's base-type,
  * and serializes back to XML on demand. Carries no runtime value state. Scoring leaves
- * only as response-processing rules (getScoringRule); it is never evaluated here.
+ * only as response-processing rules or templates (getScoringRule,
+ * getResponseProcessingTemplate); it is never evaluated here.
  *
  */
 import { buildXmlNode } from '../xml.js';
-import { BaseType, Cardinality } from '../../constants.js';
+import { BaseType, Cardinality, RESPONSE_IDENTIFIER } from '../../constants.js';
 import { declarationParsers, CAPABILITY } from './declarations/index.js';
 
 /**
@@ -22,14 +23,23 @@ const COMPOUND_VALUE_TYPES = new Set([BaseType.POINT, BaseType.PAIR, BaseType.DI
 /**
  * Capabilities that can score a response, preferred first. Registration follows the
  * XML's child order, so it cannot decide between a correct response and a mapping.
+ *
+ * A mapping comes before the correct response because it says more: text entry writes one
+ * to keep each accepted answer's case sensitivity, which matching against the correct
+ * response alone would ignore.
  */
-const SCORING_PRECEDENCE = Object.freeze([CAPABILITY.CORRECT_RESPONSE]);
+const SCORING_PRECEDENCE = Object.freeze([
+  CAPABILITY.MAPPING,
+  CAPABILITY.AREA_MAPPING,
+  CAPABILITY.CORRECT_RESPONSE,
+]);
 
 /**
  * @typedef {object} Capability
  * @property {function(): *} get
  * @property {function(): (Element|null)} getXML
  * @property {function(string): (Element|null)} [getScoringRule]
+ * @property {function(): (string|null)} [getResponseProcessingTemplate]
  */
 
 export class QTIDeclaration {
@@ -131,17 +141,44 @@ export class QTIDeclaration {
   }
 
   /**
+   * The first non-null result of a scoring method, asked of this declaration's
+   * capabilities in SCORING_PRECEDENCE order. Every scoring method goes through here, so
+   * the rule and the template for a declaration always come from the same capability.
+   *
+   * @param {string} method - The capability method to call
+   * @param {...*} args - Arguments for it
+   * @returns {*|null}
+   */
+  _fromScoringCapability(method, ...args) {
+    for (const name of SCORING_PRECEDENCE) {
+      const result = this._capabilities[name]?.[method]?.(...args);
+      if (result) {
+        return result;
+      }
+    }
+    return null;
+  }
+
+  /**
    * @param {string} outcomeIdentifier
    * @returns {Element|null} null when no capability in SCORING_PRECEDENCE can score
    */
   getScoringRule(outcomeIdentifier) {
-    for (const name of SCORING_PRECEDENCE) {
-      const rule = this._capabilities[name]?.getScoringRule?.(outcomeIdentifier);
-      if (rule) {
-        return rule;
-      }
+    return this._fromScoringCapability('getScoringRule', outcomeIdentifier);
+  }
+
+  /**
+   * The standard response processing template that scores this declaration on its own.
+   * Every standard template reads the response named RESPONSE, so a declaration named
+   * anything else has none, and is scored by its rule instead.
+   *
+   * @returns {string|null} One of ResponseProcessingTemplate, or null when no template fits
+   */
+  getResponseProcessingTemplate() {
+    if (this.identifier !== RESPONSE_IDENTIFIER) {
+      return null;
     }
-    return null;
+    return this._fromScoringCapability('getResponseProcessingTemplate');
   }
 
   // ---------------------------------------------------------------------------

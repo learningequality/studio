@@ -6,7 +6,9 @@
  * declaration's base-type. Re-serializes values back to XML strings on demand.
  */
 import { buildFloatNode, buildXmlNode } from '../../xml.js';
+import { ResponseProcessingTemplate } from '../../../constants.js';
 import { CAPABILITY } from './capabilities.js';
+import { buildAddToOutcomeNode } from './scoring.js';
 
 export default class CorrectResponse {
   /**
@@ -73,7 +75,6 @@ export default class CorrectResponse {
       return null;
     }
     const response = { identifier: this._declaration.identifier };
-    const outcome = { identifier: outcomeIdentifier };
     return buildXmlNode({
       tag: 'qti-response-condition',
       children: [
@@ -87,22 +88,18 @@ export default class CorrectResponse {
                 buildXmlNode({ tag: 'qti-correct', attrs: response }),
               ],
             }),
-            buildXmlNode({
-              tag: 'qti-set-outcome-value',
-              attrs: outcome,
-              children: [
-                buildXmlNode({
-                  tag: 'qti-sum',
-                  children: [
-                    buildXmlNode({ tag: 'qti-variable', attrs: outcome }),
-                    buildFloatNode(1),
-                  ],
-                }),
-              ],
-            }),
+            buildAddToOutcomeNode(outcomeIdentifier, buildFloatNode(1)),
           ],
         }),
       ],
     });
+  }
+
+  /**
+   * @returns {string|null} match_correct, or null when there is no correct response to
+   *   match against
+   */
+  getResponseProcessingTemplate() {
+    return this._values.length ? ResponseProcessingTemplate.MATCH_CORRECT : null;
   }
 }

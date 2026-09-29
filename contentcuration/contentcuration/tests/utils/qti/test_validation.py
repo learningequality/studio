@@ -155,8 +155,8 @@ class UncoveredInteractionTypeTests(unittest.TestCase):
 # Mirrors what the QTI editor emits for a brand new question, before the author has
 # written anything — see createBlankItem.js. Every "New question" click sends this to the
 # sync endpoint, which validates it, so the two have to stay in lockstep. It carries the
-# scoring outcome and the match_correct template, so a question authored here is gradable
-# in the same way as one the legacy conversion produces.
+# scoring outcome but no response processing: it has no correct answer yet to score
+# against, and gets the match_correct template once the author marks one.
 BLANK_EDITOR_ITEM = (
     '<?xml version="1.0" encoding="UTF-8"?>\n'
     '<qti-assessment-item xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0" '
@@ -169,8 +169,6 @@ BLANK_EDITOR_ITEM = (
     '<qti-simple-choice identifier="choice_oaasu90l" />'
     "</qti-choice-interaction>"
     "</qti-item-body>"
-    "<qti-response-processing "
-    'template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct.xml" />'
     "</qti-assessment-item>"
 )
 

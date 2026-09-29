@@ -50,11 +50,52 @@ function buildOutcomeDeclarationNode(identifier) {
 }
 
 /**
+ * A declaration as QTIDeclaration reads it, or null when it cannot: a declaration it
+ * rejects has no rule or template to score it by.
+ *
+ * @param {Element} node
+ * @returns {QTIDeclaration|null}
+ */
+function readDeclaration(node) {
+  try {
+    return QTIDeclaration.fromXML(node);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Build `<qti-response-processing>` holding the given rules, starting from the outcome reset
+ * to 0.0: outcomes with no default start as NULL, and qti-sum with a NULL operand is NULL.
+ *
+ * @param {string} outcomeIdentifier
+ * @param {Element[]} rules
+ * @returns {Element}
+ */
+function buildRulesNode(outcomeIdentifier, rules) {
+  return buildXmlNode({
+    tag: 'qti-response-processing',
+    children: [
+      buildXmlNode({
+        tag: 'qti-set-outcome-value',
+        attrs: { identifier: outcomeIdentifier },
+        children: [buildFloatNode(0)],
+      }),
+      ...rules,
+    ],
+  });
+}
+
+/**
  * Regenerated on every save rather than carried over: an author's edit can invalidate the
  * rules a previous tool recorded. No response declaration — nothing to answer — means no
- * processing, as the converter does. One keeps match_correct. Several are each scored by
- * their declaration's rule and averaged; if any cannot be scored there is no processing,
- * since an average that skips a response would misgrade the item.
+ * processing, as the converter does.
+ *
+ * One declaration is scored by its standard template when one fits, and otherwise by its
+ * rule adding straight into SCORE; with neither, as for a free response, there is nothing
+ * to score it against and no processing. Several are each scored by their declaration's
+ * rule and averaged; if any cannot be scored there is no processing, since an average that
+ * skips a response would misgrade the item.
  *
  * @param {Element[]} declNodes
  * @returns {{ outcomeDeclarations: Element[], responseProcessing: Element|null }}
@@ -64,27 +105,24 @@ function buildScoringNodes(declNodes) {
   if (!declNodes.length) {
     return { outcomeDeclarations, responseProcessing: null };
   }
+
   if (declNodes.length === 1) {
-    return {
-      outcomeDeclarations,
-      responseProcessing: buildXmlNode({
-        tag: 'qti-response-processing',
-        attrs: {
-          template: 'https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct.xml',
-        },
-      }),
-    };
+    const declaration = readDeclaration(declNodes[0]);
+    const template = declaration?.getResponseProcessingTemplate();
+    if (template) {
+      return {
+        outcomeDeclarations,
+        responseProcessing: buildXmlNode({ tag: 'qti-response-processing', attrs: { template } }),
+      };
+    }
+    const rule = declaration?.getScoringRule(SCORE);
+    return { outcomeDeclarations, responseProcessing: rule ? buildRulesNode(SCORE, [rule]) : null };
   }
 
-  const scored = declNodes.map(node => {
-    const identifier = node.getAttribute('identifier');
-    try {
-      return { identifier, rule: QTIDeclaration.fromXML(node).getScoringRule(RAW_SCORE) };
-    } catch {
-      // A declaration QTIDeclaration rejects has no rule to score it by.
-      return { identifier, rule: null };
-    }
-  });
+  const scored = declNodes.map(node => ({
+    identifier: node.getAttribute('identifier'),
+    rule: readDeclaration(node)?.getScoringRule(RAW_SCORE) ?? null,
+  }));
   const unscorable = scored.filter(({ rule }) => !rule).map(({ identifier }) => identifier);
   if (unscorable.length) {
     // eslint-disable-next-line no-console
@@ -96,31 +134,22 @@ function buildScoringNodes(declNodes) {
 
   return {
     outcomeDeclarations: [...outcomeDeclarations, buildOutcomeDeclarationNode(RAW_SCORE)],
-    responseProcessing: buildXmlNode({
-      tag: 'qti-response-processing',
-      children: [
-        // Outcomes with no default start as NULL, and qti-sum with a NULL operand is NULL.
-        buildXmlNode({
-          tag: 'qti-set-outcome-value',
-          attrs: { identifier: RAW_SCORE },
-          children: [buildFloatNode(0)],
-        }),
-        ...scored.map(({ rule }) => rule),
-        buildXmlNode({
-          tag: 'qti-set-outcome-value',
-          attrs: { identifier: SCORE },
-          children: [
-            buildXmlNode({
-              tag: 'qti-divide',
-              children: [
-                buildXmlNode({ tag: 'qti-variable', attrs: { identifier: RAW_SCORE } }),
-                buildFloatNode(declNodes.length),
-              ],
-            }),
-          ],
-        }),
-      ],
-    }),
+    responseProcessing: buildRulesNode(RAW_SCORE, [
+      ...scored.map(({ rule }) => rule),
+      buildXmlNode({
+        tag: 'qti-set-outcome-value',
+        attrs: { identifier: SCORE },
+        children: [
+          buildXmlNode({
+            tag: 'qti-divide',
+            children: [
+              buildXmlNode({ tag: 'qti-variable', attrs: { identifier: RAW_SCORE } }),
+              buildFloatNode(declNodes.length),
+            ],
+          }),
+        ],
+      }),
+    ]),
   };
 }
 

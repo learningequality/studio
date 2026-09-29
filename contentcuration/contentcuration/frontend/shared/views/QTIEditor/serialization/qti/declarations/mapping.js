@@ -6,10 +6,14 @@
  *
  * Scoring logic (score(), clampScore(), lookup()) and the ScoringDeclaration
  * base class from the Kolibri original are intentionally omitted — the
- * authoring editor does not evaluate responses at runtime.
+ * authoring editor does not evaluate responses at runtime. It only writes the
+ * response-processing rule that has the delivery engine map them
+ * (getScoringRule, getResponseProcessingTemplate).
  */
 import { buildXmlNode } from '../../xml.js';
+import { ResponseProcessingTemplate } from '../../../constants.js';
 import { CAPABILITY } from './capabilities.js';
+import { buildAddToOutcomeNode } from './scoring.js';
 
 /**
  * Parse the bound attributes shared by Mapping and AreaMapping.
@@ -101,5 +105,34 @@ export default class Mapping {
     });
 
     return buildXmlNode({ tag: 'qti-mapping', attrs, children });
+  }
+
+  /**
+   * Adds the response's mapped value to the outcome. Averaging these over an item assumes
+   * each response scores at most 1.0, which holds for the mappings this editor writes: text
+   * entry maps each accepted answer to 1.
+   *
+   * @param {string} outcomeIdentifier - The outcome this response's score is added to
+   * @returns {Element|null} null when there are no entries to map the response by
+   */
+  getScoringRule(outcomeIdentifier) {
+    if (!this._data.entries.length) {
+      return null;
+    }
+    return buildAddToOutcomeNode(
+      outcomeIdentifier,
+      buildXmlNode({
+        tag: 'qti-map-response',
+        attrs: { identifier: this._declaration.identifier },
+      }),
+    );
+  }
+
+  /**
+   * @returns {string|null} map_response, or null when there are no entries to map
+   *   the response by
+   */
+  getResponseProcessingTemplate() {
+    return this._data.entries.length ? ResponseProcessingTemplate.MAP_RESPONSE : null;
   }
 }

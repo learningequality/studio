@@ -7,7 +7,9 @@
  * for the authoring editor.
  */
 import { buildXmlNode } from '../../xml.js';
+import { ResponseProcessingTemplate } from '../../../constants.js';
 import { CAPABILITY } from './capabilities.js';
+import { buildAddToOutcomeNode } from './scoring.js';
 import { parseScoringAttrs } from './mapping.js';
 
 export default class AreaMapping {
@@ -75,5 +77,34 @@ export default class AreaMapping {
     );
 
     return buildXmlNode({ tag: 'qti-area-mapping', attrs, children });
+  }
+
+  /**
+   * Adds the response's mapped value to the outcome. Averaging these over an item assumes
+   * each response scores at most 1.0; no interaction in this editor writes an area mapping
+   * yet, so one that does should keep its mapped values (or its upper-bound) within that.
+   *
+   * @param {string} outcomeIdentifier - The outcome this response's score is added to
+   * @returns {Element|null} null when there are no entries to map the response by
+   */
+  getScoringRule(outcomeIdentifier) {
+    if (!this._data.entries.length) {
+      return null;
+    }
+    return buildAddToOutcomeNode(
+      outcomeIdentifier,
+      buildXmlNode({
+        tag: 'qti-map-response-point',
+        attrs: { identifier: this._declaration.identifier },
+      }),
+    );
+  }
+
+  /**
+   * @returns {string|null} map_response_point, or null when there are no entries to map
+   *   the response by
+   */
+  getResponseProcessingTemplate() {
+    return this._data.entries.length ? ResponseProcessingTemplate.MAP_RESPONSE_POINT : null;
   }
 }

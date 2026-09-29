@@ -5,9 +5,10 @@
  * QTIDeclaration, and when QTIDeclaration looks them up via its getters.
  * Constants prevent silent failures from typos in capability key names.
  *
- * A capability may provide getScoringRule(outcomeIdentifier), chosen by
- * QTIDeclaration's SCORING_PRECEDENCE. SCORE and LOOKUP from the Kolibri original
- * are intentionally omitted — the editor writes scoring rules, never evaluates them.
+ * A capability may provide getScoringRule(outcomeIdentifier) and
+ * getResponseProcessingTemplate(), chosen by QTIDeclaration's SCORING_PRECEDENCE.
+ * SCORE and LOOKUP from the Kolibri original are intentionally omitted — the editor
+ * writes scoring rules and templates, never evaluates them.
  */
 
 /** @enum {string} */

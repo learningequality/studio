@@ -5,6 +5,7 @@ import { assembleItemXml } from '../assembleItem.js';
 import { parseItem } from '../parseItem.js';
 import { buildXmlNode, parseXML } from '../xml.js';
 import { normalizeXML } from '../qti/__tests__/testUtils.js';
+import { ResponseProcessingTemplate } from '../../constants';
 import { MULTI_TEXT_ENTRY_ITEM_DOCUMENT } from '../../utils/testingFixtures';
 
 const serializer = new XMLSerializer();
@@ -207,6 +208,42 @@ describe('assembleItemXml', () => {
       expect(processing.getAttribute('template')).toContain('rptemplates/match_correct');
       expect(processing.children).toHaveLength(0);
       expect(identifiersOf(xml, 'qti-outcome-declaration')).toEqual(['SCORE']);
+    });
+
+    it('scores a lone response declaration with a mapping by the map_response template', () => {
+      const xml = assembleWith([
+        '<qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string">' +
+          '<qti-correct-response><qti-value>Paris</qti-value></qti-correct-response>' +
+          '<qti-mapping default-value="0"><qti-map-entry map-key="Paris" mapped-value="1"/></qti-mapping>' +
+          '</qti-response-declaration>',
+      ]);
+      expect(parseXML(xml).querySelector('qti-response-processing').getAttribute('template')).toBe(
+        ResponseProcessingTemplate.MAP_RESPONSE,
+      );
+    });
+
+    it('scores a lone response declaration not named RESPONSE by its rule, into SCORE', () => {
+      // Every standard template reads RESPONSE, so it would score nothing here.
+      const xml = assembleWith([declaration('response_xq7tbn2c', 'choice_a1b2c3d4')]);
+      expect(identifiersOf(xml, 'qti-outcome-declaration')).toEqual(['SCORE']);
+      expect(xml).toContain(
+        normalizeXML(`
+          <qti-response-processing>
+            <qti-set-outcome-value identifier="SCORE">
+              <qti-base-value base-type="float">0.0</qti-base-value>
+            </qti-set-outcome-value>
+            ${rule('response_xq7tbn2c').replace(/RAW_SCORE/g, 'SCORE')}
+          </qti-response-processing>`),
+      );
+    });
+
+    it('writes no processing for a lone response declaration with nothing to score it by', () => {
+      // A free response: there is no answer to score against, which is not a mistake.
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      const xml = assembleWith([declaration('RESPONSE')]);
+      expect(parseXML(xml).querySelector('qti-response-processing')).toBeNull();
+      expect(identifiersOf(xml, 'qti-outcome-declaration')).toEqual(['SCORE']);
+      expect(warn).not.toHaveBeenCalled();
     });
 
     it('averages the scoring rules of several scorable response declarations', () => {
