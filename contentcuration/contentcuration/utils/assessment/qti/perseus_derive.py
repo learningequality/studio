@@ -85,7 +85,9 @@ def _derivable_interaction(root, item_body):
     ``qti-text-entry-interaction``, *and* that its ``response-identifier``
     resolves to a response declaration; a mismatch yields ``None`` so the node
     degrades to QTI-only rather than deriving zero correct answers. A text entry
-    must also be numeric: Perseus input questions only accept numbers.
+    must also be numeric: Perseus input questions only accept numbers. One with no
+    declared answer must not be scored by inline rules, such as a tolerance
+    comparison.
     """
     interactions = _interaction_elements(item_body)
     if len(interactions) != 1:
@@ -97,12 +99,20 @@ def _derivable_interaction(root, item_body):
     declaration = _response_declaration(root, interaction.get("response-identifier"))
     if declaration is None:
         return None
-    if (
-        deriver is _derive_text
-        and declaration.get("base-type") not in _NUMERIC_BASE_TYPES
+    if deriver is _derive_text and (
+        declaration.get("base-type") not in _NUMERIC_BASE_TYPES
+        or (_has_inline_response_rules(root) and not _accepted_values(declaration))
     ):
         return None
     return deriver, interaction, declaration
+
+
+def _has_inline_response_rules(root) -> bool:
+    processing = _first_descendant(root, "qti-response-processing")
+    return (
+        processing is not None
+        and next(processing.iterchildren(etree.Element), None) is not None
+    )
 
 
 def _correct_values(declaration) -> List[str]:
@@ -223,11 +233,26 @@ def is_perseus_derivable(raw_data: str) -> bool:
     return _derivable_interaction(root, item_body) is not None
 
 
+def _is_answerless(derivable) -> bool:
+    deriver, _, declaration = derivable
+    return deriver is _derive_text and not _accepted_values(declaration)
+
+
+def is_answerless_numeric_entry(raw_data: str) -> bool:
+    """True for a numeric text entry that accepts no answer, so nothing a learner
+    enters can score. String entries never match: free response has no answer."""
+    root, item_body = _parse(raw_data)
+    if item_body is None:
+        return False
+    derivable = _derivable_interaction(root, item_body)
+    return derivable is not None and _is_answerless(derivable)
+
+
 def derive_perseus_item(assessment_item) -> Optional[DerivedAssessmentItem]:
     """Django ``AssessmentItem`` → ``DerivedAssessmentItem`` proxy, or ``None``.
 
     Returns ``None`` (with a warning) when the item is unparseable or its
-    interaction is not Perseus-expressible.
+    interaction is not Perseus-expressible, or it is an answerless numeric entry.
 
     The proxy's ``assessment_id`` is the QTI item's root ``identifier`` — the
     same id the QTI archive records for the item in the manifest, and hence in
@@ -249,6 +274,14 @@ def derive_perseus_item(assessment_item) -> Optional[DerivedAssessmentItem]:
     if derivable is None:
         logger.warning(
             "QTI item %s is not Perseus-expressible; skipping derivation",
+            assessment_item.assessment_id,
+        )
+        return None
+
+    # The QTI archive leaves this item out too, so both archives list the same ids.
+    if _is_answerless(derivable):
+        logger.warning(
+            "QTI item %s has no correct answer; skipping derivation",
             assessment_item.assessment_id,
         )
         return None
