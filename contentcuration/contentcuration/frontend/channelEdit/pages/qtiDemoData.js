@@ -260,6 +260,57 @@ export const ASSOCIATE_ITEM_XML = `<?xml version="1.0" encoding="UTF-8"?>
 </qti-assessment-item>`;
 
 /**
+ * Demo item 8: match interaction — learner matches animals to their traits.
+ * Uses cardinality="multiple" and base-type="directedPair".
+ * Bat has two answers, "Can fly" and "Mammal" are each shared by two rows, and
+ * "Reptile" is a distractor.
+ */
+export const MATCH_ITEM_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  identifier="item-match"
+  title="Match each animal with its traits"
+  adaptive="false"
+  time-dependent="false"
+  xml:lang="en"
+>
+  <qti-response-declaration
+    identifier="RESPONSE"
+    cardinality="multiple"
+    base-type="directedPair"
+  >
+    <qti-correct-response>
+      <qti-value>row_bat choice_mammal</qti-value>
+      <qti-value>row_bat choice_fly</qti-value>
+      <qti-value>row_eagle choice_bird</qti-value>
+      <qti-value>row_eagle choice_fly</qti-value>
+      <qti-value>row_whale choice_mammal</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+
+  <qti-item-body>
+    <qti-match-interaction
+      response-identifier="RESPONSE"
+      shuffle="true"
+      max-associations="5"
+    >
+      <qti-prompt><p>Match each animal with its traits:</p></qti-prompt>
+      <qti-simple-match-set>
+        <qti-simple-associable-choice identifier="row_bat" match-max="2">Bat</qti-simple-associable-choice>
+        <qti-simple-associable-choice identifier="row_eagle" match-max="2">Eagle</qti-simple-associable-choice>
+        <qti-simple-associable-choice identifier="row_whale" match-max="1">Whale</qti-simple-associable-choice>
+      </qti-simple-match-set>
+      <qti-simple-match-set>
+        <qti-simple-associable-choice identifier="choice_mammal" match-max="2">Mammal</qti-simple-associable-choice>
+        <qti-simple-associable-choice identifier="choice_fly" match-max="2">Can fly</qti-simple-associable-choice>
+        <qti-simple-associable-choice identifier="choice_bird" match-max="1">Bird</qti-simple-associable-choice>
+        <qti-simple-associable-choice identifier="choice_reptile" match-max="1">Reptile</qti-simple-associable-choice>
+      </qti-simple-match-set>
+    </qti-match-interaction>
+  </qti-item-body>
+</qti-assessment-item>`;
+
+/**
  * Hardcoded items covering different states:
  *  - item-1: single-select choice interaction
  *  - item-2: multi-select choice interaction
@@ -268,6 +319,7 @@ export const ASSOCIATE_ITEM_XML = `<?xml version="1.0" encoding="UTF-8"?>
  *  - item-free-response: free-response text-entry (no correct answer)
  *  - item-ordering: ordering interaction (planets by distance from the Sun)
  *  - item-associate: associate interaction (countries to capitals, with distractors)
+ *  - item-match: match interaction (animals to traits, with shared answers and a distractor)
  */
 export const INITIAL_ASSESSMENTS = [
   {
@@ -304,5 +356,10 @@ export const INITIAL_ASSESSMENTS = [
     assessment_id: 'demo-item-associate',
     type: AssessmentItemTypes.QTI,
     raw_data: ASSOCIATE_ITEM_XML,
+  },
+  {
+    assessment_id: 'demo-item-match',
+    type: AssessmentItemTypes.QTI,
+    raw_data: MATCH_ITEM_XML,
   },
 ];

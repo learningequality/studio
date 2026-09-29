@@ -3,7 +3,7 @@
   <div
     ref="editorContainer"
     class="editor-container"
-    :class="{ 'view-mode': editorMode === 'view' }"
+    :class="{ 'view-mode': editorMode === 'view', 'is-padded': padding === 'default' }"
     :style="[
       minHeight && editorMode !== 'view' ? { minHeight } : {},
       editorMode !== 'view' ? { backgroundColor: $themePalette.white } : {},
@@ -92,6 +92,7 @@
     </div>
 
     <EditorContentWrapper
+      :padding="padding"
       :inert="editorMode === 'view'"
       @drop.native.prevent="handleDrop"
       @dragover.native.prevent
@@ -357,6 +358,15 @@
         default: 'markdown',
         validator: v => ['markdown', 'html'].includes(v),
       },
+      /**
+       * Space around the content: 'default', 'small' (8px) or 'none', for cards
+       * and chips. Below default, view mode also drops paragraph margins.
+       */
+      padding: {
+        type: String,
+        default: 'default',
+        validator: v => ['default', 'small', 'none'].includes(v),
+      },
     },
     emits: ['update', 'minimize', 'open-editor'],
   });
@@ -485,6 +495,12 @@
 
   .editor-container li {
     margin: 4px 0;
+  }
+
+  /* A card or chip with reduced padding shows its content as one line, which
+     paragraph margins would push past that padding. */
+  .editor-container.view-mode:not(.is-padded) p {
+    margin: 0;
   }
 
 </style>
