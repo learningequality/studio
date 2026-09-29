@@ -164,10 +164,10 @@ describe('MatchEditor', () => {
       expect(screen.queryByText(tr.$tr('pairNumberLabel', { number: 1 }))).not.toBeInTheDocument();
     });
 
-    it('opens the first row prompt for editing when the question prompt is written', () => {
+    it('opens the question prompt for editing when it is already written', () => {
       renderEditor();
-      expect(queryButton(editRow(1))).not.toBeInTheDocument();
-      expect(openTextarea()).toHaveValue('Dog');
+      expect(queryButton(tr.$tr('editQuestionLabel'))).not.toBeInTheDocument();
+      expect(button(editRow(1))).toBeInTheDocument();
     });
 
     it('shows a placeholder in a blank row prompt until it opens', async () => {
@@ -205,8 +205,8 @@ describe('MatchEditor', () => {
 
     it('writes the typed question prompt into the emitted XML', async () => {
       const user = userEvent.setup();
+      // The question prompt opens on mount.
       const { emitted } = renderEditor();
-      await user.click(button(tr.$tr('editQuestionLabel')));
       await user.type(openTextarea(), 'Which class?');
       expect(latestBodyXml(emitted)).toContain('Which class?');
     });
@@ -253,8 +253,8 @@ describe('MatchEditor', () => {
     it('stacks only the row whose editor is open', async () => {
       mockWindowIsLarge = false;
       const user = userEvent.setup();
-      // Row 1's prompt opens on mount.
       renderEditor();
+      await user.click(button(editRow(1)));
       const [first, second] = rows();
       expect(isStacked(first)).toBe(true);
       expect(isStacked(second)).toBe(false);
@@ -542,6 +542,7 @@ describe('MatchEditor', () => {
     it('closes an open row prompt when a distractor is deleted', async () => {
       const user = userEvent.setup();
       renderEditor();
+      await user.click(button(editRow(1)));
       expect(openTextarea()).toHaveValue('Dog');
       await user.click(button(tr.$tr('deleteDistractorBtn', { number: 1 })));
       expect(openTextarea()).toBeUndefined();

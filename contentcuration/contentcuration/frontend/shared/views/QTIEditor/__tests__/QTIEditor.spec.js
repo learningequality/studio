@@ -31,6 +31,14 @@ const renderComponent = assessments =>
 
 const editButton = () => screen.getByRole('button', { name: toolbarLabelEdit$() });
 
+// jsdom implements no layout, so it has no scrollIntoView for an opening card to call.
+beforeAll(() => {
+  Element.prototype.scrollIntoView = jest.fn();
+});
+afterAll(() => {
+  delete Element.prototype.scrollIntoView;
+});
+
 describe('QTIEditor', () => {
   describe('opening a question', () => {
     test('opens a question from its Edit action', async () => {

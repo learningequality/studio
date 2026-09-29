@@ -29,9 +29,23 @@ const renderEditor = (props = {}) =>
     routes: new VueRouter(),
   });
 
+// The mock TipTapEditor renders a <textarea> only for the editor that is open.
+const openTextarea = () => screen.queryAllByRole('textbox').find(el => el.tagName === 'TEXTAREA');
+
 describe('TextEntryEditor — numeric', () => {
   const answerInputs = () =>
     screen.queryAllByRole('textbox', { name: tr.$tr('answerValuePlaceholder') });
+
+  it('opens the question for editing when it is already written', () => {
+    renderEditor({
+      interaction: blockWithDecl(TEXT_ENTRY_BODY_XML, NUMERIC_DECL),
+      questionType: QuestionType.NUMERIC,
+    });
+    expect(
+      screen.queryByRole('button', { name: tr.$tr('editQuestionLabel') }),
+    ).not.toBeInTheDocument();
+    expect(openTextarea().value).toContain('What is H2O?');
+  });
 
   describe('answer list', () => {
     it('renders one answer row per value in the declaration', () => {

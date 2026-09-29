@@ -421,11 +421,8 @@
             openTarget.value = null;
             return;
           }
-          if (!hasRichTextContent(state.value.prompt)) {
-            openPrompt();
-          } else if (state.value.pairs.length > 0) {
-            openPairItem(0, 0);
-          }
+          // Open the question, the first thing in the card, so the card opens at its start.
+          openPrompt();
         },
         { immediate: true },
       );

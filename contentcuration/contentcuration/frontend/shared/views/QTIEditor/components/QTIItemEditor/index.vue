@@ -7,6 +7,7 @@
     control covering the card would just add a redundant tab stop and announcement.
   -->
   <KPageContainer
+    ref="card"
     noPadding
     :topMargin="0"
     class="item question-card"
@@ -110,7 +111,7 @@
 
 <script>
 
-  import { computed, ref, watch } from 'vue';
+  import { computed, onMounted, ref, watch } from 'vue';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { AssessmentItemTypes, QuestionType } from '../../constants';
   import useQtiItem from '../../composables/useQtiItem';
@@ -283,6 +284,25 @@
         emit('open');
       }
 
+      const card = ref(null);
+
+      function scrollToStart() {
+        card.value.$el.scrollIntoView({ block: 'start' });
+      }
+
+      onMounted(() => {
+        if (props.mode === 'edit') scrollToStart();
+      });
+
+      watch(
+        () => props.mode,
+        mode => {
+          if (mode === 'edit') scrollToStart();
+        },
+        // After the re-render, so the card's position is where it has settled.
+        { flush: 'post' },
+      );
+
       /** Errors the interaction editor reports about the state it holds. */
       const errors = ref([]);
 
@@ -306,6 +326,7 @@
       });
 
       return {
+        card,
         currentQuestionType,
         interactions,
         currentInteraction,
@@ -381,6 +402,8 @@
     --question-card-horizontal-padding: 20px;
 
     padding: 0;
+    // Room for the tab bar above, so an opened card is not scrolled in under it.
+    scroll-margin-top: 64px;
 
     &.is-clickable {
       cursor: pointer;

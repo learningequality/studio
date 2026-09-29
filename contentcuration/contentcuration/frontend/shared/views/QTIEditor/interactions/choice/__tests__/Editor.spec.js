@@ -358,11 +358,28 @@ describe('ChoiceInteractionEditor', () => {
       expect(screen.getAllByRole('radio')).toHaveLength(2);
     });
 
+    it('opens the question for editing when it is already written', () => {
+      renderEditor({
+        interaction: block(CHOICE_SINGLE_SELECT_XML),
+        questionType: QuestionType.SINGLE_SELECT,
+      });
+      expect(
+        screen.queryByRole('button', { name: tr.$tr('editQuestionLabel') }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: tr.$tr('editAnswerOptionLabel', { number: 1 }) }),
+      ).toBeInTheDocument();
+    });
+
     it('opens the prompt for editing via keyboard (Enter)', async () => {
       renderEditor({
         interaction: block(CHOICE_SINGLE_SELECT_XML),
         questionType: QuestionType.SINGLE_SELECT,
       });
+      // The prompt opens on mount; move the open editor away so there is a prompt to open.
+      await fireEvent.click(
+        screen.getByRole('button', { name: tr.$tr('editAnswerOptionLabel', { number: 1 }) }),
+      );
       const promptBtn = screen.getByRole('button', { name: tr.$tr('editQuestionLabel') });
       await fireEvent.click(promptBtn);
       expect(

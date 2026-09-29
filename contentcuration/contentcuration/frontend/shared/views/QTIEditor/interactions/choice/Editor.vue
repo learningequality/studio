@@ -372,11 +372,8 @@
         () => props.mode,
         newMode => {
           if (newMode === 'edit') {
-            if (!state.value.prompt || !state.value.prompt.trim()) {
-              openQuestion();
-            } else if (state.value.choices.length > 0) {
-              openChoice(state.value.choices[0].id);
-            }
+            // Open the question, the first thing in the card, so the card opens at its start.
+            openQuestion();
           } else {
             isQuestionOpen.value = false;
             openChoiceId.value = null;

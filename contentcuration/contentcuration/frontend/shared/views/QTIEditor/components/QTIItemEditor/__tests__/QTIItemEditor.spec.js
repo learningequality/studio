@@ -59,7 +59,17 @@ const renderComponent = (props = {}, slots = {}, listeners = { open: () => {} })
   });
 };
 
+// jsdom implements no layout, so it has no scrollIntoView for an opening card to call.
+const scrollIntoView = jest.fn();
+beforeAll(() => {
+  Element.prototype.scrollIntoView = scrollIntoView;
+});
+afterAll(() => {
+  delete Element.prototype.scrollIntoView;
+});
+
 describe('QTIItemEditor', () => {
+  beforeEach(() => scrollIntoView.mockClear());
   afterEach(() => jest.restoreAllMocks());
 
   describe('view mode', () => {
@@ -142,6 +152,33 @@ describe('QTIItemEditor', () => {
       } finally {
         document.removeEventListener('click', onDocumentClick);
       }
+    });
+  });
+
+  describe('bringing an opened card into view', () => {
+    test('scrolls the start of the card into view when it opens', async () => {
+      const { container, updateProps } = renderComponent({ mode: 'view' });
+      await updateProps({ mode: 'edit' });
+      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
+      expect(scrollIntoView.mock.instances[0]).toBe(container.firstChild);
+    });
+
+    test('scrolls the start of a card into view when it is created open', () => {
+      const { container } = renderComponent({ mode: 'edit' });
+      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
+      expect(scrollIntoView.mock.instances[0]).toBe(container.firstChild);
+    });
+
+    test('leaves the scroll position alone for a closed card', () => {
+      renderComponent({ mode: 'view' });
+      expect(scrollIntoView).not.toHaveBeenCalled();
+    });
+
+    test('leaves the scroll position alone when a card closes', async () => {
+      const { updateProps } = renderComponent({ mode: 'edit' });
+      scrollIntoView.mockClear();
+      await updateProps({ mode: 'view' });
+      expect(scrollIntoView).not.toHaveBeenCalled();
     });
   });
 
