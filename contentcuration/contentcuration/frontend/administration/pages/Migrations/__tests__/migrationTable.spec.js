@@ -47,6 +47,7 @@ describe('MigrationTable', () => {
   });
 
   it.each(['Accept', 'Decline'])('focuses the next row after keyboard %s', async label => {
+    const user = userEvent.setup();
     Invitation.fetchCollection.mockResolvedValue([
       migration,
       { ...migration, id: 'second', channel_name: 'Next channel' },
@@ -54,10 +55,22 @@ describe('MigrationTable', () => {
     render(MigrationTable, { routes: [{ name: 'CHANNEL', path: '/channels/:channelId' }] });
     const buttons = await screen.findAllByRole('button', { name: 'Options' });
     buttons[0].focus();
-    await userEvent.keyboard('{Enter}');
-    await screen.findByText(label);
-    if (label === 'Decline') await userEvent.keyboard('{ArrowDown}');
-    await userEvent.keyboard('{Enter}');
+    await user.keyboard('{Enter}');
+    const accept = (await screen.findByText('Accept')).closest('li');
+    // JSDOM has no layout; KDropdownMenu checks these dimensions before
+    // handling arrow keys in an open popover.
+    const popover = accept.closest('.ui-popover');
+    Object.defineProperties(popover, {
+      clientWidth: { value: 200 },
+      clientHeight: { value: 100 },
+    });
+    await waitFor(() => expect(accept).toHaveFocus());
+    if (label === 'Decline') {
+      await user.keyboard('{ArrowDown}');
+      await waitFor(() => expect(screen.getByText('Decline').closest('li')).toHaveFocus());
+    }
+    await user.keyboard('{Enter}');
+    await waitFor(() => expect(Invitation[label.toLowerCase()]).toHaveBeenCalledWith('request'));
     await waitFor(() => expect(screen.getAllByRole('button', { name: 'Options' })).toHaveLength(1));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Options' })).toHaveFocus());
     expect(screen.getByRole('status')).toHaveTextContent('Example channel');

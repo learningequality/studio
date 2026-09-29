@@ -45,6 +45,7 @@
           :data-migration-id="content"
           hasDropdown
           :disabled="Boolean(resolving)"
+          @keydown.enter.native.stop
         >
           <template #menu>
             <KDropdownMenu
