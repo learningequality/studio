@@ -14,7 +14,7 @@ UNFORMATTED_INT: [DIGIT]*
 DIGIT: [0-9]
 NON_ZERO_DIGIT: [1-9]
 SIGN: -{0,1}
-EXPONENT: [DECIMAL | INTEGER]e+{0,1}[INTEGER]
+EXPONENT: [DECIMAL | INTEGER]e[+|-]{0,1}[FORMATTED_INT | UNFORMATTED_INT]
 
 """
 import json
@@ -76,7 +76,7 @@ VALID_NUMBER = re.compile(
 )
 PERCENTAGE = re.compile("({num})%".format(num=VALID_NUMBER.pattern))
 EXPONENT = re.compile(
-    "((?:{decimal}|{integer})e\\+?{integer})".format(
+    "((?:{decimal}|{integer})e(?!\\+-)\\+?{integer})".format(
         decimal=DECIMAL.pattern, integer=INTEGER.pattern
     )
 )
@@ -88,37 +88,41 @@ def extract_value(text):
 
 def parse_valid_number(text):
     try:
-        return (
-            parse_exponent(text)
-            or parse_percentage(text)
-            or parse_mixed_number(text)
-            or parse_fraction(text)
-            or parse_decimal(text)
-            or parse_integer(text)
-        )
+        text = text.strip().replace(r"\.", ".")
+        for parse in (
+            parse_exponent,
+            parse_percentage,
+            parse_mixed_number,
+            parse_fraction,
+            parse_decimal,
+            parse_integer,
+        ):
+            value = parse(text)
+            if value is not None:
+                return value
     except Exception:
         return None
 
 
 def parse_integer(text):
-    match = INTEGER.search(text)
+    match = INTEGER.fullmatch(text)
     return match and float(to_en(match.group(1)))
 
 
 def parse_decimal(text):
-    match = DECIMAL.search(text)
+    match = DECIMAL.fullmatch(text)
     return match and float(to_en(match.group(1)))
 
 
 def parse_fraction(text):
-    match = FRACTION.search(text)
+    match = FRACTION.fullmatch(text)
     return match and float(parse_integer(match.group(2))) / float(
         parse_integer(match.group(3))
     )
 
 
 def parse_mixed_number(text):
-    match = MIXED_NUMBER.search(text)
+    match = MIXED_NUMBER.fullmatch(text)
     if match:
         number = parse_integer(match.group(1))
         return (abs(number) + parse_fraction(match.group(3))) * (
@@ -128,18 +132,18 @@ def parse_mixed_number(text):
 
 
 def parse_percentage(text):
-    match = PERCENTAGE.search(text)
+    match = PERCENTAGE.fullmatch(text)
     return match and extract_value(match.group(1)) / float(100)
 
 
 def parse_exponent(text):
-    eval_str = None
-    match = EXPONENT.search(text)
+    match = EXPONENT.fullmatch(text)
     if match:
         val1 = extract_value(match.group(2) or match.group(4))
         val2 = extract_value(match.group(5))
-        eval_str = val1 and val2 and "{int}e{exp}".format(int=val1, exp=int(val2))
-    return eval_str and eval(to_en(eval_str))
+        if val1 is not None and val2 is not None:
+            return eval(to_en("{int}e{exp}".format(int=val1, exp=int(val2))))
+    return None
 
 
 def to_en(text):
