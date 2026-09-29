@@ -54,15 +54,32 @@ def _choice_item(
     return xml
 
 
-def _text_item(cardinality, correct_values, prompt="<p>What is 6 times 7?</p>"):
-    correct = "".join("<qti-value>{}</qti-value>".format(v) for v in correct_values)
+def _text_item(
+    cardinality,
+    correct_values,
+    prompt="<p>What is 6 times 7?</p>",
+    base_type="float",
+    map_entries=(),
+):
+    correct = ""
+    if correct_values:
+        correct = "<qti-correct-response>{}</qti-correct-response>".format(
+            "".join("<qti-value>{}</qti-value>".format(v) for v in correct_values)
+        )
+    mapping = ""
+    if map_entries:
+        mapping = '<qti-mapping default-value="0.0">{}</qti-mapping>'.format(
+            "".join(
+                '<qti-map-entry map-key="{}" mapped-value="{}" />'.format(key, value)
+                for key, value in map_entries
+            )
+        )
     return _item_xml(
         "item_text",
         "Text Item",
         '<qti-response-declaration identifier="RESPONSE" cardinality="{}" '
-        'base-type="string"><qti-correct-response>{}'
-        "</qti-correct-response></qti-response-declaration>".format(
-            cardinality, correct
+        'base-type="{}">{}{}</qti-response-declaration>'.format(
+            cardinality, base_type, correct, mapping
         ),
         '<div>{}<p><qti-text-entry-interaction response-identifier="RESPONSE" '
         'expected-length="50" /></p></div>'.format(prompt),
@@ -131,6 +148,28 @@ def test_text_input_multiple_correct_values():
     assert result.type == exercises.INPUT_QUESTION
     answers = json.loads(result.answers)
     assert [a["answer"] for a in answers] == ["1", "2"]
+    assert all(a["correct"] for a in answers)
+
+
+def test_integer_text_input_derivation():
+    raw_data = _text_item("single", ["42"], base_type="integer")
+    assert is_perseus_derivable(raw_data) is True
+    answers = json.loads(derive_perseus_item(_Item(raw_data)).answers)
+    assert [a["answer"] for a in answers] == ["42"]
+
+
+@pytest.mark.parametrize(
+    "map_entries,expected",
+    [
+        pytest.param([("41", "0.5")], ["42"], id="partial_credit_key"),
+        pytest.param([("0", "0.0")], ["42"], id="zero_mapped_key"),
+        pytest.param([("13", "1.0")], ["42", "13"], id="full_credit_key"),
+    ],
+)
+def test_text_input_mapping_keeps_correct_response(map_entries, expected):
+    raw_data = _text_item("single", ["42"], map_entries=map_entries)
+    answers = json.loads(derive_perseus_item(_Item(raw_data)).answers)
+    assert [a["answer"] for a in answers] == expected
     assert all(a["correct"] for a in answers)
 
 
@@ -281,6 +320,9 @@ MALFORMED_XML = "<qti-assessment-item><unclosed>"
         pytest.param(EXTENDED_TEXT_ITEM, id="extended_text"),
         pytest.param(MALFORMED_XML, id="malformed_xml"),
         pytest.param(ENTITY_CHOICE_ITEM, id="doctype_entity"),
+        pytest.param(
+            _text_item("single", ["cat"], base_type="string"), id="string_text_entry"
+        ),
     ],
 )
 def test_not_derivable(raw_data):
@@ -327,9 +369,9 @@ def test_comments_do_not_change_derivation(anchor, after, node):
 
 
 def test_comment_inside_qti_value_keeps_text_after_it():
-    raw_data = _text_item("single", ["a<!-- c -->b"])
+    raw_data = _text_item("single", ["1<!-- c -->2"])
     answers = json.loads(derive_perseus_item(_Item(raw_data)).answers)
-    assert answers == [{"answer": "ab", "correct": True, "order": 0}]
+    assert answers == [{"answer": "12", "correct": True, "order": 0}]
 
 
 @pytest.mark.parametrize(

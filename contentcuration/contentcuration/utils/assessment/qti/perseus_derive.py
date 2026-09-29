@@ -2,7 +2,7 @@
 
 Reverse of the forward ``convert``/``ingest`` pipeline for the subset of QTI
 interactions Perseus can express: single/multiple ``qti-choice-interaction``
-and inline ``qti-text-entry-interaction``. Everything else is *not* expressible
+and inline numeric ``qti-text-entry-interaction``. Everything else is *not* expressible
 and derivation returns ``None`` so the node publishes QTI only.
 
 All parse/derive failures log + return ``None``/``False`` — a single malformed
@@ -10,6 +10,7 @@ item must never abort the channel publish.
 """
 import json
 import logging
+import math
 from dataclasses import dataclass
 from typing import List
 from typing import Optional
@@ -18,10 +19,13 @@ from le_utils.constants import exercises
 from lxml import etree
 
 from contentcuration.utils.assessment.qti.catalog import KOLIBRI_HINT_SUPPORT
+from contentcuration.utils.assessment.qti.constants import BaseType
 from contentcuration.utils.assessment.qti.html_to_markdown import html_to_markdown
 from contentcuration.utils.assessment.qti.validation import parse_qti_xml
 
 logger = logging.getLogger(__name__)
+
+_NUMERIC_BASE_TYPES = (BaseType.FLOAT.value, BaseType.INTEGER.value)
 
 
 @dataclass
@@ -80,7 +84,8 @@ def _derivable_interaction(root, item_body):
     Requires exactly one interaction, that it be a ``qti-choice-interaction`` or
     ``qti-text-entry-interaction``, *and* that its ``response-identifier``
     resolves to a response declaration; a mismatch yields ``None`` so the node
-    degrades to QTI-only rather than deriving zero correct answers.
+    degrades to QTI-only rather than deriving zero correct answers. A text entry
+    must also be numeric: Perseus input questions only accept numbers.
     """
     interactions = _interaction_elements(item_body)
     if len(interactions) != 1:
@@ -91,6 +96,11 @@ def _derivable_interaction(root, item_body):
         return None
     declaration = _response_declaration(root, interaction.get("response-identifier"))
     if declaration is None:
+        return None
+    if (
+        deriver is _derive_text
+        and declaration.get("base-type") not in _NUMERIC_BASE_TYPES
+    ):
         return None
     return deriver, interaction, declaration
 
@@ -103,6 +113,33 @@ def _correct_values(declaration) -> List[str]:
         value.text or ""
         for value in _children_by_localname(correct_responses[0], "qti-value")
     ]
+
+
+def _accepted_values(declaration) -> List[str]:
+    """Every number the declaration scores as correct: its correct response
+    plus any full-credit mapped keys. Earlier conversions stored non-numbers
+    such as ``False`` in float declarations."""
+    values = _correct_values(declaration)
+    mappings = _children_by_localname(declaration, "qti-mapping")
+    if mappings:
+        values += [
+            entry.get("map-key")
+            for entry in _children_by_localname(mappings[0], "qti-map-entry")
+            if (_as_float(entry.get("mapped-value")) or 0) >= 1
+        ]
+    return list(dict.fromkeys(value for value in values if _is_number(value)))
+
+
+def _as_float(value) -> Optional[float]:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _is_number(value) -> bool:
+    number = _as_float(value)
+    return number is not None and math.isfinite(number)
 
 
 def _children_by_localname(el, localname):
@@ -151,7 +188,7 @@ def _derive_text(interaction, item_body, declaration):
     question = html_to_markdown([item_body])
     answers = [
         {"answer": value, "correct": True, "order": order}
-        for order, value in enumerate(_correct_values(declaration))
+        for order, value in enumerate(_accepted_values(declaration))
     ]
     return exercises.INPUT_QUESTION, question, answers
 

@@ -38,6 +38,7 @@ from .testdata import node as create_node
 from .testdata import slideshow
 from .testdata import thumbnail_bytes
 from .testdata import tree
+from .utils.qti.test_perseus_derive import _text_item
 from .utils.qti.test_validation import _item_xml
 from .utils.qti.test_validation import ENTITY_CHOICE_ITEM
 from .utils.qti.test_validation import VALID_CHOICE_ITEM
@@ -80,6 +81,9 @@ UNSUPPORTED_QTI_ITEM = _item_xml(
     '<qti-simple-choice identifier="choice_1" fixed="false">Second</qti-simple-choice>'
     "</qti-order-interaction>",
 )
+
+# Perseus input questions are numeric-only, so this publishes QTI only.
+STRING_ENTRY_QTI_ITEM = _text_item("single", ["cat"], base_type="string")
 
 
 # Larger than the signed 32-bit maximum (2_147_483_647); ~3 GB.
@@ -379,6 +383,28 @@ class ExportChannelTestCase(StudioTestCase):
             answers="[]",
             hints="[]",
             raw_data=ENTITY_CHOICE_ITEM,
+            order=1,
+            randomize=False,
+        )
+
+        native_qti_string_entry_exercise = create_node(
+            {
+                "kind_id": "exercise",
+                "title": "Native QTI String Entry Exercise",
+                "extra_fields": qti_extra_fields,
+            }
+        )
+        native_qti_string_entry_exercise.complete = True
+        native_qti_string_entry_exercise.parent = current_exercise.parent
+        native_qti_string_entry_exercise.save()
+        cc.AssessmentItem.objects.create(
+            contentnode=native_qti_string_entry_exercise,
+            assessment_id=uuid.uuid4().hex,
+            type=exercises.QTI,
+            question="",
+            answers="[]",
+            hints="[]",
+            raw_data=STRING_ENTRY_QTI_ITEM,
             order=1,
             randomize=False,
         )
@@ -1164,6 +1190,11 @@ class ExportChannelTestCase(StudioTestCase):
         with qti_file.file_on_disk.open("rb") as file_handle:
             names = zipfile.ZipFile(file_handle).namelist()
         self.assertEqual([name for name in names if name.startswith("items/")], [])
+
+    def test_native_qti_string_entry_publishes_qti_only(self):
+        node = cc.ContentNode.objects.get(title="Native QTI String Entry Exercise")
+        self.assertTrue(node.files.filter(preset_id=format_presets.QTI_ZIP).exists())
+        self.assertFalse(node.files.filter(preset_id=format_presets.EXERCISE).exists())
 
     def test_legacy_items_without_perseus_question_route_to_qti_packaging(self):
         node = cc.ContentNode.objects.get(title="Legacy No Perseus Exercise")
