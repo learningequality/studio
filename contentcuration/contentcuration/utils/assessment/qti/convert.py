@@ -1,7 +1,10 @@
 import base64
 import logging
+import math
+import re
 from dataclasses import dataclass
 from dataclasses import field
+from decimal import Decimal
 from typing import Any
 from typing import Dict
 from typing import List
@@ -19,6 +22,8 @@ from contentcuration.utils.assessment.qti.assessment_item import BaseValue
 from contentcuration.utils.assessment.qti.assessment_item import CorrectResponse
 from contentcuration.utils.assessment.qti.assessment_item import FieldValue
 from contentcuration.utils.assessment.qti.assessment_item import ItemBody
+from contentcuration.utils.assessment.qti.assessment_item import MapEntry
+from contentcuration.utils.assessment.qti.assessment_item import Mapping
 from contentcuration.utils.assessment.qti.assessment_item import OutcomeDeclaration
 from contentcuration.utils.assessment.qti.assessment_item import ResponseCondition
 from contentcuration.utils.assessment.qti.assessment_item import ResponseDeclaration
@@ -52,6 +57,7 @@ from contentcuration.utils.assessment.qti.interaction_types.text_based import (
     TextEntryInteraction,
 )
 from contentcuration.utils.assessment.qti.prompt import Prompt
+from contentcuration.utils.parser import extract_value
 
 
 choice_interactions = {
@@ -215,7 +221,10 @@ def _create_catalog_info(item: LegacyAssessmentItem) -> Optional[CatalogInfo]:
 
 
 def _response_declaration(
-    cardinality: Cardinality, base_type: BaseType, correct_values: List[Value]
+    cardinality: Cardinality,
+    base_type: BaseType,
+    correct_values: List[Value],
+    mapping: Optional[Mapping] = None,
 ) -> ResponseDeclaration:
     return ResponseDeclaration(
         identifier="RESPONSE",
@@ -224,7 +233,46 @@ def _response_declaration(
         correct_response=CorrectResponse(value=correct_values)
         if correct_values
         else None,
+        mapping=mapping,
     )
+
+
+def accepted_answers(answers: List[Dict[str, Any]]) -> List[str]:
+    """
+    Text of each correct answer. Blank and JSON false answers are dropped, as
+    the export path does; an answer with no "correct" key counts as correct.
+    """
+    accepted = []
+    for answer in answers:
+        value = answer.get("answer")
+        if value is None or value is False or not answer.get("correct", True):
+            continue
+        text = str(value).strip()
+        if text:
+            accepted.append(text)
+    return accepted
+
+
+# Decimal literals Kolibri's Number() reads that extract_value does not, e.g. +3, 1E3.
+_JS_NUMBER = re.compile(r"[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?", re.ASCII)
+
+
+def _format_number(answer: str) -> Optional[str]:
+    """
+    The answer in xsd:double form, or None if it is not a finite number. Written
+    as JS Number#toString writes it, since Kolibri looks up map keys that way.
+    """
+    number = extract_value(answer)
+    if number is None and _JS_NUMBER.fullmatch(answer):
+        number = float(answer)
+    if number is None or not math.isfinite(number):
+        return None
+    if number == 0:
+        return "0"
+    if 1e-6 <= abs(number) < 1e21:
+        return format(Decimal(repr(number)).normalize(), "f")
+    mantissa, exponent = repr(number).split("e")
+    return f"{mantissa}e{int(exponent):+d}"
 
 
 def _create_choice_interaction_and_response(
@@ -290,22 +338,31 @@ def _create_text_entry_interaction_and_response(
     prompt.append(interaction_element)
     interaction = Div(children=prompt)
 
-    correct_values = []
-    values_float = []
-    for answer in item.answers:
-        if answer["correct"]:
-            correct_values.append(Value(value=str(answer["answer"])))
-        try:
-            float(answer["answer"])
-            values_float.append(True)
-        except ValueError:
-            values_float.append(False)
-    float_answer = bool(values_float) and all(values_float)
+    answers = accepted_answers(item.answers)
+    numbers = [_format_number(answer) for answer in answers]
+    # An answerless input question is float, so publish can tell it from free
+    # response and skip it.
+    is_numeric = all(numbers) and (answers or item.type == exercises.INPUT_QUESTION)
+    base_type = BaseType.FLOAT if is_numeric else BaseType.STRING
+    answers = list(dict.fromkeys(numbers if is_numeric else answers))
 
+    # Any one accepted answer scores full marks, case-sensitively as
+    # match_correct scores a single answer.
+    mapping = (
+        Mapping(
+            map_entries=[
+                MapEntry(map_key=answer, mapped_value=1.0, case_sensitive=True)
+                for answer in answers
+            ]
+        )
+        if len(answers) > 1
+        else None
+    )
     response_declaration = _response_declaration(
-        Cardinality.MULTIPLE if len(correct_values) > 1 else Cardinality.SINGLE,
-        BaseType.FLOAT if float_answer else BaseType.STRING,
-        correct_values,
+        Cardinality.SINGLE,
+        base_type,
+        [Value(value=answer) for answer in answers[:1]],
+        mapping=mapping,
     )
     return interaction, response_declaration
 
@@ -410,8 +467,9 @@ def convert_legacy_assessment_item_to_qti(
         identifier="SCORE", cardinality=Cardinality.SINGLE, base_type=BaseType.FLOAT
     )
 
+    template = "map_response" if response_declaration.mapping else "match_correct"
     response_processing = ResponseProcessing(
-        template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct.xml"
+        template=f"https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/{template}.xml"
     )
 
     qti_item_id = hex_to_qti_id(item.assessment_id)
