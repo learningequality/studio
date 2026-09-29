@@ -34,8 +34,19 @@
           @select="onInsertSelect"
         >
           <template #option="{ option }">
-            <div class="insert-option">
+            <!-- A disabled option emits no select, so its click is stopped here
+              instead of in onInsertSelect. -->
+            <div
+              class="insert-option"
+              @click="option.disabled && $event.stopPropagation()"
+            >
+              <KIcon
+                v-if="option.kIcon"
+                :icon="option.kIcon"
+                class="dropdown-icon"
+              />
               <img
+                v-else
                 :src="option.icon"
                 alt=""
                 class="dropdown-icon"
@@ -80,7 +91,11 @@
         getTipTapEditorStrings();
 
       const insertOptions = computed(() =>
-        insertTools.value.map(tool => ({ ...tool, label: tool.title })),
+        insertTools.value.map(tool => ({
+          ...tool,
+          label: tool.title,
+          disabled: tool.isAvailable === false,
+        })),
       );
 
       const onInsertSelect = (option, event) => {
@@ -162,6 +177,8 @@
   }
 
   .dropdown-icon {
+    /* Undoes KIcon's inline-text nudge, which misaligns it with the img icons. */
+    top: 0;
     flex-shrink: 0;
     width: 20px;
     height: 20px;

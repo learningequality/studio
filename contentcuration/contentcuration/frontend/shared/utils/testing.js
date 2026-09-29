@@ -1,3 +1,4 @@
+/* eslint-env jest */
 import { Session } from 'shared/data/resources';
 
 export function resetJestGlobal() {
@@ -39,4 +40,35 @@ export async function tabIn(user) {
   sentinel.focus();
   await user.tab({ shift: true });
   sentinel.remove();
+}
+
+/**
+ * Stub the layout APIs a focused ProseMirror editor needs, for the tests of the
+ * enclosing `describe`, restoring them after. jsdom implements none of these, and
+ * ProseMirror measures the selection to scroll it into view whenever the editor
+ * takes focus.
+ */
+export function stubProseMirrorLayout() {
+  const stubs = [
+    [Range.prototype, 'getClientRects', () => []],
+    [Range.prototype, 'getBoundingClientRect', () => ({ top: 0, bottom: 0, left: 0, right: 0 })],
+    [Element.prototype, 'scrollIntoView', () => {}],
+  ];
+  const originals = stubs.map(([target, key]) => Object.getOwnPropertyDescriptor(target, key));
+
+  beforeAll(() => {
+    stubs.forEach(([target, key, stub]) => {
+      target[key] = stub;
+    });
+  });
+
+  afterAll(() => {
+    stubs.forEach(([target, key], i) => {
+      if (originals[i]) {
+        Object.defineProperty(target, key, originals[i]);
+      } else {
+        delete target[key];
+      }
+    });
+  });
 }

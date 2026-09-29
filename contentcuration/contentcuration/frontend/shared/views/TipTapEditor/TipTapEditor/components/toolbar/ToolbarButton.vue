@@ -12,7 +12,13 @@
     @click.stop="handleClick"
     @keydown="handleKeydown"
   >
+    <KIcon
+      v-if="kIcon"
+      :icon="kIcon"
+      class="toolbar-icon"
+    />
     <img
+      v-else
       :src="currentIcon"
       :alt="title"
       class="toolbar-icon"
@@ -68,9 +74,15 @@
         type: String,
         required: true,
       },
+      // An image URL.
       icon: {
         type: String,
-        required: true,
+        default: '',
+      },
+      // A KDS icon name, rendered with KIcon instead of `icon`.
+      kIcon: {
+        type: String,
+        default: '',
       },
       rtlIcon: {
         type: String,
@@ -133,6 +145,8 @@
   }
 
   .toolbar-icon {
+    /* Undoes KIcon's inline-text nudge, which misaligns it with the img icons. */
+    top: 0;
     width: 1.7rem;
     height: 1.7rem;
     opacity: 0.7;

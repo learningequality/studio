@@ -2,8 +2,32 @@ import { computed, inject } from 'vue';
 import { getTipTapEditorStrings } from '../TipTapEditorStrings';
 import { transformPastedHTML } from '../utils/pasteTransform';
 
+/**
+ * Evaluates a contributed insert action against the editor's insert context.
+ * `isActive` and `isAvailable` may be booleans or predicates of the context.
+ * Its `icon` names a KDS icon, so it becomes `kIcon`: built-in `icon`s are image URLs.
+ * Its `handler` does nothing while the action is unavailable.
+ * `contributed` tells it apart from the built-in insert tools.
+ */
+export function resolveInsertAction({ icon, ...action }, insertContext) {
+  const evaluate = value => (typeof value === 'function' ? value(insertContext.value) : value);
+  const isAvailable = action.isAvailable === undefined || Boolean(evaluate(action.isAvailable));
+  return {
+    ...action,
+    kIcon: icon,
+    contributed: true,
+    isActive: evaluate(action.isActive),
+    isAvailable,
+    handler: () => {
+      if (isAvailable) action.handler(insertContext.value);
+    },
+  };
+}
+
 export function useToolbarActions(emit) {
   const editor = inject('editor', null);
+  const insertContext = inject('insertContext', null);
+  const contributedInsertActions = inject('insertActions', null);
 
   /**
    * Drop the actions marked `hide`, which every toolbar honours — the desktop one and
@@ -441,7 +465,7 @@ export function useToolbarActions(emit) {
     },
   ]);
 
-  const insertTools = computed(() =>
+  const builtInInsertTools = computed(() =>
     visible([
       {
         name: 'image',
@@ -475,6 +499,18 @@ export function useToolbarActions(emit) {
       },
     ]),
   );
+
+  // Kept apart from the built-ins: a predicate reads the insert context, which
+  // changes on every transaction.
+  const resolvedInsertActions = computed(() =>
+    visible(
+      (contributedInsertActions?.value ?? []).map(action =>
+        resolveInsertAction(action, insertContext),
+      ),
+    ),
+  );
+
+  const insertTools = computed(() => [...builtInInsertTools.value, ...resolvedInsertActions.value]);
 
   const minimizeAction = {
     name: 'minimize',
