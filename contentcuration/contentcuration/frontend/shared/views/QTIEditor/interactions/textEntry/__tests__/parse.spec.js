@@ -61,6 +61,32 @@ const BLANK_VALUE_DECLARATION = `
   </qti-response-declaration>
 `.trim();
 
+/** The shape legacy input-question conversion writes. */
+const CONVERTED_NUMERIC_DECLARATION = `
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="float">
+    <qti-correct-response>
+      <qti-value>13</qti-value>
+    </qti-correct-response>
+    <qti-mapping default-value="0.0">
+      <qti-map-entry map-key="13" mapped-value="1.0" case-sensitive="true"/>
+      <qti-map-entry map-key="12" mapped-value="1.0" case-sensitive="true"/>
+      <qti-map-entry map-key="11" mapped-value="0.5" case-sensitive="true"/>
+    </qti-mapping>
+  </qti-response-declaration>
+`.trim();
+
+const CONVERTED_STRING_DECLARATION = `
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string">
+    <qti-correct-response>
+      <qti-value>Sphere</qti-value>
+    </qti-correct-response>
+    <qti-mapping default-value="0.0">
+      <qti-map-entry map-key="Sphere" mapped-value="1.0" case-sensitive="true"/>
+      <qti-map-entry map-key="Ball" mapped-value="1.0" case-sensitive="true"/>
+    </qti-mapping>
+  </qti-response-declaration>
+`.trim();
+
 /** `identifier` is required by the QTI schema — QTIDeclaration refuses to model this. */
 const DECLARATION_WITHOUT_IDENTIFIER = `
   <qti-response-declaration cardinality="single" base-type="string">
@@ -120,11 +146,14 @@ describe('_extractAnswers', () => {
     expect(result.map(a => a.value)).toEqual(['0.5', '1.5']);
   });
 
-  it('returns [] when declaration has no <qti-correct-response>', () => {
+  it('returns [] without logging when declaration has no <qti-correct-response>', () => {
+    // Legacy conversion writes an answerless input question this way.
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     const declXml = `
       <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="float"/>
     `.trim();
     expect(_extractAnswers([declXml])).toEqual([]);
+    expect(errorSpy).not.toHaveBeenCalled();
   });
 
   it('assigns unique ids to each answer', () => {
@@ -139,12 +168,11 @@ describe('_extractAnswers', () => {
   });
 
   describe('mapping-derived case sensitivity', () => {
-    it('reads caseSensitive by map-key, silently ignoring unmatched entries', () => {
+    it('reads caseSensitive by map-key, taking a mapped key with no <qti-value> as an answer', () => {
       const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       const result = _extractAnswers([TEXT_ENTRY_DECLARATION_WITH_MAPPING]);
-      // The Lisbon entry has no <qti-value>, so it contributes no answer and no error.
       const byValue = Object.fromEntries(result.map(a => [a.value, a.caseSensitive]));
-      expect(byValue).toEqual({ Paris: false, Madrid: true });
+      expect(byValue).toEqual({ Paris: false, Madrid: true, Lisbon: true });
       expect(errorSpy).not.toHaveBeenCalled();
     });
 
@@ -157,6 +185,20 @@ describe('_extractAnswers', () => {
     it('reports numeric answers as never case-sensitive', () => {
       const result = _extractAnswers([SINGLE_NUMERIC_DECLARATION]);
       expect(result[0].caseSensitive).toBe(false);
+    });
+
+    it('reads every full-credit mapped numeric key, correct response first', () => {
+      const result = _extractAnswers([CONVERTED_NUMERIC_DECLARATION]);
+      expect(result.map(a => a.value)).toEqual(['13', '12']);
+      expect(result.every(a => a.caseSensitive === false)).toBe(true);
+    });
+
+    it('reads full-credit mapped keys when there is no <qti-correct-response>', () => {
+      const declXml = CONVERTED_NUMERIC_DECLARATION.replace(
+        /<qti-correct-response>[\s\S]*<\/qti-correct-response>/,
+        '',
+      );
+      expect(_extractAnswers([declXml]).map(a => a.value)).toEqual(['13', '12']);
     });
 
     it('matches a map entry for a blank answer value', () => {
@@ -499,6 +541,35 @@ describe('buildTextEntryInteractionXML', () => {
       const parsed = parseTextEntryInteraction(bodyXml, responseDeclarations);
       expect(parsed.answers.map(a => a.value)).toEqual(['0.5', '1.5']);
     });
+
+    it.each([
+      [
+        'numeric',
+        CONVERTED_NUMERIC_DECLARATION,
+        QuestionType.NUMERIC,
+        BaseType.FLOAT,
+        ['13', '12'],
+      ],
+      [
+        'textEntry',
+        CONVERTED_STRING_DECLARATION,
+        QuestionType.TEXT_ENTRY,
+        BaseType.STRING,
+        ['Sphere', 'Ball'],
+      ],
+    ])(
+      '%s: re-saving a converted legacy item keeps every accepted answer',
+      (_, declaration, questionType, baseType, expected) => {
+        const state = parseTextEntryInteraction(makeBodyXml(), [declaration]);
+        const { bodyXml, responseDeclarations } = buildTextEntryInteractionXML(
+          state,
+          questionType,
+          { baseType, cardinality: Cardinality.MULTIPLE },
+        );
+        const parsed = parseTextEntryInteraction(bodyXml, responseDeclarations);
+        expect(parsed.answers.map(a => a.value)).toEqual(expected);
+      },
+    );
 
     it('textEntry: round-trip preserves per-answer caseSensitive', () => {
       const original = {
