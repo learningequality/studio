@@ -3,6 +3,9 @@
 /* eslint-disable jest-dom/prefer-to-have-attribute, jest-dom/prefer-to-have-text-content */
 import { QTIDeclaration } from '../QTIDeclaration.js';
 import { CAPABILITY } from '../declarations/index.js';
+import CorrectResponse from '../declarations/correctResponse.js';
+import Mapping from '../declarations/mapping.js';
+import { ResponseProcessingTemplate } from '../../../constants.js';
 import { parseXML, reparse, serializeXML } from './testUtils.js';
 import {
   DECLARATION_WITH_MAPPING,
@@ -56,6 +59,65 @@ describe('QTIDeclaration.registerCapability', () => {
     const fakeCR = { get: () => ['A'], getXML: () => null };
     d.registerCapability(CAPABILITY.CORRECT_RESPONSE, fakeCR);
     expect(d.correctResponse).toEqual(['A']);
+  });
+});
+
+describe('QTIDeclaration scoring', () => {
+  const MAPPING = {
+    defaultValue: 0,
+    lowerBound: null,
+    upperBound: null,
+    entries: [{ mapKey: 'Paris', mappedValue: 1, caseSensitive: false }],
+  };
+  const declaration = (identifier = 'RESPONSE') =>
+    new QTIDeclaration({ identifier, baseType: 'string' });
+
+  describe('getScoringRule', () => {
+    it('prefers the mapping over a correct response registered before it', () => {
+      const d = declaration();
+      new CorrectResponse(['Paris'], d);
+      const mapping = new Mapping(MAPPING, d);
+      expect(d.getScoringRule('RAW_SCORE')).toEqual(mapping.getScoringRule('RAW_SCORE'));
+    });
+
+    it('falls back to the correct response when the mapping has no entries', () => {
+      const d = declaration();
+      const cr = new CorrectResponse(['Paris'], d);
+      new Mapping({ ...MAPPING, entries: [] }, d);
+      expect(d.getScoringRule('RAW_SCORE')).toEqual(cr.getScoringRule('RAW_SCORE'));
+    });
+
+    it('returns null when no capability can score', () => {
+      const d = declaration();
+      new CorrectResponse([], d);
+      expect(d.getScoringRule('RAW_SCORE')).toBeNull();
+    });
+  });
+
+  describe('getResponseProcessingTemplate', () => {
+    it('comes from the same capability as the scoring rule', () => {
+      const d = declaration();
+      new CorrectResponse(['Paris'], d);
+      new Mapping(MAPPING, d);
+      expect(d.getResponseProcessingTemplate()).toBe(ResponseProcessingTemplate.MAP_RESPONSE);
+    });
+
+    it('is match_correct for a correct response alone', () => {
+      const d = declaration();
+      new CorrectResponse(['Paris'], d);
+      expect(d.getResponseProcessingTemplate()).toBe(ResponseProcessingTemplate.MATCH_CORRECT);
+    });
+
+    it('is null for a declaration not named RESPONSE, which no template reads', () => {
+      const d = declaration('response_xq7tbn2c');
+      new CorrectResponse(['Paris'], d);
+      expect(d.getResponseProcessingTemplate()).toBeNull();
+      expect(d.getScoringRule('SCORE')).not.toBeNull();
+    });
+
+    it('is null when no capability can score', () => {
+      expect(declaration().getResponseProcessingTemplate()).toBeNull();
+    });
   });
 });
 

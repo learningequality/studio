@@ -4,8 +4,16 @@
 import Mapping from '../../declarations/mapping.js';
 import { QTIDeclaration } from '../../QTIDeclaration.js';
 import { CAPABILITY } from '../../declarations/index.js';
-import { parseXML, reparse } from '../testUtils.js';
+import { ResponseProcessingTemplate } from '../../../../constants.js';
+import { normalizeXML, parseXML, reparse } from '../testUtils.js';
 import { MAPPING_WITH_BOUNDS_XML, SIMPLE_MAPPING_XML } from './fixtures.js';
+
+const MAPPING_DATA = {
+  defaultValue: 0,
+  lowerBound: null,
+  upperBound: null,
+  entries: [{ mapKey: 'ChoiceA', mappedValue: 1, caseSensitive: false }],
+};
 
 function makeDeclaration() {
   return new QTIDeclaration({
@@ -244,6 +252,40 @@ describe('Mapping', () => {
       };
       const reparsed = reparse(new Mapping(data, makeDeclaration()).getXML());
       expect(reparsed.querySelector('qti-map-entry').getAttribute('map-key')).toBe('选择甲');
+    });
+  });
+
+  describe('getScoringRule', () => {
+    it('adds the mapped value of the response to the outcome', () => {
+      const scorer = new Mapping(MAPPING_DATA, makeDeclaration());
+      expect(scorer.getScoringRule('OUTCOME')).toEqual(
+        parseXML(
+          normalizeXML(`
+            <qti-set-outcome-value identifier="OUTCOME">
+              <qti-sum>
+                <qti-variable identifier="OUTCOME"/>
+                <qti-map-response identifier="RESPONSE"/>
+              </qti-sum>
+            </qti-set-outcome-value>`),
+        ),
+      );
+    });
+
+    it('returns null when there are no entries', () => {
+      const scorer = new Mapping({ ...MAPPING_DATA, entries: [] }, makeDeclaration());
+      expect(scorer.getScoringRule('OUTCOME')).toBeNull();
+    });
+  });
+
+  describe('getResponseProcessingTemplate', () => {
+    it('is map_response', () => {
+      const scorer = new Mapping(MAPPING_DATA, makeDeclaration());
+      expect(scorer.getResponseProcessingTemplate()).toBe(ResponseProcessingTemplate.MAP_RESPONSE);
+    });
+
+    it('returns null when there are no entries', () => {
+      const scorer = new Mapping({ ...MAPPING_DATA, entries: [] }, makeDeclaration());
+      expect(scorer.getResponseProcessingTemplate()).toBeNull();
     });
   });
 });

@@ -8,6 +8,7 @@ import {
   VALID_MATCH_ITEM_DOCUMENT,
   MATCH_THREE_SETS_XML,
   MATCH_XML,
+  MULTI_TEXT_ENTRY_ITEM_DOCUMENT,
 } from '../utils/testingFixtures';
 
 const codesOf = errors => errors.map(error => error.code);
@@ -27,6 +28,13 @@ describe('validateQtiItem', () => {
     expect(codesOf(validateQtiItem(CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER))).toContain(
       ValidationError.NO_CORRECT_ANSWER,
     );
+  });
+
+  it('validates an item with several inline interactions as one question', () => {
+    // Every inline interaction is handed the whole body, so validating one per interaction
+    // would report the same problem once for each of them.
+    const xml = MULTI_TEXT_ENTRY_ITEM_DOCUMENT.replace(/>Sun</, '><').replace(/>Moon</, '><');
+    expect(codesOf(validateQtiItem(xml))).toEqual([ValidationError.EMPTY_ANSWER_CONTENT]);
   });
 
   it('reports an item whose body holds no interaction', () => {

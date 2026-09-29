@@ -118,6 +118,17 @@ export const ValidationError = Object.freeze({
 
 export const RESPONSE_IDENTIFIER = 'RESPONSE';
 
+/**
+ * The QTI 3.0 standard response processing templates. Each one scores the response
+ * variable named RESPONSE into SCORE, so it only fits an item whose one response
+ * declaration has that identifier.
+ */
+export const ResponseProcessingTemplate = Object.freeze({
+  MATCH_CORRECT: 'https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct.xml',
+  MAP_RESPONSE: 'https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response.xml',
+  MAP_RESPONSE_POINT: 'https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response_point.xml',
+});
+
 export const Placement = Object.freeze({
   BLOCK: 'block',
   INLINE: 'inline',

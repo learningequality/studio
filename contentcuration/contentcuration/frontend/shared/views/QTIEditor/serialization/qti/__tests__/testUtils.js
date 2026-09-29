@@ -15,6 +15,16 @@ export function parseXML(xmlString) {
 }
 
 /**
+ * Drop the indentation between tags, so expected XML can be written pretty-printed and
+ * still match serializer output.
+ * @param {string} xmlString
+ * @returns {string}
+ */
+export function normalizeXML(xmlString) {
+  return xmlString.replace(/>\s+</g, '><').trim();
+}
+
+/**
  * Serialize a DOM node to an XML string.
  * @param {Node} node
  * @returns {string}
