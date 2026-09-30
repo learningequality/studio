@@ -8,11 +8,16 @@ from django.utils.http import http_date
 from kolibri_content import base_models
 from kolibri_content import models as content
 from kolibri_content.constants.schema_versions import CONTENT_SCHEMA_VERSION
+from kolibri_content.constants.schema_versions import EXPORT_SCHEMA_VERSIONS
+from kolibri_content.constants.schema_versions import MIN_CONTENT_SCHEMA_VERSION
+from kolibri_content.constants.schema_versions import VERSION_5
+from kolibri_content.contentschema.columns import for_version
 from kolibri_public import models as public
 from kolibri_public.tests.test_content_app import ChannelBuilder
 from le_utils.constants import content_kinds
 from rest_framework.test import APITestCase
 
+from contentcuration.models import Language
 from contentcuration.tests.helpers import reverse_with_query
 
 
@@ -24,6 +29,15 @@ class ImportMetadataTestCase(APITestCase):
         public.ContentNode.objects.all().update(available=True)
         cls.root = public.ContentNode.objects.get(id=cls.builder.root_node["id"])
         cls.node = cls.root.get_descendants().exclude(kind=content_kinds.TOPIC).first()
+        cls.language = Language.objects.get_or_create(
+            id="fr",
+            defaults={
+                "lang_code": "fr",
+                "readable_name": "French",
+                "native_name": "Français",
+            },
+        )[0]
+        public.ContentNode.objects.filter(id=cls.node.id).update(lang=cls.language)
         cls.all_nodes = cls.node.get_ancestors(include_self=True)
         cls.files = public.File.objects.filter(contentnode__in=cls.all_nodes)
         cls.assessmentmetadata = public.AssessmentMetaData.objects.filter(
@@ -47,9 +61,7 @@ class ImportMetadataTestCase(APITestCase):
         cls.family_ids = list(cls.topic.get_family().values_list("id", flat=True))
 
     def _assert_data(self, Model, ContentModel, queryset):
-        response = self.client.get(
-            reverse("publicimportmetadata-detail", kwargs={"pk": self.node.id})
-        )
+        response = self._get()
         fields = Model._meta.fields
         BaseModel = getattr(base_models, Model.__name__, Model)
         field_names = {field.column for field in BaseModel._meta.fields}
@@ -125,6 +137,60 @@ class ImportMetadataTestCase(APITestCase):
             self.family_ids,
         )
 
+    def _get(self, schema_version=None):
+        url = reverse("publicimportmetadata-detail", kwargs={"pk": self.node.id})
+        if schema_version is not None:
+            url += "?schema_version={}".format(schema_version)
+        return self.client.get(url)
+
+    def _get_metadata(self, schema_version=None):
+        response = self._get(schema_version)
+        self.assertEqual(response.status_code, 200)
+        return response.data
+
+    def test_no_schema_version_serves_every_supported_column(self):
+        data = self._get_metadata()
+        self.assertEqual(data["schema_version"], CONTENT_SCHEMA_VERSION)
+        for table in for_version(CONTENT_SCHEMA_VERSION):
+            rows = data[table]
+            if not rows:
+                continue
+            with self.subTest(table=table):
+                self.assertEqual(
+                    set(rows[0]),
+                    set().union(
+                        *(for_version(v)[table] for v in EXPORT_SCHEMA_VERSIONS)
+                    ),
+                )
+
+    def test_language_lang_name_is_native_name(self):
+        for schema_version in [None] + EXPORT_SCHEMA_VERSIONS:
+            with self.subTest(schema_version=schema_version):
+                languages = self._get_metadata(schema_version)[
+                    content.Language._meta.db_table
+                ]
+                self.assertEqual(
+                    [row["lang_name"] for row in languages],
+                    [self.language.native_name],
+                )
+
+    def test_import_metadata_columns_match_frozen_map(self):
+        for version in EXPORT_SCHEMA_VERSIONS:
+            data = self._get_metadata(version)
+            self.assertEqual(data["schema_version"], version)
+            # Iterate the frozen map rather than the response, as the response
+            # also carries a non-table `schema_version` key.
+            for table, columns in for_version(version).items():
+                self.assertIn(table, data)
+                rows = data[table]
+                if not rows:
+                    continue
+                with self.subTest(version=version, table=table):
+                    self.assertEqual(sorted(rows[0].keys()), sorted(columns))
+
+    def test_schema_version_is_normalised(self):
+        self.assertEqual(self._get_metadata("05"), self._get_metadata(VERSION_5))
+
     def test_import_metadata_nodes(self):
         self._assert_data(public.ContentNode, content.ContentNode, self.all_nodes)
 
@@ -165,34 +231,41 @@ class ImportMetadataTestCase(APITestCase):
 
         self.assertEqual(response.data["error"], "Invalid UUID format.")
 
-    def test_schema_version_too_low(self):
-        response = self.client.get(
-            reverse("publicimportmetadata-detail", kwargs={"pk": self.node.id})
-            + "?schema_version=1"
-        )
+    def _assert_schema_error(self, schema_version, message):
+        response = self._get(schema_version)
         self.assertEqual(response.status_code, 400)
+        self.assertEqual(response["Content-Type"], "application/json")
+        self.assertEqual(response.json(), [message])
+
+    def test_schema_version_too_low(self):
+        self._assert_schema_error(
+            "1",
+            "Schema version is too low, exports only suported for versions {} to {}".format(
+                MIN_CONTENT_SCHEMA_VERSION, CONTENT_SCHEMA_VERSION
+            ),
+        )
 
     def test_schema_version_too_high(self):
-        response = self.client.get(
-            reverse("publicimportmetadata-detail", kwargs={"pk": self.node.id})
-            + "?schema_version={}".format(int(CONTENT_SCHEMA_VERSION) + 1)
+        self._assert_schema_error(
+            int(CONTENT_SCHEMA_VERSION) + 1,
+            "Schema version is too high, exports only suported for versions {} to {}".format(
+                MIN_CONTENT_SCHEMA_VERSION, CONTENT_SCHEMA_VERSION
+            ),
         )
-        self.assertEqual(response.status_code, 400)
 
-    def test_schema_version_just_right(self):
-        response = self.client.get(
-            reverse("publicimportmetadata-detail", kwargs={"pk": self.node.id})
-            + "?schema_version={}".format(CONTENT_SCHEMA_VERSION)
-        )
-        self.assertEqual(response.status_code, 200)
+    def test_schema_version_unparseable(self):
+        for schema_version in ("abc", ""):
+            with self.subTest(schema_version=schema_version):
+                self._assert_schema_error(
+                    schema_version,
+                    "Schema version is not parseable by this version of Kolibri",
+                )
 
     def test_headers(self):
         channel = public.ChannelMetadata.objects.get()
         channel.last_updated = datetime.datetime.now()
         channel.save()
-        response = self.client.get(
-            reverse("publicimportmetadata-detail", kwargs={"pk": self.node.id})
-        )
+        response = self._get()
         self.assertEqual(response.headers["Vary"], "Accept")
         self.assertEqual(
             response.headers["Cache-Control"],
