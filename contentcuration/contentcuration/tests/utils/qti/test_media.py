@@ -4,6 +4,7 @@ from contentcuration.utils.assessment.qti.media import rewrite_qti_media_paths
 from contentcuration.utils.assessment.qti.media import rewrite_qti_sized_image_paths
 from contentcuration.utils.assessment.qti.media import set_qti_item_language
 from contentcuration.utils.assessment.qti.media import strip_studio_attributes
+from contentcuration.utils.assessment.qti.media import XML_LANG_ATTRIBUTE
 from contentcuration.utils.assessment.qti.validation import parse_qti_xml
 from contentcuration.utils.assessment.qti.validation import validate_qti_item
 
@@ -39,29 +40,43 @@ def test_accepts_bytes():
     assert get_qti_media_references(xml) == {f"{CHECKSUM_A}.png"}
 
 
+def _root(xml):
+    return parse_qti_xml(xml.encode("utf-8")).getroot()
+
+
+def _attribute_values(xml, attribute):
+    return [
+        element.get(attribute)
+        for element in _root(xml).iter()
+        if attribute in element.attrib
+    ]
+
+
 def test_rewrite_leaves_input_untouched_with_no_mapping():
     xml = f'<item><img src="{CHECKSUM_A}.png" /></item>'
     assert rewrite_qti_media_paths(xml, {}) == xml
 
 
-def test_rewrite_remaps_src_href_data_and_preserves_formatting():
+def test_rewrite_remaps_src_href_data():
     xml = (
         f'<item><img src="{CHECKSUM_A}.png" alt="diagram" />'
         f'<a href="{CHECKSUM_B}.pdf">x</a>'
         f'<object data="{CHECKSUM_A}.png"></object></item>'
     )
-    result = rewrite_qti_media_paths(
-        xml,
-        {
-            f"{CHECKSUM_A}.png": f"images/{CHECKSUM_A}.png",
-            f"{CHECKSUM_B}.pdf": f"images/{CHECKSUM_B}.pdf",
-        },
+    result = _root(
+        rewrite_qti_media_paths(
+            xml,
+            {
+                f"{CHECKSUM_A}.png": f"images/{CHECKSUM_A}.png",
+                f"{CHECKSUM_B}.pdf": f"images/{CHECKSUM_B}.pdf",
+            },
+        )
     )
-    assert result == (
-        f'<item><img src="images/{CHECKSUM_A}.png" alt="diagram" />'
-        f'<a href="images/{CHECKSUM_B}.pdf">x</a>'
-        f'<object data="images/{CHECKSUM_A}.png"></object></item>'
-    )
+    img, a, obj = result
+    assert img.attrib == {"src": f"images/{CHECKSUM_A}.png", "alt": "diagram"}
+    assert a.get("href") == f"images/{CHECKSUM_B}.pdf"
+    assert a.text == "x"
+    assert obj.get("data") == f"images/{CHECKSUM_A}.png"
 
 
 def test_rewrite_remaps_srcset_entries_preserving_descriptors():
@@ -73,9 +88,9 @@ def test_rewrite_remaps_srcset_entries_preserving_descriptors():
             f"{CHECKSUM_B}.png": f"images/{CHECKSUM_B}.png",
         },
     )
-    assert result == (
-        f'<item><img srcset="images/{CHECKSUM_A}.png 1x, images/{CHECKSUM_B}.png 2x"/></item>'
-    )
+    assert _attribute_values(result, "srcset") == [
+        f"images/{CHECKSUM_A}.png 1x, images/{CHECKSUM_B}.png 2x"
+    ]
 
 
 def test_rewrite_ignores_values_not_in_mapping():
@@ -83,9 +98,29 @@ def test_rewrite_ignores_values_not_in_mapping():
     result = rewrite_qti_media_paths(
         xml, {f"{CHECKSUM_A}.png": f"images/{CHECKSUM_A}.png"}
     )
-    assert result == (
-        f'<item><img src="images/{CHECKSUM_A}.png"/><a href="{CHECKSUM_B}.pdf">x</a></item>'
+    assert _attribute_values(result, "src") == [f"images/{CHECKSUM_A}.png"]
+    assert _attribute_values(result, "href") == [f"{CHECKSUM_B}.pdf"]
+
+
+def test_rewrite_remaps_a_src_written_with_a_character_reference():
+    xml = f'<item><img src="&#x{ord(CHECKSUM_A[0]):x};{CHECKSUM_A[1:]}.png"/></item>'
+    result = rewrite_qti_media_paths(
+        xml, {f"{CHECKSUM_A}.png": f"images/{CHECKSUM_A}.png"}
     )
+    assert _attribute_values(result, "src") == [f"images/{CHECKSUM_A}.png"]
+
+
+def test_rewrite_remaps_a_src_written_as_an_entity():
+    declaration, _, item = VALID_CHOICE_ITEM.partition("?>")
+    xml = (
+        f'{declaration}?><!DOCTYPE qti-assessment-item [<!ENTITY e "{CHECKSUM_A}.png">]>'
+        + item.replace("<qti-prompt>", '<qti-prompt><img src="&e;" alt="x"/>')
+    )
+    result = rewrite_qti_media_paths(
+        xml, {f"{CHECKSUM_A}.png": f"images/{CHECKSUM_A}.png"}
+    )
+    assert _attribute_values(result, "src") == [f"images/{CHECKSUM_A}.png"]
+    assert "&e;" not in result
 
 
 def _path_for_size(filename, width, height):
@@ -98,11 +133,24 @@ def test_sized_rewrite_points_each_sized_img_at_its_size():
         f"<img height='75' src='{CHECKSUM_A}.png' width='100' />"
         f'<img src="{CHECKSUM_B}.png" width="200" height="150"></img></item>'
     )
-    assert rewrite_qti_sized_image_paths(xml, _path_for_size) == (
-        f'<item>\n  <img alt="a > b" src="images/200x150-{CHECKSUM_A}.png" width="200" height="150"/>'
-        f"<img height='75' src='images/100x75-{CHECKSUM_A}.png' width='100' />"
-        f'<img src="images/200x150-{CHECKSUM_B}.png" width="200" height="150"></img></item>'
+    assert _attribute_values(
+        rewrite_qti_sized_image_paths(xml, _path_for_size), "src"
+    ) == [
+        f"images/200x150-{CHECKSUM_A}.png",
+        f"images/100x75-{CHECKSUM_A}.png",
+        f"images/200x150-{CHECKSUM_B}.png",
+    ]
+
+
+def test_sized_rewrite_points_a_namespaced_img_at_its_size():
+    result = rewrite_qti_sized_image_paths(
+        VALID_CHOICE_ITEM.replace(
+            "<qti-item-body>",
+            f'<qti-item-body><p><img src="{CHECKSUM_A}.png" alt="" width="200" height="150"/></p>',
+        ),
+        _path_for_size,
     )
+    assert _attribute_values(result, "src") == [f"images/200x150-{CHECKSUM_A}.png"]
 
 
 def test_sized_rewrite_leaves_imgs_without_a_pixel_size_or_checksum_src():
@@ -117,7 +165,10 @@ def test_sized_rewrite_leaves_imgs_without_a_pixel_size_or_checksum_src():
         '<img src="https://example.com/x.png" width="200" height="150"/>'
         f'<object data="{CHECKSUM_A}.png" width="200" height="150"></object></item>'
     )
-    assert rewrite_qti_sized_image_paths(xml, _path_for_size) == xml
+    result = _root(rewrite_qti_sized_image_paths(xml, _path_for_size))
+    assert [element.attrib for element in result] == [
+        element.attrib for element in _root(xml)
+    ]
 
 
 def test_sized_rewrite_leaves_imgs_in_comments_and_cdata():
@@ -127,10 +178,9 @@ def test_sized_rewrite_leaves_imgs_in_comments_and_cdata():
             f"<item>{hidden}"
             f'<img src="{CHECKSUM_A}.png" width="100" height="75"/></item>'
         )
-        assert rewrite_qti_sized_image_paths(xml, _path_for_size) == (
-            f"<item>{hidden}"
-            f'<img src="images/100x75-{CHECKSUM_A}.png" width="100" height="75"/></item>'
-        )
+        result = rewrite_qti_sized_image_paths(xml, _path_for_size)
+        assert sized_img in result.replace("&lt;", "<").replace("&gt;", ">")
+        assert _attribute_values(result, "src") == [f"images/100x75-{CHECKSUM_A}.png"]
 
 
 ITEM_WITHOUT_LANGUAGE = (
@@ -141,58 +191,35 @@ ITEM_WITHOUT_LANGUAGE = (
 )
 
 
+def _language(xml):
+    return _root(xml).get(XML_LANG_ATTRIBUTE)
+
+
 def test_set_language_adds_it_when_the_item_has_none():
     result = set_qti_item_language(ITEM_WITHOUT_LANGUAGE, "es")
-    assert 'xml:lang="es"' in result
+    assert _language(result) == "es"
     assert "<qti-item-body><p>Body</p></qti-item-body>" in result
 
 
 def test_set_language_replaces_a_language_the_item_already_had():
     already = ITEM_WITHOUT_LANGUAGE.replace('title="t"', 'title="t" xml:lang="en"')
-    result = set_qti_item_language(already, "sw")
-    # Rewritten where it stands, so the value is the only thing that differs.
-    assert result == already.replace('xml:lang="en"', 'xml:lang="sw"')
-
-
-def test_set_language_replaces_a_single_quoted_language():
-    already = ITEM_WITHOUT_LANGUAGE.replace('title="t"', "title=\"t\" xml:lang='en'")
-    result = set_qti_item_language(already, "sw")
-    assert result == already.replace("xml:lang='en'", 'xml:lang="sw"')
-    parse_qti_xml(result.encode("utf-8"))
-
-
-def test_set_language_replaces_a_language_containing_the_other_quote():
-    already = ITEM_WITHOUT_LANGUAGE.replace('title="t"', 'title="t" xml:lang="it\'s"')
-    result = set_qti_item_language(already, "sw")
-    assert result == already.replace('xml:lang="it\'s"', 'xml:lang="sw"')
-    parse_qti_xml(result.encode("utf-8"))
-
-
-def test_set_language_replaces_a_language_with_spaces_around_the_equals_sign():
-    already = ITEM_WITHOUT_LANGUAGE.replace('title="t"', "title=\"t\" xml:lang = 'en'")
-    result = set_qti_item_language(already, "sw")
-    assert result == already.replace("xml:lang = 'en'", 'xml:lang="sw"')
+    assert _language(set_qti_item_language(already, "sw")) == "sw"
 
 
 def test_set_language_finds_the_language_after_a_greater_than_in_an_attribute():
     already = ITEM_WITHOUT_LANGUAGE.replace(
         'title="t"', "title=\"a > b\" xml:lang='en'"
     )
-    result = set_qti_item_language(already, "sw")
-    assert result == already.replace("xml:lang='en'", 'xml:lang="sw"')
+    root = _root(set_qti_item_language(already, "sw"))
+    assert root.get(XML_LANG_ATTRIBUTE) == "sw"
+    assert root.get("title") == "a > b"
 
 
 def test_set_language_ignores_language_text_inside_another_attribute_value():
     tricky = ITEM_WITHOUT_LANGUAGE.replace('title="t"', "title=\"see xml:lang='x'\"")
-    result = set_qti_item_language(tricky, "sw")
-    assert result == tricky.replace(
-        'time-dependent="false">', 'time-dependent="false" xml:lang="sw">'
-    )
-
-
-def test_set_language_leaves_an_item_already_declaring_it_byte_for_byte():
-    already = ITEM_WITHOUT_LANGUAGE.replace('title="t"', 'title="t" xml:lang="sw"')
-    assert set_qti_item_language(already, "sw") == already
+    root = _root(set_qti_item_language(tricky, "sw"))
+    assert root.get(XML_LANG_ATTRIBUTE) == "sw"
+    assert root.get("title") == "see xml:lang='x'"
 
 
 def test_set_language_leaves_the_item_alone_without_a_language_to_set():
@@ -213,6 +240,34 @@ def test_set_language_keeps_the_item_schema_valid():
     assert validation.is_valid, validation.errors
 
 
+def test_set_language_reads_the_text_as_utf8_whatever_encoding_it_declares():
+    latin = VALID_CHOICE_ITEM.replace('encoding="UTF-8"', 'encoding="ISO-8859-1"')
+    result = set_qti_item_language(
+        latin.replace("<qti-prompt>", "<qti-prompt>café "), "fr"
+    )
+    prompt = _root(result).find(".//{*}qti-prompt")
+    assert prompt.text == "café Select the correct answer."
+
+
+def test_set_language_sets_it_on_a_namespace_prefixed_root():
+    prefixed = (
+        ITEM_WITHOUT_LANGUAGE.replace("<qti-", "<q:qti-")
+        .replace("</qti-", "</q:qti-")
+        .replace("xmlns=", "xmlns:q=")
+    )
+    assert _language(set_qti_item_language(prefixed, "es")) == "es"
+
+
+def test_set_language_skips_a_comment_quoting_the_root_tag_after_the_declaration():
+    declaration, _, root = VALID_CHOICE_ITEM.partition("?>")
+    comment = '<!-- <qti-assessment-item foo="1"> -->'
+    result = set_qti_item_language(f"{declaration}?>{comment}{root}", "fr")
+    assert comment in result
+    assert _language(result) == "fr"
+    validation = validate_qti_item(result)
+    assert validation.is_valid, validation.errors
+
+
 def test_strip_studio_attributes_removes_every_one_and_nothing_else():
     marked = ITEM_WITHOUT_LANGUAGE.replace(
         "<p>Body</p>",
@@ -221,10 +276,15 @@ def test_strip_studio_attributes_removes_every_one_and_nothing_else():
         "data-studio-sentinel='' shuffle=\"false\">"
         '<qti-inline-choice identifier="c"/></qti-inline-choice-interaction></p>',
     )
-    result = strip_studio_attributes(marked)
-    assert result == marked.replace(' data-studio-prompt=""', "").replace(
-        " data-studio-sentinel=''", ""
+    result = _root(strip_studio_attributes(marked))
+    expected = _root(
+        marked.replace(' data-studio-prompt=""', "").replace(
+            " data-studio-sentinel=''", ""
+        )
     )
+    assert [(e.tag, e.attrib, e.text) for e in result.iter()] == [
+        (e.tag, e.attrib, e.text) for e in expected.iter()
+    ]
 
 
 def test_strip_studio_attributes_ignores_lookalikes_in_values_and_text():
@@ -232,4 +292,9 @@ def test_strip_studio_attributes_ignores_lookalikes_in_values_and_text():
         "<p>Body</p>",
         '<p title="a > b data-studio-prompt=\'\'" data-other="1">data-studio-prompt=""</p>',
     )
-    assert strip_studio_attributes(tricky) == tricky
+    paragraph = _root(strip_studio_attributes(tricky)).find(".//{*}p")
+    assert paragraph.attrib == {
+        "title": "a > b data-studio-prompt=''",
+        "data-other": "1",
+    }
+    assert paragraph.text == 'data-studio-prompt=""'

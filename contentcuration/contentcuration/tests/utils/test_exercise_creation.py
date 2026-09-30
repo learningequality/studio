@@ -43,6 +43,12 @@ from contentcuration.utils.assessment.qti.validation import validate_qti_item
 UNRESIZABLE_IMAGE_BYTES = b"not an image"
 
 
+def _canonical_xml(xml_string):
+    return etree.tostring(
+        etree.fromstring(_normalize_xml(xml_string).encode("utf-8")), method="c14n"
+    )
+
+
 def _create_unresizable_image():
     return create_studio_file(
         UNRESIZABLE_IMAGE_BYTES, preset=format_presets.EXERCISE_IMAGE, ext="jpg"
@@ -2201,10 +2207,9 @@ class TestQTIExerciseCreation(StudioTestCase):
         <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct.xml" />
         </qti-assessment-item>"""
 
-        # Compare normalized XML
         self.assertEqual(
-            _normalize_xml(expected_item_xml),
-            _normalize_xml(actual_item_xml),
+            _canonical_xml(expected_item_xml),
+            _canonical_xml(actual_item_xml),
         )
 
     def test_image_resize_failure_uses_original(self):
@@ -2509,12 +2514,10 @@ class TestQTIExerciseCreation(StudioTestCase):
             _normalize_xml(actual_manifest_xml),
         )
 
-    def test_native_qti_item_written_verbatim(self):
-        """The item XML in the zip is the authored raw_data, not a rebuild of it.
-
-        Publishing rewrites the root's xml:lang to the node's language, which here is the
-        language the item already declares, so every byte of it — formatting included — has
-        to survive. Stamping an item that declares none is covered in test_exportchannel.
+    def test_native_qti_item_written_as_authored(self):
+        """Publishing rewrites the root's xml:lang to the node's language, which here is the
+        language the item already declares, so the item is otherwise unchanged. Stamping an
+        item that declares none is covered in test_exportchannel.
         """
         raw_data = _item_xml(
             "native_item_1",
@@ -2542,7 +2545,7 @@ class TestQTIExerciseCreation(StudioTestCase):
         zip_file = self._validate_qti_zip_structure(exercise_file)
         self.assertIn("items/native_item_1.xml", zip_file.namelist())
         item_xml = zip_file.read("items/native_item_1.xml").decode("utf-8")
-        self.assertEqual(item_xml, raw_data)
+        self.assertEqual(_canonical_xml(item_xml), _canonical_xml(raw_data))
 
     def test_native_qti_item_published_without_studio_attributes(self):
         """The QTI editor's data-studio-* markers are for reopening an item, not for Kolibri."""
@@ -2570,7 +2573,10 @@ class TestQTIExerciseCreation(StudioTestCase):
         exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
         zip_file = self._validate_qti_zip_structure(exercise_file)
         item_xml = zip_file.read("items/native_item_1.xml").decode("utf-8")
-        self.assertEqual(item_xml, raw_data.replace(' data-studio-prompt=""', ""))
+        self.assertEqual(
+            _canonical_xml(item_xml),
+            _canonical_xml(raw_data.replace(' data-studio-prompt=""', "")),
+        )
 
     def test_native_qti_item_media_included_and_addressed(self):
         # fileobj_exercise_image() writes real bytes to storage keyed by their
@@ -2606,9 +2612,41 @@ class TestQTIExerciseCreation(StudioTestCase):
         item_xml = zip_file.read("items/native_item_1.xml").decode("utf-8")
         # The media path is remapped; nothing else about the item changes.
         self.assertEqual(
-            item_xml,
-            raw_data.replace(media_filename, f"images/{media_filename}"),
+            _canonical_xml(item_xml),
+            _canonical_xml(
+                raw_data.replace(media_filename, f"images/{media_filename}")
+            ),
         )
+
+    def test_native_qti_item_media_written_as_an_entity_is_addressed(self):
+        image_file = fileobj_exercise_image()
+        media_filename = f"{image_file.checksum}.{image_file.file_format_id}"
+        declaration, _, item_body = self.NATIVE_ITEM_XML.format(
+            checksum=image_file.checksum, ext=image_file.file_format_id
+        ).partition("?>")
+        raw_data = (
+            f'{declaration}?><!DOCTYPE qti-assessment-item [<!ENTITY e "{media_filename}">]>'
+            + item_body.replace(f'src="{media_filename}"', 'src="&e;"')
+        )
+        item = self._create_native_qti_item(raw_data)
+        image_file.assessment_item = item
+        image_file.save()
+        exercise_data = {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": 5,
+            "m": 3,
+            "all_assessment_items": [item.assessment_id],
+            "assessment_mapping": {item.assessment_id: exercises.QTI},
+        }
+        self._create_qti_zip(exercise_data)
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+        self.assertIn(f"items/images/{media_filename}", zip_file.namelist())
+        item_xml = zip_file.read("items/native_item_1.xml").decode("utf-8")
+        self.assertNotIn("&e;", item_xml)
+        img = parse_qti_xml(item_xml.encode("utf-8")).find(".//{*}img")
+        self.assertEqual(img.get("src"), f"images/{media_filename}")
 
     def test_native_qti_item_invalid_raw_data_is_skipped(self):
         """An item that fails schema validation is logged and excluded, not fatal to publish."""
