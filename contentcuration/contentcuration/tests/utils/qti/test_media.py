@@ -2,6 +2,7 @@ from contentcuration.tests.utils.qti.test_validation import VALID_CHOICE_ITEM
 from contentcuration.utils.assessment.qti.media import get_qti_media_references
 from contentcuration.utils.assessment.qti.media import rewrite_qti_media_paths
 from contentcuration.utils.assessment.qti.media import set_qti_item_language
+from contentcuration.utils.assessment.qti.validation import parse_qti_xml
 from contentcuration.utils.assessment.qti.validation import validate_qti_item
 
 CHECKSUM_A = "a" * 32
@@ -104,6 +105,42 @@ def test_set_language_replaces_a_language_the_item_already_had():
     result = set_qti_item_language(already, "sw")
     # Rewritten where it stands, so the value is the only thing that differs.
     assert result == already.replace('xml:lang="en"', 'xml:lang="sw"')
+
+
+def test_set_language_replaces_a_single_quoted_language():
+    already = ITEM_WITHOUT_LANGUAGE.replace('title="t"', "title=\"t\" xml:lang='en'")
+    result = set_qti_item_language(already, "sw")
+    assert result == already.replace("xml:lang='en'", 'xml:lang="sw"')
+    parse_qti_xml(result.encode("utf-8"))
+
+
+def test_set_language_replaces_a_language_containing_the_other_quote():
+    already = ITEM_WITHOUT_LANGUAGE.replace('title="t"', 'title="t" xml:lang="it\'s"')
+    result = set_qti_item_language(already, "sw")
+    assert result == already.replace('xml:lang="it\'s"', 'xml:lang="sw"')
+    parse_qti_xml(result.encode("utf-8"))
+
+
+def test_set_language_replaces_a_language_with_spaces_around_the_equals_sign():
+    already = ITEM_WITHOUT_LANGUAGE.replace('title="t"', "title=\"t\" xml:lang = 'en'")
+    result = set_qti_item_language(already, "sw")
+    assert result == already.replace("xml:lang = 'en'", 'xml:lang="sw"')
+
+
+def test_set_language_finds_the_language_after_a_greater_than_in_an_attribute():
+    already = ITEM_WITHOUT_LANGUAGE.replace(
+        'title="t"', "title=\"a > b\" xml:lang='en'"
+    )
+    result = set_qti_item_language(already, "sw")
+    assert result == already.replace("xml:lang='en'", 'xml:lang="sw"')
+
+
+def test_set_language_ignores_language_text_inside_another_attribute_value():
+    tricky = ITEM_WITHOUT_LANGUAGE.replace('title="t"', "title=\"see xml:lang='x'\"")
+    result = set_qti_item_language(tricky, "sw")
+    assert result == tricky.replace(
+        'time-dependent="false">', 'time-dependent="false" xml:lang="sw">'
+    )
 
 
 def test_set_language_leaves_an_item_already_declaring_it_byte_for_byte():
