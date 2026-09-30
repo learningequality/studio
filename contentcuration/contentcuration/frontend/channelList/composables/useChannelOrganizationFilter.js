@@ -1,5 +1,6 @@
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router/composables';
+import { Organization } from 'shared/data/resources';
 import { useFilter } from 'shared/composables/useFilter';
 import { createTranslator } from 'shared/i18n';
 
@@ -16,12 +17,31 @@ const strings = createTranslator('ChannelOrganizationFilter', {
     message: 'Unavailable organization',
     context: 'Selected organization has no accessible channels in this list',
   },
+  loadError: {
+    message: 'Unable to load organizations. Please try again.',
+    context: 'Error loading organization filter options',
+  },
+  retry: {
+    message: 'Retry',
+    context: 'Reload organization filter options',
+  },
 });
 
-// Derive options from the unfiltered list so selecting one organization does not
-// remove the others. Association metadata is supplied by the channel Resource.
+// Memberships include organizations with no channels in this list. Also retain
+// organizations on directly shared channels where the user is not a member.
 export function useChannelOrganizationFilter(channels) {
   const route = useRoute();
+  const memberships = ref([]);
+  const organizationLoadError = ref(false);
+  async function loadOrganizations() {
+    organizationLoadError.value = false;
+    try {
+      memberships.value = await Organization.fetchCollection({ member: true, page_size: 100 });
+    } catch (error) {
+      organizationLoadError.value = true;
+    }
+  }
+  onMounted(loadOrganizations);
   const selectedId = computed(() => {
     const value = route.query.organization;
     return typeof value === 'string' ? value : '';
@@ -32,6 +52,9 @@ export function useChannelOrganizationFilter(channels) {
       if (channel.organization && channel.organization_name) {
         organizations.set(channel.organization, channel.organization_name);
       }
+    }
+    for (const organization of memberships.value) {
+      organizations.set(organization.id, organization.name);
     }
     const entries = [...organizations.entries()].sort((a, b) => a[1].localeCompare(b[1]));
     const map = Object.fromEntries([
@@ -55,6 +78,10 @@ export function useChannelOrganizationFilter(channels) {
   );
 
   return {
+    organizationLoadError,
+    loadOrganizations,
+    organizationLoadError$: strings.loadError$,
+    retryOrganizations$: strings.retry$,
     organizationFilter: filter,
     organizationOptions: options,
     filteredChannels,

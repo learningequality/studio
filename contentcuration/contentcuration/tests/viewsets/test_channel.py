@@ -643,6 +643,31 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
 
 
 class CRUDTestCase(StudioAPITestCase):
+    def test_channel_organization_metadata_in_list_and_detail(self):
+        user = testdata.user()
+        organization = models.Organization.objects.create(name="Aurora")
+        channel = testdata.channel()
+        channel.editors.add(user)
+        self.client.force_authenticate(user=user)
+
+        for owner in (organization, None):
+            channel.organization = owner
+            channel.save()
+            for url, params in (
+                (reverse("channel-detail", args=[channel.id]), {}),
+                (reverse("channel-list"), {"edit": True}),
+            ):
+                with self.subTest(organization=owner, url=url):
+                    response = self.client.get(url, params)
+                    self.assertEqual(response.status_code, 200, response.content)
+                    data = response.data
+                    if isinstance(data, list):
+                        data = next(item for item in data if item["id"] == channel.id)
+                    self.assertEqual(data["organization"], owner.id if owner else None)
+                    self.assertEqual(
+                        data["organization_name"], owner.name if owner else None
+                    )
+
     @property
     def channel_metadata(self):
         return {

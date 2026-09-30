@@ -30,6 +30,16 @@
           />
         </div>
       </div>
+      <p
+        v-if="organizationLoadError"
+        role="alert"
+      >
+        {{ organizationLoadError$() }}
+        <KButton
+          :text="retryOrganizations$()"
+          @click="loadOrganizations"
+        />
+      </p>
     </template>
 
     <template
@@ -116,12 +126,24 @@
         orderFields: ['desc'],
       });
 
-      const { organizationFilter, organizationOptions, filteredChannels, filterByOrganization$ } =
-        useChannelOrganizationFilter(channels);
+      const {
+        organizationFilter,
+        organizationOptions,
+        filteredChannels,
+        filterByOrganization$,
+        organizationLoadError,
+        organizationLoadError$,
+        retryOrganizations$,
+        loadOrganizations,
+      } = useChannelOrganizationFilter(channels);
 
       return {
         loading,
         editableChannels: filteredChannels,
+        organizationLoadError,
+        organizationLoadError$,
+        retryOrganizations$,
+        loadOrganizations,
         organizationFilter,
         organizationOptions,
         filterByOrganization$,

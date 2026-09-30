@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import VueRouter from 'vue-router';
 import { Store } from 'vuex';
 import StudioMyChannels from '../index.vue';
+import { Organization } from 'shared/data/resources';
 import { ChannelListTypes } from 'shared/constants';
 import { redirectBrowser } from 'shared/utils/navigation';
 
@@ -106,6 +107,7 @@ function renderComponent(props = {}, channelData = CHANNELS) {
 describe('StudioMyChannels', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.spyOn(Organization, 'fetchCollection').mockResolvedValue([]);
     router.push('/').catch(() => {});
   });
 
@@ -127,6 +129,51 @@ describe('StudioMyChannels', () => {
   });
 
   describe('organization filter', () => {
+    it('lists all three memberships even when no channels have organization metadata', async () => {
+      Organization.fetchCollection.mockResolvedValue([
+        { id: 'one', name: 'Aurora' },
+        { id: 'two', name: 'Beacon' },
+        { id: 'three', name: 'Cedar' },
+      ]);
+      renderComponent(
+        {},
+        CHANNELS.map(channel => ({
+          ...channel,
+          organization: undefined,
+          organization_name: undefined,
+        })),
+      );
+      await screen.findAllByTestId('channel-card');
+      await userEvent.click(screen.getByText('Filter by organization'));
+      for (const name of ['Aurora', 'Beacon', 'Cedar']) {
+        expect(
+          await screen.findByText(name, { selector: '.ui-select-option-basic' }),
+        ).toBeInTheDocument();
+      }
+      expect(Organization.fetchCollection).toHaveBeenCalledWith({ member: true, page_size: 100 });
+      await userEvent.click(screen.getByText('Cedar', { selector: '.ui-select-option-basic' }));
+      await waitFor(() => expect(screen.getByText('No channels found')).toBeInTheDocument());
+      expect(
+        screen.getByText('Cedar', { selector: '.ui-select-display-value' }),
+      ).toBeInTheDocument();
+    });
+
+    it('lets the user retry a failed membership lookup without hiding channels', async () => {
+      Organization.fetchCollection.mockRejectedValueOnce(new Error('Network error'));
+      renderComponent();
+      expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load organizations');
+      expect(await screen.findAllByTestId('channel-card')).toHaveLength(2);
+      Organization.fetchCollection.mockResolvedValue([
+        { id: 'retry-org', name: 'Recovered organization' },
+      ]);
+      await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
+      await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
+      await userEvent.click(screen.getByText('Filter by organization'));
+      expect(
+        await screen.findByText('Recovered organization', { selector: '.ui-select-option-basic' }),
+      ).toBeInTheDocument();
+    });
+
     it('keeps legacy channels without association metadata visible by default', async () => {
       const legacyChannels = CHANNELS.map(channel => ({
         ...channel,
