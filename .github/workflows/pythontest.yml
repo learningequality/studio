@@ -10,26 +10,36 @@ on:
 
 permissions:
   contents: read
-  actions: read
 
 jobs:
   pre_job:
     name: Path match check
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
     # Map a step output to a job output
     outputs:
-      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+      python: ${{ steps.filter.outputs.python }}
     steps:
-      - id: skip_check
-        uses: fkirc/skip-duplicate-actions@master
+      # paths-filter needs a checkout to diff push events
+      - uses: actions/checkout@v7
+      - id: filter
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         with:
-          github_token: ${{ github.token }}
-          paths: '["**.py", "requirements.txt", "requirements-dev.txt", ".github/workflows/pythontest.yml", "webpack.config.js", "webpackDevServerAddress.js"]'
+          filters: |
+            python:
+              - '**.py'
+              - 'requirements.txt'
+              - 'requirements-dev.txt'
+              - '.github/workflows/pythontest.yml'
+              - 'webpack.config.js'
+              - 'webpackDevServerAddress.js'
 
   unit_test:
     name: Python unit tests
     needs: pre_job
-    if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
+    if: ${{ needs.pre_job.outputs.python == 'true' }}
     runs-on: ubuntu-latest
 
     services:

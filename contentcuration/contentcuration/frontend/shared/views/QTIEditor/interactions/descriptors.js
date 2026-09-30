@@ -2,6 +2,8 @@ import { Placement, QtiInteraction } from '../constants';
 import { choiceInteractionDescriptor } from './choice/Descriptor';
 import { textEntryInteractionDescriptor } from './textEntry/Descriptor';
 import { orderingInteractionDescriptor } from './ordering/Descriptor';
+import { associateInteractionDescriptor } from './associate/Descriptor';
+import { matchInteractionDescriptor } from './match/Descriptor';
 
 /**
  * Every interaction's descriptor: matching, parsing, building and validating XML.
@@ -26,6 +28,8 @@ export const descriptors = [
   choiceInteractionDescriptor,
   textEntryInteractionDescriptor,
   orderingInteractionDescriptor,
+  associateInteractionDescriptor,
+  matchInteractionDescriptor,
 ];
 
 /**

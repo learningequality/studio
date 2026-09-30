@@ -47,7 +47,7 @@ describe('a converted single-selection item', () => {
     expect(doc.querySelector('parsererror')).toBeNull();
     expect(doc.querySelector('qti-outcome-declaration').getAttribute('identifier')).toBe('SCORE');
     expect(doc.querySelector('qti-response-processing').getAttribute('template')).toBe(
-      'https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct',
+      'https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct.xml',
     );
   });
 

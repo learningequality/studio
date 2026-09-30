@@ -2,8 +2,10 @@ import re
 import xml.etree.ElementTree as ET
 from abc import ABC
 from enum import Enum
+from functools import lru_cache
 from functools import partial
 from typing import Annotated
+from typing import get_args
 from typing import List
 from typing import Optional
 from typing import Set
@@ -167,6 +169,10 @@ class BaseSequence(XMLElement):
     label: Optional[str] = None
     # We explicitly do not set the base value.
     dir_: Optional[Dir] = None
+    # QTI 3.0 declares no style attribute but the item XSD allows it.
+    # Studio uses it for what the HTML profile has no element for — a text decoration, an
+    # alignment — rather than shipping a qti-stylesheet and a vocabulary of classes.
+    style: Optional[str] = None
 
 
 # Pydantic's BaseModel Metaclass is only importable from an internal module,
@@ -207,6 +213,21 @@ class RegistryMeta(BaseSequenceMetaclass):
         """Get the registered class for a given tag name"""
         cls._ensure_registry_complete()
         return getattr(cls, "_registry", {}).get(tag_name)
+
+
+@lru_cache(maxsize=1)
+def _inline_classes() -> tuple:
+    """The classes the schema lets sit inline, read off ``InlineGroup`` itself.
+
+    Taken from the union rather than restated here, so that a type the schema starts
+    admitting inline -- MathML being the one that is neither HTML nor an interaction --
+    does not also have to be remembered in this module.
+    """
+    # Imported here rather than at module scope: content_types imports this module, so
+    # the two only resolve once the registry that html populates is in place.
+    from contentcuration.utils.assessment.qti.html.content_types import InlineGroup
+
+    return tuple(member for member in get_args(InlineGroup) if isinstance(member, type))
 
 
 class ElementTreeBase(BaseSequence, metaclass=RegistryMeta):
@@ -254,13 +275,37 @@ class ElementTreeBase(BaseSequence, metaclass=RegistryMeta):
             children.append(TextNode(text=element.text))
 
         # Process child elements
-        for child_elem in element:
+        child_elements = list(element)
+        for index, child_elem in enumerate(child_elements):
             children.append(cls.from_element(child_elem))
             # Add tail text after child element
-            if child_elem.tail and child_elem.tail.strip():
-                children.append(TextNode(text=child_elem.tail))
+            tail = child_elem.tail
+            if tail and (
+                tail.strip() or cls._separates_inline_siblings(child_elements, index)
+            ):
+                children.append(TextNode(text=tail))
 
         return children
+
+    @classmethod
+    def _separates_inline_siblings(cls, child_elements, index: int) -> bool:
+        """Whether whitespace after ``child_elements[index]`` is content of its own.
+
+        Between two inline elements it is the word gap a reader sees, and dropping it
+        runs the two words together. Between block elements it is the renderer's own
+        indentation, which says nothing and does not belong in the item.
+        """
+        if index + 1 >= len(child_elements):
+            return False
+        return all(
+            cls._is_inline_tag(child_elements[offset].tag)
+            for offset in (index, index + 1)
+        )
+
+    @classmethod
+    def _is_inline_tag(cls, tag: str) -> bool:
+        target_class = type(cls).get_class_for_tag(tag)
+        return target_class is not None and issubclass(target_class, _inline_classes())
 
     @classmethod
     def from_string(cls, string: str) -> List["ElementTreeBase"]:

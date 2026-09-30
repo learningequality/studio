@@ -3,7 +3,7 @@
   <div
     ref="editorContainer"
     class="editor-container"
-    :class="{ 'view-mode': editorMode === 'view' }"
+    :class="{ 'view-mode': editorMode === 'view', 'is-padded': padding === 'default' }"
     :style="[
       minHeight && editorMode !== 'view' ? { minHeight } : {},
       editorMode !== 'view' ? { backgroundColor: $themePalette.white } : {},
@@ -27,33 +27,6 @@
         v-else
         v-on="sharedEventHandlers"
         @minimize="emitMinimize"
-      />
-    </div>
-
-    <div
-      v-if="linkHandler.isBubbleMenuOpen.value"
-      :style="linkHandler.popoverStyle.value"
-    >
-      <LinkBubbleMenu
-        v-if="isReady"
-        :editor="editor"
-      />
-    </div>
-
-    <div
-      v-if="linkHandler.isEditorOpen.value"
-      class="link-editor-popover-wrapper"
-      :class="{ 'has-overlay': linkHandler.isEditorCentered.value }"
-      :style="linkHandler.isEditorCentered.value ? {} : linkHandler.popoverStyle.value"
-      @click.self="linkHandler.closeLinkEditor"
-    >
-      <LinkEditor
-        :style="linkHandler.isEditorCentered.value ? linkHandler.popoverStyle.value : {}"
-        :mode="linkHandler.editorMode.value"
-        :initial-state="linkHandler.editorInitialState.value"
-        @save="linkHandler.saveLink"
-        @remove="linkHandler.removeLink"
-        @close="linkHandler.closeLinkEditor"
       />
     </div>
 
@@ -92,6 +65,7 @@
     </div>
 
     <EditorContentWrapper
+      :padding="padding"
       :inert="editorMode === 'view'"
       @drop.native.prevent="handleDrop"
       @dragover.native.prevent
@@ -116,6 +90,7 @@
     watch,
     computed,
     ref,
+    toRef,
     nextTick,
     onMounted,
     onUnmounted,
@@ -126,9 +101,6 @@
   import ImageUploadModal from './components/image/ImageUploadModal.vue';
   import { useImageHandling } from './composables/useImageHandling';
   import '../assets/styles/code-theme-dark.css';
-  import { useLinkHandling } from './composables/useLinkHandling';
-  import LinkBubbleMenu from './components/link/LinkBubbleMenu.vue';
-  import LinkEditor from './components/link/LinkEditor.vue';
   import { useMathHandling } from './composables/useMathHandling';
   import FormulasMenu from './components/math/FormulasMenu.vue';
   import { preprocessMarkdown } from './utils/markdown';
@@ -144,20 +116,17 @@
       EditorToolbar,
       EditorContentWrapper,
       ImageUploadModal,
-      LinkBubbleMenu,
-      LinkEditor,
       FormulasMenu,
       MobileTopBar,
       MobileFormattingBar,
     },
     setup(props, { emit }) {
       const editorContainer = ref(null);
-      const { editor, isReady, isFocused, initializeEditor } = useEditor();
+      const { editor, isReady, isFocused, insertContext, initializeEditor } = useEditor();
       provide('editor', editor);
       provide('isReady', isReady);
-
-      const linkHandler = useLinkHandling(editor);
-      provide('linkHandler', linkHandler);
+      provide('insertContext', insertContext);
+      provide('insertActions', toRef(props, 'insertActions'));
 
       // The anchored modals are measured and hit-tested through these refs, so that several
       // editors mounted at once each work with their own modal.
@@ -176,7 +145,6 @@
 
       const sharedEventHandlers = computed(() => ({
         'insert-image': target => imageHandler.openCreateModal({ targetElement: target }),
-        'insert-link': () => linkHandler.openLinkEditor(),
         'insert-math': target => mathHandler.openCreateMathModal({ targetElement: target }),
       }));
 
@@ -261,6 +229,7 @@
           if (!editor.value) {
             initializeEditor(processedContent, props.mode, {
               autofocus: props.autofocus,
+              extensions: props.extensions,
             });
             return;
           }
@@ -272,7 +241,7 @@
         { immediate: true },
       );
 
-      // sync changes from the editor to the parent component, only on blur
+      // sync changes from the editor to the parent component
       const emitContentUpdate = () => {
         if (!editor.value || !isReady.value) {
           return;
@@ -284,6 +253,15 @@
           emit('update', content);
         }
       };
+
+      /**
+       * `ready`: emitted once, with the tiptap `Editor`, when commands can be issued.
+       */
+      watch(isReady, ready => {
+        if (ready) {
+          emit('ready', editor.value);
+        }
+      });
 
       // Emit the content update only when the editor loses focus (blur).
       watch(isFocused, (focused, wasFocused) => {
@@ -304,18 +282,19 @@
         editorContainer,
         imageUploadModal,
         formulasMenu,
-        isReady,
         hasFocusWithin,
         handleFocusout,
         handleDrop,
-        linkHandler,
-        editor,
         mathHandler,
         isTouchDevice,
         imageHandler,
         sharedEventHandlers,
         editorMode: computed(() => props.mode),
         emitMinimize: () => {
+          // Toolbar buttons suppress blur to keep the caret, so content written since
+          // the last blur is still unsynced. Flush it first: a parent acting on the
+          // close would otherwise read the content as it stood before that edit.
+          emitContentUpdate();
           emit('minimize');
         },
         handleContainerKeydown,
@@ -344,6 +323,34 @@
         type: Object,
         default: () => ({}),
       },
+      /**
+       * tiptap extensions (`Node`, `Mark` or `Extension`), registered after the
+       * built-in ones. Read once, when the editor is created.
+       * @type {import('@tiptap/core').AnyExtension[]}
+       */
+      extensions: {
+        type: Array,
+        default: () => [],
+      },
+      /**
+       * Actions appended to the insert tools of every toolbar. Each is
+       * `{ name, title, icon, handler, isActive?, isAvailable?, prominent? }`:
+       * - `name` {string}: unique among the insert tools.
+       * - `title` {string}: translated label and accessible name.
+       * - `icon` {string}: a KDS icon name, rendered with `KIcon`.
+       * - `handler` {(context) => void}: runs on click; not called while unavailable.
+       * - `isActive`, `isAvailable` {boolean | (context) => boolean}: re-evaluated on
+       *   every transaction.
+       * - `prominent` {boolean}: on desktop, a labelled button before minimize that
+       *   never moves into More.
+       * `context` is `{ editor, selection: { empty, spansLines, hasCursor },
+       * canInsertNode(typeName) }`; see docs/rich_text_editor.md.
+       * @type {Object[]}
+       */
+      insertActions: {
+        type: Array,
+        default: () => [],
+      },
       minHeight: {
         type: String,
         default: null,
@@ -353,8 +360,17 @@
         default: 'markdown',
         validator: v => ['markdown', 'html'].includes(v),
       },
+      /**
+       * Space around the content: 'default', 'small' (8px) or 'none', for cards
+       * and chips. Below default, view mode also drops paragraph margins.
+       */
+      padding: {
+        type: String,
+        default: 'default',
+        validator: v => ['default', 'small', 'none'].includes(v),
+      },
     },
-    emits: ['update', 'minimize', 'open-editor'],
+    emits: ['update', 'minimize', 'open-editor', 'ready'],
   });
 
 </script>
@@ -364,6 +380,10 @@
 
   .editor-container {
     position: relative;
+
+    /* Laid out as a flex item, this would otherwise refuse to shrink below the
+       widest thing typed into it, pushing the row it sits in past its bounds. */
+    min-width: 0;
     min-height: 200px;
     margin: auto;
     font-family:
@@ -387,7 +407,6 @@
     outline-color: #007bff;
   }
 
-  .link-editor-popover-wrapper,
   .image-upload-popover-wrapper,
   .math-modal-popover-wrapper {
     position: fixed;
@@ -402,7 +421,6 @@
     pointer-events: none;
   }
 
-  .link-editor-popover-wrapper > *,
   .image-upload-popover-wrapper > *,
   .math-modal-popover-wrapper > * {
     pointer-events: auto;
@@ -477,6 +495,12 @@
 
   .editor-container li {
     margin: 4px 0;
+  }
+
+  /* A card or chip with reduced padding shows its content as one line, which
+     paragraph margins would push past that padding. */
+  .editor-container.view-mode:not(.is-padded) p {
+    margin: 0;
   }
 
 </style>

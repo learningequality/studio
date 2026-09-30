@@ -62,6 +62,7 @@
               :key="`button-${action.name}`"
               :title="action.title"
               :icon="action.icon"
+              :kIcon="action.kIcon"
               :is-active="action.isActive"
               :isAvailable="action.isAvailable"
               :rtlIcon="action.rtlIcon"
@@ -102,6 +103,8 @@
             @select="onOverflowSelect"
           >
             <template #option="{ option }">
+              <!-- A disabled contributed option emits no select, so its click is stopped here
+                instead of in onOverflowSelect. -->
               <div
                 class="overflow-item"
                 :style="
@@ -112,8 +115,15 @@
                     }
                     : null
                 "
+                @click="option.disabled && option.contributed && $event.stopPropagation()"
               >
+                <KIcon
+                  v-if="option.kIcon"
+                  :icon="option.kIcon"
+                  class="dropdown-item-icon"
+                />
                 <img
+                  v-else
                   :src="option.icon"
                   class="dropdown-item-icon"
                   aria-hidden="true"
@@ -125,6 +135,22 @@
         </button>
       </template>
     </KListWithOverflow>
+
+    <!-- `aria-disabled` rather than `disabled`, which would drop its tab stop. -->
+    <KButton
+      v-for="action in prominentInsertTools"
+      :key="action.name"
+      class="prominent-button"
+      primary
+      appearance="raised-button"
+      :text="action.title"
+      :title="action.title"
+      :icon="action.kIcon"
+      data-toolbar-item
+      :aria-disabled="String(!action.isAvailable)"
+      @mousedown.native.prevent
+      @click="action.handler()"
+    />
 
     <ToolbarButton
       class="minimize-button"
@@ -167,7 +193,6 @@
         canClearFormat,
         historyActions,
         alignAction,
-        alignActionHidden,
         textActions,
         listActions,
         insertTools,
@@ -241,8 +266,6 @@
         {
           name: 'align',
           groupActions: [alignAction.value],
-          // Reason on the flag, in useToolbarActions.js.
-          hide: alignActionHidden,
         },
         {
           name: 'clearFormat',
@@ -272,12 +295,17 @@
           name: 'insert',
           role: 'group',
           label: insertTools$(),
-          groupActions: insertTools.value.map(tool => ({
-            ...tool,
-            handler: (e, { fromOverflow } = {}) => onInsertToolClick(tool, e, { fromOverflow }),
-          })),
+          groupActions: insertTools.value
+            .filter(tool => !tool.prominent)
+            .map(tool => ({
+              ...tool,
+              handler: (e, { fromOverflow } = {}) => onInsertToolClick(tool, e, { fromOverflow }),
+            })),
         },
       ]);
+
+      // Outside KListWithOverflow, so they never collapse into More.
+      const prominentInsertTools = computed(() => insertTools.value.filter(tool => tool.prominent));
 
       // Flattens the visible overflow groups into a KDropdownMenu-compatible
       // options array. Maps `title` → `label` and `isAvailable` → `disabled`.
@@ -318,9 +346,6 @@
       const toolbarGroupsWithDividers = computed(() => {
         const groups = [];
         toolbarGroups.value.forEach((group, index) => {
-          if (group.hide) {
-            return;
-          }
           groups.push(group);
           if (index < toolbarGroups.value.length - 1) {
             groups.push({ type: 'divider' });
@@ -342,6 +367,7 @@
         toolbarGroupsWithDividers,
         flatOverflowOptions,
         historyActions,
+        prominentInsertTools,
         minimizeAction,
         onOverflowSelect,
         textFormattingToolbar$,
@@ -366,9 +392,28 @@
     border-radius: 8px 8px 0 0;
   }
 
+  /* Never narrower than More, which would otherwise overlap minimize. */
   .overflow-list {
-    flex: 1;
+    flex: 2;
+    min-width: min-content;
+  }
+
+  /* Visible items stay out of min-content, so they can still collapse. */
+  .overflow-list ::v-deep .list {
+    flex-grow: 1;
+    width: 0;
     min-width: 0;
+  }
+
+  /* Keeps its full label; the overflow list gives up tools instead. */
+  .toolbar .prominent-button {
+    flex: none;
+  }
+
+  .prominent-button[aria-disabled='true'] {
+    cursor: default;
+    box-shadow: none;
+    opacity: 0.5;
   }
 
   .toolbar-group {
@@ -384,6 +429,8 @@
   }
 
   .dropdown-item-icon {
+    /* Undoes KIcon's inline-text nudge, which misaligns it with the img icons. */
+    top: 0;
     flex-shrink: 0;
     width: 20px;
     height: 20px;

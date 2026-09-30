@@ -105,7 +105,6 @@
   .community-library-status-button {
     @extend %md-standard-func;
 
-    width: 9em;
     padding: 4px;
     color: v-bind('labelColor');
     background-color: v-bind('color');

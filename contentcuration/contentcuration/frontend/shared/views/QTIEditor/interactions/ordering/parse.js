@@ -1,6 +1,5 @@
 import { QTIDeclaration } from '../../serialization/qti/QTIDeclaration';
-import { getPromptHTML, parseXML } from '../../serialization/xml';
-import { buildXmlNode } from '../../serialization/assembleItem';
+import { buildXmlNode, getPromptHTML, parseXML } from '../../serialization/xml';
 import CorrectResponse from '../../serialization/qti/declarations/correctResponse';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
 import { Orientation, RESPONSE_IDENTIFIER } from '../../constants';

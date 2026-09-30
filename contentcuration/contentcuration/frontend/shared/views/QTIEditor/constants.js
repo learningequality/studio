@@ -53,6 +53,7 @@ export const QtiInteraction = Object.freeze({
   CHOICE: 'qti-choice-interaction',
   ORDER: 'qti-order-interaction',
   MATCH: 'qti-match-interaction',
+  ASSOCIATE: 'qti-associate-interaction',
   TEXT_ENTRY: 'qti-text-entry-interaction',
   EXTENDED_TEXT: 'qti-extended-text-interaction',
 });
@@ -82,6 +83,8 @@ export const QuestionType = Object.freeze({
   TEXT_ENTRY: 'textEntry',
   FREE_RESPONSE: 'freeResponse',
   ORDERING: 'ordering',
+  ASSOCIATE: 'associate',
+  MATCH: 'match',
 });
 
 /**
@@ -103,9 +106,28 @@ export const ValidationError = Object.freeze({
   EMPTY_ANSWER_CONTENT: 'EMPTY_ANSWER_CONTENT',
   DUPLICATE_ANSWER_CONTENT: 'DUPLICATE_ANSWER_CONTENT',
   TOO_FEW_CHOICES: 'TOO_FEW_CHOICES',
+  TOO_FEW_PAIRS: 'TOO_FEW_PAIRS',
+  DUPLICATE_PAIR_CONTENT: 'DUPLICATE_PAIR_CONTENT',
+  DUPLICATE_DISTRACTOR_CONTENT: 'DUPLICATE_DISTRACTOR_CONTENT',
+  EMPTY_ROW_CONTENT: 'EMPTY_ROW_CONTENT',
+  ROW_WITHOUT_MATCH: 'ROW_WITHOUT_MATCH',
+  TOO_FEW_ROWS: 'TOO_FEW_ROWS',
+  DUPLICATE_ROW_CONTENT: 'DUPLICATE_ROW_CONTENT',
+  DUPLICATE_MATCH_CONTENT: 'DUPLICATE_MATCH_CONTENT',
 });
 
 export const RESPONSE_IDENTIFIER = 'RESPONSE';
+
+/**
+ * The QTI 3.0 standard response processing templates. Each one scores the response
+ * variable named RESPONSE into SCORE, so it only fits an item whose one response
+ * declaration has that identifier.
+ */
+export const ResponseProcessingTemplate = Object.freeze({
+  MATCH_CORRECT: 'https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct.xml',
+  MAP_RESPONSE: 'https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response.xml',
+  MAP_RESPONSE_POINT: 'https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/map_response_point.xml',
+});
 
 export const Placement = Object.freeze({
   BLOCK: 'block',

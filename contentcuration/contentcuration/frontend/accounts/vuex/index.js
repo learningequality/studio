@@ -16,12 +16,14 @@ export default {
     sendPasswordResetLink(context, email) {
       return client.post(window.Urls.auth_password_reset(), { email });
     },
-    setPassword(context, { uidb64, token, new_password1, new_password2 }) {
+    setPassword(context, { uidb64, new_password1, new_password2 }) {
       const data = {
         new_password1,
         new_password2,
       };
-      return client.post(window.Urls.auth_password_reset_confirm(uidb64, token), data, {
+      // Django's PasswordResetConfirmView.reset_url_token
+      // https://docs.djangoproject.com/en/3.2/topics/auth/default/#django.contrib.auth.views.PasswordResetConfirmView
+      return client.post(window.Urls.auth_password_reset_confirm(uidb64, 'set-password'), data, {
         headers: {
           'Content-type': 'application/form-url-encode',
         },

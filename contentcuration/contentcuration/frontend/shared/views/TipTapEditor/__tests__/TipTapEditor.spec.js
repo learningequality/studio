@@ -1,3 +1,7 @@
+import { render, screen, waitFor } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
+import { nextTick } from 'vue';
+import VueRouter from 'vue-router';
 import TipTapEditor from '../TipTapEditor/TipTapEditor.vue';
 
 function makeEditorStub({ markdownOut, htmlOut }) {
@@ -85,5 +89,40 @@ describe('TipTapEditor — getContent() logic', () => {
       const editor = { storage: {}, getHTML: () => HTML };
       expect(getContent(editor, true, 'html')).toBe(HTML);
     });
+  });
+});
+
+describe('TipTapEditor — minimizing from the toolbar', () => {
+  const renderEditor = async listeners => {
+    const ready = jest.fn();
+    render(
+      {
+        components: { TipTapEditor },
+        template:
+          '<TipTapEditor value="<p>before</p>" mode="edit" format="html" v-on="$listeners" />',
+      },
+      { listeners: { ...listeners, ready }, routes: new VueRouter() },
+    );
+    // The toolbar treats its buttons as unavailable until the editor reports ready.
+    await waitFor(() => expect(ready).toHaveBeenCalled());
+    await nextTick();
+    return ready.mock.calls[0][0];
+  };
+
+  const minimize = user => user.click(screen.getByRole('button', { name: 'Minimize Toolbar' }));
+
+  it('emits the content written since the last blur, before it emits minimize', async () => {
+    const user = userEvent.setup();
+    const update = jest.fn();
+    const onMinimize = jest.fn();
+    const editor = await renderEditor({ update, minimize: onMinimize });
+    editor.commands.setContent('<p>after</p>');
+
+    await minimize(user);
+
+    expect(update).toHaveBeenCalledWith('<p>after</p>');
+    expect(update.mock.invocationCallOrder.at(-1)).toBeLessThan(
+      onMinimize.mock.invocationCallOrder[0],
+    );
   });
 });

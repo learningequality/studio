@@ -61,6 +61,53 @@ export const ORDERING_DECL_XML = `<qti-response-declaration identifier="RESPONSE
   </qti-correct-response>
 </qti-response-declaration>`;
 
+// choice_eee55555 (Lysander) is unpaired — it is the fixture's distractor.
+export const ASSOCIATE_XML = `<qti-associate-interaction response-identifier="RESPONSE" shuffle="true" max-associations="2">
+  <qti-prompt><p>Match each character to his adversary.</p></qti-prompt>
+  <qti-simple-associable-choice identifier="choice_aaa11111" match-max="1">Antonio</qti-simple-associable-choice>
+  <qti-simple-associable-choice identifier="choice_bbb22222" match-max="1">Prospero</qti-simple-associable-choice>
+  <qti-simple-associable-choice identifier="choice_ccc33333" match-max="1">Capulet</qti-simple-associable-choice>
+  <qti-simple-associable-choice identifier="choice_ddd44444" match-max="1">Montague</qti-simple-associable-choice>
+  <qti-simple-associable-choice identifier="choice_eee55555" match-max="1">Lysander</qti-simple-associable-choice>
+</qti-associate-interaction>`;
+
+export const ASSOCIATE_DECL_XML = `<qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="pair">
+  <qti-correct-response>
+    <qti-value>choice_aaa11111 choice_bbb22222</qti-value>
+    <qti-value>choice_ccc33333 choice_ddd44444</qti-value>
+  </qti-correct-response>
+</qti-response-declaration>`;
+
+// choice_reptile is named by no correct-response value — the fixture's distractor.
+export const MATCH_XML = `<qti-match-interaction response-identifier="RESPONSE" shuffle="true" max-associations="3">
+  <qti-prompt><p>Match each animal to its biological classification class.</p></qti-prompt>
+  <qti-simple-match-set>
+    <qti-simple-associable-choice identifier="row_dog" match-max="1">Dog</qti-simple-associable-choice>
+    <qti-simple-associable-choice identifier="row_eagle" match-max="1">Eagle</qti-simple-associable-choice>
+    <qti-simple-associable-choice identifier="row_frog" match-max="1">Frog</qti-simple-associable-choice>
+  </qti-simple-match-set>
+  <qti-simple-match-set>
+    <qti-simple-associable-choice identifier="choice_bird" match-max="1">Bird</qti-simple-associable-choice>
+    <qti-simple-associable-choice identifier="choice_mammal" match-max="1">Mammal</qti-simple-associable-choice>
+    <qti-simple-associable-choice identifier="choice_amphibian" match-max="1">Amphibian</qti-simple-associable-choice>
+    <qti-simple-associable-choice identifier="choice_reptile" match-max="1">Reptile</qti-simple-associable-choice>
+  </qti-simple-match-set>
+</qti-match-interaction>`;
+
+export const MATCH_DECL_XML = `<qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="directedPair">
+  <qti-correct-response>
+    <qti-value>row_dog choice_mammal</qti-value>
+    <qti-value>row_eagle choice_bird</qti-value>
+    <qti-value>row_frog choice_amphibian</qti-value>
+  </qti-correct-response>
+</qti-response-declaration>`;
+
+// A third match set is outside what the editor can represent.
+export const MATCH_THREE_SETS_XML = MATCH_XML.replace(
+  '</qti-match-interaction>',
+  '<qti-simple-match-set/></qti-match-interaction>',
+);
+
 // Full QTI Assessment Item XML Documents
 
 export const VALID_CHOICE_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
@@ -281,6 +328,38 @@ export const NO_INTERACTION_ITEM_WITH_HINTS = `<?xml version="1.0" encoding="UTF
   </qti-catalog-info>
 </qti-assessment-item>`;
 
+export const VALID_ASSOCIATE_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  identifier="item-test-associate"
+  title="Test Associate Question"
+  adaptive="false"
+  time-dependent="false"
+  xml:lang="en"
+>
+  ${ASSOCIATE_DECL_XML}
+
+  <qti-item-body>
+    ${ASSOCIATE_XML}
+  </qti-item-body>
+</qti-assessment-item>`;
+
+export const VALID_MATCH_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  identifier="item-test-match"
+  title="Test Match Question"
+  adaptive="false"
+  time-dependent="false"
+  xml:lang="en"
+>
+  ${MATCH_DECL_XML}
+
+  <qti-item-body>
+    ${MATCH_XML}
+  </qti-item-body>
+</qti-assessment-item>`;
+
 export const TWO_INTERACTIONS_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item
   xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
@@ -300,6 +379,37 @@ export const TWO_INTERACTIONS_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
     </qti-choice-interaction>
     <p>Middle text</p>
     <qti-text-entry-interaction response-identifier="RESP2" />
+  </qti-item-body>
+</qti-assessment-item>`;
+
+/**
+ * Two text entries whose declarations are listed out of body order.
+ * Text entry, the only inline interaction parseItem finds until #6180, stands in for
+ * inline choice.
+ */
+export const MULTI_TEXT_ENTRY_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  identifier="item-multi-text-entry"
+  title="Multi Text Entry"
+  adaptive="false"
+  time-dependent="false"
+  xml:lang="en"
+>
+  <qti-response-declaration identifier="response_pw4rzk8d" cardinality="single" base-type="string">
+    <qti-correct-response>
+      <qti-value>Moon</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+  <qti-response-declaration identifier="response_xq7tbn2c" cardinality="single" base-type="string">
+    <qti-correct-response>
+      <qti-value>Sun</qti-value>
+    </qti-correct-response>
+  </qti-response-declaration>
+
+  <qti-item-body>
+    <p>The Earth orbits the <qti-text-entry-interaction response-identifier="response_xq7tbn2c" />.</p>
+    <p>The <qti-text-entry-interaction response-identifier="response_pw4rzk8d" /> orbits the Earth.</p>
   </qti-item-body>
 </qti-assessment-item>`;
 

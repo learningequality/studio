@@ -198,7 +198,9 @@
     flex-wrap: wrap;
     gap: 5px;
     align-items: flex-start;
-    padding: 10px 20px;
+
+    // The question card body already insets its content.
+    padding: 10px 0;
 
     &.small-screen {
       flex-direction: column;
@@ -223,8 +225,9 @@
     gap: 8px;
   }
 
+  // Matches the question label of every interaction editor.
   .group-label {
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 600;
     line-height: 1.4;
     white-space: nowrap;

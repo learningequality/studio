@@ -2,27 +2,39 @@ import { computed, inject } from 'vue';
 import { getTipTapEditorStrings } from '../TipTapEditorStrings';
 import { transformPastedHTML } from '../utils/pasteTransform';
 
+/**
+ * Evaluates a contributed insert action against the editor's insert context.
+ * `isActive` and `isAvailable` may be booleans or predicates of the context.
+ * Its `icon` names a KDS icon, so it becomes `kIcon`: built-in `icon`s are image URLs.
+ * Its `handler` does nothing while the action is unavailable.
+ * `contributed` tells it apart from the built-in insert tools.
+ */
+export function resolveInsertAction({ icon, ...action }, insertContext) {
+  const evaluate = value => (typeof value === 'function' ? value(insertContext.value) : value);
+  const isAvailable = action.isAvailable === undefined || Boolean(evaluate(action.isAvailable));
+  return {
+    ...action,
+    kIcon: icon,
+    contributed: true,
+    isActive: evaluate(action.isActive),
+    isAvailable,
+    handler: () => {
+      if (isAvailable) action.handler(insertContext.value);
+    },
+  };
+}
+
 export function useToolbarActions(emit) {
   const editor = inject('editor', null);
+  const insertContext = inject('insertContext', null);
+  const contributedInsertActions = inject('insertActions', null);
 
   /**
    * Drop the actions marked `hide`, which every toolbar honours — the desktop one and
-   * the mobile bars alike. Same convention as the hidden groups in EditorToolbar.vue:
-   * the action stays defined, with the reason it is not offered, so restoring it is a
-   * matter of deleting one flag.
+   * the mobile bars alike. The action stays defined, with the reason it is not offered,
+   * so restoring it is a matter of deleting one flag.
    */
   const visible = actions => actions.filter(action => !action.hide);
-
-  /*
-   * TextAlign writes `style="text-align: …"`, and the QTI 3.0 HTML profile declares no
-   * style attribute — the item schema admits one only through its lax wildcard, so an
-   * aligned paragraph saves and then ships as non-conformant QTI. The image extension
-   * carries alignment as `data-text-align` instead, which the schema does allow.
-   *
-   * Kept out of `alignAction` so a toolbar can ask whether to offer the control without
-   * evaluating the action, which reads the editor's current selection to pick its icon.
-   */
-  const alignActionHidden = true;
 
   // helper
   const getEffectiveAlignment = editorInstance => {
@@ -364,44 +376,36 @@ export function useToolbarActions(emit) {
     },
   ]);
 
-  const textActions = computed(() =>
-    visible([
-      {
-        name: 'bold',
-        title: bold$(),
-        icon: require('../../assets/icon-bold.svg'),
-        handler: handleBold,
-        isActive: isMarkActive('bold'),
-      },
-      {
-        name: 'italic',
-        title: italic$(),
-        icon: require('../../assets/icon-italic.svg'),
-        handler: handleItalic,
-        isActive: isMarkActive('italic'),
-      },
-      {
-        name: 'underline',
-        title: underline$(),
-        icon: require('../../assets/icon-underline.svg'),
-        handler: handleUnderline,
-        isActive: isMarkActive('underline'),
-        // The QTI 3.0 HTML profile has no <u> or <s>, so the item schema rejects an item
-        // carrying either and the save fails. Both marks are switched off in useEditor.js
-        // as well, since hiding a button leaves its keyboard shortcut behind — offering
-        // these again means undoing both halves.
-        hide: true,
-      },
-      {
-        name: 'strikethrough',
-        title: strikethrough$(),
-        icon: require('../../assets/icon-strikethrough.svg'),
-        handler: handleStrikethrough,
-        isActive: isMarkActive('strike'),
-        hide: true,
-      },
-    ]),
-  );
+  const textActions = computed(() => [
+    {
+      name: 'bold',
+      title: bold$(),
+      icon: require('../../assets/icon-bold.svg'),
+      handler: handleBold,
+      isActive: isMarkActive('bold'),
+    },
+    {
+      name: 'italic',
+      title: italic$(),
+      icon: require('../../assets/icon-italic.svg'),
+      handler: handleItalic,
+      isActive: isMarkActive('italic'),
+    },
+    {
+      name: 'underline',
+      title: underline$(),
+      icon: require('../../assets/icon-underline.svg'),
+      handler: handleUnderline,
+      isActive: isMarkActive('underline'),
+    },
+    {
+      name: 'strikethrough',
+      title: strikethrough$(),
+      icon: require('../../assets/icon-strikethrough.svg'),
+      handler: handleStrikethrough,
+      isActive: isMarkActive('strike'),
+    },
+  ]);
 
   const listActions = computed(() => [
     {
@@ -441,7 +445,7 @@ export function useToolbarActions(emit) {
     },
   ]);
 
-  const insertTools = computed(() =>
+  const builtInInsertTools = computed(() =>
     visible([
       {
         name: 'image',
@@ -475,6 +479,18 @@ export function useToolbarActions(emit) {
       },
     ]),
   );
+
+  // Kept apart from the built-ins: a predicate reads the insert context, which
+  // changes on every transaction.
+  const resolvedInsertActions = computed(() =>
+    visible(
+      (contributedInsertActions?.value ?? []).map(action =>
+        resolveInsertAction(action, insertContext),
+      ),
+    ),
+  );
+
+  const insertTools = computed(() => [...builtInInsertTools.value, ...resolvedInsertActions.value]);
 
   const minimizeAction = {
     name: 'minimize',
@@ -528,7 +544,6 @@ export function useToolbarActions(emit) {
     historyActions,
     textActions,
     alignAction,
-    alignActionHidden,
     listActions,
     scriptActions,
     insertTools,

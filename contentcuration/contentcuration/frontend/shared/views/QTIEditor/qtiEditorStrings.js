@@ -105,9 +105,167 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     message: 'Duplicate items are not allowed',
     context: 'Validation error when two or more ordering items have identical content',
   },
+
+  associateLabel: {
+    message: 'Associate',
+    context: 'Display name for an associate question type shown in the question type selector',
+  },
+  associateDescription: {
+    message: 'Learners must associate pairs of items.',
+    context: 'Description for the associate question type in the info modal',
+  },
+  correctPairsLabel: {
+    message: 'Matching pairs',
+    context: 'Section header above the list of correctly associated pairs',
+  },
+  correctPairsDescription: {
+    message:
+      'Learners match responses from a shuffled set to each prompt. Include distractors to increase difficulty.',
+    context: 'Subtitle under the matching pairs header',
+  },
+  distractorsLabel: {
+    message: 'Distractors (optional)',
+    context: 'Section header above the choices that belong to no correct pair',
+  },
+  distractorsDescription: {
+    message: "Extra items shown in the response pool that don't match any prompt",
+    context: 'Subtitle under the distractors header',
+  },
+  responsePoolLabel: {
+    message: 'Response pool (shuffled)',
+    context: 'Header above the shuffled pool of choices learners will pick from',
+  },
+  correctAnswersLabel: {
+    message: 'Answers',
+    context: 'Header above the list of correct pairs shown when answers are revealed',
+  },
+  pairNumberLabel: {
+    message: 'Pair {number}',
+    context: 'Label to the left of a pair row, e.g. "Pair 2"',
+  },
+  addPairBtn: {
+    message: 'Add pair',
+    context: 'Button that appends a new pair',
+  },
+  deletePairBtn: {
+    message: 'Delete pair {number}',
+    context: 'Accessible label for the delete icon button next to a pair row',
+  },
+  addDistractorBtn: {
+    message: 'Add distractor',
+    context: 'Button that opens the editor for a new distractor',
+  },
+  deleteDistractorBtn: {
+    message: 'Delete distractor {number}',
+    context: 'Accessible label for the delete icon button on a distractor',
+  },
+  saveChipBtn: {
+    message: 'Save',
+    context:
+      'Button that saves the answer or distractor being edited and closes its editor; a new one joins its list',
+  },
+  editPairItemLabel: {
+    message: 'Edit pair {number}, item {position}',
+    context: 'Accessible label for the clickable region to edit one item of a pair',
+  },
+  editDistractorLabel: {
+    message: 'Edit distractor {number}',
+    context: 'Accessible label for the clickable region to edit a distractor',
+  },
+  errorTooFewPairs: {
+    message: '1 or more valid pairs are required',
+    context: 'Validation error when no pair has two distinct, non-empty items',
+  },
+  errorDuplicatePairContent: {
+    message: 'Answers within a pair cannot be the same',
+    context: 'Validation error when both items of a pair have identical content',
+  },
+  errorDuplicateDistractorContent: {
+    message: 'Distractors cannot repeat another item',
+    context:
+      'Validation error when a distractor has the same content as another distractor or as an item in a pair',
+  },
+  matchingRowsLabel: {
+    message: 'Prompts and responses',
+    context: 'Section header above the list of prompts and their correct answers',
+  },
+  matchingRowsDescription: {
+    message:
+      'Learners match responses from a shuffled set to a fixed prompt. Include distractors to increase difficulty.',
+    context: 'Subtitle under the matching rows header',
+  },
+  addRowBtn: {
+    message: 'Add row',
+    context: 'Button that appends a new matching row',
+  },
+  deleteRowBtn: {
+    message: 'Delete row {number}',
+    context: 'Accessible label for the delete icon button next to a matching row',
+  },
+  editRowLabel: {
+    message: 'Edit row {number} prompt',
+    context: "Accessible label for the clickable region to edit a matching row's prompt",
+  },
+  promptColumnLabel: {
+    message: 'Prompt',
+    context: 'Column header above the prompts of the matching rows',
+  },
+  answersColumnLabel: {
+    message: 'Correct matches',
+    context: 'Column header above the correct answers of the matching rows',
+  },
+  answerPlaceholder: {
+    message: 'Enter an answer',
+    context: 'Placeholder shown in a matching row answer that has no content yet',
+  },
+  rowPromptPlaceholder: {
+    message: 'Enter a prompt',
+    context: 'Placeholder shown in a matching row prompt that has no content yet',
+  },
+  rowAnswersLabel: {
+    message: 'Answers for row {number}',
+    context: 'Accessible label for the list of correct answers in a matching row',
+  },
+  addMatchLabel: {
+    message: 'Add answer to row {number}',
+    context: 'Accessible label for the area that starts a new answer in a matching row',
+  },
+  editMatchLabel: {
+    message: 'Edit row {number}, answer {position}',
+    context: 'Accessible label for the clickable region to edit one answer of a matching row',
+  },
+  deleteMatchBtn: {
+    message: 'Delete row {number}, answer {position}',
+    context: "Accessible label for the delete icon button on a matching row's answer",
+  },
+  errorEmptyRowContent: {
+    message: 'Prompt cannot be blank',
+    context: "Validation error when a matching row's prompt is empty",
+  },
+  errorRowWithoutMatch: {
+    message: 'Add at least one answer',
+    context: 'Validation error when a matching row has no non-blank answer',
+  },
+  errorTooFewRows: {
+    message: '1 or more valid rows are required',
+    context: 'Validation error when no row has both a prompt and an answer',
+  },
+  errorDuplicateMatchContent: {
+    message: 'Answers within a row cannot be the same',
+    context: 'Validation error when two answers in one row have identical content',
+  },
+  errorDuplicateRowContent: {
+    message: 'Rows cannot repeat the same prompt',
+    context: 'Validation error when two rows have identical prompts',
+  },
   matchLabel: {
     message: 'Match',
-    context: 'Display name for a match question type',
+    context: 'Display name for a match question type shown in the question type selector',
+  },
+  matchDescription: {
+    message:
+      'Learners match each item in one list to one or more correct items in another, where items can have multiple valid matches, and distractors can be included to increase difficulty.',
+    context: 'Description for the match question type in the info modal',
   },
   extendedTextLabel: {
     message: 'Extended text',

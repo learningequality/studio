@@ -304,11 +304,16 @@
         fetchQueryParams: keywordSearchFetchQueryParams,
       } = useKeywordSearch();
 
+      // channelStatusFilter is derived from the current channelType's options, so an
+      // existing status that's no longer valid for the new type already reads back as
+      // unset - only default it to the first option in that case.
       watch(
         channelTypeFilter,
         () => {
-          const options = channelStatusOptions.value;
-          channelStatusFilter.value = options.length ? options[0].value : null;
+          if (!channelStatusFilter.value) {
+            const options = channelStatusOptions.value;
+            channelStatusFilter.value = options.length ? options[0].value : null;
+          }
         },
         { immediate: true },
       );

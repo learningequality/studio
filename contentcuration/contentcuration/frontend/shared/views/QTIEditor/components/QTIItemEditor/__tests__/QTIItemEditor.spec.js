@@ -12,6 +12,9 @@ import {
   NO_INTERACTION_ITEM_DOCUMENT,
   CHOICE_ITEM_DOCUMENT_WITH_HINTS,
   NO_INTERACTION_ITEM_WITH_HINTS,
+  VALID_ASSOCIATE_ITEM_DOCUMENT,
+  VALID_MATCH_ITEM_DOCUMENT,
+  MULTI_TEXT_ENTRY_ITEM_DOCUMENT,
 } from '../../../utils/testingFixtures';
 
 jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor');
@@ -19,7 +22,7 @@ jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
   const { ref } = require('vue');
   return {
     __esModule: true,
-    default: () => ({ windowIsSmall: ref(false) }),
+    default: () => ({ windowIsSmall: ref(false), windowIsLarge: ref(true) }),
   };
 });
 
@@ -29,6 +32,11 @@ const {
   unsupportedItemMessage$,
   incompleteItemIndicatorLabel$,
   hintsLabel$,
+  associateLabel$,
+  matchLabel$,
+  questionNumberAndTypeLabel$,
+  unknownTypeLabel$,
+  responsePoolLabel$,
 } = qtiEditorStrings;
 
 const defaultProps = {
@@ -51,6 +59,8 @@ const renderComponent = (props = {}, slots = {}) => {
 };
 
 describe('QTIItemEditor', () => {
+  afterEach(() => jest.restoreAllMocks());
+
   describe('view mode', () => {
     test('shows the card body (placeholder) even in view mode', () => {
       renderComponent({ mode: 'view' });
@@ -195,6 +205,31 @@ describe('QTIItemEditor', () => {
       expect(emitted()['update:rawData']).toBeUndefined();
     });
 
+    test('a card that is only being viewed does not warn about scoring it will not write', async () => {
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      renderComponent({
+        item: {
+          assessment_id: 'item-id',
+          type: AssessmentItemTypes.QTI,
+          raw_data: MULTI_TEXT_ENTRY_ITEM_DOCUMENT.replace(
+            /<qti-correct-response>\s*<qti-value>Moon<\/qti-value>\s*<\/qti-correct-response>/,
+            '',
+          ),
+        },
+      });
+      await nextTick();
+
+      expect(warn).not.toHaveBeenCalled();
+    });
+
+    test('a card reopened for editing reports nothing until the author changes something', async () => {
+      const { emitted, updateProps } = renderWithContent('view');
+      await updateProps({ mode: 'edit' });
+      await nextTick();
+
+      expect(emitted()['update:rawData']).toBeUndefined();
+    });
+
     test('a change made while editing is still reported once the card closes', async () => {
       const { emitted, updateProps } = renderWithContent('edit');
       // Deliberately not awaited: the change and the close land in the same flush, which is
@@ -288,6 +323,52 @@ describe('QTIItemEditor', () => {
       const [xml] = emitted()['update:rawData'].at(-1);
       expect(xml).toContain('<p>test2 2</p>');
       expect(xml).not.toContain('<p>test</p>');
+    });
+  });
+
+  describe('associate interaction', () => {
+    const renderAssociateItem = () =>
+      renderComponent({
+        item: {
+          assessment_id: 'test-item-id',
+          type: AssessmentItemTypes.QTI,
+          raw_data: VALID_ASSOCIATE_ITEM_DOCUMENT,
+        },
+      });
+
+    test('names the associate question type rather than falling back to unknown', async () => {
+      renderAssociateItem();
+      expect(await screen.findByText(associateLabel$(), { exact: false })).toBeInTheDocument();
+      expect(screen.queryByText(unknownTypeLabel$(), { exact: false })).not.toBeInTheDocument();
+    });
+
+    test('renders the associate editor for the parsed interaction', async () => {
+      renderAssociateItem();
+      expect(await screen.findByText(responsePoolLabel$())).toBeInTheDocument();
+      expect(screen.getByText('Antonio')).toBeInTheDocument();
+    });
+  });
+
+  describe('match interaction', () => {
+    const renderMatchItem = () =>
+      renderComponent({
+        item: {
+          assessment_id: 'test-item-id',
+          type: AssessmentItemTypes.QTI,
+          raw_data: VALID_MATCH_ITEM_DOCUMENT,
+        },
+      });
+
+    test('names the match question type rather than falling back to unknown', async () => {
+      renderMatchItem();
+      const heading = questionNumberAndTypeLabel$({ number: 1, total: 5, type: matchLabel$() });
+      expect(await screen.findByText(heading)).toBeInTheDocument();
+    });
+
+    test('renders the match editor for the parsed interaction', async () => {
+      renderMatchItem();
+      expect(await screen.findByText(responsePoolLabel$())).toBeInTheDocument();
+      expect(screen.getByText('Dog')).toBeInTheDocument();
     });
   });
 

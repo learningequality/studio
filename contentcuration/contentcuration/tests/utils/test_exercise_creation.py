@@ -1637,7 +1637,7 @@ class TestQTIExerciseCreation(StudioTestCase):
             _normalize_xml(actual_manifest_xml),
         )
 
-        self.assertEqual(exercise_file.checksum, "08f316508478ea4710b96473d0e5e1f3")
+        self.assertEqual(exercise_file.checksum, "8964d7eaa997b47b1e336040ae439bce")
 
     def test_image_resizing(self):
         # Create a base image file
@@ -1733,7 +1733,7 @@ class TestQTIExerciseCreation(StudioTestCase):
         </qti-card>
         </qti-catalog>
         </qti-catalog-info>
-        <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct" />
+        <qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/rptemplates/match_correct.xml" />
         </qti-assessment-item>"""
 
         # Compare normalized XML
@@ -1843,7 +1843,7 @@ class TestQTIExerciseCreation(StudioTestCase):
             _normalize_xml(actual_manifest_xml),
         )
 
-        self.assertEqual(exercise_file.checksum, "f4689243ba9f9b5e1abdc874d2d7527d")
+        self.assertEqual(exercise_file.checksum, "033780f045cbde8d8e0c52f7a9a18b71")
 
     def test_unsupported_question_type(self):
         """Test that unsupported question types raise appropriate errors"""

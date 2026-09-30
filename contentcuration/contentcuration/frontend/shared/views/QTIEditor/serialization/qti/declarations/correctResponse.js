@@ -5,8 +5,10 @@
  * to its native JS type (number, boolean, or string) based on the parent
  * declaration's base-type. Re-serializes values back to XML strings on demand.
  */
-import { buildXmlNode } from '../../assembleItem.js';
+import { buildFloatNode, buildXmlNode } from '../../xml.js';
+import { ResponseProcessingTemplate } from '../../../constants.js';
 import { CAPABILITY } from './capabilities.js';
+import { buildAddToOutcomeNode } from './scoring.js';
 
 export default class CorrectResponse {
   /**
@@ -58,5 +60,46 @@ export default class CorrectResponse {
         .formatValues(this._values)
         .map(v => buildXmlNode({ tag: 'qti-value', children: [v] })),
     });
+  }
+
+  /**
+   * Adds 1.0 to the outcome when the response matches, assuming the item's score is the
+   * average of its correct responses. Another combination (weights, all-or-nothing) needs
+   * this condition and its increment changed.
+   *
+   * @param {string} outcomeIdentifier - The outcome this response's score is added to
+   * @returns {Element|null} null when there is no correct response to match against
+   */
+  getScoringRule(outcomeIdentifier) {
+    if (!this._values.length) {
+      return null;
+    }
+    const response = { identifier: this._declaration.identifier };
+    return buildXmlNode({
+      tag: 'qti-response-condition',
+      children: [
+        buildXmlNode({
+          tag: 'qti-response-if',
+          children: [
+            buildXmlNode({
+              tag: 'qti-match',
+              children: [
+                buildXmlNode({ tag: 'qti-variable', attrs: response }),
+                buildXmlNode({ tag: 'qti-correct', attrs: response }),
+              ],
+            }),
+            buildAddToOutcomeNode(outcomeIdentifier, buildFloatNode(1)),
+          ],
+        }),
+      ],
+    });
+  }
+
+  /**
+   * @returns {string|null} match_correct, or null when there is no correct response to
+   *   match against
+   */
+  getResponseProcessingTemplate() {
+    return this._values.length ? ResponseProcessingTemplate.MATCH_CORRECT : null;
   }
 }
