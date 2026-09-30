@@ -4,6 +4,8 @@ import { parseXML } from '../xml';
 import {
   VALID_CHOICE_ITEM_DOCUMENT,
   TWO_INTERACTIONS_DOCUMENT,
+  UNDESCRIBED_INTERACTION,
+  UNRECOGNIZED_INTERACTION_ITEM_DOCUMENT,
   MULTI_TEXT_ENTRY_ITEM_DOCUMENT,
 } from '../../utils/testingFixtures';
 
@@ -57,6 +59,12 @@ describe('parseItem — interaction blocks', () => {
   it('returns two blocks for an item with two interactions', () => {
     const model = parseItem(TWO_INTERACTIONS_DOCUMENT);
     expect(model.interactions).toHaveLength(2);
+  });
+
+  it('finds an interaction the editor has no descriptor for', () => {
+    const model = parseItem(UNRECOGNIZED_INTERACTION_ITEM_DOCUMENT);
+    expect(model.interactions).toHaveLength(1);
+    expect(model.interactions[0].bodyXml).toContain(`<${UNDESCRIBED_INTERACTION}`);
   });
 
   it('merges inline interactions of one type into one block, in body order', () => {
