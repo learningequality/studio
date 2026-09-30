@@ -23,6 +23,8 @@ from contentcuration.tests.testdata import create_studio_file
 from contentcuration.tests.testdata import fileobj_exercise_graphie
 from contentcuration.tests.testdata import fileobj_exercise_image
 from contentcuration.tests.utils.qti.test_convert import _normalize_xml
+from contentcuration.tests.utils.qti.test_perseus_derive import _text_item
+from contentcuration.tests.utils.qti.test_perseus_derive import TOLERANCE_ITEM
 from contentcuration.tests.utils.qti.test_validation import _item_xml
 from contentcuration.tests.utils.qti.test_validation import VALID_CHOICE_ITEM
 from contentcuration.utils.assessment.perseus import PerseusExerciseGenerator
@@ -2109,6 +2111,90 @@ class TestQTIExerciseCreation(StudioTestCase):
         self.assertEqual(
             [name for name in zip_file.namelist() if name.startswith("items/")], []
         )
+
+    def _exercise_data(self, items):
+        return {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": len(items),
+            "m": 1,
+            "all_assessment_items": [item.assessment_id for item in items],
+            "assessment_mapping": {item.assessment_id: item.type for item in items},
+        }
+
+    def _assert_only_item_packaged(self, items, identifier):
+        with self.assertLogs(level="WARNING") as logs:
+            self._create_qti_zip(self._exercise_data(items))
+        self.assertTrue(any("no correct answer" in message for message in logs.output))
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+        self.assertEqual(
+            [name for name in zip_file.namelist() if name.startswith("items/")],
+            [f"items/{identifier}.xml"],
+        )
+        manifest = zip_file.read("imsmanifest.xml").decode("utf-8")
+        self.assertEqual(manifest.count("<resource "), 1)
+
+    def test_legacy_answerless_input_question_images_are_not_packaged(self):
+        choice = self._create_assessment_item(
+            exercises.SINGLE_SELECTION,
+            "What is 2+2?",
+            [{"answer": "4", "correct": True, "order": 1}],
+        )
+        image_file = fileobj_exercise_image()
+        image_url = exercises.CONTENT_STORAGE_FORMAT.format(image_file.filename())
+        answerless = self._create_assessment_item(
+            exercises.INPUT_QUESTION,
+            f"How many sides? ![shape]({image_url})",
+            [{"answer": "", "correct": True, "order": 1}],
+        )
+        image_file.assessment_item = answerless
+        image_file.save()
+        self._assert_only_item_packaged(
+            [choice, answerless], hex_to_qti_id(choice.assessment_id)
+        )
+
+    def test_legacy_input_question_answer_blanked_by_processing_is_skipped(self):
+        choice = self._create_assessment_item(
+            exercises.SINGLE_SELECTION,
+            "What is 2+2?",
+            [{"answer": "4", "correct": True, "order": 1}],
+        )
+        zero_size_image = exercises.CONTENT_STORAGE_FORMAT.format(f"{'a' * 32}.png")
+        answerless = self._create_assessment_item(
+            exercises.INPUT_QUESTION,
+            "What is 6 times 7?",
+            [{"answer": f"![]({zero_size_image} =0x0)", "correct": True, "order": 1}],
+        )
+        self._assert_only_item_packaged(
+            [choice, answerless], hex_to_qti_id(choice.assessment_id)
+        )
+
+    def test_legacy_input_question_zero_answer_is_packaged(self):
+        item = self._create_assessment_item(
+            exercises.INPUT_QUESTION,
+            "What is 5 minus 5?",
+            [{"answer": 0, "correct": True, "order": 1}],
+        )
+        self._create_qti_zip(self._exercise_data([item]))
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+        item_xml = zip_file.read(
+            f"items/{hex_to_qti_id(item.assessment_id)}.xml"
+        ).decode("utf-8")
+        self.assertIn("<qti-value>0</qti-value>", item_xml)
+
+    def test_native_answerless_float_entry_is_skipped(self):
+        choice = self._create_native_qti_item(VALID_CHOICE_ITEM)
+        answerless = self._create_native_qti_item(_text_item("single", []))
+        self._assert_only_item_packaged([choice, answerless], "item_1")
+
+    def test_native_custom_processed_float_entry_is_packaged(self):
+        item = self._create_native_qti_item(TOLERANCE_ITEM)
+        self._create_qti_zip(self._exercise_data([item]))
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+        self.assertIn("items/item_text.xml", zip_file.namelist())
 
     def test_native_qti_item_missing_media_file_is_logged_and_omitted(self):
         """A dangling media reference is logged and skipped, not fatal to publish."""

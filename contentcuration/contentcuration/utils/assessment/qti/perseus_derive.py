@@ -2,7 +2,7 @@
 
 Reverse of the forward ``convert``/``ingest`` pipeline for the subset of QTI
 interactions Perseus can express: single/multiple ``qti-choice-interaction``
-and inline ``qti-text-entry-interaction``. Everything else is *not* expressible
+and inline numeric ``qti-text-entry-interaction``. Everything else is *not* expressible
 and derivation returns ``None`` so the node publishes QTI only.
 
 All parse/derive failures log + return ``None``/``False`` — a single malformed
@@ -10,6 +10,7 @@ item must never abort the channel publish.
 """
 import json
 import logging
+import math
 from dataclasses import dataclass
 from typing import List
 from typing import Optional
@@ -18,10 +19,13 @@ from le_utils.constants import exercises
 from lxml import etree
 
 from contentcuration.utils.assessment.qti.catalog import KOLIBRI_HINT_SUPPORT
+from contentcuration.utils.assessment.qti.constants import BaseType
 from contentcuration.utils.assessment.qti.html_to_markdown import html_to_markdown
 from contentcuration.utils.assessment.qti.validation import parse_qti_xml
 
 logger = logging.getLogger(__name__)
+
+_NUMERIC_BASE_TYPES = (BaseType.FLOAT.value, BaseType.INTEGER.value)
 
 
 @dataclass
@@ -80,7 +84,10 @@ def _derivable_interaction(root, item_body):
     Requires exactly one interaction, that it be a ``qti-choice-interaction`` or
     ``qti-text-entry-interaction``, *and* that its ``response-identifier``
     resolves to a response declaration; a mismatch yields ``None`` so the node
-    degrades to QTI-only rather than deriving zero correct answers.
+    degrades to QTI-only rather than deriving zero correct answers. A text entry
+    must also be numeric: Perseus input questions only accept numbers. One with no
+    declared answer must not be scored by inline rules, such as a tolerance
+    comparison.
     """
     interactions = _interaction_elements(item_body)
     if len(interactions) != 1:
@@ -92,7 +99,20 @@ def _derivable_interaction(root, item_body):
     declaration = _response_declaration(root, interaction.get("response-identifier"))
     if declaration is None:
         return None
+    if deriver is _derive_text and (
+        declaration.get("base-type") not in _NUMERIC_BASE_TYPES
+        or (_has_inline_response_rules(root) and not _accepted_values(declaration))
+    ):
+        return None
     return deriver, interaction, declaration
+
+
+def _has_inline_response_rules(root) -> bool:
+    processing = _first_descendant(root, "qti-response-processing")
+    return (
+        processing is not None
+        and next(processing.iterchildren(etree.Element), None) is not None
+    )
 
 
 def _correct_values(declaration) -> List[str]:
@@ -103,6 +123,33 @@ def _correct_values(declaration) -> List[str]:
         value.text or ""
         for value in _children_by_localname(correct_responses[0], "qti-value")
     ]
+
+
+def _accepted_values(declaration) -> List[str]:
+    """Every number the declaration scores as correct: its correct response
+    plus any full-credit mapped keys. Earlier conversions stored non-numbers
+    such as ``False`` in float declarations."""
+    values = _correct_values(declaration)
+    mappings = _children_by_localname(declaration, "qti-mapping")
+    if mappings:
+        values += [
+            entry.get("map-key")
+            for entry in _children_by_localname(mappings[0], "qti-map-entry")
+            if (_as_float(entry.get("mapped-value")) or 0) >= 1
+        ]
+    return list(dict.fromkeys(value for value in values if _is_number(value)))
+
+
+def _as_float(value) -> Optional[float]:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _is_number(value) -> bool:
+    number = _as_float(value)
+    return number is not None and math.isfinite(number)
 
 
 def _children_by_localname(el, localname):
@@ -151,7 +198,7 @@ def _derive_text(interaction, item_body, declaration):
     question = html_to_markdown([item_body])
     answers = [
         {"answer": value, "correct": True, "order": order}
-        for order, value in enumerate(_correct_values(declaration))
+        for order, value in enumerate(_accepted_values(declaration))
     ]
     return exercises.INPUT_QUESTION, question, answers
 
@@ -186,11 +233,26 @@ def is_perseus_derivable(raw_data: str) -> bool:
     return _derivable_interaction(root, item_body) is not None
 
 
+def _is_answerless(derivable) -> bool:
+    deriver, _, declaration = derivable
+    return deriver is _derive_text and not _accepted_values(declaration)
+
+
+def is_answerless_numeric_entry(raw_data: str) -> bool:
+    """True for a numeric text entry that accepts no answer, so nothing a learner
+    enters can score. String entries never match: free response has no answer."""
+    root, item_body = _parse(raw_data)
+    if item_body is None:
+        return False
+    derivable = _derivable_interaction(root, item_body)
+    return derivable is not None and _is_answerless(derivable)
+
+
 def derive_perseus_item(assessment_item) -> Optional[DerivedAssessmentItem]:
     """Django ``AssessmentItem`` → ``DerivedAssessmentItem`` proxy, or ``None``.
 
     Returns ``None`` (with a warning) when the item is unparseable or its
-    interaction is not Perseus-expressible.
+    interaction is not Perseus-expressible, or it is an answerless numeric entry.
 
     The proxy's ``assessment_id`` is the QTI item's root ``identifier`` — the
     same id the QTI archive records for the item in the manifest, and hence in
@@ -212,6 +274,14 @@ def derive_perseus_item(assessment_item) -> Optional[DerivedAssessmentItem]:
     if derivable is None:
         logger.warning(
             "QTI item %s is not Perseus-expressible; skipping derivation",
+            assessment_item.assessment_id,
+        )
+        return None
+
+    # The QTI archive leaves this item out too, so both archives list the same ids.
+    if _is_answerless(derivable):
+        logger.warning(
+            "QTI item %s has no correct answer; skipping derivation",
             assessment_item.assessment_id,
         )
         return None

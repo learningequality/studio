@@ -7,6 +7,9 @@ from contentcuration.tests.utils.qti.test_validation import _item_xml
 from contentcuration.tests.utils.qti.test_validation import ENTITY_CHOICE_ITEM
 from contentcuration.tests.utils.qti.test_validation import HINTED_EDITOR_ITEM
 from contentcuration.utils.assessment.qti.perseus_derive import derive_perseus_item
+from contentcuration.utils.assessment.qti.perseus_derive import (
+    is_answerless_numeric_entry,
+)
 from contentcuration.utils.assessment.qti.perseus_derive import is_perseus_derivable
 
 
@@ -54,15 +57,32 @@ def _choice_item(
     return xml
 
 
-def _text_item(cardinality, correct_values, prompt="<p>What is 6 times 7?</p>"):
-    correct = "".join("<qti-value>{}</qti-value>".format(v) for v in correct_values)
+def _text_item(
+    cardinality,
+    correct_values,
+    prompt="<p>What is 6 times 7?</p>",
+    base_type="float",
+    map_entries=(),
+):
+    correct = ""
+    if correct_values:
+        correct = "<qti-correct-response>{}</qti-correct-response>".format(
+            "".join("<qti-value>{}</qti-value>".format(v) for v in correct_values)
+        )
+    mapping = ""
+    if map_entries:
+        mapping = '<qti-mapping default-value="0.0">{}</qti-mapping>'.format(
+            "".join(
+                '<qti-map-entry map-key="{}" mapped-value="{}" />'.format(key, value)
+                for key, value in map_entries
+            )
+        )
     return _item_xml(
         "item_text",
         "Text Item",
         '<qti-response-declaration identifier="RESPONSE" cardinality="{}" '
-        'base-type="string"><qti-correct-response>{}'
-        "</qti-correct-response></qti-response-declaration>".format(
-            cardinality, correct
+        'base-type="{}">{}{}</qti-response-declaration>'.format(
+            cardinality, base_type, correct, mapping
         ),
         '<div>{}<p><qti-text-entry-interaction response-identifier="RESPONSE" '
         'expected-length="50" /></p></div>'.format(prompt),
@@ -132,6 +152,36 @@ def test_text_input_multiple_correct_values():
     answers = json.loads(result.answers)
     assert [a["answer"] for a in answers] == ["1", "2"]
     assert all(a["correct"] for a in answers)
+
+
+def test_integer_text_input_derivation():
+    raw_data = _text_item("single", ["42"], base_type="integer")
+    assert is_perseus_derivable(raw_data) is True
+    answers = json.loads(derive_perseus_item(_Item(raw_data)).answers)
+    assert [a["answer"] for a in answers] == ["42"]
+
+
+@pytest.mark.parametrize(
+    "map_entries,expected",
+    [
+        pytest.param([("41", "0.5")], ["42"], id="partial_credit_key"),
+        pytest.param([("0", "0.0")], ["42"], id="zero_mapped_key"),
+        pytest.param([("13", "1.0")], ["42", "13"], id="full_credit_key"),
+    ],
+)
+def test_text_input_mapping_keeps_correct_response(map_entries, expected):
+    raw_data = _text_item("single", ["42"], map_entries=map_entries)
+    assert is_answerless_numeric_entry(raw_data) is False
+    answers = json.loads(derive_perseus_item(_Item(raw_data)).answers)
+    assert [a["answer"] for a in answers] == expected
+    assert all(a["correct"] for a in answers)
+
+
+def test_answerless_float_entry_is_skipped_but_node_stays_derivable(caplog):
+    raw_data = _text_item("single", [])
+    assert derive_perseus_item(_Item(raw_data)) is None
+    assert "no correct answer" in caplog.text
+    assert is_perseus_derivable(raw_data) is True
 
 
 def test_math_prompt_survives_into_question():
@@ -272,6 +322,70 @@ EXTENDED_TEXT_ITEM = _item_xml(
 
 MALFORMED_XML = "<qti-assessment-item><unclosed>"
 
+MATCH_CORRECT_PROCESSING = (
+    '<qti-response-processing template="https://purl.imsglobal.org/spec/qti/v3p0/'
+    'rptemplates/match_correct.xml" />'
+)
+
+TOLERANCE_ITEM = _text_item("single", []).replace(
+    MATCH_CORRECT_PROCESSING,
+    "<qti-response-processing><qti-response-condition><qti-response-if>"
+    '<qti-equal tolerance-mode="absolute" tolerance="0.5">'
+    '<qti-variable identifier="RESPONSE" />'
+    '<qti-base-value base-type="float">42</qti-base-value></qti-equal>'
+    '<qti-set-outcome-value identifier="SCORE">'
+    '<qti-base-value base-type="float">1</qti-base-value>'
+    "</qti-set-outcome-value></qti-response-if></qti-response-condition>"
+    "</qti-response-processing>",
+)
+
+
+def test_answered_text_entry_with_inline_processing_derives():
+    raw_data = _text_item("single", ["42"]).replace(
+        MATCH_CORRECT_PROCESSING,
+        "<qti-response-processing><qti-response-condition><qti-response-if>"
+        '<qti-match><qti-variable identifier="RESPONSE" />'
+        '<qti-correct identifier="RESPONSE" /></qti-match>'
+        '<qti-set-outcome-value identifier="SCORE">'
+        '<qti-base-value base-type="float">1</qti-base-value>'
+        "</qti-set-outcome-value></qti-response-if></qti-response-condition>"
+        "</qti-response-processing>",
+    )
+    assert is_perseus_derivable(raw_data) is True
+    answers = json.loads(derive_perseus_item(_Item(raw_data)).answers)
+    assert [a["answer"] for a in answers] == ["42"]
+
+
+@pytest.mark.parametrize(
+    "processing",
+    [
+        pytest.param(
+            '<qti-response-processing template="https://purl.imsglobal.org/spec/qti/'
+            'v3p0/rptemplates/match_correct" />',
+            id="no_xml_suffix",
+        ),
+        pytest.param(
+            '<qti-response-processing template="http://www.imsglobal.org/question/'
+            'qti_v3p0/rptemplates/match_correct" />',
+            id="imsglobal_host",
+        ),
+        pytest.param(
+            '<qti-response-processing template-location="https://purl.imsglobal.org/'
+            'spec/qti/v3p0/rptemplates/match_correct.xml" />',
+            id="template_location",
+        ),
+    ],
+)
+def test_text_entry_template_spellings_derive(processing):
+    raw_data = _text_item("single", ["42"]).replace(
+        MATCH_CORRECT_PROCESSING, processing
+    )
+    assert is_perseus_derivable(raw_data) is True
+    answers = json.loads(derive_perseus_item(_Item(raw_data)).answers)
+    assert [a["answer"] for a in answers] == ["42"]
+    answerless = _text_item("single", []).replace(MATCH_CORRECT_PROCESSING, processing)
+    assert is_answerless_numeric_entry(answerless) is True
+
 
 @pytest.mark.parametrize(
     "raw_data",
@@ -281,6 +395,10 @@ MALFORMED_XML = "<qti-assessment-item><unclosed>"
         pytest.param(EXTENDED_TEXT_ITEM, id="extended_text"),
         pytest.param(MALFORMED_XML, id="malformed_xml"),
         pytest.param(ENTITY_CHOICE_ITEM, id="doctype_entity"),
+        pytest.param(
+            _text_item("single", ["cat"], base_type="string"), id="string_text_entry"
+        ),
+        pytest.param(TOLERANCE_ITEM, id="custom_processed_text_entry"),
     ],
 )
 def test_not_derivable(raw_data):
@@ -327,9 +445,9 @@ def test_comments_do_not_change_derivation(anchor, after, node):
 
 
 def test_comment_inside_qti_value_keeps_text_after_it():
-    raw_data = _text_item("single", ["a<!-- c -->b"])
+    raw_data = _text_item("single", ["1<!-- c -->2"])
     answers = json.loads(derive_perseus_item(_Item(raw_data)).answers)
-    assert answers == [{"answer": "ab", "correct": True, "order": 0}]
+    assert answers == [{"answer": "12", "correct": True, "order": 0}]
 
 
 @pytest.mark.parametrize(
@@ -346,3 +464,33 @@ def test_comment_inside_prompt_markup_does_not_change_question(prompt):
         commented.question
         == derive_perseus_item(_Item(_text_item("single", ["1"], plain))).question
     )
+
+
+@pytest.mark.parametrize(
+    "raw_data,expected",
+    [
+        pytest.param(_text_item("single", []), True, id="float_no_answer"),
+        pytest.param(
+            _text_item("single", [], map_entries=[("0", "0.0")]),
+            True,
+            id="float_only_zero_mapped",
+        ),
+        pytest.param(_text_item("single", ["0"]), False, id="float_zero_answer"),
+        pytest.param(_text_item("single", ["False"]), True, id="float_non_number"),
+        pytest.param(
+            _text_item("single", [], map_entries=[("13", "1.0"), ("12", "1.0")]),
+            False,
+            id="float_mapped_answers",
+        ),
+        pytest.param(
+            _text_item("single", [], base_type="string"), False, id="string_no_answer"
+        ),
+        pytest.param(
+            _choice_item("single", [], [("choice_0", "A")]), False, id="choice"
+        ),
+        pytest.param(TOLERANCE_ITEM, False, id="custom_processed"),
+        pytest.param(MALFORMED_XML, False, id="malformed_xml"),
+    ],
+)
+def test_is_answerless_numeric_entry(raw_data, expected):
+    assert is_answerless_numeric_entry(raw_data) is expected

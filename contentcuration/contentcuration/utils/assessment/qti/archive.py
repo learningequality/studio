@@ -1,3 +1,4 @@
+import json
 import logging
 from dataclasses import dataclass
 from typing import Any
@@ -11,6 +12,7 @@ from le_utils.constants import format_presets
 
 from contentcuration.utils.assessment.base import ExerciseArchiveGenerator
 from contentcuration.utils.assessment.qti.constants import ResourceType
+from contentcuration.utils.assessment.qti.convert import accepted_answers
 from contentcuration.utils.assessment.qti.convert import (
     build_perseus_custom_interaction_item,
 )
@@ -27,6 +29,9 @@ from contentcuration.utils.assessment.qti.imsmanifest import Resources
 from contentcuration.utils.assessment.qti.media import get_qti_media_references
 from contentcuration.utils.assessment.qti.media import rewrite_qti_media_paths
 from contentcuration.utils.assessment.qti.media import set_qti_item_language
+from contentcuration.utils.assessment.qti.perseus_derive import (
+    is_answerless_numeric_entry,
+)
 from contentcuration.utils.assessment.qti.validation import parse_qti_xml
 from contentcuration.utils.assessment.qti.validation import validate_qti_item
 
@@ -84,6 +89,22 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
             )
         self.qti_resources.append(resource)
 
+    def _warn_answerless(self, assessment_item):
+        logging.warning(
+            f"QTI item {assessment_item.assessment_id} on node {self.ccnode.pk} "
+            f"has no correct answer and will be excluded from the package"
+        )
+
+    def _skip_answerless_input(self, assessment_item, answers) -> bool:
+        # Conversion makes an input question with no accepted answer an
+        # answerless float entry.
+        is_answerless = assessment_item.type == exercises.INPUT_QUESTION and not (
+            accepted_answers(answers)
+        )
+        if is_answerless:
+            self._warn_answerless(assessment_item)
+        return is_answerless
+
     def _create_native_qti_item(self, assessment_item) -> Optional[Tuple[str, bytes]]:
         raw_bytes = assessment_item.raw_data.encode("utf-8")
 
@@ -97,6 +118,10 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
                 f"failed schema validation and will be excluded from the package: "
                 f"{error_messages}"
             )
+            return None
+
+        if is_answerless_numeric_entry(assessment_item.raw_data):
+            self._warn_answerless(assessment_item)
             return None
 
         identifier = parse_qti_xml(raw_bytes).getroot().get("identifier")
@@ -160,7 +185,26 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
     def process_assessment_item(self, assessment_item):
         if assessment_item.type == exercises.PERSEUS_QUESTION:
             return self._create_perseus_custom_interaction(assessment_item)
+        # Checked before processing, which writes the item's images to the
+        # package, and again after, which can blank an image-only answer.
+        if self._skip_answerless_input(
+            assessment_item, json.loads(assessment_item.answers)
+        ):
+            return None
         return super().process_assessment_item(assessment_item)
+
+    def _process_answers(self, assessment_item):
+        # The base drops every falsy answer, including a JSON 0; conversion
+        # drops the blank and false input answers itself.
+        if assessment_item.type != exercises.INPUT_QUESTION:
+            return super()._process_answers(assessment_item)
+        answers = json.loads(assessment_item.answers)
+        for answer in answers:
+            if isinstance(answer.get("answer"), str):
+                answer["answer"], answer["images"] = self._process_content(
+                    answer["answer"]
+                )
+        return self._sort_by_order(answers, "answers")
 
     def _create_perseus_custom_interaction(self, assessment_item) -> None:
         """Embed a raw Perseus question as a ``qti-custom-interaction``.
@@ -202,6 +246,9 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
 
         if assessment_item.type == exercises.QTI:
             return self._create_native_qti_item(assessment_item)
+
+        if self._skip_answerless_input(assessment_item, processed_data["answers"]):
+            return None
 
         legacy_item = LegacyAssessmentItem(
             type=assessment_item.type,

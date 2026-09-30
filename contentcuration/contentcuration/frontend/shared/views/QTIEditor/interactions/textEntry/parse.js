@@ -75,6 +75,7 @@ function extractPromptHTML(bodyEl) {
  * correct response is declared (i.e. free-response items).
  *
  * Supports both float (numeric) and string (textEntry) base-types.
+ * Answers are the correct response values plus any full-credit `map-key`s.
  * For string base-types `caseSensitive` comes from the declaration's
  * <qti-mapping>, matched by `map-key`; it is always false for float.
  *
@@ -95,33 +96,31 @@ export function _extractAnswers(responseDeclarations) {
       return [];
     }
 
-    if (correctResponse === null) {
-      if (baseType === BaseType.FLOAT) {
-        // eslint-disable-next-line no-console
-        console.error('[QTI Editor] Missing <qti-correct-response> for numeric interaction');
-      }
-      return [];
-    }
-
-    // Case sensitivity is a string-only concept, so numeric answers never read the mapping.
-    const mapEntries = baseType === BaseType.STRING ? (declaration.mapping?.entries ?? []) : [];
+    const mapEntries = declaration.mapping?.entries ?? [];
     // Key on the XML string form: both map-key and correct-response values are coerced
     // on parse (empty → null under QTI NULL semantics), so formatting both back matches
     // them on equal terms.
     const caseSensitivity = new Map(
       mapEntries.map(entry => [declaration.formatValue(entry.mapKey), entry.caseSensitive]),
     );
+    // Legacy conversion writes only the first accepted answer as correct and maps them
+    // all, so every full-credit key is an answer too. It writes no correct response
+    // for an answerless input question.
+    const values = new Set([
+      ...(correctResponse ?? []).map(value => declaration.formatValue(value)),
+      ...mapEntries
+        .filter(entry => entry.mappedValue >= 1)
+        .map(entry => declaration.formatValue(entry.mapKey)),
+    ]);
 
-    return correctResponse.map(value => {
-      const formatted = declaration.formatValue(value);
-      return {
-        id: generateRandomSlug('answer'),
-        value: formatted,
-        // An answer with no matching qti-map-entry — including every answer in an
-        // item authored before mappings were written — takes the XSD default, false.
-        caseSensitive: caseSensitivity.get(formatted) ?? false,
-      };
-    });
+    return [...values].map(value => ({
+      id: generateRandomSlug('answer'),
+      value,
+      // An answer with no matching qti-map-entry — including every answer in an
+      // item authored before mappings were written — takes the XSD default, false.
+      // Case sensitivity is a string-only concept, so numeric answers never read it.
+      caseSensitive: baseType === BaseType.STRING && (caseSensitivity.get(value) ?? false),
+    }));
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error('[QTI Editor] Failed to parse text-entry response declaration:', err);
