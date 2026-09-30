@@ -294,3 +294,55 @@ def test_is_perseus_derivable_true_for_choice_and_text():
     )
     assert is_perseus_derivable(choice) is True
     assert is_perseus_derivable(_text_item("single", ["42"])) is True
+
+
+_BASE_CHOICE_ITEM = _choice_item(
+    "single",
+    ["choice_0"],
+    [("choice_0", "Option A"), ("choice_1", "Option B")],
+    catalog=HINT_CATALOG,
+)
+
+
+@pytest.mark.parametrize(
+    "anchor, after",
+    [
+        pytest.param("<qti-item-body>", True, id="item_body_start"),
+        pytest.param("<qti-simple-choice", False, id="before_first_choice"),
+        pytest.param("<qti-prompt>", True, id="in_prompt"),
+        pytest.param("<qti-correct-response>", False, id="in_response_declaration"),
+        pytest.param("</qti-correct-response>", False, id="in_correct_response"),
+        pytest.param('<qti-card support="ext:kolibri-hint">', True, id="in_hint_card"),
+    ],
+)
+@pytest.mark.parametrize("node", ["<!-- note -->", "<?target data?>"])
+def test_comments_do_not_change_derivation(anchor, after, node):
+    replacement = anchor + node if after else node + anchor
+    commented = _BASE_CHOICE_ITEM.replace(anchor, replacement, 1)
+    assert commented != _BASE_CHOICE_ITEM
+    assert is_perseus_derivable(commented) is True
+    assert derive_perseus_item(_Item(commented)) == derive_perseus_item(
+        _Item(_BASE_CHOICE_ITEM)
+    )
+
+
+def test_comment_inside_qti_value_keeps_text_after_it():
+    raw_data = _text_item("single", ["a<!-- c -->b"])
+    answers = json.loads(derive_perseus_item(_Item(raw_data)).answers)
+    assert answers == [{"answer": "ab", "correct": True, "order": 0}]
+
+
+@pytest.mark.parametrize(
+    "prompt",
+    [
+        "<ul><li>one<!-- c --></li><li>two</li></ul>",
+        "<p>Run <code>a<!-- c -->b</code></p>",
+    ],
+)
+def test_comment_inside_prompt_markup_does_not_change_question(prompt):
+    plain = prompt.replace("<!-- c -->", "")
+    commented = derive_perseus_item(_Item(_text_item("single", ["1"], prompt)))
+    assert (
+        commented.question
+        == derive_perseus_item(_Item(_text_item("single", ["1"], plain))).question
+    )

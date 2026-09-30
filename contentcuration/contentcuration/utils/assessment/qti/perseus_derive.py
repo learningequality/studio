@@ -171,6 +171,8 @@ def _parse(raw_data):
     except etree.XMLSyntaxError:
         logger.warning("Unable to parse QTI item XML during Perseus derivation")
         return None, None
+    # strip_tags, not remove(): keeps the text following each comment/PI.
+    etree.strip_tags(root, etree.Comment, etree.ProcessingInstruction)
     item_body = _first_descendant(root, "qti-item-body")
     return root, item_body
 

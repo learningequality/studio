@@ -46,6 +46,7 @@ from contentcuration import models as cc
 from contentcuration.models import CustomTaskMetadata
 from contentcuration.utils.assessment.qti.archive import hex_to_qti_id
 from contentcuration.utils.assessment.qti.validation import parse_qti_xml
+from contentcuration.utils.assessment.qti.validation import validate_qti_item
 from contentcuration.utils.celery.tasks import generate_task_signature
 from contentcuration.utils.publish import ChannelIncompleteError
 from contentcuration.utils.publish import convert_channel_thumbnail
@@ -87,6 +88,11 @@ LARGE_FILE_SIZE = 3 * 1024 ** 3
 
 def description():
     return "".join(random.sample(string.printable, 20))
+
+
+COMMENTED_CHOICE_ITEM = VALID_CHOICE_ITEM.replace(
+    "<qti-item-body>", "<qti-item-body><!-- note -->", 1
+)
 
 
 class ExportChannelTestCase(StudioTestCase):
@@ -306,6 +312,28 @@ class ExportChannelTestCase(StudioTestCase):
             answers="[]",
             hints="[]",
             raw_data=VALID_CHOICE_ITEM,
+            order=1,
+            randomize=False,
+        )
+
+        native_qti_commented_exercise = create_node(
+            {
+                "kind_id": "exercise",
+                "title": "Native QTI Commented Exercise",
+                "extra_fields": qti_extra_fields,
+            }
+        )
+        native_qti_commented_exercise.complete = True
+        native_qti_commented_exercise.parent = current_exercise.parent
+        native_qti_commented_exercise.save()
+        cc.AssessmentItem.objects.create(
+            contentnode=native_qti_commented_exercise,
+            assessment_id=uuid.uuid4().hex,
+            type=exercises.QTI,
+            question="",
+            answers="[]",
+            hints="[]",
+            raw_data=COMMENTED_CHOICE_ITEM,
             order=1,
             randomize=False,
         )
@@ -1019,6 +1047,36 @@ class ExportChannelTestCase(StudioTestCase):
         node = cc.ContentNode.objects.get(title="Native QTI Exercise")
         self.assertTrue(node.files.filter(preset_id=format_presets.QTI_ZIP).exists())
         self.assertTrue(node.files.filter(preset_id=format_presets.EXERCISE).exists())
+
+    def test_native_qti_commented_item_publishes_qti_zip(self):
+        node = cc.ContentNode.objects.get(title="Native QTI Commented Exercise")
+        qti_file = node.files.get(preset_id=format_presets.QTI_ZIP)
+        with qti_file.file_on_disk.open("rb") as file_handle:
+            archive = zipfile.ZipFile(file_handle)
+            item_xml = [
+                archive.read(name)
+                for name in archive.namelist()
+                if name.startswith("items/") and name.endswith(".xml")
+            ]
+        self.assertEqual(len(item_xml), 1)
+        self.assertIn(b"<!-- note -->", item_xml[0])
+        self.assertTrue(validate_qti_item(item_xml[0]).is_valid)
+
+    def test_native_qti_commented_item_derives_same_perseus_content(self):
+        def item_contents(title):
+            node = cc.ContentNode.objects.get(title=title)
+            exercise_file = node.files.get(preset_id=format_presets.EXERCISE)
+            with exercise_file.file_on_disk.open("rb") as file_handle:
+                archive = zipfile.ZipFile(file_handle)
+                return [
+                    json.loads(archive.read(name))
+                    for name in archive.namelist()
+                    if name.endswith(".json") and name != "exercise.json"
+                ]
+
+        commented = item_contents("Native QTI Commented Exercise")
+        self.assertTrue(commented)
+        self.assertEqual(commented, item_contents("Native QTI Exercise"))
 
     def test_native_qti_perseus_ids_match_assessment_metadata(self):
         """The derived Perseus item JSON filenames must equal the ids recorded
