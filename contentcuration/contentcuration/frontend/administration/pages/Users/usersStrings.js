@@ -31,8 +31,8 @@ export const usersStrings = createTranslator('UsersStrings', {
     context: 'Label of the dropdown filtering users by the country they work in',
   },
   searchLabel: {
-    message: 'Search for a user...',
-    context: 'Placeholder of the users search field',
+    message: 'Search for a user',
+    context: 'Label of the users search field',
   },
   joinedWithinLabel: {
     message: 'Joined within',

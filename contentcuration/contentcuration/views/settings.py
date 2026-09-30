@@ -177,7 +177,7 @@ class StorageSettingsView(PostFormMixin, FormView):
     form_class = StorageRequestForm
 
     def form_valid(self, form):
-        self.record_storage_request(self.request.user, form.cleaned_data["storage"])
+        self._record_storage_request(self.request.user, form.cleaned_data["storage"])
 
         channels = [c for c in form.cleaned_data["public"].split(", ") if c]
         message = render_to_string(
@@ -197,7 +197,7 @@ class StorageSettingsView(PostFormMixin, FormView):
         )
 
     @staticmethod
-    def record_storage_request(user, storage):
+    def _record_storage_request(user, storage):
         information = user.information or {}
         information["latest_storage_request"] = storage
         user.information = information

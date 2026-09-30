@@ -11,6 +11,7 @@ const {
   userCount$,
   clearFiltersAction$,
   emailAction$,
+  emailUsersAction$,
   downloadCSVAction$,
   userTypeLabel$,
   targetLocationLabel$,
@@ -228,14 +229,17 @@ describe('UserTable', () => {
       });
     });
 
-    it('is offered for a user type of "All", which narrows nothing but is still a selection', async () => {
-      renderComponent();
+    it('stays unoffered for a user type of "All", which is the default and narrows nothing', async () => {
+      renderWithFilters({ userType: 'administrator' });
+      await waitFor(() => {
+        expect(clearFiltersLink()).toBeInTheDocument();
+      });
 
       await user.click(screen.getByText(userTypeLabel$()));
       await user.click(await screen.findByText(userTypeAll$()));
 
       await waitFor(() => {
-        expect(clearFiltersLink()).toBeInTheDocument();
+        expect(clearFiltersLink()).not.toBeInTheDocument();
       });
       expect(lastFetchParams()).not.toHaveProperty('is_admin');
     });
@@ -374,6 +378,27 @@ describe('UserTable', () => {
     });
   });
 
+  describe('mass email', () => {
+    it('names the whole filtered set without leaking the filter object', async () => {
+      renderComponent();
+
+      await user.click(screen.getByRole('button', { name: emailUsersAction$({ count: 3 }) }));
+
+      const dialog = await screen.findByText(/^All .*users/);
+      expect(dialog).toHaveTextContent('All users');
+      expect(dialog).not.toHaveTextContent('[object Object]');
+    });
+
+    it('names the selected user type', async () => {
+      renderWithFilters({ userType: 'administrator' });
+
+      await user.click(screen.getByRole('button', { name: emailUsersAction$({ count: 3 }) }));
+
+      const dialog = await screen.findByText(/^All .*users/);
+      expect(dialog).toHaveTextContent('All administrator users');
+    });
+  });
+
   describe('CSV download', () => {
     it('offers the download when there are users to export', () => {
       renderComponent();
@@ -390,13 +415,14 @@ describe('UserTable', () => {
     it('downloads a dated CSV built from the current filters', async () => {
       const client = require('shared/client').default;
       const { saveAs } = require('file-saver');
-      renderComponent();
+      renderWithFilters({ hasPublished: 'yes' });
 
       await user.click(csvButton());
 
       await waitFor(() => {
         expect(saveAs).toHaveBeenCalled();
       });
+      expect(client.get.mock.calls[0][1].params).toEqual({ published_channel: true });
       expect(client.get.mock.calls[0][1].responseType).toBe('blob');
       const [savedBlob, savedName] = saveAs.mock.calls[0];
       expect(savedBlob).toBeInstanceOf(Blob);

@@ -23,7 +23,7 @@
     </h1>
     <EmailUsersDialog
       v-model="showMassEmailDialog"
-      :userTypeFilter="userTypeFilter"
+      :userTypeFilter="userTypeFilter.value"
       :locationFilter="locationFilter"
       :keywordFilter="keywordInput"
       :usersFilterFetchQueryParams="filterFetchQueryParams"
@@ -107,7 +107,11 @@
         :layout8="{ span: 4 }"
         :layout4="{ span: 4 }"
       >
-        <div class="toggle-filters">
+        <div
+          ref="filterActions"
+          class="toggle-filters"
+          tabindex="-1"
+        >
           <Checkbox
             v-model="hasPublishedFilter"
             class="toggle-checkbox"
@@ -193,8 +197,8 @@
 
 <script setup>
 
-  import { computed, onMounted, ref, watch } from 'vue';
-  import pick from 'lodash/pick';
+  import { computed, nextTick, onMounted, ref, watch } from 'vue';
+  import omit from 'lodash/omit';
   import transform from 'lodash/transform';
   import { saveAs } from 'file-saver';
   import { useRoute } from 'vue-router/composables';
@@ -256,13 +260,12 @@
 
   const { clearAction$ } = commonStrings;
 
-  const tableStateQueryParams = ['page', 'page_size', 'sortBy', 'descending'];
-
+  const userTypeDefault = 'all';
   const dateWindowDefault = 'any';
   const booleanFilterDefault = 'no';
 
   const filterDefaults = {
-    userType: undefined,
+    userType: userTypeDefault,
     location: undefined,
     keywords: undefined,
     joinedWithin: dateWindowDefault,
@@ -355,6 +358,7 @@
   const showEmailDialog = ref(false);
   const showMassEmailDialog = ref(false);
   const locationDropdown = ref(null);
+  const filterActions = ref(null);
   const locationFilterMap = ref({});
 
   const users = computed(() => store.getters['userAdmin/users']);
@@ -364,7 +368,11 @@
     filter: userTypeFilter,
     options: userTypeOptions,
     fetchQueryParams: userTypeParams,
-  } = useFilter({ name: 'userType', filterMap: userTypeFilterMap });
+  } = useFilter({
+    name: 'userType',
+    filterMap: userTypeFilterMap,
+    defaultValue: userTypeDefault,
+  });
 
   const {
     filter: locationOption,
@@ -422,7 +430,8 @@
   );
 
   function clearFilters() {
-    updateQueryParams(pick(route.query, tableStateQueryParams));
+    updateQueryParams(omit(route.query, Object.keys(filterDefaults)));
+    nextTick().then(() => filterActions.value.focus());
   }
 
   const { pagination, loading, loadItems } = useTable({
