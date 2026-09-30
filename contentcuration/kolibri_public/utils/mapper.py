@@ -4,6 +4,7 @@ from kolibri_content import models as kolibri_content_models
 from kolibri_content.base_models import MAX_TAG_LENGTH
 from kolibri_public import models as kolibri_public_models
 from kolibri_public.search import annotate_contentnode_label_bitmasks
+from kolibri_public.search import annotate_modality
 from kolibri_public.utils.annotation import set_channel_metadata_fields
 from le_utils.constants import content_kinds
 
@@ -69,9 +70,9 @@ class ChannelMapper(object):
             self.mapped_channel.public = self.public
             self.mapped_channel.save_base(raw=True)
 
-            annotate_contentnode_label_bitmasks(
-                self.mapped_root.get_descendants(include_self=True)
-            )
+            mapped_nodes = self.mapped_root.get_descendants(include_self=True)
+            annotate_contentnode_label_bitmasks(mapped_nodes)
+            annotate_modality(mapped_nodes)
             # Rather than set the ancestors fields after mapping, like it is done in Kolibri
             # here we set it during mapping as we are already recursing through the tree.
 
