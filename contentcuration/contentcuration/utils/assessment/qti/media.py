@@ -14,8 +14,13 @@ QTI_MEDIA_REFERENCE_XPATH = etree.XPath(
     + " or ".join(f"@{attribute}" for attribute in QTI_REFERENCE_ATTRIBUTES)
     + " or @srcset]"
 )
-ITEM_ROOT_START_TAG_REGEX = re.compile(r"<qti-assessment-item\b[^>]*>")
-XML_LANG_ATTRIBUTE_REGEX = re.compile(r'\s+xml:lang="[^"]*"')
+ITEM_ROOT_START_TAG_REGEX = re.compile(
+    r"""<qti-assessment-item\b(?:"[^"]*"|'[^']*'|[^>"'])*>"""
+)
+# Quoted values are matched first so a lookalike inside another attribute is skipped.
+XML_LANG_OR_QUOTED_VALUE_REGEX = re.compile(
+    r"""(?P<lang>\s+xml:lang\s*=\s*(?:"[^"]*"|'[^']*'))|"[^"]*"|'[^']*'"""
+)
 
 QTI_MEDIA_ATTRIBUTE_VALUE_REGEX = re.compile(
     r"(?P<attr>" + "|".join(QTI_REFERENCE_ATTRIBUTES + ("srcset",)) + r")"
@@ -92,8 +97,7 @@ def set_qti_item_language(raw_data, language):
     Operates as a targeted text substitution on the root start tag, for the same reason
     ``rewrite_qti_media_paths`` does: every other byte of ``raw_data``, formatting included,
     is left as the author's editor produced it. An attribute already present is rewritten
-    where it stands rather than moved to the end, so an item that already declares the
-    node's language comes back byte for byte.
+    where it stands rather than moved to the end.
     """
     if not language:
         return raw_data
@@ -102,10 +106,9 @@ def set_qti_item_language(raw_data, language):
 
     def _replace_root(match):
         tag = match.group(0)
-        if XML_LANG_ATTRIBUTE_REGEX.search(tag):
-            # A function, not a string: a replacement string would read any backslash
-            # in the language tag as a group reference.
-            return XML_LANG_ATTRIBUTE_REGEX.sub(lambda _: replacement, tag, count=1)
+        for attribute in XML_LANG_OR_QUOTED_VALUE_REGEX.finditer(tag):
+            if attribute.group("lang"):
+                return tag[: attribute.start()] + replacement + tag[attribute.end() :]
         return f"{tag[:-1].rstrip()}{replacement}>"
 
     return ITEM_ROOT_START_TAG_REGEX.sub(_replace_root, raw_data, count=1)
