@@ -21,4 +21,4 @@ export const editors = Object.freeze({
   [QtiInteraction.MATCH]: MatchEditor,
 });
 
-export { DEFAULT_INTERACTION, descriptors, registry } from './descriptors';
+export { descriptors, registry } from './descriptors';

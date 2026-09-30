@@ -1,6 +1,6 @@
 import { QuestionType, ValidationError } from './constants';
 import { parseItem } from './serialization/parseItem';
-import { resolveDescriptor } from './interactions/resolveDescriptor';
+import { isSupportedItem, resolveDescriptor } from './interactions/resolveDescriptor';
 
 /**
  * Validate what is wrong with an item as a whole, rather than with one of its interactions:
@@ -40,7 +40,8 @@ export function validateItemShape({ interactions, questionTypes = [], allowFreeR
  * @param {object} [options]
  * @param {boolean} [options.allowFreeResponse] - Whether a free-response question counts
  *   as valid. Consumers that only accept scorable questions pass false.
- * @returns {Array<{ code: string, id?: string }>} Empty when the item is valid
+ * @returns {Array<{ code: string, id?: string }>} Empty when the item is valid. Items the
+ *   editor shows read-only report only unreadable XML or a missing interaction.
  */
 export function validateQtiItem(rawData, { allowFreeResponse = true } = {}) {
   if (!rawData) {
@@ -58,6 +59,11 @@ export function validateQtiItem(rawData, { allowFreeResponse = true } = {}) {
     ...interaction,
     ...resolveDescriptor(interaction.bodyXml, interaction.responseDeclarations),
   }));
+
+  if (item.interactions.length && !isSupportedItem(item.interactions)) {
+    // Shown read-only: the editor's rules don't apply, only unreadable interactions count.
+    return resolved.filter(({ error }) => error).map(({ error }) => ({ code: error }));
+  }
 
   const errors = validateItemShape({
     interactions: item.interactions,
