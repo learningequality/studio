@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within, configure } from '@testing-library/vue';
+import { render, screen, waitFor, within } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { Store } from 'vuex';
 import router from '../../../router';
@@ -10,6 +10,8 @@ import { commonStrings } from 'shared/strings/commonStrings';
 const {
   userCount$,
   clearFiltersAction$,
+  emailAction$,
+  downloadCSVAction$,
   userTypeLabel$,
   targetLocationLabel$,
   searchLabel$,
@@ -28,8 +30,6 @@ jest.mock('shared/client', () => ({
   default: { get: jest.fn() },
 }));
 jest.mock('file-saver', () => ({ saveAs: jest.fn() }));
-
-configure({ testIdAttribute: 'data-test' });
 
 const USER_IDS = ['user-a', 'user-b', 'user-c'];
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -74,6 +74,8 @@ function lastFetchParams() {
 
 const clearFiltersLink = () => screen.queryByText(clearFiltersAction$());
 const selectAllCheckbox = () => within(screen.getByRole('table')).getAllByRole('checkbox')[0];
+const bulkEmailButton = () => screen.queryByRole('button', { name: emailAction$() });
+const csvButton = () => screen.getByRole('button', { name: downloadCSVAction$() });
 
 describe('UserTable', () => {
   let user;
@@ -177,6 +179,19 @@ describe('UserTable', () => {
       await waitFor(() => {
         expect(lastFetchParams().joined_since).toMatch(ISO_DATE);
       });
+    });
+
+    it('a date window stays inside the target month on the last day of a longer one', async () => {
+      jest.useFakeTimers().setSystemTime(new Date(2026, 2, 31, 12));
+      try {
+        renderWithFilters({ joinedWithin: '1mo' });
+
+        await waitFor(() => {
+          expect(lastFetchParams().joined_since.slice(0, 7)).toBe('2026-02');
+        });
+      } finally {
+        jest.useRealTimers();
+      }
     });
 
     it('an active-within selection fetches users filtered by an ISO active_since date', async () => {
@@ -304,7 +319,7 @@ describe('UserTable', () => {
     it('offers no bulk email action until users are selected', () => {
       renderComponent();
 
-      expect(screen.queryByTestId('email')).not.toBeInTheDocument();
+      expect(bulkEmailButton()).not.toBeInTheDocument();
     });
 
     it('selecting all users offers a bulk email action for them', async () => {
@@ -312,20 +327,39 @@ describe('UserTable', () => {
 
       await user.click(selectAllCheckbox());
 
-      expect(await screen.findByTestId('email')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(bulkEmailButton()).toBeInTheDocument();
+      });
       expect(screen.getByText(`(${USER_IDS.length})`)).toBeInTheDocument();
+    });
+
+    it('unticking select-all drops the bulk email action again', async () => {
+      renderComponent();
+
+      await user.click(selectAllCheckbox());
+      await waitFor(() => {
+        expect(bulkEmailButton()).toBeInTheDocument();
+      });
+
+      await user.click(selectAllCheckbox());
+
+      await waitFor(() => {
+        expect(bulkEmailButton()).not.toBeInTheDocument();
+      });
     });
 
     it('discards the selection when the filters change', async () => {
       renderComponent();
 
       await user.click(selectAllCheckbox());
-      expect(await screen.findByTestId('email')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(bulkEmailButton()).toBeInTheDocument();
+      });
 
       await user.click(screen.getByLabelText(hasPublishedLabel$()));
 
       await waitFor(() => {
-        expect(screen.queryByTestId('email')).not.toBeInTheDocument();
+        expect(bulkEmailButton()).not.toBeInTheDocument();
       });
     });
 
@@ -333,7 +367,7 @@ describe('UserTable', () => {
       renderComponent();
 
       await user.click(selectAllCheckbox());
-      await user.click(await screen.findByTestId('email'));
+      await user.click(await screen.findByRole('button', { name: emailAction$() }));
 
       // EmailUsersDialog has no $trs, so there is no key to reference for its title.
       expect(await screen.findByRole('heading', { name: 'Send email' })).toBeInTheDocument();
@@ -344,13 +378,13 @@ describe('UserTable', () => {
     it('offers the download when there are users to export', () => {
       renderComponent();
 
-      expect(screen.getByTestId('csv')).toBeEnabled();
+      expect(csvButton()).toBeEnabled();
     });
 
     it('is unavailable when there are no users to export', () => {
       renderComponent({ users: [] });
 
-      expect(screen.getByTestId('csv')).toBeDisabled();
+      expect(csvButton()).toBeDisabled();
     });
 
     it('downloads a dated CSV built from the current filters', async () => {
@@ -358,7 +392,7 @@ describe('UserTable', () => {
       const { saveAs } = require('file-saver');
       renderComponent();
 
-      await user.click(screen.getByTestId('csv'));
+      await user.click(csvButton());
 
       await waitFor(() => {
         expect(saveAs).toHaveBeenCalled();
