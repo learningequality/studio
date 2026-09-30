@@ -29,6 +29,9 @@ from contentcuration.utils.assessment.qti.imsmanifest import Resources
 from contentcuration.utils.assessment.qti.media import get_qti_media_references
 from contentcuration.utils.assessment.qti.media import rewrite_qti_media_paths
 from contentcuration.utils.assessment.qti.media import set_qti_item_language
+from contentcuration.utils.assessment.qti.normalize import (
+    normalize_text_entry_cardinality,
+)
 from contentcuration.utils.assessment.qti.perseus_derive import (
     is_answerless_numeric_entry,
 )
@@ -106,7 +109,8 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
         return is_answerless
 
     def _create_native_qti_item(self, assessment_item) -> Optional[Tuple[str, bytes]]:
-        raw_bytes = assessment_item.raw_data.encode("utf-8")
+        raw_data = normalize_text_entry_cardinality(assessment_item.raw_data)
+        raw_bytes = raw_data.encode("utf-8")
 
         result = validate_qti_item(raw_bytes)
         if not result.is_valid:
@@ -131,7 +135,9 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
             )
 
         filepath = f"items/{identifier}.xml"
-        item_xml, file_dependencies = self._write_qti_media_files(assessment_item)
+        item_xml, file_dependencies = self._write_qti_media_files(
+            assessment_item, raw_data
+        )
         # The other two paths through this generator build their items here and stamp the
         # node's language as they go; this one is handed raw_data, so it stamps it too.
         # Otherwise one package declares a language for some items and not others,
@@ -148,8 +154,9 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
 
         return filepath, item_xml.encode("utf-8")
 
-    def _write_qti_media_files(self, assessment_item) -> Tuple[str, List[str]]:
-        raw_data = assessment_item.raw_data
+    def _write_qti_media_files(
+        self, assessment_item, raw_data: str
+    ) -> Tuple[str, List[str]]:
         filenames = get_qti_media_references(raw_data)
         if not filenames:
             return raw_data, []

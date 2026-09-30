@@ -18,6 +18,7 @@ from le_utils.constants import format_presets
 
 from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
+from contentcuration.models import Language
 from contentcuration.tests.base import StudioTestCase
 from contentcuration.tests.testdata import create_studio_file
 from contentcuration.tests.testdata import fileobj_exercise_graphie
@@ -2048,6 +2049,56 @@ class TestQTIExerciseCreation(StudioTestCase):
         self.assertIn("items/native_item_1.xml", zip_file.namelist())
         item_xml = zip_file.read("items/native_item_1.xml").decode("utf-8")
         self.assertEqual(item_xml, raw_data)
+
+    LEGACY_TEXT_ENTRY_XML = _item_xml(
+        "legacy_text_1",
+        "Legacy Text",
+        '<qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="string">'
+        "<qti-correct-response><qti-value>1</qti-value><qti-value>2</qti-value>"
+        "</qti-correct-response>"
+        '<qti-mapping default-value="0"><qti-map-entry map-key="1" mapped-value="1"/>'
+        '<qti-map-entry map-key="2" mapped-value="1"/></qti-mapping>'
+        "</qti-response-declaration>",
+        '<div><p>Pick a number. <img src="{checksum}.{ext}" alt="diagram" /></p>'
+        '<p><qti-text-entry-interaction response-identifier="RESPONSE" expected-length="50" /></p></div>',
+    )
+
+    def _publish_legacy_text_item_xml(self, item):
+        exercise_data = {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": 5,
+            "m": 3,
+            "all_assessment_items": [item.assessment_id],
+            "assessment_mapping": {item.assessment_id: exercises.QTI},
+        }
+        self._create_qti_zip(exercise_data)
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+        return zip_file.read("items/legacy_text_1.xml").decode("utf-8")
+
+    def test_legacy_text_entry_item_keeps_media_and_language_handling(self):
+        image_file = fileobj_exercise_image()
+        item = self._create_native_qti_item(
+            self.LEGACY_TEXT_ENTRY_XML.format(
+                checksum=image_file.checksum,
+                ext=image_file.file_format_id,
+            )
+        )
+        image_file.assessment_item = item
+        image_file.save()
+        self.exercise_node.language = Language.objects.get(id="fr")
+        self.exercise_node.save()
+        item_xml = self._publish_legacy_text_item_xml(item)
+        media_filename = f"{image_file.checksum}.{image_file.file_format_id}"
+        self.assertIn(f'src="images/{media_filename}"', item_xml)
+        self.assertIn('xml:lang="fr"', item_xml)
+        self.assertIn("rptemplates/map_response.xml", item_xml)
+        self.assertIn('cardinality="single"', item_xml)
+        self.assertIn('base-type="string"', item_xml)
+        self.assertNotIn('cardinality="multiple"', item_xml)
+        self.assertEqual(item_xml.count("<qti-map-entry"), 2)
+        self.assertEqual(item_xml.count("<qti-value>"), 1)
 
     def test_native_qti_item_media_included_and_addressed(self):
         # fileobj_exercise_image() writes real bytes to storage keyed by their
