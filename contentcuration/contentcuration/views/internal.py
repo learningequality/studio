@@ -508,7 +508,7 @@ def get_tree_data(request):
 @permission_classes((IsAuthenticated,))
 def get_node_tree_data(request):
     """
-    Get one level of children data for for the node `node_id` of
+    Get one level of children data for the node `node_id` of
     the `tree` tree associated with channel `data['channel_id']`.
     Returns { success: true, tree:[ children of node_id ] }
     """
