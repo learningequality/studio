@@ -414,6 +414,40 @@ class ExportChannelTestCase(StudioTestCase):
             randomize=False,
         )
 
+        # A node mixing a native QTI item with a legacy item -> both archives
+        native_qti_legacy_mixed_exercise = create_node(
+            {
+                "kind_id": "exercise",
+                "title": "Native QTI + Legacy Mixed Exercise",
+                "extra_fields": qti_extra_fields,
+            }
+        )
+        native_qti_legacy_mixed_exercise.complete = True
+        native_qti_legacy_mixed_exercise.parent = current_exercise.parent
+        native_qti_legacy_mixed_exercise.save()
+        cc.AssessmentItem.objects.create(
+            contentnode=native_qti_legacy_mixed_exercise,
+            assessment_id=uuid.uuid4().hex,
+            type=exercises.QTI,
+            question="",
+            answers="[]",
+            hints="[]",
+            raw_data=VALID_CHOICE_ITEM,
+            order=1,
+            randomize=False,
+        )
+        cc.AssessmentItem.objects.create(
+            contentnode=native_qti_legacy_mixed_exercise,
+            assessment_id=uuid.uuid4().hex,
+            type=exercises.INPUT_QUESTION,
+            question="What is 2+2?",
+            answers=json.dumps([{"answer": 4, "correct": True, "order": 1}]),
+            hints=json.dumps([]),
+            raw_data="{}",
+            order=2,
+            randomize=False,
+        )
+
         first_topic = self.content_channel.main_tree.get_descendants().first()
 
         # Add a publishable topic to ensure it does not inherit but that its children do
@@ -985,6 +1019,33 @@ class ExportChannelTestCase(StudioTestCase):
 
         self.assertTrue(item_stems)
         self.assertEqual(item_stems, assessment_item_ids)
+
+    def test_mixed_native_legacy_perseus_ids_match_assessment_metadata(self):
+        """Older Kolibri looks up legacy items by the QTI manifest id too."""
+        title = "Native QTI + Legacy Mixed Exercise"
+        node = cc.ContentNode.objects.get(title=title)
+        exercise_file = node.files.get(preset_id=format_presets.EXERCISE)
+        with exercise_file.file_on_disk.open("rb") as file_handle:
+            archive = zipfile.ZipFile(file_handle)
+            item_stems = {
+                name[: -len(".json")]
+                for name in archive.namelist()
+                if name.endswith(".json") and name != "exercise.json"
+            }
+            exercise_data = json.loads(archive.read("exercise.json"))
+
+        assessment_item_ids = (
+            kolibri_models.ContentNode.objects.get(title=title)
+            .assessmentmetadata.first()
+            .assessment_item_ids
+        )
+
+        self.assertEqual(len(assessment_item_ids), 2)
+        self.assertEqual(item_stems, set(assessment_item_ids))
+        self.assertEqual(exercise_data["all_assessment_items"], assessment_item_ids)
+        self.assertEqual(
+            set(exercise_data["assessment_mapping"]), set(assessment_item_ids)
+        )
 
     def test_native_qti_item_declares_the_node_language(self):
         """The editor has no language of its own to write, so publishing supplies it.
