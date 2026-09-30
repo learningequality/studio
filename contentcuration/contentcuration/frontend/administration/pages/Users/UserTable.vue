@@ -59,6 +59,7 @@
         :layout4="{ span: 4 }"
       >
         <KTextbox
+          ref="searchField"
           v-model="keywordInput"
           :appearanceOverrides="{ maxWidth: '100%' }"
           :label="searchLabel$()"
@@ -107,11 +108,7 @@
         :layout8="{ span: 4 }"
         :layout4="{ span: 4 }"
       >
-        <div
-          ref="filterActions"
-          class="toggle-filters"
-          tabindex="-1"
-        >
+        <div class="toggle-filters">
           <Checkbox
             v-model="hasPublishedFilter"
             class="toggle-checkbox"
@@ -358,7 +355,7 @@
   const showEmailDialog = ref(false);
   const showMassEmailDialog = ref(false);
   const locationDropdown = ref(null);
-  const filterActions = ref(null);
+  const searchField = ref(null);
   const locationFilterMap = ref({});
 
   const users = computed(() => store.getters['userAdmin/users']);
@@ -430,8 +427,10 @@
   );
 
   function clearFilters() {
+    setKeywords.value.cancel();
+    keywordInput.value = '';
     updateQueryParams(omit(route.query, Object.keys(filterDefaults)));
-    nextTick().then(() => filterActions.value.focus());
+    nextTick().then(() => searchField.value.focus());
   }
 
   const { pagination, loading, loadItems } = useTable({
