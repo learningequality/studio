@@ -19,6 +19,7 @@ from le_utils.constants import format_presets
 from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
 from contentcuration.tests.base import StudioTestCase
+from contentcuration.tests.testdata import create_studio_file
 from contentcuration.tests.testdata import fileobj_exercise_graphie
 from contentcuration.tests.testdata import fileobj_exercise_image
 from contentcuration.tests.utils.qti.test_convert import _normalize_xml
@@ -29,6 +30,14 @@ from contentcuration.utils.assessment.qti.archive import hex_to_qti_id
 from contentcuration.utils.assessment.qti.archive import QTIExerciseGenerator
 from contentcuration.utils.assessment.qti.validation import parse_qti_xml
 from contentcuration.utils.assessment.qti.validation import validate_qti_item
+
+UNRESIZABLE_IMAGE_BYTES = b"not an image"
+
+
+def _create_unresizable_image():
+    return create_studio_file(
+        UNRESIZABLE_IMAGE_BYTES, preset=format_presets.EXERCISE_IMAGE, ext="jpg"
+    )["db_file"]
 
 
 class TestPerseusExerciseCreation(StudioTestCase):
@@ -1265,6 +1274,51 @@ class TestPerseusExerciseCreation(StudioTestCase):
             f"Expected 1 resized images, found {len(image_files)}: {image_files}",
         )
 
+    def test_image_resize_failure_uses_original(self):
+        bad_image = _create_unresizable_image()
+        bad_image_url = exercises.CONTENT_STORAGE_FORMAT.format(bad_image.filename())
+        item = self._create_assessment_item(
+            exercises.SINGLE_SELECTION,
+            f"Question: ![x]({bad_image_url} =60x45)",
+            [
+                {
+                    "answer": f"![y]({bad_image_url} =30x20)",
+                    "correct": True,
+                    "order": 1,
+                }
+            ],
+        )
+        bad_image.assessment_item = item
+        bad_image.save()
+
+        self._create_perseus_zip(
+            {
+                "mastery_model": exercises.M_OF_N,
+                "randomize": True,
+                "n": 1,
+                "m": 1,
+                "all_assessment_items": [item.assessment_id],
+                "assessment_mapping": {item.assessment_id: exercises.SINGLE_SELECTION},
+            }
+        )
+
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
+        zip_file, _ = self._validate_perseus_zip(exercise_file)
+
+        image_path = f"images/{bad_image.filename()}"
+        self.assertEqual(
+            [name for name in zip_file.namelist() if name.startswith("images/")],
+            [image_path],
+        )
+        self.assertEqual(zip_file.read(image_path), UNRESIZABLE_IMAGE_BYTES)
+        item_json = json.loads(
+            zip_file.read(f"{item.assessment_id}.json").decode("utf-8")
+        )
+        self.assertIn(
+            f"${exercises.IMG_PLACEHOLDER}/{image_path}",
+            item_json["question"]["content"],
+        )
+
 
 class TestQTIExerciseCreation(StudioTestCase):
     """
@@ -1741,6 +1795,43 @@ class TestQTIExerciseCreation(StudioTestCase):
             _normalize_xml(expected_item_xml),
             _normalize_xml(actual_item_xml),
         )
+
+    def test_image_resize_failure_uses_original(self):
+        bad_image = _create_unresizable_image()
+        bad_image_url = exercises.CONTENT_STORAGE_FORMAT.format(bad_image.filename())
+        item_type = exercises.SINGLE_SELECTION
+        item = self._create_assessment_item(
+            item_type,
+            f"Question: ![x]({bad_image_url} =60x45)",
+            [{"answer": "Answer A", "correct": True, "order": 1}],
+        )
+        bad_image.assessment_item = item
+        bad_image.save()
+
+        self._create_qti_zip(
+            {
+                "mastery_model": exercises.M_OF_N,
+                "randomize": True,
+                "n": 1,
+                "m": 1,
+                "all_assessment_items": [item.assessment_id],
+                "assessment_mapping": {item.assessment_id: item_type},
+            }
+        )
+
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+
+        image_path = f"items/images/{bad_image.filename()}"
+        self.assertEqual(
+            [name for name in zip_file.namelist() if name.startswith("items/images/")],
+            [image_path],
+        )
+        self.assertEqual(zip_file.read(image_path), UNRESIZABLE_IMAGE_BYTES)
+        item_xml = zip_file.read(
+            f"items/{hex_to_qti_id(item.assessment_id)}.xml"
+        ).decode("utf-8")
+        self.assertIn(f'src="images/{bad_image.filename()}"', item_xml)
 
     def test_multiple_question_types_mixed(self):
         """Test creating a QTI exercise with multiple supported question types"""

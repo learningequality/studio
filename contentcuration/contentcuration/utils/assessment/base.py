@@ -231,6 +231,9 @@ class ExerciseArchiveGenerator(ABC):
 
         if not resized_content:
             logging.warning(f"Failed to resize image {filename}. Using original image.")
+            self.add_file_to_write(
+                os.path.join(new_file_path, filename), original_content
+            )
             return
         resized_checksum = get_resized_image_checksum(resized_content)
 
