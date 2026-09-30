@@ -10,6 +10,7 @@ from typing import Tuple
 
 from le_utils.constants import exercises
 from le_utils.constants import format_presets
+from lxml import etree
 
 from contentcuration.utils.assessment.base import ExerciseArchiveGenerator
 from contentcuration.utils.assessment.qti.constants import ResourceType
@@ -299,7 +300,14 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
         path_by_filename = {
             os.path.basename(image["name"]): image["name"] for image in image_entries
         }
-        item_xml = rewrite_qti_media_paths(result.xml, path_by_filename)
+        try:
+            item_xml = rewrite_qti_media_paths(result.xml, path_by_filename)
+        except etree.XMLSyntaxError as e:
+            logging.error(
+                f"QTI item {assessment_item.assessment_id} on node {self.ccnode.pk} "
+                f"is not well-formed XML and will be excluded from the package: {e}"
+            )
+            return None
         file_dependencies = list(
             dict.fromkeys(path_by_filename.get(d, d) for d in result.file_dependencies)
         )
