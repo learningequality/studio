@@ -502,22 +502,17 @@ class ChannelViewSet(ValuesViewset):
         instance.save(update_fields=["deleted"], actor_id=self.request.user.id)
 
     def get_queryset(self):
+        # edit/view are already annotated here with organization grants folded
+        # in by Channel.filter_view_queryset.
         queryset = super(ChannelViewSet, self).get_queryset()
-        user_id = not self.request.user.is_anonymous and self.request.user.id
-        user_queryset = User.objects.filter(id=user_id)
         # Add the last modified node modified value as the channel last modified
         channel_main_tree_nodes = ContentNode.objects.filter(
             tree_id=OuterRef("main_tree__tree_id")
         )
-        queryset = queryset.annotate(
+        return queryset.annotate(
             modified=Subquery(
                 channel_main_tree_nodes.values("modified").order_by("-modified")[:1]
             )
-        )
-
-        return queryset.annotate(
-            edit=Exists(user_queryset.filter(editable_channels=OuterRef("id"))),
-            view=Exists(user_queryset.filter(view_only_channels=OuterRef("id"))),
         )
 
     def _annotate_draft_token(self, queryset):
