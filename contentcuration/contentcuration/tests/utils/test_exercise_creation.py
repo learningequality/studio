@@ -5,9 +5,11 @@
 import json
 import os
 import re
+import struct
 import zipfile
 from io import BytesIO
 from tempfile import TemporaryDirectory
+from unittest import mock
 from uuid import uuid4
 
 from django.core.files.storage import default_storage as storage
@@ -15,6 +17,10 @@ from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
+from lxml import etree
+from PIL import Image
+from PIL import ImageCms
+from PIL import PngImagePlugin
 
 from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
@@ -40,6 +46,122 @@ def _create_unresizable_image():
     return create_studio_file(
         UNRESIZABLE_IMAGE_BYTES, preset=format_presets.EXERCISE_IMAGE, ext="jpg"
     )["db_file"]
+
+
+def _animated_gif_bytes(size=(120, 90)):
+    frames = [Image.new("RGB", size, color=c) for c in ("red", "blue", "green")]
+    buffer = BytesIO()
+    frames[0].save(buffer, "GIF", save_all=True, append_images=frames[1:])
+    return buffer.getvalue()
+
+
+def _moving_block_gif_bytes():
+    # A red block crosses a transparent background, one third per frame
+    frames = []
+    for left in (0, 40, 80):
+        frame = Image.new("RGBA", (120, 90), (0, 0, 0, 0))
+        frame.paste((255, 0, 0, 255), (left, 0, left + 40, 90))
+        frames.append(frame)
+    buffer = BytesIO()
+    frames[0].save(buffer, "GIF", save_all=True, append_images=frames[1:], disposal=2)
+    return buffer.getvalue()
+
+
+def _dotted_gif_bytes():
+    # 1px dots stay put while a block moves along the bottom edge
+    frames = []
+    for left in (0, 100, 200):
+        frame = Image.new("RGB", (400, 300), "white")
+        for x in range(0, 400, 8):
+            for y in range(0, 240, 8):
+                frame.putpixel((x, y), (0, 0, 0))
+        frame.paste((255, 0, 0), (left, 260, left + 40, 300))
+        frames.append(frame)
+    buffer = BytesIO()
+    frames[0].save(buffer, "GIF", save_all=True, append_images=frames[1:])
+    return buffer.getvalue()
+
+
+def _red_thirds(content):
+    thirds = []
+    with Image.open(BytesIO(content)) as f:
+        for index in range(f.n_frames):
+            f.seek(index)
+            frame = f.convert("RGBA")
+            thirds.append(
+                "".join(
+                    "R"
+                    if frame.getpixel((x, frame.height // 2)) == (255, 0, 0, 255)
+                    else "."
+                    for x in (frame.width // 6, frame.width // 2, frame.width * 5 // 6)
+                )
+            )
+    return thirds
+
+
+def _assert_animated_60x45(test, content):
+    with Image.open(BytesIO(content)) as f:
+        test.assertEqual((f.size, f.n_frames), ((60, 45), 3))
+
+
+def _exif_rotated_jpeg_bytes(image_format="JPEG", **save_kwargs):
+    # Stored 400x300 with the left half red; orientation 6 displays it
+    # 300x400 with the red half on top.
+    stored = Image.new("RGB", (400, 300), color="blue")
+    stored.paste("red", (0, 0, 200, 300))
+    exif = Image.Exif()
+    exif[0x0112] = 6
+    buffer = BytesIO()
+    stored.save(buffer, image_format, exif=exif, **save_kwargs)
+    return buffer.getvalue()
+
+
+def _jpeg_with_exif(tiff):
+    # A 400x300 JPEG whose EXIF segment holds ``tiff`` as written, valid or not
+    buffer = BytesIO()
+    Image.new("RGB", (400, 300), "blue").save(buffer, "JPEG")
+    payload = b"Exif\x00\x00" + tiff
+    app1 = b"\xff\xe1" + (len(payload) + 2).to_bytes(2, "big") + payload
+    # The APP1 segment goes straight after the start-of-image marker
+    return buffer.getvalue()[:2] + app1 + buffer.getvalue()[2:]
+
+
+def _mpo_bytes():
+    # A phone-camera JPEG with an embedded second image, which Pillow opens as MPO
+    return _exif_rotated_jpeg_bytes(
+        "MPO", save_all=True, append_images=[Image.new("RGB", (400, 300))]
+    )
+
+
+SVG_BYTES = b'<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"/>'
+
+
+def _svg_size(content):
+    root = etree.fromstring(content)
+    return root.get("width"), root.get("height")
+
+
+def _noisy_jpeg_bytes(quality=95, **save_kwargs):
+    buffer = BytesIO()
+    Image.effect_noise((400, 300), 64).convert("RGB").save(
+        buffer, "JPEG", quality=quality, **save_kwargs
+    )
+    return buffer.getvalue()
+
+
+def _png_bytes(size):
+    buffer = BytesIO()
+    Image.new("RGB", size, color="blue").save(buffer, "PNG")
+    return buffer.getvalue()
+
+
+def _assert_upright_150x200(test, content):
+    with Image.open(BytesIO(content)) as f:
+        test.assertEqual(f.size, (150, 200))
+        red, _, blue = f.convert("RGB").getpixel((130, 20))
+        test.assertGreater(red, blue)
+        red, _, blue = f.convert("RGB").getpixel((20, 180))
+        test.assertGreater(blue, red)
 
 
 class TestPerseusExerciseCreation(StudioTestCase):
@@ -1060,6 +1182,233 @@ class TestPerseusExerciseCreation(StudioTestCase):
     def test_image_resizing_in_hint(self):
         """Test image resizing functionality in hint content"""
         self._test_image_resizing_in_field("hint")
+
+    def _publish_sized_image(self, content, ext, width, height):
+        image_file = create_studio_file(
+            content, preset=format_presets.EXERCISE_IMAGE, ext=ext
+        )["db_file"]
+        image_url = exercises.CONTENT_STORAGE_FORMAT.format(image_file.filename())
+        item = self._create_assessment_item(
+            exercises.SINGLE_SELECTION,
+            f"![shape]({image_url} ={width}x{height})",
+            [{"answer": "Answer A", "correct": True, "order": 1}],
+        )
+        image_file.assessment_item = item
+        image_file.save()
+
+        self._create_perseus_zip(
+            {
+                "mastery_model": exercises.M_OF_N,
+                "randomize": True,
+                "n": 1,
+                "m": 1,
+                "all_assessment_items": [item.assessment_id],
+                "assessment_mapping": {item.assessment_id: exercises.SINGLE_SELECTION},
+            }
+        )
+
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
+        zip_file, _ = self._validate_perseus_zip(exercise_file)
+        image_files = sorted(
+            name for name in zip_file.namelist() if name.startswith("images/")
+        )
+        return zip_file, image_file.filename(), image_files
+
+    def test_sized_animated_gif_is_resized_with_its_frames(self):
+        zip_file, filename, (image,) = self._publish_sized_image(
+            _animated_gif_bytes(), "gif", 60, 45
+        )
+        self.assertNotEqual(image, f"images/{filename}")
+        _assert_animated_60x45(self, zip_file.read(image))
+
+    def test_sized_animated_gif_clears_each_frame_before_the_next(self):
+        zip_file, _, (image,) = self._publish_sized_image(
+            _moving_block_gif_bytes(), "gif", 60, 45
+        )
+        self.assertEqual(_red_thirds(zip_file.read(image)), ["R..", ".R.", "..R"])
+
+    def test_sized_animated_gif_resamples_every_frame_alike(self):
+        zip_file, _, (image,) = self._publish_sized_image(
+            _dotted_gif_bytes(), "gif", 200, 150
+        )
+        with Image.open(BytesIO(zip_file.read(image))) as f:
+            dots = []
+            for index in range(f.n_frames):
+                f.seek(index)
+                dots.append(f.convert("RGB").crop((0, 0, 200, 120)).tobytes())
+        self.assertEqual(dots[0], dots[1])
+
+    def test_sized_animated_png_keeps_each_frame(self):
+        # A red block moves along the bottom of a blue background and back
+        frames = []
+        for left in (0, 40, 80, 40):
+            frame = Image.new("RGBA", (120, 90), "blue")
+            frame.paste("red", (left, 60, left + 40, 90))
+            frames.append(frame)
+        buffer = BytesIO()
+        frames[0].save(
+            buffer,
+            "PNG",
+            save_all=True,
+            append_images=frames[1:],
+            duration=[100, 200, 300, 400],
+        )
+        zip_file, _, (image,) = self._publish_sized_image(
+            buffer.getvalue(), "png", 60, 45
+        )
+        with Image.open(BytesIO(zip_file.read(image))) as f:
+            durations = []
+            tops = []
+            for index in range(f.n_frames):
+                f.seek(index)
+                f.load()
+                durations.append(f.info["duration"])
+                tops.append(f.convert("RGBA").getpixel((30, 5)))
+        self.assertEqual(durations, [100, 200, 300, 400])
+        self.assertEqual(tops, [(0, 0, 255, 255)] * 4)
+
+    def test_sized_transparent_animated_png_leaves_no_trail(self):
+        # A green block moves across a transparent background
+        frames = []
+        for left in (0, 50, 100, 150):
+            frame = Image.new("RGBA", (200, 150), (0, 0, 0, 0))
+            frame.paste((0, 255, 0, 255), (left, 0, left + 50, 150))
+            frames.append(frame)
+        buffer = BytesIO()
+        frames[0].save(
+            buffer,
+            "PNG",
+            save_all=True,
+            append_images=frames[1:],
+            duration=100,
+            disposal=PngImagePlugin.Disposal.OP_BACKGROUND,
+            blend=PngImagePlugin.Blend.OP_OVER,
+        )
+        zip_file, _, (image,) = self._publish_sized_image(
+            buffer.getvalue(), "png", 100, 75
+        )
+        with Image.open(BytesIO(zip_file.read(image))) as f:
+            first_quarter_alphas = []
+            for index in range(f.n_frames):
+                f.seek(index)
+                first_quarter_alphas.append(f.convert("RGBA").getpixel((12, 37))[3])
+        self.assertEqual(first_quarter_alphas, [255, 0, 0, 0])
+
+    def test_sized_exif_rotated_photo_is_resized_upright(self):
+        zip_file, filename, (image,) = self._publish_sized_image(
+            _exif_rotated_jpeg_bytes(), "jpg", 150, 200
+        )
+        self.assertNotEqual(image, f"images/{filename}")
+        _assert_upright_150x200(self, zip_file.read(image))
+
+    def test_sized_photo_with_truncated_exif_is_resized(self):
+        zip_file, filename, (image,) = self._publish_sized_image(
+            _jpeg_with_exif(b"II"), "jpg", 200, 150
+        )
+        self.assertNotEqual(image, f"images/{filename}")
+        with Image.open(BytesIO(zip_file.read(image))) as f:
+            self.assertEqual(f.size, (200, 150))
+
+    def test_sized_rotated_photo_with_mistyped_exif_tag_is_resized(self):
+        # Orientation 6, then tag 0x0121, a LONG, stored as ASCII "Cam"
+        tiff = (
+            b"II*\x00\x08\x00\x00\x00\x02\x00"
+            + struct.pack("<HHIHH", 0x0112, 3, 1, 6, 0)
+            + struct.pack("<HHI", 0x0121, 2, 4)
+            + b"Cam\x00\x00\x00\x00\x00"
+        )
+        zip_file, filename, (image,) = self._publish_sized_image(
+            _jpeg_with_exif(tiff), "jpg", 150, 200
+        )
+        self.assertNotEqual(image, f"images/{filename}")
+        with Image.open(BytesIO(zip_file.read(image))) as f:
+            self.assertEqual(f.size, (150, 200))
+
+    def test_sized_mpo_photo_is_resized_upright(self):
+        zip_file, filename, (image,) = self._publish_sized_image(
+            _mpo_bytes(), "jpg", 150, 200
+        )
+        self.assertNotEqual(image, f"images/{filename}")
+        _assert_upright_150x200(self, zip_file.read(image))
+
+    def test_animated_gif_at_its_natural_size_ships_original(self):
+        _, filename, image_files = self._publish_sized_image(
+            _animated_gif_bytes(), "gif", 120, 90
+        )
+        self.assertEqual(image_files, [f"images/{filename}"])
+
+    def test_animated_gif_sized_down_from_past_the_pixel_budget_is_resized(self):
+        zip_file, filename, (image,) = self._publish_sized_image(
+            # Frames past the resized pixel budget, yet a small file
+            _animated_gif_bytes((2600, 2600)),
+            "gif",
+            400,
+            300,
+        )
+        self.assertNotEqual(image, f"images/{filename}")
+        with Image.open(BytesIO(zip_file.read(image))) as f:
+            self.assertEqual((f.size, f.n_frames), ((400, 300), 3))
+
+    def test_animated_gif_sized_past_the_pixel_budget_ships_original(self):
+        original = _animated_gif_bytes()
+        zip_file, filename, image_files = self._publish_sized_image(
+            original, "gif", 3000, 3000
+        )
+        self.assertEqual(image_files, [f"images/{filename}"])
+        self.assertEqual(zip_file.read(image_files[0]), original)
+
+    @mock.patch(
+        "contentcuration.utils.assessment.base.MAX_DECODED_ANIMATION_PIXELS", 30_000
+    )
+    def test_animated_gif_past_the_decode_budget_ships_original(self):
+        # Three 120x90 frames decode 32,400 pixels
+        original = _animated_gif_bytes()
+        zip_file, filename, image_files = self._publish_sized_image(
+            original, "gif", 60, 45
+        )
+        self.assertEqual(image_files, [f"images/{filename}"])
+        self.assertEqual(zip_file.read(image_files[0]), original)
+
+    def test_sized_jpeg_at_its_own_size_ships_the_smaller_re_encode(self):
+        original = _noisy_jpeg_bytes()
+        zip_file, filename, (image,) = self._publish_sized_image(
+            original, "jpg", 400, 300
+        )
+        self.assertNotEqual(image, f"images/{filename}")
+        self.assertLess(len(zip_file.read(image)), len(original))
+
+    def test_sized_jpeg_at_its_own_size_ships_original_when_re_encode_is_larger(
+        self,
+    ):
+        original = _noisy_jpeg_bytes(quality=30)
+        zip_file, filename, image_files = self._publish_sized_image(
+            original, "jpg", 400, 300
+        )
+        self.assertEqual(image_files, [f"images/{filename}"])
+        self.assertEqual(zip_file.read(image_files[0]), original)
+
+    def test_sized_jpeg_keeps_its_colour_profile(self):
+        icc_profile = ImageCms.ImageCmsProfile(ImageCms.createProfile("sRGB")).tobytes()
+        zip_file, _, (image,) = self._publish_sized_image(
+            _noisy_jpeg_bytes(icc_profile=icc_profile), "jpg", 200, 150
+        )
+        with Image.open(BytesIO(zip_file.read(image))) as f:
+            self.assertEqual(f.info.get("icc_profile"), icc_profile)
+
+    def test_sized_transparent_static_gif_keeps_its_transparency(self):
+        # A red block on a transparent background
+        image = Image.new("P", (400, 300), 0)
+        image.putpalette([0, 0, 0, 255, 0, 0])
+        image.paste(1, (100, 75, 300, 225))
+        buffer = BytesIO()
+        image.save(buffer, "GIF", transparency=0)
+        zip_file, _, (image,) = self._publish_sized_image(
+            buffer.getvalue(), "gif", 200, 150
+        )
+        with Image.open(BytesIO(zip_file.read(image))) as f:
+            f = f.convert("RGBA")
+            self.assertEqual(f.getpixel((0, 0))[3], 0)
+            self.assertEqual(f.getpixel((100, 75)), (255, 0, 0, 255))
 
     def test_image_with_same_resize_dimensions(self):
         """Test handling of multiple instances of the same image with the same resize dimensions"""
