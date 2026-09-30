@@ -103,8 +103,6 @@
             @select="onOverflowSelect"
           >
             <template #option="{ option }">
-              <!-- A disabled contributed option emits no select, so its click is stopped here
-                instead of in onOverflowSelect. -->
               <div
                 class="overflow-item"
                 :style="
@@ -115,7 +113,6 @@
                     }
                     : null
                 "
-                @click="option.disabled && option.contributed && $event.stopPropagation()"
               >
                 <KIcon
                   v-if="option.kIcon"
@@ -355,10 +352,6 @@
       });
 
       const onOverflowSelect = (option, event) => {
-        // Stop propagation to avoid triggering RTE on outside click handler that
-        // minimizes the editor because KDropdownMenu is attached to an overlay layer,
-        // i.e. not a descendant of the editor.
-        event.stopPropagation();
         option.handler(event, { fromOverflow: true });
       };
 

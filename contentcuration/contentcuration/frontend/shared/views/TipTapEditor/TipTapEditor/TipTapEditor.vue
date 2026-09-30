@@ -84,20 +84,11 @@
 
 <script>
 
-  import {
-    defineComponent,
-    provide,
-    watch,
-    computed,
-    ref,
-    toRef,
-    nextTick,
-    onMounted,
-    onUnmounted,
-  } from 'vue';
+  import { defineComponent, provide, watch, computed, ref, toRef, nextTick } from 'vue';
   import EditorToolbar from './components/EditorToolbar.vue';
   import EditorContentWrapper from './components/EditorContentWrapper.vue';
   import { useEditor } from './composables/useEditor';
+  import { useClickOutside } from './composables/useClickOutside';
   import ImageUploadModal from './components/image/ImageUploadModal.vue';
   import { useImageHandling } from './composables/useImageHandling';
   import '../assets/styles/code-theme-dark.css';
@@ -163,25 +154,6 @@
           imageHandler.openCreateModal({ file });
         }
       };
-
-      // Handle click outside to minimize
-      const handleClickOutside = event => {
-        if (props.mode !== 'edit') {
-          return;
-        }
-
-        if (editorContainer.value && !editorContainer.value.contains(event.target)) {
-          emit('minimize');
-        }
-      };
-
-      onMounted(() => {
-        document.addEventListener('click', handleClickOutside);
-      });
-
-      onUnmounted(() => {
-        document.removeEventListener('click', handleClickOutside);
-      });
 
       const getContent = () => {
         if (!editor.value || !isReady.value) return '';
@@ -263,11 +235,21 @@
         }
       });
 
-      // Emit the content update only when the editor loses focus (blur).
-      watch(isFocused, (focused, wasFocused) => {
-        if (wasFocused && !focused) {
-          emitContentUpdate();
-        }
+      const minimize = () => {
+        // Toolbar buttons suppress blur to keep the caret, so content written since
+        // the last blur is still unsynced. Flush it first: a parent acting on the
+        // close would otherwise read the content as it stood before that edit.
+        emitContentUpdate();
+        emit('minimize');
+      };
+
+      // The content is emitted only when the editor loses focus (blur) or closes.
+      useClickOutside({
+        container: editorContainer,
+        isFocused,
+        isEditing: () => props.mode === 'edit',
+        syncContent: emitContentUpdate,
+        close: minimize,
       });
 
       const handleContainerKeydown = event => {
@@ -290,13 +272,7 @@
         imageHandler,
         sharedEventHandlers,
         editorMode: computed(() => props.mode),
-        emitMinimize: () => {
-          // Toolbar buttons suppress blur to keep the caret, so content written since
-          // the last blur is still unsynced. Flush it first: a parent acting on the
-          // close would otherwise read the content as it stood before that edit.
-          emitContentUpdate();
-          emit('minimize');
-        },
+        emitMinimize: minimize,
         handleContainerKeydown,
         TipTapEditorLabel$,
         TipTapViewerLabel$,

@@ -34,12 +34,7 @@
           @select="onInsertSelect"
         >
           <template #option="{ option }">
-            <!-- A disabled option emits no select, so its click is stopped here
-              instead of in onInsertSelect. -->
-            <div
-              class="insert-option"
-              @click="option.disabled && $event.stopPropagation()"
-            >
+            <div class="insert-option">
               <KIcon
                 v-if="option.kIcon"
                 :icon="option.kIcon"
@@ -98,10 +93,7 @@
         })),
       );
 
-      const onInsertSelect = (option, event) => {
-        // KDropdownMenu renders outside the editor, so this click would otherwise
-        // reach the RTE's outside-click handler and minimize the editor.
-        event.stopPropagation();
+      const onInsertSelect = option => {
         // Nothing to anchor a modal to: the menu item is gone once the menu closes.
         option.handler(null);
       };

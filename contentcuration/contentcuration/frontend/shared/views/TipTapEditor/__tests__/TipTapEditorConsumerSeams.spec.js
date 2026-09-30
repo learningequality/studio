@@ -221,14 +221,26 @@ describe('TipTapEditor — contributed insert actions', () => {
       expect(emitted().minimize).toBeUndefined();
     });
 
-    it('still minimizes on an unavailable built-in option, as without contributed actions', async () => {
+    it('does not minimize the editor when the author clicks an unavailable built-in option', async () => {
       const user = userEvent.setup();
       const { emitted } = await renderWithActions([]);
 
       await user.click(screen.getByRole('button', { name: moreButtonText$() }));
       await user.click(within(await screen.findByRole('menu')).getByText(clearFormatting$()));
 
-      expect(emitted().minimize).toHaveLength(1);
+      expect(emitted().minimize).toBeUndefined();
+    });
+
+    it('does not minimize the editor when an action runs from the More menu', async () => {
+      const user = userEvent.setup();
+      const action = makeAction();
+      const { emitted } = await renderWithActions([action]);
+
+      await user.click(screen.getByRole('button', { name: moreButtonText$() }));
+      await user.click(within(await screen.findByRole('menu')).getByText('Insert widget'));
+
+      expect(action.handler).toHaveBeenCalledTimes(1);
+      expect(emitted().minimize).toBeUndefined();
     });
 
     it('keeps a prominent action out of the More menu', async () => {
