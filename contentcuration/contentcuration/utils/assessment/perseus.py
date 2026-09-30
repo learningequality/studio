@@ -1,3 +1,4 @@
+import copy
 import json
 import re
 import zipfile
@@ -8,6 +9,7 @@ from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 
 from contentcuration.utils.assessment.base import ExerciseArchiveGenerator
+from contentcuration.utils.assessment.qti.convert import hex_to_qti_id
 from contentcuration.utils.assessment.qti.perseus_derive import derive_perseus_item
 from contentcuration.utils.parser import extract_value
 
@@ -69,6 +71,10 @@ class PerseusExerciseGenerator(ExerciseArchiveGenerator):
             return super().process_assessment_item(derived)
         if assessment_item.type == exercises.PERSEUS_QUESTION:
             self._write_raw_perseus_assets(assessment_item, self.get_image_file_path())
+        if self._derived_items():
+            # Dual-published: AssessmentMetaData records the QTI manifest id.
+            assessment_item = copy.copy(assessment_item)
+            assessment_item.assessment_id = hex_to_qti_id(assessment_item.assessment_id)
         return super().process_assessment_item(assessment_item)
 
     def _process_input_answers(self, processed_data):
@@ -104,13 +110,12 @@ class PerseusExerciseGenerator(ExerciseArchiveGenerator):
 
     def _exercise_data_for_archive(self):
         """``exercise.json`` must list the same item ids and types as the item
-        JSON files written into this archive. Native QTI items are written by
-        their derived proxy's ``assessment_id`` (the QTI root identifier) and
-        carry a legacy Perseus ``type``, so rewrite ``all_assessment_items`` /
-        ``assessment_mapping`` to match. Otherwise ``restore_channel``'s
-        ``extract_assessment_items`` opens ``{hex}.json`` and raises
-        ``FileNotFoundError``, and ``generate_assessment_item`` receives a
-        ``qti`` type it cannot map.
+        JSON files written into this archive. When the node has native QTI
+        items, every item is written by its QTI manifest id, and native items
+        carry their derived proxy's legacy Perseus ``type``. On a mismatch,
+        ``restore_channel``'s ``extract_assessment_items`` opens ``{hex}.json``
+        and raises ``FileNotFoundError``, and ``generate_assessment_item``
+        receives a ``qti`` type it cannot map.
         """
         derived = self._derived_items()
         if not derived:
@@ -129,9 +134,10 @@ class PerseusExerciseGenerator(ExerciseArchiveGenerator):
                 new_ids.append(proxy.assessment_id)
                 new_mapping[proxy.assessment_id] = proxy.type
             else:
-                new_ids.append(assessment_id)
+                qti_id = hex_to_qti_id(assessment_id)
+                new_ids.append(qti_id)
                 if assessment_id in original_mapping:
-                    new_mapping[assessment_id] = original_mapping[assessment_id]
+                    new_mapping[qti_id] = original_mapping[assessment_id]
         return {
             **self.exercise_data,
             "all_assessment_items": new_ids,
