@@ -41,6 +41,19 @@ def test_image_gets_content_storage_prefix():
     assert expected in result
 
 
+def test_image_without_a_pixel_size_pair_carries_no_suffix():
+    expected = "![d]({})".format(exercises.CONTENT_STORAGE_FORMAT.format("abc123.png"))
+    for size in (
+        "",
+        'width="200"',
+        'height="150"',
+        'width="50%" height="150"',
+        'width="0" height="150"',
+    ):
+        result = _markdown_from_html(f'<p><img alt="d" src="abc123.png" {size}/></p>')
+        assert result == expected, size
+
+
 def test_interaction_is_dropped_from_prompt():
     fragment = "<p>Fill <qti-text-entry-interaction/> in</p>"
     assert html_to_markdown(_elements(fragment)) == "Fill  in"
@@ -172,6 +185,9 @@ CANONICAL_MARKDOWN = "\n\n".join(
             "inline."
         ),
         "![alt text]({})".format(exercises.CONTENT_STORAGE_FORMAT.format("abc123.png")),
+        "![sized]({} =200x150)".format(
+            exercises.CONTENT_STORAGE_FORMAT.format("abc123.png")
+        ),
         "> A blockquote paragraph.",
         "- First bullet\n- Second bullet\n  - Nested bullet\n- Third bullet",
         "1. First numbered\n2. Second numbered",

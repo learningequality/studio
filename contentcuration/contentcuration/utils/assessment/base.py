@@ -175,6 +175,8 @@ class ExerciseArchiveGenerator(ABC):
     ZIP_DATE_TIME = (2015, 10, 21, 7, 28, 0)
     ZIP_COMPRESS_TYPE = zipfile.ZIP_DEFLATED
     ZIP_COMMENT = "".encode()
+    # Keep the ` =WxH` suffix on sized images, for formats whose markup carries the size
+    KEEP_IMAGE_SIZES = False
 
     @property
     @abstractmethod
@@ -432,6 +434,7 @@ class ExerciseArchiveGenerator(ABC):
                 filename, checksum, ext, width, height, new_file_path
             )
 
+            size_suffix = ""
             if width is not None and height is not None:
                 image_list.append(
                     {
@@ -440,7 +443,9 @@ class ExerciseArchiveGenerator(ABC):
                         "height": height,
                     }
                 )
-            return f"![{img_match.group(1)}]({new_image_path}/{processed_filename})"
+                if self.KEEP_IMAGE_SIZES and width >= 1 and height >= 1:
+                    size_suffix = f" ={int(width)}x{int(height)}"
+            return f"![{img_match.group(1)}]({new_image_path}/{processed_filename}{size_suffix})"
 
         content = re.sub(image_pattern, _replace_image, content)
 

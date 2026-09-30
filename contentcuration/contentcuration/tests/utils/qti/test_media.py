@@ -1,6 +1,7 @@
 from contentcuration.tests.utils.qti.test_validation import VALID_CHOICE_ITEM
 from contentcuration.utils.assessment.qti.media import get_qti_media_references
 from contentcuration.utils.assessment.qti.media import rewrite_qti_media_paths
+from contentcuration.utils.assessment.qti.media import rewrite_qti_sized_image_paths
 from contentcuration.utils.assessment.qti.media import set_qti_item_language
 from contentcuration.utils.assessment.qti.media import strip_studio_attributes
 from contentcuration.utils.assessment.qti.validation import parse_qti_xml
@@ -85,6 +86,51 @@ def test_rewrite_ignores_values_not_in_mapping():
     assert result == (
         f'<item><img src="images/{CHECKSUM_A}.png"/><a href="{CHECKSUM_B}.pdf">x</a></item>'
     )
+
+
+def _path_for_size(filename, width, height):
+    return f"images/{width}x{height}-{filename}"
+
+
+def test_sized_rewrite_points_each_sized_img_at_its_size():
+    xml = (
+        f'<item>\n  <img alt="a > b" src="{CHECKSUM_A}.png" width="200" height="150"/>'
+        f"<img height='75' src='{CHECKSUM_A}.png' width='100' />"
+        f'<img src="{CHECKSUM_B}.png" width="200" height="150"></img></item>'
+    )
+    assert rewrite_qti_sized_image_paths(xml, _path_for_size) == (
+        f'<item>\n  <img alt="a > b" src="images/200x150-{CHECKSUM_A}.png" width="200" height="150"/>'
+        f"<img height='75' src='images/100x75-{CHECKSUM_A}.png' width='100' />"
+        f'<img src="images/200x150-{CHECKSUM_B}.png" width="200" height="150"></img></item>'
+    )
+
+
+def test_sized_rewrite_leaves_imgs_without_a_pixel_size_or_checksum_src():
+    xml = (
+        f'<item><img src="{CHECKSUM_A}.png"/>'
+        f'<img src="{CHECKSUM_A}.png" width="200"/>'
+        f'<img src="{CHECKSUM_A}.png" width="50%" height="150"/>'
+        f'<img srcset="{CHECKSUM_A}.png 1x" width="200" height="150"/>'
+        f'<img permanentSrc="{CHECKSUM_A}.png" width="200" height="150"/>'
+        f'<img data-src="{CHECKSUM_A}.png" width="200" height="150"/>'
+        f'<img alt=\'src="{CHECKSUM_A}.png"\' width="200" height="150"/>'
+        '<img src="https://example.com/x.png" width="200" height="150"/>'
+        f'<object data="{CHECKSUM_A}.png" width="200" height="150"></object></item>'
+    )
+    assert rewrite_qti_sized_image_paths(xml, _path_for_size) == xml
+
+
+def test_sized_rewrite_leaves_imgs_in_comments_and_cdata():
+    sized_img = f'<img src="{CHECKSUM_A}.png" width="200" height="150"/>'
+    for hidden in (f"<!-- {sized_img}\n-->", f"<![CDATA[{sized_img}]]>"):
+        xml = (
+            f"<item>{hidden}"
+            f'<img src="{CHECKSUM_A}.png" width="100" height="75"/></item>'
+        )
+        assert rewrite_qti_sized_image_paths(xml, _path_for_size) == (
+            f"<item>{hidden}"
+            f'<img src="images/100x75-{CHECKSUM_A}.png" width="100" height="75"/></item>'
+        )
 
 
 ITEM_WITHOUT_LANGUAGE = (
