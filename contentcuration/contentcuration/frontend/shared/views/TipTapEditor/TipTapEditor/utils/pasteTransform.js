@@ -1,3 +1,5 @@
+import { flattenBlocks } from './inlineContent';
+
 function stripMsoConditionalComments(html) {
   return html.replace(/<!--\[if.*?endif\]-->/gis, '');
 }
@@ -69,7 +71,7 @@ const DOM_TRANSFORMS = [
   stripImages,
 ];
 
-export function transformPastedHTML(html) {
+export function transformPastedHTML(html, { inlineOnly = false } = {}) {
   if (!html) return '';
   let cleaned = html;
   for (const transform of STRING_TRANSFORMS) {
@@ -79,5 +81,6 @@ export function transformPastedHTML(html) {
   for (const transform of DOM_TRANSFORMS) {
     transform(doc);
   }
+  if (inlineOnly) flattenBlocks(doc);
   return doc.body.innerHTML;
 }

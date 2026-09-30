@@ -10,8 +10,25 @@ import { StyledStrike, StyledUnderline } from '../extensions/TextDecoration';
 import { Image } from '../extensions/Image';
 import { CodeBlockSyntaxHighlight } from '../extensions/CodeBlockSyntaxHighlight';
 import { Math } from '../extensions/Math';
+import { InlineDocument } from '../extensions/InlineDocument';
 import { createCustomMarkdownSerializer } from '../utils/markdownSerializer';
 import { transformPastedHTML } from '../utils/pasteTransform';
+
+// Inline-only fields leave every block node and the line break out of the schema,
+// so no command, shortcut or input rule has one to create.
+const INLINE_ONLY_STARTER_KIT = {
+  document: false,
+  paragraph: false,
+  heading: false,
+  blockquote: false,
+  bulletList: false,
+  orderedList: false,
+  listItem: false,
+  listKeymap: false,
+  horizontalRule: false,
+  hardBreak: false,
+  trailingNode: false,
+};
 
 // Whether replacing the selection would delete a line break, welding two lines.
 function spansLines({ doc, selection }) {
@@ -42,7 +59,7 @@ export function useEditor() {
   const initializeEditor = (
     content,
     mode = 'edit',
-    { autofocus = false, extensions = [] } = {},
+    { autofocus = false, extensions = [], inlineOnly = false } = {},
   ) => {
     editor.value = new Editor({
       autofocus,
@@ -59,18 +76,23 @@ export function useEditor() {
           // decoration as a style on a <span> — the QTI 3.0 HTML profile has no <u> or <s>.
           strike: false,
           underline: false,
+          ...(inlineOnly && INLINE_ONLY_STARTER_KIT),
         }),
-        CodeBlockSyntaxHighlight,
-        Small,
+        ...(inlineOnly
+          ? [InlineDocument]
+          : [
+              CodeBlockSyntaxHighlight,
+              Small,
+              Image,
+              TextAlign.configure({
+                types: ['heading', 'paragraph', 'image', 'small'],
+              }),
+            ]),
         StyledStrike,
         StyledUnderline,
         Superscript,
         Subscript,
-        Image,
         Math,
-        TextAlign.configure({
-          types: ['heading', 'paragraph', 'image', 'small'],
-        }),
         ...extensions,
       ],
       content: content || '<p></p>',
@@ -79,7 +101,28 @@ export function useEditor() {
           class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none',
           dir: 'auto',
         },
-        transformPastedHTML: html => transformPastedHTML(html),
+        transformPastedHTML: html => transformPastedHTML(html, { inlineOnly }),
+        // ProseMirror wraps each line of pasted plain text in a paragraph, which an
+        // inline-only schema joins to the next with no space between.
+        ...(inlineOnly && {
+          transformPastedText: text => {
+            if (!/[\r\n]/.test(text)) return text;
+            return text
+              .split(/[\r\n]+/)
+              .map(line => line.trim())
+              .filter(Boolean)
+              .join(' ');
+          },
+          // Android Chrome leaves Enter to the browser. Its newline, after Shift or
+          // beside a math node, reads back as a space that the keymap never sees.
+          handleDOMEvents: {
+            beforeinput: (view, event) => {
+              if (!['insertParagraph', 'insertLineBreak'].includes(event.inputType)) return false;
+              event.preventDefault();
+              return true;
+            },
+          },
+        }),
       },
       onCreate: () => {
         isReady.value = true;

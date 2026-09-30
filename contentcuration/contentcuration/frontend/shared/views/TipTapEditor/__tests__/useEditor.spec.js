@@ -3,6 +3,9 @@ import { useEditor } from '../TipTapEditor/composables/useEditor';
 import { transformPastedHTML } from '../TipTapEditor/utils/pasteTransform';
 import { stubProseMirrorLayout } from 'shared/utils/testing';
 
+// jsdom has no ClipboardEvent, which is what the paste methods build without one.
+const pasteEvent = () => new Event('paste');
+
 /**
  * The QTI 3.0 HTML profile has no <u> or <s>, so an item carrying either is rejected by
  * the item schema. It does have <span>, and the schema admits a `style` attribute, so
@@ -89,6 +92,131 @@ describe('the editor schema', () => {
 });
 
 /**
+ * An inline-only editor has no block nodes or line breaks at all: a block command,
+ * input rule or line-break key then has nothing to create.
+ */
+describe('the inline-only schema', () => {
+  const INLINE_ELEMENTS = ['strong', 'em', 'span', 'sub', 'sup', 'code'];
+
+  let editors = [];
+
+  const createEditor = content => {
+    const { initializeEditor, editor } = useEditor();
+    initializeEditor(content, 'edit', { inlineOnly: true });
+    editors.push(editor.value);
+    return editor.value;
+  };
+
+  const elementsIn = html => {
+    const container = document.createElement('div');
+    container.innerHTML = html;
+    return Array.from(container.querySelectorAll('*'), element => element.localName);
+  };
+
+  // Input rules run from the view's text input handler, one character at a time.
+  const type = (editor, text) => {
+    for (const char of text) {
+      const { from, to } = editor.state.selection;
+      const handled = editor.view.someProp('handleTextInput', handler =>
+        handler(editor.view, from, to, char),
+      );
+      if (!handled) editor.view.dispatch(editor.state.tr.insertText(char, from, to));
+    }
+  };
+
+  afterEach(() => {
+    editors.forEach(editor => editor.destroy());
+    editors = [];
+  });
+
+  it('writes every offered feature as inline elements only', () => {
+    const editor = createEditor(
+      '<strong>b</strong><em>i</em>' +
+        '<span style="text-decoration: underline">u</span>' +
+        '<span style="text-decoration: line-through">s</span>' +
+        '<sub>1</sub><sup>2</sup><code>c</code><span data-latex="x^2"></span>',
+    );
+    const html = editor.getHTML();
+
+    expect([...new Set(elementsIn(html))].sort()).toEqual([...INLINE_ELEMENTS].sort());
+    expect(html).toContain('data-latex="x^2"');
+  });
+
+  it.each([
+    ['heading', 'Mod-Alt-1'],
+    ['bullet list', 'Mod-Shift-8'],
+    ['ordered list', 'Mod-Shift-7'],
+    ['blockquote', 'Mod-Shift-b'],
+    ['code block', 'Mod-Alt-c'],
+    ['small text', 'Mod-Shift-S'],
+  ])('creates no block from the %s shortcut', (_, shortcut) => {
+    const editor = createEditor('text');
+    editor.commands.focus('end');
+    editor.commands.keyboardShortcut(shortcut);
+
+    expect(elementsIn(editor.getHTML())).toEqual([]);
+    expect(editor.getText()).toBe('text');
+  });
+
+  it.each([
+    ['heading', '# '],
+    ['bullet list', '- '],
+    ['ordered list', '1. '],
+    ['blockquote', '> '],
+    ['code block', '```'],
+    ['horizontal rule', '---'],
+  ])('creates no block from the %s input rule', (_, typed) => {
+    const editor = createEditor('');
+    type(editor, typed);
+
+    expect(elementsIn(editor.getHTML())).toEqual([]);
+    expect(editor.getText()).toBe(typed);
+  });
+
+  // Touch keyboards edit the DOM before ProseMirror offers Enter to the keymap;
+  // an unclaimed Enter lets their newline into the doc.
+  it.each([
+    ['Enter', {}],
+    ['Shift-Enter', { shiftKey: true }],
+    ['Mod-Enter', { ctrlKey: true }],
+  ])('claims %s and inserts nothing', (_, modifiers) => {
+    const editor = createEditor('ab');
+    editor.commands.setTextSelection(1);
+    const enter = new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, ...modifiers });
+
+    expect(editor.view.someProp('handleKeyDown', handler => handler(editor.view, enter))).toBe(
+      true,
+    );
+    expect(editor.getHTML()).toBe('ab');
+  });
+
+  it.each(['insertParagraph', 'insertLineBreak'])('cancels the %s input', inputType => {
+    const editor = createEditor('ab');
+    const input = new InputEvent('beforeinput', { inputType, cancelable: true });
+    editor.view.dom.dispatchEvent(input);
+
+    expect(input.defaultPrevented).toBe(true);
+  });
+
+  it('lets the insertText input through', () => {
+    const editor = createEditor('ab');
+    const input = new InputEvent('beforeinput', { inputType: 'insertText', cancelable: true });
+    editor.view.dom.dispatchEvent(input);
+
+    expect(input.defaultPrevented).toBe(false);
+  });
+
+  it('undoes an edit', () => {
+    const editor = createEditor('a');
+    editor.commands.focus('end');
+    editor.commands.insertContent('b');
+    editor.commands.undo();
+
+    expect(editor.getHTML()).toBe('a');
+  });
+});
+
+/**
  * A pasted decoration is what this schema had no mark for until now: the two were
  * switched off in StarterKit, so a <u> or a decorated <span> arrived as plain text.
  * Google Docs writes a decoration as a style on a <span>, which is also how the marks
@@ -118,6 +246,183 @@ describe('a pasted decoration', () => {
       { text: 'under', style: expect.stringContaining('text-decoration: underline') },
       { text: 'struck', style: expect.stringContaining('text-decoration: line-through') },
     ]);
+  });
+});
+
+/**
+ * ProseMirror joins the text of blocks an inline-only schema cannot hold with nothing
+ * between them, so a paste would weld the last word of one line to the next.
+ */
+describe('a paste into an inline-only editor', () => {
+  let editor;
+
+  beforeEach(() => {
+    const { initializeEditor, editor: instance } = useEditor();
+    initializeEditor('', 'edit', { inlineOnly: true });
+    editor = instance.value;
+  });
+
+  afterEach(() => {
+    editor.destroy();
+  });
+
+  it('arrives as one run keeping its marks and math', () => {
+    editor.view.pasteHTML(
+      '<h1>Title</h1><ul><li><strong>bold</strong></li>' +
+        '<li>math <span data-latex="x^2"></span></li></ul>',
+      pasteEvent(),
+    );
+
+    expect(editor.getHTML()).toBe(
+      'Title <strong>bold</strong> math <span data-latex="x^2"></span>',
+    );
+  });
+
+  it('reads the Google Docs wrapper as a container, not a bold run', () => {
+    editor.view.pasteHTML(
+      '<b style="font-weight:normal" id="docs-internal-guid-x"><p>one</p><p>two</p></b>',
+      pasteEvent(),
+    );
+
+    expect(editor.getHTML()).toBe('one two');
+  });
+
+  it('joins the lines of plain text with a space', () => {
+    editor.view.pasteText('one \ntwo\r\n\r\n three', pasteEvent());
+
+    expect(editor.getHTML()).toBe('one two three');
+  });
+
+  it("drops the placeholder breaks of a full editor's empty and hard-break-ended lines", () => {
+    editor.view.pasteHTML(
+      '<p>one</p><p><br class="ProseMirror-trailingBreak"></p>' +
+        '<p>two<br><br class="ProseMirror-trailingBreak"></p><p>three</p>',
+      pasteEvent(),
+    );
+
+    expect(editor.getHTML()).toBe('one two three');
+  });
+
+  it("separates a full editor's small text lines", () => {
+    editor.view.pasteHTML(
+      '<p>Intro</p><small class="small-text">first line</small>' +
+        '<small class="small-text">second line</small><p>end</p>',
+      pasteEvent(),
+    );
+
+    expect(editor.getHTML()).toBe('Intro first line second line end');
+  });
+
+  it('separates blocks with a comment between them', () => {
+    editor.view.pasteHTML('<p>one</p><!-- note --><p>two</p>', pasteEvent());
+
+    expect(editor.getHTML()).toBe('one two');
+  });
+
+  it.each([
+    [
+      'Excel',
+      '<table><!--StartFragment--><col width=64><col width=64>' +
+        '<tr><td>red</td><td>blue</td></tr><!--EndFragment--></table>',
+      'red blue',
+    ],
+    [
+      'LibreOffice Calc',
+      '<table><colgroup width="85"></colgroup><tr><td>red</td><td>blue</td></tr></table>',
+      'red blue',
+    ],
+    [
+      'a table after text',
+      'Intro<table><colgroup><col></colgroup><tr><td>red</td><td>blue</td></tr></table>',
+      'Intro red blue',
+    ],
+  ])('keeps the text of a spreadsheet paste from %s', (_, html, expected) => {
+    editor.view.pasteHTML(html, pasteEvent());
+
+    expect(editor.getHTML()).toBe(expected);
+  });
+
+  it.each([
+    ['<p>one</p><br><p>two</p>', 'one two'],
+    ['one<br>\n    two', 'one two'],
+    ['<strong>one</strong><br> <em>two</em>', '<strong>one</strong> <em>two</em>'],
+  ])('turns a line break into one space in %j', (html, expected) => {
+    editor.view.pasteHTML(html, pasteEvent());
+
+    expect(editor.getHTML()).toBe(expected);
+  });
+});
+
+/**
+ * A copy carries markup around its content, and a ProseMirror copy the blocks it was
+ * cut from, which an inline-only editor has none of.
+ */
+describe('a copy pasted into an inline-only editor', () => {
+  let editors = [];
+
+  const createEditor = (content, inlineOnly) => {
+    const { initializeEditor, editor } = useEditor();
+    initializeEditor(content, 'edit', { inlineOnly });
+    editors.push(editor.value);
+    return editor.value;
+  };
+
+  const copy = (editor, from, to) =>
+    editor.view.serializeForClipboard(editor.state.doc.slice(from, to, true)).dom.innerHTML;
+
+  const pasteBetween = html => {
+    const editor = createEditor('xy', true);
+    editor.commands.setTextSelection(1);
+    editor.view.pasteHTML(html, pasteEvent());
+    return editor.getText();
+  };
+
+  afterEach(() => {
+    editors.forEach(editor => editor.destroy());
+    editors = [];
+  });
+
+  // Chromium on Windows wraps copied HTML in line-broken markup.
+  it('drops the Windows clipboard wrapper of a marked copy around a pasted phrase', () => {
+    const html =
+      '<html>\r\n<body>\r\n<!--StartFragment--><meta charset="utf-8"><span data-pm-slice="0 0 []">hello</span><!--EndFragment-->\r\n</body>\r\n</html>';
+
+    expect(pasteBetween(html)).toBe('xhelloy');
+  });
+
+  it('joins copied paragraphs with one space', () => {
+    const html = copy(createEditor('<p>one</p><p></p><p>two</p>', false), 1, 11);
+
+    expect(pasteBetween(html)).toBe('xone twoy');
+  });
+
+  it.each([
+    ['paragraphs around', 1, 'xa by'],
+    ['a paragraph after', 3, 'xby'],
+  ])('drops a copied horizontal rule with %s it', (_, from, expected) => {
+    const source = createEditor('<p>a</p><hr><p>b</p>', false);
+    const html = copy(source, from, source.state.doc.content.size - 1);
+
+    expect(pasteBetween(html)).toBe(expected);
+  });
+
+  // Chromium on macOS and Linux prefixes copied HTML with a meta tag.
+  it.each([
+    ['a charset', '<meta charset="utf-8">'],
+    ['a content-type', '<meta http-equiv="content-type" content="text/html; charset=utf-8">'],
+  ])('joins copied paragraphs prefixed with %s meta tag with one space', (_, meta) => {
+    const html = copy(createEditor('<p>one</p><p>two</p>', false), 1, 9);
+
+    expect(pasteBetween(meta + html)).toBe('xone twoy');
+  });
+
+  it("flattens a copied code block's lines as stored content does", () => {
+    const source = createEditor('<p>intro</p><pre><code>if x:\n    y()</code></pre>', false);
+    const html = copy(source, 1, source.state.doc.content.size - 1);
+    const editor = createEditor('', true);
+    editor.view.pasteHTML(html, pasteEvent());
+
+    expect(editor.getHTML()).toBe('intro <code>if x: y()</code>');
   });
 });
 
