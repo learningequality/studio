@@ -270,7 +270,6 @@ describe('UserTable', () => {
       renderComponent();
 
       await user.type(screen.getByLabelText(searchLabel$()), 'keyword test');
-      // useKeywordSearch debounces, so a pending write would land after the clear.
       await waitFor(() => {
         expect(router.currentRoute.query.keywords).toBe('keyword test');
       });
@@ -288,6 +287,29 @@ describe('UserTable', () => {
       expect(screen.getByLabelText(hasPublishedLabel$())).not.toBeChecked();
       expect(screen.getByLabelText(hasStudioActivityLabel$())).not.toBeChecked();
       expect(clearFiltersLink()).not.toBeInTheDocument();
+    });
+
+    it('cancels a keyword search that has not been written yet', async () => {
+      renderWithFilters({ hasPublished: 'yes' });
+
+      await user.type(screen.getByLabelText(searchLabel$()), 'zzz');
+      await user.click(clearFiltersLink());
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(searchLabel$())).toHaveValue('');
+      });
+      await new Promise(resolve => setTimeout(resolve, 600));
+      expect(router.currentRoute.query.keywords).toBeUndefined();
+    });
+
+    it('moves focus to the search field, which a screen reader can name', async () => {
+      renderWithFilters({ hasPublished: 'yes' });
+
+      await user.click(clearFiltersLink());
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(searchLabel$())).toHaveFocus();
+      });
     });
 
     it('removes every filter query param while preserving pagination and sorting', async () => {
