@@ -68,13 +68,17 @@ const XHTML_NS = 'http://www.w3.org/1999/xhtml';
  * The QTI schema rejects that: inline content belongs to the QTI namespace the item root
  * declares, so these elements have to be namespace-less in order to inherit it. Foreign
  * subtrees (MathML, SVG) keep their own namespace, which QTI does expect declared.
+ * serializeAsHtml uses it the other way round, from XML into an HTML document.
  *
  * @param {Node} node
+ * @param {Document} [doc] - Document to re-create the node in
+ * @param {string|null} [plainNamespace] - Namespace whose elements become the document's
+ *   default ones; any other is kept
  * @returns {Node|null} null for node types that carry no content (comments, etc.)
  */
-function adoptHtmlNode(node) {
-  if (node.nodeType === Node.TEXT_NODE) {
-    return xmlDoc.createTextNode(node.nodeValue);
+function adoptNode(node, doc = xmlDoc, plainNamespace = XHTML_NS) {
+  if (node.nodeType === Node.TEXT_NODE || node.nodeType === Node.CDATA_SECTION_NODE) {
+    return doc.createTextNode(node.nodeValue);
   }
   if (node.nodeType !== Node.ELEMENT_NODE) {
     return null;
@@ -82,9 +86,9 @@ function adoptHtmlNode(node) {
 
   const namespace = node.namespaceURI;
   const el =
-    !namespace || namespace === XHTML_NS
-      ? xmlDoc.createElement(node.localName)
-      : xmlDoc.createElementNS(namespace, node.tagName);
+    !namespace || namespace === plainNamespace
+      ? doc.createElement(node.localName)
+      : doc.createElementNS(namespace, node.tagName);
 
   for (const attr of node.attributes) {
     // A literal xmlns attribute would re-introduce the namespace we just dropped.
@@ -94,13 +98,37 @@ function adoptHtmlNode(node) {
   }
 
   for (const child of node.childNodes) {
-    const adopted = adoptHtmlNode(child);
+    const adopted = adoptNode(child, doc, plainNamespace);
     if (adopted) {
       el.appendChild(adopted);
     }
   }
 
   return el;
+}
+
+/**
+ * Serialize XML nodes as an HTML string, for state that a rich text editor parses as HTML.
+ *
+ * XMLSerializer writes an empty element as `<x/>`, and the HTML parser does not treat `/>` as
+ * self-closing on unknown elements such as QTI's, so the following siblings end up nested
+ * inside it. It also writes `xmlns` on elements in the item's namespace. Re-creating the nodes
+ * in an HTML document gives every element an explicit end tag and no `xmlns`; foreign
+ * subtrees (MathML, SVG) keep their namespace.
+ *
+ * @param {Node[]} nodes
+ * @param {string|null} [namespace] - Namespace of the plain elements, e.g. the item's QTI one
+ * @returns {string}
+ */
+export function serializeAsHtml(nodes, namespace = null) {
+  const htmlDoc = parseXML('<!DOCTYPE html><body></body>', 'text/html');
+  for (const node of nodes) {
+    const converted = adoptNode(node, htmlDoc, namespace);
+    if (converted) {
+      htmlDoc.body.appendChild(converted);
+    }
+  }
+  return htmlDoc.body.innerHTML;
 }
 
 /**
@@ -132,7 +160,7 @@ export function buildXmlNode({ tag, attrs = {}, children, innerHTML }) {
   if (innerHTML !== undefined) {
     const htmlDoc = parseXML(`<!DOCTYPE html><body>${innerHTML}</body>`, 'text/html');
     for (const child of [...htmlDoc.body.childNodes]) {
-      const adopted = adoptHtmlNode(child);
+      const adopted = adoptNode(child);
       if (adopted) {
         el.appendChild(adopted);
       }
