@@ -267,9 +267,8 @@
         () => props.mode,
         newMode => {
           if (newMode === 'edit') {
-            if (!state.value.prompt || !state.value.prompt.trim()) {
-              openPrompt();
-            }
+            // Open the question, the first thing in the card, so the card opens at its start.
+            openPrompt();
           } else {
             isPromptOpen.value = false;
           }

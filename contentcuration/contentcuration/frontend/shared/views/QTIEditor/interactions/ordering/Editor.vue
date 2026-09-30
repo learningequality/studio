@@ -303,11 +303,8 @@
         () => props.mode,
         newMode => {
           if (newMode === 'edit') {
-            if (!state.value.prompt || !state.value.prompt.trim()) {
-              openPrompt();
-            } else if (state.value.items.length > 0) {
-              openItem(state.value.items[0].id);
-            }
+            // Open the question, the first thing in the card, so the card opens at its start.
+            openPrompt();
             emit('update:interaction', workingInteraction.value);
           } else {
             isPromptOpen.value = false;

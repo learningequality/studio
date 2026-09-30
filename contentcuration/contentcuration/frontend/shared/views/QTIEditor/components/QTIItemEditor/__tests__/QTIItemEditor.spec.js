@@ -50,15 +50,26 @@ const defaultProps = {
   showAnswers: false,
 };
 
-const renderComponent = (props = {}, slots = {}) => {
+const renderComponent = (props = {}, slots = {}, listeners = { open: () => {} }) => {
   return render(QTIItemEditor, {
     props: { ...defaultProps, ...props },
     slots,
+    listeners,
     routes: new VueRouter(),
   });
 };
 
+// jsdom implements no layout, so it has no scrollIntoView for an opening card to call.
+const scrollIntoView = jest.fn();
+beforeAll(() => {
+  Element.prototype.scrollIntoView = scrollIntoView;
+});
+afterAll(() => {
+  delete Element.prototype.scrollIntoView;
+});
+
 describe('QTIItemEditor', () => {
+  beforeEach(() => scrollIntoView.mockClear());
   afterEach(() => jest.restoreAllMocks());
 
   describe('view mode', () => {
@@ -70,6 +81,104 @@ describe('QTIItemEditor', () => {
     test('does not show the close button', () => {
       renderComponent({ mode: 'view' });
       expect(screen.queryByRole('button', { name: closeBtnLabel$() })).not.toBeInTheDocument();
+    });
+  });
+
+  describe('opening the card by clicking it', () => {
+    test('asks to open a closed card when it is clicked', async () => {
+      const { emitted } = renderComponent({ mode: 'view' });
+      await fireEvent.click(screen.getByText(questionContentPlaceholder$()));
+      expect(emitted().open).toHaveLength(1);
+    });
+
+    test('does not ask to open a card that is already open', async () => {
+      const { emitted } = renderComponent({ mode: 'edit' });
+      await fireEvent.click(screen.getByText(questionContentPlaceholder$()));
+      expect(emitted().open).toBeUndefined();
+    });
+
+    test('does not ask to open an item this editor cannot edit', async () => {
+      const { emitted } = renderComponent({
+        item: { assessment_id: 'perseus-item', type: 'perseus_question', raw_data: '{}' },
+      });
+      await fireEvent.click(screen.getByText(unsupportedItemMessage$()));
+      expect(emitted().open).toBeUndefined();
+    });
+
+    test('leaves clicks on the toolbar actions to the actions themselves', async () => {
+      const { emitted } = renderComponent(
+        { mode: 'view' },
+        { toolbarActions: '<button type="button">Move up</button>' },
+      );
+      await fireEvent.click(screen.getByRole('button', { name: 'Move up' }));
+      expect(emitted().open).toBeUndefined();
+    });
+
+    test('asks to open a closed card when its incomplete indicator is clicked', async () => {
+      const { emitted } = renderComponent({
+        item: { ...defaultProps.item, raw_data: CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER },
+        mode: 'view',
+      });
+      await fireEvent.click(await screen.findByTestId('incompleteIndicator'));
+      expect(emitted().open).toHaveLength(1);
+    });
+
+    test('leaves clicks on buttons inside the card body to the buttons themselves', async () => {
+      const { emitted } = renderComponent({
+        item: { ...defaultProps.item, raw_data: CHOICE_ITEM_DOCUMENT_WITH_HINTS },
+        mode: 'view',
+        showAnswers: true,
+      });
+      await fireEvent.click(screen.getByRole('button', { name: hintsLabel$() }));
+      expect(emitted().open).toBeUndefined();
+    });
+
+    test('offers no way to open a card whose consumer does not listen for it', async () => {
+      const { container, emitted } = renderComponent({ mode: 'view' }, {}, {});
+      expect(container.firstChild).not.toHaveClass('is-clickable');
+      await fireEvent.click(screen.getByText(questionContentPlaceholder$()));
+      expect(emitted().open).toBeUndefined();
+    });
+
+    test('keeps the click that opens a card from carrying on to the document', async () => {
+      // The editor's click-outside handler lives there, and minimizes the question.
+      const onDocumentClick = jest.fn();
+      document.addEventListener('click', onDocumentClick);
+      try {
+        const { emitted } = renderComponent({ mode: 'view' });
+        await fireEvent.click(screen.getByText(questionContentPlaceholder$()));
+        expect(emitted().open).toHaveLength(1);
+        expect(onDocumentClick).not.toHaveBeenCalled();
+      } finally {
+        document.removeEventListener('click', onDocumentClick);
+      }
+    });
+  });
+
+  describe('bringing an opened card into view', () => {
+    test('scrolls the start of the card into view when it opens', async () => {
+      const { container, updateProps } = renderComponent({ mode: 'view' });
+      await updateProps({ mode: 'edit' });
+      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
+      expect(scrollIntoView.mock.instances[0]).toBe(container.firstChild);
+    });
+
+    test('scrolls the start of a card into view when it is created open', () => {
+      const { container } = renderComponent({ mode: 'edit' });
+      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
+      expect(scrollIntoView.mock.instances[0]).toBe(container.firstChild);
+    });
+
+    test('leaves the scroll position alone for a closed card', () => {
+      renderComponent({ mode: 'view' });
+      expect(scrollIntoView).not.toHaveBeenCalled();
+    });
+
+    test('leaves the scroll position alone when a card closes', async () => {
+      const { updateProps } = renderComponent({ mode: 'edit' });
+      scrollIntoView.mockClear();
+      await updateProps({ mode: 'view' });
+      expect(scrollIntoView).not.toHaveBeenCalled();
     });
   });
 

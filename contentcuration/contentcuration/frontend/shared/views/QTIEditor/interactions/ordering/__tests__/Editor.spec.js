@@ -62,8 +62,22 @@ const dragFirstRowToLast = async () => {
   await nextTick();
 };
 
+// The mock TipTapEditor renders a <textarea> only for the editor that is open.
+const openTextarea = () => screen.queryAllByRole('textbox').find(el => el.tagName === 'TEXTAREA');
+
 describe('OrderingEditor', () => {
   describe('edit mode rendering', () => {
+    it('opens the question for editing when it is already written', () => {
+      renderEditor({
+        interaction: blockWithDecl(ORDERING_XML, ORDERING_DECL_XML),
+        questionType: QuestionType.ORDERING,
+      });
+      expect(
+        screen.queryByRole('button', { name: tr.$tr('editQuestionLabel') }),
+      ).not.toBeInTheDocument();
+      expect(openTextarea().value).toContain('Arrange the planets');
+    });
+
     it('renders the prompt text from the XML', () => {
       renderEditor({
         interaction: blockWithDecl(ORDERING_XML, ORDERING_DECL_XML),

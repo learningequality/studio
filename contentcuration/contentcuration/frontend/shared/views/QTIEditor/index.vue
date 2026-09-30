@@ -29,12 +29,14 @@
           :allowFreeResponse="allowFreeResponse"
           :showAnswers="showAnswers"
           data-testid="item"
+          @open="openItem(item.assessment_id)"
           @close="closeItem"
           @update:rawData="newXml => updateItemRawData(item.assessment_id, newXml)"
         >
-          <template #toolbarActions>
+          <template #toolbarActions="{ canOpen }">
             <CollapsibleToolbar
-              :actions="getToolbarActions(item, idx)"
+              :ref="el => setToolbarRef(item.assessment_id, el)"
+              :actions="getToolbarActions(item, idx, { canOpen })"
               data-testid="toolbar"
             />
           </template>
@@ -60,7 +62,7 @@
 <script>
 
   import { v4 as uuidv4 } from 'uuid';
-  import { ref, computed } from 'vue';
+  import { ref, computed, nextTick } from 'vue';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { qtiEditorStrings } from './qtiEditorStrings';
   import { AssessmentItemTypes } from './constants';
@@ -103,14 +105,25 @@
       const showAnswers = ref(false);
 
       function openItem(id) {
-        const item = props.assessments.find(i => i.assessment_id === id);
-        // Items authored elsewhere (e.g. Perseus) are read-only here.
-        if (!item || item.type !== AssessmentItemTypes.QTI) return;
         activeId.value = id;
       }
 
+      const toolbars = {};
+
+      function setToolbarRef(id, toolbar) {
+        if (toolbar) {
+          toolbars[id] = toolbar;
+        } else {
+          delete toolbars[id];
+        }
+      }
+
       function closeItem() {
+        const closedId = activeId.value;
         activeId.value = null;
+        // The Close button goes with the card, so hand focus to the Edit action that reopens
+        // it. On the next tick, because closing is what enables that action.
+        nextTick(() => toolbars[closedId]?.focusAction('edit'));
       }
 
       /**
@@ -162,7 +175,6 @@
 
       const { getToolbarActions } = useQTIEditorActions({
         items,
-        activeId,
         windowIsSmall,
         openItem,
         moveItemUp,
@@ -178,6 +190,8 @@
         items,
         activeId,
         showAnswers,
+        setToolbarRef,
+        openItem,
         closeItem,
         addItem,
         updateItemRawData,
