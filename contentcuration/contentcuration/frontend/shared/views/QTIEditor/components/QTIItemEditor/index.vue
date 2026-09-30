@@ -80,7 +80,7 @@
 
       <!-- .stop: expanding or collapsing the hints must not open the card -->
       <HintsSection
-        v-if="hasHints && (mode === 'edit' || showAnswers)"
+        v-if="showHints"
         :hints="hints"
         :mode="mode"
         @update:hints="onUpdateHints"
@@ -115,7 +115,8 @@
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { AssessmentItemTypes, QuestionType } from '../../constants';
   import useQtiItem from '../../composables/useQtiItem';
-  import { validateItemShape } from '../../validateItem';
+  import { validateItemShape, validateQtiItem } from '../../validateItem';
+  import { isSupportedItem } from '../../interactions/resolveDescriptor';
   import InteractionSection from '../InteractionSection/index.vue';
   import HintsSection from '../HintsSection/index.vue';
 
@@ -147,33 +148,34 @@
       // Parse the item XML. rawData is a computed inside useQtiItem that
       // re-assembles the full XML whenever identifier/title/language or the
       // editor refs change — no need to duplicate assembleItemXml here.
-      const { interactions, itemBodyXml, hints, parseError, rawData } = useQtiItem(
-        props.item.raw_data,
-        {
-          bodyXml: currentBodyXml,
-          responseDeclarations: currentResponseDeclarations,
-        },
+      const { interactions, hints, parseError, rawData } = useQtiItem(props.item.raw_data, {
+        bodyXml: currentBodyXml,
+        responseDeclarations: currentResponseDeclarations,
+      });
+
+      const isQti = computed(() => props.item.type === AssessmentItemTypes.QTI);
+
+      /**
+       * Whether this editor can edit the item's XML faithfully: it is readable, and it is
+       * either blank or holds exactly one interaction this editor knows.
+       */
+      const isBlank = !props.item.raw_data;
+      const isEditableQti = computed(
+        () => !parseError.value && (isBlank || isSupportedItem(interactions.value)),
       );
 
       /**
-       * Items authored outside this editor (e.g. Perseus questions) and items whose XML
-       * cannot be read are shown as read-only cards.
+       * Items authored outside this editor (e.g. Perseus questions) and QTI it cannot edit
+       * faithfully are shown as read-only cards.
        */
-      const isUnsupported = computed(
-        () => props.item.type !== AssessmentItemTypes.QTI || Boolean(parseError.value),
-      );
+      const isUnsupported = computed(() => !isQti.value || !isEditableQti.value);
 
       /*
        * Seed the editor refs from the parsed item's first block, which for an inline
        * passage holds every declaration.
-       *
-       * The body is seeded even when there is no interaction to edit. Such an item still has
-       * content — its own text, and any interaction this editor has no descriptor for — and
-       * anything else the author can change, a hint, reassembles the whole item. Leaving the
-       * body unseeded would write an empty <qti-item-body/> over that text.
        */
-      currentBodyXml.value = interactions.value[0]?.bodyXml ?? itemBodyXml.value;
       if (interactions.value.length > 0) {
+        currentBodyXml.value = interactions.value[0].bodyXml;
         currentResponseDeclarations.value = interactions.value[0].responseDeclarations;
       }
 
@@ -262,6 +264,10 @@
        */
       const hasHints = hints.value.length > 0;
 
+      const showHints = computed(
+        () => hasHints && (props.mode === 'edit' ? !isUnsupported.value : props.showAnswers),
+      );
+
       function onUpdateHints(newHints) {
         editedHere = props.mode === 'edit';
         hints.value = newHints;
@@ -315,7 +321,13 @@
        */
       const isIncomplete = computed(() => {
         if (isUnsupported.value) {
-          return false;
+          // Unreadable or empty QTI can't be fixed here and blocks publishing; other
+          // unsupported items are publishable.
+          return (
+            isQti.value &&
+            validateQtiItem(props.item.raw_data, { allowFreeResponse: props.allowFreeResponse })
+              .length > 0
+          );
         }
         const itemErrors = validateItemShape({
           interactions: interactions.value,
@@ -343,7 +355,7 @@
         onUpdateInteraction,
         onUpdateErrors,
         hints,
-        hasHints,
+        showHints,
         onUpdateHints,
       };
     },
