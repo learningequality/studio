@@ -45,6 +45,7 @@ from contentcuration import models as cc
 from contentcuration.models import CustomTaskMetadata
 from contentcuration.utils.assessment.qti.archive import hex_to_qti_id
 from contentcuration.utils.assessment.qti.validation import parse_qti_xml
+from contentcuration.utils.assessment.qti.validation import validate_qti_item
 from contentcuration.utils.celery.tasks import generate_task_signature
 from contentcuration.utils.publish import ChannelIncompleteError
 from contentcuration.utils.publish import convert_channel_thumbnail
