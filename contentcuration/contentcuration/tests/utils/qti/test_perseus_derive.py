@@ -4,6 +4,7 @@ import pytest
 from le_utils.constants import exercises
 
 from contentcuration.tests.utils.qti.test_validation import _item_xml
+from contentcuration.tests.utils.qti.test_validation import ENTITY_CHOICE_ITEM
 from contentcuration.tests.utils.qti.test_validation import HINTED_EDITOR_ITEM
 from contentcuration.utils.assessment.qti.perseus_derive import derive_perseus_item
 from contentcuration.utils.assessment.qti.perseus_derive import is_perseus_derivable
@@ -279,6 +280,7 @@ MALFORMED_XML = "<qti-assessment-item><unclosed>"
         pytest.param(TWO_INTERACTION_ITEM, id="two_interactions"),
         pytest.param(EXTENDED_TEXT_ITEM, id="extended_text"),
         pytest.param(MALFORMED_XML, id="malformed_xml"),
+        pytest.param(ENTITY_CHOICE_ITEM, id="doctype_entity"),
     ],
 )
 def test_not_derivable(raw_data):

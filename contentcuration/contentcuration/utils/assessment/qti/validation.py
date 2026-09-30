@@ -55,7 +55,14 @@ def secure_parser() -> etree.XMLParser:
 
 
 def parse_qti_xml(xml: bytes) -> etree._Element:
-    return etree.parse(BytesIO(xml), parser=secure_parser())
+    doc = etree.parse(BytesIO(xml), parser=secure_parser())
+    # Unresolved entity nodes crash schema validation and derivation.
+    entity = next(doc.iter(etree.Entity), None)
+    if entity is not None:
+        raise etree.XMLSyntaxError(
+            "entity references are not supported", 0, entity.sourceline or 0, 1
+        )
+    return doc
 
 
 def validate_qti_item(xml: Union[str, bytes]) -> QTIValidationResult:

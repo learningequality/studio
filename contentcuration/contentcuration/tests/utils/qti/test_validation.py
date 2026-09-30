@@ -47,6 +47,14 @@ VALID_CHOICE_ITEM = _item_xml(
     "</qti-choice-interaction>",
 )
 
+_XML_DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>'
+
+_ENTITY_DOCTYPE = '<!DOCTYPE qti-assessment-item [<!ENTITY e "hi">]>'
+
+ENTITY_CHOICE_ITEM = VALID_CHOICE_ITEM.replace(
+    _XML_DECLARATION, _XML_DECLARATION + _ENTITY_DOCTYPE
+).replace("Option A", "Option &e;")
+
 
 class ValidateQTIItemTests(unittest.TestCase):
     def test_accepts_valid_item(self):
@@ -95,6 +103,46 @@ class ValidateQTIItemTests(unittest.TestCase):
         result = validate_qti_item(xml)
         serialized = " ".join(e.message for e in result.errors)
         self.assertNotIn("super-secret-value", serialized)
+
+    def test_rejects_entity_reference_without_raising(self):
+        result = validate_qti_item(ENTITY_CHOICE_ITEM)
+        self.assertFalse(result.is_valid)
+        self.assertEqual(len(result.errors), 1)
+
+    def test_rejects_external_entity_reference_in_body(self):
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
+            f.write("super-secret-value")
+            secret_path = f.name
+        self.addCleanup(os.remove, secret_path)
+        xml = VALID_CHOICE_ITEM.replace(
+            _XML_DECLARATION,
+            _XML_DECLARATION
+            + '<!DOCTYPE qti-assessment-item [<!ENTITY e SYSTEM "file://%s">]>'
+            % secret_path,
+        ).replace("Option A", "Option &e;")
+        result = validate_qti_item(xml)
+        self.assertFalse(result.is_valid)
+        self.assertNotIn(
+            "super-secret-value", " ".join(e.message for e in result.errors)
+        )
+
+    def test_accepts_entity_in_attribute_value(self):
+        xml = VALID_CHOICE_ITEM.replace(
+            _XML_DECLARATION, _XML_DECLARATION + _ENTITY_DOCTYPE
+        ).replace('title="Sample Item"', 'title="&e;"')
+        self.assertTrue(validate_qti_item(xml).is_valid)
+
+    def test_accepts_unused_entity_declaration(self):
+        xml = VALID_CHOICE_ITEM.replace(
+            _XML_DECLARATION, _XML_DECLARATION + _ENTITY_DOCTYPE
+        )
+        self.assertTrue(validate_qti_item(xml).is_valid)
+
+    def test_accepts_bare_doctype(self):
+        xml = VALID_CHOICE_ITEM.replace(
+            _XML_DECLARATION, _XML_DECLARATION + "<!DOCTYPE qti-assessment-item>"
+        )
+        self.assertTrue(validate_qti_item(xml).is_valid)
 
 
 MATCH_INTERACTION_ITEM = _item_xml(

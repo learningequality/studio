@@ -9,6 +9,7 @@ from contentcuration import models
 from contentcuration.tests import testdata
 from contentcuration.tests.base import StudioAPITestCase
 from contentcuration.tests.utils.qti.test_validation import _item_xml
+from contentcuration.tests.utils.qti.test_validation import ENTITY_CHOICE_ITEM
 from contentcuration.tests.utils.qti.test_validation import VALID_CHOICE_ITEM
 from contentcuration.tests.viewsets.base import generate_create_event
 from contentcuration.tests.viewsets.base import generate_delete_event
@@ -1071,6 +1072,27 @@ class SyncTestCase(SyncTestMixin, StudioAPITestCase):
         assessmentitem = self.assessmentitem_metadata
         assessmentitem["type"] = "QTI"
         assessmentitem["raw_data"] = "<qti-assessment-item><unclosed>"
+        response = self.sync_changes(
+            [
+                generate_create_event(
+                    [assessmentitem["contentnode"], assessmentitem["assessment_id"]],
+                    ASSESSMENTITEM,
+                    assessmentitem,
+                    channel_id=self.channel.id,
+                ),
+            ],
+        )
+        self.assertTrue(response.json()["errors"][0]["errors"]["raw_data"])
+        with self.assertRaises(models.AssessmentItem.DoesNotExist):
+            models.AssessmentItem.objects.get(
+                assessment_id=assessmentitem["assessment_id"]
+            )
+
+    def test_qti_entity_reference_assessmentitem(self):
+        self.client.force_authenticate(user=self.user)
+        assessmentitem = self.assessmentitem_metadata
+        assessmentitem["type"] = "QTI"
+        assessmentitem["raw_data"] = ENTITY_CHOICE_ITEM
         response = self.sync_changes(
             [
                 generate_create_event(

@@ -39,6 +39,7 @@ from .testdata import slideshow
 from .testdata import thumbnail_bytes
 from .testdata import tree
 from .utils.qti.test_validation import _item_xml
+from .utils.qti.test_validation import ENTITY_CHOICE_ITEM
 from .utils.qti.test_validation import VALID_CHOICE_ITEM
 from .utils.restricted_filesystemstorage import RestrictedFileSystemStorage
 from contentcuration import models as cc
@@ -328,6 +329,28 @@ class ExportChannelTestCase(StudioTestCase):
             answers="[]",
             hints="[]",
             raw_data=UNSUPPORTED_QTI_ITEM,
+            order=1,
+            randomize=False,
+        )
+
+        native_qti_entity_exercise = create_node(
+            {
+                "kind_id": "exercise",
+                "title": "Native QTI Entity Exercise",
+                "extra_fields": qti_extra_fields,
+            }
+        )
+        native_qti_entity_exercise.complete = True
+        native_qti_entity_exercise.parent = current_exercise.parent
+        native_qti_entity_exercise.save()
+        cc.AssessmentItem.objects.create(
+            contentnode=native_qti_entity_exercise,
+            assessment_id=uuid.uuid4().hex,
+            type=exercises.QTI,
+            question="",
+            answers="[]",
+            hints="[]",
+            raw_data=ENTITY_CHOICE_ITEM,
             order=1,
             randomize=False,
         )
@@ -1075,6 +1098,14 @@ class ExportChannelTestCase(StudioTestCase):
         node = cc.ContentNode.objects.get(title="Native QTI Unsupported Exercise")
         self.assertTrue(node.files.filter(preset_id=format_presets.QTI_ZIP).exists())
         self.assertFalse(node.files.filter(preset_id=format_presets.EXERCISE).exists())
+
+    def test_native_qti_entity_item_is_excluded_from_qti_only_package(self):
+        node = cc.ContentNode.objects.get(title="Native QTI Entity Exercise")
+        self.assertFalse(node.files.filter(preset_id=format_presets.EXERCISE).exists())
+        qti_file = node.files.get(preset_id=format_presets.QTI_ZIP)
+        with qti_file.file_on_disk.open("rb") as file_handle:
+            names = zipfile.ZipFile(file_handle).namelist()
+        self.assertEqual([name for name in names if name.startswith("items/")], [])
 
     def test_legacy_items_without_perseus_question_route_to_qti_packaging(self):
         node = cc.ContentNode.objects.get(title="Legacy No Perseus Exercise")
