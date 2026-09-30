@@ -258,14 +258,17 @@
 
   const tableStateQueryParams = ['page', 'page_size', 'sortBy', 'descending'];
 
+  const dateWindowDefault = 'any';
+  const booleanFilterDefault = 'no';
+
   const filterDefaults = {
     userType: undefined,
     location: undefined,
     keywords: undefined,
-    joinedWithin: 'any',
-    activeWithin: 'any',
-    hasPublished: 'no',
-    hasEdits: 'no',
+    joinedWithin: dateWindowDefault,
+    activeWithin: dateWindowDefault,
+    hasPublished: booleanFilterDefault,
+    hasEdits: booleanFilterDefault,
   };
 
   const userTypeFilterMap = {
@@ -285,8 +288,14 @@
   ];
 
   function isoDateMonthsAgo(monthsAgo) {
-    const cutoff = new Date();
+    const today = new Date();
+    const cutoff = new Date(today);
     cutoff.setMonth(cutoff.getMonth() - monthsAgo);
+    // A day past the end of the target month rolls Date forward into the next
+    // one, so 31 March less one month lands on 3 March rather than in February.
+    if (cutoff.getDate() !== today.getDate()) {
+      cutoff.setDate(0);
+    }
     return cutoff.toISOString().slice(0, 10);
   }
 
@@ -315,7 +324,7 @@
     return useFilter({
       name,
       filterMap: buildDateWindowFilterMap(paramName),
-      defaultValue: 'any',
+      defaultValue: dateWindowDefault,
     });
   }
 
@@ -326,7 +335,7 @@
         no: { label: booleanFilterAny$(), params: {} },
         yes: { label, params: { [paramName]: true } },
       },
-      defaultValue: 'no',
+      defaultValue: booleanFilterDefault,
     });
     const isChecked = computed({
       get: () => filter.value.value === 'yes',
@@ -484,6 +493,8 @@
 
   onMounted(() => {
     updateTabTitle(tabTitle$());
+    // The location options live on the CountryField component, so they cannot be
+    // read until it is mounted.
     locationFilterMap.value = buildLocationFilterMap(locationDropdown.value.options);
   });
 
