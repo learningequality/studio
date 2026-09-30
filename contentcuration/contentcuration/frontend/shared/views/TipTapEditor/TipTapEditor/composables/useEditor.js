@@ -100,6 +100,7 @@ export function useEditor() {
         attributes: {
           class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none',
           dir: 'auto',
+          ...(inlineOnly && { 'aria-multiline': 'false' }),
         },
         transformPastedHTML: html => transformPastedHTML(html, { inlineOnly }),
         // ProseMirror wraps each line of pasted plain text in a paragraph, which an

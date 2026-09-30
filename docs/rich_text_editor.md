@@ -40,6 +40,18 @@ A component that renders `TipTapEditor` can add behaviour without editing the ed
 - Read once, when the editor is created; later changes are ignored.
 - The markdown serializer drops nodes it doesn't know: with the default `format="markdown"`, a contributed node is lost on save. Use `format="html"`.
 
+### `inlineOnly` prop
+- The field holds one line of inline content.
+- Offers bold, italic, underline, strikethrough, subscript, superscript, math, inline code and undo/redo.
+- Block nodes and the line break are left out of the schema, so no toolbar, shortcut or input rule creates one.
+- `Enter`, `Shift-Enter` and `Mod-Enter` insert nothing.
+- Blocks and line breaks in the value or a paste become spaces.
+- Images in the value or a paste are dropped.
+- Stored blocks are rewritten on the next save.
+- `insertActions` handlers and `@ready` listeners insert inline content only: `insertContent` with a block throws on an empty editor and welds its text to its neighbours otherwise.
+- Read once, when the editor is created.
+- Reads and writes HTML whatever `format` says: the markdown serializer assumes block children.
+
 ### `@ready` event
 - Emitted once, with the tiptap `Editor`, after its `create` event; commands are safe from then on.
 - Subscribe with `editor.on(…)`; unsubscribe with `editor.off(…)` on unmount.

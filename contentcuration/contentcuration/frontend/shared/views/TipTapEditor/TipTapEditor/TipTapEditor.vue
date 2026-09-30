@@ -11,7 +11,7 @@
     :tabindex="tabindex"
     role="textbox"
     :aria-label="editorMode === 'edit' ? TipTapEditorLabel$() : TipTapViewerLabel$()"
-    aria-multiline="true"
+    :aria-multiline="String(!inlineOnly)"
     @keydown="handleContainerKeydown"
     @focusin="hasFocusWithin = true"
     @focusout="handleFocusout"
@@ -96,6 +96,7 @@
   import FormulasMenu from './components/math/FormulasMenu.vue';
   import { preprocessMarkdown } from './utils/markdown';
   import { resolveImageSrcs, toStoredImageSrcs } from './utils/imageSrc';
+  import { toInlineHTML } from './utils/inlineContent';
   import MobileTopBar from './components/toolbar/MobileTopBar.vue';
   import MobileFormattingBar from './components/toolbar/MobileFormattingBar.vue';
   import { getTipTapEditorStrings } from './TipTapEditorStrings';
@@ -118,6 +119,11 @@
       provide('isReady', isReady);
       provide('insertContext', insertContext);
       provide('insertActions', toRef(props, 'insertActions'));
+      // Read once: the schema is fixed when the editor is created.
+      const { inlineOnly } = props;
+      provide('inlineOnly', inlineOnly);
+      // The markdown serializer writes each inline child of an inline-only doc as a block.
+      const isHTML = computed(() => props.format === 'html' || inlineOnly);
 
       // The anchored modals are measured and hit-tested through these refs, so that several
       // editors mounted at once each work with their own modal.
@@ -150,7 +156,8 @@
 
       const handleDrop = event => {
         const file = event.dataTransfer.files[0];
-        if (file) {
+        // An inline-only schema has no image node to insert.
+        if (file && !inlineOnly) {
           imageHandler.openCreateModal({ file });
         }
       };
@@ -160,7 +167,7 @@
         // Image srcs are resolved for display on the way in, so they are reduced
         // back to their stored form here — leaving this the one place that reads
         // content out, whichever form the editor happens to be holding.
-        if (props.format === 'html') return toStoredImageSrcs(editor.value.getHTML());
+        if (isHTML.value) return toStoredImageSrcs(editor.value.getHTML());
         if (!editor.value.storage?.markdown) return '';
         return editor.value.storage.markdown.getMarkdown();
       };
@@ -195,13 +202,16 @@
             return;
           }
 
-          const processedContent =
-            props.format === 'html' ? resolveImageSrcs(newValue) : preprocessMarkdown(newValue);
+          let processedContent;
+          if (inlineOnly) processedContent = toInlineHTML(newValue);
+          else if (isHTML.value) processedContent = resolveImageSrcs(newValue);
+          else processedContent = preprocessMarkdown(newValue);
 
           if (!editor.value) {
             initializeEditor(processedContent, props.mode, {
               autofocus: props.autofocus,
               extensions: props.extensions,
+              inlineOnly,
             });
             return;
           }
@@ -307,6 +317,15 @@
       extensions: {
         type: Array,
         default: () => [],
+      },
+      /**
+       * Holds one line of inline content; blocks and line breaks in the value become
+       * spaces. Read once, when the editor is created. Reads and writes HTML, whatever
+       * `format` says.
+       */
+      inlineOnly: {
+        type: Boolean,
+        default: false,
       },
       /**
        * Actions appended to the insert tools of every toolbar. Each is
