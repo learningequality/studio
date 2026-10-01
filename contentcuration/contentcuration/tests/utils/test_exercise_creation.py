@@ -2049,6 +2049,34 @@ class TestQTIExerciseCreation(StudioTestCase):
         item_xml = zip_file.read("items/native_item_1.xml").decode("utf-8")
         self.assertEqual(item_xml, raw_data)
 
+    def test_native_qti_item_published_without_studio_attributes(self):
+        """The QTI editor's data-studio-* markers are for reopening an item, not for Kolibri."""
+        raw_data = _item_xml(
+            "native_item_1",
+            "Native Item",
+            '<qti-response-declaration identifier="r1" cardinality="single" base-type="identifier">'
+            "<qti-correct-response><qti-value>c1</qti-value></qti-correct-response>"
+            "</qti-response-declaration>",
+            '<p data-studio-prompt="">Pick the word.</p>'
+            '<p>The <qti-inline-choice-interaction response-identifier="r1" shuffle="false">'
+            '<qti-inline-choice identifier="c1">sky</qti-inline-choice>'
+            "</qti-inline-choice-interaction> is blue.</p>",
+        )
+        item = self._create_native_qti_item(raw_data)
+        exercise_data = {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": 1,
+            "m": 1,
+            "all_assessment_items": [item.assessment_id],
+            "assessment_mapping": {item.assessment_id: exercises.QTI},
+        }
+        self._create_qti_zip(exercise_data)
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+        item_xml = zip_file.read("items/native_item_1.xml").decode("utf-8")
+        self.assertEqual(item_xml, raw_data.replace(' data-studio-prompt=""', ""))
+
     def test_native_qti_item_media_included_and_addressed(self):
         # fileobj_exercise_image() writes real bytes to storage keyed by their
         # actual md5 checksum + "jpg" ext -- use that real checksum/ext rather

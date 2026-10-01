@@ -29,6 +29,7 @@ from contentcuration.utils.assessment.qti.imsmanifest import Resources
 from contentcuration.utils.assessment.qti.media import get_qti_media_references
 from contentcuration.utils.assessment.qti.media import rewrite_qti_media_paths
 from contentcuration.utils.assessment.qti.media import set_qti_item_language
+from contentcuration.utils.assessment.qti.media import strip_studio_attributes
 from contentcuration.utils.assessment.qti.perseus_derive import (
     is_answerless_numeric_entry,
 )
@@ -137,6 +138,7 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
         # Otherwise one package declares a language for some items and not others,
         # depending only on which editor wrote them.
         item_xml = set_qti_item_language(item_xml, self._node_language())
+        item_xml = strip_studio_attributes(item_xml)
 
         self._add_resource(
             QTIResource(

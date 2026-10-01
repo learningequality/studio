@@ -56,6 +56,7 @@ export const QtiInteraction = Object.freeze({
   ASSOCIATE: 'qti-associate-interaction',
   TEXT_ENTRY: 'qti-text-entry-interaction',
   EXTENDED_TEXT: 'qti-extended-text-interaction',
+  INLINE_CHOICE: 'qti-inline-choice-interaction',
 });
 
 export const QTI_INTERACTION_TAGS = Object.freeze(Object.values(QtiInteraction));
@@ -85,6 +86,7 @@ export const QuestionType = Object.freeze({
   ORDERING: 'ordering',
   ASSOCIATE: 'associate',
   MATCH: 'match',
+  INLINE_CHOICE: 'inlineChoice',
 });
 
 /**

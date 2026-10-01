@@ -2,6 +2,7 @@ from contentcuration.tests.utils.qti.test_validation import VALID_CHOICE_ITEM
 from contentcuration.utils.assessment.qti.media import get_qti_media_references
 from contentcuration.utils.assessment.qti.media import rewrite_qti_media_paths
 from contentcuration.utils.assessment.qti.media import set_qti_item_language
+from contentcuration.utils.assessment.qti.media import strip_studio_attributes
 from contentcuration.utils.assessment.qti.validation import parse_qti_xml
 from contentcuration.utils.assessment.qti.validation import validate_qti_item
 
@@ -164,3 +165,25 @@ def test_set_language_keeps_the_item_schema_valid():
     result = set_qti_item_language(VALID_CHOICE_ITEM, "es")
     validation = validate_qti_item(result)
     assert validation.is_valid, validation.errors
+
+
+def test_strip_studio_attributes_removes_every_one_and_nothing_else():
+    marked = ITEM_WITHOUT_LANGUAGE.replace(
+        "<p>Body</p>",
+        '<p data-studio-prompt="" class="q">Question</p>'
+        '<p><qti-inline-choice-interaction response-identifier="r" '
+        "data-studio-sentinel='' shuffle=\"false\">"
+        '<qti-inline-choice identifier="c"/></qti-inline-choice-interaction></p>',
+    )
+    result = strip_studio_attributes(marked)
+    assert result == marked.replace(' data-studio-prompt=""', "").replace(
+        " data-studio-sentinel=''", ""
+    )
+
+
+def test_strip_studio_attributes_ignores_lookalikes_in_values_and_text():
+    tricky = ITEM_WITHOUT_LANGUAGE.replace(
+        "<p>Body</p>",
+        '<p title="a > b data-studio-prompt=\'\'" data-other="1">data-studio-prompt=""</p>',
+    )
+    assert strip_studio_attributes(tricky) == tricky

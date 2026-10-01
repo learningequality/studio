@@ -199,6 +199,46 @@ class UncoveredInteractionTypeTests(unittest.TestCase):
         self.assertFalse(result.is_valid)
         self.assertTrue(result.errors)
 
+    def test_accepts_inline_choice_item_with_several_dropdowns(self):
+        declaration = (
+            '<qti-response-declaration identifier="r1" cardinality="single" base-type="identifier">'
+            "<qti-correct-response><qti-value>c2</qti-value></qti-correct-response>"
+            "</qti-response-declaration>"
+            '<qti-response-declaration identifier="r2" cardinality="single" base-type="identifier" />'
+        )
+        body = (
+            '<p data-studio-prompt="">Fill in the blanks.</p>'
+            '<p data-studio-prompt="">Choose well.</p>'
+            '<p>The <strong><qti-inline-choice-interaction response-identifier="r1" shuffle="true">'
+            '<qti-inline-choice identifier="c1">a</qti-inline-choice>'
+            '<qti-inline-choice identifier="c2">b</qti-inline-choice>'
+            "</qti-inline-choice-interaction></strong></p>"
+            '<ul><li><qti-inline-choice-interaction response-identifier="r2" shuffle="true">'
+            '<qti-inline-choice identifier="c3"></qti-inline-choice>'
+            "</qti-inline-choice-interaction></li></ul>"
+        )
+        result = validate_qti_item(
+            _item_xml("item_ic", "Inline choice", declaration, body)
+        )
+        self.assertTrue(result.is_valid)
+        self.assertEqual(result.errors, [])
+
+    def test_accepts_inline_choice_sentinel_item(self):
+        declaration = ""
+        body = (
+            '<p data-studio-prompt="">Question</p>'
+            "<p>Passage</p>"
+            '<p><qti-inline-choice-interaction response-identifier="studio_sentinel" '
+            'data-studio-sentinel="">'
+            '<qti-inline-choice identifier="studio_sentinel"></qti-inline-choice>'
+            "</qti-inline-choice-interaction></p>"
+        )
+        result = validate_qti_item(
+            _item_xml("item_ic_sentinel", "Inline choice", declaration, body)
+        )
+        self.assertTrue(result.is_valid)
+        self.assertEqual(result.errors, [])
+
 
 # Mirrors what the QTI editor emits for a brand new question, before the author has
 # written anything — see createBlankItem.js. Every "New question" click sends this to the
