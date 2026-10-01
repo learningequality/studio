@@ -1,19 +1,25 @@
 import copy
 import json
+import logging
 import math
 import re
 import zipfile
 
 from django.template.loader import render_to_string
+from django.utils.functional import cached_property
+from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 
 from contentcuration.utils.assessment.base import ExerciseArchiveGenerator
 from contentcuration.utils.assessment.qti.convert import hex_to_qti_id
+from contentcuration.utils.assessment.qti.convert import is_answerless_input
 from contentcuration.utils.assessment.qti.perseus_derive import derive_perseus_item
 from contentcuration.utils.parser import extract_value
 
+
+logger = logging.getLogger(__name__)
 
 _DOUBLE_DOLLAR_RE = re.compile(r"\$\$(.+?)\$\$", flags=re.DOTALL)
 
@@ -56,6 +62,22 @@ class PerseusExerciseGenerator(ExerciseArchiveGenerator):
             }
         return self._derived_cache
 
+    @cached_property
+    def _answerless_input_ids(self):
+        """Judged from stored answers, as exercise.json is written before any
+        item is processed. Units keep them: their pre/post test lists every id."""
+        answerless_ids = set()
+        if self.ccnode.kind_id != content_kinds.EXERCISE:
+            return answerless_ids
+        for item in self.ccnode.assessment_items.filter(type=exercises.INPUT_QUESTION):
+            if is_answerless_input(item.type, json.loads(item.answers)):
+                logger.warning(
+                    f"Input question {item.assessment_id} on node {self.ccnode.pk} "
+                    f"has no correct answer and will be excluded from the Perseus archive"
+                )
+                answerless_ids.add(item.assessment_id)
+        return answerless_ids
+
     def _process_formulas(self, content):
         return _DOUBLE_DOLLAR_RE.sub(r"$\1$", content)
 
@@ -64,6 +86,8 @@ class PerseusExerciseGenerator(ExerciseArchiveGenerator):
         return super()._process_content(content)
 
     def process_assessment_item(self, assessment_item):
+        if assessment_item.assessment_id in self._answerless_input_ids:
+            return
         if assessment_item.type == exercises.QTI:
             derived = self._derived_items().get(assessment_item.assessment_id)
             if derived is None:
@@ -118,14 +142,16 @@ class PerseusExerciseGenerator(ExerciseArchiveGenerator):
         and raises ``FileNotFoundError``, and ``generate_assessment_item``
         receives a ``qti`` type it cannot map.
         """
-        derived = self._derived_items()
-        if not derived:
-            return self.exercise_data
-
+        assessment_ids = [
+            assessment_id
+            for assessment_id in self.exercise_data.get("all_assessment_items", [])
+            if assessment_id not in self._answerless_input_ids
+        ]
         original_mapping = self.exercise_data.get("assessment_mapping", {})
+        derived = self._derived_items()
         new_ids = []
         new_mapping = {}
-        for assessment_id in self.exercise_data.get("all_assessment_items", []):
+        for assessment_id in assessment_ids:
             if assessment_id in derived:
                 proxy = derived[assessment_id]
                 if proxy is None:
@@ -135,10 +161,10 @@ class PerseusExerciseGenerator(ExerciseArchiveGenerator):
                 new_ids.append(proxy.assessment_id)
                 new_mapping[proxy.assessment_id] = proxy.type
             else:
-                qti_id = hex_to_qti_id(assessment_id)
-                new_ids.append(qti_id)
+                item_id = hex_to_qti_id(assessment_id) if derived else assessment_id
+                new_ids.append(item_id)
                 if assessment_id in original_mapping:
-                    new_mapping[qti_id] = original_mapping[assessment_id]
+                    new_mapping[item_id] = original_mapping[assessment_id]
         return {
             **self.exercise_data,
             "all_assessment_items": new_ids,
