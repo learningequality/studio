@@ -22,6 +22,7 @@ from contentcuration.utils.assessment.qti.catalog import KOLIBRI_HINT_SUPPORT
 from contentcuration.utils.assessment.qti.constants import BaseType
 from contentcuration.utils.assessment.qti.html_to_markdown import html_to_markdown
 from contentcuration.utils.assessment.qti.validation import parse_qti_xml
+from contentcuration.utils.parser import extract_value
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +88,8 @@ def _derivable_interaction(root, item_body):
     degrades to QTI-only rather than deriving zero correct answers. A text entry
     must also be numeric: Perseus input questions only accept numbers. One with no
     declared answer must not be scored by inline rules, such as a tolerance
-    comparison.
+    comparison. A non-finite answer (e.g. ``1e400``) would render as ``inf``/``nan``,
+    which is invalid JSON.
     """
     interactions = _interaction_elements(item_body)
     if len(interactions) != 1:
@@ -102,6 +104,7 @@ def _derivable_interaction(root, item_body):
     if deriver is _derive_text and (
         declaration.get("base-type") not in _NUMERIC_BASE_TYPES
         or (_has_inline_response_rules(root) and not _accepted_values(declaration))
+        or any(_is_non_finite_number(value) for value in _correct_values(declaration))
     ):
         return None
     return deriver, interaction, declaration
@@ -113,6 +116,11 @@ def _has_inline_response_rules(root) -> bool:
         processing is not None
         and next(processing.iterchildren(etree.Element), None) is not None
     )
+
+
+def _is_non_finite_number(text) -> bool:
+    number = extract_value(text)
+    return number is not None and not math.isfinite(number)
 
 
 def _correct_values(declaration) -> List[str]:

@@ -399,6 +399,15 @@ def test_text_entry_template_spellings_derive(processing):
             _text_item("single", ["cat"], base_type="string"), id="string_text_entry"
         ),
         pytest.param(TOLERANCE_ITEM, id="custom_processed_text_entry"),
+        pytest.param(_text_item("single", ["1e400"]), id="overflow_positive"),
+        pytest.param(_text_item("single", ["-1e400"]), id="overflow_negative"),
+        pytest.param(_text_item("single", ["1e0400"]), id="overflow_leading_zero"),
+        pytest.param(_text_item("single", ["1" + "0" * 400]), id="overflow_integer"),
+        pytest.param(
+            _text_item("single", ["1" + "0" * 400 + "/" + "1" + "0" * 400]),
+            id="overflow_nan_fraction",
+        ),
+        pytest.param(_text_item("single", ["42", "1e400"]), id="overflow_later_value"),
     ],
 )
 def test_not_derivable(raw_data):
