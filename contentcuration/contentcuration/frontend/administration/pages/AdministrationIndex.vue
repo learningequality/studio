@@ -12,6 +12,9 @@
         <VTab :to="usersLink">
           {{ $tr('usersLabel') }}
         </VTab>
+        <VTab :to="migrationsLink">
+          {{ $tr('migrationsLabel') }}
+        </VTab>
       </template>
     </AppBar>
     <VContent>
@@ -61,6 +64,9 @@
           name: RouteNames.CHANNELS,
         };
       },
+      migrationsLink() {
+        return { name: RouteNames.MIGRATIONS };
+      },
       usersLink() {
         return {
           name: RouteNames.USERS,
@@ -70,6 +76,7 @@
     $trs: {
       channelsLabel: 'Channels',
       usersLabel: 'Users',
+      migrationsLabel: 'Migrations',
     },
   };
 

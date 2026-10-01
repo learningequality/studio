@@ -309,6 +309,23 @@ describe('Channel sharing vuex', () => {
   });
 
   describe('getters', () => {
+    it('excludes migration requests from channel sharing and email checks', () => {
+      store.commit('channel/ADD_INVITATION', {
+        id: 'migration',
+        channel: channelId,
+        organization: 'org',
+        email: null,
+        share_mode: SharingPermissions.EDIT,
+      });
+      expect(
+        store.getters['channel/getChannelInvitations'](channelId, SharingPermissions.EDIT).some(
+          item => item.id === 'migration',
+        ),
+      ).toBe(false);
+      expect(store.getters['channel/checkInvitations'](channelId, 'someone@example.com')).toBe(
+        false,
+      );
+    });
     it('getChannelUsers should return users with the given permission', () => {
       const getter = store.getters['channel/getChannelUsers'];
       expect(getter(channelId)[0]).toEqual(pick(testUser, ['email', 'id']));
