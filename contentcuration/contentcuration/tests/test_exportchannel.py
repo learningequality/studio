@@ -87,6 +87,9 @@ UNSUPPORTED_QTI_ITEM = _item_xml(
 # Perseus input questions are numeric-only, so this publishes QTI only.
 STRING_ENTRY_QTI_ITEM = _text_item("single", ["cat"], base_type="string")
 
+# Legacy input answers Perseus can't render as a finite number.
+UNREADABLE_PERSEUS_INPUT_ANSWERS = ["Sphere", "+3", "1e400"]
+
 
 # Larger than the signed 32-bit maximum (2_147_483_647); ~3 GB.
 LARGE_FILE_SIZE = 3 * 1024 ** 3
@@ -605,6 +608,41 @@ class ExportChannelTestCase(StudioTestCase):
             order=2,
             randomize=False,
         )
+
+        # Mixed nodes whose legacy input answer Perseus cannot read -> QTI only
+        for answer in UNREADABLE_PERSEUS_INPUT_ANSWERS:
+            unreadable_input_exercise = create_node(
+                {
+                    "kind_id": "exercise",
+                    "title": f"Native QTI + Input {answer!r} Mixed Exercise",
+                    "extra_fields": qti_extra_fields,
+                }
+            )
+            unreadable_input_exercise.complete = True
+            unreadable_input_exercise.parent = current_exercise.parent
+            unreadable_input_exercise.save()
+            cc.AssessmentItem.objects.create(
+                contentnode=unreadable_input_exercise,
+                assessment_id=uuid.uuid4().hex,
+                type=exercises.QTI,
+                question="",
+                answers="[]",
+                hints="[]",
+                raw_data=VALID_CHOICE_ITEM,
+                order=1,
+                randomize=False,
+            )
+            cc.AssessmentItem.objects.create(
+                contentnode=unreadable_input_exercise,
+                assessment_id=uuid.uuid4().hex,
+                type=exercises.INPUT_QUESTION,
+                question="What is the answer?",
+                answers=json.dumps([{"answer": answer, "correct": True, "order": 1}]),
+                hints=json.dumps([]),
+                raw_data="{}",
+                order=2,
+                randomize=False,
+            )
 
         first_topic = self.content_channel.main_tree.get_descendants().first()
 
@@ -1241,6 +1279,33 @@ class ExportChannelTestCase(StudioTestCase):
             set(exercise_data["assessment_mapping"]), set(assessment_item_ids)
         )
 
+    def test_dual_published_numeric_inputs_have_answers(self):
+        dual_published = cc.ContentNode.objects.filter(
+            files__preset_id=format_presets.QTI_ZIP
+        ).filter(files__preset_id=format_presets.EXERCISE)
+        mixed_answers = []
+        for node in dual_published:
+            exercise_file = node.files.get(preset_id=format_presets.EXERCISE)
+            with exercise_file.file_on_disk.open("rb") as file_handle, zipfile.ZipFile(
+                file_handle
+            ) as archive:
+                for name in archive.namelist():
+                    if not name.endswith(".json") or name == "exercise.json":
+                        continue
+                    widgets = json.loads(archive.read(name))["question"]["widgets"]
+                    for widget in widgets.values():
+                        if widget["type"] != "numeric-input":
+                            continue
+                        answers = [
+                            answer["value"] for answer in widget["options"]["answers"]
+                        ]
+                        with self.subTest(node=node.title, item=name):
+                            self.assertTrue(answers)
+                        if node.title == "Native QTI + Legacy Mixed Exercise":
+                            mixed_answers.append(answers)
+
+        self.assertEqual(mixed_answers, [[4]])
+
     def test_native_qti_item_declares_the_node_language(self):
         """The editor has no language of its own to write, so publishing supplies it.
 
@@ -1282,6 +1347,19 @@ class ExportChannelTestCase(StudioTestCase):
         node = cc.ContentNode.objects.get(title="Native QTI String Entry Exercise")
         self.assertTrue(node.files.filter(preset_id=format_presets.QTI_ZIP).exists())
         self.assertFalse(node.files.filter(preset_id=format_presets.EXERCISE).exists())
+
+    def test_mixed_native_unreadable_input_publishes_qti_only(self):
+        for answer in UNREADABLE_PERSEUS_INPUT_ANSWERS:
+            with self.subTest(answer=answer):
+                node = cc.ContentNode.objects.get(
+                    title=f"Native QTI + Input {answer!r} Mixed Exercise"
+                )
+                self.assertTrue(
+                    node.files.filter(preset_id=format_presets.QTI_ZIP).exists()
+                )
+                self.assertFalse(
+                    node.files.filter(preset_id=format_presets.EXERCISE).exists()
+                )
 
     def test_legacy_items_without_perseus_question_route_to_qti_packaging(self):
         node = cc.ContentNode.objects.get(title="Legacy No Perseus Exercise")
