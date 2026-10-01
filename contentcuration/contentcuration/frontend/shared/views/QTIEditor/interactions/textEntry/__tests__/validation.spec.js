@@ -163,6 +163,29 @@ describe('validateTextEntryInteraction', () => {
     });
   });
 
+  const duplicateIds = (values, questionType = QuestionType.NUMERIC) =>
+    validateTextEntryInteraction(
+      {
+        ...VALID_NUMERIC_STATE,
+        answers: values.map((value, i) => ({ id: `a${i}`, value, caseSensitive: false })),
+      },
+      questionType,
+    )
+      .filter(e => e.code === ValidationError.DUPLICATE_ANSWER_CONTENT)
+      .map(e => e.id);
+
+    it.each([
+      ['1e-5', '0.00001'],
+      ['5', '+5'],
+    ])('flags %s and %s as duplicates', (first, second) => {
+      expect(duplicateIds([first, second])).toEqual(['a1']);
+    });
+
+    it('does not flag 21 and 21.5 as duplicates', () => {
+      expect(duplicateIds(['21', '21.5'])).toEqual([]);
+    });
+  });
+
   describe('valid states return empty array', () => {
     it('returns [] for a valid numeric state', () => {
       expect(validateTextEntryInteraction(VALID_NUMERIC_STATE, QuestionType.NUMERIC)).toEqual([]);
