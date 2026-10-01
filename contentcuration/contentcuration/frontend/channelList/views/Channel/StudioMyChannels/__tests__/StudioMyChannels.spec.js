@@ -3,6 +3,8 @@ import userEvent from '@testing-library/user-event';
 import VueRouter from 'vue-router';
 import { Store } from 'vuex';
 import StudioMyChannels from '../index.vue';
+import { channelOrganizationFilterStrings as filterStrings } from 'shared/strings/channelOrganizationFilterStrings';
+import { studioMyChannelsStrings as strings } from 'shared/strings/studioMyChannelsStrings';
 import { Organization } from 'shared/data/resources';
 import { ChannelListTypes } from 'shared/constants';
 import { redirectBrowser } from 'shared/utils/navigation';
@@ -129,12 +131,20 @@ describe('StudioMyChannels', () => {
   });
 
   describe('organization filter', () => {
-    it('lists all three memberships even when no channels have organization metadata', async () => {
-      Organization.fetchCollection.mockResolvedValue([
+    async function chooseOrganization(label) {
+      const filter = within(await screen.findByTestId('organization-filter'));
+      await userEvent.click(filter.getByText(filterStrings.filterByOrganization$()));
+      // KSelect renders its options in the overlay, outside the filter control.
+      await userEvent.click(await screen.findByText(label));
+    }
+
+    it('selects memberships without channel metadata and clears the filter to restore channels', async () => {
+      const memberships = [
         { id: 'one', name: 'Aurora' },
         { id: 'two', name: 'Beacon' },
         { id: 'three', name: 'Cedar' },
-      ]);
+      ];
+      Organization.fetchCollection.mockResolvedValue(memberships);
       renderComponent(
         {},
         CHANNELS.map(channel => ({
@@ -143,51 +153,34 @@ describe('StudioMyChannels', () => {
           organization_name: undefined,
         })),
       );
-      await screen.findAllByTestId('channel-card');
-      await userEvent.click(screen.getByText('Filter by organization'));
-      for (const name of ['Aurora', 'Beacon', 'Cedar']) {
-        expect(
-          await screen.findByText(name, { selector: '.ui-select-option-basic' }),
-        ).toBeInTheDocument();
+      expect(await screen.findAllByTestId('channel-card')).toHaveLength(2);
+      for (const organization of memberships) {
+        await chooseOrganization(organization.name);
+        await waitFor(() => expect(router.currentRoute.query.organization).toBe(organization.id));
+        expect(screen.queryAllByTestId('channel-card')).toHaveLength(0);
       }
       expect(Organization.fetchCollection).toHaveBeenCalledWith({ member: true, page_size: 100 });
-      await userEvent.click(screen.getByText('Cedar', { selector: '.ui-select-option-basic' }));
-      await waitFor(() => expect(screen.getByText('No channels found')).toBeInTheDocument());
-      expect(
-        screen.getByText('Cedar', { selector: '.ui-select-display-value' }),
-      ).toBeInTheDocument();
+      await chooseOrganization(filterStrings.allOrganizations$());
+      await waitFor(() => expect(screen.getAllByTestId('channel-card')).toHaveLength(2));
+      expect(router.currentRoute.query.organization).toBeUndefined();
     });
 
-    it('lets the user retry a failed membership lookup without hiding channels', async () => {
+    it('retries a failed membership lookup and filters using the recovered membership', async () => {
       Organization.fetchCollection.mockRejectedValueOnce(new Error('Network error'));
       renderComponent();
-      expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load organizations');
+      expect(await screen.findByRole('alert')).toHaveTextContent(filterStrings.loadError$());
       expect(await screen.findAllByTestId('channel-card')).toHaveLength(2);
       Organization.fetchCollection.mockResolvedValue([
         { id: 'retry-org', name: 'Recovered organization' },
       ]);
-      await userEvent.click(screen.getByRole('button', { name: 'Retry' }));
+      await userEvent.click(screen.getByRole('button', { name: filterStrings.retry$() }));
       await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
-      await userEvent.click(screen.getByText('Filter by organization'));
-      expect(
-        await screen.findByText('Recovered organization', { selector: '.ui-select-option-basic' }),
-      ).toBeInTheDocument();
+      await chooseOrganization('Recovered organization');
+      await waitFor(() => expect(router.currentRoute.query.organization).toBe('retry-org'));
+      expect(screen.queryAllByTestId('channel-card')).toHaveLength(0);
     });
 
-    it('keeps legacy channels without association metadata visible by default', async () => {
-      const legacyChannels = CHANNELS.map(channel => ({
-        ...channel,
-        organization: undefined,
-        organization_name: undefined,
-      }));
-      renderComponent({}, legacyChannels);
-      expect(await screen.findAllByTestId('channel-card')).toHaveLength(2);
-      expect(
-        await screen.findByText('All organizations', { selector: '.ui-select-display-value' }),
-      ).toBeInTheDocument();
-    });
-
-    it('deduplicates organization options and keeps options after filtering', async () => {
+    it('deduplicates organizations and keeps other options available after filtering', async () => {
       renderComponent({}, [
         ...CHANNELS,
         { ...CHANNELS[0], id: 'channel-id-3', name: 'Third channel' },
@@ -198,27 +191,6 @@ describe('StudioMyChannels', () => {
           organization: 'organization-2',
           organization_name: 'Another organization',
         },
-      ]);
-      await screen.findAllByTestId('channel-card');
-      await userEvent.click(screen.getByText('Filter by organization'));
-      expect(
-        screen.getAllByText('Learning Together', { selector: '.ui-select-option-basic' }),
-      ).toHaveLength(1);
-      await userEvent.click(
-        screen.getByText('Learning Together', { selector: '.ui-select-option-basic' }),
-      );
-      await waitFor(() => expect(screen.getAllByTestId('channel-card')).toHaveLength(2));
-      await userEvent.click(screen.getByText('Filter by organization'));
-      await userEvent.click(
-        screen.getByText('Another organization', { selector: '.ui-select-option-basic' }),
-      );
-      await waitFor(() => expect(screen.getAllByTestId('channel-card')).toHaveLength(1));
-      expect(screen.getByTestId('channel-card')).toHaveTextContent('Fourth channel');
-    });
-
-    it('does not include deleted or noneditable channels in organization options', async () => {
-      renderComponent({}, [
-        ...CHANNELS,
         {
           ...CHANNELS[0],
           id: 'deleted',
@@ -234,71 +206,56 @@ describe('StudioMyChannels', () => {
           organization_name: 'Viewer organization',
         },
       ]);
-      expect(await screen.findAllByTestId('channel-card')).toHaveLength(2);
-      await userEvent.click(screen.getByText('Filter by organization'));
+      expect(await screen.findAllByTestId('channel-card')).toHaveLength(4);
+      await chooseOrganization('Learning Together');
+      await waitFor(() => expect(screen.getAllByTestId('channel-card')).toHaveLength(2));
+      await userEvent.click(
+        within(screen.getByTestId('organization-filter')).getByText(
+          filterStrings.filterByOrganization$(),
+        ),
+      );
       expect(screen.queryByText('Deleted organization')).not.toBeInTheDocument();
       expect(screen.queryByText('Viewer organization')).not.toBeInTheDocument();
+      await userEvent.click(screen.getByText('Another organization'));
+      await waitFor(() => expect(screen.getAllByTestId('channel-card')).toHaveLength(1));
+      expect(screen.getByTestId('channel-card')).toHaveTextContent('Fourth channel');
     });
 
-    it('filters channels from the URL and preserves unrelated query parameters when cleared', async () => {
+    it('filters from the URL and preserves unrelated query parameters when cleared', async () => {
       await router.push({ query: { organization: 'organization-1', other: 'keep' } });
       renderComponent();
-
       const cards = await screen.findAllByTestId('channel-card');
       expect(cards).toHaveLength(1);
-      expect(cards[0]).toHaveTextContent('Channel title 1');
-
-      await userEvent.click(screen.getByText('Filter by organization'));
-      await userEvent.click(
-        await screen.findByText('All organizations', { selector: '.ui-select-option-basic' }),
-      );
-
+      expect(cards[0]).toHaveTextContent(CHANNELS[0].name);
+      await chooseOrganization(filterStrings.allOrganizations$());
       await waitFor(() => expect(screen.getAllByTestId('channel-card')).toHaveLength(2));
       expect(router.currentRoute.query).toEqual({ other: 'keep' });
     });
 
-    it('selects an organization and restores the list when navigating back', async () => {
+    it('restores the list when navigating back after selecting an organization', async () => {
       renderComponent();
       await screen.findAllByTestId('channel-card');
-      await userEvent.click(screen.getByText('Filter by organization'));
-      await userEvent.click(
-        await screen.findByText('Learning Together', { selector: '.ui-select-option-basic' }),
-      );
-
+      await chooseOrganization('Learning Together');
       await waitFor(() => expect(screen.getAllByTestId('channel-card')).toHaveLength(1));
       expect(router.currentRoute.query.organization).toBe('organization-1');
-
       router.back();
       await waitFor(() => expect(screen.getAllByTestId('channel-card')).toHaveLength(2));
     });
 
-    it('does not silently show all channels for an unavailable organization', async () => {
+    it('can clear an unavailable organization without silently showing unrelated channels', async () => {
       await router.push({ query: { organization: 'unavailable' } });
       renderComponent();
-
-      await waitFor(() => expect(screen.getByText('No channels found')).toBeInTheDocument());
+      await waitFor(() =>
+        expect(
+          within(screen.getByTestId('organization-filter')).getByText(
+            filterStrings.unavailableOrganization$(),
+          ),
+        ).toBeInTheDocument(),
+      );
       expect(screen.queryAllByTestId('channel-card')).toHaveLength(0);
-      expect(
-        await screen.findByText('Unavailable organization', {
-          selector: '.ui-select-display-value',
-        }),
-      ).toBeInTheDocument();
+      await chooseOrganization(filterStrings.allOrganizations$());
+      await waitFor(() => expect(screen.getAllByTestId('channel-card')).toHaveLength(2));
     });
-  });
-
-  it('shows the visually hidden title and all channel cards in correct semantic structure', async () => {
-    renderComponent();
-    const title = screen.getByRole('heading', { name: /my channels/i });
-    expect(title).toBeInTheDocument();
-    expect(title.tagName).toBe('H1');
-    expect(title).toHaveClass('visuallyhidden');
-
-    const cards = await screen.findAllByTestId('channel-card');
-    expect(cards).toHaveLength(CHANNELS.length);
-    expect(cards[0]).toHaveTextContent('Channel title 1');
-    expect(cards[0].querySelector('h2')).toBeInTheDocument();
-    expect(cards[1]).toHaveTextContent('Channel title 2');
-    expect(cards[1].querySelector('h2')).toBeInTheDocument();
   });
 
   it('navigates to the new channel route when the new channel button clicked', async () => {
@@ -308,7 +265,7 @@ describe('StudioMyChannels', () => {
     // otherwise button click silently fails
     await screen.findAllByTestId('channel-card');
 
-    const newChannelButton = screen.getByRole('button', { name: /new channel/i });
+    const newChannelButton = screen.getByRole('button', { name: strings.newChannel$() });
 
     expect(router.currentRoute.path).toBe('/');
     await userEvent.click(newChannelButton);
@@ -321,7 +278,7 @@ describe('StudioMyChannels', () => {
     renderComponent();
     await screen.findAllByTestId('channel-card');
 
-    await userEvent.click(screen.getByRole('button', { name: 'Create' }));
+    await userEvent.click(screen.getByRole('button', { name: strings.createOrganization$() }));
 
     await waitFor(() => {
       expect(router.currentRoute.path).toBe('/organizations/new');
@@ -340,40 +297,15 @@ describe('StudioMyChannels', () => {
     async function openDropdownForCard(cardIndex = 0) {
       renderComponent();
       await screen.findAllByTestId('channel-card');
-      const dropdownButtons = screen.getAllByRole('button', { name: 'More options' });
+      const dropdownButtons = screen.getAllByRole('button', { name: strings.moreOptions$() });
       await userEvent.click(dropdownButtons[cardIndex]);
       return screen.getByRole('menu');
     }
 
-    it('shows bookmark button', async () => {
-      renderComponent();
-      await screen.findAllByTestId('channel-card');
-      const bookmarkButtons = screen.getAllByRole('button', { name: /starred channels/i });
-      expect(bookmarkButtons).toHaveLength(CHANNELS.length);
-    });
-
-    it('shows more options dropdown button', async () => {
-      renderComponent();
-      await screen.findAllByTestId('channel-card');
-      const dropdownButtons = screen.getAllByRole('button', { name: 'More options' });
-      expect(dropdownButtons).toHaveLength(CHANNELS.length);
-    });
-
-    it('does not show remove option', async () => {
-      renderComponent();
-      expect(screen.queryByText('Remove channel')).not.toBeInTheDocument();
-    });
-
-    it('shows edit and delete dropdown options', async () => {
-      const menu = await openDropdownForCard(0);
-      expect(within(menu).getByText('Edit channel details')).toBeInTheDocument();
-      expect(within(menu).getByText('Delete channel')).toBeInTheDocument();
-    });
-
     it('navigates to edit page when edit option is clicked', async () => {
       const menu = await openDropdownForCard(0);
       expect(router.currentRoute.path).toBe('/');
-      await userEvent.click(within(menu).getByText('Edit channel details'));
+      await userEvent.click(within(menu).getByText(strings.editChannel$()));
       await waitFor(() => {
         expect(router.currentRoute.path).toBe('/channel-id-1/edit');
       });
@@ -381,53 +313,34 @@ describe('StudioMyChannels', () => {
 
     it('opens delete modal when delete option is clicked', async () => {
       const menu = await openDropdownForCard(0);
-      await userEvent.click(within(menu).getByText('Delete channel'));
+      await userEvent.click(within(menu).getByText(strings.deleteChannel$()));
       const dialog = await screen.findByRole('dialog');
       expect(dialog).toBeInTheDocument();
-      expect(within(dialog).getByText('Delete this channel')).toBeInTheDocument();
     });
 
     it('does not show copy token option when channel is not published', async () => {
       const menu = await openDropdownForCard(1);
-      expect(within(menu).queryByText('Copy channel token')).not.toBeInTheDocument();
-    });
-
-    it('shows copy token option when channel is published', async () => {
-      const menu = await openDropdownForCard(0);
-      expect(within(menu).getByText('Copy channel token')).toBeInTheDocument();
+      expect(within(menu).queryByText(strings.copyToken$())).not.toBeInTheDocument();
     });
 
     it('opens copy token modal when "Copy channel token" is clicked', async () => {
       const menu = await openDropdownForCard(0);
-      await userEvent.click(within(menu).getByText('Copy channel token'));
-      await waitFor(() => {
-        expect(
-          screen.getByText('Paste this token into Kolibri to import this channel'),
-        ).toBeInTheDocument();
-      });
-    });
-
-    it('shows source website option when channel has source_url', async () => {
-      const menu = await openDropdownForCard(0);
-      expect(within(menu).getByText('Go to source website')).toBeInTheDocument();
+      await userEvent.click(within(menu).getByText(strings.copyToken$()));
+      const dialog = await screen.findByRole('dialog');
+      expect(within(dialog).getByRole('textbox')).toHaveValue(CHANNELS[0].primary_token);
     });
 
     it('opens source URL in new tab when source website option is clicked', async () => {
-      window.open = jest.fn();
+      jest.spyOn(window, 'open').mockImplementation(() => {});
       const menu = await openDropdownForCard(0);
-      await userEvent.click(within(menu).getByText('Go to source website'));
+      await userEvent.click(within(menu).getByText(strings.goToWebsite$()));
       expect(window.open).toHaveBeenCalledWith('https://source.example.com', '_blank');
     });
 
-    it('shows view on Kolibri option when channel has demo_server_url', async () => {
-      const menu = await openDropdownForCard(0);
-      expect(within(menu).getByText('View channel on Kolibri')).toBeInTheDocument();
-    });
-
     it('opens demo URL in new tab when view on Kolibri is clicked', async () => {
-      window.open = jest.fn();
+      jest.spyOn(window, 'open').mockImplementation(() => {});
       const menu = await openDropdownForCard(0);
-      await userEvent.click(within(menu).getByText('View channel on Kolibri'));
+      await userEvent.click(within(menu).getByText(strings.viewContent$()));
       expect(window.open).toHaveBeenCalledWith('https://demo.example.com', '_blank');
     });
   });

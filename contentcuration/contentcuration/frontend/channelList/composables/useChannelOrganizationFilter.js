@@ -2,30 +2,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router/composables';
 import { Organization } from 'shared/data/resources';
 import { useFilter } from 'shared/composables/useFilter';
-import { createTranslator } from 'shared/i18n';
-
-const strings = createTranslator('ChannelOrganizationFilter', {
-  filterByOrganization: {
-    message: 'Filter by organization',
-    context: 'Label for filtering the current channel list by organization',
-  },
-  allOrganizations: {
-    message: 'All organizations',
-    context: 'Show all channels, including channels without an organization',
-  },
-  unavailableOrganization: {
-    message: 'Unavailable organization',
-    context: 'Selected organization has no accessible channels in this list',
-  },
-  loadError: {
-    message: 'Unable to load organizations. Please try again.',
-    context: 'Error loading organization filter options',
-  },
-  retry: {
-    message: 'Retry',
-    context: 'Reload organization filter options',
-  },
-});
+import { channelOrganizationFilterStrings as strings } from 'shared/strings/channelOrganizationFilterStrings';
 
 // Memberships include organizations with no channels in this list. Also retain
 // organizations on directly shared channels where the user is not a member.
