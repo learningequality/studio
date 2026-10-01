@@ -209,6 +209,84 @@ describe('_extractAnswers', () => {
       expect(result).toEqual([expect.objectContaining({ value: '', caseSensitive: true })]);
     });
   });
+
+  describe('numeric values', () => {
+    it.each(['21.0', '1e-5', 'e', '1e2e3', '1,234'])(
+      'reads numeric value %s as authored from <qti-value> and full-credit map-key',
+      value => {
+        const declXml = `
+          <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="float">
+            <qti-correct-response>
+              <qti-value>${value}</qti-value>
+            </qti-correct-response>
+            <qti-mapping default-value="0">
+              <qti-map-entry map-key="${value}" mapped-value="1"/>
+              <qti-map-entry map-key="${value}9" mapped-value="1"/>
+              <qti-map-entry map-key="${value}8" mapped-value="0.5"/>
+            </qti-mapping>
+          </qti-response-declaration>
+        `;
+        expect(_extractAnswers([declXml]).map(a => a.value)).toEqual([value, `${value}9`]);
+      },
+    );
+
+    it.each(['5.0', ' 5 '])(
+      'reads full-credit map-key %j equal to a <qti-value> as one answer',
+      mapKey => {
+        const declXml = `
+          <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="float">
+            <qti-correct-response>
+              <qti-value>5</qti-value>
+            </qti-correct-response>
+            <qti-mapping default-value="0">
+              <qti-map-entry map-key="${mapKey}" mapped-value="1"/>
+            </qti-mapping>
+          </qti-response-declaration>
+        `;
+        expect(_extractAnswers([declXml]).map(a => a.value)).toEqual(['5']);
+      },
+    );
+
+    it('reads mapped-value as a leading number, as Mapping.fromXML does', () => {
+      const declXml = `
+        <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="float">
+          <qti-correct-response>
+            <qti-value>1</qti-value>
+          </qti-correct-response>
+          <qti-mapping default-value="0">
+            <qti-map-entry map-key="2" mapped-value="1pt"/>
+          </qti-mapping>
+        </qti-response-declaration>
+      `;
+      expect(_extractAnswers([declXml]).map(a => a.value)).toEqual(['1', '2']);
+    });
+
+    it('returns [] for a float declaration with record cardinality', () => {
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const declXml = `
+        <qti-response-declaration identifier="RESPONSE" cardinality="record" base-type="float">
+          <qti-correct-response>
+            <qti-value>5</qti-value>
+          </qti-correct-response>
+        </qti-response-declaration>
+      `;
+      expect(_extractAnswers([declXml])).toEqual([]);
+      expect(errorSpy).toHaveBeenCalled();
+    });
+
+    it.each(['1,234', '1.2.3', '1e400', 'Infinity', '0x10', '', 'NULL'])(
+      'reads answers past default value %j, which fromXML accepts',
+      defaultValue => {
+        const declXml = `
+          <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="float">
+            <qti-default-value><qti-value>${defaultValue}</qti-value></qti-default-value>
+            <qti-correct-response><qti-value>5</qti-value></qti-correct-response>
+          </qti-response-declaration>
+        `;
+        expect(_extractAnswers([declXml]).map(a => a.value)).toEqual(['5']);
+      },
+    );
+  });
 });
 
 describe('parseTextEntryInteraction', () => {
