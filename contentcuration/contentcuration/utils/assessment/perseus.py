@@ -80,13 +80,13 @@ class PerseusExerciseGenerator(ExerciseArchiveGenerator):
 
     def _process_input_answers(self, processed_data):
         """Extract input answer processing logic"""
-        non_empty_answers = []
+        numeric_answers = []
         for answer in processed_data["answers"]:
             answer["answer"] = extract_value(answer["answer"])
             if answer["answer"] is not None and math.isfinite(answer["answer"]):
                 numeric_answers.append(answer)
 
-        return {**processed_data, "answers": non_empty_answers}
+        return {**processed_data, "answers": numeric_answers}
 
     def create_assessment_item(self, assessment_item, processed_data):
         template = self.TEMPLATE_MAP.get(assessment_item.type)
