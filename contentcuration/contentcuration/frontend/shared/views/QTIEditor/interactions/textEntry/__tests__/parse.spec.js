@@ -525,7 +525,7 @@ describe('buildTextEntryInteractionXML', () => {
 
       const entries = [...doc.querySelectorAll('qti-map-entry')];
       expect(entries.map(e => e.getAttribute('map-key'))).toEqual(['Paris', 'Madrid']);
-      expect(entries.map(e => e.getAttribute('mapped-value'))).toEqual(['1', '1']);
+      expect(entries.map(e => e.getAttribute('mapped-value'))).toEqual(['1.0', '1.0']);
     });
 
     it('writes case-sensitive="true" only for case-sensitive answers', () => {

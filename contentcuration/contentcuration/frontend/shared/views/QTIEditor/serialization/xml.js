@@ -230,8 +230,18 @@ export function wrapInlineRuns(container) {
 }
 
 /**
- * Build a float `<qti-base-value>`. Whole numbers keep a decimal (`1.0`, not `1`) so the
- * value reads as a float wherever it is written.
+ * Whole numbers keep a decimal (`1.0`, not `1`) so the value reads as a float wherever
+ * it is written.
+ *
+ * @param {number} value
+ * @returns {string}
+ */
+export function formatFloat(value) {
+  return Number.isInteger(value) ? value.toFixed(1) : String(value);
+}
+
+/**
+ * Build a float `<qti-base-value>`.
  *
  * @param {number} value
  * @returns {Element}
@@ -240,6 +250,6 @@ export function buildFloatNode(value) {
   return buildXmlNode({
     tag: 'qti-base-value',
     attrs: { 'base-type': 'float' },
-    children: [Number.isInteger(value) ? value.toFixed(1) : String(value)],
+    children: [formatFloat(value)],
   });
 }

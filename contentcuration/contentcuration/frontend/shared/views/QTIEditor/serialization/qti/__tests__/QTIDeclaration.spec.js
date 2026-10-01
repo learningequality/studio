@@ -295,7 +295,7 @@ describe('QTIDeclaration full XML output (QTI compatibility)', () => {
     const entries = [...reparsed.querySelectorAll('qti-mapping qti-map-entry')];
     expect(entries).toHaveLength(2);
     expect(entries[0].getAttribute('map-key')).toBe('ChoiceA');
-    expect(entries[0].getAttribute('mapped-value')).toBe('1');
+    expect(entries[0].getAttribute('mapped-value')).toBe('1.0');
   });
 
   it('omits base-type attr when null on re-parse', () => {

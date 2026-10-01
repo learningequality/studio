@@ -10,7 +10,7 @@
  * response-processing rule that has the delivery engine map them
  * (getScoringRule, getResponseProcessingTemplate).
  */
-import { buildXmlNode } from '../../xml.js';
+import { buildXmlNode, formatFloat } from '../../xml.js';
 import { ResponseProcessingTemplate } from '../../../constants.js';
 import { CAPABILITY } from './capabilities.js';
 import { buildAddToOutcomeNode } from './scoring.js';
@@ -89,14 +89,14 @@ export default class Mapping {
   getXML() {
     const { defaultValue, lowerBound, upperBound, entries } = this._data;
 
-    const attrs = { 'default-value': defaultValue };
-    if (lowerBound !== null) attrs['lower-bound'] = lowerBound;
-    if (upperBound !== null) attrs['upper-bound'] = upperBound;
+    const attrs = { 'default-value': formatFloat(defaultValue) };
+    if (lowerBound !== null) attrs['lower-bound'] = formatFloat(lowerBound);
+    if (upperBound !== null) attrs['upper-bound'] = formatFloat(upperBound);
 
     const children = entries.map(entry => {
       const entryAttrs = {
         'map-key': this._declaration.formatValue(entry.mapKey),
-        'mapped-value': entry.mappedValue,
+        'mapped-value': formatFloat(entry.mappedValue),
       };
       // Omit when false — the XSD default — so a consumer applying attribute defaults
       // reads back what was authored.
