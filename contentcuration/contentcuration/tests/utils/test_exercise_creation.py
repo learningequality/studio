@@ -259,6 +259,18 @@ class TestPerseusExerciseCreation(StudioTestCase):
         )
         return generator.create_exercise_archive()
 
+    def _perseus_input_values(self, answers):
+        """Values the Perseus numeric-input renders for an input question."""
+        item = self._create_assessment_item(
+            exercises.INPUT_QUESTION, "What is the answer?", answers
+        )
+        self._create_perseus_zip(_exercise_data([item]))
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
+        zip_file, _ = self._validate_perseus_zip(exercise_file)
+        item_json = json.loads(zip_file.read(f"{item.assessment_id}.json"))
+        widget = item_json["question"]["widgets"]["numeric-input 1"]
+        return [answer["value"] for answer in widget["options"]["answers"]]
+
     def _validate_perseus_zip(self, exercise_file):
         """Helper to validate the structure of the Perseus zip file"""
         # Use Django's storage backend to read the file
@@ -794,6 +806,36 @@ class TestPerseusExerciseCreation(StudioTestCase):
             [perseus_item.assessment_id, answerless.assessment_id],
         )
 
+    def test_json_number_input_answers_are_read(self):
+        for number in (4, 0, 4.5):
+            with self.subTest(number=number):
+                self.assertEqual(
+                    self._perseus_input_values(
+                        [{"answer": number, "correct": True, "order": 1}]
+                    ),
+                    [number],
+                )
+                self.exercise_node.assessment_items.all().delete()
+
+    def test_incorrect_input_answers_are_dropped(self):
+        values = self._perseus_input_values(
+            [
+                {"answer": "4", "correct": True, "order": 1},
+                {"answer": 5, "correct": False, "order": 2},
+                {"answer": "6", "correct": False, "order": 3},
+            ]
+        )
+        self.assertEqual(values, [4])
+
+    def test_input_answer_read_after_unpackageable_image_is_stripped(self):
+        image_url = exercises.CONTENT_STORAGE_FORMAT.format(
+            f"{'a' * 32}.{file_formats.PNG}"
+        )
+        values = self._perseus_input_values(
+            [{"answer": f"4![]({image_url} =0x0)", "correct": True, "order": 1}]
+        )
+        self.assertEqual(values, [4])
+
     def test_formula_processing(self):
         """Test that formulas are properly processed in exercises"""
         # Create a question with LaTeX formulas
@@ -829,41 +871,12 @@ class TestPerseusExerciseCreation(StudioTestCase):
         )
         self.assertIn("$\\frac{x}{2} = 3$", item_json["question"]["content"])
 
-    def _numeric_answer_values(self, answers):
-        item = self._create_assessment_item(
-            exercises.INPUT_QUESTION,
-            "What is the answer?",
+    def test_input_question_drops_non_finite_answers(self):
+        answers = ["6", "1e400", "-1e400", "1" * 401, "1" * 401 + "/" + "1" * 401]
+        values = self._perseus_input_values(
             [
                 {"answer": answer, "correct": True, "order": order}
                 for order, answer in enumerate(answers, start=1)
-            ],
-        )
-        self._create_perseus_zip(
-            {
-                "mastery_model": exercises.M_OF_N,
-                "randomize": True,
-                "n": 1,
-                "m": 1,
-                "all_assessment_items": [item.assessment_id],
-                "assessment_mapping": {item.assessment_id: exercises.INPUT_QUESTION},
-            }
-        )
-        exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
-        zip_file, _ = self._validate_perseus_zip(exercise_file)
-        item_json = json.loads(
-            zip_file.read(f"{item.assessment_id}.json").decode("utf-8")
-        )
-        options = item_json["question"]["widgets"]["numeric-input 1"]["options"]
-        return [answer["value"] for answer in options["answers"]]
-
-    def test_input_question_drops_non_finite_answers(self):
-        values = self._numeric_answer_values(
-            [
-                "6",
-                "1e400",
-                "-1e400",
-                "1" * 401,
-                "1" * 401 + "/" + "1" * 401,
             ]
         )
         self.assertEqual(values, [6.0])

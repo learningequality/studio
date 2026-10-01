@@ -24,6 +24,13 @@ logger = logging.getLogger(__name__)
 _DOUBLE_DOLLAR_RE = re.compile(r"\$\$(.+?)\$\$", flags=re.DOTALL)
 
 
+def perseus_input_value(answer):
+    """The number a Perseus numeric-input renders for a legacy input answer, or None."""
+    value = extract_value(str(answer))
+    # JSON has no infinity, so the rendered item would not parse.
+    return value if value is not None and math.isfinite(value) else None
+
+
 class PerseusExerciseGenerator(ExerciseArchiveGenerator):
     """
     Exercise zip generator for Perseus format exercises.
@@ -102,15 +109,21 @@ class PerseusExerciseGenerator(ExerciseArchiveGenerator):
             assessment_item.assessment_id = hex_to_qti_id(assessment_item.assessment_id)
         return super().process_assessment_item(assessment_item)
 
-    def _process_input_answers(self, processed_data):
-        """Extract input answer processing logic"""
-        numeric_answers = []
-        for answer in processed_data["answers"]:
-            answer["answer"] = extract_value(answer["answer"])
-            if answer["answer"] is not None and math.isfinite(answer["answer"]):
-                numeric_answers.append(answer)
-
-        return {**processed_data, "answers": numeric_answers}
+    def _process_answers(self, assessment_item):
+        # The base drops a JSON 0 as falsy.
+        if assessment_item.type != exercises.INPUT_QUESTION:
+            return super()._process_answers(assessment_item)
+        answers = []
+        for answer in json.loads(assessment_item.answers):
+            # The template marks every rendered answer correct.
+            if not answer.get("correct", True):
+                continue
+            if isinstance(answer["answer"], str):
+                answer["answer"], _ = self._process_content(answer["answer"])
+            value = perseus_input_value(answer["answer"])
+            if value is not None:
+                answers.append({**answer, "answer": value})
+        return self._sort_by_order(answers, "answers")
 
     def create_assessment_item(self, assessment_item, processed_data):
         template = self.TEMPLATE_MAP.get(assessment_item.type)
@@ -118,10 +131,6 @@ class PerseusExerciseGenerator(ExerciseArchiveGenerator):
             raise TypeError(
                 f"Unrecognized question type on item {assessment_item.assessment_id}: {assessment_item.type}"
             )
-
-        # Handle input question special case
-        if assessment_item.type == exercises.INPUT_QUESTION:
-            processed_data = self._process_input_answers(processed_data)
 
         filename = f"{assessment_item.assessment_id}.json"
         content = render_to_string(template, processed_data).encode("utf-8", "ignore")
