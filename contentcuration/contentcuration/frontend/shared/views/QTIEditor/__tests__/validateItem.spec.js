@@ -88,11 +88,22 @@ describe('validateQtiItem', () => {
         'Infinity',
         '',
       ].map(value => [[value], [INVALID_NUMERIC_VALUE]]),
-      [['21', '21.0'], [DUPLICATE_ANSWER_CONTENT]],
-      [['5', '5'], [DUPLICATE_ANSWER_CONTENT]],
+      [
+        ['21', '21.0'],
+        [DUPLICATE_ANSWER_CONTENT, DUPLICATE_ANSWER_CONTENT],
+      ],
+      [
+        ['5', '5'],
+        [DUPLICATE_ANSWER_CONTENT, DUPLICATE_ANSWER_CONTENT],
+      ],
       [
         ['e', 'e'],
-        [INVALID_NUMERIC_VALUE, INVALID_NUMERIC_VALUE, DUPLICATE_ANSWER_CONTENT],
+        [
+          INVALID_NUMERIC_VALUE,
+          INVALID_NUMERIC_VALUE,
+          DUPLICATE_ANSWER_CONTENT,
+          DUPLICATE_ANSWER_CONTENT,
+        ],
       ],
       [
         ['e', '-'],

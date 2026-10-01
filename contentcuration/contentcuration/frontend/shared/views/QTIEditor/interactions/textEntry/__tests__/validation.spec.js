@@ -174,15 +174,26 @@ describe('validateTextEntryInteraction', () => {
       .filter(e => e.code === ValidationError.DUPLICATE_ANSWER_CONTENT)
       .map(e => e.id);
 
-    it.each([
-      ['1e-5', '0.00001'],
-      ['5', '+5'],
-    ])('flags %s and %s as duplicates', (first, second) => {
-      expect(duplicateIds([first, second])).toEqual(['a1']);
+  describe('DUPLICATE_ANSWER_CONTENT (numeric)', () => {
+    it('flags 1e-5 and 0.00001 as duplicates', () => {
+      expect(duplicateIds(['1e-5', '0.00001'])).toEqual(['a0', 'a1']);
+    });
+
+    it('flags every answer equal in value to another', () => {
+      expect(duplicateIds(['5', '21', '5.0', '+5'])).toEqual(['a0', 'a2', 'a3']);
     });
 
     it('does not flag 21 and 21.5 as duplicates', () => {
       expect(duplicateIds(['21', '21.5'])).toEqual([]);
+    });
+  });
+
+  describe('DUPLICATE_ANSWER_CONTENT (textEntry)', () => {
+    it('flags every case-insensitive answer equal to another', () => {
+      expect(duplicateIds(['Paris', 'Rome', 'paris'], QuestionType.TEXT_ENTRY)).toEqual([
+        'a0',
+        'a2',
+      ]);
     });
   });
 

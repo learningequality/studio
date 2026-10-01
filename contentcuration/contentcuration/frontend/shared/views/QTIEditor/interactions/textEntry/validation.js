@@ -26,7 +26,9 @@ export function validateTextEntryInteraction(state, questionType) {
       errors.push({ code: ValidationError.NO_CORRECT_ANSWER });
     }
 
-    const seen = new Set();
+    // A later match flags the first answer too.
+    const firstSeenId = new Map();
+    const duplicateIds = new Set();
 
     for (const answer of answers) {
       const val = answer.value.trim();
@@ -48,11 +50,17 @@ export function validateTextEntryInteraction(state, questionType) {
       }
 
       if (val) {
-        if (seen.has(lookupKey)) {
-          errors.push({ code: ValidationError.DUPLICATE_ANSWER_CONTENT, id: answer.id });
+        if (firstSeenId.has(lookupKey)) {
+          duplicateIds.add(firstSeenId.get(lookupKey));
+          duplicateIds.add(answer.id);
+        } else {
+          firstSeenId.set(lookupKey, answer.id);
         }
-        seen.add(lookupKey);
       }
+    }
+
+    for (const duplicateId of duplicateIds) {
+      errors.push({ code: ValidationError.DUPLICATE_ANSWER_CONTENT, id: duplicateId });
     }
   }
 
