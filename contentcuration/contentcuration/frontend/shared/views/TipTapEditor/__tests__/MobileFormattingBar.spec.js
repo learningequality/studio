@@ -15,7 +15,23 @@ jest.mock('shared/utils/browserInfo.js', () => {
   return jest.requireActual('shared/utils/browserInfo.js');
 });
 
-const { decreaseFormatSize$, textFormattingToolbar$, alignRight$ } = getTipTapEditorStrings();
+const {
+  decreaseFormatSize$,
+  increaseFormatSize$,
+  textFormattingToolbar$,
+  alignRight$,
+  bold$,
+  italic$,
+  underline$,
+  strikethrough$,
+  subscript$,
+  superscript$,
+  mathFormula$,
+  bulletList$,
+  numberedList$,
+  insertImage$,
+  codeBlock$,
+} = getTipTapEditorStrings();
 
 const formattingBar = () => screen.queryByRole('toolbar', { name: textFormattingToolbar$() });
 
@@ -199,5 +215,57 @@ describe('MobileFormattingBar alignment control', () => {
     await nextTick();
 
     expect(screen.getByRole('button', { name: alignRight$() })).toBeInTheDocument();
+  });
+});
+
+describe('MobileFormattingBar in an inline-only editor', () => {
+  const INLINE_TOOLS = [
+    bold$(),
+    italic$(),
+    underline$(),
+    strikethrough$(),
+    subscript$(),
+    superscript$(),
+    mathFormula$(),
+  ];
+  const BLOCK_TOOLS = [
+    decreaseFormatSize$(),
+    increaseFormatSize$(),
+    bulletList$(),
+    numberedList$(),
+    alignRight$(),
+    insertImage$(),
+    codeBlock$(),
+  ];
+
+  function renderBar({ inlineOnly }) {
+    return render(MobileFormattingBar, {
+      provide: { editor: ref(makeEditorStub()), inlineOnly },
+      router: new VueRouter(),
+    });
+  }
+
+  it('offers the inline tools', () => {
+    renderBar({ inlineOnly: true });
+
+    for (const name of INLINE_TOOLS) {
+      expect(screen.getByRole('button', { name })).toBeInTheDocument();
+    }
+  });
+
+  it('leaves out every block tool', () => {
+    renderBar({ inlineOnly: true });
+
+    for (const name of BLOCK_TOOLS) {
+      expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();
+    }
+  });
+
+  it('keeps the block tools in an editor that is not inline-only', () => {
+    renderBar({ inlineOnly: false });
+
+    for (const name of BLOCK_TOOLS) {
+      expect(screen.getByRole('button', { name })).toBeInTheDocument();
+    }
   });
 });

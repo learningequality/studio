@@ -28,7 +28,7 @@ This is a very high level guide, you'll still need to check the docs but make su
     `TipTapEditor/extensions/`
 2. Define your node or mark using TipTap’s `Node.create()` or `Mark.create()`.
 3. Register it:
-    - for every editor: add it to the editor’s extension list in `TipTapEditor/composables/useEditor.js`.
+    - for every editor: add it to the editor’s extension list in `TipTapEditor/composables/useEditor.js`. A block node goes in the `inlineOnly`-false branch, and its toolbar actions get `blockOnly: true`.
     - for one consumer only: pass it in the `extensions` prop (see [Extending the editor from a consumer](#extending-the-editor-from-a-consumer)).
 4. If your node needs Markdown support, update the custom serializer in `TipTapEditor/utils/MarkdownSerializer.js` and don't forget to update the tests accordingly!
 ---

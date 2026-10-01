@@ -11,7 +11,17 @@ import { stubProseMirrorLayout, tabIn } from 'shared/utils/testing';
 const {
   textFormatOptions$,
   alignRight$,
-  copy$,
+  bold$,
+  italic$,
+  underline$,
+  strikethrough$,
+  subscript$,
+  superscript$,
+  mathFormula$,
+  bulletList$,
+  numberedList$,
+  insertImage$,
+  codeBlock$,
   paste$,
   pasteOptionsMenu$,
   pasteWithoutFormatting$,
@@ -36,13 +46,14 @@ function makeEditorStub({ canUndo = true, canRedo = false } = {}) {
 
 // In jsdom every control measures 0 wide, so KListWithOverflow restores them all
 // and drops the more button — two ticks after the first render.
-async function renderToolbar(editorOptions, { insertActions = [] } = {}) {
+async function renderToolbar(editorOptions, { insertActions = [], inlineOnly = false } = {}) {
   const user = userEvent.setup();
   const editor = makeEditorStub(editorOptions);
   const { container } = render(EditorToolbar, {
     provide: {
       editor: ref(editor),
       insertActions: ref(insertActions),
+      inlineOnly,
       insertContext: ref({
         editor,
         selection: { empty: true, spansLines: false, hasCursor: true },
@@ -243,6 +254,58 @@ describe('EditorToolbar alignment control', () => {
     await renderToolbar();
 
     expect(screen.getByRole('button', { name: alignRight$() })).toBeInTheDocument();
+  });
+});
+
+describe('EditorToolbar in an inline-only editor', () => {
+  const INLINE_TOOLS = [
+    bold$(),
+    italic$(),
+    underline$(),
+    strikethrough$(),
+    subscript$(),
+    superscript$(),
+    mathFormula$(),
+  ];
+  const BLOCK_TOOLS = [
+    textFormatOptions$(),
+    bulletList$(),
+    numberedList$(),
+    alignRight$(),
+    insertImage$(),
+    codeBlock$(),
+  ];
+
+  it('offers the inline tools', async () => {
+    await renderToolbar({}, { inlineOnly: true });
+
+    for (const name of INLINE_TOOLS) {
+      expect(screen.getByRole('button', { name })).toBeInTheDocument();
+    }
+  });
+
+  it('leaves out every block tool', async () => {
+    await renderToolbar({}, { inlineOnly: true });
+
+    for (const name of BLOCK_TOOLS) {
+      expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();
+    }
+  });
+
+  it('renders no empty group', async () => {
+    const { container } = await renderToolbar({}, { inlineOnly: true });
+
+    for (const group of within(container).getAllByRole('group')) {
+      expect(within(group).queryAllByRole('button')).not.toEqual([]);
+    }
+  });
+
+  it('keeps the block tools in an editor that is not inline-only', async () => {
+    await renderToolbar();
+
+    for (const name of BLOCK_TOOLS) {
+      expect(screen.getByRole('button', { name })).toBeInTheDocument();
+    }
   });
 });
 
