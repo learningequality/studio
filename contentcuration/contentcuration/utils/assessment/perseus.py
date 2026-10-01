@@ -1,5 +1,6 @@
 import copy
 import json
+import math
 import re
 import zipfile
 
@@ -82,8 +83,8 @@ class PerseusExerciseGenerator(ExerciseArchiveGenerator):
         non_empty_answers = []
         for answer in processed_data["answers"]:
             answer["answer"] = extract_value(answer["answer"])
-            if answer["answer"] or answer["answer"] == 0:
-                non_empty_answers.append(answer)
+            if answer["answer"] is not None and math.isfinite(answer["answer"]):
+                numeric_answers.append(answer)
 
         return {**processed_data, "answers": non_empty_answers}
 
