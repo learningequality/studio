@@ -21,6 +21,10 @@ ITEM_ROOT_START_TAG_REGEX = re.compile(
 XML_LANG_OR_QUOTED_VALUE_REGEX = re.compile(
     r"""(?P<lang>\s+xml:lang\s*=\s*(?:"[^"]*"|'[^']*'))|"[^"]*"|'[^']*'"""
 )
+START_TAG_REGEX = re.compile(r"""<[A-Za-z_](?:"[^"]*"|'[^']*'|[^>"'])*>""")
+STUDIO_ATTRIBUTE_OR_QUOTED_VALUE_REGEX = re.compile(
+    r"""(?P<studio>\s+data-studio-[\w.-]+\s*=\s*(?:"[^"]*"|'[^']*'))|"[^"]*"|'[^']*'"""
+)
 
 QTI_MEDIA_ATTRIBUTE_VALUE_REGEX = re.compile(
     r"(?P<attr>" + "|".join(QTI_REFERENCE_ATTRIBUTES + ("srcset",)) + r")"
@@ -112,3 +116,25 @@ def set_qti_item_language(raw_data, language):
         return f"{tag[:-1].rstrip()}{replacement}>"
 
     return ITEM_ROOT_START_TAG_REGEX.sub(_replace_root, raw_data, count=1)
+
+
+def strip_studio_attributes(raw_data):
+    """
+    Remove every ``data-studio-*`` attribute, such as the ``data-studio-prompt`` marker the
+    QTI editor writes for its own use when it reopens an item, so none reaches Kolibri.
+
+    Operates as a targeted text substitution on start tags, for the same reason
+    ``rewrite_qti_media_paths`` does.
+    """
+    if "data-studio-" not in raw_data:
+        return raw_data
+
+    def _strip_attribute(match):
+        return "" if match.group("studio") else match.group(0)
+
+    def _strip_tag(match):
+        return STUDIO_ATTRIBUTE_OR_QUOTED_VALUE_REGEX.sub(
+            _strip_attribute, match.group(0)
+        )
+
+    return START_TAG_REGEX.sub(_strip_tag, raw_data)
