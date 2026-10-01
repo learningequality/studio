@@ -6,6 +6,8 @@ import {
   DEFAULT_EXPECTED_LENGTH,
 } from '../parse';
 import { BaseType, Cardinality, QuestionType } from '../../../constants';
+import { assembleItemXml } from '../../../serialization/assembleItem';
+import { parseItem } from '../../../serialization/parseItem';
 
 const FREE_RESPONSE_DECLARATION = `
   <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string"/>
@@ -570,6 +572,41 @@ describe('buildTextEntryInteractionXML', () => {
         expect(parsed.answers.map(a => a.value)).toEqual(expected);
       },
     );
+
+    it.each([
+      [
+        'an image',
+        '<p>Look:</p><img src="x.png" alt="a">',
+        '<p>Look:</p><div><img src="x.png" alt="a"></div>',
+      ],
+      [
+        'small text',
+        '<small class="small-text">s</small>',
+        '<div><small class="small-text">s</small></div>',
+      ],
+      [
+        'an image and small text',
+        '<img src="x.png" alt="a"><small class="small-text">s</small>',
+        '<div><img src="x.png" alt="a"><small class="small-text">s</small></div>',
+      ],
+      [
+        'empty small text',
+        '<p>a</p><small class="small-text"></small><p>b</p>',
+        '<p>a</p><div><small class="small-text"></small></div><p>b</p>',
+      ],
+      ['bare text', 'Q?', '<div>Q?</div>'],
+    ])('prompt with %s reopens wrapped and rebuilds identically', (_, prompt, expectedPrompt) => {
+      const build = state =>
+        buildTextEntryInteractionXML(state, QuestionType.FREE_RESPONSE, FREE_SCHEMA);
+      const first = build({ prompt, answers: [], expectedLength: 0 });
+      const { bodyXml, responseDeclarations } = parseItem(
+        assembleItemXml({ ...first, identifier: 'i', title: 't', language: '' }),
+      ).interactions[0];
+      const parsed = parseTextEntryInteraction(bodyXml, responseDeclarations);
+
+      expect(parsed.prompt).toBe(expectedPrompt);
+      expect(build(parsed).bodyXml).toBe(first.bodyXml);
+    });
 
     it('textEntry: round-trip preserves per-answer caseSensitive', () => {
       const original = {
