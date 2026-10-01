@@ -1,6 +1,5 @@
 import { computed, inject } from 'vue';
 import { getTipTapEditorStrings } from '../TipTapEditorStrings';
-import { transformPastedHTML } from '../utils/pasteTransform';
 
 /**
  * Evaluates a contributed insert action against the editor's insert context.
@@ -28,6 +27,7 @@ export function useToolbarActions(emit) {
   const editor = inject('editor', null);
   const insertContext = inject('insertContext', null);
   const contributedInsertActions = inject('insertActions', null);
+  const inlineOnly = inject('inlineOnly', false);
 
   /**
    * Drop the actions marked `hide`, which every toolbar honours — the desktop one and
@@ -185,6 +185,18 @@ export function useToolbarActions(emit) {
     }
   };
 
+  // Paste through ProseMirror, as a native paste does, so the editor's and its
+  // extensions' paste props apply. `insertContent` skips them and parses text as HTML.
+  const pasteText = text => {
+    editor.value.commands.focus();
+    editor.value.view.pasteText(text);
+  };
+
+  const pasteHTML = html => {
+    editor.value.commands.focus();
+    editor.value.view.pasteHTML(html);
+  };
+
   const handlePaste = async () => {
     if (!editor.value) return;
 
@@ -196,16 +208,13 @@ export function useToolbarActions(emit) {
           if (item.types.includes('text/html')) {
             const htmlBlob = await item.getType('text/html');
             const html = await htmlBlob.text();
-            const cleaned = transformPastedHTML(html);
-
-            editor.value.chain().focus().insertContent(cleaned).run();
+            pasteHTML(html);
             return;
           }
           if (item.types.includes('text/plain')) {
             const textBlob = await item.getType('text/plain');
             const text = await textBlob.text();
-
-            editor.value.chain().focus().insertContent(text).run();
+            pasteText(text);
             return;
           }
         }
@@ -224,8 +233,7 @@ export function useToolbarActions(emit) {
 
       // Note: Genereted this regex with the help of LLM.
       const normalized = text.replace(/\r\n/g, '\n');
-
-      editor.value.chain().focus().insertContent(normalized).run();
+      pasteText(normalized);
     } catch (err) {
       editor.value.chain().focus().insertContent(clipboardAccessFailed$()).run();
     }

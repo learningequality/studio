@@ -1,12 +1,21 @@
-import { render, screen, within } from '@testing-library/vue';
+import { render, screen, waitFor, within } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { ref, nextTick } from 'vue';
 import VueRouter from 'vue-router';
+import { Extension } from '@tiptap/core';
 import EditorToolbar from '../TipTapEditor/components/EditorToolbar.vue';
 import { getTipTapEditorStrings } from '../TipTapEditor/TipTapEditorStrings';
-import { tabIn } from 'shared/utils/testing';
+import { useEditor } from '../TipTapEditor/composables/useEditor';
+import { stubProseMirrorLayout, tabIn } from 'shared/utils/testing';
 
-const { textFormatOptions$, alignRight$ } = getTipTapEditorStrings();
+const {
+  textFormatOptions$,
+  alignRight$,
+  copy$,
+  paste$,
+  pasteOptionsMenu$,
+  pasteWithoutFormatting$,
+} = getTipTapEditorStrings();
 
 // Every editor read the toolbar makes while rendering: undo/redo availability,
 // mark state, the alignment probe in `getEffectiveAlignment`, and the
@@ -234,5 +243,115 @@ describe('EditorToolbar alignment control', () => {
     await renderToolbar();
 
     expect(screen.getByRole('button', { name: alignRight$() })).toBeInTheDocument();
+  });
+});
+
+describe('EditorToolbar paste', () => {
+  stubProseMirrorLayout();
+
+  // jsdom has none; ProseMirror's `pasteHTML` and `pasteText` construct one.
+  beforeAll(() => {
+    global.ClipboardEvent = class ClipboardEvent extends Event {};
+  });
+
+  afterAll(() => {
+    delete global.ClipboardEvent;
+  });
+
+  // After `userEvent.setup()`, which installs its own clipboard; jsdom's Blob has no `text()`.
+  const setClipboard = (type, data) => {
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        read: async () => [{ types: [type], getType: async () => ({ text: async () => data }) }],
+        readText: async () => data,
+      },
+    });
+  };
+
+  const renderWithClipboard = (type, data, { inlineOnly = true, extensions = [] } = {}) => {
+    const user = userEvent.setup();
+    setClipboard(type, data);
+    const { initializeEditor, editor } = useEditor();
+    initializeEditor('', 'edit', { inlineOnly, extensions });
+    const { unmount } = render(EditorToolbar, {
+      provide: { editor, inlineOnly, insertActions: ref([]), insertContext: ref(null) },
+      router: new VueRouter(),
+    });
+    // The toolbar reads the editor as it re-renders, so it goes first.
+    teardown = () => {
+      unmount();
+      editor.value.destroy();
+    };
+    return { user, editor: editor.value };
+  };
+
+  let teardown;
+  afterEach(() => teardown());
+
+  const pasteFromToolbar = async (type, data, editorOptions) => {
+    const { user, editor } = renderWithClipboard(type, data, editorOptions);
+    await user.click(await screen.findByRole('button', { name: paste$() }));
+    return editor;
+  };
+
+  const pasteWithoutFormattingFromToolbar = async (text, editorOptions) => {
+    const { user, editor } = renderWithClipboard('text/plain', text, editorOptions);
+    await user.click(await screen.findByRole('button', { name: pasteOptionsMenu$() }));
+    await user.click(within(screen.getByRole('menu')).getByText(pasteWithoutFormatting$()));
+    return editor;
+  };
+
+  describe('in an editor that is not inline-only', () => {
+    const fullEditor = { inlineOnly: false };
+
+    it('applies extensions’ paste transforms to pasted HTML', async () => {
+      const ReplacePastedHTML = Extension.create({
+        name: 'replacePastedHTML',
+        transformPastedHTML: () => '<p>replaced</p>',
+      });
+      const editor = await pasteFromToolbar('text/html', '<p>a</p>', {
+        ...fullEditor,
+        extensions: [ReplacePastedHTML],
+      });
+
+      await waitFor(() => expect(editor.getHTML()).toBe('<p>replaced</p>'));
+    });
+
+    it('pastes each line of plain text as a paragraph', async () => {
+      const editor = await pasteFromToolbar('text/plain', 'a\nb', fullEditor);
+
+      await waitFor(() => expect(editor.getHTML()).toBe('<p>a</p><p>b</p>'));
+    });
+
+    it('keeps markup in text pasted without formatting as text', async () => {
+      const editor = await pasteWithoutFormattingFromToolbar('<b>a</b>', fullEditor);
+
+      await waitFor(() => expect(editor.getHTML()).toBe('<p>&lt;b&gt;a&lt;/b&gt;</p>'));
+    });
+  });
+
+  it('inserts pasted blocks as one inline run', async () => {
+    const editor = await pasteFromToolbar('text/html', '<h1>a</h1><ul><li>b</li></ul>');
+
+    await waitFor(() => expect(editor.getHTML()).toBe('a b'));
+  });
+
+  it('inserts a pasted phrase as text', async () => {
+    const editor = await pasteFromToolbar('text/html', '<span>a</span> b');
+
+    await waitFor(() => expect(editor.getHTML()).toBe('a b'));
+  });
+
+  it('joins the lines of pasted plain text with a space', async () => {
+    const editor = await pasteFromToolbar('text/plain', 'a\nb');
+
+    await waitFor(() => expect(editor.getHTML()).toBe('a b'));
+  });
+
+  it('joins the lines of text pasted without formatting with a space', async () => {
+    const editor = await pasteWithoutFormattingFromToolbar('a\r\nb');
+
+    await waitFor(() => expect(editor.getHTML()).toBe('a b'));
   });
 });
