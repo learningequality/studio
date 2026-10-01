@@ -1,6 +1,6 @@
 import { QTIDeclaration } from '../../serialization/qti/QTIDeclaration';
 import CorrectResponse from '../../serialization/qti/declarations/correctResponse';
-import { buildXmlNode, parseXML, serializeAsHtml } from '../../serialization/xml';
+import { buildXmlNode, parseXML, serializeAsHtml, wrapInlineRuns } from '../../serialization/xml';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
 
 const serializer = new XMLSerializer();
@@ -12,22 +12,6 @@ const SENTINEL_MARKER = 'data-studio-sentinel';
 const CORRECT_ATTR = 'data-studio-correct';
 const SENTINEL_ID = 'studio_sentinel';
 const KEPT_DROPDOWN_ATTRS = ['response-identifier', CORRECT_ATTR];
-const BLOCK_TAGS = new Set([
-  'p',
-  'div',
-  'ul',
-  'ol',
-  'h1',
-  'h2',
-  'h3',
-  'h4',
-  'h5',
-  'h6',
-  'blockquote',
-  'pre',
-  'table',
-  'hr',
-]);
 
 /**
  * @typedef {object} InlineChoiceState
@@ -284,33 +268,6 @@ function renameRepeatedIds(passageEl) {
       }
     }
   }
-}
-
-/**
- * Wrap each run of top-level text and non-block elements (including TipTap's `<img>` and
- * `<small>`, which the XSD only allows inside a block) in one `<div>`, so every child can carry
- * the prompt marker and `<qti-item-body>` holds only blocks. TipTap unwraps a `<div>` on
- * reopen, so this is stable across saves. Whitespace-only text is dropped.
- *
- * @param {Element} container
- * @returns {Element[]} The container's children, as blocks
- */
-function wrapInlineRuns(container) {
-  const blocks = [];
-  let run = null;
-  for (const node of [...container.childNodes]) {
-    if (node.nodeType === Node.ELEMENT_NODE && BLOCK_TAGS.has(node.localName)) {
-      blocks.push(node);
-      run = null;
-    } else if (run || node.nodeType === Node.ELEMENT_NODE || node.nodeValue.trim()) {
-      if (!run) {
-        run = buildXmlNode({ tag: 'div' });
-        blocks.push(run);
-      }
-      run.appendChild(node);
-    }
-  }
-  return blocks;
 }
 
 /**
