@@ -167,6 +167,7 @@ def test_integer_text_input_derivation():
         pytest.param([("41", "0.5")], ["42"], id="partial_credit_key"),
         pytest.param([("0", "0.0")], ["42"], id="zero_mapped_key"),
         pytest.param([("13", "1.0")], ["42", "13"], id="full_credit_key"),
+        pytest.param([("1e400", "1.0")], ["42"], id="overflowing_key"),
     ],
 )
 def test_text_input_mapping_keeps_correct_response(map_entries, expected):
@@ -175,6 +176,13 @@ def test_text_input_mapping_keeps_correct_response(map_entries, expected):
     answers = json.loads(derive_perseus_item(_Item(raw_data)).answers)
     assert [a["answer"] for a in answers] == expected
     assert all(a["correct"] for a in answers)
+
+
+def test_overflowing_correct_value_is_dropped():
+    raw_data = _text_item("single", ["42", "1e400"])
+    assert is_perseus_derivable(raw_data) is True
+    answers = json.loads(derive_perseus_item(_Item(raw_data)).answers)
+    assert [a["answer"] for a in answers] == ["42"]
 
 
 def test_answerless_float_entry_is_skipped_but_node_stays_derivable(caplog):
@@ -399,15 +407,6 @@ def test_text_entry_template_spellings_derive(processing):
             _text_item("single", ["cat"], base_type="string"), id="string_text_entry"
         ),
         pytest.param(TOLERANCE_ITEM, id="custom_processed_text_entry"),
-        pytest.param(_text_item("single", ["1e400"]), id="overflow_positive"),
-        pytest.param(_text_item("single", ["-1e400"]), id="overflow_negative"),
-        pytest.param(_text_item("single", ["1e0400"]), id="overflow_leading_zero"),
-        pytest.param(_text_item("single", ["1" + "0" * 400]), id="overflow_integer"),
-        pytest.param(
-            _text_item("single", ["1" + "0" * 400 + "/" + "1" + "0" * 400]),
-            id="overflow_nan_fraction",
-        ),
-        pytest.param(_text_item("single", ["42", "1e400"]), id="overflow_later_value"),
     ],
 )
 def test_not_derivable(raw_data):
@@ -486,6 +485,10 @@ def test_comment_inside_prompt_markup_does_not_change_question(prompt):
         ),
         pytest.param(_text_item("single", ["0"]), False, id="float_zero_answer"),
         pytest.param(_text_item("single", ["False"]), True, id="float_non_number"),
+        pytest.param(_text_item("single", ["1e400"]), True, id="float_overflow"),
+        pytest.param(
+            _text_item("single", ["1" + "0" * 400]), True, id="float_overflow_integer"
+        ),
         pytest.param(
             _text_item("single", [], map_entries=[("13", "1.0"), ("12", "1.0")]),
             False,
