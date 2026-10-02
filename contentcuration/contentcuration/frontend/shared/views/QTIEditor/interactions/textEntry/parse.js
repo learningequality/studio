@@ -1,5 +1,5 @@
 import { QTIDeclaration } from '../../serialization/qti/QTIDeclaration';
-import { buildXmlNode, parseXML } from '../../serialization/xml';
+import { buildXmlNode, parseXML, serializeAsHtml, wrapInlineRuns } from '../../serialization/xml';
 import CorrectResponse from '../../serialization/qti/declarations/correctResponse';
 import Mapping from '../../serialization/qti/declarations/mapping';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
@@ -67,7 +67,7 @@ function extractPromptHTML(bodyEl) {
     interactionEl.remove();
   }
 
-  return clone.innerHTML.trim();
+  return serializeAsHtml([...clone.childNodes], bodyEl.namespaceURI).trim();
 }
 
 /**
@@ -246,8 +246,11 @@ export function buildTextEntryInteractionXML(state, questionType, declarationSch
 
   // The prompt is authored HTML, so it goes in through innerHTML: buildXmlNode parses it
   // and adopts the result into the item's namespace.
-  const bodyEl = buildXmlNode({ tag: 'qti-item-body', innerHTML: prompt || '' });
-  bodyEl.appendChild(interactionParagraph);
+  const promptEl = buildXmlNode({ tag: 'div', innerHTML: prompt || '' });
+  const bodyEl = buildXmlNode({
+    tag: 'qti-item-body',
+    children: [...wrapInlineRuns(promptEl), interactionParagraph],
+  });
   const bodyXml = serializer.serializeToString(bodyEl);
 
   // Build the response declaration.

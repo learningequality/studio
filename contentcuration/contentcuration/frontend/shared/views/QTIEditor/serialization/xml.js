@@ -183,6 +183,52 @@ export function buildXmlNode({ tag, attrs = {}, children, innerHTML }) {
   return el;
 }
 
+const BLOCK_TAGS = new Set([
+  'p',
+  'div',
+  'ul',
+  'ol',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'blockquote',
+  'pre',
+  'table',
+  'hr',
+  // Valid only directly under <qti-item-body>, so wrapping it fails the schema.
+  'qti-rubric-block',
+]);
+
+/**
+ * Wrap each run of top-level text and non-block elements (including TipTap's `<img>` and
+ * `<small>`, which the XSD only allows inside a block) in one `<div>`, so `<qti-item-body>`
+ * holds only blocks and every child can carry a marker attribute. TipTap unwraps a `<div>` on
+ * reopen, so this is stable across saves. Whitespace-only text is dropped.
+ *
+ * @param {Element} container Changed in place: inline runs move out into the new `<div>`s
+ * @returns {Element[]} The container's children, as blocks
+ */
+export function wrapInlineRuns(container) {
+  const blocks = [];
+  let run = null;
+  for (const node of [...container.childNodes]) {
+    if (node.nodeType === Node.ELEMENT_NODE && BLOCK_TAGS.has(node.localName)) {
+      blocks.push(node);
+      run = null;
+    } else if (run || node.nodeType === Node.ELEMENT_NODE || node.nodeValue.trim()) {
+      if (!run) {
+        run = buildXmlNode({ tag: 'div' });
+        blocks.push(run);
+      }
+      run.appendChild(node);
+    }
+  }
+  return blocks;
+}
+
 /**
  * Build a float `<qti-base-value>`. Whole numbers keep a decimal (`1.0`, not `1`) so the
  * value reads as a float wherever it is written.

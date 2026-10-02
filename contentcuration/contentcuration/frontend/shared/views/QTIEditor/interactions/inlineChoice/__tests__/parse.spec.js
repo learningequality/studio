@@ -433,6 +433,19 @@ describe('buildInlineChoiceInteractionXML', () => {
       };
       expect(roundTrip(empty)).toEqual(empty);
     });
+
+    it('keeps a rubric block in the prompt directly under the item body', () => {
+      const rubric =
+        '<qti-rubric-block view="scorer" use="instructions"><qti-content-body><p>r</p></qti-content-body></qti-rubric-block>';
+      const rubricState = {
+        prompt: rubric,
+        passage: html(p('A ', marked('r1', 'c1'))),
+        shuffle: false,
+      };
+      const doc = bodyDoc(rubricState);
+      expect(doc.documentElement.firstElementChild.localName).toBe('qti-rubric-block');
+      expect(roundTrip(rubricState).prompt).toBe(rubric);
+    });
   });
 
   describe('question', () => {
