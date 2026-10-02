@@ -1,30 +1,38 @@
 <template>
 
-  <MessageLayout
+  <StudioMessageLayout
     :header="$tr('resetPasswordTitle')"
     :text="$tr('resetPasswordPrompt')"
   >
-    <VForm
-      ref="form"
-      lazy-validation
-      @submit.prevent="submit"
+    <form
+      class="reset-password-form"
+      novalidate
+      @submit.prevent="resetPassword"
     >
-      <Banner
-        :text="$tr('resetPasswordFailed')"
-        :value="error"
+      <StudioBanner
+        v-if="error"
+        role="alert"
         error
-        class="mb-4"
-      />
-      <PasswordField
+        class="banner"
+      >
+        {{ $tr('resetPasswordFailed') }}
+      </StudioBanner>
+      <StudioPasswordField
         v-model="new_password1"
-        :label="$tr('passwordLabel')"
-        :additionalRules="passwordValidationRules"
         autofocus
+        :label="$tr('passwordLabel')"
+        :errorMessages="
+          touched.new_password1 && errors.new_password1 ? [new_password1ErrorText] : []
+        "
+        @blur="touched.new_password1 = true"
       />
-      <PasswordField
+      <StudioPasswordField
         v-model="new_password2"
         :label="$tr('passwordConfirmLabel')"
-        :additionalRules="passwordConfirmRules"
+        :errorMessages="
+          touched.new_password2 && errors.new_password2 ? [new_password2ErrorText] : []
+        "
+        @blur="touched.new_password2 = true"
       />
       <KButton
         primary
@@ -32,8 +40,8 @@
         :text="$tr('submitButton')"
         type="submit"
       />
-    </VForm>
-  </MessageLayout>
+    </form>
+  </StudioMessageLayout>
 
 </template>
 
@@ -41,52 +49,88 @@
 <script>
 
   import { mapActions } from 'vuex';
-  import MessageLayout from '../../components/MessageLayout';
-  import PasswordField from 'shared/views/form/PasswordField';
-  import Banner from 'shared/views/Banner';
+  import StudioMessageLayout from '../../components/StudioMessageLayout';
+  import StudioPasswordField from '../../components/form/StudioPasswordField';
+  import StudioBanner from 'shared/views/StudioBanner';
+  import commonStrings from 'shared/translator';
+  import { generateFormMixin } from 'shared/mixins';
+
+  const formMixin = generateFormMixin({
+    new_password1: {
+      required: true,
+      validator: v => Boolean(v) && v.length >= 8,
+    },
+    new_password2: {
+      required: true,
+      validator: (v, vm) => Boolean(v) && v === vm.form.new_password1,
+    },
+  });
 
   export default {
     name: 'ResetPassword',
     components: {
-      MessageLayout,
-      PasswordField,
-      Banner,
+      StudioMessageLayout,
+      StudioPasswordField,
+      StudioBanner,
     },
+    mixins: [formMixin],
     data() {
       return {
-        new_password1: '',
-        new_password2: '',
         error: false,
+        // Gates error display until blur, since formMixin's setters otherwise
+        // mark errors on every keystroke. Create.vue has no equivalent gate,
+        // so the two forms validate differently; epic-level decision tracked
+        // on #5060.
+        touched: {
+          new_password1: false,
+          new_password2: false,
+        },
       };
     },
     computed: {
-      passwordConfirmRules() {
-        return [value => (this.new_password1 === value ? true : this.$tr('passwordMatchMessage'))];
+      new_password1ErrorText() {
+        if (!this.new_password1) {
+          /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+          return commonStrings.$tr('fieldRequired');
+        }
+        return this.$tr('passwordValidationMessage');
       },
-      passwordValidationRules() {
-        return [value => (value.length >= 8 ? true : this.$tr('passwordValidationMessage'))];
+      new_password2ErrorText() {
+        if (!this.new_password2) {
+          /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+          return commonStrings.$tr('fieldRequired');
+        }
+        return this.$tr('passwordMatchMessage');
       },
     },
     methods: {
       ...mapActions('account', ['setPassword']),
-      submit() {
+      resetPassword() {
         this.error = false;
-        if (this.$refs.form.validate()) {
-          const payload = {
-            ...this.$route.query,
-            new_password1: this.new_password1,
-            new_password2: this.new_password2,
-          };
-          this.setPassword(payload)
-            .then(() => {
-              this.$router.push({
-                name: 'ResetPasswordSuccess',
-              });
-            })
-            .catch(() => {
-              this.error = true;
-            });
+        this.touched.new_password1 = true;
+        this.touched.new_password2 = true;
+
+        // Validate against this.form rather than formMixin's clean(), which
+        // trims every field. Passwords must keep the leading/trailing spaces
+        // the user typed, both here and in the payload below.
+        if (!this.validate(this.form)) {
+          return;
         }
+
+        const payload = {
+          ...this.$route.query,
+          new_password1: this.form.new_password1,
+          new_password2: this.form.new_password2,
+        };
+        this.setPassword(payload)
+          .then(() => {
+            this.$router.push({
+              name: 'ResetPasswordSuccess',
+            });
+          })
+          .catch(() => {
+            this.error = true;
+          });
       },
     },
     $trs: {
@@ -105,6 +149,17 @@
 
 
 <style lang="scss" scoped>
+
+  .reset-password-form {
+    width: 400px;
+    max-width: 100%;
+    text-align: left;
+  }
+
+  .banner {
+    width: 100%;
+    margin-bottom: 16px;
+  }
 
   .w-100 {
     width: 100%;
