@@ -136,7 +136,7 @@ describe('Mapping', () => {
     it('emits default-value attribute', () => {
       const data = { defaultValue: -1, lowerBound: null, upperBound: null, entries: [] };
       expect(new Mapping(data, makeDeclaration()).getXML().getAttribute('default-value')).toBe(
-        '-1',
+        '-1.0',
       );
     });
 
@@ -144,7 +144,7 @@ describe('Mapping', () => {
       const withBound = { defaultValue: 0, lowerBound: -2, upperBound: null, entries: [] };
       const withoutBound = { defaultValue: 0, lowerBound: null, upperBound: null, entries: [] };
       expect(new Mapping(withBound, makeDeclaration()).getXML().getAttribute('lower-bound')).toBe(
-        '-2',
+        '-2.0',
       );
       expect(
         new Mapping(withoutBound, makeDeclaration()).getXML().hasAttribute('lower-bound'),
@@ -154,7 +154,7 @@ describe('Mapping', () => {
     it('emits upper-bound only when not null', () => {
       const withBound = { defaultValue: 0, lowerBound: null, upperBound: 5, entries: [] };
       expect(new Mapping(withBound, makeDeclaration()).getXML().getAttribute('upper-bound')).toBe(
-        '5',
+        '5.0',
       );
     });
 
@@ -172,7 +172,8 @@ describe('Mapping', () => {
       const entries = [...node.querySelectorAll('qti-map-entry')];
       expect(entries).toHaveLength(2);
       expect(entries[0].getAttribute('map-key')).toBe('ChoiceA');
-      expect(entries[0].getAttribute('mapped-value')).toBe('1');
+      expect(entries[0].getAttribute('mapped-value')).toBe('1.0');
+      expect(entries[1].getAttribute('mapped-value')).toBe('-0.5');
     });
 
     it('only emits case-sensitive attr when true', () => {
@@ -197,9 +198,9 @@ describe('Mapping', () => {
       const declaration = makeDeclaration();
       const m = Mapping.fromXML(node, declaration);
       const out = m.getXML();
-      expect(out.getAttribute('default-value')).toBe('-1');
-      expect(out.getAttribute('lower-bound')).toBe('-2');
-      expect(out.getAttribute('upper-bound')).toBe('5');
+      expect(out.getAttribute('default-value')).toBe('-1.0');
+      expect(out.getAttribute('lower-bound')).toBe('-2.0');
+      expect(out.getAttribute('upper-bound')).toBe('5.0');
       expect(out.querySelector('qti-map-entry').getAttribute('map-key')).toBe('A');
     });
   });
@@ -231,15 +232,15 @@ describe('Mapping', () => {
       );
       const first = reparsed.querySelector('qti-map-entry');
       expect(first.getAttribute('map-key')).toBe('ChoiceA');
-      expect(first.getAttribute('mapped-value')).toBe('1');
+      expect(first.getAttribute('mapped-value')).toBe('1.0');
     });
 
     it('re-parsed XML preserves bounds from full round-trip', () => {
       const reparsed = reparse(
         Mapping.fromXML(parseMappingXml(MAPPING_WITH_BOUNDS_XML), makeDeclaration()).getXML(),
       );
-      expect(reparsed.getAttribute('lower-bound')).toBe('-2');
-      expect(reparsed.getAttribute('upper-bound')).toBe('5');
+      expect(reparsed.getAttribute('lower-bound')).toBe('-2.0');
+      expect(reparsed.getAttribute('upper-bound')).toBe('5.0');
     });
 
     // Non-ASCII map-key values (e.g. Arabic or CJK identifiers authored in i18n contexts)
