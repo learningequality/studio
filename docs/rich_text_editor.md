@@ -28,7 +28,7 @@ This is a very high level guide, you'll still need to check the docs but make su
     `TipTapEditor/extensions/`
 2. Define your node or mark using TipTap’s `Node.create()` or `Mark.create()`.
 3. Register it:
-    - for every editor: add it to the editor’s extension list in `TipTapEditor/composables/useEditor.js`.
+    - for every editor: add it to the editor’s extension list in `TipTapEditor/composables/useEditor.js`. A block node goes in the `inlineOnly`-false branch, and its toolbar actions get `blockOnly: true`.
     - for one consumer only: pass it in the `extensions` prop (see [Extending the editor from a consumer](#extending-the-editor-from-a-consumer)).
 4. If your node needs Markdown support, update the custom serializer in `TipTapEditor/utils/MarkdownSerializer.js` and don't forget to update the tests accordingly!
 ---
@@ -39,6 +39,18 @@ A component that renders `TipTapEditor` can add behaviour without editing the ed
 - tiptap extensions, registered after the built-ins.
 - Read once, when the editor is created; later changes are ignored.
 - The markdown serializer drops nodes it doesn't know: with the default `format="markdown"`, a contributed node is lost on save. Use `format="html"`.
+
+### `inlineOnly` prop
+- The field holds one line of inline content.
+- Offers bold, italic, underline, strikethrough, subscript, superscript, math, inline code and undo/redo.
+- Block nodes and the line break are left out of the schema, so no toolbar, shortcut or input rule creates one.
+- `Enter`, `Shift-Enter` and `Mod-Enter` insert nothing.
+- Blocks and line breaks in the value or a paste become spaces.
+- Images in the value or a paste are dropped.
+- Stored blocks are rewritten on the next save.
+- `insertActions` handlers and `@ready` listeners insert inline content only: `insertContent` with a block throws on an empty editor and welds its text to its neighbours otherwise.
+- Read once, when the editor is created.
+- Reads and writes HTML whatever `format` says: the markdown serializer assumes block children.
 
 ### `@ready` event
 - Emitted once, with the tiptap `Editor`, after its `create` event; commands are safe from then on.

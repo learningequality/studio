@@ -30,15 +30,17 @@
     <ToolbarDivider />
 
     <!-- Format dropdown -->
-    <div
-      role="group"
-      class="formatting-group toolbar-group"
-      :aria-label="textFormattingOptions$()"
-    >
-      <FormatDropdown />
-    </div>
+    <template v-if="!inlineOnly">
+      <div
+        role="group"
+        class="formatting-group toolbar-group"
+        :aria-label="textFormattingOptions$()"
+      >
+        <FormatDropdown />
+      </div>
 
-    <ToolbarDivider />
+      <ToolbarDivider />
+    </template>
 
     <!-- Collapsible toolbar groups -->
     <KListWithOverflow
@@ -162,7 +164,7 @@
 
 <script>
 
-  import { ref, computed } from 'vue';
+  import { ref, computed, inject } from 'vue';
   import { useToolbarActions } from '../composables/useToolbarActions';
   import { getTipTapEditorStrings } from '../TipTapEditorStrings';
   import { useDropdowns } from '../composables/useDropdowns';
@@ -183,13 +185,14 @@
     setup(props, { emit }) {
       const toolbarRef = ref(null);
       useRovingTabIndex(toolbarRef);
+      const inlineOnly = inject('inlineOnly', false);
 
       const {
         handleCopy,
         handleClearFormat,
         canClearFormat,
         historyActions,
-        alignAction,
+        alignActions,
         textActions,
         listActions,
         insertTools,
@@ -262,7 +265,7 @@
         },
         {
           name: 'align',
-          groupActions: [alignAction.value],
+          groupActions: alignActions.value,
         },
         {
           name: 'clearFormat',
@@ -342,9 +345,10 @@
        */
       const toolbarGroupsWithDividers = computed(() => {
         const groups = [];
-        toolbarGroups.value.forEach((group, index) => {
+        const nonEmptyGroups = toolbarGroups.value.filter(group => group.groupActions.length);
+        nonEmptyGroups.forEach((group, index) => {
           groups.push(group);
-          if (index < toolbarGroups.value.length - 1) {
+          if (index < nonEmptyGroups.length - 1) {
             groups.push({ type: 'divider' });
           }
         });
@@ -357,6 +361,7 @@
 
       return {
         toolbarRef,
+        inlineOnly,
         toolbarGroupsWithDividers,
         flatOverflowOptions,
         historyActions,

@@ -1,6 +1,5 @@
 import { computed, inject } from 'vue';
 import { getTipTapEditorStrings } from '../TipTapEditorStrings';
-import { transformPastedHTML } from '../utils/pasteTransform';
 
 /**
  * Evaluates a contributed insert action against the editor's insert context.
@@ -28,13 +27,16 @@ export function useToolbarActions(emit) {
   const editor = inject('editor', null);
   const insertContext = inject('insertContext', null);
   const contributedInsertActions = inject('insertActions', null);
+  const inlineOnly = inject('inlineOnly', false);
 
   /**
-   * Drop the actions marked `hide`, which every toolbar honours — the desktop one and
-   * the mobile bars alike. The action stays defined, with the reason it is not offered,
-   * so restoring it is a matter of deleting one flag.
+   * Drop the actions marked `hide`, and in an inline-only editor those marked `blockOnly`.
+   * Every toolbar honours this — the desktop one and the mobile bars alike. A `hide` action
+   * stays defined, with the reason it is not offered, so restoring it is a matter of
+   * deleting one flag.
    */
-  const visible = actions => actions.filter(action => !action.hide);
+  const visible = actions =>
+    actions.filter(action => !action.hide && !(inlineOnly && action.blockOnly));
 
   // helper
   const getEffectiveAlignment = editorInstance => {
@@ -185,6 +187,18 @@ export function useToolbarActions(emit) {
     }
   };
 
+  // Paste through ProseMirror, as a native paste does, so the editor's and its
+  // extensions' paste props apply. `insertContent` skips them and parses text as HTML.
+  const pasteText = text => {
+    editor.value.commands.focus();
+    editor.value.view.pasteText(text);
+  };
+
+  const pasteHTML = html => {
+    editor.value.commands.focus();
+    editor.value.view.pasteHTML(html);
+  };
+
   const handlePaste = async () => {
     if (!editor.value) return;
 
@@ -196,16 +210,13 @@ export function useToolbarActions(emit) {
           if (item.types.includes('text/html')) {
             const htmlBlob = await item.getType('text/html');
             const html = await htmlBlob.text();
-            const cleaned = transformPastedHTML(html);
-
-            editor.value.chain().focus().insertContent(cleaned).run();
+            pasteHTML(html);
             return;
           }
           if (item.types.includes('text/plain')) {
             const textBlob = await item.getType('text/plain');
             const text = await textBlob.text();
-
-            editor.value.chain().focus().insertContent(text).run();
+            pasteText(text);
             return;
           }
         }
@@ -224,8 +235,7 @@ export function useToolbarActions(emit) {
 
       // Note: Genereted this regex with the help of LLM.
       const normalized = text.replace(/\r\n/g, '\n');
-
-      editor.value.chain().focus().insertContent(normalized).run();
+      pasteText(normalized);
     } catch (err) {
       editor.value.chain().focus().insertContent(clipboardAccessFailed$()).run();
     }
@@ -407,24 +417,28 @@ export function useToolbarActions(emit) {
     },
   ]);
 
-  const listActions = computed(() => [
-    {
-      name: 'bulletList',
-      title: bulletList$(),
-      icon: require('../../assets/icon-bulletList.svg'),
-      handler: handleBulletList,
-      isActive: isMarkActive('bulletList'),
-      shouldFlipInRtl: true,
-    },
-    {
-      name: 'numberList',
-      title: numberedList$(),
-      icon: require('../../assets/icon-numberList.svg'),
-      rtlIcon: require('../../assets/icon-numberListRTL.svg'),
-      handler: handleNumberList,
-      isActive: isMarkActive('orderedList'),
-    },
-  ]);
+  const listActions = computed(() =>
+    visible([
+      {
+        name: 'bulletList',
+        title: bulletList$(),
+        icon: require('../../assets/icon-bulletList.svg'),
+        handler: handleBulletList,
+        isActive: isMarkActive('bulletList'),
+        shouldFlipInRtl: true,
+        blockOnly: true,
+      },
+      {
+        name: 'numberList',
+        title: numberedList$(),
+        icon: require('../../assets/icon-numberList.svg'),
+        rtlIcon: require('../../assets/icon-numberListRTL.svg'),
+        handler: handleNumberList,
+        isActive: isMarkActive('orderedList'),
+        blockOnly: true,
+      },
+    ]),
+  );
 
   const scriptActions = computed(() => [
     {
@@ -452,6 +466,7 @@ export function useToolbarActions(emit) {
         title: insertImage$(),
         icon: require('../../assets/icon-insertImage.svg'),
         handler: handleInsertImage,
+        blockOnly: true,
       },
       {
         name: 'link',
@@ -476,6 +491,7 @@ export function useToolbarActions(emit) {
         icon: require('../../assets/icon-codeblock.svg'),
         handler: handleCodeBlock,
         isActive: isMarkActive('codeBlock'),
+        blockOnly: true,
       },
     ]),
   );
@@ -499,21 +515,26 @@ export function useToolbarActions(emit) {
     handler: handleMinimize,
   };
 
-  const alignAction = computed(() => {
+  const alignActions = computed(() => {
+    // Reading the effective alignment computes the selection's style on every
+    // transaction, for a button an inline-only editor never shows.
+    if (inlineOnly) return [];
     const editorInstance = editor?.value;
     const effectiveAlign = getEffectiveAlignment(editorInstance);
     const effectiveRight = effectiveAlign === 'right';
 
-    return {
-      name: 'toggleAlign',
-      title: effectiveRight ? alignLeft$() : alignRight$(),
-      icon: effectiveRight
-        ? require('../../assets/icon-alignLeft.svg')
-        : require('../../assets/icon-alignRight.svg'),
-      handler: handleToggleAlign,
-      isActive: false,
-      isAvailable: !isMarkActive('codeBlock'),
-    };
+    return [
+      {
+        name: 'toggleAlign',
+        title: effectiveRight ? alignLeft$() : alignRight$(),
+        icon: effectiveRight
+          ? require('../../assets/icon-alignLeft.svg')
+          : require('../../assets/icon-alignRight.svg'),
+        handler: handleToggleAlign,
+        isActive: false,
+        isAvailable: !isMarkActive('codeBlock'),
+      },
+    ];
   });
 
   return {
@@ -543,7 +564,7 @@ export function useToolbarActions(emit) {
     // Action arrays
     historyActions,
     textActions,
-    alignAction,
+    alignActions,
     listActions,
     scriptActions,
     insertTools,

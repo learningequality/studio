@@ -15,7 +15,7 @@ jest.mock('shared/utils/browserInfo.js', () => {
   return jest.requireActual('shared/utils/browserInfo.js');
 });
 
-const { insertContentMenu$, insertImage$ } = getTipTapEditorStrings();
+const { insertContentMenu$, insertImage$, mathFormula$, codeBlock$ } = getTipTapEditorStrings();
 
 function makeEditorStub() {
   return {
@@ -30,11 +30,12 @@ const insertContext = {
   canInsertNode: () => true,
 };
 
-function renderTopBar({ insertActions = [] } = {}) {
+function renderTopBar({ insertActions = [], inlineOnly = false } = {}) {
   return render(MobileTopBar, {
     provide: {
       editor: ref(insertContext.editor),
       insertActions: ref(insertActions),
+      inlineOnly,
       insertContext: ref(insertContext),
     },
     router: new VueRouter(),
@@ -73,6 +74,19 @@ describe('MobileTopBar insert menu', () => {
 
     expect(within(menu).getByText(insertImage$())).toBeInTheDocument();
     expect(menu).toContainElement(document.activeElement);
+  });
+});
+
+describe('MobileTopBar insert menu in an inline-only editor', () => {
+  it('offers math only', async () => {
+    const user = userEvent.setup();
+    renderTopBar({ inlineOnly: true });
+
+    const menu = await openInsertMenu(user);
+
+    expect(within(menu).getByText(mathFormula$())).toBeInTheDocument();
+    expect(within(menu).queryByText(insertImage$())).not.toBeInTheDocument();
+    expect(within(menu).queryByText(codeBlock$())).not.toBeInTheDocument();
   });
 });
 

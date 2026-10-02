@@ -35,67 +35,55 @@
       @touchstart="event => event.stopPropagation()"
       @touchend="event => event.stopPropagation()"
     >
-      <div
-        class="formatting-buttons"
-        role="group"
-        :aria-label="formatSize$()"
-      >
-        <button
-          data-toolbar-item
-          :aria-disabled="canDecreaseFormat ? 'false' : 'true'"
-          :title="decreaseFormatSize$()"
-          :aria-label="decreaseFormatSize$()"
-          class="format-btn"
-          @mousedown.prevent
-          @click="decreaseFormat"
+      <template v-if="!inlineOnly">
+        <div
+          class="formatting-buttons"
+          role="group"
+          :aria-label="formatSize$()"
         >
-          -
-        </button>
-        <img
-          src="../../../assets/icon-formatSize.svg"
-          :alt="formatSize$()"
-          aria-hidden="true"
-        >
-        <button
-          data-toolbar-item
-          :aria-disabled="canIncreaseFormat ? 'false' : 'true'"
-          :title="increaseFormatSize$()"
-          :aria-label="increaseFormatSize$()"
-          class="format-btn"
-          @mousedown.prevent
-          @click="increaseFormat"
-        >
-          +
-        </button>
-      </div>
+          <button
+            data-toolbar-item
+            :aria-disabled="canDecreaseFormat ? 'false' : 'true'"
+            :title="decreaseFormatSize$()"
+            :aria-label="decreaseFormatSize$()"
+            class="format-btn"
+            @mousedown.prevent
+            @click="decreaseFormat"
+          >
+            -
+          </button>
+          <img
+            src="../../../assets/icon-formatSize.svg"
+            :alt="formatSize$()"
+            aria-hidden="true"
+          >
+          <button
+            data-toolbar-item
+            :aria-disabled="canIncreaseFormat ? 'false' : 'true'"
+            :title="increaseFormatSize$()"
+            :aria-label="increaseFormatSize$()"
+            class="format-btn"
+            @mousedown.prevent
+            @click="increaseFormat"
+          >
+            +
+          </button>
+        </div>
 
-      <ToolbarDivider />
+        <ToolbarDivider />
+      </template>
 
-      <ToolbarButton
-        v-for="action in textActions"
-        :key="action.name"
-        :title="action.title"
-        :icon="action.icon"
-        :is-active="action.isActive"
-        @click="action.handler"
-      />
-      <ToolbarDivider />
-      <ToolbarButton
-        v-for="action in listActions"
-        :key="action.name"
-        :title="action.title"
-        :icon="action.icon"
-        :is-active="action.isActive"
-        @click="action.handler"
-      />
-      <ToolbarDivider />
-      <ToolbarButton
-        :title="alignAction.title"
-        :icon="alignAction.icon"
-        :is-active="alignAction.isActive"
-        @click="alignAction.handler"
-      />
-      <ToolbarDivider />
+      <template v-for="(group, index) in actionGroups">
+        <ToolbarButton
+          v-for="action in group"
+          :key="action.name"
+          :title="action.title"
+          :icon="action.icon"
+          :is-active="action.isActive"
+          @click="action.handler"
+        />
+        <ToolbarDivider :key="`divider-${index}`" />
+      </template>
       <ToolbarButton
         v-for="action in scriptActions"
         :key="action.name"
@@ -123,7 +111,7 @@
 
 <script>
 
-  import { defineComponent, ref, onMounted, onUnmounted, inject } from 'vue';
+  import { defineComponent, ref, computed, onMounted, onUnmounted, inject } from 'vue';
   import { useToolbarActions } from '../../composables/useToolbarActions';
   import { useFormatControls } from '../../composables/useFormatControls';
   import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
@@ -138,6 +126,7 @@
       const isExpanded = ref(true);
       const keyboardOffset = ref(0);
       const editor = inject('editor');
+      const inlineOnly = inject('inlineOnly', false);
       const toolbarRef = ref(null);
 
       useRovingTabIndex(toolbarRef);
@@ -151,8 +140,12 @@
         textFormattingToolbar$,
       } = getTipTapEditorStrings();
 
-      const { textActions, listActions, scriptActions, alignAction, insertTools } =
+      const { textActions, listActions, scriptActions, alignActions, insertTools } =
         useToolbarActions(emit);
+
+      const actionGroups = computed(() =>
+        [textActions.value, listActions.value, alignActions.value].filter(group => group.length),
+      );
 
       const { canIncreaseFormat, canDecreaseFormat, increaseFormat, decreaseFormat } =
         useFormatControls();
@@ -217,12 +210,11 @@
 
       return {
         isExpanded,
+        inlineOnly,
         keyboardOffset,
         toolbarRef,
-        textActions,
-        listActions,
+        actionGroups,
         scriptActions,
-        alignAction,
         insertTools,
         toggleToolbar,
         canIncreaseFormat,

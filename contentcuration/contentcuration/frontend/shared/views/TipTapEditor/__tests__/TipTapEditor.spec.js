@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/vue';
+import { fireEvent, render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { nextTick } from 'vue';
 import VueRouter from 'vue-router';
@@ -335,5 +335,102 @@ describe('TipTapEditor — closing on a click outside', () => {
     await user.click(screen.getByRole('button', { name: 'Open' }));
 
     expect(minimize).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Content stored before a field went inline-only can hold blocks, which ProseMirror
+ * would weld together on load.
+ */
+describe('TipTapEditor — inline-only mode', () => {
+  const BLOCKS = '<p>a</p><ul><li>b</li></ul><img src="x">';
+
+  const renderEditor = async ({ inlineOnly, value = BLOCKS, format = 'html' }) => {
+    const ready = jest.fn();
+    const update = jest.fn();
+    const { container, updateProps } = render(TipTapEditor, {
+      props: {
+        value,
+        mode: 'edit',
+        format,
+        inlineOnly,
+        imageProcessor: { ACCEPTED_MIME_TYPES: ['image/png'] },
+      },
+      listeners: { ready, update },
+      routes: new VueRouter(),
+    });
+    await waitFor(() => expect(ready).toHaveBeenCalled());
+    await nextTick();
+    return { container, update, updateProps };
+  };
+
+  const minimize = () =>
+    userEvent.setup().click(screen.getByRole('button', { name: 'Minimize Toolbar' }));
+
+  it('saves stored blocks back as one inline run', async () => {
+    const { update } = await renderEditor({ inlineOnly: true });
+
+    await minimize();
+
+    expect(update).toHaveBeenLastCalledWith('a b');
+  });
+
+  it('reads and writes HTML whatever the format', async () => {
+    const value = '<p>a <strong>b</strong></p><p>c</p>';
+    const { update } = await renderEditor({ inlineOnly: true, value, format: 'markdown' });
+
+    await minimize();
+
+    expect(update).toHaveBeenLastCalledWith('a <strong>b</strong> c');
+  });
+
+  it('flattens blocks set after it loads', async () => {
+    const { update, updateProps } = await renderEditor({ inlineOnly: true, value: 'x' });
+    await updateProps({ value: BLOCKS });
+
+    await minimize();
+
+    expect(update).toHaveBeenLastCalledWith('a b');
+  });
+
+  it('keeps blocks without it', async () => {
+    const { update } = await renderEditor({ inlineOnly: false });
+
+    await minimize();
+
+    const saved = update.mock.calls.at(-1)[0];
+    expect(saved).toContain('<ul><li><p>b</p></li></ul>');
+    expect(saved).toContain('<img');
+  });
+
+  it('marks the editor single-line', async () => {
+    const { container } = await renderEditor({ inlineOnly: true });
+
+    expect(screen.getByRole('textbox', { name: /text editor/ })).toHaveAttribute(
+      'aria-multiline',
+      'false',
+    );
+    expect(container.querySelector('[contenteditable]')).toHaveAttribute('aria-multiline', 'false');
+  });
+
+  it('leaves a full editor multi-line', async () => {
+    const { container } = await renderEditor({ inlineOnly: false });
+
+    expect(screen.getByRole('textbox', { name: /text editor/ })).toHaveAttribute(
+      'aria-multiline',
+      'true',
+    );
+    expect(container.querySelector('[contenteditable]')).not.toHaveAttribute('aria-multiline');
+  });
+
+  it('ignores a dropped file', async () => {
+    const { container } = await renderEditor({ inlineOnly: true });
+    const file = new File([''], 'image.png', { type: 'image/png' });
+
+    await fireEvent.drop(container.querySelector('.editor-content'), {
+      dataTransfer: { files: [file] },
+    });
+
+    expect(screen.queryAllByRole('dialog')).toEqual([]);
   });
 });
