@@ -4,14 +4,14 @@ import { Organization } from 'shared/data/resources';
 const MAX_PAGE_SIZE = 100;
 
 /**
- * Composable for fetching the organizations the current user belongs to.
+ * Fetch organizations visible to the user, including public organizations.
  */
 export function useOrganizationList() {
   const loading = ref(true);
   const organizations = ref([]);
 
   function loadOrganizations() {
-    return Organization.fetchCollection({ page_size: MAX_PAGE_SIZE, member: true }).then(data => {
+    return Organization.fetchCollection({ page_size: MAX_PAGE_SIZE }).then(data => {
       organizations.value = data;
     });
   }

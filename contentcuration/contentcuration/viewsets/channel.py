@@ -454,8 +454,14 @@ class ChannelViewSet(ValuesViewset):
     ordering_fields = ["modified", "name"]
     ordering = "-modified"
 
-    field_map = channel_field_map
+    field_map = {
+        **channel_field_map,
+        "organization": "organization_id",
+        "organization_name": "organization__name",
+    }
     values = base_channel_values + (
+        "organization_id",
+        "organization__name",
         "edit",
         "view",
         "unpublished_changes",
