@@ -57,21 +57,18 @@
 <script>
 
   import { computed, defineComponent } from 'vue';
-  import { useDropdowns } from '../../composables/useDropdowns';
   import { useToolbarActions } from '../../composables/useToolbarActions';
   import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
 
   export default defineComponent({
     name: 'PasteDropdown',
     setup() {
-      const { pasteOptions } = useDropdowns();
+      const { handlePaste, pasteActions } = useToolbarActions();
 
       // KDropdownMenu reads each option's `label`.
       const menuOptions = computed(() =>
-        pasteOptions.value.map(option => ({ ...option, label: option.title })),
+        pasteActions.value.map(action => ({ ...action, label: action.title })),
       );
-
-      const { handlePaste } = useToolbarActions();
 
       const { paste$, pasteOptions$, pasteOptionsMenu$ } = getTipTapEditorStrings();
 

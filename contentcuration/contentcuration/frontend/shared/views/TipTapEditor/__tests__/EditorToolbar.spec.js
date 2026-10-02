@@ -26,13 +26,14 @@ const {
   pasteOptionsMenu$,
   pasteWithoutFormatting$,
   formatHeader1$,
+  formatHeader2$,
 } = getTipTapEditorStrings();
 
 // Every editor read the toolbar makes while rendering: undo/redo availability,
 // mark state, the alignment probe in `getEffectiveAlignment`, and the
-// transaction listener in `useDropdowns`. `commands` records the chained
+// transaction listener in `FormatDropdown`. `commands` records the chained
 // commands that run.
-function makeEditorStub({ canUndo = true, canRedo = false } = {}) {
+function makeEditorStub({ canUndo = true, canRedo = false, isActive = () => false } = {}) {
   const commands = [];
   const chain = new Proxy(
     {},
@@ -49,7 +50,7 @@ function makeEditorStub({ canUndo = true, canRedo = false } = {}) {
   return {
     commands,
     chain: () => chain,
-    isActive: () => false,
+    isActive,
     can: () => ({ undo: () => canUndo, redo: () => canRedo }),
     state: {
       selection: { from: 0, to: 0, empty: true },
@@ -448,6 +449,16 @@ describe('EditorToolbar dropdown menus', () => {
 
     expect(screen.getByRole('menu')).toBeVisible();
     expect(container).not.toContainElement(screen.getByRole('menu'));
+  });
+
+  it('shows the format at the cursor on its trigger', async () => {
+    await renderToolbar({
+      isActive: (name, attrs) => name === 'heading' && attrs?.level === 2,
+    });
+
+    expect(screen.getByRole('button', { name: textFormatOptions$() })).toHaveTextContent(
+      formatHeader2$(),
+    );
   });
 
   it('applies the chosen format', async () => {

@@ -71,6 +71,8 @@ export function useToolbarActions(emit) {
     mathFormula$,
     codeBlock$,
     clipboardAccessFailed$,
+    paste$,
+    pasteWithoutFormatting$,
     alignLeft$,
     alignRight$,
   } = getTipTapEditorStrings();
@@ -417,6 +419,21 @@ export function useToolbarActions(emit) {
     },
   ]);
 
+  const pasteActions = computed(() => [
+    {
+      name: 'paste',
+      title: paste$(),
+      icon: require('../../assets/icon-paste.svg'),
+      handler: handlePaste,
+    },
+    {
+      name: 'pasteNoFormat',
+      title: pasteWithoutFormatting$(),
+      icon: require('../../assets/icon-pasteNoFormat.svg'),
+      handler: handlePasteNoFormat,
+    },
+  ]);
+
   const listActions = computed(() =>
     visible([
       {
@@ -565,6 +582,7 @@ export function useToolbarActions(emit) {
     historyActions,
     textActions,
     alignActions,
+    pasteActions,
     listActions,
     scriptActions,
     insertTools,

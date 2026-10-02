@@ -167,7 +167,6 @@
   import { ref, computed, inject } from 'vue';
   import { useToolbarActions } from '../composables/useToolbarActions';
   import { getTipTapEditorStrings } from '../TipTapEditorStrings';
-  import { useDropdowns } from '../composables/useDropdowns';
   import { useRovingTabIndex } from '../composables/useRovingTabIndex';
   import ToolbarButton from './toolbar/ToolbarButton.vue';
   import FormatDropdown from './toolbar/FormatDropdown.vue';
@@ -198,9 +197,8 @@
         insertTools,
         minimizeAction,
         scriptActions,
+        pasteActions,
       } = useToolbarActions(emit);
-
-      const { pasteOptions } = useDropdowns();
 
       const {
         copy$,
@@ -259,7 +257,7 @@
             {
               name: 'pasteDropdown',
               component: PasteDropdown,
-              dropdownActions: pasteOptions.value,
+              dropdownActions: pasteActions.value,
             },
           ],
         },

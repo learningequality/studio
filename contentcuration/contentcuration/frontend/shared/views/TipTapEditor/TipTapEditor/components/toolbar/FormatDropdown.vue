@@ -19,9 +19,9 @@
       <template #option="{ option }">
         <div
           class="dropdown-item tiptap-format-option"
-          :class="{ 'is-selected': option.label === selectedFormat }"
+          :class="{ 'is-selected': option.value === selectedValue }"
           :style="
-            option.label === selectedFormat
+            option.value === selectedValue
               ? { color: $themePalette.blue.v_600, backgroundColor: $themePalette.blue.v_100 }
               : null
           "
@@ -40,26 +40,77 @@
 
 <script>
 
-  import { defineComponent } from 'vue';
-  import { useDropdowns } from '../../composables/useDropdowns';
+  import { computed, defineComponent, inject, onMounted, onUnmounted, ref } from 'vue';
   import { useToolbarActions } from '../../composables/useToolbarActions';
   import { getTipTapEditorStrings } from '../../TipTapEditorStrings';
 
   export default defineComponent({
     name: 'FormatDropdown',
     setup() {
-      const { formatOptions, selectedFormat, selectFormat } = useDropdowns();
+      const editor = inject('editor', null);
 
       const { handleFormatChange } = useToolbarActions();
 
-      const { textFormatOptions$ } = getTipTapEditorStrings();
+      const {
+        textFormatOptions$,
+        formatSmall$,
+        formatNormal$,
+        formatHeader1$,
+        formatHeader2$,
+        formatHeader3$,
+      } = getTipTapEditorStrings();
 
-      const applyFormat = format => {
-        selectFormat(format);
-        handleFormatChange(format.value);
+      const formatOptions = computed(() => [
+        { value: 'small', label: formatSmall$(), tag: 'small' },
+        { value: 'normal', label: formatNormal$(), tag: 'p' },
+        { value: 'h3', label: formatHeader3$(), tag: 'h3' },
+        { value: 'h2', label: formatHeader2$(), tag: 'h2' },
+        { value: 'h1', label: formatHeader1$(), tag: 'h1' },
+      ]);
+
+      // Tracked by value, since two formats' labels can be translated alike.
+      const selectedValue = ref('normal');
+      const selectedFormat = computed(
+        () => formatOptions.value.find(option => option.value === selectedValue.value).label,
+      );
+
+      // The editor is not reactive, so the format at the cursor is read again on every
+      // transaction, which includes every selection change.
+      const updateSelectedFormat = () => {
+        const instance = editor?.value;
+        if (!instance) return;
+        if (instance.isActive('heading', { level: 1 })) {
+          selectedValue.value = 'h1';
+        } else if (instance.isActive('heading', { level: 2 })) {
+          selectedValue.value = 'h2';
+        } else if (instance.isActive('heading', { level: 3 })) {
+          selectedValue.value = 'h3';
+        } else if (instance.isActive('small')) {
+          selectedValue.value = 'small';
+        } else {
+          selectedValue.value = 'normal';
+        }
       };
 
+      let offTransaction = null;
+
+      onMounted(() => {
+        const instance = editor?.value;
+        if (instance) {
+          instance.on('transaction', updateSelectedFormat);
+          offTransaction = () => instance.off('transaction', updateSelectedFormat);
+        }
+        updateSelectedFormat();
+      });
+
+      onUnmounted(() => {
+        if (offTransaction) offTransaction();
+      });
+
+      const applyFormat = format => handleFormatChange(format.value);
+
       return {
+        selectedValue,
         selectedFormat,
         formatOptions,
         applyFormat,
