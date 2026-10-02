@@ -16,20 +16,16 @@
         md3
         sm3
       >
-        <DropdownWrapper>
-          <template #default="{ attach, menuProps }">
-            <VAutocomplete
-              v-model.number="minutes"
-              :step="increments"
-              box
-              :label="$tr('minutesRequired')"
-              :items="availableNumbers"
-              :menu-props="menuProps"
-              :attach="attach"
-              :rules="minutesRules"
-            />
-          </template>
-        </DropdownWrapper>
+        <KMultiSelect
+          v-model="minutes"
+          :multiple="false"
+          :options="availableNumbers"
+          :label="$tr('minutesRequired')"
+          :invalid="invalid"
+          :invalidText="invalidText"
+          :appearanceOverrides="dropdownStyle"
+          :messages="messages"
+        />
       </VFlex>
       <VFlex
         v-else
@@ -79,6 +75,7 @@
 
 <script>
 
+  import KMultiSelect from 'kolibri-design-system/lib/candidate/multiselect/KMultiSelect';
   import { CompletionDropdownMap, DurationDropdownMap } from 'shared/constants';
   import {
     translateValidator,
@@ -86,7 +83,7 @@
     getLongActivityDurationValidators,
     getShortActivityDurationValidators,
   } from 'shared/utils/validation';
-  import DropdownWrapper from 'shared/views/form/DropdownWrapper';
+  import { commonStrings } from 'shared/strings/commonStrings';
 
   const EXACT_MIN = 1;
   const EXACT_MAX = 1200;
@@ -95,7 +92,7 @@
 
   export default {
     name: 'ActivityDuration',
-    components: { DropdownWrapper },
+    components: { KMultiSelect },
     props: {
       selectedDuration: {
         type: String,
@@ -189,6 +186,28 @@
         }
         return [];
       },
+      // Runs minutesRules against the current value so the KMultiSelect dropdown
+      // can show the same validation message the VTextField shows via :rules.
+      minutesValidationMessage() {
+        for (const rule of this.minutesRules) {
+          const result = rule(this.minutes);
+          if (result !== true) {
+            return result;
+          }
+        }
+        return '';
+      },
+      invalid() {
+        return Boolean(this.minutesValidationMessage);
+      },
+      invalidText() {
+        return this.minutesValidationMessage;
+      },
+      dropdownStyle() {
+        return {
+          width: '100%',
+        };
+      },
       sliderStyle() {
         const percent = ((this.minutes - this.minRange) / (this.maxRange - this.minRange)) * 100;
         return {
@@ -196,6 +215,28 @@
           '::-webkit-slider-thumb': {
             background: this.$themeTokens.primary,
           },
+        };
+      },
+      messages() {
+        const {
+          openMenuAction$,
+          closeMenuAction$,
+          optionsClickableLabel$,
+          optionSelectedLabel$,
+          clearAction$,
+          allOptionsSelectedLabel$,
+          allOptionsDeselectedLabel$,
+          optionDeselectedLabel$,
+        } = commonStrings;
+        return {
+          open: openMenuAction$,
+          close: closeMenuAction$,
+          clickable: optionsClickableLabel$,
+          selected: optionSelectedLabel$,
+          clearText: clearAction$,
+          allOptionsSelected: allOptionsSelectedLabel$,
+          allOptionsDeselected: allOptionsDeselectedLabel$,
+          optionDeselected: optionDeselectedLabel$,
         };
       },
     },
