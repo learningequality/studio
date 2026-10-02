@@ -76,7 +76,7 @@ describe('StudioCopyToken', () => {
     Object.assign(navigator, {
       clipboard: { writeText },
     });
-    const { mockStore } = makeWrapper();
+    makeWrapper();
     const button = screen.getByRole('button');
     await fireEvent.click(button);
     expect(mockCreateSnackbar).toHaveBeenCalled();
@@ -87,7 +87,7 @@ describe('StudioCopyToken', () => {
     Object.assign(navigator, {
       clipboard: { writeText },
     });
-    const { mockStore } = makeWrapper();
+    makeWrapper();
     const button = screen.getByRole('button');
     await fireEvent.click(button);
     expect(mockCreateSnackbar).toHaveBeenCalled();

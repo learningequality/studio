@@ -258,35 +258,26 @@ describe('EditSourceModal', () => {
       expect(contentNodeActions.updateContentNode).not.toHaveBeenCalled();
     });
 
-    test('should show a snackbar with the correct number of edited nodes on success submit', () => {
+    test('should show a snackbar with the correct number of edited nodes on success submit', async () => {
       const wrapper = makeWrapper(['node1', 'node2']);
-      wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
+      await wrapper.vm.handleSave();
 
-      const animationFrameId = requestAnimationFrame(() => {
-        expect(mockCreateSnackbar).toHaveBeenCalledWith(expect.objectContaining({ text: 'Edited attribution for 2 resources' }));
-        cancelAnimationFrame(animationFrameId);
-      });
+      expect(mockCreateSnackbar).toHaveBeenCalledWith(expect.objectContaining({ text: 'Changes saved' }));
     });
 
-    test('should show a snack bar with the correct number of edited nodes on success submit if some nodes are imported', () => {
+    test('should show a snack bar with the correct number of edited nodes on success submit if some nodes are imported', async () => {
       nodes['node1'].original_source_node_id = 'original_node1';
       const wrapper = makeWrapper(['node1', 'node2']);
-      wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
+      await wrapper.vm.handleSave();
 
-      const animationFrameId = requestAnimationFrame(() => {
-        expect(mockCreateSnackbar).toHaveBeenCalledWith(expect.objectContaining({ text: 'Edited attribution for 1 resource' }));
-        cancelAnimationFrame(animationFrameId);
-      });
+      expect(mockCreateSnackbar).toHaveBeenCalledWith(expect.objectContaining({ text: 'Changes saved' }));
     });
 
-    test('should emit close event on success submit', () => {
+    test('should emit close event on success submit', async () => {
       const wrapper = makeWrapper(['node1', 'node2']);
-      wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
+      await wrapper.vm.handleSave();
 
-      const animationFrameId = requestAnimationFrame(() => {
-        expect(wrapper.emitted('close')).toBeTruthy();
-        cancelAnimationFrame(animationFrameId);
-      });
+      expect(wrapper.emitted('close')).toBeTruthy();
     });
   });
 

@@ -1,61 +1,78 @@
 
 import { mount } from "@vue/test-utils";
-import GlobalSnackbar from "../GlobalSnackbar.vue";
-import KSnackbar from "kolibri-design-system/lib/KSnackbar/KSnackbar.vue";
 import useKSnackbar from "kolibri-design-system/lib/composables/useKSnackbar";
-
-jest.mock("kolibri-design-system/lib/composables/useKSnackbar");
+import GlobalSnackbar from "../GlobalSnackbar.vue";
 
 describe("GlobalSnackbar", () => {
-  let mockClearSnackbar;
-  let mockSnackbarOptions;
-  let mockSnackbarIsVisible;
+  let actionCallback;
+  let hideCallback;
 
   beforeEach(() => {
-    mockClearSnackbar = jest.fn();
-    mockSnackbarOptions = {
-      text: "Test Snackbar",
-      actionText: "Action",
-      actionCallback: jest.fn(),
-      hideCallback: jest.fn(),
-    };
-    mockSnackbarIsVisible = true;
-
-    useKSnackbar.mockReturnValue({
-      snackbarIsVisible: mockSnackbarIsVisible,
-      snackbarOptions: mockSnackbarOptions,
-      clearSnackbar: mockClearSnackbar,
-    });
+    actionCallback = jest.fn();
+    hideCallback = jest.fn();
+    const { clearSnackbar } = useKSnackbar();
+    clearSnackbar(); // ensure clean state
   });
 
   function makeWrapper() {
-    return mount(GlobalSnackbar, {});
+    return mount(GlobalSnackbar, {
+      stubs: {
+        KSnackbar: true
+      }
+    });
   }
 
-  it("renders the snackbar text", () => {
+  it("renders the snackbar text", async () => {
+    const { createSnackbar } = useKSnackbar();
+    createSnackbar({ text: "Test Snackbar", announce: true });
     const wrapper = makeWrapper();
-    expect(wrapper.text()).toContain("Test Snackbar");
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.snackbarOptions.text).toBe("Test Snackbar");
   });
 
-  it("renders the snackbar action correctly", () => {
+  it("renders the snackbar action correctly", async () => {
+    const { createSnackbar } = useKSnackbar();
+    createSnackbar({ text: "Test Snackbar", actionText: "Action", announce: true });
     const wrapper = makeWrapper();
-    expect(wrapper.text()).toContain("Action");
+    await wrapper.vm.$nextTick();
+    expect(wrapper.vm.snackbarOptions.actionText).toBe("Action");
   });
 
   it("clicking the action calls the action callback and closes the snackbar", async () => {
+    const { createSnackbar, snackbarIsVisible } = useKSnackbar();
+    createSnackbar({
+      text: "Test Snackbar",
+      actionText: "Action",
+      actionCallback,
+      hideCallback,
+      announce: true,
+    });
     const wrapper = makeWrapper();
-    wrapper.findComponent(KSnackbar).vm.$emit("actionClick");
-    
-    expect(mockSnackbarOptions.actionCallback).toHaveBeenCalled();
-    expect(mockClearSnackbar).toHaveBeenCalled();
+    await wrapper.vm.$nextTick();
+
+    // Simulate action click on the stub
+    wrapper.findComponent({ name: "KSnackbar" }).vm.$emit("actionClick");
+
+    expect(actionCallback).toHaveBeenCalledTimes(1);
+    expect(hideCallback).toHaveBeenCalledTimes(1);
+    expect(snackbarIsVisible.value).toBe(false);
   });
 
-  it("closing the snackbar calls hideCallback when provided", async () => {
+  it("closing the snackbar calls hideCallback exactly once when provided", async () => {
+    const { createSnackbar, snackbarIsVisible } = useKSnackbar();
+    createSnackbar({
+      text: "Test Snackbar",
+      hideCallback,
+      announce: true,
+    });
+
     const wrapper = makeWrapper();
-    wrapper.findComponent(KSnackbar).vm.$emit("close");
-    
-    expect(mockSnackbarOptions.hideCallback).toHaveBeenCalled();
-    expect(mockClearSnackbar).toHaveBeenCalled();
+    await wrapper.vm.$nextTick();
+
+    wrapper.findComponent({ name: "KSnackbar" }).vm.$emit("close");
+
+    expect(hideCallback).toHaveBeenCalledTimes(1);
+    expect(snackbarIsVisible.value).toBe(false);
   });
 });
 

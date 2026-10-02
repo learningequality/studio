@@ -177,6 +177,7 @@ export default function useCommunityLibraryUpdates({ queryParams } = {}) {
       isLoadingMore.value = false;
       createSnackbar({
         text: commonStrings.genericErrorMessage$(),
+        duration: 6000,
         autoDismiss: true,
         announce: true,
       });

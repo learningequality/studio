@@ -11,8 +11,8 @@
     :autofocus="snackbarOptions.autofocus"
     :announce="snackbarOptions.announce"
     :assertive="snackbarOptions.assertive"
-    @close="handleClose"
-    @actionClick="handleActionClick"
+    @close="clearSnackbar"
+    @actionClick="snackbarOptions.actionCallback && snackbarOptions.actionCallback($event)"
     @blur="snackbarOptions.onBlur && snackbarOptions.onBlur($event)"
   />
 
@@ -37,20 +37,6 @@
         snackbarOptions,
         clearSnackbar,
       };
-    },
-    methods: {
-      handleClose() {
-        if (this.snackbarOptions && this.snackbarOptions.hideCallback) {
-          this.snackbarOptions.hideCallback();
-        }
-        this.clearSnackbar();
-      },
-      handleActionClick(event) {
-        if (this.snackbarOptions && this.snackbarOptions.actionCallback) {
-          this.snackbarOptions.actionCallback(event);
-        }
-        this.clearSnackbar();
-      },
     },
   };
 
