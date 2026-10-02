@@ -24,6 +24,7 @@ from .base import StudioTestCase
 from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
 from contentcuration.models import generate_object_storage_name
+from contentcuration.tests.testdata import fileobj_exercise_graphie
 from contentcuration.tests.testdata import fileobj_exercise_image
 from contentcuration.tests.utils.qti.test_validation import _item_xml
 from contentcuration.utils.assessment.perseus import PerseusExerciseGenerator
@@ -34,6 +35,7 @@ from contentcuration.utils.assessment.qti.imsmanifest import (
 )
 from contentcuration.utils.import_tools import create_assessment_items
 from contentcuration.utils.import_tools import create_channel
+from contentcuration.utils.import_tools import create_files
 from contentcuration.utils.import_tools import generate_assessment_item
 from contentcuration.utils.import_tools import process_content
 
@@ -187,6 +189,8 @@ class PerseusRestoreTestCase(StudioTestCase):
             assessment_item = generate_assessment_item(
                 assessment_id, data["order"], data["type"], assessment_data
             )
+            self.assertEqual(assessment_item.assessment_id, assessment_id)
+            self.assertEqual(assessment_item.order, data["order"])
             self.assertEqual(assessment_item.type, data["type"])
             self.assertEqual(assessment_item.question, data.get("question", ""))
             self.assertEqual(assessment_item.randomize, bool(data.get("randomize")))
@@ -281,6 +285,27 @@ class QTIRestoreTestCase(StudioTestCase):
             question=question,
             answers=json.dumps([{"answer": "1", "correct": True, "order": 1}]),
         )
+
+    def _add_perseus_item(self, order, image):
+        item = self._add_item(
+            exercises.PERSEUS_QUESTION,
+            order,
+            assessment_id=PERSEUS_ID,
+            raw_data=json.dumps(
+                {
+                    "question": {
+                        "content": "Perseus ![]({}/{})".format(
+                            exercises.CONTENT_STORAGE_PLACEHOLDER,
+                            image.filename(),
+                        )
+                    }
+                },
+                ensure_ascii=False,
+            ),
+        )
+        image.assessment_item = item
+        image.save()
+        return item
 
     def _publish(self, generator_class):
         items = self.source.assessment_items.order_by("order")
@@ -527,3 +552,90 @@ class QTIRestoreTestCase(StudioTestCase):
                     self._restore(format_presets.EXERCISE, package=package), []
                 )
                 self.assertIn("Restoration Process Error", stderr.write.call_args[0][0])
+
+    def test_unreachable_file_is_logged_not_raised(self):
+        db = sqlite3.connect(":memory:")
+        db.execute(
+            "CREATE TABLE content_file "
+            "(checksum, extension, file_size, contentnode_id, lang_id, preset)"
+        )
+        db.execute(
+            "INSERT INTO content_file VALUES (?, ?, ?, ?, ?, ?)",
+            ("e" * 32, "zip", 1, self.restored.node_id, None, format_presets.QTI_ZIP),
+        )
+
+        with patch(
+            "contentcuration.utils.import_tools.requests.get",
+            side_effect=requests.ConnectionError("gone"),
+        ), patch("contentcuration.utils.import_tools.sys.stderr") as stderr:
+            create_files(db.cursor(), self.restored, download_url="http://studio")
+
+        self.assertIn("gone", stderr.write.call_args[0][0])
+        self.assertFalse(self.restored.files.exists())
+
+    def test_perseus_question_in_package_restores_as_perseus_question(self):
+        self._add_perseus_item(0, fileobj_exercise_image(color="blue"))
+        self._add_editor_item(1)
+        self._publish(QTIExerciseGenerator)
+
+        items = self._restore(format_presets.QTI_ZIP)
+
+        self._assert_restores_source_rows(items, [PERSEUS_ID, None])
+        self._assert_republishes_source_package(QTIExerciseGenerator)
+
+    def test_graphie_in_perseus_question_restores_and_republishes(self):
+        graphie = fileobj_exercise_graphie(original_filename="graph1")
+        item = self._add_perseus_item(0, fileobj_exercise_image(color="blue"))
+        graphie_ref = f"web+graphie:{exercises.CONTENT_STORAGE_PLACEHOLDER}/graph1"
+        item.raw_data = item.raw_data.replace("Perseus", f"![]({graphie_ref})")
+        item.save()
+        graphie.assessment_item = item
+        graphie.save()
+        self._publish(QTIExerciseGenerator)
+
+        (restored,) = self._restore(format_presets.QTI_ZIP)
+
+        self._assert_restores_source_rows([restored], [PERSEUS_ID])
+        restored_graphie = restored.files.get(preset_id=format_presets.EXERCISE_GRAPHIE)
+        self.assertEqual(restored_graphie.original_filename, "graph1")
+        self._assert_republishes_source_package(QTIExerciseGenerator)
+
+    def _published_presets(self, node):
+        """The node's archive presets after publishing the channel database."""
+        node.complete = True
+        node.extra_fields = {
+            "options": {
+                "completion_criteria": {
+                    "model": completion_criteria.MASTERY,
+                    "threshold": {"mastery_model": exercises.M_OF_N, "m": 3, "n": 5},
+                }
+            }
+        }
+        node.save()
+        self.channel.language_id = "en"
+        set_channel_icon_encoding(self.channel)
+        os.remove(create_content_database(self.channel, True, self.user.id, False))
+        return set(node.files.values_list("preset_id", flat=True))
+
+    def test_restored_legacy_only_node_also_publishes_derived_exercise_archive(self):
+        # Legacy items restore as QTI, which publish can also derive Perseus from.
+        self._add_legacy_item(0)
+        self._add_item(
+            exercises.MULTIPLE_SELECTION,
+            1,
+            question="Pick both",
+            answers=json.dumps(
+                [
+                    {"answer": "A", "correct": True, "order": 1},
+                    {"answer": "B", "correct": True, "order": 2},
+                ]
+            ),
+        )
+        self.assertEqual(self._published_presets(self.source), {format_presets.QTI_ZIP})
+
+        self._restore(format_presets.QTI_ZIP)
+
+        self.assertEqual(
+            self._published_presets(self.restored),
+            {format_presets.QTI_ZIP, format_presets.EXERCISE},
+        )
