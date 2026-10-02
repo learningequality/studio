@@ -507,4 +507,27 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
       'When enabled, learners see a hint below the answer options so they know how many answers to choose. Toggle this off to increase question difficulty.',
     context: 'Modal body explaining answer count hint',
   },
+  insertInlineChoice: {
+    message: 'Insert',
+    context:
+      'Button in the passage toolbar that adds an answer dropdown at the cursor, or turns the highlighted text into one',
+  },
+  addAnswer: {
+    message: 'Add answer',
+    context: 'Label on an answer dropdown chip that has options but no correct answer yet',
+  },
+  addAnswers: {
+    message: 'Add answers',
+    context: 'Label on an answer dropdown chip that has no options with text yet',
+  },
+  answerDropdownWithCorrect: {
+    message:
+      'Answer dropdown, {count, plural, one {# option} other {# options}}, correct answer: {answer}',
+    context: 'Accessible name of an answer dropdown chip in the passage that has a correct answer',
+  },
+  answerDropdownNoCorrect: {
+    message:
+      'Answer dropdown, {count, plural, one {# option} other {# options}}, no correct answer yet',
+    context: 'Accessible name of an answer dropdown chip in the passage that has no correct answer',
+  },
 });

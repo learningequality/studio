@@ -35,6 +35,9 @@ importers:
       '@tiptap/extension-underline':
         specifier: ^3.31.3
         version: 3.31.3(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))
+      '@tiptap/pm':
+        specifier: ^3.31.3
+        version: 3.31.3
       '@tiptap/starter-kit':
         specifier: ^3.31.3
         version: 3.31.3
