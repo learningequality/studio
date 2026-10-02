@@ -139,10 +139,14 @@ def parse_percentage(text):
 def parse_exponent(text):
     match = EXPONENT.fullmatch(text)
     if match:
-        val1 = extract_value(match.group(2) or match.group(4))
-        val2 = extract_value(match.group(5))
-        if val1 is not None and val2 is not None:
-            return eval(to_en("{int}e{exp}".format(int=val1, exp=int(val2))))
+        exp = extract_value(match.group(5))
+        if exp is not None:
+            # float() rounds once; going through a double mantissa first rounds twice.
+            return float(
+                "{mantissa}e{exp}".format(
+                    mantissa=to_en(match.group(2) or match.group(4)), exp=int(exp)
+                )
+            )
     return None
 
 
