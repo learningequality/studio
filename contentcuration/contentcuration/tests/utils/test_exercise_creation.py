@@ -754,6 +754,45 @@ class TestPerseusExerciseCreation(StudioTestCase):
         )
         self.assertIn("$\\frac{x}{2} = 3$", item_json["question"]["content"])
 
+    def _numeric_answer_values(self, answers):
+        item = self._create_assessment_item(
+            exercises.INPUT_QUESTION,
+            "What is the answer?",
+            [
+                {"answer": answer, "correct": True, "order": order}
+                for order, answer in enumerate(answers, start=1)
+            ],
+        )
+        self._create_perseus_zip(
+            {
+                "mastery_model": exercises.M_OF_N,
+                "randomize": True,
+                "n": 1,
+                "m": 1,
+                "all_assessment_items": [item.assessment_id],
+                "assessment_mapping": {item.assessment_id: exercises.INPUT_QUESTION},
+            }
+        )
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
+        zip_file, _ = self._validate_perseus_zip(exercise_file)
+        item_json = json.loads(
+            zip_file.read(f"{item.assessment_id}.json").decode("utf-8")
+        )
+        options = item_json["question"]["widgets"]["numeric-input 1"]["options"]
+        return [answer["value"] for answer in options["answers"]]
+
+    def test_input_question_drops_non_finite_answers(self):
+        values = self._numeric_answer_values(
+            [
+                "6",
+                "1e400",
+                "-1e400",
+                "1" * 401,
+                "1" * 401 + "/" + "1" * 401,
+            ]
+        )
+        self.assertEqual(values, [6.0])
+
     def test_multiple_formula_processing(self):
         """Test that formulas are properly processed in exercises"""
         # Create a question with LaTeX formulas
