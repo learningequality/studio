@@ -1,4 +1,6 @@
 import re
+from typing import Optional
+from typing import Tuple
 
 from lxml import etree
 
@@ -25,11 +27,31 @@ START_TAG_REGEX = re.compile(r"""<[A-Za-z_](?:"[^"]*"|'[^']*'|[^>"'])*>""")
 STUDIO_ATTRIBUTE_OR_QUOTED_VALUE_REGEX = re.compile(
     r"""(?P<studio>\s+data-studio-[\w.-]+\s*=\s*(?:"[^"]*"|'[^']*'))|"[^"]*"|'[^']*'"""
 )
+PIXEL_LENGTH_REGEX = re.compile(r"[1-9][0-9]*")
+# Comments and CDATA match whole, so an <img> inside one is never read as a start tag
+COMMENT_CDATA_OR_IMG_START_TAG_REGEX = re.compile(
+    r"""<!--.*?-->|<!\[CDATA\[.*?\]\]>|<img(?=[\s/>])(?:[^>"']|"[^"]*"|'[^']*')*>""",
+    re.DOTALL,
+)
+XML_ATTRIBUTE_REGEX = re.compile(
+    r"""\s(?P<name>[^\s=/>]+)\s*=\s*(?P<quote>["'])(?P<value>.*?)(?P=quote)""",
+    re.DOTALL,
+)
 
 QTI_MEDIA_ATTRIBUTE_VALUE_REGEX = re.compile(
     r"(?P<attr>" + "|".join(QTI_REFERENCE_ATTRIBUTES + ("srcset",)) + r")"
     r'(?P<eq>\s*=\s*)(?P<quote>["\'])(?P<value>[^"\']*)(?P=quote)'
 )
+
+
+def img_pixel_size(width, height) -> Optional[Tuple[int, int]]:
+    """
+    An ``<img>``'s size in pixels, or None unless both attributes are positive
+    integers: a percentage or a lone dimension gives no size to resize to.
+    """
+    if not all(PIXEL_LENGTH_REGEX.fullmatch(value or "") for value in (width, height)):
+        return None
+    return int(width), int(height)
 
 
 def get_qti_media_references(raw_data):
@@ -88,6 +110,35 @@ def rewrite_qti_media_paths(raw_data, path_by_filename):
         return f"{attribute}{eq}{quote}{value}{quote}"
 
     return QTI_MEDIA_ATTRIBUTE_VALUE_REGEX.sub(_replace_attribute, raw_data)
+
+
+def rewrite_qti_sized_image_paths(raw_data, path_for_size):
+    """
+    Point the ``src`` of each ``<img>`` with a pixel size at
+    ``path_for_size(filename, width, height)``, per element so one image at two
+    sizes gets two paths. A ``None`` path leaves the element alone. Every other
+    byte is kept, as in ``rewrite_qti_media_paths``.
+    """
+
+    def _replace_img(match):
+        tag = match.group(0)
+        if tag.startswith("<!"):
+            return tag
+        # Matching attribute by attribute consumes each value, so a "src=" inside
+        # another attribute's value is never read as the src.
+        attributes = {m["name"]: m for m in XML_ATTRIBUTE_REGEX.finditer(tag)}
+        src = attributes.get("src")
+        values = {name: m["value"] for name, m in attributes.items()}
+        size = img_pixel_size(values.get("width"), values.get("height"))
+        if not (src and size and QTI_CHECKSUM_FILENAME_REGEX.match(src["value"])):
+            return tag
+        path = path_for_size(src["value"], *size)
+        if path is None:
+            return tag
+        start, end = src.span("value")
+        return f"{tag[:start]}{path}{tag[end:]}"
+
+    return COMMENT_CDATA_OR_IMG_START_TAG_REGEX.sub(_replace_img, raw_data)
 
 
 def set_qti_item_language(raw_data, language):

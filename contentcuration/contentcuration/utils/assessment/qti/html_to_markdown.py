@@ -27,6 +27,7 @@ from lxml import etree
 
 from contentcuration.utils.assessment.markdown import STRIKETHROUGH_DECORATION
 from contentcuration.utils.assessment.markdown import UNDERLINE_DECORATION
+from contentcuration.utils.assessment.qti.media import img_pixel_size
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +76,11 @@ def _render_img(el):
     src = el.get("src", "")
     if not src:
         return ""
-    return "![{}]({}{})".format(el.get("alt", ""), CONTENT_STORAGE_PREFIX, src)
+    size = img_pixel_size(el.get("width"), el.get("height"))
+    suffix = " ={}x{}".format(*size) if size else ""
+    return "![{}]({}{}{})".format(
+        el.get("alt", ""), CONTENT_STORAGE_PREFIX, src, suffix
+    )
 
 
 def _text_decorations(el):

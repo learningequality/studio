@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 from dataclasses import dataclass
 from typing import Any
 from typing import Dict
@@ -28,6 +29,7 @@ from contentcuration.utils.assessment.qti.imsmanifest import Resource
 from contentcuration.utils.assessment.qti.imsmanifest import Resources
 from contentcuration.utils.assessment.qti.media import get_qti_media_references
 from contentcuration.utils.assessment.qti.media import rewrite_qti_media_paths
+from contentcuration.utils.assessment.qti.media import rewrite_qti_sized_image_paths
 from contentcuration.utils.assessment.qti.media import set_qti_item_language
 from contentcuration.utils.assessment.qti.media import strip_studio_attributes
 from contentcuration.utils.assessment.qti.perseus_derive import (
@@ -51,6 +53,7 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
     """
 
     file_format = "zip"
+    KEEP_IMAGE_SIZES = True
     preset = format_presets.QTI_ZIP
 
     PERSEUS_IMAGE_DIR = "perseus/images"
@@ -169,20 +172,42 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
                 f"{', '.join(sorted(missing))}"
             )
 
+        resized_paths = set()
+
+        def _resized_path(filename, width, height):
+            file_obj = files_by_name.get(filename)
+            if file_obj is None:
+                return None
+            resized = self._process_single_image(
+                filename,
+                file_obj.checksum,
+                f".{file_obj.file_format_id}",
+                width,
+                height,
+                self.get_image_file_path(),
+            )
+            path = f"{self.get_image_ref_prefix()}/{resized}"
+            resized_paths.add(path)
+            return path
+
+        item_xml = rewrite_qti_sized_image_paths(raw_data, _resized_path)
+
         # Media files can't stay bare in items/ alongside the item XML - they're
         # written to items/images/ (matching the legacy generator's layout) and
         # the item XML's references are remapped to the images/ prefix that
-        # resolves to that directory relative to the item file.
+        # resolves to that directory relative to the item file. Resized paths
+        # already carry that prefix, so only references to originals remain.
+        references = get_qti_media_references(item_xml) if resized_paths else filenames
         path_by_filename = {}
-        for filename in sorted(filenames - missing):
+        for filename in sorted(references - missing):
             file_obj = files_by_name[filename]
             self._add_original_image(
                 file_obj.checksum, filename, self.get_image_file_path()
             )
             path_by_filename[filename] = f"{self.get_image_ref_prefix()}/{filename}"
 
-        item_xml = rewrite_qti_media_paths(raw_data, path_by_filename)
-        return item_xml, sorted(path_by_filename.values())
+        item_xml = rewrite_qti_media_paths(item_xml, path_by_filename)
+        return item_xml, sorted(resized_paths | set(path_by_filename.values()))
 
     def process_assessment_item(self, assessment_item):
         if assessment_item.type == exercises.PERSEUS_QUESTION:
@@ -264,15 +289,30 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
         )
         result = convert_legacy_assessment_item_to_qti(legacy_item)
 
+        # Sized images come out of the conversion with a bare filename
+        image_entries = processed_data.get("question_images", []) + [
+            image
+            for part in processed_data.get("answers", [])
+            + processed_data.get("hints", [])
+            for image in part.get("images", [])
+        ]
+        path_by_filename = {
+            os.path.basename(image["name"]): image["name"] for image in image_entries
+        }
+        item_xml = rewrite_qti_media_paths(result.xml, path_by_filename)
+        file_dependencies = list(
+            dict.fromkeys(path_by_filename.get(d, d) for d in result.file_dependencies)
+        )
+
         filename = self._qti_item_filepath(result.identifier)
         self._add_resource(
             QTIResource(
                 identifier=result.identifier,
                 filepath=filename,
-                file_dependencies=result.file_dependencies,
+                file_dependencies=file_dependencies,
             )
         )
-        return filename, result.xml.encode("utf-8")
+        return filename, item_xml.encode("utf-8")
 
     def _create_manifest_resources(self) -> List[Resource]:
         """Create manifest resources for all QTI items."""

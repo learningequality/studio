@@ -13,26 +13,153 @@ from tempfile import TemporaryDirectory
 from django.core.files import File
 from django.core.files.storage import default_storage as storage
 from le_utils.constants import exercises
+from le_utils.constants import file_formats
 from le_utils.constants import format_presets
+from lxml import etree
+from PIL import ExifTags
 from PIL import Image
+from PIL import ImageSequence
+from PIL import PngImagePlugin
 
 from contentcuration import models
+from contentcuration.utils.assessment.qti.validation import secure_parser
 
+
+# An animated image's resized frames count toward this
+MAX_RESIZED_IMAGE_PIXELS = 20_000_000
+# Bounds the time spent decoding an animated image's source frames
+MAX_DECODED_ANIMATION_PIXELS = 100_000_000
+# GIF frame disposal methods; APNG numbers them differently
+GIF_DISPOSE_NONE = 1
+GIF_DISPOSE_BACKGROUND = 2
+EXIF_ORIENTATION_TRANSPOSE = {
+    2: Image.Transpose.FLIP_LEFT_RIGHT,
+    3: Image.Transpose.ROTATE_180,
+    4: Image.Transpose.FLIP_TOP_BOTTOM,
+    5: Image.Transpose.TRANSPOSE,
+    6: Image.Transpose.ROTATE_270,
+    7: Image.Transpose.TRANSVERSE,
+    8: Image.Transpose.ROTATE_90,
+}
+SVG_PIXEL_LENGTH_REGEX = re.compile(r"([0-9]+(?:\.[0-9]+)?)(?:px)?")
 
 image_pattern = rf"!\[([^\]]*)]\(\${exercises.CONTENT_STORAGE_PLACEHOLDER}/([^\s)]+)(?:\s=([0-9\.]+)x([0-9\.]+))*[^)]*\)"
 
 
+def _exif_orientation(img):
+    try:
+        return img.getexif().get(ExifTags.Base.Orientation)
+    except SyntaxError:
+        # A truncated EXIF segment reads as no orientation
+        return None
+
+
+def _transpose_upright(img, orientation):
+    # Not ImageOps.exif_transpose, which raises re-serialising a mistyped EXIF tag
+    method = EXIF_ORIENTATION_TRANSPOSE.get(orientation)
+    return img if method is None else img.transpose(method)
+
+
+def _resize_animated_image(img, size):
+    # Resizing the image alone keeps only the first frame
+    loop = img.info.get("loop")
+    frames = []
+    durations = []
+    for frame in ImageSequence.Iterator(img):
+        # A GIF's first frame loads as P, which resizes with
+        # NEAREST rather than LANCZOS
+        frames.append(frame.convert("RGBA").resize(size, Image.LANCZOS))
+        # WebP sets the duration only once the frame is loaded
+        durations.append(frame.info.get("duration", 0))
+    # Each resized frame is fully composited. Leaving it in place
+    # lets the encoder store only what changes in the next, but a
+    # GIF draws over it, so a transparent GIF clears it instead.
+    disposal = PngImagePlugin.Disposal.OP_NONE
+    if img.format == "GIF":
+        transparent = any(f.getchannel("A").getextrema()[0] < 255 for f in frames)
+        disposal = GIF_DISPOSE_BACKGROUND if transparent else GIF_DISPOSE_NONE
+    buffered = BytesIO()
+    frames[0].save(
+        buffered,
+        format=img.format,
+        save_all=True,
+        append_images=frames[1:],
+        duration=durations,
+        disposal=disposal,
+        # An APNG otherwise inherits the source frame's blend, and
+        # blending over the kept frame never clears transparent pixels
+        blend=PngImagePlugin.Blend.OP_SOURCE,
+        **({} if loop is None else {"loop": loop}),
+    )
+    return buffered.getvalue()
+
+
 def resize_image(image_content, width, height):
+    """
+    The resized image, ``image_content`` unchanged when a resize isn't needed
+    or affordable, or None when the image can't be decoded.
+    """
     try:
         with Image.open(BytesIO(image_content)) as img:
             original_format = img.format
-            img = img.resize((int(width), int(height)), Image.LANCZOS)
+            icc_profile = img.info.get("icc_profile")
+            size = (int(width), int(height))
+            # A JPEG with an embedded second image opens as a two-frame MPO
+            if img.format != "MPO" and getattr(img, "is_animated", False):
+                if size == img.size:
+                    return image_content
+                # Every frame is held resized, but decoded one at a time
+                if img.n_frames * size[0] * size[1] > MAX_RESIZED_IMAGE_PIXELS:
+                    return image_content
+                if img.n_frames * img.width * img.height > MAX_DECODED_ANIMATION_PIXELS:
+                    return image_content
+                return _resize_animated_image(img, size)
+            if size[0] * size[1] > MAX_RESIZED_IMAGE_PIXELS:
+                return image_content
+            # Resize before rotating upright, so no full-size rotated copy is held.
+            # Orientations 5-8 swap the width and height.
+            orientation = _exif_orientation(img)
+            stored_size = size[::-1] if orientation in (5, 6, 7, 8) else size
+            same_size = stored_size == img.size
+            if not same_size:
+                img = img.resize(stored_size, Image.LANCZOS)
+            img = _transpose_upright(img, orientation)
             buffered = BytesIO()
-            img.save(buffered, format=original_format)
-            return buffered.getvalue()
+            img.save(buffered, format=original_format, icc_profile=icc_profile)
+            resized_content = buffered.getvalue()
+            if same_size and len(resized_content) >= len(image_content):
+                # Re-encoding at the same size only helps when it shrinks the file.
+                # Unchanged content hashes to the original's checksum, so it ships
+                # as the original.
+                return image_content
+            return resized_content
     except Exception as e:
         logging.warning(f"Error resizing image: {str(e)}")
         return None
+
+
+def resize_svg(image_content, width, height):
+    """
+    A copy of an SVG drawn at ``width``x``height``, or None when it doesn't
+    parse or has neither a ``viewBox`` nor a unitless size to scale from.
+    """
+    try:
+        root = etree.fromstring(image_content, secure_parser())
+    except etree.XMLSyntaxError as e:
+        logging.warning(f"Error resizing SVG: {str(e)}")
+        return None
+    if root.get("viewBox") is None:
+        natural_size = [
+            SVG_PIXEL_LENGTH_REGEX.fullmatch(root.get(name) or "")
+            for name in ("width", "height")
+        ]
+        if not all(natural_size):
+            return None
+        # Without a viewBox, a new size crops the drawing instead of scaling it
+        root.set("viewBox", "0 0 {} {}".format(*(m[1] for m in natural_size)))
+    root.set("width", f"{width:g}")
+    root.set("height", f"{height:g}")
+    return etree.tostring(root.getroottree(), encoding="utf-8")
 
 
 def get_resized_image_checksum(image_content):
@@ -48,6 +175,8 @@ class ExerciseArchiveGenerator(ABC):
     ZIP_DATE_TIME = (2015, 10, 21, 7, 28, 0)
     ZIP_COMPRESS_TYPE = zipfile.ZIP_DEFLATED
     ZIP_COMMENT = "".encode()
+    # Keep the ` =WxH` suffix on sized images, for formats whose markup carries the size
+    KEEP_IMAGE_SIZES = False
 
     @property
     @abstractmethod
@@ -227,17 +356,16 @@ class ExerciseArchiveGenerator(ABC):
         ) as imgfile:
             original_content = imgfile.read()
 
-        resized_content = resize_image(original_content, width, height)
+        resize = resize_svg if ext.lower() == f".{file_formats.SVG}" else resize_image
+        resized_content = resize(original_content, width, height)
 
-        if not resized_content:
+        if resized_content:
+            new_img_ref = f"{get_resized_image_checksum(resized_content)}{ext}"
+        else:
             logging.warning(f"Failed to resize image {filename}. Using original image.")
-            self.add_file_to_write(
-                os.path.join(new_file_path, filename), original_content
-            )
-            return
-        resized_checksum = get_resized_image_checksum(resized_content)
+            # Remember the original so later references skip the retry
+            new_img_ref, resized_content = filename, original_content
 
-        new_img_ref = f"{resized_checksum}{ext}"
         self.resized_images_map[filename][(width, height)] = new_img_ref
         self.add_file_to_write(
             os.path.join(new_file_path, new_img_ref), resized_content
@@ -257,10 +385,7 @@ class ExerciseArchiveGenerator(ABC):
         if similar_image:
             return similar_image
 
-        resized_image = self._resize_image(
-            checksum, ext, filename, width, height, new_file_path
-        )
-        return resized_image or filename
+        return self._resize_image(checksum, ext, filename, width, height, new_file_path)
 
     def _is_valid_image_filename(self, filename):
         checksum, ext = os.path.splitext(filename)
@@ -309,6 +434,7 @@ class ExerciseArchiveGenerator(ABC):
                 filename, checksum, ext, width, height, new_file_path
             )
 
+            size_suffix = ""
             if width is not None and height is not None:
                 image_list.append(
                     {
@@ -317,7 +443,9 @@ class ExerciseArchiveGenerator(ABC):
                         "height": height,
                     }
                 )
-            return f"![{img_match.group(1)}]({new_image_path}/{processed_filename})"
+                if self.KEEP_IMAGE_SIZES and width >= 1 and height >= 1:
+                    size_suffix = f" ={int(width)}x{int(height)}"
+            return f"![{img_match.group(1)}]({new_image_path}/{processed_filename}{size_suffix})"
 
         content = re.sub(image_pattern, _replace_image, content)
 
