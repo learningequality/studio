@@ -179,6 +179,17 @@ def _assert_upright_150x200(test, content):
         test.assertGreater(blue, red)
 
 
+def _exercise_data(items):
+    return {
+        "mastery_model": exercises.M_OF_N,
+        "randomize": True,
+        "n": len(items),
+        "m": 1,
+        "all_assessment_items": [item.assessment_id for item in items],
+        "assessment_mapping": {item.assessment_id: item.type for item in items},
+    }
+
+
 class TestPerseusExerciseCreation(StudioTestCase):
     """
     Tests for the create_perseus_exercise function which handles exercise file generation.
@@ -247,6 +258,18 @@ class TestPerseusExerciseCreation(StudioTestCase):
             user_id=self.user.id,
         )
         return generator.create_exercise_archive()
+
+    def _perseus_input_values(self, answers):
+        """Values the Perseus numeric-input renders for an input question."""
+        item = self._create_assessment_item(
+            exercises.INPUT_QUESTION, "What is the answer?", answers
+        )
+        self._create_perseus_zip(_exercise_data([item]))
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
+        zip_file, _ = self._validate_perseus_zip(exercise_file)
+        item_json = json.loads(zip_file.read(f"{item.assessment_id}.json"))
+        widget = item_json["question"]["widgets"]["numeric-input 1"]
+        return [answer["value"] for answer in widget["options"]["answers"]]
 
     def _validate_perseus_zip(self, exercise_file):
         """Helper to validate the structure of the Perseus zip file"""
@@ -719,6 +742,100 @@ class TestPerseusExerciseCreation(StudioTestCase):
                 processed_perseus_json,
             )
 
+    def _assert_only_perseus_item_packaged(self, perseus_item, answerless):
+        with self.assertLogs(level="WARNING") as logs:
+            self._create_perseus_zip(_exercise_data([perseus_item, answerless]))
+        self.assertTrue(any("no correct answer" in message for message in logs.output))
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
+        zip_file, exercise_data = self._validate_perseus_zip(exercise_file)
+        self.assertNotIn(f"{answerless.assessment_id}.json", zip_file.namelist())
+        self.assertEqual(
+            exercise_data["all_assessment_items"], [perseus_item.assessment_id]
+        )
+        self.assertEqual(
+            exercise_data["assessment_mapping"],
+            {perseus_item.assessment_id: exercises.PERSEUS_QUESTION},
+        )
+        return zip_file
+
+    def test_answerless_input_question_is_left_out(self):
+        perseus_item, _ = self._create_perseus_item()
+        for answers in (
+            [{"answer": "", "correct": True, "order": 1}],
+            [{"answer": False, "correct": True, "order": 1}],
+            [{"answer": None, "order": 1}],
+            [{"answer": "5", "correct": False, "order": 1}],
+            [],
+        ):
+            with self.subTest(answers=answers):
+                answerless = self._create_assessment_item(
+                    exercises.INPUT_QUESTION, "What is 2+3?", answers
+                )
+                self._assert_only_perseus_item_packaged(perseus_item, answerless)
+                answerless.delete()
+
+    def test_answerless_input_question_images_are_not_packaged(self):
+        perseus_item, _ = self._create_perseus_item()
+        image_file = fileobj_exercise_image()
+        image_url = exercises.CONTENT_STORAGE_FORMAT.format(image_file.filename())
+        answerless = self._create_assessment_item(
+            exercises.INPUT_QUESTION,
+            f"How many sides? ![shape]({image_url})",
+            [{"answer": "", "correct": True, "order": 1}],
+        )
+        image_file.assessment_item = answerless
+        image_file.save()
+        zip_file = self._assert_only_perseus_item_packaged(perseus_item, answerless)
+        self.assertNotIn(f"images/{image_file.filename()}", zip_file.namelist())
+
+    def test_unit_keeps_answerless_input_question(self):
+        self.exercise_node.kind_id = content_kinds.TOPIC
+        self.exercise_node.save()
+        perseus_item, _ = self._create_perseus_item()
+        answerless = self._create_assessment_item(
+            exercises.INPUT_QUESTION,
+            "What is 2+3?",
+            [{"answer": "", "correct": True, "order": 1}],
+        )
+        self._create_perseus_zip(_exercise_data([perseus_item, answerless]))
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
+        zip_file, exercise_data = self._validate_perseus_zip(exercise_file)
+        self.assertIn(f"{answerless.assessment_id}.json", zip_file.namelist())
+        self.assertEqual(
+            exercise_data["all_assessment_items"],
+            [perseus_item.assessment_id, answerless.assessment_id],
+        )
+
+    def test_json_number_input_answers_are_read(self):
+        for number in (4, 0, 4.5):
+            with self.subTest(number=number):
+                self.assertEqual(
+                    self._perseus_input_values(
+                        [{"answer": number, "correct": True, "order": 1}]
+                    ),
+                    [number],
+                )
+                self.exercise_node.assessment_items.all().delete()
+
+    def test_incorrect_input_answers_are_dropped(self):
+        values = self._perseus_input_values(
+            [
+                {"answer": "4", "correct": True, "order": 1},
+                {"answer": 5, "correct": False, "order": 2},
+                {"answer": "6", "correct": False, "order": 3},
+            ]
+        )
+        self.assertEqual(values, [4])
+
+    def test_input_answer_read_after_unpackageable_image_is_stripped(self):
+        image_url = exercises.CONTENT_STORAGE_FORMAT.format(
+            f"{'a' * 32}.{file_formats.PNG}"
+        )
+        values = self._perseus_input_values(
+            [{"answer": f"4![]({image_url} =0x0)", "correct": True, "order": 1}]
+        )
+        self.assertEqual(values, [4])
+
     def test_formula_processing(self):
         """Test that formulas are properly processed in exercises"""
         # Create a question with LaTeX formulas
@@ -754,41 +871,12 @@ class TestPerseusExerciseCreation(StudioTestCase):
         )
         self.assertIn("$\\frac{x}{2} = 3$", item_json["question"]["content"])
 
-    def _numeric_answer_values(self, answers):
-        item = self._create_assessment_item(
-            exercises.INPUT_QUESTION,
-            "What is the answer?",
+    def test_input_question_drops_non_finite_answers(self):
+        answers = ["6", "1e400", "-1e400", "1" * 401, "1" * 401 + "/" + "1" * 401]
+        values = self._perseus_input_values(
             [
                 {"answer": answer, "correct": True, "order": order}
                 for order, answer in enumerate(answers, start=1)
-            ],
-        )
-        self._create_perseus_zip(
-            {
-                "mastery_model": exercises.M_OF_N,
-                "randomize": True,
-                "n": 1,
-                "m": 1,
-                "all_assessment_items": [item.assessment_id],
-                "assessment_mapping": {item.assessment_id: exercises.INPUT_QUESTION},
-            }
-        )
-        exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
-        zip_file, _ = self._validate_perseus_zip(exercise_file)
-        item_json = json.loads(
-            zip_file.read(f"{item.assessment_id}.json").decode("utf-8")
-        )
-        options = item_json["question"]["widgets"]["numeric-input 1"]["options"]
-        return [answer["value"] for answer in options["answers"]]
-
-    def test_input_question_drops_non_finite_answers(self):
-        values = self._numeric_answer_values(
-            [
-                "6",
-                "1e400",
-                "-1e400",
-                "1" * 401,
-                "1" * 401 + "/" + "1" * 401,
             ]
         )
         self.assertEqual(values, [6.0])
@@ -2259,7 +2347,7 @@ class TestQTIExerciseCreation(StudioTestCase):
         image_file.assessment_item = item
         image_file.save()
 
-        self._create_qti_zip(self._exercise_data([item]))
+        self._create_qti_zip(_exercise_data([item]))
 
         exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
         zip_file = self._validate_qti_zip_structure(exercise_file)
@@ -2635,19 +2723,9 @@ class TestQTIExerciseCreation(StudioTestCase):
             [name for name in zip_file.namelist() if name.startswith("items/")], []
         )
 
-    def _exercise_data(self, items):
-        return {
-            "mastery_model": exercises.M_OF_N,
-            "randomize": True,
-            "n": len(items),
-            "m": 1,
-            "all_assessment_items": [item.assessment_id for item in items],
-            "assessment_mapping": {item.assessment_id: item.type for item in items},
-        }
-
     def _assert_only_item_packaged(self, items, identifier):
         with self.assertLogs(level="WARNING") as logs:
-            self._create_qti_zip(self._exercise_data(items))
+            self._create_qti_zip(_exercise_data(items))
         self.assertTrue(any("no correct answer" in message for message in logs.output))
         exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
         zip_file = self._validate_qti_zip_structure(exercise_file)
@@ -2699,7 +2777,7 @@ class TestQTIExerciseCreation(StudioTestCase):
             "What is 5 minus 5?",
             [{"answer": 0, "correct": True, "order": 1}],
         )
-        self._create_qti_zip(self._exercise_data([item]))
+        self._create_qti_zip(_exercise_data([item]))
         exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
         zip_file = self._validate_qti_zip_structure(exercise_file)
         item_xml = zip_file.read(
@@ -2714,7 +2792,7 @@ class TestQTIExerciseCreation(StudioTestCase):
 
     def test_native_custom_processed_float_entry_is_packaged(self):
         item = self._create_native_qti_item(TOLERANCE_ITEM)
-        self._create_qti_zip(self._exercise_data([item]))
+        self._create_qti_zip(_exercise_data([item]))
         exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
         zip_file = self._validate_qti_zip_structure(exercise_file)
         self.assertIn("items/item_text.xml", zip_file.namelist())
@@ -2722,7 +2800,7 @@ class TestQTIExerciseCreation(StudioTestCase):
     def _assert_missing_media_is_logged_and_omitted(self, raw_data):
         item = self._create_native_qti_item(raw_data)  # no File row linked
         with self.assertLogs(level="ERROR") as logs:
-            self._create_qti_zip(self._exercise_data([item]))
+            self._create_qti_zip(_exercise_data([item]))
         self.assertTrue(
             any("no matching File record linked" in message for message in logs.output)
         )
@@ -2755,7 +2833,7 @@ class TestQTIExerciseCreation(StudioTestCase):
 
     def _publish_native_qti_images(self, image_file, imgs):
         item = self._create_native_qti_image_item(image_file, imgs)
-        self._create_qti_zip(self._exercise_data([item]))
+        self._create_qti_zip(_exercise_data([item]))
         exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
         zip_file = self._validate_qti_zip_structure(exercise_file)
         item_doc = parse_qti_xml(zip_file.read("items/native_item_1.xml"))
@@ -2979,7 +3057,7 @@ class TestQTIExerciseCreation(StudioTestCase):
             image_file, self.TWO_SIZE_IMGS.format(filename=filename)
         )
 
-        self._create_perseus_zip(self._exercise_data([item]))
+        self._create_perseus_zip(_exercise_data([item]))
 
         exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
         with storage.open(exercise_file.file_on_disk.name, "rb") as f:
