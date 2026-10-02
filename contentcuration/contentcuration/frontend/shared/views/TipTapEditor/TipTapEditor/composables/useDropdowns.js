@@ -4,8 +4,6 @@ import { useToolbarActions } from './useToolbarActions';
 
 export function useDropdowns() {
   const selectedFormat = ref('Normal');
-  const showHeadersDropdown = ref(false);
-  const showPasteDropdown = ref(false);
   const editor = inject('editor', null);
 
   const {
@@ -57,39 +55,11 @@ export function useDropdowns() {
     }
   };
 
-  // Dropdown management
-  const toggleHeadersDropdown = () => {
-    showHeadersDropdown.value = !showHeadersDropdown.value;
-    showPasteDropdown.value = false;
-  };
-
-  const togglePasteDropdown = () => {
-    showPasteDropdown.value = !showPasteDropdown.value;
-    showHeadersDropdown.value = false;
-  };
-
-  const closeAllDropdowns = () => {
-    showHeadersDropdown.value = false;
-    showPasteDropdown.value = false;
-  };
-
   const selectFormat = format => {
     selectedFormat.value = format.label;
   };
 
-  const containerRef = ref(null);
-
-  // Each instance checks only its own container so
-  // clicking one dropdown's trigger closes the other.
-  const handleClickOutside = event => {
-    if (!containerRef.value || containerRef.value.contains(event.target)) {
-      return;
-    }
-    closeAllDropdowns();
-  };
-
   onMounted(() => {
-    document.addEventListener('mousedown', handleClickOutside);
     // Setup editor listener when component mounts
     setupEditorListener();
     // Initial format detection
@@ -97,7 +67,6 @@ export function useDropdowns() {
   });
 
   onUnmounted(() => {
-    document.removeEventListener('mousedown', handleClickOutside);
     if (offTransaction) offTransaction();
   });
 
@@ -136,15 +105,10 @@ export function useDropdowns() {
 
   return {
     selectedFormat,
-    showHeadersDropdown,
-    showPasteDropdown,
     formatOptions,
     pasteOptions,
     clipboardOptions,
-    toggleHeadersDropdown,
-    togglePasteDropdown,
     selectFormat,
     updateSelectedFormat,
-    containerRef,
   };
 }
