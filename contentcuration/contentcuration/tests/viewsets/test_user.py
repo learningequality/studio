@@ -306,6 +306,26 @@ class CRUDTestCase(StudioAPITestCase):
         self.assertIn("United States", body)
         self.assertIn("Mexico", body)
 
+    def test_admin_users_download_csv_prefers_the_latest_storage_request(self):
+        target = testdata.user(email="csv-storage@e.com")
+        target.information = {
+            "space_needed": "500MB",
+            "latest_storage_request": "10GB",
+        }
+        target.save()
+
+        self.user.is_admin = True
+        self.user.save()
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get(self._csv_url() + f"?ids={target.id}")
+        self.assertEqual(response.status_code, 200)
+
+        body = self._csv_body(response)
+        self.assertIn("Has Studio activity", body)
+        self.assertIn("10GB", body)
+        self.assertNotIn("500MB", body)
+
     def test_admin_users_download_csv_handles_null_information(self):
         user_no_info = testdata.user(email="no-info@e.com")
         user_no_info.information = None
