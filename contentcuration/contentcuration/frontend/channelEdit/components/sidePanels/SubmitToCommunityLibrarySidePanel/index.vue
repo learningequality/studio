@@ -604,6 +604,7 @@
           autoDismiss: false,
           announce: true,
           actionText: cancelAction$(),
+          autofocus: true,
           actionCallback: () => {
             clearTimeout(timer);
           },

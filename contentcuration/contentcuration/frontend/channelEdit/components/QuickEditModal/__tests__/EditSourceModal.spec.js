@@ -55,6 +55,7 @@ const makeWrapper = nodeIds => {
 
 describe('EditSourceModal', () => {
   beforeEach(() => {
+    mockCreateSnackbar.mockClear();
     nodes = {
       node1: {
         id: 'node1',
@@ -262,7 +263,7 @@ describe('EditSourceModal', () => {
       wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
 
       const animationFrameId = requestAnimationFrame(() => {
-        expect(mockCreateSnackbar).toHaveBeenCalled();
+        expect(mockCreateSnackbar).toHaveBeenCalledWith(expect.objectContaining({ text: 'Edited attribution for 2 resources' }));
         cancelAnimationFrame(animationFrameId);
       });
     });
@@ -273,7 +274,7 @@ describe('EditSourceModal', () => {
       wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
 
       const animationFrameId = requestAnimationFrame(() => {
-        expect(mockCreateSnackbar).toHaveBeenCalled();
+        expect(mockCreateSnackbar).toHaveBeenCalledWith(expect.objectContaining({ text: 'Edited attribution for 1 resource' }));
         cancelAnimationFrame(animationFrameId);
       });
     });

@@ -107,6 +107,7 @@ async function makeWrapper(items = testChildren, { isLoading = false, hasMore = 
 describe('TrashModal', () => {
   beforeEach(() => {
     jest.restoreAllMocks();
+    mockCreateSnackbar.mockClear();
   });
 
   describe('on load', () => {
@@ -232,8 +233,7 @@ describe('TrashModal', () => {
     it('successful deletion triggers snackbar and reloads nodes', async () => {
       jest.spyOn(TrashModal.methods, 'deleteContentNodes').mockResolvedValue();
 
-      const { user, loadNodesSpy, store } = await makeWrapper();
-      const dispatchSpy = jest.spyOn(store, 'dispatch').mockImplementation(() => Promise.resolve());
+      const { user, loadNodesSpy } = await makeWrapper();
 
       await user.click(within(screen.getByTestId('selectall')).getByRole('checkbox'));
       await user.click(screen.getByRole('button', { name: tr.$tr('deleteButton') }));
@@ -242,7 +242,9 @@ describe('TrashModal', () => {
       );
 
       await waitFor(() => {
-        expect(mockCreateSnackbar).toHaveBeenCalled();
+        expect(mockCreateSnackbar).toHaveBeenCalledWith(
+          expect.objectContaining({ text: tr.$tr("deleteSuccessMessage") }),
+        );
         expect(loadNodesSpy).toHaveBeenCalled();
       });
     });

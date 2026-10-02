@@ -530,6 +530,7 @@
           autoDismiss: false,
           announce: true,
           actionText: 'Cancel',
+          autofocus: true,
           actionCallback: () => {
             clearTimeout(timer);
             // Do not emit close just yet, so that the component isn't unmounted

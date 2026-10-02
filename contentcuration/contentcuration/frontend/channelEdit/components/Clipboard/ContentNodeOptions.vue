@@ -131,8 +131,7 @@
             // TODO: implement revert functionality for clipboard
             // actionText: this.$tr('undo'),
             // actionCallback: () => changeTracker.revert(),
-            // Keep cleanup deferred, as with the previous dismissal Promise.
-            hideCallback: () => Promise.resolve().then(() => changeTracker.cleanUp()),
+            hideCallback: () => changeTracker.cleanUp(),
             announce: true,
           });
         });
@@ -149,8 +148,7 @@
             // TODO: implement revert functionality for clipboard
             // actionText: this.$tr('undo'),
             // actionCallback: () => changeTracker.revert(),
-            // Keep cleanup deferred, as with the previous dismissal Promise.
-            hideCallback: () => Promise.resolve().then(() => changeTracker.cleanUp()),
+            hideCallback: () => changeTracker.cleanUp(),
             announce: true,
           });
         });

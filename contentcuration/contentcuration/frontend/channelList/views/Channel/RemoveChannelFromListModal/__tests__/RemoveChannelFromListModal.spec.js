@@ -96,7 +96,7 @@ describe('RemoveChannelFromListModal', () => {
     renderComponent();
     await userEvent.click(screen.getByRole('button', { name: 'Remove' }));
     await waitFor(() => {
-      expect(mockCreateSnackbar).toHaveBeenCalled();
+      expect(mockCreateSnackbar).toHaveBeenCalledWith(expect.objectContaining({ text: 'Channel removed' }));
     });
   });
 

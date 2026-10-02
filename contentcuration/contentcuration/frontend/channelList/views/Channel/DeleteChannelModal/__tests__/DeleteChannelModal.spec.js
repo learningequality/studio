@@ -91,7 +91,7 @@ describe('DeleteChannelModal', () => {
     renderComponent();
     await userEvent.click(screen.getByRole('button', { name: 'Delete channel' }));
     await waitFor(() => {
-      expect(mockCreateSnackbar).toHaveBeenCalled();
+      expect(mockCreateSnackbar).toHaveBeenCalledWith(expect.objectContaining({ text: 'Channel deleted' }));
     });
   });
 

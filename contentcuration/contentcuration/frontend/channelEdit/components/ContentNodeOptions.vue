@@ -331,9 +331,9 @@
             text: this.$tr('removedItems'),
             duration: 6000,
             actionText: this.$tr('undo'),
+            autofocus: true,
             actionCallback: () => changeTracker.revert(),
-            // Keep cleanup deferred, as with the previous dismissal Promise.
-            hideCallback: () => Promise.resolve().then(() => changeTracker.cleanUp()),
+            hideCallback: () => changeTracker.cleanUp(),
             announce: true,
           });
         });
@@ -349,8 +349,7 @@
               // TODO: implement revert functionality for clipboard
               // actionText: this.$tr('undo'),
               // actionCallback: () => changeTracker.revert(),
-              // Keep cleanup deferred, as with the previous dismissal Promise.
-              hideCallback: () => Promise.resolve().then(() => changeTracker.cleanUp()),
+              hideCallback: () => changeTracker.cleanUp(),
               announce: true,
             });
           },
@@ -383,9 +382,9 @@
               text: this.$tr('copiedSnackbar'),
               duration: 6000,
               actionText: this.$tr('undo'),
+              autofocus: true,
               actionCallback: () => changeTracker.revert(),
-              // Keep cleanup deferred, as with the previous dismissal Promise.
-              hideCallback: () => Promise.resolve().then(() => changeTracker.cleanUp()),
+              hideCallback: () => changeTracker.cleanUp(),
               announce: true,
             });
           })
