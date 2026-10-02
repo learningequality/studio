@@ -22,6 +22,7 @@ from .base import StudioTestCase
 from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
 from contentcuration.models import generate_object_storage_name
+from contentcuration.tests.testdata import fileobj_exercise_graphie
 from contentcuration.tests.testdata import fileobj_exercise_image
 from contentcuration.tests.utils.qti.test_validation import _item_xml
 from contentcuration.utils.assessment.perseus import PerseusExerciseGenerator
@@ -184,6 +185,8 @@ class PerseusRestoreTestCase(StudioTestCase):
             assessment_item = generate_assessment_item(
                 assessment_id, data["order"], data["type"], assessment_data
             )
+            self.assertEqual(assessment_item.assessment_id, assessment_id)
+            self.assertEqual(assessment_item.order, data["order"])
             self.assertEqual(assessment_item.type, data["type"])
             self.assertEqual(assessment_item.question, data.get("question", ""))
             self.assertEqual(assessment_item.randomize, bool(data.get("randomize")))
@@ -259,6 +262,27 @@ class QTIRestoreTestCase(StudioTestCase):
             question=question,
             answers=json.dumps([{"answer": "1", "correct": True, "order": 1}]),
         )
+
+    def _add_perseus_item(self, order, image):
+        item = self._add_item(
+            exercises.PERSEUS_QUESTION,
+            order,
+            assessment_id="fedcba0987654321fedcba0987654321",
+            raw_data=json.dumps(
+                {
+                    "question": {
+                        "content": "Perseus ![]({}/{})".format(
+                            exercises.CONTENT_STORAGE_PLACEHOLDER,
+                            f"{image.checksum}.{image.file_format_id}",
+                        )
+                    }
+                },
+                ensure_ascii=False,
+            ),
+        )
+        image.assessment_item = item
+        image.save()
+        return item
 
     def _publish(self, generator_class):
         items = self.source.assessment_items.order_by("order")
@@ -518,3 +542,30 @@ class QTIRestoreTestCase(StudioTestCase):
                     self._restore(format_presets.EXERCISE, package=package), []
                 )
                 self.assertIn("Restoration Process Error", stderr.write.call_args[0][0])
+
+    def test_perseus_question_in_package_restores_as_perseus_question(self):
+        self._add_perseus_item(0, fileobj_exercise_image(color="blue"))
+        self._add_editor_item(1)
+        self._publish(QTIExerciseGenerator)
+
+        items = self._restore(format_presets.QTI_ZIP)
+
+        self._assert_restores_source_rows(items)
+        self._assert_republishes_source_package(QTIExerciseGenerator)
+
+    def test_graphie_in_perseus_question_restores_and_republishes(self):
+        graphie = fileobj_exercise_graphie(original_filename="graph1")
+        item = self._add_perseus_item(0, fileobj_exercise_image(color="blue"))
+        graphie_ref = f"web+graphie:{exercises.CONTENT_STORAGE_PLACEHOLDER}/graph1"
+        item.raw_data = item.raw_data.replace("Perseus", f"![]({graphie_ref})")
+        item.save()
+        graphie.assessment_item = item
+        graphie.save()
+        self._publish(QTIExerciseGenerator)
+
+        (restored,) = self._restore(format_presets.QTI_ZIP)
+
+        self._assert_restores_source_rows([restored])
+        restored_graphie = restored.files.get(preset_id=format_presets.EXERCISE_GRAPHIE)
+        self.assertEqual(restored_graphie.original_filename, "graph1")
+        self._assert_republishes_source_package(QTIExerciseGenerator)

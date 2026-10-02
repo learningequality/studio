@@ -19,15 +19,20 @@ from django.core.files.storage import default_storage
 from django.db import transaction
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
+from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from le_utils.constants import roles
 from lxml import etree
 
 from contentcuration import models
 from contentcuration.api import write_raw_content_to_storage
+from contentcuration.utils.assessment.qti.archive import QTIExerciseGenerator
 from contentcuration.utils.assessment.qti.convert import qti_id_to_hex
 from contentcuration.utils.assessment.qti.imsmanifest import (
     get_assessment_item_resources_from_manifest,
+)
+from contentcuration.utils.assessment.qti.ingest import (
+    find_perseus_custom_interaction_path,
 )
 from contentcuration.utils.assessment.qti.media import rewrite_qti_media_paths
 from contentcuration.utils.assessment.qti.validation import parse_qti_xml
@@ -557,8 +562,12 @@ def _extract_qti_items(filepath, contentnode, download_url=None):
         if not resources:
             raise ValueError("QTI package has no item resources")
         for order, resource in enumerate(resources):
-            item_xml = zipf.read(resource.href).decode("utf-8")
-            _create_qti_item(zipf, item_xml, resource, order, contentnode)
+            item_xml = zipf.read(resource.href)
+            perseus_path = find_perseus_custom_interaction_path(item_xml)
+            if perseus_path:
+                _create_perseus_item(zipf, perseus_path, resource, order, contentnode)
+            else:
+                _create_qti_item(zipf, item_xml, resource, order, contentnode)
 
 
 def _create_qti_item(zipf, item_xml, resource, order, contentnode):
@@ -585,6 +594,42 @@ def _create_qti_item(zipf, item_xml, resource, order, contentnode):
         )
 
 
+def _create_perseus_item(zipf, perseus_path, resource, order, contentnode):
+    """Restore a packaged Perseus question with its images and graphies (an .svg
+    with a sibling -data.json).
+    """
+    image_dir = QTIExerciseGenerator.PERSEUS_IMAGE_DIR
+    hrefs = set(resource.dependency_hrefs)
+    graphie_hrefs = {
+        href
+        for href in hrefs
+        if href.endswith(".svg") and f"{os.path.splitext(href)[0]}-data.json" in hrefs
+    }
+    # Perseus hrefs are relative to the package root.
+    image_hrefs = [
+        href
+        for href in resource.dependency_hrefs
+        if href.startswith(f"{image_dir}/")
+        and not href.endswith("-data.json")
+        and href not in graphie_hrefs
+    ]
+    raw_data = zipf.read(perseus_path).decode("utf-8")
+    assessment_item = models.AssessmentItem.objects.create(
+        contentnode=contentnode,
+        assessment_id=os.path.splitext(os.path.basename(perseus_path))[0],
+        type=exercises.PERSEUS_QUESTION,
+        order=order,
+        raw_data=raw_data.replace(
+            f"{exercises.IMG_PLACEHOLDER}/{image_dir}",
+            exercises.CONTENT_STORAGE_PLACEHOLDER,
+        ),
+    )
+    for href in image_hrefs:
+        _create_image_file(zipf, href, assessment_item)
+    for href in sorted(graphie_hrefs):
+        _create_graphie_file(zipf, os.path.splitext(href)[0], assessment_item)
+
+
 def _create_image_file(zipf, path, assessment_item):
     _create_item_file(
         zipf.read(path),
@@ -594,13 +639,27 @@ def _create_image_file(zipf, path, assessment_item):
     )
 
 
-def _create_item_file(contents, ext, preset_id, assessment_item):
+def _create_graphie_file(zipf, stem, assessment_item):
+    """Reverse of `_write_raw_perseus_assets`: svg and data json back into one file."""
+    _create_item_file(
+        zipf.read(f"{stem}.svg")
+        + exercises.GRAPHIE_DELIMITER.encode("ascii")
+        + zipf.read(f"{stem}-data.json"),
+        file_formats.GRAPHIE,
+        format_presets.EXERCISE_GRAPHIE,
+        assessment_item,
+        original_filename=os.path.basename(stem),
+    )
+
+
+def _create_item_file(contents, ext, preset_id, assessment_item, **fields):
     _, _, filepath = write_raw_content_to_storage(contents, ext=ext)
     file_obj = models.File(
         file_format_id=ext,
         file_size=len(contents),
         assessment_item=assessment_item,
         preset_id=preset_id,
+        **fields,
     )
     file_obj.file_on_disk.name = filepath
     file_obj.save()
