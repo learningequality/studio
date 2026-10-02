@@ -27,7 +27,7 @@ describe("GlobalSnackbar", () => {
     createSnackbar({ text: "Test Snackbar", announce: true });
     const wrapper = makeWrapper();
     await wrapper.vm.$nextTick();
-    expect(wrapper.vm.snackbarOptions.text).toBe("Test Snackbar");
+    expect(wrapper.findComponent({ name: "KSnackbar" }).props("text")).toBe("Test Snackbar");
   });
 
   it("renders the snackbar action correctly", async () => {
@@ -35,7 +35,7 @@ describe("GlobalSnackbar", () => {
     createSnackbar({ text: "Test Snackbar", actionText: "Action", announce: true });
     const wrapper = makeWrapper();
     await wrapper.vm.$nextTick();
-    expect(wrapper.vm.snackbarOptions.actionText).toBe("Action");
+    expect(wrapper.findComponent({ name: "KSnackbar" }).props("actionText")).toBe("Action");
   });
 
   it("clicking the action calls the action callback and closes the snackbar", async () => {

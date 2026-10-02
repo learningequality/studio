@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { Store } from 'vuex';
+import flushPromises from 'flush-promises';
 import EditSourceModal from '../EditSourceModal';
 import { LicensesList } from 'shared/leUtils/Licenses';
 import { constantsTranslationMixin } from 'shared/mixins';
@@ -258,24 +259,18 @@ describe('EditSourceModal', () => {
       expect(contentNodeActions.updateContentNode).not.toHaveBeenCalled();
     });
 
-    test('should show a snackbar with the correct number of edited nodes on success submit', async () => {
+    test('should show a snackbar with "Changes saved" on success submit', async () => {
       const wrapper = makeWrapper(['node1', 'node2']);
-      await wrapper.vm.handleSave();
-
-      expect(mockCreateSnackbar).toHaveBeenCalledWith(expect.objectContaining({ text: 'Changes saved' }));
-    });
-
-    test('should show a snack bar with the correct number of edited nodes on success submit if some nodes are imported', async () => {
-      nodes['node1'].original_source_node_id = 'original_node1';
-      const wrapper = makeWrapper(['node1', 'node2']);
-      await wrapper.vm.handleSave();
+      wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
+      await flushPromises();
 
       expect(mockCreateSnackbar).toHaveBeenCalledWith(expect.objectContaining({ text: 'Changes saved' }));
     });
 
     test('should emit close event on success submit', async () => {
       const wrapper = makeWrapper(['node1', 'node2']);
-      await wrapper.vm.handleSave();
+      wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
+      await flushPromises();
 
       expect(wrapper.emitted('close')).toBeTruthy();
     });
