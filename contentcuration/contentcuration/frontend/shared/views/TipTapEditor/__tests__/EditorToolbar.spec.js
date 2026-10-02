@@ -25,14 +25,32 @@ const {
   paste$,
   pasteOptionsMenu$,
   pasteWithoutFormatting$,
+  formatHeader1$,
+  formatHeader2$,
 } = getTipTapEditorStrings();
 
 // Every editor read the toolbar makes while rendering: undo/redo availability,
 // mark state, the alignment probe in `getEffectiveAlignment`, and the
-// transaction listener in `useDropdowns`.
-function makeEditorStub({ canUndo = true, canRedo = false } = {}) {
+// transaction listener in `FormatDropdown`. `commands` records the chained
+// commands that run.
+function makeEditorStub({ canUndo = true, canRedo = false, isActive = () => false } = {}) {
+  const commands = [];
+  const chain = new Proxy(
+    {},
+    {
+      get: (target, name) =>
+        name === 'run'
+          ? () => true
+          : (...args) => {
+              commands.push([name, ...args]);
+              return chain;
+            },
+    },
+  );
   return {
-    isActive: () => false,
+    commands,
+    chain: () => chain,
+    isActive,
     can: () => ({ undo: () => canUndo, redo: () => canRedo }),
     state: {
       selection: { from: 0, to: 0, empty: true },
@@ -66,7 +84,7 @@ async function renderToolbar(editorOptions, { insertActions = [], inlineOnly = f
   await nextTick();
   // Every button, not only the `data-toolbar-item` ones: an unmarked control
   // would be a second tab stop.
-  return { user, container, controls: within(container).getAllByRole('button') };
+  return { user, editor, container, controls: within(container).getAllByRole('button') };
 }
 
 describe('EditorToolbar roving tabindex', () => {
@@ -416,5 +434,39 @@ describe('EditorToolbar paste', () => {
     const editor = await pasteWithoutFormattingFromToolbar('a\r\nb');
 
     await waitFor(() => expect(editor.getHTML()).toBe('a b'));
+  });
+});
+
+describe('EditorToolbar dropdown menus', () => {
+  // A menu rendered inside the toolbar is clipped by any ancestor that hides its overflow.
+  it.each([
+    ['format', textFormatOptions$],
+    ['paste', pasteOptionsMenu$],
+  ])('opens the %s menu outside the toolbar', async (name, label) => {
+    const { user, container } = await renderToolbar();
+
+    await user.click(screen.getByRole('button', { name: label() }));
+
+    expect(screen.getByRole('menu')).toBeVisible();
+    expect(container).not.toContainElement(screen.getByRole('menu'));
+  });
+
+  it('shows the format at the cursor on its trigger', async () => {
+    await renderToolbar({
+      isActive: (name, attrs) => name === 'heading' && attrs?.level === 2,
+    });
+
+    expect(screen.getByRole('button', { name: textFormatOptions$() })).toHaveTextContent(
+      formatHeader2$(),
+    );
+  });
+
+  it('applies the chosen format', async () => {
+    const { user, editor } = await renderToolbar();
+    await user.click(screen.getByRole('button', { name: textFormatOptions$() }));
+
+    await user.click(within(screen.getByRole('menu')).getByText(formatHeader1$()));
+
+    expect(editor.commands).toContainEqual(['toggleHeading', { level: 1 }]);
   });
 });
