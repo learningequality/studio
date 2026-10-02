@@ -5,11 +5,11 @@ import { generateRandomSlug } from '../../utils/generateRandomSlug';
 
 const serializer = new XMLSerializer();
 
-const DROPDOWN = 'qti-inline-choice-interaction';
-const OPTION = 'qti-inline-choice';
+export const DROPDOWN = 'qti-inline-choice-interaction';
+export const OPTION = 'qti-inline-choice';
 const PROMPT_MARKER = 'data-studio-prompt';
 const SENTINEL_MARKER = 'data-studio-sentinel';
-const CORRECT_ATTR = 'data-studio-correct';
+export const CORRECT_ATTR = 'data-studio-correct';
 const SENTINEL_ID = 'studio_sentinel';
 const KEPT_DROPDOWN_ATTRS = ['response-identifier', CORRECT_ATTR];
 const BLOCK_TAGS = new Set([
@@ -63,7 +63,7 @@ export function getDropdowns(passage) {
  * @param {Element} el - A `<qti-inline-choice-interaction>` as it is held in the passage
  * @returns {InlineChoiceDropdown}
  */
-function readDropdown(el) {
+export function readDropdown(el) {
   const options = [...el.querySelectorAll(OPTION)].map(option => ({
     id: option.getAttribute('identifier') ?? '',
     text: option.textContent,
