@@ -254,6 +254,65 @@ class TextEntryInteractionConversionTests(unittest.TestCase):
         self.assertIn("<qti-text-entry-interaction", result.xml)
         self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
 
+    def _convert_text_entry(self, answers, item_type=exercises.INPUT_QUESTION):
+        item = _make_item(
+            type=item_type,
+            question="Question",
+            answers=answers,
+            randomize=True,
+            assessment_id="fedcba0987654321fedcba0987654321",
+        )
+        result = convert_legacy_assessment_item_to_qti(item)
+        self.assertTrue(validate_qti_item(result.xml.encode("utf-8")).is_valid)
+        return result.xml
+
+    def test_single_correct_answer_is_not_mapped(self):
+        for item_type in (exercises.INPUT_QUESTION, exercises.FREE_RESPONSE):
+            with self.subTest(item_type=item_type):
+                xml = self._convert_text_entry(
+                    [
+                        {"answer": "a", "correct": True, "order": 1},
+                        {"answer": "b", "correct": False, "order": 2},
+                    ],
+                    item_type=item_type,
+                )
+
+                self.assertIn('cardinality="single"', xml)
+                self.assertIn("rptemplates/match_correct.xml", xml)
+                self.assertNotIn("qti-mapping", xml)
+
+    def test_incorrect_answers_are_left_out_of_the_mapping(self):
+        xml = self._convert_text_entry(
+            [
+                {"answer": "a", "correct": True, "order": 1},
+                {"answer": "b", "correct": True, "order": 2},
+                {"answer": "c", "correct": False, "order": 3},
+            ],
+            item_type=exercises.FREE_RESPONSE,
+        )
+
+        self.assertIn('cardinality="single"', xml)
+        self.assertIn('map-key="a"', xml)
+        self.assertIn('map-key="b"', xml)
+        self.assertNotIn('map-key="c"', xml)
+        self.assertNotIn("<qti-value>b</qti-value>", xml)
+        self.assertIn("rptemplates/map_response.xml", xml)
+
+    def test_mixed_numeric_and_text_answers_are_mapped_as_strings(self):
+        xml = self._convert_text_entry(
+            [
+                {"answer": "1", "correct": True, "order": 1},
+                {"answer": "one", "correct": True, "order": 2},
+                {"answer": 2, "correct": True, "order": 3},
+            ]
+        )
+
+        self.assertIn('base-type="string"', xml)
+        self.assertIn('map-key="1"', xml)
+        self.assertIn('map-key="one"', xml)
+        self.assertIn('map-key="2"', xml)
+        self.assertIn("rptemplates/map_response.xml", xml)
+
     def test_free_response_no_answers(self):
         item = _make_item(
             type=exercises.FREE_RESPONSE,
