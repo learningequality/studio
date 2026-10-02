@@ -1,5 +1,8 @@
 import { validateItemShape, validateQtiItem } from '../validateItem';
 import { QuestionType, ValidationError } from '../constants';
+import { assembleItemXml } from '../serialization/assembleItem';
+import { textEntryInteractionDescriptor } from '../interactions/textEntry/Descriptor';
+import { validateTextEntryInteraction } from '../interactions/textEntry/validation';
 import {
   VALID_CHOICE_ITEM_DOCUMENT,
   CHOICE_ITEM_DOCUMENT_NO_PROMPT,
@@ -89,6 +92,85 @@ describe('validateQtiItem', () => {
     it('reports a match interaction without exactly two match sets as unparseable', () => {
       const threeSets = VALID_MATCH_ITEM_DOCUMENT.replace(MATCH_XML, MATCH_THREE_SETS_XML);
       expect(validateQtiItem(threeSets)).toEqual([{ code: ValidationError.PARSE_ERROR }]);
+    });
+  });
+
+  describe('numeric answers', () => {
+    const { INVALID_NUMERIC_VALUE, DUPLICATE_ANSWER_CONTENT } = ValidationError;
+
+    it.each([
+      ...['5', '-5', '+5', '5.', '.5', '1e-5', '1E5', '2.3e+10'].map(value => [[value], []]),
+      ...[
+        'e',
+        '-',
+        '+',
+        '1e',
+        '1e2e3',
+        '1.2.3',
+        '1,234',
+        'INF',
+        '-INF',
+        'NaN',
+        '1e400',
+        '0x10',
+        'Infinity',
+        '',
+      ].map(value => [[value], [INVALID_NUMERIC_VALUE]]),
+      [
+        ['21', '21.0'],
+        [DUPLICATE_ANSWER_CONTENT, DUPLICATE_ANSWER_CONTENT],
+      ],
+      [
+        ['5', '5'],
+        [DUPLICATE_ANSWER_CONTENT, DUPLICATE_ANSWER_CONTENT],
+      ],
+      [
+        ['e', 'e'],
+        [
+          INVALID_NUMERIC_VALUE,
+          INVALID_NUMERIC_VALUE,
+          DUPLICATE_ANSWER_CONTENT,
+          DUPLICATE_ANSWER_CONTENT,
+        ],
+      ],
+      [
+        ['e', '-'],
+        [INVALID_NUMERIC_VALUE, INVALID_NUMERIC_VALUE],
+      ],
+    ])('reports %j as %j, the same as the editor', (values, expected) => {
+      const state = {
+        prompt: '<p>Enter a number</p>',
+        answers: values.map((value, i) => ({ id: `a${i}`, value, caseSensitive: false })),
+        expectedLength: 0,
+      };
+      const { bodyXml, responseDeclarations } = textEntryInteractionDescriptor.buildXML(
+        state,
+        QuestionType.NUMERIC,
+      );
+      const xml = assembleItemXml({ identifier: 'item', title: '', bodyXml, responseDeclarations });
+
+      expect(codesOf(validateTextEntryInteraction(state, QuestionType.NUMERIC))).toEqual(expected);
+      expect(codesOf(validateQtiItem(xml))).toEqual(expected);
+    });
+
+    it('reports no correct answer past a non-numeric default value', () => {
+      const { bodyXml } = textEntryInteractionDescriptor.buildXML(
+        { prompt: '<p>Enter a number</p>', answers: [], expectedLength: 0 },
+        QuestionType.NUMERIC,
+      );
+      const declaration =
+        '<qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="float">' +
+        '<qti-default-value><qti-value>x</qti-value></qti-default-value>' +
+        '<qti-correct-response><qti-value>5</qti-value></qti-correct-response>' +
+        '</qti-response-declaration>';
+      const xml = assembleItemXml({
+        identifier: 'item',
+        title: '',
+        bodyXml,
+        responseDeclarations: [declaration],
+      });
+
+      expect(codesOf(validateQtiItem(xml))).toEqual([ValidationError.NO_CORRECT_ANSWER]);
     });
   });
 
