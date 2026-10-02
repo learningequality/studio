@@ -11,10 +11,14 @@ import {
   FREE_RESPONSE_ITEM_DOCUMENT,
   NO_INTERACTION_ITEM_DOCUMENT,
   CHOICE_ITEM_DOCUMENT_WITH_HINTS,
-  NO_INTERACTION_ITEM_WITH_HINTS,
   VALID_ASSOCIATE_ITEM_DOCUMENT,
   VALID_MATCH_ITEM_DOCUMENT,
+  MATCH_THREE_SETS_XML,
+  MATCH_XML,
   MULTI_TEXT_ENTRY_ITEM_DOCUMENT,
+  MULTI_INTERACTION_ITEM_DOCUMENT,
+  UNRECOGNIZED_INTERACTION_ITEM_DOCUMENT,
+  INLINE_CHOICE_ITEM_DOCUMENT,
 } from '../../../utils/testingFixtures';
 
 jest.mock('shared/views/TipTapEditor/TipTapEditor/TipTapEditor');
@@ -67,6 +71,9 @@ beforeAll(() => {
 afterAll(() => {
   delete Element.prototype.scrollIntoView;
 });
+
+// jest_config/setup.js adds a hidden csrf input to the document.
+const isAuthorInput = el => el.name !== 'csrfmiddlewaretoken';
 
 describe('QTIItemEditor', () => {
   beforeEach(() => scrollIntoView.mockClear());
@@ -230,6 +237,57 @@ describe('QTIItemEditor', () => {
       });
       expect(screen.getByText(unsupportedItemMessage$())).toBeInTheDocument();
     });
+
+    describe('items without exactly one editable interaction', () => {
+      const documents = {
+        'two interactions': MULTI_INTERACTION_ITEM_DOCUMENT,
+        'an interaction with no descriptor': UNRECOGNIZED_INTERACTION_ITEM_DOCUMENT,
+        'an interaction with no editor': INLINE_CHOICE_ITEM_DOCUMENT,
+        'no interaction': NO_INTERACTION_ITEM_DOCUMENT,
+        'several blanks in one text entry': MULTI_TEXT_ENTRY_ITEM_DOCUMENT,
+      };
+      const renderDocument = (raw_data, props = {}) =>
+        renderComponent({
+          item: { assessment_id: 'item-id', type: AssessmentItemTypes.QTI, raw_data },
+          ...props,
+        });
+
+      describe.each(Object.entries(documents))('with %s', (_, raw_data) => {
+        test('shows the unsupported message', () => {
+          renderDocument(raw_data, { mode: 'view' });
+          expect(screen.getByText(unsupportedItemMessage$())).toBeInTheDocument();
+        });
+
+        test('offers no editable controls or hints in edit mode', () => {
+          renderDocument(raw_data, { mode: 'edit' });
+          expect(screen.queryByText(hintsLabel$())).not.toBeInTheDocument();
+          const buttons = screen.getAllByRole('button');
+          expect(buttons).toHaveLength(1);
+          expect(buttons[0]).toHaveAccessibleName(closeBtnLabel$());
+          expect(screen.queryByRole('radio')).not.toBeInTheDocument();
+          expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+          expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+          expect(screen.queryAllByRole('textbox').filter(isAuthorInput)).toHaveLength(0);
+        });
+      });
+
+      test('leaves raw_data untouched after the card is opened and closed', async () => {
+        const { emitted, updateProps } = renderDocument(MULTI_INTERACTION_ITEM_DOCUMENT, {
+          mode: 'edit',
+        });
+
+        await fireEvent.click(screen.getByRole('button', { name: closeBtnLabel$() }));
+        await updateProps({ mode: 'view' });
+        await nextTick();
+
+        expect(emitted()['update:rawData']).toBeUndefined();
+      });
+
+      test('shows the hints of an unsupported item when answers are shown', () => {
+        renderDocument(MULTI_INTERACTION_ITEM_DOCUMENT, { mode: 'view', showAnswers: true });
+        expect(screen.getByRole('button', { name: hintsLabel$() })).toBeInTheDocument();
+      });
+    });
   });
 
   describe('incomplete indicator', () => {
@@ -257,9 +315,24 @@ describe('QTIItemEditor', () => {
       expect(screen.getByText(incompleteItemIndicatorLabel$())).toBeInTheDocument();
     });
 
-    test('is shown for an item with no interaction at all', async () => {
+    test('is shown for an unsupported item with no interaction, which blocks publishing', async () => {
       await renderAndValidate(NO_INTERACTION_ITEM_DOCUMENT);
       expect(screen.getByText(incompleteItemIndicatorLabel$())).toBeInTheDocument();
+    });
+
+    test('is shown for an item whose XML cannot be parsed', async () => {
+      await renderAndValidate('<not-xml');
+      expect(screen.getByText(incompleteItemIndicatorLabel$())).toBeInTheDocument();
+    });
+
+    test('is shown for a match interaction that cannot be read', async () => {
+      await renderAndValidate(VALID_MATCH_ITEM_DOCUMENT.replace(MATCH_XML, MATCH_THREE_SETS_XML));
+      expect(screen.getByText(incompleteItemIndicatorLabel$())).toBeInTheDocument();
+    });
+
+    test('is not shown for a valid item with unsupported interactions', async () => {
+      await renderAndValidate(MULTI_INTERACTION_ITEM_DOCUMENT);
+      expect(screen.queryByText(incompleteItemIndicatorLabel$())).not.toBeInTheDocument();
     });
 
     test('is shown for a free-response question where those are not accepted', async () => {
@@ -401,23 +474,6 @@ describe('QTIItemEditor', () => {
         showAnswers: true,
       });
       expect(screen.getByText(hintsLabel$())).toBeInTheDocument();
-    });
-
-    test('keeps the body of a question that has no interaction when a hint changes', async () => {
-      // Nothing mounts an interaction editor here, so the editor holds no body of its own.
-      // Assembling from that empty state would replace the question's text with an empty
-      // <qti-item-body/> — a hint edit silently deleting the question.
-      const { emitted } = renderComponent({
-        item: { ...defaultProps.item, raw_data: NO_INTERACTION_ITEM_WITH_HINTS },
-        mode: 'edit',
-      });
-      await fireEvent.click(screen.getByRole('button', { name: hintsLabel$() }));
-      await fireEvent.click(screen.getAllByRole('button', { name: 'Delete hint' })[0]);
-      await nextTick();
-
-      const [xml] = emitted()['update:rawData'].at(-1);
-      expect(xml).toContain('What is the capital of France?');
-      expect(xml).not.toContain('<qti-item-body/>');
     });
 
     test('reports the item XML when a hint changes', async () => {

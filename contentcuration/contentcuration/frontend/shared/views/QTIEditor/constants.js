@@ -50,13 +50,28 @@ export const Orientation = Object.freeze({
  * so they serve as both type keys and CSS selectors for querySelectorAll.
  */
 export const QtiInteraction = Object.freeze({
-  CHOICE: 'qti-choice-interaction',
-  ORDER: 'qti-order-interaction',
-  MATCH: 'qti-match-interaction',
   ASSOCIATE: 'qti-associate-interaction',
-  TEXT_ENTRY: 'qti-text-entry-interaction',
+  CHOICE: 'qti-choice-interaction',
+  CUSTOM: 'qti-custom-interaction',
+  DRAWING: 'qti-drawing-interaction',
+  END_ATTEMPT: 'qti-end-attempt-interaction',
   EXTENDED_TEXT: 'qti-extended-text-interaction',
+  GAP_MATCH: 'qti-gap-match-interaction',
+  GRAPHIC_ASSOCIATE: 'qti-graphic-associate-interaction',
+  GRAPHIC_GAP_MATCH: 'qti-graphic-gap-match-interaction',
+  GRAPHIC_ORDER: 'qti-graphic-order-interaction',
+  HOTSPOT: 'qti-hotspot-interaction',
+  HOTTEXT: 'qti-hottext-interaction',
   INLINE_CHOICE: 'qti-inline-choice-interaction',
+  MATCH: 'qti-match-interaction',
+  MEDIA: 'qti-media-interaction',
+  ORDER: 'qti-order-interaction',
+  PORTABLE_CUSTOM: 'qti-portable-custom-interaction',
+  POSITION_OBJECT: 'qti-position-object-interaction',
+  SELECT_POINT: 'qti-select-point-interaction',
+  SLIDER: 'qti-slider-interaction',
+  TEXT_ENTRY: 'qti-text-entry-interaction',
+  UPLOAD: 'qti-upload-interaction',
 });
 
 export const QTI_INTERACTION_TAGS = Object.freeze(Object.values(QtiInteraction));

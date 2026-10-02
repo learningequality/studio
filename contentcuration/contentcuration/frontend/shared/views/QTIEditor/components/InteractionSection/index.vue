@@ -7,7 +7,7 @@
     >
       {{ parseError }}
     </p>
-    <div v-else>
+    <div v-else-if="descriptor">
       <QuestionTypeSelector
         v-if="mode === 'edit'"
         :questionType="questionType"

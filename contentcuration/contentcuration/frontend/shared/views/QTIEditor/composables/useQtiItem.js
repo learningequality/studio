@@ -17,7 +17,6 @@ import { assembleItemXml } from '../serialization/assembleItem';
  *   identifier: import('vue').Ref<string>,
  *   title: import('vue').Ref<string>,
  *   language: import('vue').Ref<string>,
- *   itemBodyXml: import('vue').Ref<string>,
  *   interactions: import('vue').Ref<Array<{ bodyXml: string, responseDeclarations: string[] }>>,
  *   hints: import('vue').Ref<Array<{ id: string, content: string }>>,
  *   parseError: import('vue').Ref<string | null>,
@@ -29,8 +28,6 @@ export default function useQtiItem(rawXml, { bodyXml, responseDeclarations } = {
   const title = ref('');
   const language = ref('');
   const interactions = ref([]);
-  /** The item's `<qti-item-body>` as parsed, whether or not it holds an interaction. */
-  const itemBodyXml = ref('');
   /**
    * Hints belong to the item, not to any one interaction, so they live here beside
    * identifier and title — mutable, and read back by the rawData computed below.
@@ -45,7 +42,6 @@ export default function useQtiItem(rawXml, { bodyXml, responseDeclarations } = {
       title.value = model.title;
       language.value = model.language;
       interactions.value = model.interactions;
-      itemBodyXml.value = model.itemBodyXml;
       hints.value = model.hints;
     } catch (e) {
       parseError.value = e.message;
@@ -72,7 +68,6 @@ export default function useQtiItem(rawXml, { bodyXml, responseDeclarations } = {
     identifier,
     title,
     language,
-    itemBodyXml,
     interactions,
     hints,
     parseError,

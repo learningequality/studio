@@ -1,5 +1,5 @@
-import { descriptors, editors, registry, DEFAULT_INTERACTION } from '../index';
-import { isInlineInteraction } from '../descriptors';
+import { descriptors, editors, registry } from '../index';
+import { HEADLESS_INTERACTIONS, isInlineInteraction } from '../descriptors';
 import { Placement, QtiInteraction } from '../../constants';
 
 /**
@@ -10,9 +10,7 @@ import { Placement, QtiInteraction } from '../../constants';
  * opens the question.
  */
 describe('interaction registry', () => {
-  // Descriptors whose editor is not built yet. TODO: #6182 removes this exemption.
-  const HEADLESS_DESCRIPTORS = [QtiInteraction.INLINE_CHOICE];
-  const editable = descriptors.filter(d => !HEADLESS_DESCRIPTORS.includes(d.type));
+  const editable = descriptors.filter(d => !HEADLESS_INTERACTIONS.includes(d.type));
 
   it('registers an editor for every descriptor', () => {
     const missing = editable.filter(d => !editors[d.type]).map(d => d.type);
@@ -30,10 +28,6 @@ describe('interaction registry', () => {
 
   it('keys the registry by every descriptor type', () => {
     expect(Object.keys(registry).sort()).toEqual(descriptors.map(d => d.type).sort());
-  });
-
-  it('has a descriptor for the fallback interaction', () => {
-    expect(registry[DEFAULT_INTERACTION]).toBeDefined();
   });
 
   describe('isInlineInteraction', () => {

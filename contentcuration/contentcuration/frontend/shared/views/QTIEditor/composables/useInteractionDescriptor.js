@@ -1,5 +1,5 @@
 import { computed, ref } from 'vue';
-import { descriptors, registry, DEFAULT_INTERACTION } from '../interactions/index';
+import { descriptors } from '../interactions/index';
 import { resolveDescriptor } from '../interactions/resolveDescriptor';
 import { qtiEditorStrings } from '../qtiEditorStrings';
 
@@ -31,12 +31,10 @@ export default function useInteractionDescriptor(interactionRef) {
 
   /**
    * Derived from questionType so the descriptor updates when the user switches
-   * question types via the selector. Falls back to the default when no match.
+   * question types via the selector. Null when no descriptor handles the interaction.
    */
   const descriptor = computed(
-    () =>
-      descriptors.find(d => d.questionTypes.includes(questionType.value)) ??
-      registry[DEFAULT_INTERACTION],
+    () => descriptors.find(d => d.questionTypes.includes(questionType.value)) ?? null,
   );
 
   return { descriptor, questionType, parseError };

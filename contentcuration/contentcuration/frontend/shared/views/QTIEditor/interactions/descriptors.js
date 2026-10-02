@@ -16,12 +16,6 @@ import { inlineChoiceInteractionDescriptor } from './inlineChoice/Descriptor';
  */
 
 /**
- * The default interaction type used as fallback when no descriptor matches
- * the interaction element found in the XML body.
- */
-export const DEFAULT_INTERACTION = QtiInteraction.CHOICE;
-
-/**
  * Ordered list of all registered interaction descriptors.
  * Searched in order; the first whose `matches(el)` returns true wins.
  */
@@ -38,6 +32,18 @@ export const descriptors = [
  * @type {Object.<string, import('./InteractionDescriptor').InteractionDescriptor>}
  */
 export const registry = Object.fromEntries(descriptors.map(d => [d.type, d]));
+
+/**
+ * Interactions with a descriptor but no editor in index.js yet. Items holding one are
+ * shown read-only. TODO: #6182 removes inline choice.
+ */
+export const HEADLESS_INTERACTIONS = Object.freeze([QtiInteraction.INLINE_CHOICE]);
+
+/**
+ * Inline interactions whose editor holds one per item body. A body with several would
+ * lose all but one on edit, so it is shown read-only.
+ */
+export const SINGLE_INSTANCE_INTERACTIONS = Object.freeze([QtiInteraction.TEXT_ENTRY]);
 
 /**
  * Whether an interaction is authored inline, and so needs the whole item body to parse
