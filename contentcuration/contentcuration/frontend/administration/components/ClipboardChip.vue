@@ -26,8 +26,14 @@
 
 <script>
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
+
   export default {
     name: 'ClipboardChip',
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       value: {
         type: String,
@@ -47,7 +53,12 @@
       copyToClipboard() {
         if (this.clipboardAvailable) {
           navigator.clipboard.writeText(this.value).then(() => {
-            this.$store.dispatch('showSnackbarSimple', this.successMessage);
+            this.createSnackbar({
+              text: this.successMessage,
+              autoDismiss: true,
+              announce: true,
+              duration: 6000,
+            });
           });
         }
       },

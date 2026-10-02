@@ -5,6 +5,14 @@ import Vuex from 'vuex';
 import VueRouter from 'vue-router';
 import ChannelActionsDropdown from '../ChannelActionsDropdown';
 
+const mockCreateSnackbar = jest.fn();
+jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
+  __esModule: true,
+  default: () => ({
+    createSnackbar: mockCreateSnackbar,
+  }),
+}));
+
 const localVue = createLocalVue();
 localVue.use(Vuex);
 
@@ -35,7 +43,6 @@ const mockActions = {
   updateChannel: jest.fn(() => Promise.resolve()),
   deleteChannel: jest.fn(() => Promise.resolve()),
   getAdminChannelListDetails: jest.fn(() => Promise.resolve([channel])),
-  showSnackbarSimple: jest.fn(() => Promise.resolve()),
 };
 
 const createMockStore = (channelProps = {}) => {
@@ -61,9 +68,7 @@ const createMockStore = (channelProps = {}) => {
         },
       },
     },
-    actions: {
-      showSnackbarSimple: mockActions.showSnackbarSimple,
-    },
+    actions: {},
   });
 };
 

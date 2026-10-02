@@ -96,6 +96,7 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import { RouteNames } from '../../constants';
   import { channelExportMixin } from 'shared/views/channel/mixins';
   import { CommunityLibraryStatus } from 'shared/constants';
@@ -107,6 +108,10 @@
       StudioBanner,
     },
     mixins: [channelExportMixin],
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       channelId: {
         type: String,
@@ -200,12 +205,22 @@
         this.activeDialog = null;
       },
       async downloadPDF() {
-        this.$store.dispatch('showSnackbarSimple', 'Generating PDF...');
+        this.createSnackbar({
+          text: 'Generating PDF...',
+          autoDismiss: true,
+          announce: true,
+          duration: 6000,
+        });
         const channelList = await this.getAdminChannelListDetails([this.channel.id]);
         return this.generateChannelsPDF(channelList);
       },
       async downloadCSV() {
-        this.$store.dispatch('showSnackbarSimple', 'Generating CSV...');
+        this.createSnackbar({
+          text: 'Generating CSV...',
+          autoDismiss: true,
+          announce: true,
+          duration: 6000,
+        });
         const channelList = await this.getAdminChannelListDetails([this.channel.id]);
         return this.generateChannelsCSV(channelList);
       },
@@ -214,7 +229,12 @@
           id: this.channelId,
           deleted: false,
         }).then(() => {
-          this.$store.dispatch('showSnackbarSimple', 'Channel restored');
+          this.createSnackbar({
+            text: 'Channel restored',
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
+          });
         });
       },
       softDeleteHandler() {
@@ -222,13 +242,23 @@
           id: this.channelId,
           deleted: true,
         }).then(() => {
-          this.$store.dispatch('showSnackbarSimple', 'Channel deleted');
+          this.createSnackbar({
+            text: 'Channel deleted',
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
+          });
         });
       },
       deleteHandler() {
         this.$emit('deleted');
         return this.deleteChannel(this.channelId).then(() => {
-          this.$store.dispatch('showSnackbarSimple', 'Channel deleted permanently');
+          this.createSnackbar({
+            text: 'Channel deleted permanently',
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
+          });
         });
       },
       makePublicHandler() {
@@ -236,7 +266,12 @@
           id: this.channelId,
           isPublic: true,
         }).then(() => {
-          this.$store.dispatch('showSnackbarSimple', 'Channel changed to public');
+          this.createSnackbar({
+            text: 'Channel changed to public',
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
+          });
         });
       },
       makePrivateHandler() {
@@ -244,7 +279,12 @@
           id: this.channelId,
           isPublic: false,
         }).then(() => {
-          this.$store.dispatch('showSnackbarSimple', 'Channel changed to private');
+          this.createSnackbar({
+            text: 'Channel changed to private',
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
+          });
         });
       },
     },

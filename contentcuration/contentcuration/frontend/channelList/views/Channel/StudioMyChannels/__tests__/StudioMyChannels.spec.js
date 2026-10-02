@@ -6,6 +6,14 @@ import StudioMyChannels from '../index.vue';
 import { ChannelListTypes } from 'shared/constants';
 import { redirectBrowser } from 'shared/utils/navigation';
 
+const mockCreateSnackbar = jest.fn();
+jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
+  __esModule: true,
+  default: () => ({
+    createSnackbar: mockCreateSnackbar,
+  }),
+}));
+
 jest.mock('shared/utils/navigation', () => ({
   redirectBrowser: jest.fn(),
 }));
@@ -60,9 +68,7 @@ function createStore() {
         currentUser: { id: 'user-id' },
       },
     },
-    actions: {
-      showSnackbarSimple: jest.fn(),
-    },
+    actions: {},
     modules: {
       channel: {
         namespaced: true,

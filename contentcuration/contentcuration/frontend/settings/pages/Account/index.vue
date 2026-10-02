@@ -155,6 +155,7 @@
 <script>
 
   import { mapActions, mapState } from 'vuex';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import StudioCopyToken from '../../../shared/views/StudioCopyToken';
   import FullNameForm from './FullNameForm';
   import ChangePasswordForm from './ChangePasswordForm';
@@ -167,6 +168,10 @@
       FullNameForm,
       DeleteAccountForm,
       StudioCopyToken,
+    },
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
     },
     data() {
       return {
@@ -201,7 +206,12 @@
             this.showExportDataNotice = true;
           })
           .catch(() => {
-            this.$store.dispatch('showSnackbar', { text: this.$tr('exportFailed') });
+            this.createSnackbar({
+              text: this.$tr('exportFailed'),
+              autoDismiss: true,
+              announce: true,
+              duration: 6000,
+            });
           });
       },
       channelLink(id) {

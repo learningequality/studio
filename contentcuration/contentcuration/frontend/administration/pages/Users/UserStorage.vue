@@ -57,6 +57,8 @@
 
 <script>
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
+
   import { mapActions } from 'vuex';
   import findLastKey from 'lodash/findLastKey';
   import { ONE_B, ONE_KB, ONE_MB, ONE_GB, ONE_TB } from 'shared/constants';
@@ -71,6 +73,10 @@
 
   export default {
     name: 'UserStorage',
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       value: {
         type: Number,
@@ -128,7 +134,12 @@
           }).then(() => {
             this.setUnits();
             this.$emit('close');
-            this.$store.dispatch('showSnackbarSimple', 'Changes saved');
+            this.createSnackbar({
+              text: 'Changes saved',
+              autoDismiss: true,
+              announce: true,
+              duration: 6000,
+            });
           });
         } else {
           return Promise.resolve();
