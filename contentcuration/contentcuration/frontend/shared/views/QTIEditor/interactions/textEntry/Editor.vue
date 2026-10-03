@@ -150,7 +150,7 @@
               v-if="isNumeric && answerHasError(answer.id, ValidationError.INVALID_NUMERIC_VALUE)"
               class="answer-validation-message"
             >
-              {{ errorInvalidNumericValue$() }}
+              {{ errorInvalidNumericValue$(numberExamples) }}
             </ValidationMessage>
 
             <ValidationMessage
@@ -189,6 +189,7 @@
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { QuestionType, ValidationError } from '../../constants';
   import { useTextEntryInteraction } from '../../composables/useTextEntryInteraction';
+  import { formatLocaleNumber } from '../../utils/localeNumbers';
   import ValidationMessage from 'shared/views/QTIEditor/components/ValidationMessage';
   import AddListItemButton from 'shared/views/QTIEditor/components/AddListItemButton';
   import ClickableRegion from 'shared/views/QTIEditor/components/ClickableRegion';
@@ -235,9 +236,17 @@
         removeAnswer,
         updateAnswerValue,
         toggleCaseSensitive,
-      } = useTextEntryInteraction(props.interaction, questionTypeRef);
+      } = useTextEntryInteraction(props.interaction, questionTypeRef, {
+        language: props.language,
+      });
 
       const isNumeric = computed(() => props.questionType === QuestionType.NUMERIC);
+
+      const numberExamples = {
+        integer: formatLocaleNumber('12', props.language),
+        decimal: formatLocaleNumber('0.5', props.language),
+        negative: formatLocaleNumber('-3.14', props.language),
+      };
 
       const showAnswerSection = computed(
         () =>
@@ -360,6 +369,7 @@
         state,
         windowIsSmall,
         isNumeric,
+        numberExamples,
         showAnswerSection,
         isPromptOpen,
         questionHasError,
@@ -415,6 +425,11 @@
       showAnswers: {
         type: Boolean,
         default: false,
+      },
+      /** The exercise's language, which numeric answers are read and shown in */
+      language: {
+        type: String,
+        default: '',
       },
     },
 

@@ -154,6 +154,31 @@ describe('validateTextEntryInteraction', () => {
       expect(invalids.map(e => e.id)).toEqual(['a1', 'a2']);
     });
 
+    describe('in a language', () => {
+      const numericErrors = (values, language) =>
+        validateTextEntryInteraction(
+          {
+            ...VALID_NUMERIC_STATE,
+            answers: values.map((value, i) => ({ id: `a${i}`, value })),
+          },
+          QuestionType.NUMERIC,
+          { language },
+        );
+
+      it('rejects a decimal comma with no language', () => {
+        expect(numericErrors(['1,5'])).toEqual([
+          { code: ValidationError.INVALID_NUMERIC_VALUE, id: 'a0' },
+        ]);
+      });
+
+      it('compares answers by the number they read as', () => {
+        expect(numericErrors(['1 234,5', '1234,50'], 'fr')).toEqual([
+          { code: ValidationError.DUPLICATE_ANSWER_CONTENT, id: 'a0' },
+          { code: ValidationError.DUPLICATE_ANSWER_CONTENT, id: 'a1' },
+        ]);
+      });
+    });
+
     it('does not flag INVALID_NUMERIC_VALUE for freeResponse', () => {
       const errors = validateTextEntryInteraction(
         { ...VALID_FREE_STATE, answers: [{ id: 'a1', value: 'abc' }] },

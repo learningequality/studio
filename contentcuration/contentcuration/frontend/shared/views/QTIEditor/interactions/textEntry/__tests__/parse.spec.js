@@ -344,6 +344,26 @@ describe('parseTextEntryInteraction', () => {
       expect(state.answers).toHaveLength(2);
       expect(state.answers.map(a => a.value)).toEqual(['0.5', '1.5']);
     });
+
+    it.each([
+      ['1234.5', 'fr', '1234,5'],
+      ['1234.5', 'en', '1234.5'],
+      ['1234.5', 'hi', '1234.5'],
+      ['30', 'ar-EG', '٣٠'],
+    ])('displays stored %s in %s as %s', (stored, language, displayed) => {
+      const declaration = SINGLE_NUMERIC_DECLARATION.replace('12', stored);
+      const state = parseTextEntryInteraction(makeBodyXml(), [declaration], { language });
+      expect(state.answers[0].value).toBe(displayed);
+    });
+
+    it('leaves text-entry answers as stored in any language', () => {
+      const state = parseTextEntryInteraction(
+        makeBodyXml(),
+        [TEXT_ENTRY_DECLARATION_WITHOUT_MAPPING.replace('Paris', '1.5')],
+        { language: 'fr' },
+      );
+      expect(state.answers[0].value).toBe('1.5');
+    });
   });
 });
 
@@ -488,6 +508,38 @@ describe('buildTextEntryInteractionXML', () => {
       expect(responseDeclarations[0]).toContain('qti-correct-response');
       expect(responseDeclarations[0]).toContain('>0.5<');
       expect(responseDeclarations[0]).toContain('>1.5<');
+    });
+
+    describe('in a language', () => {
+      const storedValues = (questionType, schema, value, language) => {
+        const { responseDeclarations } = buildTextEntryInteractionXML(
+          { prompt: '', answers: [{ id: 'a1', value }], expectedLength: 0 },
+          questionType,
+          schema,
+          { language },
+        );
+        return [...responseDeclarations[0].matchAll(/<qti-value>(.*?)<\/qti-value>/g)].map(
+          ([, v]) => v,
+        );
+      };
+
+      it('stores a numeric answer as the number it reads as', () => {
+        expect(storedValues(QuestionType.NUMERIC, NUMERIC_SINGLE_SCHEMA, '1 234,5', 'fr')).toEqual([
+          '1234.5',
+        ]);
+      });
+
+      it('stores a numeric answer it cannot read as typed', () => {
+        expect(storedValues(QuestionType.NUMERIC, NUMERIC_SINGLE_SCHEMA, '1,23', 'en')).toEqual([
+          '1,23',
+        ]);
+      });
+
+      it('stores a text-entry answer as typed', () => {
+        expect(storedValues(QuestionType.TEXT_ENTRY, TEXT_ENTRY_MULTI_SCHEMA, '1,5', 'fr')).toEqual(
+          ['1,5'],
+        );
+      });
     });
 
     it('numeric with 0 answers omits <qti-correct-response> (empty element is invalid per XSD)', () => {

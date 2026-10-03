@@ -4,6 +4,7 @@ import CorrectResponse from '../../serialization/qti/declarations/correctRespons
 import Mapping from '../../serialization/qti/declarations/mapping';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
 import { parseXsdDouble } from '../../utils/math';
+import { formatLocaleNumber, readLocaleNumber } from '../../utils/localeNumbers';
 import { BaseType, QuestionType, RESPONSE_IDENTIFIER } from '../../constants';
 
 const serializer = new XMLSerializer();
@@ -76,9 +77,10 @@ function extractPromptHTML(bodyEl) {
  * every answer) or truncate it (`1.2.3` → 1.2), hiding it from validation.
  *
  * @param {Element} declarationEl - A float `<qti-response-declaration>`
+ * @param {string} [language] - Valid answers are shown in this language
  * @returns {TextEntryAnswer[]}
  */
-function extractNumericAnswers(declarationEl) {
+function extractNumericAnswers(declarationEl, language) {
   // Built only to validate: throws on a bad identifier or cardinality, as fromXML does.
   new QTIDeclaration({
     identifier: declarationEl.getAttribute('identifier'),
@@ -107,7 +109,7 @@ function extractNumericAnswers(declarationEl) {
   }
   return values.map(value => ({
     id: generateRandomSlug('answer'),
-    value,
+    value: formatLocaleNumber(value, language),
     caseSensitive: false,
   }));
 }
@@ -123,16 +125,17 @@ function extractNumericAnswers(declarationEl) {
  * <qti-mapping>, matched by `map-key`; it is always false for float.
  *
  * @param {string[]} responseDeclarations
+ * @param {{ language?: string }} [options]
  * @returns {{ id: string, value: string, caseSensitive: boolean }[]}
  */
-export function _extractAnswers(responseDeclarations) {
+export function _extractAnswers(responseDeclarations, { language } = {}) {
   const [declXml] = responseDeclarations || [];
   if (!declXml) return [];
 
   try {
     const declarationEl = parseXML(declXml).documentElement;
     if (declarationEl.getAttribute('base-type') === BaseType.FLOAT) {
-      return extractNumericAnswers(declarationEl);
+      return extractNumericAnswers(declarationEl, language);
     }
 
     const declaration = QTIDeclaration.fromXML(declarationEl);
@@ -184,9 +187,11 @@ export function _extractAnswers(responseDeclarations) {
  *
  * @param {string} bodyXml - Serialized `<qti-item-body>` element
  * @param {string[]} responseDeclarations
+ * @param {{ language?: string }} [options] - Valid numeric answers are formatted for display
+ *   in `language`; with none they stay as stored
  * @returns {TextEntryState}
  */
-export function parseTextEntryInteraction(bodyXml, responseDeclarations) {
+export function parseTextEntryInteraction(bodyXml, responseDeclarations, options = {}) {
   if (!bodyXml) return _defaultState();
 
   let bodyEl;
@@ -207,7 +212,7 @@ export function parseTextEntryInteraction(bodyXml, responseDeclarations) {
     10,
   );
   const prompt = extractPromptHTML(bodyEl);
-  const answers = _extractAnswers(responseDeclarations);
+  const answers = _extractAnswers(responseDeclarations, options);
 
   return { prompt, answers, expectedLength };
 }
@@ -218,9 +223,17 @@ export function parseTextEntryInteraction(bodyXml, responseDeclarations) {
  * @param {TextEntryState} state
  * @param {string} questionType - One of QuestionType.NUMERIC, TEXT_ENTRY, FREE_RESPONSE
  * @param {{ baseType: string, cardinality: string }} declarationSchema
+ * @param {{ language?: string, storedValue?: (id: string) => string|undefined }} [options] -
+ *   Numeric answers are read in `language`; with none they are taken as xsd:double. One
+ *   `storedValue` returns a value for is written as that value instead.
  * @returns {{ bodyXml: string, responseDeclarations: string[] }}
  */
-export function buildTextEntryInteractionXML(state, questionType, declarationSchema) {
+export function buildTextEntryInteractionXML(
+  state,
+  questionType,
+  declarationSchema,
+  { language, storedValue } = {},
+) {
   const { prompt, answers, expectedLength } = state;
   const { baseType, cardinality } = declarationSchema;
 
@@ -265,7 +278,13 @@ export function buildTextEntryInteractionXML(state, questionType, declarationSch
   // order, and the schema requires <qti-correct-response> to precede <qti-mapping>.
   if (questionType !== QuestionType.FREE_RESPONSE && answers.length !== 0) {
     new CorrectResponse(
-      answers.map(a => a.value),
+      answers.map(a =>
+        // Text that can't be read is stored as typed. Headless validation passes it when it is an
+        // xsd:double (German `1.5`), though the editor rejects it (#6150).
+        baseType === BaseType.FLOAT
+          ? (storedValue?.(a.id) ?? readLocaleNumber(a.value, language) ?? a.value)
+          : a.value,
+      ),
       declaration,
     );
 
