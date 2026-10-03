@@ -60,17 +60,34 @@ def _transpose_upright(img, orientation):
     return img if method is None else img.transpose(method)
 
 
+def _is_animated(img):
+    # A JPEG with an embedded second image opens as a two-frame MPO
+    if img.format == "MPO":
+        return False
+    try:
+        return getattr(img, "is_animated", False)
+    except Exception:
+        # Truncated inside a later frame header; treat as a still
+        return False
+
+
 def _resize_animated_image(img, size):
     # Resizing the image alone keeps only the first frame
     loop = img.info.get("loop")
     frames = []
     durations = []
-    for frame in ImageSequence.Iterator(img):
-        # A GIF's first frame loads as P, which resizes with
-        # NEAREST rather than LANCZOS
-        frames.append(frame.convert("RGBA").resize(size, Image.LANCZOS))
-        # WebP sets the duration only once the frame is loaded
-        durations.append(frame.info.get("duration", 0))
+    try:
+        for frame in ImageSequence.Iterator(img):
+            # A GIF's first frame loads as P, which resizes with
+            # NEAREST rather than LANCZOS
+            frames.append(frame.convert("RGBA").resize(size, Image.LANCZOS))
+            # WebP sets the duration only once the frame is loaded
+            durations.append(frame.info.get("duration", 0))
+    except Exception as e:
+        # Keep the frames that decoded
+        if not frames:
+            raise
+        logging.warning(f"Truncated animation, keeping {len(frames)} frames: {str(e)}")
     # Each resized frame is fully composited. Leaving it in place
     # lets the encoder store only what changes in the next, but a
     # GIF draws over it, so a transparent GIF clears it instead.
@@ -78,6 +95,16 @@ def _resize_animated_image(img, size):
     if img.format == "GIF":
         transparent = any(f.getchannel("A").getextrema()[0] < 255 for f in frames)
         disposal = GIF_DISPOSE_BACKGROUND if transparent else GIF_DISPOSE_NONE
+        for i, frame in enumerate(frames):
+            if transparent:
+                # GIF transparency is binary and Pillow makes any alpha > 0 opaque,
+                # so LANCZOS's partial-alpha edges would grow an opaque fringe
+                frame.putalpha(
+                    frame.getchannel("A").point(lambda a: 255 if a >= 128 else 0)
+                )
+            else:
+                # Quantising RGBA reuses the first frame's palette for every frame
+                frames[i] = frame.convert("RGB")
     buffered = BytesIO()
     frames[0].save(
         buffered,
@@ -104,8 +131,7 @@ def resize_image(image_content, width, height):
             original_format = img.format
             icc_profile = img.info.get("icc_profile")
             size = (int(width), int(height))
-            # A JPEG with an embedded second image opens as a two-frame MPO
-            if img.format != "MPO" and getattr(img, "is_animated", False):
+            if _is_animated(img):
                 if size == img.size:
                     return image_content
                 # Every frame is held resized, but decoded one at a time

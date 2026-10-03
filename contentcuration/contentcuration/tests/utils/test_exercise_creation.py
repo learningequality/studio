@@ -7,26 +7,33 @@ import os
 import re
 import struct
 import zipfile
+import zlib
 from io import BytesIO
 from tempfile import TemporaryDirectory
 from unittest import mock
 from uuid import uuid4
 
 from django.core.files.storage import default_storage as storage
+from django.test import SimpleTestCase
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 from lxml import etree
+from PIL import ExifTags
 from PIL import Image
+from PIL import ImageChops
 from PIL import ImageCms
 from PIL import ImageDraw
+from PIL import ImageStat
 from PIL import PngImagePlugin
 
 from contentcuration.models import AssessmentItem
 from contentcuration.models import ContentNode
 from contentcuration.tests.base import StudioTestCase
 from contentcuration.tests.testdata import create_studio_file
+from contentcuration.tests.testdata import fileobj_exercise_animated_gif
+from contentcuration.tests.testdata import fileobj_exercise_exif_jpeg
 from contentcuration.tests.testdata import fileobj_exercise_graphie
 from contentcuration.tests.testdata import fileobj_exercise_image
 from contentcuration.tests.utils.qti.test_convert import _normalize_xml
@@ -34,6 +41,7 @@ from contentcuration.tests.utils.qti.test_perseus_derive import _text_item
 from contentcuration.tests.utils.qti.test_perseus_derive import TOLERANCE_ITEM
 from contentcuration.tests.utils.qti.test_validation import _item_xml
 from contentcuration.tests.utils.qti.test_validation import VALID_CHOICE_ITEM
+from contentcuration.utils.assessment.base import resize_image
 from contentcuration.utils.assessment.perseus import PerseusExerciseGenerator
 from contentcuration.utils.assessment.qti.archive import hex_to_qti_id
 from contentcuration.utils.assessment.qti.archive import QTIExerciseGenerator
@@ -177,6 +185,241 @@ def _assert_upright_150x200(test, content):
         test.assertGreater(red, blue)
         red, _, blue = f.convert("RGB").getpixel((20, 180))
         test.assertGreater(blue, red)
+
+
+def _assert_upright_portrait(test, image_bytes):
+    with Image.open(BytesIO(image_bytes)) as img:
+        test.assertEqual(img.size, (300, 400))
+        test.assertEqual(img.getexif().get(ExifTags.Base.Orientation, 1), 1)
+        rgb = img.convert("RGB")
+        top = rgb.getpixel((150, 50))
+        bottom = rgb.getpixel((150, 350))
+        test.assertGreater(top[0], 200)
+        test.assertLess(top[2], 60)
+        test.assertGreater(bottom[2], 200)
+        test.assertLess(bottom[0], 60)
+
+
+def _assert_animated_gif(test, image_bytes):
+    with Image.open(BytesIO(image_bytes)) as img:
+        test.assertEqual(img.size, (60, 45))
+        test.assertEqual(img.n_frames, 3)
+        durations = []
+        for i in range(img.n_frames):
+            img.seek(i)
+            durations.append(img.info["duration"])
+        test.assertEqual(durations, [100, 200, 300])
+        test.assertEqual(img.info["loop"], 3)
+
+
+class TestResizeImage(SimpleTestCase):
+    def _save(self, image, fmt, **kwargs):
+        buffer = BytesIO()
+        image.save(buffer, fmt, **kwargs)
+        return buffer.getvalue()
+
+    def _transparent_gif(self, **kwargs):
+        frames = []
+        for i in range(4):
+            frame = Image.new("RGBA", (120, 90), (0, 0, 0, 0))
+            frame.paste((255, 0, 0, 255), (i * 30, 10, i * 30 + 20, 30))
+            frames.append(frame)
+        return self._save(
+            frames[0],
+            "GIF",
+            save_all=True,
+            append_images=frames[1:],
+            duration=100,
+            disposal=2,
+            **kwargs,
+        )
+
+    def _moving_square_gif(self, size=(400, 300), n=20):
+        frames = []
+        for i in range(n):
+            frame = Image.new("RGB", size, "white")
+            frame.paste((255, 0, 0), (i * 5, 50, i * 5 + 60, 110))
+            frames.append(frame)
+        return self._save(
+            frames[0], "GIF", save_all=True, append_images=frames[1:], duration=50
+        )
+
+    def test_multi_picture_jpeg_with_orientation_is_upright(self):
+        image = Image.new("RGB", (400, 300), "red")
+        second = Image.new("RGB", (100, 75), "blue")
+        image.paste("blue", (200, 0, 400, 300))
+        exif = Image.Exif()
+        exif[ExifTags.Base.Orientation] = 6
+        data = self._save(
+            image, "MPO", save_all=True, append_images=[second], exif=exif
+        )
+        with Image.open(BytesIO(data)) as img:
+            self.assertGreater(img.n_frames, 1)
+
+        result = resize_image(data, 300, 400)
+
+        self.assertIsNotNone(result)
+        _assert_upright_portrait(self, result)
+
+    def test_transparent_gif_frames_do_not_smear(self):
+        result = resize_image(self._transparent_gif(loop=0), 60, 45)
+
+        with Image.open(BytesIO(result)) as img:
+            img.seek(3)
+            rgba = img.convert("RGBA")
+            # Square 0 was at x 0-10; it must be gone from frame 3.
+            self.assertEqual(rgba.getpixel((5, 10))[3], 0)
+            self.assertEqual(rgba.getpixel((50, 10))[3], 255)
+
+    def test_same_size_animated_gif_is_unchanged(self):
+        data = self._transparent_gif(loop=0, optimize=False)
+
+        self.assertEqual(resize_image(data, 120, 90), data)
+
+    def test_jpeg_with_malformed_unrelated_exif_tag_is_upright(self):
+        image = Image.new("RGB", (400, 300), "red")
+        image.paste("blue", (200, 0, 400, 300))
+        exif = Image.Exif()
+        exif[ExifTags.Base.Orientation] = 6
+        exif[0x010F] = "Cam"
+        exif[0x0110] = "Model"
+        # Retag Make as TransferRange (SHORT x6) while it still holds ASCII.
+        exif_bytes = exif.tobytes().replace(b"\x01\x0f", b"\x01\x56", 1)
+        data = self._save(image, "JPEG", exif=exif_bytes)
+
+        result = resize_image(data, 300, 400)
+
+        self.assertIsNotNone(result)
+        _assert_upright_portrait(self, result)
+
+    def test_downscaled_opaque_gif_keeps_colours_absent_from_first_frame(self):
+        ellipse = Image.new("RGB", (120, 90), (255, 255, 255))
+        # Antialiased edges give colours close to white.
+        ImageDraw.Draw(ellipse).ellipse((20, 15, 100, 75), fill=(255, 0, 0))
+        colours = [(255, 255, 255), (0, 0, 255), (0, 255, 0)]
+        frames = [ellipse] + [Image.new("RGB", (120, 90), c) for c in colours]
+        data = self._save(
+            frames[0], "GIF", save_all=True, append_images=frames[1:], duration=100
+        )
+
+        result = resize_image(data, 60, 45)
+
+        with Image.open(BytesIO(data)) as src, Image.open(BytesIO(result)) as img:
+            self.assertEqual(img.n_frames, 4)
+            for i in range(4):
+                src.seek(i)
+                img.seek(i)
+                expected = src.convert("RGB").resize((60, 45), Image.LANCZOS)
+                diff = ImageChops.difference(img.convert("RGB"), expected)
+                self.assertIsNone(diff.getbbox())
+
+    def test_downscaled_many_colour_gif_keeps_per_frame_colour_accuracy(self):
+        frames = []
+        for f in range(6):
+            frame = Image.new("HSV", (320, 240))
+            frame.putdata(
+                [
+                    # Each frame spans its own hue band: ~1500 colours in all.
+                    (f * 43 + x * 42 // 320, 255, 64 + y * 191 // 240)
+                    for y in range(240)
+                    for x in range(320)
+                ]
+            )
+            frames.append(frame.convert("RGB"))
+        data = self._save(
+            frames[0], "GIF", save_all=True, append_images=frames[1:], duration=100
+        )
+
+        result = resize_image(data, 160, 120)
+
+        with Image.open(BytesIO(data)) as src, Image.open(BytesIO(result)) as img:
+            self.assertEqual(img.n_frames, 6)
+            for i in range(6):
+                src.seek(i)
+                img.seek(i)
+                expected = src.convert("RGB").resize((160, 120), Image.LANCZOS)
+                diff = ImageChops.difference(img.convert("RGB"), expected)
+                self.assertLess(sum(ImageStat.Stat(diff).mean) / 3, 2)
+
+    def test_downscaled_transparent_gif_has_no_opaque_fringe(self):
+        frames = []
+        for i in range(3):
+            frame = Image.new("RGBA", (150, 150), (0, 0, 0, 0))
+            ImageDraw.Draw(frame).ellipse((25, 25 + i, 125, 125 + i), (255, 0, 0, 255))
+            frames.append(frame)
+        data = self._save(
+            frames[0],
+            "GIF",
+            save_all=True,
+            append_images=frames[1:],
+            duration=100,
+            disposal=2,
+        )
+
+        result = resize_image(data, 50, 50)
+
+        with Image.open(BytesIO(result)) as img:
+            for i in range(3):
+                img.seek(i)
+                alpha = img.convert("RGBA").getchannel("A")
+                opaque = 50 * 50 - alpha.histogram()[0]
+                # A 33.3px disc covers ~873 pixels.
+                self.assertLess(opaque, 920)
+
+    def test_png_with_malformed_exif_still_resizes(self):
+        data = self._save(Image.new("RGB", (40, 20), "red"), "PNG")
+        chunk = b"eXIfxx"
+        # Insert after the IHDR chunk, which ends at byte 33.
+        data = (
+            data[:33]
+            + struct.pack(">I", 2)
+            + chunk
+            + struct.pack(">I", zlib.crc32(chunk))
+            + data[33:]
+        )
+        with Image.open(BytesIO(data)) as img:
+            with self.assertRaises(SyntaxError):
+                img.getexif()
+
+        result = resize_image(data, 20, 10)
+
+        self.assertIsNotNone(result)
+        with Image.open(BytesIO(result)) as img:
+            self.assertEqual(img.size, (20, 10))
+
+    def test_gif_truncated_in_second_frame_header_still_resizes(self):
+        # Cut just after the first frame: it decodes but probing n_frames fails.
+        data = self._moving_square_gif()[:830]
+        with Image.open(BytesIO(data)) as img:
+            img.load()
+            with self.assertRaises(Exception):
+                img.n_frames
+
+        result = resize_image(data, 200, 150)
+
+        self.assertIsNotNone(result)
+        with Image.open(BytesIO(result)) as img:
+            self.assertEqual(img.size, (200, 150))
+
+    def test_truncated_gif_keeps_decoded_frames(self):
+        data = self._moving_square_gif()[:-300]
+
+        result = resize_image(data, 200, 150)
+
+        self.assertIsNotNone(result)
+        with Image.open(BytesIO(result)) as img:
+            self.assertEqual(img.size, (200, 150))
+            self.assertGreater(img.n_frames, 1)
+
+    def test_play_once_gif_stays_play_once(self):
+        data = self._transparent_gif()
+        with Image.open(BytesIO(data)) as img:
+            self.assertNotIn("loop", img.info)
+
+        result = resize_image(data, 60, 45)
+
+        with Image.open(BytesIO(result)) as img:
+            self.assertNotIn("loop", img.info)
 
 
 class TestPerseusExerciseCreation(StudioTestCase):
@@ -1225,6 +1468,42 @@ class TestPerseusExerciseCreation(StudioTestCase):
             second_file = f"{file_name} =100x75"
             self.assertNotIn(second_file, content)
 
+    def _published_resized_image(self, image_file, size_suffix):
+        image_url = exercises.CONTENT_STORAGE_FORMAT.format(image_file.filename())
+        item = self._create_assessment_item(
+            exercises.SINGLE_SELECTION,
+            f"![image]({image_url} {size_suffix})",
+            [{"answer": "Answer", "correct": True, "order": 1}],
+        )
+        image_file.assessment_item = item
+        image_file.save()
+        exercise_data = {
+            "mastery_model": exercises.M_OF_N,
+            "randomize": True,
+            "n": 1,
+            "m": 1,
+            "all_assessment_items": [item.assessment_id],
+            "assessment_mapping": {item.assessment_id: exercises.SINGLE_SELECTION},
+        }
+
+        self._create_perseus_zip(exercise_data)
+
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
+        zip_file, _ = self._validate_perseus_zip(exercise_file)
+        image_files = [n for n in zip_file.namelist() if n.startswith("images/")]
+        self.assertEqual(len(image_files), 1)
+        return zip_file.read(image_files[0])
+
+    def test_resized_animated_gif_keeps_frames(self):
+        result = self._published_resized_image(
+            fileobj_exercise_animated_gif(), "=60x45"
+        )
+        _assert_animated_gif(self, result)
+
+    def test_resized_exif_jpeg_is_upright(self):
+        result = self._published_resized_image(fileobj_exercise_exif_jpeg(), "=300x400")
+        _assert_upright_portrait(self, result)
+
     def test_image_resizing_in_question(self):
         """Test image resizing functionality in question content"""
         self._test_image_resizing_in_field("question")
@@ -2103,6 +2382,35 @@ class TestQTIExerciseCreation(StudioTestCase):
         )
 
         self.assertEqual(exercise_file.checksum, "8964d7eaa997b47b1e336040ae439bce")
+
+    def _published_resized_image(self, image_file, size_suffix):
+        image_url = exercises.CONTENT_STORAGE_FORMAT.format(image_file.filename())
+        item = self._create_assessment_item(
+            exercises.SINGLE_SELECTION,
+            f"![image]({image_url} {size_suffix})",
+            [{"answer": "Answer A", "correct": True, "order": 1}],
+            [{"hint": "Hint text", "order": 1}],
+        )
+        image_file.assessment_item = item
+        image_file.save()
+
+        self._create_qti_zip(self._exercise_data([item]))
+
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.QTI_ZIP)
+        zip_file = self._validate_qti_zip_structure(exercise_file)
+        image_files = [n for n in zip_file.namelist() if n.startswith("items/images/")]
+        self.assertEqual(len(image_files), 1)
+        return zip_file.read(image_files[0])
+
+    def test_resized_animated_gif_keeps_frames(self):
+        result = self._published_resized_image(
+            fileobj_exercise_animated_gif(), "=60x45"
+        )
+        _assert_animated_gif(self, result)
+
+    def test_resized_exif_jpeg_is_upright(self):
+        result = self._published_resized_image(fileobj_exercise_exif_jpeg(), "=300x400")
+        _assert_upright_portrait(self, result)
 
     def test_image_resizing(self):
         # Create a base image file
