@@ -90,7 +90,7 @@
                       ':focus': { ...$coreOutline, 'outline-offset': '-2px' },
                     })
                   "
-                  dir="auto"
+                  :dir="isNumeric ? 'ltr' : 'auto'"
                   :maxlength="state.expectedLength"
                   :disabled="mode !== 'edit'"
                   :style="{
@@ -100,6 +100,7 @@
                   @focus="focusedAnswerId = answer.id"
                   @blur="
                     focusedAnswerId = null;
+                    showStoredAnswerValue(answer.id);
                     runValidation();
                   "
                 >
@@ -150,7 +151,7 @@
               v-if="isNumeric && answerHasError(answer.id, ValidationError.INVALID_NUMERIC_VALUE)"
               class="answer-validation-message"
             >
-              {{ errorInvalidNumericValue$() }}
+              {{ errorInvalidNumericValue$(numberExamples) }}
             </ValidationMessage>
 
             <ValidationMessage
@@ -184,11 +185,14 @@
 
 <script>
 
-  import { computed, ref, watch, nextTick } from 'vue';
+  import { computed, ref, toRef, watch, nextTick } from 'vue';
+  import isEqual from 'lodash/isEqual';
   import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { qtiEditorStrings } from '../../qtiEditorStrings';
   import { QuestionType, ValidationError } from '../../constants';
   import { useTextEntryInteraction } from '../../composables/useTextEntryInteraction';
+  import { formatLocaleNumber } from '../../utils/localeNumbers';
+  import { textEntryInteractionDescriptor } from './Descriptor';
   import ValidationMessage from 'shared/views/QTIEditor/components/ValidationMessage';
   import AddListItemButton from 'shared/views/QTIEditor/components/AddListItemButton';
   import ClickableRegion from 'shared/views/QTIEditor/components/ClickableRegion';
@@ -234,10 +238,19 @@
         addAnswer,
         removeAnswer,
         updateAnswerValue,
+        showStoredAnswerValue,
         toggleCaseSensitive,
-      } = useTextEntryInteraction(props.interaction, questionTypeRef);
+      } = useTextEntryInteraction(props.interaction, questionTypeRef, {
+        language: toRef(props, 'language'),
+      });
 
       const isNumeric = computed(() => props.questionType === QuestionType.NUMERIC);
+
+      const numberExamples = computed(() => ({
+        integer: formatLocaleNumber('12', props.language),
+        decimal: formatLocaleNumber('0.5', props.language),
+        negative: formatLocaleNumber('-3.14', props.language),
+      }));
 
       const showAnswerSection = computed(
         () =>
@@ -262,19 +275,6 @@
           openPrompt();
         }
       }
-
-      watch(
-        () => props.mode,
-        newMode => {
-          if (newMode === 'edit') {
-            // Open the question, the first thing in the card, so the card opens at its start.
-            openPrompt();
-          } else {
-            isPromptOpen.value = false;
-          }
-        },
-        { immediate: true },
-      );
 
       // Error sets
       const questionHasError = computed(() =>
@@ -353,6 +353,34 @@
         { immediate: true },
       );
 
+      const answerValues = ({ bodyXml, responseDeclarations }) =>
+        textEntryInteractionDescriptor
+          .parse(bodyXml, responseDeclarations)
+          .answers.map(a => a.value);
+
+      watch(
+        () => props.mode,
+        (newMode, oldMode) => {
+          if (newMode !== 'edit') {
+            isPromptOpen.value = false;
+            return;
+          }
+          // Open the question, the first thing in the card, so the card opens at its start.
+          openPrompt();
+          showStoredAnswerValue();
+          // Opening a card does not remount it, so report answers stored in another form here.
+          if (
+            oldMode !== undefined &&
+            isNumeric.value &&
+            workingInteraction.value.bodyXml &&
+            !isEqual(answerValues(workingInteraction.value), answerValues(props.interaction))
+          ) {
+            emit('update:interaction', workingInteraction.value);
+          }
+        },
+        { immediate: true },
+      );
+
       // Errors are reported the same way, for the card to show that the question needs work.
       watch(errors, newVal => emit('update:errors', newVal), { immediate: true });
 
@@ -360,6 +388,7 @@
         state,
         windowIsSmall,
         isNumeric,
+        numberExamples,
         showAnswerSection,
         isPromptOpen,
         questionHasError,
@@ -370,6 +399,7 @@
         closePrompt,
         setPrompt,
         onAnswerInput,
+        showStoredAnswerValue,
         onAddAnswer,
         onRemoveAnswer,
         onToggleCaseSensitive,
@@ -415,6 +445,11 @@
       showAnswers: {
         type: Boolean,
         default: false,
+      },
+      /** The exercise's language, which numeric answers are read and shown in */
+      language: {
+        type: String,
+        default: '',
       },
     },
 
