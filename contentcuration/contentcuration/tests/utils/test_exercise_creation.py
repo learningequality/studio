@@ -13,6 +13,7 @@ from unittest import mock
 from uuid import uuid4
 
 from django.core.files.storage import default_storage as storage
+from django.test import SimpleTestCase
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import file_formats
@@ -21,6 +22,8 @@ from lxml import etree
 from PIL import Image
 from PIL import ImageCms
 from PIL import ImageDraw
+from PIL import ImageFile
+from PIL import ImageSequence
 from PIL import PngImagePlugin
 
 from contentcuration.models import AssessmentItem
@@ -34,6 +37,7 @@ from contentcuration.tests.utils.qti.test_perseus_derive import _text_item
 from contentcuration.tests.utils.qti.test_perseus_derive import TOLERANCE_ITEM
 from contentcuration.tests.utils.qti.test_validation import _item_xml
 from contentcuration.tests.utils.qti.test_validation import VALID_CHOICE_ITEM
+from contentcuration.utils.assessment.base import resize_image
 from contentcuration.utils.assessment.perseus import PerseusExerciseGenerator
 from contentcuration.utils.assessment.qti.archive import hex_to_qti_id
 from contentcuration.utils.assessment.qti.archive import QTIExerciseGenerator
@@ -49,10 +53,12 @@ def _create_unresizable_image():
     )["db_file"]
 
 
-def _animated_gif_bytes(size=(120, 90)):
+def _animated_gif_bytes(size=(120, 90), **save_kwargs):
     frames = [Image.new("RGB", size, color=c) for c in ("red", "blue", "green")]
     buffer = BytesIO()
-    frames[0].save(buffer, "GIF", save_all=True, append_images=frames[1:])
+    frames[0].save(
+        buffer, "GIF", save_all=True, append_images=frames[1:], **save_kwargs
+    )
     return buffer.getvalue()
 
 
@@ -177,6 +183,113 @@ def _assert_upright_150x200(test, content):
         test.assertGreater(red, blue)
         red, _, blue = f.convert("RGB").getpixel((20, 180))
         test.assertGreater(blue, red)
+
+
+class TestResizeImage(SimpleTestCase):
+    def _save(self, image, fmt, **kwargs):
+        buffer = BytesIO()
+        image.save(buffer, fmt, **kwargs)
+        return buffer.getvalue()
+
+    def _moving_square_gif(self):
+        frames = []
+        for i in range(20):
+            frame = Image.new("RGB", (400, 300), "white")
+            frame.paste((255, 0, 0), (i * 5, 50, i * 5 + 60, 110))
+            frames.append(frame)
+        return self._save(
+            frames[0], "GIF", save_all=True, append_images=frames[1:], duration=50
+        )
+
+    def _transparent_gif_opaque_pixels(self, frames, width, height):
+        data = self._save(
+            frames[0],
+            "GIF",
+            save_all=True,
+            append_images=frames[1:],
+            duration=100,
+            disposal=2,
+        )
+
+        result = resize_image(data, width, height)
+
+        opaque = []
+        with Image.open(BytesIO(result)) as img:
+            for i in range(len(frames)):
+                img.seek(i)
+                alpha = img.convert("RGBA").getchannel("A")
+                opaque.append(width * height - alpha.histogram()[0])
+        return opaque
+
+    def test_downscaled_transparent_gif_has_no_opaque_fringe(self):
+        frames = []
+        for i in range(3):
+            frame = Image.new("RGBA", (150, 150), (0, 0, 0, 0))
+            ImageDraw.Draw(frame).ellipse((25, 25 + i, 125, 125 + i), (255, 0, 0, 255))
+            frames.append(frame)
+
+        for opaque in self._transparent_gif_opaque_pixels(frames, 50, 50):
+            # A 33.3px disc covers ~873 pixels.
+            self.assertGreater(opaque, 830)
+            self.assertLess(opaque, 920)
+
+    def test_downscaled_transparent_gif_keeps_thin_strokes(self):
+        frames = []
+        for i in range(3):
+            frame = Image.new("RGBA", (300, 300), (0, 0, 0, 0))
+            for x in range(10 + i, 300, 20):
+                ImageDraw.Draw(frame).line((x, 0, x, 299), (0, 0, 0, 255))
+            frames.append(frame)
+
+        for opaque in self._transparent_gif_opaque_pixels(frames, 150, 150):
+            # 15 half-pixel-wide lines cover ~1125 pixels.
+            self.assertGreater(opaque, 1000)
+
+    @mock.patch.object(ImageFile, "LOAD_TRUNCATED_IMAGES", True)
+    def test_gif_truncated_in_a_frame_header_still_resizes(self):
+        # Cuts inside the second and third frame headers: probing n_frames fails.
+        gif = self._moving_square_gif()
+        for cut, n_frames in ((830, 1), (1100, 2)):
+            with self.subTest(cut=cut):
+                data = gif[:cut]
+                with Image.open(BytesIO(data)) as img:
+                    img.load()
+                    with self.assertRaises((IndexError, struct.error)):
+                        img.n_frames
+
+                result = resize_image(data, 200, 150)
+
+                self.assertIsNotNone(result)
+                with Image.open(BytesIO(result)) as img:
+                    self.assertEqual((img.size, img.n_frames), ((200, 150), n_frames))
+
+    @mock.patch.object(ImageFile, "LOAD_TRUNCATED_IMAGES", True)
+    def test_truncated_apng_keeps_decoded_frames(self):
+        frames = []
+        for i in range(10):
+            frame = Image.new("RGBA", (120, 90), "white")
+            frame.paste((255, 0, 0, 255), (i * 5, 10, i * 5 + 30, 40))
+            frames.append(frame)
+        data = self._save(
+            frames[0], "PNG", save_all=True, append_images=frames[1:], duration=50
+        )
+
+        result = resize_image(data[: len(data) // 2], 60, 45)
+
+        self.assertIsNotNone(result)
+        with Image.open(BytesIO(result)) as img:
+            self.assertEqual(img.size, (60, 45))
+            self.assertGreater(img.n_frames, 1)
+
+    def test_play_once_gif_stays_play_once(self):
+        data = _animated_gif_bytes()
+        with Image.open(BytesIO(data)) as img:
+            self.assertNotIn("loop", img.info)
+
+        result = resize_image(data, 60, 45)
+
+        with Image.open(BytesIO(result)) as img:
+            self.assertNotIn("loop", img.info)
 
 
 class TestPerseusExerciseCreation(StudioTestCase):
@@ -1270,10 +1383,15 @@ class TestPerseusExerciseCreation(StudioTestCase):
 
     def test_sized_animated_gif_is_resized_with_its_frames(self):
         zip_file, filename, (image,) = self._publish_sized_image(
-            _animated_gif_bytes(), "gif", 60, 45
+            _animated_gif_bytes(duration=[100, 200, 300], loop=3), "gif", 60, 45
         )
         self.assertNotEqual(image, f"images/{filename}")
-        _assert_animated_60x45(self, zip_file.read(image))
+        content = zip_file.read(image)
+        _assert_animated_60x45(self, content)
+        with Image.open(BytesIO(content)) as f:
+            durations = [frame.info["duration"] for frame in ImageSequence.Iterator(f)]
+            self.assertEqual(durations, [100, 200, 300])
+            self.assertEqual(f.info["loop"], 3)
 
     def test_sized_animated_gif_clears_each_frame_before_the_next(self):
         zip_file, _, (image,) = self._publish_sized_image(
@@ -2282,6 +2400,12 @@ class TestQTIExerciseCreation(StudioTestCase):
         _assert_animated_60x45(self, zip_file.read(image))
         manifest_xml = zip_file.read("imsmanifest.xml").decode("utf-8")
         self.assertIn(f'<file href="{img.get("src")}" />', manifest_xml)
+
+    def test_legacy_sized_exif_rotated_photo_is_resized_upright(self):
+        zip_file, _, (image,), _ = self._publish_legacy_sized_image(
+            _exif_rotated_jpeg_bytes(), "jpg", 150, 200
+        )
+        _assert_upright_150x200(self, zip_file.read(image))
 
     def test_legacy_image_sized_above_natural_size_ships_a_copy_at_that_size(self):
         zip_file, filename, (image,), img = self._publish_legacy_sized_image(
