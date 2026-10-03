@@ -19,6 +19,7 @@
     <QTIEditor
       :assessments="assessmentItems"
       :allowFreeResponse="allowFreeResponse"
+      :language="language"
       @update="applyUpdate"
     />
   </div>
@@ -42,14 +43,21 @@
     setup(props) {
       const { nodeId } = toRefs(props);
       const { windowIsSmall } = useKResponsiveWindow();
-      const { assessmentItems, invalidItemsCount, allowFreeResponse, applyUpdate } =
+      const { assessmentItems, invalidItemsCount, allowFreeResponse, language, applyUpdate } =
         useAssessmentItems(nodeId);
 
       const bannerStyle = computed(() =>
         windowIsSmall.value ? {} : { maxWidth: '1200px', margin: '0 auto' },
       );
 
-      return { assessmentItems, invalidItemsCount, allowFreeResponse, applyUpdate, bannerStyle };
+      return {
+        assessmentItems,
+        invalidItemsCount,
+        allowFreeResponse,
+        language,
+        applyUpdate,
+        bannerStyle,
+      };
     },
     props: {
       nodeId: {
