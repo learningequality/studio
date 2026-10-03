@@ -452,8 +452,9 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     context: 'Placeholder inside a text-entry answer input field',
   },
   errorInvalidNumericValue: {
-    message: 'Must be a valid number (e.g. 12, 0.5, -3.14)',
-    context: 'Validation error shown when an answer value is not a valid number',
+    message: 'Must be a valid number (e.g. "{integer}", "{decimal}", "{negative}")',
+    context:
+      'Validation error shown when an answer value is not a valid number. The placeholders are example numbers written the way the exercise language writes them, and may contain commas or periods. Keep each one inside quotation marks, using the quotation marks your language normally uses.',
   },
   errorParsingQuestion: {
     message: 'This question could not be loaded',

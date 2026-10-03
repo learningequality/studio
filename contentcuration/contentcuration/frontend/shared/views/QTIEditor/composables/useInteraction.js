@@ -7,13 +7,14 @@ import { ref, computed, watch } from 'vue';
  * interaction plugin must go through. Individual interaction composables
  * (e.g. useChoiceInteraction) call this and add mutation methods on top.
  *
- * Validation runs on every state or questionType change, so errors always describe the
+ * Validation runs on every state, questionType or options change, so errors always describe the
  * state the editor is showing. runValidation is exposed for explicit triggers, such as
  * closing a panel.
  *
  * @param {import('../interactions/InteractionDescriptor').InteractionDescriptor} descriptor
  * @param {{ bodyXml: string, responseDeclarations: string[] }} interactionBlock
  * @param {import('vue').Ref<string|null>} questionType
+ * @param {object} [options] - Passed to the descriptor's buildXML and validate
  * @returns {{
  *   state: import('vue').Ref<object>,
  *   bodyXml: import('vue').ComputedRef<string>,
@@ -22,7 +23,7 @@ import { ref, computed, watch } from 'vue';
  *   runValidation: () => void,
  * }}
  */
-export function useInteraction(descriptor, interactionBlock, questionType) {
+export function useInteraction(descriptor, interactionBlock, questionType, options = {}) {
   const initialState = descriptor.parse(
     interactionBlock.bodyXml,
     interactionBlock.responseDeclarations,
@@ -30,10 +31,10 @@ export function useInteraction(descriptor, interactionBlock, questionType) {
 
   const state = ref(initialState);
 
-  // Rebuild XML whenever state or questionType changes.
+  // Rebuild XML whenever state, questionType or options change.
   const interaction = computed(() => {
     if (!questionType.value) return { bodyXml: '', responseDeclarations: [] };
-    return descriptor.buildXML(state.value, questionType.value);
+    return descriptor.buildXML(state.value, questionType.value, options);
   });
 
   const bodyXml = computed(() => interaction.value.bodyXml);
@@ -43,10 +44,10 @@ export function useInteraction(descriptor, interactionBlock, questionType) {
 
   /** Validates and updates errors. Exposed for explicit triggers (e.g. close). */
   function runValidation() {
-    errors.value = descriptor.validate(state.value, questionType.value);
+    errors.value = descriptor.validate(state.value, questionType.value, options);
   }
 
-  watch([state, questionType], runValidation, { deep: true, immediate: true });
+  watch([state, questionType, () => options], runValidation, { deep: true, immediate: true });
 
   return { state, bodyXml, responseDeclarations, errors, runValidation };
 }
