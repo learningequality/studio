@@ -241,6 +241,25 @@ export const FREE_RESPONSE_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"
   </qti-item-body>
 </qti-assessment-item>`;
 
+export const NUMERIC_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
+<qti-assessment-item
+  xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
+  identifier="item-numeric"
+  title="Numeric"
+  adaptive="false"
+  time-dependent="false"
+  xml:lang="en"
+>
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="float">
+    <qti-correct-response><qti-value>1234.5</qti-value></qti-correct-response>
+  </qti-response-declaration>
+
+  <qti-item-body>
+    <p>Combien ?</p>
+    <p><qti-text-entry-interaction response-identifier="RESPONSE" /></p>
+  </qti-item-body>
+</qti-assessment-item>`;
+
 export const NO_INTERACTION_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item
   xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"

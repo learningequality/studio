@@ -14,6 +14,7 @@ import { ref, computed, watch } from 'vue';
  * @param {import('../interactions/InteractionDescriptor').InteractionDescriptor} descriptor
  * @param {{ bodyXml: string, responseDeclarations: string[] }} interactionBlock
  * @param {import('vue').Ref<string|null>} questionType
+ * @param {object} [options] - Passed to the descriptor's parse, buildXML and validate
  * @returns {{
  *   state: import('vue').Ref<object>,
  *   bodyXml: import('vue').ComputedRef<string>,
@@ -22,10 +23,11 @@ import { ref, computed, watch } from 'vue';
  *   runValidation: () => void,
  * }}
  */
-export function useInteraction(descriptor, interactionBlock, questionType) {
+export function useInteraction(descriptor, interactionBlock, questionType, options = {}) {
   const initialState = descriptor.parse(
     interactionBlock.bodyXml,
     interactionBlock.responseDeclarations,
+    options,
   );
 
   const state = ref(initialState);
@@ -33,7 +35,7 @@ export function useInteraction(descriptor, interactionBlock, questionType) {
   // Rebuild XML whenever state or questionType changes.
   const interaction = computed(() => {
     if (!questionType.value) return { bodyXml: '', responseDeclarations: [] };
-    return descriptor.buildXML(state.value, questionType.value);
+    return descriptor.buildXML(state.value, questionType.value, options);
   });
 
   const bodyXml = computed(() => interaction.value.bodyXml);
@@ -43,7 +45,7 @@ export function useInteraction(descriptor, interactionBlock, questionType) {
 
   /** Validates and updates errors. Exposed for explicit triggers (e.g. close). */
   function runValidation() {
-    errors.value = descriptor.validate(state.value, questionType.value);
+    errors.value = descriptor.validate(state.value, questionType.value, options);
   }
 
   watch([state, questionType], runValidation, { deep: true, immediate: true });

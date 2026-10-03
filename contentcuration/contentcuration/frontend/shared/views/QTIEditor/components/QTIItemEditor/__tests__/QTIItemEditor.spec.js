@@ -9,6 +9,7 @@ import {
   CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER,
   ORDERING_ITEM_DOCUMENT_NO_PROMPT,
   FREE_RESPONSE_ITEM_DOCUMENT,
+  NUMERIC_ITEM_DOCUMENT,
   NO_INTERACTION_ITEM_DOCUMENT,
   CHOICE_ITEM_DOCUMENT_WITH_HINTS,
   VALID_ASSOCIATE_ITEM_DOCUMENT,
@@ -219,6 +220,29 @@ describe('QTIItemEditor', () => {
     });
   });
 
+  test('shows a numeric answer in the language it is given', async () => {
+    renderComponent({
+      item: { ...defaultProps.item, raw_data: NUMERIC_ITEM_DOCUMENT },
+      showAnswers: true,
+      language: 'fr',
+    });
+    expect(await screen.findByDisplayValue('1234,5')).toBeInTheDocument();
+  });
+
+  test('reads a numeric answer in the language it is given after a change', async () => {
+    const { emitted, updateProps } = renderComponent({
+      item: { ...defaultProps.item, raw_data: NUMERIC_ITEM_DOCUMENT },
+      mode: 'edit',
+      language: 'fr',
+    });
+    await screen.findByDisplayValue('1234,5');
+    await updateProps({ language: 'en' });
+    const input = await screen.findByDisplayValue('1234.5');
+    await fireEvent.input(input, { target: { value: '1,234' } });
+
+    expect(emitted()['update:rawData'].at(-1)[0]).toContain('<qti-value>1234</qti-value>');
+  });
+
   describe('items this editor cannot edit', () => {
     test('shows a read-only message for an item authored elsewhere', () => {
       renderComponent({
@@ -312,6 +336,24 @@ describe('QTIItemEditor', () => {
     // interaction that reports nothing is covered like any other.
     test('is shown for an incomplete question of any interaction type', async () => {
       await renderAndValidate(ORDERING_ITEM_DOCUMENT_NO_PROMPT);
+      expect(screen.getByText(incompleteItemIndicatorLabel$())).toBeInTheDocument();
+    });
+
+    // Publishing reads the stored XML, where these are not xsd:double.
+    test.each([
+      ['fr', '1,5'],
+      ['fr', '1 234'],
+      ['de', '1.234,5'],
+      ['en', '1,234'],
+    ])('is shown in %s for a stored numeric answer %s', async (language, stored) => {
+      renderComponent({
+        item: {
+          ...defaultProps.item,
+          raw_data: NUMERIC_ITEM_DOCUMENT.replace('1234.5', stored),
+        },
+        language,
+      });
+      await nextTick();
       expect(screen.getByText(incompleteItemIndicatorLabel$())).toBeInTheDocument();
     });
 

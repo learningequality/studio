@@ -1,19 +1,22 @@
 import { QuestionType, ValidationError } from '../../constants';
 import { parseXsdDouble } from '../../utils/math';
+import { readLocaleNumber } from '../../utils/localeNumbers';
 import { hasRichTextContent } from '../../utils/richText';
 
 /**
  * Validate TextEntryState → ValidationError[].
  *
- * - numeric:      prompt required + at least one answer + each value a finite xsd:double
+ * - numeric:      prompt required + at least one answer + each value a finite number in `language`
  * - textEntry:    prompt required + at least one answer (any non-blank string)
  * - freeResponse: prompt required only
  *
  * @param {TextEntryState} state
  * @param {string} questionType
+ * @param {{ language?: string }} [options] - Numeric answers are read in `language`; with
+ *   none they must be xsd:double
  * @returns {Array<{ code: string, id?: string }>}
  */
-export function validateTextEntryInteraction(state, questionType) {
+export function validateTextEntryInteraction(state, questionType, { language } = {}) {
   const errors = [];
   const { prompt, answers } = state;
 
@@ -35,7 +38,8 @@ export function validateTextEntryInteraction(state, questionType) {
       let lookupKey;
 
       if (questionType === QuestionType.NUMERIC) {
-        const number = parseXsdDouble(val);
+        const canonical = readLocaleNumber(val, language);
+        const number = canonical === null ? null : parseXsdDouble(canonical);
         if (number === null) {
           errors.push({ code: ValidationError.INVALID_NUMERIC_VALUE, id: answer.id });
         }

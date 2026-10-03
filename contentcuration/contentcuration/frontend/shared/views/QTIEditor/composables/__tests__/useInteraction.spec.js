@@ -20,7 +20,7 @@ describe('useInteraction', () => {
     useInteraction(descriptor, block, questionType);
 
     expect(descriptor.parse).toHaveBeenCalledTimes(1);
-    expect(descriptor.parse).toHaveBeenCalledWith(block.bodyXml, block.responseDeclarations);
+    expect(descriptor.parse).toHaveBeenCalledWith(block.bodyXml, block.responseDeclarations, {});
   });
 
   it('exposes initial parsed state as a reactive ref', () => {
@@ -95,7 +95,7 @@ describe('useInteraction', () => {
     questionType.value = 'multiSelect';
     runValidation();
 
-    expect(descriptor.validate).toHaveBeenCalledWith({ prompt: 'updated' }, 'multiSelect');
+    expect(descriptor.validate).toHaveBeenCalledWith({ prompt: 'updated' }, 'multiSelect', {});
   });
 
   it('bodyXml recomputes when state changes', () => {
@@ -135,7 +135,7 @@ describe('useInteraction', () => {
     bodyXml.value; // trigger recompute
 
     expect(descriptor.buildXML).toHaveBeenCalledTimes(2);
-    expect(descriptor.buildXML).toHaveBeenLastCalledWith(expect.anything(), 'multiSelect');
+    expect(descriptor.buildXML).toHaveBeenLastCalledWith(expect.anything(), 'multiSelect', {});
   });
 
   it('automatically runs validation when state changes', async () => {
@@ -156,7 +156,7 @@ describe('useInteraction', () => {
     state.value = { prompt: 'updated' };
     await nextTick();
 
-    expect(descriptor.validate).toHaveBeenCalledWith({ prompt: 'updated' }, 'singleSelect');
+    expect(descriptor.validate).toHaveBeenCalledWith({ prompt: 'updated' }, 'singleSelect', {});
     expect(errors.value).toEqual([{ code: 'UPDATED_ERROR' }]);
   });
 });

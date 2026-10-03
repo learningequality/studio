@@ -181,6 +181,73 @@ describe('validateQtiItem', () => {
   });
 });
 
+describe('validateQtiItem on numeric answers typed in a language', () => {
+  it.each([
+    ['fr', '1,5'],
+    ['fr', '1,234'],
+    ['fr', '1 234,5'],
+    ['fr', '1\u202F234,5'],
+    ['en', '1,234'],
+    ['en', '1,234.5'],
+    ['hi', '12,34,567'],
+    ['hi', '३०'],
+    ['ar', '٣٠'],
+    ['fr', '1.5'],
+    ['ar-EG', '3.5'],
+  ])('reports no error for an answer typed in %s as %s, as the editor does', (language, value) => {
+    const state = {
+      prompt: '<p>How much?</p>',
+      answers: [{ id: 'a1', value }],
+      expectedLength: 50,
+    };
+    const { bodyXml, responseDeclarations } = textEntryInteractionDescriptor.buildXML(
+      state,
+      QuestionType.NUMERIC,
+      { language },
+    );
+    const rawData = assembleItemXml({
+      identifier: 'item',
+      title: 'Question',
+      language,
+      bodyXml,
+      responseDeclarations,
+    });
+    expect(validateQtiItem(rawData)).toEqual([]);
+    expect(
+      textEntryInteractionDescriptor.validate(state, QuestionType.NUMERIC, { language }),
+    ).toEqual([]);
+  });
+
+  it.each([
+    ['en', '1,23'],
+    ['fr', '1,2,3'],
+    ['fr', '1 234.5'],
+  ])('reports an answer typed in %s as %s invalid, as the editor does', (language, value) => {
+    const state = {
+      prompt: '<p>How much?</p>',
+      answers: [{ id: 'a1', value }],
+      expectedLength: 50,
+    };
+    const { bodyXml, responseDeclarations } = textEntryInteractionDescriptor.buildXML(
+      state,
+      QuestionType.NUMERIC,
+      { language },
+    );
+    const rawData = assembleItemXml({
+      identifier: 'item',
+      title: 'Question',
+      language,
+      bodyXml,
+      responseDeclarations,
+    });
+    const invalid = ValidationError.INVALID_NUMERIC_VALUE;
+    expect(
+      codesOf(textEntryInteractionDescriptor.validate(state, QuestionType.NUMERIC, { language })),
+    ).toContain(invalid);
+    expect(codesOf(validateQtiItem(rawData))).toContain(invalid);
+  });
+});
+
 // What the editor asks about an item it is already showing, which is everything an
 // interaction cannot answer for itself.
 describe('validateItemShape', () => {
