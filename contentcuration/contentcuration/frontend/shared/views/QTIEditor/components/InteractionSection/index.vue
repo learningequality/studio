@@ -24,6 +24,7 @@
         :mode="mode"
         :showAnswers="showAnswers"
         :teleportTargetId="settingsTargetId"
+        :language="language"
         @update:interaction="onUpdateInteraction"
         @update:errors="errors => $emit('update:errors', errors)"
       />
@@ -124,6 +125,14 @@
       allowFreeResponse: {
         type: Boolean,
         default: true,
+      },
+      /**
+       * The exercise's language, which numeric answers are read and shown in. Empty means
+       * they are read and shown as stored.
+       */
+      language: {
+        type: String,
+        default: '',
       },
     },
 

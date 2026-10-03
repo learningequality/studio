@@ -12,6 +12,7 @@ import {
   CHOICE_ITEM_DOCUMENT_WITH_HINTS_AND_STIMULUS,
   CHOICE_ITEM_DOCUMENT_WITH_STIMULUS,
   FREE_RESPONSE_ITEM_DOCUMENT,
+  NUMERIC_ITEM_DOCUMENT,
   NO_INTERACTION_ITEM_DOCUMENT,
   CHOICE_ITEM_DOCUMENT_WITH_HINTS,
   VALID_ASSOCIATE_ITEM_DOCUMENT,
@@ -47,6 +48,7 @@ const {
   questionNumberAndTypeLabel$,
   unknownTypeLabel$,
   responsePoolLabel$,
+  answerValuePlaceholder$,
 } = qtiEditorStrings;
 
 const defaultProps = {
@@ -231,6 +233,72 @@ describe('QTIItemEditor', () => {
     });
   });
 
+  test('shows a numeric answer in the language it is given', async () => {
+    renderComponent({
+      item: { ...defaultProps.item, raw_data: NUMERIC_ITEM_DOCUMENT },
+      showAnswers: true,
+      language: 'fr',
+    });
+    expect(await screen.findByRole('textbox', { name: answerValuePlaceholder$() })).toHaveValue(
+      '1234,5',
+    );
+  });
+
+  test('reads a numeric answer in the language it is given after a change', async () => {
+    const { emitted, updateProps } = renderComponent({
+      item: { ...defaultProps.item, raw_data: NUMERIC_ITEM_DOCUMENT },
+      mode: 'edit',
+      language: 'fr',
+    });
+    const answerInput = () => screen.findByRole('textbox', { name: answerValuePlaceholder$() });
+    expect(await answerInput()).toHaveValue('1234,5');
+    await updateProps({ language: 'en' });
+    const input = await answerInput();
+    expect(input).toHaveValue('1234.5');
+    await fireEvent.input(input, { target: { value: '1,234' } });
+
+    expect(emitted()['update:rawData'].at(-1)[0]).toContain('<qti-value>1234</qti-value>');
+  });
+
+  test('keeps the open question in place when the language changes', async () => {
+    const { updateProps } = renderComponent({
+      item: { ...defaultProps.item, raw_data: NUMERIC_ITEM_DOCUMENT },
+      mode: 'edit',
+      language: 'fr',
+    });
+    const input = await screen.findByRole('textbox', { name: answerValuePlaceholder$() });
+    input.focus();
+    await updateProps({ language: 'en' });
+
+    expect(input).toBeInTheDocument();
+    expect(input).toHaveFocus();
+    expect(input).toHaveValue('1234.5');
+  });
+
+  test.each([
+    ['fr', '1234.5'],
+    ['en', '1.50'],
+    ['fr', '1E3'],
+    ['de', '0012'],
+    ['ar-EG', '1.50'],
+    ['en', '12345678901234567890'],
+    ['en', '-0'],
+    ['fr', '0.0000001'],
+    ['ar-EG', '-0.000000123'],
+  ])(
+    'does not save a numeric answer stored as xsd:double on opening in %s (%s)',
+    async (language, stored) => {
+      const { emitted, updateProps } = renderComponent({
+        item: { ...defaultProps.item, raw_data: NUMERIC_ITEM_DOCUMENT.replace('1234.5', stored) },
+        language,
+      });
+      await updateProps({ mode: 'edit' });
+      await nextTick();
+
+      expect(emitted()['update:rawData']).toBeUndefined();
+    },
+  );
+
   describe('items this editor cannot edit', () => {
     test('shows a read-only message for an item authored elsewhere', () => {
       renderComponent({
@@ -350,6 +418,32 @@ describe('QTIItemEditor', () => {
       await renderAndValidate(ORDERING_ITEM_DOCUMENT_NO_PROMPT);
       expect(screen.getByText(incompleteItemIndicatorLabel$())).toBeInTheDocument();
     });
+
+    // Publishing reads the stored XML, where these are not xsd:double.
+    test.each([
+      ['fr', '1,5', '1.5'],
+      ['fr', '1 234,5', '1234.5'],
+      ['de', '1.234,5', '1234.5'],
+      ['en', '1,234', '1234'],
+    ])(
+      'is shown in %s for a stored numeric answer %s until opening stores %s',
+      async (language, stored, canonical) => {
+        const item = {
+          ...defaultProps.item,
+          raw_data: NUMERIC_ITEM_DOCUMENT.replace('1234.5', stored),
+        };
+        const { emitted, updateProps } = renderComponent({ item, language });
+        await nextTick();
+        expect(screen.getByTestId('incompleteIndicator')).toBeInTheDocument();
+
+        await updateProps({ mode: 'edit' });
+        const [rawData] = emitted()['update:rawData'].at(-1);
+        expect(rawData).toContain(`<qti-value>${canonical}</qti-value>`);
+
+        await updateProps({ item: { ...item, raw_data: rawData } });
+        expect(screen.queryByTestId('incompleteIndicator')).not.toBeInTheDocument();
+      },
+    );
 
     test('is shown for an unsupported item with no interaction, which blocks publishing', async () => {
       await renderAndValidate(NO_INTERACTION_ITEM_DOCUMENT);
