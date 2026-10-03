@@ -13,6 +13,7 @@ import pytest
 from django.core.files.storage import default_storage
 from le_utils.constants import exercises
 from le_utils.constants import format_presets
+from PIL import ExifTags
 from PIL import Image
 
 from contentcuration import models as cc
@@ -441,6 +442,46 @@ def fileobj_exercise_image(size=(100, 100), color="red", uploaded_by=None):
     image = Image.new("RGB", size, color=color)
     buffer = BytesIO()
     image.save(buffer, "JPEG")
+    temp_file_dict = create_studio_file(
+        buffer.getvalue(),
+        preset=format_presets.EXERCISE_IMAGE,
+        ext="jpg",
+        uploaded_by=uploaded_by,
+    )
+    return temp_file_dict["db_file"]
+
+
+def fileobj_exercise_animated_gif(size=(120, 90), uploaded_by=None):
+    frames = [Image.new("RGB", size, color=c) for c in ("red", "green", "blue")]
+    buffer = BytesIO()
+    frames[0].save(
+        buffer,
+        "GIF",
+        save_all=True,
+        append_images=frames[1:],
+        duration=[100, 200, 300],
+        loop=3,
+    )
+    temp_file_dict = create_studio_file(
+        buffer.getvalue(),
+        preset=format_presets.EXERCISE_IMAGE,
+        ext="gif",
+        uploaded_by=uploaded_by,
+    )
+    return temp_file_dict["db_file"]
+
+
+def fileobj_exercise_exif_jpeg(size=(400, 300), uploaded_by=None):
+    """
+    Create a JPEG stored as `size` with EXIF orientation 6 (displayed rotated 90° clockwise),
+    left half red and right half blue as stored. Upright, the top half is red and the bottom blue.
+    """
+    image = Image.new("RGB", size, color="red")
+    image.paste("blue", (size[0] // 2, 0, size[0], size[1]))
+    exif = Image.Exif()
+    exif[ExifTags.Base.Orientation] = 6
+    buffer = BytesIO()
+    image.save(buffer, "JPEG", exif=exif)
     temp_file_dict = create_studio_file(
         buffer.getvalue(),
         preset=format_presets.EXERCISE_IMAGE,
