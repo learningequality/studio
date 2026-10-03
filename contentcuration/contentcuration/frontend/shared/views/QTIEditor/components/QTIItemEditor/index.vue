@@ -67,6 +67,7 @@
         :mode="mode"
         :showAnswers="showAnswers"
         :allowFreeResponse="allowFreeResponse"
+        :language="language"
         @update:questionType="type => (currentQuestionType = type)"
         @update:interaction="onUpdateInteraction"
         @update:errors="onUpdateErrors"
@@ -397,6 +398,14 @@
       allowFreeResponse: {
         type: Boolean,
         default: true,
+      },
+      /**
+       * The exercise's language, which numeric answers are read and shown in. Empty means
+       * they are read and shown as stored.
+       */
+      language: {
+        type: String,
+        default: '',
       },
     },
 

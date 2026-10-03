@@ -1,6 +1,7 @@
 import { computed, unref } from 'vue';
 import useStore from 'shared/composables/useStore';
 import { ContentModalities } from 'shared/constants';
+import { currentLanguage } from 'shared/i18n';
 
 /**
  * Work out what changed between the list Studio holds and the list the editor produced.
@@ -44,6 +45,19 @@ function diffAssessmentItems(prevItems, nextItems) {
 }
 
 /**
+ * The exercise's language, else the channel's, else the author's UI language. Empty when
+ * this browser has no number conventions for it, as `Intl` would use the browser's own.
+ *
+ * @param {object} [node]
+ * @param {object} [channel]
+ * @returns {string}
+ */
+export function exerciseLanguage(node, channel) {
+  const language = node?.language || channel?.language || currentLanguage;
+  return Intl.NumberFormat.supportedLocalesOf([language]).length ? language : '';
+}
+
+/**
  * Everything the questions tab needs about one content node's assessment items: the
  * ordered list to render, how many of them are incomplete, and a way to save an edited
  * list back through the change-sync layer.
@@ -57,13 +71,17 @@ export default function useAssessmentItems(nodeId) {
     store.getters['assessmentItem/getAssessmentItems'](unref(nodeId)),
   );
 
+  const node = computed(() => store.getters['contentNode/getContentNode'](unref(nodeId)));
+
   /**
    * Currently free responses are only allowed in surveys
    */
   const allowFreeResponse = computed(
-    () =>
-      store.getters['contentNode/getContentNode'](unref(nodeId))?.extra_fields?.options
-        ?.modality === ContentModalities.SURVEY,
+    () => node.value?.extra_fields?.options?.modality === ContentModalities.SURVEY,
+  );
+
+  const language = computed(() =>
+    exerciseLanguage(node.value, store.getters['currentChannel/currentChannel']),
   );
 
   const invalidItemsCount = computed(() =>
@@ -107,5 +125,5 @@ export default function useAssessmentItems(nodeId) {
     }
   }
 
-  return { assessmentItems, invalidItemsCount, allowFreeResponse, applyUpdate };
+  return { assessmentItems, invalidItemsCount, allowFreeResponse, language, applyUpdate };
 }

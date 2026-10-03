@@ -3,6 +3,7 @@ import VueRouter from 'vue-router';
 import { render } from '@testing-library/vue';
 import useAssessmentItems from '../useAssessmentItems';
 import { AssessmentItemTypes, ContentModalities } from 'shared/constants';
+import { currentLanguage } from 'shared/i18n';
 
 const NODE_ID = 'node-1';
 
@@ -18,7 +19,7 @@ const item = (assessment_id, order, raw_data = `<xml>${assessment_id}</xml>`) =>
  * Renders a component that does nothing but run the composable, and returns it alongside
  * the actions the composable dispatched, in the order it dispatched them.
  */
-function setup(storedItems, { modality = null } = {}) {
+function setup(storedItems, { modality = null, nodeLanguage = null, channelLanguage = null } = {}) {
   const dispatched = [];
   const record = name => (context, payload) => dispatched.push([name, payload]);
 
@@ -27,7 +28,16 @@ function setup(storedItems, { modality = null } = {}) {
       contentNode: {
         namespaced: true,
         getters: {
-          getContentNode: () => () => ({ extra_fields: { options: { modality } } }),
+          getContentNode: () => () => ({
+            language: nodeLanguage,
+            extra_fields: { options: { modality } },
+          }),
+        },
+      },
+      currentChannel: {
+        namespaced: true,
+        getters: {
+          currentChannel: () => ({ language: channelLanguage }),
         },
       },
       assessmentItem: {
@@ -72,6 +82,33 @@ describe('useAssessmentItems', () => {
       const { composable } = setup([]);
 
       expect(composable.allowFreeResponse.value).toBe(false);
+    });
+  });
+
+  describe('language', () => {
+    it("is the exercise's own language when it has one", () => {
+      const { composable } = setup([], { nodeLanguage: 'fr', channelLanguage: 'hi' });
+
+      expect(composable.language.value).toBe('fr');
+    });
+
+    it("falls back to the channel's language", () => {
+      const { composable } = setup([], { channelLanguage: 'hi' });
+
+      expect(composable.language.value).toBe('hi');
+    });
+
+    it("falls back to the author's interface language when neither has one", () => {
+      const { composable } = setup([]);
+
+      expect(composable.language.value).toBe(currentLanguage);
+    });
+
+    it('is empty for a language with no number conventions in this browser', () => {
+      // `qaa` is reserved for private use, so no browser has conventions for it.
+      const { composable } = setup([], { nodeLanguage: 'qaa', channelLanguage: 'hi' });
+
+      expect(composable.language.value).toBe('');
     });
   });
 
