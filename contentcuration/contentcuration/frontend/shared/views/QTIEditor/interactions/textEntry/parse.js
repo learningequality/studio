@@ -94,33 +94,43 @@ function extractNumericAnswers(declarationEl) {
   const values = [...declarationEl.querySelectorAll(':scope > qti-correct-response qti-value')].map(
     el => el.textContent.trim(),
   );
-  // Full-credit map-keys are answers too, as on the string path. One equal in value to an
-  // answer already read (`5.0` for `5`) is that answer, so it is not added again.
+  // Full-credit map-keys are answers too, as on the string path.
+  const mapKeys = [...declarationEl.querySelectorAll(':scope > qti-mapping qti-map-entry')]
+    .filter(entry => parseFloat(entry.getAttribute('mapped-value')) >= 1)
+    .map(entry => (entry.getAttribute('map-key') ?? '').trim());
+  const toAnswers = answerValues =>
+    answerValues.map(value => ({
+      id: generateRandomSlug('answer'),
+      value,
+      caseSensitive: false,
+    }));
+  // The editor writes its first answer as the correct response and maps every answer,
+  // so its map-keys are the answers as authored, repeats included.
+  if (values.length === 1 && values[0] === mapKeys[0]) {
+    return toAnswers(mapKeys);
+  }
+  // Otherwise a map-key equal in value to an answer already read (`5.0` for `5`) is that
+  // answer, so it is not added again.
   const keys = new Set(values.map(value => parseXsdDouble(value) ?? value));
-  for (const entry of declarationEl.querySelectorAll(':scope > qti-mapping qti-map-entry')) {
-    const value = (entry.getAttribute('map-key') ?? '').trim();
+  for (const value of mapKeys) {
     const key = parseXsdDouble(value) ?? value;
-    if (parseFloat(entry.getAttribute('mapped-value')) >= 1 && !keys.has(key)) {
+    if (!keys.has(key)) {
       keys.add(key);
       values.push(value);
     }
   }
-  return values.map(value => ({
-    id: generateRandomSlug('answer'),
-    value,
-    caseSensitive: false,
-  }));
+  return toAnswers(values);
 }
 
 /**
- * Extract correct answer values from the response declaration string.
- * Returns an array of `{ id, value, caseSensitive }` objects, or [] when no
- * correct response is declared (i.e. free-response items).
+ * Extract accepted answers from the response declaration string.
+ * Returns an array of `{ id, value, caseSensitive }` objects, or [] when the
+ * declaration has none (i.e. free-response items).
  *
  * Supports both float (numeric) and string (textEntry) base-types.
  * Answers are the correct response values plus any full-credit `map-key`s.
- * For string base-types `caseSensitive` comes from the declaration's
- * <qti-mapping>, matched by `map-key`; it is always false for float.
+ * For string base-types `caseSensitive` comes from the matching map entry, and
+ * is true when there is no <qti-mapping>; it is always false for float.
  *
  * @param {string[]} responseDeclarations
  * @returns {{ id: string, value: string, caseSensitive: boolean }[]}
@@ -164,9 +174,9 @@ export function _extractAnswers(responseDeclarations) {
     return [...values].map(value => ({
       id: generateRandomSlug('answer'),
       value,
-      // An answer with no matching qti-map-entry — including every answer in an
-      // item authored before mappings were written — takes the XSD default, false.
-      caseSensitive: caseSensitivity.get(value) ?? false,
+      // With no map entries, match_correct compares exactly; an answer missing from a
+      // mapping takes the XSD default, false.
+      caseSensitive: caseSensitivity.get(value) ?? !mapEntries.length,
     }));
   } catch (err) {
     // eslint-disable-next-line no-console
@@ -264,29 +274,15 @@ export function buildTextEntryInteractionXML(state, questionType, declarationSch
   // CorrectResponse before Mapping: getXML emits children in capability insertion
   // order, and the schema requires <qti-correct-response> to precede <qti-mapping>.
   if (questionType !== QuestionType.FREE_RESPONSE && answers.length !== 0) {
-    new CorrectResponse(
-      answers.map(a => a.value),
-      declaration,
-    );
-
-    // <qti-mapping> is the spec's home for per-answer case sensitivity (string-only).
-    // mapped-value is schema-required but unused: the editor does not score responses.
-    if (baseType === BaseType.STRING) {
-      new Mapping(
-        {
-          defaultValue: 0,
-          lowerBound: null,
-          upperBound: null,
-          entries: answers.map(a => ({
-            // Trimmed to match how _extractAnswers reads <qti-value> text back.
-            mapKey: a.value.trim(),
-            mappedValue: 1,
-            caseSensitive: Boolean(a.caseSensitive),
-          })),
-        },
-        declaration,
-      );
-    }
+    const isString = baseType === BaseType.STRING;
+    const entries = answers.map(a => ({
+      // Text keys are trimmed to match how _extractAnswers reads <qti-value> text back.
+      mapKey: isString ? a.value.trim() : a.value,
+      mappedValue: 1,
+      caseSensitive: isString && Boolean(a.caseSensitive),
+    }));
+    new CorrectResponse([answers[0].value], declaration);
+    new Mapping({ defaultValue: 0, lowerBound: null, upperBound: null, entries }, declaration);
   }
 
   const declarationXml = serializer.serializeToString(declaration.getXML());

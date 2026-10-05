@@ -44,6 +44,19 @@ const TEXT_ENTRY_DECLARATION_WITH_MAPPING = `
   </qti-response-declaration>
 `.trim();
 
+const SINGLE_TEXT_DECLARATION_WITH_MAPPING = `
+  <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string">
+    <qti-correct-response>
+      <qti-value>Madrid</qti-value>
+    </qti-correct-response>
+    <qti-mapping default-value="0">
+      <qti-map-entry map-key="Madrid" mapped-value="1" case-sensitive="true"/>
+      <qti-map-entry map-key="Paris" mapped-value="1"/>
+      <qti-map-entry map-key="Rome" mapped-value="1"/>
+    </qti-mapping>
+  </qti-response-declaration>
+`.trim();
+
 const TEXT_ENTRY_DECLARATION_WITHOUT_MAPPING = `
   <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string">
     <qti-correct-response>
@@ -178,10 +191,44 @@ describe('_extractAnswers', () => {
       expect(errorSpy).not.toHaveBeenCalled();
     });
 
-    it('falls back to caseSensitive false when there is no mapping', () => {
+    it('reads a single-cardinality text mapping in mapping order', () => {
+      const result = _extractAnswers([SINGLE_TEXT_DECLARATION_WITH_MAPPING]);
+      expect(result.map(a => [a.value, a.caseSensitive])).toEqual([
+        ['Madrid', true],
+        ['Paris', false],
+        ['Rome', false],
+      ]);
+    });
+
+    it('falls back to correct-response values when the mapping has no entries', () => {
+      const declXml = `
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string">
+          <qti-correct-response><qti-value>Paris</qti-value></qti-correct-response>
+          <qti-mapping default-value="0"/>
+        </qti-response-declaration>
+      `.trim();
+      expect(_extractAnswers([declXml]).map(a => [a.value, a.caseSensitive])).toEqual([
+        ['Paris', true],
+      ]);
+    });
+
+    it('reads text answers as case-sensitive when there is no mapping', () => {
       const result = _extractAnswers([TEXT_ENTRY_DECLARATION_WITHOUT_MAPPING]);
       expect(result).toHaveLength(1);
-      expect(result[0].caseSensitive).toBe(false);
+      expect(result[0].caseSensitive).toBe(true);
+    });
+
+    it.each([
+      ['string', 'a', 'b', ['a', 'b']],
+      ['float', '1', '2', ['1', '2']],
+    ])('%s: keeps correct values missing from the mapping', (baseType, first, second, expected) => {
+      const declXml = `
+        <qti-response-declaration identifier="RESPONSE" cardinality="multiple" base-type="${baseType}">
+          <qti-correct-response><qti-value>${first}</qti-value><qti-value>${second}</qti-value></qti-correct-response>
+          <qti-mapping default-value="0"><qti-map-entry map-key="${first}" mapped-value="1"/></qti-mapping>
+        </qti-response-declaration>
+      `.trim();
+      expect(_extractAnswers([declXml]).map(a => a.value)).toEqual(expected);
     });
 
     it('reports numeric answers as never case-sensitive', () => {
@@ -248,6 +295,27 @@ describe('_extractAnswers', () => {
         expect(_extractAnswers([declXml]).map(a => a.value)).toEqual(['5']);
       },
     );
+
+    // The editor's own shape (correct response = first map-key) keeps repeats;
+    // any other dedupes map-keys by value against the answers already read.
+    it.each([
+      [['2'], ['2', '2'], ['2', '2']],
+      [['2'], ['2', '2.0'], ['2', '2.0']],
+      [['5'], ['5.0', '5'], ['5']],
+      [['1'], ['1.0', '1'], ['1']],
+      [['1'], ['1', '1.0'], ['1', '1.0']],
+      [[], ['1', '1'], ['1']],
+    ])('reads correct %j with map-keys %j as %j', (correct, mapKeys, expected) => {
+      const declXml = `
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="float">
+          ${correct.length ? `<qti-correct-response>${correct.map(v => `<qti-value>${v}</qti-value>`).join('')}</qti-correct-response>` : ''}
+          <qti-mapping default-value="0">
+            ${mapKeys.map(key => `<qti-map-entry map-key="${key}" mapped-value="1"/>`).join('')}
+          </qti-mapping>
+        </qti-response-declaration>
+      `;
+      expect(_extractAnswers([declXml]).map(a => a.value)).toEqual(expected);
+    });
 
     it('reads mapped-value as a leading number, as Mapping.fromXML does', () => {
       const declXml = `
@@ -350,8 +418,7 @@ describe('parseTextEntryInteraction', () => {
 describe('buildTextEntryInteractionXML', () => {
   const FREE_SCHEMA = { baseType: BaseType.STRING, cardinality: Cardinality.SINGLE };
   const NUMERIC_SINGLE_SCHEMA = { baseType: BaseType.FLOAT, cardinality: Cardinality.SINGLE };
-  const NUMERIC_MULTI_SCHEMA = { baseType: BaseType.FLOAT, cardinality: Cardinality.MULTIPLE };
-  const TEXT_ENTRY_MULTI_SCHEMA = { baseType: BaseType.STRING, cardinality: Cardinality.MULTIPLE };
+  const TEXT_ENTRY_SCHEMA = { baseType: BaseType.STRING, cardinality: Cardinality.SINGLE };
 
   describe('bodyXml', () => {
     it('produces a well-formed <qti-item-body>', () => {
@@ -456,40 +523,6 @@ describe('buildTextEntryInteractionXML', () => {
       expect(responseDeclarations[0]).toContain('base-type="float"');
     });
 
-    it('numeric with 2+ answers gets cardinality="multiple"', () => {
-      const { responseDeclarations } = buildTextEntryInteractionXML(
-        {
-          prompt: '',
-          answers: [
-            { id: 'a1', value: '0.5' },
-            { id: 'a2', value: '1.5' },
-          ],
-          expectedLength: 0,
-        },
-        QuestionType.NUMERIC,
-        NUMERIC_MULTI_SCHEMA,
-      );
-      expect(responseDeclarations[0]).toContain('cardinality="multiple"');
-    });
-
-    it('numeric includes <qti-correct-response> with each answer value', () => {
-      const { responseDeclarations } = buildTextEntryInteractionXML(
-        {
-          prompt: '',
-          answers: [
-            { id: 'a1', value: '0.5' },
-            { id: 'a2', value: '1.5' },
-          ],
-          expectedLength: 0,
-        },
-        QuestionType.NUMERIC,
-        NUMERIC_MULTI_SCHEMA,
-      );
-      expect(responseDeclarations[0]).toContain('qti-correct-response');
-      expect(responseDeclarations[0]).toContain('>0.5<');
-      expect(responseDeclarations[0]).toContain('>1.5<');
-    });
-
     it('numeric with 0 answers omits <qti-correct-response> (empty element is invalid per XSD)', () => {
       const { responseDeclarations } = buildTextEntryInteractionXML(
         { prompt: '', answers: [], expectedLength: 0 },
@@ -512,7 +545,7 @@ describe('buildTextEntryInteractionXML', () => {
     function buildDeclaration(
       state,
       questionType = QuestionType.TEXT_ENTRY,
-      schema = TEXT_ENTRY_MULTI_SCHEMA,
+      schema = TEXT_ENTRY_SCHEMA,
     ) {
       const { responseDeclarations } = buildTextEntryInteractionXML(state, questionType, schema);
       const [decl] = responseDeclarations;
@@ -534,20 +567,21 @@ describe('buildTextEntryInteractionXML', () => {
       expect(entries.map(e => e.getAttribute('case-sensitive'))).toEqual([null, 'true']);
     });
 
-    it('emits no mapping for numeric answers', () => {
+    it('keeps a blank numeric answer row as a blank map entry', () => {
       const { doc } = buildDeclaration(
         {
           prompt: '',
           answers: [
-            { id: 'a1', value: '0.5' },
-            { id: 'a2', value: '1.5' },
+            { id: 'a1', value: '1' },
+            { id: 'a2', value: '' },
           ],
           expectedLength: 0,
         },
         QuestionType.NUMERIC,
-        NUMERIC_MULTI_SCHEMA,
+        NUMERIC_SINGLE_SCHEMA,
       );
-      expect(doc.querySelector('qti-mapping')).toBeNull();
+      const entries = [...doc.querySelectorAll('qti-map-entry')];
+      expect(entries.map(e => e.getAttribute('map-key'))).toEqual(['1', '']);
     });
 
     it('emits no mapping for free response', () => {
@@ -604,7 +638,7 @@ describe('buildTextEntryInteractionXML', () => {
       expect(parsed.expectedLength).toBe(DEFAULT_EXPECTED_LENGTH);
     });
 
-    it('multi-answer numeric: round-trip preserves all values', () => {
+    it('multi-answer numeric: round-trip preserves all values in order', () => {
       const original = {
         prompt: '<p>Q</p>',
         answers: [
@@ -616,7 +650,7 @@ describe('buildTextEntryInteractionXML', () => {
       const { bodyXml, responseDeclarations } = buildTextEntryInteractionXML(
         original,
         QuestionType.NUMERIC,
-        NUMERIC_MULTI_SCHEMA,
+        NUMERIC_SINGLE_SCHEMA,
       );
       const parsed = parseTextEntryInteraction(bodyXml, responseDeclarations);
       expect(parsed.answers.map(a => a.value)).toEqual(['0.5', '1.5']);
@@ -701,12 +735,15 @@ describe('buildTextEntryInteractionXML', () => {
       const { bodyXml, responseDeclarations } = buildTextEntryInteractionXML(
         original,
         QuestionType.TEXT_ENTRY,
-        TEXT_ENTRY_MULTI_SCHEMA,
+        TEXT_ENTRY_SCHEMA,
       );
       const parsed = parseTextEntryInteraction(bodyXml, responseDeclarations);
 
-      const byValue = Object.fromEntries(parsed.answers.map(a => [a.value, a.caseSensitive]));
-      expect(byValue).toEqual({ Paris: false, Madrid: true, Rome: true });
+      expect(parsed.answers.map(a => [a.value, a.caseSensitive])).toEqual([
+        ['Paris', false],
+        ['Madrid', true],
+        ['Rome', true],
+      ]);
     });
   });
 });

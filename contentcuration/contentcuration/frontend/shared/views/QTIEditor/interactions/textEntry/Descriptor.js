@@ -74,23 +74,15 @@ class TextEntryInteractionDescriptor extends InteractionDescriptor {
 
   /**
    * Returns the response declaration schema for the given question type.
-   * Cardinality is derived from answer count for NUMERIC and TEXT_ENTRY so it
-   * stays in sync as answers are added or removed.
+   * Always single-cardinality: accepted answers are scored by a
+   * <qti-mapping>, not by a multiple-cardinality response.
    *
    * @param {string} questionType
-   * @param {TextEntryState|null} [state]
    * @returns {{ baseType: string, cardinality: string }}
    */
-  getResponseDeclarationSchema(questionType, state = null) {
-    if (questionType === QuestionType.FREE_RESPONSE) {
-      return { baseType: BaseType.STRING, cardinality: Cardinality.SINGLE };
-    }
-    const answerCount = state?.answers?.length ?? 0;
-    const cardinality = answerCount > 1 ? Cardinality.MULTIPLE : Cardinality.SINGLE;
-    if (questionType === QuestionType.TEXT_ENTRY) {
-      return { baseType: BaseType.STRING, cardinality };
-    }
-    return { baseType: BaseType.FLOAT, cardinality };
+  getResponseDeclarationSchema(questionType) {
+    const baseType = questionType === QuestionType.NUMERIC ? BaseType.FLOAT : BaseType.STRING;
+    return { baseType, cardinality: Cardinality.SINGLE };
   }
 
   /**
@@ -111,7 +103,7 @@ class TextEntryInteractionDescriptor extends InteractionDescriptor {
     return buildTextEntryInteractionXML(
       state,
       questionType,
-      this.getResponseDeclarationSchema(questionType, state),
+      this.getResponseDeclarationSchema(questionType),
     );
   }
 
