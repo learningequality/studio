@@ -3,11 +3,15 @@ import { useTextEntryInteraction } from '../useTextEntryInteraction';
 import { QuestionType, ValidationError } from '../../constants';
 
 function makeNumericBlock(answerValues = ['12']) {
-  const values = answerValues.map(v => `<qti-value>${v}</qti-value>`).join('');
-  const cardinality = answerValues.length > 1 ? 'multiple' : 'single';
+  const correct = answerValues.length ? `<qti-value>${answerValues[0]}</qti-value>` : '';
+  const mapping = answerValues.length
+    ? `<qti-mapping default-value="0">${answerValues
+        .map(v => `<qti-map-entry map-key="${v}" mapped-value="1"/>`)
+        .join('')}</qti-mapping>`
+    : '';
 
   const bodyXml = `<qti-item-body><div><p>What is 3 \xd7 4?</p><p><qti-text-entry-interaction response-identifier="RESPONSE"/></p></div></qti-item-body>`;
-  const declaration = `<qti-response-declaration identifier="RESPONSE" cardinality="${cardinality}" base-type="float"><qti-correct-response>${values}</qti-correct-response></qti-response-declaration>`;
+  const declaration = `<qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="float"><qti-correct-response>${correct}</qti-correct-response>${mapping}</qti-response-declaration>`;
 
   return { bodyXml, responseDeclarations: [declaration] };
 }
