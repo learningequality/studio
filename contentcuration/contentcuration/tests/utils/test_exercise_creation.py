@@ -2996,3 +2996,20 @@ class TestQTIExerciseCreation(StudioTestCase):
             ),
             [(100, 75), (200, 150)],
         )
+
+    def test_native_qti_perseus_derivation_signed_numeric_answer(self):
+        raw_data = _text_item("single", ["+5"])
+        item = self._create_native_qti_item(raw_data)
+
+        self._create_perseus_zip(self._exercise_data([item]))
+
+        exercise_file = self.exercise_node.files.get(preset_id=format_presets.EXERCISE)
+        with storage.open(exercise_file.file_on_disk.name, "rb") as f:
+            zip_file = zipfile.ZipFile(BytesIO(f.read()))
+        qti_id = parse_qti_xml(raw_data.encode("utf-8")).getroot().get("identifier")
+        item_json = json.loads(zip_file.read(f"{qti_id}.json").decode("utf-8"))
+
+        answers = item_json["question"]["widgets"]["numeric-input 1"]["options"][
+            "answers"
+        ]
+        self.assertEqual([answer["value"] for answer in answers], [5])

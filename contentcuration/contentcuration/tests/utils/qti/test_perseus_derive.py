@@ -145,6 +145,22 @@ def test_text_input_derivation():
     assert answers == [{"answer": "42", "correct": True, "order": 0}]
 
 
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        ("+5", "5"),
+        ("1E3", "1e3"),
+        (" +5 ", "5"),
+        ("+0", "0"),
+    ],
+)
+def test_text_input_normalises_xsd_double_answers(value, expected):
+    result = derive_perseus_item(_Item(_text_item("single", [value])))
+    assert json.loads(result.answers) == [
+        {"answer": expected, "correct": True, "order": 0}
+    ]
+
+
 def test_text_input_multiple_correct_values():
     item = _Item(_text_item("multiple", ["1", "2"]))
     result = derive_perseus_item(item)
