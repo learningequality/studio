@@ -31,8 +31,19 @@ const makeStore = ({ offline = false } = {}) =>
         online: !offline,
       },
     },
-    actions: {
-      register: mockRegisterAction,
+    modules: {
+      account: {
+        namespaced: true,
+        actions: {
+          register: mockRegisterAction,
+        },
+      },
+      policies: {
+        namespaced: true,
+        getters: {
+          getPolicyAcceptedData: () => () => ({}),
+        },
+      },
     },
   });
 
@@ -47,6 +58,24 @@ const renderComponent = async ({ routeQuery = {}, offline = false } = {}) => {
       PolicyModals: true,
     },
   });
+};
+
+const fillValidForm = async () => {
+  await userEvent.type(screen.getByLabelText(/first name/i), 'Test');
+  await userEvent.type(screen.getByLabelText(/last name/i), 'User');
+  await userEvent.type(screen.getByLabelText(/email/i), 'test@test.com');
+  await userEvent.type(screen.getByLabelText(/^password$/i), 'tester123');
+  await userEvent.type(screen.getByLabelText(/confirm password/i), 'tester123');
+
+  await userEvent.click(screen.getByLabelText(/tagging content sources/i));
+
+  await userEvent.type(screen.getByRole('combobox', { name: /select all that apply/i }), 'Kenya');
+  await userEvent.click(await screen.findByRole('option', { name: 'Kenya' }));
+
+  await userEvent.click(screen.getByText(/select one/i));
+  await userEvent.click(await screen.findByText(/learning equality website/i));
+
+  await userEvent.click(screen.getByLabelText(/i have read and agree to terms of service/i));
 };
 
 describe('Create account page', () => {
@@ -102,31 +131,9 @@ describe('Create account page', () => {
     });
   });
 
-  // NOTE:
-  // Full form submission tests are intentionally skipped here.
-  //
-  // The "locations" field uses CountryField, which internally uses VAutocomplete
-  // (a Vuetify component). VAutocomplete does not reliably update its v-model
-  // state when interacted with via Vue Testing Library's userEvent APIs, which
-  // prevents a fully user-centric submission flow from being exercised.
-  //
-  // The "source" field has been migrated to KSelect (KDS) and no longer has
-  // this limitation, but "locations" remains the blocker.
-  //
-  // These tests will be re-enabled once CountryField is migrated away from
-  // VAutocomplete as part of the ongoing Vuetify removal effort.
-  it.skip('creates an account when the user submits valid information', async () => {
+  it('creates an account when the user submits valid information', async () => {
     await renderComponent();
-
-    await userEvent.type(screen.getByLabelText(/first name/i), 'Test');
-    await userEvent.type(screen.getByLabelText(/last name/i), 'User');
-    await userEvent.type(screen.getByLabelText(/email/i), 'test@test.com');
-    await userEvent.type(screen.getByLabelText(/^password$/i), 'tester123');
-    await userEvent.type(screen.getByLabelText(/confirm password/i), 'tester123');
-
-    await userEvent.click(screen.getByLabelText(/tagging content sources/i));
-
-    await userEvent.click(screen.getByLabelText(/i have read and agree to terms of service/i));
+    await fillValidForm();
 
     const finishButton = screen.getByRole('button', { name: /finish/i });
 
@@ -141,23 +148,15 @@ describe('Create account page', () => {
     });
   });
 
-  // Skipped for the same reason as above — CountryField (VAutocomplete) blocker
-  it.skip('shows an offline error when the user is offline', async () => {
+  it('shows an offline error when the user is offline', async () => {
     await renderComponent({ offline: true });
-
-    await userEvent.type(screen.getByLabelText(/first name/i), 'Test');
-    await userEvent.type(screen.getByLabelText(/last name/i), 'User');
-    await userEvent.type(screen.getByLabelText(/email/i), 'test@test.com');
-    await userEvent.type(screen.getByLabelText(/^password$/i), 'tester123');
-    await userEvent.type(screen.getByLabelText(/confirm password/i), 'tester123');
-
-    await userEvent.click(screen.getByLabelText(/tagging content sources/i));
-
-    await userEvent.click(screen.getByLabelText(/i have read and agree to terms of service/i));
+    await fillValidForm();
 
     const finishButton = screen.getByRole('button', { name: /finish/i });
     await userEvent.click(finishButton);
 
-    expect(await screen.findByText(/offline/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/please connect to the internet to create an account/i),
+    ).toBeInTheDocument();
   });
 });
