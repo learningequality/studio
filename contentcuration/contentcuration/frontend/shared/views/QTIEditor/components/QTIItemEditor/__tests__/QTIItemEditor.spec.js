@@ -7,7 +7,10 @@ import { AssessmentItemTypes } from '../../../constants';
 import {
   VALID_CHOICE_ITEM_DOCUMENT,
   CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER,
+  CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER_WITH_STIMULUS,
   ORDERING_ITEM_DOCUMENT_NO_PROMPT,
+  CHOICE_ITEM_DOCUMENT_WITH_HINTS_AND_STIMULUS,
+  CHOICE_ITEM_DOCUMENT_WITH_STIMULUS,
   FREE_RESPONSE_ITEM_DOCUMENT,
   NO_INTERACTION_ITEM_DOCUMENT,
   CHOICE_ITEM_DOCUMENT_WITH_HINTS,
@@ -16,6 +19,8 @@ import {
   MATCH_THREE_SETS_XML,
   MATCH_XML,
   MULTI_TEXT_ENTRY_ITEM_DOCUMENT,
+  TEXT_ENTRY_ITEM_DOCUMENT_SHARED_PARAGRAPH,
+  TEXT_ENTRY_ITEM_DOCUMENT_TRAILING_CONTENT,
   MULTI_INTERACTION_ITEM_DOCUMENT,
   UNRECOGNIZED_INTERACTION_ITEM_DOCUMENT,
   INLINE_CHOICE_ITEM_DOCUMENT,
@@ -238,13 +243,18 @@ describe('QTIItemEditor', () => {
       expect(screen.getByText(unsupportedItemMessage$())).toBeInTheDocument();
     });
 
-    describe('items without exactly one editable interaction', () => {
+    describe('items the editor cannot rebuild', () => {
       const documents = {
         'two interactions': MULTI_INTERACTION_ITEM_DOCUMENT,
         'an interaction with no descriptor': UNRECOGNIZED_INTERACTION_ITEM_DOCUMENT,
         'an interaction with no editor': INLINE_CHOICE_ITEM_DOCUMENT,
         'no interaction': NO_INTERACTION_ITEM_DOCUMENT,
         'several blanks in one text entry': MULTI_TEXT_ENTRY_ITEM_DOCUMENT,
+        'a stimulus beside a block interaction': CHOICE_ITEM_DOCUMENT_WITH_STIMULUS,
+        'a stimulus beside a hinted block interaction':
+          CHOICE_ITEM_DOCUMENT_WITH_HINTS_AND_STIMULUS,
+        'text sharing the text entry paragraph': TEXT_ENTRY_ITEM_DOCUMENT_SHARED_PARAGRAPH,
+        'content after the text entry paragraph': TEXT_ENTRY_ITEM_DOCUMENT_TRAILING_CONTENT,
       };
       const renderDocument = (raw_data, props = {}) =>
         renderComponent({
@@ -255,7 +265,9 @@ describe('QTIItemEditor', () => {
       describe.each(Object.entries(documents))('with %s', (_, raw_data) => {
         test('shows the unsupported message', () => {
           renderDocument(raw_data, { mode: 'view' });
-          expect(screen.getByText(unsupportedItemMessage$())).toBeInTheDocument();
+          expect(screen.getByTestId('unsupportedMessage')).toHaveTextContent(
+            unsupportedItemMessage$(),
+          );
         });
 
         test('offers no editable controls or hints in edit mode', () => {
@@ -269,18 +281,16 @@ describe('QTIItemEditor', () => {
           expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
           expect(screen.queryAllByRole('textbox').filter(isAuthorInput)).toHaveLength(0);
         });
-      });
 
-      test('leaves raw_data untouched after the card is opened and closed', async () => {
-        const { emitted, updateProps } = renderDocument(MULTI_INTERACTION_ITEM_DOCUMENT, {
-          mode: 'edit',
+        test('leaves raw_data untouched after the card is opened and closed', async () => {
+          const { emitted, updateProps } = renderDocument(raw_data, { mode: 'edit' });
+
+          await fireEvent.click(screen.getByRole('button', { name: closeBtnLabel$() }));
+          await updateProps({ mode: 'view' });
+          await nextTick();
+
+          expect(emitted()['update:rawData']).toBeUndefined();
         });
-
-        await fireEvent.click(screen.getByRole('button', { name: closeBtnLabel$() }));
-        await updateProps({ mode: 'view' });
-        await nextTick();
-
-        expect(emitted()['update:rawData']).toBeUndefined();
       });
 
       test('shows the hints of an unsupported item when answers are shown', () => {
@@ -328,6 +338,18 @@ describe('QTIItemEditor', () => {
     test('is shown for a match interaction that cannot be read', async () => {
       await renderAndValidate(VALID_MATCH_ITEM_DOCUMENT.replace(MATCH_XML, MATCH_THREE_SETS_XML));
       expect(screen.getByText(incompleteItemIndicatorLabel$())).toBeInTheDocument();
+    });
+
+    test('is shown for an invalid item whose body the editor cannot reproduce', async () => {
+      await renderAndValidate(CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER_WITH_STIMULUS);
+      expect(screen.getByTestId('incompleteIndicator')).toHaveTextContent(
+        incompleteItemIndicatorLabel$(),
+      );
+    });
+
+    test('is not shown for a valid item whose body the editor cannot reproduce', async () => {
+      await renderAndValidate(CHOICE_ITEM_DOCUMENT_WITH_STIMULUS);
+      expect(screen.queryByTestId('incompleteIndicator')).not.toBeInTheDocument();
     });
 
     test('is not shown for a valid item with unsupported interactions', async () => {

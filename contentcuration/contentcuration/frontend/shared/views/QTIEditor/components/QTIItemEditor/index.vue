@@ -148,20 +148,22 @@
       // Parse the item XML. rawData is a computed inside useQtiItem that
       // re-assembles the full XML whenever identifier/title/language or the
       // editor refs change — no need to duplicate assembleItemXml here.
-      const { interactions, hints, parseError, rawData } = useQtiItem(props.item.raw_data, {
-        bodyXml: currentBodyXml,
-        responseDeclarations: currentResponseDeclarations,
-      });
+      const { interactions, itemBodyXml, hints, parseError, rawData } = useQtiItem(
+        props.item.raw_data,
+        { bodyXml: currentBodyXml, responseDeclarations: currentResponseDeclarations },
+      );
 
       const isQti = computed(() => props.item.type === AssessmentItemTypes.QTI);
 
       /**
        * Whether this editor can edit the item's XML faithfully: it is readable, and it is
-       * either blank or holds exactly one interaction this editor knows.
+       * either blank or holds exactly one interaction this editor knows, in the body shape its
+       * builder writes.
        */
       const isBlank = !props.item.raw_data;
       const isEditableQti = computed(
-        () => !parseError.value && (isBlank || isSupportedItem(interactions.value)),
+        () =>
+          !parseError.value && (isBlank || isSupportedItem(interactions.value, itemBodyXml.value)),
       );
 
       /**
@@ -321,8 +323,9 @@
        */
       const isIncomplete = computed(() => {
         if (isUnsupported.value) {
-          // Unreadable or empty QTI can't be fixed here and blocks publishing; other
-          // unsupported items are publishable.
+          // Unreadable or empty QTI can't be fixed here and blocks publishing. So does
+          // an item unsupported only for its body shape that breaks the editor's rules;
+          // other unsupported items are publishable.
           return (
             isQti.value &&
             validateQtiItem(props.item.raw_data, { allowFreeResponse: props.allowFreeResponse })

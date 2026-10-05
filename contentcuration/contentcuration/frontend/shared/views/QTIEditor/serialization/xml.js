@@ -107,6 +107,33 @@ function adoptNode(node, doc = xmlDoc, plainNamespace = XHTML_NS) {
   return el;
 }
 
+const XMLNS_NS = 'http://www.w3.org/2000/xmlns/';
+
+/**
+ * Whether an element has attributes beyond namespace declarations.
+ *
+ * @param {Element} el
+ * @returns {boolean}
+ */
+export function hasNonNamespaceAttributes(el) {
+  return [...el.attributes].some(attr => attr.namespaceURI !== XMLNS_NS);
+}
+
+/**
+ * Whether a node is content: an element or text (CDATA included) beyond whitespace. Comments
+ * and the like carry none.
+ *
+ * @param {Node} node
+ * @returns {boolean}
+ */
+export function isContentNode(node) {
+  return (
+    node.nodeType === Node.ELEMENT_NODE ||
+    ((node.nodeType === Node.TEXT_NODE || node.nodeType === Node.CDATA_SECTION_NODE) &&
+      /[^ \t\r\n]/.test(node.nodeValue))
+  );
+}
+
 /**
  * Serialize XML nodes as an HTML string, for state that a rich text editor parses as HTML.
  *
