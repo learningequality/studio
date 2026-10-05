@@ -264,7 +264,9 @@ describe('EditSourceModal', () => {
       wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
       await flushPromises();
 
-      expect(mockCreateSnackbar).toHaveBeenCalledWith(expect.objectContaining({ text: 'Changes saved' }));
+      expect(mockCreateSnackbar).toHaveBeenCalledWith(
+        expect.objectContaining({ text: 'Changes saved' }),
+      );
     });
 
     test('should emit close event on success submit', async () => {

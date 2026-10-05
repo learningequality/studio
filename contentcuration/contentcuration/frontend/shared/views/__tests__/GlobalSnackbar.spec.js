@@ -1,9 +1,8 @@
+import { mount } from '@vue/test-utils';
+import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
+import GlobalSnackbar from '../GlobalSnackbar.vue';
 
-import { mount } from "@vue/test-utils";
-import useKSnackbar from "kolibri-design-system/lib/composables/useKSnackbar";
-import GlobalSnackbar from "../GlobalSnackbar.vue";
-
-describe("GlobalSnackbar", () => {
+describe('GlobalSnackbar', () => {
   let actionCallback;
   let hideCallback;
 
@@ -17,32 +16,32 @@ describe("GlobalSnackbar", () => {
   function makeWrapper() {
     return mount(GlobalSnackbar, {
       stubs: {
-        KSnackbar: true
-      }
+        KSnackbar: true,
+      },
     });
   }
 
-  it("renders the snackbar text", async () => {
+  it('renders the snackbar text', async () => {
     const { createSnackbar } = useKSnackbar();
-    createSnackbar({ text: "Test Snackbar", announce: true });
+    createSnackbar({ text: 'Test Snackbar', announce: true });
     const wrapper = makeWrapper();
     await wrapper.vm.$nextTick();
-    expect(wrapper.findComponent({ name: "KSnackbar" }).props("text")).toBe("Test Snackbar");
+    expect(wrapper.findComponent({ name: 'KSnackbar' }).props('text')).toBe('Test Snackbar');
   });
 
-  it("renders the snackbar action correctly", async () => {
+  it('renders the snackbar action correctly', async () => {
     const { createSnackbar } = useKSnackbar();
-    createSnackbar({ text: "Test Snackbar", actionText: "Action", announce: true });
+    createSnackbar({ text: 'Test Snackbar', actionText: 'Action', announce: true });
     const wrapper = makeWrapper();
     await wrapper.vm.$nextTick();
-    expect(wrapper.findComponent({ name: "KSnackbar" }).props("actionText")).toBe("Action");
+    expect(wrapper.findComponent({ name: 'KSnackbar' }).props('actionText')).toBe('Action');
   });
 
-  it("clicking the action calls the action callback and closes the snackbar", async () => {
+  it('clicking the action calls the action callback and closes the snackbar', async () => {
     const { createSnackbar, snackbarIsVisible } = useKSnackbar();
     createSnackbar({
-      text: "Test Snackbar",
-      actionText: "Action",
+      text: 'Test Snackbar',
+      actionText: 'Action',
       actionCallback,
       hideCallback,
       announce: true,
@@ -51,17 +50,17 @@ describe("GlobalSnackbar", () => {
     await wrapper.vm.$nextTick();
 
     // Simulate action click on the stub
-    wrapper.findComponent({ name: "KSnackbar" }).vm.$emit("actionClick");
+    wrapper.findComponent({ name: 'KSnackbar' }).vm.$emit('actionClick');
 
     expect(actionCallback).toHaveBeenCalledTimes(1);
     expect(hideCallback).toHaveBeenCalledTimes(1);
     expect(snackbarIsVisible.value).toBe(false);
   });
 
-  it("closing the snackbar calls hideCallback exactly once when provided", async () => {
+  it('closing the snackbar calls hideCallback exactly once when provided', async () => {
     const { createSnackbar, snackbarIsVisible } = useKSnackbar();
     createSnackbar({
-      text: "Test Snackbar",
+      text: 'Test Snackbar',
       hideCallback,
       announce: true,
     });
@@ -69,10 +68,9 @@ describe("GlobalSnackbar", () => {
     const wrapper = makeWrapper();
     await wrapper.vm.$nextTick();
 
-    wrapper.findComponent({ name: "KSnackbar" }).vm.$emit("close");
+    wrapper.findComponent({ name: 'KSnackbar' }).vm.$emit('close');
 
     expect(hideCallback).toHaveBeenCalledTimes(1);
     expect(snackbarIsVisible.value).toBe(false);
   });
 });
-
