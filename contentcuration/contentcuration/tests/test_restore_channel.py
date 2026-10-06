@@ -38,6 +38,8 @@ from contentcuration.utils.import_tools import create_channel
 from contentcuration.utils.import_tools import create_files
 from contentcuration.utils.import_tools import generate_assessment_item
 from contentcuration.utils.import_tools import process_content
+from contentcuration.utils.publish import create_content_database
+from contentcuration.utils.publish import set_channel_icon_encoding
 
 
 thumbnail_path = "/content/thumbnail.png"
