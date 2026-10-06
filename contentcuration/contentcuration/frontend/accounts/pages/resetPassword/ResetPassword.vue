@@ -18,20 +18,18 @@
         {{ $tr('resetPasswordFailed') }}
       </StudioBanner>
       <StudioPasswordField
+        ref="new_password1"
         v-model="new_password1"
         autofocus
         :label="$tr('passwordLabel')"
-        :errorMessages="
-          touched.new_password1 && errors.new_password1 ? [new_password1ErrorText] : []
-        "
+        :errorMessages="new_password1Error ? [new_password1Error] : []"
         @blur="touched.new_password1 = true"
       />
       <StudioPasswordField
+        ref="new_password2"
         v-model="new_password2"
         :label="$tr('passwordConfirmLabel')"
-        :errorMessages="
-          touched.new_password2 && errors.new_password2 ? [new_password2ErrorText] : []
-        "
+        :errorMessages="new_password2Error ? [new_password2Error] : []"
         @blur="touched.new_password2 = true"
       />
       <KButton
@@ -55,14 +53,19 @@
   import commonStrings from 'shared/translator';
   import { generateFormMixin } from 'shared/mixins';
 
+  const validators = {
+    new_password1: v => Boolean(v) && v.length >= 8,
+    new_password2: (v, vm) => Boolean(v) && v === vm.form.new_password1,
+  };
+
   const formMixin = generateFormMixin({
     new_password1: {
       required: true,
-      validator: v => Boolean(v) && v.length >= 8,
+      validator: validators.new_password1,
     },
     new_password2: {
       required: true,
-      validator: (v, vm) => Boolean(v) && v === vm.form.new_password1,
+      validator: validators.new_password2,
     },
   });
 
@@ -78,9 +81,7 @@
       return {
         error: false,
         // Gates error display until blur, since formMixin's setters otherwise
-        // mark errors on every keystroke. Create.vue has no equivalent gate,
-        // so the two forms validate differently; epic-level decision tracked
-        // on #5060.
+        // mark errors on every keystroke.
         touched: {
           new_password1: false,
           new_password2: false,
@@ -88,15 +89,24 @@
       };
     },
     computed: {
-      new_password1ErrorText() {
-        if (!this.new_password1) {
+      new_password1Error() {
+        if (!this.touched.new_password1 || validators.new_password1(this.form.new_password1)) {
+          return '';
+        }
+        if (!this.form.new_password1) {
           /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
           return commonStrings.$tr('fieldRequired');
         }
         return this.$tr('passwordValidationMessage');
       },
-      new_password2ErrorText() {
-        if (!this.new_password2) {
+      new_password2Error() {
+        if (
+          !this.touched.new_password2 ||
+          validators.new_password2(this.form.new_password2, this)
+        ) {
+          return '';
+        }
+        if (!this.form.new_password2) {
           /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
           return commonStrings.$tr('fieldRequired');
         }
@@ -114,6 +124,7 @@
         // trims every field. Passwords must keep the leading/trailing spaces
         // the user typed, both here and in the payload below.
         if (!this.validate(this.form)) {
+          this.focusFirstInvalidField();
           return;
         }
 
@@ -131,6 +142,12 @@
           .catch(() => {
             this.error = true;
           });
+      },
+      focusFirstInvalidField() {
+        const firstInvalidField = this.errors.new_password1 ? 'new_password1' : 'new_password2';
+        this.$nextTick(() => {
+          this.$refs[firstInvalidField].$el.querySelector('input').focus();
+        });
       },
     },
     $trs: {
