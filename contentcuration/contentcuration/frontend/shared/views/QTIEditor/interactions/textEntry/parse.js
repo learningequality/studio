@@ -276,12 +276,12 @@ export function buildTextEntryInteractionXML(state, questionType, declarationSch
   if (questionType !== QuestionType.FREE_RESPONSE && answers.length !== 0) {
     const isString = baseType === BaseType.STRING;
     const entries = answers.map(a => ({
-      // Text keys are trimmed to match how _extractAnswers reads <qti-value> text back.
-      mapKey: isString ? a.value.trim() : a.value,
+      // Trimmed on build, not in state, so typing is untouched; matches _extractAnswers' trim.
+      mapKey: a.value.trim(),
       mappedValue: 1,
       caseSensitive: isString && Boolean(a.caseSensitive),
     }));
-    new CorrectResponse([answers[0].value], declaration);
+    new CorrectResponse([entries[0].mapKey], declaration);
     new Mapping({ defaultValue: 0, lowerBound: null, upperBound: null, entries }, declaration);
   }
 
