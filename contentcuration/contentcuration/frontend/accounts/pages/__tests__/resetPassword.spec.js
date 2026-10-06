@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/vue';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import VueRouter from 'vue-router';
 import { createLocalVue } from '@vue/test-utils';
@@ -104,6 +104,9 @@ describe('ResetPassword', () => {
 
     const newPasswordField = () => screen.getByLabelText(passwordLabel$());
     const confirmPasswordField = () => screen.getByLabelText(passwordConfirmLabel$());
+    // KTextbox doesn't link its error text to the input via ARIA, so scope
+    // queries to the textbox container that holds both.
+    const fieldContainer = field => field.closest('.ui-textbox');
 
     it('shows the required error when an empty field loses focus', async () => {
       renderComponent();
@@ -111,7 +114,10 @@ describe('ResetPassword', () => {
       await user.click(newPasswordField());
       await user.tab();
 
-      expect(screen.getByText(fieldRequired$())).toBeInTheDocument();
+      expect(within(fieldContainer(newPasswordField())).getByText(fieldRequired$())).toBeVisible();
+      expect(
+        within(fieldContainer(confirmPasswordField())).queryByText(fieldRequired$()),
+      ).not.toBeInTheDocument();
     });
 
     it('hides errors while typing and shows them once the field loses focus', async () => {
