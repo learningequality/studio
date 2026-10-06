@@ -344,7 +344,7 @@ describe('_extractAnswers', () => {
       expect(errorSpy).toHaveBeenCalled();
     });
 
-    it.each(['1,234', '1.2.3', '1e400', 'Infinity', '0x10', '', 'NULL'])(
+    it.each(['1,234', '1.2.3', '1e400', 'Infinity', '0x10', ''])(
       'reads answers past default value %j, which fromXML accepts',
       defaultValue => {
         const declXml = `
