@@ -65,18 +65,6 @@ function editableDescriptor(interactions) {
 }
 
 /**
- * Whether the editor's rules apply to an item's interaction, whatever surrounds it in the
- * body: see editableDescriptor.
- *
- * @param {Array<{ bodyXml: string, responseDeclarations: string[] }>} interactions - As
- *   returned by parseItem
- * @returns {boolean}
- */
-export function isSupportedInteraction(interactions) {
-  return editableDescriptor(interactions) !== null;
-}
-
-/**
  * Whether the editor can edit an item faithfully: its interaction is supported, and the body
  * has the shape that interaction's builder writes.
  *

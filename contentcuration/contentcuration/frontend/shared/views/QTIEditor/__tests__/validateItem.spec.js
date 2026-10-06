@@ -43,13 +43,13 @@ describe('validateQtiItem', () => {
     expect(validateQtiItem(xml)).toEqual([]);
   });
 
-  it('applies editor rules to an item whose body the editor cannot reproduce', () => {
-    expect(validateQtiItem(CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER_WITH_STIMULUS)).toEqual([
-      { code: ValidationError.NO_CORRECT_ANSWER },
-    ]);
-    expect(
-      validateQtiItem(TEXT_ENTRY_ITEM_DOCUMENT_SHARED_PARAGRAPH, { allowFreeResponse: false }),
-    ).toEqual([{ code: ValidationError.FREE_RESPONSE_NOT_ALLOWED }]);
+  it('does not apply editor rules to an item whose body the editor cannot reproduce', () => {
+    const noPrompt = TEXT_ENTRY_ITEM_DOCUMENT_SHARED_PARAGRAPH.replace(
+      '<p>Tell us what you think.</p>',
+      '',
+    );
+    expect(validateQtiItem(CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER_WITH_STIMULUS)).toEqual([]);
+    expect(validateQtiItem(noPrompt, { allowFreeResponse: false })).toEqual([]);
   });
 
   it('reports an item whose body holds no interaction', () => {

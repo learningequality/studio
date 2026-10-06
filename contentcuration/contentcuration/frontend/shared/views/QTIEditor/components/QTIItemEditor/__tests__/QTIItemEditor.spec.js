@@ -340,15 +340,8 @@ describe('QTIItemEditor', () => {
       expect(screen.getByText(incompleteItemIndicatorLabel$())).toBeInTheDocument();
     });
 
-    test('is shown for an invalid item whose body the editor cannot reproduce', async () => {
+    test('is not shown for an item whose body the editor cannot reproduce', async () => {
       await renderAndValidate(CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER_WITH_STIMULUS);
-      expect(screen.getByTestId('incompleteIndicator')).toHaveTextContent(
-        incompleteItemIndicatorLabel$(),
-      );
-    });
-
-    test('is not shown for a valid item whose body the editor cannot reproduce', async () => {
-      await renderAndValidate(CHOICE_ITEM_DOCUMENT_WITH_STIMULUS);
       expect(screen.queryByTestId('incompleteIndicator')).not.toBeInTheDocument();
     });
 

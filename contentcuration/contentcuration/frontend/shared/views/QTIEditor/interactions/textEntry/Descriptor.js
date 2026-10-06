@@ -1,21 +1,12 @@
 import { QtiInteraction, QuestionType, BaseType, Cardinality, Placement } from '../../constants';
-import { hasNonNamespaceAttributes, isContentNode, parseXML } from '../../serialization/xml';
+import { parseXML } from '../../serialization/xml';
 import { InteractionDescriptor } from '../InteractionDescriptor';
-import { parseTextEntryInteraction, buildTextEntryInteractionXML } from './parse';
+import {
+  parseTextEntryInteraction,
+  buildTextEntryInteractionXML,
+  isSupportedTextEntryBody,
+} from './parse';
 import { validateTextEntryInteraction } from './validation';
-
-function contentOf(el) {
-  return [...el.childNodes].filter(isContentNode);
-}
-
-function hasContentAfter(node) {
-  for (let sibling = node.nextSibling; sibling; sibling = sibling.nextSibling) {
-    if (isContentNode(sibling)) {
-      return true;
-    }
-  }
-  return false;
-}
 
 /**
  * Owns all text-entry-specific interaction logic: schema, parse, buildXML, validate.
@@ -59,32 +50,9 @@ class TextEntryInteractionDescriptor extends InteractionDescriptor {
     return !!el.querySelector(QtiInteraction.TEXT_ENTRY);
   }
 
-  /**
-   * The builder writes the prompt, then a `<p>` holding only the interaction. Anything else
-   * would be dropped from the interaction's `<p>`, or moved ahead of it if it follows.
-   * Legacy conversion wraps the same shape in a bare `<div>`, the body's only content.
-   *
-   * @param {Element} bodyEl
-   * @returns {boolean}
-   */
+  /** @param {Element} bodyEl */
   isSupportedBody(bodyEl) {
-    const paragraph = bodyEl.querySelector(this.type).parentElement;
-    if (
-      paragraph.localName !== 'p' ||
-      hasNonNamespaceAttributes(paragraph) ||
-      contentOf(paragraph).length > 1 ||
-      hasContentAfter(paragraph)
-    ) {
-      return false;
-    }
-    const container = paragraph.parentElement;
-    return (
-      container === bodyEl ||
-      (container.localName === 'div' &&
-        !hasNonNamespaceAttributes(container) &&
-        container.parentElement === bodyEl &&
-        contentOf(bodyEl).length === 1)
-    );
+    return isSupportedTextEntryBody(bodyEl);
   }
 
   /**

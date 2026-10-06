@@ -323,9 +323,8 @@
        */
       const isIncomplete = computed(() => {
         if (isUnsupported.value) {
-          // Unreadable or empty QTI can't be fixed here and blocks publishing. So does
-          // an item unsupported only for its body shape that breaks the editor's rules;
-          // other unsupported items are publishable.
+          // Unreadable or empty QTI can't be fixed here and blocks publishing; other
+          // unsupported items are publishable.
           return (
             isQti.value &&
             validateQtiItem(props.item.raw_data, { allowFreeResponse: props.allowFreeResponse })

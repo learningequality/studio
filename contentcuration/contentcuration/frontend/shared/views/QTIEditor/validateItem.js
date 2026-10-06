@@ -1,6 +1,6 @@
 import { QuestionType, ValidationError } from './constants';
 import { parseItem } from './serialization/parseItem';
-import { isSupportedInteraction, resolveDescriptor } from './interactions/resolveDescriptor';
+import { isSupportedItem, resolveDescriptor } from './interactions/resolveDescriptor';
 
 /**
  * Validate what is wrong with an item as a whole, rather than with one of its interactions:
@@ -40,8 +40,8 @@ export function validateItemShape({ interactions, questionTypes = [], allowFreeR
  * @param {object} [options]
  * @param {boolean} [options.allowFreeResponse] - Whether a free-response question counts
  *   as valid. Consumers that only accept scorable questions pass false.
- * @returns {Array<{ code: string, id?: string }>} Empty when the item is valid. Items whose
- *   interactions the editor can't edit report only unreadable XML or a missing interaction.
+ * @returns {Array<{ code: string, id?: string }>} Empty when the item is valid. Items the
+ *   editor shows read-only report only unreadable XML or a missing interaction.
  */
 export function validateQtiItem(rawData, { allowFreeResponse = true } = {}) {
   if (!rawData) {
@@ -60,9 +60,8 @@ export function validateQtiItem(rawData, { allowFreeResponse = true } = {}) {
     ...resolveDescriptor(interaction.bodyXml, interaction.responseDeclarations),
   }));
 
-  if (item.interactions.length && !isSupportedInteraction(item.interactions)) {
-    // The editor's rules don't apply, only unreadable interactions count. Body shape alone
-    // doesn't exempt an item: its interaction is still one those rules cover.
+  if (item.interactions.length && !isSupportedItem(item.interactions, item.itemBodyXml)) {
+    // Shown read-only: the editor's rules don't apply, only unreadable interactions count.
     return resolved.filter(({ error }) => error).map(({ error }) => ({ code: error }));
   }
 

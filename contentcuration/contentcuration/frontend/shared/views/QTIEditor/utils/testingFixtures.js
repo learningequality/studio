@@ -249,7 +249,7 @@ export const CHOICE_ITEM_DOCUMENT_WITH_STIMULUS = VALID_CHOICE_ITEM_DOCUMENT.rep
   '<qti-item-body><p>Read the passage.</p>',
 );
 
-/** An incomplete item the editor cannot reproduce, which validation still reports. */
+/** An item the editor cannot reproduce, which would break its rules if they applied. */
 export const CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER_WITH_STIMULUS =
   CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER.replace(
     '<qti-item-body>',
