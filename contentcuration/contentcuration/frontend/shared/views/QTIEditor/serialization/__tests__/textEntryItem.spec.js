@@ -99,16 +99,17 @@ describe('a text entry item', () => {
     expect(doc.querySelector('qti-correct-response qti-value').textContent).toBe('1.0');
   });
 
-  it('writes the Text correct response as typed and its map key trimmed', () => {
-    const doc = parseXML(build(QuestionType.TEXT_ENTRY, [answer(' Paris ')]));
-    expect(doc.querySelector('qti-correct-response qti-value').textContent).toBe(' Paris ');
-    expect(doc.querySelector('qti-map-entry').getAttribute('map-key')).toBe('Paris');
+  it('writes Text answers and map keys trimmed', () => {
+    const doc = parseXML(build(QuestionType.TEXT_ENTRY, [answer(' New York '), answer('Rome  ')]));
+    expect(doc.querySelector('qti-correct-response qti-value').textContent).toBe('New York');
+    const entries = [...doc.querySelectorAll('qti-map-entry')];
+    expect(entries.map(e => e.getAttribute('map-key'))).toEqual(['New York', 'Rome']);
   });
 
-  it('writes the Numeric answer as typed', () => {
-    const doc = parseXML(build(QuestionType.NUMERIC, [answer(' 1 ')]));
-    expect(doc.querySelector('qti-correct-response qti-value').textContent).toBe(' 1 ');
-    expect(doc.querySelector('qti-map-entry').getAttribute('map-key')).toBe(' 1 ');
+  it('writes the Numeric answer and map key trimmed', () => {
+    const doc = parseXML(build(QuestionType.NUMERIC, [answer(' 5 ')]));
+    expect(doc.querySelector('qti-correct-response qti-value').textContent).toBe('5');
+    expect(doc.querySelector('qti-map-entry').getAttribute('map-key')).toBe('5');
   });
 
   it('never marks a Numeric map entry case-sensitive', () => {

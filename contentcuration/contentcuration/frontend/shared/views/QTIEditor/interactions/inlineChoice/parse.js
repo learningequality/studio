@@ -288,6 +288,10 @@ export function buildInlineChoiceInteractionXML(state, questionType, declaration
   for (const el of passageEl.querySelectorAll(DROPDOWN)) {
     el.removeAttribute(CORRECT_ATTR);
     el.setAttribute('shuffle', String(Boolean(shuffle)));
+    // Trimmed here, not in editor state, so typing is untouched.
+    for (const option of el.querySelectorAll(OPTION)) {
+      option.textContent = option.textContent.trim();
+    }
   }
 
   const promptEl = buildXmlNode({ tag: 'div', innerHTML: prompt || '' });

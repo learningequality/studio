@@ -194,6 +194,27 @@ def test_text_input_mapping_keeps_correct_response(map_entries, expected):
     assert all(a["correct"] for a in answers)
 
 
+@pytest.mark.parametrize(
+    "map_key",
+    [
+        pytest.param("42", id="trimmed_key"),
+        pytest.param(" 42 ", id="padded_key"),
+    ],
+)
+def test_text_input_padded_values_dedupe(map_key):
+    raw_data = _text_item("single", [" 42 "], map_entries=[(map_key, "1.0")])
+    answers = json.loads(derive_perseus_item(_Item(raw_data)).answers)
+    assert [a["answer"] for a in answers] == ["42"]
+
+
+def test_choice_padded_correct_value_matches_identifier():
+    raw_data = _choice_item(
+        "single", [" choice_0 "], [("choice_0", "A"), ("choice_1", "B")]
+    )
+    answers = json.loads(derive_perseus_item(_Item(raw_data)).answers)
+    assert [a["correct"] for a in answers] == [True, False]
+
+
 def test_overflowing_correct_value_is_dropped():
     raw_data = _text_item("single", ["42", "1e400"])
     assert is_perseus_derivable(raw_data) is True

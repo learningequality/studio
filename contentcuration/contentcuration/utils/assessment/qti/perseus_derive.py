@@ -121,7 +121,7 @@ def _correct_values(declaration) -> List[str]:
     if not correct_responses:
         return []
     return [
-        value.text or ""
+        (value.text or "").strip()
         for value in _children_by_localname(correct_responses[0], "qti-value")
     ]
 
@@ -134,7 +134,7 @@ def _accepted_values(declaration) -> List[str]:
     mappings = _children_by_localname(declaration, "qti-mapping")
     if mappings:
         values += [
-            entry.get("map-key")
+            (entry.get("map-key") or "").strip()
             for entry in _children_by_localname(mappings[0], "qti-map-entry")
             if (_as_float(entry.get("mapped-value")) or 0) >= 1
         ]
@@ -198,7 +198,7 @@ def _derive_choice(interaction, item_body, declaration):
 def _perseus_number(value):
     """A leading "+" and capital "E" are valid xsd:double but not for
     ``extract_value``."""
-    normalised = value.strip().removeprefix("+").lower()
+    normalised = value.removeprefix("+").lower()
     return normalised if extract_value(normalised) is not None else value
 
 
