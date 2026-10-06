@@ -25,13 +25,23 @@ const router = new VueRouter({
     {
       name: RouteNames.MY_ORGANIZATIONS,
       path: '/my-organizations',
+      alias: '/organizations',
       component: StudioMyOrganizations,
     },
     {
       name: RouteNames.NEW_ORGANIZATION,
       path: '/organization/new',
+      alias: '/organizations/new',
       component: OrganizationEditPage,
       props: true,
+    },
+    {
+      path: '/organizations/:organizationId',
+      redirect: to => ({
+        name: RouteNames.ORGANIZATION_EDIT,
+        params: { organizationId: to.params.organizationId, tab: 'details' },
+        query: to.query,
+      }),
     },
     {
       name: RouteNames.ORGANIZATION_EDIT,

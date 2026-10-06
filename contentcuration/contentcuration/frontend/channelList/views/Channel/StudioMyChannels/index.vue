@@ -5,7 +5,7 @@
     :invitations="editInvitations"
   >
     <template #header>
-      <h1 class="visuallyhidden">{{ $tr('title') }}</h1>
+      <h1 class="visuallyhidden">{{ strings.title$() }}</h1>
 
       <div
         v-if="!loading"
@@ -13,10 +13,37 @@
       >
         <KButton
           primary
-          :text="$tr('newChannel')"
+          :text="strings.newChannel$()"
           @click="newChannel"
         />
+        <div
+          class="organization-actions"
+          :class="{ 'small-window': windowIsSmall }"
+        >
+          <KSelect
+            v-model="organizationFilter"
+            class="organization-filter"
+            data-testid="organization-filter"
+            :label="filterByOrganization$()"
+            :options="organizationOptions"
+          />
+          <KButton
+            primary
+            :text="strings.createOrganization$()"
+            @click="newOrganization"
+          />
+        </div>
       </div>
+      <p
+        v-if="organizationLoadError"
+        role="alert"
+      >
+        {{ organizationLoadError$() }}
+        <KButton
+          :text="retryOrganizations$()"
+          @click="loadOrganizations"
+        />
+      </p>
     </template>
 
     <template
@@ -40,7 +67,7 @@
             size="small"
             icon="optionsVertical"
             appearance="flat-button"
-            :ariaLabel="$tr('moreOptions')"
+            :ariaLabel="strings.moreOptions$()"
             @click.stop
           >
             <template #menu>
@@ -76,12 +103,15 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
+  import useKResponsiveWindow from 'kolibri-design-system/lib/composables/useKResponsiveWindow';
   import { useChannelList } from '../../../composables/useChannelList';
+  import { useChannelOrganizationFilter } from '../../../composables/useChannelOrganizationFilter';
   import { RouteNames, InvitationShareModes } from '../../../constants';
   import StudioChannelsPage from '../StudioChannelsPage';
   import StudioChannelCard from '../StudioChannelCard';
   import ChannelStar from '../ChannelStar';
   import DeleteChannelModal from '../DeleteChannelModal';
+  import { studioMyChannelsStrings as strings } from 'shared/strings/studioMyChannelsStrings';
   import ChannelTokenModal from 'shared/views/channel/ChannelTokenModal';
   import { ChannelListTypes } from 'shared/constants';
   import { redirectBrowser } from 'shared/utils/navigation';
@@ -96,15 +126,36 @@
       ChannelTokenModal,
     },
     setup() {
+      const { windowIsSmall } = useKResponsiveWindow();
       const { loading, channels } = useChannelList({
         listType: ChannelListTypes.EDITABLE,
         sortFields: ['modified'],
         orderFields: ['desc'],
       });
 
+      const {
+        organizationFilter,
+        organizationOptions,
+        filteredChannels,
+        filterByOrganization$,
+        organizationLoadError,
+        organizationLoadError$,
+        retryOrganizations$,
+        loadOrganizations,
+      } = useChannelOrganizationFilter(channels);
+
       return {
+        windowIsSmall,
+        strings,
         loading,
-        editableChannels: channels,
+        editableChannels: filteredChannels,
+        organizationLoadError,
+        organizationLoadError$,
+        retryOrganizations$,
+        loadOrganizations,
+        organizationFilter,
+        organizationOptions,
+        filterByOrganization$,
       };
     },
     data() {
@@ -138,22 +189,29 @@
           query: { last: this.$route.name },
         });
       },
+      newOrganization() {
+        this.$router.push({ name: RouteNames.NEW_ORGANIZATION });
+      },
       onCardClick(channel) {
         redirectBrowser(window.Urls.channel(channel.id));
       },
       getDropdownItems(channel) {
         const items = [
-          { label: this.$tr('editChannel'), icon: 'edit', value: 'edit' },
-          { label: this.$tr('deleteChannel'), icon: 'trash', value: 'delete' },
+          { label: this.strings.editChannel$(), icon: 'edit', value: 'edit' },
+          { label: this.strings.deleteChannel$(), icon: 'trash', value: 'delete' },
         ];
         if (channel.published) {
-          items.push({ label: this.$tr('copyToken'), icon: 'copy', value: 'copy' });
+          items.push({ label: this.strings.copyToken$(), icon: 'copy', value: 'copy' });
         }
         if (channel.source_url) {
-          items.push({ label: this.$tr('goToWebsite'), icon: 'openNewTab', value: 'source-url' });
+          items.push({
+            label: this.strings.goToWebsite$(),
+            icon: 'openNewTab',
+            value: 'source-url',
+          });
         }
         if (channel.demo_server_url) {
-          items.push({ label: this.$tr('viewContent'), icon: 'openNewTab', value: 'demo-url' });
+          items.push({ label: this.strings.viewContent$(), icon: 'openNewTab', value: 'demo-url' });
         }
         return items;
       },
@@ -175,16 +233,6 @@
         }
       },
     },
-    $trs: {
-      newChannel: 'New channel',
-      title: 'My channels',
-      moreOptions: 'More options',
-      editChannel: 'Edit channel details',
-      deleteChannel: 'Delete channel',
-      copyToken: 'Copy channel token',
-      goToWebsite: 'Go to source website',
-      viewContent: 'View channel on Kolibri',
-    },
   };
 
 </script>
@@ -194,9 +242,35 @@
 
   .button-container {
     display: flex;
-    justify-content: end;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
     width: 100%;
     margin-top: 20px;
+  }
+
+  .organization-actions {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    max-width: 100%;
+    margin-inline-start: auto;
+  }
+
+  .organization-filter {
+    width: 280px;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .organization-actions.small-window {
+    width: 100%;
+
+    .organization-filter {
+      flex: 1 1 auto;
+      width: auto;
+    }
   }
 
 </style>
