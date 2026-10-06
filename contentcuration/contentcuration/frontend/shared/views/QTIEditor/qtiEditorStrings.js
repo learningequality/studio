@@ -507,4 +507,37 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
       'When enabled, learners see a hint below the answer options so they know how many answers to choose. Toggle this off to increase question difficulty.',
     context: 'Modal body explaining answer count hint',
   },
+  insertInlineChoice: {
+    message: 'Insert',
+    context:
+      'Button in the passage toolbar that adds an answer dropdown at the cursor, or turns the highlighted text into one',
+  },
+  addAnswers: {
+    message: 'Add answers',
+    context: 'Label on an answer dropdown chip that has no correct answer yet',
+  },
+  answerDropdownWithCorrect: {
+    message:
+      '{label}, correct answer, answer dropdown, {count, plural, one {# option} other {# options}}',
+    context:
+      'Accessible name of an answer dropdown chip in the passage that has a correct answer. {label} is the correct answer, as the chip shows it',
+  },
+  answerDropdownNoCorrect: {
+    message:
+      '{label}, answer dropdown, {count, plural, one {# option} other {# options}}, no correct answer yet',
+    context:
+      "Accessible name of an answer dropdown chip in the passage that has no correct answer. {label} is the chip's 'Add answers' label",
+  },
+  answerDropdownWithCorrectNeedsAttention: {
+    message:
+      '{label}, correct answer, answer dropdown, needs attention, {count, plural, one {# option} other {# options}}',
+    context:
+      'Accessible name of an answer dropdown chip in the passage that has a correct answer and validation errors. {label} is the correct answer, as the chip shows it',
+  },
+  answerDropdownNoCorrectNeedsAttention: {
+    message:
+      '{label}, answer dropdown, needs attention, {count, plural, one {# option} other {# options}}, no correct answer yet',
+    context:
+      "Accessible name of an answer dropdown chip in the passage that has no correct answer and has validation errors. {label} is the chip's 'Add answers' label",
+  },
 });
