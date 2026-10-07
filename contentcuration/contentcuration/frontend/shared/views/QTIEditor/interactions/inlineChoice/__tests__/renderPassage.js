@@ -71,6 +71,8 @@ export async function renderPassage({ value, errorResponseIdentifiers, onChange,
     editor: onReady.mock.calls[0][0],
     openResponseIdentifier: passage.openResponseIdentifier,
     focusChip: provided.focusChip,
+    undo: passage.undo,
+    redo: passage.redo,
     onMinimize,
     setMode: newMode => {
       modeRef.value = newMode;

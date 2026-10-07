@@ -149,6 +149,124 @@ describe('InlineChoiceChip', () => {
     expect(editor.state.selection.head).toBe(3);
   });
 
+  it.each([
+    ['{ArrowRight}', 3],
+    ['{ArrowLeft}', 2],
+  ])('puts the caret beside a focused chip with %s', async (key, caret) => {
+    const user = userEvent.setup();
+    const { editor, openResponseIdentifier } = await renderPassage({
+      value: `<p>a${chip('r1', [['c1', 'x']], 'c1')}b</p>`,
+    });
+    getChip().focus();
+    await user.keyboard(key);
+
+    await waitFor(() => expect(editor.view.dom).toHaveFocus());
+    expect(editor.state.selection.empty).toBe(true);
+    expect(editor.state.selection.head).toBe(caret);
+    expect(openResponseIdentifier.value).toBeNull();
+  });
+
+  it('puts the caret by the text direction in right-to-left text', async () => {
+    const user = userEvent.setup();
+    const { editor } = await renderPassage({
+      value: `<p dir="rtl">a${chip('r1', [['c1', 'x']], 'c1')}b</p>`,
+    });
+    const chipEl = getChip();
+    const { getComputedStyle } = window;
+    const spy = jest
+      .spyOn(window, 'getComputedStyle')
+      .mockImplementation((el, ...rest) =>
+        el === chipEl ? { direction: 'rtl' } : getComputedStyle.call(window, el, ...rest),
+      );
+    try {
+      chipEl.focus();
+      await user.keyboard('{ArrowLeft}');
+    } finally {
+      spy.mockRestore();
+    }
+
+    await waitFor(() => expect(editor.view.dom).toHaveFocus());
+    expect(editor.state.selection.head).toBe(3);
+  });
+
+  it('leaves a focused chip with a modified arrow key alone', async () => {
+    const user = userEvent.setup();
+    const { editor } = await renderPassage({
+      value: `<p>a${chip('r1', [['c1', 'x']], 'c1')}b</p>`,
+    });
+    getChip().focus();
+    await user.keyboard('{Shift>}{ArrowRight}{/Shift}');
+    expect(getChip()).toHaveFocus();
+    expect(editor.view.dom).not.toHaveFocus();
+  });
+
+  // The chip keeps its keys from ProseMirror, so it runs the passage's history shortcuts itself.
+  it.each([
+    ['Ctrl+Shift+Z', '{Control>}{Shift>}z{/Shift}{/Control}'],
+    ['Ctrl+Y', '{Control>}y{/Control}'],
+  ])('undoes with Ctrl+Z and redoes with %s while focused', async (_, redoKeys) => {
+    const user = userEvent.setup();
+    const { editor } = await renderPassage({ value: `<p>${chip('r1', [['a', 'x']], 'a')}</p>` });
+    editor.commands.updateInlineChoice('r1', {
+      options: [
+        { id: 'a', text: 'x' },
+        { id: 'b', text: 'y' },
+      ],
+      correctId: 'b',
+    });
+    await waitFor(() => expect(getChip()).toHaveTextContent('2 y'));
+    getChip().focus();
+
+    await user.keyboard('{Control>}z{/Control}');
+    await waitFor(() => expect(getChip()).toHaveTextContent('1 x'));
+    expect(getChip()).toHaveFocus();
+
+    await user.keyboard(redoKeys);
+    await waitFor(() => expect(getChip()).toHaveTextContent('2 y'));
+    expect(getChip()).toHaveFocus();
+  });
+
+  // As the passage's keymap does, by the key's place when the layout gives a non-Latin letter.
+  it('undoes and redoes by the key’s place on a non-Latin keyboard layout', async () => {
+    const { editor } = await renderPassage({ value: `<p>${chip('r1', [['a', 'x']], 'a')}</p>` });
+    editor.commands.updateInlineChoice('r1', { correctId: null });
+    await waitFor(() => expect(getChip()).not.toHaveTextContent('x'));
+    const press = init => fireEvent.keyDown(getChip(), { ctrlKey: true, ...init });
+
+    await press({ key: 'я', keyCode: 90 });
+    await waitFor(() => expect(getChip()).toHaveTextContent('x'));
+    await press({ key: 'Я', keyCode: 90, shiftKey: true });
+    await waitFor(() => expect(getChip()).not.toHaveTextContent('x'));
+    await press({ key: 'я', keyCode: 90 });
+    await waitFor(() => expect(getChip()).toHaveTextContent('x'));
+    await press({ key: 'н', keyCode: 89 });
+    await waitFor(() => expect(getChip()).not.toHaveTextContent('x'));
+  });
+
+  // jsdom is no Mac, so the passage's `Mod` is Ctrl, and Cmd+Z is no shortcut there.
+  it('leaves alone a history key the passage would not take', async () => {
+    const user = userEvent.setup();
+    const { editor } = await renderPassage({ value: `<p>${chip('r1', [['a', 'x']], 'a')}</p>` });
+    editor.commands.updateInlineChoice('r1', { correctId: null });
+    await waitFor(() => expect(getChip()).not.toHaveTextContent('x'));
+    getChip().focus();
+
+    await user.keyboard('{Meta>}z{/Meta}');
+    expect(editor.can().undo()).toBe(true);
+    expect(getChip()).not.toHaveTextContent('x');
+  });
+
+  it('puts focus in the passage when an undo takes the focused chip away', async () => {
+    const user = userEvent.setup();
+    const { editor } = await renderPassage({ value: '<p>ab</p>' });
+    editor.chain().setTextSelection(2).insertInlineChoice('r1').run();
+    getChip().focus();
+
+    await user.keyboard('{Control>}z{/Control}');
+    expect(screen.queryByRole('button', CHIP)).not.toBeInTheDocument();
+    await waitFor(() => expect(editor.view.dom).toHaveFocus());
+  });
+
   it('marks the chips a text selection covers, so the highlight can cover them', async () => {
     const { editor } = await renderPassage({
       value: `<p>a${chip('r1', [['c1', 'x']], 'c1')}b${chip('r2', [['c2', 'y']], 'c2')}</p>`,

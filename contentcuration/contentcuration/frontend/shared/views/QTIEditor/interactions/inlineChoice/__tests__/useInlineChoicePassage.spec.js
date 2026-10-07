@@ -1,6 +1,7 @@
 import { nextTick } from 'vue';
 import { fireEvent, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
+import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
 import { qtiEditorStrings } from '../../../qtiEditorStrings';
 import { getDropdowns } from '../parse';
 import { CHIP, chip, renderPassage } from './renderPassage';
@@ -18,6 +19,14 @@ jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
   };
 });
 
+jest.mock('kolibri-design-system/lib/composables/useKLiveRegion', () => {
+  const sendAssertiveMessage = jest.fn();
+  return {
+    __esModule: true,
+    default: () => ({ sendPoliteMessage: jest.fn(), sendAssertiveMessage }),
+  };
+});
+
 const dropdowns = editor => getDropdowns(editor.getHTML());
 
 const chipHTML = ({ responseIdentifier, options, correctId }) =>
@@ -28,8 +37,8 @@ const chipHTML = ({ responseIdentifier, options, correctId }) =>
   );
 
 // The handler only trusts the selection once the author has focused the editor.
-async function renderAt(value, from, to = from) {
-  const rendered = await renderPassage({ value });
+async function renderAt(value, from, to = from, passageOptions = {}) {
+  const rendered = await renderPassage({ value, ...passageOptions });
   rendered.editor.view.dom.focus();
   rendered.editor.commands.setTextSelection({ from, to });
   await nextTick();
@@ -169,6 +178,102 @@ describe('useInlineChoicePassage Insert action', () => {
     expect(first).toEqual(ORIGINAL);
     expect(second.options).toEqual([{ id: expect.any(String), text: '' }]);
     expect(editor.getHTML()).toBe(`<p>a ${chipHTML(ORIGINAL)} ${chipHTML(second)}b</p>`);
+  });
+});
+
+describe('useInlineChoicePassage announcements', () => {
+  stubProseMirrorLayout();
+
+  const { sendAssertiveMessage } = useKLiveRegion();
+  beforeEach(() => sendAssertiveMessage.mockClear());
+
+  /** Puts the caret where a test starts, leaving out what getting it there announced. */
+  async function renderAnnouncerAt(...args) {
+    const rendered = await renderAt(...args);
+    sendAssertiveMessage.mockClear();
+    return rendered;
+  }
+
+  const announced = () => sendAssertiveMessage.mock.calls.map(([message]) => message);
+
+  // ProseMirror reads `keyCode`, which `userEvent.keyboard` does not set.
+  const press = (editor, key, keyCode) => fireEvent.keyDown(editor.view.dom, { key, keyCode });
+
+  const TWO_CHIPS = `<p>a${chip('r1', [['c1', 'x']], 'c1')}b${chip('r2', [
+    ['c2', 'y'],
+    ['c3', 'z'],
+  ])}</p>`;
+
+  it.each([
+    ['forward', 2, 3],
+    ['backward', 3, 2],
+  ])('names a chip the caret moves %s across', async (_, from, to) => {
+    const { editor } = await renderAnnouncerAt(TWO_CHIPS, from);
+    editor.commands.setTextSelection(to);
+    expect(announced()).toEqual([
+      qtiEditorStrings.answerDropdownWithCorrect$({ label: 'x', count: 1 }),
+    ]);
+  });
+
+  it('names a chip that needs attention as such', async () => {
+    const { editor } = await renderAnnouncerAt(TWO_CHIPS, 4, 4, {
+      errorResponseIdentifiers: ['r2'],
+    });
+    editor.commands.setTextSelection(5);
+    expect(announced()).toEqual([
+      qtiEditorStrings.answerDropdownNoCorrectNeedsAttention$({
+        label: qtiEditorStrings.addAnswers$(),
+        count: 2,
+      }),
+    ]);
+  });
+
+  it('says nothing about a caret move across text', async () => {
+    const { editor } = await renderAnnouncerAt(TWO_CHIPS, 1);
+    editor.commands.setTextSelection(2);
+    expect(announced()).toEqual([]);
+  });
+
+  it('says which chip Backspace removed', async () => {
+    const { editor } = await renderAnnouncerAt(TWO_CHIPS, 3);
+    press(editor, 'Backspace', 8);
+    expect(announced()).toEqual([qtiEditorStrings.answerDropdownRemoved$({ label: 'x' })]);
+  });
+
+  it('counts the chips removed together', async () => {
+    const { editor } = await renderAnnouncerAt(TWO_CHIPS, 1, 6);
+    editor.commands.deleteSelection();
+    expect(announced()).toEqual([qtiEditorStrings.answerDropdownsRemoved$({ count: 2 })]);
+  });
+
+  // The options panel and a focused chip step through the passage's history from outside it.
+  it('says which chip an undo or redo from outside the passage removed', async () => {
+    const { editor, undo, redo } = await renderPassage({ value: TWO_CHIPS });
+    editor.commands.deleteRange({ from: 2, to: 3 });
+    undo();
+    expect(announced()).toEqual([]);
+    redo();
+    expect(announced()).toEqual([qtiEditorStrings.answerDropdownRemoved$({ label: 'x' })]);
+  });
+
+  it('says so when an undo from a focused chip removes it', async () => {
+    const user = userEvent.setup();
+    const { editor } = await renderPassage({ value: '<p>ab</p>' });
+    editor.chain().setTextSelection(2).insertInlineChoice('r1').run();
+    screen.getByRole('button', CHIP).focus();
+
+    await user.keyboard('{Control>}z{/Control}');
+    expect(announced()).toEqual([
+      qtiEditorStrings.answerDropdownRemoved$({ label: qtiEditorStrings.addAnswers$() }),
+    ]);
+  });
+
+  it('says nothing about changes made while the passage is not focused', async () => {
+    const { editor } = await renderPassage({ value: TWO_CHIPS });
+    editor.commands.setTextSelection(2);
+    editor.commands.setTextSelection(3);
+    editor.commands.setContent('<p>ab</p>');
+    expect(announced()).toEqual([]);
   });
 });
 

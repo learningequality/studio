@@ -21,8 +21,19 @@
       ]"
       data-copy-ignore
       @click="isEditable && open()"
+      @keydown="isEditable && onKeydown($event)"
     >
-      <span class="badge">
+      <!-- As on an option row, so the chip's colour is not all that says it needs attention -->
+      <KIcon
+        v-if="hasErrors"
+        icon="error"
+        class="error-icon"
+        :color="$themeTokens.error"
+      />
+      <span
+        v-else
+        class="badge"
+      >
         {{ $formatNumber(optionCount) }}
       </span>
       <span
@@ -52,8 +63,8 @@
   // eslint-disable-next-line import/no-unresolved
   import { DOMSerializer } from '@tiptap/pm/model';
   import { NodeViewWrapper } from '@tiptap/vue-2';
-  import { qtiEditorStrings } from '../../../../qtiEditorStrings';
-  import { injectPassageChips } from '../../passageChips';
+  import { describeChip, injectPassageChips } from '../../passageChips';
+  import { historyShortcut } from '../../historyShortcut';
 
   export default {
     name: 'InlineChoiceChip',
@@ -66,55 +77,28 @@
       const {
         openResponseIdentifier,
         openDropdown,
+        focusChip,
+        stepHistory: stepPassageHistory,
         isEditable,
         errorResponseIdentifiers,
         showAnswers,
       } = injectPassageChips();
-      const {
-        addAnswers$,
-        answerDropdownWithCorrect$,
-        answerDropdownNoCorrect$,
-        answerDropdownWithCorrectNeedsAttention$,
-        answerDropdownNoCorrectNeedsAttention$,
-        answerDropdownHidden$,
-        chooseAnswer$,
-      } = qtiEditorStrings;
-
       const responseIdentifier = computed(() => props.node.attrs.responseIdentifier);
-      const optionCount = computed(
-        () => props.node.attrs.options.filter(option => option.text.trim()).length,
-      );
-      const correctText = computed(() => {
-        const correct = props.node.attrs.options.find(
-          option => option.id === props.node.attrs.correctId,
-        );
-        return correct ? correct.text.trim() : '';
-      });
-      const hasAnswer = computed(() => correctText.value !== '');
       const hasErrors = computed(() =>
         errorResponseIdentifiers.value.includes(responseIdentifier.value),
       );
       // A preview that hides the answers shows what the learner sees before choosing.
       const isConcealed = computed(() => !isEditable.value && !showAnswers.value);
-      const label = computed(() => {
-        if (isConcealed.value) return chooseAnswer$();
-        return hasAnswer.value ? correctText.value : addAnswers$();
-      });
-      // Starts with the visible label, so voice control finds the chip by what it shows.
-      const accessibleName = computed(() => {
-        // A preview that hides the answers must not read them out either.
-        if (isConcealed.value) {
-          return answerDropdownHidden$({ label: label.value, count: optionCount.value });
-        }
-        const name = hasAnswer.value
-          ? hasErrors.value
-            ? answerDropdownWithCorrectNeedsAttention$
-            : answerDropdownWithCorrect$
-          : hasErrors.value
-            ? answerDropdownNoCorrectNeedsAttention$
-            : answerDropdownNoCorrect$;
-        return name({ label: label.value, count: optionCount.value });
-      });
+      const description = computed(() =>
+        describeChip(props.node.attrs, {
+          hasErrors: hasErrors.value,
+          isConcealed: isConcealed.value,
+        }),
+      );
+      const optionCount = computed(() => description.value.optionCount);
+      const hasAnswer = computed(() => description.value.hasAnswer);
+      const label = computed(() => description.value.label);
+      const accessibleName = computed(() => description.value.accessibleName);
 
       const isOpen = computed(() => openResponseIdentifier.value === responseIdentifier.value);
       const controlAttrs = computed(() =>
@@ -133,7 +117,44 @@
         { flush: 'post' },
       );
 
+      /**
+       * Left and Right on the focused chip put the caret back in the passage beside it, as they
+       * move past the chip there. They go by the text's direction, so in right-to-left text
+       * Left lands after the chip.
+       */
+      function leaveForText(event) {
+        if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+        if (event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) return;
+        const pos = props.getPos();
+        if (typeof pos !== 'number') return;
+        event.preventDefault();
+        const rtl = window.getComputedStyle(event.currentTarget).direction === 'rtl';
+        const after = (event.key === 'ArrowRight') !== rtl;
+        props.editor
+          .chain()
+          .setTextSelection(after ? pos + props.node.nodeSize : pos)
+          .focus()
+          .run();
+      }
+
+      /** The passage's undo and redo, as its keys never reach ProseMirror from the chip. */
+      function stepHistory(event) {
+        const direction = historyShortcut(event);
+        if (!direction) return;
+        event.preventDefault();
+        const button = event.currentTarget;
+        stepPassageHistory(direction);
+        // An undo can take the chip away, and focus with it.
+        if (!button.isConnected) focusChip(responseIdentifier.value);
+      }
+
+      function onKeydown(event) {
+        leaveForText(event);
+        stepHistory(event);
+      }
+
       return {
+        onKeydown,
         copySource,
         open: () => openDropdown(responseIdentifier.value),
         optionCount,
@@ -161,6 +182,10 @@
       selected: {
         type: Boolean,
         default: false,
+      },
+      getPos: {
+        type: Function,
+        required: true,
       },
     },
   };
@@ -209,6 +234,7 @@
 
     // TipTap only keeps ProseMirror out when the button itself is the event target.
     .badge,
+    .error-icon,
     .label {
       pointer-events: none;
     }
@@ -236,6 +262,13 @@
     }
   }
 
+  .error-icon {
+    top: 0;
+    flex-shrink: 0;
+    width: 1.5em;
+    height: 1.5em;
+  }
+
   .badge {
     display: inline-flex;
     flex-shrink: 0;
@@ -248,10 +281,6 @@
     color: var(--tokens-textInverted);
     background-color: var(--tokens-correct);
     border-radius: 0.75em;
-
-    .has-errors & {
-      background-color: v-bind('$themeTokens.error');
-    }
   }
 
   // A selected chip takes the selection's colours (`::selection` in `shared/styles`), which the
