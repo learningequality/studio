@@ -60,7 +60,7 @@ export function validateQtiItem(rawData, { allowFreeResponse = true } = {}) {
     ...resolveDescriptor(interaction.bodyXml, interaction.responseDeclarations),
   }));
 
-  if (item.interactions.length && !isSupportedItem(item.interactions)) {
+  if (item.interactions.length && !isSupportedItem(item.interactions, item.itemBodyXml)) {
     // Shown read-only: the editor's rules don't apply, only unreadable interactions count.
     return resolved.filter(({ error }) => error).map(({ error }) => ({ code: error }));
   }

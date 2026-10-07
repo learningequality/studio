@@ -1,7 +1,11 @@
 import { QtiInteraction, QuestionType, BaseType, Cardinality, Placement } from '../../constants';
 import { parseXML } from '../../serialization/xml';
 import { InteractionDescriptor } from '../InteractionDescriptor';
-import { parseTextEntryInteraction, buildTextEntryInteractionXML } from './parse';
+import {
+  parseTextEntryInteraction,
+  buildTextEntryInteractionXML,
+  isSupportedTextEntryBody,
+} from './parse';
 import { validateTextEntryInteraction } from './validation';
 
 /**
@@ -44,6 +48,11 @@ class TextEntryInteractionDescriptor extends InteractionDescriptor {
   matches(el) {
     if (el.tagName.toLowerCase() === QtiInteraction.TEXT_ENTRY) return true;
     return !!el.querySelector(QtiInteraction.TEXT_ENTRY);
+  }
+
+  /** @param {Element} bodyEl */
+  isSupportedBody(bodyEl) {
+    return isSupportedTextEntryBody(bodyEl);
   }
 
   /**

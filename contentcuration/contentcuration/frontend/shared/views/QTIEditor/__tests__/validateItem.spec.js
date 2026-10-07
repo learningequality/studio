@@ -8,12 +8,14 @@ import {
   VALID_CHOICE_ITEM_DOCUMENT,
   CHOICE_ITEM_DOCUMENT_NO_PROMPT,
   CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER,
+  CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER_WITH_STIMULUS,
   NO_INTERACTION_ITEM_DOCUMENT,
   INLINE_CHOICE_ITEM_DOCUMENT,
   VALID_MATCH_ITEM_DOCUMENT,
   MATCH_THREE_SETS_XML,
   MATCH_XML,
   MULTI_TEXT_ENTRY_ITEM_DOCUMENT,
+  TEXT_ENTRY_ITEM_DOCUMENT_SHARED_PARAGRAPH,
   MULTI_INTERACTION_ITEM_DOCUMENT,
   UNRECOGNIZED_INTERACTION_ITEM_DOCUMENT,
 } from '../utils/testingFixtures';
@@ -40,6 +42,15 @@ describe('validateQtiItem', () => {
   it('does not apply editor rules to an item with several text entries', () => {
     const xml = MULTI_TEXT_ENTRY_ITEM_DOCUMENT.replace(/>Sun</, '><').replace(/>Moon</, '><');
     expect(validateQtiItem(xml)).toEqual([]);
+  });
+
+  it('does not apply editor rules to an item whose body the editor cannot reproduce', () => {
+    const noPrompt = TEXT_ENTRY_ITEM_DOCUMENT_SHARED_PARAGRAPH.replace(
+      '<p>Tell us what you think.</p>',
+      '',
+    );
+    expect(validateQtiItem(CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER_WITH_STIMULUS)).toEqual([]);
+    expect(validateQtiItem(noPrompt, { allowFreeResponse: false })).toEqual([]);
   });
 
   it('reports an item whose body holds no interaction', () => {

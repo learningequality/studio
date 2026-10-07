@@ -148,20 +148,22 @@
       // Parse the item XML. rawData is a computed inside useQtiItem that
       // re-assembles the full XML whenever identifier/title/language or the
       // editor refs change — no need to duplicate assembleItemXml here.
-      const { interactions, hints, parseError, rawData } = useQtiItem(props.item.raw_data, {
-        bodyXml: currentBodyXml,
-        responseDeclarations: currentResponseDeclarations,
-      });
+      const { interactions, itemBodyXml, hints, parseError, rawData } = useQtiItem(
+        props.item.raw_data,
+        { bodyXml: currentBodyXml, responseDeclarations: currentResponseDeclarations },
+      );
 
       const isQti = computed(() => props.item.type === AssessmentItemTypes.QTI);
 
       /**
        * Whether this editor can edit the item's XML faithfully: it is readable, and it is
-       * either blank or holds exactly one interaction this editor knows.
+       * either blank or holds exactly one interaction this editor knows, in the body shape its
+       * builder writes.
        */
       const isBlank = !props.item.raw_data;
       const isEditableQti = computed(
-        () => !parseError.value && (isBlank || isSupportedItem(interactions.value)),
+        () =>
+          !parseError.value && (isBlank || isSupportedItem(interactions.value, itemBodyXml.value)),
       );
 
       /**

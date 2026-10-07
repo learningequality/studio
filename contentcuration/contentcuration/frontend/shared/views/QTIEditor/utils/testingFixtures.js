@@ -241,6 +241,32 @@ export const FREE_RESPONSE_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"
   </qti-item-body>
 </qti-assessment-item>`;
 
+const TEXT_ENTRY_PARAGRAPH = '<p><qti-text-entry-interaction response-identifier="RESPONSE" /></p>';
+
+/** A block interaction with a stimulus beside it, which the editor would delete. */
+export const CHOICE_ITEM_DOCUMENT_WITH_STIMULUS = VALID_CHOICE_ITEM_DOCUMENT.replace(
+  '<qti-item-body>',
+  '<qti-item-body><p>Read the passage.</p>',
+);
+
+/** An item the editor cannot reproduce, which would break its rules if they applied. */
+export const CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER_WITH_STIMULUS =
+  CHOICE_ITEM_DOCUMENT_NO_CORRECT_ANSWER.replace(
+    '<qti-item-body>',
+    '<qti-item-body><p>Read the passage.</p>',
+  );
+
+export const TEXT_ENTRY_ITEM_DOCUMENT_SHARED_PARAGRAPH = FREE_RESPONSE_ITEM_DOCUMENT.replace(
+  TEXT_ENTRY_PARAGRAPH,
+  '<p>Answer: <qti-text-entry-interaction response-identifier="RESPONSE" /> km</p>',
+);
+
+/** Content after the interaction's `<p>`, which the editor would move before it. */
+export const TEXT_ENTRY_ITEM_DOCUMENT_TRAILING_CONTENT = FREE_RESPONSE_ITEM_DOCUMENT.replace(
+  '</qti-item-body>',
+  '<p>Show your working.</p></qti-item-body>',
+);
+
 export const NO_INTERACTION_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item
   xmlns="http://www.imsglobal.org/xsd/imsqtiasi_v3p0"
@@ -301,6 +327,11 @@ export const CHOICE_ITEM_DOCUMENT_WITH_HINTS = `<?xml version="1.0" encoding="UT
     </qti-catalog>
   </qti-catalog-info>
 </qti-assessment-item>`;
+
+export const CHOICE_ITEM_DOCUMENT_WITH_HINTS_AND_STIMULUS = CHOICE_ITEM_DOCUMENT_WITH_HINTS.replace(
+  '<qti-item-body>',
+  '<qti-item-body><p>Read the passage.</p>',
+);
 
 export const VALID_ASSOCIATE_ITEM_DOCUMENT = `<?xml version="1.0" encoding="UTF-8"?>
 <qti-assessment-item

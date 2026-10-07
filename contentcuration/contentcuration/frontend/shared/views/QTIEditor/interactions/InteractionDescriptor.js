@@ -11,6 +11,7 @@
  */
 
 import { Placement } from '../constants';
+import { isContentNode } from '../serialization/xml';
 
 /**
  * Methods a subclass has to implement. `matches` and `getTypeOptions` are not listed
@@ -67,6 +68,18 @@ export class InteractionDescriptor {
    */
   matches(el) {
     return el.tagName.toLowerCase() === this.type;
+  }
+
+  /**
+   * Whether the item body has the shape this interaction's builder writes, so that editing
+   * and rebuilding it loses nothing. The default is the block shape: the interaction alone.
+   *
+   * @param {Element} bodyEl
+   * @returns {boolean}
+   */
+  isSupportedBody(bodyEl) {
+    const content = [...bodyEl.childNodes].filter(isContentNode);
+    return content.length === 1 && this.matches(content[0]);
   }
 
   /**

@@ -1,5 +1,12 @@
 import { QTIDeclaration } from '../../serialization/qti/QTIDeclaration';
-import { buildXmlNode, parseXML, serializeAsHtml, wrapInlineRuns } from '../../serialization/xml';
+import {
+  buildXmlNode,
+  hasNonNamespaceAttributes,
+  isContentNode,
+  parseXML,
+  serializeAsHtml,
+  wrapInlineRuns,
+} from '../../serialization/xml';
 import CorrectResponse from '../../serialization/qti/declarations/correctResponse';
 import Mapping from '../../serialization/qti/declarations/mapping';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
@@ -42,6 +49,48 @@ export function _defaultState() {
     answers: [{ id: generateRandomSlug('answer'), value: '', caseSensitive: false }],
     expectedLength: DEFAULT_EXPECTED_LENGTH,
   };
+}
+
+function contentOf(el) {
+  return [...el.childNodes].filter(isContentNode);
+}
+
+function hasContentAfter(node) {
+  for (let sibling = node.nextSibling; sibling; sibling = sibling.nextSibling) {
+    if (isContentNode(sibling)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Whether the item body has the shape buildTextEntryInteractionXML writes: the prompt, then a
+ * `<p>` holding only the interaction. Anything else would be dropped from the interaction's
+ * `<p>`, or moved ahead of it if it follows. Legacy conversion wraps the same shape in a bare
+ * `<div>`, the body's only content.
+ *
+ * @param {Element} bodyEl - The `<qti-item-body>` element
+ * @returns {boolean}
+ */
+export function isSupportedTextEntryBody(bodyEl) {
+  const paragraph = bodyEl.querySelector('qti-text-entry-interaction').parentElement;
+  if (
+    paragraph.localName !== 'p' ||
+    hasNonNamespaceAttributes(paragraph) ||
+    contentOf(paragraph).length > 1 ||
+    hasContentAfter(paragraph)
+  ) {
+    return false;
+  }
+  const container = paragraph.parentElement;
+  return (
+    container === bodyEl ||
+    (container.localName === 'div' &&
+      !hasNonNamespaceAttributes(container) &&
+      container.parentElement === bodyEl &&
+      contentOf(bodyEl).length === 1)
+  );
 }
 
 /**
