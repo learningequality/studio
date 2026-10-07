@@ -1,5 +1,5 @@
 import { nextTick } from 'vue';
-import { screen, waitFor } from '@testing-library/vue';
+import { fireEvent, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { qtiEditorStrings } from '../../../qtiEditorStrings';
 import { getDropdowns } from '../parse';
@@ -169,5 +169,52 @@ describe('useInlineChoicePassage Insert action', () => {
     expect(first).toEqual(ORIGINAL);
     expect(second.options).toEqual([{ id: expect.any(String), text: '' }]);
     expect(editor.getHTML()).toBe(`<p>a ${chipHTML(ORIGINAL)} ${chipHTML(second)}b</p>`);
+  });
+});
+
+describe('useInlineChoicePassage syncing', () => {
+  stubProseMirrorLayout();
+
+  const press = (editor, key, keyCode, init = {}) =>
+    fireEvent.keyDown(editor.view.dom, { key, keyCode, ...init });
+
+  const VALUE = `<p>a${chip('r1', [['c1', 'x']], 'c1')}b</p>`;
+
+  async function renderSynced() {
+    const onChange = jest.fn();
+    const rendered = await renderPassage({ value: VALUE, onChange });
+    rendered.editor.view.dom.focus();
+    return { ...rendered, onChange };
+  }
+
+  it('reports the passage when a chip is removed, with no chip open', async () => {
+    const { editor, onChange } = await renderSynced();
+    editor.commands.setTextSelection(3);
+    press(editor, 'Backspace', 8);
+    expect(onChange).toHaveBeenLastCalledWith('<p>ab</p>');
+  });
+
+  it('reports the passage when undo restores a removed chip', async () => {
+    const { editor, onChange } = await renderSynced();
+    editor.commands.setTextSelection(3);
+    press(editor, 'Backspace', 8);
+    press(editor, 'z', 90, { ctrlKey: true });
+    expect(dropdowns(editor)).toHaveLength(1);
+    expect(onChange).toHaveBeenLastCalledWith(editor.getHTML());
+  });
+
+  it('reports the passage when undo changes a closed chip’s options', async () => {
+    const { editor, onChange } = await renderSynced();
+    editor.commands.updateInlineChoice('r1', { correctId: null });
+    onChange.mockClear();
+    press(editor, 'z', 90, { ctrlKey: true });
+    expect(dropdowns(editor)[0].correctId).toBe('c1');
+    expect(onChange).toHaveBeenLastCalledWith(editor.getHTML());
+  });
+
+  it('leaves typing that changes no chip to be reported on blur', async () => {
+    const { editor, onChange } = await renderSynced();
+    editor.commands.insertContentAt(1, 'z');
+    expect(onChange).not.toHaveBeenCalled();
   });
 });

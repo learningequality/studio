@@ -9,6 +9,8 @@ module.exports = {
      */
     'selector-max-id': null, // This would require a major refactor
     'csstree/validator': null, // this triggers issues with unknown at rules too.
+    // Allows uppercase, as in KDS theme variables like --tokens-fineLine.
+    'custom-property-pattern': '^([a-z][a-zA-Z0-9]*)(-[a-zA-Z0-9]+)*$',
     'selector-pseudo-element-no-unknown': [
      true,
      {

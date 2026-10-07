@@ -2479,10 +2479,15 @@ video {
 [aria-disabled] {
   cursor: default;
 }
+/* Custom properties, so elements the browser paints no selection on can match it */
+:root {
+  --selection-color: #000000;
+  --selection-background-color: #b3d4fc;
+}
 ::selection {
-  color: #000000;
+  color: var(--selection-color);
   text-shadow: none;
-  background-color: #b3d4fc;
+  background-color: var(--selection-background-color);
 }
 .bottom-sheet-transition-enter,
 .bottom-sheet-transition-leave-to {

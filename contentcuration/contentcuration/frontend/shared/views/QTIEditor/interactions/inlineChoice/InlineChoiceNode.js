@@ -18,7 +18,7 @@ import { CORRECT_ATTR, DROPDOWN, OPTION, readDropdown } from './parse';
 
 const NODE_NAME = 'inlineChoice';
 
-const isChip = node => node.type.name === NODE_NAME;
+export const isChip = node => node.type.name === NODE_NAME;
 
 export const findChip = (doc, responseIdentifier) =>
   findChildren(

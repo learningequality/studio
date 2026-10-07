@@ -28,7 +28,7 @@ export const findChip = (editor, responseIdentifier) =>
   findChipIn(editor.state.doc, responseIdentifier) || null;
 
 /** Mounts the real TipTapEditor through `useInlineChoicePassage`; resolves once it is ready. */
-export async function renderPassage({ value, errorResponseIdentifiers, mode = 'edit' }) {
+export async function renderPassage({ value, errorResponseIdentifiers, onChange, mode = 'edit' }) {
   let passage;
   let provided;
   const modeRef = ref(mode);
@@ -45,7 +45,7 @@ export async function renderPassage({ value, errorResponseIdentifiers, mode = 'e
     {
       components: { TipTapEditor, Panel },
       setup() {
-        passage = useInlineChoicePassage({ errorResponseIdentifiers });
+        passage = useInlineChoicePassage({ errorResponseIdentifiers, onChange });
         return {
           extensions: passage.extensions,
           insertActions: passage.insertActions,
