@@ -57,6 +57,7 @@ from contentcuration.utils.assessment.qti.interaction_types.text_based import (
     TextEntryInteraction,
 )
 from contentcuration.utils.assessment.qti.prompt import Prompt
+from contentcuration.utils.assessment.qti.validation import secure_parser
 from contentcuration.utils.parser import extract_value
 
 
@@ -165,7 +166,7 @@ def _adapt_unsupported_markup(markup: str) -> str:
     Runs on the rendered markup, so tags typed as raw HTML are adapted too — an
     author's own style attribute included, which is filtered rather than refused.
     """
-    root = etree.fromstring(f"<root>{markup}</root>")
+    root = etree.fromstring(f"<root>{markup}</root>", secure_parser())
     for element in list(root.iter("*")):
         if element.get("style") is not None:
             _filter_style(element)
