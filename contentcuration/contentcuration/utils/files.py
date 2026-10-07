@@ -28,7 +28,7 @@ THUMBNAIL_WIDTH = 400
 
 
 def create_file_from_contents(
-    contents, ext=None, node=None, preset_id=None, uploaded_by=None
+    contents, ext=None, node=None, preset_id=None, uploaded_by=None, **fields
 ):
     # Imported here rather than at module level to avoid a circular import:
     # the GCS storage backend imports this module, and importing models at load
@@ -44,6 +44,7 @@ def create_file_from_contents(
         preset_id=preset_id,
         contentnode=node,
         uploaded_by=uploaded_by,
+        **fields,
     )
     result.file_on_disk.name = path
     result.save()

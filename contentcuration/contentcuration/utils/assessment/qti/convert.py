@@ -68,6 +68,8 @@ choice_interactions = {
 }
 text_entry_interactions = {exercises.INPUT_QUESTION, exercises.FREE_RESPONSE}
 
+_QTI_ID_PATTERN = re.compile(r"K[A-Za-z0-9_-]{22}")
+
 
 def hex_to_qti_id(hex_string):
     """
@@ -75,6 +77,16 @@ def hex_to_qti_id(hex_string):
     """
     bytes_data = bytes.fromhex(hex_string)
     return f"K{base64.urlsafe_b64encode(bytes_data).decode('ascii').rstrip('=')}"
+
+
+def qti_id_to_hex(qti_id):
+    """
+    Reverse of `hex_to_qti_id`, or None for an id it cannot have produced.
+    """
+    if not qti_id or not _QTI_ID_PATTERN.fullmatch(qti_id):
+        return None
+    hex_string = base64.urlsafe_b64decode(f"{qti_id[1:]}==").hex()
+    return hex_string if hex_to_qti_id(hex_string) == qti_id else None
 
 
 @dataclass(frozen=True)
