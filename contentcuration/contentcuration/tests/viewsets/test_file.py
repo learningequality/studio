@@ -573,6 +573,23 @@ class UploadFileURLTestCase(StudioAPITestCase):
         file = models.File.objects.get(checksum=self.file["checksum"])
         self.assertEqual(10, file.duration)
 
+    def test_upload_url_size_over_32_bit_max(self):
+        self.user.disk_space = 10 * 1024 ** 3
+        self.user.save()
+        self.file["size"] = 3 * 1024 ** 3
+        self.file["resumable"] = True
+
+        self.client.force_authenticate(user=self.user)
+        response = self.client.post(
+            reverse("file-upload-url"),
+            self.file,
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        file = models.File.objects.get(checksum=self.file["checksum"])
+        self.assertEqual(file.file_size, 3 * 1024 ** 3)
+
     def test_upload_url_doesnot_sets_contentnode(self):
         self.client.force_authenticate(user=self.user)
         response = self.client.post(

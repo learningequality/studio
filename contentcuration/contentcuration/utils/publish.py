@@ -661,12 +661,9 @@ def create_associated_file_objects(kolibrinode, ccnode):
                 create_associated_thumbnail(ccnode, ccfilemodel) or ccfilemodel
             )
 
-        # The true size lives in the studio#5974 file_size_bigint shadow (the
-        # legacy 32-bit file_size cannot hold >2.1 GB); fall back to file_size
-        # for rows the shadow has not been backfilled onto yet.
-        real_size = ccfilemodel.file_size_bigint
-        if real_size is None:
-            real_size = ccfilemodel.file_size
+        # Kolibri's LocalFile.file_size is still a 32-bit column; sizes that
+        # overflow it go only to the bigint shadow in the exported database.
+        real_size = ccfilemodel.file_size
         if real_size is not None and real_size > INT_32BIT_MAX:
             legacy_size = None
         else:
@@ -965,7 +962,9 @@ def fill_published_fields(channel, version_notes, draft_channel_version=None):
         .order_by("kind_id")
     )
     published_size = (
-        published_nodes.values("files__checksum", "files__file_size")
+        # SUM ignores NULL, but the isnull filter matches the partial index.
+        published_nodes.filter(files__file_size__isnull=False)
+        .values("files__checksum", "files__file_size")
         .distinct()
         .aggregate(resource_size=Sum("files__file_size"))["resource_size"]
         or 0
