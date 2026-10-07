@@ -8,6 +8,15 @@ import { stubProseMirrorLayout } from 'shared/utils/testing';
 
 // jsdom defines `ontouchstart`, which would put the editor in its touch layout.
 jest.mock('shared/utils/browserInfo', () => ({ isTouchDevice: false }));
+// KDS reads the window as small until it has measured it, which would swap Insert for its icon
+// button after the first render.
+jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
+  const { ref } = require('vue');
+  return {
+    __esModule: true,
+    default: () => ({ windowIsSmall: ref(false) }),
+  };
+});
 
 const dropdowns = editor => getDropdowns(editor.getHTML());
 
