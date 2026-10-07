@@ -545,4 +545,80 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     context:
       "Accessible name of an answer dropdown chip in the passage that has no correct answer and has validation errors. {label} is the chip's 'Add answers' label",
   },
+  answerDropdownHidden: {
+    message: '{label}, answer dropdown, {count, plural, one {# option} other {# options}}',
+    context:
+      "Accessible name of an answer dropdown chip in a question preview that hides the correct answers. {label} is the chip's 'Choose…' label",
+  },
+  chooseAnswer: {
+    message: 'Choose…',
+    context:
+      'Label on an answer dropdown in a question preview that hides the correct answers, where the learner would pick one',
+  },
+  inlineChoiceLabel: {
+    message: 'Inline choice',
+    context: 'Display name for an inline choice question type shown in the question type selector',
+  },
+  inlineChoiceDescription: {
+    message: 'Learners choose the correct answer from dropdowns placed within a passage.',
+    context: 'Description for the inline choice question type in the info modal',
+  },
+  questionOptionalLabel: {
+    message: 'Question (optional)',
+    context: 'Section header for a question prompt that authors may leave empty',
+  },
+  passageEditorLabel: {
+    message: 'Passage editor',
+    context: 'Section header for the passage that holds the inline choice dropdowns',
+  },
+  passageLabel: {
+    message: 'Passage',
+    context: 'Section header for the passage of an inline choice question, as a preview shows it',
+  },
+  passageEditorDescription: {
+    message: 'Inline choice widgets can be inserted blank or converted from highlighted text.',
+    context: 'Instruction under the passage editor header of an inline choice question',
+  },
+  editPassageLabel: {
+    message: 'Edit passage',
+    context: 'Accessible label for the clickable region that opens the passage for editing',
+  },
+  inlineChoiceOptionsLabel: {
+    message: 'Inline choice answer options',
+    context: 'Section header above the answer options of the open inline choice dropdown',
+  },
+  inlineChoiceOptionsDialogLabel: {
+    message: 'Answer options for dropdown {number}',
+    context:
+      'Accessible name of the panel that edits the options of one inline choice dropdown. {number} is its position in the passage',
+  },
+  closeInlineChoiceOptions: {
+    message: 'Close answer options',
+    context: 'Button that closes the panel editing the options of an inline choice dropdown',
+  },
+  inlineChoiceOptionLabel: {
+    message: 'Option {number}',
+    context:
+      'Names an inline choice option row: its text field, its reorder controls, and the announcement after it moves',
+  },
+  markInlineChoiceOptionCorrect: {
+    message: 'Mark option {number} as correct',
+    context: 'Accessible label for the radio button that marks an inline choice option correct',
+  },
+  addInlineChoiceOptionBtn: {
+    message: 'Add option',
+    context: 'Button that appends a new option to the open inline choice dropdown',
+  },
+  deleteInlineChoiceOptionBtn: {
+    message: 'Delete option {number}',
+    context: 'Accessible label for the delete icon button next to an inline choice option',
+  },
+  errorInlineChoiceOptionProblems: {
+    message: 'One or more inline choice options have problems',
+    context: 'Validation error above the passage when any of its dropdowns needs attention',
+  },
+  errorNoInlineChoice: {
+    message: 'Insert at least one inline choice',
+    context: 'Validation error when the passage of an inline choice question has no dropdown',
+  },
 });

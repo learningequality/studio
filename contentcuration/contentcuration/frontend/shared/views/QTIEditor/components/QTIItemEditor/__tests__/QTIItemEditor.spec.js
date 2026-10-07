@@ -44,6 +44,8 @@ const {
   hintsLabel$,
   associateLabel$,
   matchLabel$,
+  inlineChoiceLabel$,
+  passageEditorLabel$,
   questionNumberAndTypeLabel$,
   unknownTypeLabel$,
   responsePoolLabel$,
@@ -245,7 +247,6 @@ describe('QTIItemEditor', () => {
       const publishableDocuments = {
         'two interactions': MULTI_INTERACTION_ITEM_DOCUMENT,
         'an interaction with no descriptor': UNRECOGNIZED_INTERACTION_ITEM_DOCUMENT,
-        'an interaction with no editor': INLINE_CHOICE_ITEM_DOCUMENT,
         'several blanks in one text entry': MULTI_TEXT_ENTRY_ITEM_DOCUMENT,
         'a stimulus beside a block interaction': CHOICE_ITEM_DOCUMENT_WITH_STIMULUS,
         'a stimulus beside a hinted block interaction':
@@ -575,6 +576,41 @@ describe('QTIItemEditor', () => {
       renderMatchItem();
       expect(await screen.findByText(responsePoolLabel$())).toBeInTheDocument();
       expect(screen.getByText('Dog')).toBeInTheDocument();
+    });
+  });
+
+  describe('inline choice interaction', () => {
+    const renderInlineChoiceItem = (props = {}) =>
+      renderComponent({
+        item: {
+          assessment_id: 'test-item-id',
+          type: AssessmentItemTypes.QTI,
+          raw_data: INLINE_CHOICE_ITEM_DOCUMENT,
+        },
+        ...props,
+      });
+
+    test('names the inline choice question type', async () => {
+      renderInlineChoiceItem();
+      const heading = questionNumberAndTypeLabel$({
+        number: 1,
+        total: 5,
+        type: inlineChoiceLabel$(),
+      });
+      expect(await screen.findByRole('heading', { name: heading })).toBeInTheDocument();
+    });
+
+    test('opens in the inline choice editor', async () => {
+      renderInlineChoiceItem({ mode: 'edit' });
+      expect(
+        await screen.findByRole('heading', { name: passageEditorLabel$() }),
+      ).toBeInTheDocument();
+      expect(screen.queryByTestId('unsupportedMessage')).not.toBeInTheDocument();
+    });
+
+    test('marks a dropdown without a correct answer as incomplete', async () => {
+      renderInlineChoiceItem();
+      expect(await screen.findByTestId('incompleteIndicator')).toBeInTheDocument();
     });
   });
 
