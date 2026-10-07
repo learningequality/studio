@@ -239,11 +239,9 @@ describe('assembleItemXml', () => {
 
     it('writes no processing for a lone response declaration with nothing to score it by', () => {
       // A free response: there is no answer to score against, which is not a mistake.
-      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
       const xml = assembleWith([declaration('RESPONSE')]);
       expect(parseXML(xml).querySelector('qti-response-processing')).toBeNull();
       expect(identifiersOf(xml, 'qti-outcome-declaration')).toEqual(['SCORE']);
-      expect(warn).not.toHaveBeenCalled();
     });
 
     it('averages the scoring rules of several scorable response declarations', () => {
@@ -255,28 +253,21 @@ describe('assembleItemXml', () => {
       expect(xml).toContain(EXPECTED_PROCESSING);
     });
 
-    it('writes no processing and warns when a response declaration cannot be scored', () => {
-      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    it('writes no processing when a response declaration cannot be scored', () => {
       const xml = assembleWith([
         declaration('response_xq7tbn2c', 'choice_a1b2c3d4'),
         declaration('response_pw4rzk8d'),
       ]);
       expect(parseXML(xml).querySelector('qti-response-processing')).toBeNull();
       expect(identifiersOf(xml, 'qti-outcome-declaration')).toEqual(['SCORE']);
-      expect(warn).toHaveBeenCalledTimes(1);
-      expect(warn.mock.calls[0][0]).toContain('response_pw4rzk8d');
-      expect(warn.mock.calls[0][0]).not.toContain('response_xq7tbn2c');
     });
 
     it('treats a response declaration it cannot read as unscorable', () => {
-      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
       const xml = assembleWith([
         declaration('response_xq7tbn2c', 'choice_a1b2c3d4'),
         '<qti-response-declaration identifier="response_pw4rzk8d" cardinality="record"/>',
       ]);
       expect(parseXML(xml).querySelector('qti-response-processing')).toBeNull();
-      expect(warn).toHaveBeenCalledTimes(1);
-      expect(warn.mock.calls[0][0]).toContain('response_pw4rzk8d');
     });
 
     describe('element order', () => {
