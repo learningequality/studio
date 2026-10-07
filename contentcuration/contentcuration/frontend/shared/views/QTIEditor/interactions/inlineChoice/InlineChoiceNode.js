@@ -1,7 +1,7 @@
 // The resolver does not read package `exports` subpaths.
 /* eslint-disable import/no-unresolved */
 import { isHistoryTransaction } from '@tiptap/pm/history';
-import { Fragment, Slice } from '@tiptap/pm/model';
+import { DOMSerializer, Fragment, Slice } from '@tiptap/pm/model';
 import { Plugin } from '@tiptap/pm/state';
 /* eslint-enable import/no-unresolved */
 import {
@@ -14,11 +14,19 @@ import {
 import { VueNodeViewRenderer } from '@tiptap/vue-2';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
 import InlineChoiceChip from './components/InlineChoiceChip';
-import { CORRECT_ATTR, DROPDOWN, OPTION, readDropdown } from './parse';
+import {
+  COPIED_DROPDOWN,
+  CORRECT_ATTR,
+  DROPDOWN,
+  OPTION,
+  copiedDropdown,
+  readCopiedDropdown,
+  readDropdown,
+} from './parse';
 
 const NODE_NAME = 'inlineChoice';
 
-const isChip = node => node.type.name === NODE_NAME;
+export const isChip = node => node.type.name === NODE_NAME;
 
 export const findChip = (doc, responseIdentifier) =>
   findChildren(
@@ -88,6 +96,17 @@ function deleteChip(view, event) {
   return true;
 }
 
+/**
+ * A chip read from HTML holding no options, such as a copy whose dropdown cannot be read, gets
+ * one: QTI requires one in every dropdown, and every save is checked against it. It holds the
+ * element's text, which in a copy is the correct answer; the missing id is filled in on insert.
+ */
+function readStoredChip(el) {
+  const dropdown = readDropdown(el);
+  if (dropdown.options.length) return dropdown;
+  return { ...dropdown, options: [{ id: '', text: el.textContent.trim() }] };
+}
+
 function reidentify(fragment, taken) {
   const children = [];
   fragment.forEach(child => {
@@ -122,7 +141,11 @@ export const InlineChoiceNode = Node.create({
   },
 
   parseHTML() {
-    return [{ tag: DROPDOWN, getAttrs: readDropdown }];
+    // A copied chip first, so it is not read as the stored form, which it also matches.
+    return [
+      { tag: COPIED_DROPDOWN, getAttrs: readCopiedDropdown },
+      { tag: DROPDOWN, getAttrs: readStoredChip },
+    ];
   },
 
   renderHTML({ node }) {
@@ -135,6 +158,10 @@ export const InlineChoiceNode = Node.create({
       ...options.map(option => [OPTION, { identifier: option.id }, option.text]),
     ];
   },
+
+  // No `renderText`: TipTap's typing shortcuts read text through it, so a chip read as its answer
+  // could start one (a `-` answer at the start of a paragraph and a space make a list), and be
+  // deleted as the characters typed for it. Plain text leaves a chip out; copied HTML has it.
 
   addCommands() {
     return {
@@ -190,9 +217,17 @@ export const InlineChoiceNode = Node.create({
   },
 
   addProseMirrorPlugins() {
+    const serializer = DOMSerializer.fromSchema(this.editor.schema);
+    // Copies write a chip as `copiedDropdown`, which another passage reads back whole and other
+    // editors as its correct answer.
+    const clipboardSerializer = new DOMSerializer(
+      { ...serializer.nodes, [this.name]: node => copiedDropdown(node.attrs) },
+      serializer.marks,
+    );
     return [
       new Plugin({
         props: {
+          clipboardSerializer,
           handleKeyDown(view, event) {
             return ['Backspace', 'Delete'].includes(event.key) && deleteChip(view, event);
           },

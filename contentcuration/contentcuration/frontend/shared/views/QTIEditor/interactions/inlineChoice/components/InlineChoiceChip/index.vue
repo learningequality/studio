@@ -11,7 +11,11 @@
         'chip',
         {
           'is-open': isEditable && isOpen,
+          'is-revealed': !isEditable && showAnswers,
+          'is-concealed': isConcealed,
           'has-errors': hasErrors,
+          // TipTap marks a chip selected whenever the selection covers it, text selections
+          // included.
           'is-selected': isEditable && selected,
         },
         $computedClass({ ':focus': $coreOutline }),
@@ -23,7 +27,10 @@
         {{ $formatNumber(optionCount) }}
       </span>
       <span
-        :class="['label', { placeholder: !hasAnswer }]"
+        :class="[
+          'label',
+          { placeholder: isConcealed || (!hasAnswer && !optionCount), 'is-concealed': isConcealed },
+        ]"
         dir="auto"
       >
         {{ label }}
@@ -48,6 +55,7 @@
   import { NodeViewWrapper } from '@tiptap/vue-2';
   import { qtiEditorStrings } from '../../../../qtiEditorStrings';
   import { injectPassageChips } from '../../passageChips';
+  import { copiedDropdown } from '../../parse';
 
   export default {
     name: 'InlineChoiceChip',
@@ -57,14 +65,21 @@
     },
 
     setup(props) {
-      const { openResponseIdentifier, openDropdown, isEditable, errorResponseIdentifiers } =
-        injectPassageChips();
+      const {
+        openResponseIdentifier,
+        openDropdown,
+        isEditable,
+        errorResponseIdentifiers,
+        showAnswers,
+      } = injectPassageChips();
       const {
         addAnswers$,
         answerDropdownWithCorrect$,
         answerDropdownNoCorrect$,
         answerDropdownWithCorrectNeedsAttention$,
         answerDropdownNoCorrectNeedsAttention$,
+        answerDropdownHidden$,
+        chooseAnswer$,
       } = qtiEditorStrings;
 
       const responseIdentifier = computed(() => props.node.attrs.responseIdentifier);
@@ -81,9 +96,18 @@
       const hasErrors = computed(() =>
         errorResponseIdentifiers.value.includes(responseIdentifier.value),
       );
-      const label = computed(() => (hasAnswer.value ? correctText.value : addAnswers$()));
+      // A preview that hides the answers shows what the learner sees before choosing.
+      const isConcealed = computed(() => !isEditable.value && !showAnswers.value);
+      const label = computed(() => {
+        if (isConcealed.value) return chooseAnswer$();
+        return hasAnswer.value ? correctText.value : addAnswers$();
+      });
       // Starts with the visible label, so voice control finds the chip by what it shows.
       const accessibleName = computed(() => {
+        // A preview that hides the answers must not read them out either.
+        if (isConcealed.value) {
+          return answerDropdownHidden$({ label: label.value, count: optionCount.value });
+        }
         const name = hasAnswer.value
           ? hasErrors.value
             ? answerDropdownWithCorrectNeedsAttention$
@@ -105,8 +129,8 @@
       watchEffect(
         () => {
           if (!copySource.value) return;
-          const serializer = DOMSerializer.fromSchema(props.editor.schema);
-          copySource.value.replaceChildren(serializer.serializeNode(props.node));
+          const { dom } = DOMSerializer.renderSpec(document, copiedDropdown(props.node.attrs));
+          copySource.value.replaceChildren(dom);
         },
         { flush: 'post' },
       );
@@ -116,10 +140,12 @@
         open: () => openDropdown(responseIdentifier.value),
         optionCount,
         hasAnswer,
+        isConcealed,
         hasErrors,
         label,
         accessibleName,
         isEditable,
+        showAnswers,
         isOpen,
         controlAttrs,
       };
@@ -127,10 +153,6 @@
 
     props: {
       node: {
-        type: Object,
-        required: true,
-      },
-      editor: {
         type: Object,
         required: true,
       },
@@ -146,33 +168,49 @@
 
 <style lang="scss" scoped>
 
+  // Taller than a line of text, so it sits on the text's middle rather than its baseline.
   .chip {
     display: inline-flex;
-    gap: 6px;
+    gap: 8px;
     align-items: center;
-    padding: 0 8px;
+    padding: 10px 8px;
+    margin: 2px 0;
     font: inherit;
+    line-height: 1.5;
     color: inherit;
+    vertical-align: middle;
     cursor: pointer;
     background-color: transparent;
-    border: 1px dashed v-bind('$themeTokens.correct');
-    border-radius: 12px;
+    border: 1px dashed var(--tokens-correct);
+    border-radius: 8px;
 
-    &.is-open {
-      background-color: v-bind('$themePalette.green.v_100');
+    &.is-open,
+    &.is-revealed {
+      background-color: var(--palette-green-v100);
       border-style: solid;
     }
 
-    &.has-errors {
-      border-color: v-bind('$themeTokens.error');
+    // With the answers hidden, green would hint that the chip holds the correct answer.
+    &.is-concealed {
+      border-color: var(--palette-grey-v400);
+
+      .badge {
+        background-color: var(--palette-grey-v700);
+      }
     }
 
-    &.has-errors.is-open {
-      background-color: v-bind('$themePalette.red.v_100');
+    &.has-errors {
+      border-color: var(--tokens-error);
+    }
+
+    // A shown answer that needs attention reads as an error, not as a correct answer.
+    &.has-errors.is-open,
+    &.has-errors.is-revealed {
+      background-color: var(--palette-red-v100);
 
       // `annotation` is below AA contrast on this fill.
       .placeholder {
-        color: v-bind('$themePalette.grey.v_800');
+        color: var(--palette-grey-v800);
       }
     }
 
@@ -182,10 +220,9 @@
       pointer-events: none;
     }
 
-    // ProseMirror hides the caret while a chip is node-selected.
-    &.is-selected {
-      outline: 2px solid v-bind('$themeTokens.primary');
-      outline-offset: 1px;
+    &::selection,
+    *::selection {
+      background-color: transparent;
     }
   }
 
@@ -197,22 +234,49 @@
     white-space: nowrap;
 
     &.placeholder {
-      color: v-bind('$themeTokens.annotation');
+      color: var(--tokens-annotation);
+    }
+
+    // Stands in for the learner's choice rather than naming an answer.
+    &.is-concealed {
+      font-weight: normal;
     }
   }
 
   .badge {
-    min-width: 1.4em;
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5em;
+    height: 1.5em;
     padding: 0 4px;
     font-size: 0.85em;
-    font-weight: 600;
-    color: v-bind('$themeTokens.textInverted');
-    text-align: center;
-    background-color: v-bind('$themeTokens.correct');
-    border-radius: 10px;
+    color: var(--tokens-textInverted);
+    background-color: var(--tokens-correct);
+    border-radius: 0.75em;
 
     .has-errors & {
       background-color: v-bind('$themeTokens.error');
+    }
+  }
+
+  // A selected chip takes the selection's colour (KDS's global `::selection`), which the browser
+  // only paints behind text, and turns neutral so it keeps its contrast. Last, and as specific as
+  // the open error state, so it wins over the states above.
+  .chip.is-selected,
+  .chip.is-selected.has-errors.is-open {
+    background-color: var(--brand-secondary-v100);
+    border-color: var(--palette-grey-v400);
+
+    .badge {
+      color: var(--tokens-text);
+      background-color: transparent;
+      box-shadow: inset 0 0 0 1px var(--palette-grey-v400);
+    }
+
+    .label {
+      color: var(--tokens-text);
     }
   }
 

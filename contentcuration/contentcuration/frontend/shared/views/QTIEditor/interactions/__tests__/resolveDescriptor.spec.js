@@ -89,7 +89,6 @@ describe('isSupportedItem', () => {
     ['two choice interactions', interactionsOf(MULTI_INTERACTION_ITEM_DOCUMENT)],
     ['a choice and a text entry', interactionsOf(TWO_INTERACTIONS_DOCUMENT)],
     ['an interaction with no descriptor', interactionsOf(UNRECOGNIZED_INTERACTION_ITEM_DOCUMENT)],
-    ['an interaction with no editor', interactionsOf(INLINE_CHOICE_ITEM_DOCUMENT)],
     ['several text entries in one body', interactionsOf(MULTI_TEXT_ENTRY_ITEM_DOCUMENT)],
     [
       'an interaction whose question type cannot be read',
@@ -103,6 +102,14 @@ describe('isSupportedItem', () => {
     ['one choice interaction', VALID_CHOICE_ITEM_DOCUMENT],
     ['a match interaction', VALID_MATCH_ITEM_DOCUMENT],
     ['a text entry after its prompt', FREE_RESPONSE_ITEM_DOCUMENT],
+    ['inline choice dropdowns in a passage', INLINE_CHOICE_ITEM_DOCUMENT],
+    [
+      'inline choice dropdowns after a question, across paragraphs',
+      INLINE_CHOICE_ITEM_DOCUMENT.replace(
+        '<qti-item-body>',
+        '<qti-item-body><p data-studio-prompt="">Fill in the blanks</p><p>Read this first.</p>',
+      ),
+    ],
   ])('accepts %s', (_, document) => {
     expect(isSupported(document)).toBe(true);
   });
