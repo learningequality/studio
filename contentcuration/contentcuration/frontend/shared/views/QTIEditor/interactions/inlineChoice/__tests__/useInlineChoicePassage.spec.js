@@ -160,20 +160,6 @@ describe('useInlineChoicePassage Insert action', () => {
     expect(dropdowns(editor)).toHaveLength(1);
   });
 
-  it('adds a new chip after a node-selected chip instead of replacing it', async () => {
-    const { editor, openResponseIdentifier } = await renderAt(`<p>a${chipHTML(ORIGINAL)}b</p>`, 1);
-    editor.commands.setNodeSelection(2);
-    await nextTick();
-    await clickInsert();
-
-    expect(dropdowns(editor)).toHaveLength(2);
-    const [first, second] = dropdowns(editor);
-    expect(first).toEqual(ORIGINAL);
-    expect(second.options).toEqual([{ id: expect.any(String), text: '' }]);
-    expect(editor.getHTML()).toBe(`<p>a${chipHTML(ORIGINAL)}${chipHTML(second)}b</p>`);
-    expect(openResponseIdentifier.value).toBe(second.responseIdentifier);
-  });
-
   it('keeps a chip inside the highlighted text and adds the new one after it', async () => {
     const { editor } = await renderAt(`<p>a ${chipHTML(ORIGINAL)} b</p>`, 1, 5);
     await clickInsert();
