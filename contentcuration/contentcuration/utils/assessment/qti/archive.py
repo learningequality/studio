@@ -111,9 +111,7 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
         return is_answerless
 
     def _create_native_qti_item(self, assessment_item) -> Optional[Tuple[str, bytes]]:
-        raw_bytes = assessment_item.raw_data.encode("utf-8")
-
-        result = validate_qti_item(raw_bytes)
+        result = validate_qti_item(assessment_item.raw_data)
         if not result.is_valid:
             error_messages = "; ".join(
                 f"line {e.line}, column {e.column}: {e.message}" for e in result.errors
@@ -129,7 +127,7 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
             self._warn_answerless(assessment_item)
             return None
 
-        identifier = parse_qti_xml(raw_bytes).getroot().get("identifier")
+        identifier = parse_qti_xml(assessment_item.raw_data).getroot().get("identifier")
         if not identifier:
             raise ValueError(
                 f"QTI item {assessment_item.assessment_id} is missing a root identifier attribute"

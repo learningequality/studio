@@ -30,10 +30,6 @@ def img_pixel_size(width, height) -> Optional[Tuple[int, int]]:
     return int(width), int(height)
 
 
-def _parse(raw_data):
-    return parse_qti_xml(raw_data.encode("utf-8"))
-
-
 def _serialize(doc):
     return etree.tostring(doc, encoding="UTF-8", xml_declaration=True).decode("utf-8")
 
@@ -43,8 +39,6 @@ def get_qti_media_references(raw_data):
     Scan QTI item XML for <checksum>.<ext> media references in src/href/data/srcset
     attributes, matching the TipTap editor's permanentSrc="<checksum>.<ext>" convention.
     """
-    if isinstance(raw_data, str):
-        raw_data = raw_data.encode("utf-8")
     checksums = set()
     try:
         doc = parse_qti_xml(raw_data)
@@ -82,7 +76,7 @@ def rewrite_qti_media_paths(raw_data, path_by_filename):
             return match.group(0)
         return match.group(0).replace(filename, new_path, 1)
 
-    doc = _parse(raw_data)
+    doc = parse_qti_xml(raw_data)
     for element in QTI_MEDIA_REFERENCE_XPATH(doc):
         for attribute in QTI_REFERENCE_ATTRIBUTES:
             value = element.get(attribute)
@@ -102,7 +96,7 @@ def rewrite_qti_sized_image_paths(raw_data, path_for_size):
     ``path_for_size(filename, width, height)``, per element so one image at two
     sizes gets two paths. A ``None`` path leaves the element alone.
     """
-    doc = _parse(raw_data)
+    doc = parse_qti_xml(raw_data)
     for img in doc.iter("{*}img"):
         src = img.get("src")
         size = img_pixel_size(img.get("width"), img.get("height"))
@@ -124,7 +118,7 @@ def set_qti_item_language(raw_data, language):
     """
     if not language:
         return raw_data
-    doc = _parse(raw_data)
+    doc = parse_qti_xml(raw_data)
     doc.getroot().set(XML_LANG_ATTRIBUTE, language)
     return _serialize(doc)
 
@@ -136,7 +130,7 @@ def strip_studio_attributes(raw_data):
     """
     if "data-studio-" not in raw_data:
         return raw_data
-    doc = _parse(raw_data)
+    doc = parse_qti_xml(raw_data)
     for element in doc.iter(etree.Element):
         for name in list(element.attrib):
             if name.startswith("data-studio-"):
