@@ -231,6 +231,42 @@ describe('_extractAnswers', () => {
       expect(_extractAnswers([declXml]).map(a => a.value)).toEqual(expected);
     });
 
+    it.each([
+      [['Paris'], ['Paris', 'Rome', 'Paris'], '1', ['Paris', 'Rome', 'Paris']],
+      [['Paris'], ['Paris', 'Paris'], '1.0', ['Paris', 'Paris']],
+      [['Paris'], ['Paris', 'Paris'], '2', ['Paris']],
+      [['Paris'], ['Rome', 'Paris', 'Paris'], '1', ['Paris', 'Rome']],
+      [[], ['Paris', 'Paris'], '1', ['Paris']],
+    ])(
+      'string: reads correct %j with map-keys %j at %s as %j',
+      (correct, keys, mapped, expected) => {
+        const declXml = `
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string">
+          ${correct.length ? `<qti-correct-response>${correct.map(v => `<qti-value>${v}</qti-value>`).join('')}</qti-correct-response>` : ''}
+          <qti-mapping default-value="0">
+            ${keys.map(key => `<qti-map-entry map-key="${key}" mapped-value="${mapped}" case-sensitive="false"/>`).join('')}
+          </qti-mapping>
+        </qti-response-declaration>
+      `;
+        expect(_extractAnswers([declXml]).map(a => a.value)).toEqual(expected);
+      },
+    );
+
+    it('string: reads a declaration with partial credit by value', () => {
+      const declXml = `
+        <qti-response-declaration identifier="RESPONSE" cardinality="single" base-type="string">
+          <qti-correct-response><qti-value>Paris</qti-value></qti-correct-response>
+          <qti-mapping default-value="0">
+            <qti-map-entry map-key="Paris" mapped-value="1" case-sensitive="false"/>
+            <qti-map-entry map-key="Paris" mapped-value="0.5" case-sensitive="true"/>
+            <qti-map-entry map-key="Rome" mapped-value="1" case-sensitive="false"/>
+            <qti-map-entry map-key="Rome" mapped-value="1" case-sensitive="false"/>
+          </qti-mapping>
+        </qti-response-declaration>
+      `;
+      expect(_extractAnswers([declXml]).map(a => a.value)).toEqual(['Paris', 'Rome']);
+    });
+
     it('reports numeric answers as never case-sensitive', () => {
       const result = _extractAnswers([SINGLE_NUMERIC_DECLARATION]);
       expect(result[0].caseSensitive).toBe(false);

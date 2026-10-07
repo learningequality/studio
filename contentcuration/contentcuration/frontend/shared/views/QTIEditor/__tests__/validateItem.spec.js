@@ -96,6 +96,17 @@ describe('validateQtiItem', () => {
     });
   });
 
+  function expectSameCodesAsEditor(state, questionType, expected) {
+    const { bodyXml, responseDeclarations } = textEntryInteractionDescriptor.buildXML(
+      state,
+      questionType,
+    );
+    const xml = assembleItemXml({ identifier: 'item', title: '', bodyXml, responseDeclarations });
+
+    expect(codesOf(validateTextEntryInteraction(state, questionType))).toEqual(expected);
+    expect(codesOf(validateQtiItem(xml))).toEqual(expected);
+  }
+
   describe('numeric answers', () => {
     const { INVALID_NUMERIC_VALUE, DUPLICATE_ANSWER_CONTENT } = ValidationError;
 
@@ -144,14 +155,7 @@ describe('validateQtiItem', () => {
         answers: values.map((value, i) => ({ id: `a${i}`, value, caseSensitive: false })),
         expectedLength: 0,
       };
-      const { bodyXml, responseDeclarations } = textEntryInteractionDescriptor.buildXML(
-        state,
-        QuestionType.NUMERIC,
-      );
-      const xml = assembleItemXml({ identifier: 'item', title: '', bodyXml, responseDeclarations });
-
-      expect(codesOf(validateTextEntryInteraction(state, QuestionType.NUMERIC))).toEqual(expected);
-      expect(codesOf(validateQtiItem(xml))).toEqual(expected);
+      expectSameCodesAsEditor(state, QuestionType.NUMERIC, expected);
     });
 
     it('reports no correct answer past a non-numeric default value', () => {
@@ -194,6 +198,35 @@ describe('validateQtiItem', () => {
           .answers,
       ).toEqual([{ id: expect.any(String), value: 'NULL', caseSensitive }]);
     });
+
+    const { EMPTY_ANSWER_CONTENT, DUPLICATE_ANSWER_CONTENT } = ValidationError;
+    const duplicates = [DUPLICATE_ANSWER_CONTENT, DUPLICATE_ANSWER_CONTENT];
+
+    it.each([
+      [['Paris', 'Paris'], [false, false], duplicates],
+      [['Paris', ' Paris'], [false, false], duplicates],
+      [['Paris', 'paris'], [false, false], duplicates],
+      [['Paris', 'Paris'], [true, false], []],
+      [
+        ['', ''],
+        [false, false],
+        [EMPTY_ANSWER_CONTENT, EMPTY_ANSWER_CONTENT],
+      ],
+    ])(
+      'reports %j (case-sensitive %j) as %j, the same as the editor',
+      (values, flags, expected) => {
+        const state = {
+          prompt: '<p>Name the capital of France</p>',
+          answers: values.map((value, i) => ({
+            id: `a${i}`,
+            value,
+            caseSensitive: flags[i],
+          })),
+          expectedLength: 0,
+        };
+        expectSameCodesAsEditor(state, QuestionType.TEXT_ENTRY, expected);
+      },
+    );
   });
 
   it('reports unparseable XML', () => {
