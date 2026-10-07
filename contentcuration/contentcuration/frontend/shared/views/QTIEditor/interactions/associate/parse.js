@@ -1,7 +1,7 @@
 import flatMap from 'lodash/flatMap';
 import flatten from 'lodash/flatten';
 import { QTIDeclaration } from '../../serialization/qti/QTIDeclaration';
-import { buildXmlNode, getPromptHTML, parseXML } from '../../serialization/xml';
+import { buildXmlNode, getContentHTML, getPromptHTML, parseXML } from '../../serialization/xml';
 import CorrectResponse from '../../serialization/qti/declarations/correctResponse';
 import { generateRandomSlug } from '../../utils/generateRandomSlug';
 import { hasRichTextContent, richTextComparisonKey } from '../../utils/richText';
@@ -82,7 +82,7 @@ export function parseAssociateInteraction(bodyXml, responseDeclarations) {
 
   const pool = [...root.querySelectorAll('qti-simple-associable-choice')].map(el => ({
     id: el.getAttribute('identifier') || generateRandomSlug('choice'),
-    content: el.innerHTML,
+    content: getContentHTML(el),
     matchMax: parseInt(el.getAttribute('match-max'), 10) || 1,
   }));
   const poolById = new Map(pool.map(choice => [choice.id, choice]));

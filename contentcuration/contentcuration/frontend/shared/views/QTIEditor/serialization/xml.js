@@ -44,17 +44,26 @@ export function parseXML(xmlString, mimeType = 'text/xml') {
 }
 
 /**
- * Extract the inner HTML of the first <qti-prompt> child of an interaction element.
+ * Extract the markup of the first <qti-prompt> child of an interaction element, as HTML.
  * Returns an empty string when no prompt element is present.
- * Using innerHTML (not textContent) preserves rich inline markup (<p>, <strong>, etc.)
- * for round-trip fidelity.
  *
  * @param {Element} interactionEl - The <qti-*-interaction> root element
  * @returns {string}
  */
 export function getPromptHTML(interactionEl) {
   const promptEl = interactionEl.querySelector('qti-prompt');
-  return promptEl ? promptEl.innerHTML : '';
+  return promptEl ? getContentHTML(promptEl) : '';
+}
+
+/**
+ * An element's content as HTML, for a rich text editor to load. Not `innerHTML`: see
+ * serializeAsHtml.
+ *
+ * @param {Element} el
+ * @returns {string}
+ */
+export function getContentHTML(el) {
+  return serializeAsHtml([...el.childNodes], el.namespaceURI);
 }
 
 const xmlDoc = parser.parseFromString('<root/>', 'text/xml');
@@ -153,9 +162,9 @@ export function isContentNode(node) {
  * Serialize XML nodes as an HTML string, for state that a rich text editor parses as HTML.
  *
  * XMLSerializer writes an empty element as `<x/>`, and the HTML parser does not treat `/>` as
- * self-closing on unknown elements such as QTI's, so the following siblings end up nested
- * inside it. It also writes `xmlns` on elements in the item's namespace. Re-creating the nodes
- * in an HTML document gives every element an explicit end tag and no `xmlns`; foreign
+ * self-closing on non-void elements such as `<span>` or QTI's, so the following siblings end up
+ * nested inside it. It also writes `xmlns` on elements in the item's namespace. Re-creating the
+ * nodes in an HTML document gives every element an explicit end tag and no `xmlns`; foreign
  * subtrees (MathML, SVG) keep their namespace.
  *
  * @param {Node[]} nodes

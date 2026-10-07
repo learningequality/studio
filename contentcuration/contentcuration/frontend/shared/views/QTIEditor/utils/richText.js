@@ -13,6 +13,7 @@
  */
 
 import { QTISanitizer } from '../serialization/qti/QTISanitizer';
+import { parseXML } from '../serialization/xml';
 
 /**
  * Markup that is content in its own right, with no text to find.
@@ -21,7 +22,7 @@ import { QTISanitizer } from '../serialization/qti/QTISanitizer';
  * only becomes MathML when the item is published — so both forms count, the item being
  * read here having come from either side of that.
  */
-const EMBEDDED_MEDIA = /<(img|math|svg)\b|<span[^>]*\sdata-latex=/i;
+const EMBEDDED_MEDIA = 'img, math, svg, span[data-latex]';
 
 /**
  * The fragment's visible text.
@@ -43,7 +44,10 @@ function toText(content) {
  * @returns {boolean}
  */
 export function hasRichTextContent(content) {
-  return toText(content).length > 0 || EMBEDDED_MEDIA.test(content ?? '');
+  return (
+    toText(content).length > 0 ||
+    Boolean(parseXML(content ?? '', 'text/html').querySelector(EMBEDDED_MEDIA))
+  );
 }
 
 /**
