@@ -48,8 +48,6 @@ def convert_legacy_question_to_qti(question_data: dict) -> QTIConversionResult:
 
 
 def find_perseus_custom_interaction_path(raw_data) -> Optional[str]:
-    if isinstance(raw_data, str):
-        raw_data = raw_data.encode("utf-8")
     try:
         doc = parse_qti_xml(raw_data)
     except etree.XMLSyntaxError:

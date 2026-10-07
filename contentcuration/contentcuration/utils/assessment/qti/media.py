@@ -16,32 +16,8 @@ QTI_MEDIA_REFERENCE_XPATH = etree.XPath(
     + " or ".join(f"@{attribute}" for attribute in QTI_REFERENCE_ATTRIBUTES)
     + " or @srcset]"
 )
-ITEM_ROOT_START_TAG_REGEX = re.compile(
-    r"""<qti-assessment-item\b(?:"[^"]*"|'[^']*'|[^>"'])*>"""
-)
-# Quoted values are matched first so a lookalike inside another attribute is skipped.
-XML_LANG_OR_QUOTED_VALUE_REGEX = re.compile(
-    r"""(?P<lang>\s+xml:lang\s*=\s*(?:"[^"]*"|'[^']*'))|"[^"]*"|'[^']*'"""
-)
-START_TAG_REGEX = re.compile(r"""<[A-Za-z_](?:"[^"]*"|'[^']*'|[^>"'])*>""")
-STUDIO_ATTRIBUTE_OR_QUOTED_VALUE_REGEX = re.compile(
-    r"""(?P<studio>\s+data-studio-[\w.-]+\s*=\s*(?:"[^"]*"|'[^']*'))|"[^"]*"|'[^']*'"""
-)
 PIXEL_LENGTH_REGEX = re.compile(r"[1-9][0-9]*")
-# Comments and CDATA match whole, so an <img> inside one is never read as a start tag
-COMMENT_CDATA_OR_IMG_START_TAG_REGEX = re.compile(
-    r"""<!--.*?-->|<!\[CDATA\[.*?\]\]>|<img(?=[\s/>])(?:[^>"']|"[^"]*"|'[^']*')*>""",
-    re.DOTALL,
-)
-XML_ATTRIBUTE_REGEX = re.compile(
-    r"""\s(?P<name>[^\s=/>]+)\s*=\s*(?P<quote>["'])(?P<value>.*?)(?P=quote)""",
-    re.DOTALL,
-)
-
-QTI_MEDIA_ATTRIBUTE_VALUE_REGEX = re.compile(
-    r"(?P<attr>" + "|".join(QTI_REFERENCE_ATTRIBUTES + ("srcset",)) + r")"
-    r'(?P<eq>\s*=\s*)(?P<quote>["\'])(?P<value>[^"\']*)(?P=quote)'
-)
+XML_LANG_ATTRIBUTE = "{http://www.w3.org/XML/1998/namespace}lang"
 
 
 def img_pixel_size(width, height) -> Optional[Tuple[int, int]]:
@@ -54,13 +30,15 @@ def img_pixel_size(width, height) -> Optional[Tuple[int, int]]:
     return int(width), int(height)
 
 
+def _serialize(doc):
+    return etree.tostring(doc, encoding="UTF-8", xml_declaration=True).decode("utf-8")
+
+
 def get_qti_media_references(raw_data):
     """
     Scan QTI item XML for <checksum>.<ext> media references in src/href/data/srcset
     attributes, matching the TipTap editor's permanentSrc="<checksum>.<ext>" convention.
     """
-    if isinstance(raw_data, str):
-        raw_data = raw_data.encode("utf-8")
     checksums = set()
     try:
         doc = parse_qti_xml(raw_data)
@@ -86,10 +64,7 @@ def get_qti_media_references(raw_data):
 def rewrite_qti_media_paths(raw_data, path_by_filename):
     """
     Rewrite src/href/data/srcset attribute values referencing keys of
-    `path_by_filename` to the corresponding new path. Operates as a targeted
-    text substitution rather than a parse/serialize round-trip, so every other
-    byte of `raw_data` (formatting, attribute order, self-closing tag style,
-    etc.) is left untouched.
+    `path_by_filename` to the corresponding new path.
     """
     if not path_by_filename:
         return raw_data
@@ -101,44 +76,36 @@ def rewrite_qti_media_paths(raw_data, path_by_filename):
             return match.group(0)
         return match.group(0).replace(filename, new_path, 1)
 
-    def _replace_attribute(match):
-        attribute, eq, quote, value = match.group("attr", "eq", "quote", "value")
-        if attribute == "srcset":
-            value = re.sub(srcset_entry_pattern, _replace_srcset_entry, value)
-        elif value in path_by_filename:
-            value = path_by_filename[value]
-        return f"{attribute}{eq}{quote}{value}{quote}"
-
-    return QTI_MEDIA_ATTRIBUTE_VALUE_REGEX.sub(_replace_attribute, raw_data)
+    doc = parse_qti_xml(raw_data)
+    for element in QTI_MEDIA_REFERENCE_XPATH(doc):
+        for attribute in QTI_REFERENCE_ATTRIBUTES:
+            value = element.get(attribute)
+            if value in path_by_filename:
+                element.set(attribute, path_by_filename[value])
+        srcset = element.get("srcset")
+        if srcset:
+            element.set(
+                "srcset", re.sub(srcset_entry_pattern, _replace_srcset_entry, srcset)
+            )
+    return _serialize(doc)
 
 
 def rewrite_qti_sized_image_paths(raw_data, path_for_size):
     """
     Point the ``src`` of each ``<img>`` with a pixel size at
     ``path_for_size(filename, width, height)``, per element so one image at two
-    sizes gets two paths. A ``None`` path leaves the element alone. Every other
-    byte is kept, as in ``rewrite_qti_media_paths``.
+    sizes gets two paths. A ``None`` path leaves the element alone.
     """
-
-    def _replace_img(match):
-        tag = match.group(0)
-        if tag.startswith("<!"):
-            return tag
-        # Matching attribute by attribute consumes each value, so a "src=" inside
-        # another attribute's value is never read as the src.
-        attributes = {m["name"]: m for m in XML_ATTRIBUTE_REGEX.finditer(tag)}
-        src = attributes.get("src")
-        values = {name: m["value"] for name, m in attributes.items()}
-        size = img_pixel_size(values.get("width"), values.get("height"))
-        if not (src and size and QTI_CHECKSUM_FILENAME_REGEX.match(src["value"])):
-            return tag
-        path = path_for_size(src["value"], *size)
-        if path is None:
-            return tag
-        start, end = src.span("value")
-        return f"{tag[:start]}{path}{tag[end:]}"
-
-    return COMMENT_CDATA_OR_IMG_START_TAG_REGEX.sub(_replace_img, raw_data)
+    doc = parse_qti_xml(raw_data)
+    for img in doc.iter("{*}img"):
+        src = img.get("src")
+        size = img_pixel_size(img.get("width"), img.get("height"))
+        if not (src and size and QTI_CHECKSUM_FILENAME_REGEX.match(src)):
+            continue
+        path = path_for_size(src, *size)
+        if path is not None:
+            img.set("src", path)
+    return _serialize(doc)
 
 
 def set_qti_item_language(raw_data, language):
@@ -148,44 +115,24 @@ def set_qti_item_language(raw_data, language):
     The node's language is the one Studio knows to be current, so it wins over whatever an
     item recorded when it was written — which for an item authored in the QTI editor before
     it had a language to record is nothing at all.
-
-    Operates as a targeted text substitution on the root start tag, for the same reason
-    ``rewrite_qti_media_paths`` does: every other byte of ``raw_data``, formatting included,
-    is left as the author's editor produced it. An attribute already present is rewritten
-    where it stands rather than moved to the end.
     """
     if not language:
         return raw_data
-
-    replacement = f' xml:lang="{language}"'
-
-    def _replace_root(match):
-        tag = match.group(0)
-        for attribute in XML_LANG_OR_QUOTED_VALUE_REGEX.finditer(tag):
-            if attribute.group("lang"):
-                return tag[: attribute.start()] + replacement + tag[attribute.end() :]
-        return f"{tag[:-1].rstrip()}{replacement}>"
-
-    return ITEM_ROOT_START_TAG_REGEX.sub(_replace_root, raw_data, count=1)
+    doc = parse_qti_xml(raw_data)
+    doc.getroot().set(XML_LANG_ATTRIBUTE, language)
+    return _serialize(doc)
 
 
 def strip_studio_attributes(raw_data):
     """
     Remove every ``data-studio-*`` attribute, such as the ``data-studio-prompt`` marker the
     QTI editor writes for its own use when it reopens an item, so none reaches Kolibri.
-
-    Operates as a targeted text substitution on start tags, for the same reason
-    ``rewrite_qti_media_paths`` does.
     """
     if "data-studio-" not in raw_data:
         return raw_data
-
-    def _strip_attribute(match):
-        return "" if match.group("studio") else match.group(0)
-
-    def _strip_tag(match):
-        return STUDIO_ATTRIBUTE_OR_QUOTED_VALUE_REGEX.sub(
-            _strip_attribute, match.group(0)
-        )
-
-    return START_TAG_REGEX.sub(_strip_tag, raw_data)
+    doc = parse_qti_xml(raw_data)
+    for element in doc.iter(etree.Element):
+        for name in list(element.attrib):
+            if name.startswith("data-studio-"):
+                del element.attrib[name]
+    return _serialize(doc)

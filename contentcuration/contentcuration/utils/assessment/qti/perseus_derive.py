@@ -222,7 +222,7 @@ _INTERACTION_DERIVERS = {
 def _parse(raw_data):
     """Parse untrusted XML; return the item-body element or ``None``."""
     try:
-        root = parse_qti_xml(raw_data.encode("utf-8")).getroot()
+        root = parse_qti_xml(raw_data).getroot()
     except etree.XMLSyntaxError:
         logger.warning("Unable to parse QTI item XML during Perseus derivation")
         return None, None
