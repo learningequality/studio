@@ -65,6 +65,7 @@
       </h4>
       <div
         v-if="mode === 'edit'"
+        :id="passageDescriptionId"
         class="field-description"
         :style="{ color: $themeTokens.annotation }"
       >
@@ -135,6 +136,7 @@
   import ClickableRegion from '../../components/ClickableRegion/index.vue';
   import AnswerSettings from '../choice/components/AnswerSettings/index.vue';
   import { hasRichTextContent } from '../../utils/richText';
+  import { generateRandomSlug } from '../../utils/generateRandomSlug';
   import { useInlineChoicePassage } from './useInlineChoicePassage';
   import InlineChoiceOptions from './components/InlineChoiceOptions/index.vue';
   import TipTapEditor from 'shared/views/TipTapEditor/TipTapEditor/TipTapEditor';
@@ -186,10 +188,12 @@
           .map(d => d.responseIdentifier);
       });
 
+      const passageDescriptionId = generateRandomSlug('passage-description');
       const passage = useInlineChoicePassage({
         errorResponseIdentifiers,
         // An author editing the question sees its answers, even in the closed passage.
         showAnswers: computed(() => props.mode === 'edit' || props.showAnswers),
+        describedBy: passageDescriptionId,
         onChange: setPassage,
       });
 
@@ -321,6 +325,7 @@
         state,
         errors,
         passage,
+        passageDescriptionId,
         hasPrompt,
         hasDropdownErrors,
         hasNoDropdown,

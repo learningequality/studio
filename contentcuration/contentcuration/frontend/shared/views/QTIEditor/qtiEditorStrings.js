@@ -545,10 +545,26 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     context:
       "Accessible name of an answer dropdown chip in the passage that has no correct answer and has validation errors. {label} is the chip's 'Add answers' label",
   },
+  answerDropdownRemoved: {
+    message: '{label}, answer dropdown, removed',
+    context:
+      "Announced to screen readers when an answer dropdown is deleted from the passage. {label} is what the chip showed: its correct answer, or 'Add answers'",
+  },
+  answerDropdownsRemoved: {
+    message: '{count, plural, one {# answer dropdown removed} other {# answer dropdowns removed}}',
+    context:
+      'Announced to screen readers when several answer dropdowns are deleted from the passage at once',
+  },
   answerDropdownHidden: {
     message: '{label}, answer dropdown, {count, plural, one {# option} other {# options}}',
     context:
       "Accessible name of an answer dropdown chip in a question preview that hides the correct answers. {label} is the chip's 'Choose…' label",
+  },
+  answerDropdownHiddenNeedsAttention: {
+    message:
+      '{label}, answer dropdown, needs attention, {count, plural, one {# option} other {# options}}',
+    context:
+      "Accessible name of an answer dropdown chip with a problem to fix, in a question preview that hides the correct answers. {label} is the chip's 'Choose…' label",
   },
   chooseAnswer: {
     message: 'Choose…',

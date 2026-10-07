@@ -25,7 +25,7 @@ jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
 // usable object rather than undefined.
 jest.mock('kolibri-design-system/lib/composables/useKLiveRegion', () => ({
   __esModule: true,
-  default: () => ({ sendPoliteMessage: jest.fn() }),
+  default: () => ({ sendPoliteMessage: jest.fn(), sendAssertiveMessage: jest.fn() }),
 }));
 
 const PASSAGE = `<p>The Earth ${chip('r1', [
@@ -122,6 +122,12 @@ describe('InlineChoiceEditor', () => {
     expect(passage.getByText(tr.passageEditorDescription$())).toBeInTheDocument();
     expect(passage.getByRole('button', { name: tr.insertInlineChoice$() })).toBeInTheDocument();
     expect(passage.getAllByRole('button', CHIP)).toHaveLength(2);
+  });
+
+  it('describes the passage editor with its helper text', async () => {
+    await renderEditor();
+    const passage = section(tr.passageEditorLabel$()).querySelector('.ProseMirror');
+    expect(passage).toHaveAccessibleDescription(tr.passageEditorDescription$());
   });
 
   it('opens on the question, focused, with the passage closed', async () => {
@@ -224,7 +230,8 @@ describe('InlineChoiceEditor', () => {
       );
 
       expect(optionInputs().map(input => input.value)).toEqual(['Sun', 'Stars']);
-      expect(chips()[0]).toHaveTextContent(/^2/);
+      // The chip needs a correct answer, so its count is in its name, beside the error icon.
+      expect(chips()[0]).toHaveAccessibleName(/2 options/);
       expect(savedDropdowns(emitted())[0].options.map(o => o.text)).toEqual(['Sun', 'Stars']);
     });
 
@@ -730,6 +737,10 @@ describe('InlineChoiceEditor', () => {
       ).toBeInTheDocument();
       expect(chips()[0]).toHaveAccessibleName(/needs attention/);
       expect(chips()[1]).not.toHaveAccessibleName(/needs attention/);
+      // The error icon stands in for the option count, as on an option row.
+      expect(chips()[0]).toHaveTextContent(new RegExp(`^${tr.addAnswers$()}$`));
+      expect(chips()[0].querySelector('svg')).toBeInTheDocument();
+      expect(chips()[1]).toHaveTextContent('1 revolves');
 
       await openChip(user, 0);
       expect(within(dialog()).getByText(tr.errorNoCorrectAnswer$())).toBeInTheDocument();
@@ -816,6 +827,18 @@ describe('InlineChoiceEditor', () => {
       expect(hidden).toHaveAccessibleName(
         tr.answerDropdownHidden$({ label: tr.chooseAnswer$(), count: 1 }),
       );
+    });
+
+    it('marks a hidden chip that needs attention by more than colour', async () => {
+      await renderEditor({ mode: 'view', showAnswers: false });
+      const [incomplete, complete] = screen.getAllByRole('img', { name: /answer dropdown/ });
+      expect(incomplete).toHaveAccessibleName(
+        tr.answerDropdownHiddenNeedsAttention$({ label: tr.chooseAnswer$(), count: 3 }),
+      );
+      // The error icon stands in for its option count.
+      expect(incomplete).toHaveTextContent(new RegExp(`^${tr.chooseAnswer$()}$`));
+      expect(incomplete.querySelector('svg')).toBeInTheDocument();
+      expect(complete.querySelector('svg')).not.toBeInTheDocument();
     });
   });
 });
