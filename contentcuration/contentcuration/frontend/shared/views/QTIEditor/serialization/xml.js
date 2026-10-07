@@ -59,6 +59,8 @@ export function getPromptHTML(interactionEl) {
 
 const xmlDoc = parser.parseFromString('<root/>', 'text/xml');
 const XHTML_NS = 'http://www.w3.org/1999/xhtml';
+const DROPPED_ELEMENTS = new Set(['noscript', 'script', 'style']);
+const RAW_TEXT_ELEMENTS = new Set(['iframe', 'noembed', 'noframes', 'plaintext', 'xmp']);
 
 /**
  * Re-create a node parsed from HTML inside the XML document.
@@ -74,7 +76,8 @@ const XHTML_NS = 'http://www.w3.org/1999/xhtml';
  * @param {Document} [doc] - Document to re-create the node in
  * @param {string|null} [plainNamespace] - Namespace whose elements become the document's
  *   default ones; any other is kept
- * @returns {Node|null} null for node types that carry no content (comments, etc.)
+ * @returns {Node|null} null for node types that carry no content (comments, etc.) and, when
+ *   re-creating into an HTML document, for noscript, script and style elements
  */
 function adoptNode(node, doc = xmlDoc, plainNamespace = XHTML_NS) {
   if (node.nodeType === Node.TEXT_NODE || node.nodeType === Node.CDATA_SECTION_NODE) {
@@ -89,6 +92,18 @@ function adoptNode(node, doc = xmlDoc, plainNamespace = XHTML_NS) {
     !namespace || namespace === plainNamespace
       ? doc.createElement(node.localName)
       : doc.createElementNS(namespace, node.tagName);
+
+  // The HTML serializer writes these elements' text unescaped, so escaped markup in it
+  // would come back live. TipTap ignores noscript, script and style, and keeps only the
+  // others' text.
+  if (el.namespaceURI === XHTML_NS) {
+    if (DROPPED_ELEMENTS.has(el.localName)) {
+      return null;
+    }
+    if (RAW_TEXT_ELEMENTS.has(el.localName)) {
+      return doc.createTextNode(node.textContent);
+    }
+  }
 
   for (const attr of node.attributes) {
     // A literal xmlns attribute would re-introduce the namespace we just dropped.
