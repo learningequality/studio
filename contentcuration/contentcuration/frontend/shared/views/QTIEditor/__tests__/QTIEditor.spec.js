@@ -15,7 +15,12 @@ jest.mock('kolibri-design-system/lib/composables/useKResponsiveWindow', () => {
   };
 });
 
-const { toolbarLabelEdit$, closeBtnLabel$, unsupportedItemMessage$ } = qtiEditorStrings;
+const {
+  toolbarLabelEdit$,
+  closeBtnLabel$,
+  unsupportedItemMessage$,
+  deleteUnsupportedItemMessage$,
+} = qtiEditorStrings;
 
 const QTI_ITEM = {
   assessment_id: 'qti-item',
@@ -97,7 +102,9 @@ describe('QTIEditor', () => {
           raw_data: '<qti-assessment-item><oops>',
         },
       ]);
-      expect(screen.getByText(unsupportedItemMessage$())).toBeInTheDocument();
+      const message = screen.getByTestId('unsupportedMessage');
+      expect(message).toHaveTextContent(deleteUnsupportedItemMessage$());
+      expect(message).not.toHaveTextContent(unsupportedItemMessage$());
       expect(editButton()).toBeDisabled();
     });
   });

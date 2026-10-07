@@ -28,6 +28,7 @@
           :mode="activeId === item.assessment_id ? 'edit' : 'view'"
           :allowFreeResponse="allowFreeResponse"
           :showAnswers="showAnswers"
+          canDelete
           data-testid="item"
           @open="openItem(item.assessment_id)"
           @close="closeItem"
