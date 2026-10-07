@@ -1,6 +1,7 @@
 import { validateItemShape, validateQtiItem } from '../validateItem';
 import { QuestionType, ValidationError } from '../constants';
 import { assembleItemXml } from '../serialization/assembleItem';
+import { parseItem } from '../serialization/parseItem';
 import { textEntryInteractionDescriptor } from '../interactions/textEntry/Descriptor';
 import { validateTextEntryInteraction } from '../interactions/textEntry/validation';
 import {
@@ -171,6 +172,27 @@ describe('validateQtiItem', () => {
       });
 
       expect(codesOf(validateQtiItem(xml))).toEqual([ValidationError.NO_CORRECT_ANSWER]);
+    });
+  });
+
+  describe('text entry answers', () => {
+    it.each([false, true])('reopens and accepts NULL with caseSensitive %s', caseSensitive => {
+      const { bodyXml, responseDeclarations } = textEntryInteractionDescriptor.buildXML(
+        {
+          prompt: '<p>Which SQL keyword marks a missing value?</p>',
+          answers: [{ id: 'a0', value: 'NULL', caseSensitive }],
+          expectedLength: 0,
+        },
+        QuestionType.TEXT_ENTRY,
+      );
+      const xml = assembleItemXml({ identifier: 'item', title: '', bodyXml, responseDeclarations });
+      const [interaction] = parseItem(xml).interactions;
+
+      expect(validateQtiItem(xml)).toEqual([]);
+      expect(
+        textEntryInteractionDescriptor.parse(interaction.bodyXml, interaction.responseDeclarations)
+          .answers,
+      ).toEqual([{ id: expect.any(String), value: 'NULL', caseSensitive }]);
     });
   });
 

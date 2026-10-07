@@ -322,8 +322,12 @@ describe('QTIDeclaration full XML output (QTI compatibility)', () => {
 
 describe('QTIDeclaration.coerceValue', () => {
   describe('null / empty handling', () => {
-    it.each([null, undefined, '', 'NULL'])('returns null for %p', raw => {
+    it.each([null, undefined, ''])('returns null for %p', raw => {
       expect(QTIDeclaration.coerceValue(raw, 'identifier')).toBeNull();
+    });
+
+    it('keeps the string "NULL"', () => {
+      expect(QTIDeclaration.coerceValue('NULL', 'string')).toBe('NULL');
     });
   });
 

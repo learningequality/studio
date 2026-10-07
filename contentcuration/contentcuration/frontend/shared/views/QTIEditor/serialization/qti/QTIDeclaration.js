@@ -202,7 +202,7 @@ export class QTIDeclaration {
    *
    * Follows the Kolibri QTI implementation — each base-type maps to a
    * specific JS primitive or 2-element array (point/pair/directedPair).
-   * Returns null for empty, null, undefined, or 'NULL' inputs.
+   * Returns null for empty, null, or undefined inputs.
    *
    * @param {string|null|undefined} raw  - Raw text from a <qti-value> element
    * @param {string|null}           baseType - One of BaseType.* constants
@@ -211,7 +211,7 @@ export class QTIDeclaration {
    */
   static coerceValue(raw, baseType) {
     // QTI treats empty / null as NULL — see qti-is-null spec
-    if (raw === null || raw === undefined || raw === '' || raw === 'NULL') {
+    if (raw === null || raw === undefined || raw === '') {
       return null;
     }
 
