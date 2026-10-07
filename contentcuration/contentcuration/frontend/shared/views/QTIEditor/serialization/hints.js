@@ -16,22 +16,13 @@
 
 import { generateRandomSlug } from '../utils/generateRandomSlug';
 import { hasRichTextContent } from '../utils/richText';
+import { getContentHTML } from './xml';
 
 /** The catalog this editor writes hints into. */
 export const HINT_CATALOG_ID = 'kolibri-hints';
 
 /** The support value that marks a card as a hint. Mirrors qti/catalog.py. */
 export const HINT_SUPPORT = 'ext:kolibri-hint';
-
-/**
- * The item's own namespace, which its content inherits from the root and therefore does
- * not declare. Serializing a subtree on its own re-declares it on every top-level
- * element, so reading a card's markup back out of the document reintroduces a
- * declaration that was never in the stored XML. Dropped by value rather than by pattern,
- * so a foreign namespace a hint legitimately carries — MathML from the formula button —
- * is left alone.
- */
-const QTI_NAMESPACE_DECLARATION = / xmlns="http:\/\/www\.imsglobal\.org\/xsd\/imsqtiasi_v3p0"/g;
 
 /**
  * Read the item's hints, in document order.
@@ -52,9 +43,7 @@ export function parseHints(doc) {
       id: generateRandomSlug('hint'),
       // Pretty-printed XML puts the card's indentation inside the element, and the
       // editor would otherwise open on a stray blank line.
-      content: htmlContent
-        ? htmlContent.innerHTML.replace(QTI_NAMESPACE_DECLARATION, '').trim()
-        : '',
+      content: htmlContent ? getContentHTML(htmlContent).trim() : '',
     };
   });
 }

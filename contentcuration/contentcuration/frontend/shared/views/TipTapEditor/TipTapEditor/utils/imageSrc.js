@@ -14,8 +14,10 @@ import { storageUrl } from 'shared/vuex/file/utils';
 // backend which references publishing is able to resolve.
 const CHECKSUM_FILENAME = /^([a-f0-9]{32})\.([0-9a-z]+)$/;
 
-const IMG_TAG = /<img\b[^>]*>/gi;
-const SRC_ATTRIBUTE = /\bsrc\s*=\s*(["'])(.*?)\1/i;
+// Quoted values are skipped whole: the HTML serializer leaves `>` unescaped in them, and
+// they can contain `src=`.
+const IMG_TAG = /<img\b(?:[^>"']|"[^"]*"|'[^']*')*>/gi;
+const ATTRIBUTE = /(\s)([^\s"'>/=]+)(?:(\s*=\s*)("[^"]*"|'[^']*'|[^\s"'>]+))?/g;
 
 /**
  * Rewrite the src of every <img> in an HTML string.
@@ -32,12 +34,23 @@ function mapImageSrcs(html, mapSrc) {
   if (!html) {
     return html;
   }
-  return html.replace(IMG_TAG, tag =>
-    tag.replace(SRC_ATTRIBUTE, (attribute, quote, src) => {
+  return html.replace(IMG_TAG, tag => {
+    // The first src wins, as in the HTML parser.
+    let seen = false;
+    return tag.replace(ATTRIBUTE, (attribute, space, name, equals, value = '') => {
+      if (seen || name.toLowerCase() !== 'src') {
+        return attribute;
+      }
+      seen = true;
+      const quote = value[0];
+      if (quote !== '"' && quote !== "'") {
+        return attribute;
+      }
+      const src = value.slice(1, -1);
       const mapped = mapSrc(src);
-      return mapped === src ? attribute : `src=${quote}${mapped}${quote}`;
-    }),
-  );
+      return mapped === src ? attribute : `${space}${name}${equals}${quote}${mapped}${quote}`;
+    });
+  });
 }
 
 /**

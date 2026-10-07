@@ -44,21 +44,32 @@ export function parseXML(xmlString, mimeType = 'text/xml') {
 }
 
 /**
- * Extract the inner HTML of the first <qti-prompt> child of an interaction element.
+ * Extract the markup of the first <qti-prompt> child of an interaction element, as HTML.
  * Returns an empty string when no prompt element is present.
- * Using innerHTML (not textContent) preserves rich inline markup (<p>, <strong>, etc.)
- * for round-trip fidelity.
  *
  * @param {Element} interactionEl - The <qti-*-interaction> root element
  * @returns {string}
  */
 export function getPromptHTML(interactionEl) {
   const promptEl = interactionEl.querySelector('qti-prompt');
-  return promptEl ? promptEl.innerHTML : '';
+  return promptEl ? getContentHTML(promptEl) : '';
+}
+
+/**
+ * An element's content as HTML, for a rich text editor to load. Not `innerHTML`: see
+ * serializeAsHtml.
+ *
+ * @param {Element} el
+ * @returns {string}
+ */
+export function getContentHTML(el) {
+  return serializeAsHtml([...el.childNodes], el.namespaceURI);
 }
 
 const xmlDoc = parser.parseFromString('<root/>', 'text/xml');
 const XHTML_NS = 'http://www.w3.org/1999/xhtml';
+const DROPPED_ELEMENTS = new Set(['noscript', 'script', 'style']);
+const RAW_TEXT_ELEMENTS = new Set(['iframe', 'noembed', 'noframes', 'plaintext', 'xmp']);
 
 /**
  * Re-create a node parsed from HTML inside the XML document.
@@ -74,7 +85,8 @@ const XHTML_NS = 'http://www.w3.org/1999/xhtml';
  * @param {Document} [doc] - Document to re-create the node in
  * @param {string|null} [plainNamespace] - Namespace whose elements become the document's
  *   default ones; any other is kept
- * @returns {Node|null} null for node types that carry no content (comments, etc.)
+ * @returns {Node|null} null for node types that carry no content (comments, etc.) and, when
+ *   re-creating into an HTML document, for noscript, script and style elements
  */
 function adoptNode(node, doc = xmlDoc, plainNamespace = XHTML_NS) {
   if (node.nodeType === Node.TEXT_NODE || node.nodeType === Node.CDATA_SECTION_NODE) {
@@ -89,6 +101,18 @@ function adoptNode(node, doc = xmlDoc, plainNamespace = XHTML_NS) {
     !namespace || namespace === plainNamespace
       ? doc.createElement(node.localName)
       : doc.createElementNS(namespace, node.tagName);
+
+  // The HTML serializer writes these elements' text unescaped, so escaped markup in it
+  // would come back live. TipTap ignores noscript, script and style, and keeps only the
+  // others' text.
+  if (el.namespaceURI === XHTML_NS) {
+    if (DROPPED_ELEMENTS.has(el.localName)) {
+      return null;
+    }
+    if (RAW_TEXT_ELEMENTS.has(el.localName)) {
+      return doc.createTextNode(node.textContent);
+    }
+  }
 
   for (const attr of node.attributes) {
     // A literal xmlns attribute would re-introduce the namespace we just dropped.
@@ -138,9 +162,9 @@ export function isContentNode(node) {
  * Serialize XML nodes as an HTML string, for state that a rich text editor parses as HTML.
  *
  * XMLSerializer writes an empty element as `<x/>`, and the HTML parser does not treat `/>` as
- * self-closing on unknown elements such as QTI's, so the following siblings end up nested
- * inside it. It also writes `xmlns` on elements in the item's namespace. Re-creating the nodes
- * in an HTML document gives every element an explicit end tag and no `xmlns`; foreign
+ * self-closing on non-void elements such as `<span>` or QTI's, so the following siblings end up
+ * nested inside it. It also writes `xmlns` on elements in the item's namespace. Re-creating the
+ * nodes in an HTML document gives every element an explicit end tag and no `xmlns`; foreign
  * subtrees (MathML, SVG) keep their namespace.
  *
  * @param {Node[]} nodes
