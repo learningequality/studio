@@ -143,6 +143,17 @@ def to_pk(model_or_pk):
     return model_or_pk
 
 
+def filter_storage_billable_files(queryset):
+    """
+    Perseus exports would not be included in storage calculations.
+    """
+    if queryset is None:
+        return queryset
+    return queryset.exclude(file_format_id__isnull=True).exclude(
+        file_format_id=file_formats.PERSEUS
+    )
+
+
 class UserManager(BaseUserManager):
     def create_user(self, email, first_name, last_name, password=None):
         if not email:
@@ -441,7 +452,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             )
         )
 
-        new_staging_files_qs = self._filter_storage_billable_files(new_staging_files_qs)
+        new_staging_files_qs = filter_storage_billable_files(new_staging_files_qs)
 
         unique_staging_ids = (
             new_staging_files_qs.order_by("checksum", "id")
@@ -494,8 +505,11 @@ class User(AbstractBaseUser, PermissionsMixin):
         )
 
     def get_user_active_trees(self):
-        return self.editable_channels.exclude(deleted=True).values(
-            tree_id=F("main_tree__tree_id")
+        # Organization channels count towards the organization's storage, not the user's.
+        return (
+            self.editable_channels.exclude(deleted=True)
+            .filter(organization__isnull=True)
+            .values(tree_id=F("main_tree__tree_id"))
         )
 
     def get_user_active_files(self):
@@ -530,7 +544,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             )
         )
 
-        base_files_qs = self._filter_storage_billable_files(base_files_qs)
+        base_files_qs = filter_storage_billable_files(base_files_qs)
 
         unique_file_ids = (
             base_files_qs.order_by("checksum", "id").distinct("checksum").values("id")
@@ -539,16 +553,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         files_qs = base_files_qs.filter(id__in=Subquery(unique_file_ids))
 
         return files_qs
-
-    def _filter_storage_billable_files(self, queryset):
-        """
-        Perseus exports would not be included in storage calculations.
-        """
-        if queryset is None:
-            return queryset
-        return queryset.exclude(file_format_id__isnull=True).exclude(
-            file_format_id=file_formats.PERSEUS
-        )
 
     def get_space_used(self, active_files=None):
         active_files = active_files or self.get_user_active_files()
@@ -1252,6 +1256,7 @@ class Channel(models.Model):
             "public",
             "main_tree_id",
             "version",
+            "organization_id",
         ]
     )
 
@@ -1391,8 +1396,7 @@ class Channel(models.Model):
             return cached_data
         tree_id = self.main_tree.tree_id
         files = (
-            File.objects.select_related("contentnode", "assessment_item")
-            .filter(contentnode__tree_id=tree_id)
+            File.objects.filter(contentnode__tree_id=tree_id)
             .values("checksum", "file_size")
             .distinct()
             .aggregate(resource_size=Sum("file_size"))
@@ -1442,8 +1446,6 @@ class Channel(models.Model):
             delete_public_channel_cache_keys()
 
     def on_update(self):  # noqa C901
-        from contentcuration.utils.user import calculate_user_storage
-
         original_values = self._field_updates.changed()
 
         blacklist = set(
@@ -1451,6 +1453,7 @@ class Channel(models.Model):
                 "public",
                 "main_tree_id",
                 "version",
+                "organization_id",
             ]
         )
 
@@ -1470,11 +1473,6 @@ class Channel(models.Model):
         ):
             filename, ext = os.path.splitext(original_values["thumbnail"])
             delete_empty_file_reference(filename, ext[1:])
-
-        # Refresh storage for all editors on the channel
-        if "deleted" in original_values:
-            for editor in self.editors.all():
-                calculate_user_storage(editor.pk)
 
         if "deleted" in original_values and not original_values["deleted"]:
             self.pending_editors.all().delete()
@@ -1513,8 +1511,14 @@ class Channel(models.Model):
             )
 
     def save(self, *args, **kwargs):
+        from contentcuration.utils.user import calculate_user_storage
+
         self._actor_id = kwargs.pop("actor_id", None)
         creating = self._state.adding
+        # Deleted and organization channels don't count towards their editors' storage.
+        editors_storage_changed = not creating and bool(
+            {"deleted", "organization_id"} & set(self._field_updates.changed())
+        )
         if creating:
             if self._actor_id is None:
                 raise ValueError("No actor_id passed to save method")
@@ -1528,6 +1532,11 @@ class Channel(models.Model):
             self.history.create(
                 actor_id=self._actor_id, action=channel_history.CREATION
             )
+
+        # Refresh storage for all editors on the channel, once the change is saved
+        if editors_storage_changed:
+            for editor in self.editors.all():
+                calculate_user_storage(editor.pk)
 
     def get_thumbnail(self):
         return get_channel_thumbnail(self)

@@ -14,6 +14,7 @@ from mock import patch
 
 from .base import BaseAPITestCase
 from .base import StudioTestCase
+from .helpers import EagerTasksTestMixin
 from .testdata import base64encoding
 from .testdata import generated_base64encoding
 from .testdata import node
@@ -23,6 +24,7 @@ from contentcuration.models import ContentNode
 from contentcuration.models import delete_empty_file_reference
 from contentcuration.models import File
 from contentcuration.models import generate_object_storage_name
+from contentcuration.models import Organization
 from contentcuration.models import StagedFile
 from contentcuration.models import User
 from contentcuration.utils.files import create_thumbnail_from_base64
@@ -287,3 +289,56 @@ class UserStorageUsageTestCase(StudioTestCase):
 
         expected_usage = baseline_usage + non_perseus_size
         self.assertEqual(self.user.get_space_used(), expected_usage)
+
+    def test_get_space_used_excludes_organization_channels(self):
+        with mock.patch("contentcuration.utils.user.calculate_user_storage"):
+            self._create_file(file_format=self.base_file.file_format_id, size=275)
+        self.assertGreater(self.user.get_space_used(), 0)
+
+        # The user is still a direct editor, but the organization now owns the channel.
+        self.channel.organization = Organization.objects.create(name="Org")
+        self.channel.save()
+
+        self.assertEqual(self.user.get_space_used(), 0)
+
+
+class UserStorageRecalculationTestCase(EagerTasksTestMixin, StudioTestCase):
+    def setUp(self):
+        super().setUp()
+        self.setUpBase()
+        node = (
+            self.channel.main_tree.get_descendants().filter(files__isnull=False).first()
+        )
+        base_file = node.files.first()
+        File(
+            contentnode=node,
+            checksum=uuid4().hex,
+            file_format_id=base_file.file_format_id,
+            file_size=275,
+            uploaded_by=self.user,
+        ).save(set_by_file_on_disk=False)
+        self.user.refresh_from_db()
+
+    def _set_organization(self, organization):
+        self.channel.organization = organization
+        self.channel.save(actor_id=self.user.id)
+        self.user.refresh_from_db()
+
+    def test_storage_used_is_recalculated_when_channel_organization_changes(self):
+        storage_used = self.user.disk_space_used
+        self.assertGreater(storage_used, 0)
+
+        self._set_organization(Organization.objects.create(name="Org"))
+        self.assertEqual(self.user.disk_space_used, 0)
+
+        self._set_organization(None)
+        self.assertEqual(self.user.disk_space_used, storage_used)
+
+    def test_organization_change_does_not_mark_main_tree_changed(self):
+        ContentNode.objects.filter(pk=self.channel.main_tree.pk).update(changed=False)
+        self.channel.refresh_from_db()
+
+        self._set_organization(Organization.objects.create(name="Org"))
+
+        self.channel.main_tree.refresh_from_db()
+        self.assertFalse(self.channel.main_tree.changed)

@@ -275,4 +275,34 @@ export const organizationStrings = createTranslator('OrganizationStrings', {
     context:
       'Fallback error message shown when accepting or declining an organization invitation fails',
   },
+  channelsTab: {
+    message: 'Channels',
+    context: "Label for the organization page tab that lists the organization's channels",
+  },
+  channelNameHeader: {
+    message: 'Name',
+    context: 'Header for the channel name column in the organization channels table',
+  },
+  channelDescriptionHeader: {
+    message: 'Description',
+    context: 'Header for the channel description column in the organization channels table',
+  },
+  channelSizeHeader: {
+    message: 'Size',
+    context:
+      'Header for the column showing how much storage each channel uses in the organization channels table',
+  },
+  totalSize: {
+    message: 'Total size: {size}',
+    context:
+      "Shown below the organization channels table. 'size' is the storage used by all listed channels, e.g. '637 MB'",
+  },
+  loadChannelsError: {
+    message: 'Unable to load channels',
+    context: 'Error message shown on the organization channels tab when the channels fail to load',
+  },
+  noChannels: {
+    message: 'This organization has no channels yet.',
+    context: 'Message shown on the organization channels tab when the organization has no channels',
+  },
 });
