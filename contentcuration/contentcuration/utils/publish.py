@@ -47,6 +47,7 @@ from search.utils import get_fts_annotated_contentnode_qs
 from contentcuration import models as ccmodels
 from contentcuration.decorators import delay_user_storage_calculation
 from contentcuration.utils.assessment.perseus import answerless_input_ids
+from contentcuration.utils.assessment.perseus import is_perseus_readable_input_item
 from contentcuration.utils.assessment.perseus import PerseusExerciseGenerator
 from contentcuration.utils.assessment.qti.archive import QTIExerciseGenerator
 from contentcuration.utils.assessment.qti.imsmanifest import (
@@ -271,6 +272,11 @@ def _node_is_perseus_derivable(node):
             if not is_perseus_derivable(item.raw_data):
                 return False
         elif item.type not in PERSEUS_EXPRESSIBLE_LEGACY_TYPES:
+            return False
+        elif (
+            item.type == exercises.INPUT_QUESTION
+            and not is_perseus_readable_input_item(item)
+        ):
             return False
     return has_native_qti
 

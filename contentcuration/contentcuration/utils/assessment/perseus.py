@@ -12,6 +12,8 @@ from le_utils.constants import file_formats
 from le_utils.constants import format_presets
 
 from contentcuration.utils.assessment.base import ExerciseArchiveGenerator
+from contentcuration.utils.assessment.base import packageable_answers
+from contentcuration.utils.assessment.qti.convert import accepted_answers
 from contentcuration.utils.assessment.qti.convert import format_number
 from contentcuration.utils.assessment.qti.convert import hex_to_qti_id
 from contentcuration.utils.assessment.qti.convert import is_answerless_input
@@ -29,13 +31,21 @@ def _perseus_input_value(answer):
     return float(number) if number else None
 
 
+def is_perseus_readable_input_item(assessment_item):
+    """Whether Perseus renders every accepted answer of a legacy input question."""
+    return all(
+        _perseus_input_value(answer) is not None
+        for answer in accepted_answers(packageable_answers(assessment_item))
+    )
+
+
 def answerless_input_ids(ccnode):
     """Input questions an exercise's Perseus archive leaves out, judged from
     stored answers, as exercise.json is written before any item is processed."""
     return {
         item.assessment_id
         for item in ccnode.assessment_items.filter(type=exercises.INPUT_QUESTION)
-        if is_answerless_input(item.type, json.loads(item.answers))
+        if is_answerless_input(item.type, packageable_answers(item))
     }
 
 
