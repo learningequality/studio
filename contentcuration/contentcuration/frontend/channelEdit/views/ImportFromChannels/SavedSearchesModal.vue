@@ -79,10 +79,16 @@
 
 <script>
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
+
   import { mapActions, mapGetters } from 'vuex';
 
   export default {
     name: 'SavedSearchesModal',
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     inject: ['RouteNames'],
     props: {
       value: {
@@ -131,7 +137,12 @@
       },
       handleDeleteConfirm() {
         this.deleteSearch(this.searchId).then(() => {
-          this.$store.dispatch('showSnackbarSimple', this.$tr('searchDeletedSnackbar'));
+          this.createSnackbar({
+            text: this.$tr('searchDeletedSnackbar'),
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
+          });
           this.showDelete = false;
           this.searchId = null;
         });

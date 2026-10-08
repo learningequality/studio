@@ -22,8 +22,14 @@
 
 <script>
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
+
   export default {
     name: 'CopyToken',
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       token: {
         type: String,
@@ -58,12 +64,22 @@
             .writeText(this.displayToken)
             .then(() => {
               const text = this.successText || this.$tr('copiedTokenId');
-              this.$store.dispatch('showSnackbar', { text });
+              this.createSnackbar({
+                text,
+                autoDismiss: true,
+                announce: true,
+                duration: 6000,
+              });
               this.$analytics.trackEvent('copy_token');
               this.$emit('copied');
             })
             .catch(() => {
-              this.$store.dispatch('showSnackbar', { text: this.$tr('copyFailed') });
+              this.createSnackbar({
+                text: this.$tr('copyFailed'),
+                autoDismiss: true,
+                announce: true,
+                duration: 6000,
+              });
             });
         }
       },

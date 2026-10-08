@@ -56,10 +56,15 @@
 <script>
 
   import { mapActions, mapGetters } from 'vuex';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import { InvitationShareModes } from '../../constants';
 
   export default {
     name: 'ChannelInvitation',
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       invitationID: {
         type: String,
@@ -93,8 +98,10 @@
       accept() {
         const channelId = this.invitation.channel;
         this.acceptInvitation(this.invitationID).then(() => {
-          this.$store.dispatch('showSnackbar', {
+          this.createSnackbar({
             text: this.$tr('acceptedSnackbar'),
+            duration: 6000,
+            announce: true,
             actionText: this.$tr('goToChannelSnackbarAction'),
             actionCallback: () => {
               window.location = window.Urls.channel(channelId);
@@ -105,7 +112,11 @@
       declineAndClose() {
         this.declineInvitation(this.invitationID).then(() => {
           this.dialog = false;
-          this.$store.dispatch('showSnackbarSimple', this.$tr('declinedSnackbar'));
+          this.createSnackbar({
+            text: this.$tr('declinedSnackbar'),
+            duration: 6000,
+            announce: true,
+          });
         });
       },
       close() {

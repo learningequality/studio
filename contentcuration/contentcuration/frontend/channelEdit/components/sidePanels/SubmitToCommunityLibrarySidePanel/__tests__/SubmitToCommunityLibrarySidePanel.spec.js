@@ -1,5 +1,6 @@
 import { computed, ref } from 'vue';
 import { mount } from '@vue/test-utils';
+import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
 import { factory } from '../../../../store';
 
 import SubmitToCommunityLibrarySidePanel from '../';
@@ -115,6 +116,7 @@ const submittedLatestSubmission = { channel_version: 2, status: CommunityLibrary
 
 describe('SubmitToCommunityLibrarySidePanel', () => {
   beforeEach(() => {
+    useKSnackbar().clearSnackbar();
     store.state.currentChannel.currentChannelId = null;
     store.state.channel.channelsMap = {};
   });
@@ -605,7 +607,7 @@ describe('SubmitToCommunityLibrarySidePanel', () => {
       await submitButton.trigger('click');
       await wrapper.vm.$nextTick();
 
-      expect(store.getters['snackbarIsVisible']).toBe(true);
+      expect(useKSnackbar().snackbarIsVisible.value).toBe(true);
       expect(CommunityLibrarySubmission.create).not.toHaveBeenCalled();
       jest.useRealTimers();
     });

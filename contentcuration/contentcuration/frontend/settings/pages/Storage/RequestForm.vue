@@ -264,6 +264,7 @@
   import sortBy from 'lodash/sortBy';
   import { mapActions, mapState } from 'vuex';
   import useKLiveRegion from 'kolibri-design-system/lib/composables/useKLiveRegion';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import { generateFormMixin, constantsTranslationMixin } from 'shared/mixins';
   import { LicensesList } from 'shared/leUtils/Licenses';
   import CountryField from 'shared/views/form/CountryField';
@@ -325,8 +326,9 @@
     },
     mixins: [constantsTranslationMixin, formMixin],
     setup() {
+      const { createSnackbar } = useKSnackbar();
       const { sendPoliteMessage } = useKLiveRegion();
-      return { sendPoliteMessage };
+      return { createSnackbar, sendPoliteMessage };
     },
     computed: {
       ...mapState('settings', ['channels']),
@@ -426,12 +428,22 @@
         // Send request
         this.requestStorage(formData)
           .then(() => {
-            this.$store.dispatch('showSnackbar', { text: this.$tr('requestSent') });
+            this.createSnackbar({
+              text: this.$tr('requestSent'),
+              autoDismiss: true,
+              announce: true,
+              duration: 6000,
+            });
             this.reset();
             this.$emit('submitted');
           })
           .catch(() => {
-            this.$store.dispatch('showSnackbar', { text: this.$tr('requestFailed') });
+            this.createSnackbar({
+              text: this.$tr('requestFailed'),
+              autoDismiss: true,
+              announce: true,
+              duration: 6000,
+            });
           });
       },
     },

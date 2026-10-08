@@ -159,6 +159,7 @@
 <script>
 
   import { mapGetters, mapActions, mapState } from 'vuex';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import ResourcePanel from '../ResourcePanel';
   import MoveModal from '../move/MoveModal';
   import { SelectionFlags } from '../../vuex/clipboard/constants';
@@ -190,6 +191,10 @@
       DraggableRegion,
     },
     mixins: [clipboardMixin],
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       // key for sessionStorage to store width data at
       localName: {
@@ -308,7 +313,6 @@
       },
     },
     methods: {
-      ...mapActions(['showSnackbar']),
       ...mapActions('clipboard', [
         'initialize',
         'copy',
@@ -352,12 +356,15 @@
       copyToClipboard: withChangeTracker(function (ids, changeTracker) {
         const nodes = this.getRealContentNodes(ids);
         return this.copyAll({ nodes }).then(() => {
-          this.showSnackbar({
+          this.createSnackbar({
             text: this.$tr('copiedItemsToClipboard'),
+            duration: 6000,
             // TODO: implement revert functionality for clipboard
             // actionText: this.$tr('undo'),
             // actionCallback: () => changeTracker.revert(),
-          }).then(() => changeTracker.cleanUp());
+            hideCallback: () => changeTracker.cleanUp(),
+            announce: true,
+          });
         });
       }),
       calculateMoveNodes() {
@@ -391,12 +398,15 @@
           // `tree` is exactly the params for copy
           return this.copy(tree);
         }).then(() => {
-          this.showSnackbar({
+          this.createSnackbar({
             text: this.$tr('copiedItemsToClipboard'),
+            duration: 6000,
             // TODO: implement revert functionality for clipboard
             // actionText: this.$tr('undo'),
             // actionCallback: () => changeTracker.revert(),
-          }).then(() => changeTracker.cleanUp());
+            hideCallback: () => changeTracker.cleanUp(),
+            announce: true,
+          });
         });
       }),
       removeNodes: withChangeTracker(function (changeTracker) {
@@ -409,12 +419,15 @@
 
         return this.deleteClipboardNodes(selectionIds).then(() => {
           this.resetSelectionState();
-          this.showSnackbar({
+          this.createSnackbar({
             text: this.$tr('removedFromClipboard'),
+            duration: 6000,
             // TODO: implement revert functionality for clipboard
             // actionText: this.$tr('undo'),
             // actionCallback: () => changeTracker.revert(),
-          }).then(() => changeTracker.cleanUp());
+            hideCallback: () => changeTracker.cleanUp(),
+            announce: true,
+          });
         });
       }),
     },

@@ -97,10 +97,15 @@
 <script>
 
   import { mapActions, mapGetters, mapState } from 'vuex';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import { SharingPermissions } from 'shared/constants';
 
   export default {
     name: 'ChannelSharingTable',
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       channelId: {
         type: String,
@@ -220,23 +225,41 @@
           channelId: this.channelId,
         })
           .then(() => {
-            this.$store.dispatch('showSnackbar', { text: this.$tr('invitationSentMessage') });
+            this.createSnackbar({
+              text: this.$tr('invitationSentMessage'),
+              autoDismiss: true,
+              announce: true,
+              duration: 6000,
+            });
           })
           .catch(() => {
-            this.$store.dispatch('showSnackbar', { text: this.$tr('invitationFailedError') });
+            this.createSnackbar({
+              text: this.$tr('invitationFailedError'),
+              autoDismiss: true,
+              announce: true,
+              duration: 6000,
+            });
           });
       },
       handleDelete(invitationId) {
         this.deleteInvitation(invitationId).then(() => {
           this.showDeleteInvitation = false;
-          this.$store.dispatch('showSnackbar', { text: this.$tr('invitationDeletedMessage') });
+          this.createSnackbar({
+            text: this.$tr('invitationDeletedMessage'),
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
+          });
         });
       },
       grantEditAccess(userId) {
         this.showMakeEditor = false;
         this.makeEditor({ userId, channelId: this.channelId }).then(() => {
-          this.$store.dispatch('showSnackbar', {
+          this.createSnackbar({
             text: this.$tr('editPermissionsGrantedMessage'),
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
           });
         });
       },
@@ -254,8 +277,11 @@
             });
           })
           .then(() => {
-            this.$store.dispatch('showSnackbar', {
+            this.createSnackbar({
               text: this.$tr('userRemovedMessage'),
+              autoDismiss: true,
+              announce: true,
+              duration: 6000,
             });
           });
       },

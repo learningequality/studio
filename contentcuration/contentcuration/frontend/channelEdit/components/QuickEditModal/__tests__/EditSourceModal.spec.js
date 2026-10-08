@@ -1,8 +1,17 @@
 import { mount } from '@vue/test-utils';
 import { Store } from 'vuex';
+import flushPromises from 'flush-promises';
 import EditSourceModal from '../EditSourceModal';
 import { LicensesList } from 'shared/leUtils/Licenses';
 import { constantsTranslationMixin } from 'shared/mixins';
+
+const mockCreateSnackbar = jest.fn();
+jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
+  __esModule: true,
+  default: () => ({
+    createSnackbar: mockCreateSnackbar,
+  }),
+}));
 
 let nodes;
 
@@ -47,6 +56,7 @@ const makeWrapper = nodeIds => {
 
 describe('EditSourceModal', () => {
   beforeEach(() => {
+    mockCreateSnackbar.mockClear();
     nodes = {
       node1: {
         id: 'node1',
@@ -60,9 +70,7 @@ describe('EditSourceModal', () => {
     contentNodeActions = {
       updateContentNode: jest.fn(),
     };
-    generalActions = {
-      showSnackbarSimple: jest.fn(),
-    };
+    generalActions = {};
     store = new Store({
       actions: generalActions,
       modules: {
@@ -251,41 +259,22 @@ describe('EditSourceModal', () => {
       expect(contentNodeActions.updateContentNode).not.toHaveBeenCalled();
     });
 
-    test('should show a snackbar with the correct number of edited nodes on success submit', () => {
+    test('should show a snackbar with "Changes saved" on success submit', async () => {
       const wrapper = makeWrapper(['node1', 'node2']);
       wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
+      await flushPromises();
 
-      const animationFrameId = requestAnimationFrame(() => {
-        expect(generalActions.showSnackbarSimple).toHaveBeenCalledWith(
-          expect.anything(),
-          'Edited attribution for 2 resources',
-        );
-        cancelAnimationFrame(animationFrameId);
-      });
+      expect(mockCreateSnackbar).toHaveBeenCalledWith(
+        expect.objectContaining({ text: 'Changes saved' }),
+      );
     });
 
-    test('should show a snack bar with the correct number of edited nodes on success submit if some nodes are imported', () => {
-      nodes['node1'].original_source_node_id = 'original_node1';
+    test('should emit close event on success submit', async () => {
       const wrapper = makeWrapper(['node1', 'node2']);
       wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
+      await flushPromises();
 
-      const animationFrameId = requestAnimationFrame(() => {
-        expect(generalActions.showSnackbarSimple).toHaveBeenCalledWith(
-          expect.anything(),
-          'Edited attribution for 1 resource',
-        );
-        cancelAnimationFrame(animationFrameId);
-      });
-    });
-
-    test('should emit close event on success submit', () => {
-      const wrapper = makeWrapper(['node1', 'node2']);
-      wrapper.find('[data-test="edit-source-modal"]').vm.$emit('submit');
-
-      const animationFrameId = requestAnimationFrame(() => {
-        expect(wrapper.emitted('close')).toBeTruthy();
-        cancelAnimationFrame(animationFrameId);
-      });
+      expect(wrapper.emitted('close')).toBeTruthy();
     });
   });
 

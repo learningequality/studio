@@ -37,12 +37,18 @@
 
 <script>
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
+
   import { mapActions, mapGetters } from 'vuex';
   import { getTitleValidators, getInvalidText } from 'shared/utils/validation';
   import commonStrings from 'shared/translator';
 
   export default {
     name: 'EditTitleDescriptionModal',
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     props: {
       nodeId: {
         type: String,
@@ -100,8 +106,13 @@
           description: description.trim(),
           checkComplete: true,
         });
-        /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
-        this.$store.dispatch('showSnackbarSimple', commonStrings.$tr('changesSaved'));
+        this.createSnackbar({
+          /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+          text: commonStrings.$tr('changesSaved'),
+          autoDismiss: true,
+          announce: true,
+          duration: 6000,
+        });
         this.close(this.changed);
       },
     },

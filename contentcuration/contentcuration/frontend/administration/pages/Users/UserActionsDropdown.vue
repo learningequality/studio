@@ -114,6 +114,8 @@
 
 <script>
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
+
   import { mapActions, mapGetters, mapState } from 'vuex';
 
   import EmailUsersDialog from './EmailUsersDialog';
@@ -124,6 +126,10 @@
     components: {
       EmailUsersDialog,
       UserPrivilegeModal,
+    },
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
     },
     props: {
       userId: {
@@ -153,32 +159,57 @@
       deleteHandler() {
         return this.deleteUser(this.userId).then(() => {
           this.deleteDialog = false;
-          this.$store.dispatch('showSnackbarSimple', 'User removed');
+          this.createSnackbar({
+            text: 'User removed',
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
+          });
           this.$emit('deleted');
         });
       },
       activateHandler() {
         this.updateUser({ id: this.userId, is_active: true }).then(() => {
           this.activateDialog = false;
-          this.$store.dispatch('showSnackbarSimple', 'User activated');
+          this.createSnackbar({
+            text: 'User activated',
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
+          });
         });
       },
       deactivateHandler() {
         this.updateUser({ id: this.userId, is_active: false }).then(() => {
           this.deactivateDialog = false;
-          this.$store.dispatch('showSnackbarSimple', 'User deactivated');
+          this.createSnackbar({
+            text: 'User deactivated',
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
+          });
         });
       },
       removeAdminHandler() {
         this.updateUser({ id: this.userId, is_admin: false }).then(() => {
           this.removeAdminPrivilegeDialog = false;
-          this.$store.dispatch('showSnackbarSimple', 'Admin privilege removed');
+          this.createSnackbar({
+            text: 'Admin privilege removed',
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
+          });
         });
       },
       addAdminHandler() {
         this.updateUser({ id: this.userId, is_admin: true }).then(() => {
           this.addAdminPrivilegeDialog = false;
-          this.$store.dispatch('showSnackbarSimple', 'Admin privilege added');
+          this.createSnackbar({
+            text: 'Admin privilege added',
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
+          });
         });
       },
     },

@@ -4,6 +4,14 @@ import { factory } from '../../../store';
 import { LanguagesList } from 'shared/leUtils/Languages';
 import { ContentKindsNames } from 'shared/leUtils/ContentKinds';
 
+const mockCreateSnackbar = jest.fn();
+jest.mock('kolibri-design-system/lib/composables/useKSnackbar', () => ({
+  __esModule: true,
+  default: () => ({
+    createSnackbar: mockCreateSnackbar,
+  }),
+}));
+
 const nodes = [
   { id: 'test-en-res', language: 'en' },
   { id: 'test-es-res', language: 'es' },
@@ -33,15 +41,9 @@ function makeWrapper(nodeIds) {
   const updateContentNodeDescendants = jest.spyOn(wrapper.vm, 'updateContentNodeDescendants');
   updateContentNodeDescendants.mockResolvedValue(null);
 
-  const showSnackbarSimple = jest.spyOn(wrapper.vm, 'showSnackbarSimple');
-  showSnackbarSimple.mockResolvedValue(null);
-
   const handleSave = jest.spyOn(wrapper.vm, 'handleSave');
 
-  return [
-    wrapper,
-    { updateContentNode, updateContentNodeDescendants, showSnackbarSimple, handleSave },
-  ];
+  return [wrapper, { updateContentNode, updateContentNodeDescendants, handleSave }];
 }
 
 async function chooseLanguage(wrapper, language) {
@@ -216,7 +218,7 @@ describe('EditLanguageModal', () => {
     await wrapper.vm.handleSave();
     await wrapper.vm.$nextTick();
 
-    expect(mocks.showSnackbarSimple).toHaveBeenCalledWith(expect.anything());
+    expect(mockCreateSnackbar).toHaveBeenCalled();
   });
 
   describe('topic nodes present', () => {

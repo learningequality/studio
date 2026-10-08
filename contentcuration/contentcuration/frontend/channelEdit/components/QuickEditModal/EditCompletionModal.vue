@@ -24,6 +24,8 @@
 
 <script>
 
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
+
   import isEqual from 'lodash/isEqual';
   import { mapGetters, mapActions } from 'vuex';
   import { getFileDuration } from 'shared/utils/helpers';
@@ -34,6 +36,10 @@
     name: 'EditCompletionModal',
     components: {
       CompletionOptions,
+    },
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
     },
     props: {
       nodeId: {
@@ -128,8 +134,13 @@
         };
 
         this.updateContentNode({ id: this.nodeId, ...payload });
-        /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
-        this.$store.dispatch('showSnackbarSimple', commonStrings.$tr('changesSaved'));
+        this.createSnackbar({
+          /* eslint-disable-next-line kolibri/vue-no-undefined-string-uses */
+          text: commonStrings.$tr('changesSaved'),
+          autoDismiss: true,
+          announce: true,
+          duration: 6000,
+        });
         this.close(this.changed);
       },
       close(changed = false) {

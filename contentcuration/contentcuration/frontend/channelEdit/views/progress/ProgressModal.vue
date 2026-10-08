@@ -60,12 +60,17 @@
 
 <script>
 
-  import { mapActions, mapGetters } from 'vuex';
+  import { mapGetters } from 'vuex';
+  import useKSnackbar from 'kolibri-design-system/lib/composables/useKSnackbar';
   import get from 'lodash/get';
   import { TASK_ID } from 'shared/data/constants';
 
   export default {
     name: 'ProgressModal',
+    setup() {
+      const { createSnackbar } = useKSnackbar();
+      return { createSnackbar };
+    },
     data: () => ({
       now: Date.now(),
     }),
@@ -153,11 +158,13 @@
       clearInterval(this.timer);
     },
     methods: {
-      ...mapActions(['showSnackbar']),
       showSnackbarOnCompleteSync(newShowProgress, oldShowProgress) {
         if (!newShowProgress && oldShowProgress) {
-          this.showSnackbar({
+          this.createSnackbar({
             text: this.$tr('syncedSnackbar'),
+            autoDismiss: true,
+            announce: true,
+            duration: 6000,
           });
         }
       },
