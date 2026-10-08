@@ -39,6 +39,7 @@ const {
   closeBtnLabel$,
   questionContentPlaceholder$,
   unsupportedItemMessage$,
+  deleteUnsupportedItemMessage$,
   incompleteItemIndicatorLabel$,
   hintsLabel$,
   associateLabel$,
@@ -67,6 +68,12 @@ const renderComponent = (props = {}, slots = {}, listeners = { open: () => {} })
     routes: new VueRouter(),
   });
 };
+
+const renderDocument = (raw_data, props = {}) =>
+  renderComponent({
+    item: { assessment_id: 'item-id', type: AssessmentItemTypes.QTI, raw_data },
+    ...props,
+  });
 
 // jsdom implements no layout, so it has no scrollIntoView for an opening card to call.
 const scrollIntoView = jest.fn();
@@ -228,27 +235,17 @@ describe('QTIItemEditor', () => {
     test('shows a read-only message for an item authored elsewhere', () => {
       renderComponent({
         item: { assessment_id: 'perseus-item', type: 'perseus_question', raw_data: '{}' },
+        canDelete: true,
       });
-      expect(screen.getByText(unsupportedItemMessage$())).toBeInTheDocument();
-    });
-
-    test('shows a read-only message when the item XML cannot be read', () => {
-      renderComponent({
-        item: {
-          assessment_id: 'broken-item',
-          type: AssessmentItemTypes.QTI,
-          raw_data: '<qti-assessment-item><oops>',
-        },
-      });
-      expect(screen.getByText(unsupportedItemMessage$())).toBeInTheDocument();
+      expect(screen.getByTestId('unsupportedMessage')).toHaveTextContent(unsupportedItemMessage$());
+      expect(screen.queryByText(deleteUnsupportedItemMessage$())).not.toBeInTheDocument();
     });
 
     describe('items the editor cannot rebuild', () => {
-      const documents = {
+      const publishableDocuments = {
         'two interactions': MULTI_INTERACTION_ITEM_DOCUMENT,
         'an interaction with no descriptor': UNRECOGNIZED_INTERACTION_ITEM_DOCUMENT,
         'an interaction with no editor': INLINE_CHOICE_ITEM_DOCUMENT,
-        'no interaction': NO_INTERACTION_ITEM_DOCUMENT,
         'several blanks in one text entry': MULTI_TEXT_ENTRY_ITEM_DOCUMENT,
         'a stimulus beside a block interaction': CHOICE_ITEM_DOCUMENT_WITH_STIMULUS,
         'a stimulus beside a hinted block interaction':
@@ -256,20 +253,23 @@ describe('QTIItemEditor', () => {
         'text sharing the text entry paragraph': TEXT_ENTRY_ITEM_DOCUMENT_SHARED_PARAGRAPH,
         'content after the text entry paragraph': TEXT_ENTRY_ITEM_DOCUMENT_TRAILING_CONTENT,
       };
-      const renderDocument = (raw_data, props = {}) =>
-        renderComponent({
-          item: { assessment_id: 'item-id', type: AssessmentItemTypes.QTI, raw_data },
-          ...props,
-        });
+      const documents = {
+        ...publishableDocuments,
+        'no interaction': NO_INTERACTION_ITEM_DOCUMENT,
+      };
 
-      describe.each(Object.entries(documents))('with %s', (_, raw_data) => {
-        test('shows the unsupported message', () => {
-          renderDocument(raw_data, { mode: 'view' });
+      test.each(Object.entries(publishableDocuments))(
+        'with %s shows the unsupported message and no delete prompt',
+        (_, raw_data) => {
+          renderDocument(raw_data, { mode: 'view', canDelete: true });
           expect(screen.getByTestId('unsupportedMessage')).toHaveTextContent(
             unsupportedItemMessage$(),
           );
-        });
+          expect(screen.queryByText(deleteUnsupportedItemMessage$())).not.toBeInTheDocument();
+        },
+      );
 
+      describe.each(Object.entries(documents))('with %s', (_, raw_data) => {
         test('offers no editable controls or hints in edit mode', () => {
           renderDocument(raw_data, { mode: 'edit' });
           expect(screen.queryByText(hintsLabel$())).not.toBeInTheDocument();
@@ -297,6 +297,32 @@ describe('QTIItemEditor', () => {
         renderDocument(MULTI_INTERACTION_ITEM_DOCUMENT, { mode: 'view', showAnswers: true });
         expect(screen.getByRole('button', { name: hintsLabel$() })).toBeInTheDocument();
       });
+    });
+  });
+
+  describe('delete prompt', () => {
+    test.each([
+      ['XML that cannot be parsed', '<not-xml'],
+      ['no interaction', NO_INTERACTION_ITEM_DOCUMENT],
+      [
+        'a match interaction that cannot be read',
+        VALID_MATCH_ITEM_DOCUMENT.replace(MATCH_XML, MATCH_THREE_SETS_XML),
+      ],
+    ])(
+      'asks the author to delete a question with %s instead of only saying it cannot be edited',
+      (_, raw_data) => {
+        renderDocument(raw_data, { canDelete: true });
+        const message = screen.getByTestId('unsupportedMessage');
+        expect(message).toHaveTextContent(deleteUnsupportedItemMessage$());
+        expect(message).not.toHaveTextContent(unsupportedItemMessage$());
+      },
+    );
+
+    test('only says the question cannot be edited where the card offers no Delete', () => {
+      // Rendered without canDelete, as ResourcePanel's preview does.
+      renderDocument('<not-xml');
+      expect(screen.getByTestId('unsupportedMessage')).toHaveTextContent(unsupportedItemMessage$());
+      expect(screen.queryByText(deleteUnsupportedItemMessage$())).not.toBeInTheDocument();
     });
   });
 

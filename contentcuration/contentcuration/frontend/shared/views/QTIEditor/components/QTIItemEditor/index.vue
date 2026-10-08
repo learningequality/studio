@@ -59,7 +59,7 @@
         :style="{ color: $themeTokens.annotation, margin: 0, fontStyle: 'italic' }"
         data-testid="unsupportedMessage"
       >
-        {{ unsupportedItemMessage$() }}
+        {{ unsupportedMessage }}
       </p>
       <InteractionSection
         v-else-if="interactions.length > 0"
@@ -134,6 +134,7 @@
         unknownTypeLabel$,
         incompleteItemIndicatorLabel$,
         unsupportedItemMessage$,
+        deleteUnsupportedItemMessage$,
       } = qtiEditorStrings;
 
       /**
@@ -319,17 +320,29 @@
       }
 
       /**
+       * Unreadable or empty QTI can't be fixed here and blocks publishing; other unsupported
+       * items are publishable.
+       */
+      const isUnfixable = computed(
+        () =>
+          isUnsupported.value &&
+          isQti.value &&
+          validateQtiItem(props.item.raw_data, { allowFreeResponse: props.allowFreeResponse })
+            .length > 0,
+      );
+
+      const unsupportedMessage = computed(() =>
+        isUnfixable.value && props.canDelete
+          ? deleteUnsupportedItemMessage$()
+          : unsupportedItemMessage$(),
+      );
+
+      /**
        * Whether the question is missing something an author still has to supply.
        */
       const isIncomplete = computed(() => {
         if (isUnsupported.value) {
-          // Unreadable or empty QTI can't be fixed here and blocks publishing; other
-          // unsupported items are publishable.
-          return (
-            isQti.value &&
-            validateQtiItem(props.item.raw_data, { allowFreeResponse: props.allowFreeResponse })
-              .length > 0
-          );
+          return isUnfixable.value;
         }
         const itemErrors = validateItemShape({
           interactions: interactions.value,
@@ -345,6 +358,7 @@
         interactions,
         currentInteraction,
         isUnsupported,
+        unsupportedMessage,
         isIncomplete,
         canOpen,
         onCardClick,
@@ -353,7 +367,6 @@
         closeBtnLabel$,
         questionContentPlaceholder$,
         incompleteItemIndicatorLabel$,
-        unsupportedItemMessage$,
         onUpdateInteraction,
         onUpdateErrors,
         hints,
@@ -399,6 +412,11 @@
       allowFreeResponse: {
         type: Boolean,
         default: true,
+      },
+      /** Whether the toolbar actions offer Delete, so an unfixable question can point to it */
+      canDelete: {
+        type: Boolean,
+        default: false,
       },
     },
 

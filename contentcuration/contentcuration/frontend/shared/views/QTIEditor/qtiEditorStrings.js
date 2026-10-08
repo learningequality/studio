@@ -38,6 +38,11 @@ export const qtiEditorStrings = createTranslator('QTIEditorStrings', {
     context:
       'Shown in place of the editor for questions authored elsewhere, or whose content could not be read',
   },
+  deleteUnsupportedItemMessage: {
+    message: 'This question cannot be edited or published. Delete it from the Options menu.',
+    context:
+      "Shown in place of the editor for a question whose content is unreadable or has no answer area. Deleting it is the only fix. 'Options' is the question card's menu, labelled by the generic 'Options' string",
+  },
   singleSelectLabel: {
     message: 'Single Choice',
     context: 'Display name for a single-select question type',
