@@ -22,7 +22,6 @@ from contentcuration.utils.assessment.qti.catalog import KOLIBRI_HINT_SUPPORT
 from contentcuration.utils.assessment.qti.constants import BaseType
 from contentcuration.utils.assessment.qti.html_to_markdown import html_to_markdown
 from contentcuration.utils.assessment.qti.validation import parse_qti_xml
-from contentcuration.utils.parser import extract_value
 
 logger = logging.getLogger(__name__)
 
@@ -195,17 +194,10 @@ def _derive_choice(interaction, item_body, declaration):
     return item_type, question, answers
 
 
-def _perseus_number(value):
-    """A leading "+" and capital "E" are valid xsd:double but not for
-    ``extract_value``."""
-    normalised = value.removeprefix("+").lower()
-    return normalised if extract_value(normalised) is not None else value
-
-
 def _derive_text(interaction, item_body, declaration):
     question = html_to_markdown([item_body])
     answers = [
-        {"answer": _perseus_number(value), "correct": True, "order": order}
+        {"answer": value, "correct": True, "order": order}
         for order, value in enumerate(_accepted_values(declaration))
     ]
     return exercises.INPUT_QUESTION, question, answers

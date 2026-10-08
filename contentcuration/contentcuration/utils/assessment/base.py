@@ -47,6 +47,38 @@ SVG_PIXEL_LENGTH_REGEX = re.compile(r"([0-9]+(?:\.[0-9]+)?)(?:px)?")
 image_pattern = rf"!\[([^\]]*)]\(\${exercises.CONTENT_STORAGE_PLACEHOLDER}/([^\s)]+)(?:\s=([0-9\.]+)x([0-9\.]+))*[^)]*\)"
 
 
+def _image_size(img_match):
+    return tuple(float(size) if size else None for size in img_match.group(3, 4))
+
+
+def _is_checksum_filename(filename):
+    checksum, ext = os.path.splitext(filename)
+    try:
+        int(checksum, 16)
+    except ValueError:
+        return False
+    return bool(ext)
+
+
+def _strip_unpackageable_images(content):
+    def _strip(img_match):
+        packageable = _is_checksum_filename(img_match.group(2)) and (
+            0 not in _image_size(img_match)
+        )
+        return img_match.group(0) if packageable else ""
+
+    return re.sub(image_pattern, _strip, content)
+
+
+def packageable_answers(assessment_item):
+    """The item's answers less the image references ``process_image_strings`` drops."""
+    answers = json.loads(assessment_item.answers)
+    for answer in answers:
+        if isinstance(answer.get("answer"), str):
+            answer["answer"] = _strip_unpackageable_images(answer["answer"])
+    return answers
+
+
 def _exif_orientation(img):
     try:
         return img.getexif().get(ExifTags.Base.Orientation)
@@ -501,8 +533,10 @@ class ExerciseArchiveGenerator(ABC):
         processed_answers = []
 
         for answer in answer_data:
-            if answer["answer"]:
-                if isinstance(answer["answer"], str):
+            # A JSON 0 is a valid input answer; each format drops the blank
+            # ones itself.
+            if answer.get("answer") or assessment_item.type == exercises.INPUT_QUESTION:
+                if isinstance(answer.get("answer"), str):
                     (answer["answer"], answer_images,) = self._process_content(
                         answer["answer"],
                     )

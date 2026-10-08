@@ -14,7 +14,6 @@ from lxml import etree
 
 from contentcuration.utils.assessment.base import ExerciseArchiveGenerator
 from contentcuration.utils.assessment.qti.constants import ResourceType
-from contentcuration.utils.assessment.qti.convert import accepted_answers
 from contentcuration.utils.assessment.qti.convert import (
     build_perseus_custom_interaction_item,
 )
@@ -22,6 +21,7 @@ from contentcuration.utils.assessment.qti.convert import (
     convert_legacy_assessment_item_to_qti,
 )
 from contentcuration.utils.assessment.qti.convert import hex_to_qti_id
+from contentcuration.utils.assessment.qti.convert import is_answerless_input
 from contentcuration.utils.assessment.qti.convert import LegacyAssessmentItem
 from contentcuration.utils.assessment.qti.imsmanifest import File as ManifestFile
 from contentcuration.utils.assessment.qti.imsmanifest import Manifest
@@ -103,9 +103,7 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
     def _skip_answerless_input(self, assessment_item, answers) -> bool:
         # Conversion makes an input question with no accepted answer an
         # answerless float entry.
-        is_answerless = assessment_item.type == exercises.INPUT_QUESTION and not (
-            accepted_answers(answers)
-        )
+        is_answerless = is_answerless_input(assessment_item.type, answers)
         if is_answerless:
             self._warn_answerless(assessment_item)
         return is_answerless
@@ -218,19 +216,6 @@ class QTIExerciseGenerator(ExerciseArchiveGenerator):
         ):
             return None
         return super().process_assessment_item(assessment_item)
-
-    def _process_answers(self, assessment_item):
-        # The base drops every falsy answer, including a JSON 0; conversion
-        # drops the blank and false input answers itself.
-        if assessment_item.type != exercises.INPUT_QUESTION:
-            return super()._process_answers(assessment_item)
-        answers = json.loads(assessment_item.answers)
-        for answer in answers:
-            if isinstance(answer.get("answer"), str):
-                answer["answer"], answer["images"] = self._process_content(
-                    answer["answer"]
-                )
-        return self._sort_by_order(answers, "answers")
 
     def _create_perseus_custom_interaction(self, assessment_item) -> None:
         """Embed a raw Perseus question as a ``qti-custom-interaction``.
